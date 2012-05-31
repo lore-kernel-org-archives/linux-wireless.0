@@ -1,185 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:40298 "HELO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757795Ab2EIBdu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 21:33:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 15/18] mwifiex: rearrange AP sys configure code
-Date: Tue,  8 May 2012 18:30:27 -0700
-Message-Id: <1336527030-2045-16-git-send-email-bzhao@marvell.com> (sfid-20120509_035905_435086_2264C9EA)
-In-Reply-To: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
-References: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2054 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751976Ab2EaRnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 13:43:50 -0400
+Message-ID: <4FC7ADCA.5020002@broadcom.com> (sfid-20120531_194354_171285_DFC89556)
+Date: Thu, 31 May 2012 19:43:38 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Stefano Brivio" <stefano.brivio@polimi.it>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: ensure ext PA lines are enabled for BCM4331
+References: <1338472163-3810-1-git-send-email-seth.forshee@canonical.com>
+ <4FC77D25.4060100@hauke-m.de> <20120531142652.GA32179@thinkpad-t410>
+In-Reply-To: <20120531142652.GA32179@thinkpad-t410>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On 05/31/2012 04:26 PM, Seth Forshee wrote:
+> On Thu, May 31, 2012 at 04:16:05PM +0200, Hauke Mehrtens wrote:
+>> > Hi Seth,
+>> > 
+>> > why don't you call this from bcma_pmu_workarounds() in
+>> > drivers/bcma/driver_chipcommon_pmu.c instead of calling this from b43? I
+>> > think it looks better to call some workarounds on chip common from bcma
+>> > and not from b43.
+> Arend recommended calling it from within b43's start op, but I'm not
+> sure of the reason. Arend?
 
-This patch takes into account AP config_type
-(bss config/custom ie config) while preparing AP
-sys_configure command buffer.
+Well, my comment on start op was regarding your observation of CHIPCTL
+being zero. As the start op does reinitialize the hardware you should
+check CHIPCTL register at the end of it. This is just to confirm the
+register contains valid bits.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    5 +-
- drivers/net/wireless/mwifiex/fw.h       |    2 +
- drivers/net/wireless/mwifiex/uap_cmd.c  |   62 +++++++++++++++++++++---------
- 3 files changed, 48 insertions(+), 21 deletions(-)
+> Agreed though that if there's no need to run it every time the interface
+> is started then bcma_pmu_workarounds() would be a nicer place for it.
+> 
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 6c34321..d305b37 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -502,7 +502,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- 			ret = mwifiex_send_cmd_async(priv,
- 						     HostCmd_CMD_UAP_SYS_CONFIG,
- 						     HostCmd_ACT_GEN_SET,
--						     0, bss_cfg);
-+						     UAP_BSS_PARAMS_I, bss_cfg);
- 
- 			kfree(bss_cfg);
- 
-@@ -983,7 +983,8 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 	}
- 
- 	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
--				   HostCmd_ACT_GEN_SET, 0, bss_cfg)) {
-+				   HostCmd_ACT_GEN_SET,
-+				   UAP_BSS_PARAMS_I, bss_cfg)) {
- 		wiphy_err(wiphy, "Failed to set the SSID\n");
- 		kfree(bss_cfg);
- 		return -1;
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 57fd0ca..4fd7a05 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -93,6 +93,8 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- 
- #define CAL_SNR(RSSI, NF)		((s16)((s16)(RSSI)-(s16)(NF)))
- 
-+#define UAP_BSS_PARAMS_I			0
-+
- #define TLV_TYPE_UAP_SSID			0x0000
- 
- #define PROPRIETARY_TLV_BASE_ID                 0x0100
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 0cfe888..e43bcaa 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -123,14 +123,12 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
- 	config->retry_limit = 0x7F;
- }
- 
--/* Parse AP config structure and prepare TLV based command structure
-- * to be sent to FW for uAP configuration
-- */
--static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
--				      u16 cmd_action, void *cmd_buf)
-+/* This function parses BSS related parameters from structure
-+ * and prepares TLVs. These TLVs are appended to command buffer.
-+*/
-+static int
-+mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- {
--	u8 *tlv;
--	struct host_cmd_ds_sys_config *sys_config = &cmd->params.uap_sys_config;
- 	struct host_cmd_tlv_dtim_period *dtim_period;
- 	struct host_cmd_tlv_beacon_period *beacon_period;
- 	struct host_cmd_tlv_ssid *ssid;
-@@ -145,14 +143,7 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
- 	struct host_cmd_tlv_passphrase *passphrase;
- 	struct host_cmd_tlv_akmp *tlv_akmp;
- 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
--	u16 cmd_size;
--
--	cmd->command = cpu_to_le16(HostCmd_CMD_UAP_SYS_CONFIG);
--	cmd_size = (u16)(sizeof(struct host_cmd_ds_sys_config) + S_DS_GEN);
--
--	sys_config->action = cpu_to_le16(cmd_action);
--
--	tlv = sys_config->tlv;
-+	u16 cmd_size = *param_size;
- 
- 	if (bss_cfg->ssid.ssid_len) {
- 		ssid = (struct host_cmd_tlv_ssid *)tlv;
-@@ -319,7 +310,39 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
- 		tlv += sizeof(struct host_cmd_tlv_encrypt_protocol);
- 	}
- 
--	cmd->size = cpu_to_le16(cmd_size);
-+	*param_size = cmd_size;
-+
-+	return 0;
-+}
-+
-+/* Parse AP config structure and prepare TLV based command structure
-+ * to be sent to FW for uAP configuration
-+ */
-+static int
-+mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd, u16 cmd_action,
-+			   u32 type, void *cmd_buf)
-+{
-+	u8 *tlv;
-+	u16 cmd_size, param_size;
-+	struct host_cmd_ds_sys_config *sys_cfg;
-+
-+	cmd->command = cpu_to_le16(HostCmd_CMD_UAP_SYS_CONFIG);
-+	cmd_size = (u16)(sizeof(struct host_cmd_ds_sys_config) + S_DS_GEN);
-+	sys_cfg = (struct host_cmd_ds_sys_config *)&cmd->params.uap_sys_config;
-+	sys_cfg->action = cpu_to_le16(cmd_action);
-+	tlv = sys_cfg->tlv;
-+
-+	switch (type) {
-+	case UAP_BSS_PARAMS_I:
-+		param_size = cmd_size;
-+		if (mwifiex_uap_bss_param_prepare(tlv, cmd_buf, &param_size))
-+			return -1;
-+		cmd->size = cpu_to_le16(param_size);
-+		break;
-+	default:
-+		return -1;
-+	}
-+
- 	return 0;
- }
- 
-@@ -329,14 +352,14 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
-  * routines based upon the command number.
-  */
- int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
--			    u16 cmd_action, u32 cmd_oid,
-+			    u16 cmd_action, u32 type,
- 			    void *data_buf, void *cmd_buf)
- {
- 	struct host_cmd_ds_command *cmd = cmd_buf;
- 
- 	switch (cmd_no) {
- 	case HostCmd_CMD_UAP_SYS_CONFIG:
--		if (mwifiex_cmd_uap_sys_config(cmd, cmd_action, data_buf))
-+		if (mwifiex_cmd_uap_sys_config(cmd, cmd_action, type, data_buf))
- 			return -1;
- 		break;
- 	case HostCmd_CMD_UAP_BSS_START:
-@@ -371,7 +394,8 @@ int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel)
- 	bss_cfg->channel = channel;
- 
- 	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
--				   HostCmd_ACT_GEN_SET, 0, bss_cfg)) {
-+				   HostCmd_ACT_GEN_SET,
-+				   UAP_BSS_PARAMS_I, bss_cfg)) {
- 		wiphy_err(wiphy, "Failed to set the uAP channel\n");
- 		kfree(bss_cfg);
- 		return -1;
--- 
-1.7.0.2
+So I agree with Hauke and have this code in bcma. Just not sure whether
+bcma_pmu_workarounds() is the place to put it. This is not a pmu related
+register, but as the function was already there I will not stress to
+move it to driver_chipcommon.c ;-)
+
+Gr. AvS
 
