@@ -1,185 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56783 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965941Ab2EOWdf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47087 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579Ab2EaRAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 18:33:35 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] ath9k: Support ethtool getstats api.
-Date: Tue, 15 May 2012 15:33:25 -0700
-Message-Id: <1337121205-24539-1-git-send-email-greearb@candelatech.com> (sfid-20120516_003339_881194_69FA182F)
+	Thu, 31 May 2012 13:00:37 -0400
+Message-ID: <1338483631.9102.9.camel@jlt3.sipsolutions.net> (sfid-20120531_190041_029844_379D383D)
+Subject: Re: Master mode support in iwlagn?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Erwin Van de Velde <erwin.vandevelde@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Florian Fainelli <florian@openwrt.org>
+Date: Thu, 31 May 2012 19:00:31 +0200
+In-Reply-To: <1338483124.1817.53.camel@aeonflux>
+References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be>
+	 <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be>
+	 <4FC75DA4.2090909@broadcom.com>
+	 <1999855.FUDAX7EfOH@sylvesterjr.cmi.ua.ac.be> <4FC76389.70600@broadcom.com>
+	 <1338474236.2242.1.camel@dcbw.foobar.com>
+	 <1338483124.1817.53.camel@aeonflux>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, 2012-05-31 at 18:52 +0200, Marcel Holtmann wrote:
 
-This returns many of the values that formerly could
-only be obtained from debugfs.  This should be an
-improvement when trying to access these counters
-programatically.  Currently this support is only
-enabled when DEBUGFS is enabled because otherwise
-these stats are not accumulated.
+> > The problem with Ad-Hoc as "hotspot" is that many devices like Android
+> > phones simply ignore adhoc networks due to security issues (as stupid as
+> > that may be, since anyone can set up an AP-mode network too).  Which is
+> > why real AP mode is nice, but clearly not all wifi hardware is going to
+> > support it.
+> 
+> the security issue is the missing proper encryption for IBSS networks.
+> Even while in theory you can have RSN, but who is really supporting this
+> on the other end.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-v2:  Change BUG_ON to WARN_ON per suggestion.
+We are actually supporting this now, and supposedly it interoperates
+with Windows too :-)
 
-:100644 100644 dfa78e8... c25af9a... M	drivers/net/wireless/ath/ath9k/main.c
- drivers/net/wireless/ath/ath9k/main.c |  134 +++++++++++++++++++++++++++++++++
- 1 files changed, 134 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dfa78e8..c25af9a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2388,6 +2388,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+
-+/* Ethtool support for get-stats */
-+
-+#define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
-+static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
-+	"tx_pkts_nic",
-+	"tx_bytes_nic",
-+	"rx_pkts_nic",
-+	"rx_bytes_nic",
-+	AMKSTR(d_tx_pkts),
-+	AMKSTR(d_tx_bytes),
-+	AMKSTR(d_tx_mpdus_queued),
-+	AMKSTR(d_tx_mpdus_completed),
-+	AMKSTR(d_tx_mpdu_xretries),
-+	AMKSTR(d_tx_aggregates),
-+	AMKSTR(d_tx_ampdus_queued_hw),
-+	AMKSTR(d_tx_ampdus_queued_sw),
-+	AMKSTR(d_tx_ampdus_completed),
-+	AMKSTR(d_tx_ampdu_retries),
-+	AMKSTR(d_tx_ampdu_xretries),
-+	AMKSTR(d_tx_fifo_underrun),
-+	AMKSTR(d_tx_op_exceeded),
-+	AMKSTR(d_tx_timer_expiry),
-+	AMKSTR(d_tx_desc_cfg_err),
-+	AMKSTR(d_tx_data_underrun),
-+	AMKSTR(d_tx_delim_underrun),
-+
-+	"d_rx_decrypt_crc_err",
-+	"d_rx_phy_err",
-+	"d_rx_mic_err",
-+	"d_rx_pre_delim_crc_err",
-+	"d_rx_post_delim_crc_err",
-+	"d_rx_decrypt_busy_err",
-+
-+	"d_rx_phyerr_radar",
-+	"d_rx_phyerr_ofdm_timing",
-+	"d_rx_phyerr_cck_timing",
-+
-+};
-+#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
-+
-+static void ath9k_get_et_strings(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS)
-+		memcpy(data, *ath9k_gstrings_stats,
-+		       sizeof(ath9k_gstrings_stats));
-+}
-+
-+static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif, int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return ATH9K_SSTATS_LEN;
-+	return 0;
-+}
-+
-+#define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
-+#define AWDATA(elem)							\
-+	do {								\
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-+	} while (0)
-+
-+#define AWDATA_RX(elem)						\
-+	do {							\
-+		data[i++] = sc->debug.stats.rxstats.elem;	\
-+	} while (0)
-+
-+static void ath9k_get_et_stats(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct ethtool_stats *stats, u64 *data)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	int i = 0;
-+
-+	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_pkts_all);
-+	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_bytes_all);
-+	AWDATA_RX(rx_pkts_all);
-+	AWDATA_RX(rx_bytes_all);
-+
-+	AWDATA(tx_pkts_all);
-+	AWDATA(tx_bytes_all);
-+	AWDATA(queued);
-+	AWDATA(completed);
-+	AWDATA(xretries);
-+	AWDATA(a_aggr);
-+	AWDATA(a_queued_hw);
-+	AWDATA(a_queued_sw);
-+	AWDATA(a_completed);
-+	AWDATA(a_retries);
-+	AWDATA(a_xretries);
-+	AWDATA(fifo_underrun);
-+	AWDATA(xtxop);
-+	AWDATA(timer_exp);
-+	AWDATA(desc_cfg_err);
-+	AWDATA(data_underrun);
-+	AWDATA(delim_underrun);
-+
-+	AWDATA_RX(decrypt_crc_err);
-+	AWDATA_RX(phy_err);
-+	AWDATA_RX(mic_err);
-+	AWDATA_RX(pre_delim_crc_err);
-+	AWDATA_RX(post_delim_crc_err);
-+	AWDATA_RX(decrypt_busy_err);
-+
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_RADAR]);
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_OFDM_TIMING]);
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_CCK_TIMING]);
-+
-+	WARN_ON(i != ATH9K_SSTATS_LEN);
-+}
-+
-+/* End of ethtool get-stats functions */
-+
-+#endif
-+
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2416,4 +2544,10 @@ struct ieee80211_ops ath9k_ops = {
- 	.get_stats	    = ath9k_get_stats,
- 	.set_antenna	    = ath9k_set_antenna,
- 	.get_antenna	    = ath9k_get_antenna,
-+
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+	.get_et_sset_count  = ath9k_get_et_sset_count,
-+	.get_et_stats  = ath9k_get_et_stats,
-+	.get_et_strings  = ath9k_get_et_strings,
-+#endif
- };
--- 
-1.7.3.4
+johannes
 
