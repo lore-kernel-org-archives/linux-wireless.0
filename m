@@ -1,121 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:52407 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752129Ab2EDVk5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 17:40:57 -0400
-Received: by vcqp1 with SMTP id p1so2359374vcq.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 May 2012 14:40:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABF+-6WvgwjkrD6WG8GxcXQ+JM7szugFWZbLN6ssJ8589Q7-BA@mail.gmail.com>
-References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
-	<4FA15A70.2020108@stericsson.com>
-	<CABF+-6XbdG_QMa0iQJMpbOsr4bXCq4mDEB6unkM8jxNGWYwFyQ@mail.gmail.com>
-	<4FA23DA0.3030207@stericsson.com>
-	<CABF+-6WjnVxC55iGHwoaL2zJ+_6oLbkVjaqwwLLrQzZxKwwWxw@mail.gmail.com>
-	<4FA2BF0A.4040307@stericsson.com>
-	<CABF+-6UgQek50abaLnUsBh3LEccG2Pd1vFQDiLyxgcky-JN4Ag@mail.gmail.com>
-	<CAFED-jkzELRHGy7pwqDznLqPzhandwZLQEoCEFvw5F6ogMxiYA@mail.gmail.com>
-	<CABF+-6WvgwjkrD6WG8GxcXQ+JM7szugFWZbLN6ssJ8589Q7-BA@mail.gmail.com>
-Date: Fri, 4 May 2012 17:40:56 -0400
-Message-ID: <CABF+-6U8100oTnpaU=anEYtzkktPLvNqp_bm5M+7Yp_Hajv3+w@mail.gmail.com> (sfid-20120504_234100_843395_EE7C9084)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Kevin Groeneveld <kgroeneveld@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:33352 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756853Ab2EaNHP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 09:07:15 -0400
+Message-ID: <1338469632.9102.6.camel@jlt3.sipsolutions.net> (sfid-20120531_150718_829540_491DD11B)
+Subject: Re: [PATCH v3] mac80211: add command to get current rssi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 31 May 2012 15:07:12 +0200
+In-Reply-To: <CAK80WHYMUtNLg-RcppWc8h561+tLi3P0GE9iY+LV8YnbJyYgrA@mail.gmail.com>
+References: <1338467755-8331-1-git-send-email-victorg@ti.com>
+	 <1338468480.9102.5.camel@jlt3.sipsolutions.net>
+	 <CAK80WHYMUtNLg-RcppWc8h561+tLi3P0GE9iY+LV8YnbJyYgrA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> So, you should configure this in cw1200_add_interface() for new
->> compat-wireless:
->>
->>        vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
->>                             IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+On Thu, 2012-05-31 at 16:06 +0300, Goldenshtein, Victor wrote:
+> On Thu, May 31, 2012 at 3:48 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2012-05-31 at 15:35 +0300, Victor Goldenshtein wrote:
+> >
+> >> +DEFINE_EVENT(local_sdata_evt, drv_get_rssi,
+> >> +     TP_PROTO(struct ieee80211_local *local,
+> >> +              struct ieee80211_sub_if_data *sdata),
+> >> +     TP_ARGS(local, sdata)
+> >> +);
+> >
+> > Shouldn't that also trace the station?
+> >
+> 
+> I don't know, what you think we should trace there ?
 
-I tried adding the above code today and I can now connect in station mode.
+There are some helper macros for tracing the station, I think they just
+have the MAC address
 
-While connected in station mode I get a lot of the following warnings
-in the log:
-
-ieee80211 phy1: Slowpath: tailroom is not big enough. Req: 8, got: 0.
-
-Is that anything to worry about?
-
-The driver did seem to crash on me once today spewing out a lot of
-WARNINGs and trace info to the log.  Unfortunately I didn't save the
-log.  I will try to pay more attention to it if it happens again.
-
-I also did a bit more testing in AP mode.  After changing hostapd to
-802.11g mode I got much better throughput.  However, I did see quite a
-few warnings in the log such as the following:
-
-[  296.854219] ieee80211 phy2: Missed interrupt?
-[  297.104219] ieee80211 phy2: Multicast delivery timeout.
-[  254.194450] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000002
-[   34.731942] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000002
-[  462.159614] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000002
-[  482.560642] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000002
-[  482.568372] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000002
-[  482.601447] ieee80211 phy2: Multicast delivery timeout.
-[  482.736948] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000006
-[  482.879955] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000006
-[  483.052676] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000006
-[  483.570836] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000006
-[  483.578685] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000006
-[  483.765740] ieee80211 phy2: Requeue for link_id 1 (try 2). STAs
-asleep: 0x00000006
-[  483.773462] ieee80211 phy2: Requeue for link_id 1 (try 2). STAs
-asleep: 0x00000006
-[  484.340904] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000006
-[  484.348626] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000006
-[  484.356344] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000006
-[  484.670846] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-asleep: 0x00000006
-[  484.903498] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000006
-[    2.101774] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000000
-[    2.109569] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000000
-[    2.119271] ieee80211 phy2: Requeue for link_id 0 (try 2). STAs
-asleep: 0x00000000
-[    2.128483] ieee80211 phy2: Requeue for link_id 0 (try 2). STAs
-asleep: 0x00000004
-[    2.137894] ieee80211 phy2: Requeue for link_id 0 (try 3). STAs
-asleep: 0x00000004
-[    5.629055] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000004
-[   81.020541] ieee80211 phy2: Missed interrupt?
-[   85.050556] ieee80211 phy2: Missed interrupt?
-[   96.410571] ieee80211 phy2: Missed interrupt?
-[  100.410560] ieee80211 phy2: Missed interrupt?
-[  105.700565] ieee80211 phy2: Missed interrupt?
-[  119.410573] ieee80211 phy2: Missed interrupt?
-[  140.050548] ieee80211 phy2: Missed interrupt?
-[  156.993680] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000004
-[  157.001679] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-asleep: 0x00000004
-[  157.240546] ieee80211 phy2: Multicast delivery timeout.
-[  167.400528] ieee80211 phy2: Missed interrupt?
-
-Should I be worried about these?
+johannes
 
 
-Thanks,
-
-Kevin
