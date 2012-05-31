@@ -1,125 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62140 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752404Ab2EXDyr (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:43913 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753003Ab2EaJDu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:54:47 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Thu, 31 May 2012 05:03:50 -0400
+Received: by wibhn6 with SMTP id hn6so692981wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 02:03:49 -0700 (PDT)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: Master mode support in iwlagn?
+Date: Thu, 31 May 2012 11:03:47 +0200
+Message-ID: <3093264.LxkCudZSCQ@sylvesterjr.cmi.ua.ac.be> (sfid-20120531_110357_097140_7C9A6A11)
+In-Reply-To: <1338450022.4531.3.camel@jlt3.sipsolutions.net>
+References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be> <1338417129.8887.32.camel@dcbw.foobar.com> <1338450022.4531.3.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45255.268653.859697@gargle.gargle.HOWL> (sfid-20120524_055452_228615_90C96BD0)
-Date: Thu, 24 May 2012 09:23:43 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/22] ath9k: Use separate operational flags for BTCOEX
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |   12 +++++++-----
- drivers/net/wireless/ath/ath9k/gpio.c  |   17 +++++++++--------
- 2 files changed, 16 insertions(+), 13 deletions(-)
+What is the reasoning behind it? Why provide it for some wireless NICs and not 
+for others? Seems quite odd for me and features like Internet sharing over 
+wireless are not that exotic, are they?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9400579..9c54d4c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -441,7 +441,11 @@ void ath_start_ani(struct ath_common *common);
- /* BTCOEX */
- /**********/
- 
-+#define BT_OP_PRIORITY_DETECTED   BIT(0)
-+#define BT_OP_SCAN                BIT(1)
-+
- struct ath_btcoex {
-+	u8 op_flags; /* BT_OP_* */
- 	bool hw_timer_enabled;
- 	spinlock_t btcoex_lock;
- 	struct timer_list period_timer; /* Timer for BT period */
-@@ -588,11 +592,9 @@ struct ath_ant_comb {
- #define SC_OP_BEACONS                BIT(1)
- #define SC_OP_RXFLUSH                BIT(2)
- #define SC_OP_TSF_RESET              BIT(3)
--#define SC_OP_BT_PRIORITY_DETECTED   BIT(4)
--#define SC_OP_BT_SCAN                BIT(5)
--#define SC_OP_ANI_RUN                BIT(6)
--#define SC_OP_PRIM_STA_VIF           BIT(7)
--#define SC_OP_HW_RESET               BIT(8)
-+#define SC_OP_ANI_RUN                BIT(4)
-+#define SC_OP_PRIM_STA_VIF           BIT(5)
-+#define SC_OP_HW_RESET               BIT(6)
- 
- /* Powersave flags */
- #define PS_WAIT_FOR_BEACON        BIT(0)
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 281a9af..ab805be 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -132,17 +132,17 @@ static void ath_detect_bt_priority(struct ath_softc *sc)
- 
- 	if (time_after(jiffies, btcoex->bt_priority_time +
- 			msecs_to_jiffies(ATH_BT_PRIORITY_TIME_THRESHOLD))) {
--		sc->sc_flags &= ~(SC_OP_BT_PRIORITY_DETECTED | SC_OP_BT_SCAN);
-+		btcoex->op_flags &= ~(BT_OP_PRIORITY_DETECTED | BT_OP_SCAN);
- 		/* Detect if colocated bt started scanning */
- 		if (btcoex->bt_priority_cnt >= ATH_BT_CNT_SCAN_THRESHOLD) {
- 			ath_dbg(ath9k_hw_common(sc->sc_ah), BTCOEX,
- 				"BT scan detected\n");
--			sc->sc_flags |= (SC_OP_BT_SCAN |
--					 SC_OP_BT_PRIORITY_DETECTED);
-+			btcoex->op_flags |= (BT_OP_SCAN |
-+					     BT_OP_PRIORITY_DETECTED);
- 		} else if (btcoex->bt_priority_cnt >= ATH_BT_CNT_THRESHOLD) {
- 			ath_dbg(ath9k_hw_common(sc->sc_ah), BTCOEX,
- 				"BT priority traffic detected\n");
--			sc->sc_flags |= SC_OP_BT_PRIORITY_DETECTED;
-+			btcoex->op_flags |= BT_OP_PRIORITY_DETECTED;
- 		}
- 
- 		btcoex->bt_priority_cnt = 0;
-@@ -196,7 +196,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	ath9k_ps_wakeup(sc);
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
- 		ath_detect_bt_priority(sc);
--	is_btscan = sc->sc_flags & SC_OP_BT_SCAN;
-+	is_btscan = !!(btcoex->op_flags & BT_OP_SCAN);
- 
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
-@@ -233,7 +233,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	bool is_btscan = sc->sc_flags & SC_OP_BT_SCAN;
-+	bool is_btscan = !!(btcoex->op_flags & BT_OP_SCAN);
- 
- 	ath_dbg(common, BTCOEX, "no stomp timer running\n");
- 
-@@ -292,7 +292,7 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
- 
- 	btcoex->bt_priority_cnt = 0;
- 	btcoex->bt_priority_time = jiffies;
--	sc->sc_flags &= ~(SC_OP_BT_PRIORITY_DETECTED | SC_OP_BT_SCAN);
-+	btcoex->op_flags &= ~(BT_OP_PRIORITY_DETECTED | BT_OP_SCAN);
- 
- 	mod_timer(&btcoex->period_timer, jiffies);
- }
-@@ -316,12 +316,13 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- 
- u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen)
- {
-+	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_mci_profile *mci = &sc->btcoex.mci;
- 	u16 aggr_limit = 0;
- 
- 	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) && mci->aggr_limit)
- 		aggr_limit = (max_4ms_framelen * mci->aggr_limit) >> 4;
--	else if (sc->sc_flags & SC_OP_BT_PRIORITY_DETECTED)
-+	else if (btcoex->op_flags & BT_OP_PRIORITY_DETECTED)
- 		aggr_limit = min((max_4ms_framelen * 3) / 8,
- 				 (u32)ATH_AMPDU_LIMIT_MAX);
- 
--- 
-1.7.10.2
+Best regards,
+Erwin
 
+
+On Thursday 31 May 2012 09:40:22 Johannes Berg wrote:
+> On Wed, 2012-05-30 at 17:32 -0500, Dan Williams wrote:
+> > On Wed, 2012-05-30 at 14:31 +0200, Johannes Berg wrote:
+> > > On Wed, 2012-05-30 at 14:09 +0200, Erwin Van de Velde wrote:
+> > > > Dear all,
+> > > > 
+> > > > Are there any plans to add Master mode support to iwlagn?
+> > > 
+> > > Depending on the device, it is (partially) supported as part of P2P/GO
+> > > mode, but other than that there are no plans.
+> > 
+> > What's the list of devices that will support Master mode?  I recall that
+> > 3945 and 4965 never will.  And I assume anything 6xxx-based will get it.
+> > But I was somewhat fuzzy on where the 5xxx series stand.
+> 
+> That's not completely correct. Today, we have released firmware with
+> support for it for 100, 105, 135, 2000, 2030, 6205, 6030, 1030 and 6x50
+> devices. 6x00 doesn't have it, and I don't think it will.
+> 
+> I'm pretty sure any 5xxx series (there are a few different ones for
+> Wimax etc.) will not get it.
+> 
+> johannes
