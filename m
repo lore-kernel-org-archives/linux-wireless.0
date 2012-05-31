@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:47866 "HELO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752138Ab2ECHXl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39944 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861Ab2EaFxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:23:41 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH 09/18] mwifiex: stop BSS in deauthentication handling
-Date: Thu,  3 May 2012 00:22:31 -0700
-Message-Id: <1336029760-22565-10-git-send-email-bzhao@marvell.com> (sfid-20120503_092345_193633_75DD5094)
-In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
-References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+	Thu, 31 May 2012 01:53:02 -0400
+Message-ID: <4FC70737.1070708@qca.qualcomm.com> (sfid-20120531_075307_206841_3B26A9D6)
+Date: Thu, 31 May 2012 11:22:55 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <stable@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k: Fix softlockup in AR9485
+References: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com>	<20422.56106.127697.13731@gargle.gargle.HOWL>	<4FC702E4.9000906@qca.qualcomm.com> <20423.1188.258292.959073@gargle.gargle.HOWL>
+In-Reply-To: <20423.1188.258292.959073@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Thursday 31 May 2012 11:11 AM, Sujith Manoharan wrote:
+> Mohammed Shafi Shajakhan wrote:
+>> should we check  if (work_pending(&sc->hw_reset_work)) like we do in
+>> ath_beacon_tasklet in all the other work routine that access hardware
+>> registers in case the hw_reset_work is not cancelled(possible in
+>> ath_set_channel)
+>
+> Probably, but this needs to be done in a clean manner.
 
-While in AP mode, we should stop BSS in deauthentication handler.
+ok.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/join.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+>
+>> don't know, i put a printk to see the routine seems to get executed for
+>> every 200ms(HZ/5). scan work in mac80211 seems to use HZ
+>> ieee80211_queue_delayed_work(&local->hw,&local->scan_work, next_delay);
+>
+> HZ can be configured to a user-defined value, so we need to make sure
+> that the timing for the PLL work is what we want.
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index aeb0b3f..d6b4fb0 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -1374,6 +1374,7 @@ static int mwifiex_deauthenticate_infra(struct mwifiex_private *priv, u8 *mac)
-  *
-  * In case of infra made, it sends deauthentication request, and
-  * in case of ad-hoc mode, a stop network request is sent to the firmware.
-+ * In AP mode, a command to stop bss is sent to firmware.
-  */
- int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
- {
-@@ -1387,6 +1388,9 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
- 		return mwifiex_send_cmd_sync(priv,
- 					     HostCmd_CMD_802_11_AD_HOC_STOP,
- 					     HostCmd_ACT_GEN_SET, 0, NULL);
-+	case NL80211_IFTYPE_AP:
-+		return mwifiex_send_cmd_sync(priv, HostCmd_CMD_UAP_BSS_STOP,
-+					     HostCmd_ACT_GEN_SET, 0, NULL);
- 	default:
- 		break;
- 	}
+ok, then we will change it.
+
+>
+> Sujith
+
+
 -- 
-1.7.0.2
-
+thanks,
+shafi
