@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57451 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753938Ab2EPVFL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57913 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab2EaGhI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 17:05:11 -0400
-Message-ID: <1337202309.18519.21.camel@jlt3.sipsolutions.net> (sfid-20120516_230515_251505_3B7797BF)
-Subject: [PATCH 3/3 v2] iwlwifi: add __printf argument checking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 16 May 2012 23:05:09 +0200
-In-Reply-To: <1337200851-20469-4-git-send-email-johannes@sipsolutions.net> (sfid-20120516_224111_220363_A215918A)
-References: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
-	 <1337200851-20469-4-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120516_224111_220363_A215918A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 31 May 2012 02:37:08 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20423.4426.500293.813699@gargle.gargle.HOWL> (sfid-20120531_083713_227358_32B72808)
+Date: Thu, 31 May 2012 12:05:54 +0530
+To: Ben Greear <greearb@candelatech.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Ath9k performance testing results (AR9380)
+In-Reply-To: <4FC6FF1B.7050201@candelatech.com>
+References: <4FC55443.4020003@candelatech.com>
+	<20422.56339.579488.464864@gargle.gargle.HOWL>
+	<4FC6FF1B.7050201@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Ben Greear wrote:
+> On 05/30/2012 07:48 PM, Sujith Manoharan wrote:
+> > Ben Greear wrote:
+> >> I am not sure why there is such a big difference, but possibly
+> >> sending wifi is harder than receiving it, and the Atom processor
+> >> just can't keep up.
+> >
+> > I have a small Atom-based netbook, I'll try with it and see what numbers
+> > can be seen. It's a pain to pry it open and bolt a different card, though. :)
+> 
+> We had to install a hacked 'white-listed' BIOS to get a Lenovo laptop to even POST with
+> an Atheros NIC in it, so if your NIC works w/out having to hack the BIOS, please
+> let me know :)
 
-Joe Perches suggested adding the __printf attribute
-to the __iwl_dbg function to check arguments; add it
-to all of the logging functions (err, warn, info, dbg
-and crit.)
+It works on Samsung netbooks. I replaced the onboard card with a AR9462 card
+and there were no hiccups.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-v2: remove gerrit junk from commit log
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 8376b84..f6bf91c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -38,10 +38,10 @@ static inline bool iwl_have_debug_level(u32 level)
- }
- 
- void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
--		const char *fmt, ...);
--void __iwl_warn(struct device *dev, const char *fmt, ...);
--void __iwl_info(struct device *dev, const char *fmt, ...);
--void __iwl_crit(struct device *dev, const char *fmt, ...);
-+		const char *fmt, ...) __printf(4, 5);
-+void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
-+void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
-+void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
- 
- /* No matter what is m (priv, bus, trans), this will work */
- #define IWL_ERR(m, f, a...) __iwl_err((m)->dev, false, false, f, ## a)
-@@ -52,9 +52,9 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
- #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
- void __iwl_dbg(struct device *dev,
- 	       u32 level, bool limit, const char *function,
--	       const char *fmt, ...);
-+	       const char *fmt, ...) __printf(5, 6);
- #else
--static inline void
-+__printf(5, 6) static inline void
- __iwl_dbg(struct device *dev,
- 	  u32 level, bool limit, const char *function,
- 	  const char *fmt, ...)
-
-
+Sujith
