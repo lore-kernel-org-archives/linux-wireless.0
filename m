@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:53094 "EHLO
-	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751549Ab2EJFrG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 01:47:06 -0400
-From: Soumik DAS <soumik.das@stericsson.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 10 May 2012 07:46:40 +0200
-Subject: [PATCH] mac80211: Increment probe_send_count earlier
-Message-ID: <2E48302EED53D048A7BA72B0A307FB511FB9009098@EXDCVYMBSTM005.EQ1STM.local> (sfid-20120510_074711_365138_BBE0A483)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:34505 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773Ab2EaLPt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 07:15:49 -0400
+Message-ID: <1338462946.9102.1.camel@jlt3.sipsolutions.net> (sfid-20120531_131553_206436_686BF185)
+Subject: Re: iwlwifi: GF was set with SGI:SISO
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Cesar Eduardo Barros <cesarb@cesarb.net>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Date: Thu, 31 May 2012 13:15:46 +0200
+In-Reply-To: <4FC74B3C.1090501@cesarb.net>
+References: <4FC17BA8.2050606@cesarb.net>
+	  (sfid-20120527_030308_122290_604E4002) <1338450650.4531.6.camel@jlt3.sipsolutions.net>
+	 <4FC74B3C.1090501@cesarb.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At times, null frame gets transmitted and acked before mac80211
-gets to increment probe_send_count. This leads to a situation
-where mac80211 waits for ack to null frame, but no ack comes
-causing unnecessary disconnection.
+On Thu, 2012-05-31 at 07:43 -0300, Cesar Eduardo Barros wrote:
+> Em 31-05-2012 04:50, Johannes Berg escreveu:
+> > On Sat, 2012-05-26 at 21:56 -0300, Cesar Eduardo Barros wrote:
+> >> I have twice now seen a problem with iwlwifi where rate control gets
+> >> "stuck" (the tx bitrate as shown by "iw dev wlan0 link" does not change
+> >> anymore), while spamming the kernel log with "iwlwifi 0000:03:00.0: GF
+> >> was set with SGI:SISO".
+> >>
+> >> What I believe is happening is the following scenario:
+> > [...]
+> >
+> > Unfortunately, I don't have any idea right away right now what's going
+> > on. Would you file a bug on bugzilla.intellinuxwireless.org so we can
+> > track it and help you better? We may want to reproduce it and/or ask you
+> > to collect some tracing information and it's easier to collect all that
+> > in a bug report.
+> 
+> Filed as http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2361.
 
-Signed-off-by: Soumik Das <soumik.das@stericsson.com>
----
- net/mac80211/mlme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks, I'll follow up there.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index dbd4bd9..a1213e4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1522,6 +1522,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 	 * anymore. The timeout will be reset if the frame is ACKed by
- 	 * the AP.
- 	 */
-+	ifmgd->probe_send_count++;
- 	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) {
- 		ifmgd->nullfunc_failed = false;
- 		ieee80211_send_nullfunc(sdata->local, sdata, 0);
-@@ -1538,7 +1539,6 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 					 0, (u32) -1, true, false);
- 	}
- 
--	ifmgd->probe_send_count++;
- 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
- 	run_again(ifmgd, ifmgd->probe_timeout);
- 	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
--- 
-1.7.5.4
+johannes
+
