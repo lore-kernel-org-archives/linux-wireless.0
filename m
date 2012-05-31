@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:48726 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755368Ab2EJPtp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49996 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752569Ab2EaFnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 11:49:45 -0400
-Received: by qcro28 with SMTP id o28so1231497qcr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 08:49:44 -0700 (PDT)
+	Thu, 31 May 2012 01:43:10 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAG9cJm=tJcOnbEfcxV7zyizbUEerO52+NdEGMN13Z0oGmu_2dg@mail.gmail.com>
-References: <CAG9cJmkDf6koV93NyOo2W8D7Y3G6tapQOucjW5M7FLPDnNhvKQ@mail.gmail.com>
-	<CAGRGNgXDUuLFeKh7KgqMqyyT8Xi_GV2BReYJ66uK_SgBJ5Nb4g@mail.gmail.com>
-	<CAG9cJmmRZvf=EW9k6AVLEv_zeU86thGaEWHv5R0ADNX9B6jMmw@mail.gmail.com>
-	<CAGRGNgXQ3o-2bD9J+C2cAu9M-fo69tiXWfugZKjqU3o9ki7f7Q@mail.gmail.com>
-	<CAG9cJm=tJcOnbEfcxV7zyizbUEerO52+NdEGMN13Z0oGmu_2dg@mail.gmail.com>
-Date: Thu, 10 May 2012 23:49:44 +0800
-Message-ID: <CAG9cJmnPzdy10F1t+dJ_n4_2t1F5Yr588mDoUWj3B0n3h+d+Qw@mail.gmail.com> (sfid-20120510_174948_908266_8D6FC11A)
-Subject: Re: how to remove the b43
-From: lina <lina.lastname@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20423.1188.258292.959073@gargle.gargle.HOWL> (sfid-20120531_074320_224930_6C959345)
+Date: Thu, 31 May 2012 11:11:56 +0530
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <stable@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k: Fix softlockup in AR9485
+In-Reply-To: <4FC702E4.9000906@qca.qualcomm.com>
+References: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com>
+	<20422.56106.127697.13731@gargle.gargle.HOWL>
+	<4FC702E4.9000906@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-# aptitude install linux-image-amd64
-The following NEW packages will be installed:
-  firmware-linux-free{a} linux-base{a} linux-image-3.2.0-2-amd64{a}
-  linux-image-amd64
+Mohammed Shafi Shajakhan wrote:
+> should we check  if (work_pending(&sc->hw_reset_work)) like we do in
+> ath_beacon_tasklet in all the other work routine that access hardware 
+> registers in case the hw_reset_work is not cancelled(possible in 
+> ath_set_channel)
 
-# aptitude install firmware-b43-installer
-The following NEW packages will be installed:
-  b43-fwcutter{a} firmware-b43-installer
+Probably, but this needs to be done in a clean manner.
 
+> don't know, i put a printk to see the routine seems to get executed for 
+> every 200ms(HZ/5). scan work in mac80211 seems to use HZ
+> ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
 
-Setting up b43-fwcutter (1:015-14) ...
-Setting up firmware-b43-installer (1:015-14) ...
-No chroot environment found. Starting normal installation
-Unsupported device(s) found: PCI id 14e4:4331
-Aborting.
+HZ can be configured to a user-defined value, so we need to make sure
+that the timing for the PLL work is what we want.
 
-Have I missed something?
-
-Thanks again,
+Sujith
