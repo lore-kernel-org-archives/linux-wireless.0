@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46022 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760625Ab2EKQQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 12:16:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/6] atheros-initvals: add a makefile target for refreshing all initval files
-Date: Fri, 11 May 2012 18:16:36 +0200
-Message-Id: <1336753001-29583-1-git-send-email-nbd@openwrt.org> (sfid-20120511_181656_694464_723D67F7)
+Received: from youngberry.canonical.com ([91.189.89.112]:36322 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347Ab2EaO2Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 10:28:24 -0400
+Date: Thu, 31 May 2012 09:26:52 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Arend van Spriel <arend@broadcom.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: ensure ext PA lines are enabled for BCM4331
+Message-ID: <20120531142652.GA32179@thinkpad-t410> (sfid-20120531_163831_211808_781229E5)
+References: <1338472163-3810-1-git-send-email-seth.forshee@canonical.com>
+ <4FC77D25.4060100@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FC77D25.4060100@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- Makefile |   31 +++++++++++++++++++++----------
- 1 files changed, 21 insertions(+), 10 deletions(-)
+On Thu, May 31, 2012 at 04:16:05PM +0200, Hauke Mehrtens wrote:
+> Hi Seth,
+> 
+> why don't you call this from bcma_pmu_workarounds() in
+> drivers/bcma/driver_chipcommon_pmu.c instead of calling this from b43? I
+> think it looks better to call some workarounds on chip common from bcma
+> and not from b43.
 
-diff --git a/Makefile b/Makefile
-index ad02c6d..b8b0838 100644
---- a/Makefile
-+++ b/Makefile
-@@ -23,22 +23,33 @@ ATHEROS_DEPS += \
- 	ar9300_jupiter20.ini
- endif
- 
--ATH9K_DEPS += \
--	ar5008_initvals.h 	\
--	ar9001_initvals.h	\
--	ar9002_initvals.h 	\
--	ar9003_2p2_initvals.h	\
--	ar9330_1p1_initvals.h	\
--	ar9330_1p2_initvals.h	\
--	ar9485_initvals.h	\
--	ar9580_1p0_initvals.h   \
--	ar9462_2p0_initvals.h
-+ATH9K_HEADERS = \
-+	ar5008:ar5008_initvals.h		\
-+	ar9001:ar9001_initvals.h		\
-+	ar9002:ar9002_initvals.h		\
-+	ar9003-2p2:ar9003_2p2_initvals.h	\
-+	ar9330-1p1:ar9330_1p1_initvals.h	\
-+	ar9330-1p2:ar9330_1p2_initvals.h	\
-+	ar9485:ar9485_initvals.h		\
-+	ar9580-1p0:ar9580_1p0_initvals.h \
-+	ar9462-2p0:ar9462_2p0_initvals.h
-+
-+ATH9K_DEPS := $(foreach header,$(ATH9K_HEADERS),$(word 2,$(subst :, ,$(header))))
- 
- SOURCES:=initvals.c sha1.c
- 
- initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) $(SOURCES)
- 	gcc $(LOCAL_CFLAGS) -o $@ $(SOURCES)
- 
-+define refresh_command
-+	./initvals -w -f $(word 1,$(subst :, ,$(1))) > $(word 2,$(subst :, ,$(1)))
-+
-+endef
-+
-+refresh: initvals
-+	$(foreach header,$(ATH9K_HEADERS),$(call refresh_command,$(header)))
-+	./initvals > checksums.txt
-+
- all: initvals
- 
- clean:
--- 
-1.7.3.2
+Arend recommended calling it from within b43's start op, but I'm not
+sure of the reason. Arend?
+
+Agreed though that if there's no need to run it every time the interface
+is started then bcma_pmu_workarounds() would be a nicer place for it.
+
+> According to some Broadcom code this should also be called for chip_id
+> 43431 when turning it on and in the sprom code.
+
+I'm having trouble parsing this, specifically the "and in the sprom
+code" part. Can you clarify?
+
+Thanks,
+Seth
 
