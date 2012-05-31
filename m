@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:49313 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758335Ab2EIRlL (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53426 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421Ab2EaFS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 13:41:11 -0400
-Date: Wed, 9 May 2012 10:41:06 -0700
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>
-Subject: Re: brcmsmac still woes, possible regression?
-Message-ID: <20120509174106.GA7189@ubuntu-mba> (sfid-20120509_194126_669079_ADFCCCC9)
-References: <20120328112657.GA6114@stt008.linux.site>
- <4F7302D9.8070009@broadcom.com>
- <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
- <4F744DD8.8010004@broadcom.com>
- <20120329133835.GA5196@stt008.linux.site>
- <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
- <20120402215005.GA13969@burratino>
- <4F7B179F.7070502@broadcom.com>
- <20120509094111.GA2333@burratino>
- <4FAA45AF.8050201@broadcom.com>
+	Thu, 31 May 2012 01:18:26 -0400
+Message-ID: <4FC6FF1B.7050201@candelatech.com> (sfid-20120531_071830_177093_608F71A4)
+Date: Wed, 30 May 2012 22:18:19 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4FAA45AF.8050201@broadcom.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Ath9k performance testing results (AR9380)
+References: <4FC55443.4020003@candelatech.com> <20422.56339.579488.464864@gargle.gargle.HOWL>
+In-Reply-To: <20422.56339.579488.464864@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 09, 2012 at 12:23:43PM +0200, Arend van Spriel wrote:
-> On 05/09/2012 11:41 AM, Jonathan Nieder wrote:
-> > Hi Arend,
-> > 
-> > Arend van Spriel wrote, about a month ago[1]:
-> > 
-> >> I sent the patch to Camaleón to test it before sending out the
-> >> patch. So the answer it definitely no. I wanted to get it into rc1,
-> >> but we missed that.
-> > 
-> > Any news?  If there's a patch that goes in the right direction with
-> > known problems I'd still be interested in it, among other reasons
-> > because it would make the bug more concrete and make it easier to
-> > think about possible fixes.
-> 
-> Well, there is the short term fix, which is already upstream and moved
-> to stable. The long term fix for which Seth Forshee (Canonical) did a
-> great job is reviewed over here, but it involves regulatory related code
-> so it needs discussions with our compliance team and supervisor. So that
-> causes some lag time.
+On 05/30/2012 07:48 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> I am not sure why there is such a big difference, but possibly
+>> sending wifi is harder than receiving it, and the Atom processor
+>> just can't keep up.
+>
+> I have a small Atom-based netbook, I'll try with it and see what numbers
+> can be seen. It's a pain to pry it open and bolt a different card, though. :)
 
-The patches I sent still relies on the transmit-after-beacon fix, as I
-preserved the behavior of muting tx if the channel is passive scan. I
-*think* this isn't actually necessary, but I'd have to investigate a
-little further to be certain.
+We had to install a hacked 'white-listed' BIOS to get a Lenovo laptop to even POST with
+an Atheros NIC in it, so if your NIC works w/out having to hack the BIOS, please
+let me know :)
 
-Seth
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
