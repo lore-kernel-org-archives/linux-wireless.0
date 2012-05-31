@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:52955 "EHLO
-	mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755339Ab2EGNYG (ORCPT
+Received: from smtp02.msg.oleane.net ([62.161.4.2]:34487 "EHLO
+	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab2EaQjy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 09:24:06 -0400
-From: =?utf-8?B?WmVybyBMaW4gKOael+eRnumdkik=?= <zero.lin@mediatek.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Date: Mon, 7 May 2012 21:18:50 +0800
-Subject: RE: [PATCH] rt2x00:Add RT539B chipset support V2
-Message-ID: <599E416D1C5C994980C45977191D726906AB2FE230@MTKMBS03.mediatek.inc> (sfid-20120507_152410_638247_4955ABF1)
-References: <1336361682-2771-1-git-send-email-zero.lin.0203@gmail.com>
- <CAL1gcdMBj_w5qbMX=kxcW6yow7UgSfSrWjz6TrKkFZiJCtS1cg@mail.gmail.com>
-In-Reply-To: <CAL1gcdMBj_w5qbMX=kxcW6yow7UgSfSrWjz6TrKkFZiJCtS1cg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 31 May 2012 12:39:54 -0400
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp02.msg.oleane.net (MTA) with ESMTP id q4VGdqA4030534
+	for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 18:39:52 +0200
 MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="US-ASCII"
+Subject: mac80211/scan.c: scanning ceases after a double rescheduling
+Date: Thu, 31 May 2012 18:39:51 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A319012CA1B7@sbs2003.acksys.local> (sfid-20120531_184004_280948_42581D0B)
+From: "Jean-Pierre TOSONI" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RGVhciBHZXJ0amFuLA0KDQpJIGFtIHNvcnJ5LCB3aGF0IHNob3VsZCBJIGRvIG5vdz8NClJlLXNl
-bmQgYSBwYXRjaD8NCg0KQlIsDQpaZXJvDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
-cm9tOiBHZXJ0amFuIHZhbiBXaW5nZXJkZSBbbWFpbHRvOmd3aW5nZXJkZUBnbWFpbC5jb21dIA0K
-U2VudDogTW9uZGF5LCBNYXkgMDcsIDIwMTIgODo0MCBQTQ0KVG86IFplcm8gTGluDQpDYzogdXNl
-cnNAcnQyeDAwLnNlcmlhbG1vbmtleS5jb207IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9y
-ZzsgSm9obiBMaW52aWxsZTsgWmVybyBMaW4gKOael+eRnumdkikNClN1YmplY3Q6IFJlOiBbUEFU
-Q0hdIHJ0MngwMDpBZGQgUlQ1MzlCIGNoaXBzZXQgc3VwcG9ydCBWMg0KDQpIaSwNCg0KT24gTW9u
-LCBNYXkgNywgMjAxMiBhdCA1OjM0IEFNLCBaZXJvIExpbiA8emVyby5saW4uMDIwM0BnbWFpbC5j
-b20+IHdyb3RlOg0KPiBGcm9tOiAiWmVyby5MaW4iIDxaZXJvLkxpbkBtZWRpYXRlay5jb20+DQo+
-DQo+IFNpZ25lZC1vZmYtYnk6IFplcm8uTGluIDxaZXJvLkxpbkBtZWRpYXRlay5jb20+DQoNCkkn
-bSBzb3JyeSwgYnV0IHlvdSB3aWxsIGhhdmUgdG8gZG8gdGhpcyBhcyBhIGNvbXBsZXRlIG5ldyBw
-YXRjaCByZXBsYWNpbmcgeW91ciBvbGQgb25lLCBub3QgYXMgYW4gaW5jcmVtZW50YWwgdG8geW91
-ciBpbml0aWFsIHBhdGNoLg0KDQo+IC0tLQ0KPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0Mngw
-MC9ydDI4MDBwY2kuYyB8IMKgIMKgMiArLQ0KPiDCoDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRp
-b25zKCspLCAxIGRlbGV0aW9ucygtKQ0KPg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvcnQyeDAwL3J0MjgwMHBjaS5jIA0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0Mngw
-MC9ydDI4MDBwY2kuYw0KPiBpbmRleCAwYzliNTFkLi5jYWQyNWJmIDEwMDY0NA0KPiAtLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyODAwcGNpLmMNCj4gKysrIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvcnQyeDAwL3J0MjgwMHBjaS5jDQo+IEBAIC0xMTkyLDggKzExOTIsOCBAQCBz
-dGF0aWMgDQo+IERFRklORV9QQ0lfREVWSUNFX1RBQkxFKHJ0MjgwMHBjaV9kZXZpY2VfdGFibGUp
-ID0gew0KPiDCoCDCoCDCoCDCoHsgUENJX0RFVklDRSgweDE4MTQsIDB4NTM5MCkgfSwNCj4gwqAg
-wqAgwqAgwqB7IFBDSV9ERVZJQ0UoMHgxODE0LCAweDUzOTIpIH0sDQo+IMKgIMKgIMKgIMKgeyBQ
-Q0lfREVWSUNFKDB4MTgxNCwgMHg1MzlhKSB9LA0KPiAtIMKgIMKgIMKgIHsgUENJX0RFVklDRSgw
-eDE4MTQsIDB4NTM5ZikgfSwNCj4gwqAgwqAgwqAgwqB7IFBDSV9ERVZJQ0UoMHgxODE0LCAweDUz
-OWIpIH0sDQo+ICsgwqAgwqAgwqAgeyBQQ0lfREVWSUNFKDB4MTgxNCwgMHg1MzlmKSB9LA0KPiDC
-oCNlbmRpZg0KPiDCoCDCoCDCoCDCoHsgMCwgfQ0KPiDCoH07DQo+IC0tDQo+IDEuNy41LjQNCj4N
-Cj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVu
-c3Vic2NyaWJlIA0KPiBsaW51eC13aXJlbGVzcyIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRv
-IG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBo
-dHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg0KDQoNCi0tDQotLS0N
-CkdlcnRqYW4NCgoqKioqKioqKioqKioqIEVtYWlsIENvbmZpZGVudGlhbGl0eSBOb3RpY2UgKioq
-KioqKioqKioqKioqKioqKioNClRoZSBpbmZvcm1hdGlvbiBjb250YWluZWQgaW4gdGhpcyBlLW1h
-aWwgbWVzc2FnZSAoaW5jbHVkaW5nIGFueSANCmF0dGFjaG1lbnRzKSBtYXkgYmUgY29uZmlkZW50
-aWFsLCBwcm9wcmlldGFyeSwgcHJpdmlsZWdlZCwgb3Igb3RoZXJ3aXNlDQpleGVtcHQgZnJvbSBk
-aXNjbG9zdXJlIHVuZGVyIGFwcGxpY2FibGUgbGF3cy4gSXQgaXMgaW50ZW5kZWQgdG8gYmUgDQpj
-b252ZXllZCBvbmx5IHRvIHRoZSBkZXNpZ25hdGVkIHJlY2lwaWVudChzKS4gQW55IHVzZSwgZGlz
-c2VtaW5hdGlvbiwgDQpkaXN0cmlidXRpb24sIHByaW50aW5nLCByZXRhaW5pbmcgb3IgY29weWlu
-ZyBvZiB0aGlzIGUtbWFpbCAoaW5jbHVkaW5nIGl0cyANCmF0dGFjaG1lbnRzKSBieSB1bmludGVu
-ZGVkIHJlY2lwaWVudChzKSBpcyBzdHJpY3RseSBwcm9oaWJpdGVkIGFuZCBtYXkgDQpiZSB1bmxh
-d2Z1bC4gSWYgeW91IGFyZSBub3QgYW4gaW50ZW5kZWQgcmVjaXBpZW50IG9mIHRoaXMgZS1tYWls
-LCBvciBiZWxpZXZlIA0KdGhhdCB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBlcnJv
-ciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIA0KaW1tZWRpYXRlbHkgKGJ5IHJlcGx5aW5nIHRv
-IHRoaXMgZS1tYWlsKSwgZGVsZXRlIGFueSBhbmQgYWxsIGNvcGllcyBvZiANCnRoaXMgZS1tYWls
-IChpbmNsdWRpbmcgYW55IGF0dGFjaG1lbnRzKSBmcm9tIHlvdXIgc3lzdGVtLCBhbmQgZG8gbm90
-DQpkaXNjbG9zZSB0aGUgY29udGVudCBvZiB0aGlzIGUtbWFpbCB0byBhbnkgb3RoZXIgcGVyc29u
-LiBUaGFuayB5b3Uh
+Hello all,
+
+I am using compat-wireless-2012-04-17 in a OpenWrt box, client mode,
+kernel 2.6.33.
+I arrange to run an active background scan every second under some load
+(iperf UDP 40 Mbps).
+
+I observed that the probes can be delayed due to two events flagged as
+IEEE80211_STA_BEACON_POLL and IEEE80211_STA_CONNECTION_POLL. They make
+__ieee80211_start_scan() return early in mac80211/scan.c when it is
+called by ieee80211_request_scan().
+
+When one of these events occurs, the function returns and
+__ieee80211_start_scan() is reentered later, called this time by
+ieee80211_scan_work(). Now if it finds the other event flagged, it
+returns early but will never be called again. As a result later scan
+requests result in a "EBUSY" error.
+
+I made a workaround by always returning an error, but I am pretty sure
+this is a wrong solution. I wonder if scan_work should not be
+rescheduled in this case.
+
+Here is my try:
+==================
+--- a/mac80211/scan.c   2012-05-31 18:37:41.000000000 +0200
++++ b/mac80211/scan.c   2012-05-31 18:37:48.000000000 +0200
+@@ -413,10 +413,7 @@
+                return -EBUSY;
+
+        if (!ieee80211_can_scan(local, sdata)) {
+-               /* wait for the work to finish/time out */
+-               local->scan_req = req;
+-               local->scan_sdata = sdata;
+-               return 0;
++               return -EAGAIN;
+        }
+
+        if (local->ops->hw_scan) {
+==================
+
+Any thoughts / suggestions ?
+
+Thanks,
+
+Jean-Pierre Tosoni
 
