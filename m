@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43152 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757065Ab2EOR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 13:59:26 -0400
-Message-ID: <1337104765.7050.24.camel@joe2Laptop> (sfid-20120515_195955_463081_DA730895)
-Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
-	dev@openvswitch.org, linux-sctp@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 15 May 2012 10:59:25 -0700
-In-Reply-To: <20120515.134531.530903973750646107.davem@davemloft.net>
-References: <cover.1336981915.git.joe@perches.com>
-	 <20120515.134531.530903973750646107.davem@davemloft.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:40966 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059Ab2EaHkn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 03:40:43 -0400
+Message-ID: <1338450022.4531.3.camel@jlt3.sipsolutions.net> (sfid-20120531_094047_691788_D7CA58C4)
+Subject: Re: Master mode support in iwlagn?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Erwin Van de Velde <erwin.vandevelde@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 31 May 2012 09:40:22 +0200
+In-Reply-To: <1338417129.8887.32.camel@dcbw.foobar.com>
+References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be>
+	 (sfid-20120530_140937_028561_351996E4) <1338381071.4511.13.camel@jlt3.sipsolutions.net>
+	 <1338417129.8887.32.camel@dcbw.foobar.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-15 at 13:45 -0400, David Miller wrote:
-> From: Joe Perches <joe@perches.com>
-> Date: Mon, 14 May 2012 00:56:24 -0700
-> 
-> > net_ratelimit() like __ratelimit() is too easy to misuse.
+On Wed, 2012-05-30 at 17:32 -0500, Dan Williams wrote:
+> On Wed, 2012-05-30 at 14:31 +0200, Johannes Berg wrote:
+> > On Wed, 2012-05-30 at 14:09 +0200, Erwin Van de Velde wrote:
+> > > Dear all,
+> > > 
+> > > Are there any plans to add Master mode support to iwlagn? 
 > > 
-> > Add simplifying macros similar to pr_<level>_ratelimited
-> > that combines the test of net_ratelimit and logging.
-> > 
-> > Joe Perches (2):
-> >   net: Add net_ratelimited_function and net_<level>_ratelimited macros
-> >   net: Convert net_ratelimit uses to net_<level>_ratelimited
+> > Depending on the device, it is (partially) supported as part of P2P/GO
+> > mode, but other than that there are no plans.
 > 
-> These look fine to me so I've applied them to net-next and am
-> sanity checking the build right now.
+> What's the list of devices that will support Master mode?  I recall that
+> 3945 and 4965 never will.  And I assume anything 6xxx-based will get it.
+> But I was somewhat fuzzy on where the 5xxx series stand.
 
-OK, but fyi, there's a possible issue with !CONFIG_DEBUG
-builds because these patches converted some uses of
-	if (net_ratelimit())
-		printk(KERN_DEBUG ...
-to
-	net_dbg_ratelimited()
+That's not completely correct. Today, we have released firmware with
+support for it for 100, 105, 135, 2000, 2030, 6205, 6030, 1030 and 6x50
+devices. 6x00 doesn't have it, and I don't think it will.
 
-These messages are no longer emitted when DEBUG isn't defined
-and not using dynamic_debug.  I'm not sure that's a real
-problem, but it's a difference.
+I'm pretty sure any 5xxx series (there are a few different ones for
+Wimax etc.) will not get it.
 
-I could produce a net_printk_ratelimited that would keep
-the original behavior if necessary.
-
-	net_printk_ratelimited(KERN_DEBUG etc...)
-
-cheers, Joe
+johannes
 
