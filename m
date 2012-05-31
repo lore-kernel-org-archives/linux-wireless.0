@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:54253 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750983Ab2EPPnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 11:43:24 -0400
-Message-ID: <1337183004.4818.2.camel@joe2Laptop> (sfid-20120516_174342_952357_563A85EC)
-Subject: Re: [PATCH 0/3] net: mac80211: Neaten debugging
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 16 May 2012 08:43:24 -0700
-In-Reply-To: <1337182220.18519.5.camel@jlt3.sipsolutions.net>
-References: <1337106548.15553.8.camel@jlt3.sipsolutions.net>
-	 <cover.1337116578.git.joe@perches.com>
-	 <20120516.012319.1903390658912592000.davem@davemloft.net>
-	 <1337155171.4367.2.camel@jlt3.sipsolutions.net>
-	 <1337181771.4818.0.camel@joe2Laptop>
-	 <1337182220.18519.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46484 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753781Ab2EaDOx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 23:14:53 -0400
+Received: by pbbrp8 with SMTP id rp8so828356pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 20:14:53 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20422.57801.731014.743866@gargle.gargle.HOWL> (sfid-20120531_051457_786926_31B30245)
+Date: Thu, 31 May 2012 08:43:13 +0530
+To: George Nychis <gnychis@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Sujith Manoharan <m.sujith@gmail.com>
+Subject: convinced bug in RSSI reporting for AR9280/ath9k_htc/htc_7010.fw
+In-Reply-To: <CA+7oygf50aro8VrHekWFJvSb3hhOsZUP9ybUeUE1WaYzx2MNHA@mail.gmail.com>
+References: <CA+7oygf50aro8VrHekWFJvSb3hhOsZUP9ybUeUE1WaYzx2MNHA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-16 at 17:30 +0200, Johannes Berg wrote:
-> On Wed, 2012-05-16 at 08:22 -0700, Joe Perches wrote:
-> > On Wed, 2012-05-16 at 09:59 +0200, Johannes Berg wrote:
-> > > I wonder if it makes sense to leave these under
-> > > #ifdef though? Why #ifdef something if it's going to be invisible most
-> > > of the time anyway?
-> > 
-> > I don't understand your point.
-> > #ifdef removal is a good thing.
+George Nychis wrote:
+> This would explain why in my other thread that the RSSI values for
+> beacons for my AP acted as expected and all other RSSI values did not
+> follow as expected.
 > 
-> Yeah, but you left a lot of them under ifdef, and I'm wondering why you
-> didn't remove them, or if you should, or ...
+> I would greatly appreciate it if someone could chime in here.  Sujith?
 
-Those mostly use other different
-#ifdef CONFIG_SOME_OTHER_CONTROL elements.
+Thanks for reporting this, we'll do some tests to see what's wrong.
 
-There are I think 3 that I left because they do
-not use printk/pr_level but use wiphy_<level> or
-netdev_<level>.
-
+Sujith
