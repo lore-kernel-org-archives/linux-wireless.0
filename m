@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40142 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760690Ab2EJRgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 13:36:19 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 0/2] NFC fixes for 3.4
-Date: Thu, 10 May 2012 19:45:50 +0200
-Message-Id: <1336671952-22678-1-git-send-email-sameo@linux.intel.com> (sfid-20120510_193639_486865_D8F572BE)
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:35541 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754448Ab2EaJW6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 05:22:58 -0400
+Received: by eeit10 with SMTP id t10so230892eei.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 02:22:57 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Erwin Van de Velde <erwin.vandevelde@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: Master mode support in iwlagn?
+Date: Thu, 31 May 2012 11:20:49 +0200
+Message-ID: <4932187.SWLxM4x7cN@flexo> (sfid-20120531_112309_153126_321CFF8F)
+In-Reply-To: <1338455399.7328.0.camel@jlt3.sipsolutions.net>
+References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be> <3093264.LxkCudZSCQ@sylvesterjr.cmi.ua.ac.be> <1338455399.7328.0.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi,
 
-In case Linus does an rc7 and Dave takes more 3.4 fixes in, here are the 2
-pending ones that I have for NFC
-I sent the nfc.h export one yesterday, I'm including it here again.
+On Thursday 31 May 2012 11:09:59 Johannes Berg wrote:
+> Please don't top-post.
+> 
+> On Thu, 2012-05-31 at 11:03 +0200, Erwin Van de Velde wrote:
+> > What is the reasoning behind it? Why provide it for some wireless NICs and 
+not 
+> > for others? Seems quite odd for me and features like Internet sharing over 
+> > wireless are not that exotic, are they?
+> 
+> This features requires extensive testing, space in the firmware that not
+> all devices have, integration, etc. It's not trivial to port to
+> different devices.
 
-So we have an nfc.h export to the kernel hearders, and a fix for large LLCP
-frame fragments to be sent in the right order.
+It certainly is not, but you can get some help from the software mac with that 
+regard. Since your device is capable of beaconing for P2P and GO modes, 
+Erwin's question is perfectly legitimate with respect to AP support. I suppose 
+that you could get it working without too much firmware work.
 
-Samuel Ortiz (2):
-  NFC: Export nfc.h to userland
-  NFC: Queue I frame fragments to the LLCP sockets queue tail
+At the same time, since Intel's iwlwifi series are targetted at the laptop 
+market, and not AP/router solutions, it certainly was not in a roadmap to get 
+AP mode supported. Apart from pleasing people, that won't make you sell more 
+adapters.
 
- include/linux/Kbuild    |    1 +
- net/nfc/llcp/commands.c |    2 +-
- 2 files changed, 2 insertions(+), 1 deletions(-)
-
--- 
-1.7.9.1
-
+My 2 cents.
+--
+Florian
