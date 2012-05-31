@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36373 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750797Ab2E2MoA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 08:44:00 -0400
-Message-ID: <4FC4C47A.50006@openwrt.org> (sfid-20120529_144403_865324_FB9691FE)
-Date: Tue, 29 May 2012 14:43:38 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60565 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933113Ab2EaTYR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 15:24:17 -0400
+Received: by pbbrp8 with SMTP id rp8so1878936pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 12:24:17 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 09/22] ath9k: Handle fatal interrupts properly
-References: <20413.45797.72462.431840@gargle.gargle.HOWL>  <4FC4C12A.1050804@openwrt.org> (sfid-20120529_142944_112351_CE560AC4) <1338294968.4342.32.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338294968.4342.32.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAJ-Vmokf+EfpQ9m_8W6q3q-nsKgMMTn0w7=BgnW26AWh5vZB2g@mail.gmail.com>
+References: <4FC04B5A.1070900@candelatech.com>
+	<20416.19680.571601.549629@gargle.gargle.HOWL>
+	<4FC0F8CE.1030303@candelatech.com>
+	<20417.972.888113.821079@gargle.gargle.HOWL>
+	<20417.1857.115550.807746@gargle.gargle.HOWL>
+	<4FC2437C.9090106@candelatech.com>
+	<CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com>
+	<4FC2F73F.4070701@candelatech.com>
+	<CAJ-VmonMtRUZpidJERT7hRUDJNgyoMdVovXoG5WdStH6zk7yFQ@mail.gmail.com>
+	<20419.9719.160216.124618@gargle.gargle.HOWL>
+	<CAJ-Vmokf+EfpQ9m_8W6q3q-nsKgMMTn0w7=BgnW26AWh5vZB2g@mail.gmail.com>
+Date: Thu, 31 May 2012 12:24:17 -0700
+Message-ID: <CAJ-Vmok8oK6G1U2GR074n3QWJUr924WitP4Xn47wG6k95msfDA@mail.gmail.com> (sfid-20120531_212421_322148_42E333C0)
+Subject: Re: Anyone doing WiFi throughput tests?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-05-29 2:36 PM, Johannes Berg wrote:
-> On Tue, 2012-05-29 at 14:29 +0200, Felix Fietkau wrote:
->> On 2012-05-24 6:02 AM, Sujith Manoharan wrote:
->> > When a fatal interrupt is received or it is detected that the baseband
->> > has hung, the chip has to be reset immediately.  Otherwise, we end up
->> > processing spurious interrupts. Ensure that we bail out properly in
->> > the ISR when the reset work hasn't completed yet.
->> > 
->> > Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->> Wouldn't it be much easier to just use a bool variable instead of the
->> combination of lock+flag? A simple variable assignment is atomic...
-> 
-> Is that guaranteed for bool variables?
-Hm, good point. Maybe use u32 then. Either way, the lock in this patch
-does almost nothing to protect against race conditions, since it doesn't
-apply to other places in the code that change sc->sc_flags.
-Maybe we should change that entire thing to just use set_bit/test_bit
-instead.
+.. yup, I got it to 250MBit UDP. :-)
 
-- Felix
+It turns out that (at least in FreeBSD-9), the scheduler and sleep
+state behaviour when doing adaptive power save/sleep state (ie,
+adaptive CPU speed changes, going into C2) is enough to negatively
+impact my iperf and ath/net80211 taskqueue scheduling.
+
+When I nail it back up to C1, fixed speed - everything is perfectly fine.
+
+I'll go and do some further digging into this, but it's good to see
+that I can squeeze decently high throughput out of the 2x2 NICs.
+
+
+
+Adrian
