@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:58890 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933046Ab2EOPEq (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:35994 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751100Ab2EaKSP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 11:04:46 -0400
-Received: by gglu4 with SMTP id u4so4281898ggl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 08:04:46 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 15 May 2012 11:04:45 -0400
-Message-ID: <CA+7oygccmq9DY+dR-=__4z_rZ4Sa9d8zmz+6=zX-xsTKdWkFWQ@mail.gmail.com> (sfid-20120515_170451_089218_1944E3C8)
-Subject: AR9280 reported signal strengths are flat (comparison with bcm4322 included)
-From: George Nychis <gnychis@gmail.com>
+	Thu, 31 May 2012 06:18:15 -0400
+Received: by pbbrp8 with SMTP id rp8so1260389pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 03:18:15 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: Add missing mesh parameter dot11MeshForwarding for debugfs
+Date: Thu, 31 May 2012 18:17:30 +0800
+Message-Id: <1338459450-31728-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120531_121819_745552_11621429)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am experiencing unexpected signal strength values reported by an
-AR9280.  Basically, they always tend to be flat no matter how far or
-close I am from the device that is transmitting.  Roughly between the
--65 and -55dBm range on average.  The exact AR9280 I am using is:
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/debugfs_netdev.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-     Sony UWA-BR100 802.11abgn Wireless Adapter [Atheros AR7010+AR9280]
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index fa62a5e..8920c4b 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -610,6 +610,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
+ 	MESHPARAMS_ADD(dot11MeshHWMPRootMode);
+ 	MESHPARAMS_ADD(dot11MeshHWMPRannInterval);
+ 	MESHPARAMS_ADD(dot11MeshHWMPconfirmationInterval);
++	MESHPARAMS_ADD(dot11MeshForwarding);
+ 	MESHPARAMS_ADD(dot11MeshGateAnnouncementProtocol);
+ 	MESHPARAMS_ADD(rssi_threshold);
+ 	MESHPARAMS_ADD(ht_opmode);
+-- 
+1.7.0.4
 
-I have compared this behavior to a bcm4322 and the behavior I see with
-the bcm4322 is as expected.  Far away I get low signal strength
-values, and close to the device I get high signal strength values
-(-20dBm).
-
-Here is a comparison of the two (taken at the same time) as I walk
-closer to the transmitter.  I record the signal strength from
-wireshark using radiotap header field radiotap.dbm_antsignal.
-
-http://www.flickr.com/photos/gnychis/7203437510/in/photostream
-
-Surprisingly, the average signal strength seems to decrease with the
-ar9280 as I get closer, yet remains relatively flat.  The bcm4322
-shows a clear increasing trend as I get closer.
-
-Does anyone have any insight as to what might be going on?  I'm using
-the most recent firmware and compat-wireless as of May 14, 2012.
-
-Thanks!
-George
