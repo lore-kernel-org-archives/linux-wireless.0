@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:33377 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751701Ab2E0Mbl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2012 08:31:41 -0400
-Received: by dady13 with SMTP id y13so3061798dad.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2012 05:31:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20417.35821.91808.2702@gargle.gargle.HOWL>
-References: <4FC04B5A.1070900@candelatech.com>
-	<CAJ-VmomRv-GdRooL=1G5avxAqJ4h3eoAfNkzYit3ok-fXmd25A@mail.gmail.com>
-	<20417.35821.91808.2702@gargle.gargle.HOWL>
-Date: Sun, 27 May 2012 05:31:40 -0700
-Message-ID: <CAJ-Vmo=GmeNG96CX=4topxFDhV6EAEoiXXVBcPn501SUMou+NA@mail.gmail.com> (sfid-20120527_143218_290648_E4083A98)
-Subject: Re: Anyone doing WiFi throughput tests?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49474 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754048Ab2EaUie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 May 2012 16:38:34 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, m@bues.ch,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] ssb: recognize ARM Cortex M3
+Date: Thu, 31 May 2012 22:38:22 +0200
+Message-Id: <1338496702-16324-1-git-send-email-hauke@hauke-m.de> (sfid-20120531_223838_443027_32131B0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 May 2012 19:05, Sujith Manoharan <c_manoha@qca.qualcomm.com> wrote:
+I found this core on a BCM4322, a PCI card in the Linksys WRT610N V1.
+This core is not used by the driver, this patch just makes ssb show the
+correct name.
 
->> FWIW, FreeBSD was getting 270MBit/sec one-way UDP and 150MBit one-way
->> TCP out of AR9160/AR9280's late last year. I should re-run those tests
->> again now that I've fixed a bunch of things and see if I've regressed.
->> Those are 2T2R devices w/ a Routerstation Pro (AR7161) as the hostap.
->
-> 270 Mbps with a 2-stream device ? That seems abnormally high. :)
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/scan.c      |    2 ++
+ include/linux/ssb/ssb.h |    1 +
+ 2 files changed, 3 insertions(+)
 
-The 40MHz/MCS15/SGI PHY rate is "300MBit", so I was expecting to get
-around 250MBit. That was pretty easy. 270MBit was kind of scary and
-showed all kinds of broken corner cases.
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index 266c7c5..ab4627c 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -90,6 +90,8 @@ const char *ssb_core_name(u16 coreid)
+ 		return "ARM 1176";
+ 	case SSB_DEV_ARM_7TDMI:
+ 		return "ARM 7TDMI";
++	case SSB_DEV_ARM_CM3:
++		return "ARM Cortex M3";
+ 	}
+ 	return "UNKNOWN";
+ }
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index bc14bd7..bb674c0 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -243,6 +243,7 @@ struct ssb_bus_ops {
+ #define SSB_DEV_MINI_MACPHY	0x823
+ #define SSB_DEV_ARM_1176	0x824
+ #define SSB_DEV_ARM_7TDMI	0x825
++#define SSB_DEV_ARM_CM3		0x82A
+ 
+ /* Vendor-ID values */
+ #define SSB_VENDOR_BROADCOM	0x4243
+-- 
+1.7.9.5
 
-I'll go and try FreeBSD-HEAD again with all the lock debugging
-disabled and post results. It's quite possible that I'm
-mis-remembering. :)
-
-
-
-Adrian
