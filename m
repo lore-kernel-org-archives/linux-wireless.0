@@ -1,64 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26994 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754769Ab2FSPuN (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42263 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965359Ab2FAQPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 11:50:13 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	<aeolus@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: [PATCH 08/10] ath: Add Wake-on-Wireless debug mask
-Date: Tue, 19 Jun 2012 21:17:28 +0530
-Message-ID: <1340120850-9155-9-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120619_175035_220368_08E736CD)
-In-Reply-To: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 1 Jun 2012 12:15:44 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 02/10] brcm80211: smac: always set channel specified by mac80211
+Date: Fri,  1 Jun 2012 11:15:28 -0500
+Message-Id: <1338567336-12076-3-git-send-email-seth.forshee@canonical.com> (sfid-20120601_181549_070781_80B028F8)
+In-Reply-To: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
+References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+In some situations brcmsmac is choosing a channel internally. This makes
+it difficult at times to know what channel to use for enforcing
+regulatory constraints, so instead always use the channel from the
+mac80211 configuration.
 
-to help the developers and users to debug/know
-whats happening with WoW
-
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- drivers/net/wireless/ath/ath.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   30 +++++-------------------
+ 1 file changed, 6 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index c54b7d3..9bd0248 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -215,6 +215,7 @@ void ath_printk(const char *level, const struct ath_common *common,
-  *	used exclusively for WLAN-BT coexistence starting from
-  *	AR9462.
-  * @ATH_DBG_DFS: radar datection
-+ * @ATH_DBG_WOW: Wake on Wireless
-  * @ATH_DBG_ANY: enable all debugging
-  *
-  * The debug level is used to control the amount and type of debugging output
-@@ -242,6 +243,7 @@ enum ATH_DEBUG {
- 	ATH_DBG_BSTUCK		= 0x00008000,
- 	ATH_DBG_MCI		= 0x00010000,
- 	ATH_DBG_DFS		= 0x00020000,
-+	ATH_DBG_WOW		= 0x00040000,
- 	ATH_DBG_ANY		= 0xffffffff
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 19db405..93c865d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3139,20 +3139,6 @@ void brcms_c_reset(struct brcms_c_info *wlc)
+ 	brcms_b_reset(wlc->hw);
+ }
+ 
+-/* Return the channel the driver should initialize during brcms_c_init.
+- * the channel may have to be changed from the currently configured channel
+- * if other configurations are in conflict (bandlocked, 11n mode disabled,
+- * invalid channel for current country, etc.)
+- */
+-static u16 brcms_c_init_chanspec(struct brcms_c_info *wlc)
+-{
+-	u16 chanspec =
+-	    1 | WL_CHANSPEC_BW_20 | WL_CHANSPEC_CTL_SB_NONE |
+-	    WL_CHANSPEC_BAND_2G;
+-
+-	return chanspec;
+-}
+-
+ void brcms_c_init_scb(struct scb *scb)
+ {
+ 	int i;
+@@ -5129,6 +5115,8 @@ static void brcms_c_wme_retries_write(struct brcms_c_info *wlc)
+ /* make interface operational */
+ int brcms_c_up(struct brcms_c_info *wlc)
+ {
++	struct ieee80211_channel *ch;
++
+ 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+ 
+ 	/* HW is turned off so don't try to access it */
+@@ -5195,8 +5183,9 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 	wlc->pub->up = true;
+ 
+ 	if (wlc->bandinit_pending) {
++		ch = wlc->pub->ieee_hw->conf.channel;
+ 		brcms_c_suspend_mac_and_wait(wlc);
+-		brcms_c_set_chanspec(wlc, wlc->default_bss->chanspec);
++		brcms_c_set_chanspec(wlc, ch20mhz_chspec(ch->hw_value));
+ 		wlc->bandinit_pending = false;
+ 		brcms_c_enable_mac(wlc);
+ 	}
+@@ -8201,19 +8190,12 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
+ void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
+ {
+ 	struct bcma_device *core = wlc->hw->d11core;
++	struct ieee80211_channel *ch = wlc->pub->ieee_hw->conf.channel;
+ 	u16 chanspec;
+ 
+ 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+ 
+-	/*
+-	 * This will happen if a big-hammer was executed. In
+-	 * that case, we want to go back to the channel that
+-	 * we were on and not new channel
+-	 */
+-	if (wlc->pub->associated)
+-		chanspec = wlc->home_chanspec;
+-	else
+-		chanspec = brcms_c_init_chanspec(wlc);
++	chanspec = ch20mhz_chspec(ch->hw_value);
+ 
+ 	brcms_b_init(wlc->hw, chanspec);
  
 -- 
-1.7.0.4
+1.7.9.5
 
