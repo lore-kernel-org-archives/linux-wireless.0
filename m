@@ -1,46 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37382 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55588 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532Ab2FLLd0 (ORCPT
+	with ESMTP id S1759157Ab2FAKu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 07:33:26 -0400
-Message-ID: <1339500801.4531.2.camel@jlt3.sipsolutions.net> (sfid-20120612_133329_198553_07B60033)
-Subject: Re: [PATCH] mac80211: Disallow changing chan type on monitor when
- CHAN_MODE_FIXED
+	Fri, 1 Jun 2012 06:50:56 -0400
+Message-ID: <1338547854.4884.17.camel@jlt3.sipsolutions.net> (sfid-20120601_125100_304102_37B8DF41)
+Subject: [PATCH] cfg80211: validate remain-on-channel time better
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Tue, 12 Jun 2012 13:33:21 +0200
-In-Reply-To: <4FD725FF.1030108@gmail.com> (sfid-20120612_132035_802191_87C8E8E9)
-References: <1339499167-26225-1-git-send-email-pontus.fuchs@gmail.com>
-	  (sfid-20120612_130639_458885_983B325C) <1339499291.4531.1.camel@jlt3.sipsolutions.net>
-	 <4FD725FF.1030108@gmail.com> (sfid-20120612_132035_802191_87C8E8E9)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 01 Jun 2012 12:50:54 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-12 at 13:20 +0200, Pontus Fuchs wrote:
-> On 2012-06-12 13:08, Johannes Berg wrote:
-> > If you add a monitor interface in paralell to a normal interface
-> > mac80211 will let you to change the channel type on the monitor
-> > interface even if you are connected. Add an explicit check to
-> > disallow this.
-> > Is this against 3.5, and is it really needed there? It's a corner case
-> > to start with.
-> It's against wireless-next. 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Right, sorry, I was looking at the wrong code :(
+The remain-on-channel time validation shouldn't
+depend on the value of HZ, as it does now with
+the check against jiffies, since then you might
+use a value that works on one system but not on
+another. Fix it by checking against a minimum
+that's fixed.
 
-> It's a real corner case indeed. With the
-> wireshark toolbar I create monitors on demand for all phy's so I
-> see it quite often myself. If it needs fixing is up to you to decide :)
+Also add validation of the wait duration for a
+management frame TX since this also translates
+into remain-on-channel internally.
 
-Yeah, like we discussed, maybe it should or should not be allowed? With
-the new changes Michal is doing it'll probably be disallowed anyway?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/nl80211.h |    2 ++
+ net/wireless/nl80211.c  |   23 ++++++++++++++++-------
+ 2 files changed, 18 insertions(+), 7 deletions(-)
 
-I'll apply it, but can you rediff and remove the "is_monitor" argument,
-since dev == NULL is equivalent? :)
+--- a/include/linux/nl80211.h	2012-06-01 10:33:10.000000000 +0200
++++ b/include/linux/nl80211.h	2012-06-01 12:46:07.000000000 +0200
+@@ -1522,6 +1522,8 @@ enum nl80211_attrs {
+ #define NL80211_MAX_NR_CIPHER_SUITES		5
+ #define NL80211_MAX_NR_AKM_SUITES		2
+ 
++#define NL80211_MIN_REMAIN_ON_CHANNEL_TIME	10
++
+ /**
+  * enum nl80211_iftype - (virtual) interface types
+  *
+--- a/net/wireless/nl80211.c	2012-06-01 10:33:10.000000000 +0200
++++ b/net/wireless/nl80211.c	2012-06-01 12:47:01.000000000 +0200
+@@ -5545,18 +5545,18 @@ static int nl80211_remain_on_channel(str
+ 
+ 	duration = nla_get_u32(info->attrs[NL80211_ATTR_DURATION]);
+ 
++	if (!rdev->ops->remain_on_channel ||
++	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL))
++		return -EOPNOTSUPP;
++
+ 	/*
+-	 * We should be on that channel for at least one jiffie,
+-	 * and more than 5 seconds seems excessive.
++	 * We should be on that channel for at least a minimum amount of
++	 * time (10ms) but no longer than the driver supports.
+ 	 */
+-	if (!duration || !msecs_to_jiffies(duration) ||
++	if (duration < NL80211_MIN_REMAIN_ON_CHANNEL_TIME ||
+ 	    duration > rdev->wiphy.max_remain_on_channel_duration)
+ 		return -EINVAL;
+ 
+-	if (!rdev->ops->remain_on_channel ||
+-	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL))
+-		return -EOPNOTSUPP;
+-
+ 	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE] &&
+ 	    !nl80211_valid_channel_type(info, &channel_type))
+ 		return -EINVAL;
+@@ -5827,6 +5827,15 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 		if (!(rdev->wiphy.flags & WIPHY_FLAG_OFFCHAN_TX))
+ 			return -EINVAL;
+ 		wait = nla_get_u32(info->attrs[NL80211_ATTR_DURATION]);
++
++		/*
++		 * We should wait on the channel for at least a minimum amount
++		 * of time (10ms) but no longer than the driver supports.
++		 */
++		if (wait < NL80211_MIN_REMAIN_ON_CHANNEL_TIME ||
++		    wait > rdev->wiphy.max_remain_on_channel_duration)
++			return -EINVAL;
++
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
 
-johannes
 
