@@ -1,65 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46698 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758582Ab2FHG2C (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3197 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933399Ab2FARxH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 02:28:02 -0400
-Message-ID: <1339136879.5832.1.camel@jlt3.sipsolutions.net> (sfid-20120608_082807_706668_96C17A95)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andre Heider <a.heider@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 08:27:59 +0200
-In-Reply-To: <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com> (sfid-20120607_234722_659278_D556184E)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
-	 <20120607180325.7752b3c0@milhouse>
-	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
-	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
-	 <4FD11B47.10002@lwfinger.net>
-	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
-	 (sfid-20120607_234722_659278_D556184E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Jun 2012 13:53:07 -0400
+From: "Brett Rudley" <brudley@broadcom.com>
+To: "Seth Forshee" <seth.forshee@canonical.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: RE: [PATCH 05/10] brcm80211: smac: remove DFS channels from
+ 5GHz band
+Date: Fri, 1 Jun 2012 17:52:55 +0000
+Message-ID: <2D7FF7D769509245B7AD0DB511D0FD3A17AB30@SJEXCHMB09.corp.ad.broadcom.com> (sfid-20120601_195313_051851_1BC3A475)
+References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
+ <1338567336-12076-6-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1338567336-12076-6-git-send-email-seth.forshee@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-07 at 23:47 +0200, Andre Heider wrote:
-> On Thu, Jun 7, 2012 at 11:21 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > On 06/07/2012 03:56 PM, Johannes Berg wrote:
-> >>
-> >> On Thu, 2012-06-07 at 20:36 +0200, Johannes Berg wrote:
-> >>
-> >>> However, it's also possible to actually *use* the new mac80211 feature.
-> >>> That would also help with IEEE80211_TX_CTL_SEND_AFTER_DTIM, you could
-> >>> ask mac80211 to use a separate HW queue for it (for tx_ring_mcast.) This
-> >>> may be quicker.
-> >>
-> >>
-> >> This might do it, I haven't tested it at all:
-> >>
-> >> http://p.sipsolutions.net/3c6b003bb06e5298.txt
-> >
-> >
-> > With that patch, the driver never loads the firmware. I have not yet found
-> > the reason.
+
+Not quite understanding this. Why does a STA need radar detection when the NO_IBSS flag is set?
+
+Thanks
+Brett
+
+> -----Original Message-----
+> From: Seth Forshee [mailto:seth.forshee@canonical.com]
+> Sent: Friday, June 01, 2012 9:16 AM
+> To: Arend Van Spriel; linux-wireless@vger.kernel.org
+> Cc: Brett Rudley; Roland Vossen; Franky (Zhenhui) Lin; Kan Yan; Pieter-
+> Paul Giesberts; John W. Linville
+> Subject: [PATCH 05/10] brcm80211: smac: remove DFS channels from 5GHz
+> band
 > 
-> Same here.
+> brcmsmac doesn't currently support DFS or radar detection. Until it does
+> we need to avoid using DFS channels, so for now remove them from the
+> list of supported channels in the 5GHZ band.
+> 
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   48 --------------
+> ------
+>  1 file changed, 48 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> index 50f92a0..d2c0903 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> @@ -130,54 +130,6 @@ static struct ieee80211_channel
+> brcms_5ghz_nphy_chantable[] = {
+>  	CHAN5GHZ(40, IEEE80211_CHAN_NO_HT40PLUS),
+>  	CHAN5GHZ(44, IEEE80211_CHAN_NO_HT40MINUS),
+>  	CHAN5GHZ(48, IEEE80211_CHAN_NO_HT40PLUS),
+> -	/* UNII-2 */
+> -	CHAN5GHZ(52,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN |
+> IEEE80211_CHAN_NO_HT40MINUS),
+> -	CHAN5GHZ(56,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS),
+> -	CHAN5GHZ(60,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN |
+> IEEE80211_CHAN_NO_HT40MINUS),
+> -	CHAN5GHZ(64,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS),
+> -	/* MID */
+> -	CHAN5GHZ(100,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN |
+> IEEE80211_CHAN_NO_HT40MINUS),
+> -	CHAN5GHZ(104,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS),
+> -	CHAN5GHZ(108,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN |
+> IEEE80211_CHAN_NO_HT40MINUS),
+> -	CHAN5GHZ(112,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS),
+> -	CHAN5GHZ(116,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN |
+> IEEE80211_CHAN_NO_HT40MINUS),
+> -	CHAN5GHZ(120,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS),
+> -	CHAN5GHZ(124,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN |
+> IEEE80211_CHAN_NO_HT40MINUS),
+> -	CHAN5GHZ(128,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS),
+> -	CHAN5GHZ(132,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN |
+> IEEE80211_CHAN_NO_HT40MINUS),
+> -	CHAN5GHZ(136,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS),
+> -	CHAN5GHZ(140,
+> -		 IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IBSS |
+> -		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_HT40PLUS |
+> -		 IEEE80211_CHAN_NO_HT40MINUS),
+>  	/* UNII-3 */
+>  	CHAN5GHZ(149, IEEE80211_CHAN_NO_HT40MINUS),
+>  	CHAN5GHZ(153, IEEE80211_CHAN_NO_HT40PLUS),
+> --
+> 1.7.9.5
+> 
 
-It doesn't start any interfaces, right?
-
-The patch was incomplete -- it has to register all 5 queues not but
-might not use them, please try this:
-http://p.sipsolutions.net/69a78bbb83cd6421.txt
-
-(and if it still fails, please let me know how far it gets)
-
-johannes
 
