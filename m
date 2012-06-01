@@ -1,80 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46454 "EHLO ebb05.tieto.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2659 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756900Ab2FUMDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 08:03:43 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Kazior Michal <Michal.Kazior@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v2 5/7] mac80211: use channel context notifications
-Date: Thu, 21 Jun 2012 14:03:34 +0200
-Message-ID: <1340280216-18807-6-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140353_917538_39E23C49)
-In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
-References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+	id S1758621Ab2FAH6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2012 03:58:49 -0400
+Message-ID: <4FC8762D.8090807@broadcom.com> (sfid-20120601_095852_809260_558AB288)
+Date: Fri, 1 Jun 2012 09:58:37 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcma: make some functions static
+References: <1338496859-16436-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1338496859-16436-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kazior Michal <Michal.Kazior@tieto.com>
+On 05/31/2012 10:40 PM, Hauke Mehrtens wrote:
+> The functions and structs are not used in an other file and the
+> prototypes are in no header file, just make them static so the compiler
+> is able to optimize them better.
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+> diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+> index 6c05cf4..f7fbae7 100644
+> --- a/drivers/bcma/host_pci.c
+> +++ b/drivers/bcma/host_pci.c
+> @@ -77,8 +77,8 @@ static void bcma_host_pci_write32(struct bcma_device *core, u16 offset,
+>  }
+>  
+>  #ifdef CONFIG_BCMA_BLOCKIO
+> -void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
+> -			      size_t count, u16 offset, u8 reg_width)
+> +static void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
+> +				     size_t count, u16 offset, u8 reg_width)
 
-Channel context pointer will be accessiable on
-both assign and unassign events.
+align this with struct keyword above.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+>  {
+>  	void __iomem *addr = core->bus->mmio + offset;
+>  	if (core->bus->mapped_core != core)
+> @@ -100,8 +100,9 @@ void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
+>  	}
+>  }
+>  
+> -void bcma_host_pci_block_write(struct bcma_device *core, const void *buffer,
+> -			       size_t count, u16 offset, u8 reg_width)
+> +static void bcma_host_pci_block_write(struct bcma_device *core,
+> +				      const void *buffer, size_t count,
+> +				      u16 offset, u8 reg_width)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index f5b4a77..20483a0 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -5,6 +5,7 @@
- #include <linux/nl80211.h>
- #include <net/cfg80211.h>
- #include "ieee80211_i.h"
-+#include "driver-ops.h"
- 
- static enum ieee80211_chan_mode
- __ieee80211_get_channel_mode(struct ieee80211_local *local,
-@@ -187,6 +188,8 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	list_add(&ctx->list, &local->chanctx_list);
- 	INIT_LIST_HEAD(&ctx->interfaces);
- 
-+	drv_add_chanctx(local, ctx);
-+
- 	return ctx;
- }
- 
-@@ -195,6 +198,8 @@ ieee80211_free_chanctx(struct ieee80211_chanctx *ctx)
- {
- 	BUG_ON(!list_empty(&ctx->interfaces));
- 
-+	drv_remove_chanctx(ctx->local, ctx);
-+
- 	list_del(&ctx->list);
- 	kfree(ctx);
- }
-@@ -205,12 +210,16 @@ ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- {
- 	list_add(&sdata->chanctx_listitem, &ctx->interfaces);
- 	sdata->vif.chanctx_conf = &ctx->conf;
-+
-+	drv_assign_vif_chanctx(sdata->local, sdata, ctx);
- }
- 
- static void
- ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 			       struct ieee80211_chanctx *ctx)
- {
-+	drv_unassign_vif_chanctx(sdata->local, sdata, ctx);
-+
- 	sdata->vif.chanctx_conf = NULL;
- 	list_del(&sdata->chanctx_listitem);
- }
--- 
-1.7.0.4
+same here. checkpatch also spews warnings about DOS line endings.
+
+Gr. AvS
 
