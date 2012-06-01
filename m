@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52465 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751789Ab2F2Xpt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 19:45:49 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 0/9] bcma misc updates
-Date: Sat, 30 Jun 2012 01:44:36 +0200
-Message-Id: <1341013486-2520-1-git-send-email-hauke@hauke-m.de> (sfid-20120630_014553_266657_E565383B)
+Received: from youngberry.canonical.com ([91.189.89.112]:42817 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758224Ab2FASQb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2012 14:16:31 -0400
+Date: Fri, 1 Jun 2012 13:16:25 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 05/10] brcm80211: smac: remove DFS channels from 5GHz band
+Message-ID: <20120601181625.GA31517@thinkpad-t410> (sfid-20120601_201634_908846_8F03F430)
+References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
+ <1338567336-12076-6-git-send-email-seth.forshee@canonical.com>
+ <2D7FF7D769509245B7AD0DB511D0FD3A17AB30@SJEXCHMB09.corp.ad.broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2D7FF7D769509245B7AD0DB511D0FD3A17AB30@SJEXCHMB09.corp.ad.broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are some updates for bcma. Some are extending or completing some 
-workarounds for PCIe based wireless cards. A patch adds 
-bcma_pmu_spuravoid_pllupdate, used by brcmsmac and an other patch adds 
-constants for the chip ids. This code is mostly based on code from 
-brcmsmac and the Broadcom SDK for BCM47XX SoCs.
+On Fri, Jun 01, 2012 at 05:52:55PM +0000, Brett Rudley wrote:
+> 
+> Not quite understanding this. Why does a STA need radar detection when the NO_IBSS flag is set?
 
-This was tested on a BCM4718 SoC with a BCM43224 PCIe and a BCM5357.
-The Wifi part of the BCM4718 and BCM43224 is more or less working with 
-brcmsmac, which need some more patches for that, but it has low speed 
-and some times or with some access points I still get errors. The wifi 
-of the BCM5357 does not work.
+Arend specifically suggested removing these channels due to lack of DFS
+support [1]. I replied asking whether it was at least possible to detect
+radar presence and stop transmitting in order to be able to use these
+channels. The last response from Arend was that he was going to check on
+the firmware capabilities.
 
-These patches are based on current wireless-testing.
+I'm more than happy to drop this patch if there's not regulatory
+impedement to operating on the DFS channels.
 
-Hauke Mehrtens (9):
-  bcma: extend workaround for bcm4331
-  bcma: add constants for chip ids
-  bcma: remove fix for 4329b0 bad LPOM is detection
-  bcma: add PCI ID for BCM43224
-  bcma: complete workaround for BCMA43224 and BCM4313
-  bcma: remove bcma_pmu_{pll,swreg}_init()
-  bcma: remove chip ids doing nothing from PMU initialization.
-  bcma: add bcma_pmu_spuravoid_pllupdate()
-  bcma: add mdelay bcma_pmu_resources_init()
-  
-v2:
-  - remove start of workaround for BCM4329b0
-  - remove bcma_pmu_pll_init() and bcma_pmu_swreg_init()
-  - do not add all the SOCs to the switch case statements in 
-    bcma_pmu_workarounds() and bcma_pmu_resources_init(), but make the 
-    message displayed a debug message.
-  - remove code for BCM6362, this chip uses a slightly different bus 
-    from bcma and ssb.
-
- drivers/bcma/driver_chipcommon_pmu.c        |  317 ++++++++++++++++++++-------
- drivers/bcma/driver_mips.c                  |    8 +-
- drivers/bcma/driver_pci_host.c              |    8 +-
- drivers/bcma/host_pci.c                     |    1 +
- drivers/bcma/sprom.c                        |   18 +-
- include/linux/bcma/bcma.h                   |   30 +++
- include/linux/bcma/bcma_driver_chipcommon.h |   23 ++
- 7 files changed, 310 insertions(+), 95 deletions(-)
-
--- 
-1.7.9.5
+[1] http://www.spinics.net/lists/linux-wireless/msg91022.html
 
