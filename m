@@ -1,64 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42641 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121Ab2FPMsB (ORCPT
+Received: from mail-gh0-f180.google.com ([209.85.160.180]:40736 "EHLO
+	mail-gh0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758403Ab2FAHlR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2012 08:48:01 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3 1/9] brcm80211: smac: don't set up tx power limits during initialization
-Date: Sat, 16 Jun 2012 07:47:48 -0500
-Message-Id: <1339850876-8020-2-git-send-email-seth.forshee@canonical.com> (sfid-20120616_144806_582816_477FC3D9)
-In-Reply-To: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
-References: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
+	Fri, 1 Jun 2012 03:41:17 -0400
+Received: by ghbz12 with SMTP id z12so1758831ghb.11
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 00:41:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAOZOX0VKcLApVZVYQhF24FE2GR4ShkD3dtrHozxjOBaWu5eSDg@mail.gmail.com>
+References: <1336554519.4323.7.camel@jlt3.sipsolutions.net>
+	<CAGXE3d_iBznfsKBQr5ES3m5cYmrGQ+kZW+cb7-cvd8pCh48-3Q@mail.gmail.com>
+	<CAOZOX0VKcLApVZVYQhF24FE2GR4ShkD3dtrHozxjOBaWu5eSDg@mail.gmail.com>
+Date: Fri, 1 Jun 2012 09:41:16 +0200
+Message-ID: <CAGXE3d_=-Gn0vDyNN8uTp8YkgmbasNOA3XxRuP_M79nd8SyYwg@mail.gmail.com> (sfid-20120601_094120_822734_96A9CC41)
+Subject: Re: [RFC] mac80211: add time synchronisation with BSS for assoc
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code is unnecessary, and in fact it's never executed because the
-interface is never up when brcms_c_channels_commit() is called. Removing
-it helps simplify the implementation of proper regulatory support.
+On Fri, Jun 1, 2012 at 9:37 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> Hi,
+>
+>> On Wed, May 9, 2012 at 11:08 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>> Some drivers (iwlegacy, iwlwifi and rt2x00) today use the
+>>> bss_conf.last_tsf value. By itself though that value is
+>>> completely worthless since it may be ancient. What really
+>>> is needed is synchronisation between some device time and
+>>> the TSF.
+>>>
+>>> To clarify this, rename bss_conf.last_tsf to sync_tsf and
+>>> add sync_device_ts which is obtained from rx_status which
+>>> gets a new field device_timestamp for this purpose. This
+>>> is intentionally not using the mactime field since that
+>>> is used for other things and in IBSS is expected to sync
+>>> with the IBSS's TSF which isn't necessarily true for the
+>>> device timestamp.
+>>>
+>>> Also, since we have the information and it's useful even
+>>> before the connection has been established, give all the
+>>> timing details to the driver before authenticating.
+>>>
+>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>>> ---
+>>> I note that rt2x00 is completely broken since it mixes last_tsf (now
+>>> sync_tsf) with jiffies ... what??
+>>
+>> Thanks for coming up with this Johannes,  that looks indeed strange.
+>>
+>> Ivo, that was introduced with your "rt2x00: Add autowake support for
+>> USB hardware" patch as far as I can tell.
+>>
+>> Since the last_beacon value is updated within rt2x00 already we should
+>> be able to just remove the assignment in rt2x00lib_config_erp. Ivo, could
+>> you please recheck?
+>>
+>> This would also remove rt2x00's dependency on the last_tsf
+>> field as provided by mac80211.
+>>
+>> Thanks,
+>> Helmut
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c
+>> b/drivers/net/wireless/rt2x00/rt2x00config.c
+>> index 96db933..b2d2ad3 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2x00config.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+>> @@ -102,7 +102,6 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+>>
+>>        /* Update the AID, this is needed for dynamic PS support */
+>>        rt2x00dev->aid = bss_conf->assoc ? bss_conf->aid : 0;
+>> -       rt2x00dev->last_beacon = bss_conf->last_tsf;
+>
+> Can't access the code right now, is the last_beacon initialized somewhere else?
+> because I do assume we need the value somewhere?
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |    8 --------
- 1 file changed, 8 deletions(-)
+Yup, it's set in two code paths. One is within rt2x00 where last_beacon is
+set to jiffies. The other one is here where it is set to last_tsf which is not
+derived from jiffies at all :D
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index eb77ac3..049d78f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -908,7 +908,6 @@ static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
- {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
- 	uint chan;
--	struct txpwr_limits txpwr;
- 
- 	/* search for the existence of any valid channel */
- 	for (chan = 0; chan < MAXCHANNEL; chan++) {
-@@ -949,13 +948,6 @@ static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
- 		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
- 						     brcms_c_japan(wlc) ? true :
- 						     false);
--
--	if (wlc->pub->up && chan != INVCHANNEL) {
--		brcms_c_channel_reg_limits(wlc_cm, wlc->chanspec, &txpwr);
--		brcms_c_channel_min_txpower_limits_with_local_constraint(wlc_cm,
--			&txpwr, BRCMS_TXPWR_MAX);
--		wlc_phy_txpower_limit_set(wlc->band->pi, &txpwr, wlc->chanspec);
--	}
- }
- 
- static int
--- 
-1.7.9.5
-
+Helmut
