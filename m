@@ -1,99 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28200 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755777Ab2FFKIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:08:46 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 29/29] NFC: Monitor pn533 target mode
-Date: Wed,  6 Jun 2012 12:16:46 +0200
-Message-Id: <1338977806-30279-30-git-send-email-sameo@linux.intel.com> (sfid-20120606_120849_691101_E87AB74C)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43981 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965188Ab2FAQAy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jun 2012 12:00:54 -0400
+Received: by yhmm54 with SMTP id m54so1753219yhm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 09:00:54 -0700 (PDT)
+Message-ID: <4FC8E733.6030905@lwfinger.net> (sfid-20120601_180058_790781_3197A1CF)
+Date: Fri, 01 Jun 2012 11:00:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jacopo Runchi <jacoporunchi@hotmail.it>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: I: RTL8187 driver in linux 3.4
+References: <!&!AAAAAAAAAAAuAAAAAAAAAH2SKMTPZA1PmAOs8RWvl9YBANlTnCJhprtFudq2LHCBs8EBACQA//8AABAAAACIF7qVX5kVSJrDEtYsG/e+AQAAAAA=@hotmail.it> <DUB107-ds5BA2D5341A3C373209B17A0080@phx.gbl>
+In-Reply-To: <DUB107-ds5BA2D5341A3C373209B17A0080@phx.gbl>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When receiving a DEP link down event, we should cancel all pending URBs
-if we're activated as a target or if we're an initiator.
+On 06/01/2012 09:50 AM, Jacopo Runchi wrote:
+> Thank you for the help on the request below.
+>
+> Bye, Jacopo.
+>
+> *Da:*Jacopo Runchi [mailto:jacoporunchi@hotmail.it]
+> *Inviato:* venerdì 1 giugno 2012 15:21
+> *A:* 'herton@canonical.com'; 'htl10@users.sourceforge.net';
+> 'Larry.Finger@lwfinger.net'
+> *Oggetto:* RTL8187 driver in linux 3.4
+>
+> Hi, I write to you because I found you are the maintainers of the driver in subject.
+>
+> Hi, I’m working with a USB device using chipset RTL8187 connected to a mips
+> router with Openwrt.
+>
+> With the old driver r8187l.ko in linux 2.4.x it works fine.
+>
+> With the RTL8187 driver, if the signal is not good enough, it can establish a
+> connection, but it doesn’t transfer datas (no ping for example).
+>
+> I think it is a bug of the driver, so I would like to know if you know this bug
+> and if you have planned to solve it…
+>
+> There is any change planned on this driver?
+>
+> I hope for a generous answer and I’m sorry for my bad English.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+The address looks OK to me. I do not know why it bounced.
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index 58c1641..9ac829e 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -343,6 +343,7 @@ struct pn533 {
- 
- 	u8 tgt_available_prots;
- 	u8 tgt_active_prot;
-+	u8 tgt_mode;
- };
- 
- struct pn533_frame {
-@@ -1158,6 +1159,8 @@ static int pn533_tm_get_data_complete(struct pn533 *dev, void *arg,
- 	if (params_len > 0 && params[0] != 0) {
- 		nfc_tm_deactivated(dev->nfc_dev);
- 
-+		dev->tgt_mode = 0;
-+
- 		kfree_skb(skb_resp);
- 		return 0;
- 	}
-@@ -1245,6 +1248,8 @@ static int pn533_init_target_complete(struct pn533 *dev, void *arg,
- 		return rc;
- 	}
- 
-+	dev->tgt_mode = 1;
-+
- 	queue_work(dev->wq, &dev->tg_work);
- 
- 	return 0;
-@@ -1397,6 +1402,12 @@ static int pn533_start_poll(struct nfc_dev *nfc_dev,
- 		return -EBUSY;
- 	}
- 
-+	if (dev->tgt_mode) {
-+		nfc_dev_err(&dev->interface->dev,
-+			    "Cannot poll while already being activated");
-+		return -EBUSY;
-+	}
-+
- 	if (tm_protocols) {
- 		dev->gb = nfc_get_local_general_bytes(nfc_dev, &dev->gb_len);
- 		if (dev->gb == NULL)
-@@ -1725,7 +1736,15 @@ static int pn533_dep_link_down(struct nfc_dev *nfc_dev)
- 
- 	pn533_poll_reset_mod_list(dev);
- 
--	pn533_deactivate_target(nfc_dev, 0);
-+	if (dev->tgt_mode || dev->tgt_active_prot) {
-+		pn533_send_ack(dev, GFP_KERNEL);
-+		usb_kill_urb(dev->in_urb);
-+	}
-+
-+	dev->tgt_active_prot = 0;
-+	dev->tgt_mode = 0;
-+
-+	skb_queue_purge(&dev->resp_q);
- 
- 	return 0;
- }
-@@ -1956,6 +1975,8 @@ static int pn533_tm_send_complete(struct pn533 *dev, void *arg,
- 	if (params_len > 0 && params[0] != 0) {
- 		nfc_tm_deactivated(dev->nfc_dev);
- 
-+		dev->tgt_mode = 0;
-+
- 		return 0;
- 	}
- 
--- 
-1.7.9.1
+My involvement with the RTL8187 devices only started with 2.6.X, where X is 25 
+or 26. I have no knowledge of the driver in kernel 2.4.
 
+There have been various complaints about the driver, particularly on RTL8187L 
+hardware, that concern rate setting using the minstrel algorithm. I have been 
+unable to reproduce the results.
+
+Please answer the following questions;
+
+Does the device work is you lock the rate at 1 Mbps?
+
+What is the USB ID as shown by lsusb?
+
+Does it work when you use the PID rate-setting algorithm? To enable this, you 
+will need to set CONFIG_EXPERT=y.
+
+Larry
+
+
+Does it work better if you choose
