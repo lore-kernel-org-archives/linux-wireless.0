@@ -1,93 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32229 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555Ab2FDK7z (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:41652 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932595Ab2FAONX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:59:55 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38119.503505.923411@gargle.gargle.HOWL> (sfid-20120604_132058_724147_45FB6A38)
-Date: Mon, 4 Jun 2012 16:28:47 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 19/20] ath9k_hw: fix power state for MCI
+	Fri, 1 Jun 2012 10:13:23 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] bcma: add ext PA workaround for BCM4331 and BCM43431
+Date: Fri,  1 Jun 2012 09:13:17 -0500
+Message-Id: <1338559997-4356-1-git-send-email-seth.forshee@canonical.com> (sfid-20120601_161327_753574_FF6029BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+MacBook Pro models with BCM4331 wireless have been found to have the ext
+PA lines disabled after resuming from S3 without external power attach.
+This causes them to be unable to transmit. Add a workaround to ensure
+that the ext PA lines are enabled on BCM4331. Also extend all handling
+of ext PA line muxing to BCM43431 as is done in the Broadcom SDK.
 
-Program MCI related power registers only if MCI interrupts
-are enabled. This could help to reduce power consumptions when
-WLAN alone is enabled in BT coex chips.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+BugLink: http://bugs.launchpad.net/bugs/925577
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: stable@vger.kernel.org
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |   25 +++++++++----------------
- 1 file changed, 9 insertions(+), 16 deletions(-)
+ drivers/bcma/driver_chipcommon_pmu.c |    4 +++-
+ drivers/bcma/sprom.c                 |    4 ++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 98478fd..45e6700 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2009,12 +2009,9 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index a058842..61ce405 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -139,7 +139,9 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 		bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
+ 		break;
+ 	case 0x4331:
+-		/* BCM4331 workaround is SPROM-related, we put it in sprom.c */
++	case 43431:
++		/* Ext PA lines must be enabled for tx on BCM4331 */
++		bcma_chipco_bcm4331_ext_pa_lines_ctl(cc, true);
+ 		break;
+ 	case 43224:
+ 		if (bus->chipinfo.rev == 0) {
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index c7f9335..f16f42d 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -579,13 +579,13 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 	if (!sprom)
+ 		return -ENOMEM;
  
- 	if (AR_SREV_9462(ah)) {
--		REG_WRITE(ah, AR_TIMER_MODE,
--			  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
--		REG_WRITE(ah, AR_NDP2_TIMER_MODE,
--			  REG_READ(ah, AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
--		REG_WRITE(ah, AR_SLP32_INC,
--			  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
-+		REG_CLR_BIT(ah, AR_TIMER_MODE, 0xff);
-+		REG_CLR_BIT(ah, AR_NDP2_TIMER_MODE, 0xff);
-+		REG_CLR_BIT(ah, AR_SLP32_INC, 0xfffff);
- 		/* xxx Required for WLAN only case ? */
- 		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
- 		udelay(100);
-@@ -2026,7 +2023,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- 	 */
- 	REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
+-	if (bus->chipinfo.id == 0x4331)
++	if (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43431)
+ 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
  
--	if (AR_SREV_9462(ah))
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		udelay(100);
+ 	pr_debug("SPROM offset 0x%x\n", offset);
+ 	bcma_sprom_read(bus, offset, sprom);
  
- 	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
-@@ -2051,7 +2048,6 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
--	u32 val;
+-	if (bus->chipinfo.id == 0x4331)
++	if (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43431)
+ 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
  
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 
-@@ -2070,19 +2066,16 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- 		 * SYS_WAKING and SYS_SLEEPING messages which will make
- 		 * BT CPU to busy to process.
- 		 */
--		if (AR_SREV_9462(ah)) {
--			val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
--				~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
--			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
--		}
-+		if (ath9k_hw_mci_is_enabled(ah))
-+			REG_CLR_BIT(ah, AR_MCI_INTERRUPT_RX_MSG_EN,
-+				    AR_MCI_INTERRUPT_RX_HW_MSG_MASK);
- 		/*
- 		 * Clear the RTC force wake bit to allow the
- 		 * mac to go to sleep.
- 		 */
--		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
--			    AR_RTC_FORCE_WAKE_EN);
-+		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
- 
--		if (AR_SREV_9462(ah))
-+		if (ath9k_hw_mci_is_enabled(ah))
- 			udelay(30);
- 	}
- 
+ 	err = bcma_sprom_valid(sprom);
 -- 
-1.7.10.3
+1.7.9.5
 
