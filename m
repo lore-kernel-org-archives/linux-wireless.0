@@ -1,72 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49847 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753983Ab2FHPsd (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42266 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965359Ab2FAQPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 11:48:33 -0400
-Message-ID: <1339170510.5748.9.camel@jlt3.sipsolutions.net> (sfid-20120608_174837_380556_4700EE77)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andre Heider <a.heider@gmail.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 17:48:30 +0200
-In-Reply-To: <1339170287.5748.8.camel@jlt3.sipsolutions.net> (sfid-20120608_174453_828379_B54E3AF3)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
-	 <20120607180325.7752b3c0@milhouse>
-	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
-	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
-	 <4FD11B47.10002@lwfinger.net>
-	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 (sfid-20120608_173825_724071_61477734) <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 (sfid-20120608_174309_875550_ADC4A235) <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 (sfid-20120608_174453_828379_B54E3AF3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Jun 2012 12:15:46 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 03/10] brcm80211: smac: remove unused code for 40MHz channels
+Date: Fri,  1 Jun 2012 11:15:29 -0500
+Message-Id: <1338567336-12076-4-git-send-email-seth.forshee@canonical.com> (sfid-20120601_181550_343614_539CB5DF)
+In-Reply-To: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
+References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 17:44 +0200, Johannes Berg wrote:
-> On Fri, 2012-06-08 at 17:43 +0200, Johannes Berg wrote:
-> > On Fri, 2012-06-08 at 10:38 -0500, Larry Finger wrote:
-> > 
-> > > I got the same result as Andre when using open-source firmware - endless MAC 
-> > > suspend failures. It works OK with the proprietary fw, with or without a "qos=0" 
-> > > module parameter.
-> > 
-> > I just noticed one more bug -- I need to number the ACs the other way
-> > around, changing
-> > 	vif->hw_queue[i] = i;
-> > to
-> > 	vif->hw_queue[i] = 3 - i;
-> > 
-> > in main.c, because 0 is BK and 3 is VO, rather than 0 VO/3 BK like in
-> > mac80211.
-> > 
-> > http://p.sipsolutions.net/449d71a3c76656f1.txt
-> 
-> Ahrg! I keep numbering them wrong, this should be fixed:
-> http://p.sipsolutions.net/3bbdb9c6294dad70.txt
+This code has been kept around in anticipation of adding support for
+40MHz channels, but subsequent patches to better integrate with mac80211
+regulatory support will render it completely broken. Therefore we should
+go ahead and remove it.
 
-Nope, still wrong, I shouldn't be using skb_get_queue_mapping but rather
-info->index since now mac80211 is giving us the right *queue number*
-rather than just *AC*
+Keep these changes separate from other cleanup patches in order to make
+it easier to resurrect 40MHz channel support at some point in the
+future.
 
-johannes
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c |  116 ---------------------
+ 1 file changed, 116 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+index 049d78f..089cc87 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+@@ -512,83 +512,6 @@ static const struct {
+ 	"X2", LOCALES(i, 11, bn, 11n)},	/* Worldwide RoW 2 */
+ };
+ 
+-#ifdef SUPPORT_40MHZ
+-/* 20MHz channel info for 40MHz pairing support */
+-struct chan20_info {
+-	u8 sb;
+-	u8 adj_sbs;
+-};
+-
+-/* indicates adjacent channels that are allowed for a 40 Mhz channel and
+- * those that permitted by the HT
+- */
+-struct chan20_info chan20_info[] = {
+-	/* 11b/11g */
+-/* 0 */ {1, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 1 */ {2, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 2 */ {3, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 3 */ {4, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 4 */ {5, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
+-/* 5 */ {6, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
+-/* 6 */ {7, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
+-/* 7 */ {8, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
+-/* 8 */ {9, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
+-/* 9 */ {10, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 10 */ {11, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 11 */ {12, (CH_LOWER_SB)},
+-/* 12 */ {13, (CH_LOWER_SB)},
+-/* 13 */ {14, (CH_LOWER_SB)},
+-
+-/* 11a japan high */
+-/* 14 */ {34, (CH_UPPER_SB)},
+-/* 15 */ {38, (CH_LOWER_SB)},
+-/* 16 */ {42, (CH_LOWER_SB)},
+-/* 17 */ {46, (CH_LOWER_SB)},
+-
+-/* 11a usa low */
+-/* 18 */ {36, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 19 */ {40, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 20 */ {44, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 21 */ {48, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 22 */ {52, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 23 */ {56, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 24 */ {60, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 25 */ {64, (CH_LOWER_SB | CH_EWA_VALID)},
+-
+-/* 11a Europe */
+-/* 26 */ {100, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 27 */ {104, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 28 */ {108, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 29 */ {112, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 30 */ {116, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 31 */ {120, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 32 */ {124, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 33 */ {128, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 34 */ {132, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 35 */ {136, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 36 */ {140, (CH_LOWER_SB)},
+-
+-/* 11a usa high, ref5 only */
+-/* The 0x80 bit in pdiv means these are REF5, other entries are REF20 */
+-/* 37 */ {149, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 38 */ {153, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 39 */ {157, (CH_UPPER_SB | CH_EWA_VALID)},
+-/* 40 */ {161, (CH_LOWER_SB | CH_EWA_VALID)},
+-/* 41 */ {165, (CH_LOWER_SB)},
+-
+-/* 11a japan */
+-/* 42 */ {184, (CH_UPPER_SB)},
+-/* 43 */ {188, (CH_LOWER_SB)},
+-/* 44 */ {192, (CH_UPPER_SB)},
+-/* 45 */ {196, (CH_LOWER_SB)},
+-/* 46 */ {200, (CH_UPPER_SB)},
+-/* 47 */ {204, (CH_LOWER_SB)},
+-/* 48 */ {208, (CH_UPPER_SB)},
+-/* 49 */ {212, (CH_LOWER_SB)},
+-/* 50 */ {216, (CH_LOWER_SB)}
+-};
+-#endif				/* SUPPORT_40MHZ */
+-
+ static const struct locale_info *brcms_c_get_locale_2g(u8 locale_idx)
+ {
+ 	if (locale_idx >= ARRAY_SIZE(g_locale_2g_table))
+@@ -1449,45 +1372,6 @@ brcms_c_valid_chanspec_ext(struct brcms_cm_info *wlc_cm, u16 chspec,
+ 			return brcms_c_valid_channel20(wlc_cm->wlc->cmi,
+ 						       channel);
+ 	}
+-#ifdef SUPPORT_40MHZ
+-	/*
+-	 * We know we are now checking a 40MHZ channel, so we should
+-	 * only be here for NPHYS
+-	 */
+-	if (BRCMS_ISNPHY(wlc->band) || BRCMS_ISSSLPNPHY(wlc->band)) {
+-		u8 upper_sideband = 0, idx;
+-		u8 num_ch20_entries =
+-		    sizeof(chan20_info) / sizeof(struct chan20_info);
+-
+-		if (!VALID_40CHANSPEC_IN_BAND(wlc, chspec_bandunit(chspec)))
+-			return false;
+-
+-		if (dualband) {
+-			if (!brcms_c_valid_channel20_db(wlc->cmi,
+-							lower_20_sb(channel)) ||
+-			    !brcms_c_valid_channel20_db(wlc->cmi,
+-							upper_20_sb(channel)))
+-				return false;
+-		} else {
+-			if (!brcms_c_valid_channel20(wlc->cmi,
+-						     lower_20_sb(channel)) ||
+-			    !brcms_c_valid_channel20(wlc->cmi,
+-						     upper_20_sb(channel)))
+-				return false;
+-		}
+-
+-		/* find the lower sideband info in the sideband array */
+-		for (idx = 0; idx < num_ch20_entries; idx++) {
+-			if (chan20_info[idx].sb == lower_20_sb(channel))
+-				upper_sideband = chan20_info[idx].adj_sbs;
+-		}
+-		/* check that the lower sideband allows an upper sideband */
+-		if ((upper_sideband & (CH_UPPER_SB | CH_EWA_VALID)) ==
+-		    (CH_UPPER_SB | CH_EWA_VALID))
+-			return true;
+-		return false;
+-	}
+-#endif				/* 40 MHZ */
+ 
+ 	return false;
+ }
+-- 
+1.7.9.5
 
