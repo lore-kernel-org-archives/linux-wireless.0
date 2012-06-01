@@ -1,85 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14835 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816Ab2FRGXf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48924 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753142Ab2FAG4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 02:23:35 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC 05/10] ath9k: advertise supported WoW flags to upper layer
-Date: Mon, 18 Jun 2012 11:51:49 +0530
-Message-ID: <1340000514-7779-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120618_082337_738900_40D21508)
-In-Reply-To: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 1 Jun 2012 02:56:45 -0400
+Message-ID: <1338533803.4884.6.camel@jlt3.sipsolutions.net> (sfid-20120601_085648_998164_987CB355)
+Subject: [PATCH 3.5] iwlwifi: disable WoWLAN if !CONFIG_PM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 01 Jun 2012 08:56:43 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-currently the code supports WoW triggers due to
-*magic packet
-*user defined patterns
-*deauth and disassoc patterns
-*disconnect - beacon miss, last beacon received timeout,
-no ack for keeep alive frames.
+If CONFIG_PM is disabled, then mac80211 (correctly)
+refuses advertising WoWLAN. Disable WoWLAN in the
+driver in this case.
 
-we need to support other WoW offload features in the
-near future. also a minor cleanup.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: stable@kernel.org
+Reported-by: Sebastian Kemper <sebastian_ml@gmx.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c |   20 ++++++++++++++++++--
- 1 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9dfce1a..d08824f 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -688,8 +688,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		IEEE80211_HW_SPECTRUM_MGMT |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index ab2f4d7..06546f7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -199,6 +199,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
+ 			    WIPHY_FLAG_IBSS_RSN;
  
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
--		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
-+		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
- 
- 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
-@@ -713,6 +713,22 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 
-+#ifdef CONFIG_PM_SLEEP
-+
-+	if ((ah->caps.wow_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
-+	    device_can_wakeup(sc->dev)) {
-+
-+		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
-+					  WIPHY_WOWLAN_DISCONNECT;
-+		hw->wiphy->wowlan.n_patterns = MAX_NUM_USER_PATTERN;
-+		hw->wiphy->wowlan.pattern_min_len = 1;
-+		hw->wiphy->wowlan.pattern_max_len = MAX_PATTERN_SIZE;
-+		INIT_LIST_HEAD(&sc->wow_info.wow_patterns);
-+
-+	}
-+
++#ifdef CONFIG_PM
+ 	if (priv->fw->img[IWL_UCODE_WOWLAN].sec[0].len &&
+ 	    priv->trans->ops->wowlan_suspend &&
+ 	    device_can_wakeup(priv->trans->dev)) {
+@@ -217,6 +218,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		hw->wiphy->wowlan.pattern_max_len =
+ 					IWLAGN_WOWLAN_MAX_PATTERN_LEN;
+ 	}
 +#endif
-+
- 	hw->queues = 4;
- 	hw->max_rates = 4;
- 	hw->channel_change_time = 5000;
+ 
+ 	if (iwlwifi_mod_params.power_save)
+ 		hw->wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
 -- 
-1.7.0.4
+1.7.10
+
+
 
