@@ -1,118 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37221 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52330 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756432Ab2FZNKg (ORCPT
+	with ESMTP id S1758913Ab2FAKj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 09:10:36 -0400
-Message-ID: <1340716233.14634.31.camel@jlt3.sipsolutions.net> (sfid-20120626_151040_748067_29396226)
-Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+	Fri, 1 Jun 2012 06:39:58 -0400
+Message-ID: <1338547195.4884.16.camel@jlt3.sipsolutions.net> (sfid-20120601_124023_742827_1A34F686)
+Subject: [PATCH] mac80211: do remain-on-channel while idle
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Eliad Peller <eliad@wizery.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 26 Jun 2012 15:10:33 +0200
-In-Reply-To: <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com> (sfid-20120626_133531_465169_24BA84E2)
-References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
-	 <1340707305.14634.9.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
-	 <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com>
-	 (sfid-20120626_133531_465169_24BA84E2)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 01 Jun 2012 12:39:55 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-26 at 14:35 +0300, Arik Nemtsov wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> >> Yes, we should keep that in mind, but I have a feeling that we should
-> >> treat it separately. It's quite different as mac80211 is doing a lot
-> >> less -- for example, mac80211 is managing retries, comeback timeouts,
-> >> etc. in the managed case.
-> >>
-> > i guess it makes sense. i just don't like it being managed in multiple
-> > places (userspace for ap, kernel for sta).
-> 
-> I also think managing this in multiple places can get messy. I
-> slightly prefer Eliad's approach with userspace giving the ROCs, since
-> it sees the bigger picture.
+The IDLE handling in HW off-channel is broken right
+now since we turn off IDLE only when the off-channel
+period already started. Therefore, all drivers that
+use it today (only iwlwifi!) must support off-channel
+while idle, so playing with idle isn't needed at all.
 
-Yeah but I don't think the bigger picture actually helps much in this
-case. The details matter much more.
+Also document a small caveat for reporting TX status
+from off-channel frames in HW remain-on-channel.
 
-Imagine userspace asking to ROC and then to authenticate when the ROC is
-accepted. Then the first question is -- how long should the ROC period
-be? mac80211 will transmit an auth frame, but if it doesn't get an
-answer it will retransmit up to 2 times with 100ms delay. That's
-*highly* implementation dependent, I don't think any other (full-MAC)
-driver would do exactly the same thing. So this means you'd need about
-300ms ROC time.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h    |    8 +++++++-
+ net/mac80211/cfg.c        |    7 +++----
+ net/mac80211/iface.c      |    9 ++-------
+ net/mac80211/offchannel.c |    4 ----
+ 4 files changed, 12 insertions(+), 16 deletions(-)
 
-OTOH, WFA mandates replies within 30ms. So it makes much more sense to
-have ~35ms ROC time and try a new one if it fails for some reason,
-right?
+--- a/include/net/mac80211.h	2012-06-01 10:23:19.000000000 +0200
++++ b/include/net/mac80211.h	2012-06-01 10:33:10.000000000 +0200
+@@ -2183,7 +2183,13 @@ enum ieee80211_rate_control_changed {
+  *	offload. Frames to transmit on the off-channel channel are transmitted
+  *	normally except for the %IEEE80211_TX_CTL_TX_OFFCHAN flag. When the
+  *	duration (which will always be non-zero) expires, the driver must call
+- *	ieee80211_remain_on_channel_expired(). This callback may sleep.
++ *	ieee80211_remain_on_channel_expired().
++ *	The driver must not call ieee80211_remain_on_channel_expired() before
++ *	the TX status for a frame that was sent off-channel, otherwise the TX
++ *	status is reported to userspace in an invalid way.
++ *	Note that this callback may be called while the device is in IDLE and
++ *	must be accepted in this case.
++ *	This callback may sleep.
+  * @cancel_remain_on_channel: Requests that an ongoing off-channel period is
+  *	aborted before it expires. This callback may sleep.
+  *
+--- a/net/mac80211/cfg.c	2012-06-01 10:33:10.000000000 +0200
++++ b/net/mac80211/cfg.c	2012-06-01 10:34:30.000000000 +0200
+@@ -2187,8 +2187,6 @@ static int ieee80211_cancel_remain_on_ch
+ 	local->hw_roc_cookie = 0;
+ 	local->hw_roc_channel = NULL;
+ 
+-	ieee80211_recalc_idle(local);
+-
+ 	return 0;
+ }
+ 
+@@ -2248,7 +2246,7 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	struct ieee80211_work *wk;
+ 	const struct ieee80211_mgmt *mgmt = (void *)buf;
+ 	u32 flags;
+-	bool is_offchan = false;
++	bool is_offchan = false, in_hw_roc = false;
+ 
+ 	if (dont_wait_for_ack)
+ 		flags = IEEE80211_TX_CTL_NO_ACK;
+@@ -2268,6 +2266,7 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	if (chan == local->hw_roc_channel) {
+ 		/* TODO: check channel type? */
+ 		is_offchan = false;
++		in_hw_roc = true;
+ 		flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
+ 	}
+ 
+@@ -2368,7 +2367,7 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	 * wait is involved, we might otherwise not be on
+ 	 * the right channel for long enough!
+ 	 */
+-	if (!is_offchan && !wait && !sdata->vif.bss_conf.idle) {
++	if (!is_offchan && !wait && (in_hw_roc || !sdata->vif.bss_conf.idle)) {
+ 		ieee80211_tx_skb(sdata, skb);
+ 		return 0;
+ 	}
+--- a/net/mac80211/iface.c	2012-06-01 10:33:10.000000000 +0200
++++ b/net/mac80211/iface.c	2012-06-01 10:33:10.000000000 +0200
+@@ -1454,7 +1454,7 @@ u32 __ieee80211_recalc_idle(struct ieee8
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int count = 0;
+-	bool working = false, scanning = false, hw_roc = false;
++	bool working = false, scanning = false;
+ 	struct ieee80211_work *wk;
+ 	unsigned int led_trig_start = 0, led_trig_stop = 0;
+ 
+@@ -1502,9 +1502,6 @@ u32 __ieee80211_recalc_idle(struct ieee8
+ 		local->scan_sdata->vif.bss_conf.idle = false;
+ 	}
+ 
+-	if (local->hw_roc_channel)
+-		hw_roc = true;
+-
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+ 		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+@@ -1516,7 +1513,7 @@ u32 __ieee80211_recalc_idle(struct ieee8
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
+ 	}
+ 
+-	if (working || scanning || hw_roc)
++	if (working || scanning)
+ 		led_trig_start |= IEEE80211_TPT_LEDTRIG_FL_WORK;
+ 	else
+ 		led_trig_stop |= IEEE80211_TPT_LEDTRIG_FL_WORK;
+@@ -1528,8 +1525,6 @@ u32 __ieee80211_recalc_idle(struct ieee8
+ 
+ 	ieee80211_mod_tpt_led_trig(local, led_trig_start, led_trig_stop);
+ 
+-	if (hw_roc)
+-		return ieee80211_idle_off(local, "hw remain-on-channel");
+ 	if (working)
+ 		return ieee80211_idle_off(local, "working");
+ 	if (scanning)
+--- a/net/mac80211/offchannel.c	2012-06-01 10:33:10.000000000 +0200
++++ b/net/mac80211/offchannel.c	2012-06-01 10:33:10.000000000 +0200
+@@ -207,8 +207,6 @@ static void ieee80211_hw_roc_start(struc
+ 					  GFP_KERNEL);
+ 	}
+ 
+-	ieee80211_recalc_idle(local);
+-
+ 	mutex_unlock(&local->mtx);
+ }
+ 
+@@ -260,8 +258,6 @@ static void ieee80211_hw_roc_done(struct
+ 	local->hw_roc_channel = NULL;
+ 	local->hw_roc_cookie = 0;
+ 
+-	ieee80211_recalc_idle(local);
+-
+ 	mutex_unlock(&local->mtx);
+ }
+ 
 
-The next question is whether to use a new ROC for assoc or not. How much
-time is left on the ROC? Should you cancel it (could be inefficient) and
-then start a new one? How can you make that decision.
-
-And now this is just why it won't work even if we start from a clean
-slate -- I haven't even talked about the backward compatibility aspect,
-running an old supplicant on a driver that expects a ROC. Remember that
-the driver need not give the virtual interface *any* channel time on the
-right channel before needed, so if there's something going on on another
-channel with multi-channel, that vif would never be able to authenticate
-with an old supplicant.
-
-I could also mention how this is a stupid userspace API, you're now
-requiring to call one thing before another call is valid, but then the
-other call is only very briefly valid? If we really wanted ROC, we
-should embed the time for it into the auth/assoc request, I'd say.
-
-Thinking about that though -- what for connect() calls? Whole new can of
-worms ...
-
-So I really don't see how ROC from userspace makes any sense in this
-case or is even workable.
-
-> But all userspace changes are reflected in the STA flags in kernel, so
-> we can do STA + AP from kernel mode as well.
-
-Yes, but it would need this patch and a change to hostapd to add the
-station when it sends the first auth frame:
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/005-nl80211-full-sta-state.patch
-
-I haven't yet had a chance to look at this again in more detail, in
-particular we need a matching hostapd implementation of course.
-This would require the assumption though that when hostapd adds a
-station it will also send an auth response and the client will request
-assoc, but that seems like a reasonable assumption (and hostapd would
-have to make assumptions about the client just as mac80211 would.)
-
-This would probably make it possible to implement such "give it airtime"
-behaviour entirely within the sta_state() callback in the driver, which
-isn't really possible in the managed case.
-
-> Can you give a bit more info on the Tx-sync approach, for the uninitiated?
-> I'm also thinking that maybe we could somehow treat the sleeping-GO as
-> a special case (maybe with some special code and a HW flag). Right now
-> I'm not sure the wl12xx FW even supports it.
-
-Well so the sleeping-GO case is basically that the GO could be asleep at
-any time (even opportunistic PS), so you would want to receive a beacon
-from it before you send an auth frame.
-
-The TX-sync name goes back to the tx_sync API I had at some point to
-handle this case, now we handle it a bit differently (but not very well)
-so I removed that because the implementation details were pretty ugly,
-but for the future we want something better :-) This was removed in
-commit 177958e9679c23537411066cc41b205635dacb14, you can look there for
-the old code.
-
-Basically this was letting the driver know that mac80211 was going to TX
-a management frame for the auth/assoc sequence, and the callback could
-sleep so the driver had a chance to sync up with the GO or reserve
-airtime or whatever else.
-
-johannes
 
