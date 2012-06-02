@@ -1,41 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:64823 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756077Ab2FNQZF (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:33065 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933601Ab2FBSPB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 12:25:05 -0400
-Received: by gglu4 with SMTP id u4so1534378ggl.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 09:25:04 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: fix the assignment of mesh element TTL
-Date: Fri, 15 Jun 2012 00:23:53 +0800
-Message-Id: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120614_182509_669934_DD26F585)
+	Sat, 2 Jun 2012 14:15:01 -0400
+Received: by wibhm6 with SMTP id hm6so1385511wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2012 11:14:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1338659135.12823.3.camel@jlt3.sipsolutions.net>
+References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1338533070.4884.4.camel@jlt3.sipsolutions.net> <4FC86AB4.9020602@qca.qualcomm.com>
+ <1338534832.4884.7.camel@jlt3.sipsolutions.net> <4FCA30DE.4080805@qca.qualcomm.com>
+ <1338659135.12823.3.camel@jlt3.sipsolutions.net>
+From: Guido Iribarren <guidoiribarren@buenosaireslibre.org>
+Date: Sat, 2 Jun 2012 15:14:39 -0300
+Message-ID: <CAHD-aq+wyT2Rm-uYaA34Wspm1+J79=eyCbpiD=T4ti3Bv-MP9g@mail.gmail.com> (sfid-20120602_201535_765815_95E30E50)
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	stable@vger.kernel.org, Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the wrong assignment of mesh element TTL.
+On Sat, Jun 2, 2012 at 2:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> The sets are mutually exclusive, and there are implied sets of each
+> interface with a max number of 1. So for example, in iwlwifi we don't
+> advertise IBSS in the combinations at all, because it's not compatible
+> with anything. In your case, I think the same applies, since you said
+>
+>        if the first interface is ADHOC we cannot have any other
+>        interface. we cannot add an ADHOC interface if there is already
+>        an interface is present
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- net/mac80211/cfg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I've been following the thread and still can't get this confusion out
+of my head:
+i'm currently using kernel 3.3.2 (openwrt trunk r31439), with Atheros
+AR9285 and i can succesfully combine IBSS interface with AP or STA
+modes...
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 85ac364..43eb8d9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1529,7 +1529,7 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 	if (_chg_mesh_attr(NL80211_MESHCONF_TTL, mask))
- 		conf->dot11MeshTTL = nconf->dot11MeshTTL;
- 	if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
--		conf->dot11MeshTTL = nconf->element_ttl;
-+		conf->element_ttl = nconf->element_ttl;
- 	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
- 		conf->auto_open_plinks = nconf->auto_open_plinks;
- 	if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
--- 
-1.7.0.4
+# iw dev
+phy#0
+	Interface wlan0-1
+		ifindex 11
+		type AP
+	Interface wlan0-2
+		ifindex 10
+		type IBSS
+	Interface wlan0
+		ifindex 9
+		type AP
 
+So, does this patch mean this functionality will be lost in future
+versions of ath9k?
+or maybe it is officially unsupported and openwrt has patches applied?
+or, even worse, I completely misunderstood what you're talking about?
+(in that case i'm sorry for the noise)
+
+Thanks a lot,
+
+Guido
