@@ -1,60 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59081 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394Ab2FOJhy (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50234 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932330Ab2FBP2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 05:37:54 -0400
-Message-ID: <1339753070.13702.1.camel@jlt3.sipsolutions.net> (sfid-20120615_113758_124340_B709DCDF)
-Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Date: Fri, 15 Jun 2012 11:37:50 +0200
-In-Reply-To: <CAEFj9846z0=Lif42m_Fd4wq3XvS=o_OZ7rTZw2V5gJaHLJ0onA@mail.gmail.com> (sfid-20120615_112628_825277_2B9DE7A8)
-References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1339700228.9786.11.camel@jlt3.sipsolutions.net>
-	 <CAEFj985xi0LNsLqHn1cgAw0oMVsfWrh_ioPuzUva8ZLbUTn=ZQ@mail.gmail.com>
-	 <1339748416.4512.9.camel@jlt3.sipsolutions.net>
-	 <CAEFj9846z0=Lif42m_Fd4wq3XvS=o_OZ7rTZw2V5gJaHLJ0onA@mail.gmail.com>
-	 (sfid-20120615_112628_825277_2B9DE7A8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 2 Jun 2012 11:28:11 -0400
+Message-ID: <4FCA30DE.4080805@qca.qualcomm.com> (sfid-20120602_172847_470702_F3C986C3)
+Date: Sat, 2 Jun 2012 20:57:26 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>, <stable@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
+References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>		 (sfid-20120601_083956_399882_A3D65832) <1338533070.4884.4.camel@jlt3.sipsolutions.net>	 <4FC86AB4.9020602@qca.qualcomm.com> <1338534832.4884.7.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338534832.4884.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-15 at 17:26 +0800, Yeoh Chun-Yeow wrote:
-> Hi, Johannes
-> 
-> No. I think that I am actually fixing the wrong assignment of the
-> previous patch.
+On Friday 01 June 2012 12:43 PM, Johannes Berg wrote:
+> On Fri, 2012-06-01 at 12:39 +0530, Mohammed Shafi Shajakhan wrote:
+>> Hi Johannes,
+>>
+>> On Friday 01 June 2012 12:14 PM, Johannes Berg wrote:
+>>> On Fri, 2012-06-01 at 12:09 +0530, Mohammed Shafi Shajakhan wrote:
+>>>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>>>
+>>>> In ath9k we make sure the following two things
+>>>> *if the first interface is ADHOC we cannot have any other interface.
+>>>> *we cannot add an ADHOC interface if there is already an interface
+>>>> is present.
+>>>
+>>>> -	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
+>>>> -	    ((vif->type == NL80211_IFTYPE_ADHOC)&&
+>>>> -	     sc->nvifs>   0)) {
+>>>> -		ath_err(common, "Cannot create ADHOC interface when other"
+>>>> -			" interfaces already exist.\n");
+>>>> +	if ((ah->opmode == NL80211_IFTYPE_ADHOC)&&   (sc->nvifs>   0)) {
+>>>> +		ath_err(common, "Cannot create any other interface when an ADHOC interface already exists.\n");
+>>>> +		ret = -EINVAL;
+>>>> +		goto out;
+>>>> +	}
+>>>> +
+>>>> +	if ((vif->type == NL80211_IFTYPE_ADHOC)&&   (sc->nvifs>   0)) {
+>>>> +		ath_err(common, "Cannot create ADHOC interface when other interfaces already exist.\n");
+>>>
+>>> You could just remove the entire check since the interface combinations
+>>> you advertise don't allow it, I think? Or just fix those
+>>> combinations :-)
+>>
+>> i did not check this before, thanks a lot for your inputs. will send a
+>> proper v2 after checking this out.
+>
+> If this is needed for stable, you might want to keep this patch&  send
+> another one to remove it.
 
-Please clarify *which* previous patch.
+thanks Johannes.
+i was looking at how to fix this properly in iface combination 
+advertised to mac80211.  got few doubts regarding this
 
-> > commit 45904f21655cf4f0ae7d0fab5906fe51bf56ecf4
-> > Author:     Javier Cardona <javier@cozybit.com>
-> > AuthorDate: Fri Dec 3 09:20:40 2010 +0100
-> > Commit:     John W. Linville <linville@tuxdriver.com>
-> > CommitDate: Mon Dec 6 16:01:28 2010 -0500
-> >
-> >    nl80211/mac80211: define and allow configuring mesh element TTL
+*if an interface type is not all advertised in the 
+ieee80211_iface_combination then it cannot it be co-existing with any 
+other interfaces ?
+please let me know is there some other way do that.
 
-This patch looked like this:
+if we advertise something like this
 
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1024,6 +1024,8 @@ static int ieee80211_set_mesh_params(struct wiphy *wiphy,
-                conf->dot11MeshMaxRetries = nconf->dot11MeshMaxRetries;
-        if (_chg_mesh_attr(NL80211_MESHCONF_TTL, mask))
-                conf->dot11MeshTTL = nconf->dot11MeshTTL;
-+       if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
-+               conf->dot11MeshTTL = nconf->element_ttl;
-        if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
-                conf->auto_open_plinks = nconf->auto_open_plinks;
-        if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES, mask))
+static const struct ieee80211_iface_limit if_limits[] = {
+	{set1
+     	.... },
+	{set 2
+	.... },
+};
+
+then interface types in set1 and set2 co-exist as per the logic in 
+cfg80211_can_change_interface. is there already a way we can make
+set1 and set2 interface types mutually exclusive ? thanks!
 
 
-Are you telling me you're not fixing that code?
 
-johannes
-
+-- 
+thanks,
+shafi
