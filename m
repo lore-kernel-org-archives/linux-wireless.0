@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53132 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752277Ab2FTFcy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 01:32:54 -0400
-Message-ID: <1340170374.4655.1.camel@jlt3.sipsolutions.net> (sfid-20120620_073257_581494_63A8D34C)
-Subject: Re: [PATCH 1/3] mac80211: Track auth frame registrations on IBSS
- ifaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Will Hawkins <hawkinsw@opentechinstitute.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Wed, 20 Jun 2012 07:32:54 +0200
-In-Reply-To: <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org>
-References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
-	 <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout0.freenet.de ([195.4.92.90]:55504 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752546Ab2FCQjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jun 2012 12:39:41 -0400
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1SbDq7-0004C1-Rz
+	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:39:39 +0200
+Received: from localhost ([::1]:49312 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1SbDq7-0000Ai-L4
+	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:39:39 +0200
+Received: from [195.4.92.18] (port=57545 helo=8.mx.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1SbDnU-0007w5-TA
+	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:36:56 +0200
+Received: from [2002:4fde:120e:2:5054:ff:feb8:40bd] (port=54823 helo=mail.maya.org)
+	by 8.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1SbDnU-00063A-I0
+	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:36:56 +0200
+Message-ID: <4FCB929B.7000802@01019freenet.de> (sfid-20120603_183945_508115_56AE1DB7)
+Date: Sun, 03 Jun 2012 18:36:43 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Vilius Palme <palme3000@gmail.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	helmut.schaa@googlemail.com, IvDoorn@gmail.com, gwingerde@gmail.com
+Subject: Re: RT2800USB driver problem. txpower stuck at 0
+References: <CAOUATobNS0XNp6e+-W6VrShXpm2JVVeGUBSKxe9v05M3e00S4g@mail.gmail.com>
+In-Reply-To: <CAOUATobNS0XNp6e+-W6VrShXpm2JVVeGUBSKxe9v05M3e00S4g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-19 at 17:59 -0400, Will Hawkins wrote:
-> Track userspace registrations for authentication
-> frames received on an IBSS interface. This field
-> will be used to decide whether or not to send
-> "open system" authentication frames when a new
-> station joins an adhoc network.
+Hi Vilius,
+
+Vilius Palme wrote:
+> Hello.
 > 
-> Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
-> ---
->  net/mac80211/cfg.c         |   10 ++++++++++
->  net/mac80211/ieee80211_i.h |    1 +
->  2 files changed, 11 insertions(+)
+> I'm having some sort of a problem with RT3070 usb dongle. It works
+> perfectly fine under 3.3.5 and 3.3.7 kernels, but somewhy refuses to
+> set txpower under 3.4.0. kernel .config is the same across all three.
 > 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 498c94e..e00a696 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2486,6 +2486,16 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
->  					  u16 frame_type, bool reg)
->  {
->  	struct ieee80211_local *local = wiphy_priv(wiphy);
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
-> +	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && 
-> +	    (frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH))) {
-> +		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-> +		if (reg)
-> +			ifibss->auth_frame_registrations++;
-> +		else if (reg > 0)
-> +			ifibss->auth_frame_registrations--;
+> Here's some output:
+> 
+> [root@R1 iw]# ifconfig wlan0 up
+> [root@R1 iw]# iwconfig wlan0
+> wlan0     IEEE 802.11bgn  ESSID:off/any
+>          Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm
+>          Retry  long limit:7   RTS thr:off   Fragment thr:off
+>          Encryption key:off
+>          Power Management:off
+> 
+> [root@R1 iw]# iwconfig wlan0 txpower 20
+> Error for wireless request "Set Tx Power" (8B26) :
+>    SET failed on device wlan0 ; Invalid argument.
+> [root@R1 iw]# iwconfig wlan0 txpower 1
+> Error for wireless request "Set Tx Power" (8B26) :
+>    SET failed on device wlan0 ; Invalid argument.
+> [root@R1 iw]# iwconfig wlan0 txpower 0
+> [root@R1 iw]#
 
-The "if (reg > 0)" here doesn't seem to make sense?
+Please take a look at this thread:
+http://thread.gmane.org/gmane.comp.embedded.openwrt.devel/14224/focus=91183
 
-johannes
+Does this answer your question?
 
+
+Kind regards,
+Andreas
