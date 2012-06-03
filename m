@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:50037 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751374Ab2FLLUf (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:54087 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752759Ab2FCJQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 07:20:35 -0400
-Received: by lahd3 with SMTP id d3so3415066lah.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 04:20:34 -0700 (PDT)
-Message-ID: <4FD725FF.1030108@gmail.com> (sfid-20120612_132039_089213_B1A0521A)
-Date: Tue, 12 Jun 2012 13:20:31 +0200
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-MIME-Version: 1.0
+	Sun, 3 Jun 2012 05:16:32 -0400
+Date: Sun, 3 Jun 2012 11:16:43 +0200
+From: Sebastian Kemper <sebastian_ml@gmx.net>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Disallow changing chan type on monitor when
- CHAN_MODE_FIXED
-References: <1339499167-26225-1-git-send-email-pontus.fuchs@gmail.com>  (sfid-20120612_130639_458885_983B325C) <1339499291.4531.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339499291.4531.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: IWLWIFI should depend on SUSPEND
+Message-ID: <20120603091643.GA2191@wolfgang> (sfid-20120603_111636_242591_DF8BE591)
+References: <20120519201958.GA2313@wolfgang>
+ <1337540836.4585.1.camel@jlt3.sipsolutions.net>
+ <1338384543.4511.18.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1338384543.4511.18.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-06-12 13:08, Johannes Berg wrote:
-> If you add a monitor interface in paralell to a normal interface
-> mac80211 will let you to change the channel type on the monitor
-> interface even if you are connected. Add an explicit check to
-> disallow this.
-> Is this against 3.5, and is it really needed there? It's a corner case
-> to start with.
-It's against wireless-next. It's a real corner case indeed. With the
-wireshark toolbar I create monitors on demand for all phy's so I
-see it quite often myself. If it needs fixing is up to you to decide :)
+On Wed, May 30, 2012 at 03:29:03PM +0200, Johannes Berg wrote:
+> Could you try this patch please?
+> 
+> johannes
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> b/drivers/net/wireless/iwlwifi/iwl-mac80211.c index ab2f4d7..06546f7
+> 100644 --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c +++
+> b/drivers/net/wireless/iwlwifi/iwl-mac80211.c @@ -199,6 +199,7 @@ int
+> iwlagn_mac_setup_register(struct iwl_priv *priv,
+> WIPHY_FLAG_DISABLE_BEACON_HINTS | WIPHY_FLAG_IBSS_RSN;
+>  
+> +#ifdef CONFIG_PM if (priv->fw->img[IWL_UCODE_WOWLAN].sec[0].len &&
+> priv->trans->ops->wowlan_suspend &&
+> device_can_wakeup(priv->trans->dev)) { @@ -217,6 +218,7 @@ int
+> iwlagn_mac_setup_register(struct iwl_priv *priv,
+> hw->wiphy->wowlan.pattern_max_len = IWLAGN_WOWLAN_MAX_PATTERN_LEN; }
+> +#endif
+>  
+>  	if (iwlwifi_mod_params.power_save) hw->wiphy->flags |=
+>  	WIPHY_FLAG_PS_ON_BY_DEFAULT;
 
-Cheers,
+Hello Johannes,
 
-Pontus
+the patch doesn't apply on top of 3.2.18 (kernel I currently use),
+neither on 3.3.7.
 
+Regards
+Sebastian
