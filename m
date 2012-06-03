@@ -1,83 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45921 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530Ab2FDK7j (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45376 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548Ab2FCF64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:59:39 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38103.52026.288964@gargle.gargle.HOWL> (sfid-20120604_132058_640105_2902EA26)
-Date: Mon, 4 Jun 2012 16:28:31 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 16/20] ath9k_hw: fix BT RF performance
+	Sun, 3 Jun 2012 01:58:56 -0400
+Received: by obbtb18 with SMTP id tb18so5330081obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2012 22:58:55 -0700 (PDT)
+From: Chris Yungmann <yungmann.chris@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Chris Yungmann <yungmann.chris@gmail.com>
+Subject: [PATCH] brcm80211: brcmsmac: fixed checkpatch and sparse warnings
+Date: Sun,  3 Jun 2012 00:57:57 -0500
+Message-Id: <1338703077-15700-1-git-send-email-yungmann.chris@gmail.com> (sfid-20120603_080002_149773_CE01B936)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Fixed checkpatch and sparse warnings related to aiutils.*
 
-When software rfkill is triggered, before put the chip in reset
-state, give LNA and SPDT control to BT to make sure BT can have
-good RF performance.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Chris Yungmann <yungmann.chris@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 +
- drivers/net/wireless/ath/ath9k/hw.c         |    3 +++
- 3 files changed, 20 insertions(+)
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    3 +--
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 854dff6..8b09a82 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1391,3 +1391,19 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 	return value;
- }
- EXPORT_SYMBOL(ar9003_mci_state);
-+
-+void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+
-+	ath_dbg(common, MCI, "Give LNA and SPDT control to BT\n");
-+
-+	REG_SET_BIT(ah, AR_PHY_GLB_CONTROL, AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
-+	mci->is_2g = false;
-+	mci->update_2g5g = true;
-+	ar9003_mci_send_2g5g_status(ah, true);
-+
-+	/* Force another 2g5g update at next scanning */
-+	mci->update_2g5g = true;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 652ab8c..f4a6a44 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -266,6 +266,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
- void ar9003_mci_cleanup(struct ath_hw *ah);
- void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 			      u32 *rx_msg_intr);
-+void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index 6d8b721..3c6f9b1 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -631,9 +631,8 @@ uint ai_cc_reg(struct si_pub *sih, uint regoff, u32 mask, u32 val)
+ 	cc = sii->icbus->drv_cc.core;
  
- /*
-  * These functions are used by ath9k_hw.
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9f0f5f7..98478fd 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2737,6 +2737,9 @@ EXPORT_SYMBOL(ath9k_hw_setrxfilter);
+ 	/* mask and set */
+-	if (mask || val) {
++	if (mask || val)
+ 		bcma_maskset32(cc, regoff, ~mask, val);
+-	}
  
- bool ath9k_hw_phy_disable(struct ath_hw *ah)
- {
-+	if (ath9k_hw_mci_is_enabled(ah))
-+		ar9003_mci_bt_gain_ctrl(ah);
-+
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_WARM))
- 		return false;
+ 	/* readback */
+ 	w = bcma_read32(cc, regoff);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+index d9f04a6..d6fa982 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+@@ -193,7 +193,7 @@ extern void ai_detach(struct si_pub *sih);
+ extern uint ai_cc_reg(struct si_pub *sih, uint regoff, u32 mask, u32 val);
+ extern void ai_clkctl_init(struct si_pub *sih);
+ extern u16 ai_clkctl_fast_pwrup_delay(struct si_pub *sih);
+-extern bool ai_clkctl_cc(struct si_pub *sih, uint mode);
++extern bool ai_clkctl_cc(struct si_pub *sih, enum bcma_clkmode mode);
+ extern bool ai_deviceremoved(struct si_pub *sih);
  
+ extern void ai_pci_down(struct si_pub *sih);
 -- 
-1.7.10.3
+1.7.10
 
