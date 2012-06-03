@@ -1,81 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62849 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221Ab2FYGwe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 02:52:34 -0400
-Message-ID: <4FE80AB1.7030504@tieto.com> (sfid-20120625_085237_969842_5B21F70E)
-Date: Mon, 25 Jun 2012 08:52:33 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v2 1/7] mac80211: introduce channel contexts skeleton code
-References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>  <1340280216-18807-2-git-send-email-michal.kazior@tieto.com> <1340285064.4489.24.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340285064.4489.24.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:42548 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754103Ab2FCSd7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jun 2012 14:33:59 -0400
+Message-ID: <1338748437.15431.0.camel@jlt3.sipsolutions.net> (sfid-20120603_203402_477935_01C03F39)
+Subject: Re: IWLWIFI should depend on SUSPEND
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sebastian Kemper <sebastian_ml@gmx.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 03 Jun 2012 20:33:57 +0200
+In-Reply-To: <20120603164905.GA2056@wolfgang> (sfid-20120603_184923_810965_27443E1D)
+References: <20120519201958.GA2313@wolfgang>
+	 <1337540836.4585.1.camel@jlt3.sipsolutions.net>
+	 <1338384543.4511.18.camel@jlt3.sipsolutions.net>
+	 <20120603091643.GA2191@wolfgang>
+	 <1338735736.4972.0.camel@jlt3.sipsolutions.net>
+	 <20120603164905.GA2056@wolfgang> (sfid-20120603_184923_810965_27443E1D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2012-06-21 at 14:03 +0200, Michal Kazior wrote:
->
->> +++ b/include/net/mac80211.h
->> @@ -143,6 +143,41 @@ struct ieee80211_low_level_stats {
->>   	unsigned int dot11RTSSuccessCount;
->>   };
->>
->> +
->> +/**
->> + * enum ieee80211_chanctx_mode - channel context configuration mode
->> + *
->> + * @IEEE80211_CHANCTX_SHARED: channel context may be used by
->> + *	multiple interfaces
->> + * @IEEE80211_CHANCTX_EXCLUSIVE: channel context can be used
->> + *	only by a single interface. This can be used for example for
->> + *	non-fixed channel IBSS.
->> + */
->> +enum ieee80211_chanctx_mode {
->> +	IEEE80211_CHANCTX_SHARED,
->> +	IEEE80211_CHANCTX_EXCLUSIVE
->> +};
->
-> Does the driver ever care about this? It seems mostly internal to
-> determine what's going on?
+On Sun, 2012-06-03 at 18:49 +0200, Sebastian Kemper wrote:
+> On Sun, Jun 03, 2012 at 05:02:16PM +0200, Johannes Berg wrote:
+> > Oh, so this goes back much further than I thought.
+> > 
+> > Well, the easiest is probably if you find the wowlan.pattern_max_len
+> > stuff etc. and put #ifdef around the whole wowlan block manually, like
+> > in my patch.
+> > 
+> > johannes
+> > 
+> 
+> Hello again,
+> 
+> I didn't try it out yet, although I did find the block you're talking
+> about. I didn't because I *think* that
+> 
+> #ifdef CONFIG_PM
+> …
+> #endif
+> 
+> wouldn't work.
 
-Why did I put it there I wonder.
+You're right, it should be CONFIG_PM_SLEEP or something ... I'll have to
+sort it out. It looks like in iwlwifi, the suspend/resume methods are
+under CONFIG_PM_SLEEP, while in mac80211 they're under CONFIG_PM.
 
+johannes
 
->> + * @chanctx_conf: channel context vif is bound to, may be NULL
->
-> Maybe say "will be %NULL before the interface is assigned to a channel
-> context" or so?
->
->> +	INIT_LIST_HEAD(&ctx->interfaces);
->
-> Is there really a need for this list? It seems only moderately less
-> efficient to iterate all interfaces and filter by channel context, and
-> that's probably easier to maintain?
->
->> +static void
->> +__ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
->> +{
->> +	struct ieee80211_chanctx_conf *conf = sdata->vif.chanctx_conf;
->> +	struct ieee80211_chanctx *ctx =
->> +			container_of(conf, struct ieee80211_chanctx, conf);
->> +
->> +	if (!conf)
->> +		return;
->> +
->> +	ieee80211_unassign_vif_chanctx(sdata, ctx);
->> +	if (list_empty(&ctx->interfaces))
->> +		ieee80211_free_chanctx(ctx);
->> +}
->
-> Ah, ok. So I guess there's a good use for the list at least here.
-
-Actually you're right. I'll make it a simple refcount. No need to do 
-fancy lists.
-
-
--- 
-Pozdrawiam / Best regards, Michal Kazior.
