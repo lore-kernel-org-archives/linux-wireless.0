@@ -1,92 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:58261 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759728Ab2FAN00 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 09:26:26 -0400
-Received: by vbbff1 with SMTP id ff1so1274098vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 06:26:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGXE3d_=-Gn0vDyNN8uTp8YkgmbasNOA3XxRuP_M79nd8SyYwg@mail.gmail.com>
-References: <1336554519.4323.7.camel@jlt3.sipsolutions.net>
-	<CAGXE3d_iBznfsKBQr5ES3m5cYmrGQ+kZW+cb7-cvd8pCh48-3Q@mail.gmail.com>
-	<CAOZOX0VKcLApVZVYQhF24FE2GR4ShkD3dtrHozxjOBaWu5eSDg@mail.gmail.com>
-	<CAGXE3d_=-Gn0vDyNN8uTp8YkgmbasNOA3XxRuP_M79nd8SyYwg@mail.gmail.com>
-Date: Fri, 1 Jun 2012 15:26:24 +0200
-Message-ID: <CAOZOX0XzC=HJ+uHww2LdAfgOsL2X5kBM=8Mz6kB3muEKC3zqgg@mail.gmail.com> (sfid-20120601_152631_460084_734FDBFC)
-Subject: Re: [RFC] mac80211: add time synchronisation with BSS for assoc
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57436 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752266Ab2FCOa2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jun 2012 10:30:28 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: update some urls to git trees in docs
+Date: Sun,  3 Jun 2012 16:30:14 +0200
+Message-Id: <1338733814-31438-2-git-send-email-hauke@hauke-m.de> (sfid-20120603_163105_407318_60836A74)
+In-Reply-To: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
+References: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 1, 2012 at 9:41 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> On Fri, Jun 1, 2012 at 9:37 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
->> Hi,
->>
->>> On Wed, May 9, 2012 at 11:08 AM, Johannes Berg
->>> <johannes@sipsolutions.net> wrote:
->>>> From: Johannes Berg <johannes.berg@intel.com>
->>>>
->>>> Some drivers (iwlegacy, iwlwifi and rt2x00) today use the
->>>> bss_conf.last_tsf value. By itself though that value is
->>>> completely worthless since it may be ancient. What really
->>>> is needed is synchronisation between some device time and
->>>> the TSF.
->>>>
->>>> To clarify this, rename bss_conf.last_tsf to sync_tsf and
->>>> add sync_device_ts which is obtained from rx_status which
->>>> gets a new field device_timestamp for this purpose. This
->>>> is intentionally not using the mactime field since that
->>>> is used for other things and in IBSS is expected to sync
->>>> with the IBSS's TSF which isn't necessarily true for the
->>>> device timestamp.
->>>>
->>>> Also, since we have the information and it's useful even
->>>> before the connection has been established, give all the
->>>> timing details to the driver before authenticating.
->>>>
->>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->>>> ---
->>>> I note that rt2x00 is completely broken since it mixes last_tsf (now
->>>> sync_tsf) with jiffies ... what??
->>>
->>> Thanks for coming up with this Johannes,  that looks indeed strange.
->>>
->>> Ivo, that was introduced with your "rt2x00: Add autowake support for
->>> USB hardware" patch as far as I can tell.
->>>
->>> Since the last_beacon value is updated within rt2x00 already we should
->>> be able to just remove the assignment in rt2x00lib_config_erp. Ivo, could
->>> you please recheck?
->>>
->>> This would also remove rt2x00's dependency on the last_tsf
->>> field as provided by mac80211.
->>>
->>> Thanks,
->>> Helmut
->>>
->>> diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c
->>> b/drivers/net/wireless/rt2x00/rt2x00config.c
->>> index 96db933..b2d2ad3 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2x00config.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2x00config.c
->>> @@ -102,7 +102,6 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
->>>
->>>        /* Update the AID, this is needed for dynamic PS support */
->>>        rt2x00dev->aid = bss_conf->assoc ? bss_conf->aid : 0;
->>> -       rt2x00dev->last_beacon = bss_conf->last_tsf;
->>
->> Can't access the code right now, is the last_beacon initialized somewhere else?
->> because I do assume we need the value somewhere?
->
-> Yup, it's set in two code paths. One is within rt2x00 where last_beacon is
-> set to jiffies. The other one is here where it is set to last_tsf which is not
-> derived from jiffies at all :D
+Changes some references to compat and compat-wireless git tree hosted
+at git.kernel.org to github and changed some references from wireless-
+testing to linux-next and linux-2.6-allstable to linux-stable.
 
-Hmm ok, well then removing this line should be safe :)
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ README                        |    4 ++--
+ scripts/admin-update.sh       |   16 ++++++++--------
+ scripts/gen-stable-release.sh |    4 ++--
+ 3 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/README b/README
+index 09d8612..2cbef56 100644
+--- a/README
++++ b/README
+@@ -302,8 +302,8 @@ compatibility. You will then need to checkout three trees to start hacking on
+ compat-wireless:
+ 
+ git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
+-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
++git://github.com/mcgrof/compat.git
++git://github.com/mcgrof/compat-wireless.git
+ 
+ Linux next
+ ----------
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index c4f5e39..a9dc68c 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -2,21 +2,21 @@
+ # 
+ # Copyright 2007, 2008, 2010	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+ #
+-# Use this to update compat-wireless-2.6 to the latest
+-# wireless-testing.git tree you have.
++# Use this to update compat-wireless to the latest
++# linux-nex.git tree you have.
+ #
+-# Usage: you should have the latest pull of wireless-2.6.git
+-# git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+-# We assume you have it on your ~/devel/wireless-testing/ directory. If you do,
+-# just run this script from the compat-wireless-2.6 directory.
++# Usage: you should have the latest pull of linux-nex.git
++# git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
++# We assume you have it on your ~/linux-next/ directory. If you do,
++# just run this script from the compat-wireless directory.
+ # You can specify where your GIT_TREE is by doing:
+ #
+-# export GIT_TREE=/home/mcgrof/wireless-testing/
++# export GIT_TREE=/home/mcgrof/linux-next/
+ # 
+ # for example
+ #
+ GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+-GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
++GIT_COMPAT_URL="git://github.com/mcgrof/compat.git"
+ 
+ INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h hci_mon.h mgmt.h sco.h smp.h a2mp.h"
+ NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
+diff --git a/scripts/gen-stable-release.sh b/scripts/gen-stable-release.sh
+index 9764730..98f4af0 100755
+--- a/scripts/gen-stable-release.sh
++++ b/scripts/gen-stable-release.sh
+@@ -3,8 +3,8 @@
+ #
+ # You can use this to make stable compat-wireless releases
+ #
+-# The assumption is you have the linux-2.6-allstable git tree on your $HOME
+-# git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
++# The assumption is you have the linux-stable git tree on your $HOME
++# git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+ #
+ # Local branches will be created based on the remote linux-2.6.X.y branches.
+ # If your branch already exists we will nuke it for you to avoid rebasing.
+-- 
+1.7.9.5
+
