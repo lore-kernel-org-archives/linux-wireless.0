@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41314 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756774Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 09:25:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com
-Subject: [PATCH 9/9] ath9k_hw: clean up ANI OFDM trigger handling
-Date: Fri, 15 Jun 2012 15:25:27 +0200
-Message-Id: <1339766727-61926-9-git-send-email-nbd@openwrt.org> (sfid-20120615_152555_303116_0E809950)
-In-Reply-To: <1339766727-61926-8-git-send-email-nbd@openwrt.org>
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
- <1339766727-61926-2-git-send-email-nbd@openwrt.org>
- <1339766727-61926-3-git-send-email-nbd@openwrt.org>
- <1339766727-61926-4-git-send-email-nbd@openwrt.org>
- <1339766727-61926-5-git-send-email-nbd@openwrt.org>
- <1339766727-61926-6-git-send-email-nbd@openwrt.org>
- <1339766727-61926-7-git-send-email-nbd@openwrt.org>
- <1339766727-61926-8-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:54074 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494Ab2FCPCT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jun 2012 11:02:19 -0400
+Message-ID: <1338735736.4972.0.camel@jlt3.sipsolutions.net> (sfid-20120603_170231_946292_6C1AEEC5)
+Subject: Re: IWLWIFI should depend on SUSPEND
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sebastian Kemper <sebastian_ml@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 03 Jun 2012 17:02:16 +0200
+In-Reply-To: <20120603091643.GA2191@wolfgang> (sfid-20120603_111701_060866_620EFB8E)
+References: <20120519201958.GA2313@wolfgang>
+	 <1337540836.4585.1.camel@jlt3.sipsolutions.net>
+	 <1338384543.4511.18.camel@jlt3.sipsolutions.net>
+	 <20120603091643.GA2191@wolfgang> (sfid-20120603_111701_060866_620EFB8E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adjust ah->config.ofdm_trig_{high,low} when setting noise immunity values
-to simplify threshold checks in ath9k_hw_ani_monitor
+On Sun, 2012-06-03 at 11:16 +0200, Sebastian Kemper wrote:
+> On Wed, May 30, 2012 at 03:29:03PM +0200, Johannes Berg wrote:
+> > Could you try this patch please?
+> > 
+> > johannes
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> > b/drivers/net/wireless/iwlwifi/iwl-mac80211.c index ab2f4d7..06546f7
+> > 100644 --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c +++
+> > b/drivers/net/wireless/iwlwifi/iwl-mac80211.c @@ -199,6 +199,7 @@ int
+> > iwlagn_mac_setup_register(struct iwl_priv *priv,
+> > WIPHY_FLAG_DISABLE_BEACON_HINTS | WIPHY_FLAG_IBSS_RSN;
+> >  
+> > +#ifdef CONFIG_PM if (priv->fw->img[IWL_UCODE_WOWLAN].sec[0].len &&
+> > priv->trans->ops->wowlan_suspend &&
+> > device_can_wakeup(priv->trans->dev)) { @@ -217,6 +218,7 @@ int
+> > iwlagn_mac_setup_register(struct iwl_priv *priv,
+> > hw->wiphy->wowlan.pattern_max_len = IWLAGN_WOWLAN_MAX_PATTERN_LEN; }
+> > +#endif
+> >  
+> >  	if (iwlwifi_mod_params.power_save) hw->wiphy->flags |=
+> >  	WIPHY_FLAG_PS_ON_BY_DEFAULT;
+> 
+> Hello Johannes,
+> 
+> the patch doesn't apply on top of 3.2.18 (kernel I currently use),
+> neither on 3.3.7.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ani.c |   23 ++++++++++-------------
- 1 files changed, 10 insertions(+), 13 deletions(-)
+Oh, so this goes back much further than I thought.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 6ee0875..a90aa0b 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -179,6 +179,14 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
- 			ath9k_hw_ani_control(ah,
- 				ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
- 				entry_ofdm->ofdm_weak_signal_on);
-+
-+	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
-+	} else {
-+		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI;
-+		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
-+	}
- }
- 
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
-@@ -428,21 +436,10 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 
- 	if (aniState->listenTime > ah->aniperiod) {
- 		if (cckPhyErrRate < ah->config.cck_trig_low &&
--		    ((ofdmPhyErrRate < ah->config.ofdm_trig_low &&
--		      aniState->ofdmNoiseImmunityLevel <
--		      ATH9K_ANI_OFDM_DEF_LEVEL) ||
--		     (ofdmPhyErrRate < ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI &&
--		      aniState->ofdmNoiseImmunityLevel >=
--		      ATH9K_ANI_OFDM_DEF_LEVEL))) {
-+		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
- 			ath9k_hw_ani_lower_immunity(ah);
- 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
--		} else if ((ofdmPhyErrRate > ah->config.ofdm_trig_high &&
--			    aniState->ofdmNoiseImmunityLevel >=
--			    ATH9K_ANI_OFDM_DEF_LEVEL) ||
--			   (ofdmPhyErrRate >
--			    ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI &&
--			    aniState->ofdmNoiseImmunityLevel <
--			    ATH9K_ANI_OFDM_DEF_LEVEL)) {
-+		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
- 			ath9k_hw_ani_ofdm_err_trigger(ah);
- 			aniState->ofdmsTurn = false;
- 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
--- 
-1.7.3.2
+Well, the easiest is probably if you find the wowlan.pattern_max_len
+stuff etc. and put #ifdef around the whole wowlan block manually, like
+in my patch.
+
+johannes
 
