@@ -1,46 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:63510 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab2FFKVA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45921 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530Ab2FDK7j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:21:00 -0400
-Received: by dady13 with SMTP id y13so8594095dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 03:20:59 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH 0/4] Support proactive PREQ mechanism in Mesh
-Date: Wed,  6 Jun 2012 18:20:35 +0800
-Message-Id: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120606_122104_484695_18F90616)
+	Mon, 4 Jun 2012 06:59:39 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.38103.52026.288964@gargle.gargle.HOWL> (sfid-20120604_132058_640105_2902EA26)
+Date: Mon, 4 Jun 2012 16:28:31 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 16/20] ath9k_hw: fix BT RF performance
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These series of patches allow the support of proactive PREQ mechanism as defined in
-Sec. 13.10.4.2 of IEEE Std. 802.11-2012 based on the setting of dot11MeshHWMPRootMode
-as follow:
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-dot11MeshHWMPRootMode (2): Proactive PREQ no PREP
-dot11MeshHWMPRootMode (3): Proactive PREQ with PREP
+When software rfkill is triggered, before put the chip in reset
+state, give LNA and SPDT control to BT to make sure BT can have
+good RF performance.
 
-Proactive RANN is now supported if the dot11MeshHWMPRootMode is set as (4).
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   16 ++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +++
+ 3 files changed, 20 insertions(+)
 
-Chun-Yeow Yeoh (4):
-  {nl,cfg,mac}80211: implement dot11MeshHWMProotInterval and
-    dot11MeshHWMPactivePathToRootTimeout
-  mac80211: implement the proactive PREQ generation
-  mac80211: implement the proactive PREP generation
-  mac80211: invoke the timer only with correct dot11MeshHWMPRootMode
-    value
-
- include/linux/nl80211.h       |    9 +++++
- include/net/cfg80211.h        |    2 +
- net/mac80211/cfg.c            |   12 ++++++-
- net/mac80211/debugfs_netdev.c |    6 +++
- net/mac80211/mesh.c           |    9 +++--
- net/mac80211/mesh_hwmp.c      |   72 +++++++++++++++++++++++++++++++++++------
- net/wireless/mesh.c           |    4 ++
- net/wireless/nl80211.c        |   14 ++++++++
- 8 files changed, 113 insertions(+), 15 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 854dff6..8b09a82 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1391,3 +1391,19 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	return value;
+ }
+ EXPORT_SYMBOL(ar9003_mci_state);
++
++void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++
++	ath_dbg(common, MCI, "Give LNA and SPDT control to BT\n");
++
++	REG_SET_BIT(ah, AR_PHY_GLB_CONTROL, AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
++	mci->is_2g = false;
++	mci->update_2g5g = true;
++	ar9003_mci_send_2g5g_status(ah, true);
++
++	/* Force another 2g5g update at next scanning */
++	mci->update_2g5g = true;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 652ab8c..f4a6a44 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -266,6 +266,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ void ar9003_mci_cleanup(struct ath_hw *ah);
+ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
++void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
+ 
+ /*
+  * These functions are used by ath9k_hw.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9f0f5f7..98478fd 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2737,6 +2737,9 @@ EXPORT_SYMBOL(ath9k_hw_setrxfilter);
+ 
+ bool ath9k_hw_phy_disable(struct ath_hw *ah)
+ {
++	if (ath9k_hw_mci_is_enabled(ah))
++		ar9003_mci_bt_gain_ctrl(ah);
++
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_WARM))
+ 		return false;
+ 
+-- 
+1.7.10.3
 
