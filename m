@@ -1,73 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36181 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755030Ab2F3Oz3 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60075 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054Ab2FDK6W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 10:55:29 -0400
-Message-ID: <1341068113.4852.25.camel@deadeye.wl.decadent.org.uk> (sfid-20120630_165603_739064_87DB7225)
-Subject: Re: linux-firmware: pull-request wl12xx 2012-06-27
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Luciano Coelho <coelho@ti.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org, arik@wizery.com
-Date: Sat, 30 Jun 2012 15:55:13 +0100
-In-Reply-To: <1340817712.1631.633.camel@cumari.coelho.fi>
-References: <1340817712.1631.633.camel@cumari.coelho.fi>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-l6/TW8WCLnWH6dtIf8Wz"
-Mime-Version: 1.0
+	Mon, 4 Jun 2012 06:58:22 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.38026.380186.485805@gargle.gargle.HOWL> (sfid-20120604_125825_812162_E40D5C9D)
+Date: Mon, 4 Jun 2012 16:27:14 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 02/20] ath9k: Handle ASPM properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ASPM has to be disabled when BTCOEX is in use, do this properly
+by calling the bus-specific ASPM init routine after the
+BTCOEX scheme has been determined.
 
---=-l6/TW8WCLnWH6dtIf8Wz
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   |   11 -----------
+ drivers/net/wireless/ath/ath9k/init.c |    3 +++
+ drivers/net/wireless/ath/ath9k/pci.c  |    5 +++++
+ 3 files changed, 8 insertions(+), 11 deletions(-)
 
-On Wed, 2012-06-27 at 20:21 +0300, Luciano Coelho wrote:
-> Hi Ben,
->=20
-> Here are some new versions of TI's WLAN firmwares.  Also a new one for a
-> new chip we started supporting recently.
->=20
-> Please let me know if there are any problems.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 7db1890..febf697 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -390,14 +390,6 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
+ }
+ 
+-static void ath9k_hw_aspm_init(struct ath_hw *ah)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	if (common->bus_ops->aspm_init)
+-		common->bus_ops->aspm_init(common);
+-}
+-
+ /* This should work for all families including legacy */
+ static bool ath9k_hw_chip_test(struct ath_hw *ah)
+ {
+@@ -693,9 +685,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (r)
+ 		return r;
+ 
+-	if (ah->is_pciexpress)
+-		ath9k_hw_aspm_init(ah);
+-
+ 	r = ath9k_hw_init_macaddr(ah);
+ 	if (r) {
+ 		ath_err(common, "Failed to initialize MAC address\n");
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 3e22839..9dfce1a 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -597,6 +597,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	ath9k_cmn_init_crypto(sc->sc_ah);
+ 	ath9k_init_misc(sc);
+ 
++	if (common->bus_ops->aspm_init)
++		common->bus_ops->aspm_init(common);
++
+ 	return 0;
+ 
+ err_btcoex:
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index a856b51..6ec9f88 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -115,6 +115,9 @@ static void ath_pci_aspm_init(struct ath_common *common)
+ 	int pos;
+ 	u8 aspm;
+ 
++	if (!ah->is_pciexpress)
++		return;
++
+ 	pos = pci_pcie_cap(pdev);
+ 	if (!pos)
+ 		return;
+@@ -138,6 +141,7 @@ static void ath_pci_aspm_init(struct ath_common *common)
+ 		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+ 		pci_write_config_byte(parent, pos + PCI_EXP_LNKCTL, aspm);
+ 
++		ath_info(common, "Disabling ASPM since BTCOEX is enabled\n");
+ 		return;
+ 	}
+ 
+@@ -147,6 +151,7 @@ static void ath_pci_aspm_init(struct ath_common *common)
+ 		ah->aspm_enabled = true;
+ 		/* Initialize PCIe PM and SERDES registers. */
+ 		ath9k_hw_configpcipowersave(ah, false);
++		ath_info(common, "ASPM enabled: 0x%x\n", aspm);
+ 	}
+ }
+ 
+-- 
+1.7.10.3
 
-This adds firmware that's requested by a new driver:
-
-[...]
->       wl18xx: add firmware for WiLink8 WLAN chips
-[...]
-
-The new driver should get its own section in WHENCE.
-
-Ben.
-
---=20
-Ben Hutchings
-Lowery's Law:
-             If it jams, force it. If it breaks, it needed replacing anyway=
-.
-
---=-l6/TW8WCLnWH6dtIf8Wz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAT+8TUee/yOyVhhEJAQoRgg//e4mK8YHCjYCoyMEeQq1QFj3Hpea1JD1u
-fVu/XpzUC26D9TGuOpW53cpnw0jU0dox6KutCBwddPmM77W1QI4QfFUI0TjENxxS
-dHO0mmdsOb3t2isV2Ns+v97clsKLjMxNrYx8Oe56grRpLrFTNJvnTnk/TqUXCVmv
-QlFqttRSjN2Bwl4AtJA4rFY6GlGd3G9Ex8O3E5G08lFy3zwAasIakW/BMIsWIaL6
-ukGFX14KowN+4ARisMFHES5OXzDGdFcoF3szwJFqeyIW+EJ4wpMtSrCHU/jDn+lO
-1PO+7PjTxA5Ab3911cdTL9QabOdLqfhSl2iAMj/Q0C2hQpwd0fuBTv97jlFNKWy3
-6sEVhPPaqvmI4mlK2+OUsk7QZ8swVbR2f8EbuEEknziV3B9EAfgqOLsHrtyuivmF
-m2saoGod3hoc/43ZMNKgab9Gan9HWZsZO/+p2qSnGNN/7HNWJa54jCycGQCiPoS4
-jIN8DTbXrJXl8+VTcaROFOMEmvNRtXVBdFXV9oI0eA6Kc2BQ6doRmt37L6djSP9o
-4GNNsGml8pLeQL+Og2c5vJMDIZW2n1vsUAB8h6bUSW2Ma4gqFpmGe1UXJNzS6r+K
-U3SDn+5aRJ3KqN10Dpwz9KQ4ZKTPHf+ytRlRKMzAoLuX40PbBBJR4/Tf2LkO4Fsz
-9BLF33GuYT0=
-=dLYb
------END PGP SIGNATURE-----
-
---=-l6/TW8WCLnWH6dtIf8Wz--
