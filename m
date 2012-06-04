@@ -1,102 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29412 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422Ab2FMEns (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60075 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab2FDK6R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 00:43:48 -0400
-Message-ID: <4FD81A7D.4060300@qca.qualcomm.com> (sfid-20120613_064353_248668_4638A85F)
-Date: Wed, 13 Jun 2012 10:13:41 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Mon, 4 Jun 2012 06:58:17 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@venema.h4ckr.net>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<stable@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: Fix softlockup in AR9485
-References: <1339512223-17514-1-git-send-email-mohammed@qca.qualcomm.com> <20120612194429.GB1932@tuxdriver.com>
-In-Reply-To: <20120612194429.GB1932@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.38020.949577.773472@gargle.gargle.HOWL> (sfid-20120604_125820_755154_8E92FE96)
+Date: Mon, 4 Jun 2012 16:27:08 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 01/20] ath9k: Prune ath9k_init_device
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Instead of cluttering ath9k_init_device() with 'ath_softc'
+specific initialization code, use ath9k_init_softc() to
+setup driver-specific work routines, timers etc.
 
-On Wednesday 13 June 2012 01:14 AM, John W. Linville wrote:
-> Do you have a version that applies to 3.5 and earlier?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |   15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-thanks, will soon send a back ported version for 3.5. thanks.
-
->
-> On Tue, Jun 12, 2012 at 08:13:43PM +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> steps to recreate:
->> load latest ath9k driver with AR9485
->> stop the network-manager and wpa_supplicant
->> bring the interface up
->>
->> 	Call Trace:
->> 	[<ffffffffa0517490>] ? ath_hw_check+0xe0/0xe0 [ath9k]
->> 	[<ffffffff812cd1e8>] __const_udelay+0x28/0x30
->> 	[<ffffffffa03bae7a>] ar9003_get_pll_sqsum_dvc+0x4a/0x80 [ath9k_hw]
->> 	[<ffffffffa05174eb>] ath_hw_pll_work+0x5b/0xe0 [ath9k]
->> 	[<ffffffff810744fe>] process_one_work+0x11e/0x470
->> 	[<ffffffff8107530f>] worker_thread+0x15f/0x360
->> 	[<ffffffff810751b0>] ? manage_workers+0x230/0x230
->> 	[<ffffffff81079af3>] kthread+0x93/0xa0
->> 	[<ffffffff815fd3a4>] kernel_thread_helper+0x4/0x10
->> 	[<ffffffff81079a60>] ? kthread_freezable_should_stop+0x70/0x70
->> 	[<ffffffff815fd3a0>] ? gs_change+0x13/0x13
->>
->> ensure that the PLL-WAR for AR9485/AR9340 is executed only if the STA is
->> associated (or) IBSS/AP mode had started beaconing. Ideally this WAR
->> is needed to recover from some rare beacon stuck during stress testing.
->> Before the STA is associated/IBSS had started beaconing, PLL4(0x1618c)
->> always seem to have zero even though we had configured PLL3(0x16188) to
->> query about PLL's locking status. When we keep on polling infinitely PLL4's
->> 8th bit(ie check for PLL locking measurements is done), machine hangs
->> due to softlockup.
->>
->> fixes https://bugzilla.redhat.com/show_bug.cgi?id=811142
->>
->> Reported-by: Rolf Offermanns<rolf.offermanns@gmx.net>
->> Cc: stable@vger.kernel.org
->> Tested-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/link.c |    8 ++++++++
->>   1 files changed, 8 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
->> index 0cc4c70..a105c94 100644
->> --- a/drivers/net/wireless/ath/ath9k/link.c
->> +++ b/drivers/net/wireless/ath/ath9k/link.c
->> @@ -136,6 +136,14 @@ void ath_hw_pll_work(struct work_struct *work)
->>   	u32 pll_sqsum;
->>   	struct ath_softc *sc = container_of(work, struct ath_softc,
->>   					    hw_pll_work.work);
->> +	/*
->> +	 * ensure that the PLL WAR is executed only
->> +	 * after the STA is associated (or) if the
->> +	 * beaconing had started in interfaces that
->> +	 * uses beacons.
->> +	 */
->> +	if (!test_bit(SC_OP_BEACONS,&sc->sc_flags))
->> +		return;
->>
->>   	ath9k_ps_wakeup(sc);
->>   	pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
->> --
->> 1.7.0.4
->>
->>
->
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index dee9e09..3e22839 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -489,6 +489,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 
+ 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
+ 
++	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+@@ -560,6 +561,12 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
+ 		     (unsigned long)sc);
+ 
++	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
++	INIT_WORK(&sc->hw_check_work, ath_hw_check);
++	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
++	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
++	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
++
+ 	/*
+ 	 * Cache line size is used to size and align various
+ 	 * structures used to communicate with the hardware.
+@@ -782,11 +789,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		ARRAY_SIZE(ath9k_tpt_blink));
+ #endif
+ 
+-	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+-	INIT_WORK(&sc->hw_check_work, ath_hw_check);
+-	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
+-	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+-
+ 	/* Register with mac80211 */
+ 	error = ieee80211_register_hw(hw);
+ 	if (error)
+@@ -805,9 +807,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 			goto error_world;
+ 	}
+ 
+-	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
+-	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+-
+ 	ath_init_leds(sc);
+ 	ath_start_rfkill_poll(sc);
+ 
 -- 
-thanks,
-shafi
+1.7.10.3
+
