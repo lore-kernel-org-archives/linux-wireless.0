@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9660 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751629Ab2FRNbm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46266 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756822Ab2FDLnO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 09:31:42 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/4] ath9k: fix mci_is_enabled utility
-Date: Mon, 18 Jun 2012 19:02:38 +0530
-Message-ID: <1340026360-18873-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120618_153144_545402_AF92E3CA)
-In-Reply-To: <1340026360-18873-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1340026360-18873-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 4 Jun 2012 07:43:14 -0400
+Message-ID: <1338810191.4512.10.camel@jlt3.sipsolutions.net> (sfid-20120604_134322_137939_988A2C37)
+Subject: [PATCH 3.5 v2] iwlwifi: disable WoWLAN if !CONFIG_PM_SLEEP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Sebastian Kemper <sebastian_ml@gmx.net>
+Date: Mon, 04 Jun 2012 13:43:11 +0200
+In-Reply-To: <1338533803.4884.6.camel@jlt3.sipsolutions.net> (sfid-20120601_085648_998164_987CB355)
+References: <1338533803.4884.6.camel@jlt3.sipsolutions.net>
+	 (sfid-20120601_085648_998164_987CB355)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During driver stop, btcoex is disabled and also btcoex_hw.enabled
-is set to false. Afterwards mci_is_enabled returns false so that
-BT is not gaining SPDT control on WLAN sleep. Fix that.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+If CONFIG_PM_SLEEP is disabled, then iwlwifi doesn't
+support suspend/resume handlers and thus mac80211
+(correctly) refuses advertising WoWLAN. Disable
+WoWLAN in the driver in this case.
+
+Cc: stable@kernel.org
+Reported-by: Sebastian Kemper <sebastian_ml@gmx.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 03d5909..934ea40 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1038,7 +1038,8 @@ static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
- }
- static inline bool ath9k_hw_mci_is_enabled(struct ath_hw *ah)
- {
--	return ah->btcoex_hw.enabled && (ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
-+	return ah->common.btcoex_enabled &&
-+	       (ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index ab2f4d7..5d158ca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -199,6 +199,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
+ 			    WIPHY_FLAG_IBSS_RSN;
  
- }
- void ath9k_hw_btcoex_enable(struct ath_hw *ah);
++#ifdef CONFIG_PM_SLEEP
+ 	if (priv->fw->img[IWL_UCODE_WOWLAN].sec[0].len &&
+ 	    priv->trans->ops->wowlan_suspend &&
+ 	    device_can_wakeup(priv->trans->dev)) {
+@@ -217,6 +218,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		hw->wiphy->wowlan.pattern_max_len =
+ 					IWLAGN_WOWLAN_MAX_PATTERN_LEN;
+ 	}
++#endif
+ 
+ 	if (iwlwifi_mod_params.power_save)
+ 		hw->wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
 -- 
-1.7.10.4
+1.7.10
+
+
 
