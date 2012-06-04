@@ -1,224 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:59166 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753925Ab2FZJBT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44760 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677Ab2FDK6o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 05:01:19 -0400
-Date: Tue, 26 Jun 2012 16:56:07 +0800
-From: Dong Aisheng <aisheng.dong@freescale.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-CC: Wei Ni <wni@nvidia.com>, Mursalin Akon <makon@nvidia.com>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	'Mark Brown' <broonie@opensource.wolfsonmicro.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	'Philip Rakity' <prakity@marvell.com>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, <r64343@freescale.com>,
-	<b29397@freescale.com>, <b20223@freescale.com>,
-	<r65037@freescale.com>
-Subject: Re: Where to power on the wifi device before loading the driver.
-Message-ID: <20120626085605.GA6047@shlinux2.ap.freescale.net> (sfid-20120626_110130_478362_A29DA53F)
-References: <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
- <4FDB5976.20809@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
- <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com>
- <20120619091719.GZ3974@opensource.wolfsonmicro.com>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD626@HKMAIL01.nvidia.com>
- <4FE112F2.7000506@wwwdotorg.org>
+	Mon, 4 Jun 2012 06:58:44 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4FE112F2.7000506@wwwdotorg.org>
+Message-ID: <20428.38048.99716.355420@gargle.gargle.HOWL> (sfid-20120604_125847_461172_5EFBA264)
+Date: Mon, 4 Jun 2012 16:27:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 06/20] ath9k_hw: Cleanup power mode API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 06:01:54PM -0600, Stephen Warren wrote:
-> On 06/19/2012 03:44 AM, Wei Ni wrote:
-> > On Tue, Jun 19, 2012 at 17:17:19, Mark Brown wrote:
-> >> * PGP Signed by an unknown key
-> >>
-> >> On Tue, Jun 19, 2012 at 12:25:58PM +0800, Wei Ni wrote:
-> >>
-> >> As Stephen previously said please fix your mail formatting - word 
-> >> wrapping within paragraphs is important!
-> >>
-> >>> On Tue, Jun 19, 2012 at 09:23:35, Philip Rakity wrote:
-> >>>> Why can't you use the regulator notify to get called back on power 
-> >>>> or voltage change options to plumb in the manipulation of the gpio. 
-> >>>> I can imagine you might need to add a notify call in core.c if you 
-> >>>> need to assert the gpio before power is applied
-> >>>
-> >>> Yes, we can use the regulator notify, but the Tegra30 support is via 
-> >>> device tree, I think there have no special board file to run the call 
-> >>> back.
-> >>
-> >> You can mix board files with device tree for cases where device tree is 
-> >> not yet up to the job, though the goal should be to come up with a way of expressing things in device tree.
-> > 
-> > I think we wish to use the device tree to handle these gpios, pass them to the related driver to assert them.
-> > If we mix the board files, we even can set these gpio directly, not use the notify. But I think this is not a goog way.
-> 
-> Yes, I would definitely not want to add this to a board file; there is
-> no board file for Cardhu, and we're getting close to deleting all the
-> board files that are left for other boards.
-> 
-> I think what we need is some way of matching a DT node to a device even
-> when that device was instantiated through some probing mechanism such as
-> SDIO or USB (and I've heard hints that one can already do this for PCI;
-> I should investigate).
-> 
-> So, we start off with the plain SDHCI controller node:
-> 
-> sdhci@78000000 {
-> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
-> 	reg = <0x78000000 0x200>;
-> 	interrupts = <0 14 0x04>;
-> };
-> 
-> Then, we add a child node to represent the device that's attached:
-> 
-> sdhci@78000000 {
-> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
-> 	reg = <0x78000000 0x200>;
-> 	interrupts = <0 14 0x04>;
-> 
-> 	sdio-device {
-> 		reset-gpios = <...>;
-> 		enable-gpios = <...>;
-> 	};
-> };
-> 
-> When the SDHCI controller/core instantiates the child device it finds on
-> the HW bus, it initializes that struct device's of_node with a pointer
-> to the sdio-device node above. From there, the child device can get DT
-> properties such as GPIOs in the usual way.
-> 
-> However, there are still some issues that need thought here; what if (as
-> is I believe the case on Cardhu) we can in fact plug in multiple
-> different types of device into the socket? Might we end up with
-> something like:
-> 
-> sdhci@78000000 {
-> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
-> 	reg = <0x78000000 0x200>;
-> 	interrupts = <0 14 0x04>;
-> 
-> 	sdio-device-option@0 {
-> 		compatible = "broadcom,bcm4239";
-> 		reset-gpios = <...>;
-> 		enable-gpios = <...>;
-> 	};
-> 
-> 	sdio-device-option@1 {
-> 		compatible = "broadcom,bcm4330";
-> 		reset-gpios = <...>;
-> 		enable-gpios = <...>;
-> 	};
-> };
-> 
-> and match on compatible value?
-> 
-I like this idea.
-We may extend the sdio_device_id to contain a compatible string,
-then sdio core is responsible to pass the corresponding device node to the
-sdio function driver once a match device found, this is sdio function independent.
-The sdio function driver then are responsible to parse the device node to
-fetch the needed information like reset-gpios and enable-gpios to do correct
-initialization sequence.
+The 'setChip' variable is unused, remove it and
+simplify the functions.
 
-However, one known question for this model is that some WiFi may need reset the chip
-via gpio first before being able to be enumerated.
-Then this model may not work for such devices since it can not enumerate this device
-before completing the sdio function specific initialization, neither passing node to its
-driver.
-(i'm not sure this is a correct behavior since per my understanding, the sdio io function
-(function 1-7) specific initialization should not affect the normal sdio common function
-(function 0) enumeration, but i did not find a clear definition in sdio spec.
-Anyone see such real devices?)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |  175 +++++++++++++++++------------------
+ 1 file changed, 85 insertions(+), 90 deletions(-)
 
-Then for such devices, that is definitely a problem.
-If the sdio function specific initialization affects the normal enumeration,
-then it definitely need to be put into sdio core as an interface like sdio_prepare before the
-enumeration.
-But it seems not reasonable since we did not know prepare for which sdio device
-before the sdio device enumeration completes.
-Maybe the possible solution is still do it in platform specific code via
-of_machine_is_compatible(....).
-
-For your question that user may plug multi types of sdio device with difference
-gpio using,
-did we see such a real device that the pluggable sdio devices need
-some extra gpio to work? I did not meet it before.
-If it real exists, can we rather consider it an integrated sdio devices on board?
-Then we can only define the integrated sdio device node on board under sdio controller.
-
-> But in this case, at least some of the data those two drivers want from
-> that node is the same; the 2 GPIOs that control the reset and enable
-> signals. Do we just make the bindings for those two devices happen to
-> share the same properties so that we can get away with just one node
-> irrespective of what device type has been found? What we're really
-Maybe no.
-These things are board specific and should be put in board dts file.
-If really using the same gpios by chance, then add them for each board may
-be reasonable.
-
-> modeling is the card slot, and the services it provides, so perhaps we
-> should really end up with:
-> 
-> sdhci@78000000 {
-> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
-> 	reg = <0x78000000 0x200>;
-> 	interrupts = <0 14 0x04>;
-> 
-> 	socket {
-> 		reset-gpios = <...>;
-> 		enable-gpios = <...>;
-> 
-> 		sdio-device-option@0 {
-> 			compatible = "broadcom,bcm4239";
-> 		};
-> 
-> 		sdio-device-option@1 {
-> 			compatible = "broadcom,bcm4330";
-> 		};
-> 	};
-> };
-> 
-> Where somehow the WiFi drivers can obtain the reset/enable service from
-> the socket that hosts them, but still have nodes for the attached device
-> itself in case any additional driver-specific configuration is needed.
-> 
-> That sounds somewhat similar to the virtual platform device that was
-> mentioned earlier in this thread by Broadcom, although I'm not sure
-> whether explicitly modeling it as a platform device makes sense, rather
-> than the socket providing services to the WiFi module, not necessarily
-> through a device.
-> 
-> Unfortunately, it should be noted that the WiFi device socket on Cardhu
-> apparently isn't some standardized thing (like PCIe) but something
-> rather more custom, although there are apparently devices available to
-> plug into it from multiple module vendors which contain WiFi chips from
-> multiple chip vendors.
-That seems should be cared by the corresponding WiFi function driver
-rather than the binding itself no matter which is plugged in.
-The binding just pass the node to driver, then everything else is driver
-specific. Is that reasonable?
-
-Regards
-Dong Aisheng
-> 
-> Anyway, these are just some quick thoughts on the topic - obviously more
-> flesh is needed.
-> _______________________________________________
-> devicetree-discuss mailing list
-> devicetree-discuss@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/devicetree-discuss
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a7231ca..9f0f5f7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2004,39 +2004,38 @@ EXPORT_SYMBOL(ath9k_hw_reset);
+  * Notify Power Mgt is disabled in self-generated frames.
+  * If requested, force chip to sleep.
+  */
+-static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
++static void ath9k_set_power_sleep(struct ath_hw *ah)
+ {
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+-	if (setChip) {
+-		if (AR_SREV_9462(ah)) {
+-			REG_WRITE(ah, AR_TIMER_MODE,
+-				  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
+-			REG_WRITE(ah, AR_NDP2_TIMER_MODE, REG_READ(ah,
+-				  AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
+-			REG_WRITE(ah, AR_SLP32_INC,
+-				  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
+-			/* xxx Required for WLAN only case ? */
+-			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
+-			udelay(100);
+-		}
+ 
+-		/*
+-		 * Clear the RTC force wake bit to allow the
+-		 * mac to go to sleep.
+-		 */
+-		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
++	if (AR_SREV_9462(ah)) {
++		REG_WRITE(ah, AR_TIMER_MODE,
++			  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
++		REG_WRITE(ah, AR_NDP2_TIMER_MODE,
++			  REG_READ(ah, AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
++		REG_WRITE(ah, AR_SLP32_INC,
++			  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
++		/* xxx Required for WLAN only case ? */
++		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
++		udelay(100);
++	}
+ 
+-		if (AR_SREV_9462(ah))
+-			udelay(100);
++	/*
++	 * Clear the RTC force wake bit to allow the
++	 * mac to go to sleep.
++	 */
++	REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
+ 
+-		if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+-			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
++	if (AR_SREV_9462(ah))
++		udelay(100);
+ 
+-		/* Shutdown chip. Active low */
+-		if (!AR_SREV_5416(ah) && !AR_SREV_9271(ah)) {
+-			REG_CLR_BIT(ah, AR_RTC_RESET, AR_RTC_RESET_EN);
+-			udelay(2);
+-		}
++	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
++		REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
++
++	/* Shutdown chip. Active low */
++	if (!AR_SREV_5416(ah) && !AR_SREV_9271(ah)) {
++		REG_CLR_BIT(ah, AR_RTC_RESET, AR_RTC_RESET_EN);
++		udelay(2);
+ 	}
+ 
+ 	/* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
+@@ -2049,44 +2048,42 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
+  * frames. If request, set power mode of chip to
+  * auto/normal.  Duration in units of 128us (1/8 TU).
+  */
+-static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
++static void ath9k_set_power_network_sleep(struct ath_hw *ah)
+ {
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	u32 val;
+ 
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+-	if (setChip) {
+-		struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 
+-		if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
+-			/* Set WakeOnInterrupt bit; clear ForceWake bit */
+-			REG_WRITE(ah, AR_RTC_FORCE_WAKE,
+-				  AR_RTC_FORCE_WAKE_ON_INT);
+-		} else {
++	if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
++		/* Set WakeOnInterrupt bit; clear ForceWake bit */
++		REG_WRITE(ah, AR_RTC_FORCE_WAKE,
++			  AR_RTC_FORCE_WAKE_ON_INT);
++	} else {
+ 
+-			/* When chip goes into network sleep, it could be waken
+-			 * up by MCI_INT interrupt caused by BT's HW messages
+-			 * (LNA_xxx, CONT_xxx) which chould be in a very fast
+-			 * rate (~100us). This will cause chip to leave and
+-			 * re-enter network sleep mode frequently, which in
+-			 * consequence will have WLAN MCI HW to generate lots of
+-			 * SYS_WAKING and SYS_SLEEPING messages which will make
+-			 * BT CPU to busy to process.
+-			 */
+-			if (AR_SREV_9462(ah)) {
+-				val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
+-					~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
+-				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
+-			}
+-			/*
+-			 * Clear the RTC force wake bit to allow the
+-			 * mac to go to sleep.
+-			 */
+-			REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
+-				    AR_RTC_FORCE_WAKE_EN);
+-
+-			if (AR_SREV_9462(ah))
+-				udelay(30);
++		/* When chip goes into network sleep, it could be waken
++		 * up by MCI_INT interrupt caused by BT's HW messages
++		 * (LNA_xxx, CONT_xxx) which chould be in a very fast
++		 * rate (~100us). This will cause chip to leave and
++		 * re-enter network sleep mode frequently, which in
++		 * consequence will have WLAN MCI HW to generate lots of
++		 * SYS_WAKING and SYS_SLEEPING messages which will make
++		 * BT CPU to busy to process.
++		 */
++		if (AR_SREV_9462(ah)) {
++			val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
++				~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
++			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
+ 		}
++		/*
++		 * Clear the RTC force wake bit to allow the
++		 * mac to go to sleep.
++		 */
++		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
++			    AR_RTC_FORCE_WAKE_EN);
++
++		if (AR_SREV_9462(ah))
++			udelay(30);
+ 	}
+ 
+ 	/* Clear Bit 14 of AR_WA after putting chip into Net Sleep mode. */
+@@ -2094,7 +2091,7 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
+ 		REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
+ }
+ 
+-static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
++static bool ath9k_hw_set_power_awake(struct ath_hw *ah)
+ {
+ 	u32 val;
+ 	int i;
+@@ -2105,37 +2102,35 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+ 		udelay(10);
+ 	}
+ 
+-	if (setChip) {
+-		if ((REG_READ(ah, AR_RTC_STATUS) &
+-		     AR_RTC_STATUS_M) == AR_RTC_STATUS_SHUTDOWN) {
+-			if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+-				return false;
+-			}
+-			if (!AR_SREV_9300_20_OR_LATER(ah))
+-				ath9k_hw_init_pll(ah, NULL);
++	if ((REG_READ(ah, AR_RTC_STATUS) &
++	     AR_RTC_STATUS_M) == AR_RTC_STATUS_SHUTDOWN) {
++		if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
++			return false;
+ 		}
+-		if (AR_SREV_9100(ah))
+-			REG_SET_BIT(ah, AR_RTC_RESET,
+-				    AR_RTC_RESET_EN);
++		if (!AR_SREV_9300_20_OR_LATER(ah))
++			ath9k_hw_init_pll(ah, NULL);
++	}
++	if (AR_SREV_9100(ah))
++		REG_SET_BIT(ah, AR_RTC_RESET,
++			    AR_RTC_RESET_EN);
+ 
++	REG_SET_BIT(ah, AR_RTC_FORCE_WAKE,
++		    AR_RTC_FORCE_WAKE_EN);
++	udelay(50);
++
++	for (i = POWER_UP_TIME / 50; i > 0; i--) {
++		val = REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M;
++		if (val == AR_RTC_STATUS_ON)
++			break;
++		udelay(50);
+ 		REG_SET_BIT(ah, AR_RTC_FORCE_WAKE,
+ 			    AR_RTC_FORCE_WAKE_EN);
+-		udelay(50);
+-
+-		for (i = POWER_UP_TIME / 50; i > 0; i--) {
+-			val = REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M;
+-			if (val == AR_RTC_STATUS_ON)
+-				break;
+-			udelay(50);
+-			REG_SET_BIT(ah, AR_RTC_FORCE_WAKE,
+-				    AR_RTC_FORCE_WAKE_EN);
+-		}
+-		if (i == 0) {
+-			ath_err(ath9k_hw_common(ah),
+-				"Failed to wakeup in %uus\n",
+-				POWER_UP_TIME / 20);
+-			return false;
+-		}
++	}
++	if (i == 0) {
++		ath_err(ath9k_hw_common(ah),
++			"Failed to wakeup in %uus\n",
++			POWER_UP_TIME / 20);
++		return false;
+ 	}
+ 
+ 	REG_CLR_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+@@ -2146,7 +2141,7 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	int status = true, setChip = true;
++	int status = true;
+ 	static const char *modes[] = {
+ 		"AWAKE",
+ 		"FULL-SLEEP",
+@@ -2162,17 +2157,17 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 
+ 	switch (mode) {
+ 	case ATH9K_PM_AWAKE:
+-		status = ath9k_hw_set_power_awake(ah, setChip);
++		status = ath9k_hw_set_power_awake(ah);
+ 		break;
+ 	case ATH9K_PM_FULL_SLEEP:
+ 		if (ath9k_hw_mci_is_enabled(ah))
+ 			ar9003_mci_set_full_sleep(ah);
+ 
+-		ath9k_set_power_sleep(ah, setChip);
++		ath9k_set_power_sleep(ah);
+ 		ah->chip_fullsleep = true;
+ 		break;
+ 	case ATH9K_PM_NETWORK_SLEEP:
+-		ath9k_set_power_network_sleep(ah, setChip);
++		ath9k_set_power_network_sleep(ah);
+ 		break;
+ 	default:
+ 		ath_err(common, "Unknown power mode %u\n", mode);
+-- 
+1.7.10.3
 
