@@ -1,28 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38978 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756753Ab2FFU3m (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38635 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756823Ab2FDKVe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 16:29:42 -0400
-Date: Wed, 06 Jun 2012 13:29:41 -0700 (PDT)
-Message-Id: <20120606.132941.1294502053699065256.davem@davemloft.net> (sfid-20120606_223001_670992_E3A43A95)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-06-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120606183613.GD2338@tuxdriver.com>
-References: <20120606183613.GD2338@tuxdriver.com>
+	Mon, 4 Jun 2012 06:21:34 -0400
+Message-ID: <1338805292.4512.8.camel@jlt3.sipsolutions.net> (sfid-20120604_122137_550103_DE98F045)
+Subject: Re: [RFC] cfg80211: 11ac change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 04 Jun 2012 12:21:32 +0200
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0A4550@mbx022-e1-nj-10.exch022.domain.local>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0A4550@mbx022-e1-nj-10.exch022.domain.local>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 6 Jun 2012 14:36:13 -0400
+On Mon, 2012-06-04 at 09:43 +0000, Mahesh Palivela wrote:
+> Hi,
+> 
+> As part of 11ac changes I had modified cfg80211 to push hw VHT capabilities to NL layer. Please review.
+> 
+> Signed off by: Mahesh Palivela
 
-> Here is a batch of wireless/bluetooth fixes intended for 3.5...
- ...
-> Please let me know if there are problems!
 
-Pulled, thanks for the detailed rundown, it helps.
+Please re-read the available documentation on patch formatting,
+changelogs, signed-off-by, etc. You're getting almost everything wrong
+that you can :-)
+
+> +/* 802.11ac VHT Capabilities */
+> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
+...
+> +#define IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN                  0x20000000
+
+> +    u16 cap; /* use IEEE80211_VHT_CAP_ */
+
+so how exactly is that going to fit?
+
+johannes
+
