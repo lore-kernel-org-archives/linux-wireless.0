@@ -1,79 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:60739 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752297Ab2FIRkJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21170 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225Ab2FDOzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 13:40:09 -0400
-Received: by weyu7 with SMTP id u7so1218461wey.19
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jun 2012 10:40:08 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: BA session issue due to old BARs?
-Date: Sat, 9 Jun 2012 19:40:03 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Sean Patrick Santos <quantheory@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com> <201206091623.25232.chunkeey@googlemail.com> <4FD363E8.9090508@openwrt.org>
-In-Reply-To: <4FD363E8.9090508@openwrt.org>
+	Mon, 4 Jun 2012 10:55:17 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201206091940.04037.chunkeey@googlemail.com> (sfid-20120609_194054_528909_E2B5AF5E)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.52239.190352.124133@gargle.gargle.HOWL> (sfid-20120604_165530_943553_053F152A)
+Date: Mon, 4 Jun 2012 20:24:07 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] ath9k: Fix powersave locking
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 09 June 2012 16:55:36 Felix Fietkau wrote:
-> On 2012-06-09 4:23 PM, Christian Lamparter wrote:
->> On Saturday 09 June 2012 14:20:48 Helmut Schaa wrote:
->>> On Sat, Jun 9, 2012 at 2:18 AM, Christian Lamparter wrote:
->>>> On Friday 08 June 2012 09:57:26 Sean Patrick Santos wrote:
->>>>> commit f0425beda4d404a6e751439b562100b902ba9c98
->>>>> Author: Felix Fietkau <nbd@openwrt.org>
->>>>> Date:   Sun Aug 28 21:11:01 2011 +0200
->>>>>
->>>>>     mac80211: retry sending failed BAR frames later instead of tearing down aggr
->>>>>
->>>> Or am I misinterpreting the commit and
->>>> this patch was just a temporary fix since back then mac80211
->>>> had problems with setting up BA session (and they might
->>>> have been fixed in the meantime?!).
->>> As far as I understood tearing down the BA session and then
->>> starting it again has a much higher impact onto throughput
->>> then just resending the BAR after the next successfully sent
->>> AMPDU.
->> Well, at least in case of carl9170 it looks like the resending
->> BARs are confusing the receiver reorder buffer on the other 
->> HT peer. Since it looks like the HT peer dump hardware is still
->> ACKs incoming frames from a carl9170 station, but the software
->> reorder buffer on the HT peer is silently dropping the data frames.
->> [Of course, data frames from other TIDs, MGMT (probes) or null-
->> frames are not reordered... so the connection polling with
->> null-frames does not detect the bad state and won't try to
->> recover).
-> I think we need to figure out what exactly confuses the receiver reorder
-> buffer of a HT peer. It sounds to me like something is causing a gap in
-> sequence number allocation, but I don't know what would do that. Where
-> exactly is the connection between BAR retransmission and those reorder
-> issues?
-The connection is that before the patch the BA session
-was torn down when a BAR was not delivered successfully.
-Now the code tries to revive the stalled BA sessions by
-sending BARs (which at least according to the spec
-should work fine as long as the BA session is still active?!).
+The 'ps_flags' is used/accessed in a variety of contexts
+and requires proper locking. Use 'sc_pm_lock' appropriately.
 
-I guess part of the problem is the implementation of
-"11.5.3 Error recovery upon a peer failure" in both peers.
-In order to debug this, it would be great to know how the
-peers handle a injected frame that has the ACK policy
-set to Block ACK but without an active session.
-802.11-2007 11.5.3 says (under figure 11-14) that the
-frame should be discarded and the receiver has to send
-a DELBA. However in mac80211 case (if I didn't miss any
-code), the frame is not discarded (in fact it will go
-though the rx path unreordered - code is in mac80211/rx.c,
-func: ieee80211_rx_reorder_ampdu) and no delba is sent
-either... so there's some potential from similar 
-"undefinied" behavior in other stacks as well.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   14 ++++++++++++--
+ drivers/net/wireless/ath/ath9k/recv.c |   13 ++++++-------
+ drivers/net/wireless/ath/ath9k/xmit.c |    3 +++
+ 3 files changed, 21 insertions(+), 9 deletions(-)
 
-Regards,
-	Christian
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6ff33c9..953888b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -345,7 +345,7 @@ void ath9k_tasklet(unsigned long data)
+ 	struct ath_softc *sc = (struct ath_softc *)data;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-
++	unsigned long flags;
+ 	u32 status = sc->intrstatus;
+ 	u32 rxmask;
+ 
+@@ -369,6 +369,7 @@ void ath9k_tasklet(unsigned long data)
+ 		goto out;
+ 	}
+ 
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 	if ((status & ATH9K_INT_TSFOOR) && sc->ps_enabled) {
+ 		/*
+ 		 * TSF sync does not look correct; remain awake to sync with
+@@ -377,6 +378,7 @@ void ath9k_tasklet(unsigned long data)
+ 		ath_dbg(common, PS, "TSFOOR - Sync with next Beacon\n");
+ 		sc->ps_flags |= PS_WAIT_FOR_BEACON | PS_BEACON_SYNC;
+ 	}
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+ 		rxmask = (ATH9K_INT_RXHP | ATH9K_INT_RXLP | ATH9K_INT_RXEOL |
+@@ -526,8 +528,10 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 			/* Clear RxAbort bit so that we can
+ 			 * receive frames */
+ 			ath9k_setpower(sc, ATH9K_PM_AWAKE);
++			spin_lock(&sc->sc_pm_lock);
+ 			ath9k_hw_setrxabort(sc->sc_ah, 0);
+ 			sc->ps_flags |= PS_WAIT_FOR_BEACON;
++			spin_unlock(&sc->sc_pm_lock);
+ 		}
+ 
+ chip_reset:
+@@ -682,6 +686,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_tx_control txctl;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	unsigned long flags;
+ 
+ 	if (sc->ps_enabled) {
+ 		/*
+@@ -704,6 +709,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		 * completed and if needed, also for RX of buffered frames.
+ 		 */
+ 		ath9k_ps_wakeup(sc);
++		spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 		if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
+ 			ath9k_hw_setrxabort(sc->sc_ah, 0);
+ 		if (ieee80211_is_pspoll(hdr->frame_control)) {
+@@ -719,6 +725,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		 * the ps_flags bit is cleared. We are just dropping
+ 		 * the ps_usecount here.
+ 		 */
++		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 		ath9k_ps_restore(sc);
+ 	}
+ 
+@@ -1479,7 +1486,7 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+-
++	unsigned long flags;
+ 	/*
+ 	 * Skip iteration if primary station vif's bss info
+ 	 * was not changed
+@@ -1501,7 +1508,10 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 		 * on the receipt of the first Beacon frame (i.e.,
+ 		 * after time sync with the AP).
+ 		 */
++		spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 		sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
++		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++
+ 		/* Reset rssi stats */
+ 		sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 3ac52c5..1cf4fc8 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -587,13 +587,13 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb, bool mybeacon)
+ 
+ 	/* Process Beacon and CAB receive in PS state */
+ 	if (((sc->ps_flags & PS_WAIT_FOR_BEACON) || ath9k_check_auto_sleep(sc))
+-	    && mybeacon)
++	    && mybeacon) {
+ 		ath_rx_ps_beacon(sc, skb);
+-	else if ((sc->ps_flags & PS_WAIT_FOR_CAB) &&
+-		 (ieee80211_is_data(hdr->frame_control) ||
+-		  ieee80211_is_action(hdr->frame_control)) &&
+-		 is_multicast_ether_addr(hdr->addr1) &&
+-		 !ieee80211_has_moredata(hdr->frame_control)) {
++	} else if ((sc->ps_flags & PS_WAIT_FOR_CAB) &&
++		   (ieee80211_is_data(hdr->frame_control) ||
++		    ieee80211_is_action(hdr->frame_control)) &&
++		   is_multicast_ether_addr(hdr->addr1) &&
++		   !ieee80211_has_moredata(hdr->frame_control)) {
+ 		/*
+ 		 * No more broadcast/multicast frames to be received at this
+ 		 * point.
+@@ -1229,7 +1229,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			skb_trim(skb, skb->len - 8);
+ 
+ 		spin_lock_irqsave(&sc->sc_pm_lock, flags);
+-
+ 		if ((sc->ps_flags & (PS_WAIT_FOR_BEACON |
+ 				     PS_WAIT_FOR_CAB |
+ 				     PS_WAIT_FOR_PSPOLL_DATA)) ||
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index bb74780..f777ddc 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1994,6 +1994,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
+ 	int q, padpos, padsize;
++	unsigned long flags;
+ 
+ 	ath_dbg(common, XMIT, "TX complete: skb: %p\n", skb);
+ 
+@@ -2012,6 +2013,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 		skb_pull(skb, padsize);
+ 	}
+ 
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 	if ((sc->ps_flags & PS_WAIT_FOR_TX_ACK) && !txq->axq_depth) {
+ 		sc->ps_flags &= ~PS_WAIT_FOR_TX_ACK;
+ 		ath_dbg(common, PS,
+@@ -2021,6 +2023,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 					PS_WAIT_FOR_PSPOLL_DATA |
+ 					PS_WAIT_FOR_TX_ACK));
+ 	}
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 
+ 	q = skb_get_queue_mapping(skb);
+ 	if (txq == sc->tx.txq_map[q]) {
+-- 
+1.7.10.3
+
