@@ -1,176 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16003 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755486Ab2FFKHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:03 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 08/29] NFC: Implement pn533 target mode polling loop
-Date: Wed,  6 Jun 2012 12:16:25 +0200
-Message-Id: <1338977806-30279-9-git-send-email-sameo@linux.intel.com> (sfid-20120606_120712_731095_4DE74FF2)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58298 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760006Ab2FDK7o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 06:59:44 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.38108.548476.991534@gargle.gargle.HOWL> (sfid-20120604_132059_153682_F191F0A2)
+Date: Mon, 4 Jun 2012 16:28:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 17/20] ath9k: BT coex performance tuning for AR9462
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We only want to support p2p target mode for now, no host card emulation.
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Use smaller aggregation limit and increasing aggregation threshold
+for osla that could improve wlan performance when there is HID profile.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/nfc/pn533.c |  109 ++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 104 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    3 --
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 -
+ drivers/net/wireless/ath/ath9k/mci.c        |   54 +++++++++++++++++----------
+ 3 files changed, 35 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index 38a523c..605a08a 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -74,6 +74,8 @@ MODULE_DEVICE_TABLE(usb, pn533_table);
- #define PN533_CMD_IN_RELEASE 0x52
- #define PN533_CMD_IN_JUMP_FOR_DEP 0x56
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 8b09a82..b1ced2a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1381,9 +1381,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	case MCI_STATE_NEED_FTP_STOMP:
+ 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
+ 		break;
+-	case MCI_STATE_NEED_TUNING:
+-		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_TUNING);
+-		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index f4a6a44..10282e2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -212,7 +212,6 @@ enum mci_state_type {
+ 	MCI_STATE_SET_CONCUR_TX_PRI,
+ 	MCI_STATE_RECOVER_RX,
+ 	MCI_STATE_NEED_FTP_STOMP,
+-	MCI_STATE_NEED_TUNING,
+ 	MCI_STATE_DEBUG,
+ 	MCI_STATE_MAX
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 7b553f6..49137f4 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -116,42 +116,58 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 	struct ath_mci_profile *mci = &btcoex->mci;
++	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
+ 	struct ath_mci_profile_info *info;
+ 	u32 num_profile = NUM_PROF(mci);
  
-+#define PN533_CMD_TG_INIT_AS_TARGET 0x8c
++	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
++		goto skip_tuning;
 +
- #define PN533_CMD_RESPONSE(cmd) (cmd + 1)
- 
- /* PN533 Return codes */
-@@ -253,6 +255,25 @@ struct pn533_cmd_jump_dep_response {
- 	u8 gt[];
- } __packed;
- 
-+
-+/* PN533_TG_INIT_AS_TARGET */
-+#define PN533_INIT_TARGET_PASSIVE 0x1
-+#define PN533_INIT_TARGET_DEP 0x2
-+
-+struct pn533_cmd_init_target {
-+	u8 mode;
-+	u8 mifare[6];
-+	u8 felica[18];
-+	u8 nfcid3[10];
-+	u8 gb_len;
-+	u8 gb[];
-+} __packed;
-+
-+struct pn533_cmd_init_target_response {
-+	u8 mode;
-+	u8 cmd[];
-+} __packed;
-+
- struct pn533 {
- 	struct usb_device *udev;
- 	struct usb_interface *interface;
-@@ -1078,11 +1099,88 @@ stop_poll:
- 	return 0;
- }
- 
--static int pn533_init_target(struct nfc_dev *nfc_dev, u32 protocols)
-+static int pn533_init_target_frame(struct pn533_frame *frame,
-+				   u8 *gb, size_t gb_len)
- {
-+	struct pn533_cmd_init_target *cmd;
-+	size_t cmd_len;
-+
-+	cmd_len = sizeof(struct pn533_cmd_init_target) + gb_len + 1;
-+	cmd = kzalloc(cmd_len, GFP_KERNEL);
-+	if (cmd == NULL)
-+		return -ENOMEM;
-+
-+	pn533_tx_frame_init(frame, PN533_CMD_TG_INIT_AS_TARGET);
-+
-+	/* DEP support only */
-+	cmd->mode |= PN533_INIT_TARGET_DEP;
-+	get_random_bytes(cmd->nfcid3, 10);
-+	cmd->gb_len = gb_len;
-+	memcpy(cmd->gb, gb, gb_len);
-+	/* Len Tk */
-+	cmd->gb[gb_len] = 0;
-+
-+	memcpy(PN533_FRAME_CMD_PARAMS_PTR(frame), cmd, cmd_len);
-+	frame->datalen += cmd_len;
-+
-+	pn533_tx_frame_finish(frame);
-+
- 	return 0;
- }
- 
-+static int pn533_init_target_complete(struct pn533 *dev, void *arg,
-+				      u8 *params, int params_len)
-+{
-+	struct pn533_cmd_init_target_response *resp;
-+
-+	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
-+
-+	if (params_len < 0) {
-+		nfc_dev_err(&dev->interface->dev,
-+			    "Error %d when starting as a target",
-+			    params_len);
-+
-+		return params_len;
-+	}
-+
-+	resp = (struct pn533_cmd_init_target_response *) params;
-+
-+	nfc_dev_dbg(&dev->interface->dev, "Target mode 0x%x\n", resp->mode);
-+
-+	return 0;
-+}
-+
-+static int pn533_init_target(struct nfc_dev *nfc_dev, u32 protocols)
-+{
-+	struct pn533 *dev = nfc_get_drvdata(nfc_dev);
-+	u8 *gb;
-+	size_t gb_len;
-+	int rc;
-+
-+	pn533_poll_reset_mod_list(dev);
-+
-+	gb = nfc_get_local_general_bytes(nfc_dev, &gb_len);
-+	if (gb == NULL)
-+		return -ENOMEM;
-+
-+	rc = pn533_init_target_frame(dev->out_frame, gb, gb_len);
-+	if (rc < 0)
-+		return rc;
-+
-+	rc = pn533_send_cmd_frame_async(dev, dev->out_frame, dev->in_frame,
-+					dev->in_maxlen,
-+					pn533_init_target_complete,
-+					NULL, GFP_KERNEL);
-+
-+	if (rc)
-+		nfc_dev_err(&dev->interface->dev,
-+			    "Error %d when trying to initiate as a target", rc);
-+
-+	dev->poll_mod_count++;
-+
-+	return rc;
-+}
-+
- static int pn533_start_im_poll(struct nfc_dev *nfc_dev, u32 protocols)
- {
- 	struct pn533 *dev = nfc_get_drvdata(nfc_dev);
-@@ -1146,12 +1244,13 @@ static int pn533_start_poll(struct nfc_dev *nfc_dev,
- 		return -EBUSY;
+ 	if (num_profile == 1) {
+ 		info = list_first_entry(&mci->info,
+ 					struct ath_mci_profile_info,
+ 					list);
+-		if (mci->num_sco && info->T == 12) {
+-			mci->aggr_limit = 8;
++		if (mci->num_sco) {
++			if (info->T == 12)
++				mci->aggr_limit = 8;
++			else if (info->T == 6) {
++				mci->aggr_limit = 6;
++				btcoex->duty_cycle = 30;
++			}
+ 			ath_dbg(common, MCI,
+-				"Single SCO, aggregation limit 2 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_BNEP) &&
+-			   !info->master) {
+-			btcoex->btcoex_period = 60;
++				"Single SCO, aggregation limit %d 1/4 ms\n",
++				mci->aggr_limit);
++		} else if (mci->num_pan || mci->num_other_acl) {
++			/*
++			 * For single PAN/FTP profile, allocate 35% for BT
++			 * to improve WLAN throughput.
++			 */
++			btcoex->duty_cycle = 35;
++			btcoex->btcoex_period = 53;
+ 			ath_dbg(common, MCI,
+-				"Single slave PAN/FTP, bt period 60 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_HID) &&
+-			 (info->T > 0 && info->T < 50) &&
+-			 (info->A > 1 || info->W > 1)) {
++				"Single PAN/FTP bt period %d ms dutycycle %d\n",
++				btcoex->duty_cycle, btcoex->btcoex_period);
++		} else if (mci->num_hid) {
+ 			btcoex->duty_cycle = 30;
+-			mci->aggr_limit = 8;
++			mci->aggr_limit = 6;
+ 			ath_dbg(common, MCI,
+ 				"Multiple attempt/timeout single HID "
+-				"aggregation limit 2 ms dutycycle 30%%\n");
++				"aggregation limit 1.5 ms dutycycle 30%%\n");
+ 		}
+-	} else if ((num_profile == 2) && (mci->num_hid == 2)) {
+-		btcoex->duty_cycle = 30;
+-		mci->aggr_limit = 8;
+-		ath_dbg(common, MCI,
+-			"Two HIDs aggregation limit 2 ms dutycycle 30%%\n");
+-	} else if (num_profile > 3) {
++	} else if (num_profile == 2) {
++		if (mci->num_hid == 2)
++			btcoex->duty_cycle = 30;
+ 		mci->aggr_limit = 6;
+ 		ath_dbg(common, MCI,
+-			"Three or more profiles aggregation limit 1.5 ms\n");
++			"Two BT profiles aggr limit 1.5 ms dutycycle %d%%\n",
++			btcoex->duty_cycle);
++	} else if (num_profile >= 3) {
++		mci->aggr_limit = 4;
++		ath_dbg(common, MCI,
++			"Three or more profiles aggregation limit 1 ms\n");
  	}
  
--	if (!tm_protocols)
-+	if (im_protocols)
- 		return pn533_start_im_poll(nfc_dev, im_protocols);
--	else if (!im_protocols)
-+
-+	if (tm_protocols)
- 		return pn533_init_target(nfc_dev, tm_protocols);
--	else
--		return -EINVAL;
-+
-+	return -EINVAL;
- }
- 
- static void pn533_stop_poll(struct nfc_dev *nfc_dev)
++skip_tuning:
+ 	if (IS_CHAN_2GHZ(sc->sc_ah->curchan)) {
+ 		if (IS_CHAN_HT(sc->sc_ah->curchan))
+ 			ath_mci_adjust_aggr_limit(btcoex);
 -- 
-1.7.9.1
+1.7.10.3
 
