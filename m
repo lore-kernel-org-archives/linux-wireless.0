@@ -1,53 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36063 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761472Ab2FVHRb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 03:17:31 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>, dan.carpenter@oracle.com
-Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
-Date: Fri, 22 Jun 2012 10:17:23 +0300
-In-Reply-To: <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
-	(Rajkumar Manoharan's message of "Fri, 22 Jun 2012 00:01:32 +0530")
-Message-ID: <87ipej4xz0.fsf@purkki.adurom.net> (sfid-20120622_091739_535072_332E718F)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54114 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753946Ab2FDPrI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 11:47:08 -0400
+Message-ID: <4FCCD860.6020901@qca.qualcomm.com> (sfid-20120604_174713_721778_B40AB4BD)
+Date: Mon, 4 Jun 2012 21:16:40 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>, <stable@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
+References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>			 (sfid-20120601_083956_399882_A3D65832) <1338533070.4884.4.camel@jlt3.sipsolutions.net>		 <4FC86AB4.9020602@qca.qualcomm.com>	 <1338534832.4884.7.camel@jlt3.sipsolutions.net>	 <4FCA30DE.4080805@qca.qualcomm.com> <1338659135.12823.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338659135.12823.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
+Hi Johannes,
 
-> ath9k_get_et_stats() warn: side effect in macro
-> 'AWDATA' doing 'i++'
+
+>>>>> You could just remove the entire check since the interface combinations
+>>>>> you advertise don't allow it, I think? Or just fix those
+>>>>> combinations :-)
+>>>>
+>>>> i did not check this before, thanks a lot for your inputs. will send a
+>>>> proper v2 after checking this out.
+>>>
+>>> If this is needed for stable, you might want to keep this patch&   send
+>>> another one to remove it.
+>>
+>> thanks Johannes.
+>> i was looking at how to fix this properly in iface combination
+>> advertised to mac80211.  got few doubts regarding this
+>>
+>> *if an interface type is not all advertised in the
+>> ieee80211_iface_combination then it cannot it be co-existing with any
+>> other interfaces ?
+>> please let me know is there some other way do that.
+>>
+>> if we advertise something like this
+>>
+>> static const struct ieee80211_iface_limit if_limits[] = {
+>> 	{set1
+>>       	.... },
+>> 	{set 2
+>> 	.... },
+>> };
+>>
+>> then interface types in set1 and set2 co-exist as per the logic in
+>> cfg80211_can_change_interface. is there already a way we can make
+>> set1 and set2 interface types mutually exclusive ? thanks!
 >
-> Cc: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> The sets are mutually exclusive, and there are implied sets of each
+> interface with a max number of 1. So for example, in iwlwifi we don't
+> advertise IBSS in the combinations at all, because it's not compatible
+> with anything. In your case, I think the same applies, since you said
+>
+>          if the first interface is ADHOC we cannot have any other
+>          interface. we cannot add an ADHOC interface if there is already
+>          an interface is present
+>
+> Thus, if you leave IBSS out of the combinations you should get the
+> desired behaviour of not being able to combine IBSS with any other
+> types.
+>
 
-[...]
+ath9k and also iwlwifi seems to have IBSS check not included in any of 
+the interface combinations, but still i am able to IBSS interface 
+atleast in ath9k with the checks removed in drv_add_interface.
+it seems we are allowing any interface type to be added even if
+its not added in the ieee80211_iface_combination structure.
 
->  	do {								\
-> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> +		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> +		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> +		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> +		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> +		i += 4; \
->  	} while (0)
-
-I agree with Ben, this is a useless change as the end result is still
-the same (the side effect is that i is increased with four). You are
-just hiding that from smatch and once smatch is fixed it will warn again
-about the same thing.
-
-I recommend fixing this properly so that the macro doesn't have any side
-effects.
+i am sending an RFC to add this check in cfg80211 based on my 
+understanding. please review my understanding and any corrections
+needed. thanks for your thoughts!
 
 -- 
-Kalle Valo
+thanks,
+shafi
