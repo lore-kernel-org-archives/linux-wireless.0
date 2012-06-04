@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39305 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154Ab2FSJgw convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48073 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219Ab2FDGNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 05:36:52 -0400
-Received: by obbtb18 with SMTP id tb18so9787244obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 02:36:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
-References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
-Date: Tue, 19 Jun 2012 15:06:52 +0530
-Message-ID: <CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com> (sfid-20120619_113655_976763_21745838)
-Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Matt Chen <machen@suse.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 4 Jun 2012 02:13:40 -0400
+Message-ID: <1338790417.4512.0.camel@jlt3.sipsolutions.net> (sfid-20120604_081418_835258_51AFB2F3)
+Subject: Re: [PATCH] mac80211: don't call drv_ampdu_action() during reconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 Jun 2012 08:13:37 +0200
+In-Reply-To: <1338755341-13141-1-git-send-email-arik@wizery.com> (sfid-20120603_222938_747172_0AC3AE01)
+References: <1338755341-13141-1-git-send-email-arik@wizery.com>
+	 (sfid-20120603_222938_747172_0AC3AE01)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Matt,
+On Sun, 2012-06-03 at 23:29 +0300, Arik Nemtsov wrote:
+> When tearing down BA sessions during HW reconfig, the low level driver
+> is not aware of them yet. Add a parameter to relevant Rx/Tx BA functions
+> to prevent calls to the driver, while removing all mac80211 related state.
 
-> I tested the latest kernel v3.5-rc3 ath9k for the Atheros [168c 0034],
-> code name is Miami. I found no matter how I press the wifi button to
-> enable/disable the wifi, it doesn't work to me.
-> Even I found the rfkill status for this interface is not changing.
+I think iwlwifi uses the callback, even during restart, to clean up
+hardware state, so this might break it.
 
-its a AR9462please poke at the register  #define AR_GPIO_IN  -> 0x402c : 0x404c)
-i remember testing it in a acer laptop, it was working.
-
->
-> --
-> Thank you.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
 
 
-
--- 
-thanks,
-shafi
