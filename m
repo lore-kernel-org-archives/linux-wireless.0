@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:10843
-	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751526Ab2FUQzz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 12:55:55 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC v2] cfg80211/mac80211: 802.11ac changes
-Date: Thu, 21 Jun 2012 16:55:54 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3CF9@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120621_185559_118962_6E541DE4)
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3B74@mbx022-e1-nj-10.exch022.domain.local>,<1340289952.4489.29.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340289952.4489.29.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:48838 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751420Ab2FDGQk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 02:16:40 -0400
+Message-ID: <1338790597.4512.3.camel@jlt3.sipsolutions.net> (sfid-20120604_081642_240148_42325632)
+Subject: Re: [PATCH] mac80211: stop Rx during HW reconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 Jun 2012 08:16:37 +0200
+In-Reply-To: <1338755422-13220-1-git-send-email-arik@wizery.com> (sfid-20120603_223057_537536_88947913)
+References: <1338755422-13220-1-git-send-email-arik@wizery.com>
+	 (sfid-20120603_223057_537536_88947913)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-________________________________________
-From: Johannes Berg [johannes@sipsolutions.net]
-Sent: Thursday, June 21, 2012 8:15 PM
-To: Mahesh Palivela
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] cfg80211/mac80211: 802.11ac changes
+On Sun, 2012-06-03 at 23:30 +0300, Arik Nemtsov wrote:
 
-On Thu, 2012-06-21 at 05:13 +0000, Mahesh Palivela wrote:
+> +++ b/net/mac80211/rx.c
+> @@ -3023,6 +3023,9 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	if (WARN_ON(!sband))
+>  		goto drop;
+>  
+> +	/* make sure we get the latest values for the next variable checks */
+> +	smp_rmb();
+> +
 
-> +/**
-> + * struct ieee80211_vht_mcs_info - VHT MCS information
-> + * @rx_mask: RX mask
-> + * @rx_highest: highest supported RX rate. If set represents
-> + *   the highest supported RX data rate in units of 1 Mbps.
-> + *   If this field is 0 this value should not be used to
-> + *   consider the highest RX data rate supported.
-> + * @tx_params: TX parameters
+That doesn't make a lot of sense I think? This entire thing is
+inherently racy, you could be processing RX already even while just
+setting the variable in the other code. I'm not really sure what the
+effect of this here is, but it's certainly a hot-path.
 
-those don't seem to match below -- rx_mcs_map, tx_mcs_map and tx_highest
-should be there?
-
-[MP] Yes. I missed it. Just sent another patch with correct comments.
-
-> +struct ieee80211_vht_mcs_info {
-> +     __le16 rx_mcs_map;
-> +     __le16 rx_highest;
-> +     __le16 tx_mcs_map;
-> +     __le16 tx_highest;
-> +} __packed;
+> +       /*
+> +        * Stop all Rx during the reconfig. We don't want state changes
+> +        * or driver callbacks while this is in progress.
+> +        */
+> +       local->in_reconfig = true;
+> +       smp_wmb();
 
 
-> +     if (supp_vht)
-> +             local->scan_ies_len += 2 + sizeof(struct ieee80211_vht_capabilities);
-
-that line looks a bit long, but yeah, this is what I was thinking of
-before :-)
-
-[MP] Yes. I didn't know that.
+If anything, you should probably put this right into
+ieee80211_restart_hw() rather than the reconfig function? It's not
+needed for suspend/resume anyway since we check that separately.
 
 johannes
 
