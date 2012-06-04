@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48537 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab2FKJyM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29111 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054Ab2FDK7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 05:54:12 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/13] iwlwifi: don't modify the timer if we don't Tx
-Date: Mon, 11 Jun 2012 11:53:12 +0200
-Message-Id: <1339408392-19425-14-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115424_329391_D34A4F2B)
-In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
-References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 4 Jun 2012 06:59:11 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.38075.511019.370729@gargle.gargle.HOWL> (sfid-20120604_125915_132156_371589E4)
+Date: Mon, 4 Jun 2012 16:28:03 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 11/20] ath9k_hw: update ar9462 initval table to fix rx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-In fragmentation we don't update the write pointer of the
-HW immediately. So we shouldn't modify the timer in that
-case.
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+The wrong ADC sample phase that happen between awake and
+network/full sleep will lead to improper rx noisefloor
+calibration.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/trans.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index d426e3d..6a30cce 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1353,7 +1353,8 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 			     skb->data + hdr_len, secondlen);
- 
- 	/* start timer if queue currently empty */
--	if (q->read_ptr == q->write_ptr && trans_pcie->wd_timeout)
-+	if (txq->need_update && q->read_ptr == q->write_ptr &&
-+	    trans_pcie->wd_timeout)
- 		mod_timer(&txq->stuck_timer, jiffies + trans_pcie->wd_timeout);
- 
- 	/* Tell device the write index *just past* this latest filled TFD */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+index 1d6658e..a10ece0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x0001604c, 0x2699e04f},
+ 	{0x00016050, 0x6db6db6c},
+ 	{0x00016058, 0x6c200000},
+-	{0x00016080, 0x00040000},
++	{0x00016080, 0x000c0000},
+ 	{0x00016084, 0x9a68048c},
+ 	{0x00016088, 0x54214514},
+ 	{0x0001608c, 0x1203040b},
+@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x00016144, 0x02084080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x050a0001},
+-	{0x00016284, 0x3d841400},
++	{0x00016284, 0x3d841418},
+ 	{0x00016288, 0x00000000},
+ 	{0x0001628c, 0xe3000000},
+ 	{0x00016290, 0xa1005080},
 -- 
-1.7.10
+1.7.10.3
 
