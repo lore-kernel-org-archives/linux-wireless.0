@@ -1,81 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f66.google.com ([209.85.210.66]:37295 "EHLO
-	mail-pz0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab2FGAcp (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21022 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753487Ab2FDOzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 20:32:45 -0400
-Received: by dado14 with SMTP id o14so24667dad.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 17:32:44 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 1/5] mac80211_hwsim: Report rate info in tx status
-Date: Wed,  6 Jun 2012 17:29:37 -0700
-Message-Id: <1339028981-17097-2-git-send-email-jason@cozybit.com> (sfid-20120607_023248_114778_D624100E)
-In-Reply-To: <1339028981-17097-1-git-send-email-jason@cozybit.com>
-References: <1339028981-17097-1-git-send-email-jason@cozybit.com>
+	Mon, 4 Jun 2012 10:55:05 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.52215.217721.253157@gargle.gargle.HOWL> (sfid-20120604_165516_938676_6B3C353B)
+Date: Mon, 4 Jun 2012 20:23:43 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/7] ath9k: Fix work handling
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Timo Lindhorst <tlnd@online.de>
+* Currently, there is no synchronization between the reset
+  work and the tx-poll work. Fix this and make sure that we
+  bail out properly if a reset work is in progress.
 
-Assuming an ideal channel, always the first transmission is considered
-successful if an ACK is received. If no ACK is received, the
-rates/attempts are reported as set by the rate control.
+* Cleanup the PLL WAR and enable it for AR9340 too and
+  use a helper for restarting work/timers after a reset.
 
-Signed-off-by: Timo Lindhorst <tlnd@online.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/link.c  |   33 ++++++++++++++++++--------------
+ drivers/net/wireless/ath/ath9k/main.c  |   22 ++++++++++++++++-----
+ 3 files changed, 37 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4c9336c..52ba3e6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -715,6 +715,14 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
-+	u8 tx_count[IEEE80211_TX_MAX_RATES];
-+	int i;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	if (ieee80211_is_beacon(mgmt->frame_control) ||
-+	    ieee80211_is_probe_resp(mgmt->frame_control))
-+		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d804416..2faa181 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -431,6 +431,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+ #define ATH_RESTART_CALINTERVAL   1200000 /* 20 minutes */
  
- 	mac80211_hwsim_monitor_rx(hw, skb);
+ #define ATH_PAPRD_TIMEOUT	100 /* msecs */
++#define ATH_PLL_WORK_INTERVAL   100
  
-@@ -745,6 +753,10 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (txi->control.sta)
- 		hwsim_check_sta_magic(txi->control.sta);
+ void ath_tx_complete_poll_work(struct work_struct *work);
+ void ath_reset_work(struct work_struct *work);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 7368b96..89b38a9 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -52,6 +52,7 @@ void ath_tx_complete_poll_work(struct work_struct *work)
+ 			"tx hung, resetting the chip\n");
+ 		RESET_STAT_INC(sc, RESET_TYPE_TX_HANG);
+ 		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
++		return;
+ 	}
  
-+	if (!ack)
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			tx_count[i] = txi->control.rates[i].count;
-+
- 	ieee80211_tx_info_clear_status(txi);
- 
- 	/* frame was transmitted at most favorable rate at first attempt */
-@@ -753,6 +765,15 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
-+
-+	if (ack) {
-+		txi->status.rates[0].count = 1;
-+		txi->status.rates[1].idx = -1;
-+	} else {
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			txi->control.rates[i].count = tx_count[i];
-+	}
-+
- 	ieee80211_tx_status_irqsafe(hw, skb);
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+@@ -107,9 +108,9 @@ out:
  }
  
+ /*
+- * PLL-WAR for AR9485.
++ * PLL-WAR for AR9485/AR9340
+  */
+-static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
++static bool ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
+ {
+ 	static int count;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+@@ -117,29 +118,33 @@ static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
+ 	if (pll_sqsum >= 0x40000) {
+ 		count++;
+ 		if (count == 3) {
+-			/* Rx is hung for more than 500ms. Reset it */
+-			ath_dbg(common, RESET, "Possible RX hang, resetting\n");
++			ath_dbg(common, RESET, "PLL WAR, resetting the chip\n");
+ 			RESET_STAT_INC(sc, RESET_TYPE_PLL_HANG);
+ 			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 			count = 0;
++			return true;
+ 		}
+-	} else
++	} else {
+ 		count = 0;
++	}
++
++	return false;
+ }
+ 
+ void ath_hw_pll_work(struct work_struct *work)
+ {
++	u32 pll_sqsum;
+ 	struct ath_softc *sc = container_of(work, struct ath_softc,
+ 					    hw_pll_work.work);
+-	u32 pll_sqsum;
+ 
+-	if (AR_SREV_9485(sc->sc_ah)) {
+-		ath9k_ps_wakeup(sc);
+-		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
+-		ath9k_ps_restore(sc);
+-		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
+-		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
+-	}
++	ath9k_ps_wakeup(sc);
++	pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
++	ath9k_ps_restore(sc);
++	if (ath_hw_pll_rx_hang_check(sc, pll_sqsum))
++		return;
++
++	ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work,
++				     msecs_to_jiffies(ATH_PLL_WORK_INTERVAL));
+ }
+ 
+ /*
+@@ -293,7 +298,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 		if (ar9003_paprd_create_curve(ah, caldata, chain)) {
+ 			ath_dbg(common, CALIBRATE,
+ 				"PAPRD create curve failed on chain %d\n",
+-								   chain);
++				chain);
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7a75263..032edab 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -158,6 +158,22 @@ static void ath_cancel_work(struct ath_softc *sc)
+ 	cancel_work_sync(&sc->hw_reset_work);
+ }
+ 
++static void ath_restart_work(struct ath_softc *sc)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
++
++	if (AR_SREV_9485(sc->sc_ah) || AR_SREV_9340(sc->sc_ah))
++		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work,
++				     msecs_to_jiffies(ATH_PLL_WORK_INTERVAL));
++
++	ath_start_rx_poll(sc, 3);
++
++	if (!common->disable_ani)
++		ath_start_ani(common);
++}
++
+ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -209,11 +225,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 		if (sc->sc_flags & SC_OP_BEACONS)
+ 			ath_set_beacon(sc);
+ 
+-		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+-		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/2);
+-		ath_start_rx_poll(sc, 3);
+-		if (!common->disable_ani)
+-			ath_start_ani(common);
++		ath_restart_work(sc);
+ 	}
+ 
+ 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx != 3) {
 -- 
-1.7.9.5
+1.7.10.3
 
