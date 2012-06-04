@@ -1,69 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39660 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45019 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756515Ab2FTOnN (ORCPT
+	with ESMTP id S1760912Ab2FDQNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 10:43:13 -0400
-Message-ID: <1340203389.4655.71.camel@jlt3.sipsolutions.net> (sfid-20120620_164316_120283_8737FB7D)
-Subject: Re: [PATCH 1/3] mac80211: Track auth frame registrations on IBSS
- ifaces
+	Mon, 4 Jun 2012 12:13:24 -0400
+Message-ID: <1338826398.4512.23.camel@jlt3.sipsolutions.net> (sfid-20120604_181329_661243_024D12BE)
+Subject: Re: [RFC] cfg80211: Fix incompatible interfaces combination
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Will Hawkins <hawkinsw@opentechinstitute.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Wed, 20 Jun 2012 16:43:09 +0200
-In-Reply-To: <4FE1E0DA.8010406@opentechinstitute.org>
-References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
-	  <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org>
-	 <1340170374.4655.1.camel@jlt3.sipsolutions.net>
-	 <4FE1E0DA.8010406@opentechinstitute.org>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 04 Jun 2012 18:13:18 +0200
+In-Reply-To: <4FCCDB63.3040806@qca.qualcomm.com>
+References: <1338824836-2283-1-git-send-email-mohammed@qca.qualcomm.com>
+	 <1338825141.4512.14.camel@jlt3.sipsolutions.net>
+	 <4FCCDB63.3040806@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 10:40 -0400, Will Hawkins wrote:
-> 
-> On 06/20/2012 01:32 AM, Johannes Berg wrote:
-> > On Tue, 2012-06-19 at 17:59 -0400, Will Hawkins wrote:
-> >> Track userspace registrations for authentication
-> >> frames received on an IBSS interface. This field
-> >> will be used to decide whether or not to send
-> >> "open system" authentication frames when a new
-> >> station joins an adhoc network.
+On Mon, 2012-06-04 at 21:29 +0530, Mohammed Shafi Shajakhan wrote:
+> On Monday 04 June 2012 09:22 PM, Johannes Berg wrote:
+> > On Mon, 2012-06-04 at 21:17 +0530, Mohammed Shafi Shajakhan wrote:
+> >> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
 > >>
-> >> Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
-> >> ---
-> >>  net/mac80211/cfg.c         |   10 ++++++++++
-> >>  net/mac80211/ieee80211_i.h |    1 +
-> >>  2 files changed, 11 insertions(+)
-> >>
-> >> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> >> index 498c94e..e00a696 100644
-> >> --- a/net/mac80211/cfg.c
-> >> +++ b/net/mac80211/cfg.c
-> >> @@ -2486,6 +2486,16 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
-> >>  					  u16 frame_type, bool reg)
-> >>  {
-> >>  	struct ieee80211_local *local = wiphy_priv(wiphy);
-> >> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> >> +
-> >> +	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && 
-> >> +	    (frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH))) {
-> >> +		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-> >> +		if (reg)
-> >> +			ifibss->auth_frame_registrations++;
-> >> +		else if (reg > 0)
-> >> +			ifibss->auth_frame_registrations--;
-> > 
-> > The "if (reg > 0)" here doesn't seem to make sense?
+> >> *if any interface type is not advertised by the driver
+> >> via ieee80211_iface_combination make sure we will have it
+> >> as a single interface only. lets that we will not add
+> >> an incompatible interface if some other interface is
+> >> already present. we cannot add any other interface,
+> >> if the already present interface is an incompatible
+> >> interface. for example in ath9k we don't advertise ADHOC in
+> >> ieee80211_iface_combination structure in the driver,
+> >> so it can only exist as an single interface
+> >
+> > I'm not sure I understand what you're changing here?
 > 
-> Just trying to make sure that it doesn't go negative. I am protecting
-> against unmatched unregisters.
+> if an interface say ad-hoc is not advertised in iface combination,
+> with the current still we can add that interface with some other 
+> interface(removing the driver checks).
+> 
+> in ath9k we have
+> 
+> static const struct ieee80211_iface_limit if_limits[] = {
+>          { .max = 2048,  .types = BIT(NL80211_IFTYPE_STATION) |
+>                                   BIT(NL80211_IFTYPE_P2P_CLIENT) |
+>                                   BIT(NL80211_IFTYPE_WDS) },
+>          { .max = 8,     .types =
+> #ifdef CONFIG_MAC80211_MESH
+>                                   BIT(NL80211_IFTYPE_MESH_POINT) |
+> #endif
+>                                   BIT(NL80211_IFTYPE_AP) |
+>                                   BIT(NL80211_IFTYPE_P2P_GO) },
+> };
+> 
+> i am able to create an IBSS interface even if a STA interface is up and 
+> running in ath9k(removing the driver checks).
+> 
+> this patch ensures that if we have an incompatible interface, it is the 
+> only one can that can exist.
 
-reg is a bool, did you mean "if (ifibss->auth_frame_registrations > 0)"?
-
-in any case, you don't really have to care about unmatched unregisters
-as cfg80211 tracks all of them anyway.
+Right, ok, I see that it's broken now, trying to see if there's a better
+fix though.
 
 johannes
 
