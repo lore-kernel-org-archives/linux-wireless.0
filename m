@@ -1,117 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10357 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753997Ab2F1LSE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32229 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555Ab2FDK7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 07:18:04 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [RFC 60g 5/5] wireless: bitrate calculation for 60g
-Date: Thu, 28 Jun 2012 14:17:00 +0300
-Message-ID: <1340882220-31768-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131808_978759_C50A6118)
-In-Reply-To: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 4 Jun 2012 06:59:55 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.38119.503505.923411@gargle.gargle.HOWL> (sfid-20120604_132058_724147_45FB6A38)
+Date: Mon, 4 Jun 2012 16:28:47 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 19/20] ath9k_hw: fix power state for MCI
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-60g band uses different from .11n MCS scheme, so bitrate should be calculated
-differently
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Program MCI related power registers only if MCI interrupts
+are enabled. This could help to reduce power consumptions when
+WLAN alone is enabled in BT coex chips.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- include/net/cfg80211.h |    2 ++
- net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+)
+ drivers/net/wireless/ath/ath9k/hw.c |   25 +++++++++----------------
+ 1 file changed, 9 insertions(+), 16 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 56e840d..f760520 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -563,11 +563,13 @@ enum station_info_flags {
-  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
-  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
-  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
-+ * @RATE_INFO_FLAGS_60G: 60gHz MCS
-  */
- enum rate_info_flags {
- 	RATE_INFO_FLAGS_MCS		= 1<<0,
- 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
- 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
-+	RATE_INFO_FLAGS_60G		= 1<<3,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 98478fd..45e6700 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2009,12 +2009,9 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
  
- /**
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 98b2a8d..77319a6 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -890,12 +890,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
+ 	if (AR_SREV_9462(ah)) {
+-		REG_WRITE(ah, AR_TIMER_MODE,
+-			  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
+-		REG_WRITE(ah, AR_NDP2_TIMER_MODE,
+-			  REG_READ(ah, AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
+-		REG_WRITE(ah, AR_SLP32_INC,
+-			  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
++		REG_CLR_BIT(ah, AR_TIMER_MODE, 0xff);
++		REG_CLR_BIT(ah, AR_NDP2_TIMER_MODE, 0xff);
++		REG_CLR_BIT(ah, AR_SLP32_INC, 0xfffff);
+ 		/* xxx Required for WLAN only case ? */
+ 		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
+ 		udelay(100);
+@@ -2026,7 +2023,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
+ 	 */
+ 	REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
  
-+static u16 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
-+{
-+	static const u16 __mcs2bitrate[] = {
-+		/* control PHY */
-+		[0] =   275,
-+		/* SC PHY */
-+		[1] =  3850,
-+		[2] =  7700,
-+		[3] =  9625,
-+		[4] = 11550,
-+		[5] = 12512, /* 1251.25 mbps */
-+		[6] = 15400,
-+		[7] = 19250,
-+		[8] = 23100,
-+		[9] = 25025,
-+		[10] = 30800,
-+		[11] = 38500,
-+		[12] = 46200,
-+		/* OFDM PHY */
-+		[13] =  6930,
-+		[14] =  8662, /* 866.25 mbps */
-+		[15] = 13860,
-+		[16] = 17325,
-+		[17] = 20790,
-+		[18] = 27720,
-+		[19] = 34650,
-+		[20] = 41580,
-+		[21] = 45045,
-+		[22] = 51975,
-+		[23] = 62370,
-+		[24] = 67568, /* 6756.75 mbps */
-+		/* LP-SC PHY */
-+		[25] =  6260,
-+		[26] =  8340,
-+		[27] = 11120,
-+		[28] = 12510,
-+		[29] = 16680,
-+		[30] = 22240,
-+		[31] = 25030,
-+	};
-+
-+	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
-+		return 0;
-+
-+	return __mcs2bitrate[rate->mcs];
-+}
-+
- u16 cfg80211_calculate_bitrate(struct rate_info *rate)
+-	if (AR_SREV_9462(ah))
++	if (ath9k_hw_mci_is_enabled(ah))
+ 		udelay(100);
+ 
+ 	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+@@ -2051,7 +2048,6 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
+ static void ath9k_set_power_network_sleep(struct ath_hw *ah)
  {
- 	int modulation, streams, bitrate;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+-	u32 val;
  
- 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
- 		return rate->legacy;
-+	if (rate->flags & RATE_INFO_FLAGS_60G)
-+		return cfg80211_calculate_bitrate_60g(rate);
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
  
- 	/* the formula below does only work for MCS values smaller than 32 */
- 	if (WARN_ON_ONCE(rate->mcs >= 32))
+@@ -2070,19 +2066,16 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah)
+ 		 * SYS_WAKING and SYS_SLEEPING messages which will make
+ 		 * BT CPU to busy to process.
+ 		 */
+-		if (AR_SREV_9462(ah)) {
+-			val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
+-				~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
+-			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
+-		}
++		if (ath9k_hw_mci_is_enabled(ah))
++			REG_CLR_BIT(ah, AR_MCI_INTERRUPT_RX_MSG_EN,
++				    AR_MCI_INTERRUPT_RX_HW_MSG_MASK);
+ 		/*
+ 		 * Clear the RTC force wake bit to allow the
+ 		 * mac to go to sleep.
+ 		 */
+-		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
+-			    AR_RTC_FORCE_WAKE_EN);
++		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
+ 
+-		if (AR_SREV_9462(ah))
++		if (ath9k_hw_mci_is_enabled(ah))
+ 			udelay(30);
+ 	}
+ 
 -- 
-1.7.9.5
+1.7.10.3
 
