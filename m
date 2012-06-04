@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:39520 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754709Ab2FTIxx convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 20 Jun 2012 04:53:53 -0400
-Received: by vcbf11 with SMTP id f11so3690046vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 01:53:46 -0700 (PDT)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40118 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752297Ab2FDP7j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 11:59:39 -0400
+Message-ID: <4FCCDB63.3040806@qca.qualcomm.com> (sfid-20120604_175943_704589_C95AFADA)
+Date: Mon, 4 Jun 2012 21:29:31 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
-References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
-	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
-	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
-Date: Wed, 20 Jun 2012 16:53:45 +0800
-Message-ID: <CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com> (sfid-20120620_105357_181145_71E90662)
-Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
-From: Matt Chen <machen@suse.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] cfg80211: Fix incompatible interfaces combination
+References: <1338824836-2283-1-git-send-email-mohammed@qca.qualcomm.com> <1338825141.4512.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338825141.4512.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+On Monday 04 June 2012 09:22 PM, Johannes Berg wrote:
+> On Mon, 2012-06-04 at 21:17 +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> *if any interface type is not advertised by the driver
+>> via ieee80211_iface_combination make sure we will have it
+>> as a single interface only. lets that we will not add
+>> an incompatible interface if some other interface is
+>> already present. we cannot add any other interface,
+>> if the already present interface is an incompatible
+>> interface. for example in ath9k we don't advertise ADHOC in
+>> ieee80211_iface_combination structure in the driver,
+>> so it can only exist as an single interface
+>
+> I'm not sure I understand what you're changing here?
 
-2012/6/20 Matt Chen <machen@suse.com>:
-> Hi Mohammed,
->
-> 2012/6/19 Mohammed Shafi <shafi.wireless@gmail.com>:
->> Hi Matt,
->>
->>> I tested the latest kernel v3.5-rc3 ath9k for the Atheros [168c 0034],
->>> code name is Miami. I found no matter how I press the wifi button to
->>> enable/disable the wifi, it doesn't work to me.
->>> Even I found the rfkill status for this interface is not changing.
->>
->> its a AR9462please poke at the register  #define AR_GPIO_IN  -> 0x402c : 0x404c)
-> I do
-> 1) echo 0x402c > regidx
->     watch -n 1 regval
-> 2) echo 0x404c > regidx
->    watch -n1 regval
->> i remember testing it in a acer laptop, it was working.
-> Both 1) and 2) shows no different in their value no matter how I press
-> the wifi button. :(
-I found it is not enabling the
-wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll(struct
-ath_softc *sc).
-The condition for (ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT) is failed.
-Any direction I can dig further ? :)
->>>
->>> --
->>> Thank you.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->> --
->> thanks,
->> shafi
->>
->
->
->
-> --
-> Thank you.
+if an interface say ad-hoc is not advertised in iface combination,
+with the current still we can add that interface with some other 
+interface(removing the driver checks).
 
+in ath9k we have
+
+static const struct ieee80211_iface_limit if_limits[] = {
+         { .max = 2048,  .types = BIT(NL80211_IFTYPE_STATION) |
+                                  BIT(NL80211_IFTYPE_P2P_CLIENT) |
+                                  BIT(NL80211_IFTYPE_WDS) },
+         { .max = 8,     .types =
+#ifdef CONFIG_MAC80211_MESH
+                                  BIT(NL80211_IFTYPE_MESH_POINT) |
+#endif
+                                  BIT(NL80211_IFTYPE_AP) |
+                                  BIT(NL80211_IFTYPE_P2P_GO) },
+};
+
+i am able to create an IBSS interface even if a STA interface is up and 
+running in ath9k(removing the driver checks).
+
+this patch ensures that if we have an incompatible interface, it is the 
+only one can that can exist.
+
+>
+>> *if the driver is not advertising interface combination just
+>> return so that we don't break their multivif operation.
+>
+> Actually, we want to break multivif for drivers that don't advertise it.
+
+oh, ok.
+
+>
+> johannes
+>
 
 
 -- 
-Thank you.
+thanks,
+shafi
