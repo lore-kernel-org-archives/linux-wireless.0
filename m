@@ -1,102 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:55883 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753630Ab2F1Vzq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 17:55:46 -0400
-Message-ID: <4FECD2E5.1060603@ti.com> (sfid-20120628_235550_814819_C6FB9FDB)
-Date: Thu, 28 Jun 2012 16:55:49 -0500
-From: Jon Hunter <jon-hunter@ti.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:39501 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975Ab2FDXtJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 19:49:09 -0400
+Received: by obbtb18 with SMTP id tb18so7898287obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2012 16:49:09 -0700 (PDT)
 MIME-Version: 1.0
-To: Franky Lin <frankyl@broadcom.com>
-CC: Kevin Hilman <khilman@ti.com>, <b-cousson@ti.com>,
-	<tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<grant.likely@secretlab.ca>, <santosh.shilimkar@ti.com>,
-	<linux-omap@vger.kernel.org>, <tarun.kanti@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com> <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com> <4FECCB91.7090609@broadcom.com>
-In-Reply-To: <4FECCB91.7090609@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+From: Javier Cardona <javier@cozybit.com>
+Date: Mon, 4 Jun 2012 16:48:49 -0700
+Message-ID: <CAPjQAd-rwDM=JzuZ=EaQEPc7MQKRinXXa4r0en_fNV0j6MH6_Q@mail.gmail.com> (sfid-20120605_014913_234528_9DA75A12)
+Subject: Re: [PATCH] mac80211: The station fail average is not updated
+ correctly since the IEEE80211_STAT_ACK flag is not set when using wmediumd
+ with mac80211_hwsim. Set this flag when wmediumd indicates that the frame was
+ successfully transmitted (eventuall
+To: Qasim Javed <qasimj@gmail.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quasim,
 
-On 06/28/2012 04:24 PM, Franky Lin wrote:
-> On 06/28/2012 08:42 AM, Jon Hunter wrote:
->>
->> On 06/27/2012 07:41 PM, Franky Lin wrote:
->>> On 06/26/2012 08:37 PM, Kevin Hilman wrote:
->>>> "Franky Lin" <frankyl@broadcom.com> writes:
->>>>> I noticed Kevin raised some similar cases on other platforms and also
->>>>> provided two patches in the patch mail thread. But unfortunately those
->>>>> two patches doesn't help in our case. I tested the driver with 3.5-rc3
->>>>> mainline kernel and the issue is still there. I can only "fix" the
->>>>> hang by either reverting the commit or disabling
->>>>> CONFIG_PM_RUNTIME. Also, the hang only happens on Panda ES board. Old
->>>>> Panda with 4430 works good.
->>>>>
->>>>> Any thoughts and suggestions?
->>>>
->>>> If reverting the patch fixes your problem, can you isolate down to
->>>> which
->>>> part of that patch causes the problem?  IOW, can you fix your
->>>> problem if
->>>> you undo just the hunk added in runtime_suspend or undo just the moved
->>>> hunk runtime_resume?  Or is reverting both required?
->>>>
->>>> I suspect the added runtime_suspend hunk is causing the problems, so
->>>> can
->>>> you see if just undoing that part works[1].  If that works, I will give
->>>> a bit more of a thinking on it tomorrow.
->>>
->>> runtime_suspend hunk is fine. The hang still exist after reverting it.
->>> The culprit is the moved hunk in runtime_resume. Reverting it makes the
->>> hang disappear.
->>
->> Thanks. From reviewing the code the only thing that appears suspect based
->> upon your findings is the return if we find the context has not been
->> lost.
->> We are not checking if "workaround_enabled" is set before we return.
->>
->> Could you try the following change on top of v3.5-rc3?
->>
-> 
-> The patch doesn't help. And I also managed to probe the signal. It's
-> active when it hung.
+On Mon, Jun 4, 2012 at 8:03 PM, Qasim Javed <qasimj@gmail.com> wrote:
+> Signed-off-by: Qasim Javed <qasimj@gmail.com>
 
-Ok. Any way to manually reset the wlan module to deactivate the gpio
-when it is hung? I am wondering if the gpio is deactivated if the board
-comes back to life, indicating it is stuck in the interrupt somewhere.
+The fix looks correct but you will have to reformat the patch: it
+looks like the commit log made it into the Subject line of your patch:
 
->> Also, could you add a print in the runtime_suspend/resume() functions so
->> we can see how often these are being called. In my case, I really
->> don't see
->> these being exercised and I am wondering how often you see suspend/resume
->> being called in your setup.
-> 
-> Well, the runtime_suspend/resume never get called during the test.
+Subject: [PATCH] mac80211: The station fail average is not updated
+correctly since the IEEE80211_STAT_ACK flag is not set when using
+wmediumd with mac80211_hwsim. Set this flag when wmediumd indicates
+that the frame was successfully transmitted (eventually).
 
-Well, at least that is consistent with what I see, but also perplexing
-that it takes sometime to fail. Can you try the following as a debug
-patch to see if it is in the context restore that is the problem. From
-your testing and bisect, the only possible difference in the current
-kernel is that it could perform the context restore when acquiring the gpio.
+You probably want:
 
-diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
-index c4ed172..a2401bd 100644
---- a/drivers/gpio/gpio-omap.c
-+++ b/drivers/gpio/gpio-omap.c
-@@ -1341,6 +1341,8 @@ void omap2_gpio_resume_after_idle(void)
- #if defined(CONFIG_PM_RUNTIME)
- static void omap_gpio_restore_context(struct gpio_bank *bank)
- {
-+       return;
-+
-        __raw_writel(bank->context.wake_en,
-                                bank->base + bank->regs->wkup_en);
-        __raw_writel(bank->context.ctrl, bank->base + bank->regs->ctrl);
+```
+Subject: [PATCH] mac80211_hwsim: Set IEEE80211_STAT_ACK when userspace
+indicates the frame has been acknowledged.
 
-Cheers
-Jon
+The station fail average is not updated correctly since the
+IEEE80211_STAT_ACK flag is not set when using wmediumd with
+mac80211_hwsim. Set this flag when wmediumd indicates that the frame
+was successfully transmitted (eventually).
+```
+
+Cheers,
+
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index 4c9336c..a0b7cfd 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -1555,6 +1555,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+>                        hdr = (struct ieee80211_hdr *) skb->data;
+>                        mac80211_hwsim_monitor_ack(data2->hw, hdr->addr2);
+>                }
+> +               txi->flags |= IEEE80211_TX_STAT_ACK;
+>        }
+>        ieee80211_tx_status_irqsafe(data2->hw, skb);
+>        return 0;
+> --
+> 1.7.8.2
+>
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
