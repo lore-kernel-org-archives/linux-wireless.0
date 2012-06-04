@@ -1,318 +1,450 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:50489 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932339Ab2FOF7B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 01:59:01 -0400
-From: Joe Perches <joe@perches.com>
-To: Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 19/20] wl3501_cs: Use pr_<level>
-Date: Thu, 14 Jun 2012 22:53:59 -0700
-Message-Id: <1993e467eb3e9774d18c011667ea92a4f55832c7.1339739416.git.joe@perches.com> (sfid-20120615_075945_226562_75E30C8E)
-In-Reply-To: <cover.1339739415.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21170 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753487Ab2FDOzO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 10:55:14 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20428.52227.436727.259474@gargle.gargle.HOWL> (sfid-20120604_165523_781338_DEE70CBC)
+Date: Mon, 4 Jun 2012 20:23:55 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/7] ath9k: Use atomic operations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a more current logging style.
+The 'sc_flags' variable is being used in a number of places
+with no locking whatsoever. This patch converts the usage
+of sc_flags to atomic ops.
 
-Convert printks to pr_<level>.
-Coalesce formats, align arguments.
-Add newline terminations to pr_debug uses.
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/wl3501_cs.c |   80 ++++++++++++++++++--------------------
- 1 files changed, 38 insertions(+), 42 deletions(-)
+ drivers/net/wireless/ath/ath9k/ahb.c    |    2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h  |   16 ++++++------
+ drivers/net/wireless/ath/ath9k/beacon.c |   18 ++++++-------
+ drivers/net/wireless/ath/ath9k/debug.c  |    6 ++---
+ drivers/net/wireless/ath/ath9k/link.c   |    4 +--
+ drivers/net/wireless/ath/ath9k/main.c   |   42 +++++++++++++++----------------
+ drivers/net/wireless/ath/ath9k/pci.c    |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c   |   10 ++++----
+ drivers/net/wireless/ath/ath9k/xmit.c   |    2 +-
+ 9 files changed, 52 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index 00f6e69..a7dac1a 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -27,6 +27,8 @@
-  * with a SMP machine (dual pentium 100), using pktgen, 432 pps (pkt_size = 60)
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 5e47ca6..4a4e8a2 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -126,7 +126,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	sc->irq = irq;
  
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/delay.h>
- #include <linux/types.h>
- #include <linux/init.h>
-@@ -431,9 +433,9 @@ static int wl3501_pwr_mgmt(struct wl3501_card *this, int suspend)
- 			spin_unlock_irqrestore(&this->lock, flags);
- 			rc = wait_event_interruptible(this->wait,
- 				this->sig_pwr_mgmt_confirm.status != 255);
--			printk(KERN_INFO "%s: %s status=%d\n", __func__,
--			       suspend ? "suspend" : "resume",
--			       this->sig_pwr_mgmt_confirm.status);
-+			pr_info("%s: %s status=%d\n",
-+				__func__, suspend ? "suspend" : "resume",
-+				this->sig_pwr_mgmt_confirm.status);
- 			goto out;
+ 	/* Will be cleared in ath9k_start() */
+-	sc->sc_flags |= SC_OP_INVALID;
++	set_bit(SC_OP_INVALID, &sc->sc_flags);
+ 
+ 	ret = request_irq(irq, ath_isr, IRQF_SHARED, "ath9k", sc);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4c2ce45..ae43de1 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -604,12 +604,14 @@ void ath_ant_comb_update(struct ath_softc *sc);
+ #define ATH_TXPOWER_MAX         100     /* .5 dBm units */
+ #define ATH_RATE_DUMMY_MARKER   0
+ 
+-#define SC_OP_INVALID                BIT(0)
+-#define SC_OP_BEACONS                BIT(1)
+-#define SC_OP_RXFLUSH                BIT(2)
+-#define SC_OP_TSF_RESET              BIT(3)
+-#define SC_OP_ANI_RUN                BIT(4)
+-#define SC_OP_PRIM_STA_VIF           BIT(5)
++enum sc_op_flags {
++	SC_OP_INVALID,
++	SC_OP_BEACONS,
++	SC_OP_RXFLUSH,
++	SC_OP_TSF_RESET,
++	SC_OP_ANI_RUN,
++	SC_OP_PRIM_STA_VIF,
++};
+ 
+ /* Powersave flags */
+ #define PS_WAIT_FOR_BEACON        BIT(0)
+@@ -655,9 +657,9 @@ struct ath_softc {
+ 	struct completion paprd_complete;
+ 
+ 	unsigned int hw_busy_count;
++	unsigned long sc_flags;
+ 
+ 	u32 intrstatus;
+-	u32 sc_flags; /* SC_OP_* */
+ 	u16 ps_flags; /* PS_* */
+ 	u16 curtxpow;
+ 	bool ps_enabled;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 11bc55e..6afb470 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -387,7 +387,7 @@ void ath_beacon_tasklet(unsigned long data)
+ 		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
+ 			ath_dbg(common, BSTUCK, "beacon is officially stuck\n");
+ 			sc->beacon.bmisscnt = 0;
+-			sc->sc_flags |= SC_OP_TSF_RESET;
++			set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+ 			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
  		}
+ 
+@@ -477,16 +477,16 @@ static void ath9k_beacon_init(struct ath_softc *sc,
+ 			      u32 next_beacon,
+ 			      u32 beacon_period)
+ {
+-	if (sc->sc_flags & SC_OP_TSF_RESET) {
++	if (test_bit(SC_OP_TSF_RESET, &sc->sc_flags)) {
+ 		ath9k_ps_wakeup(sc);
+ 		ath9k_hw_reset_tsf(sc->sc_ah);
  	}
-@@ -650,10 +652,10 @@ static void wl3501_mgmt_scan_confirm(struct wl3501_card *this, u16 addr)
- 	int matchflag = 0;
- 	struct wl3501_scan_confirm sig;
  
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	wl3501_get_from_wla(this, addr, &sig, sizeof(sig));
- 	if (sig.status == WL3501_STATUS_SUCCESS) {
--		pr_debug("success");
-+		pr_debug("success\n");
- 		if ((this->net_type == IW_MODE_INFRA &&
- 		     (sig.cap_info & WL3501_MGMT_CAPABILITY_ESS)) ||
- 		    (this->net_type == IW_MODE_ADHOC &&
-@@ -688,7 +690,7 @@ static void wl3501_mgmt_scan_confirm(struct wl3501_card *this, u16 addr)
- 			}
- 		}
- 	} else if (sig.status == WL3501_STATUS_TIMEOUT) {
--		pr_debug("timeout");
-+		pr_debug("timeout\n");
- 		this->join_sta_bss = 0;
- 		for (i = this->join_sta_bss; i < this->bss_cnt; i++)
- 			if (!wl3501_mgmt_join(this, i))
-@@ -822,8 +824,8 @@ static void wl3501_online(struct net_device *dev)
- {
- 	struct wl3501_card *this = netdev_priv(dev);
+ 	ath9k_hw_beaconinit(sc->sc_ah, next_beacon, beacon_period);
  
--	printk(KERN_INFO "%s: Wireless LAN online. BSSID: %pM\n",
--	       dev->name, this->bssid);
-+	pr_info("%s: Wireless LAN online. BSSID: %pM\n",
-+		dev->name, this->bssid);
- 	netif_wake_queue(dev);
- }
- 
-@@ -845,7 +847,7 @@ static int wl3501_mgmt_auth(struct wl3501_card *this)
- 		.timeout = 1000,
- 	};
- 
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	memcpy(sig.mac_addr, this->bssid, ETH_ALEN);
- 	return wl3501_esbq_exec(this, &sig, sizeof(sig));
- }
-@@ -859,7 +861,7 @@ static int wl3501_mgmt_association(struct wl3501_card *this)
- 		.cap_info	 = this->cap_info,
- 	};
- 
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	memcpy(sig.mac_addr, this->bssid, ETH_ALEN);
- 	return wl3501_esbq_exec(this, &sig, sizeof(sig));
- }
-@@ -869,7 +871,7 @@ static void wl3501_mgmt_join_confirm(struct net_device *dev, u16 addr)
- 	struct wl3501_card *this = netdev_priv(dev);
- 	struct wl3501_join_confirm sig;
- 
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	wl3501_get_from_wla(this, addr, &sig, sizeof(sig));
- 	if (sig.status == WL3501_STATUS_SUCCESS) {
- 		if (this->net_type == IW_MODE_INFRA) {
-@@ -916,7 +918,7 @@ static inline void wl3501_alarm_interrupt(struct net_device *dev,
- 					  struct wl3501_card *this)
- {
- 	if (this->net_type == IW_MODE_INFRA) {
--		printk(KERN_INFO "Wireless LAN offline\n");
-+		pr_info("Wireless LAN offline\n");
- 		netif_stop_queue(dev);
- 		wl3501_mgmt_resync(this);
+-	if (sc->sc_flags & SC_OP_TSF_RESET) {
++	if (test_bit(SC_OP_TSF_RESET, &sc->sc_flags)) {
+ 		ath9k_ps_restore(sc);
+-		sc->sc_flags &= ~SC_OP_TSF_RESET;
++		clear_bit(SC_OP_TSF_RESET, &sc->sc_flags);
  	}
-@@ -928,7 +930,7 @@ static inline void wl3501_md_confirm_interrupt(struct net_device *dev,
- {
- 	struct wl3501_md_confirm sig;
+ }
  
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	wl3501_get_from_wla(this, addr, &sig, sizeof(sig));
- 	wl3501_free_tx_buffer(this, sig.data);
- 	if (netif_queue_stopped(dev))
-@@ -956,7 +958,7 @@ static inline void wl3501_md_ind_interrupt(struct net_device *dev,
- 			    &addr4, sizeof(addr4));
- 	if (!(addr4[0] == 0xAA && addr4[1] == 0xAA &&
- 	      addr4[2] == 0x03 && addr4[4] == 0x00)) {
--		printk(KERN_INFO "Insupported packet type!\n");
-+		pr_info("Insupported packet type!\n");
+@@ -516,7 +516,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
+ 	/* Set the computed AP beacon timers */
+ 
+ 	ath9k_hw_disable_interrupts(ah);
+-	sc->sc_flags |= SC_OP_TSF_RESET;
++	set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 	ath9k_hw_set_interrupts(ah);
+@@ -659,7 +659,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	u32 tsf, intval, nexttbtt;
+ 
+ 	ath9k_reset_beacon_status(sc);
+-	if (!(sc->sc_flags & SC_OP_BEACONS))
++	if (!test_bit(SC_OP_BEACONS, &sc->sc_flags))
+ 		ath9k_hw_settsf64(ah, sc->beacon.bc_tstamp);
+ 
+ 	intval = TU_TO_USEC(conf->beacon_interval);
+@@ -724,7 +724,7 @@ static bool ath9k_allow_beacon_config(struct ath_softc *sc,
+ 	 */
+ 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
+ 	    (vif->type == NL80211_IFTYPE_STATION) &&
+-	    (sc->sc_flags & SC_OP_BEACONS) &&
++	    test_bit(SC_OP_BEACONS, &sc->sc_flags) &&
+ 	    !avp->primary_sta_vif) {
+ 		ath_dbg(common, CONFIG,
+ 			"Beacon already configured for a station interface\n");
+@@ -810,7 +810,7 @@ void ath_set_beacon(struct ath_softc *sc)
  		return;
  	}
- 	pkt_len = sig.size + 12 - 24 - 4 - 6;
-@@ -964,8 +966,8 @@ static inline void wl3501_md_ind_interrupt(struct net_device *dev,
- 	skb = dev_alloc_skb(pkt_len + 5);
  
- 	if (!skb) {
--		printk(KERN_WARNING "%s: Can't alloc a sk_buff of size %d.\n",
--		       dev->name, pkt_len);
-+		pr_warn("%s: Can't alloc a sk_buff of size %d\n",
-+			dev->name, pkt_len);
- 		dev->stats.rx_dropped++;
+-	sc->sc_flags |= SC_OP_BEACONS;
++	set_bit(SC_OP_BEACONS, &sc->sc_flags);
+ }
+ 
+ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
+@@ -818,7 +818,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
+ 	struct ath_hw *ah = sc->sc_ah;
+ 
+ 	if (!ath_has_valid_bslot(sc)) {
+-		sc->sc_flags &= ~SC_OP_BEACONS;
++		clear_bit(SC_OP_BEACONS, &sc->sc_flags);
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index c134dda..2831258 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -205,10 +205,10 @@ static ssize_t write_file_disable_ani(struct file *file,
+ 	common->disable_ani = !!disable_ani;
+ 
+ 	if (disable_ani) {
+-		sc->sc_flags &= ~SC_OP_ANI_RUN;
++		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 		del_timer_sync(&common->ani.timer);
  	} else {
- 		skb->dev = dev;
-@@ -983,7 +985,7 @@ static inline void wl3501_md_ind_interrupt(struct net_device *dev,
- static inline void wl3501_get_confirm_interrupt(struct wl3501_card *this,
- 						u16 addr, void *sig, int size)
- {
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	wl3501_get_from_wla(this, addr, &this->sig_get_confirm,
- 			    sizeof(this->sig_get_confirm));
- 	wake_up(&this->wait);
-@@ -995,7 +997,7 @@ static inline void wl3501_start_confirm_interrupt(struct net_device *dev,
- {
- 	struct wl3501_start_confirm sig;
- 
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	wl3501_get_from_wla(this, addr, &sig, sizeof(sig));
- 	if (sig.status == WL3501_STATUS_SUCCESS)
- 		netif_wake_queue(dev);
-@@ -1007,7 +1009,7 @@ static inline void wl3501_assoc_confirm_interrupt(struct net_device *dev,
- 	struct wl3501_card *this = netdev_priv(dev);
- 	struct wl3501_assoc_confirm sig;
- 
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	wl3501_get_from_wla(this, addr, &sig, sizeof(sig));
- 
- 	if (sig.status == WL3501_STATUS_SUCCESS)
-@@ -1019,7 +1021,7 @@ static inline void wl3501_auth_confirm_interrupt(struct wl3501_card *this,
- {
- 	struct wl3501_auth_confirm sig;
- 
--	pr_debug("entry");
-+	pr_debug("entry\n");
- 	wl3501_get_from_wla(this, addr, &sig, sizeof(sig));
- 
- 	if (sig.status == WL3501_STATUS_SUCCESS)
-@@ -1035,7 +1037,7 @@ static inline void wl3501_rx_interrupt(struct net_device *dev)
- 	u8 sig_id;
- 	struct wl3501_card *this = netdev_priv(dev);
- 
--	pr_debug("entry");
-+	pr_debug("entry\n");
- loop:
- 	morepkts = 0;
- 	if (!wl3501_esbq_confirm(this))
-@@ -1158,7 +1160,7 @@ static int wl3501_reset_board(struct wl3501_card *this)
- 		}
- 		WL3501_NOPLOOP(10);
- 	}
--	printk(KERN_WARNING "%s: failed to reset the board!\n", __func__);
-+	pr_warn("%s: failed to reset the board!\n", __func__);
- 	rc = -ENODEV;
- out:
- 	return rc;
-@@ -1209,7 +1211,7 @@ static int wl3501_init_firmware(struct wl3501_card *this)
- out:
- 	return rc;
- fail:
--	printk(KERN_WARNING "%s: failed!\n", __func__);
-+	pr_warn("%s: failed!\n", __func__);
- 	goto out;
- }
- 
-@@ -1232,7 +1234,7 @@ static int wl3501_close(struct net_device *dev)
- 	wl3501_block_interrupt(this);
- 
- 	rc = 0;
--	printk(KERN_INFO "%s: WL3501 closed\n", dev->name);
-+	pr_info("%s: WL3501 closed\n", dev->name);
- 	spin_unlock_irqrestore(&this->lock, flags);
- 	return rc;
- }
-@@ -1253,8 +1255,7 @@ static int wl3501_reset(struct net_device *dev)
- 	wl3501_block_interrupt(this);
- 
- 	if (wl3501_init_firmware(this)) {
--		printk(KERN_WARNING "%s: Can't initialize Firmware!\n",
--		       dev->name);
-+		pr_warn("%s: Can't initialize Firmware!\n", dev->name);
- 		/* Free IRQ, and mark IRQ as unused */
- 		free_irq(dev->irq, dev);
- 		goto out;
-@@ -1268,7 +1269,7 @@ static int wl3501_reset(struct net_device *dev)
- 	wl3501_ack_interrupt(this);
- 	wl3501_unblock_interrupt(this);
- 	wl3501_mgmt_scan(this, 100);
--	pr_debug("%s: device reset", dev->name);
-+	pr_debug("%s: device reset\n", dev->name);
- 	rc = 0;
- out:
- 	return rc;
-@@ -1286,7 +1287,7 @@ static void wl3501_tx_timeout(struct net_device *dev)
- 	rc = wl3501_reset(dev);
- 	spin_unlock_irqrestore(&this->lock, flags);
- 	if (rc)
--		printk(KERN_ERR "%s: Error %d resetting card on Tx timeout!\n",
-+		pr_err("%s: Error %d resetting card on Tx timeout!\n",
- 		       dev->name, rc);
- 	else {
- 		dev->trans_start = jiffies; /* prevent tx timeout */
-@@ -1341,7 +1342,7 @@ static int wl3501_open(struct net_device *dev)
- 	link->open++;
- 
- 	/* Initial WL3501 firmware */
--	pr_debug("%s: Initialize WL3501 firmware...", dev->name);
-+	pr_debug("%s: Initialize WL3501 firmware...\n", dev->name);
- 	if (wl3501_init_firmware(this))
- 		goto fail;
- 	/* Initial device variables */
-@@ -1353,16 +1354,14 @@ static int wl3501_open(struct net_device *dev)
- 	wl3501_unblock_interrupt(this);
- 	wl3501_mgmt_scan(this, 100);
- 	rc = 0;
--	pr_debug("%s: WL3501 opened", dev->name);
--	printk(KERN_INFO "%s: Card Name: %s\n"
--			 "%s: Firmware Date: %s\n",
--			 dev->name, this->card_name,
--			 dev->name, this->firmware_date);
-+	pr_debug("%s: WL3501 opened\n", dev->name);
-+	pr_info("%s: Card Name: %s\n", dev->name, this->card_name);
-+	pr_info("%s: Firmware Date: %s\n", dev->name, this->firmware_date);
- out:
- 	spin_unlock_irqrestore(&this->lock, flags);
- 	return rc;
- fail:
--	printk(KERN_WARNING "%s: Can't initialize firmware!\n", dev->name);
-+	pr_warn("%s: Can't initialize firmware!\n", dev->name);
- 	goto out;
- }
- 
-@@ -1922,7 +1921,7 @@ static int wl3501_config(struct pcmcia_device *link)
- 	dev->base_addr = link->resource[0]->start;
- 	SET_NETDEV_DEV(dev, &link->dev);
- 	if (register_netdev(dev)) {
--		printk(KERN_NOTICE "wl3501_cs: register_netdev() failed\n");
-+		pr_notice("register_netdev() failed\n");
- 		goto failed;
+-		sc->sc_flags |= SC_OP_ANI_RUN;
++		set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 		ath_start_ani(common);
  	}
  
-@@ -1931,8 +1930,7 @@ static int wl3501_config(struct pcmcia_device *link)
- 	this->base_addr = dev->base_addr;
+@@ -1321,7 +1321,7 @@ static int open_file_bb_mac_samps(struct inode *inode, struct file *file)
+ 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
+ 	u8 nread;
  
- 	if (!wl3501_get_flash_mac_addr(this)) {
--		printk(KERN_WARNING "%s: Can't read MAC addr in flash ROM?\n",
--		       dev->name);
-+		pr_warn("%s: Can't read MAC addr in flash ROM?\n", dev->name);
- 		unregister_netdev(dev);
- 		goto failed;
- 	}
-@@ -1941,10 +1939,8 @@ static int wl3501_config(struct pcmcia_device *link)
- 		dev->dev_addr[i] = ((char *)&this->mac_addr)[i];
+-	if (sc->sc_flags & SC_OP_INVALID)
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
+ 		return -EAGAIN;
  
- 	/* print probe information */
--	printk(KERN_INFO "%s: wl3501 @ 0x%3.3x, IRQ %d, "
--	       "MAC addr in flash ROM:%pM\n",
--	       dev->name, this->base_addr, (int)dev->irq,
--	       dev->dev_addr);
-+	pr_info("%s: wl3501 @ 0x%3.3x, IRQ %d, MAC addr in flash ROM:%pM\n",
-+		dev->name, this->base_addr, (int)dev->irq, dev->dev_addr);
- 	/*
- 	 * Initialize card parameters - added by jss
+ 	buf = vmalloc(size);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 89b38a9..0cc4c70 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -155,7 +155,7 @@ void ath_start_rx_poll(struct ath_softc *sc, u8 nbeacon)
+ 	if (!AR_SREV_9300(sc->sc_ah))
+ 		return;
+ 
+-	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF))
++	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
+ 		return;
+ 
+ 	mod_timer(&sc->rx_poll_timer, jiffies + msecs_to_jiffies
+@@ -430,7 +430,7 @@ void ath_start_ani(struct ath_common *common)
+ 	unsigned long timestamp = jiffies_to_msecs(jiffies);
+ 	struct ath_softc *sc = (struct ath_softc *) common->priv;
+ 
+-	if (!(sc->sc_flags & SC_OP_ANI_RUN))
++	if (!test_bit(SC_OP_ANI_RUN, &sc->sc_flags))
+ 		return;
+ 
+ 	if (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0471c4b..86bfea9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -222,7 +222,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	ath9k_hw_enable_interrupts(ah);
+ 
+ 	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) && start) {
+-		if (sc->sc_flags & SC_OP_BEACONS)
++		if (test_bit(SC_OP_BEACONS, &sc->sc_flags))
+ 			ath_set_beacon(sc);
+ 
+ 		ath_restart_work(sc);
+@@ -293,7 +293,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ {
+ 	int r;
+ 
+-	if (sc->sc_flags & SC_OP_INVALID)
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
+ 		return -EIO;
+ 
+ 	r = ath_reset_internal(sc, hchan, false);
+@@ -435,7 +435,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 	 * touch anything. Note this can happen early
+ 	 * on if the IRQ is shared.
  	 */
+-	if (sc->sc_flags & SC_OP_INVALID)
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
+ 		return IRQ_NONE;
+ 
+ 
+@@ -635,7 +635,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	ath_mci_enable(sc);
+ 
+-	sc->sc_flags &= ~SC_OP_INVALID;
++	clear_bit(SC_OP_INVALID, &sc->sc_flags);
+ 	sc->sc_ah->is_monitoring = false;
+ 
+ 	if (!ath_complete_reset(sc, false)) {
+@@ -754,7 +754,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	ath_cancel_work(sc);
+ 	del_timer_sync(&sc->rx_poll_timer);
+ 
+-	if (sc->sc_flags & SC_OP_INVALID) {
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+ 		ath_dbg(common, ANY, "Device not present\n");
+ 		mutex_unlock(&sc->mutex);
+ 		return;
+@@ -811,7 +811,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-	sc->sc_flags |= SC_OP_INVALID;
++	set_bit(SC_OP_INVALID, &sc->sc_flags);
+ 	sc->ps_idle = prev_idle;
+ 
+ 	mutex_unlock(&sc->mutex);
+@@ -915,11 +915,11 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 	/* Set op-mode & TSF */
+ 	if (iter_data.naps > 0) {
+ 		ath9k_hw_set_tsfadjust(ah, 1);
+-		sc->sc_flags |= SC_OP_TSF_RESET;
++		set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+ 		ah->opmode = NL80211_IFTYPE_AP;
+ 	} else {
+ 		ath9k_hw_set_tsfadjust(ah, 0);
+-		sc->sc_flags &= ~SC_OP_TSF_RESET;
++		clear_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+ 
+ 		if (iter_data.nmeshes)
+ 			ah->opmode = NL80211_IFTYPE_MESH_POINT;
+@@ -950,12 +950,12 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+ 
+ 		if (!common->disable_ani) {
+-			sc->sc_flags |= SC_OP_ANI_RUN;
++			set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 			ath_start_ani(common);
+ 		}
+ 
+ 	} else {
+-		sc->sc_flags &= ~SC_OP_ANI_RUN;
++		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 		del_timer_sync(&common->ani.timer);
+ 	}
+ }
+@@ -1479,11 +1479,11 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	 * Skip iteration if primary station vif's bss info
+ 	 * was not changed
+ 	 */
+-	if (sc->sc_flags & SC_OP_PRIM_STA_VIF)
++	if (test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
+ 		return;
+ 
+ 	if (bss_conf->assoc) {
+-		sc->sc_flags |= SC_OP_PRIM_STA_VIF;
++		set_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
+ 		avp->primary_sta_vif = true;
+ 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ 		common->curaid = bss_conf->aid;
+@@ -1504,7 +1504,7 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 		ath_start_rx_poll(sc, 3);
+ 
+ 		if (!common->disable_ani) {
+-			sc->sc_flags |= SC_OP_ANI_RUN;
++			set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 			ath_start_ani(common);
+ 		}
+ 
+@@ -1524,7 +1524,8 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	if (avp->primary_sta_vif && !bss_conf->assoc) {
+ 		ath_dbg(common, CONFIG, "Bss Info DISASSOC %d, bssid %pM\n",
+ 			common->curaid, common->curbssid);
+-		sc->sc_flags &= ~(SC_OP_PRIM_STA_VIF | SC_OP_BEACONS);
++		clear_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
++		clear_bit(SC_OP_BEACONS, &sc->sc_flags);
+ 		avp->primary_sta_vif = false;
+ 		memset(common->curbssid, 0, ETH_ALEN);
+ 		common->curaid = 0;
+@@ -1537,10 +1538,9 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	 * None of station vifs are associated.
+ 	 * Clear bssid & aid
+ 	 */
+-	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF)) {
++	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
+ 		ath9k_hw_write_associd(sc->sc_ah);
+-		/* Stop ANI */
+-		sc->sc_flags &= ~SC_OP_ANI_RUN;
++		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 		del_timer_sync(&common->ani.timer);
+ 		del_timer_sync(&sc->rx_poll_timer);
+ 		memset(&sc->caldata, 0, sizeof(sc->caldata));
+@@ -1578,12 +1578,12 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+ 
+ 			if (!common->disable_ani) {
+-				sc->sc_flags |= SC_OP_ANI_RUN;
++				set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 				ath_start_ani(common);
+ 			}
+ 
+ 		} else {
+-			sc->sc_flags &= ~SC_OP_ANI_RUN;
++			clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
+ 			del_timer_sync(&common->ani.timer);
+ 			del_timer_sync(&sc->rx_poll_timer);
+ 		}
+@@ -1595,7 +1595,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	 */
+ 	if ((changed & BSS_CHANGED_BEACON_INT) &&
+ 	    (vif->type == NL80211_IFTYPE_AP))
+-		sc->sc_flags |= SC_OP_TSF_RESET;
++		set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+ 
+ 	/* Configure beaconing (AP, IBSS, MESH) */
+ 	if (ath9k_uses_beacons(vif->type) &&
+@@ -1787,7 +1787,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 		return;
+ 	}
+ 
+-	if (sc->sc_flags & SC_OP_INVALID) {
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+ 		ath_dbg(common, ANY, "Device not present\n");
+ 		mutex_unlock(&sc->mutex);
+ 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 6ec9f88..aa0e83a 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -251,7 +251,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc->mem = mem;
+ 
+ 	/* Will be cleared in ath9k_start() */
+-	sc->sc_flags |= SC_OP_INVALID;
++	set_bit(SC_OP_INVALID, &sc->sc_flags);
+ 
+ 	ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index b45256e..3ac52c5 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -285,8 +285,8 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 	int error = 0;
+ 
+ 	spin_lock_init(&sc->sc_pcu_lock);
+-	sc->sc_flags &= ~SC_OP_RXFLUSH;
+ 	spin_lock_init(&sc->rx.rxbuflock);
++	clear_bit(SC_OP_RXFLUSH, &sc->sc_flags);
+ 
+ 	common->rx_bufsize = IEEE80211_MAX_MPDU_LEN / 2 +
+ 			     sc->sc_ah->caps.rx_status_len;
+@@ -498,11 +498,11 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 
+ void ath_flushrecv(struct ath_softc *sc)
+ {
+-	sc->sc_flags |= SC_OP_RXFLUSH;
++	set_bit(SC_OP_RXFLUSH, &sc->sc_flags);
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+ 		ath_rx_tasklet(sc, 1, true);
+ 	ath_rx_tasklet(sc, 1, false);
+-	sc->sc_flags &= ~SC_OP_RXFLUSH;
++	clear_bit(SC_OP_RXFLUSH, &sc->sc_flags);
+ }
+ 
+ static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
+@@ -1063,7 +1063,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 
+ 	do {
+ 		/* If handling rx interrupt and flush is in progress => exit */
+-		if ((sc->sc_flags & SC_OP_RXFLUSH) && (flush == 0))
++		if (test_bit(SC_OP_RXFLUSH, &sc->sc_flags) && (flush == 0))
+ 			break;
+ 
+ 		memset(&rs, 0, sizeof(rs));
+@@ -1108,7 +1108,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		 * If we're asked to flush receive queue, directly
+ 		 * chain it back at the queue without processing it.
+ 		 */
+-		if (sc->sc_flags & SC_OP_RXFLUSH) {
++		if (test_bit(SC_OP_RXFLUSH, &sc->sc_flags)) {
+ 			RX_STAT_INC(rx_drop_rxflush);
+ 			goto requeue_drop_frag;
+ 		}
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 6619a39..bb74780 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1536,7 +1536,7 @@ bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 	int i;
+ 	u32 npend = 0;
+ 
+-	if (sc->sc_flags & SC_OP_INVALID)
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
+ 		return true;
+ 
+ 	ath9k_hw_abort_tx_dma(ah);
 -- 
-1.7.8.111.gad25c.dirty
+1.7.10.3
 
