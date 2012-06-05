@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:49340 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026Ab2F0O6J convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37079 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431Ab2FETR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 10:58:09 -0400
-Received: by gglu4 with SMTP id u4so970244ggl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 07:58:08 -0700 (PDT)
+	Tue, 5 Jun 2012 15:17:58 -0400
+Date: Tue, 5 Jun 2012 15:00:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Soumik DAS <soumik.das@stericsson.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Increment probe_send_count earlier
+Message-ID: <20120605190058.GC1937@tuxdriver.com> (sfid-20120605_211802_646222_4B2CC8E4)
+References: <2E48302EED53D048A7BA72B0A307FB511FB9009098@EXDCVYMBSTM005.EQ1STM.local>
+ <87vck48q92.fsf@purkki.adurom.net>
+ <2E48302EED53D048A7BA72B0A307FB511FB9009215@EXDCVYMBSTM005.EQ1STM.local>
+ <87mx5g8j31.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1340805979.11012.34.camel@jlt3.sipsolutions.net>
-References: <1340805097.11012.24.camel@jlt3.sipsolutions.net>
-	<1340805979.11012.34.camel@jlt3.sipsolutions.net>
-Date: Wed, 27 Jun 2012 07:58:08 -0700
-Message-ID: <CAMcMvsjmbM1NXtiHhcGeDkim6PuTJKqoXfkvU4xxWJaqEP3-qA@mail.gmail.com> (sfid-20120627_165814_211718_1E70B947)
-Subject: Re: 3.4.x bug with channel type changes
-From: Paul Stewart <pstew@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	manschwetus@googlemail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87mx5g8j31.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 27, 2012 at 7:06 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-06-27 at 15:51 +0200, Johannes Berg wrote:
->
->> Now, the reason I'm writing all this in an email and not a commit log is
->> that I don't know what the TX/RX channel type usage should be, or if
->> maybe it should be "if (queues_stopped) wake_queues()" or something like
->> that... Can you tell me what it should be?
->
-> Something like this should help, of course, but maybe there are other
-> issues in this area too?
->
-> http://p.sipsolutions.net/3e89ee42463d6cc9.txt
+On Thu, May 10, 2012 at 12:46:10PM +0300, Kalle Valo wrote:
+> Hi Soumik,
+> 
+> Soumik DAS <soumik.das@stericsson.com> writes:
+> 
+> > In some cases the sequence of events gets changed -
+> > 	a. call ieee80211_send_nullfunc()
+> > 		(current thread gets scheduled out/pre-empted at this point)
+> > 	b. null frame gets transmitted and acked
+> > 	c. probe_send_count is incremented
+> > 	d. mac80211 waits for some specified timeout and checks that probe_send_count is still > 0. It concludes that AP did not acknowledge the null frame and disassociates from the current AP.
+> > 	e. After a scan STA again re-associate with the same AP.
+> 
+> Ok, so there's a race in mac80211? You should describe the race in the
+> commit log so that a random developer understands what's happening. It
+> doesn't need to be anything fancy, usually just few sentences is enough
+> to give sufficient background for the patch. Where the race is, how
+> often it happens and how to fix it properly, that sort of things.
+> 
+> I repeat this a lot (sorry!) but the most important question the commit
+> log should answer is "Why?". The question "What?" isn't actually that
+> important as anyone can read the patch themselves.
+> 
+> -- 
+> Kalle Valo
 
-This looks good to me, however, Rajkumar might be better at answering
-the question of correctness since I was only involved as far as
-changing the rate control, and didn't (intend to) change anything as
-far as queues go.
+Soumik,
 
+Are you going to repost with a proper changelog?
 
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
