@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:34082 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754224Ab2FYPdx (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:52022 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752924Ab2FEPsw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 11:33:53 -0400
+	Tue, 5 Jun 2012 11:48:52 -0400
+Received: by wibhj8 with SMTP id hj8so4072395wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 08:48:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn08gkYJnyYfqyZT8VX-bFPgDVZPgVSHE_QBEuXj5aEWMw@mail.gmail.com>
-References: <1340637550-12669-1-git-send-email-aletes.xgr@gmail.com>
-	<CAD2nsn08gkYJnyYfqyZT8VX-bFPgDVZPgVSHE_QBEuXj5aEWMw@mail.gmail.com>
-Date: Mon, 25 Jun 2012 12:33:51 -0300
-Message-ID: <CAAAP30EaW67e_w0k0W5qasaFfccfn0pDtqdHQB+-hesEbJwOLQ@mail.gmail.com> (sfid-20120625_173412_830284_2046D7EC)
-Subject: Re: [PATCH] mac80211: fix build warning
-From: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <1338881890.4514.13.camel@jlt3.sipsolutions.net>
+References: <1338881890.4514.13.camel@jlt3.sipsolutions.net>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 5 Jun 2012 08:48:29 -0700
+Message-ID: <CA+55aFxV4b-CkCby=skn0s6GAM1kptsRJVcHeE6hoFVLY5T8uQ@mail.gmail.com> (sfid-20120605_174856_119592_04E88431)
+Subject: Re: [PATCH 3.5] iwlwifi: fix double free/complete in firmware loading
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 12:31 PM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> Hi,
+On Tue, Jun 5, 2012 at 12:38 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> @@ -861,13 +861,20 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
 >
-> On Mon, Jun 25, 2012 at 8:49 PM, Alexandre Pereira da Silva
-> <aletes.xgr@gmail.com> wrote:
->> Fix:
->> net/mac80211/mlme.c: In function 'ieee80211_prep_connection':
->> net/mac80211/mlme.c:3035:19: warning: 'sta' may be used uninitialized in
->> this function
->>
->> Initialize sta to NULL
+>        /* We have our copies now, allow OS release its copies */
+>        release_firmware(ucode_raw);
+> -       complete(&drv->request_firmware_complete);
 >
-> i think already fixed by and there in wireless-testing
-> http://www.spinics.net/lists/linux-wireless/msg92385.html
+>        drv->op_mode = iwl_dvm_ops.start(drv->trans, drv->cfg, &drv->fw);
+>
+> -       if (!drv->op_mode)
+> -               goto out_free_fw;
+> +       if (!drv->op_mode) {
+> +               complete(&drv->request_firmware_complete);
+> +               goto out_release_driver;
+> +       }
 
-Ok, thanks for pointing that out.
+If you do it this way, you might as well replace the
+
+   complete(&drv->request_firmware_complete);
+   goto out_release_driver;
+
+with just a "goto out_unbind".
+
+                Linus
