@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv04.lahn.de ([213.239.197.57]:46451 "EHLO serv04.lahn.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752251Ab2FSHHm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 03:07:42 -0400
-Date: Tue, 19 Jun 2012 08:51:37 +0200
-From: Michael Leun <lkml20120218@newton.leun.net>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
-Message-ID: <20120619085137.337838c0@xenia.leun.net> (sfid-20120619_090816_215887_2637B89F)
+Received: from he.sipsolutions.net ([78.46.109.217]:44424 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837Ab2FER4H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 13:56:07 -0400
+Message-ID: <1338918966.4514.49.camel@jlt3.sipsolutions.net> (sfid-20120605_195626_179221_28C6B5D5)
+Subject: [PATCH 3.5 v3] iwlwifi: fix double free/complete in firmware loading
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 05 Jun 2012 19:56:06 +0200
+In-Reply-To: <1338881890.4514.13.camel@jlt3.sipsolutions.net> (sfid-20120605_093822_652064_2187C728)
+References: <1338881890.4514.13.camel@jlt3.sipsolutions.net>
+	 (sfid-20120605_093822_652064_2187C728)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-ne-wlan1@elektra:/home/ml4> ping 192.168.2.1
-PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
-64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=2010 ms
-64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=1011 ms
-64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=11.5 ms
-64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=1.12 ms
-64 bytes from 192.168.2.1: icmp_seq=5 ttl=64 time=1002 ms
-64 bytes from 192.168.2.1: icmp_seq=6 ttl=64 time=3.83 ms
-64 bytes from 192.168.2.1: icmp_seq=7 ttl=64 time=1003 ms
-64 bytes from 192.168.2.1: icmp_seq=8 ttl=64 time=4.10 ms
-64 bytes from 192.168.2.1: icmp_seq=9 ttl=64 time=1003 ms
-64 bytes from 192.168.2.1: icmp_seq=10 ttl=64 time=3.95 ms
-64 bytes from 192.168.2.1: icmp_seq=11 ttl=64 time=1003 ms
-64 bytes from 192.168.2.1: icmp_seq=12 ttl=64 time=3.78 ms
+Linus reported that due to mac80211 failing to register
+the device (due to WoWLAN) his machine crashed etc. as
+we double-freed the vmalloc() firmware area. His patch
+to fix it was very similar to this one but I noticed
+that there's another bug in the area: we complete the
+completion before starting, so since we're running in
+a work struct context stop() could be called while in
+the middle of start() which will almost certainly lead
+to issues.
 
+Make a modification similar to his to avoid the double-
+free but also move the completion to another spot so it
+is only done after start() either finished or failed so
+that stop() can have a consistent state.
 
-Please note the additional delay of ~1000ms every 2nd packet. This is
-Kernel 3.4.3, have seen it in 3.4.2 also. Does NOT happen in 3.3.1.
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+Wow, clearly I'm not paying enough attention today, sorry.
+Remove the stray label.
 
-Is this Issue already known? If so, I can save the work bisecting...
+ drivers/net/wireless/iwlwifi/iwl-drv.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Happens with two different ath9k_htc cards:
-
-Bus 002 Device 012: ID 0846:9018 NetGear, Inc. WNDA3200 802.11abgn Wireless Adapter [Atheros AR7010+AR9280]
-Bus 002 Device 004: ID 0cf3:7015 Atheros Communications, Inc. TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
-
-Does NOT happen with an atk9k (mini pci express) card.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index d742900..fac67a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -861,13 +861,18 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 
+ 	/* We have our copies now, allow OS release its copies */
+ 	release_firmware(ucode_raw);
+-	complete(&drv->request_firmware_complete);
+ 
+ 	drv->op_mode = iwl_dvm_ops.start(drv->trans, drv->cfg, &drv->fw);
+ 
+ 	if (!drv->op_mode)
+-		goto out_free_fw;
++		goto out_unbind;
+ 
++	/*
++	 * Complete the firmware request last so that
++	 * a driver unbind (stop) doesn't run while we
++	 * are doing the start() above.
++	 */
++	complete(&drv->request_firmware_complete);
+ 	return;
+ 
+  try_again:
 -- 
-MfG,
+1.7.10
 
-Michael Leun
+
 
