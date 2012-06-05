@@ -1,68 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:44203 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751275Ab2FYJAb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 05:00:31 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi: "GF was set with SGI:SISO"
-References: <87lijfjkjk.fsf@nemi.mork.no>
-	<1340613038.4589.10.camel@jlt3.sipsolutions.net>
-Date: Mon, 25 Jun 2012 10:59:54 +0200
-In-Reply-To: <1340613038.4589.10.camel@jlt3.sipsolutions.net> (Johannes Berg's
-	message of "Mon, 25 Jun 2012 10:30:38 +0200")
-Message-ID: <878vfbhilx.fsf@nemi.mork.no> (sfid-20120625_110036_585744_2CB50E08)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36256 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753315Ab2FEXIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 19:08:32 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 10/18] brcmsmac: use chip and package id constants from bcma
+Date: Wed,  6 Jun 2012 01:07:13 +0200
+Message-Id: <1338937641-8519-11-git-send-email-hauke@hauke-m.de> (sfid-20120606_012943_258148_DDCA308D)
+In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> There's nothing you can do about it, I'll just downgrade it -- see patch
-> below, also for an explanation.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |   10 ----------
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   12 ++++++------
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   10 +++++-----
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   20 ++++++++++----------
+ drivers/net/wireless/brcm80211/brcmsmac/pmu.c      |   12 ++++++------
+ 5 files changed, 27 insertions(+), 37 deletions(-)
 
-Thanks.  That looks like the only sensible solution.  I did some commit
-digging, and it seems this log message was introduced out of the blue
-with no explanation during code refactoring.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+index 2c101b2..8a069b6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+@@ -88,16 +88,6 @@
+ #define	CLKD_OTP		0x000f0000
+ #define	CLKD_OTP_SHIFT		16
+ 
+-/* Package IDs */
+-#define	BCM4717_PKG_ID		9	/* 4717 package id */
+-#define	BCM4718_PKG_ID		10	/* 4718 package id */
+-#define BCM43224_FAB_SMIC	0xa	/* the chip is manufactured by SMIC */
+-
+-/* these are router chips */
+-#define	BCM4716_CHIP_ID		0x4716	/* 4716 chipcommon chipid */
+-#define	BCM47162_CHIP_ID	47162	/* 47162 chipcommon chipid */
+-#define	BCM4748_CHIP_ID		0x4748	/* 4716 chipcommon chipid (OTP, RBBU) */
+-
+ /* dynamic clock control defines */
+ #define	LPOMINFREQ		25000	/* low power oscillator min */
+ #define	LPOMAXFREQ		43000	/* low power oscillator max */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 19db405..8cfa8bb 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2125,8 +2125,8 @@ void brcms_b_switch_macfreq(struct brcms_hardware *wlc_hw, u8 spurmode)
+ {
+ 	struct bcma_device *core = wlc_hw->d11core;
+ 
+-	if ((ai_get_chip_id(wlc_hw->sih) == BCM43224_CHIP_ID) ||
+-	    (ai_get_chip_id(wlc_hw->sih) == BCM43225_CHIP_ID)) {
++	if ((ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM43224) ||
++	    (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM43225)) {
+ 		if (spurmode == WL_SPURAVOID_ON2) {	/* 126Mhz */
+ 			bcma_write16(core, D11REGOFFS(tsf_clk_frac_l), 0x2082);
+ 			bcma_write16(core, D11REGOFFS(tsf_clk_frac_h), 0x8);
+@@ -2790,7 +2790,7 @@ void brcms_b_core_phypll_ctl(struct brcms_hardware *wlc_hw, bool on)
+ 	tmp = 0;
+ 
+ 	if (on) {
+-		if ((ai_get_chip_id(wlc_hw->sih) == BCM4313_CHIP_ID)) {
++		if ((ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313)) {
+ 			bcma_set32(core, D11REGOFFS(clk_ctl_st),
+ 				   CCS_ERSRC_REQ_HT |
+ 				   CCS_ERSRC_REQ_D11PLL |
+@@ -4541,7 +4541,7 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
+ 	else
+ 		wlc_hw->_nbands = 1;
+ 
+-	if ((ai_get_chip_id(wlc_hw->sih) == BCM43225_CHIP_ID))
++	if ((ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM43225))
+ 		wlc_hw->_nbands = 1;
+ 
+ 	/* BMAC_NOTE: remove init of pub values when brcms_c_attach()
+@@ -5049,7 +5049,7 @@ static void brcms_b_hw_up(struct brcms_hardware *wlc_hw)
+ 	wlc_hw->wlc->pub->hw_up = true;
+ 
+ 	if ((wlc_hw->boardflags & BFL_FEM)
+-	    && (ai_get_chip_id(wlc_hw->sih) == BCM4313_CHIP_ID)) {
++	    && (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313)) {
+ 		if (!
+ 		    (wlc_hw->boardrev >= 0x1250
+ 		     && (wlc_hw->boardflags & BFL_FEM_BT)))
+@@ -5141,7 +5141,7 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 	}
+ 
+ 	if ((wlc->pub->boardflags & BFL_FEM)
+-	    && (ai_get_chip_id(wlc->hw->sih) == BCM4313_CHIP_ID)) {
++	    && (ai_get_chip_id(wlc->hw->sih) == BCMA_CHIP_ID_BCM4313)) {
+ 		if (wlc->pub->boardrev >= 0x1250
+ 		    && (wlc->pub->boardflags & BFL_FEM_BT))
+ 			brcms_b_mhf(wlc->hw, MHF5, MHF5_4313_GPIOCTRL,
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index 264f8c4..d16cbec 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -837,7 +837,7 @@ wlc_phy_table_addr(struct brcms_phy *pi, uint tbl_id, uint tbl_offset,
+ 	pi->tbl_data_hi = tblDataHi;
+ 	pi->tbl_data_lo = tblDataLo;
+ 
+-	if (pi->sh->chip == BCM43224_CHIP_ID &&
++	if (pi->sh->chip == BCMA_CHIP_ID_BCM43224 &&
+ 	    pi->sh->chiprev == 1) {
+ 		pi->tbl_addr = tblAddr;
+ 		pi->tbl_save_id = tbl_id;
+@@ -847,7 +847,7 @@ wlc_phy_table_addr(struct brcms_phy *pi, uint tbl_id, uint tbl_offset,
+ 
+ void wlc_phy_table_data_write(struct brcms_phy *pi, uint width, u32 val)
+ {
+-	if ((pi->sh->chip == BCM43224_CHIP_ID) &&
++	if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) &&
+ 	    (pi->sh->chiprev == 1) &&
+ 	    (pi->tbl_save_id == NPHY_TBL_ID_ANTSWCTRLLUT)) {
+ 		read_phy_reg(pi, pi->tbl_data_lo);
+@@ -881,7 +881,7 @@ wlc_phy_write_table(struct brcms_phy *pi, const struct phytbl_info *ptbl_info,
+ 
+ 	for (idx = 0; idx < ptbl_info->tbl_len; idx++) {
+ 
+-		if ((pi->sh->chip == BCM43224_CHIP_ID) &&
++		if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) &&
+ 		    (pi->sh->chiprev == 1) &&
+ 		    (tbl_id == NPHY_TBL_ID_ANTSWCTRLLUT)) {
+ 			read_phy_reg(pi, tblDataLo);
+@@ -918,7 +918,7 @@ wlc_phy_read_table(struct brcms_phy *pi, const struct phytbl_info *ptbl_info,
+ 
+ 	for (idx = 0; idx < ptbl_info->tbl_len; idx++) {
+ 
+-		if ((pi->sh->chip == BCM43224_CHIP_ID) &&
++		if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) &&
+ 		    (pi->sh->chiprev == 1)) {
+ 			(void)read_phy_reg(pi, tblDataLo);
+ 
+@@ -2894,7 +2894,7 @@ const u8 *wlc_phy_get_ofdm_rate_lookup(void)
+ 
+ void wlc_lcnphy_epa_switch(struct brcms_phy *pi, bool mode)
+ {
+-	if ((pi->sh->chip == BCM4313_CHIP_ID) &&
++	if ((pi->sh->chip == BCMA_CHIP_ID_BCM4313) &&
+ 	    (pi->sh->boardflags & BFL_FEM)) {
+ 		if (mode) {
+ 			u16 txant = 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+index 2247fef..f0ccac8 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+@@ -19309,8 +19309,8 @@ void wlc_phy_init_nphy(struct brcms_phy *pi)
+ 		pi->measure_hold |= PHY_HOLD_FOR_NOT_ASSOC;
+ 
+ 	if ((ISNPHY(pi)) && (NREV_GE(pi->pubpi.phy_rev, 5)) &&
+-	    ((pi->sh->chippkg == BCM4717_PKG_ID) ||
+-	     (pi->sh->chippkg == BCM4718_PKG_ID))) {
++	    ((pi->sh->chippkg == BCMA_PKG_ID_BCM4717) ||
++	     (pi->sh->chippkg == BCMA_PKG_ID_BCM4718))) {
+ 		if ((pi->sh->boardflags & BFL_EXTLNA) &&
+ 		    (CHSPEC_IS2G(pi->radio_chanspec)))
+ 			ai_cc_reg(pi->sh->sih,
+@@ -20751,11 +20751,11 @@ wlc_phy_chanspec_radio2056_setup(struct brcms_phy *pi,
+ 				cascbias = 0x20;
+ 
+ 				if ((pi->sh->chip ==
+-				     BCM43224_CHIP_ID)
++				     BCMA_CHIP_ID_BCM43224)
+ 				    || (pi->sh->chip ==
+-					BCM43225_CHIP_ID)) {
++					BCMA_CHIP_ID_BCM43225)) {
+ 					if (pi->sh->chippkg ==
+-					    BCM43224_FAB_SMIC) {
++					    BCMA_PKG_ID_BCM43224_FAB_SMIC) {
+ 						bias = 0x2a;
+ 						cascbias = 0x38;
+ 					}
+@@ -20863,9 +20863,9 @@ wlc_phy_chanspec_radio2056_setup(struct brcms_phy *pi,
+ 
+ 			cascbias = 0x30;
+ 
+-			if ((pi->sh->chip == BCM43224_CHIP_ID) ||
+-			    (pi->sh->chip == BCM43225_CHIP_ID)) {
+-				if (pi->sh->chippkg == BCM43224_FAB_SMIC)
++			if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) ||
++			    (pi->sh->chip == BCMA_CHIP_ID_BCM43225)) {
++				if (pi->sh->chippkg == BCMA_PKG_ID_BCM43224_FAB_SMIC)
+ 					cascbias = 0x35;
+ 			}
+ 
+@@ -21193,8 +21193,8 @@ wlc_phy_chanspec_nphy_setup(struct brcms_phy *pi, u16 chanspec,
+ 		bcma_pmu_spuravoid_pllupdate(&sii->icbus->drv_cc, spuravoid);
+ 		wlapi_bmac_core_phypll_ctl(pi->sh->physhim, true);
+ 
+-		if ((pi->sh->chip == BCM43224_CHIP_ID) ||
+-		    (pi->sh->chip == BCM43225_CHIP_ID)) {
++		if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) ||
++		    (pi->sh->chip == BCMA_CHIP_ID_BCM43225)) {
+ 			if (spuravoid == 1) {
+ 				bcma_write16(pi->d11core,
+ 					     D11REGOFFS(tsf_clk_frac_l),
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
+index 6b4344f..7e9df56 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
+@@ -103,9 +103,9 @@ u16 si_pmu_fast_pwrup_delay(struct si_pub *sih)
+ 	uint delay = PMU_MAX_TRANSITION_DLY;
+ 
+ 	switch (ai_get_chip_id(sih)) {
+-	case BCM43224_CHIP_ID:
+-	case BCM43225_CHIP_ID:
+-	case BCM4313_CHIP_ID:
++	case BCMA_CHIP_ID_BCM43224:
++	case BCMA_CHIP_ID_BCM43225:
++	case BCMA_CHIP_ID_BCM4313:
+ 		delay = 3700;
+ 		break;
+ 	default:
+@@ -156,9 +156,9 @@ u32 si_pmu_alp_clock(struct si_pub *sih)
+ 		return clock;
+ 
+ 	switch (ai_get_chip_id(sih)) {
+-	case BCM43224_CHIP_ID:
+-	case BCM43225_CHIP_ID:
+-	case BCM4313_CHIP_ID:
++	case BCMA_CHIP_ID_BCM43224:
++	case BCMA_CHIP_ID_BCM43225:
++	case BCMA_CHIP_ID_BCM4313:
+ 		/* always 20Mhz */
+ 		clock = 20000 * 1000;
+ 		break;
+-- 
+1.7.9.5
 
->> This is the first time I notice this issue, so I don't think it's very
->> reproducible.
->
-> Too bad, I would've been interested in a command trace when this
-> happens, but it would have to be a fairly long-running trace before the
-> error message happens.
->
-> Were you in some special place when this happened?
-
-No it was at home, and it's been a few months since the access points
-there were changed in any way (hardware, firmware, config). 
-
-> It has to be an 11n
-> AP that is greenfield capable, with no 11a/b/g stations connected to it.
-
-That sounds likely at the time this happened. The access points are two
-Netgear WNDR4500 routers if that matters.  I.e. Linux 2.6.22 with
-Broadcoms proprietary closed source drivers. 
-
-> Maybe some 11g client disconnected from the AP and then the messages
-> started showing up?
-
-Could very well be.  The 11g client would probably be my phone then.  It
-tends to do connects/disconnects on its own, so it sounds likely that it
-could just have disconnected when the log messages started appearing.
-
-> [PATCH] iwlwifi: turn down "GF was set with SGI:SISO" message
-
-I don't think I can test this in any other way than building it, as I am
-unable to trigger the problem again.  It went away on the first
-disconnect/reconnect (while suspending the laptop) and I have not seen
-the messages again.
-
-But the solution look sane to me FWIW.
-
-
-Bjørn
