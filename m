@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ip-relay-001.utdallas.edu ([129.110.20.111]:27796 "EHLO
-	ip-relay-001.utdallas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975Ab2FDXq6 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60857 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757838Ab2FEIjD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 19:46:58 -0400
-From: Qasim Javed <qasimj@gmail.com>
-To: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Cc: javier@cozybit.com, Qasim Javed <qasimj@gmail.com>
-Subject: [PATCH] mac80211: The station fail average is not updated correctly since the IEEE80211_STAT_ACK flag is not set when using wmediumd with mac80211_hwsim. Set this flag when wmediumd indicates that the frame was successfully transmitted (eventually).
-Date: Mon,  4 Jun 2012 22:03:43 -0500
-Message-Id: <1338865423-11200-1-git-send-email-qasimj@gmail.com> (sfid-20120605_014701_651467_B86F4ED3)
+	Tue, 5 Jun 2012 04:39:03 -0400
+Message-ID: <1338885523.1817.101.camel@aeonflux> (sfid-20120605_103910_267242_A7B3C23E)
+Subject: Re: [PATCH] NFC: Driver for SAMSUNG S3FHRN2 NFC Chip.
+From: Marcel Holtmann <marcel@holtmann.org>
+To: =?UTF-8?Q?=EC=9D=B4=EC=9A=B4=EA=B8=B0?= <woonki84.lee@samsung.com>
+Cc: linux-wireless@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	sameo@linux.intel.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, kgene.kim@samsung.com
+Date: Tue, 05 Jun 2012 17:38:43 +0900
+In-Reply-To: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com>
+References: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Qasim Javed <qasimj@gmail.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4c9336c..a0b7cfd 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1555,6 +1555,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 			hdr = (struct ieee80211_hdr *) skb->data;
- 			mac80211_hwsim_monitor_ack(data2->hw, hdr->addr2);
- 		}
-+		txi->flags |= IEEE80211_TX_STAT_ACK;
- 	}
- 	ieee80211_tx_status_irqsafe(data2->hw, skb);
- 	return 0;
--- 
-1.7.8.2
+> This is a driver for the S3FHRN2 NFC device. the driver is just a
+> proxy getting SHDLC/HCI frames from a userspace stack.
+
+<snip>
+
+> +
+> +	info->miscdev.minor = MISC_DYNAMIC_MINOR;
+> +	info->miscdev.name = S3FHRN2_DRIVER_NAME;
+> +	info->miscdev.fops = &s3fhrn2_fops;
+> +	info->miscdev.parent = &client->dev;
+> +	ret = misc_register(&info->miscdev);
+> +	if (ret < 0) {
+> +		dev_err(&client->dev, "failed to register Device\n");
+> +		goto err_dev_reg;
+> +	}
+
+instead of creating a misc character device, I would prefer that this
+gets integrated as driver for the NFC subsystem.
+
+We do not want to have shim NFC drivers in the kernel anymore.
+
+Regards
+
+Marcel
+
 
