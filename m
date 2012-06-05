@@ -1,40 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:41772 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753514Ab2F0L1W (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37679 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917Ab2FEHiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 07:27:22 -0400
-Received: by bkcji2 with SMTP id ji2so821358bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 04:27:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340795869.11012.12.camel@jlt3.sipsolutions.net>
-References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
- <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
- <1340707305.14634.9.camel@jlt3.sipsolutions.net> <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
- <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com> <1340795869.11012.12.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 27 Jun 2012 14:27:06 +0300
-Message-ID: <CA+XVXfcNpj_UqCOXUG7sr2MQH8qZNHYr7MfBz5J3vwC3f+KU6Q@mail.gmail.com> (sfid-20120627_132726_504307_DD6DBE48)
-Subject: Re: mac80211 auth/assoc in multi-channel scenarios
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 5 Jun 2012 03:38:13 -0400
+Message-ID: <1338881890.4514.13.camel@jlt3.sipsolutions.net> (sfid-20120605_093822_652064_2187C728)
+Subject: [PATCH 3.5] iwlwifi: fix double free/complete in firmware loading
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 05 Jun 2012 09:38:10 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 27, 2012 at 2:17 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2012-06-26 at 14:35 +0300, Arik Nemtsov wrote:
->
->> Can you give a bit more info on the Tx-sync approach, for the uninitiated?
->> I'm also thinking that maybe we could somehow treat the sleeping-GO as
->> a special case (maybe with some special code and a HW flag). Right now
->> I'm not sure the wl12xx FW even supports it.
->
-> I basically had a simpler version in mind, something like this:
-> http://p.sipsolutions.net/cd928e926a941ac7.txt
+From: Johannes Berg <johannes.berg@intel.com>
 
-If the low level driver has to prepare for each such Tx, that's fine.
-But does this somehow rely on the timing of the Tx? Relying on op_tx
-to come right after this seems racy.
+Linus reported that due to mac80211 failing to register
+the device (due to WoWLAN) his machine crashed etc. as
+we double-freed the vmalloc() firmware area. His patch
+to fix it was very similar to this one but I noticed
+that there's another bug in the area: we complete the
+completion before starting, so since we're running in
+a work struct context stop() could be called while in
+the middle of start() which will almost certainly lead
+to issues.
+
+Make a modification similar to his to avoid the double-
+free but also move the completion to another spot so it
+is only done after start() either finished or failed so
+that stop() can have a consistent state.
+
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c |   14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index d742900..1f4d6af 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -861,13 +861,20 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 
+ 	/* We have our copies now, allow OS release its copies */
+ 	release_firmware(ucode_raw);
+-	complete(&drv->request_firmware_complete);
+ 
+ 	drv->op_mode = iwl_dvm_ops.start(drv->trans, drv->cfg, &drv->fw);
+ 
+-	if (!drv->op_mode)
+-		goto out_free_fw;
++	if (!drv->op_mode) {
++		complete(&drv->request_firmware_complete);
++		goto out_release_driver;
++	}
+ 
++	/*
++	 * Complete the firmware request last so that
++	 * a driver unbind (stop) doesn't run while we
++	 * are doing the start() above.
++	 */
++	complete(&drv->request_firmware_complete);
+ 	return;
+ 
+  try_again:
+@@ -883,6 +890,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	release_firmware(ucode_raw);
+  out_unbind:
+ 	complete(&drv->request_firmware_complete);
++ out_release_driver:
+ 	device_release_driver(drv->trans->dev);
+ }
+ 
+-- 
+1.7.10
+
+
+
