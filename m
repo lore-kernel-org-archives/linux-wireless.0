@@ -1,50 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:56431 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754845Ab2FWGmO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36425 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753251Ab2FEG2Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 02:42:14 -0400
-Received: by lbbgk8 with SMTP id gk8so4885110lbb.12
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:11 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
-Subject: [PATCH 13/18] wlcore: cancel suspend when recovery is pending
-Date: Sat, 23 Jun 2012 09:41:24 +0300
-Message-Id: <1340433689-24320-14-git-send-email-coelho@ti.com> (sfid-20120623_085130_557270_F29CC22D)
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
+	Tue, 5 Jun 2012 02:28:25 -0400
+Message-ID: <1338877698.4514.7.camel@jlt3.sipsolutions.net> (sfid-20120605_082833_805414_943DC0FB)
+Subject: Re: Wireless networking without CONFIG_PM..
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <linus971@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Tue, 05 Jun 2012 08:28:18 +0200
+In-Reply-To: <CA+55aFw96wx_Vp_z=H9q=0A-Y8iYD-JJEmYzVPr-BEU6ez5bqA@mail.gmail.com> (sfid-20120605_051012_943406_4BDCE2C0)
+References: <CA+55aFw96wx_Vp_z=H9q=0A-Y8iYD-JJEmYzVPr-BEU6ez5bqA@mail.gmail.com>
+	 (sfid-20120605_051012_943406_4BDCE2C0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Hi,
 
-We wish to postpone suspend if recovery is pending. This will make sure
-the FW is in a good state and perform wowlan wakeup.
+On Mon, 2012-06-04 at 20:09 -0700, Linus Torvalds wrote:
+> I wonder if anybody has really ever tested that? Because I think it's broken..
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+Yeah, it is indeed.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index b0795aa..0df28d5 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1661,6 +1661,12 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
- 	WARN_ON(!wow);
- 
-+	/* we want to perform the recovery before suspending */
-+	if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
-+		wl1271_warning("postponing suspend to perform recovery");
-+		return -EBUSY;
-+	}
-+
- 	wl1271_tx_flush(wl);
- 
- 	mutex_lock(&wl->mutex);
--- 
-1.7.10
+> In particular, I made the mistake of not enabling CONFIG_PM on a new
+> laptop, and it caused some *seriously* nasty-to-debug problems. The
+> mac80211 code goes crazy, that upsets the wireless driver, and then
+> the wrieless driver in question had a nasty bug where it would
+> double-release its firmware, which then caused vmalloc corruption and
+> all kinds of really odd recursive panics etc.
+
+That's pure suck :( I see you already sent a separate patch.
+
+> And as far as I can tell, the root cause of the problem is a bad
+> choice in net/mac80211/main.c:
+> 
+>   int ieee80211_register_hw(struct ieee80211_hw *hw)
+>   {
+>   ...
+>         if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns)
+>   #ifdef CONFIG_PM
+>             && (!local->ops->suspend || !local->ops->resume)
+>   #endif
+>             )
+>                 return -EINVAL;
+> 
+> which means that if the wiphy says it supports wake-on-wireless lan,
+> and CONFIG_PM isn't enabled, we'll return -EINVAL and will refuse to
+> do any wireless at all.
+> 
+> It's that a bit extreme? Or outright stupid? What is the advantage of
+> saying that "if you don't have CONFIG_PM enabled, we'll just refuse to
+> register any hardware that talks about it's wake-on-wireless
+> patterns"?
+>
+> Maybe there is some reason for that return -EINVAL, but I don't think
+> it makes sense with that particular placement of #ifdef CONFIG_PM.
+> Maybe if the #ifdef was around the whole test? Or maybe it should just
+> be removed.
+
+It should just be around the whole test.
+
+> Or am I missing some big reason for why it makes sense to do that? Hmm?
+
+No, not really. It was a case of not wanting to compile suspend/resume
+methods when they aren't needed, so they aren't even declared in the ops
+struct in that case, and then I forgot about that and when somebody
+found it they added the ifdef that way here and clearly only tested
+non-WoWLAN devices.
+
+> I'll make a separate bug-report email to the intel iwlwifi people
+> about their absolutely horribly broken error handling which then made
+> it such a disaster, but I thought I'd bring the generic mac80211 issue
+> up. I don't think there are a lot of drivers that do the whole wowlan
+> thing, and obviously most people use wireless on laptops where you
+> want CONFIG_PM anyway, so it probably hasn't triggered very much.
+
+For the next release I think I'll just put the ifdef around the entire
+test to avoid this issue. Overall, I'm still debating whether it makes
+sense to leave WoWLAN code and data in when the system will never be
+able to suspend, I have a feeling that maybe it doesn't and we should
+make it a compile error to even try to access wiphy->wowlan when
+CONFIG_PM isn't set ...
+
+Interestingly, none of that would actually matter for iwlwifi in
+particular since that has yet another issue -- it only declares
+suspend/resume ops when CONFIG_PM_SLEEP is set since WoWLAN doesn't work
+in other PM cases, so there the #ifdef CONFIG_PM_SLEEP patch that Sedat
+pointed to is actually needed pretty much regardless.
+
+johannes
 
