@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4875 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757121Ab2FYOOZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 10:14:25 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3 05/10] ath9k: advertise supported WoW flags to upper layer
-Date: Mon, 25 Jun 2012 19:42:54 +0530
-Message-ID: <1340633579-7514-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120625_161437_336698_4BBD736A)
-In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36302 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753612Ab2FEXIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 19:08:50 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 18/18] brcmsmac: handle non PCI devices in the phy code
+Date: Wed,  6 Jun 2012 01:07:21 +0200
+Message-Id: <1338937641-8519-19-git-send-email-hauke@hauke-m.de> (sfid-20120606_012943_549966_A8EF417E)
+In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Some code in write_{radio,radio}_reg() should just be run if this is a
+pci based device. Add the condition again which was removed in commit:
+commit 821e4e93172e4f7d5ac1eade04665c3dc5049c4a
+Author: Roland Vossen <rvossen@broadcom.com>
+Date:   Mon Aug 8 15:58:58 2011 +0200
 
-currently the code supports WoW triggers due to
-*magic packet
-*user defined patterns
-*deauth and disassoc patterns
-*disconnect - beacon miss, last beacon received timeout,
-no ack for keeep alive frames.
+    staging: brcm80211: removed unused bus code from softmac
 
-we need to support other WoW offload features in the
-near future. also a minor cleanup.
-
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/init.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9dfce1a..576f808 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -713,6 +713,22 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index 25a17eb..5f1493c 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -198,6 +198,8 @@ u16 read_radio_reg(struct brcms_phy *pi, u16 addr)
  
-+#ifdef CONFIG_PM_SLEEP
+ void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ {
++	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
 +
-+	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
-+	    device_can_wakeup(sc->dev)) {
+ 	if ((D11REV_GE(pi->sh->corerev, 24)) ||
+ 	    (D11REV_IS(pi->sh->corerev, 22)
+ 	     && (pi->pubpi.phy_type != PHY_TYPE_SSN))) {
+@@ -209,9 +211,11 @@ void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ 		bcma_write16(pi->d11core, D11REGOFFS(phy4wdatalo), val);
+ 	}
+ 
+-	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
+-		(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
+-		pi->phy_wreg = 0;
++	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) {
++		if (++pi->phy_wreg >= pi->phy_wreg_limit) {
++			(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
++			pi->phy_wreg = 0;
++		}
+ 	}
+ }
+ 
+@@ -294,10 +298,14 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ 	if (addr == 0x72)
+ 		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
+ #else
++	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
 +
-+		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
-+					  WIPHY_WOWLAN_DISCONNECT;
-+		hw->wiphy->wowlan.n_patterns = MAX_NUM_USER_PATTERN;
-+		hw->wiphy->wowlan.pattern_min_len = 1;
-+		hw->wiphy->wowlan.pattern_max_len = MAX_PATTERN_SIZE;
-+		INIT_LIST_HEAD(&sc->wow_info.wow_patterns);
-+
-+	}
-+
-+#endif
-+
- 	hw->queues = 4;
- 	hw->max_rates = 4;
- 	hw->channel_change_time = 5000;
+ 	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
+-	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
+-		pi->phy_wreg = 0;
+-		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
++	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) {
++		if (++pi->phy_wreg >= pi->phy_wreg_limit) {
++			pi->phy_wreg = 0;
++			(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
++		}
+ 	}
+ #endif
+ }
 -- 
-1.7.0.4
+1.7.9.5
 
