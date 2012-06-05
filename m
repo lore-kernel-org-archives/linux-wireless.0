@@ -1,85 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:43389 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110Ab2FSD2W convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Mon, 18 Jun 2012 23:28:22 -0400
-Received: by bkcji2 with SMTP id ji2so4673567bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 20:28:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <599E416D1C5C994980C45977191D726906AC82C5C2@MTKMBS03.mediatek.inc>
-References: <4FD867DB.9070806@gmail.com>
-	<CALx5=V97QacZXoZ6XfwMc+scD05ixFAo7LBDYp0SjurAMzjsEA@mail.gmail.com>
-	<599E416D1C5C994980C45977191D726906AC82C5C2@MTKMBS03.mediatek.inc>
-Date: Tue, 19 Jun 2012 11:28:09 +0800
-Message-ID: <CALx5=V-q+5AdgUH549VsdBepDzFokAdiOSmEsOU5uVDOS=QY0w@mail.gmail.com> (sfid-20120619_052825_332239_8CDCDBE0)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00 : RT3290 chip support v4
-From: Matt Chen <machen@suse.com>
-To: =?Big5?B?V29vZHkgSHVuZyAorHis7qbLKQ==?= <woody.hung@mediatek.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=Big5
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:46061 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752084Ab2FEO3y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 10:29:54 -0400
+Received: by lbok6 with SMTP id k6so5233824lbo.18
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 07:29:51 -0700 (PDT)
+Message-ID: <1338906589.13935.243.camel@cumari.coelho.fi> (sfid-20120605_162957_608913_926832A2)
+Subject: Re: [PATCH] wlcore/wl12xx/wl18xx: don't use TX align quirk for
+ wl127x
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 05 Jun 2012 17:29:49 +0300
+In-Reply-To: <1338880471-854-1-git-send-email-coelho@ti.com>
+References: <1338880471-854-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Woody,
+On Tue, 2012-06-05 at 10:14 +0300, Luciano Coelho wrote:
+> When we moved the identify_chip operation to an earlier stage (ie. to
+> the probe function), we broke wl127x support because during HW init we
+> would set the WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN.
+> 
+> To avoid this, set this quirk in the identify_chip operations and only
+> force it to be unset if the bus module doesn't support it.  We were
+> doing the opposite and setting the flag if the bus module supports it.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-2012/6/19 Woody Hung (¬x¬î¦Ë) <woody.hung@mediatek.com>:
-> Dear All:
->
->        I have send it to the http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git.
->        And it have been applied 3 days ago.
->        Please see the short log "rt2800pci:Firmware update v1".
->        Do I miss something or some rule I need to follow???
-I see. I found it in the
-http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git.
-I tested this patch and firmware, it works fine to me here. :)
-> BR,
-> Woody Hung
-> -----Original Message-----
-> From: Matt Chen [mailto:machen@suse.com]
-> Sent: Monday, June 18, 2012 5:17 PM
-> To: Xose Vazquez Perez
-> Cc: linux-wireless@vger.kernel.org; users@rt2x00.serialmonkey.com; Woody Hung (¬x¬î¦Ë)
-> Subject: Re: [rt2x00-users] [PATCH] rt2x00 : RT3290 chip support v4
->
-> 2012/6/13 Xose Vazquez Perez <xose.vazquez@gmail.com>:
->> Woody Hung wrote:
->>
->>> --- a/drivers/net/wireless/rt2x00/rt2800pci.h
->>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.h
->>> @@ -47,6 +47,7 @@
->>>  * 8051 firmware image.
->>>  */
->>>  #define FIRMWARE_RT2860                        "rt2860.bin"
->>> +#define FIRMWARE_RT3290                        "rt3290.bin"
->>
->>
->> There is no rt3290 fw in linux-firmware [1] Please, send it ASAP.
-> Indeed, I found the firmware is only in
-> http://www.ralink.com.tw/en/04_support/support.php?sn=501, RT3290 PCIe driver tar ball.
->
-> Hi Woody,
-> Please send the firmware to the linux-firmware ASAP. :)
->
->> [1]
->> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
->>
->>
->> _______________________________________________
->> users mailing list
->> users@rt2x00.serialmonkey.com
->> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmon
->> key.com
->>
->
->
->
-> --
-> Thank you.
->
-
+Applied and pushed to wl12xx/master.
 
 -- 
-Thank you.
+Cheers,
+Luca.
+
