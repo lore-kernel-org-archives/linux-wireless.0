@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:60559 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750806Ab2F2Onm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 10:43:42 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, senthilb@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org, vthiagar@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, mcgrof@qca.qualcomm.com,
-	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org
-Subject: [PATCH] ath9k: fixing register bit shift values of control packets to support TPC
-Date: Fri, 29 Jun 2012 10:43:10 -0400
-Message-Id: <1340980990-81486-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120629_164345_760767_2E7E6B28)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35907 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753170Ab2FEVzf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 17:55:35 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 8/8] bcma: add mdelay bcma_pmu_resources_init()
+Date: Tue,  5 Jun 2012 23:55:07 +0200
+Message-Id: <1338933307-13446-9-git-send-email-hauke@hauke-m.de> (sfid-20120605_235539_423984_C4C7A610)
+In-Reply-To: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some register values of bit shifts are corrected in order to support the upcoming
-transmission power control (tpc) for control packets as well.
+This is based on code from brcmsmac.
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/reg.h |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/bcma/driver_chipcommon_pmu.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 5046b28..dd9c726 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1643,11 +1643,11 @@ enum {
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index ea054a2..812ea41 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -111,6 +111,9 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
+ 		bcma_cc_write32(cc, BCMA_CC_PMU_MINRES_MSK, min_msk);
+ 	if (max_msk)
+ 		bcma_cc_write32(cc, BCMA_CC_PMU_MAXRES_MSK, max_msk);
++
++	/* Add some delay; allow resources to come up and settle. */
++	mdelay(2);
+ }
  
- #define AR_TPC                 0x80e8
- #define AR_TPC_ACK             0x0000003f
--#define AR_TPC_ACK_S           0x00
-+#define AR_TPC_ACK_S           0
- #define AR_TPC_CTS             0x00003f00
--#define AR_TPC_CTS_S           0x08
-+#define AR_TPC_CTS_S           8
- #define AR_TPC_CHIRP           0x003f0000
--#define AR_TPC_CHIRP_S         0x16
-+#define AR_TPC_CHIRP_S         16
- 
- #define AR_QUIET1          0x80fc
- #define AR_QUIET1_NEXT_QUIET_S         0
+ static void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
 -- 
-1.7.10.4
+1.7.9.5
 
