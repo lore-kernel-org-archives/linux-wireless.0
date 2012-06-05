@@ -1,136 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:42677 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754368Ab2FXIj4 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53566 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755888Ab2FEOeT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2012 04:39:56 -0400
-Received: by lbbgk8 with SMTP id gk8so5508115lbb.40
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2012 01:39:53 -0700 (PDT)
-Message-ID: <1340527191.1631.423.camel@cumari.coelho.fi> (sfid-20120624_104000_437844_E4C0BB82)
-Subject: pull request: TI wireless drivers 2012-06-24 (for 3.6)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com, assaf@ti.com
-Date: Sun, 24 Jun 2012 11:39:51 +0300
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-DuUOmeG0w+V9BAtFZwin"
-Mime-Version: 1.0
+	Tue, 5 Jun 2012 10:34:19 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 2/9] brcm80211: smac: always set channel specified by mac80211
+Date: Tue,  5 Jun 2012 09:34:02 -0500
+Message-Id: <1338906849-26135-3-git-send-email-seth.forshee@canonical.com> (sfid-20120605_163422_997953_E5A02ED5)
+In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In some situations brcmsmac is choosing a channel internally. This makes
+it difficult at times to know what channel to use for enforcing
+regulatory constraints, so instead always use the channel from the
+mac80211 configuration.
 
---=-DuUOmeG0w+V9BAtFZwin
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   30 +++++-------------------
+ 1 file changed, 6 insertions(+), 24 deletions(-)
 
-Hi John,
-
-One more pull request intended for 3.6.  Mostly about SDIO error
-handling (by Ido) and correct handling and recovery during
-suspend/resume.  Plus one new debugfs entry that allows easier FW
-debugging, by Arkady.
-
-Please pull or let me know if there's any problem.
-
-
-The following changes since commit 5ea276963eacbef742fe4854883c0f69c903fcfd=
-:
-
-  rtlwifi: Change debug level for deletion of an entry in CAM (2012-06-22 1=
-4:44:06 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linvill=
-e
-
-for you to fetch changes up to 03e713de9df5afd00dd13f23f83b2eb20c4c92b3:
-
-  Merge branch 'wl12xx-next' into for-linville (2012-06-24 10:40:25 +0300)
-
-----------------------------------------------------------------
-
-Arik Nemtsov (6):
-      wlcore: cancel suspend when recovery is pending
-      wlcore: don't allow SDIO read/writes after failure
-      wlcore: force recovery on resume if suspended without recovering
-      wlcore: check Rx-filter functions in the suspend path
-      wlcore: refactor threaded IRQ routine
-      wlcore: prevent recovery in the middle of resume
-
-Arkady Miasnikov (1):
-      wlcore: access the firmware memory via debugfs
-
-Ido Yariv (11):
-      wlcore: Fix sdio out-of-sync power state
-      wlcore: Disable interrupts while recovering
-      wlcore: Change read/write ops to return errors
-      wlcore: Change raw io functions to return errors
-      wlcore: Propagate errors from wlcore_raw_*_data functions
-      wlcore: Propagate errors from wl1271_read
-      wlcore: Propagate errors from wl1271_write
-      wlcore: Propagate errors from wl1271_raw_read32
-      wlcore: Propagate errors from wl1271_raw_write32
-      wlcore: Propagate errors from wl1271_read_hwaddr
-      wlcore: Force checking of io functions' return values
-
-Luciano Coelho (1):
-      Merge branch 'wl12xx-next' into for-linville
-
- drivers/net/wireless/ti/wl12xx/main.c     |  343 +++++++++++++++++++++++++=
-+++++++++++++++++++----------------
- drivers/net/wireless/ti/wl18xx/io.c       |   39 ++++---
- drivers/net/wireless/ti/wl18xx/io.h       |    4 +-
- drivers/net/wireless/ti/wl18xx/main.c     |  219 +++++++++++++++++++++++++=
-++-----------
- drivers/net/wireless/ti/wlcore/boot.c     |   84 ++++++++++-----
- drivers/net/wireless/ti/wlcore/cmd.c      |   47 +++++++--
- drivers/net/wireless/ti/wlcore/debugfs.c  |  192 +++++++++++++++++++++++++=
-+++++++++
- drivers/net/wireless/ti/wlcore/event.c    |   15 ++-
- drivers/net/wireless/ti/wlcore/hw_ops.h   |   12 ++-
- drivers/net/wireless/ti/wlcore/io.c       |   55 +++++++---
- drivers/net/wireless/ti/wlcore/io.h       |  144 ++++++++++++++++---------
- drivers/net/wireless/ti/wlcore/main.c     |  240 +++++++++++++++++++++++++=
-++++++-----------
- drivers/net/wireless/ti/wlcore/ps.c       |   14 ++-
- drivers/net/wireless/ti/wlcore/rx.c       |   37 +++++--
- drivers/net/wireless/ti/wlcore/rx.h       |    4 +-
- drivers/net/wireless/ti/wlcore/sdio.c     |   50 +++++----
- drivers/net/wireless/ti/wlcore/spi.c      |   14 ++-
- drivers/net/wireless/ti/wlcore/tx.c       |   61 +++++++----
- drivers/net/wireless/ti/wlcore/tx.h       |    4 +-
- drivers/net/wireless/ti/wlcore/wlcore.h   |   14 +--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    9 +-
- 21 files changed, 1196 insertions(+), 405 deletions(-)
-
---=20
-Cheers,
-Luca.
-
-
---=-DuUOmeG0w+V9BAtFZwin
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAABAgAGBQJP5tJXAAoJEKFHnKIaPMX64OIP+QGTiDstT71YtFwPA5mPBRew
-DiNQA0ixP+lrEFr9l1hH5YeJb+69TOVn7IPCJv7D9yDFQWwqKX+ymMt9Sud5LEuO
-QfdSaB6FPtEP5ApOf+dEPO0JaVdFG7RRvk8b3fWR5W1l74lJ8mQ5ekWf3+gTdEX8
-SOLbp1KHCSpiJHOp2aBxqi8VG1fMZN7jzVOQClAPSQ9Y068ZxVU2QozfBgbdpN1K
-9RXFwtsgBYB4ObU/yMtq6hcmuazGgONLpIfwyruS+BNsyP4gygWDmkxkaCXZec6i
-WRyXph+SIWTip7JB9umE1L8zYw1q4Gbr/A2pPE3xssbug6j/sRM6VzL2lMfse+KG
-ZW2cApSc1PGT+Ff+hrlyQ/ZVpxFgEVg3MdEGta7xEaqvyHgEqcKexBSYrkeQZMcN
-dgBS8dz7FpOe9QZRm+GCnQHZKoS03BV3B7bCGDXPzZxO9JeVAXaFokL3i3qUI2up
-Mcv3KHy31NWZ9HhgmDIcxHVIOt1fLlwqTIGSB9B7H+hBDHsSVDlS91C61Zo3wRFX
-qKFcFKgssIKEZaJw2bi2lBjXM4pVUmjVY+XnmBBvUfdwssNmIOiD3qq5Z7COLoyX
-tgAenqiVxD33VCCuWnml33gMfRdCbV8FToY3Z3KSAcHh9ytp96NAcF8k9UDg9iAs
-3eghMIkC4AoZEGT75193
-=wXXx
------END PGP SIGNATURE-----
-
---=-DuUOmeG0w+V9BAtFZwin--
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 19db405..93c865d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3139,20 +3139,6 @@ void brcms_c_reset(struct brcms_c_info *wlc)
+ 	brcms_b_reset(wlc->hw);
+ }
+ 
+-/* Return the channel the driver should initialize during brcms_c_init.
+- * the channel may have to be changed from the currently configured channel
+- * if other configurations are in conflict (bandlocked, 11n mode disabled,
+- * invalid channel for current country, etc.)
+- */
+-static u16 brcms_c_init_chanspec(struct brcms_c_info *wlc)
+-{
+-	u16 chanspec =
+-	    1 | WL_CHANSPEC_BW_20 | WL_CHANSPEC_CTL_SB_NONE |
+-	    WL_CHANSPEC_BAND_2G;
+-
+-	return chanspec;
+-}
+-
+ void brcms_c_init_scb(struct scb *scb)
+ {
+ 	int i;
+@@ -5129,6 +5115,8 @@ static void brcms_c_wme_retries_write(struct brcms_c_info *wlc)
+ /* make interface operational */
+ int brcms_c_up(struct brcms_c_info *wlc)
+ {
++	struct ieee80211_channel *ch;
++
+ 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+ 
+ 	/* HW is turned off so don't try to access it */
+@@ -5195,8 +5183,9 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 	wlc->pub->up = true;
+ 
+ 	if (wlc->bandinit_pending) {
++		ch = wlc->pub->ieee_hw->conf.channel;
+ 		brcms_c_suspend_mac_and_wait(wlc);
+-		brcms_c_set_chanspec(wlc, wlc->default_bss->chanspec);
++		brcms_c_set_chanspec(wlc, ch20mhz_chspec(ch->hw_value));
+ 		wlc->bandinit_pending = false;
+ 		brcms_c_enable_mac(wlc);
+ 	}
+@@ -8201,19 +8190,12 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
+ void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
+ {
+ 	struct bcma_device *core = wlc->hw->d11core;
++	struct ieee80211_channel *ch = wlc->pub->ieee_hw->conf.channel;
+ 	u16 chanspec;
+ 
+ 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+ 
+-	/*
+-	 * This will happen if a big-hammer was executed. In
+-	 * that case, we want to go back to the channel that
+-	 * we were on and not new channel
+-	 */
+-	if (wlc->pub->associated)
+-		chanspec = wlc->home_chanspec;
+-	else
+-		chanspec = brcms_c_init_chanspec(wlc);
++	chanspec = ch20mhz_chspec(ch->hw_value);
+ 
+ 	brcms_b_init(wlc->hw, chanspec);
+ 
+-- 
+1.7.9.5
 
