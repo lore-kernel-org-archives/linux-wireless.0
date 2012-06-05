@@ -1,236 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49324 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755887Ab2FTJFY (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59889 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751117Ab2FEWmt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 05:05:24 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/5] cfg80211: make some functions static
-Date: Wed, 20 Jun 2012 11:05:15 +0200
-Message-Id: <1340183119-15340-2-git-send-email-johannes@sipsolutions.net> (sfid-20120620_110554_517301_B863D138)
-In-Reply-To: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
-References: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 5 Jun 2012 18:42:49 -0400
+Received: by lahd3 with SMTP id d3so4201481lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 15:42:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20120605T221743-446@post.gmane.org>
+References: <loom.20120605T215520-645@post.gmane.org> <4FCE67CA.2020502@lwfinger.net>
+ <loom.20120605T221743-446@post.gmane.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 6 Jun 2012 08:42:28 +1000
+Message-ID: <CAGRGNgVLnsnP_vR-Yc8-ep4mQ=gw_CXVy5PKrx9iHQwgahHLew@mail.gmail.com> (sfid-20120606_004253_750492_A3D9262D)
+Subject: Re: usb.c
+To: Ouyang <ilhebe999@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Some of the functions to retrieve a device can
-be static as they're used only in nl80211.
+On Wed, Jun 6, 2012 at 6:23 AM, Ouyang <ilhebe999@gmail.com> wrote:
+> I am still a little confused. Would you please set an example for
+> drivers/net/wireless/rtlwifi/usb.c ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c    |   63 -------------------------------------
- net/wireless/core.h    |   26 ---------------
- net/wireless/nl80211.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 82 insertions(+), 89 deletions(-)
+That contains some of the code for dealing with USB RTLWifi devices.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a87d435..907f62c 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -96,69 +96,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
- 	return &rdev->wiphy;
- }
- 
--/* requires cfg80211_mutex to be held! */
--struct cfg80211_registered_device *
--__cfg80211_rdev_from_info(struct genl_info *info)
--{
--	int ifindex;
--	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
--	struct net_device *dev;
--	int err = -EINVAL;
--
--	assert_cfg80211_lock();
--
--	if (info->attrs[NL80211_ATTR_WIPHY]) {
--		bywiphyidx = cfg80211_rdev_by_wiphy_idx(
--				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
--		err = -ENODEV;
--	}
--
--	if (info->attrs[NL80211_ATTR_IFINDEX]) {
--		ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
--		dev = dev_get_by_index(genl_info_net(info), ifindex);
--		if (dev) {
--			if (dev->ieee80211_ptr)
--				byifidx =
--					wiphy_to_dev(dev->ieee80211_ptr->wiphy);
--			dev_put(dev);
--		}
--		err = -ENODEV;
--	}
--
--	if (bywiphyidx && byifidx) {
--		if (bywiphyidx != byifidx)
--			return ERR_PTR(-EINVAL);
--		else
--			return bywiphyidx; /* == byifidx */
--	}
--	if (bywiphyidx)
--		return bywiphyidx;
--
--	if (byifidx)
--		return byifidx;
--
--	return ERR_PTR(err);
--}
--
--struct cfg80211_registered_device *
--cfg80211_get_dev_from_info(struct genl_info *info)
--{
--	struct cfg80211_registered_device *rdev;
--
--	mutex_lock(&cfg80211_mutex);
--	rdev = __cfg80211_rdev_from_info(info);
--
--	/* if it is not an error we grab the lock on
--	 * it to assure it won't be going away while
--	 * we operate on it */
--	if (!IS_ERR(rdev))
--		mutex_lock(&rdev->mtx);
--
--	mutex_unlock(&cfg80211_mutex);
--
--	return rdev;
--}
--
- struct cfg80211_registered_device *
- cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
- {
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9348a47..609a579 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -159,32 +159,6 @@ static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
- struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx);
- int get_wiphy_idx(struct wiphy *wiphy);
- 
--struct cfg80211_registered_device *
--__cfg80211_rdev_from_info(struct genl_info *info);
--
--/*
-- * This function returns a pointer to the driver
-- * that the genl_info item that is passed refers to.
-- * If successful, it returns non-NULL and also locks
-- * the driver's mutex!
-- *
-- * This means that you need to call cfg80211_unlock_rdev()
-- * before being allowed to acquire &cfg80211_mutex!
-- *
-- * This is necessary because we need to lock the global
-- * mutex to get an item off the list safely, and then
-- * we lock the rdev mutex so it doesn't go away under us.
-- *
-- * We don't want to keep cfg80211_mutex locked
-- * for all the time in order to allow requests on
-- * other interfaces to go through at the same time.
-- *
-- * The result of this can be a PTR_ERR and hence must
-- * be checked with IS_ERR() for errors.
-- */
--extern struct cfg80211_registered_device *
--cfg80211_get_dev_from_info(struct genl_info *info);
--
- /* requires cfg80211_rdev_mutex to be held! */
- struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a363ca1..2d3541c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -70,6 +70,88 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
- 	return 0;
- }
- 
-+static struct cfg80211_registered_device *
-+__cfg80211_rdev_from_info(struct genl_info *info)
-+{
-+	int ifindex;
-+	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
-+	struct net_device *dev;
-+	int err = -EINVAL;
-+
-+	assert_cfg80211_lock();
-+
-+	if (info->attrs[NL80211_ATTR_WIPHY]) {
-+		bywiphyidx = cfg80211_rdev_by_wiphy_idx(
-+				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
-+		err = -ENODEV;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_IFINDEX]) {
-+		ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
-+		dev = dev_get_by_index(genl_info_net(info), ifindex);
-+		if (dev) {
-+			if (dev->ieee80211_ptr)
-+				byifidx =
-+					wiphy_to_dev(dev->ieee80211_ptr->wiphy);
-+			dev_put(dev);
-+		}
-+		err = -ENODEV;
-+	}
-+
-+	if (bywiphyidx && byifidx) {
-+		if (bywiphyidx != byifidx)
-+			return ERR_PTR(-EINVAL);
-+		else
-+			return bywiphyidx; /* == byifidx */
-+	}
-+	if (bywiphyidx)
-+		return bywiphyidx;
-+
-+	if (byifidx)
-+		return byifidx;
-+
-+	return ERR_PTR(err);
-+}
-+
-+/*
-+ * This function returns a pointer to the driver
-+ * that the genl_info item that is passed refers to.
-+ * If successful, it returns non-NULL and also locks
-+ * the driver's mutex!
-+ *
-+ * This means that you need to call cfg80211_unlock_rdev()
-+ * before being allowed to acquire &cfg80211_mutex!
-+ *
-+ * This is necessary because we need to lock the global
-+ * mutex to get an item off the list safely, and then
-+ * we lock the rdev mutex so it doesn't go away under us.
-+ *
-+ * We don't want to keep cfg80211_mutex locked
-+ * for all the time in order to allow requests on
-+ * other interfaces to go through at the same time.
-+ *
-+ * The result of this can be a PTR_ERR and hence must
-+ * be checked with IS_ERR() for errors.
-+ */
-+static struct cfg80211_registered_device *
-+cfg80211_get_dev_from_info(struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev;
-+
-+	mutex_lock(&cfg80211_mutex);
-+	rdev = __cfg80211_rdev_from_info(info);
-+
-+	/* if it is not an error we grab the lock on
-+	 * it to assure it won't be going away while
-+	 * we operate on it */
-+	if (!IS_ERR(rdev))
-+		mutex_lock(&rdev->mtx);
-+
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	return rdev;
-+}
-+
- /* policy for the attributes */
- static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_WIPHY] = { .type = NLA_U32 },
+Thanks,
+
 -- 
-1.7.10
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
