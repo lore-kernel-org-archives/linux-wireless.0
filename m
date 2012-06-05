@@ -1,99 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:47639 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752476Ab2FKPtz (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:35400 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754861Ab2FESjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 11:49:55 -0400
-Message-ID: <4FD61395.8030901@xenotime.net> (sfid-20120611_174958_712219_16A49867)
-Date: Mon, 11 Jun 2012 08:49:41 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-Subject: Re: kernel-doc warnings (3.5-rc1)
-References: <4FD28ED7.6070506@xenotime.net>	 (sfid-20120609_014646_473500_8E65425E) <1339229158.4539.4.camel@jlt3.sipsolutions.net> <1339229241.4539.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339229241.4539.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Jun 2012 14:39:44 -0400
+From: Oleksij Rempel <bug-track@fisher-privat.net>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Oleksij Rempel <bug-track@fisher-privat.net>
+Subject: [PATCH 1/1] b43: do not call ieee80211_unregister_hw if we are not registred
+Date: Tue,  5 Jun 2012 20:39:32 +0200
+Message-Id: <1338921572-22315-2-git-send-email-bug-track@fisher-privat.net> (sfid-20120605_203948_826533_CF886290)
+In-Reply-To: <1338921572-22315-1-git-send-email-bug-track@fisher-privat.net>
+References: <1338921572-22315-1-git-send-email-bug-track@fisher-privat.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/09/2012 01:07 AM, Johannes Berg wrote:
+this patch fixes kernel Oops on "rmmod b43" if firmware was not loaded:
 
-> On Sat, 2012-06-09 at 10:05 +0200, Johannes Berg wrote:
->> On Fri, 2012-06-08 at 16:46 -0700, Randy Dunlap wrote:
->>> Would someone please add/fix the kernel-doc warnings?
->>
->> I'll commit the below patch for these:
-> 
-> D'oh.
-> 
-> 
-> 
-> mac80211: add some missing kernel-doc
-> 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Add a few kernel-doc descriptions that were missed
-> during development.
-> 
-> Reported-by: Randy Dunlap <rdunlap@xenotime.net>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000088
+IP: [<ffffffff8104e988>] drain_workqueue+0x25/0x142
+PGD 153ac6067 PUD 153b82067 PMD 0
+Oops: 0000 [#1] SMP
 
+Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+---
+ drivers/net/wireless/b43/b43.h  |    4 ++++
+ drivers/net/wireless/b43/main.c |   19 ++++++++++++-------
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-
-Johannes,
-
-There are still 2 warnings from sta_info.h after applying
-your patch:
-
-Warning(net/mac80211/sta_info.h:384): No description found for parameter 't_offset_setpoint'
-Warning(net/mac80211/sta_info.h:384): No description found for parameter 'ch_type'
-
-
-
-> ---
->  include/net/mac80211.h  |    6 ++++++
->  net/mac80211/sta_info.h |    2 ++
->  2 files changed, 8 insertions(+)
-> 
-> --- a/include/net/mac80211.h	2012-06-09 10:04:15.000000000 +0200
-> +++ b/include/net/mac80211.h	2012-06-09 10:04:19.000000000 +0200
-> @@ -1945,6 +1945,11 @@ enum ieee80211_rate_control_changed {
->   *	to also unregister the device. If it returns 1, then mac80211
->   *	will also go through the regular complete restart on resume.
->   *
-> + * @set_wakeup: Enable or disable wakeup when WoWLAN configuration is
-> + *	modified. The reason is that device_set_wakeup_enable() is
-> + *	supposed to be called when the configuration changes, not only
-> + *	in suspend().
-> + *
->   * @add_interface: Called when a netdevice attached to the hardware is
->   *	enabled. Because it is not called for monitor mode devices, @start
->   *	and @stop must be implemented.
-> @@ -2974,6 +2979,7 @@ __le16 ieee80211_ctstoself_duration(stru
->   * ieee80211_generic_frame_duration - Calculate the duration field for a frame
->   * @hw: pointer obtained from ieee80211_alloc_hw().
->   * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-> + * @band: the band to calculate the frame duration on
->   * @frame_len: the length of the frame.
->   * @rate: the rate at which the frame is going to be transmitted.
->   *
-> --- a/net/mac80211/sta_info.h	2012-06-09 10:04:15.000000000 +0200
-> +++ b/net/mac80211/sta_info.h	2012-06-09 10:04:19.000000000 +0200
-> @@ -278,6 +278,8 @@ struct sta_ampdu_mlme {
->   * @sta: station information we share with the driver
->   * @sta_state: duplicates information about station state (for debug)
->   * @beacon_loss_count: number of times beacon loss has triggered
-> + * @supports_40mhz: tracks whether the station advertised 40 MHz support
-> + *	as we overwrite its HT parameters with the currently used value
->   */
->  struct sta_info {
->  	/* General information, mostly static */
-> 
-> 
-> 
-
-
-
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 67c13af..c06b6cb 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -877,6 +877,10 @@ struct b43_wl {
+ 	 * from the mac80211 subsystem. */
+ 	u16 mac80211_initially_registered_queues;
+ 
++	/* Set this if we call ieee80211_register_hw() and check if we call
++	 * ieee80211_unregister_hw(). */
++	bool hw_registred;
++
+ 	/* We can only have one operating interface (802.11 core)
+ 	 * at a time. General information about this interface follows.
+ 	 */
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index e4d6dc2..747079b 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2437,6 +2437,7 @@ start_ieee80211:
+ 	err = ieee80211_register_hw(wl->hw);
+ 	if (err)
+ 		goto err_one_core_detach;
++	wl->hw_registred = true;
+ 	b43_leds_register(wl->current_dev);
+ 	goto out;
+ 
+@@ -5283,6 +5284,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ 
+ 	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
+ 	wl->mac80211_initially_registered_queues = hw->queues;
++	wl->hw_registred = false;
+ 	hw->max_rates = 2;
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	if (is_valid_ether_addr(sprom->et1mac))
+@@ -5354,12 +5356,15 @@ static void b43_bcma_remove(struct bcma_device *core)
+ 	 * as the ieee80211 unreg will destroy the workqueue. */
+ 	cancel_work_sync(&wldev->restart_work);
+ 
+-	/* Restore the queues count before unregistering, because firmware detect
+-	 * might have modified it. Restoring is important, so the networking
+-	 * stack can properly free resources. */
+-	wl->hw->queues = wl->mac80211_initially_registered_queues;
+-	b43_leds_stop(wldev);
+-	ieee80211_unregister_hw(wl->hw);
++	B43_WARN_ON(!wl);
++	if (wl->current_dev == wldev && wl->hw_registred) {
++		/* Restore the queues count before unregistering, because firmware detect
++		 * might have modified it. Restoring is important, so the networking
++		 * stack can properly free resources. */
++		wl->hw->queues = wl->mac80211_initially_registered_queues;
++		b43_leds_stop(wldev);
++		ieee80211_unregister_hw(wl->hw);
++	}
+ 
+ 	b43_one_core_detach(wldev->dev);
+ 
+@@ -5430,7 +5435,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 	cancel_work_sync(&wldev->restart_work);
+ 
+ 	B43_WARN_ON(!wl);
+-	if (wl->current_dev == wldev) {
++	if (wl->current_dev == wldev && wl->hw_registred) {
+ 		/* Restore the queues count before unregistering, because firmware detect
+ 		 * might have modified it. Restoring is important, so the networking
+ 		 * stack can properly free resources. */
 -- 
-~Randy
+1.7.9.5
+
