@@ -1,174 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21170 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225Ab2FDOzR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37683 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917Ab2FEHih (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 10:55:17 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.52239.190352.124133@gargle.gargle.HOWL> (sfid-20120604_165530_943553_053F152A)
-Date: Mon, 4 Jun 2012 20:24:07 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/7] ath9k: Fix powersave locking
+	Tue, 5 Jun 2012 03:38:37 -0400
+Message-ID: <1338881915.4514.14.camel@jlt3.sipsolutions.net> (sfid-20120605_093840_264529_9142C1C5)
+Subject: [PATCH 3.5] iwlwifi: unregister LEDs if mac80211 registration fails
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 05 Jun 2012 09:38:35 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'ps_flags' is used/accessed in a variety of contexts
-and requires proper locking. Use 'sc_pm_lock' appropriately.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Otherwise the LEDs stick around and cause issues the
+next time around since they're still there but not
+really hooked up.
+
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   14 ++++++++++++--
- drivers/net/wireless/ath/ath9k/recv.c |   13 ++++++-------
- drivers/net/wireless/ath/ath9k/xmit.c |    3 +++
- 3 files changed, 21 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6ff33c9..953888b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -345,7 +345,7 @@ void ath9k_tasklet(unsigned long data)
- 	struct ath_softc *sc = (struct ath_softc *)data;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--
-+	unsigned long flags;
- 	u32 status = sc->intrstatus;
- 	u32 rxmask;
- 
-@@ -369,6 +369,7 @@ void ath9k_tasklet(unsigned long data)
- 		goto out;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 5d158ca..3ee23134 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -251,6 +251,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 	ret = ieee80211_register_hw(priv->hw);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Failed to register hw (error %d)\n", ret);
++		iwl_leds_exit(priv);
+ 		return ret;
  	}
- 
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 	if ((status & ATH9K_INT_TSFOOR) && sc->ps_enabled) {
- 		/*
- 		 * TSF sync does not look correct; remain awake to sync with
-@@ -377,6 +378,7 @@ void ath9k_tasklet(unsigned long data)
- 		ath_dbg(common, PS, "TSFOOR - Sync with next Beacon\n");
- 		sc->ps_flags |= PS_WAIT_FOR_BEACON | PS_BEACON_SYNC;
- 	}
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		rxmask = (ATH9K_INT_RXHP | ATH9K_INT_RXLP | ATH9K_INT_RXEOL |
-@@ -526,8 +528,10 @@ irqreturn_t ath_isr(int irq, void *dev)
- 			/* Clear RxAbort bit so that we can
- 			 * receive frames */
- 			ath9k_setpower(sc, ATH9K_PM_AWAKE);
-+			spin_lock(&sc->sc_pm_lock);
- 			ath9k_hw_setrxabort(sc->sc_ah, 0);
- 			sc->ps_flags |= PS_WAIT_FOR_BEACON;
-+			spin_unlock(&sc->sc_pm_lock);
- 		}
- 
- chip_reset:
-@@ -682,6 +686,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_tx_control txctl;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	unsigned long flags;
- 
- 	if (sc->ps_enabled) {
- 		/*
-@@ -704,6 +709,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		 * completed and if needed, also for RX of buffered frames.
- 		 */
- 		ath9k_ps_wakeup(sc);
-+		spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 		if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
- 			ath9k_hw_setrxabort(sc->sc_ah, 0);
- 		if (ieee80211_is_pspoll(hdr->frame_control)) {
-@@ -719,6 +725,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		 * the ps_flags bit is cleared. We are just dropping
- 		 * the ps_usecount here.
- 		 */
-+		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 		ath9k_ps_restore(sc);
- 	}
- 
-@@ -1479,7 +1486,7 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 	struct ath_vif *avp = (void *)vif->drv_priv;
--
-+	unsigned long flags;
- 	/*
- 	 * Skip iteration if primary station vif's bss info
- 	 * was not changed
-@@ -1501,7 +1508,10 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 		 * on the receipt of the first Beacon frame (i.e.,
- 		 * after time sync with the AP).
- 		 */
-+		spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 		sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
-+		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+
- 		/* Reset rssi stats */
- 		sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 3ac52c5..1cf4fc8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -587,13 +587,13 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb, bool mybeacon)
- 
- 	/* Process Beacon and CAB receive in PS state */
- 	if (((sc->ps_flags & PS_WAIT_FOR_BEACON) || ath9k_check_auto_sleep(sc))
--	    && mybeacon)
-+	    && mybeacon) {
- 		ath_rx_ps_beacon(sc, skb);
--	else if ((sc->ps_flags & PS_WAIT_FOR_CAB) &&
--		 (ieee80211_is_data(hdr->frame_control) ||
--		  ieee80211_is_action(hdr->frame_control)) &&
--		 is_multicast_ether_addr(hdr->addr1) &&
--		 !ieee80211_has_moredata(hdr->frame_control)) {
-+	} else if ((sc->ps_flags & PS_WAIT_FOR_CAB) &&
-+		   (ieee80211_is_data(hdr->frame_control) ||
-+		    ieee80211_is_action(hdr->frame_control)) &&
-+		   is_multicast_ether_addr(hdr->addr1) &&
-+		   !ieee80211_has_moredata(hdr->frame_control)) {
- 		/*
- 		 * No more broadcast/multicast frames to be received at this
- 		 * point.
-@@ -1229,7 +1229,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			skb_trim(skb, skb->len - 8);
- 
- 		spin_lock_irqsave(&sc->sc_pm_lock, flags);
--
- 		if ((sc->ps_flags & (PS_WAIT_FOR_BEACON |
- 				     PS_WAIT_FOR_CAB |
- 				     PS_WAIT_FOR_PSPOLL_DATA)) ||
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index bb74780..f777ddc 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1994,6 +1994,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
- 	int q, padpos, padsize;
-+	unsigned long flags;
- 
- 	ath_dbg(common, XMIT, "TX complete: skb: %p\n", skb);
- 
-@@ -2012,6 +2013,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 		skb_pull(skb, padsize);
- 	}
- 
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 	if ((sc->ps_flags & PS_WAIT_FOR_TX_ACK) && !txq->axq_depth) {
- 		sc->ps_flags &= ~PS_WAIT_FOR_TX_ACK;
- 		ath_dbg(common, PS,
-@@ -2021,6 +2023,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 					PS_WAIT_FOR_PSPOLL_DATA |
- 					PS_WAIT_FOR_TX_ACK));
- 	}
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
- 	q = skb_get_queue_mapping(skb);
- 	if (txq == sc->tx.txq_map[q]) {
+ 	priv->mac80211_registered = 1;
 -- 
-1.7.10.3
+1.7.10
+
+
 
