@@ -1,122 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:49955 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752464Ab2FROxZ (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:60518 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754507Ab2FEQts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 10:53:25 -0400
-Received: by obbwc20 with SMTP id wc20so8495670obb.31
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:53:23 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
-	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH 6/7] nl80211: add channel switch command/event
-Date: Mon, 18 Jun 2012 17:49:45 +0300
-Message-Id: <1340030986-29118-7-git-send-email-victorg@ti.com> (sfid-20120618_165332_826606_5FF02659)
-In-Reply-To: <1340030986-29118-1-git-send-email-victorg@ti.com>
-References: <1340030986-29118-1-git-send-email-victorg@ti.com>
+	Tue, 5 Jun 2012 12:49:48 -0400
+Received: by obbtb18 with SMTP id tb18so8980307obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 09:49:48 -0700 (PDT)
+Date: Tue, 5 Jun 2012 11:49:45 -0500
+From: Seth Forshee <seth.forshee@gmail.com>
+To: Oleksij Rempel <bug-track@fisher-privat.net>
+Cc: b43-dev@lists.infradead.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] b43: do not call ieee80211_unregister_hw if we are
+ not registred
+Message-ID: <20120605164945.GB18176@thinkpad-t410> (sfid-20120605_185003_739919_AD1457EB)
+References: <1338536240-4392-1-git-send-email-bug-track@fisher-privat.net>
+ <1338536240-4392-2-git-send-email-bug-track@fisher-privat.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1338536240-4392-2-git-send-email-bug-track@fisher-privat.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement AP channel switch command and handle
-channel switch complete event.
+(I don't have access to the original message, so I appologize if any
+ Cc's were dropped. I added some additional Cc's.)
 
-Signed-hostap: Boris Presman <boris.presman@ti.com>
-Signed-hostap: Victor Goldenshtein <victorg@ti.com>
----
- src/drivers/driver_nl80211.c |   54 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 54 insertions(+), 0 deletions(-)
+On Fri, Jun 01, 2012 at 09:37:20AM +0200, Oleksij Rempel wrote:
+> this patch fixes kernel Oops on "rmmod b43" if firmware was not loaded:
+> 
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000088
+> IP: [<ffffffff8104e988>] drain_workqueue+0x25/0x142
+> PGD 153ac6067 PUD 153b82067 PMD 0
+> Oops: 0000 [#1] SMP
+> 
+> Signed-off-by: Oleksij Rempel <bug-track-M18mAb7Tlt0yCq4wW13eYl6hYfS7NtTn@public.gmane.org>
 
-diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-index fe6e4d2..7e8b800 100644
---- a/src/drivers/driver_nl80211.c
-+++ b/src/drivers/driver_nl80211.c
-@@ -2054,6 +2054,8 @@ static void nl80211_spurious_frame(struct i802_bss *bss, struct nlattr **tb,
- static void do_process_drv_event(struct wpa_driver_nl80211_data *drv,
- 				 int cmd, struct nlattr **tb)
- {
-+	union wpa_event_data data;
-+
- 	if (drv->ap_scan_as_station != NL80211_IFTYPE_UNSPECIFIED &&
- 	    (cmd == NL80211_CMD_NEW_SCAN_RESULTS ||
- 	     cmd == NL80211_CMD_SCAN_ABORTED)) {
-@@ -2161,6 +2163,17 @@ static void do_process_drv_event(struct wpa_driver_nl80211_data *drv,
- 	case NL80211_CMD_PROBE_CLIENT:
- 		nl80211_client_probe_event(drv, tb);
- 		break;
-+	case NL80211_CMD_AP_CHANNEL_SWITCH:
-+		os_memset(&data, 0, sizeof(data));
-+		if (tb[NL80211_ATTR_WIPHY_FREQ]) {
-+			data.channel_switch_complete.freq =
-+				    nla_get_u16(tb[NL80211_ATTR_WIPHY_FREQ]);
-+		}
-+		data.channel_switch_complete.status = TRUE;
-+		wpa_printf(MSG_DEBUG, "nl80211: Channel switch complete event");
-+		wpa_supplicant_event(drv->ctx, EVENT_CHANNEL_SWITCH_COMPLETE,
-+				     &data);
-+		break;
- 	default:
- 		wpa_printf(MSG_DEBUG, "nl80211: Ignored unknown event "
- 			   "(cmd=%d)", cmd);
-@@ -8805,6 +8818,46 @@ nla_put_failure:
- }
- 
- 
-+static int nl80211_ap_channel_switch(void *priv,
-+				     struct hostapd_channel_switch *params)
-+{
-+	struct i802_bss *bss = priv;
-+	struct wpa_driver_nl80211_data *drv = bss->drv;
-+	struct nl_msg *msg;
-+	int ret;
-+
-+	wpa_printf(MSG_DEBUG, "nl80211: Channel switch, "
-+		   "ch_switch_count = %d, tx_block = %d, "
-+		   "freq = %d, post_switch_block_tx = %d.",
-+		   params->ch_switch_count, params->tx_block,
-+		   params->freq, params->post_switch_block_tx);
-+
-+	msg = nlmsg_alloc();
-+	if (!msg)
-+		return -1;
-+
-+	nl80211_cmd(bss->drv, msg, 0, NL80211_CMD_AP_CHANNEL_SWITCH);
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
-+	NLA_PUT_U32(msg, NL80211_ATTR_CH_SWITCH_COUNT, params->ch_switch_count);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, params->freq);
-+
-+	if (params->tx_block)
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_CH_SWITCH_BLOCK_TX);
-+
-+	if (params->post_switch_block_tx)
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX);
-+
-+	ret = send_and_recv_msgs(drv, msg, NULL, NULL);
-+	if (ret == 0)
-+		return 0;
-+	wpa_printf(MSG_DEBUG, "nl80211: Failed to channel switch: "
-+		   "%d (%s)", ret, strerror(-ret));
-+nla_put_failure:
-+	return -1;
-+}
-+
-+
- #ifdef CONFIG_TDLS
- 
- static int nl80211_send_tdls_mgmt(void *priv, const u8 *dst, u8 action_code,
-@@ -9100,6 +9153,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
- 	.poll_client = nl80211_poll_client,
- 	.set_p2p_powersave = nl80211_set_p2p_powersave,
- 	.enable_tx = nl80211_enable_dfs_tx,
-+	.hapd_channel_switch = nl80211_ap_channel_switch,
- #ifdef CONFIG_TDLS
- 	.send_tdls_mgmt = nl80211_send_tdls_mgmt,
- 	.tdls_oper = nl80211_tdls_oper,
--- 
-1.7.5.4
+This issue is affecting the Ubuntu installer, and I've verified the
+patch fixes the problem on a Mac Mini 5,2.
 
+Tested-by: Seth Forshee <seth.forshee@canonical.com>
+
+This issue affects 3.4, probably introduced in 6b6fa58 (b43: Load
+firmware from a work queue and not from the probe routine), so I'd
+suggest a Cc for stable also be added.
+
+> ---
+>  drivers/net/wireless/b43/b43.h  |    4 ++++
+>  drivers/net/wireless/b43/main.c |   19 ++++++++++++-------
+>  2 files changed, 16 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+> index 67c13af..c06b6cb 100644
+> --- a/drivers/net/wireless/b43/b43.h
+> +++ b/drivers/net/wireless/b43/b43.h
+> @@ -877,6 +877,10 @@ struct b43_wl {
+>  	 * from the mac80211 subsystem. */
+>  	u16 mac80211_initially_registered_queues;
+>  
+> +	/* Set this if we call ieee80211_register_hw() and check if we call
+> +	 * ieee80211_unregister_hw(). */
+> +	bool hw_registred;
+> +
+>  	/* We can only have one operating interface (802.11 core)
+>  	 * at a time. General information about this interface follows.
+>  	 */
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index e4d6dc2..747079b 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -2437,6 +2437,7 @@ start_ieee80211:
+>  	err = ieee80211_register_hw(wl->hw);
+>  	if (err)
+>  		goto err_one_core_detach;
+> +	wl->hw_registred = true;
+>  	b43_leds_register(wl->current_dev);
+>  	goto out;
+>  
+> @@ -5283,6 +5284,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+>  
+>  	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
+>  	wl->mac80211_initially_registered_queues = hw->queues;
+> +	wl->hw_registred = false;
+>  	hw->max_rates = 2;
+>  	SET_IEEE80211_DEV(hw, dev->dev);
+>  	if (is_valid_ether_addr(sprom->et1mac))
+> @@ -5354,12 +5356,15 @@ static void b43_bcma_remove(struct bcma_device *core)
+>  	 * as the ieee80211 unreg will destroy the workqueue. */
+>  	cancel_work_sync(&wldev->restart_work);
+>  
+> -	/* Restore the queues count before unregistering, because firmware detect
+> -	 * might have modified it. Restoring is important, so the networking
+> -	 * stack can properly free resources. */
+> -	wl->hw->queues = wl->mac80211_initially_registered_queues;
+> -	b43_leds_stop(wldev);
+> -	ieee80211_unregister_hw(wl->hw);
+> +	B43_WARN_ON(!wl);
+> +	if (wl->current_dev == wldev && wl->hw_registred) {
+> +		/* Restore the queues count before unregistering, because firmware detect
+> +		 * might have modified it. Restoring is important, so the networking
+> +		 * stack can properly free resources. */
+> +		wl->hw->queues = wl->mac80211_initially_registered_queues;
+> +		b43_leds_stop(wldev);
+> +		ieee80211_unregister_hw(wl->hw);
+> +	}
+>  
+>  	b43_one_core_detach(wldev->dev);
+>  
+> @@ -5430,7 +5435,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+>  	cancel_work_sync(&wldev->restart_work);
+>  
+>  	B43_WARN_ON(!wl);
+> -	if (wl->current_dev == wldev) {
+> +	if (wl->current_dev == wldev && wl->hw_registred) {
+>  		/* Restore the queues count before unregistering, because firmware detect
+>  		 * might have modified it. Restoring is important, so the networking
+>  		 * stack can properly free resources. */
+> -- 
+> 1.7.9.5
+> 
