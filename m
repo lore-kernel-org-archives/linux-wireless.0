@@ -1,61 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53201 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:38684 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761357Ab2FVGdg (ORCPT
+	with ESMTP id S1761706Ab2FEKQw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 02:33:36 -0400
-Message-ID: <1340346809.4491.0.camel@jlt3.sipsolutions.net> (sfid-20120622_083340_685346_B39E5D28)
-Subject: RE: [RFC v3] cfg80211/mac80211: 802.11ac changes
+	Tue, 5 Jun 2012 06:16:52 -0400
+Message-ID: <1338891410.4514.27.camel@jlt3.sipsolutions.net> (sfid-20120605_121656_172146_31F2CAEE)
+Subject: [PATCH 3.5] cfg80211: fix interface combinations check
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Jun 2012 08:33:29 +0200
-In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3D6F@mbx022-e1-nj-10.exch022.domain.local>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3CE8@mbx022-e1-nj-10.exch022.domain.local>
-	 <1340302471.4489.43.camel@jlt3.sipsolutions.net>
-	 <4FE36942.1090801@broadcom.com>
-	 <1340303967.4489.44.camel@jlt3.sipsolutions.net>
-	,<4FE36FC1.2020702@broadcom.com>
-	 <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3D6F@mbx022-e1-nj-10.exch022.domain.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 05 Jun 2012 12:16:50 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-22 at 03:06 +0000, Mahesh Palivela wrote:
-> ________________________________________
-> From: Arend van Spriel [arend@broadcom.com]
-> Sent: Friday, June 22, 2012 12:32 AM
-> To: Johannes Berg
-> Cc: Mahesh Palivela; linville@tuxdriver.com; linux-wireless@vger.kernel.org
-> Subject: Re: [RFC v3] cfg80211/mac80211: 802.11ac changes
-> 
-> On 06/21/2012 08:39 PM, Johannes Berg wrote:
-> > On Thu, 2012-06-21 at 20:34 +0200, Arend van Spriel wrote:
-> >> On 06/21/2012 08:14 PM, Johannes Berg wrote:
-> >>> On Thu, 2012-06-21 at 16:51 +0000, Mahesh Palivela wrote:
-> >>>
-> >>>> +/* 802.11ac VHT Capabilities */
-> >>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
-> >>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454               0x00000002
-> >>>
-> >>> I have a feeling there should be a value for 3895, since this isn't
-> >>> really a bitfield only (it doesn't make sense to set both of these, in
-> >>> fact 3 is reserved)
-> >>
-> >> These are matching the values specified for the VHP Capability Info IE.
-> >> 3895 is specified as 0. Value 3 is reserved because it is not to be
-> >> regarded as a bit field.
-> >
-> > Right, but I think it'd make more sense to actually have the 3895 value
-> > as a constant here so you're not tempted to think that you could set
-> 
-> [MP] Should I declare another constant for this?
-> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895   0
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes I think that would be good
+If a given interface combination doesn't contain
+a required interface type then we missed checking
+that and erroneously allowed it even though iface
+type wasn't there at all. Add a check that makes
+sure that all interface types are accounted for.
 
-johannes
+Cc: stable@kernel.org
+Reported-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/util.c |   19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+--- a/net/wireless/util.c	2012-06-05 11:35:57.000000000 +0200
++++ b/net/wireless/util.c	2012-06-05 11:38:58.000000000 +0200
+@@ -935,6 +935,7 @@ int cfg80211_can_change_interface(struct
+ 				  enum nl80211_iftype iftype)
+ {
+ 	struct wireless_dev *wdev_iter;
++	u32 used_iftypes = BIT(iftype);
+ 	int num[NUM_NL80211_IFTYPES];
+ 	int total = 1;
+ 	int i, j;
+@@ -961,6 +962,7 @@ int cfg80211_can_change_interface(struct
+ 
+ 		num[wdev_iter->iftype]++;
+ 		total++;
++		used_iftypes |= BIT(wdev_iter->iftype);
+ 	}
+ 	mutex_unlock(&rdev->devlist_mtx);
+ 
+@@ -970,6 +972,7 @@ int cfg80211_can_change_interface(struct
+ 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+ 		const struct ieee80211_iface_combination *c;
+ 		struct ieee80211_iface_limit *limits;
++		u32 all_iftypes = 0;
+ 
+ 		c = &rdev->wiphy.iface_combinations[i];
+ 
+@@ -984,6 +987,7 @@ int cfg80211_can_change_interface(struct
+ 			if (rdev->wiphy.software_iftypes & BIT(iftype))
+ 				continue;
+ 			for (j = 0; j < c->n_limits; j++) {
++				all_iftypes |= limits[j].types;
+ 				if (!(limits[j].types & BIT(iftype)))
+ 					continue;
+ 				if (limits[j].max < num[iftype])
+@@ -991,7 +995,20 @@ int cfg80211_can_change_interface(struct
+ 				limits[j].max -= num[iftype];
+ 			}
+ 		}
+-		/* yay, it fits */
++
++		/*
++		 * Finally check that all iftypes that we're currently
++		 * using are actually part of this combination. If they
++		 * aren't then we can't use this combination and have
++		 * to continue to the next.
++		 */
++		if ((all_iftypes & used_iftypes) != used_iftypes)
++			goto cont;
++
++		/*
++		 * This combination covered all interface types and
++		 * supported the requested numbers, so we're good.
++		 */
+ 		kfree(limits);
+ 		return 0;
+  cont:
+
 
