@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1156 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752573Ab2FFKDs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:03:48 -0400
-Message-ID: <4FCF2AF1.8020200@broadcom.com> (sfid-20120606_120352_055450_3FD8D0D1)
-Date: Wed, 6 Jun 2012 12:03:29 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 13/18] brcmsmac: add some workarounds for other
- chips again
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-14-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338937641-8519-14-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from ip-relay-001.utdallas.edu ([129.110.20.111]:45318 "EHLO
+	ip-relay-001.utdallas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757857Ab2FEDIp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 23:08:45 -0400
+From: Qasim Javed <qasimj@gmail.com>
+To: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Cc: javier@cozybit.com, Qasim Javed <qasimj@gmail.com>
+Subject: [PATCH] mac80211_hwsim: Set IEEE80211_STAT_ACK flag when userspace indicates that the frame has been acknowledged.
+Date: Tue,  5 Jun 2012 01:25:44 -0500
+Message-Id: <1338877544-12827-1-git-send-email-qasimj@gmail.com> (sfid-20120605_050849_396207_1C3C35C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
-> This adds some workarounds for the BCM4716, BCM47162, BCM43421, BCM5357
-> and BCM6362 to the phy code again. This patch reverts the following
+The station fail average is not updated correctly since the IEEE80211_STAT_ACK flag is not set when using wmediumd with mac80211_hwsim. Set this flag when wmediumd indicates that the frame was successfully transmitted (eventually).
 
-Has brcmsmac been tested for all these chips? At this moment I do not
-have any bandwidth to do that. I am not too comfortable adding this code
-without having some testing coverage. It was the reason to remove the
-snippets from brcmsmac.
+Signed-off-by: Qasim Javed <qasimj@gmail.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> patch expect the part with the workaround for the BCM43236, which is an
-> usb chip and will be unsupported by brcmsmac.
-
-'expect' should be 'except'. Indeed, BCM43236 is a fullmac usb chip and
-as such supported by brcmfmac.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4c9336c..a0b7cfd 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1555,6 +1555,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 			hdr = (struct ieee80211_hdr *) skb->data;
+ 			mac80211_hwsim_monitor_ack(data2->hw, hdr->addr2);
+ 		}
++		txi->flags |= IEEE80211_TX_STAT_ACK;
+ 	}
+ 	ieee80211_tx_status_irqsafe(data2->hw, skb);
+ 	return 0;
+-- 
+1.7.1
 
