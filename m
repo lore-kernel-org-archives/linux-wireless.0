@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60240 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182Ab2FLTRe (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:63555 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752365Ab2FEFuz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 15:17:34 -0400
-Message-ID: <1339528648.4531.15.camel@jlt3.sipsolutions.net> (sfid-20120612_211758_361900_60F2BA38)
-Subject: Re: [PATCH] iwlwifi: re-order module_init order to prevent NULL ptr
- deref
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: wey-yi.w.guy@intel.com, linville@tuxdriver.com,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 12 Jun 2012 21:17:28 +0200
-In-Reply-To: <1339528412-4163-1-git-send-email-levinsasha928@gmail.com> (sfid-20120612_211247_722972_E0F3BAE7)
-References: <1339528412-4163-1-git-send-email-levinsasha928@gmail.com>
-	 (sfid-20120612_211247_722972_E0F3BAE7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Jun 2012 01:50:55 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+55aFw96wx_Vp_z=H9q=0A-Y8iYD-JJEmYzVPr-BEU6ez5bqA@mail.gmail.com>
+References: <CA+55aFw96wx_Vp_z=H9q=0A-Y8iYD-JJEmYzVPr-BEU6ez5bqA@mail.gmail.com>
+Date: Tue, 5 Jun 2012 07:50:54 +0200
+Message-ID: <CA+icZUVu-PNAgna2aoEV78GPK6Fa9PJSDQu1e3-OzvU6v9-UzQ@mail.gmail.com> (sfid-20120605_075100_546425_9DEB139B)
+Subject: Re: Wireless networking without CONFIG_PM..
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Linus Torvalds <linus971@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-12 at 21:13 +0200, Sasha Levin wrote:
-> We need to make sure iwl_drv_init is called before iwl_init, since otherwise
-> iwl_init will NULL ptr deref when trying to add a new mode.
-> 
-> Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
-> ---
->  drivers/net/wireless/iwlwifi/Makefile |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-> index 98c8f64..16e39a4 100644
-> --- a/drivers/net/wireless/iwlwifi/Makefile
-> +++ b/drivers/net/wireless/iwlwifi/Makefile
-> @@ -1,5 +1,3 @@
-> -obj-$(CONFIG_IWLDVM)	+= dvm/
-> -
+On Tue, Jun 5, 2012 at 5:09 AM, Linus Torvalds <linus971@gmail.com> wrote:
+> I wonder if anybody has really ever tested that? Because I think it's broken..
+>
+> In particular, I made the mistake of not enabling CONFIG_PM on a new
+> laptop, and it caused some *seriously* nasty-to-debug problems. The
+> mac80211 code goes crazy, that upsets the wireless driver, and then
+> the wrieless driver in question had a nasty bug where it would
+> double-release its firmware, which then caused vmalloc corruption and
+> all kinds of really odd recursive panics etc.
+>
+> And as far as I can tell, the root cause of the problem is a bad
+> choice in net/mac80211/main.c:
+>
+>  int ieee80211_register_hw(struct ieee80211_hw *hw)
+>  {
+>  ...
+>        if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns)
+>  #ifdef CONFIG_PM
+>            && (!local->ops->suspend || !local->ops->resume)
+>  #endif
+>            )
+>                return -EINVAL;
+>
+> which means that if the wiphy says it supports wake-on-wireless lan,
+> and CONFIG_PM isn't enabled, we'll return -EINVAL and will refuse to
+> do any wireless at all.
+>
+> It's that a bit extreme? Or outright stupid? What is the advantage of
+> saying that "if you don't have CONFIG_PM enabled, we'll just refuse to
+> register any hardware that talks about it's wake-on-wireless
+> patterns"?
+>
+> Maybe there is some reason for that return -EINVAL, but I don't think
+> it makes sense with that particular placement of #ifdef CONFIG_PM.
+> Maybe if the #ifdef was around the whole test? Or maybe it should just
+> be removed.
+>
+> Or am I missing some big reason for why it makes sense to do that? Hmm?
+>
+> I'll make a separate bug-report email to the intel iwlwifi people
+> about their absolutely horribly broken error handling which then made
+> it such a disaster, but I thought I'd bring the generic mac80211 issue
+> up. I don't think there are a lot of drivers that do the whole wowlan
+> thing, and obviously most people use wireless on laptops where you
+> want CONFIG_PM anyway, so it probably hasn't triggered very much.
+>
+>                  Linus
 
-Thanks! I already have a patch like this in my tree, will send a pull
-request soon:
+Sounds like you have hit...
 
-http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-next.git;a=commit;h=4b75b1e49568dd6a30a1dddc47408cc6fde55608
+"[PATCH 3.5 v2] iwlwifi: disable WoWLAN if !CONFIG_PM_SLEEP"
+http://www.spinics.net/lists/linux-wireless/msg91308.html
 
-johannes
-
+- Sedat -
