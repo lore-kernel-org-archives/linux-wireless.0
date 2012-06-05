@@ -1,90 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26774 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764Ab2FFFDT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36070 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753467Ab2FEPxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 01:03:19 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<stable@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 3.5] ath9k: Fix a WARNING on suspend/resume with IBSS
-Date: Wed, 6 Jun 2012 10:33:10 +0530
-Message-ID: <1338958990-2691-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120606_070322_977582_B9AFE3D3)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 5 Jun 2012 11:53:02 -0400
+Message-ID: <1338911579.4514.47.camel@jlt3.sipsolutions.net> (sfid-20120605_175307_136047_C4FD1EEC)
+Subject: Re: [PATCH 3.5] iwlwifi: fix double free/complete in firmware
+ loading
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 05 Jun 2012 17:52:59 +0200
+In-Reply-To: <CA+55aFxV4b-CkCby=skn0s6GAM1kptsRJVcHeE6hoFVLY5T8uQ@mail.gmail.com> (sfid-20120605_174851_874161_7B46655E)
+References: <1338881890.4514.13.camel@jlt3.sipsolutions.net>
+	 <CA+55aFxV4b-CkCby=skn0s6GAM1kptsRJVcHeE6hoFVLY5T8uQ@mail.gmail.com>
+	 (sfid-20120605_174851_874161_7B46655E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, 2012-06-05 at 08:48 -0700, Linus Torvalds wrote:
+> On Tue, Jun 5, 2012 at 12:38 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > @@ -861,13 +861,20 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+> >
+> >        /* We have our copies now, allow OS release its copies */
+> >        release_firmware(ucode_raw);
+> > -       complete(&drv->request_firmware_complete);
+> >
+> >        drv->op_mode = iwl_dvm_ops.start(drv->trans, drv->cfg, &drv->fw);
+> >
+> > -       if (!drv->op_mode)
+> > -               goto out_free_fw;
+> > +       if (!drv->op_mode) {
+> > +               complete(&drv->request_firmware_complete);
+> > +               goto out_release_driver;
+> > +       }
+> 
+> If you do it this way, you might as well replace the
+> 
+>    complete(&drv->request_firmware_complete);
+>    goto out_release_driver;
+> 
+> with just a "goto out_unbind".
 
-this patch is dependent on the patch "cfg80211: fix interface
-combinations"
+Good point.
 
-In ath9k currently we have ADHOC interface as a single incompatible
-interface. when drv_add_interface is called during resume we got to
-consider number of vifs already present in addition to checking the
-drivers 'opmode' information about ADHOC.  we incorrectly assume
-an ADHOC interface is already present. Then we may miss some driver
-specific data for the ADHOC interface after resume.
-
-The above mentioned checks can be removed from the driver,
-as the patch 'cfg80211: fix interface combinations' ensures that
-if an interface type is not advertised by the driver in any of the
-interface combinations(via ieee80211_iface_combination) then it shall
-be treated as a single incompatible interface. Fixes the following
-warning on suspend/resume with ibss interface.
-
-        ath: phy0: Cannot create ADHOC interface when other
-        interfaces already exist.
-        WARNING: at net/mac80211/driver-ops.h:12
-        ieee80211_reconfig+0x1882/0x1ca0 [mac80211]()
-        Hardware name: 2842RK1
-        wlan2:  Failed check-sdata-in-driver check, flags: 0x0
-
-        Call Trace:
-        [<c01361b2>] warn_slowpath_common+0x72/0xa0
-        [<f8aaa7c2>] ? ieee80211_reconfig+0x1882/0x1ca0
-        [mac80211]
-        [<f8aaa7c2>] ? ieee80211_reconfig+0x1882/0x1ca0
-        [mac80211]
-        [<c0136283>] warn_slowpath_fmt+0x33/0x40
-        [<f8aaa7c2>] ieee80211_reconfig+0x1882/0x1ca0 [mac80211]
-        [<c06c1d1a>] ? mutex_lock_nested+0x23a/0x2f0
-        [<f8a95097>] ieee80211_resume+0x27/0x70 [mac80211]
-        [<fd177edf>] wiphy_resume+0x8f/0xa0 [cfg80211]
-
-Cc: stable@vger.kernel.org
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index cfbcc04..9ae76bd 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1443,15 +1443,6 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
--	    ((vif->type == NL80211_IFTYPE_ADHOC) &&
--	     sc->nvifs > 0)) {
--		ath_err(common, "Cannot create ADHOC interface when other"
--			" interfaces already exist.\n");
--		ret = -EINVAL;
--		goto out;
--	}
--
- 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
- 
- 	sc->nvifs++;
--- 
-1.7.0.4
+johannes
 
