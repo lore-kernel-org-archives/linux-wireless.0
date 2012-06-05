@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34273 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758094Ab2FEIsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 04:48:53 -0400
-Date: Tue, 5 Jun 2012 10:59:19 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: =?utf-8?B?77+9zL/vv73vv73vv70=?= <woonki84.lee@samsung.com>
-Cc: linux-wireless@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	kgene.kim@samsung.com
-Subject: Re: [PATCH] NFC: Driver for SAMSUNG S3FHRN2 NFC Chip.
-Message-ID: <20120605085919.GI27105@sortiz-mobl> (sfid-20120605_104858_111742_E6029F75)
-References: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com>
+Received: from ip-relay-001.utdallas.edu ([129.110.20.111]:27796 "EHLO
+	ip-relay-001.utdallas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975Ab2FDXq6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jun 2012 19:46:58 -0400
+From: Qasim Javed <qasimj@gmail.com>
+To: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Cc: javier@cozybit.com, Qasim Javed <qasimj@gmail.com>
+Subject: [PATCH] mac80211: The station fail average is not updated correctly since the IEEE80211_STAT_ACK flag is not set when using wmediumd with mac80211_hwsim. Set this flag when wmediumd indicates that the frame was successfully transmitted (eventually).
+Date: Mon,  4 Jun 2012 22:03:43 -0500
+Message-Id: <1338865423-11200-1-git-send-email-qasimj@gmail.com> (sfid-20120605_014701_651467_B86F4ED3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi WoonKi,
+Signed-off-by: Qasim Javed <qasimj@gmail.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-On Tue, Jun 05, 2012 at 04:49:38PM +0900, �̿��� wrote:
-> This is a driver for the S3FHRN2 NFC device. the driver is just a
-> proxy getting SHDLC/HCI frames from a userspace stack.
-> 
-> Signed-off-by: WoonKi Lee <woonki84.lee@samsung.com>
-NACK from me. We started the NFC subsystem to avoid having a new and different
-ad-hoc API for each and every NFC driver, and that's what you're doing right
-here.
-Until this driver gets converted to the kernel NFC APIs, it should live in the
-staging directory.
-
-Cheers,
-Samuel.
-
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4c9336c..a0b7cfd 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1555,6 +1555,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 			hdr = (struct ieee80211_hdr *) skb->data;
+ 			mac80211_hwsim_monitor_ack(data2->hw, hdr->addr2);
+ 		}
++		txi->flags |= IEEE80211_TX_STAT_ACK;
+ 	}
+ 	ieee80211_tx_status_irqsafe(data2->hw, skb);
+ 	return 0;
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.8.2
+
