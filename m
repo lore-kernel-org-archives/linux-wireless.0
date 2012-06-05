@@ -1,81 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:53998 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859Ab2FJFN2 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35138 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756215Ab2FENlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2012 01:13:28 -0400
-Received: by wgbdr13 with SMTP id dr13so2085080wgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jun 2012 22:13:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201206091601.34601.chunkeey@googlemail.com>
-References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
-	<201206091414.41940.chunkeey@googlemail.com>
-	<1339244892.5763.1.camel@jlt3.sipsolutions.net>
-	<201206091601.34601.chunkeey@googlemail.com>
-Date: Sun, 10 Jun 2012 08:13:25 +0300
-Message-ID: <CANUX_P3smm6Pci-69aXA+PmW23nUSg-s2LGSv5Mn_rvTF-Q9-Q@mail.gmail.com> (sfid-20120610_071404_575300_A80889F8)
-Subject: Re: [RFC v3] mac80211: follow 802.11-2007 11.5.3 Error recovery upon
- HT BA failure
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Sean Patrick Santos <quantheory@gmail.com>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	helmut.schaa@googlemail.com, mar.kolya@gmail.com,
-	Per-Erik Westerberg <per-erik.westerberg@bredband.net>,
-	=?ISO-8859-2?Q?Miko=B3aj_Kuligowski?= <mikolaj.q@wp.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 5 Jun 2012 09:41:25 -0400
+Message-ID: <1338903681.4514.43.camel@jlt3.sipsolutions.net> (sfid-20120605_154128_368514_1FDD6AAE)
+Subject: Re: [PATCH] wireless: add my new trees to MAINTAINERS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 05 Jun 2012 15:41:21 +0200
+In-Reply-To: <1338903211.3277.1.camel@joe2Laptop> (sfid-20120605_153337_923396_06051E52)
+References: <1338898901.4514.40.camel@jlt3.sipsolutions.net>
+	 <1338903211.3277.1.camel@joe2Laptop> (sfid-20120605_153337_923396_06051E52)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> The path is
-> 11. -> MLME
->        5. -> Block Ack operation
->                3. -> Error Recovery upon a peer failure
->
-> > > > >  - The spec says we should test for BlockAcks, however
-> > > > >    that is not feasible because it is a control frame
-> > > > >    (so FIF_CONTROL might filter it on some hardware).
-> > > >
-> > > > In some way, all devices are going to have to report these
-> > > > frames. Maybe not as the frame itself, but as some other
-> > > > notification, to allow cleaning up the TX queues
-> > > > accordingly, I think? There's a BA notification in iwlwifi
-> > > > for example.
-> > > Alright, I guess this means that we probably need a new HW
-> > > feature flag like:
-> > >     IEEE80211_HW_REPORTS_BA_NOTIFICATION
-> > > for hardware/firmware which filter BA frames, but have a BA
-> > > notification trap. And every other driver need to pass BA
-> > > to the stack where a new rx handler will update the last_tx
-> > > accordingly.
-> >
-> > But that notification trap would also have to call some function
-> > in the stack, and the drivers that don't have it (or don't
-> > implement it yet) need something more like this patch?
->
-> (see v3 attached to this mail).
->
-> Yes, drivers that don't pass BAs to the stack and won't call
-> ieee80211_ba_notification will have their BA sessions "removed" in v3.
-> Of course, we can also retain the old behavoir and reset the
-> tx ba session timeout until we know we don't break anything.
+On Tue, 2012-06-05 at 06:33 -0700, Joe Perches wrote:
+> On Tue, 2012-06-05 at 14:21 +0200, Johannes Berg wrote:
+> > Add my new trees to the MAINTAINERS file
+> []
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> []
+> > @@ -5694,6 +5699,10 @@ F:	include/linux/remoteproc.h
+> >  
+> >  RFKILL
+> >  M:	Johannes Berg <johannes@sipsolutions.net>
+> > +W:	http://wireless.kernel.org/
+> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
+> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
+> > +S:	Maintained
+> >  L:	linux-wireless@vger.kernel.org
+> >  S:	Maintained
+> >  F:	Documentation/rfkill.txt
+> 
+> no need for multiple S: lines
 
-But if the peer acked a packet sent in a BA session, then it must send
-a BA (spec AFAIK), so when the driver calls ieee80211_tx_status at the
-originator side, mac80211 can assume that a BA was received, right ?
+Oops, copy/paste error, thanks.
 
-Even if you still want a specific notification from the driver to
-mac80211, what about adding it to ieee80211_tx_info.status ?
-We have a trade-off here. We can have a new notification which is a
-new API (which is a disadvantage in terms of runtime and design) but
-can be called once per batch: meaning that we will reset the the timer
-once every 15 packets or so. Or we can have a bit in the
-ieee80211_tx_info.status which would be in every packet, but then, no
-need for new API.
-Maybe the best way is to have the driver set the new bit in
-ieee80211_tx_info.status only for the last packet of the batch (or the
-first, whatever).
+johannes
 
-But I don't see why we cannot rely on the assumption I made in the
-beginning of this mail to start with.
