@@ -1,151 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43564 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731Ab2FMJQw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 05:16:52 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Sejh5-0001E7-9t
-	for linux-wireless@vger.kernel.org; Wed, 13 Jun 2012 11:16:51 +0200
-Message-ID: <1339579011.4519.22.camel@jlt3.sipsolutions.net> (sfid-20120613_111656_715922_B90C2025)
-Subject: [PATCH] cfg80211/nl80211: fix kernel-doc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Jun 2012 11:16:51 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36225 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753315Ab2FEXIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 19:08:19 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 05/18] brcmsmac: remove ai_findcore()
+Date: Wed,  6 Jun 2012 01:07:08 +0200
+Message-Id: <1338937641-8519-6-git-send-email-hauke@hauke-m.de> (sfid-20120606_010822_773194_B26DC38E)
+In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+bcma also stores a pointer to the chipcommon core in its struct,
+brcmsmac should use it and not search for the core by its own.
 
-Add missing entries to nl80211.h and fix
-the kernel-doc notation in cfg80211.h.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- include/linux/nl80211.h |   33 ++++++++++++++++++++++++++++-----
- include/net/cfg80211.h  |    8 ++++----
- 2 files changed, 32 insertions(+), 9 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   31 ++++-----------------
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    2 --
+ drivers/net/wireless/brcm80211/brcmsmac/pmu.c     |   12 +++++---
+ 3 files changed, 14 insertions(+), 31 deletions(-)
 
---- a/include/linux/nl80211.h	2012-06-13 11:13:59.000000000 +0200
-+++ b/include/linux/nl80211.h	2012-06-13 11:14:13.000000000 +0200
-@@ -275,6 +275,12 @@
-  * @NL80211_CMD_NEW_SURVEY_RESULTS: survey data notification (as a reply to
-  *	NL80211_CMD_GET_SURVEY and on the "scan" multicast group)
-  *
-+ * @NL80211_CMD_SET_PMKSA: Add a PMKSA cache entry, using %NL80211_ATTR_MAC
-+ *	(for the BSSID) and %NL80211_ATTR_PMKID.
-+ * @NL80211_CMD_DEL_PMKSA: Delete a PMKSA cache entry, using %NL80211_ATTR_MAC
-+ *	(for the BSSID) and %NL80211_ATTR_PMKID.
-+ * @NL80211_CMD_FLUSH_PMKSA: Flush all PMKSA cache entries.
-+ *
-  * @NL80211_CMD_REG_CHANGE: indicates to userspace the regulatory domain
-  * 	has been changed and provides details of the request information
-  * 	that caused the change such as who initiated the regulatory request
-@@ -454,6 +460,10 @@
-  *	the frame.
-  * @NL80211_CMD_ACTION_TX_STATUS: Alias for @NL80211_CMD_FRAME_TX_STATUS for
-  *	backward compatibility.
-+ *
-+ * @NL80211_CMD_SET_POWER_SAVE: Set powersave, using %NL80211_ATTR_PS_STATE
-+ * @NL80211_CMD_GET_POWER_SAVE: Get powersave status in %NL80211_ATTR_PS_STATE
-+ *
-  * @NL80211_CMD_SET_CQM: Connection quality monitor configuration. This command
-  *	is used to configure connection quality monitoring notification trigger
-  *	levels.
-@@ -769,6 +779,13 @@ enum nl80211_commands {
-  *	section 7.3.2.25.1, e.g. 0x000FAC04)
-  * @NL80211_ATTR_KEY_SEQ: transmit key sequence number (IV/PN) for TKIP and
-  *	CCMP keys, each six bytes in little endian
-+ * @NL80211_ATTR_KEY_DEFAULT: Flag attribute indicating the key is default key
-+ * @NL80211_ATTR_KEY_DEFAULT_MGMT: Flag attribute indicating the key is the
-+ *	default management key
-+ * @NL80211_ATTR_CIPHER_SUITES_PAIRWISE: For crypto settings for connect or
-+ *	other commands, indicates which pairwise cipher suites are used
-+ * @NL80211_ATTR_CIPHER_SUITE_GROUP: For crypto settings for connect or
-+ *	other commands, indicates which group cipher suite is used
-  *
-  * @NL80211_ATTR_BEACON_INTERVAL: beacon interval in TU
-  * @NL80211_ATTR_DTIM_PERIOD: DTIM period for beaconing
-@@ -1004,6 +1021,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_ACK: Flag attribute indicating that the frame was
-  *	acknowledged by the recipient.
-  *
-+ * @NL80211_ATTR_PS_STATE: powersave state, using &enum nl80211_ps_state values.
-+ *
-  * @NL80211_ATTR_CQM: connection quality monitor configuration in a
-  *	nested attribute with %NL80211_ATTR_CQM_* sub-attributes.
-  *
-@@ -1061,7 +1080,7 @@ enum nl80211_commands {
-  *	flag isn't set, the frame will be rejected. This is also used as an
-  *	nl80211 capability flag.
-  *
-- * @NL80211_ATTR_BSS_HTOPMODE: HT operation mode (u16)
-+ * @NL80211_ATTR_BSS_HT_OPMODE: HT operation mode (u16)
-  *
-  * @NL80211_ATTR_KEY_DEFAULT_TYPES: A nested attribute containing flags
-  *	attributes, specifying what a key should be set as default as.
-@@ -1085,10 +1104,10 @@ enum nl80211_commands {
-  *	indicate which WoW triggers should be enabled. This is also
-  *	used by %NL80211_CMD_GET_WOWLAN to get the currently enabled WoWLAN
-  *	triggers.
--
-+ *
-  * @NL80211_ATTR_SCHED_SCAN_INTERVAL: Interval between scheduled scan
-  *	cycles, in msecs.
--
-+ *
-  * @NL80211_ATTR_SCHED_SCAN_MATCH: Nested attribute with one or more
-  *	sets of attributes to match during scheduled scans.  Only BSSs
-  *	that match any of the sets will be reported.  These are
-@@ -1115,7 +1134,7 @@ enum nl80211_commands {
-  *	are managed in software: interfaces of these types aren't subject to
-  *	any restrictions in their number or combinations.
-  *
-- * @%NL80211_ATTR_REKEY_DATA: nested attribute containing the information
-+ * @NL80211_ATTR_REKEY_DATA: nested attribute containing the information
-  *	necessary for GTK rekeying in the device, see &enum nl80211_rekey_data.
-  *
-  * @NL80211_ATTR_SCAN_SUPP_RATES: rates per to be advertised as supported in scan,
-@@ -1182,7 +1201,6 @@ enum nl80211_commands {
-  * @NL80211_ATTR_FEATURE_FLAGS: This u32 attribute contains flags from
-  *	&enum nl80211_feature_flags and is advertised in wiphy information.
-  * @NL80211_ATTR_PROBE_RESP_OFFLOAD: Indicates that the HW responds to probe
-- *
-  *	requests while operating in AP-mode.
-  *	This attribute holds a bitmap of the supported protocols for
-  *	offloading (see &enum nl80211_probe_resp_offload_support_attr).
-@@ -2499,6 +2517,11 @@ enum nl80211_band {
- 	NL80211_BAND_5GHZ,
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index 1e3d9e5..ca53522 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -590,27 +590,6 @@ void ai_detach(struct si_pub *sih)
+ 	kfree(sii);
+ }
  
-+/**
-+ * enum nl80211_ps_state - powersave state
-+ * @NL80211_PS_DISABLED: powersave is disabled
-+ * @NL80211_PS_ENABLED: powersave is enabled
-+ */
- enum nl80211_ps_state {
- 	NL80211_PS_DISABLED,
- 	NL80211_PS_ENABLED,
---- a/include/net/cfg80211.h	2012-06-13 11:13:52.000000000 +0200
-+++ b/include/net/cfg80211.h	2012-06-13 11:14:13.000000000 +0200
-@@ -622,10 +622,10 @@ struct sta_bss_parameters {
-  * @llid: mesh local link id
-  * @plid: mesh peer link id
-  * @plink_state: mesh peer link state
-- * @signal: the signal strength, type depends on the wiphy's signal_type
--	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
-- * @signal_avg: avg signal strength, type depends on the wiphy's signal_type
--	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
-+ * @signal: The signal strength, type depends on the wiphy's signal_type.
-+ *	For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
-+ * @signal_avg: Average signal strength, type depends on the wiphy's signal_type.
-+ *	For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
-  * @txrate: current unicast bitrate from this station
-  * @rxrate: current unicast bitrate to this station
-  * @rx_packets: packets received from this station
-
+-/* return index of coreid or BADIDX if not found */
+-struct bcma_device *ai_findcore(struct si_pub *sih, u16 coreid, u16 coreunit)
+-{
+-	struct bcma_device *core;
+-	struct si_info *sii;
+-	uint found;
+-
+-	sii = container_of(sih, struct si_info, pub);
+-
+-	found = 0;
+-
+-	list_for_each_entry(core, &sii->icbus->cores, list)
+-		if (core->id.id == coreid) {
+-			if (found == coreunit)
+-				return core;
+-			found++;
+-		}
+-
+-	return NULL;
+-}
+-
+ /*
+  * read/modify chipcommon core register.
+  */
+@@ -687,12 +666,13 @@ ai_clkctl_setdelay(struct si_pub *sih, struct bcma_device *cc)
+ /* initialize power control delay registers */
+ void ai_clkctl_init(struct si_pub *sih)
+ {
++	struct si_info *sii = container_of(sih, struct si_info, pub);
+ 	struct bcma_device *cc;
+ 
+ 	if (!(ai_get_cccaps(sih) & CC_CAP_PWR_CTL))
+ 		return;
+ 
+-	cc = ai_findcore(sih, BCMA_CORE_CHIPCOMMON, 0);
++	cc = sii->icbus->drv_cc.core;
+ 	if (cc == NULL)
+ 		return;
+ 
+@@ -724,7 +704,7 @@ u16 ai_clkctl_fast_pwrup_delay(struct si_pub *sih)
+ 		return 0;
+ 
+ 	fpdelay = 0;
+-	cc = ai_findcore(sih, CC_CORE_ID, 0);
++	cc = sii->icbus->drv_cc.core;
+ 	if (cc) {
+ 		slowminfreq = ai_slowclk_freq(sih, false, cc);
+ 		fpdelay = (((bcma_read32(cc, CHIPCREGOFFS(pll_on_delay)) + 2)
+@@ -748,7 +728,7 @@ bool ai_clkctl_cc(struct si_pub *sih, enum bcma_clkmode mode)
+ 
+ 	sii = container_of(sih, struct si_info, pub);
+ 
+-	cc = ai_findcore(&sii->pub, BCMA_CORE_CHIPCOMMON, 0);
++	cc = sii->icbus->drv_cc.core;
+ 	bcma_core_set_clockmode(cc, mode);
+ 	return mode == BCMA_CLKMODE_FAST;
+ }
+@@ -777,9 +757,10 @@ void ai_pci_down(struct si_pub *sih)
+ /* Enable BT-COEX & Ex-PA for 4313 */
+ void ai_epa_4313war(struct si_pub *sih)
+ {
++	struct si_info *sii = container_of(sih, struct si_info, pub);
+ 	struct bcma_device *cc;
+ 
+-	cc = ai_findcore(sih, CC_CORE_ID, 0);
++	cc = sii->icbus->drv_cc.core;
+ 
+ 	/* EPA Fix */
+ 	bcma_set32(cc, CHIPCREGOFFS(gpiocontrol), GPIO_CTRL_EPA_EN_MASK);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+index 74beb87..2c101b2 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+@@ -182,8 +182,6 @@ struct si_info {
+ 
+ 
+ /* AMBA Interconnect exported externs */
+-extern struct bcma_device *ai_findcore(struct si_pub *sih,
+-				       u16 coreid, u16 coreunit);
+ extern u32 ai_core_cflags(struct bcma_device *core, u32 mask, u32 val);
+ 
+ /* === exported functions === */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
+index 4931d29..0399a86 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
+@@ -142,10 +142,11 @@ static void si_pmu_res_masks(struct si_pub *sih, u32 * pmin, u32 * pmax)
+ void si_pmu_spuravoid_pllupdate(struct si_pub *sih, u8 spuravoid)
+ {
+ 	u32 tmp = 0;
++	struct si_info *sii = container_of(sih, struct si_info, pub);
+ 	struct bcma_device *core;
+ 
+ 	/* switch to chipc */
+-	core = ai_findcore(sih, BCMA_CORE_CHIPCOMMON, 0);
++	core = sii->icbus->drv_cc.core;
+ 
+ 	switch (ai_get_chip_id(sih)) {
+ 	case BCM43224_CHIP_ID:
+@@ -286,10 +287,11 @@ u32 si_pmu_alp_clock(struct si_pub *sih)
+ /* initialize PMU */
+ void si_pmu_init(struct si_pub *sih)
+ {
++	struct si_info *sii = container_of(sih, struct si_info, pub);
+ 	struct bcma_device *core;
+ 
+ 	/* select chipc */
+-	core = ai_findcore(sih, BCMA_CORE_CHIPCOMMON, 0);
++	core = sii->icbus->drv_cc.core;
+ 
+ 	if (ai_get_pmurev(sih) == 1)
+ 		bcma_mask32(core, CHIPCREGOFFS(pmucontrol),
+@@ -301,11 +303,12 @@ void si_pmu_init(struct si_pub *sih)
+ /* initialize PMU resources */
+ void si_pmu_res_init(struct si_pub *sih)
+ {
++	struct si_info *sii = container_of(sih, struct si_info, pub);
+ 	struct bcma_device *core;
+ 	u32 min_mask = 0, max_mask = 0;
+ 
+ 	/* select to chipc */
+-	core = ai_findcore(sih, BCMA_CORE_CHIPCOMMON, 0);
++	core = sii->icbus->drv_cc.core;
+ 
+ 	/* Determine min/max rsrc masks */
+ 	si_pmu_res_masks(sih, &min_mask, &max_mask);
+@@ -328,6 +331,7 @@ void si_pmu_res_init(struct si_pub *sih)
+ 
+ u32 si_pmu_measure_alpclk(struct si_pub *sih)
+ {
++	struct si_info *sii = container_of(sih, struct si_info, pub);
+ 	struct bcma_device *core;
+ 	u32 alp_khz;
+ 
+@@ -335,7 +339,7 @@ u32 si_pmu_measure_alpclk(struct si_pub *sih)
+ 		return 0;
+ 
+ 	/* Remember original core before switch to chipc */
+-	core = ai_findcore(sih, BCMA_CORE_CHIPCOMMON, 0);
++	core = sii->icbus->drv_cc.core;
+ 
+ 	if (bcma_read32(core, CHIPCREGOFFS(pmustatus)) & PST_EXTLPOAVAIL) {
+ 		u32 ilp_ctr, alp_hz;
+-- 
+1.7.9.5
 
