@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:38092 "HELO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757899Ab2FUC7B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 22:59:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, "3.4.y" <stable@vger.kernel.org>
-Subject: [PATCH 3.5] mwifiex: fix WPS eapol handshake failure
-Date: Wed, 20 Jun 2012 19:58:33 -0700
-Message-Id: <1340247517-4593-2-git-send-email-bzhao@marvell.com> (sfid-20120621_045908_028486_2920E48E)
-In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
-References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35852 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751885Ab2FEVzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 17:55:22 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/8] bcma: extend workaround for bcm4331
+Date: Tue,  5 Jun 2012 23:55:00 +0200
+Message-Id: <1338933307-13446-2-git-send-email-hauke@hauke-m.de> (sfid-20120605_235526_620721_BEC20495)
+In-Reply-To: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+This patch is based on a recent version of the Broadcom SDK.
 
-After association, STA will go through eapol handshake with WPS
-enabled AP. It's observed that WPS handshake fails with some 11n
-AP. The reason for the failure is that the eapol packet is sent
-via 11n frame aggregation.
-
-The eapol packet should be sent directly without 11n aggregation.
-
-This patch fixes the problem by adding WPS session control while
-dequeuing Tx packets for transmission.
-
-Cc: "3.4.y" <stable@vger.kernel.org>
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/mwifiex/wmm.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/bcma/driver_chipcommon_pmu.c        |    3 +++
+ include/linux/bcma/bcma_driver_chipcommon.h |    1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index f3fc655..4f09992 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -1221,6 +1221,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 97f6495..65fae62 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -123,8 +123,11 @@ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
+ 		val |= BCMA_CHIPCTL_4331_EXTPA_EN;
+ 		if (bus->chipinfo.pkg == 9 || bus->chipinfo.pkg == 11)
+ 			val |= BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
++		else if (bus->chipinfo.rev > 0)
++			val |= BCMA_CHIPCTL_4331_EXTPA_EN2;
+ 	} else {
+ 		val &= ~BCMA_CHIPCTL_4331_EXTPA_EN;
++		val &= ~BCMA_CHIPCTL_4331_EXTPA_EN2;
+ 		val &= ~BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
+ 	}
+ 	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 8bbfe31..1e523cc 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -321,6 +321,7 @@
+ #define BCMA_CHIPCTL_4331_OVR_PIPEAUXPWRDOWN	BIT(9)	/* override core control on pipe_AuxPowerDown */
+ #define BCMA_CHIPCTL_4331_PCIE_AUXCLKEN		BIT(10)	/* pcie_auxclkenable */
+ #define BCMA_CHIPCTL_4331_PCIE_PIPE_PLLDOWN	BIT(11)	/* pcie_pipe_pllpowerdown */
++#define BCMA_CHIPCTL_4331_EXTPA_EN2		BIT(12)	/* 0 ext pa disable, 1 ext pa enabled */
+ #define BCMA_CHIPCTL_4331_BT_SHD0_ON_GPIO4	BIT(16)	/* enable bt_shd0 at gpio4 */
+ #define BCMA_CHIPCTL_4331_BT_SHD1_ON_GPIO5	BIT(17)	/* enable bt_shd1 at gpio5 */
  
- 	if (!ptr->is_11n_enabled ||
- 	    mwifiex_is_ba_stream_setup(priv, ptr, tid) ||
-+	    priv->wps.session_enable ||
- 	    ((priv->sec_info.wpa_enabled ||
- 	      priv->sec_info.wpa2_enabled) &&
- 	     !priv->wpa_is_gtk_set)) {
 -- 
-1.7.0.2
+1.7.9.5
 
