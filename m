@@ -1,54 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42155 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757033Ab2F0PZi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 11:25:38 -0400
-Message-ID: <1340810735.11012.44.camel@jlt3.sipsolutions.net> (sfid-20120627_172717_899467_DB02BF0A)
-Subject: Re: mac80211 auth/assoc in multi-channel scenarios
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Eliad Peller <eliad@wizery.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 27 Jun 2012 17:25:35 +0200
-In-Reply-To: <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com> (sfid-20120627_172101_975306_3DA213AA)
-References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
-	 <1340707305.14634.9.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
-	 <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com>
-	 <1340795869.11012.12.camel@jlt3.sipsolutions.net>
-	 <CA+XVXfcNpj_UqCOXUG7sr2MQH8qZNHYr7MfBz5J3vwC3f+KU6Q@mail.gmail.com>
-	 <1340807890.11012.43.camel@jlt3.sipsolutions.net>
-	 <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com>
-	 (sfid-20120627_172101_975306_3DA213AA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35895 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753170Ab2FEVzc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 17:55:32 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/8] bcma: handle SoCs in pmu initialization
+Date: Tue,  5 Jun 2012 23:55:05 +0200
+Message-Id: <1338933307-13446-7-git-send-email-hauke@hauke-m.de> (sfid-20120605_235536_172239_4928A01E)
+In-Reply-To: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-27 at 18:20 +0300, Arik Nemtsov wrote:
+The SoCs do not need any special handling in bcma_pmu_pll_init(),
+bcma_pmu_resources_init(), bcma_pmu_swreg_init() and
+bcma_pmu_workarounds. This patches suppresses some warnings in the log.
 
-> > It'll depend on the driver I guess? If you're going to set a flag "give
-> > this vif priority now" on the first invocation, then you probably
-> > wouldn't care about the timing. It looks like our implementation would
-> > actually start some "give me the channel" operation and when the
-> > firmware says "ok you have the channel now" we'd return and rely on
-> > getting the TX right after.
-> >
-> > Wrt. the race, this isn't going to be something that happens within less
-> > than a millisecond or so, it's going to give us maybe 50ms at least of
-> > channel time (WFA mandates replying within 30ms), so that doesn't seem
-> > like a problem?
-> 
-> It's probably not an issue. Just seems simpler to just give the skb to
-> the driver so it can do whatever it wants before/during/after. Bypass
-> op_tx completely for these.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_chipcommon_pmu.c |   32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-Yeah, that was one of the other options I considered in my original
-email ... but this call must be able to sleep, and the TX processing in
-mac80211 cannot sleep, so unless we bypass all processing (which seems
-wrong) that would be rather difficult to implement.
-
-johannes
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 2ebba9c..9bf2dff 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -63,6 +63,14 @@ static void bcma_pmu_pll_init(struct bcma_drv_cc *cc)
+ 	case BCMA_CHIP_ID_BCM4331:
+ 	case BCMA_CHIP_ID_BCM43224:
+ 	case BCMA_CHIP_ID_BCM43225:
++	case BCMA_CHIP_ID_BCM4716:
++	case BCMA_CHIP_ID_BCM4748:
++	case BCMA_CHIP_ID_BCM47162:
++	case BCMA_CHIP_ID_BCM4749:
++	case BCMA_CHIP_ID_BCM5357:
++	case BCMA_CHIP_ID_BCM5356:
++	case BCMA_CHIP_ID_BCM53572:
++	case BCMA_CHIP_ID_BCM4706:
+ 		break;
+ 	default:
+ 		pr_err("PLL init unknown for device 0x%04X\n",
+@@ -83,6 +91,14 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
+ 	case BCMA_CHIP_ID_BCM4331:
+ 	case BCMA_CHIP_ID_BCM43224:
+ 	case BCMA_CHIP_ID_BCM43225:
++	case BCMA_CHIP_ID_BCM4716:
++	case BCMA_CHIP_ID_BCM4748:
++	case BCMA_CHIP_ID_BCM47162:
++	case BCMA_CHIP_ID_BCM4749:
++	case BCMA_CHIP_ID_BCM5357:
++	case BCMA_CHIP_ID_BCM5356:
++	case BCMA_CHIP_ID_BCM53572:
++	case BCMA_CHIP_ID_BCM4706:
+ 		break;
+ 	default:
+ 		pr_err("PMU resource config unknown for device 0x%04X\n",
+@@ -105,6 +121,14 @@ static void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
+ 	case BCMA_CHIP_ID_BCM4331:
+ 	case BCMA_CHIP_ID_BCM43224:
+ 	case BCMA_CHIP_ID_BCM43225:
++	case BCMA_CHIP_ID_BCM4716:
++	case BCMA_CHIP_ID_BCM4748:
++	case BCMA_CHIP_ID_BCM47162:
++	case BCMA_CHIP_ID_BCM4749:
++	case BCMA_CHIP_ID_BCM5357:
++	case BCMA_CHIP_ID_BCM5356:
++	case BCMA_CHIP_ID_BCM53572:
++	case BCMA_CHIP_ID_BCM4706:
+ 		break;
+ 	default:
+ 		pr_err("PMU switch/regulators init unknown for device "
+@@ -168,6 +192,14 @@ static void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 		}
+ 		break;
+ 	case BCMA_CHIP_ID_BCM43225:
++	case BCMA_CHIP_ID_BCM4716:
++	case BCMA_CHIP_ID_BCM4748:
++	case BCMA_CHIP_ID_BCM47162:
++	case BCMA_CHIP_ID_BCM4749:
++	case BCMA_CHIP_ID_BCM5357:
++	case BCMA_CHIP_ID_BCM5356:
++	case BCMA_CHIP_ID_BCM53572:
++	case BCMA_CHIP_ID_BCM4706:
+ 		break;
+ 	default:
+ 		pr_err("Workarounds unknown for device 0x%04X\n",
+-- 
+1.7.9.5
 
