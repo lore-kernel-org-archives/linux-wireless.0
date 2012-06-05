@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55883 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752143Ab2FTIPx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 04:15:53 -0400
-Message-ID: <1340180149.4655.23.camel@jlt3.sipsolutions.net> (sfid-20120620_101606_136330_F25F4269)
-Subject: Re: [PATCH v4] mac80211: add command to get current rssi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 20 Jun 2012 10:15:49 +0200
-In-Reply-To: <1340173975-13609-1-git-send-email-victorg@ti.com>
-References: <1340173975-13609-1-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36296 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753586Ab2FEXIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jun 2012 19:08:47 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 17/18] brcmsmac: fix read in write_phy_reg
+Date: Wed,  6 Jun 2012 01:07:20 +0200
+Message-Id: <1338937641-8519-18-git-send-email-hauke@hauke-m.de> (sfid-20120606_012943_768101_76008F22)
+In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 09:32 +0300, Victor Goldenshtein wrote:
+This reverts a unintended change mad in commit.
+commit 4b006b11ca18995677c5f1cd03cc9c42fbe80693
+Author: Arend van Spriel <arend@broadcom.com>
+Date:   Thu Dec 8 15:06:54 2011 -0800
 
-> +	trace_drv_get_rssi(local, sdata);
-> +	ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
-> +	trace_drv_return_int(local, ret);
+    brcm80211: smac: use bcma functions for register access in phy code
 
-Where are you tracing the sta?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-And why not trace the value returned in *rssi_dbm?
-
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index 5cfbe5c..25a17eb 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -292,7 +292,7 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ 	bcma_wflush16(pi->d11core, D11REGOFFS(phyregaddr), addr);
+ 	bcma_write16(pi->d11core, D11REGOFFS(phyregdata), val);
+ 	if (addr == 0x72)
+-		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
++		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
+ #else
+ 	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
+ 	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
+-- 
+1.7.9.5
 
