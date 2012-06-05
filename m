@@ -1,263 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58716 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753684Ab2FZCew (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53561 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755888Ab2FEOeQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 22:34:52 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<johannes@sipsolutions.net>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [RFC] cfg80211: support TX error rate CQM
-Date: Mon, 25 Jun 2012 19:34:48 -0700
-Message-ID: <1340678088-5353-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120626_043456_671811_70B4E690)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 5 Jun 2012 10:34:16 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 1/9] brcm80211: smac: don't set up tx power limits during initialization
+Date: Tue,  5 Jun 2012 09:34:01 -0500
+Message-Id: <1338906849-26135-2-git-send-email-seth.forshee@canonical.com> (sfid-20120605_163421_057943_EE7C94E0)
+In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let the user configure serveral TX error conection quality monitoring
-parameters: % error rate, survey interval, and # of attempted packets.
+This code is unnecessary, and in fact it's never executed because the
+interface is never up when brcms_c_channels_commit() is called. Removing
+it helps simplify the implementation of proper regulatory support.
 
-On exceeding the TX failure rate over the given interval, the driver
-will send a CQM notify event with the actual TX failure rate and
-packets attempted.
-
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- include/linux/nl80211.h |   14 ++++++++
- include/net/cfg80211.h  |   20 +++++++++++
- net/wireless/mlme.c     |   13 +++++++
- net/wireless/nl80211.c  |   81 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    5 +++
- 5 files changed, 133 insertions(+), 0 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c |    8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 970afdf..1477c99 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -2517,6 +2517,17 @@ enum nl80211_ps_state {
-  * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event
-  * @NL80211_ATTR_CQM_PKT_LOSS_EVENT: a u32 value indicating that this many
-  *	consecutive packets were not acknowledged by the peer
-+ * @NL80211_ATTR_CQM_TXE_RATE: TX error rate in %. Minimum % of TX failures
-+ *	during the given %NL80211_ATTR_CQM_TXE_INTVL before an
-+ *	%NL80211_CMD_NOTIFY_CQM with reported %NL80211_ATTR_CQM_TXE_RATE and
-+ *	%NL80211_ATTR_CQM_TXE_PKTS is generated.
-+ * @NL80211_ATTR_CQM_TXE_PKTS: number of TX attempts in a given
-+ *	%NL80211_ATTR_CQM_TXE_INTVL before %NL80211_ATTR_CQM_TXE_RATE is
-+ *	checked.
-+ * @NL80211_ATTR_CQM_TXE_INTVL: interval in seconds. Specifies the periodic
-+ *	interval in which %NL80211_ATTR_CQM_TXE_PKTS and
-+ *	%NL80211_ATTR_CQM_TXE_RATE must be satisfied before generating an
-+ *	%NL80211_CMD_NOTIFY_CQM.
-  * @__NL80211_ATTR_CQM_AFTER_LAST: internal
-  * @NL80211_ATTR_CQM_MAX: highest key attribute
-  */
-@@ -2526,6 +2537,9 @@ enum nl80211_attr_cqm {
- 	NL80211_ATTR_CQM_RSSI_HYST,
- 	NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT,
- 	NL80211_ATTR_CQM_PKT_LOSS_EVENT,
-+	NL80211_ATTR_CQM_TXE_RATE,
-+	NL80211_ATTR_CQM_TXE_PKTS,
-+	NL80211_ATTR_CQM_TXE_INTVL,
- 
- 	/* keep last */
- 	__NL80211_ATTR_CQM_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7319f25..356d031 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1500,6 +1500,8 @@ struct cfg80211_gtk_rekey_data {
-  * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
-  *	allows the driver to adjust the dynamic ps timeout value.
-  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
-+ * @set_cqm_txe_config: Configure connection quality monitor TX error
-+ *	thresholds.
-  * @sched_scan_start: Tell the driver to start a scheduled scan.
-  * @sched_scan_stop: Tell the driver to stop an ongoing scheduled
-  *	scan.  The driver_initiated flag specifies whether the driver
-@@ -1705,6 +1707,10 @@ struct cfg80211_ops {
- 				       struct net_device *dev,
- 				       s32 rssi_thold, u32 rssi_hyst);
- 
-+	int	(*set_cqm_txe_config)(struct wiphy *wiphy,
-+				      struct net_device *dev,
-+				      u32 rate, u32 pkts, u32 intvl);
-+
- 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       u16 frame_type, bool reg);
-@@ -3300,6 +3306,20 @@ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
- 				 const u8 *peer, u32 num_packets, gfp_t gfp);
- 
- /**
-+ * cfg80211_cqm_txe_notify - TX error rate event
-+ * @dev: network device
-+ * @peer: peer's MAC address
-+ * @num_packets: how many packets were lost
-+ * @rate: % of packets which failed transmission
-+ * @gfp: context flags
-+ *
-+ * Notify userspace when configured % TX failures over number of packets in a
-+ * given interval is exceeded.
-+ */
-+void cfg80211_cqm_txe_notify(struct net_device *dev, const u8 *peer,
-+			     u32 num_packets, u32 rate, gfp_t gfp);
-+
-+/**
-  * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
-  * @dev: network device
-  * @bssid: BSSID of AP (to avoid races)
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index da4406f..485698a 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -907,6 +907,19 @@ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
- }
- EXPORT_SYMBOL(cfg80211_cqm_pktloss_notify);
- 
-+void cfg80211_cqm_txe_notify(struct net_device *dev,
-+			     const u8 *peer, u32 num_packets,
-+			     u32 rate, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	/* Indicate roaming trigger event to user space */
-+	nl80211_send_cqm_txe_notify(rdev, dev, peer, num_packets, rate, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_cqm_txe_notify);
-+
- void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
- 			       const u8 *replay_ctr, gfp_t gfp)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+index eb77ac3..049d78f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+@@ -908,7 +908,6 @@ static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
  {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ae54b8..d7320b7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6003,8 +6003,34 @@ nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] __read_mostly = {
- 	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CQM_TXE_RATE] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CQM_TXE_PKTS] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CQM_TXE_INTVL] = { .type = NLA_U32 },
- };
+ 	struct brcms_c_info *wlc = wlc_cm->wlc;
+ 	uint chan;
+-	struct txpwr_limits txpwr;
  
-+static int nl80211_set_cqm_txe(struct genl_info *info,
-+				u32 rate, u32 pkts, u32 intvl)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev;
-+	struct net_device *dev = info->user_ptr[1];
-+
-+	if (rate < 0 || rate > 100)
-+		return -EINVAL;
-+
-+	wdev = dev->ieee80211_ptr;
-+
-+	if (!rdev->ops->set_cqm_txe_config)
-+		return -EOPNOTSUPP;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION &&
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+		return -EOPNOTSUPP;
-+
-+	return rdev->ops->set_cqm_txe_config(wdev->wiphy, dev,
-+					     rate, pkts, intvl);
-+}
-+
- static int nl80211_set_cqm_rssi(struct genl_info *info,
- 				s32 threshold, u32 hysteresis)
- {
-@@ -6052,6 +6078,14 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
- 		threshold = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
- 		hysteresis = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
- 		err = nl80211_set_cqm_rssi(info, threshold, hysteresis);
-+	} else if (attrs[NL80211_ATTR_CQM_TXE_RATE] &&
-+		   attrs[NL80211_ATTR_CQM_TXE_PKTS] &&
-+		   attrs[NL80211_ATTR_CQM_TXE_INTVL]) {
-+		u32 rate, pkts, intvl;
-+		rate = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_RATE]);
-+		pkts = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_PKTS]);
-+		intvl = nla_get_u32(attrs[NL80211_ATTR_CQM_TXE_INTVL]);
-+		err = nl80211_set_cqm_txe(info, rate, pkts, intvl);
- 	} else
- 		err = -EINVAL;
- 
-@@ -8184,6 +8218,53 @@ void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
+ 	/* search for the existence of any valid channel */
+ 	for (chan = 0; chan < MAXCHANNEL; chan++) {
+@@ -949,13 +948,6 @@ static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
+ 		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
+ 						     brcms_c_japan(wlc) ? true :
+ 						     false);
+-
+-	if (wlc->pub->up && chan != INVCHANNEL) {
+-		brcms_c_channel_reg_limits(wlc_cm, wlc->chanspec, &txpwr);
+-		brcms_c_channel_min_txpower_limits_with_local_constraint(wlc_cm,
+-			&txpwr, BRCMS_TXPWR_MAX);
+-		wlc_phy_txpower_limit_set(wlc->band->pi, &txpwr, wlc->chanspec);
+-	}
  }
  
- void
-+nl80211_send_cqm_txe_notify(struct cfg80211_registered_device *rdev,
-+			    struct net_device *netdev, const u8 *peer,
-+			    u32 num_packets, u32 rate, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct nlattr *pinfoattr;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NOTIFY_CQM);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, peer))
-+		goto nla_put_failure;
-+
-+	pinfoattr = nla_nest_start(msg, NL80211_ATTR_CQM);
-+	if (!pinfoattr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_CQM_TXE_PKTS, num_packets))
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_CQM_TXE_RATE, rate))
-+		goto nla_put_failure;
-+
-+	nla_nest_end(msg, pinfoattr);
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
-+void
- nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
- 				struct net_device *netdev, const u8 *peer,
- 				u32 num_packets, gfp_t gfp)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 01a1122..c6b738a 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -110,6 +110,11 @@ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
- 				struct net_device *netdev, const u8 *peer,
- 				u32 num_packets, gfp_t gfp);
- 
-+void
-+nl80211_send_cqm_txe_notify(struct cfg80211_registered_device *rdev,
-+			    struct net_device *netdev, const u8 *peer,
-+			    u32 num_packets, u32 rate, gfp_t gfp);
-+
- void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
- 			      struct net_device *netdev, const u8 *bssid,
- 			      const u8 *replay_ctr, gfp_t gfp);
+ static int
 -- 
-1.7.4.1
+1.7.9.5
 
