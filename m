@@ -1,74 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1094 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752345Ab2F0Iga (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36461 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366Ab2FESdG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 04:36:30 -0400
-Message-ID: <1340786187.1911.24.camel@x61.thuisdomein> (sfid-20120627_103759_789163_131BF86C)
-Subject: [PATCH] iwlegacy: print how long queue was actually stuck
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 27 Jun 2012 10:36:27 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Jun 2012 14:33:06 -0400
+Date: Tue, 5 Jun 2012 14:24:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Seth Forshee <seth.forshee@gmail.com>
+Cc: Oleksij Rempel <bug-track@fisher-privat.net>,
+	b43-dev@lists.infradead.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] b43: do not call ieee80211_unregister_hw if we are
+ not registred
+Message-ID: <20120605182410.GA1937@tuxdriver.com> (sfid-20120605_203311_061685_729B2685)
+References: <1338536240-4392-1-git-send-email-bug-track@fisher-privat.net>
+ <1338536240-4392-2-git-send-email-bug-track@fisher-privat.net>
+ <20120605164945.GB18176@thinkpad-t410>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120605164945.GB18176@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Every now and then, after resuming from suspend, the iwlegacy driver
-prints
-    iwl4965 0000:03:00.0: Queue 2 stuck for 2000 ms.
-    iwl4965 0000:03:00.0: On demand firmware reload
+Could someone repost a clean version to linux-wireless@vger.kernel.org?
 
-I have no idea what causes these errors. But the code currently uses
-wd_timeout in the first error. wd_timeout will generally be set at
-IL_DEF_WD_TIMEOUT (ie, 2000). Perhaps printing for how long the queue
-was actually stuck can clarify the cause of these errors.
+On Tue, Jun 05, 2012 at 11:49:45AM -0500, Seth Forshee wrote:
+> (I don't have access to the original message, so I appologize if any
+>  Cc's were dropped. I added some additional Cc's.)
+> 
+> On Fri, Jun 01, 2012 at 09:37:20AM +0200, Oleksij Rempel wrote:
+> > this patch fixes kernel Oops on "rmmod b43" if firmware was not loaded:
+> > 
+> > BUG: unable to handle kernel NULL pointer dereference at 0000000000000088
+> > IP: [<ffffffff8104e988>] drain_workqueue+0x25/0x142
+> > PGD 153ac6067 PUD 153b82067 PMD 0
+> > Oops: 0000 [#1] SMP
+> > 
+> > Signed-off-by: Oleksij Rempel <bug-track-M18mAb7Tlt0yCq4wW13eYl6hYfS7NtTn@public.gmane.org>
+> 
+> This issue is affecting the Ubuntu installer, and I've verified the
+> patch fixes the problem on a Mac Mini 5,2.
+> 
+> Tested-by: Seth Forshee <seth.forshee@canonical.com>
+> 
+> This issue affects 3.4, probably introduced in 6b6fa58 (b43: Load
+> firmware from a work queue and not from the probe routine), so I'd
+> suggest a Cc for stable also be added.
+> 
+> > ---
+> >  drivers/net/wireless/b43/b43.h  |    4 ++++
+> >  drivers/net/wireless/b43/main.c |   19 ++++++++++++-------
+> >  2 files changed, 16 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+> > index 67c13af..c06b6cb 100644
+> > --- a/drivers/net/wireless/b43/b43.h
+> > +++ b/drivers/net/wireless/b43/b43.h
+> > @@ -877,6 +877,10 @@ struct b43_wl {
+> >  	 * from the mac80211 subsystem. */
+> >  	u16 mac80211_initially_registered_queues;
+> >  
+> > +	/* Set this if we call ieee80211_register_hw() and check if we call
+> > +	 * ieee80211_unregister_hw(). */
+> > +	bool hw_registred;
+> > +
+> >  	/* We can only have one operating interface (802.11 core)
+> >  	 * at a time. General information about this interface follows.
+> >  	 */
+> > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> > index e4d6dc2..747079b 100644
+> > --- a/drivers/net/wireless/b43/main.c
+> > +++ b/drivers/net/wireless/b43/main.c
+> > @@ -2437,6 +2437,7 @@ start_ieee80211:
+> >  	err = ieee80211_register_hw(wl->hw);
+> >  	if (err)
+> >  		goto err_one_core_detach;
+> > +	wl->hw_registred = true;
+> >  	b43_leds_register(wl->current_dev);
+> >  	goto out;
+> >  
+> > @@ -5283,6 +5284,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+> >  
+> >  	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
+> >  	wl->mac80211_initially_registered_queues = hw->queues;
+> > +	wl->hw_registred = false;
+> >  	hw->max_rates = 2;
+> >  	SET_IEEE80211_DEV(hw, dev->dev);
+> >  	if (is_valid_ether_addr(sprom->et1mac))
+> > @@ -5354,12 +5356,15 @@ static void b43_bcma_remove(struct bcma_device *core)
+> >  	 * as the ieee80211 unreg will destroy the workqueue. */
+> >  	cancel_work_sync(&wldev->restart_work);
+> >  
+> > -	/* Restore the queues count before unregistering, because firmware detect
+> > -	 * might have modified it. Restoring is important, so the networking
+> > -	 * stack can properly free resources. */
+> > -	wl->hw->queues = wl->mac80211_initially_registered_queues;
+> > -	b43_leds_stop(wldev);
+> > -	ieee80211_unregister_hw(wl->hw);
+> > +	B43_WARN_ON(!wl);
+> > +	if (wl->current_dev == wldev && wl->hw_registred) {
+> > +		/* Restore the queues count before unregistering, because firmware detect
+> > +		 * might have modified it. Restoring is important, so the networking
+> > +		 * stack can properly free resources. */
+> > +		wl->hw->queues = wl->mac80211_initially_registered_queues;
+> > +		b43_leds_stop(wldev);
+> > +		ieee80211_unregister_hw(wl->hw);
+> > +	}
+> >  
+> >  	b43_one_core_detach(wldev->dev);
+> >  
+> > @@ -5430,7 +5435,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+> >  	cancel_work_sync(&wldev->restart_work);
+> >  
+> >  	B43_WARN_ON(!wl);
+> > -	if (wl->current_dev == wldev) {
+> > +	if (wl->current_dev == wldev && wl->hw_registred) {
+> >  		/* Restore the queues count before unregistering, because firmware detect
+> >  		 * might have modified it. Restoring is important, so the networking
+> >  		 * stack can properly free resources. */
+> > -- 
+> > 1.7.9.5
+> > 
+> 
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-0) Compile tested on v3.5-rc4. Tested on Fedora 's current v3.4.2 based
-kernel (ie, on F16). That required an edit to this commit because of
-trivial context changes.
-
-1) Please note that testing here involved waiting until I again
-triggered this error (which now of course printed how long the queue was
-actually stuck).
-
- drivers/net/wireless/iwlegacy/common.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index cbf2dc1..763c752 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -4717,10 +4717,11 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
- 	struct il_tx_queue *txq = &il->txq[cnt];
- 	struct il_queue *q = &txq->q;
- 	unsigned long timeout;
-+	unsigned long now = jiffies;
- 	int ret;
- 
- 	if (q->read_ptr == q->write_ptr) {
--		txq->time_stamp = jiffies;
-+		txq->time_stamp = now;
- 		return 0;
- 	}
- 
-@@ -4728,9 +4729,9 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
- 	    txq->time_stamp +
- 	    msecs_to_jiffies(il->cfg->wd_timeout);
- 
--	if (time_after(jiffies, timeout)) {
-+	if (time_after(now, timeout)) {
- 		IL_ERR("Queue %d stuck for %u ms.\n", q->id,
--		       il->cfg->wd_timeout);
-+		       jiffies_to_msecs(now - txq->time_stamp));
- 		ret = il_force_reset(il, false);
- 		return (ret == -EAGAIN) ? 0 : 1;
- 	}
 -- 
-1.7.7.6
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
