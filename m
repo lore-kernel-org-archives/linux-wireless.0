@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39774 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757781Ab2FHPou (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:59924 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754444Ab2FFWtI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 11:44:50 -0400
-Message-ID: <1339170287.5748.8.camel@jlt3.sipsolutions.net> (sfid-20120608_174453_828379_B54E3AF3)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andre Heider <a.heider@gmail.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 17:44:47 +0200
-In-Reply-To: <1339170182.5748.7.camel@jlt3.sipsolutions.net> (sfid-20120608_174309_875550_ADC4A235)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
-	 <20120607180325.7752b3c0@milhouse>
-	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
-	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
-	 <4FD11B47.10002@lwfinger.net>
-	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 (sfid-20120608_173825_724071_61477734) <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 (sfid-20120608_174309_875550_ADC4A235)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Jun 2012 18:49:08 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so9416638dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:08 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/6] mac80211: Remove unused variable
+Date: Wed,  6 Jun 2012 15:48:48 -0700
+Message-Id: <1339022932-14240-3-git-send-email-jason@cozybit.com> (sfid-20120607_004923_109644_43BD9DCC)
+In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 17:43 +0200, Johannes Berg wrote:
-> On Fri, 2012-06-08 at 10:38 -0500, Larry Finger wrote:
-> 
-> > I got the same result as Andre when using open-source firmware - endless MAC 
-> > suspend failures. It works OK with the proprietary fw, with or without a "qos=0" 
-> > module parameter.
-> 
-> I just noticed one more bug -- I need to number the ACs the other way
-> around, changing
-> 	vif->hw_queue[i] = i;
-> to
-> 	vif->hw_queue[i] = 3 - i;
-> 
-> in main.c, because 0 is BK and 3 is VO, rather than 0 VO/3 BK like in
-> mac80211.
-> 
-> http://p.sipsolutions.net/449d71a3c76656f1.txt
+From: Javier Cardona <javier@cozybit.com>
 
-Ahrg! I keep numbering them wrong, this should be fixed:
-http://p.sipsolutions.net/3bbdb9c6294dad70.txt
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-johannes
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index fa7c580..acbd1ad 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -323,7 +323,6 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
+ {
+-	struct ieee80211_supported_band *sband;
+ 	struct rate_info rinfo;
+ 	/* This should be adjusted for each device */
+ 	int device_constant = 1 << ARITH_SHIFT;
+@@ -333,8 +332,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	u32 tx_time, estimated_retx;
+ 	u64 result;
+ 
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
+ 
+-- 
+1.7.9.5
 
