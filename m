@@ -1,105 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53566 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755888Ab2FEOeT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 10:34:19 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 2/9] brcm80211: smac: always set channel specified by mac80211
-Date: Tue,  5 Jun 2012 09:34:02 -0500
-Message-Id: <1338906849-26135-3-git-send-email-seth.forshee@canonical.com> (sfid-20120605_163422_997953_E5A02ED5)
-In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:58144 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750713Ab2FFI4O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 04:56:14 -0400
+Message-ID: <4FCF1B2B.7030803@tieto.com> (sfid-20120606_105617_408376_9B715278)
+Date: Wed, 6 Jun 2012 10:56:11 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 01/14] cfg80211: respect intf combinations for 1 interface
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>  <1338203942-5667-2-git-send-email-michal.kazior@tieto.com> <1338972702.4513.24.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338972702.4513.24.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some situations brcmsmac is choosing a channel internally. This makes
-it difficult at times to know what channel to use for enforcing
-regulatory constraints, so instead always use the channel from the
-mac80211 configuration.
+Johannes Berg wrote:
+> On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
+>> Don't ignore interface combinations when only one
+>> interface is up. Otherwise we may call a driver to
+>> create (or change) interface type to something it
+>> didn't report in interface combinations it
+>> reported.
+>
+> We still check wiphy.interface_modes before we even go into this
+> function, no? Arguably we should move the check into the function, but
+> I'm not sure what you're fixing here.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   30 +++++-------------------
- 1 file changed, 6 insertions(+), 24 deletions(-)
+Suppose a driver advertises support for AP and STA. Without the patch 
+it's possible to bring up e.g. IBSS interface.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 19db405..93c865d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3139,20 +3139,6 @@ void brcms_c_reset(struct brcms_c_info *wlc)
- 	brcms_b_reset(wlc->hw);
- }
- 
--/* Return the channel the driver should initialize during brcms_c_init.
-- * the channel may have to be changed from the currently configured channel
-- * if other configurations are in conflict (bandlocked, 11n mode disabled,
-- * invalid channel for current country, etc.)
-- */
--static u16 brcms_c_init_chanspec(struct brcms_c_info *wlc)
--{
--	u16 chanspec =
--	    1 | WL_CHANSPEC_BW_20 | WL_CHANSPEC_CTL_SB_NONE |
--	    WL_CHANSPEC_BAND_2G;
--
--	return chanspec;
--}
--
- void brcms_c_init_scb(struct scb *scb)
- {
- 	int i;
-@@ -5129,6 +5115,8 @@ static void brcms_c_wme_retries_write(struct brcms_c_info *wlc)
- /* make interface operational */
- int brcms_c_up(struct brcms_c_info *wlc)
- {
-+	struct ieee80211_channel *ch;
-+
- 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
- 
- 	/* HW is turned off so don't try to access it */
-@@ -5195,8 +5183,9 @@ int brcms_c_up(struct brcms_c_info *wlc)
- 	wlc->pub->up = true;
- 
- 	if (wlc->bandinit_pending) {
-+		ch = wlc->pub->ieee_hw->conf.channel;
- 		brcms_c_suspend_mac_and_wait(wlc);
--		brcms_c_set_chanspec(wlc, wlc->default_bss->chanspec);
-+		brcms_c_set_chanspec(wlc, ch20mhz_chspec(ch->hw_value));
- 		wlc->bandinit_pending = false;
- 		brcms_c_enable_mac(wlc);
- 	}
-@@ -8201,19 +8190,12 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
- void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
- {
- 	struct bcma_device *core = wlc->hw->d11core;
-+	struct ieee80211_channel *ch = wlc->pub->ieee_hw->conf.channel;
- 	u16 chanspec;
- 
- 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
- 
--	/*
--	 * This will happen if a big-hammer was executed. In
--	 * that case, we want to go back to the channel that
--	 * we were on and not new channel
--	 */
--	if (wlc->pub->associated)
--		chanspec = wlc->home_chanspec;
--	else
--		chanspec = brcms_c_init_chanspec(wlc);
-+	chanspec = ch20mhz_chspec(ch->hw_value);
- 
- 	brcms_b_init(wlc->hw, chanspec);
- 
+
 -- 
-1.7.9.5
-
+Pozdrawiam / Best regards, Michal Kazior.
