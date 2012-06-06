@@ -1,128 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62282 "EHLO ebb06.tieto.com"
+Received: from mga11.intel.com ([192.55.52.93]:52353 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751002Ab2FRK6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 06:58:05 -0400
-From: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <lukasz.kucharczyk@tieto.com>
-Subject: [RFC 3/5] mac80211: bind driver's filter callback to subif
-Date: Mon, 18 Jun 2012 12:57:13 +0200
-Message-ID: <1340017035-7657-4-git-send-email-lukasz.kucharczyk@tieto.com> (sfid-20120618_125818_291712_503739CF)
-In-Reply-To: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com>
-References: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755777Ab2FFKIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:08:17 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 27/29] NFC: Set the proper baud rate when trying to activate pn533 targets
+Date: Wed,  6 Jun 2012 12:16:44 +0200
+Message-Id: <1338977806-30279-28-git-send-email-sameo@linux.intel.com> (sfid-20120606_120823_702689_ED38C827)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver is now aware for which virtual interface
-the RX filter is being configured.
+We get the right baud rate from the last polled modulation.
 
-ieee80211_sub_if_data *sdata argument is added to
-drv_configure_filter.
-
-ieee80211_vif *vif argument is added to driver's
-configure_filter callback.
-
-Signed-off-by: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- include/net/mac80211.h      |    1 +
- net/mac80211/driver-ops.h   |    7 ++++---
- net/mac80211/driver-trace.h |    9 ++++++---
- net/mac80211/main.c         |    2 +-
- 4 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/nfc/pn533.c |   25 +++++++++++++++++++++++--
+ 1 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6914f99..c515a6f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2282,6 +2282,7 @@ struct ieee80211_ops {
- 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
- 				 struct netdev_hw_addr_list *mc_list);
- 	void (*configure_filter)(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
- 				 unsigned int changed_flags,
- 				 unsigned int *total_flags,
- 				 u64 multicast);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 6d33a0c..cfc4a35 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -237,16 +237,17 @@ static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index c9ba96c..b97e3c8 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -1629,6 +1629,20 @@ static int pn533_in_dep_link_up_complete(struct pn533 *dev, void *arg,
+ 	return 0;
  }
  
- static inline void drv_configure_filter(struct ieee80211_local *local,
-+					struct ieee80211_sub_if_data *sdata,
- 					unsigned int changed_flags,
- 					unsigned int *total_flags,
- 					u64 multicast)
- {
- 	might_sleep();
++static int pn533_mod_to_baud(struct pn533 *dev)
++{
++	switch (dev->poll_mod_curr) {
++	case PN533_POLL_MOD_106KBPS_A:
++		return 0;
++	case PN533_POLL_MOD_212KBPS_FELICA:
++		return 1;
++	case PN533_POLL_MOD_424KBPS_FELICA:
++		return 2;
++	default:
++		return -EINVAL;
++	}
++}
++
+ #define PASSIVE_DATA_LEN 5
+ static int pn533_dep_link_up(struct nfc_dev *nfc_dev, struct nfc_target *target,
+ 			     u8 comm_mode, u8* gb, size_t gb_len)
+@@ -1637,7 +1651,7 @@ static int pn533_dep_link_up(struct nfc_dev *nfc_dev, struct nfc_target *target,
+ 	struct pn533_cmd_jump_dep *cmd;
+ 	u8 cmd_len, *data_ptr;
+ 	u8 passive_data[PASSIVE_DATA_LEN] = {0x00, 0xff, 0xff, 0x00, 0x3};
+-	int rc;
++	int rc, baud;
  
--	trace_drv_configure_filter(local, changed_flags, total_flags,
-+	trace_drv_configure_filter(local, sdata, changed_flags, total_flags,
- 				   multicast);
--	local->ops->configure_filter(&local->hw, changed_flags, total_flags,
--				     multicast);
-+	local->ops->configure_filter(&local->hw, &sdata->vif, changed_flags,
-+				     total_flags, multicast);
- 	trace_drv_return_void(local);
- }
+ 	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
  
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 6de00b2..ad99338 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -360,14 +360,16 @@ TRACE_EVENT(drv_prepare_multicast,
+@@ -1653,6 +1667,13 @@ static int pn533_dep_link_up(struct nfc_dev *nfc_dev, struct nfc_target *target,
+ 		return -EBUSY;
+ 	}
  
- TRACE_EVENT(drv_configure_filter,
- 	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
- 		 unsigned int changed_flags,
- 		 unsigned int *total_flags,
- 		 u64 multicast),
++	baud = pn533_mod_to_baud(dev);
++	if (baud < 0) {
++		nfc_dev_err(&dev->interface->dev,
++			    "Invalid curr modulation %d", dev->poll_mod_curr);
++		return baud;
++	}
++
+ 	cmd_len = sizeof(struct pn533_cmd_jump_dep) + gb_len;
+ 	if (comm_mode == NFC_COMM_PASSIVE)
+ 		cmd_len += PASSIVE_DATA_LEN;
+@@ -1665,7 +1686,7 @@ static int pn533_dep_link_up(struct nfc_dev *nfc_dev, struct nfc_target *target,
  
--	TP_ARGS(local, changed_flags, total_flags, multicast),
-+	TP_ARGS(local, sdata, changed_flags, total_flags, multicast),
- 
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
-+		VIF_ENTRY
- 		__field(unsigned int, changed)
- 		__field(unsigned int, total)
- 		__field(u64, multicast)
-@@ -375,14 +377,15 @@ TRACE_EVENT(drv_configure_filter,
- 
- 	TP_fast_assign(
- 		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
- 		__entry->changed = changed_flags;
- 		__entry->total = *total_flags;
- 		__entry->multicast = multicast;
- 	),
- 
- 	TP_printk(
--		LOCAL_PR_FMT " changed:%#x total:%#x",
--		LOCAL_PR_ARG, __entry->changed, __entry->total
-+		LOCAL_PR_FMT VIF_PR_FMT " changed:%#x total:%#x",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->changed, __entry->total
- 	)
- );
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 6adc1d2..057e098 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -73,7 +73,7 @@ void ieee80211_configure_filter(struct ieee80211_sub_if_data *sdata)
- 	/* be a bit nasty */
- 	new_flags |= (1<<31);
- 
--	drv_configure_filter(local, changed_flags, &new_flags, mc);
-+	drv_configure_filter(local, sdata, changed_flags, &new_flags, mc);
- 
- 	WARN_ON(new_flags & (1<<31));
- 
+ 	cmd->active = !comm_mode;
+ 	cmd->next = 0;
+-	cmd->baud = 2;
++	cmd->baud = baud;
+ 	data_ptr = cmd->data;
+ 	if (comm_mode == NFC_COMM_PASSIVE && cmd->baud > 0) {
+ 		memcpy(data_ptr, passive_data, PASSIVE_DATA_LEN);
 -- 
-1.7.0.4
+1.7.9.1
 
