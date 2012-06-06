@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:46061 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752084Ab2FEO3y (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33659 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754425Ab2FFNWW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 10:29:54 -0400
-Received: by lbok6 with SMTP id k6so5233824lbo.18
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 07:29:51 -0700 (PDT)
-Message-ID: <1338906589.13935.243.camel@cumari.coelho.fi> (sfid-20120605_162957_608913_926832A2)
-Subject: Re: [PATCH] wlcore/wl12xx/wl18xx: don't use TX align quirk for
- wl127x
-From: Luciano Coelho <coelho@ti.com>
+	Wed, 6 Jun 2012 09:22:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Date: Tue, 05 Jun 2012 17:29:49 +0300
-In-Reply-To: <1338880471-854-1-git-send-email-coelho@ti.com>
-References: <1338880471-854-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH 01/29] iwlwifi: Check BSS ctx active before call mac80211
+Date: Wed,  6 Jun 2012 15:21:42 +0200
+Message-Id: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152231_979720_A2082B64)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-05 at 10:14 +0300, Luciano Coelho wrote:
-> When we moved the identify_chip operation to an earlier stage (ie. to
-> the probe function), we broke wl127x support because during HW init we
-> would set the WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN.
-> 
-> To avoid this, set this quirk in the identify_chip operations and only
-> force it to be unset if the bus module doesn't support it.  We were
-> doing the opposite and setting the flag if the bus module supports it.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+From: Ilan Peer <ilan.peer@intel.com>
 
-Applied and pushed to wl12xx/master.
+It is possible that the BSS context is not active (for example
+when the current mode is set to GO), or that the vif->type is
+different than station. In such a case we cannot
+call mac80211 to report the average rssi for the interface
+(the function assumes that the vif is valid and that the type
+is station).
 
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index e55ec6c..c31072d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -617,6 +617,11 @@ static bool iwlagn_fill_txpower_mode(struct iwl_priv *priv,
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 	int ave_rssi;
+ 
++	if (!ctx->vif || (ctx->vif->type != NL80211_IFTYPE_STATION)) {
++		IWL_DEBUG_INFO(priv, "BSS ctx not active or not in sta mode\n");
++		return false;
++	}
++
+ 	ave_rssi = ieee80211_ave_rssi(ctx->vif);
+ 	if (!ave_rssi) {
+ 		/* no rssi data, no changes to reduce tx power */
 -- 
-Cheers,
-Luca.
+1.7.10
 
