@@ -1,600 +1,602 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52388 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:33661 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753796Ab2FSOva (ORCPT
+	with ESMTP id S1754428Ab2FFNWW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:30 -0400
+	Wed, 6 Jun 2012 09:22:22 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 15/17] cfg80211: add P2P Device abstraction
-Date: Tue, 19 Jun 2012 16:50:54 +0200
-Message-Id: <1340117456-10154-16-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165137_981692_0DA59A56)
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+Subject: [PATCH 03/29] iwlwifi: make a lot of functions static
+Date: Wed,  6 Jun 2012 15:21:44 +0200
+Message-Id: <1338988930-11561-3-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152236_074984_883F5F7C)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-In order to support using a different MAC address
-for the P2P Device address we must first have a
-P2P Device abstraction that can be assigned a MAC
-address.
+A lot of functions were temporarily made non-static
+for experimental work, make them static again now.
 
-This abstraction will also be useful to support
-offloading P2P operations to the device, e.g.
-periodic listen for discoverability.
-
-Currently, the driver is responsible for assigning
-a MAC address to the P2P Device, but this could be
-changed by allowing a MAC address to be given to
-the NEW_INTERFACE command.
-
-As it has no associated netdev, a P2P Device can
-only be identified by its wdev identifier but the
-previous patches allowed using the wdev identifier
-in various APIs, e.g. remain-on-channel.
-
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/nl80211.h |   16 ++++++
- include/net/cfg80211.h  |   40 ++++++++++++++-
- net/mac80211/iface.c    |    3 ++
- net/mac80211/util.c     |    2 +
- net/wireless/core.c     |   52 +++++++++++++++++++-
- net/wireless/mlme.c     |   10 ++--
- net/wireless/nl80211.c  |  123 ++++++++++++++++++++++++++++++++++++++++++++---
- net/wireless/util.c     |   18 ++++++-
- 8 files changed, 249 insertions(+), 15 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   21 +++---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   32 ++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |   81 --------------------
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |  106 ++++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-ucode.c    |    2 +-
+ 5 files changed, 82 insertions(+), 160 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index fe3b6da..1e9a569 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -565,6 +565,14 @@
-  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
-  *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
-  *
-+ * @NL80211_CMD_START_P2P_DEVICE: Start the given P2P Device, identified by
-+ *	its %NL80211_ATTR_WDEV identifier. It must have been created with
-+ *	%NL80211_CMD_NEW_INTERFACE previously. After it has been started, the
-+ *	P2P Device can be used for P2P operations, e.g. remain-on-channel and
-+ *	public action frame TX.
-+ * @NL80211_CMD_STOP_P2P_DEVICE: Stop the given P2P Device, identified by
-+ *	its %NL80211_ATTR_WDEV identifier.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -708,6 +716,9 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CH_SWITCH_NOTIFY,
- 
-+	NL80211_CMD_START_P2P_DEVICE,
-+	NL80211_CMD_STOP_P2P_DEVICE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1562,6 +1573,10 @@ enum nl80211_attrs {
-  * @NL80211_IFTYPE_MESH_POINT: mesh point
-  * @NL80211_IFTYPE_P2P_CLIENT: P2P client
-  * @NL80211_IFTYPE_P2P_GO: P2P group owner
-+ * @NL80211_IFTYPE_P2P_DEVICE: P2P device interface type, this is not a netdev
-+ *	and therefore can't be created in the normal ways, use the
-+ *	%NL80211_CMD_START_P2P_DEVICE and %NL80211_CMD_STOP_P2P_DEVICE
-+ *	commands to create and destroy one
-  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
-  * @NUM_NL80211_IFTYPES: number of defined interface types
-  *
-@@ -1580,6 +1595,7 @@ enum nl80211_iftype {
- 	NL80211_IFTYPE_MESH_POINT,
- 	NL80211_IFTYPE_P2P_CLIENT,
- 	NL80211_IFTYPE_P2P_GO,
-+	NL80211_IFTYPE_P2P_DEVICE,
- 
- 	/* keep last */
- 	NUM_NL80211_IFTYPES,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f5c4b9d..3ffbc83 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1414,7 +1414,8 @@ struct cfg80211_gtk_rekey_data {
-  * @add_virtual_intf: create a new virtual interface with the given name,
-  *	must set the struct wireless_dev's iftype. Beware: You must create
-  *	the new netdev in the wiphy's network namespace! Returns the struct
-- *	wireless_dev, or an ERR_PTR.
-+ *	wireless_dev, or an ERR_PTR. For P2P device wdevs, the driver must
-+ *	also set the address member in the wdev.
-  *
-  * @del_virtual_intf: remove the virtual interface
-  *
-@@ -1590,6 +1591,9 @@ struct cfg80211_gtk_rekey_data {
-  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
-  *	and perhaps other supported types of ethtool data-sets.
-  *	See @ethtool_ops.get_strings
-+ *
-+ * @start_p2p_device: Start the given P2P device.
-+ * @stop_p2p_device: Stop the given P2P device.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1800,6 +1804,11 @@ struct cfg80211_ops {
- 				struct ethtool_stats *stats, u64 *data);
- 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
- 				  u32 sset, u8 *data);
-+
-+	int	(*start_p2p_device)(struct wiphy *wiphy,
-+				    struct wireless_dev *wdev);
-+	void	(*stop_p2p_device)(struct wiphy *wiphy,
-+				   struct wireless_dev *wdev);
- };
- 
- /*
-@@ -2361,6 +2370,8 @@ struct cfg80211_cached_keys;
-  * @cleanup_work: work struct used for cleanup that can't be done directly
-  * @beacon_interval: beacon interval used on this device for transmitting
-  *	beacons, 0 when not valid
-+ * @address: The address for this device, valid only if @netdev is %NULL
-+ * @p2p_started: true if this is a P2P Device that has been started
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-@@ -2379,7 +2390,9 @@ struct wireless_dev {
- 
- 	struct work_struct cleanup_work;
- 
--	bool use_4addr;
-+	bool use_4addr, p2p_started;
-+
-+	u8 address[ETH_ALEN] __aligned(sizeof(u16));
- 
- 	/* currently used for IBSS and SME - might be rearranged later */
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
-@@ -2422,6 +2435,13 @@ struct wireless_dev {
- #endif
- };
- 
-+static inline u8 *wdev_address(struct wireless_dev *wdev)
-+{
-+	if (wdev->netdev)
-+		return wdev->netdev->dev_addr;
-+	return wdev->address;
-+}
-+
- /**
-  * wdev_priv - return wiphy priv from wireless_dev
-  *
-@@ -3474,6 +3494,22 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
-  */
- u16 cfg80211_calculate_bitrate(struct rate_info *rate);
- 
-+/**
-+ * cfg80211_unregister_wdev - remove the given wdev
-+ * @wdev: struct wireless_dev to remove
-+ *
-+ * Call this function only for wdevs that have no netdev assigned,
-+ * e.g. P2P Devices. It removes the device from the list so that
-+ * it can no longer be used. It is necessary to call this function
-+ * even when cfg80211 requests the removal of the interface by
-+ * calling the del_virtual_intf() callback. The function must also
-+ * be called when the driver wishes to unregister the wdev, e.g.
-+ * when the device is unbound from the driver.
-+ *
-+ * Requires the RTNL to be held.
-+ */
-+void cfg80211_unregister_wdev(struct wireless_dev *wdev);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0fa224d..cf598d8 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -323,6 +323,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 	case NUM_NL80211_IFTYPES:
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_P2P_DEVICE:
- 		/* cannot happen */
- 		WARN_ON(1);
- 		break;
-@@ -1021,6 +1022,8 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_IFTYPE_WDS:
- 	case NL80211_IFTYPE_AP_VLAN:
- 		break;
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		/* not yet supported */
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NUM_NL80211_IFTYPES:
- 		BUG();
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 242ecde..864e533 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1362,6 +1362,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		case NL80211_IFTYPE_MONITOR:
- 			/* ignore virtual */
- 			break;
-+		case NL80211_IFTYPE_P2P_DEVICE:
-+			/* not yet supported */
- 		case NL80211_IFTYPE_UNSPECIFIED:
- 		case NUM_NL80211_IFTYPES:
- 		case NL80211_IFTYPE_P2P_CLIENT:
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 12b905a..6d922c0 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -230,9 +230,24 @@ static int cfg80211_rfkill_set_block(void *data, bool blocked)
- 	rtnl_lock();
- 	mutex_lock(&rdev->devlist_mtx);
- 
--	list_for_each_entry(wdev, &rdev->wdev_list, list)
--		if (wdev->netdev)
-+	list_for_each_entry(wdev, &rdev->wdev_list, list) {
-+		if (wdev->netdev) {
- 			dev_close(wdev->netdev);
-+			continue;
-+		}
-+		/* otherwise, check iftype */
-+		switch (wdev->iftype) {
-+		case NL80211_IFTYPE_P2P_DEVICE:
-+			if (!wdev->p2p_started)
-+				break;
-+			rdev->ops->stop_p2p_device(&rdev->wiphy, wdev);
-+			wdev->p2p_started = false;
-+			rdev->opencount--;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
- 
- 	mutex_unlock(&rdev->devlist_mtx);
- 	rtnl_unlock();
-@@ -399,6 +414,11 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 			if (WARN_ON(wiphy->software_iftypes & types))
- 				return -EINVAL;
- 
-+			/* Only a single P2P_DEVICE can be allowed */
-+			if (WARN_ON(types & BIT(NL80211_IFTYPE_P2P_DEVICE) &&
-+				    c->limits[j].max > 1))
-+				return -EINVAL;
-+
- 			cnt += c->limits[j].max;
- 			/*
- 			 * Don't advertise an unsupported type
-@@ -714,6 +734,34 @@ static void wdev_cleanup_work(struct work_struct *work)
- 	dev_put(wdev->netdev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 0a3aa7c..7fc8c25 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -175,7 +175,8 @@ static int iwlagn_disconn_pan(struct iwl_priv *priv,
+ 	return ret;
  }
  
-+void cfg80211_unregister_wdev(struct wireless_dev *wdev)
-+{
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	ASSERT_RTNL();
-+
-+	if (WARN_ON(wdev->netdev))
-+		return;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	list_del_rcu(&wdev->list);
-+	rdev->devlist_generation++;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		if (wdev->p2p_started) {
-+			wdev->p2p_started = false;
-+			rdev->opencount--;
-+		}
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		break;
-+	}
-+	mutex_unlock(&rdev->devlist_mtx);
-+}
-+EXPORT_SYMBOL(cfg80211_unregister_wdev);
-+
- static struct device_type wiphy_type = {
- 	.name	= "wlan",
- };
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 46e3c387..8b19ff4 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -720,7 +720,6 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			  const u8 *buf, size_t len, bool no_cck,
- 			  bool dont_wait_for_ack, u64 *cookie)
+-void iwlagn_update_qos(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
++static void iwlagn_update_qos(struct iwl_priv *priv,
++			      struct iwl_rxon_context *ctx)
  {
--	struct net_device *dev = wdev->netdev;
- 	const struct ieee80211_mgmt *mgmt;
- 	u16 stype;
+ 	int ret;
  
-@@ -780,7 +779,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 		case NL80211_IFTYPE_AP:
- 		case NL80211_IFTYPE_P2P_GO:
- 		case NL80211_IFTYPE_AP_VLAN:
--			if (!ether_addr_equal(mgmt->bssid, dev->dev_addr))
-+			if (!ether_addr_equal(mgmt->bssid, wdev_address(wdev)))
- 				err = -EINVAL;
- 			break;
- 		case NL80211_IFTYPE_MESH_POINT:
-@@ -793,6 +792,11 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			 * cfg80211 doesn't track the stations
- 			 */
- 			break;
-+		case NL80211_IFTYPE_P2P_DEVICE:
-+			/*
-+			 * fall through, P2P device only supports
-+			 * public action frames
-+			 */
- 		default:
- 			err = -EOPNOTSUPP;
- 			break;
-@@ -803,7 +807,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			return err;
+@@ -202,8 +203,8 @@ void iwlagn_update_qos(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 		IWL_DEBUG_QUIET_RFKILL(priv, "Failed to update QoS\n");
+ }
+ 
+-int iwlagn_update_beacon(struct iwl_priv *priv,
+-			 struct ieee80211_vif *vif)
++static int iwlagn_update_beacon(struct iwl_priv *priv,
++				struct ieee80211_vif *vif)
+ {
+ 	lockdep_assert_held(&priv->mutex);
+ 
+@@ -215,7 +216,7 @@ int iwlagn_update_beacon(struct iwl_priv *priv,
+ }
+ 
+ static int iwlagn_send_rxon_assoc(struct iwl_priv *priv,
+-			   struct iwl_rxon_context *ctx)
++				  struct iwl_rxon_context *ctx)
+ {
+ 	int ret = 0;
+ 	struct iwl_rxon_assoc_cmd rxon_assoc;
+@@ -863,8 +864,8 @@ static int iwl_check_rxon_cmd(struct iwl_priv *priv,
+  * or is clearing the RXON_FILTER_ASSOC_MSK, then return 1 to indicate that
+  * a new tune (full RXON command, rather than RXON_ASSOC cmd) is required.
+  */
+-int iwl_full_rxon_required(struct iwl_priv *priv,
+-			   struct iwl_rxon_context *ctx)
++static int iwl_full_rxon_required(struct iwl_priv *priv,
++				  struct iwl_rxon_context *ctx)
+ {
+ 	const struct iwl_rxon_cmd *staging = &ctx->staging;
+ 	const struct iwl_rxon_cmd *active = &ctx->active;
+@@ -1294,9 +1295,9 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	return ret;
+ }
+ 
+-void iwlagn_check_needed_chains(struct iwl_priv *priv,
+-				struct iwl_rxon_context *ctx,
+-				struct ieee80211_bss_conf *bss_conf)
++static void iwlagn_check_needed_chains(struct iwl_priv *priv,
++				       struct iwl_rxon_context *ctx,
++				       struct ieee80211_bss_conf *bss_conf)
+ {
+ 	struct ieee80211_vif *vif = ctx->vif;
+ 	struct iwl_rxon_context *tmp;
+@@ -1388,7 +1389,7 @@ void iwlagn_check_needed_chains(struct iwl_priv *priv,
+ 	ht_conf->single_chain_sufficient = !need_multiple;
+ }
+ 
+-void iwlagn_chain_noise_reset(struct iwl_priv *priv)
++static void iwlagn_chain_noise_reset(struct iwl_priv *priv)
+ {
+ 	struct iwl_chain_noise_data *data = &priv->chain_noise_data;
+ 	int ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index cd95a240..fa00717 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -577,7 +577,7 @@ static const u8 iwlagn_pan_ac_to_queue[] = {
+ 	7, 6, 5, 4,
+ };
+ 
+-void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
++static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
+ {
+ 	int i;
+ 
+@@ -644,7 +644,7 @@ void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
+ 	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
+ }
+ 
+-void iwl_rf_kill_ct_config(struct iwl_priv *priv)
++static void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+ {
+ 	struct iwl_ct_kill_config cmd;
+ 	struct iwl_ct_kill_throttling_config adv_cmd;
+@@ -725,7 +725,7 @@ static int iwlagn_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant)
  	}
+ }
  
--	if (!ether_addr_equal(mgmt->sa, dev->dev_addr))
-+	if (!ether_addr_equal(mgmt->sa, wdev_address(wdev)))
- 		return -EINVAL;
+-void iwl_send_bt_config(struct iwl_priv *priv)
++static void iwl_send_bt_config(struct iwl_priv *priv)
+ {
+ 	struct iwl_bt_cmd bt_cmd = {
+ 		.lead_time = BT_LEAD_TIME_DEF,
+@@ -1080,7 +1080,7 @@ static void iwlagn_disable_roc_work(struct work_struct *work)
+  *
+  *****************************************************************************/
  
- 	/* Transmit the Action frame as requested by user space */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e94aac9..0c31771 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1086,6 +1086,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		if (nla_put_u32(msg, i, NL80211_CMD_REGISTER_BEACONS))
- 			goto nla_put_failure;
+-void iwl_setup_deferred_work(struct iwl_priv *priv)
++static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ {
+ 	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
+ 
+@@ -1331,7 +1331,7 @@ static void iwl_free_geos(struct iwl_priv *priv)
+ 	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
+ }
+ 
+-int iwl_init_drv(struct iwl_priv *priv)
++static int iwl_init_drv(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
+@@ -1394,7 +1394,7 @@ err:
+ 	return ret;
+ }
+ 
+-void iwl_uninit_drv(struct iwl_priv *priv)
++static void iwl_uninit_drv(struct iwl_priv *priv)
+ {
+ 	iwl_free_geos(priv);
+ 	iwl_free_channel_map(priv);
+@@ -1407,7 +1407,7 @@ void iwl_uninit_drv(struct iwl_priv *priv)
+ #endif
+ }
+ 
+-void iwl_set_hw_params(struct iwl_priv *priv)
++static void iwl_set_hw_params(struct iwl_priv *priv)
+ {
+ 	if (priv->cfg->ht_params)
+ 		priv->hw_params.use_rts_for_aggregation =
+@@ -1423,7 +1423,7 @@ void iwl_set_hw_params(struct iwl_priv *priv)
+ 
+ 
+ /* show what optional capabilities we have */
+-void iwl_option_config(struct iwl_priv *priv)
++static void iwl_option_config(struct iwl_priv *priv)
+ {
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	IWL_INFO(priv, "CONFIG_IWLWIFI_DEBUG enabled\n");
+@@ -1722,7 +1722,7 @@ out:
+ 	return op_mode;
+ }
+ 
+-void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
++static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 
+@@ -2187,7 +2187,7 @@ static void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
  	}
-+	CMD(start_p2p_device, START_P2P_DEVICE);
+ }
  
- #ifdef CONFIG_NL80211_TESTMODE
- 	CMD(testmode_cmd, TESTMODE);
-@@ -1732,13 +1733,13 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+-void iwl_nic_error(struct iwl_op_mode *op_mode)
++static void iwl_nic_error(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
  
- 	if (dev &&
- 	    (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
--	     nla_put_string(msg, NL80211_ATTR_IFNAME, dev->name) ||
--	     nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, dev->dev_addr)))
-+	     nla_put_string(msg, NL80211_ATTR_IFNAME, dev->name)))
- 		goto nla_put_failure;
+@@ -2200,7 +2200,7 @@ void iwl_nic_error(struct iwl_op_mode *op_mode)
+ 	iwlagn_fw_error(priv, false);
+ }
  
- 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
- 	    nla_put_u32(msg, NL80211_ATTR_IFTYPE, wdev->iftype) ||
- 	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, wdev_address(wdev)) ||
- 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
- 			rdev->devlist_generation ^
- 			(cfg80211_rdev_list_generation << 2)))
-@@ -2004,8 +2005,10 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		return PTR_ERR(wdev);
+-void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
++static void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 
+@@ -2210,7 +2210,7 @@ void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
  	}
+ }
  
--	if (type == NL80211_IFTYPE_MESH_POINT &&
--	    info->attrs[NL80211_ATTR_MESH_ID]) {
-+	switch (type) {
-+	case NL80211_IFTYPE_MESH_POINT:
-+		if (!info->attrs[NL80211_ATTR_MESH_ID])
-+			break;
- 		wdev_lock(wdev);
- 		BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN !=
- 			     IEEE80211_MAX_MESH_ID_LEN);
-@@ -2014,6 +2017,26 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		memcpy(wdev->ssid, nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
- 		       wdev->mesh_id_up_len);
- 		wdev_unlock(wdev);
-+		break;
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		/*
-+		 * P2P Device doesn't have a netdev, so doesn't go
-+		 * through the netdev notifier and must be added here
-+		 */
-+		mutex_init(&wdev->mtx);
-+		INIT_LIST_HEAD(&wdev->event_list);
-+		spin_lock_init(&wdev->event_lock);
-+		INIT_LIST_HEAD(&wdev->mgmt_registrations);
-+		spin_lock_init(&wdev->mgmt_registrations_lock);
-+
-+		mutex_lock(&rdev->devlist_mtx);
-+		wdev->identifier = ++rdev->wdev_id;
-+		list_add_rcu(&wdev->list, &rdev->wdev_list);
-+		rdev->devlist_generation++;
-+		mutex_unlock(&rdev->devlist_mtx);
-+		break;
-+	default:
-+		break;
- 	}
+-void iwl_nic_config(struct iwl_op_mode *op_mode)
++static void iwl_nic_config(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
  
- 	if (nl80211_send_iface(msg, info->snd_pid, info->snd_seq, 0,
-@@ -5971,6 +5994,7 @@ static int nl80211_register_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_P2P_DEVICE:
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
-@@ -6017,6 +6041,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_P2P_DEVICE:
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
-@@ -6113,6 +6138,7 @@ static int nl80211_tx_mgmt_cancel_wait(struct sk_buff *skb, struct genl_info *in
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_P2P_DEVICE:
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
-@@ -6695,6 +6721,69 @@ static int nl80211_register_beacons(struct sk_buff *skb, struct genl_info *info)
+@@ -2225,7 +2225,7 @@ static void iwl_wimax_active(struct iwl_op_mode *op_mode)
+ 	IWL_ERR(priv, "RF is used by WiMAX\n");
+ }
+ 
+-void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, int queue)
++static void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, int queue)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 	int mq = priv->queue_to_mac80211[queue];
+@@ -2244,7 +2244,7 @@ void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, int queue)
+ 	ieee80211_stop_queue(priv->hw, mq);
+ }
+ 
+-void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, int queue)
++static void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, int queue)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 	int mq = priv->queue_to_mac80211[queue];
+@@ -2284,7 +2284,7 @@ void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
+ 	priv->passive_no_rx = false;
+ }
+ 
+-void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
++static void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info;
+ 
+@@ -2293,7 +2293,7 @@ void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+ 	dev_kfree_skb_any(skb);
+ }
+ 
+-void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
++static void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 5c1693f..3f3607f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -523,85 +523,4 @@ static inline const char *iwl_dvm_get_cmd_string(u8 cmd)
+ 		return s;
+ 	return "UNKNOWN";
+ }
+-
+-/* API method exported for mvm hybrid state */
+-void iwl_setup_deferred_work(struct iwl_priv *priv);
+-int iwl_send_wimax_coex(struct iwl_priv *priv);
+-int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+-void iwl_option_config(struct iwl_priv *priv);
+-void iwl_set_hw_params(struct iwl_priv *priv);
+-void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
+-int iwl_init_drv(struct iwl_priv *priv);
+-void iwl_uninit_drv(struct iwl_priv *priv);
+-void iwl_send_bt_config(struct iwl_priv *priv);
+-void iwl_rf_kill_ct_config(struct iwl_priv *priv);
+-int iwl_setup_interface(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+-void iwl_teardown_interface(struct iwl_priv *priv,
+-			    struct ieee80211_vif *vif,
+-			    bool mode_change);
+-int iwl_full_rxon_required(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+-void iwlagn_update_qos(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+-void iwlagn_check_needed_chains(struct iwl_priv *priv,
+-				struct iwl_rxon_context *ctx,
+-				struct ieee80211_bss_conf *bss_conf);
+-void iwlagn_chain_noise_reset(struct iwl_priv *priv);
+-int iwlagn_update_beacon(struct iwl_priv *priv,
+-			 struct ieee80211_vif *vif);
+-void iwl_tt_handler(struct iwl_priv *priv);
+-void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode);
+-void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, int queue);
+-void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state);
+-void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb);
+-void iwl_nic_error(struct iwl_op_mode *op_mode);
+-void iwl_cmd_queue_full(struct iwl_op_mode *op_mode);
+-void iwl_nic_config(struct iwl_op_mode *op_mode);
+-int iwlagn_mac_set_tim(struct ieee80211_hw *hw,
+-		       struct ieee80211_sta *sta, bool set);
+-void iwlagn_mac_rssi_callback(struct ieee80211_hw *hw,
+-			      enum ieee80211_rssi_event rssi_event);
+-int iwlagn_mac_cancel_remain_on_channel(struct ieee80211_hw *hw);
+-int iwlagn_mac_tx_last_beacon(struct ieee80211_hw *hw);
+-void iwlagn_mac_flush(struct ieee80211_hw *hw, bool drop);
+-void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, int queue);
+-void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+-			       struct ieee80211_channel_switch *ch_switch);
+-int iwlagn_mac_sta_state(struct ieee80211_hw *hw,
+-			 struct ieee80211_vif *vif,
+-			 struct ieee80211_sta *sta,
+-			 enum ieee80211_sta_state old_state,
+-			 enum ieee80211_sta_state new_state);
+-int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+-			    struct ieee80211_vif *vif,
+-			    enum ieee80211_ampdu_mlme_action action,
+-			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-			    u8 buf_size);
+-int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
+-		       struct ieee80211_vif *vif,
+-		       struct cfg80211_scan_request *req);
+-void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
+-			   struct ieee80211_vif *vif,
+-			   enum sta_notify_cmd cmd,
+-			   struct ieee80211_sta *sta);
+-void iwlagn_configure_filter(struct ieee80211_hw *hw,
+-			     unsigned int changed_flags,
+-			     unsigned int *total_flags,
+-			     u64 multicast);
+-int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
+-		       struct ieee80211_vif *vif, u16 queue,
+-		       const struct ieee80211_tx_queue_params *params);
+-void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
+-			       struct ieee80211_vif *vif,
+-			       struct cfg80211_gtk_rekey_data *data);
+-void iwlagn_mac_update_tkip_key(struct ieee80211_hw *hw,
+-				struct ieee80211_vif *vif,
+-				struct ieee80211_key_conf *keyconf,
+-				struct ieee80211_sta *sta,
+-				u32 iv32, u16 *phase1key);
+-int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+-		       struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta,
+-		       struct ieee80211_key_conf *key);
+-void iwlagn_mac_stop(struct ieee80211_hw *hw);
+-void iwlagn_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+-int iwlagn_mac_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
+ #endif /* __iwl_agn_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index ff66200..d0b64cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -338,7 +338,7 @@ static int iwlagn_mac_start(struct ieee80211_hw *hw)
  	return 0;
  }
  
-+static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+	int err;
-+
-+	if (!rdev->ops->start_p2p_device)
-+		return -EOPNOTSUPP;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
-+		return -EOPNOTSUPP;
-+
-+	if (!(rdev->wiphy.interface_modes & BIT(NL80211_IFTYPE_P2P_DEVICE)))
-+		return -EOPNOTSUPP;
-+
-+	if (wdev->p2p_started)
-+		return 0;
-+
-+	err = cfg80211_can_add_interface(rdev, wdev->iftype);
-+	if (err)
-+		return err;
-+
-+	err = rdev->ops->start_p2p_device(&rdev->wiphy, wdev);
-+	if (err)
-+		return err;
-+
-+	wdev->p2p_started = true;
-+	mutex_lock(&rdev->devlist_mtx);
-+	rdev->opencount++;
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	return 0;
-+}
-+
-+static int nl80211_stop_p2p_device(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+
-+	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
-+		return -EOPNOTSUPP;
-+
-+	if (!rdev->ops->stop_p2p_device)
-+		return -EOPNOTSUPP;
-+
-+	if (!wdev->p2p_started)
-+		return 0;
-+
-+	rdev->ops->stop_p2p_device(&rdev->wiphy, wdev);
-+	wdev->p2p_started = false;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	rdev->opencount--;
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	if (WARN_ON(rdev->scan_req && rdev->scan_req->wdev == wdev)) {
-+		rdev->scan_req->aborted = true;
-+		___cfg80211_scan_done(rdev, true);
-+	}
-+
-+	return 0;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -6702,7 +6791,7 @@ static int nl80211_register_beacons(struct sk_buff *skb, struct genl_info *info)
- #define NL80211_FLAG_NEED_NETDEV_UP	(NL80211_FLAG_NEED_NETDEV |\
- 					 NL80211_FLAG_CHECK_NETDEV_UP)
- #define NL80211_FLAG_NEED_WDEV		0x10
--/* If a netdev is associated, it must be UP */
-+/* If a netdev is associated, it must be UP, P2P must be started */
- #define NL80211_FLAG_NEED_WDEV_UP	(NL80211_FLAG_NEED_WDEV |\
- 					 NL80211_FLAG_CHECK_NETDEV_UP)
+-void iwlagn_mac_stop(struct ieee80211_hw *hw)
++static void iwlagn_mac_stop(struct ieee80211_hw *hw)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
  
-@@ -6763,6 +6852,13 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
- 			}
+@@ -366,9 +366,9 @@ void iwlagn_mac_stop(struct ieee80211_hw *hw)
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
  
- 			dev_hold(dev);
-+		} else if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP) {
-+			if (!wdev->p2p_started) {
-+				mutex_unlock(&cfg80211_mutex);
-+				if (rtnl)
-+					rtnl_unlock();
-+				return -ENETDOWN;
-+			}
- 		}
+-void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
+-			       struct ieee80211_vif *vif,
+-			       struct cfg80211_gtk_rekey_data *data)
++static void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      struct cfg80211_gtk_rekey_data *data)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
  
- 		cfg80211_lock_rdev(rdev);
-@@ -7322,7 +7418,22 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
--
-+	{
-+		.cmd = NL80211_CMD_START_P2P_DEVICE,
-+		.doit = nl80211_start_p2p_device,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WDEV |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
-+		.cmd = NL80211_CMD_STOP_P2P_DEVICE,
-+		.doit = nl80211_stop_p2p_device,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
+@@ -394,7 +394,8 @@ void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
  
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index ab8d9a5..676c4a3 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -793,6 +793,10 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	if (otype == NL80211_IFTYPE_AP_VLAN)
- 		return -EOPNOTSUPP;
+ #ifdef CONFIG_PM_SLEEP
  
-+	/* cannot change into P2P device type */
-+	if (ntype == NL80211_IFTYPE_P2P_DEVICE)
-+		return -EOPNOTSUPP;
-+
- 	if (!rdev->ops->change_virtual_intf ||
- 	    !(rdev->wiphy.interface_modes & (1 << ntype)))
- 		return -EOPNOTSUPP;
-@@ -865,6 +869,9 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 		case NUM_NL80211_IFTYPES:
- 			/* not happening */
- 			break;
-+		case NL80211_IFTYPE_P2P_DEVICE:
-+			WARN_ON(1);
-+			break;
- 		}
- 	}
+-int iwlagn_mac_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
++static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
++			      struct cfg80211_wowlan *wowlan)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+@@ -505,7 +506,7 @@ static void iwlagn_mac_set_wakeup(struct ieee80211_hw *hw, bool enabled)
+ }
+ #endif
  
-@@ -954,8 +961,15 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
- 		if (wdev_iter == wdev)
- 			continue;
--		if (!netif_running(wdev_iter->netdev))
--			continue;
-+		if (wdev_iter->netdev) {
-+			if (!netif_running(wdev_iter->netdev))
-+				continue;
-+		} else if (wdev_iter->iftype == NL80211_IFTYPE_P2P_DEVICE) {
-+			if (!wdev_iter->p2p_started)
-+				continue;
-+		} else {
-+			WARN_ON(1);
-+		}
+-void iwlagn_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++static void iwlagn_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
  
- 		if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
- 			continue;
+@@ -516,21 +517,21 @@ void iwlagn_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		dev_kfree_skb_any(skb);
+ }
+ 
+-void iwlagn_mac_update_tkip_key(struct ieee80211_hw *hw,
+-				struct ieee80211_vif *vif,
+-				struct ieee80211_key_conf *keyconf,
+-				struct ieee80211_sta *sta,
+-				u32 iv32, u16 *phase1key)
++static void iwlagn_mac_update_tkip_key(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_key_conf *keyconf,
++				       struct ieee80211_sta *sta,
++				       u32 iv32, u16 *phase1key)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 
+ 	iwl_update_tkip_key(priv, vif, keyconf, sta, iv32, phase1key);
+ }
+ 
+-int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+-		       struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta,
+-		       struct ieee80211_key_conf *key)
++static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++			      struct ieee80211_vif *vif,
++			      struct ieee80211_sta *sta,
++			      struct ieee80211_key_conf *key)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
+@@ -630,11 +631,11 @@ int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	return ret;
+ }
+ 
+-int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+-			    struct ieee80211_vif *vif,
+-			    enum ieee80211_ampdu_mlme_action action,
+-			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-			    u8 buf_size)
++static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   enum ieee80211_ampdu_mlme_action action,
++				   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
++				   u8 buf_size)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	int ret = -EINVAL;
+@@ -756,11 +757,11 @@ static int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
+-int iwlagn_mac_sta_state(struct ieee80211_hw *hw,
+-			 struct ieee80211_vif *vif,
+-			 struct ieee80211_sta *sta,
+-			 enum ieee80211_sta_state old_state,
+-			 enum ieee80211_sta_state new_state)
++static int iwlagn_mac_sta_state(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ieee80211_sta *sta,
++				enum ieee80211_sta_state old_state,
++				enum ieee80211_sta_state new_state)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
+@@ -839,8 +840,8 @@ int iwlagn_mac_sta_state(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
+-void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+-			       struct ieee80211_channel_switch *ch_switch)
++static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
++				      struct ieee80211_channel_switch *ch_switch)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	const struct iwl_channel_info *ch_info;
+@@ -934,10 +935,10 @@ void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
+ 		ieee80211_chswitch_done(ctx->vif, is_success);
+ }
+ 
+-void iwlagn_configure_filter(struct ieee80211_hw *hw,
+-			     unsigned int changed_flags,
+-			     unsigned int *total_flags,
+-			     u64 multicast)
++static void iwlagn_configure_filter(struct ieee80211_hw *hw,
++				    unsigned int changed_flags,
++				    unsigned int *total_flags,
++				    u64 multicast)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	__le32 filter_or = 0, filter_nand = 0;
+@@ -984,7 +985,7 @@ void iwlagn_configure_filter(struct ieee80211_hw *hw,
+ 			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
+ }
+ 
+-void iwlagn_mac_flush(struct ieee80211_hw *hw, bool drop)
++static void iwlagn_mac_flush(struct ieee80211_hw *hw, bool drop)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 
+@@ -1111,7 +1112,7 @@ static int iwlagn_mac_remain_on_channel(struct ieee80211_hw *hw,
+ 	return err;
+ }
+ 
+-int iwlagn_mac_cancel_remain_on_channel(struct ieee80211_hw *hw)
++static int iwlagn_mac_cancel_remain_on_channel(struct ieee80211_hw *hw)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 
+@@ -1128,8 +1129,8 @@ int iwlagn_mac_cancel_remain_on_channel(struct ieee80211_hw *hw)
+ 	return 0;
+ }
+ 
+-void iwlagn_mac_rssi_callback(struct ieee80211_hw *hw,
+-			      enum ieee80211_rssi_event rssi_event)
++static void iwlagn_mac_rssi_callback(struct ieee80211_hw *hw,
++				     enum ieee80211_rssi_event rssi_event)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 
+@@ -1153,8 +1154,8 @@ void iwlagn_mac_rssi_callback(struct ieee80211_hw *hw,
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+ 
+-int iwlagn_mac_set_tim(struct ieee80211_hw *hw,
+-		       struct ieee80211_sta *sta, bool set)
++static int iwlagn_mac_set_tim(struct ieee80211_hw *hw,
++			      struct ieee80211_sta *sta, bool set)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 
+@@ -1163,9 +1164,9 @@ int iwlagn_mac_set_tim(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
+-int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
+-		       struct ieee80211_vif *vif, u16 queue,
+-		       const struct ieee80211_tx_queue_params *params)
++static int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif, u16 queue,
++			      const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
+@@ -1207,7 +1208,7 @@ int iwlagn_mac_conf_tx(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
+-int iwlagn_mac_tx_last_beacon(struct ieee80211_hw *hw)
++static int iwlagn_mac_tx_last_beacon(struct ieee80211_hw *hw)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 
+@@ -1223,7 +1224,8 @@ static int iwl_set_mode(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	return iwlagn_commit_rxon(priv, ctx);
+ }
+ 
+-int iwl_setup_interface(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
++static int iwl_setup_interface(struct iwl_priv *priv,
++			       struct iwl_rxon_context *ctx)
+ {
+ 	struct ieee80211_vif *vif = ctx->vif;
+ 	int err, ac;
+@@ -1343,9 +1345,9 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
+ 	return err;
+ }
+ 
+-void iwl_teardown_interface(struct iwl_priv *priv,
+-			    struct ieee80211_vif *vif,
+-			    bool mode_change)
++static void iwl_teardown_interface(struct iwl_priv *priv,
++				   struct ieee80211_vif *vif,
++				   bool mode_change)
+ {
+ 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
+ 
+@@ -1486,9 +1488,9 @@ static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
+ 	return err;
+ }
+ 
+-int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
+-		       struct ieee80211_vif *vif,
+-		       struct cfg80211_scan_request *req)
++static int iwlagn_mac_hw_scan(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct cfg80211_scan_request *req)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	int ret;
+@@ -1543,10 +1545,10 @@ static void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
+ 	iwl_send_add_sta(priv, &cmd, CMD_ASYNC);
+ }
+ 
+-void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
+-			   struct ieee80211_vif *vif,
+-			   enum sta_notify_cmd cmd,
+-			   struct ieee80211_sta *sta)
++static void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  enum sta_notify_cmd cmd,
++				  struct ieee80211_sta *sta)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index bc40dc6..d14e633 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -177,7 +177,7 @@ int iwl_init_alive_start(struct iwl_priv *priv)
+ 	return 0;
+ }
+ 
+-int iwl_send_wimax_coex(struct iwl_priv *priv)
++static int iwl_send_wimax_coex(struct iwl_priv *priv)
+ {
+ 	struct iwl_wimax_coex_cmd coex_cmd;
+ 
 -- 
 1.7.10
 
