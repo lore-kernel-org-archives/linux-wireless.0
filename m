@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752676Ab2FII3N (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:57938 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752683Ab2FFEBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 04:29:13 -0400
-Message-ID: <1339230544.4539.21.camel@jlt3.sipsolutions.net> (sfid-20120609_102919_120480_A464B7C1)
-Subject: Re: iwlwifi: kernel panic during boot due to module load order
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: donald.h.fry@intel.com, emmanuel.grumbach@intel.com,
-	linville@tuxdriver.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Sat, 09 Jun 2012 10:29:04 +0200
-In-Reply-To: <1339072491.3279.6.camel@lappy> (sfid-20120607_143403_120928_12961A9D)
-References: <1339072491.3279.6.camel@lappy>
-	 (sfid-20120607_143403_120928_12961A9D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Jun 2012 00:01:44 -0400
+Received: by ghrr11 with SMTP id r11so4953063ghr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 21:01:43 -0700 (PDT)
+Message-ID: <4FCED623.6050600@lwfinger.net> (sfid-20120606_060152_761893_E6C4DF7F)
+Date: Tue, 05 Jun 2012 23:01:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ouyang <ilhebe999@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: usb.c
+References: <loom.20120605T215520-645@post.gmane.org> <4FCE67CA.2020502@lwfinger.net> <loom.20120605T221743-446@post.gmane.org>
+In-Reply-To: <loom.20120605T221743-446@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-07 at 14:34 +0200, Sasha Levin wrote:
-> Hi all,
-> 
-> Commit cc5f7e397 ("iwlwifi: implement dynamic opmode loading") causes a
-> kernel panic during boot in the following scenario:
-> 
-> 1. All drivers are built-in.
-> 2. Due to their build order, iwl_init gets called before iwl_drv_init.
-> 3. iwl_init will call iwl_opmode_register which will iterate the new op
-> list, and cause a NULL ptr deref when trying to list_for_each_entry the
-> dev list, which won't be empty since it wasn't initialized (iwl_drv_init
-> wasn't called yet).
-> 
-> While it's possible to easily fix the actual deref, I suspect that the
-> init function call order is wrong. I've looked at getting it right in
-> the Makefile, but it seems to have specific ordering behind it, so I'd
-> rather not try patching it myself.
+On 06/05/2012 03:23 PM, Ouyang wrote:
 
-Yeah, looks like we forgot about this part.
+> Thank you so much for the reply. I am so appreciated.
+>
+> I am still a little confused. Would you please set an example for
+> drivers/net/wireless/rtlwifi/usb.c ?
 
-I think Don said he had a fix, my suggestion would be to try to just
-reorder the dvm line in the iwlwifi/Makefile to the bottom of the
-Makefile, or at least after obj-$(...) += iwlwifi.o.
+That file contains the USB-specific low-level routines for the driver used by 
+the RTL8188CU devices built by Realtek. If you want to know what that file does, 
+read the comments.
 
-johannes
-
+Larry
