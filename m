@@ -1,125 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41888 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab2FRGXB (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38753 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756260Ab2FFWtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 02:23:01 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC 02/10] ath9k: Add definitions and structures to support WoW
-Date: Mon, 18 Jun 2012 11:51:46 +0530
-Message-ID: <1340000514-7779-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120618_082305_205755_E990B4E9)
-In-Reply-To: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 6 Jun 2012 18:49:14 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so168376pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:13 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/6] mac80211: Use signal strength as a proxy for expected datarate.
+Date: Wed,  6 Jun 2012 15:48:51 -0700
+Message-Id: <1339022932-14240-6-git-send-email-jason@cozybit.com> (sfid-20120607_004920_913952_9D005E35)
+In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Thomas Pedersen <thomas@cozybit.com>
 
-*add structures, macros and variables for WoW, so that the driver
-can make use of it.
-*maintain a list for user enabled patterns and masks
-*track pattern slots for the hardware limitation on the
-maximum number of patterns that can be stored.
-*track interrupts enabled before WoW suspend, so
-that can be reconfigured after resume
-*have macros to parse user defined wow configurations to
-hardware code
+When establishing mesh paths with new stations, there is no historic
+datarate information to compute the airtime link metric.  Up until now
+we were just using a poor initial metric.  A better approach is to
+use the signal strength as an indicator of how good the new link will
+be.  Once traffic is exchanged with the station, the average datarate is
+computed and the signal strength is not used anymore.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Reviewed-by: Jason Abele <jason@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |   20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h    |   21 +++++++++++++++++++++
- 2 files changed, 41 insertions(+), 0 deletions(-)
+ net/mac80211/mesh_hwmp.c |   72 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 70 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a8c0500..264c25b 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -505,6 +505,19 @@ static inline u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc,
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 22b327a..bb32203 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -330,6 +330,71 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	return;
  }
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
  
-+struct ath9k_wow_pattern {
-+	bool slot;
-+	u8 pattern_bytes[MAX_PATTERN_SIZE];
-+	u8 mask_bytes[MAX_PATTERN_SIZE];
-+	u32 pattern_len;
-+	struct list_head list;
-+};
++/* estimate link rate as a function of last rssi for sta */
++static unsigned int rssi_get_rate(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	/* XXX: oper_channel is moving to sdata upstream */
++	enum ieee80211_band band = sta->local->oper_channel->band;
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.ht_cap;
++	struct rate_info rinfo;
++	int i, ridx, ci = 0;
++	int rssi, rate;
++	u32 cidx[IEEE80211_MAX_SUPP_RATES];
 +
-+struct ath9k_wow_info {
-+	u32 num_of_patterns;
-+	struct list_head wow_patterns;
-+};
++	if (sta->last_signal >= 0)
++		return 0;
 +
- /********************/
- /*   LED Control    */
- /********************/
-@@ -706,6 +719,13 @@ struct ath_softc {
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
- 	struct dfs_pattern_detector *dfs_detector;
++	memset(&rinfo, sizeof(rinfo), 0);
 +
-+#ifdef CONFIG_PM_SLEEP
-+	bool wow_got_bmiss_intr;
-+	bool wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
-+	u32 wow_intr_before_sleep;
-+	struct ath9k_wow_info wow_info;
-+#endif
- };
++	/* make rates contiguous */
++	for (i = 0; i < IEEE80211_MAX_SUPP_RATES; i++) {
++		if (ht_cap->ht_supported &&
++		    !(ht_cap->mcs.rx_mask[i / 8] & (i % 8)))
++			continue;
++
++		if (!(sta->sta.supp_rates[band] & BIT(i)))
++			continue;
++
++		cidx[ci++] = i;
++	}
++
++	/* map rssi in range 20 - 70 to rates 32 - 0 */
++#define RSSI_OFF 20
++#define RSSI_MAX 50
++	rssi = abs(sta->last_signal) - RSSI_OFF;
++	rssi = max(rssi, 0);
++	rssi = min(rssi, RSSI_MAX);
++	/* invert rssi against ci and get the supported nth rate */
++	/* TODO: make this non-linear */
++	ridx = cidx[min((int)(ci * (1 - ((float) rssi / RSSI_MAX))), ci)];
++
++	if (ht_cap->ht_supported) {
++		rinfo.flags |= RATE_INFO_FLAGS_MCS;
++		rinfo.flags |= (sta->sta.ht_cap.cap &
++				IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
++					RATE_INFO_FLAGS_40_MHZ_WIDTH :
++					0;
++		rinfo.flags |= (sta->sta.ht_cap.cap &
++				(IEEE80211_HT_CAP_SGI_20 |
++				 IEEE80211_HT_CAP_SGI_40)) ?
++						RATE_INFO_FLAGS_SHORT_GI :
++						0;
++		rinfo.mcs = ridx;
++	} else {
++		struct ieee80211_supported_band *sband;
++		sband = sta->local->hw.wiphy->bands[band];
++		rinfo.legacy = sband->bitrates[ridx].bitrate;
++	}
++
++	rate = cfg80211_calculate_bitrate(&rinfo);
++	if (WARN_ON(!rate))
++		rate = 10;
++	mhwmp_dbg("est. %d Mbps for %pM with rssi %d\n",
++		  rate/10, sta->sta.addr, sta->last_signal);
++	return rate;
++}
++
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
+ {
+@@ -345,8 +410,11 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
  
- void ath9k_tasklet(unsigned long data);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 03d5909..d0e14a3 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -179,6 +179,24 @@
- #define PAPRD_TABLE_SZ			24
- #define PAPRD_IDEAL_AGC2_PWR_RANGE	0xe0
+-	/* If not enough values accumulated in rate average, assume 1 Mbps */
+-	rate = max(ewma_read(&sta->avg_rate), 10UL);
++	if (sta->tx_packets > 100)
++		rate = max(ewma_read(&sta->avg_rate), 10UL);
++	else
++		/* Not enough traffic sent, use rx signal strengh as proxy */
++		rate = rssi_get_rate(sta);
  
-+/* Wake on Wireless */
-+
-+#define MAX_PATTERN_SIZE		256
-+#define MAX_PATTERN_MASK_SIZE		32
-+#define MAX_NUM_PATTERN			8
-+#define MAX_NUM_USER_PATTERN		6 /*  deducting the disassociate and
-+					      deauthenticate packets */
-+
-+/*
-+ * WoW trigger mapping to hardware code
-+ */
-+
-+#define AH_WOW_USER_PATTERN_EN		BIT(0)
-+#define AH_WOW_MAGIC_PATTERN_EN		BIT(1)
-+#define AH_WOW_LINK_CHANGE		BIT(2)
-+#define AH_WOW_BEACON_MISS		BIT(3)
-+#define AH_WOW_MAX_EVENTS		4
-+
- enum ath_hw_txq_subtype {
- 	ATH_TXQ_AC_BE = 0,
- 	ATH_TXQ_AC_BK = 1,
-@@ -861,6 +879,9 @@ struct ath_hw {
- 	/* Enterprise mode cap */
- 	u32 ent_mode;
- 
-+#ifdef CONFIG_PM_SLEEP
-+	u32 wow_event_mask;
-+#endif
- 	bool is_clk_25mhz;
- 	int (*get_mac_revision)(void);
- 	int (*external_reset)(void);
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
 -- 
-1.7.0.4
+1.7.9.5
 
