@@ -1,130 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:38753 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754508Ab2FFWtK (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63510 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab2FFKVI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 18:49:10 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so168376pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:10 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/6] mac80211: Keep tx rate averages for mesh peers for better metric calculation.
-Date: Wed,  6 Jun 2012 15:48:49 -0700
-Message-Id: <1339022932-14240-4-git-send-email-jason@cozybit.com> (sfid-20120607_004915_417157_7AC5133B)
-In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
-References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+	Wed, 6 Jun 2012 06:21:08 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so8594095dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 03:21:08 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH 3/4] mac80211: implement the proactive PREP generation
+Date: Wed,  6 Jun 2012 18:20:38 +0800
+Message-Id: <1338978039-4269-4-git-send-email-yeohchunyeow@gmail.com> (sfid-20120606_122112_803347_6F758DB2)
+In-Reply-To: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+Generate the proactive PREP element in Proactive PREQ mode as defined in
+Sec. 13.10.10.3 (Case D) of IEEE Std. 802.11-2012
 
-The mesh metric is computed every time it was requested by the path
-selection framework.  At that time only the last_tx_rate was taken into
-account when computing the metric.  This last frame may not reflect the
-average data rate that was possible ver that peer link (it could be a
-management frame, a rate control probe, or other outlier).
-
-This patch maintains an average tx rate for each peer link which is used
-in metric calculation.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- net/mac80211/mesh_hwmp.c |   24 +++++++++++++++---------
- net/mac80211/sta_info.c  |    1 +
- net/mac80211/sta_info.h  |    1 +
- 3 files changed, 17 insertions(+), 9 deletions(-)
+ net/mac80211/mesh_hwmp.c |   34 ++++++++++++++++++++++++++++------
+ 1 files changed, 28 insertions(+), 6 deletions(-)
 
 diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index acbd1ad..8fb3e59 100644
+index b1e4399..d038767 100644
 --- a/net/mac80211/mesh_hwmp.c
 +++ b/net/mac80211/mesh_hwmp.c
-@@ -307,7 +307,9 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- {
- 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct rate_info rinfo;
- 	int failed;
-+	int rate;
+@@ -529,10 +529,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	struct mesh_path *mpath = NULL;
+ 	u8 *target_addr, *orig_addr;
+ 	const u8 *da;
+-	u8 target_flags, ttl;
++	u8 target_flags, ttl, flags;
+ 	u32 orig_sn, target_sn, lifetime;
+ 	bool reply = false;
+ 	bool forward = true;
++	bool root_is_gate;
  
- 	if (!ieee80211_is_data(hdr->frame_control))
- 		return;
-@@ -318,36 +320,40 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	stainfo->fail_avg = ((80 * stainfo->fail_avg + 5) / 100 + 20 * failed);
- 	if (stainfo->fail_avg > 95)
- 		mesh_plink_broken(stainfo);
-+
-+	sta_set_rate_info_tx(stainfo, &stainfo->last_tx_rate, &rinfo);
-+	rate = cfg80211_calculate_bitrate(&rinfo);
-+	if (WARN_ON(!rate))
-+		return;
-+
-+	ewma_add(&stainfo->avg_rate, rate);
-+	return;
- }
+ 	/* Update target SN, if present */
+ 	target_addr = PREQ_IE_TARGET_ADDR(preq_elem);
+@@ -540,6 +541,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	target_sn = PREQ_IE_TARGET_SN(preq_elem);
+ 	orig_sn = PREQ_IE_ORIG_SN(preq_elem);
+ 	target_flags = PREQ_IE_TARGET_F(preq_elem);
++	/* Proactive PREQ gate announcements */
++	flags = PREQ_IE_FLAGS(preq_elem);
++	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
  
- static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 				   struct sta_info *sta)
- {
--	struct rate_info rinfo;
- 	/* This should be adjusted for each device */
- 	int device_constant = 1 << ARITH_SHIFT;
- 	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
- 	int s_unit = 1 << ARITH_SHIFT;
--	int rate, err;
- 	u32 tx_time, estimated_retx;
- 	u64 result;
-+	int rate;
-+	int err = (sta->fail_avg << ARITH_SHIFT) / 100;
+ 	mhwmp_dbg("received PREQ from %pM", orig_addr);
  
- 	if (sta->fail_avg >= 100)
- 		return MAX_METRIC;
- 
--	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
--	rate = cfg80211_calculate_bitrate(&rinfo);
--	if (WARN_ON(!rate))
--		return MAX_METRIC;
--
--	err = (sta->fail_avg << ARITH_SHIFT) / 100;
-+	/* If not enough values accumulated in rate average, assume 1 Mbps */
-+	rate = max(ewma_read(&sta->avg_rate), 10UL);
- 
- 	/* bitrate is in units of 100 Kbps, while we need rate in units of
- 	 * 1Mbps. This will be corrected on tx_time computation.
- 	 */
- 	tx_time = (device_constant + 10 * test_frame_len / rate);
- 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
--	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
-+	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT);
- 	return (u32)result;
- }
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 77dcf2f..ddbec7b 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -256,6 +256,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	do_posix_clock_monotonic_gettime(&uptime);
- 	sta->last_connected = uptime.tv_sec;
- 	ewma_init(&sta->avg_signal, 1024, 8);
-+	ewma_init(&sta->avg_rate, 1, 32);
- 
- 	if (sta_prepare_rate_control(local, sta, gfp)) {
- 		kfree(sta);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 3bb24a1..0bf888e 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -330,6 +330,7 @@ struct sta_info {
- 	unsigned long tx_retry_failed, tx_retry_count;
- 	/* moving percentage of failed MSDUs */
- 	unsigned int fail_avg;
-+	struct ewma avg_rate;
- 
- 	/* Updated from TX path only, no locking requirements */
- 	unsigned long tx_packets;
+@@ -554,6 +558,15 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			target_sn = ++ifmsh->sn;
+ 			ifmsh->last_sn_update = jiffies;
+ 		}
++	} else if (is_broadcast_ether_addr(target_addr) &&
++			(target_flags & MP_F_DO)) {
++		mpath = mesh_path_lookup(orig_addr, sdata);
++		if (mpath) {
++			if (flags & PREQ_F_PREP)
++				reply = true;
++			if (root_is_gate)
++				mesh_path_add_gate(mpath);
++		}
+ 	} else {
+ 		rcu_read_lock();
+ 		mpath = mesh_path_lookup(target_addr, sdata);
+@@ -581,11 +594,20 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		ttl = ifmsh->mshcfg.element_ttl;
+ 		if (ttl != 0) {
+ 			mhwmp_dbg("replying to the PREQ");
+-			mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
+-				cpu_to_le32(orig_sn), 0, target_addr,
+-				cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
+-				cpu_to_le32(lifetime), cpu_to_le32(metric),
+-				0, sdata);
++			if (!is_broadcast_ether_addr(target_addr))
++				mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
++				    cpu_to_le32(orig_sn), 0, target_addr,
++				    cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
++				    cpu_to_le32(lifetime), cpu_to_le32(metric),
++				    0, sdata);
++			else {
++				mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
++				    cpu_to_le32(orig_sn), 0, sdata->vif.addr,
++				    cpu_to_le32(++ifmsh->sn), mgmt->sa, 0, ttl,
++				    cpu_to_le32(lifetime), 0,
++				    0, sdata);
++				ifmsh->last_sn_update = jiffies;
++			}
+ 		} else
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 	}
 -- 
-1.7.9.5
+1.7.0.4
 
