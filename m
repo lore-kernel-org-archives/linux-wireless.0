@@ -1,60 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55859 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755569Ab2FNQiE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 12:38:04 -0400
-Message-ID: <1339691877.9786.0.camel@jlt3.sipsolutions.net> (sfid-20120614_183808_321382_4DFC7DF5)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andre Heider <a.heider@gmail.com>
-Cc: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Thu, 14 Jun 2012 18:37:57 +0200
-In-Reply-To: <CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com> (sfid-20120614_182647_613518_EB710054)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 <4FD22727.7000500@lwfinger.net>
-	 <1339180580.5748.32.camel@jlt3.sipsolutions.net>
-	 <1339180948.5748.35.camel@jlt3.sipsolutions.net>
-	 <1339182289.5748.36.camel@jlt3.sipsolutions.net>
-	 <1339576294.4519.17.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
-	 <1339602402.4519.48.camel@jlt3.sipsolutions.net>
-	 <20120613204230.474d1b6c@milhouse>
-	 <CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com>
-	 (sfid-20120614_182647_613518_EB710054)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:16003 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755486Ab2FFKHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:07:03 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 08/29] NFC: Implement pn533 target mode polling loop
+Date: Wed,  6 Jun 2012 12:16:25 +0200
+Message-Id: <1338977806-30279-9-git-send-email-sameo@linux.intel.com> (sfid-20120606_120712_731095_4DE74FF2)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-14 at 18:26 +0200, Andre Heider wrote:
+We only want to support p2p target mode for now, no host card emulation.
 
-> > This just seems to be a follow-up oops and the original one scrolled off screen.
-> 
-> Indeed, the framebuffer showed up too late on TV and I didn't even notice ;)
-> 
-> pause_on_oops=30 made that easier, and the offender is
-> drivers/net/wireless/b43/main.c:5294 from the patch:
-> wldev->qos_enabled = true;
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |  109 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 104 insertions(+), 5 deletions(-)
 
-Ok ... seems wldev doesn't exist then? Doesn't make any sense to me, but
-I don't understand the code ... not that it matters, try this:
-
-http://p.sipsolutions.net/9c830800d14f3ff8.txt
-
-johannes
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index 38a523c..605a08a 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -74,6 +74,8 @@ MODULE_DEVICE_TABLE(usb, pn533_table);
+ #define PN533_CMD_IN_RELEASE 0x52
+ #define PN533_CMD_IN_JUMP_FOR_DEP 0x56
+ 
++#define PN533_CMD_TG_INIT_AS_TARGET 0x8c
++
+ #define PN533_CMD_RESPONSE(cmd) (cmd + 1)
+ 
+ /* PN533 Return codes */
+@@ -253,6 +255,25 @@ struct pn533_cmd_jump_dep_response {
+ 	u8 gt[];
+ } __packed;
+ 
++
++/* PN533_TG_INIT_AS_TARGET */
++#define PN533_INIT_TARGET_PASSIVE 0x1
++#define PN533_INIT_TARGET_DEP 0x2
++
++struct pn533_cmd_init_target {
++	u8 mode;
++	u8 mifare[6];
++	u8 felica[18];
++	u8 nfcid3[10];
++	u8 gb_len;
++	u8 gb[];
++} __packed;
++
++struct pn533_cmd_init_target_response {
++	u8 mode;
++	u8 cmd[];
++} __packed;
++
+ struct pn533 {
+ 	struct usb_device *udev;
+ 	struct usb_interface *interface;
+@@ -1078,11 +1099,88 @@ stop_poll:
+ 	return 0;
+ }
+ 
+-static int pn533_init_target(struct nfc_dev *nfc_dev, u32 protocols)
++static int pn533_init_target_frame(struct pn533_frame *frame,
++				   u8 *gb, size_t gb_len)
+ {
++	struct pn533_cmd_init_target *cmd;
++	size_t cmd_len;
++
++	cmd_len = sizeof(struct pn533_cmd_init_target) + gb_len + 1;
++	cmd = kzalloc(cmd_len, GFP_KERNEL);
++	if (cmd == NULL)
++		return -ENOMEM;
++
++	pn533_tx_frame_init(frame, PN533_CMD_TG_INIT_AS_TARGET);
++
++	/* DEP support only */
++	cmd->mode |= PN533_INIT_TARGET_DEP;
++	get_random_bytes(cmd->nfcid3, 10);
++	cmd->gb_len = gb_len;
++	memcpy(cmd->gb, gb, gb_len);
++	/* Len Tk */
++	cmd->gb[gb_len] = 0;
++
++	memcpy(PN533_FRAME_CMD_PARAMS_PTR(frame), cmd, cmd_len);
++	frame->datalen += cmd_len;
++
++	pn533_tx_frame_finish(frame);
++
+ 	return 0;
+ }
+ 
++static int pn533_init_target_complete(struct pn533 *dev, void *arg,
++				      u8 *params, int params_len)
++{
++	struct pn533_cmd_init_target_response *resp;
++
++	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
++
++	if (params_len < 0) {
++		nfc_dev_err(&dev->interface->dev,
++			    "Error %d when starting as a target",
++			    params_len);
++
++		return params_len;
++	}
++
++	resp = (struct pn533_cmd_init_target_response *) params;
++
++	nfc_dev_dbg(&dev->interface->dev, "Target mode 0x%x\n", resp->mode);
++
++	return 0;
++}
++
++static int pn533_init_target(struct nfc_dev *nfc_dev, u32 protocols)
++{
++	struct pn533 *dev = nfc_get_drvdata(nfc_dev);
++	u8 *gb;
++	size_t gb_len;
++	int rc;
++
++	pn533_poll_reset_mod_list(dev);
++
++	gb = nfc_get_local_general_bytes(nfc_dev, &gb_len);
++	if (gb == NULL)
++		return -ENOMEM;
++
++	rc = pn533_init_target_frame(dev->out_frame, gb, gb_len);
++	if (rc < 0)
++		return rc;
++
++	rc = pn533_send_cmd_frame_async(dev, dev->out_frame, dev->in_frame,
++					dev->in_maxlen,
++					pn533_init_target_complete,
++					NULL, GFP_KERNEL);
++
++	if (rc)
++		nfc_dev_err(&dev->interface->dev,
++			    "Error %d when trying to initiate as a target", rc);
++
++	dev->poll_mod_count++;
++
++	return rc;
++}
++
+ static int pn533_start_im_poll(struct nfc_dev *nfc_dev, u32 protocols)
+ {
+ 	struct pn533 *dev = nfc_get_drvdata(nfc_dev);
+@@ -1146,12 +1244,13 @@ static int pn533_start_poll(struct nfc_dev *nfc_dev,
+ 		return -EBUSY;
+ 	}
+ 
+-	if (!tm_protocols)
++	if (im_protocols)
+ 		return pn533_start_im_poll(nfc_dev, im_protocols);
+-	else if (!im_protocols)
++
++	if (tm_protocols)
+ 		return pn533_init_target(nfc_dev, tm_protocols);
+-	else
+-		return -EINVAL;
++
++	return -EINVAL;
+ }
+ 
+ static void pn533_stop_poll(struct nfc_dev *nfc_dev)
+-- 
+1.7.9.1
 
