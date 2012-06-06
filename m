@@ -1,122 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62282 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751246Ab2FRK6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 06:58:06 -0400
-From: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <lukasz.kucharczyk@tieto.com>
-Subject: [RFC 5/5] mac80211: bind prepare_multicast callback to subif.
-Date: Mon, 18 Jun 2012 12:57:15 +0200
-Message-ID: <1340017035-7657-6-git-send-email-lukasz.kucharczyk@tieto.com> (sfid-20120618_125812_900273_0DF38F46)
-In-Reply-To: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com>
-References: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:53082 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755294Ab2FFIwy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 04:52:54 -0400
+Message-ID: <1338972772.4513.25.camel@jlt3.sipsolutions.net> (sfid-20120606_105257_432031_3CBE2EE1)
+Subject: Re: [RFC 02/14] cfg80211: check iface combinations only when intf
+ is running
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Jun 2012 10:52:52 +0200
+In-Reply-To: <1338203942-5667-3-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	 <1338203942-5667-3-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver is now aware for which virtual interace the multicast
-is being configured.
+On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
+> Don't validate interface combinations on a stopped
+> interface. Otherwise we might end up being able to
+> create a new interface with a certain type, but
+> won't be able to change an existing interface
+> type.
+> 
+> This also skips some other functions when
+> interface is stopped when changing interface type.
+> 
+> Change-Id: I02af110905184c8182aa30dc9054a2c53f0238d0
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  net/wireless/util.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index 147f283..eb7ca3c 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -805,7 +805,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+>  	     ntype == NL80211_IFTYPE_P2P_CLIENT))
+>  		return -EBUSY;
+>  
+> -	if (ntype != otype) {
+> +	if (ntype != otype && netif_running(dev)) {
 
-ieee80211_sub_if_data *sdata parameter is added to
-drv_prepare_multicast.
+Yeah, makes sense, can you send it separately for 3.5?
 
-vieee80211_vif *vif parameter is added to driver's
-prepare_multicast callback.
-
-Signed-off-by: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
----
- include/net/mac80211.h      |    1 +
- net/mac80211/driver-ops.h   |    6 ++++--
- net/mac80211/driver-trace.h |   12 ++++++++----
- net/mac80211/main.c         |    2 +-
- 4 files changed, 14 insertions(+), 7 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c515a6f..39ebba0 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2280,6 +2280,7 @@ struct ieee80211_ops {
- 				 u32 changed);
- 
- 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
- 				 struct netdev_hw_addr_list *mc_list);
- 	void (*configure_filter)(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index cfc4a35..e27dd48 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -222,14 +222,16 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
- }
- 
- static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
-+					struct ieee80211_sub_if_data *sdata,
- 					struct netdev_hw_addr_list *mc_list)
- {
- 	u64 ret = 0;
- 
--	trace_drv_prepare_multicast(local, mc_list->count);
-+	trace_drv_prepare_multicast(local, sdata, mc_list->count);
- 
- 	if (local->ops->prepare_multicast)
--		ret = local->ops->prepare_multicast(&local->hw, mc_list);
-+		ret = local->ops->prepare_multicast(&local->hw, &sdata->vif,
-+						    mc_list);
- 
- 	trace_drv_return_u64(local, ret);
- 
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index ad99338..2226816 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -338,23 +338,27 @@ TRACE_EVENT(drv_bss_info_changed,
- );
- 
- TRACE_EVENT(drv_prepare_multicast,
--	TP_PROTO(struct ieee80211_local *local, int mc_count),
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 int mc_count),
- 
--	TP_ARGS(local, mc_count),
-+	TP_ARGS(local, sdata, mc_count),
- 
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
-+		VIF_ENTRY
- 		__field(int, mc_count)
- 	),
- 
- 	TP_fast_assign(
- 		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
- 		__entry->mc_count = mc_count;
- 	),
- 
- 	TP_printk(
--		LOCAL_PR_FMT " prepare mc (%d)",
--		LOCAL_PR_ARG, __entry->mc_count
-+		LOCAL_PR_FMT VIF_PR_FMT " prepare mc (%d)",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->mc_count
- 	)
- );
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b00eb59..6541c74 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -67,7 +67,7 @@ void ieee80211_configure_filter(struct ieee80211_sub_if_data *sdata)
- 	spin_lock_bh(&sdata->filter_lock);
- 	changed_flags = sdata->filter_flags ^ new_flags;
- 
--	mc = drv_prepare_multicast(local, &sdata->mc_list);
-+	mc = drv_prepare_multicast(local, sdata, &sdata->mc_list);
- 	spin_unlock_bh(&sdata->filter_lock);
- 
- 	/* be a bit nasty */
--- 
-1.7.0.4
+johannes
 
