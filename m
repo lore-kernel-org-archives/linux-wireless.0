@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35072 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754645Ab2FTIzE (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:59924 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756260Ab2FFWtM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 04:55:04 -0400
-Message-ID: <1340182500.4655.47.camel@jlt3.sipsolutions.net> (sfid-20120620_105534_694731_4B51686F)
-Subject: Re: [PATCH 1/2] cfg80211: Support for automatic channel selection
- in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <nataraja@qca.qualcomm.com>
-Cc: jouni@qca.qualcomm.com, kvalo@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Date: Wed, 20 Jun 2012 10:55:00 +0200
-In-Reply-To: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com>
-References: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Jun 2012 18:49:12 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so9416638dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:11 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/6] mac80211: Rename stainfo variable for the more common sta
+Date: Wed,  6 Jun 2012 15:48:50 -0700
+Message-Id: <1339022932-14240-5-git-send-email-jason@cozybit.com> (sfid-20120607_004917_939413_B6C233B9)
+In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-06-18 at 16:30 +0530, Vivek Natarajan wrote:
-> If the driver sets WIPHY_FLAG_SUPPORTS_ACS, auto_channel_select
-> is passed to the driver as ap settings and frequency setting is
-> skipped. When the AP mode comes up in the new channel, it is 
-> intimated to cfg80211 through cfg80211_ch_switch_notify which
-> in turn notifies the channel information to wpa_supplicant
-> through CH_SWITCH event.
-> 
-> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
-> ---
-> v2: Add a new flag attribute for _START_AP command to indicate ACS request.
->     Update the channel/frequency information using ch_switch_notify
->     once the driver (firmware) has selected the channel.
-> 
-> For P2P, the operating channel needs to be known before group negotiation starts.
-> This is true in case of P2P GO or client. It needs a separate p2p command from
-> wpa_cli to get the acs-based best channel information from the driver.
+From: Javier Cardona <javier@cozybit.com>
 
-So .. is there any reason to not do only the second, and then pass that
-channel back here instead?
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 8fb3e59..22b327a 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -303,7 +303,7 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
+ }
+ 
+ void ieee80211s_update_metric(struct ieee80211_local *local,
+-		struct sta_info *stainfo, struct sk_buff *skb)
++		struct sta_info *sta, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+@@ -317,16 +317,16 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
+ 
+ 	/* moving average, scaled to 100 */
+-	stainfo->fail_avg = ((80 * stainfo->fail_avg + 5) / 100 + 20 * failed);
+-	if (stainfo->fail_avg > 95)
+-		mesh_plink_broken(stainfo);
++	sta->fail_avg = ((80 * sta->fail_avg + 5) / 100 + 20 * failed);
++	if (sta->fail_avg > 95)
++		mesh_plink_broken(sta);
+ 
+-	sta_set_rate_info_tx(stainfo, &stainfo->last_tx_rate, &rinfo);
++	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
+ 	rate = cfg80211_calculate_bitrate(&rinfo);
+ 	if (WARN_ON(!rate))
+ 		return;
+ 
+-	ewma_add(&stainfo->avg_rate, rate);
++	ewma_add(&sta->avg_rate, rate);
+ 	return;
+ }
+ 
+-- 
+1.7.9.5
 
