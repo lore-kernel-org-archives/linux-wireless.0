@@ -1,155 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:52248 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757815Ab2FFTKO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33696 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754788Ab2FFNXX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 15:10:14 -0400
-Received: by qcro28 with SMTP id o28so3538421qcr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 12:10:13 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 6 Jun 2012 21:10:13 +0200
-Message-ID: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com> (sfid-20120606_211036_695360_C0AB150F)
-Subject: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
-From: Andre Heider <a.heider@gmail.com>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	johannes.berg@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 6 Jun 2012 09:23:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/29] iwlwifi: allocate Tx cmd pool per device
+Date: Wed,  6 Jun 2012 15:22:02 +0200
+Message-Id: <1338988930-11561-21-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152329_413630_26C87E6C)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-the wlan daughterboard on a nintendo wii stopped working with current master.
-Building from the v3.4 tag gives me a working device.
+Different transports will have different needs: New tranports
+need headroom for their own use before the Tx cmd. So allocate
+the Tx cmd pool in the transport and give it a unique name
+based on dev_name.
 
-I bisected this to:
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/dev.h    |    2 --
+ drivers/net/wireless/iwlwifi/dvm/main.c   |   22 ++++------------------
+ drivers/net/wireless/iwlwifi/dvm/tx.c     |   12 ++++++------
+ drivers/net/wireless/iwlwifi/iwl-trans.h  |   29 +++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c |   19 +++++++++++++++++++
+ 5 files changed, 58 insertions(+), 26 deletions(-)
 
-commit 3a25a8c8b75b430c4f4022918e26fa51d557ecde
-Author: Johannes Berg <johannes.berg@intel.com>
+diff --git a/drivers/net/wireless/iwlwifi/dvm/dev.h b/drivers/net/wireless/iwlwifi/dvm/dev.h
+index af9de95..c29e637 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/dev.h
++++ b/drivers/net/wireless/iwlwifi/dvm/dev.h
+@@ -1001,8 +1001,6 @@ struct iwl_priv {
+ 	enum iwl_ucode_type cur_ucode;
+ }; /*iwl_priv */
+ 
+-extern struct kmem_cache *iwl_tx_cmd_pool;
+-
+ static inline struct iwl_rxon_context *
+ iwl_rxon_ctx_from_vif(struct ieee80211_vif *vif)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index 4411887..6cca1f4 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -2290,10 +2290,11 @@ void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
+ 
+ static void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+ {
++	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 	struct ieee80211_tx_info *info;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+-	kmem_cache_free(iwl_tx_cmd_pool, (info->driver_data[1]));
++	iwl_trans_free_tx_cmd(priv->trans, info->driver_data[1]);
+ 	dev_kfree_skb_any(skb);
+ }
+ 
+@@ -2328,9 +2329,6 @@ const struct iwl_op_mode_ops iwl_dvm_ops = {
+  * driver and module entry point
+  *
+  *****************************************************************************/
+-
+-struct kmem_cache *iwl_tx_cmd_pool;
+-
+ static int __init iwl_init(void)
+ {
+ 
+@@ -2338,29 +2336,18 @@ static int __init iwl_init(void)
+ 	pr_info(DRV_DESCRIPTION ", " DRV_VERSION "\n");
+ 	pr_info(DRV_COPYRIGHT "\n");
+ 
+-	iwl_tx_cmd_pool = kmem_cache_create("iwl_dev_cmd",
+-					    sizeof(struct iwl_device_cmd),
+-					    sizeof(void *), 0, NULL);
+-	if (!iwl_tx_cmd_pool)
+-		return -ENOMEM;
+-
+ 	ret = iwlagn_rate_control_register();
+ 	if (ret) {
+ 		pr_err("Unable to register rate control algorithm: %d\n", ret);
+-		goto error_rc_register;
++		return ret;
+ 	}
+ 
+ 	ret = iwl_opmode_register("iwldvm", &iwl_dvm_ops);
+ 	if (ret) {
+ 		pr_err("Unable to register op_mode: %d\n", ret);
+-		goto error_opmode_register;
++		iwlagn_rate_control_unregister();
+ 	}
+-	return ret;
+ 
+-error_opmode_register:
+-	iwlagn_rate_control_unregister();
+-error_rc_register:
+-	kmem_cache_destroy(iwl_tx_cmd_pool);
+ 	return ret;
+ }
+ module_init(iwl_init);
+@@ -2369,6 +2356,5 @@ static void __exit iwl_exit(void)
+ {
+ 	iwl_opmode_deregister("iwldvm");
+ 	iwlagn_rate_control_unregister();
+-	kmem_cache_destroy(iwl_tx_cmd_pool);
+ }
+ module_exit(iwl_exit);
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index 7fdbd17..7e3bd62 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -295,7 +295,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct iwl_station_priv *sta_priv = NULL;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+-	struct iwl_device_cmd *dev_cmd = NULL;
++	struct iwl_device_cmd *dev_cmd;
+ 	struct iwl_tx_cmd *tx_cmd;
+ 	__le16 fc;
+ 	u8 hdr_len;
+@@ -377,7 +377,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	if (info->flags & IEEE80211_TX_CTL_AMPDU)
+ 		is_agg = true;
+ 
+-	dev_cmd = kmem_cache_alloc(iwl_tx_cmd_pool, GFP_ATOMIC);
++	dev_cmd = iwl_trans_alloc_tx_cmd(priv->trans);
+ 
+ 	if (unlikely(!dev_cmd))
+ 		goto drop_unlock_priv;
+@@ -492,7 +492,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ drop_unlock_sta:
+ 	if (dev_cmd)
+-		kmem_cache_free(iwl_tx_cmd_pool, dev_cmd);
++		iwl_trans_free_tx_cmd(priv->trans, dev_cmd);
+ 	spin_unlock(&priv->sta_lock);
+ drop_unlock_priv:
+ 	return -1;
+@@ -1193,8 +1193,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 
+ 			info = IEEE80211_SKB_CB(skb);
+ 			ctx = info->driver_data[0];
+-			kmem_cache_free(iwl_tx_cmd_pool,
+-					(info->driver_data[1]));
++			iwl_trans_free_tx_cmd(priv->trans,
++					      info->driver_data[1]);
+ 
+ 			memset(&info->status, 0, sizeof(info->status));
+ 
+@@ -1357,7 +1357,7 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 			WARN_ON_ONCE(1);
+ 
+ 		info = IEEE80211_SKB_CB(skb);
+-		kmem_cache_free(iwl_tx_cmd_pool, (info->driver_data[1]));
++		iwl_trans_free_tx_cmd(priv->trans, info->driver_data[1]);
+ 
+ 		if (freed == 1) {
+ 			/* this is the first skb we deliver in this batch */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 90ef0dc..00efde8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -433,6 +433,11 @@ enum iwl_trans_state {
+  * @hw_id_str: a string with info about HW ID. Set during transport allocation.
+  * @pm_support: set to true in start_hw if link pm is supported
+  * @wait_command_queue: the wait_queue for SYNC host commands
++ * @dev_cmd_pool: pool for Tx cmd allocation - for internal use only.
++ *	The user should use iwl_trans_{alloc,free}_tx_cmd.
++ * @dev_cmd_headroom: room needed for the transport's private use before the
++ *	device_cmd for Tx - for internal use only
++ *	The user should use iwl_trans_{alloc,free}_tx_cmd.
+  */
+ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+@@ -450,6 +455,10 @@ struct iwl_trans {
+ 
+ 	wait_queue_head_t wait_command_queue;
+ 
++	/* The following fields are internal only */
++	struct kmem_cache *dev_cmd_pool;
++	size_t dev_cmd_headroom;
++
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+ 	char trans_specific[0] __aligned(sizeof(void *));
+@@ -525,6 +534,26 @@ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
+ 	return trans->ops->send_cmd(trans, cmd);
+ }
+ 
++static inline struct iwl_device_cmd *
++iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
++{
++	u8 *dev_cmd_ptr = kmem_cache_alloc(trans->dev_cmd_pool, GFP_ATOMIC);
++
++	if (unlikely(dev_cmd_ptr == NULL))
++		return NULL;
++
++	return (struct iwl_device_cmd *)
++			(dev_cmd_ptr + trans->dev_cmd_headroom);
++}
++
++static inline void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
++					 struct iwl_device_cmd *dev_cmd)
++{
++	u8 *dev_cmd_ptr = (u8 *)dev_cmd - trans->dev_cmd_headroom;
++
++	kmem_cache_free(trans->dev_cmd_pool, dev_cmd_ptr);
++}
++
+ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			       struct iwl_device_cmd *dev_cmd, int queue)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 0f59e1f..1eabb83 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1528,6 +1528,7 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	iounmap(trans_pcie->hw_base);
+ 	pci_release_regions(trans_pcie->pci_dev);
+ 	pci_disable_device(trans_pcie->pci_dev);
++	kmem_cache_destroy(trans->dev_cmd_pool);
+ 
+ 	kfree(trans);
+ }
+@@ -2042,6 +2043,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ {
+ 	struct iwl_trans_pcie *trans_pcie;
+ 	struct iwl_trans *trans;
++	char cmd_pool_name[100];
+ 	u16 pci_cmd;
+ 	int err;
+ 
+@@ -2138,8 +2140,25 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	init_waitqueue_head(&trans->wait_command_queue);
+ 	spin_lock_init(&trans->reg_lock);
+ 
++	snprintf(cmd_pool_name, sizeof(cmd_pool_name), "iwl_cmd_pool:%s",
++		 dev_name(trans->dev));
++
++	trans->dev_cmd_headroom = 0;
++	trans->dev_cmd_pool =
++		kmem_cache_create(cmd_pool_name,
++				  sizeof(struct iwl_device_cmd)
++				  + trans->dev_cmd_headroom,
++				  sizeof(void *),
++				  SLAB_HWCACHE_ALIGN,
++				  NULL);
++
++	if (!trans->dev_cmd_pool)
++		goto out_pci_disable_msi;
++
+ 	return trans;
+ 
++out_pci_disable_msi:
++	pci_disable_msi(pdev);
+ out_pci_release_regions:
+ 	pci_release_regions(pdev);
+ out_pci_disable_device:
+-- 
+1.7.10
 
-The hw queues fail the check in ieee80211_check_queues(). When I hack
-that function to always "return 0;" wlan works again.
-
-These 2 printk()s:
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index d4c19a7..246fc04 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -154,7 +154,9 @@ static int ieee80211_check_queues(struct
-ieee80211_sub_if_data *sdata)
-    int n_queues = sdata->local->hw.queues;
-    int i;
-
-+   printk("n_queues=%d\n", n_queues);
-    for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+       printk("sdata->vif.hw_queue[%d]=%d\n", i, sdata->vif.hw_queue[i]);
-        if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
-                 IEEE80211_INVAL_HW_QUEUE))
-            return -EINVAL;
-
-end in:
-[   11.873077] n_queues=1
-[   11.897066] sdata->vif.hw_queue[0]=0
-[   11.900451] sdata->vif.hw_queue[1]=1
-
-The surrounding dmesg output is:
-[    0.270900] sdhci: Secure Digital Host Controller Interface driver
-[    0.274159] sdhci: Copyright(c) Pierre Ossman
-[    0.286360] sdhci-pltfm: SDHCI platform and OF driver helper
-[    0.318739] mmc0: SDHCI controller on d070000.sd [d070000.sd] using DMA
-[    0.358650] mmc1: SDHCI controller on d080000.sdio [d080000.sdio] using DMA
-[    0.366951] TCP: cubic registered
-[    0.370514] NET: Registered protocol family 17
-[    0.374265] Bluetooth: RFCOMM TTY layer initialized
-[    0.386710] Bluetooth: RFCOMM socket layer initialized
-[    0.390129] Bluetooth: RFCOMM ver 1.11
-[    0.393466] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
-[    0.396794] Bluetooth: BNEP filters: protocol multicast
-[    0.400096] Bluetooth: HIDP (Human Interface Emulation) ver 1.2
-[    0.403386] initlevel:7=late, 14 registered initcalls
-[    0.408372] Waiting for root device /dev/mmcblk0p2...
-[    0.425466] mmc0: new high speed SD card at address f181
-[    0.429456] mmcblk0: mmc0:f181 SD02G 1.87 GiB
-[    0.434311]  mmcblk0: p1 p2 p3
-[    0.461667] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
-[    0.467214] mmc1: queuing unknown CIS tuple 0x80 (5 bytes)
-[    0.471669] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
-[    0.485751] mmc1: queuing unknown CIS tuple 0x80 (5 bytes)
-[    0.493260] mmc1: queuing unknown CIS tuple 0x80 (10 bytes)
-[    0.496433] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
-[    0.499543] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
-[    0.502583] mmc1: queuing unknown CIS tuple 0x80 (5 bytes)
-[    0.505491] mmc1: queuing unknown CIS tuple 0x80 (4 bytes)
-[    0.508130] mmc1: new SDIO card at address 0001
-[    0.520378] b43-sdio mmc1:0001:1: Chip ID 14e4:4318
-[    0.523595] ssb: Found chip with id 0x4318, rev 0x02 and package 0x02
-[    0.557528] ssb: chipcommon status is 0x0
-[    0.561271] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
-[    0.643432] ssb: Sonics Silicon Backplane found on SDIO device mmc1:0001:1
-[    0.770220] EXT4-fs (mmcblk0p2): mounted filesystem with ordered
-data mode. Opts: (null)
-[    0.786605] VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
-[    0.795436] Freeing unused kernel memory: 144k freed
-[    5.339710] EXT4-fs (mmcblk0p2): re-mounted. Opts: (null)
-[    5.789283] EXT4-fs (mmcblk0p2): re-mounted. Opts: discard,errors=remount-ro
-[   10.919815] b43-phy0: Loading OpenSource firmware version 410.31754
-[   10.936408] b43-phy0: Hardware crypto acceleration not supported by firmware
-[   10.943866] b43-phy0: QoS not supported by firmware
-[   11.873077] n_queues=1
-[   11.897066] sdata->vif.hw_queue[0]=0
-[   11.900451] sdata->vif.hw_queue[1]=1
-[   11.903763] ------------[ cut here ]------------
-[   11.906987] WARNING: at /home/andre/devel-temp/linux/net/mac80211/iface.c:164
-[   11.913314] NIP: c039e248 LR: c039e1f4 CTR: 00000000
-[   11.916488] REGS: d3019cb0 TRAP: 0700   Not tainted  (3.5.0-rc1-wii+)
-[   11.919674] MSR: 00029032 <EE,ME,IR,DR,RI>  CR: 28888428  XER: 00000000
-[   11.926211] TASK = d3020270[1221] 'wpa_supplicant' THREAD: d3018000
-[   11.926211] GPR00: 00000001 d3019d60 d3020270 00000018 00001032
-d3019c48 ffffffff 00000000
-[   11.926211] GPR08: d38e5220 c04f0000 00000000 000000a5 22888428
-100f2a98 10015603 00000027
-[   11.926211] GPR16: ffffffff 100d8200 100d1bd4 100f0000 100eaa84
-100eaa84 bfe0ce1e d3b8bccc
-[   11.926211] GPR24: 00000000 d3019e28 00000001 c049ced3 00000001
-d3bb3402 00000002 d3bb3400
-[   11.957761] NIP [c039e248] ieee80211_check_queues+0xb0/0x188
-[   11.961435] LR [c039e1f4] ieee80211_check_queues+0x5c/0x188
-[   11.965097] Call Trace:
-[   11.968754] [d3019d60] [c039e1f4] ieee80211_check_queues+0x5c/0x188
-(unreliable)
-[   11.976391] [d3019d80] [c039fef0] ieee80211_do_open+0x548/0xb88
-[   11.980396] [d3019db0] [c02c0300] __dev_open+0xc4/0x120
-[   11.984400] [d3019dd0] [c02bd0ec] __dev_change_flags+0xe0/0x174
-[   11.988397] [d3019df0] [c02c01f0] dev_change_flags+0x24/0x70
-[   11.992413] [d3019e10] [c030f618] devinet_ioctl+0x2bc/0x77c
-[   11.996500] [d3019e80] [c0310df4] inet_ioctl+0xd8/0x114
-[   12.000568] [d3019e90] [c02a9728] sock_ioctl+0x1fc/0x248
-[   12.004555] [d3019eb0] [c00d9170] do_vfs_ioctl+0x688/0x730
-[   12.008466] [d3019f10] [c00d9268] sys_ioctl+0x50/0x90
-[   12.012333] [d3019f40] [c000f668] ret_from_syscall+0x0/0x38
-[   12.016134] --- Exception: c01 at 0xfbe0058
-[   12.016134]     LR = 0xfbdffbc
-[   12.023526] Instruction dump:
-[   12.027091] 68000001 0f000000 2f800000 41be00d4 38000001 3d20c04f
-9809712f 480000c4
-[   12.034244] 41b8002c 3d20c04f 88097130 68000001 <0f000000> 2f800000
-41be00a8 38000001
-[   12.041393] ---[ end trace 5b1ec0526600d1ae ]---
-[   13.343824] b43-phy0: Loading OpenSource firmware version 410.31754
-[   13.347591] b43-phy0: Hardware crypto acceleration not supported by firmware
-[   13.354286] b43-phy0: QoS not supported by firmware
-[   14.299915] n_queues=1
-[   14.303012] sdata->vif.hw_queue[0]=0
-[   14.306058] sdata->vif.hw_queue[1]=1
-[   15.643819] b43-phy0: Loading OpenSource firmware version 410.31754
-[   15.647501] b43-phy0: Hardware crypto acceleration not supported by firmware
-[   15.654225] b43-phy0: QoS not supported by firmware
-[   16.584720] n_queues=1
-[   16.587757] sdata->vif.hw_queue[0]=0
-[   16.590721] sdata->vif.hw_queue[1]=1
-
-Any ideas?
-
-Thanks,
-Andre
