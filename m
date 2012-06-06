@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58778 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920Ab2FLOwF convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754556Ab2FFNWW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 10:52:05 -0400
-Received: by dady13 with SMTP id y13so6967204dad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 07:52:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87ipew63b2.fsf@purkki.adurom.net>
-References: <1339497630-31589-1-git-send-email-eyal@wizery.com> <87ipew63b2.fsf@purkki.adurom.net>
-From: Eyal Shapira <eyal@wizery.com>
-Date: Tue, 12 Jun 2012 17:51:45 +0300
-Message-ID: <CAF8O4-xur15soj2Emedz3YO2Dp82n6f-QPEj8=HkBFDD2S7agQ@mail.gmail.com> (sfid-20120612_165209_552402_1A55C1F3)
-Subject: Re: [PATCH] mac80211: handle auth failure returned with unmatching
- auth algo
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 6 Jun 2012 09:22:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 04/29] iwlwifi: use mac80211 channel in connection init
+Date: Wed,  6 Jun 2012 15:21:45 +0200
+Message-Id: <1338988930-11561-4-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152232_508544_5BFA86A6)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 June 2012 16:57, Kalle Valo <kvalo@adurom.com> wrote:
-> Eyal Shapira <eyal@wizery.com> writes:
->
->> Some Netgear APs like WNAP210 have a quirk behavior when
->> configured for WEP Shared. They send an auth response with algo
->> SHARED and status code NOT_SUPPORTED_AUTH_ALG (13) when being
->> sent a request made with auth algo OPEN. Enable such response to
->> propagate to userspace instead of discarding it so wpa_s can
->> reattempt to auth with SHARED.
->>
->> Reported-by: Noam Shaked <noams@ti.com>
->> Signed-off-by: Eyal Shapira <eyal@wizery.com>
->
-> [...]
->
->> -     if (auth_alg != ifmgd->auth_data->algorithm ||
->> +     if ((auth_alg != ifmgd->auth_data->algorithm &&
->> +          status_code != WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG) ||
->
-> I think a small comment in the code would be nice, like
-> "WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG is a workaround for Netgear
-> WNAPxxx".
->
-Sure. I'll add that in v2.
+From: Johannes Berg <johannes.berg@intel.com>
 
-> --
-> Kalle Valo
+mac80211 guarantees that the channel pointer is
+always valid, so we can use that instead of our
+own channel list.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 7fc8c25..c570318 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -37,8 +37,6 @@
+ void iwl_connection_init_rx_config(struct iwl_priv *priv,
+ 				   struct iwl_rxon_context *ctx)
+ {
+-	const struct iwl_channel_info *ch_info;
+-
+ 	memset(&ctx->staging, 0, sizeof(ctx->staging));
+ 
+ 	if (!ctx->vif) {
+@@ -80,14 +78,8 @@ void iwl_connection_init_rx_config(struct iwl_priv *priv,
+ 		ctx->staging.flags |= RXON_FLG_SHORT_PREAMBLE_MSK;
+ #endif
+ 
+-	ch_info = iwl_get_channel_info(priv, priv->band,
+-				       le16_to_cpu(ctx->active.channel));
+-
+-	if (!ch_info)
+-		ch_info = &priv->channel_info[0];
+-
+-	ctx->staging.channel = cpu_to_le16(ch_info->channel);
+-	priv->band = ch_info->band;
++	ctx->staging.channel = cpu_to_le16(priv->hw->conf.channel->hw_value);
++	priv->band = priv->hw->conf.channel->band;
+ 
+ 	iwl_set_flags_for_band(priv, ctx, priv->band, ctx->vif);
+ 
+-- 
+1.7.10
+
