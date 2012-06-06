@@ -1,204 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:42462 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755822Ab2FWGmV (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:44606 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994Ab2FFXT4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 02:42:21 -0400
-Received: by lbok6 with SMTP id k6so5974987lbo.18
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:17 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
-Subject: [PATCH 17/18] wlcore: refactor threaded IRQ routine
-Date: Sat, 23 Jun 2012 09:41:28 +0300
-Message-Id: <1340433689-24320-18-git-send-email-coelho@ti.com> (sfid-20120623_084227_326261_CA4EA9BD)
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
+	Wed, 6 Jun 2012 19:19:56 -0400
+Received: by mail-pz0-f46.google.com with SMTP id y13so2117dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 16:19:56 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 5/5] mac80211: Use signal strength as a proxy for expected datarate.
+Date: Wed,  6 Jun 2012 16:19:35 -0700
+Message-Id: <1339024775-15405-6-git-send-email-jason@cozybit.com> (sfid-20120607_012000_484046_7CC77C13)
+In-Reply-To: <1339024775-15405-1-git-send-email-jason@cozybit.com>
+References: <1339024775-15405-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Javier Cardona <javier@cozybit.com>
 
-Separate the threaded IRQ handling routine into two functions.
-The outer function takes the mutex and calls recovery on errors. It also
-performs a Tx-path optimization to avoid redundant works.
+When establishing mesh paths with new stations, there is no historic
+datarate information to compute the airtime link metric.  Up until now
+we were just using a poor initial metric.  A better approach is to
+use the signal strength as an indicator of how good the new link will
+be.  Once traffic is exchanged with the station, the average datarate is
+computed and the signal strength is not used anymore.
 
-The inner function is simplified - all calls to recovery are removed and
-it assumes the lock is taken. The locked variant will be reused elsewhere.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Reviewed-by: Jason Abele <jason@cozybit.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c |   62 ++++++++++++++++-----------------
- 1 file changed, 31 insertions(+), 31 deletions(-)
+ net/mac80211/mesh_hwmp.c |   68 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 66 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index e6e6654..0c1e075 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -494,20 +494,15 @@ static void wl1271_netstack_work(struct work_struct *work)
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 22b327a..86fc9e5 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -330,6 +330,67 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	return;
+ }
  
- #define WL1271_IRQ_MAX_LOOPS 256
- 
--static irqreturn_t wl1271_irq(int irq, void *cookie)
-+static int wlcore_irq_locked(struct wl1271 *wl)
- {
--	int ret;
-+	int ret = 0;
- 	u32 intr;
- 	int loopcount = WL1271_IRQ_MAX_LOOPS;
--	struct wl1271 *wl = (struct wl1271 *)cookie;
- 	bool done = false;
- 	unsigned int defer_count;
- 	unsigned long flags;
- 
--	/* TX might be handled here, avoid redundant work */
--	set_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
--	cancel_work_sync(&wl->tx_work);
--
- 	/*
- 	 * In case edge triggered interrupt must be used, we cannot iterate
- 	 * more than once without introducing race conditions with the hardirq.
-@@ -515,8 +510,6 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
- 		loopcount = 1;
- 
--	mutex_lock(&wl->mutex);
--
- 	wl1271_debug(DEBUG_IRQ, "IRQ work");
- 
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
-@@ -536,10 +529,8 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 		smp_mb__after_clear_bit();
- 
- 		ret = wlcore_fw_status(wl, wl->fw_status_1, wl->fw_status_2);
--		if (ret < 0) {
--			wl12xx_queue_recovery_work(wl);
-+		if (ret < 0)
- 			goto out;
--		}
- 
- 		wlcore_hw_tx_immediate_compl(wl);
- 
-@@ -553,7 +544,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 		if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
- 			wl1271_error("HW watchdog interrupt received! starting recovery.");
- 			wl->watchdog_recovery = true;
--			wl12xx_queue_recovery_work(wl);
-+			ret = -EIO;
- 
- 			/* restarting the chip. ignore any other interrupt. */
- 			goto out;
-@@ -563,7 +554,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 			wl1271_error("SW watchdog interrupt received! "
- 				     "starting recovery.");
- 			wl->watchdog_recovery = true;
--			wl12xx_queue_recovery_work(wl);
-+			ret = -EIO;
- 
- 			/* restarting the chip. ignore any other interrupt. */
- 			goto out;
-@@ -573,10 +564,8 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
- 
- 			ret = wlcore_rx(wl, wl->fw_status_1);
--			if (ret < 0) {
--				wl12xx_queue_recovery_work(wl);
-+			if (ret < 0)
- 				goto out;
--			}
- 
- 			/* Check if any tx blocks were freed */
- 			spin_lock_irqsave(&wl->wl_lock, flags);
-@@ -588,20 +577,16 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 				 * call the work function directly.
- 				 */
- 				ret = wlcore_tx_work_locked(wl);
--				if (ret < 0) {
--					wl12xx_queue_recovery_work(wl);
-+				if (ret < 0)
- 					goto out;
--				}
- 			} else {
- 				spin_unlock_irqrestore(&wl->wl_lock, flags);
- 			}
- 
- 			/* check for tx results */
- 			ret = wlcore_hw_tx_delayed_compl(wl);
--			if (ret < 0) {
--				wl12xx_queue_recovery_work(wl);
-+			if (ret < 0)
- 				goto out;
--			}
- 
- 			/* Make sure the deferred queues don't get too long */
- 			defer_count = skb_queue_len(&wl->deferred_tx_queue) +
-@@ -613,19 +598,15 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 		if (intr & WL1271_ACX_INTR_EVENT_A) {
- 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_A");
- 			ret = wl1271_event_handle(wl, 0);
--			if (ret < 0) {
--				wl12xx_queue_recovery_work(wl);
-+			if (ret < 0)
- 				goto out;
--			}
- 		}
- 
- 		if (intr & WL1271_ACX_INTR_EVENT_B) {
- 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_B");
- 			ret = wl1271_event_handle(wl, 1);
--			if (ret < 0) {
--				wl12xx_queue_recovery_work(wl);
-+			if (ret < 0)
- 				goto out;
--			}
- 		}
- 
- 		if (intr & WL1271_ACX_INTR_INIT_COMPLETE)
-@@ -639,6 +620,25 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 	wl1271_ps_elp_sleep(wl);
- 
- out:
-+	return ret;
++/* estimate link rate as a function of last rssi for sta */
++static unsigned int rssi_get_rate(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	/* XXX: oper_channel is moving to sdata upstream */
++	enum ieee80211_band band = sta->local->oper_channel->band;
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.ht_cap;
++	struct rate_info rinfo;
++	int i, rssi, rate, rate_max, rate_min = 10, maxidx = 0;
++	const int rssi_min = -100;
++	const int rssi_max = -20;
++
++	if (sta->last_signal >= 0)
++		return rate_min;
++
++	memset(&rinfo, sizeof(rinfo), 0);
++
++	if (ht_cap->ht_supported) {
++		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
++			if (ht_cap->mcs.rx_mask[i])
++				maxidx = i*8 + fls(ht_cap->mcs.rx_mask[i]) - 1;
++		}
++		rinfo.flags |= RATE_INFO_FLAGS_MCS;
++		rinfo.flags |= (sta->sta.ht_cap.cap &
++				IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
++					RATE_INFO_FLAGS_40_MHZ_WIDTH :
++					0;
++		rinfo.flags |= (sta->sta.ht_cap.cap &
++				(IEEE80211_HT_CAP_SGI_20 |
++				 IEEE80211_HT_CAP_SGI_40)) ?
++						RATE_INFO_FLAGS_SHORT_GI :
++						0;
++		rinfo.mcs = maxidx;
++	} else {
++		struct ieee80211_supported_band *sband;
++
++		maxidx = fls(sta->sta.supp_rates[band]) - 1;
++		if (WARN_ON(maxidx < 0))
++			return rate_min;
++		sband = sta->local->hw.wiphy->bands[band];
++		rinfo.legacy = sband->bitrates[maxidx].bitrate;
++	}
++
++	rate_max = cfg80211_calculate_bitrate(&rinfo);
++
++	rssi = max(rssi_min, sta->last_signal);
++	rssi = min(rssi_max, rssi);
++
++	rate = ((rssi - rssi_min) * rate_max +
++		(rssi_max - rssi) * rate_min) /
++		(rssi_max - rssi_min);
++
++	if (WARN_ON(!rate))
++		rate = rate_min;
++
++	mhwmp_dbg("\nest. %d Mbps for %pM with rssi %d\n",
++		  rate/10, sta->sta.addr, sta->last_signal);
++
++	return rate;
 +}
 +
-+static irqreturn_t wlcore_irq(int irq, void *cookie)
-+{
-+	int ret;
-+	unsigned long flags;
-+	struct wl1271 *wl = cookie;
-+
-+	/* TX might be handled here, avoid redundant work */
-+	set_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
-+	cancel_work_sync(&wl->tx_work);
-+
-+	mutex_lock(&wl->mutex);
-+
-+	ret = wlcore_irq_locked(wl);
-+	if (ret)
-+		wl12xx_queue_recovery_work(wl);
-+
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	/* In case TX was not handled here, queue TX work */
- 	clear_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
-@@ -1748,7 +1748,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
+ {
+@@ -345,8 +406,11 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
  
- 		/* don't talk to the HW if recovery is pending */
- 		if (!pending_recovery)
--			wl1271_irq(0, wl);
-+			wlcore_irq(0, wl);
+-	/* If not enough values accumulated in rate average, assume 1 Mbps */
+-	rate = max(ewma_read(&sta->avg_rate), 10UL);
++	if (sta->tx_packets > 100)
++		rate = max(ewma_read(&sta->avg_rate), 10UL);
++	else
++		/* Not enough traffic sent, use rx signal strengh as proxy */
++		rate = rssi_get_rate(sta);
  
- 		wlcore_enable_interrupts(wl);
- 	}
-@@ -5489,7 +5489,7 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
- 	else
- 		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
- 
--	ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wl1271_irq,
-+	ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wlcore_irq,
- 				   irqflags,
- 				   pdev->name, wl);
- 	if (ret < 0) {
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
 -- 
-1.7.10
+1.7.9.5
 
