@@ -1,322 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:63688 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754403Ab2FCU3J (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33665 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754537Ab2FFNWW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 16:29:09 -0400
-Received: by wibhj8 with SMTP id hj8so2231889wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2012 13:29:08 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: don't call drv_ampdu_action() during reconfig
-Date: Sun,  3 Jun 2012 23:29:01 +0300
-Message-Id: <1338755341-13141-1-git-send-email-arik@wizery.com> (sfid-20120603_222937_990353_ADEBC923)
+	Wed, 6 Jun 2012 09:22:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH 02/29] iwlwifi: handle race condition in ROC flow
+Date: Wed,  6 Jun 2012 15:21:43 +0200
+Message-Id: <1338988930-11561-2-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152236_574362_12A0940B)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When tearing down BA sessions during HW reconfig, the low level driver
-is not aware of them yet. Add a parameter to relevant Rx/Tx BA functions
-to prevent calls to the driver, while removing all mac80211 related state.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+When a remain on channel request from mac80211 is followed by
+a request to tx a mgmt frame offchannel, it is possible that
+the remain on channel expires before the device reported the
+tx status for the frame. This causes a race condition in
+mac80211.
+
+To fix this, delay the ROC notification to mac80211 until the
+device reported the Tx status for all frames in the aux queue.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/agg-rx.c      |   16 ++++++++++------
- net/mac80211/agg-tx.c      |   18 +++++++++++-------
- net/mac80211/debugfs_sta.c |    2 +-
- net/mac80211/ht.c          |   19 +++++++++++--------
- net/mac80211/ieee80211_i.h |   13 ++++++++-----
- net/mac80211/iface.c       |    2 +-
- net/mac80211/mlme.c        |    2 +-
- net/mac80211/pm.c          |    2 +-
- net/mac80211/sta_info.c    |    2 +-
- net/mac80211/util.c        |    3 ++-
- 10 files changed, 47 insertions(+), 32 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   18 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    3 ++
+ drivers/net/wireless/iwlwifi/iwl-agn.h    |    5 +++
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c   |   51 +++++++++++++++++++++++------
+ 5 files changed, 68 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a070d4f..d1afa99 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -59,7 +59,8 @@ static void ieee80211_free_tid_rx(struct rcu_head *h)
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 3366e2e..ad1d36f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -486,6 +486,9 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	if (sta_priv && sta_priv->client && !is_agg)
+ 		atomic_inc(&sta_priv->pending_frames);
  
- void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
--				     u16 initiator, u16 reason, bool tx)
-+				     u16 initiator, u16 reason, bool tx,
-+				     bool call_drv)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct tid_ampdu_rx *tid_rx;
-@@ -82,8 +83,9 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 	       (int)reason);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
++	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)
++		iwl_scan_offchannel_skb(priv);
++
+ 	return 0;
  
--	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
--			     &sta->sta, tid, NULL, 0))
-+	if (call_drv && drv_ampdu_action(local, sta->sdata,
-+					 IEEE80211_AMPDU_RX_STOP,
-+					 &sta->sta, tid, NULL, 0))
- 		printk(KERN_DEBUG "HW problem - can not stop rx "
- 				"aggregation for tid %d\n", tid);
+ drop_unlock_sta:
+@@ -1136,6 +1139,7 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 	struct sk_buff *skb;
+ 	struct iwl_rxon_context *ctx;
+ 	bool is_agg = (txq_id >= IWLAGN_FIRST_AMPDU_QUEUE);
++	bool is_offchannel_skb;
  
-@@ -98,10 +100,12 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- }
+ 	tid = (tx_resp->ra_tid & IWLAGN_TX_RES_TID_MSK) >>
+ 		IWLAGN_TX_RES_TID_POS;
+@@ -1149,6 +1153,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
  
- void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
--				    u16 initiator, u16 reason, bool tx)
-+				    u16 initiator, u16 reason, bool tx,
-+				    bool call_drv)
- {
- 	mutex_lock(&sta->ampdu_mlme.mtx);
--	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, tx);
-+	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, tx,
-+					call_drv);
- 	mutex_unlock(&sta->ampdu_mlme.mtx);
- }
+ 	__skb_queue_head_init(&skbs);
  
-@@ -290,7 +294,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 		/* delete existing Rx BA session on the same tid */
- 		___ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
- 						WLAN_STATUS_UNSPECIFIED_QOS,
--						false);
-+						false, true);
- 	}
++	is_offchannel_skb = false;
++
+ 	if (tx_resp->frame_count == 1) {
+ 		u16 next_reclaimed = le16_to_cpu(tx_resp->seq_ctl);
+ 		next_reclaimed = SEQ_TO_SN(next_reclaimed + 0x10);
+@@ -1225,10 +1231,19 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			if (!is_agg)
+ 				iwlagn_non_agg_tx_status(priv, ctx, hdr->addr1);
  
- 	/* prepare A-MPDU MLME for Rx aggregation */
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 7cf0715..daa1764 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -150,7 +150,7 @@ void ieee80211_assign_tid_tx(struct sta_info *sta, int tid,
- 
- int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 				    enum ieee80211_back_parties initiator,
--				    bool tx)
-+				    bool tx, bool call_drv)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct tid_ampdu_tx *tid_tx;
-@@ -216,9 +216,12 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 	tid_tx->stop_initiator = initiator;
- 	tid_tx->tx_stop = tx;
- 
--	ret = drv_ampdu_action(local, sta->sdata,
--			       IEEE80211_AMPDU_TX_STOP,
--			       &sta->sta, tid, NULL, 0);
-+	if (call_drv)
-+		ret = drv_ampdu_action(local, sta->sdata,
-+				       IEEE80211_AMPDU_TX_STOP,
-+				       &sta->sta, tid, NULL, 0);
-+	else
-+		ret = 0;
- 
- 	/* HW shall not deny going back to legacy */
- 	if (WARN_ON(ret)) {
-@@ -688,13 +691,14 @@ EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
- 
- int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 				   enum ieee80211_back_parties initiator,
--				   bool tx)
-+				   bool tx, bool call_drv)
- {
- 	int ret;
- 
- 	mutex_lock(&sta->ampdu_mlme.mtx);
- 
--	ret = ___ieee80211_stop_tx_ba_session(sta, tid, initiator, tx);
-+	ret = ___ieee80211_stop_tx_ba_session(sta, tid, initiator, tx,
-+					      call_drv);
- 
- 	mutex_unlock(&sta->ampdu_mlme.mtx);
- 
-@@ -911,7 +915,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
- 
- 	} else {
- 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR,
--						true);
-+						true, true);
- 	}
- 
-  out:
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 5ccec2c..0127367 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -230,7 +230,7 @@ static ssize_t sta_agg_status_write(struct file *file, const char __user *userbu
- 			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid);
- 	} else {
- 		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
--					       3, true);
-+					       3, true, true);
- 		ret = 0;
- 	}
- 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 9b60336..a8125cb 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -179,16 +179,19 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_apply_htcap_overrides(sdata, ht_cap);
- }
- 
--void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx)
-+void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx,
-+					 bool call_drv)
- {
- 	int i;
- 
- 	cancel_work_sync(&sta->ampdu_mlme.work);
- 
- 	for (i = 0; i <  STA_TID_NUM; i++) {
--		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR, tx);
-+		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR, tx,
-+					       call_drv);
- 		__ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
--					       WLAN_REASON_QSTA_LEAVE_QBSS, tx);
-+					       WLAN_REASON_QSTA_LEAVE_QBSS, tx,
-+					       call_drv);
- 	}
- }
- 
-@@ -213,13 +216,13 @@ void ieee80211_ba_session_work(struct work_struct *work)
- 		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
- 			___ieee80211_stop_rx_ba_session(
- 				sta, tid, WLAN_BACK_RECIPIENT,
--				WLAN_REASON_QSTA_TIMEOUT, true);
-+				WLAN_REASON_QSTA_TIMEOUT, true, true);
- 
- 		if (test_and_clear_bit(tid,
- 				       sta->ampdu_mlme.tid_rx_stop_requested))
- 			___ieee80211_stop_rx_ba_session(
- 				sta, tid, WLAN_BACK_RECIPIENT,
--				WLAN_REASON_UNSPECIFIED, true);
-+				WLAN_REASON_UNSPECIFIED, true, true);
- 
- 		tid_tx = sta->ampdu_mlme.tid_start_tx[tid];
- 		if (tid_tx) {
-@@ -246,7 +249,7 @@ void ieee80211_ba_session_work(struct work_struct *work)
- 						 &tid_tx->state))
- 			___ieee80211_stop_tx_ba_session(sta, tid,
- 							WLAN_BACK_INITIATOR,
--							true);
-+							true, true);
- 	}
- 	mutex_unlock(&sta->ampdu_mlme.mtx);
- }
-@@ -314,10 +317,10 @@ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
- 
- 	if (initiator == WLAN_BACK_INITIATOR)
- 		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_INITIATOR, 0,
--					       true);
-+					       true, true);
- 	else
- 		__ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
--					       true);
-+					       true, true);
- }
- 
- int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ae046b5..1975f35 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1336,10 +1336,13 @@ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
- void ieee80211_request_smps_work(struct work_struct *work);
- 
- void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
--				     u16 initiator, u16 reason, bool stop);
-+				     u16 initiator, u16 reason, bool stop,
-+				     bool call_drv);
- void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
--				    u16 initiator, u16 reason, bool stop);
--void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx);
-+				    u16 initiator, u16 reason, bool stop,
-+				    bool call_drv);
-+void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx,
-+					 bool call_drv);
- void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
- 			     struct sta_info *sta,
- 			     struct ieee80211_mgmt *mgmt, size_t len);
-@@ -1354,10 +1357,10 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 
- int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 				   enum ieee80211_back_parties initiator,
--				   bool tx);
-+				   bool tx, bool call_drv);
- int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 				    enum ieee80211_back_parties initiator,
--				    bool tx);
-+				    bool tx, bool call_drv);
- void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
- void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
- void ieee80211_ba_session_work(struct work_struct *work);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index c550945..859271d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -922,7 +922,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 				__ieee80211_stop_rx_ba_session(
- 					sta, tid, WLAN_BACK_RECIPIENT,
- 					WLAN_REASON_QSTA_REQUIRE_SETUP,
--					true);
-+					true, true);
- 			}
- 			mutex_unlock(&local->sta_mtx);
- 		} else switch (sdata->vif.type) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 40c933c..4ae9b23 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1363,7 +1363,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	sta = sta_info_get(sdata, bssid);
- 	if (sta) {
- 		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
--		ieee80211_sta_tear_down_BA_sessions(sta, tx);
-+		ieee80211_sta_tear_down_BA_sessions(sta, tx, true);
- 	}
- 	mutex_unlock(&local->sta_mtx);
- 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index af1c4e2..52cb3d3 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -43,7 +43,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		mutex_lock(&local->sta_mtx);
- 		list_for_each_entry(sta, &local->sta_list, list) {
- 			set_sta_flag(sta, WLAN_STA_BLOCK_BA);
--			ieee80211_sta_tear_down_BA_sessions(sta, true);
-+			ieee80211_sta_tear_down_BA_sessions(sta, true, true);
- 		}
- 		mutex_unlock(&local->sta_mtx);
- 	}
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 97a9d66..f5c2b7e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -682,7 +682,7 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	 * will be sufficient.
- 	 */
- 	set_sta_flag(sta, WLAN_STA_BLOCK_BA);
--	ieee80211_sta_tear_down_BA_sessions(sta, true);
-+	ieee80211_sta_tear_down_BA_sessions(sta, true, true);
- 
- 	ret = sta_info_hash_del(local, sta);
- 	if (ret)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a44c680..7c7e571 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1391,7 +1391,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		mutex_lock(&local->sta_mtx);
- 
- 		list_for_each_entry(sta, &local->sta_list, list) {
--			ieee80211_sta_tear_down_BA_sessions(sta, true);
-+			/* don't call the driver when tearing down sessions */
-+			ieee80211_sta_tear_down_BA_sessions(sta, true, false);
- 			clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
++			is_offchannel_skb =
++				(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN);
+ 			freed++;
  		}
  
+ 		WARN_ON(!is_agg && freed != 1);
++
++		/*
++		 * An offchannel frame can be send only on the AUX queue, where
++		 * there is no aggregation (and reordering) so it only is single
++		 * skb is expected to be processed.
++		 */
++		WARN_ON(is_offchannel_skb && freed != 1);
+ 	}
+ 
+ 	iwl_check_abort_status(priv, tx_resp->frame_count, status);
+@@ -1239,6 +1254,9 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 		ieee80211_tx_status(priv->hw, skb);
+ 	}
+ 
++	if (is_offchannel_skb)
++		iwl_scan_offchannel_skb_status(priv);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5149e6f..cd95a240 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -931,6 +931,9 @@ void iwl_down(struct iwl_priv *priv)
+ 	priv->ucode_loaded = false;
+ 	iwl_trans_stop_device(priv->trans);
+ 
++	/* Set num_aux_in_flight must be done after the transport is stopped */
++	atomic_set(&priv->num_aux_in_flight, 0);
++
+ 	/* Clear out all status bits but a few that are stable across reset */
+ 	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
+ 				STATUS_RF_KILL_HW |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 79c0fe0..5c1693f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -101,6 +101,7 @@ extern struct iwl_lib_ops iwl6030_lib;
+ #define STATUS_CHANNEL_SWITCH_PENDING 11
+ #define STATUS_SCAN_COMPLETE	12
+ #define STATUS_POWER_PMI	13
++#define STATUS_SCAN_ROC_EXPIRED 14
+ 
+ struct iwl_ucode_capabilities;
+ 
+@@ -255,6 +256,10 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+ 				   enum iwl_scan_type scan_type,
+ 				   enum ieee80211_band band);
+ 
++void iwl_scan_roc_expired(struct iwl_priv *priv);
++void iwl_scan_offchannel_skb(struct iwl_priv *priv);
++void iwl_scan_offchannel_skb_status(struct iwl_priv *priv);
++
+ /* For faster active scanning, scan will move to the next channel if fewer than
+  * PLCP_QUIET_THRESH packets are heard on this channel within
+  * ACTIVE_QUIET_TIME after sending probe request.  This shortens the dwell
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 7006237..a4936a1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -846,6 +846,7 @@ struct iwl_priv {
+ 	struct iwl_station_entry stations[IWLAGN_STATION_COUNT];
+ 	unsigned long ucode_key_table;
+ 	struct iwl_tid_data tid_data[IWLAGN_STATION_COUNT][IWL_MAX_TID_COUNT];
++	atomic_t num_aux_in_flight;
+ 
+ 	u8 mac80211_registered;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 031d8e2..eb0ded7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -101,11 +101,8 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
+ 		ieee80211_scan_completed(priv->hw, aborted);
+ 	}
+ 
+-	if (priv->scan_type == IWL_SCAN_ROC) {
+-		ieee80211_remain_on_channel_expired(priv->hw);
+-		priv->hw_roc_channel = NULL;
+-		schedule_delayed_work(&priv->hw_roc_disable_work, 10 * HZ);
+-	}
++	if (priv->scan_type == IWL_SCAN_ROC)
++		iwl_scan_roc_expired(priv);
+ 
+ 	priv->scan_type = IWL_SCAN_NORMAL;
+ 	priv->scan_vif = NULL;
+@@ -134,11 +131,8 @@ static void iwl_process_scan_complete(struct iwl_priv *priv)
+ 		goto out_settings;
+ 	}
+ 
+-	if (priv->scan_type == IWL_SCAN_ROC) {
+-		ieee80211_remain_on_channel_expired(priv->hw);
+-		priv->hw_roc_channel = NULL;
+-		schedule_delayed_work(&priv->hw_roc_disable_work, 10 * HZ);
+-	}
++	if (priv->scan_type == IWL_SCAN_ROC)
++		iwl_scan_roc_expired(priv);
+ 
+ 	if (priv->scan_type != IWL_SCAN_NORMAL && !aborted) {
+ 		int err;
+@@ -1158,3 +1152,40 @@ void iwl_cancel_scan_deferred_work(struct iwl_priv *priv)
+ 		mutex_unlock(&priv->mutex);
+ 	}
+ }
++
++void iwl_scan_roc_expired(struct iwl_priv *priv)
++{
++	/*
++	 * The status bit should be set here, to prevent a race
++	 * where the atomic_read returns 1, but before the execution continues
++	 * iwl_scan_offchannel_skb_status() checks if the status bit is set
++	 */
++	set_bit(STATUS_SCAN_ROC_EXPIRED, &priv->status);
++
++	if (atomic_read(&priv->num_aux_in_flight) == 0) {
++		ieee80211_remain_on_channel_expired(priv->hw);
++		priv->hw_roc_channel = NULL;
++		schedule_delayed_work(&priv->hw_roc_disable_work,
++				      10 * HZ);
++
++		clear_bit(STATUS_SCAN_ROC_EXPIRED, &priv->status);
++	} else {
++		IWL_DEBUG_SCAN(priv, "ROC done with %d frames in aux\n",
++			       atomic_read(&priv->num_aux_in_flight));
++	}
++}
++
++void iwl_scan_offchannel_skb(struct iwl_priv *priv)
++{
++	WARN_ON(!priv->hw_roc_start_notified);
++	atomic_inc(&priv->num_aux_in_flight);
++}
++
++void iwl_scan_offchannel_skb_status(struct iwl_priv *priv)
++{
++	if (atomic_dec_return(&priv->num_aux_in_flight) == 0 &&
++	    test_bit(STATUS_SCAN_ROC_EXPIRED, &priv->status)) {
++		IWL_DEBUG_SCAN(priv, "0 aux frames. Calling ROC expired\n");
++		iwl_scan_roc_expired(priv);
++	}
++}
 -- 
-1.7.9.5
+1.7.10
 
