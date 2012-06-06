@@ -1,77 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3810 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932625Ab2FHQzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 12:55:03 -0400
-Message-ID: <4FD22E59.5020302@broadcom.com> (sfid-20120608_185508_124209_F7CD3879)
-Date: Fri, 8 Jun 2012 18:54:49 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Jonas Gorski" <jonas.gorski@gmail.com>
-cc: "Hauke Mehrtens" <hauke@hauke-m.de>, linville@tuxdriver.com,
-	brudley@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 13/18] brcmsmac: add some workarounds for other
- chips again
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-14-git-send-email-hauke@hauke-m.de>
- <4FCF2AF1.8020200@broadcom.com> <4FD0B062.1080606@hauke-m.de>
- <4FD1023D.4040604@broadcom.com>
- <CAOiHx==hhFUgMYiiUy_XZR9K=Ao76OjLu0MSkMopUDuVmOpvdw@mail.gmail.com>
-In-Reply-To: <CAOiHx==hhFUgMYiiUy_XZR9K=Ao76OjLu0MSkMopUDuVmOpvdw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8
+Received: from he.sipsolutions.net ([78.46.109.217]:33663 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754548Ab2FFNWW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 09:22:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 05/29] iwlwifi: trust mac80211 channel setting
+Date: Wed,  6 Jun 2012 15:21:46 +0200
+Message-Id: <1338988930-11561-5-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152231_477839_92E0740A)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/2012 01:31 PM, Jonas Gorski wrote:
-> On 7 June 2012 21:34, Arend van Spriel <arend@broadcom.com> wrote:
->> On 06/07/2012 03:45 PM, Hauke Mehrtens wrote:
->>> On 06/06/2012 12:03 PM, Arend van Spriel wrote:
->>>> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->>>>> This adds some workarounds for the BCM4716, BCM47162, BCM43421, BCM5357
->>>>> and BCM6362 to the phy code again. This patch reverts the following
->>>>
->>>> Has brcmsmac been tested for all these chips? At this moment I do not
->>>> have any bandwidth to do that. I am not too comfortable adding this code
->>>> without having some testing coverage. It was the reason to remove the
->>>> snippets from brcmsmac.
->>> I have just tested BCM4716 and BCM5357, BCM5357 is not working. ;-)
->>> I do not have all the devices to test this and for the BCM6362 some
->>> infrastructure code is still missing.
->>> The adding of the BCM5357 is part of my start adding support for that
->>> chip, which is not complete. As the device detection code in brcmsmac
->>> is not changed in this commit, no more devices are detected by brcmsmac
->>> now. I talked to Jonas Gorski about the BCM6362 and he thinks about
->>> adding support for that device to the Linux kernel in some time.
->>
->> Yes. Jonas tested brcmsmac on bcm6362 host during our mainlining days.
-> 
-> Wait, no, I didn't. It was bcm6328 with an external pcie connected
-> bcm4313, so not really anything special there.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes. I know it was with external card connected through PCIe. Did not
-recall exactly which BCM63xx you used for big-endian mips test.
+mac80211 will never set, switch to, or scan on an
+invalid channel, so remove the code to validate
+the channels against the driver channel list.
 
-> 0x2057). I did not try brcmsmac, since it didn't even use bcma at that
-> time. It probably needs some more special handling, as there is an OTP
-> core present, and my gut feeling says the wifi driver needs/uses it,
-> but since I don't have sources for the proprietary driver I can't
-> really check this ;).
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    9 ---------
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   12 +-----------
+ 3 files changed, 1 insertion(+), 27 deletions(-)
 
-brcmsmac had OTP code, but I added OTP processing to BCMA. It is daily
-tested on powerpc64 so that should work.
-
-> TL;DR: BCM6362 isn't real bcma, so it's unlikely the bcma code will
-> ever see it (unless the translation hacks get accepted ;). Feel free
-> to drop any BCM6362 handling here.
-> 
-> @Arend: Which probably also means that brcm{s,f]mac will likely never
-> support it, right? :-/
-
-What silicon backplane does it have? Sonics? I tried to look it up, but
-did not find the info.
-
-Do you know the chip revision of your bcm6362?
-
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index c570318..36b4965 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -1182,7 +1182,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct iwl_rxon_context *ctx;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	struct ieee80211_channel *channel = conf->channel;
+-	const struct iwl_channel_info *ch_info;
+ 	int ret = 0;
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter: changed %#x\n", changed);
+@@ -1216,14 +1215,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		ch_info = iwl_get_channel_info(priv, channel->band,
+-					       channel->hw_value);
+-		if (!is_channel_valid(ch_info)) {
+-			IWL_DEBUG_MAC80211(priv, "leave - invalid channel\n");
+-			ret = -EINVAL;
+-			goto out;
+-		}
+-
+ 		for_each_context(priv, ctx) {
+ 			/* Configure HT40 channels */
+ 			if (ctx->ht.enabled != conf_is_ht(conf))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index d0b64cd..19e5235 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -844,7 +844,6 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+ 				      struct ieee80211_channel_switch *ch_switch)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+-	const struct iwl_channel_info *ch_info;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	struct ieee80211_channel *channel = ch_switch->channel;
+ 	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
+@@ -881,12 +880,6 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+ 	if (le16_to_cpu(ctx->active.channel) == ch)
+ 		goto out;
+ 
+-	ch_info = iwl_get_channel_info(priv, channel->band, ch);
+-	if (!is_channel_valid(ch_info)) {
+-		IWL_DEBUG_MAC80211(priv, "invalid channel\n");
+-		goto out;
+-	}
+-
+ 	priv->current_ht_config.smps = conf->smps_mode;
+ 
+ 	/* Configure HT40 channels */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index eb0ded7..ea05ae8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -534,7 +534,6 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
+ {
+ 	struct ieee80211_channel *chan;
+ 	const struct ieee80211_supported_band *sband;
+-	const struct iwl_channel_info *ch_info;
+ 	u16 passive_dwell = 0;
+ 	u16 active_dwell = 0;
+ 	int added, i;
+@@ -559,16 +558,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
+ 		channel = chan->hw_value;
+ 		scan_ch->channel = cpu_to_le16(channel);
+ 
+-		ch_info = iwl_get_channel_info(priv, band, channel);
+-		if (!is_channel_valid(ch_info)) {
+-			IWL_DEBUG_SCAN(priv,
+-				       "Channel %d is INVALID for this band.\n",
+-				       channel);
+-			continue;
+-		}
+-
+-		if (!is_active || is_channel_passive(ch_info) ||
+-		    (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN))
++		if (!is_active || (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN))
+ 			scan_ch->type = SCAN_CHANNEL_TYPE_PASSIVE;
+ 		else
+ 			scan_ch->type = SCAN_CHANNEL_TYPE_ACTIVE;
+-- 
+1.7.10
 
