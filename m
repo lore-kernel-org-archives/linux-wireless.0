@@ -1,105 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46940 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761818Ab2FHQIS (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:52248 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757815Ab2FFTKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 12:08:18 -0400
-Message-ID: <1339171694.5748.12.camel@jlt3.sipsolutions.net> (sfid-20120608_180825_325077_425BCA99)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andre Heider <a.heider@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 18:08:14 +0200
-In-Reply-To: <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com> (sfid-20120608_180524_269136_D8428874)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
-	 <20120607180325.7752b3c0@milhouse>
-	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
-	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
-	 <4FD11B47.10002@lwfinger.net>
-	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 (sfid-20120608_180524_269136_D8428874)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Jun 2012 15:10:14 -0400
+Received: by qcro28 with SMTP id o28so3538421qcr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 12:10:13 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 6 Jun 2012 21:10:13 +0200
+Message-ID: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com> (sfid-20120606_211036_695360_C0AB150F)
+Subject: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+From: Andre Heider <a.heider@gmail.com>
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	johannes.berg@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 18:05 +0200, Andre Heider wrote:
-> On Fri, Jun 8, 2012 at 5:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Fri, 2012-06-08 at 17:56 +0200, Andre Heider wrote:
-> >
-> >> > Hopefully this is better: http://p.sipsolutions.net/017d73ac0688f863.txt
-> >>
-> >> The previous patched all had the mac suspend failure. This one:
-> >>
-> >> drivers/net/wireless/b43/main.c: In function 'b43_qos_upload_all':
-> >> drivers/net/wireless/b43/main.c:3483: error: size of array 'type name'
-> >> is negative
-> >> drivers/net/wireless/b43/main.c: In function 'b43_qos_clear':
-> >> drivers/net/wireless/b43/main.c:3502: error: size of array 'type name'
-> >> is negative
-> >> drivers/net/wireless/b43/main.c: In function 'b43_op_conf_tx':
-> >> drivers/net/wireless/b43/main.c:3578: error: size of array 'type name'
-> >> is negative
-> >
-> > Huh, I thought I compiled it ... guess I had the wrong version.
-> >
-> > http://p.sipsolutions.net/511dda98892d2c9a.txt
-> 
-> It's getting warmer:
-> 
-> [    9.456216] b43-phy0: Loading OpenSource firmware version 410.31754
-> [    9.473798] b43-phy0: Hardware crypto acceleration not supported by firmware
-> [    9.491781] b43-phy0: QoS not supported by firmware
-> [    9.868750] b43-phy0 debug: Chip initialized
-> [    9.888580] b43-phy0 debug: PIO initialized
-> [    9.899273] b43-phy0 debug: QoS disabled
-> [   10.088420] b43-phy0 debug: Wireless interface started
-> [   10.212209] b43-phy0 debug: Adding Interface type 2
-> [   12.739776] wlan0: authenticate with d8:5d:4c:9c:31:14
-> [   12.796248] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
-> [   12.811768] wlan0: authenticated
-> [   12.823310] wlan0: associate with d8:5d:4c:9c:31:14 (try 1/3)
-> [   12.844942] wlan0: RX AssocResp from d8:5d:4c:9c:31:14 (capab=0x411
-> status=0 aid=2)
-> [   12.863966] wlan0: associated
-> [   16.319097] ieee80211 phy0: wlan0: No probe response from AP
-> d8:5d:4c:9c:31:14 after 500ms, disconnecting.
-> [   16.349674] cfg80211: Calling CRDA for country: DE
-> [   17.597307] wlan0: authenticate with d8:5d:4c:9c:31:14
-> [   17.638399] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
-> [   17.851085] wlan0: send auth to d8:5d:4c:9c:31:14 (try 2/3)
-> [   18.063086] wlan0: send auth to d8:5d:4c:9c:31:14 (try 3/3)
-> [   18.275081] wlan0: authentication with d8:5d:4c:9c:31:14 timed out
-> 
-> Tried it 3 times, always times out.
+Hi,
 
-So you didn't get the warning, but can you still check what
-info->hw_queue is in pio.c?
+the wlan daughterboard on a nintendo wii stopped working with current master.
+Building from the v3.4 tag gives me a working device.
 
-johannes
+I bisected this to:
 
+commit 3a25a8c8b75b430c4f4022918e26fa51d557ecde
+Author: Johannes Berg <johannes.berg@intel.com>
 
+The hw queues fail the check in ieee80211_check_queues(). When I hack
+that function to always "return 0;" wlan works again.
+
+These 2 printk()s:
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index d4c19a7..246fc04 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -154,7 +154,9 @@ static int ieee80211_check_queues(struct
+ieee80211_sub_if_data *sdata)
+    int n_queues = sdata->local->hw.queues;
+    int i;
+
++   printk("n_queues=%d\n", n_queues);
+    for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++       printk("sdata->vif.hw_queue[%d]=%d\n", i, sdata->vif.hw_queue[i]);
+        if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
+                 IEEE80211_INVAL_HW_QUEUE))
+            return -EINVAL;
+
+end in:
+[   11.873077] n_queues=1
+[   11.897066] sdata->vif.hw_queue[0]=0
+[   11.900451] sdata->vif.hw_queue[1]=1
+
+The surrounding dmesg output is:
+[    0.270900] sdhci: Secure Digital Host Controller Interface driver
+[    0.274159] sdhci: Copyright(c) Pierre Ossman
+[    0.286360] sdhci-pltfm: SDHCI platform and OF driver helper
+[    0.318739] mmc0: SDHCI controller on d070000.sd [d070000.sd] using DMA
+[    0.358650] mmc1: SDHCI controller on d080000.sdio [d080000.sdio] using DMA
+[    0.366951] TCP: cubic registered
+[    0.370514] NET: Registered protocol family 17
+[    0.374265] Bluetooth: RFCOMM TTY layer initialized
+[    0.386710] Bluetooth: RFCOMM socket layer initialized
+[    0.390129] Bluetooth: RFCOMM ver 1.11
+[    0.393466] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+[    0.396794] Bluetooth: BNEP filters: protocol multicast
+[    0.400096] Bluetooth: HIDP (Human Interface Emulation) ver 1.2
+[    0.403386] initlevel:7=late, 14 registered initcalls
+[    0.408372] Waiting for root device /dev/mmcblk0p2...
+[    0.425466] mmc0: new high speed SD card at address f181
+[    0.429456] mmcblk0: mmc0:f181 SD02G 1.87 GiB
+[    0.434311]  mmcblk0: p1 p2 p3
+[    0.461667] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
+[    0.467214] mmc1: queuing unknown CIS tuple 0x80 (5 bytes)
+[    0.471669] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
+[    0.485751] mmc1: queuing unknown CIS tuple 0x80 (5 bytes)
+[    0.493260] mmc1: queuing unknown CIS tuple 0x80 (10 bytes)
+[    0.496433] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
+[    0.499543] mmc1: queuing unknown CIS tuple 0x80 (2 bytes)
+[    0.502583] mmc1: queuing unknown CIS tuple 0x80 (5 bytes)
+[    0.505491] mmc1: queuing unknown CIS tuple 0x80 (4 bytes)
+[    0.508130] mmc1: new SDIO card at address 0001
+[    0.520378] b43-sdio mmc1:0001:1: Chip ID 14e4:4318
+[    0.523595] ssb: Found chip with id 0x4318, rev 0x02 and package 0x02
+[    0.557528] ssb: chipcommon status is 0x0
+[    0.561271] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
+[    0.643432] ssb: Sonics Silicon Backplane found on SDIO device mmc1:0001:1
+[    0.770220] EXT4-fs (mmcblk0p2): mounted filesystem with ordered
+data mode. Opts: (null)
+[    0.786605] VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
+[    0.795436] Freeing unused kernel memory: 144k freed
+[    5.339710] EXT4-fs (mmcblk0p2): re-mounted. Opts: (null)
+[    5.789283] EXT4-fs (mmcblk0p2): re-mounted. Opts: discard,errors=remount-ro
+[   10.919815] b43-phy0: Loading OpenSource firmware version 410.31754
+[   10.936408] b43-phy0: Hardware crypto acceleration not supported by firmware
+[   10.943866] b43-phy0: QoS not supported by firmware
+[   11.873077] n_queues=1
+[   11.897066] sdata->vif.hw_queue[0]=0
+[   11.900451] sdata->vif.hw_queue[1]=1
+[   11.903763] ------------[ cut here ]------------
+[   11.906987] WARNING: at /home/andre/devel-temp/linux/net/mac80211/iface.c:164
+[   11.913314] NIP: c039e248 LR: c039e1f4 CTR: 00000000
+[   11.916488] REGS: d3019cb0 TRAP: 0700   Not tainted  (3.5.0-rc1-wii+)
+[   11.919674] MSR: 00029032 <EE,ME,IR,DR,RI>  CR: 28888428  XER: 00000000
+[   11.926211] TASK = d3020270[1221] 'wpa_supplicant' THREAD: d3018000
+[   11.926211] GPR00: 00000001 d3019d60 d3020270 00000018 00001032
+d3019c48 ffffffff 00000000
+[   11.926211] GPR08: d38e5220 c04f0000 00000000 000000a5 22888428
+100f2a98 10015603 00000027
+[   11.926211] GPR16: ffffffff 100d8200 100d1bd4 100f0000 100eaa84
+100eaa84 bfe0ce1e d3b8bccc
+[   11.926211] GPR24: 00000000 d3019e28 00000001 c049ced3 00000001
+d3bb3402 00000002 d3bb3400
+[   11.957761] NIP [c039e248] ieee80211_check_queues+0xb0/0x188
+[   11.961435] LR [c039e1f4] ieee80211_check_queues+0x5c/0x188
+[   11.965097] Call Trace:
+[   11.968754] [d3019d60] [c039e1f4] ieee80211_check_queues+0x5c/0x188
+(unreliable)
+[   11.976391] [d3019d80] [c039fef0] ieee80211_do_open+0x548/0xb88
+[   11.980396] [d3019db0] [c02c0300] __dev_open+0xc4/0x120
+[   11.984400] [d3019dd0] [c02bd0ec] __dev_change_flags+0xe0/0x174
+[   11.988397] [d3019df0] [c02c01f0] dev_change_flags+0x24/0x70
+[   11.992413] [d3019e10] [c030f618] devinet_ioctl+0x2bc/0x77c
+[   11.996500] [d3019e80] [c0310df4] inet_ioctl+0xd8/0x114
+[   12.000568] [d3019e90] [c02a9728] sock_ioctl+0x1fc/0x248
+[   12.004555] [d3019eb0] [c00d9170] do_vfs_ioctl+0x688/0x730
+[   12.008466] [d3019f10] [c00d9268] sys_ioctl+0x50/0x90
+[   12.012333] [d3019f40] [c000f668] ret_from_syscall+0x0/0x38
+[   12.016134] --- Exception: c01 at 0xfbe0058
+[   12.016134]     LR = 0xfbdffbc
+[   12.023526] Instruction dump:
+[   12.027091] 68000001 0f000000 2f800000 41be00d4 38000001 3d20c04f
+9809712f 480000c4
+[   12.034244] 41b8002c 3d20c04f 88097130 68000001 <0f000000> 2f800000
+41be00a8 38000001
+[   12.041393] ---[ end trace 5b1ec0526600d1ae ]---
+[   13.343824] b43-phy0: Loading OpenSource firmware version 410.31754
+[   13.347591] b43-phy0: Hardware crypto acceleration not supported by firmware
+[   13.354286] b43-phy0: QoS not supported by firmware
+[   14.299915] n_queues=1
+[   14.303012] sdata->vif.hw_queue[0]=0
+[   14.306058] sdata->vif.hw_queue[1]=1
+[   15.643819] b43-phy0: Loading OpenSource firmware version 410.31754
+[   15.647501] b43-phy0: Hardware crypto acceleration not supported by firmware
+[   15.654225] b43-phy0: QoS not supported by firmware
+[   16.584720] n_queues=1
+[   16.587757] sdata->vif.hw_queue[0]=0
+[   16.590721] sdata->vif.hw_queue[1]=1
+
+Any ideas?
+
+Thanks,
+Andre
