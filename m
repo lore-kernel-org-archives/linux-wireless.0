@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:50518 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754768Ab2FYHXL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33688 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934Ab2FFNXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 03:23:11 -0400
-Received: by lbbgg6 with SMTP id gg6so8177741lbb.22
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 00:23:09 -0700 (PDT)
-Message-ID: <1340608985.1631.453.camel@cumari.coelho.fi> (sfid-20120625_092315_458405_10429671)
-Subject: Re: [PATCH] wlcore: drop INET dependency
-From: Luciano Coelho <coelho@ti.com>
-To: Randy Dunlap <rdunlap@xenotime.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 25 Jun 2012 10:23:05 +0300
-In-Reply-To: <4FE7CA1C.9030204@xenotime.net>
-References: <4FE7CA1C.9030204@xenotime.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Jun 2012 09:23:12 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 27/29] iwlwifi: configure PHY version for 1000 series
+Date: Wed,  6 Jun 2012 15:22:08 +0200
+Message-Id: <1338988930-11561-27-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152324_145840_5E0CDF3D)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(updated to my new email address).
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Sun, 2012-06-24 at 19:17 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> Mainline build reports:
-> 
-> warning: (WL12XX) selects WLCORE which has unmet direct dependencies (NETDEVICES && WLAN && WL_TI && GENERIC_HARDIRQS && MAC80211 && INET)
-> 
-> The INET dependency was added in commit
-> 3c6af5b54fe74b6e56efadc22927e4055d00e9fc:
->     wl1271_main.c:(.text+0x271052): undefined reference to `unregister_inetaddr_
-> notifier'
->     wl1271_main.c:(.text+0x2714d7): undefined reference to `register_inetaddr_no
-> tifier'
->     
->     Driver is doing some filtering based on IP addresses...
-> 
-> but this driver no longer has that code and it builds fine even when
-> CONFIG_INET is not enabled, so drop that dependency and eliminate the
-> kconfig warning message.
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> Cc: Luciano Coelho <luciano.coelho@nokia.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> ---
+We should also configure the PHY version in the
+CSR_HW_IF_CONFIG_REG register for 1000 series
+devices, not just for the other devices.
 
-Acked-by: Luciano Coelho <coelho@ti.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/devices.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Thanks, Randy!
-
-This one goes quite far back, the dependency in the code was removed in
-commit eb887d (wl1271: Use the ARP configuration function from
-mac80211), 2 years ago.
-
-I think this should be applied to 3.5 and maybe even to stable (is this
-kind of warning important enough to deserve going to stable releases?)
-
-John, can you take this directly into wireless.git?
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/iwlwifi/dvm/devices.c b/drivers/net/wireless/iwlwifi/dvm/devices.c
+index 747e576..d12f063 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/devices.c
++++ b/drivers/net/wireless/iwlwifi/dvm/devices.c
+@@ -96,10 +96,7 @@ static void iwl1000_set_ct_threshold(struct iwl_priv *priv)
+ /* NIC configuration for 1000 series */
+ static void iwl1000_nic_config(struct iwl_priv *priv)
+ {
+-	/* set CSR_HW_CONFIG_REG for uCode use */
+-	iwl_set_bit(priv->trans, CSR_HW_IF_CONFIG_REG,
+-		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
+-		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
++	iwl_rf_config(priv);
+ 
+ 	/* Setting digital SVR for 1000 card to 1.32V */
+ 	/* locking is acquired in iwl_set_bits_mask_prph() function */
+-- 
+1.7.10
 
