@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33316 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752590Ab2FVO0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 10:26:18 -0400
-Message-ID: <1340375177.31821.7.camel@joe2Laptop> (sfid-20120622_162621_665280_54BE3A97)
-Subject: Re: dynamic debug
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>
-Cc: Jim Cromie <jim.cromie@gmail.com>, Jason Baron <jbaron@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Jun 2012 07:26:17 -0700
-In-Reply-To: <1340367797.4491.21.camel@jlt3.sipsolutions.net>
-References: <1340367797.4491.21.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2379 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753435Ab2FFXnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 19:43:42 -0400
+Message-ID: <4FCFEB0E.2020206@broadcom.com> (sfid-20120607_014444_999304_303AB406)
+Date: Wed, 6 Jun 2012 16:43:10 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Julia Lawall" <Julia.Lawall@lip6.fr>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	kernel-janitors@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, joe@perches.com,
+	"Julia Lawall" <julia@diku.dk>
+Subject: Re: [PATCH 5/7]
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c: adjust suspicious bit
+ operation
+References: <1339018901-28439-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1339018901-28439-6-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1339018901-28439-6-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-22 at 14:23 +0200, Johannes Berg wrote:
-> Joe, Jim, Jason,
-> 
-> Joe's conversion of mac80211 to pr_debug() was pretty much a disaster,
+On 06/06/2012 02:41 PM, Julia Lawall wrote:
+> From: Julia Lawall<Julia.Lawall@lip6.fr>
+>
+> IRQF_TRIGGER_HIGH is 0x00000004, so it seems that&  was intended rather than |.
+>
+> This problem was found using Coccinelle (http://coccinelle.lip6.fr/).
+>
+> Signed-off-by: Julia Lawall<julia@diku.dk>
 
-First I've heard of it.
+Thanks, Julia. But this has already been fixed by Joe Perches [1] and 
+the patch has arrived at Linux wireless tree.
 
-> now people have to first select what they want in Kconfig, and then
-> still enable dynamic debug in debugfs...
+Franky
 
-This doesn't parse for me.
-Please illustrate further.
-
->  That doesn't make any sense at
-> all, and requires teaching everybody new tricks, so I'm basically
-> reverting it for now in favour of pr_info() instead of pr_debug().
-
-Why not just add #define DEBUG?
-
-> I'd actually not mind using pr_debug() if it meant we could get rid of
-> all the Kconfig symbols, but that's not possible.
-> 
-> The biggest problem here really is that the dynamic debug infrastructure
-> lets us enable messages at runtime, which is great, but the granularity
-> is useless since you only have these possibilities:
-
-What I think dyn_debug needs is a mask/level control.
-so you can do the equivalent of
-	echo val > /somewhere
-to control the tested against value
-
-see: https://lkml.org/lkml/2011/8/21/128
-
-
+[1] https://lkml.org/lkml/2012/5/30/482
 
