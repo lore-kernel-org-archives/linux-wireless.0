@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:48184 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751712Ab2FFRHb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45738 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030Ab2FFLxD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 13:07:31 -0400
-Received: by lbbgg6 with SMTP id gg6so5905085lbb.36
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 10:07:12 -0700 (PDT)
-Message-ID: <1339002430.7078.39.camel@cumari.coelho.fi> (sfid-20120606_190734_600082_5AB60B35)
-Subject: Re: [PATCH v2] wlcore: do not send stop fwlog cmd if fw is hanged
-From: Luciano Coelho <coelho@ti.com>
-To: Yoni Divinsky <yoni.divinsky@ti.com>
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com
-Date: Wed, 06 Jun 2012 20:07:10 +0300
-In-Reply-To: <1337157258-15163-2-git-send-email-yoni.divinsky@ti.com>
-References: <1337157258-15163-1-git-send-email-yoni.divinsky@ti.com>
-	 <1337157258-15163-2-git-send-email-yoni.divinsky@ti.com>
+	Wed, 6 Jun 2012 07:53:03 -0400
+Message-ID: <1338983581.26346.2.camel@jlt3.sipsolutions.net> (sfid-20120606_135307_006832_6B1DF605)
+Subject: Re: [RFC 07/14] cfg80211: track monitor interfaces count
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bing Zhao <bzhao@marvell.com>, Kalle Valo <kvalo@adurom.com>
+Date: Wed, 06 Jun 2012 13:53:01 +0200
+In-Reply-To: <4FCF41AA.9070400@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	  <1338203942-5667-8-git-send-email-michal.kazior@tieto.com>
+	 <1338973824.4513.42.camel@jlt3.sipsolutions.net>
+	 <4FCF41AA.9070400@tieto.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-16 at 11:34 +0300, Yoni Divinsky wrote:
-> If the driver received a watchdog interrupt then the
-> assumption is that the fw is hanged. Avoid sending
-> the stop fwlog command in case of a watchdog recovey
-> to avoid waiting for the 2 seconds timeout of the command.
+On Wed, 2012-06-06 at 13:40 +0200, Michal Kazior wrote:
+> Johannes Berg wrote:
+> > The other thing we might then want to is make this more general and not
+> > just inform the driver about the monitor/no-monitor layout change, but
+> > also tell it which interface combination we're in right now? Might look
+> > a bit more like
+> >
+> > set_iface_combination(wiphy, dev, combination);
+> >
+> > or even
+> > set_iface_combination(wiphy, dev, combination, have_monitor);
+> >
+> >
+> > Then pure monitor would be "combination == NULL, have_monitor=True",
+> > etc. The only downside is that we don't have combinations advertised for
+> > when there's a single interface only, so we'd have to point to some
+> > internal single-interface combinations then (static in cfg80211).
+> > Thoughts?
 > 
-> Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
-> ---
+> I'm afraid we can't simply tell which combination we're in. I imagine 
+> there may be two or three combinations matching at the same time. Take 
+> this for example:
+> 
+>    comb1: 1xSTA + 1xAP (max channels = 1)
+>    comb2: 2xSTA (max channels = 2)
+> 
+>    wlan0 is running as STA @ chan=1
+> 
+> Which combination are we in? Which one should we report to the driver?
 
-Thanks, Yoni! Applied.
+Doesn't matter, right? Pick the one with most channels or something? :-)
 
---
-Luca.
+> I don't see what passing current interface combination would be useful 
+> for. Do you have something particular in mind?
+
+I'm thinking about # of channels in the combination mostly, in
+particular in combination with IBSS. OTOH, if we always reserve one
+channel for IBSS in cfg80211 (unless it's fixed & driver supports that)
+then it won't matter.
+
+But then again, what about say 2xSTA being active and drivers with
+connect() API?
+
+johannes
 
