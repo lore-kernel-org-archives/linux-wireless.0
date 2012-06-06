@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36302 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753612Ab2FEXIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 19:08:50 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 18/18] brcmsmac: handle non PCI devices in the phy code
-Date: Wed,  6 Jun 2012 01:07:21 +0200
-Message-Id: <1338937641-8519-19-git-send-email-hauke@hauke-m.de> (sfid-20120606_012943_549966_A8EF417E)
-In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:33673 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754584Ab2FFNWX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 09:22:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 08/29] iwlwifi: give HT format to mac80211/radiotap
+Date: Wed,  6 Jun 2012 15:21:49 +0200
+Message-Id: <1338988930-11561-8-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152240_308029_BFFCB9CB)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some code in write_{radio,radio}_reg() should just be run if this is a
-pci based device. Add the condition again which was removed in commit:
-commit 821e4e93172e4f7d5ac1eade04665c3dc5049c4a
-Author: Roland Vossen <rvossen@broadcom.com>
-Date:   Mon Aug 8 15:58:58 2011 +0200
+From: Johannes Berg <johannes.berg@intel.com>
 
-    staging: brcm80211: removed unused bus code from softmac
+We know whether we received a frame in GF format
+or not, add it to the radiotap information.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 ++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-index 25a17eb..5f1493c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -198,6 +198,8 @@ u16 read_radio_reg(struct brcms_phy *pi, u16 addr)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index 403de96..5035d2d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -1012,6 +1012,8 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+ 		rx_status.flag |= RX_FLAG_40MHZ;
+ 	if (rate_n_flags & RATE_MCS_SGI_MSK)
+ 		rx_status.flag |= RX_FLAG_SHORT_GI;
++	if (rate_n_flags & RATE_MCS_GF_MSK)
++		rx_status.flag |= RX_FLAG_HT_GF;
  
- void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
- {
-+	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
-+
- 	if ((D11REV_GE(pi->sh->corerev, 24)) ||
- 	    (D11REV_IS(pi->sh->corerev, 22)
- 	     && (pi->pubpi.phy_type != PHY_TYPE_SSN))) {
-@@ -209,9 +211,11 @@ void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
- 		bcma_write16(pi->d11core, D11REGOFFS(phy4wdatalo), val);
- 	}
+ 	iwlagn_pass_packet_to_mac80211(priv, header, len, ampdu_status,
+ 				    rxb, &rx_status);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 19e5235..26a87c2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -38,6 +38,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/if_arp.h>
  
--	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
--		(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
--		pi->phy_wreg = 0;
-+	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) {
-+		if (++pi->phy_wreg >= pi->phy_wreg_limit) {
-+			(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
-+			pi->phy_wreg = 0;
-+		}
- 	}
- }
++#include <net/ieee80211_radiotap.h>
+ #include <net/mac80211.h>
  
-@@ -294,10 +298,14 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
- 	if (addr == 0x72)
- 		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
- #else
-+	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
-+
- 	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
--	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
--		pi->phy_wreg = 0;
--		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
-+	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) {
-+		if (++pi->phy_wreg >= pi->phy_wreg_limit) {
-+			pi->phy_wreg = 0;
-+			(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
-+		}
- 	}
- #endif
- }
+ #include <asm/div64.h>
+@@ -154,6 +155,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		    IEEE80211_HW_SCAN_WHILE_IDLE;
+ 
+ 	hw->offchannel_tx_hw_queue = IWL_AUX_QUEUE;
++	hw->radiotap_mcs_details |= IEEE80211_RADIOTAP_MCS_HAVE_FMT;
+ 
+ 	/*
+ 	 * Including the following line will crash some AP's.  This
 -- 
-1.7.9.5
+1.7.10
 
