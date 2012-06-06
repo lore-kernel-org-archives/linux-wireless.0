@@ -1,54 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56285 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754368Ab2FXJbM (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:63143 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754845Ab2FFIZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2012 05:31:12 -0400
-Message-ID: <1340530258.4577.4.camel@jlt3.sipsolutions.net> (sfid-20120624_113149_922579_7B3EB009)
-Subject: Re: [PATCH 4/6] mac80211: clean up debugging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>,
-	Jason Baron <jbaron@redhat.com>
-Date: Sun, 24 Jun 2012 11:30:58 +0200
-In-Reply-To: <1340466044.7758.4.camel@joe2Laptop>
-References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
-	 <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
-	 <1340438536.2274.9.camel@joe2Laptop>
-	 <1340456697.4636.1.camel@jlt3.sipsolutions.net>
-	 <1340466044.7758.4.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Jun 2012 04:25:10 -0400
+Received: by weyu7 with SMTP id u7so4144205wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:25:09 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3] mac80211: stop Rx during HW reconfig
+Date: Wed,  6 Jun 2012 11:25:02 +0300
+Message-Id: <1338971102-4872-1-git-send-email-arik@wizery.com> (sfid-20120606_102518_331941_00D7BF99)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-06-23 at 08:40 -0700, Joe Perches wrote:
+While HW reconfig is in progress, drop all incoming Rx. This prevents
+incoming packets from changing the internal state of the driver or
+calling callbacks of the low level driver while it is in inconsistent
+state.
 
-> > FWIW, I would definitely prefer named rather than bitmap selectors :-)
-> 
-> (Added Jason and Jim)
-> 
-> Given it's a debug-only facility, I think bitmap
-> selectors sufficient, Maybe adding an external
-> utility to map names to bits would be enough to
-> not need that feature in the kernel.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/main.c        |    7 +++++++
+ net/mac80211/rx.c          |    4 ++++
+ net/mac80211/util.c        |    3 +++
+ 4 files changed, 17 insertions(+)
 
-I guess the real question isn't whether it should be a bitmap or a name
-or whatever, it's how it's implemented. To allay fears about runtime
-overhead, I think it would be good to use the jump_label mechanism to
-implement it -- I do realise that still has runtime overhead for the
-argument preparation, but still.
-
-Looking at the history, it seems that jump labels were at one point used
-by reverted to fix gcc 3.3, I'm sure that could be resolved?
-
-Anyway, the point is that if it uses jump labels then we need some sort
-of house-keeping structures anyway to be able to enable/disable the
-right jump labels. And that could easily have a string attached, which
-would make it easier when working with bug reporters etc. since you
-don't have to worry about the exact bitmap, you can give them a string
-(and if it's wrong, there will be a failure rather than silently getting
-the wrong data)
-
-johannes
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ae046b5..04e8912 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -912,6 +912,9 @@ struct ieee80211_local {
+ 	/* device is started */
+ 	bool started;
+ 
++	/* device is during a HW reconfig */
++	bool in_reconfig;
++
+ 	/* wowlan is enabled -- don't reconfig on resume */
+ 	bool wowlan;
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b70f7f0..eb4a5b9 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -345,6 +345,13 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
+ 	ieee80211_stop_queues_by_reason(hw,
+ 		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
++	/*
++	 * Stop all Rx during the reconfig. We don't want state changes
++	 * or driver callbacks while this is in progress.
++	 */
++	local->in_reconfig = true;
++	barrier();
++
+ 	schedule_work(&local->restart_work);
+ }
+ EXPORT_SYMBOL(ieee80211_restart_hw);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index d5ac02f..3b488e3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3033,6 +3033,10 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (unlikely(local->quiescing || local->suspended))
+ 		goto drop;
+ 
++	/* We might be during a HW reconfig, prevent Rx for the same reason */
++	if (unlikely(local->in_reconfig))
++		goto drop;
++
+ 	/*
+ 	 * The same happens when we're not even started,
+ 	 * but that's worth a warning.
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 76f90c1..ee46273 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1399,6 +1399,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		if (ieee80211_sdata_running(sdata))
+ 			ieee80211_enable_keys(sdata);
+ 
++	local->in_reconfig = false;
++	barrier();
++
+  wake_up:
+ 	/*
+ 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
+-- 
+1.7.9.5
 
