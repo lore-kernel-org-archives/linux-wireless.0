@@ -1,124 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
+Received: from mga02.intel.com ([134.134.136.20]:44010 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756517Ab2FZMai (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:30:38 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v3 05/13] cfg80211: introduce cfg80211_get_chan_state
-Date: Tue, 26 Jun 2012 14:30:10 +0200
-Message-ID: <1340713818-28549-6-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143046_229686_7D1840A8)
-In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755777Ab2FFKIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:08:10 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 25/29] NFC: Switch to Initiator mode when getting NFC_ATTR_PROTOCOLS
+Date: Wed,  6 Jun 2012 12:16:42 +0200
+Message-Id: <1338977806-30279-26-git-send-email-sameo@linux.intel.com> (sfid-20120606_120816_702831_D46985EF)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helper function for finding out which channel is
-used by a given interface.
+That is needed for keeping backward compatibility with apps using the old
+netlink polling API (NFC_ATTR_PROTOCOLS instead of NFC_ATTR_IM_PROTOCOLS).
 
-An exclusive channel can be used only by a single
-interface. This is mainly for non-fixed channel
-IBSS handling.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- net/wireless/chan.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h |   12 ++++++++++++
- 2 files changed, 63 insertions(+), 0 deletions(-)
+ net/nfc/netlink.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index c1999e4..167e7cb 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -92,3 +92,54 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 21eaa9b..03c31db 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -597,11 +597,11 @@ static int nfc_genl_start_poll(struct sk_buff *skb, struct genl_info *info)
  
- 	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
- }
-+
-+void
-+cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
-+		        struct wireless_dev *wdev,
-+		        struct ieee80211_channel **chan,
-+		        enum cfg80211_chan_mode *chanmode)
-+{
-+	*chan = NULL;
-+	*chanmode = CHAN_MODE_UNDEFINED;
-+
-+	ASSERT_RDEV_LOCK(rdev);
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	if (!netif_running(wdev->netdev))
-+		return;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_ADHOC:
-+		if (wdev->current_bss) {
-+			*chan = wdev->current_bss->pub.channel;
-+			*chanmode = wdev->ibss_fixed
-+				  ? CHAN_MODE_SHARED
-+				  : CHAN_MODE_EXCLUSIVE;
-+			return;
-+		}
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		if (wdev->current_bss) {
-+			*chan = wdev->current_bss->pub.channel;
-+			*chanmode = CHAN_MODE_SHARED;
-+			return;
-+		}
-+		break;
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_MESH_POINT:
-+		*chan = wdev->channel;
-+		*chanmode = CHAN_MODE_SHARED;
-+		return;
-+	case NL80211_IFTYPE_MONITOR:
-+	case NL80211_IFTYPE_AP_VLAN:
-+	case NL80211_IFTYPE_WDS:
-+		/* these interface types don't really have a channel */
-+		return;
-+	case NL80211_IFTYPE_UNSPECIFIED:
-+	case NUM_NL80211_IFTYPES:
-+		WARN_ON(1);
-+	}
-+
-+	return;
-+}
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index a366ffd..bbf2f75 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -267,6 +267,12 @@ struct cfg80211_cached_keys {
- 	int def, defmgmt;
- };
+ 	if (info->attrs[NFC_ATTR_TM_PROTOCOLS])
+ 		tm_protocols = nla_get_u32(info->attrs[NFC_ATTR_TM_PROTOCOLS]);
+-	else if (info->attrs[NFC_ATTR_PROTOCOLS])
+-		tm_protocols = nla_get_u32(info->attrs[NFC_ATTR_PROTOCOLS]);
  
-+enum cfg80211_chan_mode {
-+	CHAN_MODE_UNDEFINED,
-+	CHAN_MODE_SHARED,
-+	CHAN_MODE_EXCLUSIVE,
-+};
-+
+ 	if (info->attrs[NFC_ATTR_IM_PROTOCOLS])
+ 		im_protocols = nla_get_u32(info->attrs[NFC_ATTR_IM_PROTOCOLS]);
++	else if (info->attrs[NFC_ATTR_PROTOCOLS])
++		im_protocols = nla_get_u32(info->attrs[NFC_ATTR_PROTOCOLS]);
  
- /* free object */
- extern void cfg80211_dev_free(struct cfg80211_registered_device *rdev);
-@@ -445,6 +451,12 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
- 	return cfg80211_can_change_interface(rdev, NULL, iftype);
- }
- 
-+void
-+cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
-+		        struct wireless_dev *wdev,
-+		        struct ieee80211_channel **chan,
-+		        enum cfg80211_chan_mode *chanmode);
-+
- struct ieee80211_channel *
- rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
- 		  int freq, enum nl80211_channel_type channel_type);
+ 	dev = nfc_get_device(idx);
+ 	if (!dev)
 -- 
-1.7.0.4
+1.7.9.1
 
