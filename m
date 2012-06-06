@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45587 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482Ab2FZUXc (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:57066 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754105Ab2FFISw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 16:23:32 -0400
-Date: Mon, 25 Jun 2012 15:07:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Panayiotis Karabassis <panayk@gmail.com>
-Cc: linux-wireless@vger.kernel.org, shafi.wireless@gmail.com,
-	fynivx@gmail.com, gilleshabran@gmail.com
-Subject: Re: [PATCH] ath9k: enable serialize_regmode for non-PCIE AR9287
-Message-ID: <20120625190730.GB9177@tuxdriver.com> (sfid-20120626_222336_752710_3D37CEB5)
-References: <1340476984-19516-1-git-send-email-panayk@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1340476984-19516-1-git-send-email-panayk@gmail.com>
+	Wed, 6 Jun 2012 04:18:52 -0400
+Received: by lahc1 with SMTP id c1so5465970lah.32
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:18:50 -0700 (PDT)
+Message-ID: <1338970728.7078.3.camel@cumari.coelho.fi> (sfid-20120606_101857_488782_67770076)
+Subject: Re: [PATCH] wlcore: wait for roc complete only for the first roc
+ command
+From: Luciano Coelho <coelho@ti.com>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, arik@wizery.com
+Date: Wed, 06 Jun 2012 11:18:48 +0300
+In-Reply-To: <1337000858-13620-1-git-send-email-victorg@ti.com>
+References: <1337000858-13620-1-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 23, 2012 at 09:43:04PM +0300, Panayiotis Karabassis wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=42903
+On Mon, 2012-05-14 at 16:07 +0300, Victor Goldenshtein wrote:
+> In some multi role scenarios the driver might send multi
+> roc requests without sending a croc first, the fw queues
+> those requests and starts service the next roc request as
+> soon as the driver sends a croc for the previous one. So,
+> if the fw rocs on channel X and driver asks to roc also
+> on channel Y, the fw will not start service Y (and will
+> not send roc complete event for this request) until the
+> driver releases the fw with croc X.
 > 
-> Based on the work of <fynivx@gmail.com>
-
-Needs a "Signed-off-by: ...' line.
-
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
 > ---
->  drivers/net/wireless/ath/ath9k/hw.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index a42c26f..ebfb2a3 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -614,7 +614,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
->  
->  	if (NR_CPUS > 1 && ah->config.serialize_regmode == SER_REG_MODE_AUTO) {
->  		if (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCI ||
-> -		    ((AR_SREV_9160(ah) || AR_SREV_9280(ah)) &&
-> +		    ((AR_SREV_9160(ah) || AR_SREV_9280(ah) || AR_SREV_9287(ah)) &&
->  		     !ah->is_pciexpress)) {
->  			ah->config.serialize_regmode =
->  				SER_REG_MODE_ON;
-> -- 
-> 1.7.10
-> 
-> 
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Applied and pushed!
+
+--
+Luca.
+
