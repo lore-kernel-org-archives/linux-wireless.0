@@ -1,76 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35226 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:33682 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755104Ab2FUNY1 (ORCPT
+	with ESMTP id S1754503Ab2FFNXI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 09:24:27 -0400
-Message-ID: <1340285064.4489.24.camel@jlt3.sipsolutions.net> (sfid-20120621_152429_570624_8D3B15F6)
-Subject: Re: [RFC v2 1/7] mac80211: introduce channel contexts skeleton code
+	Wed, 6 Jun 2012 09:23:08 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 21 Jun 2012 15:24:24 +0200
-In-Reply-To: <1340280216-18807-2-git-send-email-michal.kazior@tieto.com>
-References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
-	 <1340280216-18807-2-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 11/29] iwlwifi: trust mac80211 HT40 setting
+Date: Wed,  6 Jun 2012 15:21:52 +0200
+Message-Id: <1338988930-11561-11-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152324_709590_ECB1522F)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-21 at 14:03 +0200, Michal Kazior wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +++ b/include/net/mac80211.h
-> @@ -143,6 +143,41 @@ struct ieee80211_low_level_stats {
->  	unsigned int dot11RTSSuccessCount;
->  };
->  
-> +
-> +/**
-> + * enum ieee80211_chanctx_mode - channel context configuration mode
-> + *
-> + * @IEEE80211_CHANCTX_SHARED: channel context may be used by
-> + *	multiple interfaces
-> + * @IEEE80211_CHANCTX_EXCLUSIVE: channel context can be used
-> + *	only by a single interface. This can be used for example for
-> + *	non-fixed channel IBSS.
-> + */
-> +enum ieee80211_chanctx_mode {
-> +	IEEE80211_CHANCTX_SHARED,
-> +	IEEE80211_CHANCTX_EXCLUSIVE
-> +};
+When mac80211 asks us to do HT40, it'll not do so
+on a channel that we marked as not having HT40+/-
+with IEEE80211_CHAN_NO_HT40PLUS (or MINUS). Thus,
+there's no need to verify it again in the driver.
 
-Does the driver ever care about this? It seems mostly internal to
-determine what's going on?
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c |   24 +-----------------------
+ 1 file changed, 1 insertion(+), 23 deletions(-)
 
-
-> + * @chanctx_conf: channel context vif is bound to, may be NULL
-
-Maybe say "will be %NULL before the interface is assigned to a channel
-context" or so?
-
-> +	INIT_LIST_HEAD(&ctx->interfaces);
-
-Is there really a need for this list? It seems only moderately less
-efficient to iterate all interfaces and filter by channel context, and
-that's probably easier to maintain?
-
-> +static void
-> +__ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
-> +{
-> +	struct ieee80211_chanctx_conf *conf = sdata->vif.chanctx_conf;
-> +	struct ieee80211_chanctx *ctx =
-> +			container_of(conf, struct ieee80211_chanctx, conf);
-> +
-> +	if (!conf)
-> +		return;
-> +
-> +	ieee80211_unassign_vif_chanctx(sdata, ctx);
-> +	if (list_empty(&ctx->interfaces))
-> +		ieee80211_free_chanctx(ctx);
-> +}
-
-Ah, ok. So I guess there's a good use for the list at least here.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 36055ed..01fbf06 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -171,26 +171,6 @@ int iwl_send_add_sta(struct iwl_priv *priv,
+ 	return cmd.handler_status;
+ }
+ 
+-static bool iwl_is_channel_extension(struct iwl_priv *priv,
+-				     enum ieee80211_band band,
+-				     u16 channel, u8 extension_chan_offset)
+-{
+-	const struct iwl_channel_info *ch_info;
+-
+-	ch_info = iwl_get_channel_info(priv, band, channel);
+-	if (!is_channel_valid(ch_info))
+-		return false;
+-
+-	if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE)
+-		return !(ch_info->ht40_extension_channel &
+-					IEEE80211_CHAN_NO_HT40PLUS);
+-	else if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW)
+-		return !(ch_info->ht40_extension_channel &
+-					IEEE80211_CHAN_NO_HT40MINUS);
+-
+-	return false;
+-}
+-
+ bool iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+ 			    struct iwl_rxon_context *ctx,
+ 			    struct ieee80211_sta_ht_cap *ht_cap)
+@@ -210,9 +190,7 @@ bool iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+ 		return false;
+ #endif
+ 
+-	return iwl_is_channel_extension(priv, priv->band,
+-			le16_to_cpu(ctx->staging.channel),
+-			ctx->ht.extension_chan_offset);
++	return true;
+ }
+ 
+ static void iwl_sta_calc_ht_flags(struct iwl_priv *priv,
+-- 
+1.7.10
 
