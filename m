@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:60857 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757838Ab2FEIjD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53080 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064Ab2FFIvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 04:39:03 -0400
-Message-ID: <1338885523.1817.101.camel@aeonflux> (sfid-20120605_103910_267242_A7B3C23E)
-Subject: Re: [PATCH] NFC: Driver for SAMSUNG S3FHRN2 NFC Chip.
-From: Marcel Holtmann <marcel@holtmann.org>
-To: =?UTF-8?Q?=EC=9D=B4=EC=9A=B4=EA=B8=B0?= <woonki84.lee@samsung.com>
-Cc: linux-wireless@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	sameo@linux.intel.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, kgene.kim@samsung.com
-Date: Tue, 05 Jun 2012 17:38:43 +0900
-In-Reply-To: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com>
-References: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com>
+	Wed, 6 Jun 2012 04:51:43 -0400
+Message-ID: <1338972702.4513.24.camel@jlt3.sipsolutions.net> (sfid-20120606_105147_433796_F12872D4)
+Subject: Re: [RFC 01/14] cfg80211: respect intf combinations for 1 interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Jun 2012 10:51:42 +0200
+In-Reply-To: <1338203942-5667-2-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	 <1338203942-5667-2-git-send-email-michal.kazior@tieto.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
+> Don't ignore interface combinations when only one
+> interface is up. Otherwise we may call a driver to
+> create (or change) interface type to something it
+> didn't report in interface combinations it
+> reported.
 
-> This is a driver for the S3FHRN2 NFC device. the driver is just a
-> proxy getting SHDLC/HCI frames from a userspace stack.
+We still check wiphy.interface_modes before we even go into this
+function, no? Arguably we should move the check into the function, but
+I'm not sure what you're fixing here.
 
-<snip>
-
-> +
-> +	info->miscdev.minor = MISC_DYNAMIC_MINOR;
-> +	info->miscdev.name = S3FHRN2_DRIVER_NAME;
-> +	info->miscdev.fops = &s3fhrn2_fops;
-> +	info->miscdev.parent = &client->dev;
-> +	ret = misc_register(&info->miscdev);
-> +	if (ret < 0) {
-> +		dev_err(&client->dev, "failed to register Device\n");
-> +		goto err_dev_reg;
-> +	}
-
-instead of creating a misc character device, I would prefer that this
-gets integrated as driver for the NFC subsystem.
-
-We do not want to have shim NFC drivers in the kernel anymore.
-
-Regards
-
-Marcel
-
+johannes
 
