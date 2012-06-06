@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:51821 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab2FOUDl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 16:03:41 -0400
-Received: by yenl2 with SMTP id l2so2235112yen.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 13:03:40 -0700 (PDT)
-Date: Fri, 15 Jun 2012 16:03:29 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
-	linville@tuxdriver.com
-Cc: johannes.berg@intel.com
-Subject: [PATCH] ath5k: remove _bh from inner locks
-Message-ID: <20120615200329.GA19999@localhost> (sfid-20120615_220418_079389_DA7537E0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:17207 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755441Ab2FFKGz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:06:55 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 06/29] NFC: Export LLCP general bytes getter
+Date: Wed,  6 Jun 2012 12:16:23 +0200
+Message-Id: <1338977806-30279-7-git-send-email-sameo@linux.intel.com> (sfid-20120606_120658_121234_FF5CBD5E)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-spin_unlock_bh(&txq->lock) already disables softirqs so we don't want
-to do it here.  Fixes smatch warnings:
-
-   drivers/net/wireless/ath/ath5k/base.c:1048 ath5k_drain_tx_buffs() error: double lock 'bottom_half:'
-   drivers/net/wireless/ath/ath5k/base.c:1056 ath5k_drain_tx_buffs() error: double unlock 'bottom_half:'
-
-Reported-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ include/net/nfc/nfc.h |    1 +
+ net/nfc/core.c        |    8 ++++++++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index fbaa309..44ad6fe 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1045,11 +1045,11 @@ ath5k_drain_tx_buffs(struct ath5k_hw *ah)
+diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+index b7ca4a2..3116f92 100644
+--- a/include/net/nfc/nfc.h
++++ b/include/net/nfc/nfc.h
+@@ -188,6 +188,7 @@ struct sk_buff *nfc_alloc_recv_skb(unsigned int size, gfp_t gfp);
  
- 				ath5k_txbuf_free_skb(ah, bf);
+ int nfc_set_remote_general_bytes(struct nfc_dev *dev,
+ 				 u8 *gt, u8 gt_len);
++u8 *nfc_get_local_general_bytes(struct nfc_dev *dev, size_t *gb_len);
  
--				spin_lock_bh(&ah->txbuflock);
-+				spin_lock(&ah->txbuflock);
- 				list_move_tail(&bf->list, &ah->txbuf);
- 				ah->txbuf_len++;
- 				txq->txq_len--;
--				spin_unlock_bh(&ah->txbuflock);
-+				spin_unlock(&ah->txbuflock);
- 			}
- 			txq->link = NULL;
- 			txq->txq_poll_mark = false;
+ int nfc_targets_found(struct nfc_dev *dev,
+ 		      struct nfc_target *targets, int ntargets);
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 9f6ce01..f5a43f7 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -447,6 +447,14 @@ int nfc_set_remote_general_bytes(struct nfc_dev *dev, u8 *gb, u8 gb_len)
+ }
+ EXPORT_SYMBOL(nfc_set_remote_general_bytes);
+ 
++u8 *nfc_get_local_general_bytes(struct nfc_dev *dev, size_t *gb_len)
++{
++	pr_debug("dev_name=%s\n", dev_name(&dev->dev));
++
++	return nfc_llcp_general_bytes(dev, gb_len);
++}
++EXPORT_SYMBOL(nfc_get_local_general_bytes);
++
+ /**
+  * nfc_alloc_send_skb - allocate a skb for data exchange responses
+  *
 -- 
-1.7.2.5
+1.7.9.1
 
--- 
-Bob Copeland %% www.bobcopeland.com
