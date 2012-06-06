@@ -1,95 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756566Ab2FZMak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:30:40 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v3 09/13] cfg80211: track monitor channel
-Date: Tue, 26 Jun 2012 14:30:14 +0200
-Message-ID: <1340713818-28549-10-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143046_902793_EB1BAE4F)
-In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:53100 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713Ab2FFIz5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 04:55:57 -0400
+Message-ID: <1338972956.4513.28.camel@jlt3.sipsolutions.net> (sfid-20120606_105600_957434_2C5E7787)
+Subject: Re: [RFC 05/14] cfg80211: add channel tracking for AP and mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Jun 2012 10:55:56 +0200
+In-Reply-To: <1338203942-5667-6-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	 <1338203942-5667-6-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make it even more obvious we support single
-monitor channel. This will allow us to remove
-.get_channel.
+On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
+> We need to know which channel is used by a running
+> AP and mesh for channel context accounting and
+> finding matching/active interface combination.
+> 
+> STA/IBSS have current_bss already which allows us
+> to check which channel a vif is tuned to.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/wireless/chan.c |    9 ++++++++-
- net/wireless/core.c |    8 +++++++-
- net/wireless/core.h |    3 +++
- 3 files changed, 18 insertions(+), 2 deletions(-)
+For IBSS this assumption is dangerous though since the channel can
+change at will when it decides to merge with a different cell on a
+different channel.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 019401b..434c56b 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -82,6 +82,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 				 int freq, enum nl80211_channel_type chantype)
- {
- 	struct ieee80211_channel *chan;
-+	int err;
- 
- 	if (!rdev->ops->set_monitor_channel)
- 		return -EOPNOTSUPP;
-@@ -92,7 +93,13 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 	if (!chan)
- 		return -EINVAL;
- 
--	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
-+	err = rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
-+	if (!err) {
-+		rdev->monitor_channel = chan;
-+		rdev->monitor_channel_type = chantype;
-+	}
-+
-+	return err;
- }
- 
- void
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 9097d6c..8315c2a 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -789,9 +789,15 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 		rdev->num_running_monitor_ifaces += num;
- 
- 	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
--	if (has_monitors_only_new != has_monitors_only_old)
-+	if (has_monitors_only_new != has_monitors_only_old) {
- 		rdev->ops->set_monitor_enabled(&rdev->wiphy,
- 					       has_monitors_only_new);
-+
-+		if (!has_monitors_only_new) {
-+			rdev->monitor_channel = NULL;
-+			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
-+		}
-+	}
- }
- 
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index b27fa3b..9d9441d 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -59,6 +59,9 @@ struct cfg80211_registered_device {
- 	int num_running_ifaces;
- 	int num_running_monitor_ifaces;
- 
-+	struct ieee80211_channel *monitor_channel;
-+	enum nl80211_channel_type monitor_channel_type;
-+
- 	/* BSSes/scanning */
- 	spinlock_t bss_lock;
- 	struct list_head bss_list;
--- 
-1.7.0.4
+I don't mind tracking the channel for AP/mesh of course.
+
+johannes
 
