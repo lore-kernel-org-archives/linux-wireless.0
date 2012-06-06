@@ -1,119 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:20470 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752772Ab2FFKHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:11 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 10/29] NFC: Set the NFC device RF mode appropriately
-Date: Wed,  6 Jun 2012 12:16:27 +0200
-Message-Id: <1338977806-30279-11-git-send-email-sameo@linux.intel.com> (sfid-20120606_120720_172765_7E80864B)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:47822 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935Ab2FFIKp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 04:10:45 -0400
+Received: by eaak11 with SMTP id k11so1821938eaa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:10:44 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/8] bcma: Fix for 4329b0 bad LPOM is detection
+Date: Wed, 06 Jun 2012 10:08:15 +0200
+Message-ID: <2043822.26J1ek8FFi@flexo> (sfid-20120606_101050_708293_7A83EFCB)
+In-Reply-To: <1338933307-13446-4-git-send-email-hauke@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de> <1338933307-13446-4-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- include/linux/nfc.h   |    1 +
- include/net/nfc/nfc.h |    2 +-
- net/nfc/core.c        |   14 ++++++++++----
- 3 files changed, 12 insertions(+), 5 deletions(-)
+Hi Hauke,
 
-diff --git a/include/linux/nfc.h b/include/linux/nfc.h
-index d124e92..f4e6dd9 100644
---- a/include/linux/nfc.h
-+++ b/include/linux/nfc.h
-@@ -146,6 +146,7 @@ enum nfc_attrs {
- /* NFC RF modes */
- #define NFC_RF_INITIATOR 0
- #define NFC_RF_TARGET    1
-+#define NFC_RF_NONE      2
- 
- /* NFC protocols masks used in bitsets */
- #define NFC_PROTO_JEWEL_MASK	(1 << NFC_PROTO_JEWEL)
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 41573b4b..a6a7b49 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -100,10 +100,10 @@ struct nfc_dev {
- 	int targets_generation;
- 	struct device dev;
- 	bool dev_up;
-+	u8 rf_mode;
- 	bool polling;
- 	struct nfc_target *active_target;
- 	bool dep_link_up;
--	u32 dep_rf_mode;
- 	struct nfc_genl_data genl_data;
- 	u32 supported_protocols;
- 
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 17f1474..722a0c7 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -144,8 +144,10 @@ int nfc_start_poll(struct nfc_dev *dev, u32 im_protocols, u32 tm_protocols)
- 	}
- 
- 	rc = dev->ops->start_poll(dev, im_protocols, tm_protocols);
--	if (!rc)
-+	if (!rc) {
- 		dev->polling = true;
-+		dev->rf_mode = NFC_RF_NONE;
-+	}
- 
- error:
- 	device_unlock(&dev->dev);
-@@ -235,8 +237,10 @@ int nfc_dep_link_up(struct nfc_dev *dev, int target_index, u8 comm_mode)
- 	}
- 
- 	rc = dev->ops->dep_link_up(dev, target, comm_mode, gb, gb_len);
--	if (!rc)
-+	if (!rc) {
- 		dev->active_target = target;
-+		dev->rf_mode = NFC_RF_INITIATOR;
-+	}
- 
- error:
- 	device_unlock(&dev->dev);
-@@ -264,7 +268,7 @@ int nfc_dep_link_down(struct nfc_dev *dev)
- 		goto error;
- 	}
- 
--	if (dev->dep_rf_mode == NFC_RF_TARGET) {
-+	if (dev->rf_mode == NFC_RF_TARGET) {
- 		rc = -EOPNOTSUPP;
- 		goto error;
- 	}
-@@ -286,7 +290,6 @@ int nfc_dep_link_is_up(struct nfc_dev *dev, u32 target_idx,
- 		       u8 comm_mode, u8 rf_mode)
- {
- 	dev->dep_link_up = true;
--	dev->dep_rf_mode = rf_mode;
- 
- 	nfc_llcp_mac_is_up(dev, target_idx, comm_mode, rf_mode);
- 
-@@ -330,6 +333,7 @@ int nfc_activate_target(struct nfc_dev *dev, u32 target_idx, u32 protocol)
- 	rc = dev->ops->activate_target(dev, target, protocol);
- 	if (!rc) {
- 		dev->active_target = target;
-+		dev->rf_mode = NFC_RF_INITIATOR;
- 
- 		if (dev->ops->check_presence)
- 			mod_timer(&dev->check_pres_timer, jiffies +
-@@ -470,6 +474,8 @@ int nfc_tm_activated(struct nfc_dev *dev, u32 protocol, u8 comm_mode,
- 			goto out;
- 	}
- 
-+	dev->rf_mode = NFC_RF_TARGET;
-+
- 	if (protocol == NFC_PROTO_NFC_DEP_MASK)
- 		nfc_dep_link_is_up(dev, 0, comm_mode, NFC_RF_TARGET);
- 
--- 
-1.7.9.1
+On Tuesday 05 June 2012 23:55:02 Hauke Mehrtens wrote:
+> This workaround should be triggered based on the chipid and rev and not
+> the core id and rev. This is based on code in the Broadcom SDK.
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/bcma/driver_chipcommon_pmu.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/bcma/driver_chipcommon_pmu.c 
+b/drivers/bcma/driver_chipcommon_pmu.c
+> index da8769e..dd2b55d 100644
+> --- a/drivers/bcma/driver_chipcommon_pmu.c
+> +++ b/drivers/bcma/driver_chipcommon_pmu.c
+> @@ -166,6 +166,7 @@ static void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+>  void bcma_pmu_init(struct bcma_drv_cc *cc)
+>  {
+>  	u32 pmucap;
+> +	struct bcma_bus *bus = cc->core->bus;
+>  
+>  	pmucap = bcma_cc_read32(cc, BCMA_CC_PMU_CAP);
+>  	cc->pmu.rev = (pmucap & BCMA_CC_PMU_CAP_REVISION);
+> @@ -180,7 +181,7 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
+>  		bcma_cc_set32(cc, BCMA_CC_PMU_CTL,
+>  			     BCMA_CC_PMU_CTL_NOILPONW);
+>  
+> -	if (cc->core->id.id == 0x4329 && cc->core->id.rev == 2)
+> +	if (bus->chipinfo.id == 0x4329 && bus->chipinfo.rev == 2)
+>  		pr_err("Fix for 4329b0 bad LPOM state not implemented!\n");
 
+Does not that deserve a new define to be in line with your previous patch?
+--
+Florian
