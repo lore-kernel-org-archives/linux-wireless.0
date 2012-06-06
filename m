@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56871 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951Ab2FMNqx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 09:46:53 -0400
-Date: Wed, 13 Jun 2012 08:46:51 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 7/9] brcm80211: smac: use mac80211 channel data for tx
- power limits
-Message-ID: <20120613134651.GB3490@thinkpad-t410> (sfid-20120613_154656_987925_08FDF630)
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
- <1338906849-26135-8-git-send-email-seth.forshee@canonical.com>
- <4FD85FE3.3090604@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FD85FE3.3090604@broadcom.com>
+Received: from mga14.intel.com ([143.182.124.37]:54748 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755700Ab2FFKHq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:07:46 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 19/29] NFC: Configure pn533 RF timings
+Date: Wed,  6 Jun 2012 12:16:36 +0200
+Message-Id: <1338977806-30279-20-git-send-email-sameo@linux.intel.com> (sfid-20120606_120749_487556_C2B9832D)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2012 at 11:39:47AM +0200, Arend van Spriel wrote:
-> On 06/05/2012 04:34 PM, Seth Forshee wrote:
-> > Currently the limits from the internal X2 domain are used, regardless
-> > of what regulatory rules are in effect. Instead use the power limits set
-> > by the higher-level regulatory support.
-> > 
-> > The rules for the MIMO power limits are still always derived from the
-> > world domain. Guidance from Broadcom is needed on how these limits
-> > should be determined for other regulatory domains.
-> 
-> Have not got definite answer yet. Luis indicated that Qualcomm/Atheros
-> had similar construct, but that is was not really needed and could be
-> derived. I will have to follow up on it in a separate patch.
+Those define the ATR_RES response timeout after which the pn533 considers the
+target to be mute.
 
-Thanks, that confirms my understanding of the state of things from
-previous discussion.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
-Would you like me to modify that statement in some way? Or was your
-comment purely informational? Reading it again, I probably will at least
-add a comment to indicate that the state of things is workable for now
-and will be improved later.
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index 2a7e4e8..d976344 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -104,8 +104,14 @@ struct pn533_fw_version {
+ };
+ 
+ /* PN533_CMD_RF_CONFIGURATION */
++#define PN533_CFGITEM_TIMING 0x02
+ #define PN533_CFGITEM_MAX_RETRIES 0x05
+ 
++#define PN533_CONFIG_TIMING_102 0xb
++#define PN533_CONFIG_TIMING_204 0xc
++#define PN533_CONFIG_TIMING_409 0xd
++#define PN533_CONFIG_TIMING_819 0xe
++
+ #define PN533_CONFIG_MAX_RETRIES_NO_RETRY 0x00
+ #define PN533_CONFIG_MAX_RETRIES_ENDLESS 0xFF
+ 
+@@ -115,6 +121,12 @@ struct pn533_config_max_retries {
+ 	u8 mx_rty_passive_act;
+ } __packed;
+ 
++struct pn533_config_timing {
++	u8 rfu;
++	u8 atr_res_timeout;
++	u8 dep_timeout;
++} __packed;
++
+ /* PN533_CMD_IN_LIST_PASSIVE_TARGET */
+ 
+ /* felica commands opcode */
+@@ -2004,6 +2016,7 @@ static int pn533_probe(struct usb_interface *interface,
+ 	struct usb_host_interface *iface_desc;
+ 	struct usb_endpoint_descriptor *endpoint;
+ 	struct pn533_config_max_retries max_retries;
++	struct pn533_config_timing timing;
+ 	int in_endpoint = 0;
+ 	int out_endpoint = 0;
+ 	int rc = -ENOMEM;
+@@ -2115,6 +2128,18 @@ static int pn533_probe(struct usb_interface *interface,
+ 		goto unregister_nfc_dev;
+ 	}
+ 
++	timing.rfu = PN533_CONFIG_TIMING_102;
++	timing.atr_res_timeout = PN533_CONFIG_TIMING_204;
++	timing.dep_timeout = PN533_CONFIG_TIMING_409;
++
++	rc = pn533_set_configuration(dev, PN533_CFGITEM_TIMING,
++				(u8 *) &timing, sizeof(timing));
++	if (rc) {
++		nfc_dev_err(&dev->interface->dev,
++			    "Error on setting RF timings");
++		goto unregister_nfc_dev;
++	}
++
+ 	return 0;
+ 
+ unregister_nfc_dev:
+-- 
+1.7.9.1
 
