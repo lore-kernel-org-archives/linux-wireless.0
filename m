@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6221 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751842Ab2FKNMj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33714 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754813Ab2FFNXf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 09:12:39 -0400
-Message-ID: <4FD5EEC1.9020206@qca.qualcomm.com> (sfid-20120611_151242_262029_0264F6FD)
-Date: Mon, 11 Jun 2012 16:12:33 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Etay Luz <eluz@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath6kl: support changing dtim period on AP mode
-References: <1338366908-4654-1-git-send-email-kvalo@qca.qualcomm.com>
-In-Reply-To: <1338366908-4654-1-git-send-email-kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 6 Jun 2012 09:23:35 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/29] iwlwifi: update mask value for SCD queue config
+Date: Wed,  6 Jun 2012 15:22:01 +0200
+Message-Id: <1338988930-11561-20-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152340_492018_ABA970A3)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2012 11:35 AM, Kalle Valo wrote:
-> From: Etay Luz <eluz@qca.qualcomm.com>
-> 
-> This patch adds support for dtim_period configuration in beacon.
-> 
-> kvalo: add a comment about ignoring the error, use vif_idx,
-> add \n to the warning message
-> 
-> Signed-off-by: Etay Luz <eluz@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Thanks, applied.
+Although we don't use bit 24, this bit is valid, but bit 23
+is not. Update the mask accordingly.
 
-Kalle
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 3b10692..a9f0415 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -187,7 +187,7 @@
+ #define SCD_QUEUE_STTS_REG_POS_ACTIVE	(3)
+ #define SCD_QUEUE_STTS_REG_POS_WSL	(4)
+ #define SCD_QUEUE_STTS_REG_POS_SCD_ACT_EN (19)
+-#define SCD_QUEUE_STTS_REG_MSK		(0x00FF0000)
++#define SCD_QUEUE_STTS_REG_MSK		(0x017F0000)
+ 
+ #define SCD_QUEUE_CTX_REG1_CREDIT_POS		(8)
+ #define SCD_QUEUE_CTX_REG1_CREDIT_MSK		(0x00FFFF00)
+-- 
+1.7.10
+
