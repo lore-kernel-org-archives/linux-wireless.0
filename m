@@ -1,73 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:52122 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754221Ab2F0AIL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 20:08:11 -0400
-Received: by wgbdr13 with SMTP id dr13so431997wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 17:08:09 -0700 (PDT)
-Message-ID: <4FEA4EE6.2070401@gmail.com> (sfid-20120627_020815_064756_65E358A6)
-Date: Wed, 27 Jun 2012 02:08:06 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: dsd@gentoo.org, kune@deine-taler.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	dwmw2@infradead.org, ben@decadent.org.uk
-Subject: ZyDAS zd1211/zd1211b fw
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:39292 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755719Ab2FFKHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:07:55 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 21/29] NFC: Add type A and type F parameters for pn533 target mode
+Date: Wed,  6 Jun 2012 12:16:38 +0200
+Message-Id: <1338977806-30279-22-git-send-email-sameo@linux.intel.com> (sfid-20120606_120759_353127_FE188C44)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+Without those settings several devices will not activate pn533 as a target.
 
-ZyDAS zd1211/zd1211b firmware are missing in linux-firmware.git,
-readme says:
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |   25 ++++++++++++++++++++++++-
+ 1 files changed, 24 insertions(+), 1 deletions(-)
 
---cut--
-README
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index 806ab3d..6e4b228 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -1126,6 +1126,13 @@ static int pn533_init_target_frame(struct pn533_frame *frame,
+ {
+ 	struct pn533_cmd_init_target *cmd;
+ 	size_t cmd_len;
++	u8 felica_params[18] = {0x1, 0xfe, /* DEP */
++				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, /* random */
++				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
++				0xff, 0xff}; /* System code */
++	u8 mifare_params[6] = {0x1, 0x1, /* SENS_RES */
++			       0x0, 0x0, 0x0,
++			       0x40}; /* SEL_RES for DEP */
+ 
+ 	cmd_len = sizeof(struct pn533_cmd_init_target) + gb_len + 1;
+ 	cmd = kzalloc(cmd_len, GFP_KERNEL);
+@@ -1136,17 +1143,33 @@ static int pn533_init_target_frame(struct pn533_frame *frame,
+ 
+ 	/* DEP support only */
+ 	cmd->mode |= PN533_INIT_TARGET_DEP;
+-	get_random_bytes(cmd->nfcid3, 10);
++
++	/* Felica params */
++	memcpy(cmd->felica, felica_params, 18);
++	get_random_bytes(cmd->felica + 2, 6);
++
++	/* NFCID3 */
++	memset(cmd->nfcid3, 0, 10);
++	memcpy(cmd->nfcid3, cmd->felica, 8);
++
++	/* MIFARE params */
++	memcpy(cmd->mifare, mifare_params, 6);
++
++	/* General bytes */
+ 	cmd->gb_len = gb_len;
+ 	memcpy(cmd->gb, gb, gb_len);
++
+ 	/* Len Tk */
+ 	cmd->gb[gb_len] = 0;
+ 
+ 	memcpy(PN533_FRAME_CMD_PARAMS_PTR(frame), cmd, cmd_len);
++
+ 	frame->datalen += cmd_len;
+ 
+ 	pn533_tx_frame_finish(frame);
+ 
++	kfree(cmd);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.9.1
 
-This distribution contains the firmware files for the
-ZD1211 chip, which is used in WLAN USB sticks. Copy the zd1211_* files to
-/lib/firmware/zd1211, where they can be loaded by the rewritten
-zd1211 driver.
-
-The files are generated from C header files distributed in the
-original ZyDAS ZD1211 driver under the GNU Public License.
-
-The full source of the original ZYDAS driver is available from
-http://zd1211.wiki.sourceforge.net/VendorDriver
-
-The GPL-licensed header files used to produce the firmware blobs are also
-present in this distribution. See the COPYING file for the full license terms.
-
-HISTORY
-
-VERSION 1.4 (2007-10-04)
-Sync to vendor driver v2.21.0.0
-According to Atheros, this firmware fixes a USB disconnect issue which most
-commonly appeared when running "lsusb" or "cat /proc/usb/devices" while using
-the device.
-
-VERSION 1.3 (2006-12-30)
-Sync to vendor driver v2.16.0.0
-Large packet support is now disabled. The zd1211 firmware is now the same as
-v1.1 but the zd1211b firmware is new: It is the same which is shipped in the
-2.10.0.0 release which supposedly fixes a "reboot issue"
-
-VERSION 1.2 (2006-07-22)
-Sync to vendor driver v2.13.0.0
-Release notes mention that this firmware includes largepacket support
-
-VERSION 1.1 (2006-04-30)
-Added ZD1211B firmware files
-
-VERSION 1.0 (2006-04-16)
-This firmware has been generated from fersion 2_5_0_0 of the Zydas
-driver, 2006-04-16.
---end--
-
-So zero troubles to be at linux-firmware.git, can anyone submit a patch ?
-
-latest fw at: http://netcologne.dl.sourceforge.net/project/zd1211/zd1211-firmware/1.4/
-
--thanks-
