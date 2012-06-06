@@ -1,296 +1,557 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:3433 "EHLO
-	HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761482Ab2FVH1s convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 03:27:48 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: [PATCH] cfg80211/mac80211: 802.11ac changes
-Date: Fri, 22 Jun 2012 07:27:46 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120622_092751_899141_A4A05320)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:64714 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755150Ab2FFKGk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:06:40 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 02/29] NFC: Socket linked list
+Date: Wed,  6 Jun 2012 12:16:19 +0200
+Message-Id: <1338977806-30279-3-git-send-email-sameo@linux.intel.com> (sfid-20120606_120642_999405_6F4EF1C8)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-11ac changes to push VHT cap through NL layer.
-ieee structs, constants for 11ac.
-VHT cap IE in ProbeReq.
+Simplify the LLCP sockets structure by putting all the connected ones
+into a single linked list.
 
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
-Cc: Johannes Berg <johannes@sipsolutions.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- include/linux/ieee80211.h  |   70 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/nl80211.h    |    6 ++++
- include/net/cfg80211.h     |   17 ++++++++++
- net/mac80211/ieee80211_i.h |    2 +
- net/mac80211/main.c        |    7 ++++-
- net/mac80211/util.c        |   25 +++++++++++++++
- net/wireless/nl80211.c     |    9 +++++
- 7 files changed, 135 insertions(+), 1 deletions(-)
+ net/nfc/llcp/llcp.c |  249 ++++++++++++++++++++++++++++-----------------------
+ net/nfc/llcp/llcp.h |   12 ++-
+ net/nfc/llcp/sock.c |   32 +++----
+ 3 files changed, 158 insertions(+), 135 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ce9af89..bb04656 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1072,6 +1072,73 @@ struct ieee80211_ht_operation {
- #define WLAN_HT_SMPS_CONTROL_STATIC	1
- #define WLAN_HT_SMPS_CONTROL_DYNAMIC	3
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 0f6dd3a..262aa82 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -31,45 +31,41 @@ static u8 llcp_magic[3] = {0x46, 0x66, 0x6d};
  
-+#define VHT_MCS_SUPPORTED_SET_SIZE      8
-+
-+struct ieee80211_vht_capabilities {
-+	__le32 vht_capabilities_info;
-+	u8 vht_supported_mcs_set[VHT_MCS_SUPPORTED_SET_SIZE];
-+} __packed;
-+
-+struct ieee80211_vht_operation {
-+	u8 vht_op_info_chwidth;
-+	u8 vht_op_info_chan_center_freq_seg1_idx;
-+	u8 vht_op_info_chan_center_freq_seg2_idx;
-+	__le16 vht_basic_mcs_set;
-+} __packed;
-+
-+/**
-+ * struct ieee80211_vht_mcs_info - VHT MCS information
-+ * @rx_mcs_map: RX MCS map 2 bits for each stream, total 8 streams
-+ * @rx_highest: Indicates highest long GI VHT PPDU data rate
-+ *	STA can receive. Rate expressed in units of 1 Mbps.
-+ *	If this field is 0 this value should not be used to
-+ *	consider the highest RX data rate supported.
-+ * @tx_mcs_map: TX MCS map 2 bits for each stream, total 8 streams
-+ * @tx_highest: Indicates highest long GI VHT PPDU data rate
-+ *	STA can transmit. Rate expressed in units of 1 Mbps.
-+ *	If this field is 0 this value should not be used to
-+ *	consider the highest TX data rate supported.
-+ */
-+struct ieee80211_vht_mcs_info {
-+	__le16 rx_mcs_map;
-+	__le16 rx_highest;
-+	__le16 tx_mcs_map;
-+	__le16 tx_highest;
-+} __packed;
-+
-+#define IEEE80211_VHT_MCS_ZERO_TO_SEVEN_SUPPORT 0
-+#define IEEE80211_VHT_MCS_ZERO_TO_EIGHT_SUPPORT 1
-+#define IEEE80211_VHT_MCS_ZERO_TO_NINE_SUPPORT  2
-+#define IEEE80211_VHT_MCS_NOT_SUPPORTED 3
-+
-+/* 802.11ac VHT Capabilities */
-+#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895                0x00000000
-+#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
-+#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454               0x00000002
-+#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ              0x00000004
-+#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ     0x00000008
-+#define IEEE80211_VHT_CAP_RXLDPC                              0x00000010
-+#define IEEE80211_VHT_CAP_SHORT_GI_80                         0x00000020
-+#define IEEE80211_VHT_CAP_SHORT_GI_160                        0x00000040
-+#define IEEE80211_VHT_CAP_TXSTBC                              0x00000080
-+#define IEEE80211_VHT_CAP_RXSTBC_1                            0x00000100
-+#define IEEE80211_VHT_CAP_RXSTBC_2                            0x00000200
-+#define IEEE80211_VHT_CAP_RXSTBC_3                            0x00000300
-+#define IEEE80211_VHT_CAP_RXSTBC_4                            0x00000400
-+#define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE               0x00000800
-+#define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE               0x00001000
-+#define IEEE80211_VHT_CAP_BEAMFORMER_ANTENNAS_MAX             0x00006000
-+#define IEEE80211_VHT_CAP_SOUNDING_DIMENTION_MAX              0x00030000
-+#define IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE               0x00080000
-+#define IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE               0x00100000
-+#define IEEE80211_VHT_CAP_VHT_TXOP_PS                         0x00200000
-+#define IEEE80211_VHT_CAP_HTC_VHT                             0x00400000
-+#define IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT          0x00800000
-+#define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_UNSOL_MFB   0x08000000
-+#define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB     0x0c000000
-+#define IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN                  0x10000000
-+#define IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN                  0x20000000
-+
- /* Authentication algorithms */
- #define WLAN_AUTH_OPEN 0
- #define WLAN_AUTH_SHARED_KEY 1
-@@ -1332,6 +1399,9 @@ enum ieee80211_eid {
- 	WLAN_EID_DSE_REGISTERED_LOCATION = 58,
- 	WLAN_EID_SUPPORTED_REGULATORY_CLASSES = 59,
- 	WLAN_EID_EXT_CHANSWITCH_ANN = 60,
-+
-+	WLAN_EID_VHT_CAPABILITY = 191,
-+	WLAN_EID_VHT_OPERATION = 192,
- };
+ static struct list_head llcp_devices;
  
- /* Action category code */
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 970afdf..16ea46e 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1792,6 +1792,9 @@ enum nl80211_mpath_info {
-  * @NL80211_BAND_ATTR_HT_CAPA: HT capabilities, as in the HT information IE
-  * @NL80211_BAND_ATTR_HT_AMPDU_FACTOR: A-MPDU factor, as in 11n
-  * @NL80211_BAND_ATTR_HT_AMPDU_DENSITY: A-MPDU density, as in 11n
-+ * @NL80211_BAND_ATTR_VHT_MCS_SET: 32-byte attribute containing the MCS set as
-+ *	defined in 802.11ac
-+ * @NL80211_BAND_ATTR_VHT_CAPA: VHT capabilities, as in the HT information IE
-  * @NL80211_BAND_ATTR_MAX: highest band attribute currently defined
-  * @__NL80211_BAND_ATTR_AFTER_LAST: internal use
-  */
-@@ -1805,6 +1808,9 @@ enum nl80211_band_attr {
- 	NL80211_BAND_ATTR_HT_AMPDU_FACTOR,
- 	NL80211_BAND_ATTR_HT_AMPDU_DENSITY,
+-static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
++void nfc_llcp_sock_link(struct llcp_sock_list *l, struct sock *sk)
+ {
+-	struct nfc_llcp_sock *parent, *s, *n;
+-	struct sock *sk, *parent_sk;
+-	int i;
+-
+-	mutex_lock(&local->socket_lock);
+-
+-	for (i = 0; i < LLCP_MAX_SAP; i++) {
+-		parent = local->sockets[i];
+-		if (parent == NULL)
+-			continue;
+-
+-		/* Release all child sockets */
+-		list_for_each_entry_safe(s, n, &parent->list, list) {
+-			list_del_init(&s->list);
+-			sk = &s->sk;
+-
+-			lock_sock(sk);
++	write_lock(&l->lock);
++	sk_add_node(sk, &l->head);
++	write_unlock(&l->lock);
++}
  
-+	NL80211_BAND_ATTR_VHT_MCS_SET,
-+	NL80211_BAND_ATTR_VHT_CAPA,
-+
- 	/* keep last */
- 	__NL80211_BAND_ATTR_AFTER_LAST,
- 	NL80211_BAND_ATTR_MAX = __NL80211_BAND_ATTR_AFTER_LAST - 1
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7319f25..5a4e5b3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -211,6 +211,22 @@ struct ieee80211_sta_ht_cap {
- };
- 
- /**
-+ * struct ieee80211_sta_vht_cap - STA's VHT capabilities
-+ *
-+ * This structure describes most essential parameters needed
-+ * to describe 802.11ac VHT capabilities for an STA.
-+ *
-+ * @vht_supported: is VHT supported by the STA
-+ * @cap: VHT capabilities map as described in 802.11ac spec
-+ * @vht_mcs: Supported VHT MCS rates
-+ */
-+struct ieee80211_sta_vht_cap {
-+	bool vht_supported;
-+	u32 cap; /* use IEEE80211_VHT_CAP_ */
-+	struct ieee80211_vht_mcs_info vht_mcs;
-+};
-+
-+/**
-  * struct ieee80211_supported_band - frequency band definition
-  *
-  * This structure describes a frequency band a wiphy
-@@ -233,6 +249,7 @@ struct ieee80211_supported_band {
- 	int n_channels;
- 	int n_bitrates;
- 	struct ieee80211_sta_ht_cap ht_cap;
-+	struct ieee80211_sta_vht_cap vht_cap;
- };
- 
- /*
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e6cbf5b..bd37ed7 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1471,6 +1471,8 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       struct ieee80211_channel *channel,
- 			       enum nl80211_channel_type channel_type,
- 			       u16 prot_mode);
-+u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-+					u32 cap);
- 
- /* channel management */
- enum ieee80211_chan_mode {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d81c178..be36a0a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -679,7 +679,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	int result, i;
- 	enum ieee80211_band band;
- 	int channels, max_bitrates;
--	bool supp_ht;
-+	bool supp_ht, supp_vht;
- 	netdev_features_t feature_whitelist;
- 	static const u32 cipher_suites[] = {
- 		/* keep WEP first, it may be removed below */
-@@ -724,6 +724,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	channels = 0;
- 	max_bitrates = 0;
- 	supp_ht = false;
-+	supp_vht = false;
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		struct ieee80211_supported_band *sband;
- 
-@@ -741,6 +742,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		if (max_bitrates < sband->n_bitrates)
- 			max_bitrates = sband->n_bitrates;
- 		supp_ht = supp_ht || sband->ht_cap.ht_supported;
-+		supp_vht = supp_vht || sband->vht_cap.vht_supported;
- 	}
- 
- 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
-@@ -816,6 +818,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (supp_ht)
- 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
- 
-+	if (supp_vht)
-+		local->scan_ies_len += 2 + sizeof(struct ieee80211_vht_capabilities);
-+
- 	if (!local->ops->hw_scan) {
- 		/* For hw_scan, driver needs to set these up. */
- 		local->hw.wiphy->max_scan_ssids = 4;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 1df4019..cccf82e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1072,6 +1072,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 		pos += noffset - offset;
- 	}
- 
-+	if (sband->vht_cap.vht_supported)
-+		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
-+						sband->vht_cap.cap);
-+
- 	return pos - buffer;
- }
- 
-@@ -1696,6 +1700,27 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 	return pos;
- }
- 
-+u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-+			      u32 cap)
+-			if (sk->sk_state == LLCP_CONNECTED)
+-				nfc_put_device(s->dev);
++void nfc_llcp_sock_unlink(struct llcp_sock_list *l, struct sock *sk)
 +{
-+	__le32 tmp;
++	write_lock(&l->lock);
++	sk_del_node_init(sk);
++	write_unlock(&l->lock);
++}
+ 
+-			sk->sk_state = LLCP_CLOSED;
++static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
++{
++	struct sock *sk;
++	struct hlist_node *node, *tmp;
++	struct nfc_llcp_sock *llcp_sock;
+ 
+-			release_sock(sk);
++	write_lock(&local->sockets.lock);
+ 
+-			sock_orphan(sk);
+-		}
++	sk_for_each_safe(sk, node, tmp, &local->sockets.head) {
++		llcp_sock = nfc_llcp_sock(sk);
+ 
+-		parent_sk = &parent->sk;
++		lock_sock(sk);
+ 
+-		lock_sock(parent_sk);
++		if (sk->sk_state == LLCP_CONNECTED)
++			nfc_put_device(llcp_sock->dev);
+ 
+-		if (parent_sk->sk_state == LLCP_LISTEN) {
++		if (sk->sk_state == LLCP_LISTEN) {
+ 			struct nfc_llcp_sock *lsk, *n;
+ 			struct sock *accept_sk;
+ 
+-			list_for_each_entry_safe(lsk, n, &parent->accept_queue,
++			list_for_each_entry_safe(lsk, n, &llcp_sock->accept_queue,
+ 						 accept_queue) {
+ 				accept_sk = &lsk->sk;
+ 				lock_sock(accept_sk);
+@@ -84,17 +80,16 @@ static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
+ 			}
+ 		}
+ 
+-		if (parent_sk->sk_state == LLCP_CONNECTED)
+-			nfc_put_device(parent->dev);
++		sk->sk_state = LLCP_CLOSED;
+ 
+-		parent_sk->sk_state = LLCP_CLOSED;
++		release_sock(sk);
+ 
+-		release_sock(parent_sk);
++		sock_orphan(sk);
+ 
+-		sock_orphan(parent_sk);
++		sk_del_node_init(sk);
+ 	}
+ 
+-	mutex_unlock(&local->socket_lock);
++	write_unlock(&local->sockets.lock);
+ }
+ 
+ struct nfc_llcp_local *nfc_llcp_local_get(struct nfc_llcp_local *local)
+@@ -122,6 +117,11 @@ static void local_release(struct kref *ref)
+ 
+ int nfc_llcp_local_put(struct nfc_llcp_local *local)
+ {
++	WARN_ON(local == NULL);
 +
-+	*pos++ = WLAN_EID_VHT_CAPABILITY;
-+	*pos++ = sizeof(struct ieee80211_vht_capabilities);
-+	memset(pos, 0, sizeof(struct ieee80211_vht_capabilities));
++	if (local == NULL)
++		return 0;
 +
-+	/* capability flags */
-+	tmp = cpu_to_le16(cap);
-+	memcpy(pos, &tmp, sizeof(u32));
-+	pos += sizeof(u32);
+ 	return kref_put(&local->ref, local_release);
+ }
+ 
+@@ -465,46 +465,107 @@ static void nfc_llcp_set_nrns(struct nfc_llcp_sock *sock, struct sk_buff *pdu)
+ 	sock->recv_ack_n = (sock->recv_n - 1) % 16;
+ }
+ 
++static struct nfc_llcp_sock *nfc_llcp_connecting_sock_get(struct nfc_llcp_local *local,
++							  u8 ssap)
++{
++	struct sock *sk;
++	struct nfc_llcp_sock *llcp_sock;
++	struct hlist_node *node;
 +
-+	/* VHT MCS set */
-+	memcpy(pos, &vht_cap->vht_mcs, sizeof(vht_cap->vht_mcs));
-+	pos += sizeof(vht_cap->vht_mcs);
++	read_lock(&local->connecting_sockets.lock);
 +
-+	return pos;
++	sk_for_each(sk, node, &local->connecting_sockets.head) {
++		llcp_sock = nfc_llcp_sock(sk);
++
++		if (llcp_sock->ssap == ssap)
++			goto out;
++	}
++
++	llcp_sock = NULL;
++
++out:
++	read_unlock(&local->connecting_sockets.lock);
++
++	sock_hold(&llcp_sock->sk);
++
++	return llcp_sock;
 +}
 +
- u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       struct ieee80211_channel *channel,
- 			       enum nl80211_channel_type channel_type,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ae54b8..bd41a5f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -832,6 +832,15 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 				dev->wiphy.bands[band]->ht_cap.ampdu_density)))
- 			goto nla_put_failure;
+ static struct nfc_llcp_sock *nfc_llcp_sock_get(struct nfc_llcp_local *local,
+ 					       u8 ssap, u8 dsap)
+ {
+-	struct nfc_llcp_sock *sock, *llcp_sock, *n;
++	struct sock *sk;
++	struct hlist_node *node;
++	struct nfc_llcp_sock *llcp_sock;
  
-+		/* add VHT info */
-+		if (dev->wiphy.bands[band]->vht_cap.vht_supported &&
-+		    (nla_put(msg, NL80211_BAND_ATTR_VHT_MCS_SET,
-+			     sizeof(dev->wiphy.bands[band]->vht_cap.vht_mcs),
-+			     &dev->wiphy.bands[band]->vht_cap.vht_mcs) ||
-+		     nla_put_u32(msg, NL80211_BAND_ATTR_VHT_CAPA,
-+				 dev->wiphy.bands[band]->vht_cap.cap)))
-+			goto nla_put_failure;
+ 	pr_debug("ssap dsap %d %d\n", ssap, dsap);
+ 
+ 	if (ssap == 0 && dsap == 0)
+ 		return NULL;
+ 
+-	mutex_lock(&local->socket_lock);
+-	sock = local->sockets[ssap];
+-	if (sock == NULL) {
+-		mutex_unlock(&local->socket_lock);
+-		return NULL;
+-	}
++	read_lock(&local->sockets.lock);
 +
- 		/* add frequencies */
- 		nl_freqs = nla_nest_start(msg, NL80211_BAND_ATTR_FREQS);
- 		if (!nl_freqs)
++	llcp_sock = NULL;
+ 
+-	pr_debug("root dsap %d (%d)\n", sock->dsap, dsap);
++	sk_for_each(sk, node, &local->sockets.head) {
++		llcp_sock = nfc_llcp_sock(sk);
+ 
+-	if (sock->dsap == dsap) {
+-		sock_hold(&sock->sk);
+-		mutex_unlock(&local->socket_lock);
+-		return sock;
++		if (llcp_sock->ssap == ssap &&
++		    llcp_sock->dsap == dsap)
++			break;
+ 	}
+ 
+-	list_for_each_entry_safe(llcp_sock, n, &sock->list, list) {
+-		pr_debug("llcp_sock %p sk %p dsap %d\n", llcp_sock,
+-			 &llcp_sock->sk, llcp_sock->dsap);
+-		if (llcp_sock->dsap == dsap) {
+-			sock_hold(&llcp_sock->sk);
+-			mutex_unlock(&local->socket_lock);
+-			return llcp_sock;
+-		}
++	read_unlock(&local->sockets.lock);
++
++	if (llcp_sock == NULL)
++		return NULL;
++
++	sock_hold(&llcp_sock->sk);
++
++	return llcp_sock;
++}
++
++static struct nfc_llcp_sock *nfc_llcp_sock_get_sn(struct nfc_llcp_local *local,
++						  u8 *sn, size_t sn_len)
++{
++	struct sock *sk;
++	struct hlist_node *node;
++	struct nfc_llcp_sock *llcp_sock;
++
++	pr_debug("sn %zd\n", sn_len);
++
++	if (sn == NULL || sn_len == 0)
++		return NULL;
++
++	read_lock(&local->sockets.lock);
++
++	llcp_sock = NULL;
++
++	sk_for_each(sk, node, &local->sockets.head) {
++		llcp_sock = nfc_llcp_sock(sk);
++
++		if (llcp_sock->sk.sk_state != LLCP_LISTEN)
++			continue;
++
++		if (llcp_sock->service_name == NULL ||
++		    llcp_sock->service_name_len == 0)
++			continue;
++
++		if (llcp_sock->service_name_len != sn_len)
++			continue;
++
++		if (memcmp(sn, llcp_sock->service_name, sn_len) == 0)
++			break;
+ 	}
+ 
+-	pr_err("Could not find socket for %d %d\n", ssap, dsap);
++	read_unlock(&local->sockets.lock);
+ 
+-	mutex_unlock(&local->socket_lock);
++	if (llcp_sock == NULL)
++		return NULL;
+ 
+-	return NULL;
++	sock_hold(&llcp_sock->sk);
++
++	return llcp_sock;
+ }
+ 
+ static void nfc_llcp_sock_put(struct nfc_llcp_sock *sock)
+@@ -540,7 +601,7 @@ static void nfc_llcp_recv_connect(struct nfc_llcp_local *local,
+ {
+ 	struct sock *new_sk, *parent;
+ 	struct nfc_llcp_sock *sock, *new_sock;
+-	u8 dsap, ssap, bound_sap, reason;
++	u8 dsap, ssap, reason;
+ 
+ 	dsap = nfc_llcp_dsap(skb);
+ 	ssap = nfc_llcp_ssap(skb);
+@@ -551,24 +612,11 @@ static void nfc_llcp_recv_connect(struct nfc_llcp_local *local,
+ 			   skb->len - LLCP_HEADER_SIZE);
+ 
+ 	if (dsap != LLCP_SAP_SDP) {
+-		bound_sap = dsap;
+-
+-		mutex_lock(&local->socket_lock);
+-		sock = local->sockets[dsap];
+-		if (sock == NULL) {
+-			mutex_unlock(&local->socket_lock);
++		sock = nfc_llcp_sock_get(local, dsap, LLCP_SAP_SDP);
++		if (sock == NULL || sock->sk.sk_state != LLCP_LISTEN) {
+ 			reason = LLCP_DM_NOBOUND;
+ 			goto fail;
+ 		}
+-
+-		sock_hold(&sock->sk);
+-		mutex_unlock(&local->socket_lock);
+-
+-		lock_sock(&sock->sk);
+-
+-		if (sock->dsap == LLCP_SAP_SDP &&
+-		    sock->sk.sk_state == LLCP_LISTEN)
+-			goto enqueue;
+ 	} else {
+ 		u8 *sn;
+ 		size_t sn_len;
+@@ -581,40 +629,15 @@ static void nfc_llcp_recv_connect(struct nfc_llcp_local *local,
+ 
+ 		pr_debug("Service name length %zu\n", sn_len);
+ 
+-		mutex_lock(&local->socket_lock);
+-		for (bound_sap = 0; bound_sap < LLCP_LOCAL_SAP_OFFSET;
+-		     bound_sap++) {
+-			sock = local->sockets[bound_sap];
+-			if (sock == NULL)
+-				continue;
+-
+-			if (sock->service_name == NULL ||
+-			    sock->service_name_len == 0)
+-					continue;
+-
+-			if (sock->service_name_len != sn_len)
+-				continue;
+-
+-			if (sock->dsap == LLCP_SAP_SDP &&
+-			    sock->sk.sk_state == LLCP_LISTEN &&
+-			    !memcmp(sn, sock->service_name, sn_len)) {
+-				pr_debug("Found service name at SAP %d\n",
+-					 bound_sap);
+-				sock_hold(&sock->sk);
+-				mutex_unlock(&local->socket_lock);
+-
+-				lock_sock(&sock->sk);
+-
+-				goto enqueue;
+-			}
++		sock = nfc_llcp_sock_get_sn(local, sn, sn_len);
++		if (sock == NULL) {
++			reason = LLCP_DM_NOBOUND;
++			goto fail;
+ 		}
+-		mutex_unlock(&local->socket_lock);
+ 	}
+ 
+-	reason = LLCP_DM_NOBOUND;
+-	goto fail;
++	lock_sock(&sock->sk);
+ 
+-enqueue:
+ 	parent = &sock->sk;
+ 
+ 	if (sk_acceptq_is_full(parent)) {
+@@ -636,13 +659,13 @@ enqueue:
+ 	new_sock->dev = local->dev;
+ 	new_sock->local = nfc_llcp_local_get(local);
+ 	new_sock->nfc_protocol = sock->nfc_protocol;
+-	new_sock->ssap = bound_sap;
++	new_sock->ssap = sock->ssap;
+ 	new_sock->dsap = ssap;
+ 	new_sock->parent = parent;
+ 
+ 	pr_debug("new sock %p sk %p\n", new_sock, &new_sock->sk);
+ 
+-	list_add_tail(&new_sock->list, &sock->list);
++	nfc_llcp_sock_link(&local->sockets, new_sk);
+ 
+ 	nfc_llcp_accept_enqueue(&sock->sk, new_sk);
+ 
+@@ -813,11 +836,7 @@ static void nfc_llcp_recv_cc(struct nfc_llcp_local *local, struct sk_buff *skb)
+ 	dsap = nfc_llcp_dsap(skb);
+ 	ssap = nfc_llcp_ssap(skb);
+ 
+-	llcp_sock = nfc_llcp_sock_get(local, dsap, ssap);
+-
+-	if (llcp_sock == NULL)
+-		llcp_sock = nfc_llcp_sock_get(local, dsap, LLCP_SAP_SDP);
+-
++	llcp_sock = nfc_llcp_connecting_sock_get(local, dsap);
+ 	if (llcp_sock == NULL) {
+ 		pr_err("Invalid CC\n");
+ 		nfc_llcp_send_dm(local, dsap, ssap, LLCP_DM_NOCONN);
+@@ -825,9 +844,13 @@ static void nfc_llcp_recv_cc(struct nfc_llcp_local *local, struct sk_buff *skb)
+ 		return;
+ 	}
+ 
+-	llcp_sock->dsap = ssap;
+ 	sk = &llcp_sock->sk;
+ 
++	/* Unlink from connecting and link to the client array */
++	nfc_llcp_sock_unlink(&local->connecting_sockets, sk);
++	nfc_llcp_sock_link(&local->sockets, sk);
++	llcp_sock->dsap = ssap;
++
+ 	nfc_llcp_parse_tlv(local, &skb->data[LLCP_HEADER_SIZE],
+ 			   skb->len - LLCP_HEADER_SIZE);
+ 
+@@ -967,7 +990,6 @@ int nfc_llcp_register_device(struct nfc_dev *ndev)
+ 	INIT_LIST_HEAD(&local->list);
+ 	kref_init(&local->ref);
+ 	mutex_init(&local->sdp_lock);
+-	mutex_init(&local->socket_lock);
+ 	init_timer(&local->link_timer);
+ 	local->link_timer.data = (unsigned long) local;
+ 	local->link_timer.function = nfc_llcp_symm_timer;
+@@ -1007,6 +1029,9 @@ int nfc_llcp_register_device(struct nfc_dev *ndev)
+ 		goto err_rx_wq;
+ 	}
+ 
++	local->sockets.lock = __RW_LOCK_UNLOCKED(local->sockets.lock);
++	local->connecting_sockets.lock = __RW_LOCK_UNLOCKED(local->connecting_sockets.lock);
++
+ 	nfc_llcp_build_gb(local);
+ 
+ 	local->remote_miu = LLCP_DEFAULT_MIU;
+diff --git a/net/nfc/llcp/llcp.h b/net/nfc/llcp/llcp.h
+index bc61955..7053304 100644
+--- a/net/nfc/llcp/llcp.h
++++ b/net/nfc/llcp/llcp.h
+@@ -40,6 +40,11 @@ enum llcp_state {
+ 
+ struct nfc_llcp_sock;
+ 
++struct llcp_sock_list {
++	struct hlist_head head;
++	rwlock_t          lock;
++};
++
+ struct nfc_llcp_local {
+ 	struct list_head list;
+ 	struct nfc_dev *dev;
+@@ -47,7 +52,6 @@ struct nfc_llcp_local {
+ 	struct kref ref;
+ 
+ 	struct mutex sdp_lock;
+-	struct mutex socket_lock;
+ 
+ 	struct timer_list link_timer;
+ 	struct sk_buff_head tx_queue;
+@@ -82,12 +86,12 @@ struct nfc_llcp_local {
+ 	u8  remote_rw;
+ 
+ 	/* sockets array */
+-	struct nfc_llcp_sock *sockets[LLCP_MAX_SAP];
++	struct llcp_sock_list sockets;
++	struct llcp_sock_list connecting_sockets;
+ };
+ 
+ struct nfc_llcp_sock {
+ 	struct sock sk;
+-	struct list_head list;
+ 	struct nfc_dev *dev;
+ 	struct nfc_llcp_local *local;
+ 	u32 target_idx;
+@@ -166,6 +170,8 @@ struct nfc_llcp_sock {
+ #define LLCP_DM_REJ     0x03
+ 
+ 
++void nfc_llcp_sock_link(struct llcp_sock_list *l, struct sock *s);
++void nfc_llcp_sock_unlink(struct llcp_sock_list *l, struct sock *s);
+ struct nfc_llcp_local *nfc_llcp_find_local(struct nfc_dev *dev);
+ struct nfc_llcp_local *nfc_llcp_local_get(struct nfc_llcp_local *local);
+ int nfc_llcp_local_put(struct nfc_llcp_local *local);
+diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+index 9ac397b..8a60b53 100644
+--- a/net/nfc/llcp/sock.c
++++ b/net/nfc/llcp/sock.c
+@@ -124,7 +124,7 @@ static int llcp_sock_bind(struct socket *sock, struct sockaddr *addr, int alen)
+ 	if (llcp_sock->ssap == LLCP_MAX_SAP)
+ 		goto put_dev;
+ 
+-	local->sockets[llcp_sock->ssap] = llcp_sock;
++	nfc_llcp_sock_link(&local->sockets, sk);
+ 
+ 	pr_debug("Socket bound to SAP %d\n", llcp_sock->ssap);
+ 
+@@ -379,15 +379,6 @@ static int llcp_sock_release(struct socket *sock)
+ 		goto out;
+ 	}
+ 
+-	mutex_lock(&local->socket_lock);
+-
+-	if (llcp_sock == local->sockets[llcp_sock->ssap])
+-		local->sockets[llcp_sock->ssap] = NULL;
+-	else
+-		list_del_init(&llcp_sock->list);
+-
+-	mutex_unlock(&local->socket_lock);
+-
+ 	lock_sock(sk);
+ 
+ 	/* Send a DISC */
+@@ -412,14 +403,12 @@ static int llcp_sock_release(struct socket *sock)
+ 		}
+ 	}
+ 
+-	/* Freeing the SAP */
+-	if ((sk->sk_state == LLCP_CONNECTED
+-	     && llcp_sock->ssap > LLCP_LOCAL_SAP_OFFSET) ||
+-	    sk->sk_state == LLCP_BOUND || sk->sk_state == LLCP_LISTEN)
+-		nfc_llcp_put_ssap(llcp_sock->local, llcp_sock->ssap);
++	nfc_llcp_put_ssap(llcp_sock->local, llcp_sock->ssap);
+ 
+ 	release_sock(sk);
+ 
++	nfc_llcp_sock_unlink(&local->sockets, sk);
++
+ out:
+ 	sock_orphan(sk);
+ 	sock_put(sk);
+@@ -505,21 +494,26 @@ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
+ 					  llcp_sock->service_name_len,
+ 					  GFP_KERNEL);
+ 
+-	local->sockets[llcp_sock->ssap] = llcp_sock;
++	nfc_llcp_sock_link(&local->connecting_sockets, sk);
+ 
+ 	ret = nfc_llcp_send_connect(llcp_sock);
+ 	if (ret)
+-		goto put_dev;
++		goto sock_unlink;
+ 
+ 	ret = sock_wait_state(sk, LLCP_CONNECTED,
+ 			      sock_sndtimeo(sk, flags & O_NONBLOCK));
+ 	if (ret)
+-		goto put_dev;
++		goto sock_unlink;
+ 
+ 	release_sock(sk);
+ 
+ 	return 0;
+ 
++sock_unlink:
++	nfc_llcp_put_ssap(local, llcp_sock->ssap);
++
++	nfc_llcp_sock_unlink(&local->connecting_sockets, sk);
++
+ put_dev:
+ 	nfc_put_device(dev);
+ 
+@@ -690,7 +684,6 @@ struct sock *nfc_llcp_sock_alloc(struct socket *sock, int type, gfp_t gfp)
+ 	skb_queue_head_init(&llcp_sock->tx_queue);
+ 	skb_queue_head_init(&llcp_sock->tx_pending_queue);
+ 	skb_queue_head_init(&llcp_sock->tx_backlog_queue);
+-	INIT_LIST_HEAD(&llcp_sock->list);
+ 	INIT_LIST_HEAD(&llcp_sock->accept_queue);
+ 
+ 	if (sock != NULL)
+@@ -708,7 +701,6 @@ void nfc_llcp_sock_free(struct nfc_llcp_sock *sock)
+ 	skb_queue_purge(&sock->tx_backlog_queue);
+ 
+ 	list_del_init(&sock->accept_queue);
+-	list_del_init(&sock->list);
+ 
+ 	sock->parent = NULL;
+ 
+-- 
+1.7.9.1
+
