@@ -1,81 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53825 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751733Ab2F3NRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:32 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 03/18] brcmsmac: remove ai_get_buscore{type,rev}()
-Date: Sat, 30 Jun 2012 15:16:06 +0200
-Message-Id: <1341062181-28071-4-git-send-email-hauke@hauke-m.de> (sfid-20120630_151735_809906_D9B3C69B)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:33710 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753294Ab2FFNXd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 09:23:33 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 22/29] iwlwifi: add iwl_set_bits_mask
+Date: Wed,  6 Jun 2012 15:22:03 +0200
+Message-Id: <1338988930-11561-22-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152336_240767_F14FDC4D)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two functions are not used any more.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+In a few cases we need to set a value in
+a certain mask inside a register, add the
+function iwl_set_bits_mask() to make such
+code easy.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   15 ---------------
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    4 ----
- 2 files changed, 19 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-io.c |   18 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-io.h |    2 ++
+ 2 files changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index c7ec9b7..339e533 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -469,9 +469,6 @@ ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
- 		sii->pub.pmurev = sii->pub.pmucaps & PCAP_REV_MASK;
- 	}
- 
--	/* figure out buscore */
--	sii->buscore = ai_findcore(&sii->pub, PCIE_CORE_ID, 0);
--
- 	return true;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index ee93274..5f2df70 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -65,6 +65,24 @@ void iwl_clear_bit(struct iwl_trans *trans, u32 reg, u32 mask)
  }
+ EXPORT_SYMBOL_GPL(iwl_clear_bit);
  
-@@ -804,15 +801,3 @@ bool ai_deviceremoved(struct si_pub *sih)
- 
- 	return false;
- }
--
--uint ai_get_buscoretype(struct si_pub *sih)
--{
--	struct si_info *sii = (struct si_info *)sih;
--	return sii->buscore->id.id;
--}
--
--uint ai_get_buscorerev(struct si_pub *sih)
--{
--	struct si_info *sii = (struct si_info *)sih;
--	return sii->buscore->id.rev;
--}
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index d6fa982..fb7f439 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -168,7 +168,6 @@ struct si_info {
- 	struct si_pub pub;	/* back plane public state (must be first) */
- 	struct bcma_bus *icbus;	/* handle to soc interconnect bus */
- 	struct pci_dev *pcibus;	/* handle to pci bus */
--	struct bcma_device *buscore;
- 
- 	u32 chipst;		/* chip status */
- };
-@@ -202,9 +201,6 @@ extern void ai_pci_up(struct si_pub *sih);
- /* Enable Ex-PA for 4313 */
- extern void ai_epa_4313war(struct si_pub *sih);
- 
--extern uint ai_get_buscoretype(struct si_pub *sih);
--extern uint ai_get_buscorerev(struct si_pub *sih);
--
- static inline u32 ai_get_cccaps(struct si_pub *sih)
++void iwl_set_bits_mask(struct iwl_trans *trans, u32 reg, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 v;
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++	WARN_ON_ONCE(value & ~mask);
++#endif
++
++	spin_lock_irqsave(&trans->reg_lock, flags);
++	v = iwl_read32(trans, reg);
++	v &= ~mask;
++	v |= value;
++	iwl_write32(trans, reg, v);
++	spin_unlock_irqrestore(&trans->reg_lock, flags);
++}
++EXPORT_SYMBOL_GPL(iwl_set_bits_mask);
++
+ int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
+ 		 u32 bits, u32 mask, int timeout)
  {
- 	return sih->cccaps;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index abb3250..4a9a45f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -54,6 +54,8 @@ static inline u32 iwl_read32(struct iwl_trans *trans, u32 ofs)
+ void iwl_set_bit(struct iwl_trans *trans, u32 reg, u32 mask);
+ void iwl_clear_bit(struct iwl_trans *trans, u32 reg, u32 mask);
+ 
++void iwl_set_bits_mask(struct iwl_trans *trans, u32 reg, u32 mask, u32 value);
++
+ int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
+ 		 u32 bits, u32 mask, int timeout);
+ int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
 -- 
-1.7.9.5
+1.7.10
 
