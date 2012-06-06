@@ -1,56 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:34995 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932119Ab2FGSKh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 14:10:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: =?iso-8859-1?Q?Hans_Kr=F6ner?= <hanskroner@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Thu, 7 Jun 2012 11:10:09 -0700
-Subject: RE: mwifiex:Testing AP functionality with hostapd
-Message-ID: <477F20668A386D41ADCC57781B1F7043083A7F0979@SC-VEXCH1.marvell.com> (sfid-20120607_201041_187794_579F765F)
-References: <loom.20120607T100950-564@post.gmane.org>
-In-Reply-To: <loom.20120607T100950-564@post.gmane.org>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:53700 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752528Ab2FFMWL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 08:22:11 -0400
+Received: by eeit10 with SMTP id t10so2297832eei.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 05:22:07 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/8] bcma: handle SoCs in pmu initialization
+Date: Wed, 06 Jun 2012 14:19:53 +0200
+Message-ID: <2716026.rMfCBzMpF9@flexo> (sfid-20120606_142214_865011_F1C58855)
+In-Reply-To: <1338933307-13446-7-git-send-email-hauke@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de> <1338933307-13446-7-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hans,
+Hi Hauke,
 
-> I wanted to test the new "AP mode" functionality in the mwifiex driver so I
-> built a kernel off the wireless-testing tree and hostapd v2.0-devel from git.
-> I tried this on a "DreamPlug" that uses the SD8787.
+On Tuesday 05 June 2012 23:55:05 Hauke Mehrtens wrote:
+> The SoCs do not need any special handling in bcma_pmu_pll_init(),
+> bcma_pmu_resources_init(), bcma_pmu_swreg_init() and
+> bcma_pmu_workarounds. This patches suppresses some warnings in the log.
+
+This does not look like it scales very good, how about you turn the pr_err() 
+into a pr_debug() so that developpers porting bcma on a new chip need to turn 
+on the appropriate debug knobs to get the message?
+
 > 
-> "Client mode" is working fine, but I can't seem to be able to get "AP mode"
-> working. No matter what I do I get this output from hostapd:
- 
-[...]
-
-> I've tried bringing both mlan0 and uap0 interfaces down/up and different
-> combinations of both to no avail. The patches for "AP mode" support mention
-> that is has been tested against hostapd v2.0-devel. Is there anything I should
-> be aware of when building hostapd? 
-
-The latest hostapd code requires mgmt handlers which we are still working on.
-Please checkout the commit id mentioned by Avinash.
-
-> I'm also not sure if I'm running the correct firmware for the SD8787.
-
-[...]
-
-> mwifiex_sdio mmc0:0001:1: driver_version = mwifiex 1.0 (14.57.5.p69)
-
-Please get the latest firmware image (14.66.9.p80) here:
-
-git://git.marvell.com/mwifiex-firmware.git
-http://git.marvell.com/?p=mwifiex-firmware.git;a=summary
-
-Thanks,
-Bing
-
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/bcma/driver_chipcommon_pmu.c |   32 
+++++++++++++++++++++++++++++++++
+>  1 file changed, 32 insertions(+)
+> 
+> diff --git a/drivers/bcma/driver_chipcommon_pmu.c 
+b/drivers/bcma/driver_chipcommon_pmu.c
+> index 2ebba9c..9bf2dff 100644
+> --- a/drivers/bcma/driver_chipcommon_pmu.c
+> +++ b/drivers/bcma/driver_chipcommon_pmu.c
+> @@ -63,6 +63,14 @@ static void bcma_pmu_pll_init(struct bcma_drv_cc *cc)
+>  	case BCMA_CHIP_ID_BCM4331:
+>  	case BCMA_CHIP_ID_BCM43224:
+>  	case BCMA_CHIP_ID_BCM43225:
+> +	case BCMA_CHIP_ID_BCM4716:
+> +	case BCMA_CHIP_ID_BCM4748:
+> +	case BCMA_CHIP_ID_BCM47162:
+> +	case BCMA_CHIP_ID_BCM4749:
+> +	case BCMA_CHIP_ID_BCM5357:
+> +	case BCMA_CHIP_ID_BCM5356:
+> +	case BCMA_CHIP_ID_BCM53572:
+> +	case BCMA_CHIP_ID_BCM4706:
+>  		break;
+>  	default:
+>  		pr_err("PLL init unknown for device 0x%04X\n",
+> @@ -83,6 +91,14 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc 
+*cc)
+>  	case BCMA_CHIP_ID_BCM4331:
+>  	case BCMA_CHIP_ID_BCM43224:
+>  	case BCMA_CHIP_ID_BCM43225:
+> +	case BCMA_CHIP_ID_BCM4716:
+> +	case BCMA_CHIP_ID_BCM4748:
+> +	case BCMA_CHIP_ID_BCM47162:
+> +	case BCMA_CHIP_ID_BCM4749:
+> +	case BCMA_CHIP_ID_BCM5357:
+> +	case BCMA_CHIP_ID_BCM5356:
+> +	case BCMA_CHIP_ID_BCM53572:
+> +	case BCMA_CHIP_ID_BCM4706:
+>  		break;
+>  	default:
+>  		pr_err("PMU resource config unknown for device 0x%04X\n",
+> @@ -105,6 +121,14 @@ static void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
+>  	case BCMA_CHIP_ID_BCM4331:
+>  	case BCMA_CHIP_ID_BCM43224:
+>  	case BCMA_CHIP_ID_BCM43225:
+> +	case BCMA_CHIP_ID_BCM4716:
+> +	case BCMA_CHIP_ID_BCM4748:
+> +	case BCMA_CHIP_ID_BCM47162:
+> +	case BCMA_CHIP_ID_BCM4749:
+> +	case BCMA_CHIP_ID_BCM5357:
+> +	case BCMA_CHIP_ID_BCM5356:
+> +	case BCMA_CHIP_ID_BCM53572:
+> +	case BCMA_CHIP_ID_BCM4706:
+>  		break;
+>  	default:
+>  		pr_err("PMU switch/regulators init unknown for device "
+> @@ -168,6 +192,14 @@ static void bcma_pmu_workarounds(struct bcma_drv_cc 
+*cc)
+>  		}
+>  		break;
+>  	case BCMA_CHIP_ID_BCM43225:
+> +	case BCMA_CHIP_ID_BCM4716:
+> +	case BCMA_CHIP_ID_BCM4748:
+> +	case BCMA_CHIP_ID_BCM47162:
+> +	case BCMA_CHIP_ID_BCM4749:
+> +	case BCMA_CHIP_ID_BCM5357:
+> +	case BCMA_CHIP_ID_BCM5356:
+> +	case BCMA_CHIP_ID_BCM53572:
+> +	case BCMA_CHIP_ID_BCM4706:
+>  		break;
+>  	default:
+>  		pr_err("Workarounds unknown for device 0x%04X\n",
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Florian
