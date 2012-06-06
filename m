@@ -1,75 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52893 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750760Ab2FZEe1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37556 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758179Ab2FFUgC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 00:34:27 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Message-ID: <4FE93BCB.2080400@qca.qualcomm.com> (sfid-20120626_063431_636676_D103F128)
-Date: Tue, 26 Jun 2012 10:04:19 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Subject: Re: [PATCH v3 04/10] ath9k_hw: advertise WoW support for capable
- chipsets
-References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>	<1340633579-7514-5-git-send-email-mohammed@qca.qualcomm.com> <20456.40631.937743.311973@gargle.gargle.HOWL>
-In-Reply-To: <20456.40631.937743.311973@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 6 Jun 2012 16:36:02 -0400
+Message-ID: <1339014959.4523.0.camel@jlt3.sipsolutions.net> (sfid-20120606_223607_054397_406A8C03)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Date: Wed, 06 Jun 2012 22:35:59 +0200
+In-Reply-To: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com> (sfid-20120606_211036_695360_C0AB150F)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 (sfid-20120606_211036_695360_C0AB150F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sujith,
+On Wed, 2012-06-06 at 21:10 +0200, Andre Heider wrote:
+> Hi,
+> 
+> the wlan daughterboard on a nintendo wii stopped working with current master.
+> Building from the v3.4 tag gives me a working device.
+> 
+> I bisected this to:
+> 
+> commit 3a25a8c8b75b430c4f4022918e26fa51d557ecde
+> Author: Johannes Berg <johannes.berg@intel.com>
+> 
+> The hw queues fail the check in ieee80211_check_queues(). When I hack
+> that function to always "return 0;" wlan works again.
 
-On Monday 25 June 2012 10:54 PM, Sujith Manoharan wrote:
-> Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> support WoW for all chipsets starting from AR9280, AR9285, AR9287,
->> AR9380, AR9382, AR9485, AR9462. Really all hardware may not support
->> WoW even though the flag is set and the WoW working depends on
->> your laptop, BIOS apart from the hardware.
->>
->> Cc: Senthil Balasubramanian<senthilb@qca.qualcomm.com>
->> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
->> Cc: vadivel@qca.qualcomm.com
->> Signed-off-by: Luis R. Rodriguez<mcgrof@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++++
->>   1 files changed, 8 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
->> index a42c26f..041d797 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.c
->> +++ b/drivers/net/wireless/ath/ath9k/hw.c
->> @@ -2572,6 +2572,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
->>   	}
->>
->>
->> +	if (AR_SREV_9280_20_OR_LATER(ah)) {
->> +		pCap->hw_caps |= ATH9K_HW_WOW_DEVICE_CAPABLE |
->> +				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
->> +
->> +		if (AR_SREV_9280(ah))
->> +			pCap->hw_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
->> +	}
->> +
->
-> I don't think this is a good idea - please enable WoW only for cards that
-> we have actually tested.
->
+There's a fix for this on the way since Larry had also reported the bug,
+but I don't know where it is right now.
 
-I had tested it in quite a few of cards like AR9280, AR9285,AR9485 with 
-wow enabled. Further the hardware was generic, with only quite a few 
-changes needed between AR9002 and AR9003. thank you.
+johannes
 
--- 
-thanks,
-shafi
