@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49538 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132Ab2FSPs5 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53644 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994Ab2FFXTv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 11:48:57 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	<aeolus@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Wed, 6 Jun 2012 19:19:51 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so197408pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 16:19:51 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/10] ath9k_hw: advertise WoW support for capable chipsets
-Date: Tue, 19 Jun 2012 21:17:24 +0530
-Message-ID: <1340120850-9155-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120619_175638_892812_F77F7C02)
-In-Reply-To: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/5] mac80211: Remove unused variable
+Date: Wed,  6 Jun 2012 16:19:32 -0700
+Message-Id: <1339024775-15405-3-git-send-email-jason@cozybit.com> (sfid-20120607_011955_140888_76E90BF6)
+In-Reply-To: <1339024775-15405-1-git-send-email-jason@cozybit.com>
+References: <1339024775-15405-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Javier Cardona <javier@cozybit.com>
 
-support WoW for all chipsets starting from AR9280, AR9285, AR9287,
-AR9380, AR9382, AR9485, AR9462. Really all hardware may not support
-WoW even though the flag is set and the WoW working depends on
-your laptop, BIOS apart from the hardware.
-
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ net/mac80211/mesh_hwmp.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 784baee..fea7f24 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2560,6 +2560,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index fa7c580..acbd1ad 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -323,7 +323,6 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
+ {
+-	struct ieee80211_supported_band *sband;
+ 	struct rate_info rinfo;
+ 	/* This should be adjusted for each device */
+ 	int device_constant = 1 << ARITH_SHIFT;
+@@ -333,8 +332,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	u32 tx_time, estimated_retx;
+ 	u64 result;
  
- 
-+	if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		pCap->wow_caps = ATH9K_HW_WOW_DEVICE_CAPABLE |
-+				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
-+
-+		if (AR_SREV_9280(ah))
-+			pCap->wow_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
-+	}
-+
- 	return 0;
- }
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
  
 -- 
-1.7.0.4
+1.7.9.5
 
