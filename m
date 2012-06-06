@@ -1,80 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36574 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321Ab2FKShq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 14:37:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <1338115108-19091-2-git-send-email-ozancag@gmail.com>
-References: <1338115108-19091-1-git-send-email-ozancag@gmail.com> <1338115108-19091-2-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 11 Jun 2012 11:37:25 -0700
-Message-ID: <CAB=NE6Xafsxpc0g+F8i5zDwS4ZGiiSQ2dmNpharZdnaTxsjHhQ@mail.gmail.com> (sfid-20120611_203751_081507_B77B4AC7)
-Subject: Re: [PATCH 2/2] bin/get-compat-kernels: Do not depend on Ubuntu
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: mcgrof@kernel.org, lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:25069 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755788Ab2FFKIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:08:21 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 28/29] NFC: Convert pn533 from semaphore to mutex
+Date: Wed,  6 Jun 2012 12:16:45 +0200
+Message-Id: <1338977806-30279-29-git-send-email-sameo@linux.intel.com> (sfid-20120606_120840_966521_5442C16E)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 27, 2012 at 3:38 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> Use Ubuntu PPA vanilla kernels on other distributions too.
-> The .deb files are extracted using 'ar' and 'tar'.
->
-> Also check if the target directory exists before downloading
-> the deb files.
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
-> ---
->  bin/get-compat-kernels |   81 ++++++++++++++++++++++++++++++++++--------------
->  1 file changed, 57 insertions(+), 24 deletions(-)
->
-> diff --git a/bin/get-compat-kernels b/bin/get-compat-kernels
-> index 7a253c2..6cac898 100755
-> --- a/bin/get-compat-kernels
-> +++ b/bin/get-compat-kernels
-> @@ -10,6 +10,9 @@
->  # to test compile the Linux kernel compatibility module. You can
->  # then use ckmake to cross compile against all supported kernels.
->
-> +KERNELS=""
-> +KPATH="http://kernel.ubuntu.com/~kernel-ppa/mainline/"
-> +
->  function get_ubuntu_kernels() {
->
->        ARCH=$(uname -m)
-> @@ -28,10 +31,6 @@ function get_ubuntu_kernels() {
->                ;;
->        esac
->
-> -       KERNELS=""
-> -
-> -       KPATH="http://kernel.ubuntu.com/~kernel-ppa/mainline/"
-> -
->        KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624_2.6.24-020624_all.deb"
->        KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624-generic_2.6.24-020624_${TARGET}.deb"
->        KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-image-2.6.24-020624-generic_2.6.24-020624_${TARGET}.deb"
-> @@ -121,19 +120,63 @@ function get_ubuntu_kernels() {
->                        continue
->                fi
->
-> -               if [[ ! -f $FILE ]]; then
-> +               # Do not download if installed, I think this
-> +               # workarounds the below XXX: comment.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-If I merge this patch the "XXX" comment would no longer present so
-anyone reading this comment would not understand what was being
-referred to with this. If this patch was meant more as an [RFC] then
-the placement of the comment makes sense but my recommendation would
-be to put these type of ephemeral comments right below the --- after
-the commig log and right before the diff stat.
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index b97e3c8..58c1641 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -329,7 +329,7 @@ struct pn533 {
+ 
+ 	pn533_cmd_complete_t cmd_complete;
+ 	void *cmd_complete_arg;
+-	struct semaphore cmd_lock;
++	struct mutex cmd_lock;
+ 	u8 cmd;
+ 
+ 	struct pn533_poll_modulations *poll_mod_active[PN533_POLL_MOD_MAX + 1];
+@@ -462,7 +462,7 @@ static void pn533_wq_cmd_complete(struct work_struct *work)
+ 					PN533_FRAME_CMD_PARAMS_LEN(in_frame));
+ 
+ 	if (rc != -EINPROGRESS)
+-		up(&dev->cmd_lock);
++		mutex_unlock(&dev->cmd_lock);
+ }
+ 
+ static void pn533_recv_response(struct urb *urb)
+@@ -640,7 +640,7 @@ static int pn533_send_cmd_frame_async(struct pn533 *dev,
+ 
+ 	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
+ 
+-	if (down_trylock(&dev->cmd_lock))
++	if (!mutex_trylock(&dev->cmd_lock))
+ 		return -EBUSY;
+ 
+ 	rc = __pn533_send_cmd_frame_async(dev, out_frame, in_frame,
+@@ -650,7 +650,7 @@ static int pn533_send_cmd_frame_async(struct pn533 *dev,
+ 
+ 	return 0;
+ error:
+-	up(&dev->cmd_lock);
++	mutex_unlock(&dev->cmd_lock);
+ 	return rc;
+ }
+ 
+@@ -1261,7 +1261,7 @@ static void pn533_listen_mode_timer(unsigned long data)
+ 
+ 	dev->cancel_listen = 1;
+ 
+-	up(&dev->cmd_lock);
++	mutex_unlock(&dev->cmd_lock);
+ 
+ 	pn533_poll_next_mod(dev);
+ 
+@@ -2054,7 +2054,7 @@ error_cmd:
+ 
+ 	kfree(arg);
+ 
+-	up(&dev->cmd_lock);
++	mutex_unlock(&dev->cmd_lock);
+ }
+ 
+ static int pn533_set_configuration(struct pn533 *dev, u8 cfgitem, u8 *cfgdata,
+@@ -2114,7 +2114,7 @@ static int pn533_probe(struct usb_interface *interface,
+ 
+ 	dev->udev = usb_get_dev(interface_to_usbdev(interface));
+ 	dev->interface = interface;
+-	sema_init(&dev->cmd_lock, 1);
++	mutex_init(&dev->cmd_lock);
+ 
+ 	iface_desc = interface->cur_altsetting;
+ 	for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
+-- 
+1.7.9.1
 
-> +               if [[ ! -d /usr/src/$PKG && ! -f $FILE ]]; then
-
-It is certainly a nice additional check, I'll take it, and yeah you
-can remove the comment also then.
-
-Nice stuff, I'll take these patches, feel free to send an [PATCH v2]!
-
-  Luis
