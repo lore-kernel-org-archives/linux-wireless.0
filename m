@@ -1,66 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39619 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755026Ab2FTHiX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 03:38:23 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 09/12] iwlwifi: delay ROC if doing internal reset scan
-Date: Wed, 20 Jun 2012 09:38:11 +0200
-Message-Id: <1340177894-12992-10-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093830_551987_30045018)
-In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
-References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:2806 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751493Ab2FFLXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 07:23:34 -0400
+Message-ID: <4FCF3DA7.1080508@broadcom.com> (sfid-20120606_132337_921695_73C2B299)
+Date: Wed, 6 Jun 2012 13:23:19 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 16/18] brcmsmac: do not call brcms_c_chipmatch() for
+ non PCI
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+ <1338937641-8519-17-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1338937641-8519-17-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+> brcms_c_chipmatch() just works for PCIe devices and returns false for
+> non PCIe devices. This stops brcms_ops_stop() from calling it when the
+> devices is not a PCIe device.
 
-When the device is doing an internal radio reset
-scan, ROC can be rejected to the supplicant with
-busy status which confuses it.
+Although this is true you may want to consider what this function
+provides. The intent is to have a more accurate filter to determine
+support the device by the driver, ie. more accurate than what is in the
+driver device table.
 
-One option would be to queue the ROC and handle
-it later, but since the radio reset scan is very
-quick we can just wait for it to finish instead.
+So in brcms_c_chipmatch() we may want a host-type independent filtering
+and validate bcma_device_id, bcma_chipinfo, and possibly bcma_boardinfo.
 
-Also add a warning since we shouldn't run into
-the case of having a scan active when requesting
-a ROC in any other case since mac80211 will not
-scan while ROC or ROC while scanning.
-
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/mac80211.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index 9d23748..c577263 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -1036,8 +1036,18 @@ static int iwlagn_mac_remain_on_channel(struct ieee80211_hw *hw,
- 	mutex_lock(&priv->mutex);
- 
- 	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
--		err = -EBUSY;
--		goto out;
-+		/* mac80211 should not scan while ROC or ROC while scanning */
-+		if (WARN_ON_ONCE(priv->scan_type != IWL_SCAN_RADIO_RESET)) {
-+			err = -EBUSY;
-+			goto out;
-+		}
-+
-+		iwl_scan_cancel_timeout(priv, 100);
-+
-+		if (test_bit(STATUS_SCAN_HW, &priv->status)) {
-+			err = -EBUSY;
-+			goto out;
-+		}
- 	}
- 
- 	priv->hw_roc_channel = channel;
--- 
-1.7.10
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   22 +++++++++++++-------
+>  1 file changed, 14 insertions(+), 8 deletions(-)
 
