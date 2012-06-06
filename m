@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45688 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753012Ab2FKHYn (ORCPT
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:60125 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757026Ab2FFRGL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 03:24:43 -0400
-Message-ID: <1339399481.4520.4.camel@jlt3.sipsolutions.net> (sfid-20120611_092446_241565_0E85153A)
-Subject: Re: [PATCH v2 4/4] mac80211: invoke the timer only with correct
- dot11MeshHWMPRootMode value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Date: Mon, 11 Jun 2012 09:24:41 +0200
-In-Reply-To: <CAEFj987SuLhiMcdhu6rRUn-UTfpgJ2Oe1wVhQyq41QZTOrwZhw@mail.gmail.com> (sfid-20120609_181156_971493_D13216FB)
-References: <1339043963-2043-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1339043963-2043-5-git-send-email-yeohchunyeow@gmail.com>
-	 <1339231619.4539.32.camel@jlt3.sipsolutions.net>
-	 <CAEFj987SuLhiMcdhu6rRUn-UTfpgJ2Oe1wVhQyq41QZTOrwZhw@mail.gmail.com>
-	 (sfid-20120609_181156_971493_D13216FB)
+	Wed, 6 Jun 2012 13:06:11 -0400
+Received: by lahd3 with SMTP id d3so5587131lah.5
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 10:05:58 -0700 (PDT)
+Message-ID: <1339002356.7078.35.camel@cumari.coelho.fi> (sfid-20120606_190613_941583_C2B46656)
+Subject: Re: [PATCH] wl12xx/wl18xx: add erp protection IE to the beacon
+ filter
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Jun 2012 20:05:56 +0300
+In-Reply-To: <1337088920-29014-1-git-send-email-eliad@wizery.com>
+References: <1337088920-29014-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-06-10 at 00:11 +0800, Yeoh Chun-Yeow wrote:
-> > so, humm, there's still the same constant here.
-> >
-> > and here.
-> >
+On Tue, 2012-05-15 at 16:35 +0300, Eliad Peller wrote:
+> We have to reconfigure the fw when erp protection should
+> be enabled/disabled. Pass beacons containing changes
+> in the ERP protection IE, so we could analyze them.
 > 
-> Possible to stick to the number, because in the standard it define
-> (0) no root
-> (2) proactive PREQ no PREP
-> (3) proactive RPEQ with PREP
-> (4) RANN
-> 
-> Not so sure what's the proper naming for this constant.
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-You could make up a name, or use >= 2 instead of > 1 ?
+Applied, thanks!
 
-johannes
+--
+Luca.
 
