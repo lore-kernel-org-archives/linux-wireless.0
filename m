@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29111 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054Ab2FDK7L (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36042 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751483Ab2FFGi2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:59:11 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38075.511019.370729@gargle.gargle.HOWL> (sfid-20120604_125915_132156_371589E4)
-Date: Mon, 4 Jun 2012 16:28:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 11/20] ath9k_hw: update ar9462 initval table to fix rx
+	Wed, 6 Jun 2012 02:38:28 -0400
+Message-ID: <1338964705.4513.3.camel@jlt3.sipsolutions.net> (sfid-20120606_083831_157225_2D71E88F)
+Subject: Re: [PATCH v2] mac80211: stop Rx during HW reconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Jun 2012 08:38:25 +0200
+In-Reply-To: <1338964357-21685-1-git-send-email-arik@wizery.com> (sfid-20120606_083243_872029_F444401F)
+References: <1338964357-21685-1-git-send-email-arik@wizery.com>
+	 (sfid-20120606_083243_872029_F444401F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2012-06-06 at 09:32 +0300, Arik Nemtsov wrote:
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> +++ b/net/mac80211/rx.c
+> @@ -3023,6 +3023,9 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	if (WARN_ON(!sband))
+>  		goto drop;
+>  
+> +	/* make sure we get the latest values for the next variable checks */
+> +	smp_rmb();
+> +
 
-The wrong ADC sample phase that happen between awake and
-network/full sleep will lead to improper rx noisefloor
-calibration.
+I still don't think this makes a lot of sense. It's guaranteed racy, so
+what does this buy us?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index 1d6658e..a10ece0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x0001604c, 0x2699e04f},
- 	{0x00016050, 0x6db6db6c},
- 	{0x00016058, 0x6c200000},
--	{0x00016080, 0x00040000},
-+	{0x00016080, 0x000c0000},
- 	{0x00016084, 0x9a68048c},
- 	{0x00016088, 0x54214514},
- 	{0x0001608c, 0x1203040b},
-@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x00016144, 0x02084080},
- 	{0x00016148, 0x000080c0},
- 	{0x00016280, 0x050a0001},
--	{0x00016284, 0x3d841400},
-+	{0x00016284, 0x3d841418},
- 	{0x00016288, 0x00000000},
- 	{0x0001628c, 0xe3000000},
- 	{0x00016290, 0xa1005080},
--- 
-1.7.10.3
+johannes
 
