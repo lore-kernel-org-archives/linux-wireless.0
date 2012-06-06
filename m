@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:38082 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750819Ab2F3Tzh (ORCPT
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:39726 "EHLO
+	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753661Ab2FFISa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 15:55:37 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.co
-Cc: wfg@linux.intel.com, linux-wireless@vger.kernel.org,
-	franzschrober@yahoo.de, julian.calaby@gmail.com,
-	johannes@sipsolutions.net, thomas@net.t-labs.tu-berlin.de,
-	nbd@openwrt.org
-Subject: [PATCH v3] mac80211: correct size the argument to kzalloc in minstrel_ht
-Date: Sat, 30 Jun 2012 21:55:26 +0200
-Message-Id: <1341086126-99685-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120630_215615_724610_BE5513A9)
+	Wed, 6 Jun 2012 04:18:30 -0400
+Received: by lboj14 with SMTP id j14so4154668lbo.7
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:18:27 -0700 (PDT)
+Message-ID: <1338970706.7078.2.camel@cumari.coelho.fi> (sfid-20120606_101835_158259_86189D79)
+Subject: Re: [PATCH] wlcore: don't enable BET for high basic rates
+From: Luciano Coelho <coelho@ti.com>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, arik@wizery.com
+Date: Wed, 06 Jun 2012 11:18:26 +0300
+In-Reply-To: <1336992947-12927-1-git-send-email-victorg@ti.com>
+References: <1336992947-12927-1-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-msp has type struct minstrel_ht_sta_priv not struct minstrel_ht_sta.
+On Mon, 2012-05-14 at 13:55 +0300, Victor Goldenshtein wrote:
+> The beacon early termination is not relevant for
+> high basic rates, which doesn't contribute
+> anything to the PS and only adds unnecessary FW
+> work.
+> 
+> Enable BET only if the basic rate is less than 9
+> Mbps.
+> 
+> Signed-off-by: Ziv Riesel <zivriesel@ti.com>
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+> ---
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
-Use suggested coding style. Thx to Schrober.
-Correct an error reported in sane. Thx to Fengguang Wu.
----
- net/mac80211/rc80211_minstrel_ht.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied and pushed to wl12xx/master.  Thanks!
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 2d1acc6..f9e51ef 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -809,7 +809,7 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
- 			max_rates = sband->n_bitrates;
- 	}
- 
--	msp = kzalloc(sizeof(struct minstrel_ht_sta), gfp);
-+	msp = kzalloc(sizeof(*msp), gfp);
- 	if (!msp)
- 		return NULL;
- 
--- 
-1.7.10.4
+--
+Luca.
 
