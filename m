@@ -1,71 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:37375 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537Ab2FXTLv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2012 15:11:51 -0400
-Received: by weyu7 with SMTP id u7so2328415wey.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2012 12:11:50 -0700 (PDT)
-MIME-Version: 1.0
-From: Guido Iribarren <guidoiribarren@buenosaireslibre.org>
-Date: Sun, 24 Jun 2012 16:11:27 -0300
-Message-ID: <CAHD-aq+nNs4L0iZNxYSABX-1Wk+B=s-Avqc1TFYfO-8JOOZ5kA@mail.gmail.com> (sfid-20120624_211155_217283_DE3783DC)
-Subject: Regression on ath9k_htc managed mode
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:20470 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752772Ab2FFKHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:07:11 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 10/29] NFC: Set the NFC device RF mode appropriately
+Date: Wed,  6 Jun 2012 12:16:27 +0200
+Message-Id: <1338977806-30279-11-git-send-email-sameo@linux.intel.com> (sfid-20120606_120720_172765_7E80864B)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello nice people,
-we've recently found a bug when using infrastructure mode with tplink
-wn722n usb dongles (ath9k_htc driver)
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/linux/nfc.h   |    1 +
+ include/net/nfc/nfc.h |    2 +-
+ net/nfc/core.c        |   14 ++++++++++----
+ 3 files changed, 12 insertions(+), 5 deletions(-)
 
-on the latest compat mac80211 we could find (2012-06-14) compiled
-against a 3.3.8 kernel, it has a problem with receiving broadcast
-while in client mode.
-That is, if the card is in Managed mode, it associates correctly,
-sends and receives unicast packets perfectly, and can send broadcast
-packets too. But no packets sent to broadcast from the AP will be
-understood.
-This has been observed with a simple arping
-[x.x.x.x being the ap, and y.y.y.y being the dongle in client mode.]
-sta# arping -b -I wlan1 x.x.x.x
-ARPING to x.x.x.x from y.y.y.y via wlan1
-Unicast reply from x.x.x.x [f8:d1:11:c0:ef:72] 108.579ms
-Unicast reply from x.x.x.x [f8:d1:11:c0:ef:72] 108.157ms
+diff --git a/include/linux/nfc.h b/include/linux/nfc.h
+index d124e92..f4e6dd9 100644
+--- a/include/linux/nfc.h
++++ b/include/linux/nfc.h
+@@ -146,6 +146,7 @@ enum nfc_attrs {
+ /* NFC RF modes */
+ #define NFC_RF_INITIATOR 0
+ #define NFC_RF_TARGET    1
++#define NFC_RF_NONE      2
+ 
+ /* NFC protocols masks used in bitsets */
+ #define NFC_PROTO_JEWEL_MASK	(1 << NFC_PROTO_JEWEL)
+diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+index 41573b4b..a6a7b49 100644
+--- a/include/net/nfc/nfc.h
++++ b/include/net/nfc/nfc.h
+@@ -100,10 +100,10 @@ struct nfc_dev {
+ 	int targets_generation;
+ 	struct device dev;
+ 	bool dev_up;
++	u8 rf_mode;
+ 	bool polling;
+ 	struct nfc_target *active_target;
+ 	bool dep_link_up;
+-	u32 dep_rf_mode;
+ 	struct nfc_genl_data genl_data;
+ 	u32 supported_protocols;
+ 
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 17f1474..722a0c7 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -144,8 +144,10 @@ int nfc_start_poll(struct nfc_dev *dev, u32 im_protocols, u32 tm_protocols)
+ 	}
+ 
+ 	rc = dev->ops->start_poll(dev, im_protocols, tm_protocols);
+-	if (!rc)
++	if (!rc) {
+ 		dev->polling = true;
++		dev->rf_mode = NFC_RF_NONE;
++	}
+ 
+ error:
+ 	device_unlock(&dev->dev);
+@@ -235,8 +237,10 @@ int nfc_dep_link_up(struct nfc_dev *dev, int target_index, u8 comm_mode)
+ 	}
+ 
+ 	rc = dev->ops->dep_link_up(dev, target, comm_mode, gb, gb_len);
+-	if (!rc)
++	if (!rc) {
+ 		dev->active_target = target;
++		dev->rf_mode = NFC_RF_INITIATOR;
++	}
+ 
+ error:
+ 	device_unlock(&dev->dev);
+@@ -264,7 +268,7 @@ int nfc_dep_link_down(struct nfc_dev *dev)
+ 		goto error;
+ 	}
+ 
+-	if (dev->dep_rf_mode == NFC_RF_TARGET) {
++	if (dev->rf_mode == NFC_RF_TARGET) {
+ 		rc = -EOPNOTSUPP;
+ 		goto error;
+ 	}
+@@ -286,7 +290,6 @@ int nfc_dep_link_is_up(struct nfc_dev *dev, u32 target_idx,
+ 		       u8 comm_mode, u8 rf_mode)
+ {
+ 	dev->dep_link_up = true;
+-	dev->dep_rf_mode = rf_mode;
+ 
+ 	nfc_llcp_mac_is_up(dev, target_idx, comm_mode, rf_mode);
+ 
+@@ -330,6 +333,7 @@ int nfc_activate_target(struct nfc_dev *dev, u32 target_idx, u32 protocol)
+ 	rc = dev->ops->activate_target(dev, target, protocol);
+ 	if (!rc) {
+ 		dev->active_target = target;
++		dev->rf_mode = NFC_RF_INITIATOR;
+ 
+ 		if (dev->ops->check_presence)
+ 			mod_timer(&dev->check_pres_timer, jiffies +
+@@ -470,6 +474,8 @@ int nfc_tm_activated(struct nfc_dev *dev, u32 protocol, u8 comm_mode,
+ 			goto out;
+ 	}
+ 
++	dev->rf_mode = NFC_RF_TARGET;
++
+ 	if (protocol == NFC_PROTO_NFC_DEP_MASK)
+ 		nfc_dep_link_is_up(dev, 0, comm_mode, NFC_RF_TARGET);
+ 
+-- 
+1.7.9.1
 
-ap# arping -b -I wlan1 y.y.y.y
-ARPING to y.y.y.y from x.x.x.x via wlan1
-[no replies]
-
-wireshark running on a separate laptop confirmed that the ap is indeed
-transmitting the broadcast, but a tcpdump running on client station
-shows no trace of the packet.
-unicasts, on the other hand, are received perfectly (both seen by
-wireshark on the air, and tcpdump in the station)
-
-This behaviour does not happen with mac80211 2012-02-27 compiled against 3.2.14
-I've recompiled many different versions of openwrt in a "bisecting"
-manner and managed to narrow it down to commit r31322 of openwrt,
-"mac80211: update to wireless-testing 2012-04-13"
-so the regression has been introduced somewhere between 2012-02-27
-(ok) and 2012-04-13 (bug)
-
-I *could* try to narrow it further, by cherrypicking revisions of
-wireless-testing between those dates, and try to compile a custom
-openwrt (i'm not sure how would that work) but I have already spent a
-lot more time than i was expecting to get to this point :(
-
-So maybe some developer, or someone more familiar with the changelog,
-might have an idea when /where (commit) could this bug have crept in,
-and have a kind soul as to find a fix, or revert it?
-
-We would be most grateful, we are building wifi community networks in
-Argentina, with very low cost mesh nodes, based on tplink mr3220 and
-these wn722n dongles, and the model we are using is being adopted by
-many local WCN, so a fix would be of great help!
-
-Guido
-
-ps. I'm crossposting to compat-wireless since i don't entirely
-understand where the problem lies. Sorry for the noise!
