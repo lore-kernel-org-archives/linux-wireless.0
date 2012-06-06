@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:35157 "HELO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753158Ab2FLBOa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 21:14:30 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] ieee80211: definitions for Microsoft Vendor OUI and WPA OUI type
-Date: Mon, 11 Jun 2012 18:14:16 -0700
-Message-Id: <1339463656-10709-1-git-send-email-bzhao@marvell.com> (sfid-20120612_031446_328016_7EEE1F0F)
+Received: from mms2.broadcom.com ([216.31.210.18]:1351 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750713Ab2FFJbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 05:31:35 -0400
+Message-ID: <4FCF2372.6080506@broadcom.com> (sfid-20120606_113138_509139_6A7CAE24)
+Date: Wed, 6 Jun 2012 11:31:30 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 06/18] brcmsmac: remove si_pmu_init() and
+ si_pmu_res_init()
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+ <1338937641-8519-7-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1338937641-8519-7-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+> This is already done by bcma_pmu_init() and bcma_pmu_resources_init() in bcma.
 
-Reference: http://standards.ieee.org/develop/regauth/oui/oui.txt
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    2 -
+>  drivers/net/wireless/brcm80211/brcmsmac/pmu.c     |   76 ---------------------
+>  drivers/net/wireless/brcm80211/brcmsmac/pmu.h     |    2 -
+>  3 files changed, 80 deletions(-)
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- include/linux/ieee80211.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ce9af89..7013513 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1589,6 +1589,8 @@ enum ieee80211_sa_query_action {
- 
- #define WLAN_OUI_WFA			0x506f9a
- #define WLAN_OUI_TYPE_WFA_P2P		9
-+#define WLAN_OUI_MICROSOFT		0x0050f2
-+#define WLAN_OUI_TYPE_MICROSOFT_WPA	1
- 
- /*
-  * WMM/802.11e Tspec Element
--- 
-1.7.0.2
 
