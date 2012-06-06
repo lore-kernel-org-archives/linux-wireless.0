@@ -1,88 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49481 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750742Ab2FSPsm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 11:48:42 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	<aeolus@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Received: from mga01.intel.com ([192.55.52.88]:12674 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755590Ab2FFKHP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 06:07:15 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/10] ath9k_hw: Add WoW hardware capability flags
-Date: Tue, 19 Jun 2012 21:17:23 +0530
-Message-ID: <1340120850-9155-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120619_174845_105548_179DC93D)
-In-Reply-To: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 11/29] NFC: Introduce target mode tx ops
+Date: Wed,  6 Jun 2012 12:16:28 +0200
+Message-Id: <1338977806-30279-12-git-send-email-sameo@linux.intel.com> (sfid-20120606_120722_703681_36CF5596)
+In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+And rename the initiator mode data exchange ops for consistency sake.
 
-have seperate wow capability flags for
-*basic wow support
-*device capable of matching exact user defined pattern
-or de-authentication/disassoc pattern
-*device such AR9280 requires first four bytes for
-all sort of patterns
-
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.h |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/nfc/pn533.c   |    8 ++++----
+ include/net/nfc/nfc.h |    3 ++-
+ net/nfc/core.c        |   37 ++++++++++++++++++++-----------------
+ net/nfc/hci/core.c    |    8 ++++----
+ net/nfc/nci/core.c    |    8 ++++----
+ 5 files changed, 34 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index d0e14a3..73a1238 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -231,6 +231,23 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_DFS			= BIT(16),
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index c6b9bc5..fd94c6f 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -1691,9 +1691,9 @@ error:
+ 	return 0;
+ }
+ 
+-static int pn533_data_exchange(struct nfc_dev *nfc_dev,
+-			       struct nfc_target *target, struct sk_buff *skb,
+-			       data_exchange_cb_t cb, void *cb_context)
++static int pn533_transceive(struct nfc_dev *nfc_dev,
++			    struct nfc_target *target, struct sk_buff *skb,
++			    data_exchange_cb_t cb, void *cb_context)
+ {
+ 	struct pn533 *dev = nfc_get_drvdata(nfc_dev);
+ 	struct pn533_frame *out_frame, *in_frame;
+@@ -1853,7 +1853,7 @@ struct nfc_ops pn533_nfc_ops = {
+ 	.stop_poll = pn533_stop_poll,
+ 	.activate_target = pn533_activate_target,
+ 	.deactivate_target = pn533_deactivate_target,
+-	.data_exchange = pn533_data_exchange,
++	.im_transceive = pn533_transceive,
  };
  
-+/*
-+ * enum ath9k_hw_wow_caps - WoW device capabilities
-+ * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
-+ * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
-+ * an exact user defined pattern or de-authentication/disassoc pattern.
-+ * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
-+ * bytes of the pattern for user defined pattern, de-authentication and
-+ * disassociation patterns for all types of possible frames recieved
-+ * of those types.
-+ */
-+
-+enum ath9k_hw_wow_caps {
-+	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(0),
-+	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(1),
-+	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(2),
-+};
-+
- struct ath9k_hw_capabilities {
- 	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
- 	u16 rts_aggr_limit;
-@@ -246,6 +263,9 @@ struct ath9k_hw_capabilities {
- 	u8 txs_len;
- 	u16 pcie_lcr_offset;
- 	bool pcie_lcr_extsync_en;
-+#ifdef	CONFIG_PM_SLEEP
-+	enum ath9k_hw_wow_caps wow_caps;
-+#endif
+ static int pn533_probe(struct usb_interface *interface,
+diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+index a6a7b49..45c4c97 100644
+--- a/include/net/nfc/nfc.h
++++ b/include/net/nfc/nfc.h
+@@ -63,9 +63,10 @@ struct nfc_ops {
+ 			       u32 protocol);
+ 	void (*deactivate_target)(struct nfc_dev *dev,
+ 				  struct nfc_target *target);
+-	int (*data_exchange)(struct nfc_dev *dev, struct nfc_target *target,
++	int (*im_transceive)(struct nfc_dev *dev, struct nfc_target *target,
+ 			     struct sk_buff *skb, data_exchange_cb_t cb,
+ 			     void *cb_context);
++	int (*tm_send)(struct nfc_dev *dev, struct sk_buff *skb);
+ 	int (*check_presence)(struct nfc_dev *dev, struct nfc_target *target);
  };
  
- struct ath9k_ops_config {
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 722a0c7..76c1e20 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -413,27 +413,30 @@ int nfc_data_exchange(struct nfc_dev *dev, u32 target_idx, struct sk_buff *skb,
+ 		goto error;
+ 	}
+ 
+-	if (dev->active_target == NULL) {
+-		rc = -ENOTCONN;
+-		kfree_skb(skb);
+-		goto error;
+-	}
++	if (dev->rf_mode == NFC_RF_INITIATOR && dev->active_target != NULL) {
++		if (dev->active_target->idx != target_idx) {
++			rc = -EADDRNOTAVAIL;
++			kfree_skb(skb);
++			goto error;
++		}
+ 
+-	if (dev->active_target->idx != target_idx) {
+-		rc = -EADDRNOTAVAIL;
++		if (dev->ops->check_presence)
++			del_timer_sync(&dev->check_pres_timer);
++
++		rc = dev->ops->im_transceive(dev, dev->active_target, skb, cb,
++					     cb_context);
++
++		if (!rc && dev->ops->check_presence)
++			mod_timer(&dev->check_pres_timer, jiffies +
++				  msecs_to_jiffies(NFC_CHECK_PRES_FREQ_MS));
++	} else if (dev->rf_mode == NFC_RF_TARGET && dev->ops->tm_send != NULL) {
++		rc = dev->ops->tm_send(dev, skb);
++	} else {
++		rc = -ENOTCONN;
+ 		kfree_skb(skb);
+ 		goto error;
+ 	}
+ 
+-	if (dev->ops->check_presence)
+-		del_timer_sync(&dev->check_pres_timer);
+-
+-	rc = dev->ops->data_exchange(dev, dev->active_target, skb, cb,
+-				     cb_context);
+-
+-	if (!rc && dev->ops->check_presence)
+-		mod_timer(&dev->check_pres_timer, jiffies +
+-			  msecs_to_jiffies(NFC_CHECK_PRES_FREQ_MS));
+ 
+ error:
+ 	device_unlock(&dev->dev);
+@@ -727,7 +730,7 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
+ 	struct nfc_dev *dev;
+ 
+ 	if (!ops->start_poll || !ops->stop_poll || !ops->activate_target ||
+-	    !ops->deactivate_target || !ops->data_exchange)
++	    !ops->deactivate_target || !ops->im_transceive)
+ 		return NULL;
+ 
+ 	if (!supported_protocols)
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index 281f3a3..a8b0b71 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -512,9 +512,9 @@ static void hci_deactivate_target(struct nfc_dev *nfc_dev,
+ {
+ }
+ 
+-static int hci_data_exchange(struct nfc_dev *nfc_dev, struct nfc_target *target,
+-			     struct sk_buff *skb, data_exchange_cb_t cb,
+-			     void *cb_context)
++static int hci_transceive(struct nfc_dev *nfc_dev, struct nfc_target *target,
++			  struct sk_buff *skb, data_exchange_cb_t cb,
++			  void *cb_context)
+ {
+ 	struct nfc_hci_dev *hdev = nfc_get_drvdata(nfc_dev);
+ 	int r;
+@@ -580,7 +580,7 @@ static struct nfc_ops hci_nfc_ops = {
+ 	.stop_poll = hci_stop_poll,
+ 	.activate_target = hci_activate_target,
+ 	.deactivate_target = hci_deactivate_target,
+-	.data_exchange = hci_data_exchange,
++	.im_transceive = hci_transceive,
+ 	.check_presence = hci_check_presence,
+ };
+ 
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 0f71898..766a02b 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -522,9 +522,9 @@ static void nci_deactivate_target(struct nfc_dev *nfc_dev,
+ 	}
+ }
+ 
+-static int nci_data_exchange(struct nfc_dev *nfc_dev, struct nfc_target *target,
+-			     struct sk_buff *skb,
+-			     data_exchange_cb_t cb, void *cb_context)
++static int nci_transceive(struct nfc_dev *nfc_dev, struct nfc_target *target,
++			  struct sk_buff *skb,
++			  data_exchange_cb_t cb, void *cb_context)
+ {
+ 	struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
+ 	int rc;
+@@ -557,7 +557,7 @@ static struct nfc_ops nci_nfc_ops = {
+ 	.stop_poll = nci_stop_poll,
+ 	.activate_target = nci_activate_target,
+ 	.deactivate_target = nci_deactivate_target,
+-	.data_exchange = nci_data_exchange,
++	.im_transceive = nci_transceive,
+ };
+ 
+ /* ---- Interface to NCI drivers ---- */
 -- 
-1.7.0.4
+1.7.9.1
 
