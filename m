@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7336 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054Ab2FDK6u (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:56306 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754844Ab2FFI1F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:58:50 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38053.773721.647317@gargle.gargle.HOWL> (sfid-20120604_125852_523656_2E002DE4)
-Date: Mon, 4 Jun 2012 16:27:41 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 07/20] ath9k: Add MCI interrupt to debugfs statistics
+	Wed, 6 Jun 2012 04:27:05 -0400
+Received: by lags15 with SMTP id s15so4459563lag.6
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:27:01 -0700 (PDT)
+Message-ID: <1338970761.7078.4.camel@cumari.coelho.fi> (sfid-20120606_102712_393629_446798A6)
+Subject: Re: [PATCH v2 1/3] wlcore: flush tx on CHANGE_CHANNEL
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
+Date: Wed, 06 Jun 2012 11:19:21 +0300
+In-Reply-To: <1337089618-12450-1-git-send-email-arik@wizery.com>
+References: <1337089618-12450-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    3 +++
- drivers/net/wireless/ath/ath9k/debug.h |    1 +
- 2 files changed, 4 insertions(+)
+On Tue, 2012-05-15 at 16:46 +0300, Arik Nemtsov wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> On CHANGE_CHANNEL indication, we should flush all the
+> queued tx frames, so they will be sent on the correct
+> (current) channel.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
+> v1->2: added SOB tag by eliad
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index fde700c..c134dda 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -374,6 +374,8 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
- 		sc->debug.stats.istats.dtim++;
- 	if (status & ATH9K_INT_TSFOOR)
- 		sc->debug.stats.istats.tsfoor++;
-+	if (status & ATH9K_INT_MCI)
-+		sc->debug.stats.istats.mci++;
- }
- 
- static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
-@@ -418,6 +420,7 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
- 	PR_IS("DTIMSYNC", dtimsync);
- 	PR_IS("DTIM", dtim);
- 	PR_IS("TSFOOR", tsfoor);
-+	PR_IS("MCI", mci);
- 	PR_IS("TOTAL", total);
- 
- 	len += snprintf(buf + len, mxlen - len,
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index c34da09..d0f851c 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -86,6 +86,7 @@ struct ath_interrupt_stats {
- 	u32 dtim;
- 	u32 bb_watchdog;
- 	u32 tsfoor;
-+	u32 mci;
- 
- 	/* Sync-cause stats */
- 	u32 sync_cause_all;
--- 
-1.7.10.3
+Applied and pushed this set, thanks!
+
+--
+Luca.
 
