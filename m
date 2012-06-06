@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39607 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754973Ab2FTHiV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 03:38:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/12] iwlwifi: check that we have enough bits to track the TX queues
-Date: Wed, 20 Jun 2012 09:38:03 +0200
-Message-Id: <1340177894-12992-2-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093843_204800_F2889251)
-In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
-References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:3044 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751366Ab2FFLjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 07:39:17 -0400
+Message-ID: <4FCF415B.9050307@broadcom.com> (sfid-20120606_133921_021452_0B3452C1)
+Date: Wed, 6 Jun 2012 13:39:07 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 17/18] brcmsmac: fix read in write_phy_reg
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+ <1338937641-8519-18-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1338937641-8519-18-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+> This reverts a unintended change mad in commit.
+> commit 4b006b11ca18995677c5f1cd03cc9c42fbe80693
+> Author: Arend van Spriel <arend@broadcom.com>
+> Date:   Thu Dec 8 15:06:54 2011 -0800
+> 
+>     brcm80211: smac: use bcma functions for register access in phy code
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/main.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index e620af3..bba3edf 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -1352,6 +1352,9 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 		trans_cfg.queue_watchdog_timeout = IWL_WATCHDOG_DISABLED;
- 	trans_cfg.command_names = iwl_dvm_cmd_strings;
- 
-+	WARN_ON(sizeof(priv->transport_queue_stop) * BITS_PER_BYTE <
-+		priv->cfg->base_params->num_of_queues);
-+
- 	ucode_flags = fw->ucode_capa.flags;
- 
- #ifndef CONFIG_IWLWIFI_P2P
--- 
-1.7.10
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
