@@ -1,111 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:59307 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761841Ab2FVJPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 05:15:36 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	Sven Eckelmann <sven@narfation.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [RFC] ath9k: raise aggregation limit to 64k for HT IBSS
-Date: Fri, 22 Jun 2012 11:05:04 +0200
-Message-Id: <1340355904-861-1-git-send-email-sven@narfation.org> (sfid-20120622_111540_582306_C9366A41)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53644 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994Ab2FFXTx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 19:19:53 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so197408pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 16:19:53 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/5] mac80211: Keep tx rate averages for mesh peers for better metric calculation.
+Date: Wed,  6 Jun 2012 16:19:33 -0700
+Message-Id: <1339024775-15405-4-git-send-email-jason@cozybit.com> (sfid-20120607_011956_950247_AEC5391A)
+In-Reply-To: <1339024775-15405-1-git-send-email-jason@cozybit.com>
+References: <1339024775-15405-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 adds stations in HT IBSS as soon as a frame comes by,
-even if the HT capabilities are not known yet (they are often
-received later, e.g. in beacons). So far, ampdu factor/density
-are only calculated when the station is initially added.
+From: Javier Cardona <javier@cozybit.com>
 
-This patch changes this to update ampdu factor/density settings
-when starting a blockack session.
+The mesh metric is computed every time it was requested by the path
+selection framework.  At that time only the last_tx_rate was taken into
+account when computing the metric.  This last frame may not reflect the
+average data rate that was possible ver that peer link (it could be a
+management frame, a rate control probe, or other outlier).
 
-Using this patch, we had performance boosts from 60 to 150 MBit/s
-between two 2x2 Atheros devices in 5 GHz HT IBSS mode.
+This patch maintains an average tx rate for each peer link which is used
+in metric calculation.
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    6 ++++--
- drivers/net/wireless/ath/ath9k/xmit.c  |   12 ++++++++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+ net/mac80211/mesh_hwmp.c |   24 +++++++++++++++---------
+ net/mac80211/sta_info.c  |    1 +
+ net/mac80211/sta_info.h  |    1 +
+ 3 files changed, 17 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f72c4a3..fe39eb4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -722,6 +722,7 @@ extern int ath9k_modparam_nohwcrypt;
- extern int led_blink;
- extern bool is_ath9k_unloaded;
- 
-+u8 ath9k_parse_mpdudensity(u8 mpdudensity);
- irqreturn_t ath_isr(int irq, void *dev);
- int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		    const struct ath_bus_ops *bus_ops);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 85f9ab4..e2e6958 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -19,7 +19,7 @@
- #include "ath9k.h"
- #include "btcoex.h"
- 
--static u8 parse_mpdudensity(u8 mpdudensity)
-+u8 ath9k_parse_mpdudensity(u8 mpdudensity)
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index acbd1ad..8fb3e59 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -307,7 +307,9 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
  {
- 	/*
- 	 * 802.11n D2.0 defined values for "Minimum MPDU Start Spacing":
-@@ -320,6 +320,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 			    struct ieee80211_vif *vif)
- {
- 	struct ath_node *an;
-+	u8 density;
- 	an = (struct ath_node *)sta->drv_priv;
+ 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct rate_info rinfo;
+ 	int failed;
++	int rate;
  
- #ifdef CONFIG_ATH9K_DEBUGFS
-@@ -334,7 +335,8 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 		ath_tx_node_init(sc, an);
- 		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
- 				     sta->ht_cap.ampdu_factor);
--		an->mpdudensity = parse_mpdudensity(sta->ht_cap.ampdu_density);
-+		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
-+		an->mpdudensity = density;
- 	}
+ 	if (!ieee80211_is_data(hdr->frame_control))
+ 		return;
+@@ -318,36 +320,40 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	stainfo->fail_avg = ((80 * stainfo->fail_avg + 5) / 100 + 20 * failed);
+ 	if (stainfo->fail_avg > 95)
+ 		mesh_plink_broken(stainfo);
++
++	sta_set_rate_info_tx(stainfo, &stainfo->last_tx_rate, &rinfo);
++	rate = cfg80211_calculate_bitrate(&rinfo);
++	if (WARN_ON(!rate))
++		return;
++
++	ewma_add(&stainfo->avg_rate, rate);
++	return;
  }
  
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 8d83060..cafb4a0 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1165,6 +1165,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
  {
- 	struct ath_atx_tid *txtid;
- 	struct ath_node *an;
-+	u8 density;
+-	struct rate_info rinfo;
+ 	/* This should be adjusted for each device */
+ 	int device_constant = 1 << ARITH_SHIFT;
+ 	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
+ 	int s_unit = 1 << ARITH_SHIFT;
+-	int rate, err;
+ 	u32 tx_time, estimated_retx;
+ 	u64 result;
++	int rate;
++	int err = (sta->fail_avg << ARITH_SHIFT) / 100;
  
- 	an = (struct ath_node *)sta->drv_priv;
- 	txtid = ATH_AN_2_TID(an, tid);
-@@ -1172,6 +1173,17 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
- 		return -EAGAIN;
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
  
-+	/* update ampdu factor/density, they may have changed. This may happen
-+	 * in HT IBSS when a beacon with HT-info is received after the station
-+	 * has already been added.
-+	 */
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
-+		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+				     sta->ht_cap.ampdu_factor);
-+		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
-+		an->mpdudensity = density;
-+	}
-+
- 	txtid->state |= AGGR_ADDBA_PROGRESS;
- 	txtid->paused = true;
- 	*ssn = txtid->seq_start = txtid->seq_next;
+-	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
+-	rate = cfg80211_calculate_bitrate(&rinfo);
+-	if (WARN_ON(!rate))
+-		return MAX_METRIC;
+-
+-	err = (sta->fail_avg << ARITH_SHIFT) / 100;
++	/* If not enough values accumulated in rate average, assume 1 Mbps */
++	rate = max(ewma_read(&sta->avg_rate), 10UL);
+ 
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
+ 	 */
+ 	tx_time = (device_constant + 10 * test_frame_len / rate);
+ 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
+-	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
++	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT);
+ 	return (u32)result;
+ }
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 77dcf2f..ddbec7b 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -256,6 +256,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	do_posix_clock_monotonic_gettime(&uptime);
+ 	sta->last_connected = uptime.tv_sec;
+ 	ewma_init(&sta->avg_signal, 1024, 8);
++	ewma_init(&sta->avg_rate, 1, 32);
+ 
+ 	if (sta_prepare_rate_control(local, sta, gfp)) {
+ 		kfree(sta);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 3bb24a1..0bf888e 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -330,6 +330,7 @@ struct sta_info {
+ 	unsigned long tx_retry_failed, tx_retry_count;
+ 	/* moving percentage of failed MSDUs */
+ 	unsigned int fail_avg;
++	struct ewma avg_rate;
+ 
+ 	/* Updated from TX path only, no locking requirements */
+ 	unsigned long tx_packets;
 -- 
-1.7.10
+1.7.9.5
 
