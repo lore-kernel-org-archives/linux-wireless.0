@@ -1,137 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42657 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121Ab2FPMs3 (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63510 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab2FFKVA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2012 08:48:29 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3 6/9] brcm80211: smac: enable/disable radio on regulatory updates
-Date: Sat, 16 Jun 2012 07:47:53 -0500
-Message-Id: <1339850876-8020-7-git-send-email-seth.forshee@canonical.com> (sfid-20120616_144832_286985_FBB9A461)
-In-Reply-To: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
-References: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
+	Wed, 6 Jun 2012 06:21:00 -0400
+Received: by dady13 with SMTP id y13so8594095dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 03:20:59 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH 0/4] Support proactive PREQ mechanism in Mesh
+Date: Wed,  6 Jun 2012 18:20:35 +0800
+Message-Id: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120606_122104_484695_18F90616)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the radio disable state is only updated during initialization,
-and it's only checked against the internal world domain. This is
-unnecessary, as there are always valid channels against this domain.
-Instead, check whether any channels are enabled in the regulatory
-notifier and update the radio state accordingly.
+These series of patches allow the support of proactive PREQ mechanism as defined in
+Sec. 13.10.4.2 of IEEE Std. 802.11-2012 based on the setting of dot11MeshHWMPRootMode
+as follow:
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   67 ++++++++-------------
- 1 file changed, 26 insertions(+), 41 deletions(-)
+dot11MeshHWMPRootMode (2): Proactive PREQ no PREP
+dot11MeshHWMPRootMode (3): Proactive PREQ with PREP
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 65ef60b..3951ccf 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -677,46 +677,6 @@ brcms_c_channel_min_txpower_limits_with_local_constraint(
- 
- }
- 
--/* Update the radio state (enable/disable) and tx power targets
-- * based on a new set of channel/regulatory information
-- */
--static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
--{
--	struct brcms_c_info *wlc = wlc_cm->wlc;
--	uint chan;
--
--	/* search for the existence of any valid channel */
--	for (chan = 0; chan < MAXCHANNEL; chan++) {
--		if (brcms_c_valid_channel20_db(wlc->cmi, chan))
--			break;
--	}
--	if (chan == MAXCHANNEL)
--		chan = INVCHANNEL;
--
--	/*
--	 * based on the channel search above, set or
--	 * clear WL_RADIO_COUNTRY_DISABLE.
--	 */
--	if (chan == INVCHANNEL) {
--		/*
--		 * country/locale with no valid channels, set
--		 * the radio disable bit
--		 */
--		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
--		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\" "
--			  "nbands %d bandlocked %d\n", wlc->pub->unit,
--			  __func__, wlc_cm->world_regd->regdomain->alpha2,
--			  wlc->pub->_nbands, wlc->bandlocked);
--	} else if (mboolisset(wlc->pub->radio_disabled,
--			      WL_RADIO_COUNTRY_DISABLE)) {
--		/*
--		 * country/locale with valid channel, clear
--		 * the radio disable bit
--		 */
--		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
--	}
--}
--
- static int
- brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 		      const struct country_info *country)
-@@ -762,7 +722,6 @@ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 	}
- 
- 	brcms_c_quiet_channels_reset(wlc_cm);
--	brcms_c_channels_commit(wlc_cm);
- 
- 	return 0;
- }
-@@ -1235,12 +1194,38 @@ static int brcms_reg_notifier(struct wiphy *wiphy,
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct brcms_info *wl = hw->priv;
- 	struct brcms_c_info *wlc = wl->wlc;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *ch;
-+	int band, i;
-+	bool ch_found = false;
- 
- 	brcms_reg_apply_radar_flags(wiphy);
- 
- 	if (request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
- 		brcms_reg_apply_beaconing_flags(wiphy, request->initiator);
- 
-+	/* Disable radio if all channels disallowed by regulatory */
-+	for (band = 0; !ch_found && band < IEEE80211_NUM_BANDS; band++) {
-+		sband = wiphy->bands[band];
-+		if (!sband)
-+			continue;
-+
-+		for (i = 0; !ch_found && i < sband->n_channels; i++) {
-+			ch = &sband->channels[i];
-+
-+			if (!(ch->flags & IEEE80211_CHAN_DISABLED))
-+				ch_found = true;
-+		}
-+	}
-+
-+	if (ch_found) {
-+		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-+	} else {
-+		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-+		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\"\n",
-+			  wlc->pub->unit, __func__, request->alpha2);
-+	}
-+
- 	if (wlc->pub->_nbands > 1 || wlc->band->bandtype == BRCM_BAND_2G)
- 		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
- 					brcms_c_japan_ccode(request->alpha2));
--- 
-1.7.9.5
+Proactive RANN is now supported if the dot11MeshHWMPRootMode is set as (4).
+
+Chun-Yeow Yeoh (4):
+  {nl,cfg,mac}80211: implement dot11MeshHWMProotInterval and
+    dot11MeshHWMPactivePathToRootTimeout
+  mac80211: implement the proactive PREQ generation
+  mac80211: implement the proactive PREP generation
+  mac80211: invoke the timer only with correct dot11MeshHWMPRootMode
+    value
+
+ include/linux/nl80211.h       |    9 +++++
+ include/net/cfg80211.h        |    2 +
+ net/mac80211/cfg.c            |   12 ++++++-
+ net/mac80211/debugfs_netdev.c |    6 +++
+ net/mac80211/mesh.c           |    9 +++--
+ net/mac80211/mesh_hwmp.c      |   72 +++++++++++++++++++++++++++++++++++------
+ net/wireless/mesh.c           |    4 ++
+ net/wireless/nl80211.c        |   14 ++++++++
+ 8 files changed, 113 insertions(+), 15 deletions(-)
 
