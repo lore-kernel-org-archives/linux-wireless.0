@@ -1,53 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45581 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493Ab2FZUXc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33706 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720Ab2FFNXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 16:23:32 -0400
-Date: Tue, 26 Jun 2012 13:18:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andreas Messer <andi@bastelmap.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt73usb not working since linux 3.4
-Message-ID: <20120626171835.GB32503@tuxdriver.com> (sfid-20120626_222337_467574_0C98A1F1)
-References: <1364831.ftJE0YjeaD@proton>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1364831.ftJE0YjeaD@proton>
+	Wed, 6 Jun 2012 09:23:30 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH 26/29] iwlwifi: fix typo 'IWL_WATCHHDOG_DISABLED'
+Date: Wed,  6 Jun 2012 15:22:07 +0200
+Message-Id: <1338988930-11561-26-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152334_189362_28DE16D0)
+In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 26, 2012 at 06:03:56PM +0200, Andreas Messer wrote:
-> Dear all,
-> 
-> updating my pc from linux kernel 3.3 to linux kernel 3.4 broke my wlan. I'm 
-> using rt2571 based wlan module from qcom: LR802UKG, which is wired to an 
-> internal usb port of my media center pc. The rfkill switch is hardwired to 
-> make wlan active all the time. This setup is (almost) properly working since 
-> about three years now. (If i ignore the occasional vendor_request_error 
-> things)
-> When I use kernel 3.4., i get a lot of additional devices reported by the 
-> kernel - three leds and a rfkill switch which have not been there before. (or 
-> at least I did not notice them) The wlan device now refuses to go online, 
-> saying that the kill switch is active, which of course can not be as it is 
-> working with linux kernel 3.3. Furthermore, the driver reports three leds, but 
-> my wlan device has only one, so probably a bad eeprom? i dont know...
-> Anyway, I noticed, that when I set the radio led to brightness 255, which 
-> takes a lot of time and gives me some vendor_request_errors, the rfkill switch 
-> gets turned off (sys/class/rfkill/../hard = 0). Unfortunately, this doesn't 
-> help to bring the interface online: After doing that I get frequent 
-> vendor_request_failed messages, even the PC becomes stuck on shutdown. 
-> (Probably NetworkManager waiting for something...)
-> So, what can I do to track down the problem?
+From: Paul Bolle <pebolle@tiscali.nl>
 
-Andreas,
+Commit 7c5ba4a830cbb730770129b0004e2a06e47dbac5 ("iwlwifi: move queue
+watchdog into transport") introduced the named constant
+'IWL_WATCHHDOG_DISABLED'. Rename it to 'IWL_WATCHDOG_DISABLED'.
 
-Hmmm...well, perhaps you can start by doing a git bisect to narrow-down
-the commit that started this problem for you?  It may take serveral
-iterations, if you can only narrow it down to 3.3 working and 3.4 not
-working.  But, at least that should point us in the right direction.
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/main.c   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-config.h |    2 +-
+ drivers/net/wireless/iwlwifi/pcie/1000.c  |    2 +-
+ drivers/net/wireless/iwlwifi/pcie/5000.c  |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index ebdc8b9..c91b66c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -1347,7 +1347,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 		trans_cfg.queue_watchdog_timeout =
+ 			priv->cfg->base_params->wd_timeout;
+ 	else
+-		trans_cfg.queue_watchdog_timeout = IWL_WATCHHDOG_DISABLED;
++		trans_cfg.queue_watchdog_timeout = IWL_WATCHDOG_DISABLED;
+ 	trans_cfg.command_names = iwl_dvm_cmd_strings;
+ 
+ 	ucode_flags = fw->ucode_capa.flags;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index e9accfc..10e4793 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -113,7 +113,7 @@ enum iwl_led_mode {
+ #define IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE	0
+ 
+ /* TX queue watchdog timeouts in mSecs */
+-#define IWL_WATCHHDOG_DISABLED	0
++#define IWL_WATCHDOG_DISABLED	0
+ #define IWL_DEF_WD_TIMEOUT	2000
+ #define IWL_LONG_WD_TIMEOUT	10000
+ #define IWL_MAX_WD_TIMEOUT	120000
+diff --git a/drivers/net/wireless/iwlwifi/pcie/1000.c b/drivers/net/wireless/iwlwifi/pcie/1000.c
+index 0269ea6..81b83f4 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/1000.c
++++ b/drivers/net/wireless/iwlwifi/pcie/1000.c
+@@ -64,7 +64,7 @@ static const struct iwl_base_params iwl1000_base_params = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.wd_timeout = IWL_WATCHHDOG_DISABLED,
++	.wd_timeout = IWL_WATCHDOG_DISABLED,
+ 	.max_event_log_size = 128,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/5000.c b/drivers/net/wireless/iwlwifi/pcie/5000.c
+index 745a358..d1665fa 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/5000.c
++++ b/drivers/net/wireless/iwlwifi/pcie/5000.c
+@@ -62,7 +62,7 @@ static const struct iwl_base_params iwl5000_base_params = {
+ 	.led_compensation = 51,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.wd_timeout = IWL_WATCHHDOG_DISABLED,
++	.wd_timeout = IWL_WATCHDOG_DISABLED,
+ 	.max_event_log_size = 512,
+ 	.no_idle_support = true,
+ };
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10
+
