@@ -1,45 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43211 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758494Ab2FOXhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 19:37:17 -0400
-Message-ID: <1339803436.26435.4.camel@joe2Laptop> (sfid-20120616_013721_454151_14FB0FA3)
-Subject: Re: [PATCH wireless-next 00/20] Use pr_<level>
-From: Joe Perches <joe@perches.com>
-To: Ted Ts'o <tytso@mit.edu>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38753 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758968Ab2FFWtP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 18:49:15 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so168376pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:15 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 15 Jun 2012 16:37:16 -0700
-In-Reply-To: <20120615225057.GD7363@thunk.org>
-References: <cover.1339739415.git.joe@perches.com>
-	 <1339745811.4512.0.camel@jlt3.sipsolutions.net>
-	 <1339757319.24527.21.camel@joe2Laptop> <20120615225057.GD7363@thunk.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/6] mac80211: Change rssi_get_rate to interpolated data rates.
+Date: Wed,  6 Jun 2012 15:48:52 -0700
+Message-Id: <1339022932-14240-7-git-send-email-jason@cozybit.com> (sfid-20120607_004924_424051_C7401D4F)
+In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-15 at 18:50 -0400, Ted Ts'o wrote:
-> On Fri, Jun 15, 2012 at 03:48:39AM -0700, Joe Perches wrote:
-> > To tee up conversions of:
-> > 	pr_<level>("%s: ...", ([truct netdevice *]foo)->name, ...)
-> > to
-> > 	netdev_<level>(foo, "...", ...) 
-> 
-> If the goal is to do the latter, why introduce needless patch churn
-> now just to get to pr_<level>?  Having a standardized netdev_<label>()
-> adds real benefit that can be weighed against the cost of code churn.
-> Why not just wait until the netdev_<level> infrastructure can be
-> introduced?  It will save effort on everybody's part.
+From: Javier Cardona <javier@cozybit.com>
 
-Not really.  This standardizes prefixes as is.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Jason Abele <jason@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c |   58 +++++++++++++++++++++-------------------------
+ 1 file changed, 27 insertions(+), 31 deletions(-)
 
-The newlines and such will still occur.
-The git blame noise etc too.
-
-The standardization via spatch will be
-significantly easier this way.  It's also
-a far easier pattern to verify.
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index bb32203..86fc9e5 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -338,38 +338,20 @@ static unsigned int rssi_get_rate(struct sta_info *sta)
+ 	enum ieee80211_band band = sta->local->oper_channel->band;
+ 	struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.ht_cap;
+ 	struct rate_info rinfo;
+-	int i, ridx, ci = 0;
+-	int rssi, rate;
+-	u32 cidx[IEEE80211_MAX_SUPP_RATES];
++	int i, rssi, rate, rate_max, rate_min = 10, maxidx = 0;
++	const int rssi_min = -100;
++	const int rssi_max = -20;
+ 
+ 	if (sta->last_signal >= 0)
+-		return 0;
++		return rate_min;
+ 
+ 	memset(&rinfo, sizeof(rinfo), 0);
+ 
+-	/* make rates contiguous */
+-	for (i = 0; i < IEEE80211_MAX_SUPP_RATES; i++) {
+-		if (ht_cap->ht_supported &&
+-		    !(ht_cap->mcs.rx_mask[i / 8] & (i % 8)))
+-			continue;
+-
+-		if (!(sta->sta.supp_rates[band] & BIT(i)))
+-			continue;
+-
+-		cidx[ci++] = i;
+-	}
+-
+-	/* map rssi in range 20 - 70 to rates 32 - 0 */
+-#define RSSI_OFF 20
+-#define RSSI_MAX 50
+-	rssi = abs(sta->last_signal) - RSSI_OFF;
+-	rssi = max(rssi, 0);
+-	rssi = min(rssi, RSSI_MAX);
+-	/* invert rssi against ci and get the supported nth rate */
+-	/* TODO: make this non-linear */
+-	ridx = cidx[min((int)(ci * (1 - ((float) rssi / RSSI_MAX))), ci)];
+-
+ 	if (ht_cap->ht_supported) {
++		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
++			if (ht_cap->mcs.rx_mask[i])
++				maxidx = i*8 + fls(ht_cap->mcs.rx_mask[i]) - 1;
++		}
+ 		rinfo.flags |= RATE_INFO_FLAGS_MCS;
+ 		rinfo.flags |= (sta->sta.ht_cap.cap &
+ 				IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
+@@ -380,18 +362,32 @@ static unsigned int rssi_get_rate(struct sta_info *sta)
+ 				 IEEE80211_HT_CAP_SGI_40)) ?
+ 						RATE_INFO_FLAGS_SHORT_GI :
+ 						0;
+-		rinfo.mcs = ridx;
++		rinfo.mcs = maxidx;
+ 	} else {
+ 		struct ieee80211_supported_band *sband;
++
++		maxidx = fls(sta->sta.supp_rates[band]) - 1;
++		if (WARN_ON(maxidx < 0))
++			return rate_min;
+ 		sband = sta->local->hw.wiphy->bands[band];
+-		rinfo.legacy = sband->bitrates[ridx].bitrate;
++		rinfo.legacy = sband->bitrates[maxidx].bitrate;
+ 	}
+ 
+-	rate = cfg80211_calculate_bitrate(&rinfo);
++	rate_max = cfg80211_calculate_bitrate(&rinfo);
++
++	rssi = max(rssi_min, sta->last_signal);
++	rssi = min(rssi_max, rssi);
++
++	rate = ((rssi - rssi_min) * rate_max +
++		(rssi_max - rssi) * rate_min) /
++		(rssi_max - rssi_min);
++
+ 	if (WARN_ON(!rate))
+-		rate = 10;
+-	mhwmp_dbg("est. %d Mbps for %pM with rssi %d\n",
++		rate = rate_min;
++
++	mhwmp_dbg("\nest. %d Mbps for %pM with rssi %d\n",
+ 		  rate/10, sta->sta.addr, sta->last_signal);
++
+ 	return rate;
+ }
+ 
+-- 
+1.7.9.5
 
