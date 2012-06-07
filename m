@@ -1,62 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49776 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753934Ab2FJN2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2012 09:28:41 -0400
-Message-ID: <4FD4A102.20805@hauke-m.de> (sfid-20120610_152918_879647_CE954AD0)
-Date: Sun, 10 Jun 2012 15:28:34 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/18] brcmsmac: remove PCIE() makro
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-2-git-send-email-hauke@hauke-m.de> <4FD10989.6040701@broadcom.com>
-In-Reply-To: <4FD10989.6040701@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from plane.gmane.org ([80.91.229.3]:37554 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754176Ab2FGKYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 06:24:21 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ScZt0-0001Vi-2j
+	for linux-wireless@vger.kernel.org; Thu, 07 Jun 2012 12:24:14 +0200
+Received: from cph-ex1.sdesigns.com ([192.215.56.171])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 12:24:14 +0200
+Received: from hanskroner by cph-ex1.sdesigns.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 12:24:14 +0200
+To: linux-wireless@vger.kernel.org
+From: Hans =?utf-8?b?S3LDtm5lcg==?= <hanskroner@gmail.com>
+Subject: Re: mwifiex:Testing AP functionality with hostapd
+Date: Thu, 7 Jun 2012 10:23:57 +0000 (UTC)
+Message-ID: <loom.20120607T121239-785@post.gmane.org> (sfid-20120607_122424_746832_10837FE6)
+References: <loom.20120607T100950-564@post.gmane.org> <CAJwzM1mTyOv6cUjTQ00-Q-5aW872kwyBPgnH9Pnk82fLZ+-J2w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 10:05 PM, Arend van Spriel wrote:
-> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->> Instead of checking if there is a PCIe core on the bus, better check if
->> hosttype is PCIe.
-> 
-> I was under the impression that the macro was used for code needed when
-> the chip has a PCIe core instead of a PCI core. Maybe BCMA only supports
-> chips with PCIe core and in the respect checking the hosttype is
-> essentially the same, but I would not necessarily call it better.
-> 
+Hi Avinash,
 
-The code from the initial submission to staging looked like this:
+Thanks for your reply!
 
-#define PCIE(si) ((BUSTYPE((si)->pub.bustype) == PCI_BUS) &&	\
-		  ((si)->pub.buscoretype == PCIE_CORE_ID))
+i)    Firmware version is reported as "mwifiex 1.0 (14.57.5.p69)"
 
-I have never seen a device using the AI bus (bcma) and a PCI core and
-not a PCIe core and I do not think bcma will work with a PCI device or
-core. The bustype in your old code is the same as the hosttype in bcma,
-so under the assumption that all device are using PCIe that are coming
-to this code the code now does the same as in the initial submission to
-staging.
+ii)   hostapd version is "v2.0-devel" I took it from git at
+      git://w1.fi/srv/git/hostap.git and used the config in my previous post
+      to build it. I'm at commit 5b3763336466f2c55611437cb924aeee45f7203e
 
-buscore in brcmsmac contained a reference to a PCIe core on the bus, if
-there was any. On a SoC with a PCIe core in host mode this also
-contained this PCIe core, but it was not the buscore and the hosttype
-was not PCIE, nor the bustype when using your SDK would be PCI_BUS, but
-SI_BUS.
+iii)  Output of hostapd "-ddd" is the same as my previous post, which used
+      "-dd". Here it is:
 
-So this patch is also more or less a bugfix for brcmsmac when you are
-not on a PCIe connected device, like a SoC. The old code also caused a
-null pointer in ai_get_buscoretype() and ai_get_buscorerev() if buscore
-was not set because there was no PCIe core on the bus.
+		random: Trying to read entropy from /dev/random
+		Configuration file: hostapd-minimal.conf
+		nl80211: interface uap0 in phy phy0
+		rfkill: initial event: idx=0 type=2 op=0 soft=0 hard=0
+		rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
+		nl80211: Disable use_monitor with device_ap_sme since no monitor mode
+		support detected
+		nl80211: Add own interface ifindex 5
+		nl80211: Set mode ifindex 5 iftype 3 (AP)
+		nl80211: Setup AP - device_ap_sme=1 use_monitor=0
+		nl80211: Subscribe to mgmt frames with AP handle 0x74608 (device SME)
+		nl80211: Register frame type=0xd0 nl_handle=0x74608
+		nl80211: Register frame match - hexdump(len=0): [NULL]
+		nl80211: Register frame command failed (type=208): ret=-95 (Operation not
+		supported)
+		nl80211: Register frame match - hexdump(len=0): [NULL]
+		nl80211: Failed to set interface uap0 into AP mode
+		netlink: Operstate: linkmode=0, operstate=6
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Try mode change after setting interface down
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Set mode ifindex 5 iftype 2 (STATION)
+		nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+		nl80211: Interface mode change to 2 from 3 failed
+		nl80211 driver initialization failed.
 
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    9 ++++-----
->>  1 file changed, 4 insertions(+), 5 deletions(-)
->>
-> 
-> Gr. AvS
-> 
+Thanks for your help!!!
+
+Best Regards,
+
+Hans
 
