@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64300 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830Ab2F2FEt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 01:04:49 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Fix clearing of BTCOEX flags
-Date: Fri, 29 Jun 2012 10:34:39 +0530
-Message-ID: <1340946279-2549-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120629_070452_748914_C519DC22)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rousseau.luceor.com ([91.121.31.107]:56767 "EHLO sro-lap"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751724Ab2FGPjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 11:39:18 -0400
+From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+Subject: [PATCH] minstrel_ht: enable frame aggregation for fixed rate
+Date: Thu,  7 Jun 2012 17:39:07 +0200
+Message-Id: <1339083547-12616-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20120607_173921_113770_67297369)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+when i was trying fixed rate in minstrel_ht, frame aggregation
+was not working. so i fix it.
+note : it's only use one chain
 
-BTCOEX flags are set/cleared by atomic operations.
-We got to do the same in ath9k_btcoex_timer_resume,
-while clearing those BTCOEX flags.
-
-Acked-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/gpio.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c |   19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 9ae6a4d..5eac4d1 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -305,7 +305,8 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 2d1acc6..3abcb5b 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -626,8 +626,23 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
  
- 	btcoex->bt_priority_cnt = 0;
- 	btcoex->bt_priority_time = jiffies;
--	btcoex->op_flags &= ~(BT_OP_PRIORITY_DETECTED | BT_OP_SCAN);
-+	clear_bit(BT_OP_PRIORITY_DETECTED, &btcoex->op_flags);
-+	clear_bit(BT_OP_SCAN, &btcoex->op_flags);
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* use fixed index if set */
+-	if (mp->fixed_rate_idx != -1)
+-		sample_idx = mp->fixed_rate_idx;
++	if (mp->fixed_rate_idx != -1) {
++		minstrel_ht_set_rate(mp, mi, &ar[0],  mp->fixed_rate_idx,
++			false, false);
++		/* Not using MRR, only use the first rate */
++		ar[1].count = 0;
++		ar[1].idx = -1;
++		
++		mi->total_packets++;
++
++		/* wraparound */
++		if (mi->total_packets == ~0) {
++			mi->total_packets = 0;
++			mi->sample_packets = 0;
++		}
++
++		return
++	}
+ #endif
  
- 	mod_timer(&btcoex->period_timer, jiffies);
- }
+ 	if (sample_idx >= 0) {
 -- 
-1.7.0.4
+1.7.9.5
 
