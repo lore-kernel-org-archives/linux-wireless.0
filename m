@@ -1,81 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:53644 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994Ab2FFXTt (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:41130 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932242Ab2FGVVP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 19:19:49 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so197408pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 16:19:49 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/5] mac80211_hwsim: Report rate info in tx status
-Date: Wed,  6 Jun 2012 16:19:31 -0700
-Message-Id: <1339024775-15405-2-git-send-email-jason@cozybit.com> (sfid-20120607_011953_032663_F9B06D02)
-In-Reply-To: <1339024775-15405-1-git-send-email-jason@cozybit.com>
-References: <1339024775-15405-1-git-send-email-jason@cozybit.com>
+	Thu, 7 Jun 2012 17:21:15 -0400
+Received: by yhmm54 with SMTP id m54so805724yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 14:21:14 -0700 (PDT)
+Message-ID: <4FD11B47.10002@lwfinger.net> (sfid-20120607_232118_870880_7E9FA51D)
+Date: Thu, 07 Jun 2012 16:21:11 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	Andre Heider <a.heider@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i]
+ >= n_queues))
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>  <1339014959.4523.0.camel@jlt3.sipsolutions.net>  <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>  <1339053364.4517.0.camel@jlt3.sipsolutions.net>  <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>  <20120607180325.7752b3c0@milhouse>  <1339094215.4630.7.camel@jlt3.sipsolutions.net>  (sfid-20120607_203710_507564_555516DC) <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Timo Lindhorst <tlnd@online.de>
+On 06/07/2012 03:56 PM, Johannes Berg wrote:
+> On Thu, 2012-06-07 at 20:36 +0200, Johannes Berg wrote:
+>
+>> However, it's also possible to actually *use* the new mac80211 feature.
+>> That would also help with IEEE80211_TX_CTL_SEND_AFTER_DTIM, you could
+>> ask mac80211 to use a separate HW queue for it (for tx_ring_mcast.) This
+>> may be quicker.
+>
+> This might do it, I haven't tested it at all:
+>
+> http://p.sipsolutions.net/3c6b003bb06e5298.txt
 
-Assuming an ideal channel, always the first transmission is considered
-successful if an ACK is received. If no ACK is received, the
-rates/attempts are reported as set by the rate control.
+With that patch, the driver never loads the firmware. I have not yet found the 
+reason.
 
-Signed-off-by: Timo Lindhorst <tlnd@online.de>
----
- drivers/net/wireless/mac80211_hwsim.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4c9336c..52ba3e6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -715,6 +715,14 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
-+	u8 tx_count[IEEE80211_TX_MAX_RATES];
-+	int i;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	if (ieee80211_is_beacon(mgmt->frame_control) ||
-+	    ieee80211_is_probe_resp(mgmt->frame_control))
-+		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
- 
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
-@@ -745,6 +753,10 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (txi->control.sta)
- 		hwsim_check_sta_magic(txi->control.sta);
- 
-+	if (!ack)
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			tx_count[i] = txi->control.rates[i].count;
-+
- 	ieee80211_tx_info_clear_status(txi);
- 
- 	/* frame was transmitted at most favorable rate at first attempt */
-@@ -753,6 +765,15 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
-+
-+	if (ack) {
-+		txi->status.rates[0].count = 1;
-+		txi->status.rates[1].idx = -1;
-+	} else {
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			txi->control.rates[i].count = tx_count[i];
-+	}
-+
- 	ieee80211_tx_status_irqsafe(hw, skb);
- }
- 
--- 
-1.7.9.5
+Larry
 
