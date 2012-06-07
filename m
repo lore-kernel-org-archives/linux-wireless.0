@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2616 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752105Ab2FKH7V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 03:59:21 -0400
-Message-ID: <4FD5A54C.9060403@broadcom.com> (sfid-20120611_095928_917980_C61EE9A9)
-Date: Mon, 11 Jun 2012 09:59:08 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-15-git-send-email-hauke@hauke-m.de>
- <4FCF2FD4.6010103@broadcom.com> <4FD0AD96.1050500@hauke-m.de>
- <4FD0FF3D.2060805@broadcom.com> <4FD49CC1.6030704@hauke-m.de>
-In-Reply-To: <4FD49CC1.6030704@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:48655 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754542Ab2FGMdm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 08:33:42 -0400
+Message-ID: <1339072491.3279.6.camel@lappy> (sfid-20120607_143403_120928_12961A9D)
+Subject: iwlwifi: kernel panic during boot due to module load order
+From: Sasha Levin <levinsasha928@gmail.com>
+To: donald.h.fry@intel.com, emmanuel.grumbach@intel.com,
+	johannes.berg@intel.com, linville@tuxdriver.com,
+	wey-yi.w.guy@intel.com
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 07 Jun 2012 14:34:51 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2012 03:10 PM, Hauke Mehrtens wrote:
-> On 06/07/2012 09:21 PM, Arend van Spriel wrote:
->> I dived into this and basically there is no correlation to the phy type.
->> There are chips with same 80211 core rev and different phy type as there
->> are chips with different 80211 core rev and the same phy type.
->>
->> Gr. AvS
-> 
-> Hi Arend,
-> 
-> Ok, then I will leave it based on the core rev like it is now. Are the
-> values I added there for core rev 17 and 28 correct? They are just
-> copied from the other phy-n device which has the same values set after
-> powering up and before they are explicitly set. The core rev 17 device
-> is working for me, but the core rev 28 is not, but I do not know why. I
-> was unable to find these values in b43 or the spec b43 is based on.
-> 
-> Hauke
-> 
+Hi all,
 
-Dug up the values and for corerev 17 they are fine, but corerev 28 has
-different values:
+Commit cc5f7e397 ("iwlwifi: implement dynamic opmode loading") causes a
+kernel panic during boot in the following scenario:
 
-{ 9, 58, 22, 14, 14, 5 },       /* corerev 28 */
+1. All drivers are built-in.
+2. Due to their build order, iwl_init gets called before iwl_drv_init.
+3. iwl_init will call iwl_opmode_register which will iterate the new op
+list, and cause a NULL ptr deref when trying to list_for_each_entry the
+dev list, which won't be empty since it wasn't initialized (iwl_drv_init
+wasn't called yet).
 
-Gr. AvS
+While it's possible to easily fix the actual deref, I suspect that the
+init function call order is wrong. I've looked at getting it right in
+the Makefile, but it seems to have specific ordering behind it, so I'd
+rather not try patching it myself.
+
+Thanks,
+Sasha.
 
