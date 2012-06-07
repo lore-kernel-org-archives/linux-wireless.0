@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:30684 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473Ab2F1MTX (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:35830 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932082Ab2FGUj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 08:19:23 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Subject: [RFC] ath9k: Fix clearing of BTCOEX flags
-Date: Thu, 28 Jun 2012 17:49:12 +0530
-Message-ID: <1340885952-5317-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120628_141927_462275_7FE8DA00)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 7 Jun 2012 16:39:57 -0400
+Received: by lboj14 with SMTP id j14so774587lbo.7
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 13:39:45 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 4/9] wlcore: export raw binary with the FW statistics in debugfs
+Date: Thu,  7 Jun 2012 23:39:23 +0300
+Message-Id: <1339101568-25346-5-git-send-email-coelho@ti.com> (sfid-20120607_224005_339499_C03E19EF)
+In-Reply-To: <1339101568-25346-1-git-send-email-coelho@ti.com>
+References: <1339101568-25346-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Instead of parsing all the binary data returned by the firmware, we
+should simply export the binary and let the userspace do the parsing.
 
-BTCOEX flags are set/cleared by atomic operations.
-We got to do the same in ath9k_btcoex_timer_resume,
-while clearing those BTCOEX flags.
+This commit adds a new file to debugfs to do that.
 
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/gpio.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ti/wlcore/debugfs.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 26032cb..bd342cd 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -305,7 +305,8 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 827a728..689a847 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -944,6 +944,25 @@ static const struct file_operations beacon_filtering_ops = {
+ 	.llseek = default_llseek,
+ };
  
- 	btcoex->bt_priority_cnt = 0;
- 	btcoex->bt_priority_time = jiffies;
--	btcoex->op_flags &= ~(BT_OP_PRIORITY_DETECTED | BT_OP_SCAN);
-+	clear_bit(BT_OP_PRIORITY_DETECTED, &btcoex->op_flags);
-+	clear_bit(BT_OP_SCAN, &btcoex->op_flags);
++static ssize_t fw_stats_raw_read(struct file *file,
++				 char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++
++	wl1271_debugfs_update_stats(wl);
++
++	return simple_read_from_buffer(userbuf, count, ppos,
++				       wl->stats.fw_stats,
++				       wl->stats.fw_stats_len);
++}
++
++static const struct file_operations fw_stats_raw_ops = {
++	.read = fw_stats_raw_read,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
+ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 				    struct dentry *rootdir)
+ {
+@@ -968,6 +987,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(irq_pkt_threshold, rootdir);
+ 	DEBUGFS_ADD(irq_blk_threshold, rootdir);
+ 	DEBUGFS_ADD(irq_timeout, rootdir);
++	DEBUGFS_ADD(fw_stats_raw, rootdir);
  
- 	mod_timer(&btcoex->period_timer, jiffies);
- }
+ 	streaming = debugfs_create_dir("rx_streaming", rootdir);
+ 	if (!streaming || IS_ERR(streaming))
 -- 
-1.7.0.4
+1.7.10
 
