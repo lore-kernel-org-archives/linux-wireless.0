@@ -1,84 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37734 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753245Ab2F3Sxn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 14:53:43 -0400
-Message-ID: <1341082411.4852.30.camel@deadeye.wl.decadent.org.uk> (sfid-20120630_205347_008948_D67A706E)
-Subject: Re: linux-firmware: pull-request wl12xx 2012-06-27 (v2)
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Luciano Coelho <coelho@ti.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org, arik@wizery.com
-Date: Sat, 30 Jun 2012 19:53:31 +0100
-In-Reply-To: <1341072404.1631.758.camel@cumari.coelho.fi>
-References: <1341072404.1631.758.camel@cumari.coelho.fi>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-MLGbr+dZBFbRRPqckCHL"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42063 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757175Ab2FGNAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 09:00:08 -0400
+Message-ID: <4FD0A5CF.7090806@hauke-m.de> (sfid-20120607_150012_700746_F1D96FD3)
+Date: Thu, 07 Jun 2012 14:59:59 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 08/18] brcmsmac: remove some redundant chip common workarounds
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-9-git-send-email-hauke@hauke-m.de> <4FCF4993.7060409@broadcom.com>
+In-Reply-To: <4FCF4993.7060409@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 06/06/2012 02:14 PM, Arend van Spriel wrote:
+> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+>> The removed workarounds are already performed in bcma_pmu_workarounds()
+>> and bcma_core_chipcommon_init()
+> 
+> Could refer to "bcma: complete workaround for BCMA43224 and BCM4313"
+> which it seems to depend on.
+Yes will do that in a v2.
+> 
+> Acked-by: Arend van Spriel <arend@broadcom.com>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   42 ---------------------
+>>  1 file changed, 42 deletions(-)
+> 
 
---=-MLGbr+dZBFbRRPqckCHL
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2012-06-30 at 19:06 +0300, Luciano Coelho wrote:
-> Hi Ben,
->=20
-> Here's v2 of my pull-request with a new section for wl18xx in the WHENCE
-> file, as you requested.
->=20
-> Please let me know if there are any more problems.
->=20
->=20
-> The following changes since commit 5f9710a5770ad1f741caa67f7e97b824fb51ef=
-2c:
->=20
->   Merge branch 'for-upstream' of git://git.chelsio.net/pub/git/linux-firm=
-ware (2012-06-15 03:10:25 +0100)
->=20
-> are available in the git repository at:
->=20
->=20
->   git://github.com/TI-OpenLink/firmwares.git linux-firmware
->=20
-> for you to fetch changes up to 4384c8a7bda1bfdca92526004dd1aa9a3f33c209:
->=20
->   wl18xx: add firmware for WiLink8 WLAN chips (2012-06-30 18:58:41 +0300)
-[...]
-
-Pulled and pushed out, thanks.
-
-Ben.
-
---=20
-Ben Hutchings
-Lowery's Law:
-             If it jams, force it. If it breaks, it needed replacing anyway=
-.
-
---=-MLGbr+dZBFbRRPqckCHL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAT+9LLOe/yOyVhhEJAQplXQ/9E/3fNVpz2yHFrkYyGmD5unH9cywSbOr6
-I8JOQUrfyxXNEgfK6QibNzFcY5TMM/UuHriVFzZBVgGzJ+PkeU2a0eMppfjiucuz
-FtPPQdW8+SFV2yL0c+TPlJoH8PG0hVXEOwgo0wCsez44plaR9+B8g4tOVb/9jDX+
-izeGXMKpeaqc/U1bkTvlCKFbbLif3fWFvrXPcS27bEIPobdRYYuYegJnAoo/NvLP
-kFwlf0ymf7gMNc+InBzHIu2hGQXjOecy5EllT+uF0v+D1r0gGN/YFYSeuX6Oyxds
-ykDEQTmP4l0DOJW+ofa5J7nVEqfoZrX4SMe0FNVU1IPlbW/sIaz5WosnuaNtY/nH
-skcSHNX1nlHaNsvm8p27rL887zCTR4WN2ngtpq/OZRohf1/cdI+q1+qxNn4CfTIB
-BjPDX9LsoqM8T0b64e1VqdbQIBcdCj88AuBhxvIaTwRqZe0upYjiEVBem+osh3p/
-toqwlNiGT8+TNXYEA+5XGRJarhjcryHleyc5+1m5wWATSoLrC/aTHpEJUIzqMXTY
-gJ6NW6sJiPuejzxbFs2XEO5yuga8wVk9+tCiUKnP+/N+Dno+iZ6W02X0mUBZfIi5
-ftp/Ls5XlMSi1nPIgReK5oEmxr2qil6fNmtHs5ONcu2X4Z5JCDdGu5EFGmJWPSg+
-AxpQ3mZFmjk=
-=ubZC
------END PGP SIGNATURE-----
-
---=-MLGbr+dZBFbRRPqckCHL--
