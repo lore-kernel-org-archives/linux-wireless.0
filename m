@@ -1,75 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1559 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752524Ab2F0IhW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 04:37:22 -0400
-Message-ID: <4FEAC62F.4000400@broadcom.com> (sfid-20120627_103735_630230_1D15BE0B)
-Date: Wed, 27 Jun 2012 10:37:03 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: Question about BCM43228 and outdated description in
- MAINTAINERS
-References: <4FE886B3.7020202@lwfinger.net>
-In-Reply-To: <4FE886B3.7020202@lwfinger.net>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:35831 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756310Ab2FGUjo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 16:39:44 -0400
+Received: by lahd3 with SMTP id d3so747999lah.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 13:39:41 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 0/9] wl18xx: debugfs additions and a new conf file
+Date: Thu,  7 Jun 2012 23:39:19 +0300
+Message-Id: <1339101568-25346-1-git-send-email-coelho@ti.com> (sfid-20120607_223947_774614_E67F5DBE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/25/2012 05:41 PM, Larry Finger wrote:
-> Hi,
-> 
-> I recently received a donated BCM43228 (14e4:4359) mini-PCIe card. At
-> the moment, neither b43 nor brcmsmac support it. Although, grepping the
-> proprietary driver wl shows that it would recognize that PCI ID, that
-> driver does not load as it requires routine lockdep_init_map(), which is
-> exported only for GPL modules. As a result, owners of this device can
-> only use it with Linux if they can find a suitable Windows driver for
-> use with ndiswrapper. In my experience, that means that 64-bit users are
-> out of luck.
+Hi,
 
-I noticed your email on the lockdep_init_map() function. Maybe the
-hybrid driver will be modified, but I leave that to Brett.
+A few more patches for wl18xx (or directly related to it).
 
-My personal experience with ndiswrapper on 64-bit kernels is different,
-but I tend to consider ndiswrapper as a last resort. Most issues I had
-were between ndiswrapper and wpa_supplicant (when using dbus ipc).
+Eyal added a new control file in debugfs that we use during the R&D
+phase, for debugging and fine-tuning.
 
-> Reverse engineering this device to be able to drive it with b43 would
-> involve a lot of effort. If your group is planning on adding it to
-> brcmsmac, then I would not undertake this project. To the fullest extent
-> that you can, please advise me regarding this matter.
+I added another file in debugfs that allows us to reset the firmware
+statistics data, so we can clear it and start counting from a
+a certain point in time.
 
-Our focus is currently on extending brcmfmac. We had requests for 43228
-support before, but did not start that task. Will inform internally what
-the plan is here and let you know to the fullest extent ;-)
+I also added a new conf binary file, which contains driver and
+firmware configuration values that are currently hardcoded in the
+driver.  With this file we will have much more flexibility and, with
+the help of a new userspace tool I implemented, we will be able to
+change any of these settings much more easily.  This file will
+eventually replace all the hardcoded values and the NVS binary file
+that we currently use.
 
-> When getting your addresses from file MAINTAINERS, I noticed that it was
-> not updated for the name change from brcm80211 to brcmsmac. The current
-> info is as follows:
-> 
-> BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-> M:
-> M:      Roland Vossen <rvossen@broadcom.com>
-> M:      Arend van Spriel <arend@broadcom.com>
-> M:      Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> M:      Kan Yan <kanyan@broadcom.com>
-> L:      linux-wireless@vger.kernel.org
-> L:      brcm80211-dev-list@broadcom.com
-> S:      Supported
-> F:      drivers/net/wireless/brcm80211/
+Cheers,
+Luca.
 
-Under the folder drivers/net/wireless/brcm80211/ are both brcmfmac and
-brcmsmac (and shared module brcmutil). So maybe patch it like this:
+Eyal Shapira (2):
+  wlcore: add support macros to easily add conf debugfs entries
+  wlcore: add debugfs control over rx interrupt pacing
 
-- BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-+ BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVERS
+Luciano Coelho (7):
+  wl18xx: add support to clear FW statistics
+  wlcore: export raw binary with the FW statistics in debugfs
+  wlcore/wl18xx/wl12xx: use u8 instead of bool for
+    host_fast_wakeup_support
+  wlcore: use u8 instead of enum for bcn_filt_mode
+  wlcore/wl18xx: the conf structs must be packed so they can be
+    exported
+  wlcore/wl18xx: export conf struct in a debugfs file
+  wl18xx: read configuration structure from a binary file
 
-Gr. AvS
+ drivers/net/wireless/ti/wl12xx/main.c    |    2 +-
+ drivers/net/wireless/ti/wl18xx/acx.c     |   24 +++++++
+ drivers/net/wireless/ti/wl18xx/acx.h     |    9 +++
+ drivers/net/wireless/ti/wl18xx/conf.h    |   10 ++-
+ drivers/net/wireless/ti/wl18xx/debugfs.c |   74 +++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/main.c    |   70 ++++++++++++++++++--
+ drivers/net/wireless/ti/wlcore/conf.h    |   75 ++++++++++++++-------
+ drivers/net/wireless/ti/wlcore/debugfs.c |  106 ++++++++++++++++++++++++++++++
+ 8 files changed, 337 insertions(+), 33 deletions(-)
+
+-- 
+1.7.10
 
