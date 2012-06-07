@@ -1,48 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44653 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753525Ab2FMNUp (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:34932 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759960Ab2FGEjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 09:20:45 -0400
-Message-ID: <1339593640.4519.39.camel@jlt3.sipsolutions.net> (sfid-20120613_152116_072262_6A4F16D6)
-Subject: Re: [BUG] iwldvm lock oops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Date: Wed, 13 Jun 2012 15:20:40 +0200
-In-Reply-To: <20120613131725.GA2052@localhost> (sfid-20120613_151753_455745_D624F0E8)
-References: <20120613131725.GA2052@localhost>
-	 (sfid-20120613_151753_455745_D624F0E8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 7 Jun 2012 00:39:53 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so502624pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 21:39:53 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v2 3/4] mac80211: implement the proactive PREP generation
+Date: Thu,  7 Jun 2012 12:39:22 +0800
+Message-Id: <1339043963-2043-4-git-send-email-yeohchunyeow@gmail.com> (sfid-20120607_064003_227894_EF56E4D8)
+In-Reply-To: <1339043963-2043-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1339043963-2043-1-git-send-email-yeohchunyeow@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Fengguang,
+Generate the proactive PREP element in Proactive PREQ mode as defined in
+Sec. 13.10.10.3 (Case D) of IEEE Std. 802.11-2012.
 
-> The kernel compiled from commit b35032f ("iwlwifi: don't configure a
-> txq that is being disabled") in
-> 
->         git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git  master
-> 
-> triggers a kernel oops below.
-> 
-> That particular commit may well not be the root cause. I'm just hoping
-> you may have better idea which recent change may be relevant.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+v2: adhere to Linux kernel coding style (Johannes)
 
-Thanks for the report. This particular problem is due to the fact that
-we have the objects linked into the kernel in the wrong order, we have a
-fix pending for it. git.kernel.org is down right now so I can't link to
-it, but it's in the iwlwifi/iwlwifi-next.git tree:
+ net/mac80211/mesh_hwmp.c |   34 ++++++++++++++++++++++++++++------
+ 1 files changed, 28 insertions(+), 6 deletions(-)
 
-commit 65fe593a519c4d7c62289d3b0a17ca412e95b037
-Author: Brandon Misemer <brandon.misemer@intel.com>
-Date:   Fri Jun 8 14:59:27 2012 -0700
-
-    iwlwifi: Fix Makefile build order for built-in driver
-
-
-johannes
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 999db08..1f2ebf0 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -521,10 +521,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	struct mesh_path *mpath = NULL;
+ 	u8 *target_addr, *orig_addr;
+ 	const u8 *da;
+-	u8 target_flags, ttl;
++	u8 target_flags, ttl, flags;
+ 	u32 orig_sn, target_sn, lifetime;
+ 	bool reply = false;
+ 	bool forward = true;
++	bool root_is_gate;
+ 
+ 	/* Update target SN, if present */
+ 	target_addr = PREQ_IE_TARGET_ADDR(preq_elem);
+@@ -532,6 +533,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	target_sn = PREQ_IE_TARGET_SN(preq_elem);
+ 	orig_sn = PREQ_IE_ORIG_SN(preq_elem);
+ 	target_flags = PREQ_IE_TARGET_F(preq_elem);
++	/* Proactive PREQ gate announcements */
++	flags = PREQ_IE_FLAGS(preq_elem);
++	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+ 
+ 	mhwmp_dbg("received PREQ from %pM", orig_addr);
+ 
+@@ -546,6 +550,15 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			target_sn = ++ifmsh->sn;
+ 			ifmsh->last_sn_update = jiffies;
+ 		}
++	} else if (is_broadcast_ether_addr(target_addr) &&
++		   (target_flags & MP_F_DO)) {
++		mpath = mesh_path_lookup(orig_addr, sdata);
++		if (mpath) {
++			if (flags & PREQ_F_PREP)
++				reply = true;
++			if (root_is_gate)
++				mesh_path_add_gate(mpath);
++		}
+ 	} else {
+ 		rcu_read_lock();
+ 		mpath = mesh_path_lookup(target_addr, sdata);
+@@ -573,11 +586,20 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		ttl = ifmsh->mshcfg.element_ttl;
+ 		if (ttl != 0) {
+ 			mhwmp_dbg("replying to the PREQ");
+-			mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
+-				cpu_to_le32(orig_sn), 0, target_addr,
+-				cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
+-				cpu_to_le32(lifetime), cpu_to_le32(metric),
+-				0, sdata);
++			if (!is_broadcast_ether_addr(target_addr)) {
++				mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
++				    cpu_to_le32(orig_sn), 0, target_addr,
++				    cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
++				    cpu_to_le32(lifetime), cpu_to_le32(metric),
++				    0, sdata);
++			} else {
++				mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
++				    cpu_to_le32(orig_sn), 0, sdata->vif.addr,
++				    cpu_to_le32(++ifmsh->sn), mgmt->sa, 0, ttl,
++				    cpu_to_le32(lifetime), 0,
++				    0, sdata);
++				ifmsh->last_sn_update = jiffies;
++			}
+ 		} else
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 	}
+-- 
+1.7.0.4
 
