@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:46762 "HELO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758084Ab2FUC7T (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61991 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932119Ab2FGSSP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 22:59:19 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: enhance power save for USB and PCIe chipsets
-Date: Wed, 20 Jun 2012 19:58:37 -0700
-Message-Id: <1340247517-4593-6-git-send-email-bzhao@marvell.com> (sfid-20120621_045922_560265_DAC79FE7)
-In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
-References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+	Thu, 7 Jun 2012 14:18:15 -0400
+Date: Thu, 7 Jun 2012 11:18:12 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC PATCH 4/8] brcm80211: smac: inform mac80211 of the X2
+ regulatory domain
+Message-ID: <20120607181812.GD4603@tux> (sfid-20120607_201819_064185_48FA1AD9)
+References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
+ <1334607462-5387-5-git-send-email-seth.forshee@canonical.com>
+ <4FC008AB.4080107@broadcom.com>
+ <20120526171800.GC11759@ubuntu-mba>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120526171800.GC11759@ubuntu-mba>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Sat, May 26, 2012 at 12:18:00PM -0500, Seth Forshee wrote:
+> My understanding of DFS is pretty rudamentary. Could you explain what
+> support is needed? I do see that mac80211 doesn't really support power
+> measurement requests, but if we can at least stop transmission when
+> radar is present couldn't we still operate on the channels?
+> 
+> Luis, any insight you can offer on the subject would be appreciated.
 
-FW will not explicitly notify about host sleep activation to the
-host for USB and PCIe chipsets. Hence host should generate Host
-Sleep Activated event as soon as Host Sleep parameters are
-configured to FW successfully.
+You can forget about DFS master support at this point. DFS client mode
+is handled by mac80211 though.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cmdevt.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 51e023e..ea37b88 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -1102,7 +1102,8 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
- 		&resp->params.opt_hs_cfg;
- 	uint32_t conditions = le32_to_cpu(phs_cfg->params.hs_config.conditions);
- 
--	if (phs_cfg->action == cpu_to_le16(HS_ACTIVATE)) {
-+	if (phs_cfg->action == cpu_to_le16(HS_ACTIVATE) &&
-+	    adapter->iface_type == MWIFIEX_SDIO) {
- 		mwifiex_hs_activated_event(priv, true);
- 		return 0;
- 	} else {
-@@ -1114,6 +1115,9 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
- 	}
- 	if (conditions != HOST_SLEEP_CFG_CANCEL) {
- 		adapter->is_hs_configured = true;
-+		if (adapter->iface_type == MWIFIEX_USB ||
-+		    adapter->iface_type == MWIFIEX_PCIE)
-+			mwifiex_hs_activated_event(priv, true);
- 	} else {
- 		adapter->is_hs_configured = false;
- 		if (adapter->hs_activated)
--- 
-1.7.0.2
-
+  Luis
