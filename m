@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm8.bullet.mail.ukl.yahoo.com ([217.146.182.249]:22603 "HELO
-	nm8.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757323Ab2FOTFt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56068 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761242Ab2FGSx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 15:05:49 -0400
-From: Schrober <franzschrober@yahoo.de>
-To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k bug in country domain handling
-Date: Fri, 15 Jun 2012 21:00:23 +0200
-Message-ID: <3396938.ZAv4RZqcUo@sven-desktop.home.narfation.org> (sfid-20120615_210552_561731_757DCEE9)
-In-Reply-To: <9709270.9fbk3VIit7@sylvesterjr.cmi.ua.ac.be>
-References: <9709270.9fbk3VIit7@sylvesterjr.cmi.ua.ac.be>
+	Thu, 7 Jun 2012 14:53:27 -0400
+Message-ID: <4FD0F8A0.3000704@qca.qualcomm.com> (sfid-20120607_205345_315518_D8636841)
+Date: Thu, 7 Jun 2012 21:53:20 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<ath6kl-devel@qualcomm.com>
+Subject: Re: [RFC 1/2] nl80211: specify RSSI threshold when scanning
+References: <1339036996-6199-1-git-send-email-c_tpeder@qca.qualcomm.com> <4FD0570D.50303@qca.qualcomm.com> <20120607183820.GA2950@pista>
+In-Reply-To: <20120607183820.GA2950@pista>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 13 June 2012 13:17:49 Erwin Van de Velde wrote:
-> Dear all,
-> 
-> I have 802.11n cards with an atheros chipset with no default country domain.
-> Upon initialization, crda is set to US domain, after which I try to change
-> it to another domain, the driver only accepts further limitations: i.e. if
-> a channel is allowed in the US but not in Belgium, it is disabled, but the
-> other way round: if a channel is not allowed in the US, but is allowed in
-> Belgium it is not enabled.
+On 06/07/2012 09:38 PM, Pedersen, Thomas wrote:
+>>> +	WIPHY_FLAG_SUPPORTS_RSSI_SCAN		= BIT(22),
+>>> > >  };
+>> > 
+>> > Is this flag really needed? For me this looks like an optimisation more
+>> > than a functional change. If the driver supports this, that's great and
+>> > we can save some power. But if the driver does not support it does it
+>> > really make any difference for the user space? Would user space act
+>> > differently if this feature is not supported by the driver?
+>
+> Well, this allows cfg80211 to return an error if this feature is
+> requested but not supported by the driver / fw.
 
-That is not a bug, but something we call restriction.
+But do we want to return an error when the driver doesn't support this?
+I was thinking that driver should just ignore the attribute in that case
+and let user space filter the results.
 
-Regards,
-Franz
+Kalle
