@@ -1,71 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:47479 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754687Ab2FQKm0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2012 06:42:26 -0400
-Received: by wibhm6 with SMTP id hm6so828465wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2012 03:42:24 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "David Lynch Jr." <ml@dlasys.net>
-Subject: Re: CARL9170 driver/firmware questions
-Date: Sun, 17 Jun 2012 12:42:20 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <CADdUxCwt35GQU2j-a4AvvJVS=h93sgBqg09CZNxTivRfbYsqzg@mail.gmail.com> <201204252201.50803.chunkeey@googlemail.com> <1339901627.7998.15.camel@hp-dhlii>
-In-Reply-To: <1339901627.7998.15.camel@hp-dhlii>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201206171242.20559.chunkeey@googlemail.com> (sfid-20120617_124229_854856_CB1603E2)
+Received: from perches-mx.perches.com ([206.117.179.246]:38098 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752111Ab2FGHYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 03:24:12 -0400
+Message-ID: <1339053852.6009.13.camel@joe2Laptop> (sfid-20120607_092415_546950_7ABBFB35)
+Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
+From: Joe Perches <joe@perches.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 07 Jun 2012 00:24:12 -0700
+In-Reply-To: <4FD0540C.5060808@qca.qualcomm.com>
+References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>
+	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 17 June 2012 04:53:47 David Lynch Jr. wrote:
-> I am working on another AR9170 project. 
-> This essentially requires injecting broadcast packets
-> of specific size, frequency, ... at extremely precise
-> intervals.
-Sounds pretty much like TDOA (and Gary). But anyway, if
-you are just looking for a noise "pattern generator", you
-might as well look into the "radar" branch of the carl9170
-firmware.
+On Thu, 2012-06-07 at 12:41 +0530, Mohammed Shafi Shajakhan wrote:
+> Hi Joe,
 
-> I am trying to understand the data flow in the firmware. 
+Hello Mohammed.
+
+> On Thursday 07 June 2012 11:55 AM, Joe Perches wrote:
+> > On Thu, 2012-06-07 at 11:32 +0530, Mohammed Shafi Shajakhan wrote:
+> >> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+> >>
+> >> ratelimit few aggregation related messages, these messages
+> >> floods the log when aggregation is disabled in the AP(for some
+> >> wifi testcases) and we run traffic between STA and AP.
+> >
+> > I looked at all of the #ifdef CONFIG_MAC80211_HT_DEBUG uses.
+> >
+> > I think it's better simply to define a mac80211_ht_dbg
+> > macro for each of the !CONFIG and CONFIG cases and convert
+> > all of the other #ifdef CONFIG_MAC80211_HT_DEBUG logging
+> > messages.
 > 
-> Initially I was looking to generate the frames in the firmware.
-Well, there's "wlan_tx_fw" in wlan.c. Which can be used by the
-firmware code to send out frames (Note: it's currently used to
-sent BA when the device received a BAR from a HT peer)
+> oh, ok.
+> 
+> >
+> > #ifdef CONFIG_MAC80211_HT_DEBUG
+> > #define mac80211_ht_dbg(fmt, ...)				\
+> > 	net_dbg_ratelimited(fmt, ##__VA_ARGS__)
+> > #else
+> > #define mac80211_ht_dbg(fmt, ...)				\
+> > do {								\
+> > 	if (0)							\
+> > 		net_dbg_ratelimited(fmt, ##__VA_ARGS__);	\
+> > } while (0)
+> >
+> > etc...
+> >
+> > I think there's one use of wiphy_dbg that could be a
+> > mac80211_ht_dbg without much loss.
+> >
+> > Maybe add "%s", wiphy_name() to the args there.
+> >
+> 
+> sorry, i could not understand with wiphy_debug, with mac80211_ht_debug. 
+> the later is for HT and aggregation related messages.
 
-> Am I correct that the same struct dma_desc is being used by
-> both USB and the Radio?
-Yes, it's a common data structure for lockless, vectored IO.
+It was an automatic conversion.
 
-> Each dma_desc points to a payload, for tx packets this is a struct
-> carl9170_tx_superframe, which must also be what the skb pointed to by 
-> void carl9170_usb_tx(struct ar9170 *ar, struct sk_buff *skb) is
-> sending ?
-Yes. Altough, the (wlan) hardware will only cares about the 
-ar9170_tx_frame struct which is embedded in the superframe.
-So, the carl9170_tx_superdesc is "hidden" by wlan_tx before
-the frame is sent down to the MAC's tx queue.
-And likewise: unhide_super when the frame is given back to
-the USB download queue.
+Might as well unconvert it back too.
 
-> Can I construct a carl9170_tx_superframe on the host side, with
-> something to allow me to identify it in handle_download in the firmware,
-> perform minor mangling of the contents, and repeatedly transmit it at
-> fixed intervals using wlan_tx() ?
-Sure, the carl9170_tx_superdesc still has a unused u8 ["padding2"].
-So, you can define your own set of flags and values right there. 
-(Of course, you could also hijack rix and cnt - Note: this will work
-if you only need to detect that the frames it needs to be handled
-differently in handle_download since wlan_tx does override these
-early on).
+$ git grep -E -A4 -n "ifdef CONFIG_MAC80211_HT_DEBUG" net/mac80211/rx.c
+net/mac80211/rx.c:635:#ifdef CONFIG_MAC80211_HT_DEBUG
+net/mac80211/rx.c-636-                  if (net_ratelimit())
+net/mac80211/rx.c-637-                          wiphy_debug(hw->wiphy,
+net/mac80211/rx.c-638-                                      "release an RX reorder frame due to timeout on earlier frames\n");
+net/mac80211/rx.c-639-#endif
 
-But if you need to repeatedly transmit frames, then the beaconing
-mechanism might be worth a look. In theory it should be jitter
-free since it is completely handled by the hardware.
+$ git blame -L635,+4 net/mac80211/rx.c
+aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 635) #ifdef CONFIG_MAC80211_HT_DEBUG
+aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 636)                    if (net_ratelimit())
+0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 637)                            wiphy_debug(hw->wiphy,
+0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 638)                                        "release an RX reorder fram
 
-Regards,
-	Chr
+$ git log -1 0fb9a9ec
+commit 0fb9a9ec27718fbf7fa3153bc94becefb716ceeb
+Author: Joe Perches <joe@perches.com>
+Date:   Fri Aug 20 16:25:38 2010 -0700
+
+    net/mac80211: Use wiphy_<level>
+    
+    Standardize logging messages from
+        printk(KERN_<level> "%s: " fmt , wiphy_name(foo), args);
+    to
+        wiphy_<level>(foo, fmt, args);
+    
+    Signed-off-by: Joe Perches <joe@perches.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+
