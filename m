@@ -1,95 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53808 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695Ab2F3NR3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:29 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 00/18] brcmsmac: update to get SoCs working
-Date: Sat, 30 Jun 2012 15:16:03 +0200
-Message-Id: <1341062181-28071-1-git-send-email-hauke@hauke-m.de> (sfid-20120630_151731_392679_24BE679E)
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:57715 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756787Ab2FGUjw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 16:39:52 -0400
+Received: by lahg1 with SMTP id g1so1633395lah.16
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 13:39:49 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 8/9] wlcore/wl18xx: export conf struct in a debugfs file
+Date: Thu,  7 Jun 2012 23:39:27 +0300
+Message-Id: <1339101568-25346-9-git-send-email-coelho@ti.com> (sfid-20120607_224004_296788_43553B0E)
+In-Reply-To: <1339101568-25346-1-git-send-email-coelho@ti.com>
+References: <1339101568-25346-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains some patches needed to get brcmsmac working on 
-SoCs like the BCM4718.
-The last part which adds core rev 17 (used in the BCM4718) to the list 
-of supported cores is missing, because we do not have a firmware 
-supporting this core yet, but I extended the b43 fwcutter to generate 
-a firmware which brcmsmac accepts. With this firmware my BCM4718 
-works. I would appreciate an official firmware release from Broadcom 
-adding support for this core.
-The final patch adding support for the BCM43224 is missing because 
-the PCIe host controller on the BCM4718 still causes problems and I 
-have to add some more read after writes into the code, for now it uses 
-an ugly hack and sometimes the problems still occur.
+Add conf file header structure, magic and version values and export
+the entire conf struct in debugfs.
 
-The wifi is not stable on the BCM4718, I had no problems connecting to 
-my ath9k driven access point but I have problems connecting to my 
-BCM47186 based AP running the vendor firmware with the Broadcom 
-proprietary driver.
-I get 12MBit/s max with the BCM4718 connected to ath9k on the 2.4 GHz 
-band and 35 MBit/s max with the BCM43224 on the 5Ghz band connected to 
-a Broadcom based AP running the proprietary driver. This seams to be 
-CPU bounced as I have over 50% sirq in both cases.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl18xx/conf.h    |    6 ++++
+ drivers/net/wireless/ti/wl18xx/debugfs.c |   44 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wlcore/conf.h    |   22 +++++++++++++++
+ 3 files changed, 72 insertions(+)
 
-brcmsmac starts on the BCM47186 (id: 0x5357), but it does not tx or rx 
-any traffic.
-
-One patch extends the xmtfifo_sz array for more core revs, I just toke 
-the values from the other phy-n cores and hope this is correct.
-
-These patches are depending on: "[PATCH v2 0/9] bcma misc updates" and 
-based on wireless-testing.
-
-I will send a patch for bcma which converts the warning message when it 
-found a PCI and not a PCIe card into a WARN.
-
-v2:
-  - when something depends on a patch for bcma, which is not in 
-    wireless-testing yet, I add that to the commit comment.
-  - removed changes for BCM43421 and BCM6362 as I do not have a device
-    to test this.
-  - xmtfifo_sz now starts at core rev 17 and contains the correct values 
-    for core rev 28
-  - make brcms_c_chipmatch() also work for SoCs
-  - typos and format changes
-
-Hauke Mehrtens (18):
-  brcmsmac: remove PCIE() macro
-  brcmsmac: remove PCI_FORCEHT() macro
-  brcmsmac: remove ai_get_buscore{type,rev}()
-  brcmsmac: use container_of instead of cast
-  brcmsmac: remove ai_findcore()
-  brcmsmac: remove si_pmu_init() and si_pmu_res_init()
-  brcmsmac: remove si_pmu_spuravoid_pllupdate()
-  brcmsmac: remove some redundant chip common workarounds
-  brcmsmac: use core id constants from bcma
-  brcmsmac: use chip and package id constants from bcma
-  brcmsmac: remove some unnessessacry casts and void pointer
-  brcmsmac: add a conditions for core rev 17 again
-  brcmsmac: add some workarounds for other chips again
-  brcmsmac: extend xmtfifo_sz array
-  brcmsmac: fix DMA on SoCs
-  brcmsmac: extend brcms_c_chipmatch() to also handle non PCIe devices
-  brcmsmac: fix read in write_phy_reg
-  brcmsmac: handle non PCI devices in the phy code
-
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c  |  128 ++-------------
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |   16 --
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |   15 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    3 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   91 ++++++++---
- .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   22 ++-
- .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |  140 ++++++++++------
- drivers/net/wireless/brcm80211/brcmsmac/pmu.c      |  172 +-------------------
- drivers/net/wireless/brcm80211/brcmsmac/pmu.h      |    3 -
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    2 +-
- drivers/net/wireless/brcm80211/include/soc.h       |   62 -------
- 11 files changed, 213 insertions(+), 441 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wl18xx/conf.h b/drivers/net/wireless/ti/wl18xx/conf.h
+index b75a6d3..130546a 100644
+--- a/drivers/net/wireless/ti/wl18xx/conf.h
++++ b/drivers/net/wireless/ti/wl18xx/conf.h
+@@ -22,6 +22,12 @@
+ #ifndef __WL18XX_CONF_H__
+ #define __WL18XX_CONF_H__
+ 
++#define WL18XX_CONF_MAGIC	0x10e100ca
++#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0001)
++#define WL18XX_CONF_MASK	0x0000ffff
++#define WL18XX_CONF_SIZE	(WLCORE_CONF_SIZE + \
++				 sizeof(struct wl18xx_priv_conf))
++
+ struct wl18xx_conf_phy {
+ 	u8 phy_standalone;
+ 	u8 rdl;
+diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
+index 468651c..96b1496 100644
+--- a/drivers/net/wireless/ti/wl18xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
+@@ -158,6 +158,48 @@ WL18XX_DEBUGFS_FWSTATS_FILE(mem, tx_free_mem_blks, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(mem, fwlog_free_mem_blks, "%u");
+ WL18XX_DEBUGFS_FWSTATS_FILE(mem, fw_gen_free_mem_blks, "%u");
+ 
++static ssize_t conf_read(struct file *file, char __user *user_buf,
++			 size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	struct wl18xx_priv *priv = wl->priv;
++	struct wlcore_conf_header header;
++	char *buf, *pos;
++	size_t len;
++	int ret;
++
++	len = WL18XX_CONF_SIZE;
++	buf = kmalloc(len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	header.magic	= cpu_to_le32(WL18XX_CONF_MAGIC);
++	header.version	= cpu_to_le32(WL18XX_CONF_VERSION);
++	header.checksum	= 0;
++
++	mutex_lock(&wl->mutex);
++
++	pos = buf;
++	memcpy(pos, &header, sizeof(header));
++	pos += sizeof(header);
++	memcpy(pos, &wl->conf, sizeof(wl->conf));
++	pos += sizeof(wl->conf);
++	memcpy(pos, &priv->conf, sizeof(priv->conf));
++
++	mutex_unlock(&wl->mutex);
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++
++	kfree(buf);
++	return ret;
++}
++
++static const struct file_operations conf_ops = {
++	.read = conf_read,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++
+ static ssize_t clear_fw_stats_write(struct file *file,
+ 			      const char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+@@ -327,6 +369,8 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_FWSTATS_ADD(mem, fwlog_free_mem_blks);
+ 	DEBUGFS_FWSTATS_ADD(mem, fw_gen_free_mem_blks);
+ 
++	DEBUGFS_ADD(conf, moddir);
++
+ 	return 0;
+ 
+ err:
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index 27d919f..03c6358 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -1271,6 +1271,22 @@ struct conf_hangover_settings {
+ 	u8 window_size;
+ } __packed;
+ 
++/*
++ * The conf version consists of 4 bytes.  The two MSB are the wlcore
++ * version, the two LSB are the lower driver's private conf
++ * version.
++ */
++#define WLCORE_CONF_VERSION	(0x0001 << 16)
++#define WLCORE_CONF_MASK	0xffff0000
++#define WLCORE_CONF_SIZE	(sizeof(struct wlcore_conf_header) +	\
++				 sizeof(struct wlcore_conf))
++
++struct wlcore_conf_header {
++	__le32 magic;
++	__le32 version;
++	__le32 checksum;
++} __packed;
++
+ struct wlcore_conf {
+ 	struct conf_sg_settings sg;
+ 	struct conf_rx_settings rx;
+@@ -1290,4 +1306,10 @@ struct wlcore_conf {
+ 	struct conf_hangover_settings hangover;
+ } __packed;
+ 
++struct wlcore_conf_file {
++	struct wlcore_conf_header header;
++	struct wlcore_conf core;
++	u8 priv[0];
++} __packed;
++
+ #endif
 -- 
-1.7.9.5
+1.7.10
 
