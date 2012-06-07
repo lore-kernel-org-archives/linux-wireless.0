@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:43729 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430Ab2FSFsM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 01:48:12 -0400
-Received: by pbbrp8 with SMTP id rp8so9185548pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 22:48:12 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4773 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754132Ab2FGUFp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 16:05:45 -0400
+Message-ID: <4FD10989.6040701@broadcom.com> (sfid-20120607_220549_554877_21DADCDF)
+Date: Thu, 7 Jun 2012 22:05:29 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1340076802.66478.YahooMailNeo@web192503.mail.sg3.yahoo.com>
-References: <1339521048.8774.YahooMailNeo@web192304.mail.sg3.yahoo.com>
- <CA+XVXfc06i8woWkwzZvF3yoJyJVSzEJRHRspfv5G4W8tfcay4Q@mail.gmail.com> <1340076802.66478.YahooMailNeo@web192503.mail.sg3.yahoo.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 19 Jun 2012 08:47:56 +0300
-Message-ID: <CA+XVXffKkYy1THphz9jnLvW4p4M1J_BUxVEABy0oXsZcMwX8=w@mail.gmail.com> (sfid-20120619_074816_067261_492A8E13)
-Subject: Re: TDLS implementation clarifications
-To: Dino Joseph Mycle <dinomycle@yahoo.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 01/18] brcmsmac: remove PCIE() makro
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+ <1338937641-8519-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1338937641-8519-2-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 6:33 AM, Dino Joseph Mycle <dinomycle@yahoo.com> wrote:
-> Hello Arik
->
->   Thanks for the reply.
->
-> For the TDLS, what you are saying is the IEEE standard does not talk how it
-> can work without user intervention. For using security the user has to
-> select the password (key) and it has to be entered, Also the system should
-> ask the user whether or not the data has to be transferred through TDLS
-> mode.
+On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+> Instead of checking if there is a PCIe core on the bus, better check if
+> hosttype is PCIe.
 
-I'm not sure everything has to reach the user. I'm just saying not
-every policy decision has to be made in kernel or wpa_supplicant.
+I was under the impression that the macro was used for code needed when
+the chip has a PCIe core instead of a PCI core. Maybe BCMA only supports
+chips with PCIe core and in the respect checking the hosttype is
+essentially the same, but I would not necessarily call it better.
 
-As for the security key - I think it is derived from the key for the
-AP network, so no separate key is needed. But you'll have to consult
-the spec, my memory is a bit vague about this point.
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+> 
 
->
-> For the channel switch, if we do , the connection to the AP will get lost
-> temporarily right, so if we are sending some data to the AP(say i am
-> browsing and want to transfer some huge data to my peer laptop) it will be
-> an issue right ?
+Gr. AvS
 
-Well we can get into power-save mode (PSM) vs. the AP, so it can't
-send us more data while we are on the other channel. TDLS also has the
-concept of PSM, to prevent the other peer from sending data.
-
-Some cards should be able to support multi-channel operation soon, so
-these kind of issues will be dealt with.
-
-Arik
