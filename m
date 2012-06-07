@@ -1,85 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25634 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755572Ab2FYLEo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 07:04:44 -0400
-Message-ID: <4FE845C5.90106@qca.qualcomm.com> (sfid-20120625_130448_308740_78FD3410)
-Date: Mon, 25 Jun 2012 16:34:37 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>
-Subject: Re: [PATCH v2 00/10] Add support for WOW in ath9k
-References: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:33283 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754843Ab2FGH5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 03:57:17 -0400
+Message-ID: <1339055836.6009.20.camel@joe2Laptop> (sfid-20120607_095720_859457_C19E1B2B)
+Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
+From: Joe Perches <joe@perches.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 07 Jun 2012 00:57:16 -0700
+In-Reply-To: <4FD05A27.80102@qca.qualcomm.com>
+References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>
+	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com>
+	 <1339053852.6009.13.camel@joe2Laptop> <4FD05A27.80102@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Thu, 2012-06-07 at 13:07 +0530, Mohammed Shafi Shajakhan wrote:
+> what about the other wiphy_debug messages, we would 
+> still retain them know
 
-please wait, will send a version v3 version for this, because of a bug 
-that occured while rebasing to the latest wireless testing. if you had 
-already applied, please let me know, i will send a proper fix for that.
-thank you.
+Yes, and...
 
+No, you know those should now still be wiphy_debug
+unless the message is HT related and need a new change.
 
-On Saturday 23 June 2012 09:29 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->
-> Add support for hardware WoW in ath9k. Magic-packet,
-> beacon loss triggers, deauth/disassoc patterns
-> (a special case of user pattern) are tested with
-> AR9485. User pattern needs a bit of
-> investigation on parsing to appropriate 802.11 format.
-> we will do more rigorous testing and address bugs.
-> Also we will quickly validate with chipsets like
-> AR9462, AR9280, AR9285, AR9287 for any bugs.
->
-> Thanks a lot to Vadivel for providing me the hardware and
-> inputs to test. Thanks to Rajkumar, Russell for
-> their invaluable help. Thanks to Aeolous, Senthil and
-> Sujith, Raja. Thanks a lot to Luis for providing the complete
-> frame work for WoW in his initial wow patches.
->
->
-> Mohammed Shafi Shajakhan (10):
->    ath9k_hw: Add register definitions for WoW support
->    ath9k: Add definitions and structures to support WoW
->    ath9k_hw: Add WoW hardware capability flags
->    ath9k_hw: advertise WoW support for capable chipsets
->    ath9k: advertise supported WoW flags to upper layer
->    ath9k_hw: INI changes for WoW for AR9002 chipsets
->    ath9k_hw: Add hardware code for WoW
->    ath: Add Wake-on-Wireless debug mask
->    ath9k: Add WoW related mac80211 callbacks
->    ath9k: do not disable hardware while wow is enabled
->
->   drivers/net/wireless/ath/ath.h                   |    2 +
->   drivers/net/wireless/ath/ath9k/Makefile          |    1 +
->   drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +
->   drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 +
->   drivers/net/wireless/ath/ath9k/ath9k.h           |   28 ++
->   drivers/net/wireless/ath/ath9k/hw.c              |    8 +
->   drivers/net/wireless/ath/ath9k/hw.h              |   68 +++
->   drivers/net/wireless/ath/ath9k/init.c            |   17 +
->   drivers/net/wireless/ath/ath9k/main.c            |  389 +++++++++++++++
->   drivers/net/wireless/ath/ath9k/pci.c             |    3 +
->   drivers/net/wireless/ath/ath9k/reg.h             |  145 ++++++-
->   drivers/net/wireless/ath/ath9k/wow.c             |  560 ++++++++++++++++++++++
->   12 files changed, 1239 insertions(+), 1 deletions(-)
->   create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
->
+All sorts of kneed/need, knitting/nitting bits are in
+my head right now, but I'll spare all of you any more.
 
+English is still a spelt-silly language.
 
--- 
-thanks,
-shafi
+cheers, Joe
+
