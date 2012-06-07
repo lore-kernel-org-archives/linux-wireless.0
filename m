@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:40142 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755144Ab2FTLxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 07:53:51 -0400
-Message-ID: <4FE1B9CB.2090206@neratec.com> (sfid-20120620_135354_364358_6E22D3F3)
-Date: Wed, 20 Jun 2012 13:53:47 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on
- op-channel
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>  <1340111463-4554-3-git-send-email-victorg@ti.com>  <1340181856.4655.37.camel@jlt3.sipsolutions.net>  (sfid-20120620_104434_561430_DB0A480E) <1340181992.4655.39.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340181992.4655.39.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:48918 "EHLO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756266Ab2FGPft (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 11:35:49 -0400
+Received: by lagw12 with SMTP id w12so540413lag.24
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 08:35:47 -0700 (PDT)
+Message-ID: <1339083345.7078.100.camel@cumari.coelho.fi> (sfid-20120607_173553_833982_86750046)
+Subject: Re: [PATCH v2] wl12xx: Add support for an external 26 MHz crystal
+ source
+From: Luciano Coelho <coelho@ti.com>
+To: Grant Erickson <marathon96@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 07 Jun 2012 18:35:45 +0300
+In-Reply-To: <1338567541-25585-1-git-send-email-marathon96@gmail.com>
+References: <1338567541-25585-1-git-send-email-marathon96@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/20/2012 10:46 AM, Johannes Berg wrote:
-> On Wed, 2012-06-20 at 10:44 +0200, Johannes Berg wrote:
->>> +	if ((!chan->radar_detect_timeout ||
->>> +	     time_is_after_jiffies(chan->radar_detect_timeout)) &&
->>> +	    (chan->flags & IEEE80211_CHAN_RADAR))
->>> +		return -EPERM;
->>
->> Ok so you reject it if it's 0, but the jiffies calculation could return
->> 0 too.. in fact, since jiffies start at -5 minutes on boot, you might
->> even hit it if you start radar detection 4 minutes after boot.
+On Fri, 2012-06-01 at 09:19 -0700, Grant Erickson wrote:
+> Add support for an external 26 MHz crystal source.
 > 
-> Also, it seems that the value should be reset eventually ... at least on
-> interface down or so. Otherwise you can start CAC, then bring the
-> interface down to stop the device, and then bring it back up (CAC check
-> is no longer running) and then you can use the channel after some time
-> even though you never really checked for radar...
-> 
-No, if you bring it back up on the same DFS channel,
-radar_detection_timeout will be set back to +60s by
-start_radar_detection(). Looks safe to me.
+> Signed-off-by: Grant Erickson <marathon96@gmail.com>
+> ---
+>   v1 Initial submission.
+>   v2 Add a body description to the commit.
 
-> And if you start CAC on two different devices on the same channel, but
-> they happen to share channel structs in the driver then this will all
-> conflict quite badly.
-> 
-Details ;) In fact, if you start device A at a DFS channel and device B
-at the same channel 50secs later and device A did not detect radars
-after 60secs, ideally both should get TX enabled at the same time with
-B's CAC being aborted after 10secs.
+Applied and pushed, thanks Grant!
 
-For that radar_detect_timeout had to be per wiphy.
+I have only changed the wl->ref_clock to priv->ref_clock that is used
+now.
 
-With the proposal here you have to wait for the last device to pass the
-CAC and if you alternatively put devices A and B up and down every
-30secs you can effectively prevent them from TXing forever.
-> 
-> This needs a lot of more thinking it seems.
-> 
-> johannes
-> 
-
+--
+Luca.
 
