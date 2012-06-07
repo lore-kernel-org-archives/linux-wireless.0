@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41305 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712Ab2FTJJG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 05:09:06 -0400
-Message-ID: <1340183344.4655.53.camel@jlt3.sipsolutions.net> (sfid-20120620_110910_143389_A59EF082)
-Subject: Re: [RFCv2 03/13] cfg80211: add channel tracking for AP and mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Jun 2012 11:09:04 +0200
-In-Reply-To: <4FE191E1.2020000@tieto.com>
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-	  <1340172859-18146-4-git-send-email-michal.kazior@tieto.com>
-	 <1340180293.4655.24.camel@jlt3.sipsolutions.net>
-	 <4FE191E1.2020000@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42152 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757999Ab2FGNUA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 09:20:00 -0400
+Message-ID: <4FD0AA77.4000108@hauke-m.de> (sfid-20120607_152004_462078_55445FB8)
+Date: Thu, 07 Jun 2012 15:19:51 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 16/18] brcmsmac: do not call brcms_c_chipmatch() for non
+ PCI
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-17-git-send-email-hauke@hauke-m.de> <4FCF3DA7.1080508@broadcom.com>
+In-Reply-To: <4FCF3DA7.1080508@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 11:03 +0200, Michal Kazior wrote:
-> Johannes Berg wrote:
-> > On Wed, 2012-06-20 at 08:14 +0200, Michal Kazior wrote:
-> >> We need to know which channel is used by a running
-> >> AP and mesh for channel context accounting and
-> >> finding matching/active interface combination.
-> >
-> > I think there's the AP channel change function now that full-MAC drivers
-> > can call -- need to update there?
+Hi Arend,
+
+On 06/06/2012 01:23 PM, Arend van Spriel wrote:
+> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+>> brcms_c_chipmatch() just works for PCIe devices and returns false for
+>> non PCIe devices. This stops brcms_ops_stop() from calling it when the
+>> devices is not a PCIe device.
 > 
-> I'm not aware of that. I thought it's impossible to change a channel 
-> while AP is running now. Am I missing something?
+> Although this is true you may want to consider what this function
+> provides. The intent is to have a more accurate filter to determine
+> support the device by the driver, ie. more accurate than what is in the
+> driver device table.
+> 
+> So in brcms_c_chipmatch() we may want a host-type independent filtering
+> and validate bcma_device_id, bcma_chipinfo, and possibly bcma_boardinfo.
+I do not like this function at all. ;-)
 
-Yeah ... I think the ath6kl driver (only user?) disassociates all
-stations or something ... I don't really remember what they told me
-about how it worked, but it should be on the list somewhere in the
-discussion(s) about the patches that added the feature, see
+Are these restrictions in this function really needed? I would more like
+to restrict it to something like core revs, which is done in the device
+table and the phy types and versions. A restriction by chipid would also
+be reasonable as some chips are needing some special workarounds, these
+checks could also be done for SoCs.
 
-commit 5314526b1743e8e8614293db7d86e480b4fe9824
-Author: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Date:   Fri Apr 6 13:35:47 2012 -0700
+In my opinion this functions results in preventing users from running
+this driver with some device which is working with this driver but which
+is not in this list of supported devices, because some board vendor just
+changed some id and no developer got such a card to test it and change
+the detection code.
+It is like with the PCIe card I found connected to my BCM4718, this card
+is working expect for some problems with the PCIe host controller on the
+BCM4716, but brcms_c_chipmatch() returned false for it.
 
-    cfg80211: add channel switch notify event
+By the way, why is a call to this function in brcms_ops_stop() in
+addition to the call in the init code? In this case the device was
+already started.
 
-
-johannes
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   22 +++++++++++++-------
+>>  1 file changed, 14 insertions(+), 8 deletions(-)
+> 
 
