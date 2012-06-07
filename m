@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49730 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753529Ab2FJNKa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2012 09:10:30 -0400
-Message-ID: <4FD49CC1.6030704@hauke-m.de> (sfid-20120610_151055_442504_96D321BE)
-Date: Sun, 10 Jun 2012 15:10:25 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-15-git-send-email-hauke@hauke-m.de> <4FCF2FD4.6010103@broadcom.com> <4FD0AD96.1050500@hauke-m.de> <4FD0FF3D.2060805@broadcom.com>
-In-Reply-To: <4FD0FF3D.2060805@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pb0-f66.google.com ([209.85.160.66]:37645 "EHLO
+	mail-pb0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab2FGAcn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 20:32:43 -0400
+Received: by pbbrp8 with SMTP id rp8so83152pbb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 17:32:42 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 0/5] Improvement to initial mesh metric
+Date: Wed,  6 Jun 2012 17:29:36 -0700
+Message-Id: <1339028981-17097-1-git-send-email-jason@cozybit.com> (sfid-20120607_023246_807436_BB94EB72)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 09:21 PM, Arend van Spriel wrote:
-> On 06/07/2012 03:33 PM, Hauke Mehrtens wrote:
->> On 06/06/2012 12:24 PM, Arend van Spriel wrote:
->>> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->>>> The xmtfifo_sz array contains the queue sizes for the different chip
->>>> revs. This array missed the sizes for the core rev 17 and 28. This
->>>
->>> Should probably use core revs instead of chip revs and I think we are
->>> talking about the 80211 core rev here.
->> Yes I will change this comment.
->>
->> Are there any devices with the same phy type using different fifo sizes?
->> If this is not the case I think it is better to do this based on the phy
->> type.
-> 
-> I dived into this and basically there is no correlation to the phy type.
-> There are chips with same 80211 core rev and different phy type as there
-> are chips with different 80211 core rev and the same phy type.
-> 
-> Gr. AvS
+v3 removes unnecessary comment and whitespace
 
-Hi Arend,
+v2 set squashes 5 and 6 from the previous patch set.
 
-Ok, then I will leave it based on the core rev like it is now. Are the
-values I added there for core rev 17 and 28 correct? They are just
-copied from the other phy-n device which has the same values set after
-powering up and before they are explicitly set. The core rev 17 device
-is working for me, but the core rev 28 is not, but I do not know why. I
-was unable to find these values in b43 or the spec b43 is based on.
+I am submitting this patch set on behalf of the cozybit team after
+testing them with the wireless-testing tag master-2012-06-06
 
-Hauke
+The first patch was previously submitted by Timo Lindhorst and adds
+important features to hwsim.
+
+The remaining patches add a feature to initialize the link rate metric
+with a guess based off of RSSI when insufficient traffic has passed to
+allow actual calculation of the link rate.
+
+Thanks
+Jason
+
+
+Javier Cardona (4):
+  mac80211: Remove unused variable
+  mac80211: Keep tx rate averages for mesh peers for better metric
+    calculation.
+  mac80211: Rename stainfo variable for the more common sta
+  mac80211: Use signal strength as a proxy for expected datarate.
+
+Timo Lindhorst (1):
+  mac80211_hwsim: Report rate info in tx status
+
+ drivers/net/wireless/mac80211_hwsim.c |   21 +++++++
+ net/mac80211/mesh_hwmp.c              |   98 +++++++++++++++++++++++++++------
+ net/mac80211/sta_info.c               |    1 +
+ net/mac80211/sta_info.h               |    1 +
+ 4 files changed, 105 insertions(+), 16 deletions(-)
+
+-- 
+1.7.9.5
+
