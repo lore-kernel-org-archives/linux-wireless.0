@@ -1,172 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50402 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756425Ab2FZMah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:30:37 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v3 06/13] cfg80211: track monitor interfaces count
-Date: Tue, 26 Jun 2012 14:30:11 +0200
-Message-ID: <1340713818-28549-7-git-send-email-michal.kazior@tieto.com> (sfid-20120626_145130_338969_AD1B34EB)
-In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pz0-f66.google.com ([209.85.210.66]:37295 "EHLO
+	mail-pz0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab2FGAcp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 20:32:45 -0400
+Received: by dado14 with SMTP id o14so24667dad.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 17:32:44 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 1/5] mac80211_hwsim: Report rate info in tx status
+Date: Wed,  6 Jun 2012 17:29:37 -0700
+Message-Id: <1339028981-17097-2-git-send-email-jason@cozybit.com> (sfid-20120607_023248_114778_D624100E)
+In-Reply-To: <1339028981-17097-1-git-send-email-jason@cozybit.com>
+References: <1339028981-17097-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implements .set_monitor_enabled(wiphy, enabled).
+From: Timo Lindhorst <tlnd@online.de>
 
-Notifies driver upon change of interface layout.
+Assuming an ideal channel, always the first transmission is considered
+successful if an ACK is received. If no ACK is received, the
+rates/attempts are reported as set by the rate control.
 
-If only monitor interfaces become present it is
-called with 2nd argument being true. If
-non-monitor interface appears then 2nd argument
-is false. Driver is notified only upon change.
-
-This makes it more obvious about the fact that
-cfg80211 supports single monitor channel. Once we
-implement multi-channel we don't want to allow
-setting monitor channel while other interface
-types are running. Otherwise it would be ambiguous
-once we start considering num_different_channels.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Timo Lindhorst <tlnd@online.de>
 ---
- include/net/cfg80211.h |    4 ++++
- net/wireless/core.c    |   24 ++++++++++++++++++++++++
- net/wireless/core.h    |   14 ++++++++++++++
- net/wireless/util.c    |    5 +++++
- 4 files changed, 47 insertions(+), 0 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 92fdd02..120eae0 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1428,6 +1428,8 @@ struct cfg80211_gtk_rekey_data {
-  *	interfaces are active this callback should reject the configuration.
-  *	If no interfaces are active or the device is down, the channel should
-  *	be stored for when a monitor interface becomes active.
-+ * @set_monitor_enabled: Notify driver that there are only monitor
-+ *	interfaces running.
-  * @get_channel: Get the current operating channel, should return %NULL if
-  *	there's no single defined operating channel if for example the
-  *	device implements channel hopping for multi-channel virtual interfaces.
-@@ -1746,6 +1748,8 @@ struct cfg80211_ops {
- 				struct ethtool_stats *stats, u64 *data);
- 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
- 				  u32 sset, u8 *data);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4c9336c..52ba3e6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -715,6 +715,14 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	bool ack;
+ 	struct ieee80211_tx_info *txi;
+ 	u32 _pid;
++	u8 tx_count[IEEE80211_TX_MAX_RATES];
++	int i;
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
++	struct mac80211_hwsim_data *data = hw->priv;
 +
-+	void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
- };
++	if (ieee80211_is_beacon(mgmt->frame_control) ||
++	    ieee80211_is_probe_resp(mgmt->frame_control))
++		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
  
- /*
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 46a33ea..9097d6c 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -776,6 +776,24 @@ static struct device_type wiphy_type = {
- 	.name	= "wlan",
- };
+ 	mac80211_hwsim_monitor_rx(hw, skb);
  
-+void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
-+			       enum nl80211_iftype iftype, int num)
-+{
-+	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
-+	bool has_monitors_only_new;
-+
-+	ASSERT_RDEV_LOCK(rdev);
-+
-+	rdev->num_running_ifaces += num;
-+	if (iftype == NL80211_IFTYPE_MONITOR)
-+		rdev->num_running_monitor_ifaces += num;
-+
-+	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
-+	if (has_monitors_only_new != has_monitors_only_old)
-+		rdev->ops->set_monitor_enabled(&rdev->wiphy,
-+					       has_monitors_only_new);
-+}
-+
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 					 unsigned long state,
- 					 void *ndev)
-@@ -879,6 +897,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		break;
- 	case NETDEV_DOWN:
- 		dev_hold(dev);
-+		cfg80211_lock_rdev(rdev);
-+		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
-+		cfg80211_unlock_rdev(rdev);
- 		queue_work(cfg80211_wq, &wdev->cleanup_work);
- 		break;
- 	case NETDEV_UP:
-@@ -986,6 +1007,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
- 		if (ret)
- 			return notifier_from_errno(ret);
-+		cfg80211_lock_rdev(rdev);
-+		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
-+		cfg80211_unlock_rdev(rdev);
- 		break;
- 	}
+@@ -745,6 +753,10 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (txi->control.sta)
+ 		hwsim_check_sta_magic(txi->control.sta);
  
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index bbf2f75..b27fa3b 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -56,6 +56,9 @@ struct cfg80211_registered_device {
- 
- 	u32 ap_beacons_nlpid;
- 
-+	int num_running_ifaces;
-+	int num_running_monitor_ifaces;
++	if (!ack)
++		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
++			tx_count[i] = txi->control.rates[i].count;
 +
- 	/* BSSes/scanning */
- 	spinlock_t bss_lock;
- 	struct list_head bss_list;
-@@ -223,6 +226,14 @@ static inline void wdev_unlock(struct wireless_dev *wdev)
- #define ASSERT_RDEV_LOCK(rdev) lockdep_assert_held(&(rdev)->mtx)
- #define ASSERT_WDEV_LOCK(wdev) lockdep_assert_held(&(wdev)->mtx)
+ 	ieee80211_tx_info_clear_status(txi);
  
-+static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
-+{
-+	ASSERT_RDEV_LOCK(rdev);
-+
-+	return rdev->num_running_ifaces == rdev->num_running_monitor_ifaces &&
-+	       rdev->num_running_ifaces > 0;
-+}
-+
- enum cfg80211_event_type {
- 	EVENT_CONNECT_RESULT,
- 	EVENT_ROAMED,
-@@ -470,6 +481,9 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 				 u32 beacon_int);
+ 	/* frame was transmitted at most favorable rate at first attempt */
+@@ -753,6 +765,15 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
-+void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
-+			       enum nl80211_iftype iftype, int num);
+ 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
+ 		txi->flags |= IEEE80211_TX_STAT_ACK;
 +
- #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
- #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
- #else
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index fc948d0..9b92ec5 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -871,6 +871,11 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 		}
- 	}
- 
-+	if (!err && ntype != otype && netif_running(dev)) {
-+		cfg80211_update_iface_num(rdev, ntype, 1);
-+		cfg80211_update_iface_num(rdev, otype, -1);
++	if (ack) {
++		txi->status.rates[0].count = 1;
++		txi->status.rates[1].idx = -1;
++	} else {
++		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
++			txi->control.rates[i].count = tx_count[i];
 +	}
 +
- 	return err;
+ 	ieee80211_tx_status_irqsafe(hw, skb);
  }
  
 -- 
-1.7.0.4
+1.7.9.5
 
