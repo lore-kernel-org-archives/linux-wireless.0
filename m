@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:45413 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752283Ab2FRHTh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 03:19:37 -0400
-Received: by wibhj8 with SMTP id hj8so1718340wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 00:19:36 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kvalo@adurom.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: set only VO as a U-APSD enabled AC
-Date: Mon, 18 Jun 2012 10:19:31 +0300
-Message-Id: <1340003971-7037-1-git-send-email-arik@wizery.com> (sfid-20120618_091940_323018_5161AE6F)
+Received: from rousseau.luceor.com ([91.121.31.107]:45165 "EHLO sro-lap"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1760696Ab2FGKzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 06:55:41 -0400
+From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+Subject: [PATCH] minstrel_ht: enable frame aggregation for fixed rate
+Date: Thu,  7 Jun 2012 12:44:30 +0200
+Message-Id: <1339065870-11507-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20120607_125551_739578_C8D8EB17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some APs experience problems when working with U-APSD. Decrease the
-probability of that happening by using legacy mode for all ACs but VO.
+when i was trying fixed rate in minstrel_ht, frame aggregation
+was not working. so i fix it
 
-The AP that caused us troubles was a Cisco 4410N. It ignores our
-setting, and always treats non-VO ACs as legacy.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
 ---
- net/mac80211/ieee80211_i.h |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ddf768f..58436c3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -56,10 +56,7 @@ struct ieee80211_local;
- #define TU_TO_EXP_TIME(x)	(jiffies + TU_TO_JIFFIES(x))
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 2d1acc6..0e502d7 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -626,8 +626,13 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
  
- #define IEEE80211_DEFAULT_UAPSD_QUEUES \
--	(IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |	\
--	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE |	\
--	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI |	\
--	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
-+	IEEE80211_WMM_IE_STA_QOSINFO_AC_VO
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* use fixed index if set */
+-	if (mp->fixed_rate_idx != -1)
+-		sample_idx = mp->fixed_rate_idx;
++	if (mp->fixed_rate_idx != -1) {
++		if(sample_idx >= 0) {
++			sample_idx = mp->fixed_rate_idx;
++		} else {
++			mi->max_tp_rate =  mp->fixed_rate_idx;	
++		}
++	}
+ #endif
  
- #define IEEE80211_DEFAULT_MAX_SP_LEN		\
- 	IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+ 	if (sample_idx >= 0) {
 -- 
 1.7.9.5
 
