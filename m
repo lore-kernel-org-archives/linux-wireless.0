@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3434 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751161Ab2FZJqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 05:46:47 -0400
-Message-ID: <4FE984F9.2060502@broadcom.com> (sfid-20120626_114650_924916_EE2A5FB3)
-Date: Tue, 26 Jun 2012 11:46:33 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:46778 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754789Ab2FGCqi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jun 2012 22:46:38 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Michal Kazior <michal.kazior@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@adurom.com>
+Date: Wed, 6 Jun 2012 19:46:20 -0700
+Subject: RE: [RFC 07/14] cfg80211: track monitor interfaces count
+Message-ID: <477F20668A386D41ADCC57781B1F7043083A7F0850@SC-VEXCH1.marvell.com> (sfid-20120607_044641_887005_D9EE474F)
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	 <1338203942-5667-8-git-send-email-michal.kazior@tieto.com>
+ <1338973824.4513.42.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338973824.4513.42.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: fix NULL pointer crash in
- brcms_c_regd_init()
-References: <1340286553-12053-1-git-send-email-arend@broadcom.com>
- <20120625165345.GB4495@thinkpad-t410>
-In-Reply-To: <20120625165345.GB4495@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/25/2012 06:53 PM, Seth Forshee wrote:
-> Yeah, I definitely messed that up.
-
-I have my off days as well. We are still human, right ;-)
-
-> This looks fine, but it strikes me that it might simplify things a bit
-> to change the loop to iterate over over wlc->pub->_nbands instead. The
-> difference is pretty minor though, and since John has already applied
-> this patch there's probably no reason to change it.
-
-I considered that but the iterator is used as index in the wiphy.band[]
-array further in the loop. So that would require a bit more rework of
-the loop (although the internal band index and the one from cfg80211 match).
-
-Gr. AvS
-
+SGkgSm9oYW5uZXMsDQoNCj4gPiBJbXBsZW1lbnRzIC5zZXRfbW9uaXRvcl9lbmFibGVkKHdpcGh5
+LCBlbmFibGVkKS4NCj4gPg0KPiA+IE5vdGlmaWVzIGRyaXZlciB1cG9uIGNoYW5nZSBvZiBpbnRl
+cmZhY2UgbGF5b3V0Lg0KPiA+DQo+ID4gSWYgb25seSBtb25pdG9yIGludGVyZmFjZXMgYmVjb21l
+IHByZXNlbnQgaXQgaXMNCj4gPiBjYWxsZWQgd2l0aCAybmQgYXJndW1lbnQgYmVpbmcgdHJ1ZS4g
+SWYNCj4gPiBub24tbW9uaXRvciBpbnRlcmZhY2UgYXBwZWFycyB0aGVuIDJuZCBhcmd1bWVudA0K
+PiA+IGlzIGZhbHNlLiBEcml2ZXIgaXMgbm90aWZpZWQgb25seSB1cG9uIGNoYW5nZS4NCj4gPg0K
+PiA+IFRoaXMgbWFrZXMgaXQgbW9yZSBvYnZpb3VzIGFib3V0IHRoZSBmYWN0IHRoYXQNCj4gPiBj
+Zmc4MDIxMSBzdXBwb3J0cyBzaW5nbGUgbW9uaXRvciBjaGFubmVsLiBPbmNlIHdlDQo+ID4gaW1w
+bGVtZW50IG11bHRpLWNoYW5uZWwgd2UgZG9uJ3Qgd2FudCB0byBhbGxvdw0KPiA+IHNldHRpbmcg
+bW9uaXRvciBjaGFubmVsIHdoaWxlIG90aGVyIGludGVyZmFjZQ0KPiA+IHR5cGVzIGFyZSBydW5u
+aW5nLiBPdGhlcndpc2UgaXQgd291bGQgYmUgYW1iaWd1b3VzDQo+ID4gb25jZSB3ZSBzdGFydCBj
+b25zaWRlcmluZyBudW1fZGlmZmVyZW50X2NoYW5uZWxzLg0KPiA+DQo+ID4gQ2hhbmdlLUlkOiBJ
+YmQ4MmE3MGMyNTZjMmRlNTg0ZWI1NDFlYTJjMzY2NjNhNTlmMDlkNA0KPiA+IFNpZ25lZC1vZmYt
+Ynk6IE1pY2hhbCBLYXppb3IgPG1pY2hhbC5rYXppb3JAdGlldG8uY29tPg0KPiANCj4gVGhpcyBp
+cyBlc3NlbnRpYWxseSBob3cgbWFjODAyMTEgYmVoYXZlcyBub3csIGFuZCBJIGhhdmUgbm8gcHJv
+YmxlbQ0KPiBpbXBvc2luZyBpdCBvbiB0aGUgcmVzdCBvZiB0aGUgc3RhY2sgYXMgd2VsbCwgYnV0
+IEkgdGhpbmsgd2UgY2FuDQo+IHByb2JhYmx5IGdldCByaWQgb2Ygc29tZSBtb3JlIGdlbmVyaWMg
+ZnVuY3Rpb25hbGl0eSB0aGVuPw0KPiANCj4gTGlrZSB0aGUgc29mdHdhcmVfaWZ0eXBlcy4gV2hh
+dCBpZiB0aGUgZHJpdmVyIGFjdHVhbGx5IHdhbnRzIHVzIHRvIHRyYWNrDQo+IHRoZSBtb25pdG9y
+IGNoYW5uZWwgbGlrZSBhbnkgb3RoZXIgY29udGV4dD8gRG9lc24ndCBtYWtlIGFueSBzZW5zZSBm
+b3INCj4gbWFjODAyMTEsIGJ1dCBiZWZvcmUgdGhpcyBpdCB3b3VsZCBoYXZlIGJlZW4gcG9zc2li
+bGUuDQo+IA0KPiBFc3NlbnRpYWxseSB5b3UncmUgc2F5aW5nIHRoYXQgbW9uaXRvciBpcyBhbHdh
+eXMgYSBzb2Z0d2FyZSBpZnR5cGUsIGFuZA0KPiB0aGF0IGl0IHNob3VsZCBhbHdheXMgYmVoYXZl
+IGxpa2UgaW4gbWFjODAyMTEgLS0gaWYgaXQncyBhbG9uZSB0aGVuIGl0J3MNCj4gYSBtb25pdG9y
+LCBpZiBub3QgYWxvbmUgaXQganVzdCBzZWVzIHdoYXQgdGhlIG90aGVycyBzZWUuDQo+IA0KPiBX
+aGF0IGRvIHRoZSBvdGhlcnMgdGhpbmc/IEJpbmc/IEthbGxlPw0KDQptd2lmaWV4IGRyaXZlciBk
+b2Vzbid0IHN1cHBvcnQgbW9uaXRvciBpbnRlcmZhY2UgdHlwZSBjdXJyZW50bHkuIFNvIGFueSBj
+aGFuZ2VzIHJlbGF0ZWQgdG8gbW9uaXRvciBzaG91bGRuJ3QgaGF2ZSBhbnkgaW1wYWN0IG9uIG13
+aWZpZXgsIEFGQUlDUy4NCg0KVGhhbmtzLA0KQmluZw0KDQo+IA0KPiBUaGUgb3RoZXIgdGhpbmcg
+d2UgbWlnaHQgdGhlbiB3YW50IHRvIGlzIG1ha2UgdGhpcyBtb3JlIGdlbmVyYWwgYW5kIG5vdA0K
+PiBqdXN0IGluZm9ybSB0aGUgZHJpdmVyIGFib3V0IHRoZSBtb25pdG9yL25vLW1vbml0b3IgbGF5
+b3V0IGNoYW5nZSwgYnV0DQo+IGFsc28gdGVsbCBpdCB3aGljaCBpbnRlcmZhY2UgY29tYmluYXRp
+b24gd2UncmUgaW4gcmlnaHQgbm93PyBNaWdodCBsb29rDQo+IGEgYml0IG1vcmUgbGlrZQ0KPiAN
+Cj4gc2V0X2lmYWNlX2NvbWJpbmF0aW9uKHdpcGh5LCBkZXYsIGNvbWJpbmF0aW9uKTsNCj4gDQo+
+IG9yIGV2ZW4NCj4gc2V0X2lmYWNlX2NvbWJpbmF0aW9uKHdpcGh5LCBkZXYsIGNvbWJpbmF0aW9u
+LCBoYXZlX21vbml0b3IpOw0KPiANCj4gDQo+IFRoZW4gcHVyZSBtb25pdG9yIHdvdWxkIGJlICJj
+b21iaW5hdGlvbiA9PSBOVUxMLCBoYXZlX21vbml0b3I9VHJ1ZSIsDQo+IGV0Yy4gVGhlIG9ubHkg
+ZG93bnNpZGUgaXMgdGhhdCB3ZSBkb24ndCBoYXZlIGNvbWJpbmF0aW9ucyBhZHZlcnRpc2VkIGZv
+cg0KPiB3aGVuIHRoZXJlJ3MgYSBzaW5nbGUgaW50ZXJmYWNlIG9ubHksIHNvIHdlJ2QgaGF2ZSB0
+byBwb2ludCB0byBzb21lDQo+IGludGVybmFsIHNpbmdsZS1pbnRlcmZhY2UgY29tYmluYXRpb25z
+IHRoZW4gKHN0YXRpYyBpbiBjZmc4MDIxMSkuDQo+IFRob3VnaHRzPw0KPiANCj4gam9oYW5uZXMN
+Cj4gDQoNCg==
