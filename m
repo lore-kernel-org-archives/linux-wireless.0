@@ -1,108 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:35361 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759881Ab2FGNS1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 09:18:27 -0400
-Received: by bkcji2 with SMTP id ji2so550310bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 06:18:25 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Sean Patrick Santos <quantheory@gmail.com>
-Subject: Re: carl9170 issue
-Date: Thu, 7 Jun 2012 15:18:20 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
-In-Reply-To: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201206071518.21171.chunkeey@googlemail.com> (sfid-20120607_151832_084430_C6021478)
+Received: from bues.ch ([80.190.117.144]:37385 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754382Ab2FGRai (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 13:30:38 -0400
+Date: Thu, 7 Jun 2012 19:30:27 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andre Heider <a.heider@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+Message-ID: <20120607193027.05389791@milhouse> (sfid-20120607_193042_423891_C32C6F97)
+In-Reply-To: <4FD0E3F3.2060900@lwfinger.net>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	<1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	<20120607180325.7752b3c0@milhouse>
+	<4FD0E3F3.2060900@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/F+8cVG22vrvfzBxJwq_a1x9"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 07 June 2012 08:53:32 Sean Patrick Santos wrote:
-> The first "problem", which is actually mild enough that I wouldn't
-> bother writing in about it if it was the only issue, is that I get a
-> lot of messages like these:
-> 
-> [13215.559590] ieee80211 phy2: channel change: 2432 -> 2437 failed (2).
-> [13215.844041] ieee80211 phy2: channel change: -1 -> 2437 failed (2).
-> [13215.844044] usb 3-1.2: restart device (7)
-> [13216.983593] usb 3-1.2: device restarted successfully.
-> [13216.988414] ieee80211 phy2: Hardware restart was requested
-> 
-> Also occasional blocks like these:
-> 
-> [13548.136457] ieee80211 phy2: invalid plcp cck rate (0).
-> [13597.224429] ieee80211 phy2: invalid plcp cck rate (0).
-> [13601.512838] ieee80211 phy2: invalid plcp cck rate (0).
-> 
-> I gather from a previous post on this mailing list that these are
-> signs of interference in the area, which doesn't surprise me. I have a
-> draft-N router that can only use the 2.4Ghz range, and there are three
-> cordless phones, a wall, a microwave, and several other wireless
-> devices between the adapter and the router. This doesn't bother me
-> that much, because when the above messages are being printed
-> performance is usually still OK, and when a restart does happen the
-> device recovers rapidly. Plus, I'm somewhat stuck with the situation,
-> since I don't have much control over how things are arranged in this
-> space, and because the other adapter I have on hand is even worse off,
-> both in terms of hardware and drivers.
-Fair enough. But what's the other adapter?
- 
-> The second, more troubling problem is that I seem to get a "silent"
-> failure (at least I can't find any errors) if I start a large download
-> or set of downloads that take more than 10 seconds to a minute (in
-> particular, trying to clone large directories using mercurial is
-> impossible, because it will always trigger this problem, though for
-> some reason git and subversion work most, but not all, of the time).
-> What I mean by "failure" is that one of these two things will happen:
-> 
-> 1. The device will simply fail to receive anything (or trickle out to
-> a rate of 500 bytes/min), at which point it will remain in that state
-> for hours, occasionally registering minuscule amounts of activity,
-> unless it is dis/reconnected to the wireless network (toggling power
-> to the device or reloading the module also work, but do neither better
-> nor worse than just reassociating). Upon reconnecting it immediately
-> works fine, as long as I don't trigger the same problem again.
-> 
-> 2. Less often, the device will fail as above, but then suddenly start
-> working again another minute or so later, allowing the process that
-> had been overworking it (mercurial, wget, firefox, whatever) to
-> continue what it was doing for another 10-50 seconds, at which point
-> the connection trickles out again. This cycle keeps happening until
-> the process either completes successfully, errors and dies, hangs, or
-> is killed, at which point everything seems fine again. (Killing the
-> process does not solve the problem, it just prevents the same process
-> from causing the problem *again* in the event that the device
-> spontaneously recovers within a minute or two).
-> 
-> I know that it's physically possible to get a stable connection here,
-> because the Windows installation on the same machine can almost always
-> get fairly good speeds with the same device in the same place on the
-> same network at the same time of day (~25Mbps, lose connection maybe
-> once per 40 hours of use). I also know this because I can always fix
-> the problem manually on Linux by reconnecting the device. What I'm not
-> sure about is what the problem is with carl9170, or how to convince it
-> to be more fault-tolerant. (Is this behavior an overreaction to the
-> noise level? Is it hanging while waiting for some event that may never
-> happen?) I'm afraid I'm not even sure how to diagnose the problem
-> further; wireless adapters are not familiar territory for me.
-Thanks for your extensive report on this.
+--Sig_/F+8cVG22vrvfzBxJwq_a1x9
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Your problems sound somewhat familiar to
-"Re: carl9170 driver - network connection breaks"
-<http://permalink.gmane.org/gmane.linux.kernel.wireless.general/88223>
+On Thu, 07 Jun 2012 12:25:07 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-So far no-one has been able to bisect the bug (last good was 3.1, so
-to breakage must have occurred between 3.1 and 3.2). I would have
-looked into it long ago, but I can't reproduce.
+> I do not understand what is different about your system than mine.
 
-Regards,
-	Christian 
+I think the difference is that he runs opensource firmware, for which the q=
+ueuenumber
+patching comes into effect. You should be able to reproduce even with stand=
+ard
+firmware by disabling QOS with the module parameter.
 
-PS: If your kernel was compiled with CONFIG_MAC80211_DEBUGFS you can
-"restart" BA/aggregation sessions by
-echo "tx stop 0" > /sys/kernel/debug/ieee80211/phyX/netdev:wlanXY/stations/AP-MAC/agg_status
-echo "rx stop 0" > /sys/kernel/debug/ieee80211/phyX/netdev:wlanXY/stations/AP-MAC/agg_status
-alternatively: you can disable ht by loading the module with 'noht=1' parameter
+--=20
+Greetings, Michael.
+
+PGP encryption is encouraged / 908D8B0E
+
+--Sig_/F+8cVG22vrvfzBxJwq_a1x9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJP0OUzAAoJEPUyvh2QjYsO8m4P/jil0zQGvfkp1RxbzhDEFkb8
+LHJE9LWtvwmjbbJvXLuWMAv0j3TLfidb7Cp94E9LJMRawtgPS6EGeARw2eBz4rll
+5G3wsbsvvVyHl8fvPniWwlIM7DsH0apHxrzRVpaGx/eqxXT1wlYdrVLgbh2hQnyM
+fLRkm/yKYxWyGnkejNFTUA1+uL0IYSLDbT3RF9e8LfqcUbz2slO1FjgB3HKKJxIz
+XC77fC1+w+bl3+PGPZBGZDHNzGzoRSIE/8UOArLgdSWEgwuQsFydAtcjrANAShlW
+SLj5n6L+lO97QOPxdJkTAxSfzmjFXPFkhHjA1UUWk3eutFdYJL4QDO1L09Vqe/hj
+aaeQS3cogfJd741iEG3FNt6x9dIYNCNJe2Z3ARAzVCA2b7VQ6xDcor/Vfrr8nq+g
+eaNc3AK19I6Oubv3r/LXCCF+JvR6n79PatYeE1EYB5iCYMwXfXTZu510rZDiEIBU
+9MUZFr1mgDXweddHHo1R10Y9leCIa/yUWm03HcjEGLe+n8ArKzJahpuhh82LjCpC
+hYs1RPyHjykHYloXmmIKU6MeBV3iwTIyqGVjeh0ej8BgUXUqq8hdY9AEC1hQ8juO
+O2KzOPjMd5A8u/joSxkg654eqqHfljfSguonpZNurVnOc1c43XLuZ6xMT/1JSDke
+46Jn4fJWXnFqMoyy41Zt
+=yOmC
+-----END PGP SIGNATURE-----
+
+--Sig_/F+8cVG22vrvfzBxJwq_a1x9--
