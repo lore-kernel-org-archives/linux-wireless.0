@@ -1,81 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f51.google.com ([209.85.213.51]:54846 "EHLO
-	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759865Ab2FUQtE convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f66.google.com ([209.85.160.66]:37645 "EHLO
+	mail-pb0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501Ab2FGAcw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 12:49:04 -0400
-Received: by yhnn12 with SMTP id n12so801218yhn.10
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 09:49:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340292308-6993-1-git-send-email-ozancag@gmail.com>
-References: <1340292308-6993-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 21 Jun 2012 09:48:43 -0700
-Message-ID: <CAB=NE6Uh90nV00TKSk+Rh9AG0yffKkYBZ7DiAe0Hvds-wMXQcg@mail.gmail.com> (sfid-20120621_184909_581862_4CD6AF6E)
-Subject: Re: [PATCH v2] compat: Define include guard for vga_switcheroo.h
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Jun 2012 20:32:52 -0400
+Received: by mail-pb0-f66.google.com with SMTP id rp8so83152pbb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 17:32:51 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 5/5] mac80211: Use signal strength as a proxy for expected datarate.
+Date: Wed,  6 Jun 2012 17:29:41 -0700
+Message-Id: <1339028981-17097-6-git-send-email-jason@cozybit.com> (sfid-20120607_023255_771098_BDACC9A4)
+In-Reply-To: <1339028981-17097-1-git-send-email-jason@cozybit.com>
+References: <1339028981-17097-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 8:25 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> The check is missing in upstream. Patch sent but until this gets
-> merged, define it in compat tree for fixing compat-drm builds.
->
-> Also add a temporary header with the same name which will be used
-> to check whether the header should be included or not.
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
-> ---
->  include/linux/compat-3.5.h     |    6 ++++++
->  include/linux/vga_switcheroo.h |    6 ++++++
->  2 files changed, 12 insertions(+)
->  create mode 100644 include/linux/vga_switcheroo.h
->
-> diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
-> index 74c8176..e999aee 100644
-> --- a/include/linux/compat-3.5.h
-> +++ b/include/linux/compat-3.5.h
-> @@ -78,6 +78,12 @@ static inline int fault_in_multipages_readable(const char __user *uaddr,
->  /* switcheroo is available on >= 2.6.34 */
->  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
->  #include <linux/vga_switcheroo.h>
-> +
-> +/* FIXME: The include guard is sent upstream, drop this
-> + * once the guard is merged. */
-> +#ifndef LINUX_VGA_SWITCHEROO_H
-> +#define LINUX_VGA_SWITCHEROO_H
-> +#endif
+From: Javier Cardona <javier@cozybit.com>
 
-Don't you want this under the ifdef above?
+When establishing mesh paths with new stations, there is no historic
+datarate information to compute the airtime link metric.  Up until now
+we were just using a poor initial metric.  A better approach is to
+use the signal strength as an indicator of how good the new link will
+be.  Once traffic is exchanged with the station, the average datarate is
+computed and the signal strength is not used anymore.
 
->  /*
->  * This backports:
->  *
-> diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
-> new file mode 100644
-> index 0000000..26ac71d
-> --- /dev/null
-> +++ b/include/linux/vga_switcheroo.h
-> @@ -0,0 +1,6 @@
-> +/* Hack for fixing the missing include guard in upstream
-> + * header. We will drop this when the patch is merged upstream. */
-> +
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Reviewed-by: Jason Abele <jason@cozybit.com>
+---
+v3:
+	comments/whitespace
 
-How about just adding this file but with something like this:
+v2:
+	squashed 5 and 6 from v1
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-/*
- * XXX: The include guard was sent upstream, drop this
- * once the guard is merged.
- */
-#ifndef LINUX_VGA_SWITCHEROO_H /* in case this gets upstream */
-#include_next <linux/vga_switcheroo.h>
-#ifndef LINUX_VGA_SWITCHEROO_H /* do not redefine once this gets upstream */
-#define LINUX_VGA_SWITCHEROO_H
-#endif /* case 1 LINUX_VGA_SWITCHEROO_H
-#endif /* case 2 LINUX_VGA_SWITCHEROO_H
-#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
+ net/mac80211/mesh_hwmp.c |   67 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 65 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 22b327a..c2811ec 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -330,6 +330,66 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	return;
+ }
+ 
++/* estimate link rate as a function of last rssi for sta */
++static unsigned int rssi_get_rate(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	enum ieee80211_band band = sta->local->oper_channel->band;
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.ht_cap;
++	struct rate_info rinfo;
++	int i, rssi, rate, rate_max, rate_min = 10, maxidx = 0;
++	const int rssi_min = -100;
++	const int rssi_max = -20;
++
++	if (sta->last_signal >= 0)
++		return rate_min;
++
++	memset(&rinfo, sizeof(rinfo), 0);
++
++	if (ht_cap->ht_supported) {
++		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
++			if (ht_cap->mcs.rx_mask[i])
++				maxidx = i*8 + fls(ht_cap->mcs.rx_mask[i]) - 1;
++		}
++		rinfo.flags |= RATE_INFO_FLAGS_MCS;
++		rinfo.flags |= (sta->sta.ht_cap.cap &
++				IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
++					RATE_INFO_FLAGS_40_MHZ_WIDTH :
++					0;
++		rinfo.flags |= (sta->sta.ht_cap.cap &
++				(IEEE80211_HT_CAP_SGI_20 |
++				 IEEE80211_HT_CAP_SGI_40)) ?
++						RATE_INFO_FLAGS_SHORT_GI :
++						0;
++		rinfo.mcs = maxidx;
++	} else {
++		struct ieee80211_supported_band *sband;
++
++		maxidx = fls(sta->sta.supp_rates[band]) - 1;
++		if (WARN_ON(maxidx < 0))
++			return rate_min;
++		sband = sta->local->hw.wiphy->bands[band];
++		rinfo.legacy = sband->bitrates[maxidx].bitrate;
++	}
++
++	rate_max = cfg80211_calculate_bitrate(&rinfo);
++
++	rssi = max(rssi_min, sta->last_signal);
++	rssi = min(rssi_max, rssi);
++
++	rate = ((rssi - rssi_min) * rate_max +
++		(rssi_max - rssi) * rate_min) /
++		(rssi_max - rssi_min);
++
++	if (WARN_ON(!rate))
++		rate = rate_min;
++
++	mhwmp_dbg("est. %d Mbps for %pM with rssi %d\n",
++		  rate/10, sta->sta.addr, sta->last_signal);
++
++	return rate;
++}
++
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
+ {
+@@ -345,8 +405,11 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
+ 
+-	/* If not enough values accumulated in rate average, assume 1 Mbps */
+-	rate = max(ewma_read(&sta->avg_rate), 10UL);
++	if (sta->tx_packets > 100)
++		rate = max(ewma_read(&sta->avg_rate), 10UL);
++	else
++		/* Not enough traffic sent, use rx signal strengh as proxy */
++		rate = rssi_get_rate(sta);
+ 
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
+-- 
+1.7.9.5
+
