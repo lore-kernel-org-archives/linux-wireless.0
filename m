@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45296 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852Ab2FTIqf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 04:46:35 -0400
-Message-ID: <1340181992.4655.39.camel@jlt3.sipsolutions.net> (sfid-20120620_104641_245308_85548D46)
-Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on
- op-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
-Date: Wed, 20 Jun 2012 10:46:32 +0200
-In-Reply-To: <1340181856.4655.37.camel@jlt3.sipsolutions.net> (sfid-20120620_104434_561430_DB0A480E)
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
-	 <1340111463-4554-3-git-send-email-victorg@ti.com>
-	 <1340181856.4655.37.camel@jlt3.sipsolutions.net>
-	 (sfid-20120620_104434_561430_DB0A480E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:44569 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752854Ab2FGOGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 10:06:31 -0400
+Message-ID: <4FD0B565.4090809@openwrt.org> (sfid-20120607_160635_192753_5946C7D6)
+Date: Thu, 07 Jun 2012 16:06:29 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] minstrel_ht: enable frame aggregation for fixed rate
+References: <1339077677-5836-1-git-send-email-sylvain.roger.rieunier@gmail.com>
+In-Reply-To: <1339077677-5836-1-git-send-email-sylvain.roger.rieunier@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 10:44 +0200, Johannes Berg wrote:
-> > +	if ((!chan->radar_detect_timeout ||
-> > +	     time_is_after_jiffies(chan->radar_detect_timeout)) &&
-> > +	    (chan->flags & IEEE80211_CHAN_RADAR))
-> > +		return -EPERM;
+On 2012-06-07 4:01 PM, Sylvain Roger Rieunier wrote:
+> Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+> ---
+>  net/mac80211/rc80211_minstrel_ht.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> Ok so you reject it if it's 0, but the jiffies calculation could return
-> 0 too.. in fact, since jiffies start at -5 minutes on boot, you might
-> even hit it if you start radar detection 4 minutes after boot.
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 2d1acc6..e2aa93e 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -626,8 +626,10 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+>  
+>  #ifdef CONFIG_MAC80211_DEBUGFS
+>  	/* use fixed index if set */
+> -	if (mp->fixed_rate_idx != -1)
+> -		sample_idx = mp->fixed_rate_idx;
+> +	if (mp->fixed_rate_idx != -1) {
+> +		mi->max_tp_rate = mp->fixed_rate_idx;
+> +		sample_idx = -1;
+> +	}
+>  #endif
+I just noticed another issue, you should prevent minstrel_ht from
+setting up the alternate retry chains if fixed rate is set, otherwise it
+won't always use the rate you configured.
 
-Also, it seems that the value should be reset eventually ... at least on
-interface down or so. Otherwise you can start CAC, then bring the
-interface down to stop the device, and then bring it back up (CAC check
-is no longer running) and then you can use the channel after some time
-even though you never really checked for radar...
-
-And if you start CAC on two different devices on the same channel, but
-they happen to share channel structs in the driver then this will all
-conflict quite badly.
-
-
-This needs a lot of more thinking it seems.
-
-johannes
-
+- Felix
