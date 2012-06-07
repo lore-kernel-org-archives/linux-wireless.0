@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50759 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756787Ab2FOSDz (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:44642 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751664Ab2FGEjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 14:03:55 -0400
-Date: Fri, 15 Jun 2012 23:35:09 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>, <c_manoha@qca.qualcomm.com>
-Subject: Re: [PATCH 8/9] ath9k_hw: fix setting lower noise immunity values
-Message-ID: <20120615180507.GD648@vmraj-lnx.qca.qualcomm.com> (sfid-20120615_200404_285225_AAF1B089)
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
- <1339766727-61926-2-git-send-email-nbd@openwrt.org>
- <1339766727-61926-3-git-send-email-nbd@openwrt.org>
- <1339766727-61926-4-git-send-email-nbd@openwrt.org>
- <1339766727-61926-5-git-send-email-nbd@openwrt.org>
- <1339766727-61926-6-git-send-email-nbd@openwrt.org>
- <1339766727-61926-7-git-send-email-nbd@openwrt.org>
- <1339766727-61926-8-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1339766727-61926-8-git-send-email-nbd@openwrt.org>
+	Thu, 7 Jun 2012 00:39:45 -0400
+Received: by dady13 with SMTP id y13so304475dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 21:39:44 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v2 0/4] Support proactive PREQ mechanism in Mesh
+Date: Thu,  7 Jun 2012 12:39:19 +0800
+Message-Id: <1339043963-2043-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120607_063952_558296_BF77498F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 15, 2012 at 03:25:26PM +0200, Felix Fietkau wrote:
-> Commit af1e8a6f "ath9k: reset noiseimmunity level to default" was supposed
-> to ensure that the default noise immunity level is above the INI
-> values, however it prevents setting lower noise immunity values altogether.
-> Fix this by moving the checks to the right function.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ani.c |   24 ++++++++++++------------
->  1 files changed, 12 insertions(+), 12 deletions(-)
->
-Thanks for the fix.
+These series of patches allow the support of proactive PREQ mechanism as defined in
+Sec. 13.10.4.2 of IEEE Std. 802.11-2012 based on the setting of dot11MeshHWMPRootMode
+as follow:
 
--Rajkumar
+dot11MeshHWMPRootMode (2): Proactive PREQ no PREP
+dot11MeshHWMPRootMode (3): Proactive PREQ with PREP
+
+Proactive RANN is now supported if the dot11MeshHWMPRootMode is set as (4).
+
+This v2 is modified according to Johannes's comments.
+
+Chun-Yeow Yeoh (4):
+  {nl,cfg,mac}80211: implement dot11MeshHWMProotInterval and
+    dot11MeshHWMPactivePathToRootTimeout
+  mac80211: implement the proactive PREQ generation
+  mac80211: implement the proactive PREP generation
+  mac80211: invoke the timer only with correct dot11MeshHWMPRootMode
+    value
+
+ include/linux/ieee80211.h     |   17 +++++++++++
+ include/linux/nl80211.h       |    9 ++++++
+ include/net/cfg80211.h        |    2 +
+ net/mac80211/cfg.c            |   12 ++++++-
+ net/mac80211/debugfs_netdev.c |    6 ++++
+ net/mac80211/mesh.c           |    9 ++++--
+ net/mac80211/mesh_hwmp.c      |   64 ++++++++++++++++++++++++++++++++++------
+ net/wireless/mesh.c           |    4 ++
+ net/wireless/nl80211.c        |   17 ++++++++++-
+ 9 files changed, 124 insertions(+), 16 deletions(-)
+
