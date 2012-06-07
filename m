@@ -1,73 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42257 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965353Ab2FAQPm (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56501 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755797Ab2FGKlp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 12:15:42 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 00/10] brcm80211: smac: rework regulatory support
-Date: Fri,  1 Jun 2012 11:15:26 -0500
-Message-Id: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com> (sfid-20120601_181547_277154_1EE6AF65)
+	Thu, 7 Jun 2012 06:41:45 -0400
+Received: by pbbrp8 with SMTP id rp8so897681pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 03:41:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20120607T121239-785@post.gmane.org>
+References: <loom.20120607T100950-564@post.gmane.org>
+	<CAJwzM1mTyOv6cUjTQ00-Q-5aW872kwyBPgnH9Pnk82fLZ+-J2w@mail.gmail.com>
+	<loom.20120607T121239-785@post.gmane.org>
+Date: Thu, 7 Jun 2012 16:11:44 +0530
+Message-ID: <CAJwzM1n2-K+J5ado9fUVBNuOumAfp0R0kwHj6jFSuOFJHap61Q@mail.gmail.com> (sfid-20120607_124148_858731_C396ADAA)
+Subject: Re: mwifiex:Testing AP functionality with hostapd
+From: Avinash Patil <avinashapatil@gmail.com>
+To: =?ISO-8859-1?Q?Hans_Kr=F6ner?= <hanskroner@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmsmac has its own internal regulatory implementation which attempts
-to enforce a Broadcom defined domain named X2. This code has no
-integration with mac80211 regulatory other than supplying regulatory
-hints, and thus each implementation operates independently of the other,
-enforcing conflicting sets of rules.
+Hi Hans,
 
-This series of patches converts brcmsmac to relying on the mac80211
-regulatory implementation. The X2 domain is registered with mac80211,
-and brcmsmac is converted to using the constraints from mac80211 for
-hardware configuration. Much code is removed in the process :)
+mwifiex AP functionality has been tested against following hostapd revision:
 
-There is one holdover from the old regulatory implementation. The MIMO
-tx power limits for brcmsmac are still being configured based on
-internal data for the X2 domain. Arend is trying to find out how these
-need to be handled, but this can be changed at a later time.
+http://hostap.epitest.fi/gitweb/gitweb.cgi?p=hostap.git;a=snapshot;h=5f32f79c6e071f02076e09931adc8fc4e0ecd383;sf=tgz
 
-Also worth noting is that support for the 5GHz DFS channels is removed
-since the driver doesn't currently support DFS or radar detection.
+Can you please test mwifiex AP setup against this hostapd revision and
+let me know result?
 
-Arend: This should have all the changes discussed on the RFC patch
-review, but let me know if I missed anything. There are two new patches,
-one to break out the removal of the 40MHz channel code into a separate
-patch and another to remove the DFS channels until something can be done
-about DFS or radar detection. I went ahead and added the Reviewed-by
-tags you supplied to the remainder, but pretty much all the patches
-after the first two have changed to varying degrees, so please have
-another look.
+Regards,
+Avinash
 
-Thanks,
-Seth
-
-
-Seth Forshee (10):
-  brcm80211: smac: don't set up tx power limits during initialization
-  brcm80211: smac: always set channel specified by mac80211
-  brcm80211: smac: remove unused code for 40MHz channels
-  brcm80211: smac: clean up channel.c
-  brcm80211: smac: remove DFS channels from 5GHz band
-  brcm80211: smac: inform mac80211 of the X2 regulatory domain
-  brcm80211: smac: enable/disable radio on regulatory updates
-  brcm80211: smac: use mac80211 channel data for tx power limits
-  brcm80211: smac: don't validate channels against internal regulatory
-    data
-  brcm80211: smac: use current regulatory domain when checking whether
-    OFDM is allowed
-
- drivers/net/wireless/brcm80211/brcmsmac/channel.c  | 1188 ++++----------------
- drivers/net/wireless/brcm80211/brcmsmac/channel.h  |    4 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   50 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   36 +-
- 4 files changed, 227 insertions(+), 1051 deletions(-)
-
+On Thu, Jun 7, 2012 at 3:53 PM, Hans Kröner <hanskroner@gmail.com> wrote:
+> Hi Avinash,
+>
+> Thanks for your reply!
+>
+> i)    Firmware version is reported as "mwifiex 1.0 (14.57.5.p69)"
+>
+> ii)   hostapd version is "v2.0-devel" I took it from git at
+>      git://w1.fi/srv/git/hostap.git and used the config in my previous post
+>      to build it. I'm at commit 5b3763336466f2c55611437cb924aeee45f7203e
+>
+> iii)  Output of hostapd "-ddd" is the same as my previous post, which used
+>      "-dd". Here it is:
+>
+>                random: Trying to read entropy from /dev/random
+>                Configuration file: hostapd-minimal.conf
+>                nl80211: interface uap0 in phy phy0
+>                rfkill: initial event: idx=0 type=2 op=0 soft=0 hard=0
+>                rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
+>                nl80211: Disable use_monitor with device_ap_sme since no monitor mode
+>                support detected
+>                nl80211: Add own interface ifindex 5
+>                nl80211: Set mode ifindex 5 iftype 3 (AP)
+>                nl80211: Setup AP - device_ap_sme=1 use_monitor=0
+>                nl80211: Subscribe to mgmt frames with AP handle 0x74608 (device SME)
+>                nl80211: Register frame type=0xd0 nl_handle=0x74608
+>                nl80211: Register frame match - hexdump(len=0): [NULL]
+>                nl80211: Register frame command failed (type=208): ret=-95 (Operation not
+>                supported)
+>                nl80211: Register frame match - hexdump(len=0): [NULL]
+>                nl80211: Failed to set interface uap0 into AP mode
+>                netlink: Operstate: linkmode=0, operstate=6
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Try mode change after setting interface down
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Set mode ifindex 5 iftype 2 (STATION)
+>                nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+>                nl80211: Interface mode change to 2 from 3 failed
+>                nl80211 driver initialization failed.
+>
+> Thanks for your help!!!
+>
+> Best Regards,
+>
+> Hans
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
