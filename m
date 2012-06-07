@@ -1,123 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:22835
-	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750842Ab2F2GRQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:17:16 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: VHT Cap IE
-Date: Fri, 29 Jun 2012 06:17:15 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D6345@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120629_081720_450830_3FECD806)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:46896 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952Ab2FGHQJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 03:16:09 -0400
+Message-ID: <1339053364.4517.0.camel@jlt3.sipsolutions.net> (sfid-20120607_091613_817277_CE2D2799)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Date: Thu, 07 Jun 2012 09:16:04 +0200
+In-Reply-To: <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com> (sfid-20120607_091004_706603_FD40A49F)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 (sfid-20120607_091004_706603_FD40A49F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VHT cap IE insertion in probeReq as part of 11ac changes.
+On Thu, 2012-06-07 at 09:10 +0200, Andre Heider wrote:
+> On Wed, Jun 6, 2012 at 10:35 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2012-06-06 at 21:10 +0200, Andre Heider wrote:
+> >> Hi,
+> >>
+> >> the wlan daughterboard on a nintendo wii stopped working with current master.
+> >> Building from the v3.4 tag gives me a working device.
+> >>
+> >> I bisected this to:
+> >>
+> >> commit 3a25a8c8b75b430c4f4022918e26fa51d557ecde
+> >> Author: Johannes Berg <johannes.berg@intel.com>
+> >>
+> >> The hw queues fail the check in ieee80211_check_queues(). When I hack
+> >> that function to always "return 0;" wlan works again.
+> >
+> > There's a fix for this on the way since Larry had also reported the bug,
+> > but I don't know where it is right now.
+> 
+> Okay, nice. Then I won't go hunting and just try the next -rc.
 
-Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/main.c        |    8 +++++++-
- net/mac80211/util.c        |   25 +++++++++++++++++++++++++
- 3 files changed, 34 insertions(+), 1 deletions(-)
+Found the commit now:
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f834a00..478ed48 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1481,6 +1481,8 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       struct ieee80211_channel *channel,
- 			       enum nl80211_channel_type channel_type,
- 			       u16 prot_mode);
-+u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-+							   u32 cap);
- 
- /* channel management */
- enum ieee80211_chan_mode {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0b040fb..06e6cc9 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -688,7 +688,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	int result, i;
- 	enum ieee80211_band band;
- 	int channels, max_bitrates;
--	bool supp_ht;
-+	bool supp_ht, supp_vht;
- 	netdev_features_t feature_whitelist;
- 	static const u32 cipher_suites[] = {
- 		/* keep WEP first, it may be removed below */
-@@ -733,6 +733,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	channels = 0;
- 	max_bitrates = 0;
- 	supp_ht = false;
-+	supp_vht = false;
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		struct ieee80211_supported_band *sband;
- 
-@@ -750,6 +751,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		if (max_bitrates < sband->n_bitrates)
- 			max_bitrates = sband->n_bitrates;
- 		supp_ht = supp_ht || sband->ht_cap.ht_supported;
-+		supp_vht = supp_vht || sband->vht_cap.vht_supported;
- 	}
- 
- 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
-@@ -825,6 +827,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (supp_ht)
- 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
- 
-+	if (supp_vht)
-+		local->scan_ies_len += 2 + 
-+			sizeof(struct ieee80211_vht_capabilities);
-+
- 	if (!local->ops->hw_scan) {
- 		/* For hw_scan, driver needs to set these up. */
- 		local->hw.wiphy->max_scan_ssids = 4;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 242ecde..94728de 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1072,6 +1072,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 		pos += noffset - offset;
- 	}
- 
-+	if (sband->vht_cap.vht_supported)
-+		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
-+										 sband->vht_cap.cap);
-+
- 	return pos - buffer;
- }
- 
-@@ -1699,6 +1703,27 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 	return pos;
- }
- 
-+u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-+							   u32 cap)
-+{
-+	__le32 tmp;
-+
-+	*pos++ = WLAN_EID_VHT_CAPABILITY;
-+	*pos++ = sizeof(struct ieee80211_vht_capabilities);
-+	memset(pos, 0, sizeof(struct ieee80211_vht_capabilities));
-+
-+	/* capability flags */
-+	tmp = cpu_to_le32(cap);
-+	memcpy(pos, &tmp, sizeof(u32));
-+	pos += sizeof(u32);
-+
-+	/* VHT MCS set */
-+	memcpy(pos, &vht_cap->vht_mcs, sizeof(vht_cap->vht_mcs));
-+	pos += sizeof(vht_cap->vht_mcs);
-+
-+	return pos;
-+}
-+
- u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       struct ieee80211_channel *channel,
- 			       enum nl80211_channel_type channel_type,
+commit a9d3c05cca51d80ef2b9eddabf794c9458e36c2c
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Mon May 7 17:45:29 2012 +0200
+
+    mac80211: fix single queue drivers
+
+
+johannes
+
