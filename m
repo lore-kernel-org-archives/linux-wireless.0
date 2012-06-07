@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:63388 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932738Ab2F1KCB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61468 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754870Ab2FGHhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 06:02:01 -0400
-Received: by dady13 with SMTP id y13so2661889dad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 03:02:00 -0700 (PDT)
+	Thu, 7 Jun 2012 03:37:19 -0400
+Message-ID: <4FD05A27.80102@qca.qualcomm.com> (sfid-20120607_093723_811304_CA07EF34)
+Date: Thu, 7 Jun 2012 13:07:11 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1340875996.4491.29.camel@jlt3.sipsolutions.net>
-References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
- <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
- <1340707305.14634.9.camel@jlt3.sipsolutions.net> <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
- <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com>
- <1340795869.11012.12.camel@jlt3.sipsolutions.net> <CA+XVXfcNpj_UqCOXUG7sr2MQH8qZNHYr7MfBz5J3vwC3f+KU6Q@mail.gmail.com>
- <1340807890.11012.43.camel@jlt3.sipsolutions.net> <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com>
- <1340810735.11012.44.camel@jlt3.sipsolutions.net> <CA+XVXffKSEL6ZQPQ98x-zO-NL2=TNF1uN==mprRyUmAaRn254g@mail.gmail.com>
- <1340875996.4491.29.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 28 Jun 2012 13:01:45 +0300
-Message-ID: <CA+XVXfc9F9-FMZyBytDT-5D4KxSFfTSwbhFd2g3oxdLPNFWWxg@mail.gmail.com> (sfid-20120628_120209_201034_5B199F3C)
-Subject: Re: mac80211 auth/assoc in multi-channel scenarios
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joe Perches <joe@perches.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
+References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com> <1339053852.6009.13.camel@joe2Laptop>
+In-Reply-To: <1339053852.6009.13.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 28, 2012 at 12:33 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-06-27 at 20:05 +0300, Arik Nemtsov wrote:
->
->> > Yeah, that was one of the other options I considered in my original
->> > email ... but this call must be able to sleep, and the TX processing in
->> > mac80211 cannot sleep, so unless we bypass all processing (which seems
->> > wrong) that would be rather difficult to implement.
+Hi Joe,
+
+>>>
+>>> I think there's one use of wiphy_dbg that could be a
+>>> mac80211_ht_dbg without much loss.
+>>>
+>>> Maybe add "%s", wiphy_name() to the args there.
+>>>
 >>
->> Good point. But another race to consider the the
->> multi-channel/multi-vif scenario, where the driver already has a lot
->> of packets queued up, so the time will expire before we get a chance
->> to Tx. Again this is not a problem in practice (since it's the VO ac).
+>> sorry, i could not understand with wiphy_debug, with mac80211_ht_debug.
+>> the later is for HT and aggregation related messages.
 >
-> If the vif is on a different channel, the driver really should assign it
-> different queues and then there shouldn't be much queued up, right?
-> Also, if you really have >100ms latency on your queues, you have a major
-> problem anyway I'd think?
-
-Yea. It's all only theoretical :)
-
+> It was an automatic conversion.
 >
->> How about somehow requiring a multi channel driver to give always
->> Tx-ack? That will mean we can abandon the retry timers, and rely on
->> the driver to give an answer within a reasonable time.
+> Might as well unconvert it back too.
 >
-> That doesn't mean we can abandon the retry timers though? Then again,
-> maybe it does, we could start the timer only when we get the status
-> information I guess?
-
-I'm not really sure why the assoc timers are there now. If it's
-because we want to be sure we gave the peer a chance to respond, well
-the Tx-ack already gives us that. Waiting any longer won't help.
-Or does waiting in general before the next Tx help with something?
-(clear temporary congestion etc).
-
+> $ git grep -E -A4 -n "ifdef CONFIG_MAC80211_HT_DEBUG" net/mac80211/rx.c
+> net/mac80211/rx.c:635:#ifdef CONFIG_MAC80211_HT_DEBUG
+> net/mac80211/rx.c-636-                  if (net_ratelimit())
+> net/mac80211/rx.c-637-                          wiphy_debug(hw->wiphy,
+> net/mac80211/rx.c-638-                                      "release an RX reorder frame due to timeout on earlier frames\n");
+> net/mac80211/rx.c-639-#endif
 >
-> I'm not sure I'd want to *require* this, but it sounds like a good thing
-> we could do to address this possible race for drivers that do support
-> reliable status reports?
+> $ git blame -L635,+4 net/mac80211/rx.c
+> aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 635) #ifdef CONFIG_MAC80211_HT_DEBUG
+> aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 636)                    if (net_ratelimit())
+> 0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 637)                            wiphy_debug(hw->wiphy,
+> 0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 638)                                        "release an RX reorder fram
+>
+> $ git log -1 0fb9a9ec
+> commit 0fb9a9ec27718fbf7fa3153bc94becefb716ceeb
+> Author: Joe Perches<joe@perches.com>
+> Date:   Fri Aug 20 16:25:38 2010 -0700
+>
+>      net/mac80211: Use wiphy_<level>
+>
+>      Standardize logging messages from
+>          printk(KERN_<level>  "%s: " fmt , wiphy_name(foo), args);
+>      to
+>          wiphy_<level>(foo, fmt, args);
+>
+>      Signed-off-by: Joe Perches<joe@perches.com>
+>      Signed-off-by: John W. Linville<linville@tuxdriver.com>
+>
+>
 
-Yea. And then, if all current multi-channel drivers support Tx-ack, we
-can skip implemeting tx_sync.
+thanks(and brilliant!), in that rx.c we can convert it to 
+mac80211_ht_debug. what about the other wiphy_debug messages, we would 
+still retain them know
+
+-- 
+thanks,
+shafi
