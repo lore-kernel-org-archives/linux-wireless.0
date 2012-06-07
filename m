@@ -1,84 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41313 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756627Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 09:25:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com
-Subject: [PATCH 1/9] ath9k_hw: remove aniState->noiseFloor
-Date: Fri, 15 Jun 2012 15:25:19 +0200
-Message-Id: <1339766727-61926-1-git-send-email-nbd@openwrt.org> (sfid-20120615_152551_509602_74F6FE74)
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:49381 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755783Ab2FGLFF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 07:05:05 -0400
+Received: by ghrr11 with SMTP id r11so260970ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 04:05:04 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 7 Jun 2012 17:05:04 +0600
+Message-ID: <CADxDmp6=ZMFkqasyt0QV_mALhTZU-V-3M2PY2Mdy573_T0nNLw@mail.gmail.com> (sfid-20120607_130508_757101_A34EE037)
+Subject: fix # of MPDUs is in an A-MPDU
+From: Kamran Nishat <kamran.nishat@gmail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't know why somebody decided to keep a cached copy of beacon rssi in a
-variable called 'noiseFloor', but the caching is unnecessary and the variable
-name is confusing, so let's just get rid of it entirely.
+Hi ,
+Do u know can we limit # of MPDUs is in a A-MPDU. We want to do some
+controled experiments. Making A-MPDUs of
+constant size will help in great deal.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ani.c |   11 ++++-------
- drivers/net/wireless/ath/ath9k/ani.h |    1 -
- 2 files changed, 4 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index b4c77f9..18ce69d 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -266,11 +266,9 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
- 	const struct ani_ofdm_level_entry *entry_ofdm;
- 	const struct ani_cck_level_entry *entry_cck;
- 
--	aniState->noiseFloor = BEACON_RSSI(ah);
--
- 	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
- 		aniState->ofdmNoiseImmunityLevel,
--		immunityLevel, aniState->noiseFloor,
-+		immunityLevel, BEACON_RSSI(ah),
- 		aniState->rssiThrLow, aniState->rssiThrHigh);
- 
- 	if (aniState->update_ani)
-@@ -292,7 +290,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
- 				     ATH9K_ANI_FIRSTEP_LEVEL,
- 				     entry_ofdm->fir_step_level);
- 
--	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
-+	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
- 	    (!aniState->ofdmWeakSigDetectOff !=
- 	     entry_ofdm->ofdm_weak_signal_on)) {
- 			ath9k_hw_ani_control(ah,
-@@ -329,15 +327,14 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
- 	const struct ani_ofdm_level_entry *entry_ofdm;
- 	const struct ani_cck_level_entry *entry_cck;
- 
--	aniState->noiseFloor = BEACON_RSSI(ah);
- 	ath_dbg(common, ANI, "**** ccklevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
- 		aniState->cckNoiseImmunityLevel, immunityLevel,
--		aniState->noiseFloor, aniState->rssiThrLow,
-+		BEACON_RSSI(ah), aniState->rssiThrLow,
- 		aniState->rssiThrHigh);
- 
- 	if ((ah->opmode == NL80211_IFTYPE_STATION ||
- 	     ah->opmode == NL80211_IFTYPE_ADHOC) &&
--	    aniState->noiseFloor <= aniState->rssiThrLow &&
-+	    BEACON_RSSI(ah) <= aniState->rssiThrLow &&
- 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
- 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 72e2b87..c04d167 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -128,7 +128,6 @@ struct ar5416AniState {
- 	u32 listenTime;
- 	int32_t rssiThrLow;
- 	int32_t rssiThrHigh;
--	u32 noiseFloor;
- 	u32 ofdmPhyErrCount;
- 	u32 cckPhyErrCount;
- 	int16_t pktRssi[2];
--- 
-1.7.3.2
-
+Kamran
