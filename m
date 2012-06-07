@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40140 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064Ab2FFIsn (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42759 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754129Ab2FGTbW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:48:43 -0400
-Message-ID: <1338972522.4513.21.camel@jlt3.sipsolutions.net> (sfid-20120606_104846_580441_3864AC39)
-Subject: Re: [PATCH] mac80211: clear ifmgd->bssid only after building DELBA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
+	Thu, 7 Jun 2012 15:31:22 -0400
+Received: by dady13 with SMTP id y13so1303518dad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 12:31:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201206071518.21171.chunkeey@googlemail.com>
+References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
+	<201206071518.21171.chunkeey@googlemail.com>
+Date: Thu, 7 Jun 2012 13:31:21 -0600
+Message-ID: <CAFR4AqZvhnB3kD_t+817zvEiw16QvNsvMgTwbFxAiogYcSCXEg@mail.gmail.com> (sfid-20120607_213138_842806_EEA16E38)
+Subject: Re: carl9170 issue
+From: Sean Patrick Santos <quantheory@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Jun 2012 10:48:42 +0200
-In-Reply-To: <CAB3XZEfTLN65kVDbfL58t7PaAhMGbnN++DgjwbSELg3NmiGqFg@mail.gmail.com> (sfid-20120601_104035_157923_97B2E5DE)
-References: <1338538443-23172-1-git-send-email-eliad@wizery.com>
-	 <1338538911.4884.10.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEfTLN65kVDbfL58t7PaAhMGbnN++DgjwbSELg3NmiGqFg@mail.gmail.com>
-	 (sfid-20120601_104035_157923_97B2E5DE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-01 at 11:40 +0300, Eliad Peller wrote:
-> On Fri, Jun 1, 2012 at 11:21 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Fri, 2012-06-01 at 11:14 +0300, Eliad Peller wrote:
-> >> ieee80211_set_disassoc() clears ifmgd->bssid before
-> >> building DELBA frames, resulting in frames with invalid
-> >> bssid ("00:00:00:00:00:00").
-> >>
-> >> Fix it by clearing ifmgd->bssid only after building
-> >> all the needed frames.
-> >>
-> >> After this change, we no longer need to save the
-> >> bssid (before clearing it), so remove the local array.
-> >
-> > I'm not convinced clearing the BSSID this late is correct, there's a lot
-> > of code using it, for example comparing it on RX, that we may not want
-> > to have it at this point any more.
-> >
-> > It may well be that this is no longer a concern, but I wouldn't dismiss
-> > it right away.
-> >
-> i can't really spot any significant difference between these 2 locations.
-> i only deferred it latter in the same function (after stopping the
-> queues, setting carrier off, and sending DELBA + deauth). do you see
-> anything that might go wrong?
+Thanks for the quick response, Christian,
 
-I took another look, and I guess I don't see anything now either. Let's
-try this patch :-)
+>> Plus, I'm somewhat stuck with the situation,
+>> since I don't have much control over how things are arranged in this
+>> space, and because the other adapter I have on hand is even worse off,
+>> both in terms of hardware and drivers.
+> Fair enough. But what's the other adapter?
 
-One side effect from clearing the BSSID early was also that we sometimes
-(if there was pending traffic while disassociating) got the message
-"dropped from to unauthorized port 00:00:00:00:00:00" or so ... so that
-should go away too.
+It's a Belkin N150 (http://www.wikidevi.com/wiki/Belkin_F9L1001),
+which didn't seem to work for more that 30 seconds at a time, and had
+low throughput even then. The driver may have improved, or be easier
+to fix, since the last time I tried it, but the actual antenna on the
+device is not suitable for this environment and so I haven't been
+motivated to make it work. The "official" driver on Windows gave
+halfway serviceable performance, emphasis firmly on the "halfway". I
+may get around to re-testing/troubleshooting it if I want to use it
+elsewhere or if I'm bored some time, but that's really a different
+question.
 
-johannes
+> Your problems sound somewhat familiar to
+> "Re: carl9170 driver - network connection breaks"
+> <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/88223>
+>
+> So far no-one has been able to bisect the bug (last good was 3.1, so
+> to breakage must have occurred between 3.1 and 3.2). I would have
+> looked into it long ago, but I can't reproduce.
 
+I may see if I can bisect it, since evidently I can reproduce the bug
+quite easily. At the least I can find out if this really is the same
+problem and not present in kernel 3.1. I'll let you know if I find
+anything interesting.
+
+> PS: If your kernel was compiled with CONFIG_MAC80211_DEBUGFS you can
+> "restart" BA/aggregation sessions by
+> echo "tx stop 0" > /sys/kernel/debug/ieee80211/phyX/netdev:wlanXY/stations/AP-MAC/agg_status
+> echo "rx stop 0" > /sys/kernel/debug/ieee80211/phyX/netdev:wlanXY/stations/AP-MAC/agg_status
+> alternatively: you can disable ht by loading the module with 'noht=1' parameter
+
+Thanks for the suggestion; I'll try this. I should note that, although
+I can't change the physical locations of anything here (at least for
+another month or two), I do manage both the machine and the wireless
+router.
