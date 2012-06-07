@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47604 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756078Ab2FVLeG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 07:34:06 -0400
-Date: Fri, 22 Jun 2012 17:05:22 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sven Eckelmann <sven@narfation.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [RFC] ath9k: raise aggregation limit to 64k for HT IBSS
-Message-ID: <20120622113520.GA10283@vmraj-lnx.users.atheros.com> (sfid-20120622_133410_464367_852F72FE)
-References: <1340355904-861-1-git-send-email-sven@narfation.org>
- <20120622105214.GC7934@vmraj-lnx.users.atheros.com>
- <20010825.m5IpWLuaVf@bentobox>
+Received: from mms3.broadcom.com ([216.31.210.19]:4181 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760090Ab2FGTeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 15:34:36 -0400
+Message-ID: <4FD1023D.4040604@broadcom.com> (sfid-20120607_213440_503845_73942474)
+Date: Thu, 7 Jun 2012 21:34:21 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20010825.m5IpWLuaVf@bentobox>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 13/18] brcmsmac: add some workarounds for other
+ chips again
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+ <1338937641-8519-14-git-send-email-hauke@hauke-m.de>
+ <4FCF2AF1.8020200@broadcom.com> <4FD0B062.1080606@hauke-m.de>
+In-Reply-To: <4FD0B062.1080606@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 22, 2012 at 01:10:24PM +0200, Sven Eckelmann wrote:
-> On Friday 22 June 2012 16:22:16 Rajkumar Manoharan wrote:
-> > > +	/* update ampdu factor/density, they may have changed. This may happen
-> > > +	 * in HT IBSS when a beacon with HT-info is received after the station
-> > > +	 * has already been added.
-> > > +	 */
-> > > +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
-> > > +		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-> > > +				     sta->ht_cap.ampdu_factor);
-> > > +		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
-> > > +		an->mpdudensity = density;
-> > > +	}
-> > > +
-> > 
-> > No need to declare local variable. ins't it?
-> 
-> You want more than 80 chars per line or ugly/complex code...?
->
-Never mind. keep the local variable.
+On 06/07/2012 03:45 PM, Hauke Mehrtens wrote:
+> On 06/06/2012 12:03 PM, Arend van Spriel wrote:
+>> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+>>> This adds some workarounds for the BCM4716, BCM47162, BCM43421, BCM5357
+>>> and BCM6362 to the phy code again. This patch reverts the following
+>>
+>> Has brcmsmac been tested for all these chips? At this moment I do not
+>> have any bandwidth to do that. I am not too comfortable adding this code
+>> without having some testing coverage. It was the reason to remove the
+>> snippets from brcmsmac.
+> I have just tested BCM4716 and BCM5357, BCM5357 is not working. ;-)
+> I do not have all the devices to test this and for the BCM6362 some
+> infrastructure code is still missing.
+> The adding of the BCM5357 is part of my start adding support for that
+> chip, which is not complete. As the device detection code in brcmsmac
+> is not changed in this commit, no more devices are detected by brcmsmac
+> now. I talked to Jonas Gorski about the BCM6362 and he thinks about
+> adding support for that device to the Linux kernel in some time.
 
--Rajkumar
+Yes. Jonas tested brcmsmac on bcm6362 host during our mainlining days.
+
+> I could reduce the code into adding support for the BCM4716 and BCM5357
+> if that is fine with you and if someone else wants to add support for
+> some other chip in the future he has to add the code again.
+
+I prefer that over adding the code untested even if it is not yet active
+code so please do.
+
+>>
+>>> patch expect the part with the workaround for the BCM43236, which is an
+>>> usb chip and will be unsupported by brcmsmac.
+>>
+>> 'expect' should be 'except'. Indeed, BCM43236 is a fullmac usb chip and
+>> as such supported by brcmfmac.
+> Yes that's the reason I removed it here because this will never be
+> supported by this code.
+
+Agree.
+
+Gr. AvS
+
