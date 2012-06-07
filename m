@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:52927 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756269Ab2F0JHc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 05:07:32 -0400
-Received: by lbbgm6 with SMTP id gm6so1343902lbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 02:07:28 -0700 (PDT)
-Message-ID: <1340788046.1631.588.camel@cumari.coelho.fi> (sfid-20120627_110739_700327_CAC75DD6)
-Subject: Re: [PATCH 0/5] wlcore/wl18xx: fixes and HW deprecation
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com
-Date: Wed, 27 Jun 2012 12:07:26 +0300
-In-Reply-To: <1340740980-22284-1-git-send-email-coelho@ti.com>
-References: <1340740980-22284-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3009 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754762Ab2FGTVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 15:21:48 -0400
+Message-ID: <4FD0FF3D.2060805@broadcom.com> (sfid-20120607_212151_357780_B4DF5565)
+Date: Thu, 7 Jun 2012 21:21:33 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+ <1338937641-8519-15-git-send-email-hauke@hauke-m.de>
+ <4FCF2FD4.6010103@broadcom.com> <4FD0AD96.1050500@hauke-m.de>
+In-Reply-To: <4FD0AD96.1050500@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-26 at 23:02 +0300, Luciano Coelho wrote:
-> Hi,
+On 06/07/2012 03:33 PM, Hauke Mehrtens wrote:
+> On 06/06/2012 12:24 PM, Arend van Spriel wrote:
+>> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+>>> The xmtfifo_sz array contains the queue sizes for the different chip
+>>> revs. This array missed the sizes for the core rev 17 and 28. This
+>>
+>> Should probably use core revs instead of chip revs and I think we are
+>> talking about the 80211 core rev here.
+> Yes I will change this comment.
 > 
-> Here are a few more patches for wlcore and wl18xx.  Three patches by
-> Eyal to fix a couple of bugs we found in the IO changes patchset and
-> improve the recovery traces.
-> 
-> Also two patches of my own that deprecate an old HW version of the
-> wl18xx chips (a sample PG1).  The reason to deprecate this is that
-> these chips will never be used outside TI and removing support for it
-> avoids some blunt caused by workarounds and other things that were
-> fixed in the hardware (PG2).
-> 
-> Please review.
+> Are there any devices with the same phy type using different fifo sizes?
+> If this is not the case I think it is better to do this based on the phy
+> type.
 
-Applied and pushed the series.
+I dived into this and basically there is no correlation to the phy type.
+There are chips with same 80211 core rev and different phy type as there
+are chips with different 80211 core rev and the same phy type.
 
---
-Luca.
+Gr. AvS
+
 
