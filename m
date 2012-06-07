@@ -1,84 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18231 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab2FGGHp (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:64564 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932139Ab2FGS3u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 02:07:45 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Joe Perches <joe@perches.com>
-Subject: [PATCH] mac80211: ratelimit few aggregated messages
-Date: Thu, 7 Jun 2012 11:32:23 +0530
-Message-ID: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120607_080823_079325_EFB6B4DD)
+	Thu, 7 Jun 2012 14:29:50 -0400
+Received: by yhmm54 with SMTP id m54so672704yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 11:29:49 -0700 (PDT)
+Message-ID: <4FD0F319.3060306@lwfinger.net> (sfid-20120607_202953_423196_9DC3E2C7)
+Date: Thu, 07 Jun 2012 13:29:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
+CC: Andre Heider <a.heider@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i]
+ >= n_queues))
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com> <1339014959.4523.0.camel@jlt3.sipsolutions.net> <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com> <1339053364.4517.0.camel@jlt3.sipsolutions.net> <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com> <20120607180325.7752b3c0@milhouse> <4FD0E3F3.2060900@lwfinger.net> <20120607193027.05389791@milhouse>
+In-Reply-To: <20120607193027.05389791@milhouse>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 06/07/2012 12:30 PM, Michael Büsch wrote:
+> On Thu, 07 Jun 2012 12:25:07 -0500
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+>> I do not understand what is different about your system than mine.
+>
+> I think the difference is that he runs opensource firmware, for which the queuenumber
+> patching comes into effect. You should be able to reproduce even with standard
+> firmware by disabling QOS with the module parameter.
 
-ratelimit few aggregation related messages, these messages
-floods the log when aggregation is disabled in the AP(for some
-wifi testcases) and we run traffic between STA and AP.
-mac80211 gives up after 15 addba requests, but
-ieee80211_start_tx_ba_session will be repeatedly called
-by drivers rate control tx_status callback. These net_dbg_ratelimited
-messages will be visible only when dynamic debug is enabled for
-mac80211 module.
+Loading b43 with the qos=0 option works, but using the open-source firmware does 
+fail.
 
-Cc: Joe Perches <joe@perches.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/agg-tx.c |   18 +++++++++++++-----
- 1 files changed, 13 insertions(+), 5 deletions(-)
+Larry
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index da07f01..c2dc766 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -449,8 +449,11 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 	    (local->hw.flags & IEEE80211_HW_TX_AMPDU_SETUP_IN_HW))
- 		return -EINVAL;
- 
--	ht_vdbg("Open BA session requested for %pM tid %u\n",
--		pubsta->addr, tid);
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	net_dbg_ratelimited("Open BA session requested for %pM tid %u\n",
-+			    pubsta->addr, tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
- 	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
-@@ -485,8 +488,11 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 
- 	spin_lock_bh(&sta->lock);
- 
--	/* we have tried too many times, receiver does not want A-MPDU */
- 	if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_MAX_RETRIES) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		net_dbg_ratelimited("receiver does not wants A-MPDU, maximum addba requests tried for tid %u\n",
-+				    tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
- 		ret = -EBUSY;
- 		goto err_unlock_sta;
- 	}
-@@ -499,8 +505,10 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 	if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_BURST_RETRIES &&
- 	    time_before(jiffies, sta->ampdu_mlme.last_addba_req_time[tid] +
- 			HT_AGG_RETRIES_PERIOD)) {
--		ht_vdbg("BA request denied - waiting a grace period after %d failed requests on tid %u\n",
--			sta->ampdu_mlme.addba_req_num[tid], tid);
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		net_dbg_ratelimited("BA request denied - waiting a grace period after %d failed requests on tid %u\n",
-+				    sta->ampdu_mlme.addba_req_num[tid], tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
- 		ret = -EBUSY;
- 		goto err_unlock_sta;
- 	}
--- 
-1.7.0.4
+
 
