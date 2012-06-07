@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:40389 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756310Ab2F0UxS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35922 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845Ab2FGHLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 16:53:18 -0400
-Message-ID: <43a66e0f20b45e9cc461272e83f2c4e4.squirrel@www.infidigm.net> (sfid-20120627_225322_729703_48DA7344)
-Date: Wed, 27 Jun 2012 17:28:55 -0400
-Subject: ar6004 / ar9374 firmware
-From: drwho@infidigm.net
-To: "Kalle Valo" <kvalo@qca.qualcomm.com>
-Cc: "Julian Calaby" <julian.calaby@gmail.com>,
-	"Sujith Manoharan" <c_manoha@qca.qualcomm.com>,
-	"Mohammed Shafi" <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org
+	Thu, 7 Jun 2012 03:11:14 -0400
+Message-ID: <4FD0540C.5060808@qca.qualcomm.com> (sfid-20120607_091117_439723_853C75F9)
+Date: Thu, 7 Jun 2012 12:41:08 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Joe Perches <joe@perches.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
+References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com> <1339050308.6009.9.camel@joe2Laptop>
+In-Reply-To: <1339050308.6009.9.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle,
+Hi Joe,
 
-I've noticed in core.h in the ath6kl driver that it is defining the
-following firmware for the ar6004....
+On Thursday 07 June 2012 11:55 AM, Joe Perches wrote:
+> On Thu, 2012-06-07 at 11:32 +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> ratelimit few aggregation related messages, these messages
+>> floods the log when aggregation is disabled in the AP(for some
+>> wifi testcases) and we run traffic between STA and AP.
+>
+> I looked at all of the #ifdef CONFIG_MAC80211_HT_DEBUG uses.
+>
+> I think it's better simply to define a mac80211_ht_dbg
+> macro for each of the !CONFIG and CONFIG cases and convert
+> all of the other #ifdef CONFIG_MAC80211_HT_DEBUG logging
+> messages.
 
-ath6k/AR6004/hw1.0/fw.ram.bin
-ath6k/AR6004/hw1.1/fw.ram.bin
-ath6k/AR6004/hw1.2/fw.ram.bin
+oh, ok.
 
-In linux-firmware.git all that exists is...
+>
+> #ifdef CONFIG_MAC80211_HT_DEBUG
+> #define mac80211_ht_dbg(fmt, ...)				\
+> 	net_dbg_ratelimited(fmt, ##__VA_ARGS__)
+> #else
+> #define mac80211_ht_dbg(fmt, ...)				\
+> do {								\
+> 	if (0)							\
+> 		net_dbg_ratelimited(fmt, ##__VA_ARGS__);	\
+> } while (0)
+>
+> etc...
+>
+> I think there's one use of wiphy_dbg that could be a
+> mac80211_ht_dbg without much loss.
+>
+> Maybe add "%s", wiphy_name() to the args there.
+>
 
-ath6k/AR6004/hw1.2/fw-2.bin
-ath6k/AR6004/hw1.2/bdata.bin
+sorry, i could not understand with wiphy_debug, with mac80211_ht_debug. 
+the later is for HT and aggregation related messages.
 
-fw-2.bin need a rename?
-
-Also, my UB134 is coming up with a device ID of 0x31c8088a?
-
-[  361.676440] ath6kl: Unsupported hardware version: 0x31c8088a
-[  361.680437] ath6kl: Failed to init ath6kl core: -22
-[  361.680491] ath6kl_usb: probe of 2-1:1.0 failed with error -22
-[  361.680520] usbcore: registered new interface driver ath6kl_usb
-
-Jon
-
-> That's right, AR9374 is basically AR6004 with USB. Don't ask me why :)
-Latest ath6kl should support is. I can't remember what kernel version
-has the full support, but I'm pretty sure 3.3 didn't support it yet. But
-I should update ath6kl documentation to mention this, thanks for
-pointing this out.
-> Kalle
-
-
-
-
+-- 
+thanks,
+shafi
