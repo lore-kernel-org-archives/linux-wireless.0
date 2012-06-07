@@ -1,130 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48646 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932862Ab2FVNOs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18231 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542Ab2FGGHp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 09:14:48 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/6] mac80211: remove TKIP debug
-Date: Fri, 22 Jun 2012 15:14:37 +0200
-Message-Id: <1340370882-9258-2-git-send-email-johannes@sipsolutions.net> (sfid-20120622_151453_623505_AC4057A2)
-In-Reply-To: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
-References: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 7 Jun 2012 02:07:45 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Joe Perches <joe@perches.com>
+Subject: [PATCH] mac80211: ratelimit few aggregated messages
+Date: Thu, 7 Jun 2012 11:32:23 +0530
+Message-ID: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120607_080823_079325_EFB6B4DD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-The TKIP code hasn't been changed in a very long
-time, so it seems unlikely that anyone really has
-a need for the TKIP debug code. Remove it.
+ratelimit few aggregation related messages, these messages
+floods the log when aggregation is disabled in the AP(for some
+wifi testcases) and we run traffic between STA and AP.
+mac80211 gives up after 15 addba requests, but
+ieee80211_start_tx_ba_session will be repeatedly called
+by drivers rate control tx_status callback. These net_dbg_ratelimited
+messages will be visible only when dynamic debug is enabled for
+mac80211 module.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Joe Perches <joe@perches.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- net/mac80211/Kconfig |   11 -----------
- net/mac80211/tkip.c  |   43 +------------------------------------------
- 2 files changed, 1 insertion(+), 53 deletions(-)
+ net/mac80211/agg-tx.c |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 8d249d7..323aa19 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -152,17 +152,6 @@ config MAC80211_HT_DEBUG
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index da07f01..c2dc766 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -449,8 +449,11 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	    (local->hw.flags & IEEE80211_HW_TX_AMPDU_SETUP_IN_HW))
+ 		return -EINVAL;
  
- 	  Do not select this option.
+-	ht_vdbg("Open BA session requested for %pM tid %u\n",
+-		pubsta->addr, tid);
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	net_dbg_ratelimited("Open BA session requested for %pM tid %u\n",
++			    pubsta->addr, tid);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
++
  
--config MAC80211_TKIP_DEBUG
--	bool "Verbose TKIP debugging"
--	depends on MAC80211_DEBUG_MENU
--	---help---
--	  Selecting this option causes mac80211 to print out
--	  very verbose TKIP debugging messages. It should not
--	  be selected on production systems as those messages
--	  are remotely triggerable.
--
--	  Do not select this option.
--
- config MAC80211_IBSS_DEBUG
- 	bool "Verbose IBSS debugging"
- 	depends on MAC80211_DEBUG_MENU
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 68be47c..57e14d5 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -260,16 +260,6 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
- 	keyid = pos[3];
- 	iv32 = get_unaligned_le32(pos + 4);
- 	pos += 8;
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--	{
--		int i;
--		pr_debug("TKIP decrypt: data(len=%zd)", payload_len);
--		for (i = 0; i < payload_len; i++)
--			printk(" %02x", payload[i]);
--		printk("\n");
--		pr_debug("TKIP decrypt: iv16=%04x iv32=%08x\n", iv16, iv32);
--	}
--#endif
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
+@@ -485,8 +488,11 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
  
- 	if (!(keyid & (1 << 5)))
- 		return TKIP_DECRYPT_NO_EXT_IV;
-@@ -280,15 +270,8 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
- 	if (key->u.tkip.rx[queue].state != TKIP_STATE_NOT_INIT &&
- 	    (iv32 < key->u.tkip.rx[queue].iv32 ||
- 	     (iv32 == key->u.tkip.rx[queue].iv32 &&
--	      iv16 <= key->u.tkip.rx[queue].iv16))) {
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--		pr_debug("TKIP replay detected for RX frame from %pM (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
--			 ta, iv32, iv16,
--			 key->u.tkip.rx[queue].iv32,
--			 key->u.tkip.rx[queue].iv16);
--#endif
-+	      iv16 <= key->u.tkip.rx[queue].iv16)))
- 		return TKIP_DECRYPT_REPLAY;
--	}
+ 	spin_lock_bh(&sta->lock);
  
- 	if (only_iv) {
- 		res = TKIP_DECRYPT_OK;
-@@ -300,21 +283,6 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
- 	    key->u.tkip.rx[queue].iv32 != iv32) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--		{
--			int i;
--			u8 key_offset = NL80211_TKIP_DATA_OFFSET_ENCR_KEY;
--			pr_debug("TKIP decrypt: Phase1 TA=%pM TK=", ta);
--			for (i = 0; i < 16; i++)
--				printk("%02x ",
--				       key->conf.key[key_offset + i]);
--			printk("\n");
--			pr_debug("TKIP decrypt: P1K=");
--			for (i = 0; i < 5; i++)
--				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
--			printk("\n");
--		}
--#endif
+-	/* we have tried too many times, receiver does not want A-MPDU */
+ 	if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_MAX_RETRIES) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		net_dbg_ratelimited("receiver does not wants A-MPDU, maximum addba requests tried for tid %u\n",
++				    tid);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
+ 		ret = -EBUSY;
+ 		goto err_unlock_sta;
  	}
- 	if (key->local->ops->update_tkip_key &&
- 	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-@@ -330,15 +298,6 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
+@@ -499,8 +505,10 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_BURST_RETRIES &&
+ 	    time_before(jiffies, sta->ampdu_mlme.last_addba_req_time[tid] +
+ 			HT_AGG_RETRIES_PERIOD)) {
+-		ht_vdbg("BA request denied - waiting a grace period after %d failed requests on tid %u\n",
+-			sta->ampdu_mlme.addba_req_num[tid], tid);
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		net_dbg_ratelimited("BA request denied - waiting a grace period after %d failed requests on tid %u\n",
++				    sta->ampdu_mlme.addba_req_num[tid], tid);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
+ 		ret = -EBUSY;
+ 		goto err_unlock_sta;
  	}
- 
- 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--	{
--		int i;
--		pr_debug("TKIP decrypt: Phase2 rc4key=");
--		for (i = 0; i < 16; i++)
--			printk("%02x ", rc4key[i]);
--		printk("\n");
--	}
--#endif
- 
- 	res = ieee80211_wep_decrypt_data(tfm, rc4key, 16, pos, payload_len - 12);
-  done:
 -- 
-1.7.10
+1.7.0.4
 
