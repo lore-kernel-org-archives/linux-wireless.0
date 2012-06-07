@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43981 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965188Ab2FAQAy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 12:00:54 -0400
-Received: by yhmm54 with SMTP id m54so1753219yhm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 09:00:54 -0700 (PDT)
-Message-ID: <4FC8E733.6030905@lwfinger.net> (sfid-20120601_180058_790781_3197A1CF)
-Date: Fri, 01 Jun 2012 11:00:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jacopo Runchi <jacoporunchi@hotmail.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: I: RTL8187 driver in linux 3.4
-References: <!&!AAAAAAAAAAAuAAAAAAAAAH2SKMTPZA1PmAOs8RWvl9YBANlTnCJhprtFudq2LHCBs8EBACQA//8AABAAAACIF7qVX5kVSJrDEtYsG/e+AQAAAAA=@hotmail.it> <DUB107-ds5BA2D5341A3C373209B17A0080@phx.gbl>
-In-Reply-To: <DUB107-ds5BA2D5341A3C373209B17A0080@phx.gbl>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:30861 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751800Ab2FGMrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 08:47:25 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3.5] mac80211: add back channel change flag
+Date: Thu,  7 Jun 2012 14:47:21 +0200
+Message-Id: <1339073241-3090-1-git-send-email-sgruszka@redhat.com> (sfid-20120607_144728_340866_AE775F01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2012 09:50 AM, Jacopo Runchi wrote:
-> Thank you for the help on the request below.
->
-> Bye, Jacopo.
->
-> *Da:*Jacopo Runchi [mailto:jacoporunchi@hotmail.it]
-> *Inviato:* venerdì 1 giugno 2012 15:21
-> *A:* 'herton@canonical.com'; 'htl10@users.sourceforge.net';
-> 'Larry.Finger@lwfinger.net'
-> *Oggetto:* RTL8187 driver in linux 3.4
->
-> Hi, I write to you because I found you are the maintainers of the driver in subject.
->
-> Hi, I’m working with a USB device using chipset RTL8187 connected to a mips
-> router with Openwrt.
->
-> With the old driver r8187l.ko in linux 2.4.x it works fine.
->
-> With the RTL8187 driver, if the signal is not good enough, it can establish a
-> connection, but it doesn’t transfer datas (no ping for example).
->
-> I think it is a bug of the driver, so I would like to know if you know this bug
-> and if you have planned to solve it…
->
-> There is any change planned on this driver?
->
-> I hope for a generous answer and I’m sorry for my bad English.
+commit 24398e39c8ee4a9d9123eed322b859ece4d16cac
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Wed Mar 28 10:58:36 2012 +0200
 
-The address looks OK to me. I do not know why it bounced.
+    mac80211: set HT channel before association
 
-My involvement with the RTL8187 devices only started with 2.6.X, where X is 25 
-or 26. I have no knowledge of the driver in kernel 2.4.
+removed IEEE80211_CONF_CHANGE_CHANNEL argument from ieee80211_hw_config,
+which is required by iwl4965 driver, otherwise that driver does not
+configure channel properly and is not able to associate.
 
-There have been various complaints about the driver, particularly on RTL8187L 
-hardware, that concern rate setting using the minstrel algorithm. I have been 
-unable to reproduce the results.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Please answer the following questions;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 04c3063..b5fb5e1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3106,7 +3106,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	local->oper_channel = cbss->channel;
+-	ieee80211_hw_config(local, 0);
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+ 	if (!have_sta) {
+ 		u32 rates = 0, basic_rates = 0;
+-- 
+1.7.1
 
-Does the device work is you lock the rate at 1 Mbps?
-
-What is the USB ID as shown by lsusb?
-
-Does it work when you use the PID rate-setting algorithm? To enable this, you 
-will need to set CONFIG_EXPERT=y.
-
-Larry
-
-
-Does it work better if you choose
