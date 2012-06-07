@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:53796 "EHLO
-	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752914Ab2FTOXi (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:32683 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217Ab2FGBK0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 10:23:38 -0400
-Received: by lbgc1 with SMTP id c1so1680874lbg.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 07:23:30 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: johannes@sipsolution.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: use the correct capability info in ieee80211_set_associated()
-Date: Wed, 20 Jun 2012 17:23:24 +0300
-Message-Id: <1340202204-20536-1-git-send-email-coelho@ti.com> (sfid-20120620_162341_295812_9D0560B4)
+	Wed, 6 Jun 2012 21:10:26 -0400
+From: =?utf-8?B?7J207Jq06riw?= <woonki84.lee@samsung.com>
+To: 'Samuel Ortiz' <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	kgene.kim@samsung.com
+References: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com>
+ <20120605085919.GI27105@sortiz-mobl>
+In-reply-to: <20120605085919.GI27105@sortiz-mobl>
+Subject: RE: [PATCH] NFC: Driver for SAMSUNG S3FHRN2 NFC Chip.
+Date: Thu, 07 Jun 2012 10:10:24 +0900
+Message-id: <000701cd444a$514a39a0$f3deace0$%lee@samsung.com> (sfid-20120607_031030_320166_FEE6F906)
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If an AP is beaconing with different capabilities than the one we get
-in the associate response, we were still using the capabilities
-received in the beacons.  One example is when the AP is beaconing with
-the short slot bit set to zero and then we try to connect to it with
-long slot.  In this case, we would keep using long slot until the next
-beacon was received.
+Hello Samuel.
 
-Fix this by using the correct capability value when calling
-ieee80211_handle_bss_capability().  We were using cbss->capability,
-but we should use the bss_conf->assoc_capability instead.
+> 
+> Hi WoonKi,
+> 
+> On Tue, Jun 05, 2012 at 04:49:38PM +0900, �̿��� wrote:
+> > This is a driver for the S3FHRN2 NFC device. the driver is just a
+> > proxy getting SHDLC/HCI frames from a userspace stack.
+> >
+> > Signed-off-by: WoonKi Lee <woonki84.lee@samsung.com>
+> NACK from me. We started the NFC subsystem to avoid having a new and different
+> ad-hoc API for each and every NFC driver, and that's what you're doing right
+> here.
+> Until this driver gets converted to the kernel NFC APIs, it should live in the
+> staging directory.
+> 
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Ok, I see.
+I wonder that if I am able to use NFC API except HCI/SHDLC.
+I do not have any API of HCI/SHDLC. This driver assumes the upper layer of kernel
+supports them.
+Please let me know if I have to use HCI/SHDLC components of NFC subsystem.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9caecd4..ffa0b19 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1323,7 +1323,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 
- 	bss_info_changed |= BSS_CHANGED_BEACON_INT;
- 	bss_info_changed |= ieee80211_handle_bss_capability(sdata,
--		cbss->capability, bss->has_erp_value, bss->erp_value);
-+		bss_conf->assoc_capability, bss->has_erp_value, bss->erp_value);
- 
- 	sdata->u.mgd.beacon_timeout = usecs_to_jiffies(ieee80211_tu_to_usec(
- 		IEEE80211_BEACON_LOSS_COUNT * bss_conf->beacon_int));
--- 
-1.7.10
+Thank you for your review.
+
+Regards,
+
+WoonKi.
 
