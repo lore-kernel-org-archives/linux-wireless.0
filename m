@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:60601 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751464Ab2FOFze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 01:55:34 -0400
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 03/20] at76c50x-usb: Use pr_<level>
-Date: Thu, 14 Jun 2012 22:53:43 -0700
-Message-Id: <4146d28583e1c579daf612f9c0e338403f7a39a4.1339739416.git.joe@perches.com> (sfid-20120615_080237_221000_1CCE0761)
-In-Reply-To: <cover.1339739415.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:35777 "HELO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751704Ab2FGEO3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 00:14:29 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/3] mwifiex: shorten per channel scan time
+Date: Wed,  6 Jun 2012 21:12:40 -0700
+Message-Id: <1339042362-30317-2-git-send-email-bzhao@marvell.com> (sfid-20120607_061434_393888_E9794312)
+In-Reply-To: <1339042362-30317-1-git-send-email-bzhao@marvell.com>
+References: <1339042362-30317-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a more current logging style.
+Currently the scan time per channel for active scanning is set to
+200ms. It takes quite a while to finsh scanning on all channels,
+especially with a dual band configuration.
 
-Convert printks to pr_<level>.
-Coalesce formats, align arguments.
+Change the per channel scan time settings to the following values:
 
-Signed-off-by: Joe Perches <joe@perches.com>
+passive scan: 110ms
+active scan: 30ms
+specific scan: 30ms
+
+Above settings have been tested on x86 and arm platforms.
+
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/at76c50x-usb.c |   15 +++++++--------
- 1 files changed, 7 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mwifiex/main.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index efc162e..817fd7b 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -25,6 +25,8 @@
-  *
-  */
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index bd3b0bf..cbad00d 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -79,9 +79,9 @@ enum {
  
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/init.h>
- #include <linux/kernel.h>
- #include <linux/sched.h>
-@@ -2120,8 +2122,7 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
+ #define SCAN_BEACON_ENTRY_PAD			6
  
- 	hw = ieee80211_alloc_hw(sizeof(struct at76_priv), &at76_ops);
- 	if (!hw) {
--		printk(KERN_ERR DRIVER_NAME ": could not register"
--		       " ieee80211_hw\n");
-+		pr_err("could not register ieee80211_hw\n");
- 		return NULL;
- 	}
+-#define MWIFIEX_PASSIVE_SCAN_CHAN_TIME	200
+-#define MWIFIEX_ACTIVE_SCAN_CHAN_TIME	200
+-#define MWIFIEX_SPECIFIC_SCAN_CHAN_TIME	110
++#define MWIFIEX_PASSIVE_SCAN_CHAN_TIME	110
++#define MWIFIEX_ACTIVE_SCAN_CHAN_TIME	30
++#define MWIFIEX_SPECIFIC_SCAN_CHAN_TIME	30
  
-@@ -2301,8 +2302,7 @@ static int at76_init_new_device(struct at76_priv *priv,
+ #define SCAN_RSSI(RSSI)					(0x100 - ((u8)(RSSI)))
  
- 	ret = ieee80211_register_hw(priv->hw);
- 	if (ret) {
--		printk(KERN_ERR "cannot register mac80211 hw (status %d)!\n",
--		       ret);
-+		pr_err("cannot register mac80211 hw (status %d)!\n", ret);
- 		goto exit;
- 	}
- 
-@@ -2493,15 +2493,14 @@ static int __init at76_mod_init(void)
- {
- 	int result;
- 
--	printk(KERN_INFO DRIVER_DESC " " DRIVER_VERSION " loading\n");
-+	pr_info(DRIVER_DESC " " DRIVER_VERSION " loading\n");
- 
- 	mutex_init(&fw_mutex);
- 
- 	/* register this driver with the USB subsystem */
- 	result = usb_register(&at76_driver);
- 	if (result < 0)
--		printk(KERN_ERR DRIVER_NAME
--		       ": usb_register failed (status %d)\n", result);
-+		pr_err("usb_register failed (status %d)\n", result);
- 
- 	led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
- 	return result;
-@@ -2511,7 +2510,7 @@ static void __exit at76_mod_exit(void)
- {
- 	int i;
- 
--	printk(KERN_INFO DRIVER_DESC " " DRIVER_VERSION " unloading\n");
-+	pr_info(DRIVER_DESC " " DRIVER_VERSION " unloading\n");
- 	usb_deregister(&at76_driver);
- 	for (i = 0; i < ARRAY_SIZE(firmwares); i++)
- 		release_firmware(firmwares[i].fw);
 -- 
-1.7.8.111.gad25c.dirty
+1.7.0.2
 
