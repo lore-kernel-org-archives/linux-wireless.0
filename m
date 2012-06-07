@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44569 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752854Ab2FGOGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 10:06:31 -0400
-Message-ID: <4FD0B565.4090809@openwrt.org> (sfid-20120607_160635_192753_5946C7D6)
-Date: Thu, 07 Jun 2012 16:06:29 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
-CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] minstrel_ht: enable frame aggregation for fixed rate
-References: <1339077677-5836-1-git-send-email-sylvain.roger.rieunier@gmail.com>
-In-Reply-To: <1339077677-5836-1-git-send-email-sylvain.roger.rieunier@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:50573 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751557Ab2FGJRg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 05:17:36 -0400
+Received: by lagz14 with SMTP id z14so367100lag.21
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 02:17:33 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, Ido Reis <idor@ti.com>
+Subject: [PATCH 1/5] wl18xx: fix PHY_INIT addresses mem size
+Date: Thu,  7 Jun 2012 12:17:21 +0300
+Message-Id: <1339060645-3574-2-git-send-email-coelho@ti.com> (sfid-20120607_111740_389268_6AB09E8C)
+In-Reply-To: <1339060645-3574-1-git-send-email-coelho@ti.com>
+References: <1339060645-3574-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-06-07 4:01 PM, Sylvain Roger Rieunier wrote:
-> Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
-> ---
->  net/mac80211/rc80211_minstrel_ht.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 2d1acc6..e2aa93e 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -626,8 +626,10 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
->  
->  #ifdef CONFIG_MAC80211_DEBUGFS
->  	/* use fixed index if set */
-> -	if (mp->fixed_rate_idx != -1)
-> -		sample_idx = mp->fixed_rate_idx;
-> +	if (mp->fixed_rate_idx != -1) {
-> +		mi->max_tp_rate = mp->fixed_rate_idx;
-> +		sample_idx = -1;
-> +	}
->  #endif
-I just noticed another issue, you should prevent minstrel_ht from
-setting up the alternate retry chains if fixed rate is set, otherwise it
-won't always use the rate you configured.
+From: Ido Reis <idor@ti.com>
 
-- Felix
+was hardcoded 252, now uses the parameters struct size.
+
+Signed-off-by: Ido Reis <idor@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index c8d45f0..e030b12 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -540,8 +540,8 @@ static const struct wlcore_partition_set wl18xx_ptable[PART_TABLE_LEN] = {
+ 		.mem3 = { .start = 0x00000000, .size  = 0x00000000 },
+ 	},
+ 	[PART_PHY_INIT] = {
+-		/* TODO: use the phy_conf struct size here */
+-		.mem  = { .start = 0x80926000, .size = 252 },
++		.mem  = { .start = 0x80926000,
++			  .size = sizeof(struct wl18xx_mac_and_phy_params) },
+ 		.reg  = { .start = 0x00000000, .size = 0x00000000 },
+ 		.mem2 = { .start = 0x00000000, .size = 0x00000000 },
+ 		.mem3 = { .start = 0x00000000, .size = 0x00000000 },
+-- 
+1.7.10
+
