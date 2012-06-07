@@ -1,45 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41007 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab2F0JXT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31506 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755420Ab2FGHoC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 05:23:19 -0400
-Message-ID: <1340788995.11012.4.camel@jlt3.sipsolutions.net> (sfid-20120627_112323_198771_F3E7D406)
-Subject: Re: [PATCH] mac80211: flush queues before deauth/disassoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 27 Jun 2012 11:23:15 +0200
-In-Reply-To: <1340621899-15002-1-git-send-email-eliad@wizery.com> (sfid-20120625_125810_846874_3DBECCF4)
-References: <1340621899-15002-1-git-send-email-eliad@wizery.com>
-	 (sfid-20120625_125810_846874_3DBECCF4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 7 Jun 2012 03:44:02 -0400
+From: Naveen Singh <navesing@qca.qualcomm.com>
+To: <ath6kl-devel@qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [patch v4] ath6kl: Different version for different FW binaries
+Date: Thu, 7 Jun 2012 00:44:02 -0700
+Message-ID: <1339055042-27696-1-git-send-email-navesing@qca.qualcomm.com> (sfid-20120607_094409_191367_71B64BFF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-06-25 at 13:58 +0300, Eliad Peller wrote:
-> On deauth/disassoc we tear down all BA sessions. These
-> DELBA packets are sent on the appropriate TID, while
-> deauth/disassoc is always sent on VO. This sometimes
-> ends with the DELBA being sent after the deauth was
-> already sent.
-> 
-> Fix it by flushing all the pending frames before
-> sending deauth/disassoc (in ieee80211_send_deauth_disassoc).
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
-> i think flushing in ieee80211_send_deauth_disassoc is the
-> easiest thing to do here, as it handles all the (future) cases.
-> however, i don't care moving the flush to a higher function
-> if someone prefers it.
+Need to have different FW versioning for different FW binaries.
+This is handled by appending different meta data in firmware
+binaries.
 
-I thought about this a bit ... Currently we have two calls to this
-function, one from the actual set_disassoc() and one from
-ieee80211_mgd_deauth(). In the latter case, we don't actually need the
-flush I think, and in set_disassoc() we already have a flush call, so I
-think it makes more sense there?
+Signed-off-by: Naveen Singh <navesing@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    8 ++++++++
+ drivers/net/wireless/ath/ath6kl/main.c |   21 ++++++++++++---------
+ 2 files changed, 20 insertions(+), 9 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index daf24ee..62e25cc 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -943,6 +943,14 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+ 		}
+ 
+ 		switch (ie_id) {
++		case ATH6KL_FW_IE_FW_VERSION:
++			strlcpy(ar->wiphy->fw_version, data,
++				sizeof(ar->wiphy->fw_version));
++
++			ath6kl_dbg(ATH6KL_DBG_BOOT,
++				   "found fw version %s\n",
++				    ar->wiphy->fw_version);
++			break;
+ 		case ATH6KL_FW_IE_OTP_IMAGE:
+ 			ath6kl_dbg(ATH6KL_DBG_BOOT, "found otp image ie (%zd B)\n",
+ 				   ie_len);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 3e6768a..ceff85c 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -554,20 +554,23 @@ void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver,
+ 	struct ath6kl *ar = devt;
+ 
+ 	memcpy(ar->mac_addr, datap, ETH_ALEN);
+-	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: mac addr = %pM\n",
+-		   __func__, ar->mac_addr);
++	ath6kl_dbg(ATH6KL_DBG_BOOT,
++		"ready event mac addr %pM sw_ver 0x%x abi_ver 0x%x cap 0x%x\n",
++		ar->mac_addr, sw_ver, abi_ver, cap);
+ 
+ 	ar->version.wlan_ver = sw_ver;
+ 	ar->version.abi_ver = abi_ver;
+ 	ar->hw.cap = cap;
+ 
+-	snprintf(ar->wiphy->fw_version,
+-		 sizeof(ar->wiphy->fw_version),
+-		 "%u.%u.%u.%u",
+-		 (ar->version.wlan_ver & 0xf0000000) >> 28,
+-		 (ar->version.wlan_ver & 0x0f000000) >> 24,
+-		 (ar->version.wlan_ver & 0x00ff0000) >> 16,
+-		 (ar->version.wlan_ver & 0x0000ffff));
++	if (strlen(ar->wiphy->fw_version) == 0x00) {
++		snprintf(ar->wiphy->fw_version,
++			sizeof(ar->wiphy->fw_version),
++			"%u.%u.%u.%u",
++			(ar->version.wlan_ver & 0xf0000000) >> 28,
++			(ar->version.wlan_ver & 0x0f000000) >> 24,
++			(ar->version.wlan_ver & 0x00ff0000) >> 16,
++			(ar->version.wlan_ver & 0x0000ffff));
++	}
+ 
+ 	/* indicate to the waiting thread that the ready event was received */
+ 	set_bit(WMI_READY, &ar->flag);
+-- 
+1.7.0.4
 
