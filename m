@@ -1,117 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41626 "EHLO nbd.name"
+Received: from plane.gmane.org ([80.91.229.3]:58946 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752754Ab2FOBFP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 21:05:15 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752351Ab2FGIUI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jun 2012 04:20:08 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1ScXwq-0003ef-Sn
+	for linux-wireless@vger.kernel.org; Thu, 07 Jun 2012 10:20:04 +0200
+Received: from cph-ex1.sdesigns.com ([192.215.56.171])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 10:20:04 +0200
+Received: from hanskroner by cph-ex1.sdesigns.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 10:20:04 +0200
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2 3.5 2/2] ath9k: fix invalid pointer access in the tx path
-Date: Fri, 15 Jun 2012 03:04:53 +0200
-Message-Id: <1339722293-28613-2-git-send-email-nbd@openwrt.org> (sfid-20120615_030520_135385_CCE70BA0)
-In-Reply-To: <1339722293-28613-1-git-send-email-nbd@openwrt.org>
-References: <1339722293-28613-1-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Hans =?utf-8?b?S3LDtm5lcg==?= <hanskroner@gmail.com>
+Subject: mwifiex:Testing AP functionality with hostapd
+Date: Thu, 7 Jun 2012 08:18:35 +0000 (UTC)
+Message-ID: <loom.20120607T100950-564@post.gmane.org> (sfid-20120607_102015_629221_9689D87F)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After setup_frame_info has been called, only info->control.rates is still
-valid, other control fields have been overwritten by the ath_frame_info
-data. Move the access to info->control.vif for checking short preamble
-to setup_frame_info before it gets overwritten.
+I wanted to test the new "AP mode" functionality in the mwifiex driver so I
+built a kernel off the wireless-testing tree and hostapd v2.0-devel from git.
+I tried this on a "DreamPlug" that uses the SD8787.
 
-This regression was introduced in commit d47a61aa
-"ath9k: Fix multi-VIF BSS handling"
+"Client mode" is working fine, but I can't seem to be able to get "AP mode"
+working. No matter what I do I get this output from hostapd:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Thomas Hühn <thomas@net.t-labs.tu-berlin.de>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: stable@vger.kernel.org [3.4]
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/xmit.c  |   29 +++++++++++++++++------------
- 2 files changed, 18 insertions(+), 12 deletions(-)
+random: Trying to read entropy from /dev/random
+Configuration file: hostapd-minimal.conf
+nl80211: interface uap0 in phy phy0
+rfkill: initial event: idx=0 type=2 op=0 soft=0 hard=0
+rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
+nl80211: Disable use_monitor with device_ap_sme since no monitor mode support d
+etected
+nl80211: Add own interface ifindex 5
+nl80211: Set mode ifindex 5 iftype 3 (AP)
+nl80211: Setup AP - device_ap_sme=1 use_monitor=0
+nl80211: Subscribe to mgmt frames with AP handle 0x74608 (device SME)
+nl80211: Register frame type=0xd0 nl_handle=0x74608
+nl80211: Register frame match - hexdump(len=0): [NULL]
+nl80211: Register frame command failed (type=208): ret=-95 (Operation not suppo
+rted)
+nl80211: Register frame match - hexdump(len=0): [NULL]
+nl80211: Failed to set interface uap0 into AP mode
+netlink: Operstate: linkmode=0, operstate=6
+nl80211: Set mode ifindex 5 iftype 2 (STATION)
+nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+nl80211: Try mode change after setting interface down
+nl80211: Set mode ifindex 5 iftype 2 (STATION)
+nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+nl80211: Set mode ifindex 5 iftype 2 (STATION)
+nl80211: Failed to set interface 5 to mode 2: -16 (Device or resource busy)
+[ ... ]
+nl80211: Interface mode change to 2 from 3 failed
+nl80211 driver initialization failed.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a277cf6..4866550 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -214,6 +214,7 @@ struct ath_frame_info {
- 	enum ath9k_key_type keytype;
- 	u8 keyix;
- 	u8 retries;
-+	u8 rtscts_rate;
- };
- 
- struct ath_buf_state {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index efb7f00..4d57139 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -938,6 +938,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	struct ieee80211_tx_rate *rates;
- 	const struct ieee80211_rate *rate;
- 	struct ieee80211_hdr *hdr;
-+	struct ath_frame_info *fi = get_frame_info(bf->bf_mpdu);
- 	int i;
- 	u8 rix = 0;
- 
-@@ -948,18 +949,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 
- 	/* set dur_update_en for l-sig computation except for PS-Poll frames */
- 	info->dur_update = !ieee80211_is_pspoll(hdr->frame_control);
--
--	/*
--	 * We check if Short Preamble is needed for the CTS rate by
--	 * checking the BSS's global flag.
--	 * But for the rate series, IEEE80211_TX_RC_USE_SHORT_PREAMBLE is used.
--	 */
--	rate = ieee80211_get_rts_cts_rate(sc->hw, tx_info);
--	info->rtscts_rate = rate->hw_value;
--
--	if (tx_info->control.vif &&
--	    tx_info->control.vif->bss_conf.use_short_preamble)
--		info->rtscts_rate |= rate->hw_value_short;
-+	info->rtscts_rate = fi->rtscts_rate;
- 
- 	for (i = 0; i < 4; i++) {
- 		bool is_40, is_sgi, is_sp;
-@@ -1776,10 +1766,22 @@ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_sta *sta = tx_info->control.sta;
- 	struct ieee80211_key_conf *hw_key = tx_info->control.hw_key;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	const struct ieee80211_rate *rate;
- 	struct ath_frame_info *fi = get_frame_info(skb);
- 	struct ath_node *an = NULL;
- 	enum ath9k_key_type keytype;
-+	bool short_preamble = false;
-+
-+	/*
-+	 * We check if Short Preamble is needed for the CTS rate by
-+	 * checking the BSS's global flag.
-+	 * But for the rate series, IEEE80211_TX_RC_USE_SHORT_PREAMBLE is used.
-+	 */
-+	if (tx_info->control.vif &&
-+	    tx_info->control.vif->bss_conf.use_short_preamble)
-+		short_preamble = true;
- 
-+	rate = ieee80211_get_rts_cts_rate(hw, tx_info);
- 	keytype = ath9k_cmn_get_hw_crypto_keytype(skb);
- 
- 	if (sta)
-@@ -1794,6 +1796,9 @@ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		fi->keyix = ATH9K_TXKEYIX_INVALID;
- 	fi->keytype = keytype;
- 	fi->framelen = framelen;
-+	fi->rtscts_rate = rate->hw_value;
-+	if (short_preamble)
-+		fi->rtscts_rate |= rate->hw_value_short;
- }
- 
- u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
--- 
-1.7.3.2
+I've tried bringing both mlan0 and uap0 interfaces down/up and different
+combinations of both to no avail. The patches for "AP mode" support mention
+that is has been tested against hostapd v2.0-devel. Is there anything I should
+be aware of when building hostapd? I'm also not sure if I'm running the correct
+firmware for the SD8787.
+
+Thanks in advance for any input!!!
+
+Hans
+
+
+--- mwifiex_sdio firmware ---
+
+mwifiex_sdio mmc0:0001:1: WLAN FW already running! Skip FW dnld
+mwifiex_sdio mmc0:0001:1: WLAN FW is active
+mwifiex_sdio mmc0:0001:1: driver_version = mwifiex 1.0 (14.57.5.p69)
+
+--- hostapd .config ---
+
+CONFIG_DRIVER_HOSTAP=y
+CONFIG_DRIVER_NL80211=y
+CONFIG_LIBNL32=y
+CFLAGS += -I/usr/include/libnl3
+CONFIG_IAPP=y
+CONFIG_RSN_PREAUTH=y
+CONFIG_PEERKEY=y
+CONFIG_EAP=y
+CONFIG_EAP_MD5=y
+CONFIG_EAP_TLS=y
+CONFIG_EAP_MSCHAPV2=y
+CONFIG_EAP_PEAP=y
+CONFIG_EAP_GTC=y
+CONFIG_EAP_TTLS=y
+CONFIG_PKCS12=y
+CONFIG_IPV6=y
+CONFIG_IEEE80211N=y
+
+--- hostatp-minimal.conf ---
+
+interface=uap0
+driver=nl80211
+ssid=DreamPlug
+hw_mode=g
+channel=1
 
