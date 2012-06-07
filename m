@@ -1,48 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:50909 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757574Ab2FAIkE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40976 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145Ab2FGHZV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 04:40:04 -0400
-Received: by obbtb18 with SMTP id tb18so2589065obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 01:40:03 -0700 (PDT)
+	Thu, 7 Jun 2012 03:25:21 -0400
+From: Naveen Singh <navesing@qca.qualcomm.com>
+To: <ath6kl-devel@qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [patch v3] ath6kl: Different version for different FW binaries
+Date: Thu, 7 Jun 2012 00:25:19 -0700
+Message-ID: <1339053919-27263-1-git-send-email-navesing@qca.qualcomm.com> (sfid-20120607_092524_002990_2EAC77D1)
 MIME-Version: 1.0
-In-Reply-To: <1338538911.4884.10.camel@jlt3.sipsolutions.net>
-References: <1338538443-23172-1-git-send-email-eliad@wizery.com>
-	<1338538911.4884.10.camel@jlt3.sipsolutions.net>
-Date: Fri, 1 Jun 2012 11:40:03 +0300
-Message-ID: <CAB3XZEfTLN65kVDbfL58t7PaAhMGbnN++DgjwbSELg3NmiGqFg@mail.gmail.com> (sfid-20120601_104010_888841_9AD447A7)
-Subject: Re: [PATCH] mac80211: clear ifmgd->bssid only after building DELBA
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 1, 2012 at 11:21 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-06-01 at 11:14 +0300, Eliad Peller wrote:
->> ieee80211_set_disassoc() clears ifmgd->bssid before
->> building DELBA frames, resulting in frames with invalid
->> bssid ("00:00:00:00:00:00").
->>
->> Fix it by clearing ifmgd->bssid only after building
->> all the needed frames.
->>
->> After this change, we no longer need to save the
->> bssid (before clearing it), so remove the local array.
->
-> I'm not convinced clearing the BSSID this late is correct, there's a lot
-> of code using it, for example comparing it on RX, that we may not want
-> to have it at this point any more.
->
-> It may well be that this is no longer a concern, but I wouldn't dismiss
-> it right away.
->
-i can't really spot any significant difference between these 2 locations.
-i only deferred it latter in the same function (after stopping the
-queues, setting carrier off, and sending DELBA + deauth). do you see
-anything that might go wrong?
+Need to have different FW versioning for different FW binaries.
+This is handled by appending different meta data in firmware
+binaries.
 
-Eliad.
+Signed-off-by: Naveen Singh <navesing@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    8 ++++++++
+ drivers/net/wireless/ath/ath6kl/main.c |   21 ++++++++++++---------
+ 2 files changed, 20 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index daf24ee..62e25cc 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -943,6 +943,14 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+ 		}
+ 
+ 		switch (ie_id) {
++		case ATH6KL_FW_IE_FW_VERSION:
++			strlcpy(ar->wiphy->fw_version, data,
++				sizeof(ar->wiphy->fw_version));
++
++			ath6kl_dbg(ATH6KL_DBG_BOOT,
++				   "found fw version %s\n",
++				    ar->wiphy->fw_version);
++			break;
+ 		case ATH6KL_FW_IE_OTP_IMAGE:
+ 			ath6kl_dbg(ATH6KL_DBG_BOOT, "found otp image ie (%zd B)\n",
+ 				   ie_len);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 3e6768a..254e665 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -554,20 +554,23 @@ void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver,
+ 	struct ath6kl *ar = devt;
+ 
+ 	memcpy(ar->mac_addr, datap, ETH_ALEN);
+-	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: mac addr = %pM\n",
+-		   __func__, ar->mac_addr);
++	ath6kl_dbg(ATH6KL_DBG_BOOT, 
++		"ready event mac addr %pM sw_ver 0x%x abi_ver 0x%x cap 0x%x\n", 
++		ar->mac_addr, sw_ver, abi_ver, cap);
+ 
+ 	ar->version.wlan_ver = sw_ver;
+ 	ar->version.abi_ver = abi_ver;
+ 	ar->hw.cap = cap;
+ 
+-	snprintf(ar->wiphy->fw_version,
+-		 sizeof(ar->wiphy->fw_version),
+-		 "%u.%u.%u.%u",
+-		 (ar->version.wlan_ver & 0xf0000000) >> 28,
+-		 (ar->version.wlan_ver & 0x0f000000) >> 24,
+-		 (ar->version.wlan_ver & 0x00ff0000) >> 16,
+-		 (ar->version.wlan_ver & 0x0000ffff));
++	if (strlen(ar->wiphy->fw_version) == 0x00) {
++		snprintf(ar->wiphy->fw_version,
++			sizeof(ar->wiphy->fw_version),
++			"%u.%u.%u.%u",
++			(ar->version.wlan_ver & 0xf0000000) >> 28,
++			(ar->version.wlan_ver & 0x0f000000) >> 24,
++			(ar->version.wlan_ver & 0x00ff0000) >> 16,
++			(ar->version.wlan_ver & 0x0000ffff));
++	}
+ 
+ 	/* indicate to the waiting thread that the ready event was received */
+ 	set_bit(WMI_READY, &ar->flag);
+-- 
+1.7.0.4
+
