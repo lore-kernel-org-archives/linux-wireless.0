@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41991 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095Ab2F3GIM (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:33830 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751488Ab2FGJRf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 02:08:12 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 5/5] ath9k_hw: fix AR9462 2g5g switch on full reset
-Date: Sat, 30 Jun 2012 11:38:49 +0530
-Message-ID: <1341036529-10823-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120630_080815_214305_12BCADB2)
-In-Reply-To: <1341036529-10823-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1341036529-10823-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 7 Jun 2012 05:17:35 -0400
+Received: by lags15 with SMTP id s15so251251lag.6
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 02:17:32 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 0/5] wl18xx: add initial support for PG2.0 HW
+Date: Thu,  7 Jun 2012 12:17:20 +0300
+Message-Id: <1339060645-3574-1-git-send-email-coelho@ti.com> (sfid-20120607_111739_353618_BA3E6F85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On full reset, mci reset will put LNA update on 2G mode. And
-Whenever 2g5g_switch is forced at the end of full reset, lna
-update should not be skipped. Not doing so, is affecting WLAN
-rx and causing beacon loss when BTCOEX is enabled on AR9462.
+Hi,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+Here are some patches to add support for PG2.0.  In the near future we
+will remove support for PG1.0 to keep the code simple and since nobody
+should be using that old R&D hardware version anymore, but for now we
+support both.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 6155837..9a34fca 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1015,12 +1015,9 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
- 		return;
- 
- 	if (mci->is_2g) {
--		if (!force) {
--			ar9003_mci_send_2g5g_status(ah, true);
--
--			ar9003_mci_send_lna_transfer(ah, true);
--			udelay(5);
--		}
-+		ar9003_mci_send_2g5g_status(ah, true);
-+		ar9003_mci_send_lna_transfer(ah, true);
-+		udelay(5);
- 
- 		REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
- 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
-@@ -1030,10 +1027,8 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
- 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
- 			ar9003_mci_osla_setup(ah, true);
- 	} else {
--		if (!force) {
--			ar9003_mci_send_lna_take(ah, true);
--			udelay(5);
--		}
-+		ar9003_mci_send_lna_take(ah, true);
-+		udelay(5);
- 
- 		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
- 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
-@@ -1041,8 +1036,7 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
- 			    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
- 
- 		ar9003_mci_osla_setup(ah, false);
--		if (!force)
--			ar9003_mci_send_2g5g_status(ah, true);
-+		ar9003_mci_send_2g5g_status(ah, true);
- 	}
- }
- 
+Please review.
+
+Cheers,
+Luca.
+
+Ido Reis (5):
+  wl18xx: fix PHY_INIT addresses mem size
+  wl18xx: support PG2 version of the chip
+  wl18xx: FW/PHY arguments added for PG2
+  wl18xx: PG2.0 HW Watch dog interrupt support
+  wl18xx: pad only last frame in aggregration buffer for PG2
+
+ drivers/net/wireless/ti/wl12xx/acx.h    |   14 ++++++
+ drivers/net/wireless/ti/wl12xx/main.c   |    5 +-
+ drivers/net/wireless/ti/wl18xx/acx.h    |   20 ++++++++
+ drivers/net/wireless/ti/wl18xx/conf.h   |    4 ++
+ drivers/net/wireless/ti/wl18xx/main.c   |   77 ++++++++++++++++++++++++++++---
+ drivers/net/wireless/ti/wl18xx/reg.h    |    7 +++
+ drivers/net/wireless/ti/wl18xx/tx.h     |    3 ++
+ drivers/net/wireless/ti/wlcore/acx.h    |   27 +++++------
+ drivers/net/wireless/ti/wlcore/hw_ops.h |    9 ++++
+ drivers/net/wireless/ti/wlcore/main.c   |   13 +++++-
+ drivers/net/wireless/ti/wlcore/tx.c     |   16 +++++--
+ drivers/net/wireless/ti/wlcore/tx.h     |    4 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h |    4 ++
+ 13 files changed, 170 insertions(+), 33 deletions(-)
+
 -- 
-1.7.11.1
+1.7.10
 
