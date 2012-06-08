@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:57444 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753247Ab2FSV7l (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53722 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121Ab2FHSiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 17:59:41 -0400
-Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
-	by www19.servergod.com (Postfix) with ESMTP id 8FA4911F85A
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 14:59:40 -0700 (PDT)
-Received: by mail0.frost.chambana.net (Postfix) with SMTP id 41B9B59A058
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 21:59:40 +0000
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
-To: hawkinsw@opentechinstitute.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 0/3 v4] mac80211: add support for userspace to handle auth frames on adhoc ifaces
-Date: Tue, 19 Jun 2012 17:59:11 -0400
-Message-Id: <cover.1340142553.git.hawkinsw@opentechinstitute.org> (sfid-20120619_235944_999732_F08793DA)
+	Fri, 8 Jun 2012 14:38:16 -0400
+Message-ID: <1339180693.5748.33.camel@jlt3.sipsolutions.net> (sfid-20120608_203819_464348_F34341B0)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Date: Fri, 08 Jun 2012 20:38:13 +0200
+In-Reply-To: <CAHsu+b8M=KGyp9PL5hJ6cxgF=1kGXHoUt7idLA+UD+UqoJW6uA@mail.gmail.com> (sfid-20120608_202844_443710_C05C013D)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 <4FD22727.7000500@lwfinger.net>
+	 <1339172904.5748.18.camel@jlt3.sipsolutions.net>
+	 <20120608183339.78a7fcbd@milhouse> <4FD239AA.9090708@lwfinger.net>
+	 <1339178163.5748.27.camel@jlt3.sipsolutions.net>
+	 <1339179084.5748.29.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8M=KGyp9PL5hJ6cxgF=1kGXHoUt7idLA+UD+UqoJW6uA@mail.gmail.com>
+	 (sfid-20120608_202844_443710_C05C013D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Fri, 2012-06-08 at 20:28 +0200, Andre Heider wrote:
 
-I am sending along 3 patches to add support for user space applications
-to register for authentication frames on adhoc interfaces. These are
-revisions to a previous patch that I submitted to accomplish the same
-thing.
+> > Maybe these two patches work:
+> >
+> > http://p.sipsolutions.net/b8912f8cad4cb3b2.txt
+> > http://p.sipsolutions.net/ad2677233e6917e8.txt
+> >
+> > still kinda hack like it always was, but ...
+> 
+> Those don't apply clean on 48d212a2eec, resolved a conflict, but
+> device worked and I could login ;)
 
-Patch 1/3 adds support for tracking whether userspace applications
-are registered for authentication frames received by an adhoc
-interface. This count is used in Patch 2/3 to determine 
-if an "open system" authentication frame is sent when a new 
-station joins an adhoc network.
+Ok, so I guess that confirms that somehow PIO breaks when we configure
+QoS parameters or something .. bit strange, but hey.
 
-Patch 2/3 adds support for checking the registration count
-before sending out "open system" authentication frames when a 
-new station joins an adhoc network. If there are no userspace
-applications registered for the authentication frames then 
-an "open system" authentication frame is broadcast. 
+> But as soon as I ran `dmesg` (over ssh+wlan) I got a kernel crash. It
+> scrolled by too fast, but alot of b43 stuff starting with
+> __netif_schedule. Unsure if its because of these patches or unrelated.
 
-Patch 3/3 sets the necessary flags to allow userspace
-applications to register for authentication frames on adhoc interfaces.
-frames.
+Could be related, or not.
 
-As I've said before, I'm still new to this process so I look forward to
-your feedback on improving.
+I still dislike the way b43 plays with this stuff at runtime, and
+Michael pointed out a flaw in my patch too, so we can't apply these
+anyway...
 
-Will
-
-Will Hawkins (3):
-  mac80211: Track auth frame registrations on IBSS ifaces
-  mac80211: Check auth frame registration count
-  mac80211: Allow userspace application to register for authentication
-    frames
-
- net/mac80211/cfg.c         |   10 ++++++++++
- net/mac80211/ibss.c        |    2 +-
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/main.c        |    4 +++-
- 4 files changed, 15 insertions(+), 2 deletions(-)
-
--- 
-1.7.9.5
-
+johannes
 
