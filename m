@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4124 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755592Ab2FFKHf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:35 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 16/29] NFC: Call the DEP link down ops even when in target mode
-Date: Wed,  6 Jun 2012 12:16:33 +0200
-Message-Id: <1338977806-30279-17-git-send-email-sameo@linux.intel.com> (sfid-20120606_120740_741591_AF671A9B)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:60229 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761315Ab2FHR4J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 13:56:09 -0400
+Message-ID: <1339178163.5748.27.camel@jlt3.sipsolutions.net> (sfid-20120608_195614_138814_5C64BE11)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	Andre Heider <a.heider@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Date: Fri, 08 Jun 2012 19:56:03 +0200
+In-Reply-To: <4FD239AA.9090708@lwfinger.net> (sfid-20120608_194312_026371_EC8C6BE2)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 <4FD22727.7000500@lwfinger.net>
+	 <1339172904.5748.18.camel@jlt3.sipsolutions.net>
+	 <20120608183339.78a7fcbd@milhouse> <4FD239AA.9090708@lwfinger.net>
+	 (sfid-20120608_194312_026371_EC8C6BE2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even in target mode we need to let the driver know that we want to
-bring the DEP link down.
+On Fri, 2012-06-08 at 12:43 -0500, Larry Finger wrote:
+> On 06/08/2012 11:33 AM, Michael Büsch wrote:
+> >
+> > Larry, did you check with PIO?
+> 
+> No, I only used DMA. With the latest patch, compilation is Ok, and DMA works for 
+> both kinds of firmware, while PIO fails for both.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/core.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+Hmm, both with QoS enabled and disabled?. I don't really see what could
+be causing this, sorry.
 
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 6a3799e..4177bb5 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -268,11 +268,6 @@ int nfc_dep_link_down(struct nfc_dev *dev)
- 		goto error;
- 	}
- 
--	if (dev->rf_mode == NFC_RF_TARGET) {
--		rc = -EOPNOTSUPP;
--		goto error;
--	}
--
- 	rc = dev->ops->dep_link_down(dev);
- 	if (!rc) {
- 		dev->dep_link_up = false;
--- 
-1.7.9.1
+One more thing that I just realised though is that mac80211 uses the #
+of queues to determine whether to advertise QoS or not, so the whole
+thing won't actually work anyway without more work :-(
+
+I'm tempted to just remove the check for now to "fix" b43 and then maybe
+you can load firmware before registering with mac80211 in b43?
+
+johannes
 
