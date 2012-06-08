@@ -1,179 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.121.35]:16773 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912Ab2FTL24 convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57095 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934249Ab2FHUai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 07:28:56 -0400
-From: Wei Ni <wni@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>
-CC: 'Mark Brown' <broonie@opensource.wolfsonmicro.com>,
-	'Philip Rakity' <prakity@marvell.com>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@secretlab.ca>
-Date: Wed, 20 Jun 2012 19:28:50 +0800
-Subject: RE: Where to power on the wifi device before loading the driver.
-Message-ID: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD629@HKMAIL01.nvidia.com> (sfid-20120620_132902_823639_5D6F6C75)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
- <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
- <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
- <4FDB5976.20809@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
- <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com>
- <20120619091719.GZ3974@opensource.wolfsonmicro.com>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD626@HKMAIL01.nvidia.com>
- <4FE112F2.7000506@wwwdotorg.org>
-In-Reply-To: <4FE112F2.7000506@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
+	Fri, 8 Jun 2012 16:30:38 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so2994377pbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 13:30:38 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] mac80211: Rename stainfo variable for the more common sta
+Date: Fri,  8 Jun 2012 13:30:25 -0700
+Message-Id: <1339187425-12549-3-git-send-email-jason@cozybit.com> (sfid-20120608_223041_622523_FF0210A9)
+In-Reply-To: <1339187425-12549-1-git-send-email-jason@cozybit.com>
+References: <1339187425-12549-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 08:01:54, Stephen Warren wrote:
->On 06/19/2012 03:44 AM, Wei Ni wrote:
->> On Tue, Jun 19, 2012 at 17:17:19, Mark Brown wrote:
->>> * PGP Signed by an unknown key
->>>
->>> On Tue, Jun 19, 2012 at 12:25:58PM +0800, Wei Ni wrote:
->>>
->>> As Stephen previously said please fix your mail formatting - word 
->>> wrapping within paragraphs is important!
->>>
->>>> On Tue, Jun 19, 2012 at 09:23:35, Philip Rakity wrote:
->>>>> Why can't you use the regulator notify to get called back on power 
->>>>> or voltage change options to plumb in the manipulation of the gpio.
->>>>> I can imagine you might need to add a notify call in core.c if you 
->>>>> need to assert the gpio before power is applied
->>>>
->>>> Yes, we can use the regulator notify, but the Tegra30 support is 
->>>> via device tree, I think there have no special board file to run 
->>>> the call back.
->>>
->>> You can mix board files with device tree for cases where device tree 
->>> is not yet up to the job, though the goal should be to come up with 
->>> a way of expressing things in
->device tree.
->>
->> I think we wish to use the device tree to handle these gpios, pass 
->> them to the related driver to
->assert them.
->> If we mix the board files, we even can set these gpio directly, not 
->> use the notify. But I think this
->is not a goog way.
->
->Yes, I would definitely not want to add this to a board file; there is 
->no board file for Cardhu, and we're getting close to deleting all the board files that are left for other boards.
->
->I think what we need is some way of matching a DT node to a device even 
->when that device was instantiated through some probing mechanism such 
->as SDIO or USB (and I've heard hints that one can already do this for PCI; I should investigate).
->
->So, we start off with the plain SDHCI controller node:
->
->sdhci@78000000 {
->	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
->	reg = <0x78000000 0x200>;
->	interrupts = <0 14 0x04>;
->};
->
->Then, we add a child node to represent the device that's attached:
->
->sdhci@78000000 {
->	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
->	reg = <0x78000000 0x200>;
->	interrupts = <0 14 0x04>;
->
->	sdio-device {
->		reset-gpios = <...>;
->		enable-gpios = <...>;
->	};
->};
->
->When the SDHCI controller/core instantiates the child device it finds 
->on the HW bus, it initializes that struct device's of_node with a 
->pointer to the sdio-device node above. From there, the child device can get DT properties such as GPIOs in the usual way.
->
->However, there are still some issues that need thought here; what if 
->(as is I believe the case on
->Cardhu) we can in fact plug in multiple different types of device into 
->the socket? Might we end up with something like:
->
->sdhci@78000000 {
->	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
->	reg = <0x78000000 0x200>;
->	interrupts = <0 14 0x04>;
->
->	sdio-device-option@0 {
->		compatible = "broadcom,bcm4239";
->		reset-gpios = <...>;
->		enable-gpios = <...>;
->	};
->
->	sdio-device-option@1 {
->		compatible = "broadcom,bcm4330";
->		reset-gpios = <...>;
->		enable-gpios = <...>;
->	};
->};
->
->and match on compatible value?
->
->But in this case, at least some of the data those two drivers want from 
->that node is the same; the 2 GPIOs that control the reset and enable 
->signals. Do we just make the bindings for those two devices happen to 
->share the same properties so that we can get away with just one node 
->irrespective of what device type has been found? What we're really modeling is the card slot, and the services it provides, so perhaps we should really end up with:
->
->sdhci@78000000 {
->	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
->	reg = <0x78000000 0x200>;
->	interrupts = <0 14 0x04>;
->
->	socket {
->		reset-gpios = <...>;
->		enable-gpios = <...>;
->
->		sdio-device-option@0 {
->			compatible = "broadcom,bcm4239";
->		};
->
->		sdio-device-option@1 {
->			compatible = "broadcom,bcm4330";
->		};
->	};
->};
->
->Where somehow the WiFi drivers can obtain the reset/enable service from 
->the socket that hosts them, but still have nodes for the attached 
->device itself in case any additional driver-specific configuration is needed.
->
->That sounds somewhat similar to the virtual platform device that was 
->mentioned earlier in this thread by Broadcom, although I'm not sure 
->whether explicitly modeling it as a platform device makes sense, rather than the socket providing services to the WiFi module, not necessarily through a device.
->
->Unfortunately, it should be noted that the WiFi device socket on Cardhu 
->apparently isn't some standardized thing (like PCIe) but something 
->rather more custom, although there are apparently devices available to 
->plug into it from multiple module vendors which contain WiFi chips from multiple chip vendors.
->
->Anyway, these are just some quick thoughts on the topic - obviously more flesh is needed.
+From: Javier Cardona <javier@cozybit.com>
 
-Stephen, as Rakesh said that in case of bcm4329, the two GPIO (WF_EN and WF_RST) are shorted. So I think we can simply to use the power-gpios properity in the SD driver, just use one gpio.
-I test it in this way, it runs ok, the bcm4329 can be powered up. We can use this option.
-
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Jason Abele <jason@cozybit.com>
 ---
-nvpublic
+formerly sent as:
+	[PATCH v3 4/5] mac80211: Rename stainfo variable for the more common sta
+
+now also renames stainfo in mesh.h
+
+ net/mac80211/mesh.h      |    2 +-
+ net/mac80211/mesh_hwmp.c |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index e364275..c7400a2 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -245,7 +245,7 @@ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
+ void ieee80211s_init(void);
+ void ieee80211s_update_metric(struct ieee80211_local *local,
+-		struct sta_info *stainfo, struct sk_buff *skb);
++		struct sta_info *sta, struct sk_buff *skb);
+ void ieee80211s_stop(void);
+ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index acbd1ad..9b6da2d 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -303,7 +303,7 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
+ }
+ 
+ void ieee80211s_update_metric(struct ieee80211_local *local,
+-		struct sta_info *stainfo, struct sk_buff *skb)
++		struct sta_info *sta, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+@@ -315,9 +315,9 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
+ 
+ 	/* moving average, scaled to 100 */
+-	stainfo->fail_avg = ((80 * stainfo->fail_avg + 5) / 100 + 20 * failed);
+-	if (stainfo->fail_avg > 95)
+-		mesh_plink_broken(stainfo);
++	sta->fail_avg = ((80 * sta->fail_avg + 5) / 100 + 20 * failed);
++	if (sta->fail_avg > 95)
++		mesh_plink_broken(sta);
+ }
+ 
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+-- 
+1.7.9.5
 
