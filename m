@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37273 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756572Ab2FZNWJ (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:51865 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751590Ab2FHNco (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 09:22:09 -0400
-Message-ID: <1340716926.14634.32.camel@jlt3.sipsolutions.net> (sfid-20120626_152213_691424_30A23620)
-Subject: Re: [RFC v3 11/13] cfg80211/mac80211: remove .get_channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Jun 2012 15:22:06 +0200
-In-Reply-To: <1340713818-28549-12-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-	 <1340713818-28549-12-git-send-email-michal.kazior@tieto.com>
+	Fri, 8 Jun 2012 09:32:44 -0400
+Received: by lagz14 with SMTP id z14so1711714lag.21
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 06:32:32 -0700 (PDT)
+Message-ID: <1339162351.7078.145.camel@cumari.coelho.fi> (sfid-20120608_153246_748030_2BA10AA5)
+Subject: Re: [PATCH 0/5] wl18xx: some alignment with new FWs and conf
+ improvements
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 08 Jun 2012 16:32:31 +0300
+In-Reply-To: <1339137055-30095-1-git-send-email-coelho@ti.com>
+References: <1339137055-30095-1-git-send-email-coelho@ti.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-26 at 14:30 +0200, Michal Kazior wrote:
+On Fri, 2012-06-08 at 09:30 +0300, Luciano Coelho wrote:
+> Hi,
+> 
+> Here are a few more patches for wl18xx (or directly related to it).
+> Two of them align features and the ABI of newer firmware versions: the
+> new statistics structure format by Ido and the support for FW logger
+> by default with PG2.0 chips by Arik.
+> 
+> Then there are three more patches by Arik that improve the conf binary
+> handling.  Align the entire phy structure with the one used by the
+> firmware, fix the module parameters to reflect the new placement of
+> the settings (which are now in the conf structure) and make the NVS
+> file optional, in preparation for total removal from wl18xx.
+> 
+> Thanks guys for these patches!
+> 
+> Cheers,
+> Luca.
+> 
+> Arik Nemtsov (4):
+>   wl18xx: allow FW-log by default for PG2.0
+>   wl18xx: align wl18xx_conf_phy with FW variant and remove it
+>   wl18xx: clean up phy module parameters
+>   wlcore/wl12xx/wl18xx: make NVS file optional for wl18xx
+> 
+> Ido Reis (1):
+>   wl18xx: update fw statistics
+> 
+>  drivers/net/wireless/ti/wl18xx/acx.h     |   33 ++++--
+>  drivers/net/wireless/ti/wl18xx/conf.h    |   37 ++++++-
+>  drivers/net/wireless/ti/wl18xx/debugfs.c |   56 ++++++----
+>  drivers/net/wireless/ti/wl18xx/main.c    |  165 +++++++++++-------------------
+>  drivers/net/wireless/ti/wl18xx/reg.h     |   57 -----------
+>  drivers/net/wireless/ti/wl18xx/wl18xx.h  |    2 -
+>  drivers/net/wireless/ti/wlcore/boot.c    |    4 +-
+>  drivers/net/wireless/ti/wlcore/main.c    |   22 ++--
+>  8 files changed, 166 insertions(+), 210 deletions(-)
 
-> +++ b/net/wireless/nl80211.c
-> @@ -1588,17 +1588,11 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
->  			(cfg80211_rdev_list_generation << 2)))
->  		goto nla_put_failure;
->  
-> -	if (rdev->ops->get_channel) {
-> -		struct ieee80211_channel *chan;
-> -		enum nl80211_channel_type channel_type;
-> -
-> -		chan = rdev->ops->get_channel(&rdev->wiphy, &channel_type);
-> -		if (chan &&
-> -		    (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
-> -				    chan->center_freq) ||
-> -		     nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-> -				    channel_type)))
-> -			goto nla_put_failure;
-> +	if (rdev->monitor_channel) {
-> +		nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
-> +			    rdev->monitor_channel->center_freq);
-> +		nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-> +			    rdev->monitor_channel_type);
+Applied and pushed!
 
-Tiny comment here -- you're removing nla_put error handling.
-
-johannes
+--
+Luca.
 
