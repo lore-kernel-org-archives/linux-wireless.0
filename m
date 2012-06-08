@@ -1,78 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44798 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932623Ab2FEMVl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:65178 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756671Ab2FHRjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 08:21:41 -0400
-Message-ID: <1338898901.4514.40.camel@jlt3.sipsolutions.net> (sfid-20120605_142144_001557_25E97BCA)
-Subject: [PATCH] wireless: add my new trees to MAINTAINERS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 05 Jun 2012 14:21:41 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Jun 2012 13:39:07 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 9/9] ath9k: keep btcoex period in milliseconds
+Date: Fri, 8 Jun 2012 23:09:08 +0530
+Message-ID: <1339177148-21672-9-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120608_193910_823299_80AFFFDF)
+In-Reply-To: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+btcoex periord is converted into micro seconds during initialization
+and converted back to milli seconds while starting timer. As MCI code
+handles btcoex period in msec, lets keep the btcoex timer in msec and
+convert them into other form whenever needed.
 
-Add my new trees to the MAINTAINERS file
-for the components that I maintain in the
-new trees.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- MAINTAINERS |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/gpio.c |    8 ++++----
+ drivers/net/wireless/ath/ath9k/mci.c  |    3 +--
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c5fd905..c2d922d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1800,6 +1800,9 @@ F:	include/linux/cfag12864b.h
- CFG80211 and NL80211
- M:	Johannes Berg <johannes@sipsolutions.net>
- L:	linux-wireless@vger.kernel.org
-+W:	http://wireless.kernel.org/
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
- S:	Maintained
- F:	include/linux/nl80211.h
- F:	include/net/cfg80211.h
-@@ -4340,7 +4343,8 @@ MAC80211
- M:	Johannes Berg <johannes@sipsolutions.net>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
- S:	Maintained
- F:	Documentation/networking/mac80211-injection.txt
- F:	include/net/mac80211.h
-@@ -4351,7 +4355,8 @@ M:	Stefano Brivio <stefano.brivio@polimi.it>
- M:	Mattias Nissler <mattias.nissler@gmx.de>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/en/developers/Documentation/mac80211/RateControl/PID
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
- S:	Maintained
- F:	net/mac80211/rc80211_pid*
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index af6d273..00ff5ab 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -232,7 +232,7 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 	}
  
-@@ -5694,6 +5699,10 @@ F:	include/linux/remoteproc.h
+ 	ath9k_ps_restore(sc);
+-	timer_period = btcoex->btcoex_period / 1000;
++	timer_period = btcoex->btcoex_period;
+ 	mod_timer(&btcoex->period_timer, jiffies + msecs_to_jiffies(timer_period));
+ }
  
- RFKILL
- M:	Johannes Berg <johannes@sipsolutions.net>
-+W:	http://wireless.kernel.org/
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
-+S:	Maintained
- L:	linux-wireless@vger.kernel.org
- S:	Maintained
- F:	Documentation/rfkill.txt
+@@ -267,10 +267,10 @@ static int ath_init_btcoex_timer(struct ath_softc *sc)
+ {
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 
+-	btcoex->btcoex_period = ATH_BTCOEX_DEF_BT_PERIOD * 1000;
+-	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) *
++	btcoex->btcoex_period = ATH_BTCOEX_DEF_BT_PERIOD;
++	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) * 1000 *
+ 		btcoex->btcoex_period / 100;
+-	btcoex->btscan_no_stomp = (100 - ATH_BTCOEX_BTSCAN_DUTY_CYCLE) *
++	btcoex->btscan_no_stomp = (100 - ATH_BTCOEX_BTSCAN_DUTY_CYCLE) * 1000 *
+ 				   btcoex->btcoex_period / 100;
+ 
+ 	setup_timer(&btcoex->period_timer, ath_btcoex_period_timer,
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 2ea5e93..92d61cc 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -182,8 +182,7 @@ skip_tuning:
+ 	if (btcoex->duty_cycle > ATH_MCI_MAX_DUTY_CYCLE)
+ 		btcoex->duty_cycle = ATH_MCI_MAX_DUTY_CYCLE;
+ 
+-	btcoex->btcoex_period *= 1000;
+-	btcoex->btcoex_no_stomp =  btcoex->btcoex_period *
++	btcoex->btcoex_no_stomp =  btcoex->btcoex_period * 1000 *
+ 		(100 - btcoex->duty_cycle) / 100;
+ 
+ 	ath9k_hw_btcoex_enable(sc->sc_ah);
 -- 
-1.7.10
-
-
+1.7.10.3
 
