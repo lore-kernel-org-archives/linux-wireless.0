@@ -1,181 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4074 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752330Ab2FZT1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 15:27:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>
-Subject: [PATCH 4/7] brcmfmac: use firmware data buffer directly for
- nvram
-Date: Tue, 26 Jun 2012 21:26:37 +0200
-Message-ID: <1340738800-14087-5-git-send-email-arend@broadcom.com> (sfid-20120626_212734_955610_AE307478)
-In-Reply-To: <1340738800-14087-1-git-send-email-arend@broadcom.com>
-References: <1340738800-14087-1-git-send-email-arend@broadcom.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:55837 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932625Ab2FHQyZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 12:54:25 -0400
+Received: by qcro28 with SMTP id o28so942891qcr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 09:54:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1339173704.5748.19.camel@jlt3.sipsolutions.net>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	<1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	<20120607180325.7752b3c0@milhouse>
+	<1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	<1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	<4FD11B47.10002@lwfinger.net>
+	<CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	<1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	<1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	<1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	<1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	<4FD21C6B.5000402@lwfinger.net>
+	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	<1339171694.5748.12.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-fZQ0auLAd_8rqaoNfLF-2UghRrB7S7qgu1RrqesbW4Q@mail.gmail.com>
+	<1339173704.5748.19.camel@jlt3.sipsolutions.net>
+Date: Fri, 8 Jun 2012 18:54:24 +0200
+Message-ID: <CAHsu+b_J5CsTdbGn=epwx3A+zJ6Nw8rmuVRjZEwMMsaeGOycpQ@mail.gmail.com> (sfid-20120608_185429_399795_44A2607B)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+From: Andre Heider <a.heider@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Fri, Jun 8, 2012 at 6:41 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-06-08 at 18:16 +0200, Andre Heider wrote:
+>
+>> >> [   17.597307] wlan0: authenticate with d8:5d:4c:9c:31:14
+>> >> [   17.638399] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
+>> >> [   17.851085] wlan0: send auth to d8:5d:4c:9c:31:14 (try 2/3)
+>> >> [   18.063086] wlan0: send auth to d8:5d:4c:9c:31:14 (try 3/3)
+>> >> [   18.275081] wlan0: authentication with d8:5d:4c:9c:31:14 timed out
+>> >>
+>> >> Tried it 3 times, always times out.
+>
+> I missed one a use of queue_mapping, try this:
+>
+> http://p.sipsolutions.net/cc1fc9799ad3c015.txt
 
-The nvram file could be parsed directly in the data buffer in the
-firmware structure passed by request_firmware function. This patch
-gets rid of the redundant memcpy.
+Unfortunately still the authentication timeout.
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   97 ++++++--------------
- 1 file changed, 30 insertions(+), 67 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 581e7d9..a50796c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3336,39 +3336,6 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- 	return rxlen ? (int)rxlen : -ETIMEDOUT;
- }
- 
--static int brcmf_sdbrcm_downloadvars(struct brcmf_sdio *bus, void *arg, int len)
--{
--	int bcmerror = 0;
--
--	brcmf_dbg(TRACE, "Enter\n");
--
--	/* Basic sanity checks */
--	if (bus->sdiodev->bus_if->drvr_up) {
--		bcmerror = -EISCONN;
--		goto err;
--	}
--	if (!len) {
--		bcmerror = -EOVERFLOW;
--		goto err;
--	}
--
--	/* Free the old ones and replace with passed variables */
--	kfree(bus->vars);
--
--	bus->vars = kmalloc(len, GFP_ATOMIC);
--	bus->varsz = bus->vars ? len : 0;
--	if (bus->vars == NULL) {
--		bcmerror = -ENOMEM;
--		goto err;
--	}
--
--	/* Copy the passed variables, which should include the
--		 terminating double-null */
--	memcpy(bus->vars, arg, bus->varsz);
--err:
--	return bcmerror;
--}
--
- static int brcmf_sdbrcm_write_vars(struct brcmf_sdio *bus)
- {
- 	int bcmerror = 0;
-@@ -3573,13 +3540,21 @@ err:
-  * by two NULs.
- */
- 
--static uint brcmf_process_nvram_vars(char *varbuf, uint len)
-+static int brcmf_process_nvram_vars(struct brcmf_sdio *bus)
- {
-+	char *varbuf;
- 	char *dp;
- 	bool findNewline;
- 	int column;
--	uint buf_len, n;
-+	int ret = 0;
-+	uint buf_len, n, len;
-+
-+	len = bus->firmware->size;
-+	varbuf = vmalloc(len);
-+	if (!varbuf)
-+		return -ENOMEM;
- 
-+	memcpy(varbuf, bus->firmware->data, len);
- 	dp = varbuf;
- 
- 	findNewline = false;
-@@ -3608,56 +3583,44 @@ static uint brcmf_process_nvram_vars(char *varbuf, uint len)
- 		column++;
- 	}
- 	buf_len = dp - varbuf;
--
- 	while (dp < varbuf + n)
- 		*dp++ = 0;
- 
--	return buf_len;
-+	kfree(bus->vars);
-+
-+	bus->varsz = buf_len + 1;
-+	bus->vars = kmalloc(bus->varsz, GFP_KERNEL);
-+	if (bus->vars == NULL) {
-+		bus->varsz = 0;
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	/* copy the processed variables and add null termination */
-+	memcpy(bus->vars, varbuf, buf_len);
-+	bus->vars[buf_len] = 0;
-+err:
-+	vfree(varbuf);
-+	return ret;
- }
- 
- static int brcmf_sdbrcm_download_nvram(struct brcmf_sdio *bus)
- {
--	uint len;
--	char *memblock = NULL;
--	char *bufp;
- 	int ret;
- 
-+	if (bus->sdiodev->bus_if->drvr_up)
-+		return -EISCONN;
-+
- 	ret = request_firmware(&bus->firmware, BRCMF_SDIO_NV_NAME,
- 			       &bus->sdiodev->func[2]->dev);
- 	if (ret) {
- 		brcmf_dbg(ERROR, "Fail to request nvram %d\n", ret);
- 		return ret;
- 	}
--	bus->fw_ptr = 0;
--
--	memblock = kmalloc(MEMBLOCK, GFP_ATOMIC);
--	if (memblock == NULL) {
--		ret = -ENOMEM;
--		goto err;
--	}
--
--	len = brcmf_sdbrcm_get_image(memblock, MEMBLOCK, bus);
--
--	if (len > 0 && len < MEMBLOCK) {
--		bufp = (char *)memblock;
--		bufp[len] = 0;
--		len = brcmf_process_nvram_vars(bufp, len);
--		bufp += len;
--		*bufp++ = 0;
--		if (len)
--			ret = brcmf_sdbrcm_downloadvars(bus, memblock, len + 1);
--		if (ret)
--			brcmf_dbg(ERROR, "error downloading vars: %d\n", ret);
--	} else {
--		brcmf_dbg(ERROR, "error reading nvram file: %d\n", len);
--		ret = -EIO;
--	}
- 
--err:
--	kfree(memblock);
-+	ret = brcmf_process_nvram_vars(bus);
- 
- 	release_firmware(bus->firmware);
--	bus->fw_ptr = 0;
- 
- 	return ret;
- }
--- 
-1.7.9.5
-
-
+And trace-cmd, hmm. There're no debian packages for it (at least for
+powerpc), ubuntu only has x86 and x86_64, I don't have a compiler on
+the wii, my powerpc crosscompiler doesn't have a libc and if I find a
+solution I can only blind-script a trace via rc.local because without
+wlan there's no way to interact :)
+But I'll think of something...
