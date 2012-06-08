@@ -1,53 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:3246 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754080Ab2FYRGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 13:06:39 -0400
-Date: Mon, 25 Jun 2012 19:17:38 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linville@tuxdriver.com, davej@redhat.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: only put local on destruction if it was created
- before
-Message-ID: <20120625171738.GC16275@sortiz-mobl> (sfid-20120625_190657_889857_DCE694B4)
-References: <1339531699-7377-1-git-send-email-levinsasha928@gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33857 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756671Ab2FHRjA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 13:39:00 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 8/9] ath9k: simplify btcoex profile management
+Date: Fri, 8 Jun 2012 23:09:07 +0530
+Message-ID: <1339177148-21672-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120608_193904_651037_618600AC)
+In-Reply-To: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1339531699-7377-1-git-send-email-levinsasha928@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sasha,
+This patch simplifies profile management utility functions.
 
-On Tue, Jun 12, 2012 at 10:08:19PM +0200, Sasha Levin wrote:
-> Not having 'local' is a valid case when a socket was created but never
-> bound or connected to anything, so avoid putting 'local' if it was
-> never created.
-> 
-> Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
-> ---
->  net/nfc/llcp/sock.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
-> index 2c0b317..54daa10 100644
-> --- a/net/nfc/llcp/sock.c
-> +++ b/net/nfc/llcp/sock.c
-> @@ -710,7 +710,8 @@ void nfc_llcp_sock_free(struct nfc_llcp_sock *sock)
->  
->  	sock->parent = NULL;
->  
-> -	nfc_llcp_local_put(sock->local);
-> +	if (sock->local)
-> +		nfc_llcp_local_put(sock->local);
-nfc_llcp_local_put() already checks for its argument being NULL or not.
+* Separate find_profile from add/del functions
+* Return correct values when the profile list is empty or
+  profile is ot found
+* flush the profiles when there are entries in the list
 
-Cheers,
-Samuel.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mci.c |   48 +++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 49137f4..2ea5e93 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -28,11 +28,14 @@ ath_mci_find_profile(struct ath_mci_profile *mci,
+ {
+ 	struct ath_mci_profile_info *entry;
+ 
++	if (list_empty(&mci->info))
++		return NULL;
++
+ 	list_for_each_entry(entry, &mci->info, list) {
+ 		if (entry->conn_handle == info->conn_handle)
+-			break;
++			return entry;
+ 	}
+-	return entry;
++	return NULL;
+ }
+ 
+ static bool ath_mci_add_profile(struct ath_common *common,
+@@ -49,31 +52,21 @@ static bool ath_mci_add_profile(struct ath_common *common,
+ 	    (info->type != MCI_GPM_COEX_PROFILE_VOICE))
+ 		return false;
+ 
+-	entry = ath_mci_find_profile(mci, info);
+-
+-	if (entry) {
+-		memcpy(entry, info, 10);
+-	} else {
+-		entry = kzalloc(sizeof(*entry), GFP_KERNEL);
+-		if (!entry)
+-			return false;
++	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
++	if (!entry)
++		return false;
+ 
+-		memcpy(entry, info, 10);
+-		INC_PROF(mci, info);
+-		list_add_tail(&info->list, &mci->info);
+-	}
++	memcpy(entry, info, 10);
++	INC_PROF(mci, info);
++	list_add_tail(&entry->list, &mci->info);
+ 
+ 	return true;
+ }
+ 
+ static void ath_mci_del_profile(struct ath_common *common,
+ 				struct ath_mci_profile *mci,
+-				struct ath_mci_profile_info *info)
++				struct ath_mci_profile_info *entry)
+ {
+-	struct ath_mci_profile_info *entry;
+-
+-	entry = ath_mci_find_profile(mci, info);
+-
+ 	if (!entry)
+ 		return;
+ 
+@@ -86,12 +79,16 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci)
+ {
+ 	struct ath_mci_profile_info *info, *tinfo;
+ 
++	mci->aggr_limit = 0;
++
++	if (list_empty(&mci->info))
++		return;
++
+ 	list_for_each_entry_safe(info, tinfo, &mci->info, list) {
+ 		list_del(&info->list);
+ 		DEC_PROF(mci, info);
+ 		kfree(info);
+ 	}
+-	mci->aggr_limit = 0;
+ }
+ 
+ static void ath_mci_adjust_aggr_limit(struct ath_btcoex *btcoex)
+@@ -229,12 +226,17 @@ static void ath_mci_process_profile(struct ath_softc *sc,
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 	struct ath_mci_profile *mci = &btcoex->mci;
++	struct ath_mci_profile_info *entry = NULL;
++
++	entry = ath_mci_find_profile(mci, info);
++	if (entry)
++		memcpy(entry, info, 10);
+ 
+ 	if (info->start) {
+-		if (!ath_mci_add_profile(common, mci, info))
++		if (!entry && !ath_mci_add_profile(common, mci, info))
+ 			return;
+ 	} else
+-		ath_mci_del_profile(common, mci, info);
++		ath_mci_del_profile(common, mci, entry);
+ 
+ 	btcoex->btcoex_period = ATH_MCI_DEF_BT_PERIOD;
+ 	mci->aggr_limit = mci->num_sco ? 6 : 0;
+@@ -263,8 +265,6 @@ static void ath_mci_process_status(struct ath_softc *sc,
+ 	if (status->is_link)
+ 		return;
+ 
+-	memset(&info, 0, sizeof(struct ath_mci_profile_info));
+-
+ 	info.conn_handle = status->conn_handle;
+ 	if (ath_mci_find_profile(mci, &info))
+ 		return;
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.10.3
+
