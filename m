@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:38418 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517Ab2FSWvA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 18:51:00 -0400
-Received: by lbbgm6 with SMTP id gm6so6407558lbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 15:50:59 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:54085 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933075Ab2FHI4D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 04:56:03 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <linville@tuxdriver.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] cfg80211: check iface combinations only when iface is running
+Date: Fri, 8 Jun 2012 10:55:44 +0200
+Message-ID: <1339145744-9154-1-git-send-email-michal.kazior@tieto.com> (sfid-20120608_105612_783135_D69D0F90)
 MIME-Version: 1.0
-In-Reply-To: <CAL74qpEwZZF2LrfH1xxYNOxCGPBtT=6UKD99w4hsFr5Hzf8h+Q@mail.gmail.com>
-References: <CAL74qpEwZZF2LrfH1xxYNOxCGPBtT=6UKD99w4hsFr5Hzf8h+Q@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 20 Jun 2012 08:50:39 +1000
-Message-ID: <CAGRGNgUd_8PvJjgcPk-nCJHA47-SmY7-i1XKDg3C_qNR74OMyQ@mail.gmail.com> (sfid-20120620_005106_387391_88E5F95F)
-Subject: Re: turn off scanning
-To: =?UTF-8?B?6Km55rqQ?= <zhanyuan.roger@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Don't validate interface combinations on a stopped
+interface. Otherwise we might end up being able to
+create a new interface with a certain type, but
+won't be able to change an existing interface
+into that type.
 
-On Tue, Jun 19, 2012 at 11:30 PM, 詹源 <zhanyuan.roger@gmail.com> wrote:
-> I want to modify the 802.11 stack code to turn off sw_scanning in STA.
-> It's just a personal purpose because my STA has no need to connect to
-> a AP. STA just stays on the operation channel.
+This also skips some other functions when
+interface is stopped and changing interface type.
 
-What are you trying to achieve?
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/util.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Scanning is usually controlled by a userspace process. "Disabling" it
-as simple as making sure that there are no userspace processes, e.g.
-wpa_supplicant, NetworkManager, etc. that might initiate a scan.
-
-Thanks,
-
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 147f283..eb7ca3c 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -805,7 +805,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	     ntype == NL80211_IFTYPE_P2P_CLIENT))
+ 		return -EBUSY;
+ 
+-	if (ntype != otype) {
++	if (ntype != otype && netif_running(dev)) {
+ 		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
+ 						    ntype);
+ 		if (err)
 -- 
-Julian Calaby
+1.7.0.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
