@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:63105 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756055Ab2FNQpY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59016 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127Ab2FHRsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 12:45:24 -0400
-Message-ID: <4FDA1523.7090301@opentechinstitute.org> (sfid-20120614_184527_239494_7A059C53)
-Date: Thu, 14 Jun 2012 12:45:23 -0400
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
-MIME-Version: 1.0
+	Fri, 8 Jun 2012 13:48:03 -0400
+Date: Fri, 8 Jun 2012 13:38:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add support for userspace to handle auth frames
- on adhoc ifaces
-References: <4FD8B5D4.8060305@opentechinstitute.org> <1339658006.4909.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339658006.4909.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: print info when disabling HT
+Message-ID: <20120608173804.GB13889@tuxdriver.com> (sfid-20120608_194807_552329_B7425ACE)
+References: <1338962733.4513.1.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1338962733.4513.1.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 06, 2012 at 08:05:33AM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Make mac80211 print a message when it disables
+> HT due to the connection using WEP/TKIP or due
+> to the AP not supporting WMM/QoS.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> Did this slip through? :-)
 
+I've got it on the wireless-next side.
 
-On 06/14/2012 03:13 AM, Johannes Berg wrote:
-> On Wed, 2012-06-13 at 11:46 -0400, Will Hawkins wrote:
->> Hello all!
->>
->> This patch allows userspace applications to use nl80211 to register for
->> AUTH frames received on adhoc interfaces.
->>
->> Thanks,
->> Will
->>
->> Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
-> 
-> Thanks for the patch. Can I get you to write a better commit log? :-)
-> 
-> You should remove the "Hello" and "Thanks" portions, they shouldn't go
-> into the kernel's commit log after all. And then, even if I already
-> know, please explain in the commit log why you're making this change so
-> the reason gets recorded in the kernel's commit log.
+commit 1c4cb928e1b7c6ad30a9b7d3e720f26156d92925
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Wed May 30 15:57:00 2012 +0200
 
-I submitted a v2 of this patch with a better commit log. Thanks for the
-handholding. I'm obviously still new at this!
+    mac80211: print info when disabling HT
+    
+    Make mac80211 print a message when it disables
+    HT due to the connection using WEP/TKIP or due
+    to the AP not supporting WMM/QoS.
+    
+    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Will
-
-> 
-> Thanks,
-> johannes
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
