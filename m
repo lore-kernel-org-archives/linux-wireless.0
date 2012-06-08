@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10357 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753814Ab2F1LR7 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57095 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934249Ab2FHUag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 07:17:59 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [RFC 60g 3/5] wireless: regulatory for 60g
-Date: Thu, 28 Jun 2012 14:16:58 +0300
-Message-ID: <1340882220-31768-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131803_349409_0FAC827D)
-In-Reply-To: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 8 Jun 2012 16:30:36 -0400
+Received: by pbbrp8 with SMTP id rp8so2994377pbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 13:30:36 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] mac80211: Remove unused variable
+Date: Fri,  8 Jun 2012 13:30:24 -0700
+Message-Id: <1339187425-12549-2-git-send-email-jason@cozybit.com> (sfid-20120608_223040_172011_873C2EC2)
+In-Reply-To: <1339187425-12549-1-git-send-email-jason@cozybit.com>
+References: <1339187425-12549-1-git-send-email-jason@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add regulatory rule for the 60g band
+From: Javier Cardona <javier@cozybit.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Reviewed-by: Jason Abele <jason@cozybit.com>
 ---
- net/wireless/reg.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+formerly sent as:
+	[PATCH v3 2/5] mac80211: Remove unused variable
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index baf5704..b2b3222 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -129,7 +129,7 @@ static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
+ net/mac80211/mesh_hwmp.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index fa7c580..acbd1ad 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -323,7 +323,6 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
+ {
+-	struct ieee80211_supported_band *sband;
+ 	struct rate_info rinfo;
+ 	/* This should be adjusted for each device */
+ 	int device_constant = 1 << ARITH_SHIFT;
+@@ -333,8 +332,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	u32 tx_time, estimated_retx;
+ 	u64 result;
  
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
--	.n_reg_rules = 5,
-+	.n_reg_rules = 6,
- 	.alpha2 =  "00",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..11 */
-@@ -156,6 +156,9 @@ static const struct ieee80211_regdomain world_regdom = {
- 		REG_RULE(5745-10, 5825+10, 40, 6, 20,
- 			NL80211_RRF_PASSIVE_SCAN |
- 			NL80211_RRF_NO_IBSS),
-+
-+		/* IEEE 802.11ad (60gHz), channels 1..3 */
-+		REG_RULE(56160+2160*1-1080, 56160+2160*3+1080, 2160, 0, 0, 0),
- 	}
- };
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
  
 -- 
 1.7.9.5
