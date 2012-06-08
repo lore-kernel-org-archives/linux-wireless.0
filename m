@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:39895 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964838Ab2FAP2H (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60216 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759228Ab2FHRvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 11:28:07 -0400
-Received: by dady13 with SMTP id y13so2928376dad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 08:28:06 -0700 (PDT)
-From: Grant Erickson <marathon96@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: Add support for an external 26 MHz crystal source
-Date: Fri,  1 Jun 2012 08:27:57 -0700
-Message-Id: <1338564477-25317-1-git-send-email-marathon96@gmail.com> (sfid-20120601_172823_564042_4C62E3DC)
+	Fri, 8 Jun 2012 13:51:37 -0400
+Message-ID: <1339177894.5748.24.camel@jlt3.sipsolutions.net> (sfid-20120608_195141_847295_9D9CD38B)
+Subject: Re: [PATCH] mac80211: print info when disabling HT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 08 Jun 2012 19:51:34 +0200
+In-Reply-To: <20120608173804.GB13889@tuxdriver.com>
+References: <1338962733.4513.1.camel@jlt3.sipsolutions.net>
+	 <20120608173804.GB13889@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2012-06-08 at 13:38 -0400, John W. Linville wrote:
+> On Wed, Jun 06, 2012 at 08:05:33AM +0200, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Make mac80211 print a message when it disables
+> > HT due to the connection using WEP/TKIP or due
+> > to the AP not supporting WMM/QoS.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> > Did this slip through? :-)
+> 
+> I've got it on the wireless-next side.
 
-Signed-off-by: Grant Erickson <marathon96@gmail.com>
----
- drivers/net/wireless/ti/wl12xx/main.c |    1 +
- 1 file changed, 1 insertion(+)
+Oops, must've missed it, sorry!
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index d7dd3de..8617403 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -863,6 +863,7 @@ static int wl127x_boot_clk(struct wl1271 *wl)
- 		/* ref clk: 19.2/38.4/38.4-XTAL */
- 		clk = 0x3;
- 	else if (wl->ref_clock == CONF_REF_CLK_26_E ||
-+		 wl->ref_clock == CONF_REF_CLK_26_M_XTAL ||
- 		 wl->ref_clock == CONF_REF_CLK_52_E)
- 		/* ref clk: 26/52 */
- 		clk = 0x5;
--- 
-1.7.10.2
+johannes
 
