@@ -1,152 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756478Ab2FZMag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:30:36 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v3 03/13] cfg80211: add channel tracking for AP and mesh
-Date: Tue, 26 Jun 2012 14:30:08 +0200
-Message-ID: <1340713818-28549-4-git-send-email-michal.kazior@tieto.com> (sfid-20120626_145130_113367_E0135A34)
-In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:47506 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762201Ab2FHRnK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 13:43:10 -0400
+Received: by yhmm54 with SMTP id m54so1469006yhm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 10:43:09 -0700 (PDT)
+Message-ID: <4FD239AA.9090708@lwfinger.net> (sfid-20120608_194314_106563_4FD02AA5)
+Date: Fri, 08 Jun 2012 12:43:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Andre Heider <a.heider@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i]
+ >= n_queues))
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com> <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com> <1339167160.4901.0.camel@jlt3.sipsolutions.net> <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com> <1339168452.5748.0.camel@jlt3.sipsolutions.net> <1339168600.5748.2.camel@jlt3.sipsolutions.net> <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com> <4FD21C6B.5000402@lwfinger.net> <1339170182.5748.7.camel@jlt3.sipsolutions.net> <1339170287.5748.8.camel@jlt3.sipsolutions.net> <1339170510.5748.9.camel@jlt3.sipsolutions.net> <1339170742.5748.10.camel@jlt3.sipsolutions.net> <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com> <1339171159.5748.11.camel@jlt3.sipsolutions.net> <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com> <4FD22727.7000500@lwfinger.net> <1339172904.5748.18.camel@jlt3.sipsolutions.net> <20120608183339.78a7fcbd@milhouse>
+In-Reply-To: <20120608183339.78a7fcbd@milhouse>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to know which channel is used by a running
-AP and mesh for channel context accounting and
-finding matching/active interface combination.
+On 06/08/2012 11:33 AM, Michael Büsch wrote:
+>
+> Larry, did you check with PIO?
 
-STA/IBSS have current_bss already which allows us
-to check which channel a vif is tuned to.
-Non-fixed channel IBSS can be handled with
-additional changes.
+No, I only used DMA. With the latest patch, compilation is Ok, and DMA works for 
+both kinds of firmware, while PIO fails for both.
 
-Monitor mode is going to be handled differently.
+Larry
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- include/net/cfg80211.h |    3 +++
- net/wireless/ap.c      |    4 +++-
- net/wireless/mesh.c    |   18 ++++++++++++++----
- net/wireless/mlme.c    |    1 +
- net/wireless/nl80211.c |    5 ++++-
- 5 files changed, 25 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7319f25..0f9d7b4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2335,6 +2335,9 @@ struct wireless_dev {
- 	struct ieee80211_channel *preset_chan;
- 	enum nl80211_channel_type preset_chantype;
- 
-+	/* for AP and mesh channel tracking */
-+	struct ieee80211_channel *channel;
-+
- 	bool ps;
- 	int ps_timeout;
- 
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-index 45199cc..fcc60d8 100644
---- a/net/wireless/ap.c
-+++ b/net/wireless/ap.c
-@@ -24,8 +24,10 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 		return -ENOENT;
- 
- 	err = rdev->ops->stop_ap(&rdev->wiphy, dev);
--	if (!err)
-+	if (!err) {
- 		wdev->beacon_interval = 0;
-+		wdev->channel = NULL;
-+	}
- 
- 	return err;
- }
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index b44c736..4f218c1 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -153,6 +153,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 	if (!err) {
- 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
- 		wdev->mesh_id_len = setup->mesh_id_len;
-+		wdev->channel = setup->channel;
- 	}
- 
- 	return err;
-@@ -178,6 +179,7 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
- 			   enum nl80211_channel_type channel_type)
- {
- 	struct ieee80211_channel *channel;
-+	int err;
- 
- 	channel = rdev_freq_to_chan(rdev, freq, channel_type);
- 	if (!channel || !cfg80211_can_beacon_sec_chan(&rdev->wiphy,
-@@ -199,9 +201,14 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
- 
- 		if (!netif_running(wdev->netdev))
- 			return -ENETDOWN;
--		return rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
--							    wdev->netdev,
--							    channel);
-+
-+		err = rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
-+							   wdev->netdev,
-+							   channel);
-+		if (!err)
-+			wdev->channel = channel;
-+
-+		return err;
- 	}
- 
- 	if (wdev->mesh_id_len)
-@@ -243,8 +250,11 @@ static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
- 		return -ENOTCONN;
- 
- 	err = rdev->ops->leave_mesh(&rdev->wiphy, dev);
--	if (!err)
-+	if (!err) {
- 		wdev->mesh_id_len = 0;
-+		wdev->channel = NULL;
-+	}
-+
- 	return err;
- }
- 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index da4406f..a7882eb 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -947,6 +947,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
- 	if (WARN_ON(!chan))
- 		goto out;
- 
-+	wdev->channel = chan;
- 	nl80211_ch_switch_notify(rdev, dev, freq, type, GFP_KERNEL);
- out:
- 	wdev_unlock(wdev);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c17b57b..5d36124 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2356,8 +2356,11 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
--	if (!err)
-+	if (!err) {
- 		wdev->beacon_interval = params.beacon_interval;
-+		wdev->channel = params.channel;
-+	}
-+
- 	return err;
- }
- 
--- 
-1.7.0.4
 
