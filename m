@@ -1,67 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63895 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753693Ab2FEGgR (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:40842 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934249Ab2FHUae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 02:36:17 -0400
-Message-ID: <4FCDA8DB.9000000@qca.qualcomm.com> (sfid-20120605_083621_872453_927B3189)
-Date: Tue, 5 Jun 2012 12:06:11 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211: Fix incompatible interfaces combination
-References: <1338824836-2283-1-git-send-email-mohammed@qca.qualcomm.com>	 <1338825141.4512.14.camel@jlt3.sipsolutions.net>	 <4FCCDB63.3040806@qca.qualcomm.com>	 <1338826398.4512.23.camel@jlt3.sipsolutions.net>	 <4FCCDF78.4040606@qca.qualcomm.com>	 <1338826731.4512.24.camel@jlt3.sipsolutions.net>	 (sfid-20120604_181856_034243_5406D052) <1338826773.4512.25.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338826773.4512.25.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Fri, 8 Jun 2012 16:30:34 -0400
+Received: by dady13 with SMTP id y13so2805221dad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 13:30:34 -0700 (PDT)
+From: Jason Abele <jason@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/2] mac80211: mesh remove unused var and fix naming
+Date: Fri,  8 Jun 2012 13:30:23 -0700
+Message-Id: <1339187425-12549-1-git-send-email-jason@cozybit.com> (sfid-20120608_223038_843264_3B2D128A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+formerly sent as 2 and 4 respectively in:
+	[PATCH v3 0/5] Improvement to initial mesh metric
 
->
-> No, initialization was incorrect -- this is better:
-> http://p.sipsolutions.net/e5ab0f3e38f90d6d.txt
->
+Javier Cardona (2):
+  mac80211: Remove unused variable
+  mac80211: Rename stainfo variable for the more common sta
 
-thanks a lot for the patch!
-with the above patch ath9k seems be working fine with the single 
-incompatible adhoc interface.
-but i was just experimenting with ath9k(similar to iwlwifi having 
-hw->wiphy->n_iface_combinations > 1) with this patch.
-
-static const struct ieee80211_iface_limit a[] = {
-         { .max = 2,     .types = BIT(NL80211_IFTYPE_STATION) },
-};
-
-static const struct ieee80211_iface_limit b[] = {
-         { .max = 2,     .types = BIT(NL80211_IFTYPE_MESH_POINT) },
-};
-
-static const struct ieee80211_iface_combination if_comb[] = {
-         {.limits = a,
-         .n_limits = ARRAY_SIZE(a),
-         .max_interfaces = 2,
-         .num_different_channels = 1,
-         },
-         {.limits = b,
-         .n_limits = ARRAY_SIZE(b),
-         .max_interfaces = 2,
-         .num_different_channels = 1,
-         },
-
-};
-
-i could not add mesh interface if a managed interface is already there 
-and vice versa. if this is the expected behavior, then fine.
-
-dmesg
-iteration 1: cfg80211_can_change_interface all_iftypes 4 and used_iftypes 84
-iteration 2: cfg80211_can_change_interface all_iftypes 80 and 
-used_iftypes 84
-
+ net/mac80211/mesh.h      |    2 +-
+ net/mac80211/mesh_hwmp.c |   11 ++++-------
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
 -- 
-thanks,
-shafi
+1.7.9.5
+
