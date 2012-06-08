@@ -1,75 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:40931 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756222Ab2FPVgi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50587 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757862Ab2FHQYM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2012 17:36:38 -0400
-Received: by weyu7 with SMTP id u7so2816241wey.19
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2012 14:36:36 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: xose.vazquez@gmail.com, IvDoorn@gmail.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: [PATCH] wireless: rt2x00: rt2800: remove unsupported rf and chips
-Date: Sat, 16 Jun 2012 23:36:32 +0200
-Message-Id: <1339882592-17680-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120616_233721_204981_669FFBA8)
+	Fri, 8 Jun 2012 12:24:12 -0400
+Message-ID: <1339172649.5748.16.camel@jlt3.sipsolutions.net> (sfid-20120608_182416_999915_0E0629D3)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 18:24:09 +0200
+In-Reply-To: <1339172402.5748.15.camel@jlt3.sipsolutions.net> (sfid-20120608_182011_815432_531593AA)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	 <20120607180325.7752b3c0@milhouse>
+	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	 <4FD11B47.10002@lwfinger.net>
+	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 <1339171694.5748.12.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-fZQ0auLAd_8rqaoNfLF-2UghRrB7S7qgu1RrqesbW4Q@mail.gmail.com>
+	 (sfid-20120608_181648_775335_FE32999F) <1339172402.5748.15.camel@jlt3.sipsolutions.net>
+	 (sfid-20120608_182011_815432_531593AA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-removed, no support for:
+On Fri, 2012-06-08 at 18:20 +0200, Johannes Berg wrote:
+> On Fri, 2012-06-08 at 18:16 +0200, Andre Heider wrote:
+> 
+> > >> > http://p.sipsolutions.net/511dda98892d2c9a.txt
+> 
+> > >> [   17.597307] wlan0: authenticate with d8:5d:4c:9c:31:14
+> > >> [   17.638399] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
+> > >> [   17.851085] wlan0: send auth to d8:5d:4c:9c:31:14 (try 2/3)
+> > >> [   18.063086] wlan0: send auth to d8:5d:4c:9c:31:14 (try 3/3)
+> > >> [   18.275081] wlan0: authentication with d8:5d:4c:9c:31:14 timed out
+> > >>
+> > >> Tried it 3 times, always times out.
+> > >
+> > > So you didn't get the warning, but can you still check what
+> > > info->hw_queue is in pio.c?
+> > 
+> > always "1"
+> 
+> Ok, so that's correct. Hmm.
+> 
+> Can you check in mac80211's debugfs if the queues are ever started? Or
+> maybe somewhere else? That's the only thing I can think of, if this is
+> getting 1 I finally got the mapping right ...
 
-RF2853 2.4G/5G 3T3R
-RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+I'd be very surprised if the queue is stopped, it doesn't look that
+way .. but maybe you can figure that out with mac80211 tracing:
+http://linuxwireless.org/en/developers/Documentation/mac80211/tracing
 
-RT3593
-RT3883
-
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h |    6 ------
- drivers/net/wireless/rt2x00/rt2x00.h |    2 --
- 2 files changed, 8 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 9348521..b483c23 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -47,10 +47,7 @@
-  * RF3021 2.4G 1T2R
-  * RF3022 2.4G 2T2R
-  * RF3052 2.4G/5G 2T2R
-- * RF2853 2.4G/5G 3T3R
-  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
-- * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-- * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
-  * RF5370 2.4G 1T1R
-  * RF5390 2.4G 1T1R
-  */
-@@ -63,10 +60,7 @@
- #define RF3021				0x0007
- #define RF3022				0x0008
- #define RF3052				0x0009
--#define RF2853				0x000a
- #define RF3320				0x000b
--#define RF3322				0x000c
--#define RF3053				0x000d
- #define RF5370				0x5370
- #define RF5372				0x5372
- #define RF5390				0x5390
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 8f75402..0395881 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -189,8 +189,6 @@ struct rt2x00_chip {
- #define RT3090		0x3090	/* 2.4GHz PCIe */
- #define RT3390		0x3390
- #define RT3572		0x3572
--#define RT3593		0x3593
--#define RT3883		0x3883	/* WSOC */
- #define RT5390		0x5390  /* 2.4GHz */
- #define RT5392		0x5392  /* 2.4GHz */
- 
--- 
-1.7.10.4
+johannes
 
