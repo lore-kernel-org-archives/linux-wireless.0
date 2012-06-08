@@ -1,97 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:57232 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754768Ab2FRJB4 convert rfc822-to-8bit (ORCPT
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:63339 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761221Ab2FHQQr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 05:01:56 -0400
-Received: by lbbgm6 with SMTP id gm6so4121064lbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 02:01:54 -0700 (PDT)
+	Fri, 8 Jun 2012 12:16:47 -0400
+Received: by qabj40 with SMTP id j40so1288606qab.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 09:16:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1339882592-17680-1-git-send-email-xose.vazquez@gmail.com>
-References: <1339882592-17680-1-git-send-email-xose.vazquez@gmail.com>
-Date: Mon, 18 Jun 2012 11:01:54 +0200
-Message-ID: <CAL1gcdNwChERae_B7S_TpZmi=Pi2MwUbDiwh+SFys8px96TFDA@mail.gmail.com> (sfid-20120618_110202_387236_10BF809E)
-Subject: Re: [PATCH] wireless: rt2x00: rt2800: remove unsupported rf and chips
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: IvDoorn@gmail.com, helmut.schaa@googlemail.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
+In-Reply-To: <1339171694.5748.12.camel@jlt3.sipsolutions.net>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	<1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	<20120607180325.7752b3c0@milhouse>
+	<1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	<1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	<4FD11B47.10002@lwfinger.net>
+	<CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	<1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	<1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	<1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	<1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	<4FD21C6B.5000402@lwfinger.net>
+	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	<1339171694.5748.12.camel@jlt3.sipsolutions.net>
+Date: Fri, 8 Jun 2012 18:16:46 +0200
+Message-ID: <CAHsu+b-fZQ0auLAd_8rqaoNfLF-2UghRrB7S7qgu1RrqesbW4Q@mail.gmail.com> (sfid-20120608_181651_410236_2E084E19)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+From: Andre Heider <a.heider@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Xose,
-
-On Sat, Jun 16, 2012 at 11:36 PM, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> removed, no support for:
+On Fri, Jun 8, 2012 at 6:08 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-06-08 at 18:05 +0200, Andre Heider wrote:
+>> On Fri, Jun 8, 2012 at 5:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Fri, 2012-06-08 at 17:56 +0200, Andre Heider wrote:
+>> >
+>> >> > Hopefully this is better: http://p.sipsolutions.net/017d73ac0688f863.txt
+>> >>
+>> >> The previous patched all had the mac suspend failure. This one:
+>> >>
+>> >> drivers/net/wireless/b43/main.c: In function 'b43_qos_upload_all':
+>> >> drivers/net/wireless/b43/main.c:3483: error: size of array 'type name'
+>> >> is negative
+>> >> drivers/net/wireless/b43/main.c: In function 'b43_qos_clear':
+>> >> drivers/net/wireless/b43/main.c:3502: error: size of array 'type name'
+>> >> is negative
+>> >> drivers/net/wireless/b43/main.c: In function 'b43_op_conf_tx':
+>> >> drivers/net/wireless/b43/main.c:3578: error: size of array 'type name'
+>> >> is negative
+>> >
+>> > Huh, I thought I compiled it ... guess I had the wrong version.
+>> >
+>> > http://p.sipsolutions.net/511dda98892d2c9a.txt
+>>
+>> It's getting warmer:
+>>
+>> [    9.456216] b43-phy0: Loading OpenSource firmware version 410.31754
+>> [    9.473798] b43-phy0: Hardware crypto acceleration not supported by firmware
+>> [    9.491781] b43-phy0: QoS not supported by firmware
+>> [    9.868750] b43-phy0 debug: Chip initialized
+>> [    9.888580] b43-phy0 debug: PIO initialized
+>> [    9.899273] b43-phy0 debug: QoS disabled
+>> [   10.088420] b43-phy0 debug: Wireless interface started
+>> [   10.212209] b43-phy0 debug: Adding Interface type 2
+>> [   12.739776] wlan0: authenticate with d8:5d:4c:9c:31:14
+>> [   12.796248] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
+>> [   12.811768] wlan0: authenticated
+>> [   12.823310] wlan0: associate with d8:5d:4c:9c:31:14 (try 1/3)
+>> [   12.844942] wlan0: RX AssocResp from d8:5d:4c:9c:31:14 (capab=0x411
+>> status=0 aid=2)
+>> [   12.863966] wlan0: associated
+>> [   16.319097] ieee80211 phy0: wlan0: No probe response from AP
+>> d8:5d:4c:9c:31:14 after 500ms, disconnecting.
+>> [   16.349674] cfg80211: Calling CRDA for country: DE
+>> [   17.597307] wlan0: authenticate with d8:5d:4c:9c:31:14
+>> [   17.638399] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
+>> [   17.851085] wlan0: send auth to d8:5d:4c:9c:31:14 (try 2/3)
+>> [   18.063086] wlan0: send auth to d8:5d:4c:9c:31:14 (try 3/3)
+>> [   18.275081] wlan0: authentication with d8:5d:4c:9c:31:14 timed out
+>>
+>> Tried it 3 times, always times out.
 >
-> RF2853 2.4G/5G 3T3R
-> RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-> RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
->
-> RT3593
-> RT3883
->
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> So you didn't get the warning, but can you still check what
+> info->hw_queue is in pio.c?
 
-I don't mind removing the RT chipset definitions, but I would like to
-retain the RF chipset definitions. Even
-though these definitions are not used in the code, the do represent
-values we could see from devices, so
-I consider the list to be documentation as well.
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800.h |    6 ------
->  drivers/net/wireless/rt2x00/rt2x00.h |    2 --
->  2 files changed, 8 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index 9348521..b483c23 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -47,10 +47,7 @@
->  * RF3021 2.4G 1T2R
->  * RF3022 2.4G 2T2R
->  * RF3052 2.4G/5G 2T2R
-> - * RF2853 2.4G/5G 3T3R
->  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
-> - * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-> - * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
->  * RF5370 2.4G 1T1R
->  * RF5390 2.4G 1T1R
->  */
-> @@ -63,10 +60,7 @@
->  #define RF3021                         0x0007
->  #define RF3022                         0x0008
->  #define RF3052                         0x0009
-> -#define RF2853                         0x000a
->  #define RF3320                         0x000b
-> -#define RF3322                         0x000c
-> -#define RF3053                         0x000d
->  #define RF5370                         0x5370
->  #define RF5372                         0x5372
->  #define RF5390                         0x5390
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 8f75402..0395881 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -189,8 +189,6 @@ struct rt2x00_chip {
->  #define RT3090         0x3090  /* 2.4GHz PCIe */
->  #define RT3390         0x3390
->  #define RT3572         0x3572
-> -#define RT3593         0x3593
-> -#define RT3883         0x3883  /* WSOC */
->  #define RT5390         0x5390  /* 2.4GHz */
->  #define RT5392         0x5392  /* 2.4GHz */
->
-> --
-> 1.7.10.4
->
-
-
-
--- 
----
-Gertjan
+always "1"
