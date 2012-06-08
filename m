@@ -1,136 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:46032 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752177Ab2F1PhB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 11:37:01 -0400
-Message-ID: <4FEC7A21.5020409@ti.com> (sfid-20120628_173711_297178_733EA5B7)
-Date: Thu, 28 Jun 2012 10:37:05 -0500
-From: Jon Hunter <jon-hunter@ti.com>
-MIME-Version: 1.0
-To: Franky Lin <frankyl@broadcom.com>
-CC: <khilman@ti.com>, <tarun.kanti@ti.com>, <b-cousson@ti.com>,
-	<tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<grant.likely@secretlab.ca>, <santosh.shilimkar@ti.com>,
-	<linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com> <4FEB9A9D.4080406@ti.com> <4FEBAD7A.5050505@broadcom.com>
-In-Reply-To: <4FEBAD7A.5050505@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from he.sipsolutions.net ([78.46.109.217]:43471 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932296Ab2FHQ4L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 12:56:11 -0400
+Message-ID: <1339174568.5748.20.camel@jlt3.sipsolutions.net> (sfid-20120608_185615_556276_475F709A)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 18:56:08 +0200
+In-Reply-To: <CAHsu+b_J5CsTdbGn=epwx3A+zJ6Nw8rmuVRjZEwMMsaeGOycpQ@mail.gmail.com> (sfid-20120608_185426_510343_5E4D2A3F)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	 <20120607180325.7752b3c0@milhouse>
+	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	 <4FD11B47.10002@lwfinger.net>
+	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 <1339171694.5748.12.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-fZQ0auLAd_8rqaoNfLF-2UghRrB7S7qgu1RrqesbW4Q@mail.gmail.com>
+	 <1339173704.5748.19.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_J5CsTdbGn=epwx3A+zJ6Nw8rmuVRjZEwMMsaeGOycpQ@mail.gmail.com>
+	 (sfid-20120608_185426_510343_5E4D2A3F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Franky,
-
-On 06/27/2012 08:03 PM, Franky Lin wrote:
-> On 06/27/2012 04:43 PM, Jon Hunter wrote:
->> Hi Franky,
->>
->> On 06/25/2012 03:52 PM, Franky Lin wrote:
->>> Hi Kevin, Tarun,
->>>
->>> We are using the expansion connector A on Panda board to mount a SDIO
->>> WiFi dongle on MMC2 with a level triggered interrupt signal connected to
->>> GPIO 138. It's been working fine until 3.5 rc1. The board hang randomly
->>> within 5 mins during a network traffic test. After bisecting we found
->>> the culprit is "[PATCH 8/8] gpio/omap: fix missing check in
->>> *_runtime_suspend()" [1].
->>
->> I have been looking into this today to see if I can replicate the
->> problem that you have reported. However, so far I have not had any luck.
->> Please note that my test setup is not exactly the same as yours as I
->> don't have your wlan module. However, I have been using a 2nd board to
->> generate gpio events to a panda-es to see I can make it lock up. I have
->> tried mainline kernel 3.5-rc1 and 3.5-rc3 but I have not seen any
->> problems after sending 100k gpio events (over many minutes). My setup is
->> as follows ...
->>
->> - OMAP4460 panda-es with gpio-138 connected to OMAP3430 beagle gpio-11.
->> - Mainline kernel 3.5-rc1/3 using omap2plus_defconfig (no changes)
->> - Created a simple kernel module that acquires gpio-138 and sets up a
->>    IRQ with flag IRQF_TRIGGER_HIGH (for active high level interrupt).
->> - GPIO events are triggered roughly every 1ms
+On Fri, 2012-06-08 at 18:54 +0200, Andre Heider wrote:
+> On Fri, Jun 8, 2012 at 6:41 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2012-06-08 at 18:16 +0200, Andre Heider wrote:
+> >
+> >> >> [   17.597307] wlan0: authenticate with d8:5d:4c:9c:31:14
+> >> >> [   17.638399] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
+> >> >> [   17.851085] wlan0: send auth to d8:5d:4c:9c:31:14 (try 2/3)
+> >> >> [   18.063086] wlan0: send auth to d8:5d:4c:9c:31:14 (try 3/3)
+> >> >> [   18.275081] wlan0: authentication with d8:5d:4c:9c:31:14 timed out
+> >> >>
+> >> >> Tried it 3 times, always times out.
+> >
+> > I missed one a use of queue_mapping, try this:
+> >
+> > http://p.sipsolutions.net/cc1fc9799ad3c015.txt
 > 
-> Don't know if it's related, but we also mux several other pins on
-> connector A:
->         /* MMC2 Mux for extension board */
->         /* MMC2 CMD */
->         OMAP4_MUX(GPMC_NWE, OMAP_MUX_MODE1 | OMAP_PIN_INPUT_PULLUP),
->         /* MMC2 CLK */
->         OMAP4_MUX(GPMC_NOE, OMAP_MUX_MODE1 | OMAP_PIN_INPUT_PULLUP),
->         /* MMC2 DAT 0-3 */
->         OMAP4_MUX(GPMC_AD0, OMAP_MUX_MODE1 | OMAP_PIN_INPUT_PULLUP),
->         OMAP4_MUX(GPMC_AD1, OMAP_MUX_MODE1 | OMAP_PIN_INPUT_PULLUP),
->         OMAP4_MUX(GPMC_AD2, OMAP_MUX_MODE1 | OMAP_PIN_INPUT_PULLUP),
->         OMAP4_MUX(GPMC_AD3, OMAP_MUX_MODE1 | OMAP_PIN_INPUT_PULLUP),
->         /* GPIO MUX for OOB interupt of dongle */
->         OMAP4_MUX(MCSPI1_CS1, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLDOWN),
->         /* GPIO MUX for WLAN_ENABLE for dongle */
->         OMAP4_MUX(MCSPI1_CLK, OMAP_MUX_MODE3 | OMAP_PIN_OUTPUT),
+> Unfortunately still the authentication timeout.
 
-I would not have thought so. However, I will think about that thanks.
+I'm out of ideas then, you had the right queue to start with so this
+probably just fixed a corner case, but ... I have no idea where else a
+bug could lurk.
 
->> Can you confirm ...
->> 1. You are just using omap2plus_defconfig with no changes?
-> No, we enable following options
-> CONFIG_DEVTMPFS=y
-> CONFIG_DEVTMPFS_MOUNT=y
-> CONFIG_USB_OHCI_HCD=y
+Maybe you can first make sure the frames actually make it to the air,
+using some other device as a sniffer?
 
-Ok, thanks.
+johannes
 
->> 2. Rough frequency of gpio events?
-> 3367 interrupts were triggered during a 10 secs throughput test.
-> 
->> 3. Is the gpio configured for active low or high?
-> active high
-> 
->> 4. When the hang occurs, what is the state of the gpio? Active or
->>     inactive? Can you probe it with a scope? If it was always active I
->>     could see that this would lock the device up, but I am not sure how
->>     that would relate to the results from your bisect???
-> 
-> I dont have a scope nearby. Let me see if I can find one tomorrow.
-
-Great, that would be good.
-
->>> I noticed Kevin raised some similar cases on other platforms and also
->>> provided two patches in the patch mail thread. But unfortunately those
->>> two patches doesn't help in our case. I tested the driver with 3.5-rc3
->>> mainline kernel and the issue is still there. I can only "fix" the hang
->>> by either reverting the commit or disabling CONFIG_PM_RUNTIME. Also, the
->>> hang only happens on Panda ES board. Old Panda with 4430 works good.
->>
->> It does not make sense to me yet why this would only impact 4460, but I
->> will keep this in mind.
->>
->> In your wlan driver are you acquiring and freeing the gpio often? Or are
->> you only acquiring the gpio on boot?
->>
->> The reason I ask is because for omap4, it seems that we are not
->> currently calling omap2_gpio_prepare_for_idle() during idle and so the
->> only time I see us call the runtime_suspend/resume handlers for omap4 is
->> during probe and when we acquire and free the gpio.
->>
->> So if you were not acquiring and freeing the gpio and are using the
->> stock kernel, then as far as I can tell, the runtime pm code is not
->> being exercised much. My test is not acquiring and releasing the gpio
->> and so I am wondering if that is the secret to reproducing this
->> problem :-)
-> 
-> We only request the irq once during initialization. But we do frequently
-> disable and re-enable it since we need to access to the module through
-> SDIO to clear the interrupt. Apparently we can't finish all this in irq
-> handler.
-
-Ok, thanks. I don't see why that would cause a problem, but I can try
-that too.
-
-> Hope these could help.
-
-Yes, good info to have.
-
-Thanks
-Jon
