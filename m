@@ -1,132 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36765 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932623Ab2FEMVQ (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:52731 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932082Ab2FHNtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 08:21:16 -0400
-Message-ID: <1338898874.4514.39.camel@jlt3.sipsolutions.net> (sfid-20120605_142120_048847_58788DE5)
-Subject: [PATCH] wireless: update wireless URLs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 05 Jun 2012 14:21:14 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Jun 2012 09:49:46 -0400
+Received: by qadb17 with SMTP id b17so696658qad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 06:49:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	<1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	<20120607180325.7752b3c0@milhouse>
+	<1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	<1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	<4FD11B47.10002@lwfinger.net>
+	<CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	<1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	<1339137689.5832.2.camel@jlt3.sipsolutions.net>
+Date: Fri, 8 Jun 2012 15:49:45 +0200
+Message-ID: <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com> (sfid-20120608_154952_254390_11D5B88A)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+From: Andre Heider <a.heider@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jun 8, 2012 at 8:41 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-06-08 at 08:27 +0200, Johannes Berg wrote:
+>> On Thu, 2012-06-07 at 23:47 +0200, Andre Heider wrote:
+>> > On Thu, Jun 7, 2012 at 11:21 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> > > On 06/07/2012 03:56 PM, Johannes Berg wrote:
+>> > >>
+>> > >> On Thu, 2012-06-07 at 20:36 +0200, Johannes Berg wrote:
+>> > >>
+>> > >>> However, it's also possible to actually *use* the new mac80211 feature.
+>> > >>> That would also help with IEEE80211_TX_CTL_SEND_AFTER_DTIM, you could
+>> > >>> ask mac80211 to use a separate HW queue for it (for tx_ring_mcast.) This
+>> > >>> may be quicker.
+>> > >>
+>> > >>
+>> > >> This might do it, I haven't tested it at all:
+>> > >>
+>> > >> http://p.sipsolutions.net/3c6b003bb06e5298.txt
+>> > >
+>> > >
+>> > > With that patch, the driver never loads the firmware. I have not yet found
+>> > > the reason.
+>> >
+>> > Same here.
+>>
+>> It doesn't start any interfaces, right?
+>>
+>> The patch was incomplete -- it has to register all 5 queues not but
+>> might not use them, please try this:
+>> http://p.sipsolutions.net/69a78bbb83cd6421.txt
+>
+> No, this was wrong too, I forgot to correct the condition in
+> add_interface, this should be right:
+>
+> http://p.sipsolutions.net/854d460da251f9d6.txt
 
-The preferred URL is http://wireless.kernel.org/
-rather than http://linuxwireless.org/, update all
-URLs to point there.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- MAINTAINERS                           |   18 +++++++++---------
- drivers/net/wireless/b43legacy/main.c |    2 +-
- 2 files changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 55f0fda..c5fd905 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -329,7 +329,7 @@ F:	drivers/hwmon/adm1029.c
- 
- ADM8211 WIRELESS DRIVER
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://wireless.kernel.org/
- S:	Orphan
- F:	drivers/net/wireless/adm8211.*
- 
-@@ -1423,7 +1423,7 @@ B43 WIRELESS DRIVER
- M:	Stefano Brivio <stefano.brivio@polimi.it>
- L:	linux-wireless@vger.kernel.org
- L:	b43-dev@lists.infradead.org
--W:	http://linuxwireless.org/en/users/Drivers/b43
-+W:	http://wireless.kernel.org/en/users/Drivers/b43
- S:	Maintained
- F:	drivers/net/wireless/b43/
- 
-@@ -1432,7 +1432,7 @@ M:	Larry Finger <Larry.Finger@lwfinger.net>
- M:	Stefano Brivio <stefano.brivio@polimi.it>
- L:	linux-wireless@vger.kernel.org
- L:	b43-dev@lists.infradead.org
--W:	http://linuxwireless.org/en/users/Drivers/b43
-+W:	http://wireless.kernel.org/en/users/Drivers/b43
- S:	Maintained
- F:	drivers/net/wireless/b43legacy/
- 
-@@ -4339,7 +4339,7 @@ F:	arch/m68k/hp300/
- MAC80211
- M:	Johannes Berg <johannes@sipsolutions.net>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://wireless.kernel.org/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
- S:	Maintained
- F:	Documentation/networking/mac80211-injection.txt
-@@ -4350,7 +4350,7 @@ MAC80211 PID RATE CONTROL
- M:	Stefano Brivio <stefano.brivio@polimi.it>
- M:	Mattias Nissler <mattias.nissler@gmx.de>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/en/developers/Documentation/mac80211/RateControl/PID
-+W:	http://wireless.kernel.org/en/developers/Documentation/mac80211/RateControl/PID
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
- S:	Maintained
- F:	net/mac80211/rc80211_pid*
-@@ -5027,7 +5027,7 @@ F:	fs/ocfs2/
- 
- ORINOCO DRIVER
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/en/users/Drivers/orinoco
-+W:	http://wireless.kernel.org/en/users/Drivers/orinoco
- W:	http://www.nongnu.org/orinoco/
- S:	Orphan
- F:	drivers/net/wireless/orinoco/
-@@ -5729,7 +5729,7 @@ F:	net/rose/
- RTL8180 WIRELESS DRIVER
- M:	"John W. Linville" <linville@tuxdriver.com>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://wireless.kernel.org/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
- F:	drivers/net/wireless/rtl818x/rtl8180/
-@@ -5739,7 +5739,7 @@ M:	Herton Ronaldo Krzesinski <herton@canonical.com>
- M:	Hin-Tak Leung <htl10@users.sourceforge.net>
- M:	Larry Finger <Larry.Finger@lwfinger.net>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://wireless.kernel.org/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
- F:	drivers/net/wireless/rtl818x/rtl8187/
-@@ -5748,7 +5748,7 @@ RTL8192CE WIRELESS DRIVER
- M:	Larry Finger <Larry.Finger@lwfinger.net>
- M:	Chaoming Li <chaoming_li@realsil.com.cn>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://wireless.kernel.org/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
- F:	drivers/net/wireless/rtlwifi/
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index cd9c9bc..8b06ca5 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -1508,7 +1508,7 @@ static void b43legacy_release_firmware(struct b43legacy_wldev *dev)
- 
- static void b43legacy_print_fw_helptext(struct b43legacy_wl *wl)
- {
--	b43legacyerr(wl, "You must go to http://linuxwireless.org/en/users/"
-+	b43legacyerr(wl, "You must go to http://wireless.kernel.org/en/users/"
- 		     "Drivers/b43#devicefirmware "
- 		     "and download the correct firmware (version 3).\n");
- }
--- 
-1.7.10
-
-
-
+Sorry, still not loading any firmware.
