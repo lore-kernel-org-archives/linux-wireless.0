@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33857 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33627 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756671Ab2FHRjA (ORCPT
+	with ESMTP id S1754129Ab2FHRif (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 13:39:00 -0400
+	Fri, 8 Jun 2012 13:38:35 -0400
 From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 To: <linville@tuxdriver.com>
 CC: <linux-wireless@vger.kernel.org>,
 	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 8/9] ath9k: simplify btcoex profile management
-Date: Fri, 8 Jun 2012 23:09:07 +0530
-Message-ID: <1339177148-21672-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120608_193904_651037_618600AC)
+Subject: [PATCH 4/9] ath9k_hw: check GPM HW write pointer before chip reset
+Date: Fri, 8 Jun 2012 23:09:03 +0530
+Message-ID: <1339177148-21672-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120608_193838_700058_0956CC43)
 In-Reply-To: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
 References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
@@ -18,125 +18,79 @@ Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch simplifies profile management utility functions.
-
-* Separate find_profile from add/del functions
-* Return correct values when the profile list is empty or
-  profile is ot found
-* flush the profiles when there are entries in the list
+Both "MAC Warm Reset" and "MCI Reset Rx" will reset GPM HW write_ptr.
+We should check software cached write_ptr against HW write_ptr before
+reset. Otherwise the pending DMA data will be lost.
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/mci.c |   48 +++++++++++++++++-----------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +++
+ 3 files changed, 22 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 49137f4..2ea5e93 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -28,11 +28,14 @@ ath_mci_find_profile(struct ath_mci_profile *mci,
- {
- 	struct ath_mci_profile_info *entry;
- 
-+	if (list_empty(&mci->info))
-+		return NULL;
-+
- 	list_for_each_entry(entry, &mci->info, list) {
- 		if (entry->conn_handle == info->conn_handle)
--			break;
-+			return entry;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index b1ced2a..96a8a5f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -893,6 +893,9 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		udelay(100);
  	}
--	return entry;
-+	return NULL;
- }
  
- static bool ath_mci_add_profile(struct ath_common *common,
-@@ -49,31 +52,21 @@ static bool ath_mci_add_profile(struct ath_common *common,
- 	    (info->type != MCI_GPM_COEX_PROFILE_VOICE))
- 		return false;
- 
--	entry = ath_mci_find_profile(mci, info);
--
--	if (entry) {
--		memcpy(entry, info, 10);
--	} else {
--		entry = kzalloc(sizeof(*entry), GFP_KERNEL);
--		if (!entry)
--			return false;
-+	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-+	if (!entry)
-+		return false;
- 
--		memcpy(entry, info, 10);
--		INC_PROF(mci, info);
--		list_add_tail(&info->list, &mci->info);
--	}
-+	memcpy(entry, info, 10);
-+	INC_PROF(mci, info);
-+	list_add_tail(&entry->list, &mci->info);
- 
- 	return true;
- }
- 
- static void ath_mci_del_profile(struct ath_common *common,
- 				struct ath_mci_profile *mci,
--				struct ath_mci_profile_info *info)
-+				struct ath_mci_profile_info *entry)
- {
--	struct ath_mci_profile_info *entry;
--
--	entry = ath_mci_find_profile(mci, info);
--
- 	if (!entry)
- 		return;
- 
-@@ -86,12 +79,16 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci)
- {
- 	struct ath_mci_profile_info *info, *tinfo;
- 
-+	mci->aggr_limit = 0;
++	/* Check pending GPM msg before MCI Reset Rx */
++	ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
 +
-+	if (list_empty(&mci->info))
-+		return;
-+
- 	list_for_each_entry_safe(info, tinfo, &mci->info, list) {
- 		list_del(&info->list);
- 		DEC_PROF(mci, info);
- 		kfree(info);
+ 	regval |= SM(1, AR_MCI_COMMAND2_RESET_RX);
+ 	REG_WRITE(ah, AR_MCI_COMMAND2, regval);
+ 	udelay(1);
+@@ -1190,6 +1193,21 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
+ 		mci->gpm_idx = value;
+ 		break;
++	case MCI_STATE_CHECK_GPM_OFFSET:
++		/*
++		 * This should only be called before "MAC Warm Reset" or
++		 * "MCI Reset Rx".
++		 */
++		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
++		if (mci->gpm_idx == value)
++			break;
++		ath_dbg(common, MCI,
++			"GPM cached write pointer mismatch %d %d\n",
++			mci->gpm_idx, value);
++		mci->query_bt = true;
++		mci->need_flush_btinfo = true;
++		mci->gpm_idx = 0;
++		break;
+ 	case MCI_STATE_NEXT_GPM_OFFSET:
+ 	case MCI_STATE_LAST_GPM_OFFSET:
+ 		/*
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 10282e2..b36c885 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -190,6 +190,7 @@ enum mci_bt_state {
+ enum mci_state_type {
+ 	MCI_STATE_ENABLE,
+ 	MCI_STATE_INIT_GPM_OFFSET,
++	MCI_STATE_CHECK_GPM_OFFSET,
+ 	MCI_STATE_NEXT_GPM_OFFSET,
+ 	MCI_STATE_LAST_GPM_OFFSET,
+ 	MCI_STATE_BT,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index db3dfc9..e3ccb45 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1348,6 +1348,9 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 		}
  	}
--	mci->aggr_limit = 0;
- }
  
- static void ath_mci_adjust_aggr_limit(struct ath_btcoex *btcoex)
-@@ -229,12 +226,17 @@ static void ath_mci_process_profile(struct ath_softc *sc,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_mci_profile *mci = &btcoex->mci;
-+	struct ath_mci_profile_info *entry = NULL;
++	if (ath9k_hw_mci_is_enabled(ah))
++		ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
 +
-+	entry = ath_mci_find_profile(mci, info);
-+	if (entry)
-+		memcpy(entry, info, 10);
+ 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
  
- 	if (info->start) {
--		if (!ath_mci_add_profile(common, mci, info))
-+		if (!entry && !ath_mci_add_profile(common, mci, info))
- 			return;
- 	} else
--		ath_mci_del_profile(common, mci, info);
-+		ath_mci_del_profile(common, mci, entry);
- 
- 	btcoex->btcoex_period = ATH_MCI_DEF_BT_PERIOD;
- 	mci->aggr_limit = mci->num_sco ? 6 : 0;
-@@ -263,8 +265,6 @@ static void ath_mci_process_status(struct ath_softc *sc,
- 	if (status->is_link)
- 		return;
- 
--	memset(&info, 0, sizeof(struct ath_mci_profile_info));
--
- 	info.conn_handle = status->conn_handle;
- 	if (ath_mci_find_profile(mci, &info))
- 		return;
+ 	REGWRITE_BUFFER_FLUSH(ah);
 -- 
 1.7.10.3
 
