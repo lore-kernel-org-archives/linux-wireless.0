@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:55373 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752774Ab2FHXqm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51609 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472Ab2FHPOQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 19:46:42 -0400
-Received: from [50.53.38.135] (port=57671 helo=[192.168.1.2])
-	by box742.bluehost.com with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
-	(Exim 4.76)
-	(envelope-from <rdunlap@xenotime.net>)
-	id 1Sd8t8-0002g4-83
-	for linux-wireless@vger.kernel.org; Fri, 08 Jun 2012 17:46:42 -0600
-Message-ID: <4FD28ED7.6070506@xenotime.net> (sfid-20120609_014646_473500_8E65425E)
-Date: Fri, 08 Jun 2012 16:46:31 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: kernel-doc warnings (3.5-rc1)
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 8 Jun 2012 11:14:16 -0400
+Message-ID: <1339168452.5748.0.camel@jlt3.sipsolutions.net> (sfid-20120608_171420_397861_867305D6)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 17:14:12 +0200
+In-Reply-To: <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com> (sfid-20120608_170415_375251_68B65A73)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	 <20120607180325.7752b3c0@milhouse>
+	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	 <4FD11B47.10002@lwfinger.net>
+	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 (sfid-20120608_170415_375251_68B65A73)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2012-06-08 at 17:04 +0200, Andre Heider wrote:
 
-Would someone please add/fix the kernel-doc warnings?
+> >> > http://p.sipsolutions.net/854d460da251f9d6.txt
+> >>
+> >> Sorry, still not loading any firmware.
+> >
+> > So you're going to have to tell me what happens :-)
+> 
+> Well, nothing ;)
+> 
+> I just see this in dmesg:
+> 
+> [    1.012107] b43-sdio mmc1:0001:1: Chip ID 14e4:4318
+> [    1.018765] ssb: Found chip with id 0x4318, rev 0x02 and package 0x02
+> [    1.096506] ssb: chipcommon status is 0x0
+> [    1.105314] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
+> 
+> Hence the device doesn't get up and there's no way for me to interact
+> with the system.
 
+Ok, well, bugger :-)
 
+Can you go to main.c and print out the return value of
+ieee80211_register_hw()? I have a feeling that's where the failure is
+though I don't really know why.
 
-Warning(include/net/mac80211.h:2979): No description found for parameter 'band'
-Warning(include/net/mac80211.h:2383): No description found for parameter 'set_wakeup'
+johannes
 
-
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 't_offset_setpoint'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'ch_type'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'supports_40mhz'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 't_offset_setpoint'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'ch_type'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'supports_40mhz'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 't_offset_setpoint'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'ch_type'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'supports_40mhz'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 't_offset_setpoint'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'ch_type'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'supports_40mhz'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 't_offset_setpoint'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'ch_type'
-Warning(net/mac80211/sta_info.h:382): No description found for parameter 'supports_40mhz'
-
-
-thanks,
--- 
-~Randy
