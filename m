@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:60348 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750732Ab2FNBNq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 21:13:46 -0400
-Message-ID: <1339636425.28729.11.camel@joe2Laptop> (sfid-20120614_031349_732385_D3D12221)
-Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
-From: Joe Perches <joe@perches.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 13 Jun 2012 18:13:45 -0700
-In-Reply-To: <4FD81E2C.1000507@qca.qualcomm.com>
-References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>
-	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com>
-	 <1339053852.6009.13.camel@joe2Laptop> <4FD05A27.80102@qca.qualcomm.com>
-	 <1339055836.6009.20.camel@joe2Laptop> <4FD0688F.5020603@qca.qualcomm.com>
-	 <1339098774.14838.4.camel@joe2Laptop> <4FD81E2C.1000507@qca.qualcomm.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48483 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754463Ab2FHOwo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 10:52:44 -0400
+Message-ID: <1339167160.4901.0.camel@jlt3.sipsolutions.net> (sfid-20120608_165253_608190_0452C1A4)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 16:52:40 +0200
+In-Reply-To: <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com> (sfid-20120608_154947_934476_D2BC4F6F)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	 <20120607180325.7752b3c0@milhouse>
+	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	 <4FD11B47.10002@lwfinger.net>
+	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 (sfid-20120608_154947_934476_D2BC4F6F)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-13 at 10:29 +0530, Mohammed Shafi Shajakhan wrote:
-> On Friday 08 June 2012 01:22 AM, Joe Perches wrote:
-> > Please modify the patch based on wireless-next commit d63e9ae3b12
-> sorry for the delayed reply. so you had already posted the change you 
-> had suggested in (netdev@vger.kernel.org mailing list ?) and i have to 
-> do any changes based on that patch right ? thank you!
+On Fri, 2012-06-08 at 15:49 +0200, Andre Heider wrote:
 
-Yes, pull wireless-next and start from there.
+> > http://p.sipsolutions.net/854d460da251f9d6.txt
+> 
+> Sorry, still not loading any firmware.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=summary
+So you're going to have to tell me what happens :-)
 
-cheers, Joe
+johannes
 
