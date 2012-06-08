@@ -1,119 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:53341 "HELO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757982Ab2FUC7B (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36799 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932273Ab2FHPwZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 22:59:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.5] mwifiex: fix bugs in event handling code
-Date: Wed, 20 Jun 2012 19:58:34 -0700
-Message-Id: <1340247517-4593-3-git-send-email-bzhao@marvell.com> (sfid-20120621_045905_797589_A48BC89C)
-In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
-References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+	Fri, 8 Jun 2012 11:52:25 -0400
+Message-ID: <1339170742.5748.10.camel@jlt3.sipsolutions.net> (sfid-20120608_175229_444710_70EBC828)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andre Heider <a.heider@gmail.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 17:52:22 +0200
+In-Reply-To: <1339170510.5748.9.camel@jlt3.sipsolutions.net> (sfid-20120608_174837_380556_4700EE77)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	 <20120607180325.7752b3c0@milhouse>
+	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	 <4FD11B47.10002@lwfinger.net>
+	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 (sfid-20120608_173825_724071_61477734) <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 (sfid-20120608_174309_875550_ADC4A235) <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 (sfid-20120608_174453_828379_B54E3AF3) <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 (sfid-20120608_174837_380556_4700EE77)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Fri, 2012-06-08 at 17:48 +0200, Johannes Berg wrote:
 
-This patch ensures uniformity in event skb sent by interface code
-(USB/PCIe/SDIO) which automatically fixes following bugs.
+> > Ahrg! I keep numbering them wrong, this should be fixed:
+> > http://p.sipsolutions.net/3bbdb9c6294dad70.txt
+> 
+> Nope, still wrong, I shouldn't be using skb_get_queue_mapping but rather
+> info->index since now mac80211 is giving us the right *queue number*
+> rather than just *AC*
 
-1) For USB interface, same buffer is reused for receiving cmd and
-events from firmware. While handling events, we perform
-skb_pull(skb, 4) to remove event header. Corresponding skb_push()
-call is missing while submitting the buffer.
-2) For PCIe interface, event skb is passed with event header.
-Recently added uAP events EVENT_UAP_STA_ASSOC, EVENT_UAP_STA_DEAUTH
-will not work for PCIe, as they assume event skb points to event body.
+Hopefully this is better: http://p.sipsolutions.net/017d73ac0688f863.txt
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c      |    6 +++---
- drivers/net/wireless/mwifiex/sta_event.c |    9 ++++-----
- drivers/net/wireless/mwifiex/usb.c       |    6 +++---
- 3 files changed, 10 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index e037747..fc8a9bf 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -978,10 +978,10 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 		dev_dbg(adapter->dev, "info: --- Rx: Event ---\n");
- 		adapter->event_cause = *(u32 *) skb->data;
- 
--		skb_pull(skb, MWIFIEX_EVENT_HEADER_LEN);
--
- 		if ((skb->len > 0) && (skb->len  < MAX_EVENT_SIZE))
--			memcpy(adapter->event_body, skb->data, skb->len);
-+			memcpy(adapter->event_body,
-+			       skb->data + MWIFIEX_EVENT_HEADER_LEN,
-+			       skb->len);
- 
- 		/* event cause has been saved to adapter->event_cause */
- 		adapter->event_received = true;
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index 4ace5a3..11e731f 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -406,9 +406,9 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		break;
- 
- 	case EVENT_UAP_STA_ASSOC:
--		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
- 		memset(&sinfo, 0, sizeof(sinfo));
--		event = (struct mwifiex_assoc_event *)adapter->event_skb->data;
-+		event = (struct mwifiex_assoc_event *)
-+			(adapter->event_body + MWIFIEX_UAP_EVENT_EXTRA_HEADER);
- 		if (le16_to_cpu(event->type) == TLV_TYPE_UAP_MGMT_FRAME) {
- 			len = -1;
- 
-@@ -433,9 +433,8 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 				 GFP_KERNEL);
- 		break;
- 	case EVENT_UAP_STA_DEAUTH:
--		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
--		cfg80211_del_sta(priv->netdev, adapter->event_skb->data,
--				 GFP_KERNEL);
-+		cfg80211_del_sta(priv->netdev, adapter->event_body +
-+				 MWIFIEX_UAP_EVENT_EXTRA_HEADER, GFP_KERNEL);
- 		break;
- 	case EVENT_UAP_BSS_IDLE:
- 		priv->media_connected = false;
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 49ebf20..e6d796f 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -91,7 +91,6 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 			}
- 			skb_copy_from_linear_data(skb, &tmp, sizeof(u32));
- 			adapter->event_cause = le32_to_cpu(tmp);
--			skb_pull(skb, sizeof(u32));
- 			dev_dbg(dev, "event_cause %#x\n", adapter->event_cause);
- 
- 			if (skb->len > MAX_EVENT_SIZE) {
-@@ -99,8 +98,9 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 				return -1;
- 			}
- 
--			skb_copy_from_linear_data(skb, adapter->event_body,
--						  skb->len);
-+			memcpy(adapter->event_body, skb->data +
-+			       MWIFIEX_EVENT_HEADER_LEN, skb->len);
-+
- 			adapter->event_received = true;
- 			adapter->event_skb = skb;
- 			break;
--- 
-1.7.0.2
+johannes
 
