@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12540 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759257Ab2FUSap (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 14:30:45 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
-Date: Fri, 22 Jun 2012 00:01:32 +0530
-Message-ID: <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120621_203047_867277_DA679F15)
-In-Reply-To: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rousseau.luceor.com ([91.121.31.107]:38009 "EHLO sro-lap"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755349Ab2FHHoR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 03:44:17 -0400
+From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+Subject: [PATCH v2] minstrel_ht: enable frame aggregation for fixed rate
+Date: Fri,  8 Jun 2012 09:44:02 +0200
+Message-Id: <1339141443-10135-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20120608_094421_420812_76780F3E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_get_et_stats() warn: side effect in macro
-'AWDATA' doing 'i++'
+when i was trying fixed rate in minstrel_ht, frame aggregation
+was not working. so i fix it.
 
-Cc: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 85f9ab4..32474b0 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2003,10 +2003,11 @@ static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
- #define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
- #define AWDATA(elem)							\
- 	do {								\
--		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
--		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
--		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
--		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-+		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-+		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-+		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-+		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-+		i += 4; \
- 	} while (0)
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 2d1acc6..342ec71 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -626,8 +626,11 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
  
- #define AWDATA_RX(elem)						\
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* use fixed index if set */
+-	if (mp->fixed_rate_idx != -1)
+-		sample_idx = mp->fixed_rate_idx;
++	if (mp->fixed_rate_idx != -1) {
++		mi->max_tp_rate = mp->fixed_rate_idx;
++		mi->max_tp_rate2 = mp->fixed_rate_idx;
++		sample_idx = -1;
++	}
+ #endif
+ 
+ 	if (sample_idx >= 0) {
 -- 
-1.7.11
+1.7.9.5
 
