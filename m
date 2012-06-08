@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:60954 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247Ab2FNXT2 (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:57738 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760880Ab2FHGbJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 19:19:28 -0400
-Received: by qcro28 with SMTP id o28so1325285qcr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 16:19:28 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 14 Jun 2012 19:11:41 -0400
-Message-ID: <CAGjArBf8XTAUUXXO3D-URMQr76QsV0hQNC2zCxEohRatkPq5_w@mail.gmail.com> (sfid-20120615_011932_936544_010AF360)
-Subject: cfg80211 can lock up the kernel when resuming from low power mode
-From: Charles Gordon <digigordo@gmail.com>
+	Fri, 8 Jun 2012 02:31:09 -0400
+Received: by lbbgh12 with SMTP id gh12so1666759lbb.39
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 23:31:06 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 1/5] wl18xx: allow FW-log by default for PG2.0
+Date: Fri,  8 Jun 2012 09:30:51 +0300
+Message-Id: <1339137055-30095-2-git-send-email-coelho@ti.com> (sfid-20120608_083115_329318_BC0454BF)
+In-Reply-To: <1339137055-30095-1-git-send-email-coelho@ti.com>
+References: <1339137055-30095-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Arik Nemtsov <arik@wizery.com>
 
-I'm seeing the kernel occasionally lock up when I put the system into
-low power mode and then wake it up.  The lock up occurs while the
-system is trying to resume from low power mode.  What happens is that
-cfg80211 will sometimes kick off a process to update CRDA information.
- It prints the mesage "cfg80211: Calling CRDA for country: US".  When
-it does this, call_crda in reg.c calls kobject_uevent_env to notify
-the system that CRDA information has changed.  This eventually causes
-the system to try to run /sbin/mdev.  That is where the lock up
-occurs.
+This is supported by new FW versions (.88+).
 
-I'm running on a development system where I'm using NFS over Ethernet
-to access the root file system.  When the system resumes from low
-power mode, the Ethernet PHY driver renegotiates the Ethernet links.
-This takes a couple seconds.  If cfg80211 attempts to run /sbin/mdev
-before the Ethernet links are up, then the system won't be able to
-access /sbin/mdev over NFS and this will cause a lock up.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-I'm using the very latest Atheros ath6kl Wi-Fi driver.  It is built
-using compat-wireless which includes the cfg80211 code.
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 9cdf24f..c26015b 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -600,7 +600,6 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
+ 		/* wl18xx uses the same firmware for PLT */
+ 		wl->plt_fw_name = WL18XX_FW_NAME;
+ 		wl->quirks |= WLCORE_QUIRK_NO_ELP |
+-			      WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED |
+ 			      WLCORE_QUIRK_RX_BLOCKSIZE_ALIGN |
+ 			      WLCORE_QUIRK_TX_PAD_LAST_FRAME;
+ 
+-- 
+1.7.10
 
-Is this a known problem?  Can you recommend a solution for it?
-
-
----- Charles
