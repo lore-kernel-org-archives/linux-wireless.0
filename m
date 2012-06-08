@@ -1,111 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:39610 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757596Ab2F0Pgd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46940 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761818Ab2FHQIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 11:36:33 -0400
-Received: by lbbgj10 with SMTP id gj10so2333498lbb.37
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 08:36:30 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 8/8] wl12xx/wlcore: increase FW filename version
-Date: Wed, 27 Jun 2012 18:36:02 +0300
-Message-Id: <1340811362-30441-9-git-send-email-coelho@ti.com> (sfid-20120627_173638_934653_FB9D11B7)
-In-Reply-To: <1340811362-30441-1-git-send-email-coelho@ti.com>
-References: <1340811362-30441-1-git-send-email-coelho@ti.com>
+	Fri, 8 Jun 2012 12:08:18 -0400
+Message-ID: <1339171694.5748.12.camel@jlt3.sipsolutions.net> (sfid-20120608_180825_325077_425BCA99)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 18:08:14 +0200
+In-Reply-To: <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com> (sfid-20120608_180524_269136_D8428874)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	 <20120607180325.7752b3c0@milhouse>
+	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	 <4FD11B47.10002@lwfinger.net>
+	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 (sfid-20120608_180524_269136_D8428874)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have some API changes and new features in the new firmwares that
-are not compatible with older drivers.  Increase the version of the FW
-filenames for wl12xx to 5.
+On Fri, 2012-06-08 at 18:05 +0200, Andre Heider wrote:
+> On Fri, Jun 8, 2012 at 5:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2012-06-08 at 17:56 +0200, Andre Heider wrote:
+> >
+> >> > Hopefully this is better: http://p.sipsolutions.net/017d73ac0688f863.txt
+> >>
+> >> The previous patched all had the mac suspend failure. This one:
+> >>
+> >> drivers/net/wireless/b43/main.c: In function 'b43_qos_upload_all':
+> >> drivers/net/wireless/b43/main.c:3483: error: size of array 'type name'
+> >> is negative
+> >> drivers/net/wireless/b43/main.c: In function 'b43_qos_clear':
+> >> drivers/net/wireless/b43/main.c:3502: error: size of array 'type name'
+> >> is negative
+> >> drivers/net/wireless/b43/main.c: In function 'b43_op_conf_tx':
+> >> drivers/net/wireless/b43/main.c:3578: error: size of array 'type name'
+> >> is negative
+> >
+> > Huh, I thought I compiled it ... guess I had the wrong version.
+> >
+> > http://p.sipsolutions.net/511dda98892d2c9a.txt
+> 
+> It's getting warmer:
+> 
+> [    9.456216] b43-phy0: Loading OpenSource firmware version 410.31754
+> [    9.473798] b43-phy0: Hardware crypto acceleration not supported by firmware
+> [    9.491781] b43-phy0: QoS not supported by firmware
+> [    9.868750] b43-phy0 debug: Chip initialized
+> [    9.888580] b43-phy0 debug: PIO initialized
+> [    9.899273] b43-phy0 debug: QoS disabled
+> [   10.088420] b43-phy0 debug: Wireless interface started
+> [   10.212209] b43-phy0 debug: Adding Interface type 2
+> [   12.739776] wlan0: authenticate with d8:5d:4c:9c:31:14
+> [   12.796248] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
+> [   12.811768] wlan0: authenticated
+> [   12.823310] wlan0: associate with d8:5d:4c:9c:31:14 (try 1/3)
+> [   12.844942] wlan0: RX AssocResp from d8:5d:4c:9c:31:14 (capab=0x411
+> status=0 aid=2)
+> [   12.863966] wlan0: associated
+> [   16.319097] ieee80211 phy0: wlan0: No probe response from AP
+> d8:5d:4c:9c:31:14 after 500ms, disconnecting.
+> [   16.349674] cfg80211: Calling CRDA for country: DE
+> [   17.597307] wlan0: authenticate with d8:5d:4c:9c:31:14
+> [   17.638399] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
+> [   17.851085] wlan0: send auth to d8:5d:4c:9c:31:14 (try 2/3)
+> [   18.063086] wlan0: send auth to d8:5d:4c:9c:31:14 (try 3/3)
+> [   18.275081] wlan0: authentication with d8:5d:4c:9c:31:14 timed out
+> 
+> Tried it 3 times, always times out.
 
-Additionally, remove the duplicate definitions from wlcore_i.h and
-remove the MODULE_FIRMWARE macro calls from the SDIO and SPI modules,
-since they're irrelevant there.
+So you didn't get the warning, but can you still check what
+info->hw_queue is in pio.c?
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/main.c     |   12 ++++++------
- drivers/net/wireless/ti/wlcore/sdio.c     |    6 ------
- drivers/net/wireless/ti/wlcore/spi.c      |    6 ------
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    9 ---------
- 4 files changed, 6 insertions(+), 27 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index b11c4b3..da261cf 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -590,13 +590,13 @@ static const int wl12xx_rtable[REG_TABLE_LEN] = {
- };
- 
- /* TODO: maybe move to a new header file? */
--#define WL127X_FW_NAME_MULTI	"ti-connectivity/wl127x-fw-4-mr.bin"
--#define WL127X_FW_NAME_SINGLE	"ti-connectivity/wl127x-fw-4-sr.bin"
--#define WL127X_PLT_FW_NAME	"ti-connectivity/wl127x-fw-4-plt.bin"
-+#define WL127X_FW_NAME_MULTI	"ti-connectivity/wl127x-fw-5-mr.bin"
-+#define WL127X_FW_NAME_SINGLE	"ti-connectivity/wl127x-fw-5-sr.bin"
-+#define WL127X_PLT_FW_NAME	"ti-connectivity/wl127x-fw-5-plt.bin"
- 
--#define WL128X_FW_NAME_MULTI	"ti-connectivity/wl128x-fw-4-mr.bin"
--#define WL128X_FW_NAME_SINGLE	"ti-connectivity/wl128x-fw-4-sr.bin"
--#define WL128X_PLT_FW_NAME	"ti-connectivity/wl128x-fw-4-plt.bin"
-+#define WL128X_FW_NAME_MULTI	"ti-connectivity/wl128x-fw-5-mr.bin"
-+#define WL128X_FW_NAME_SINGLE	"ti-connectivity/wl128x-fw-5-sr.bin"
-+#define WL128X_PLT_FW_NAME	"ti-connectivity/wl128x-fw-5-plt.bin"
- 
- static int wl127x_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
- {
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 204e69f..73ace4b 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -411,9 +411,3 @@ MODULE_PARM_DESC(dump, "Enable sdio read/write dumps.");
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
--MODULE_FIRMWARE(WL127X_FW_NAME_SINGLE);
--MODULE_FIRMWARE(WL127X_FW_NAME_MULTI);
--MODULE_FIRMWARE(WL127X_PLT_FW_NAME);
--MODULE_FIRMWARE(WL128X_FW_NAME_SINGLE);
--MODULE_FIRMWARE(WL128X_FW_NAME_MULTI);
--MODULE_FIRMWARE(WL128X_PLT_FW_NAME);
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 6420aba..8da4ed2 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -435,10 +435,4 @@ module_exit(wl1271_exit);
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
--MODULE_FIRMWARE(WL127X_FW_NAME_SINGLE);
--MODULE_FIRMWARE(WL127X_FW_NAME_MULTI);
--MODULE_FIRMWARE(WL127X_PLT_FW_NAME);
--MODULE_FIRMWARE(WL128X_FW_NAME_SINGLE);
--MODULE_FIRMWARE(WL128X_FW_NAME_MULTI);
--MODULE_FIRMWARE(WL128X_PLT_FW_NAME);
- MODULE_ALIAS("spi:wl1271");
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 4273a21..a760407 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -35,15 +35,6 @@
- #include "conf.h"
- #include "ini.h"
- 
--#define WL127X_FW_NAME_MULTI "ti-connectivity/wl127x-fw-4-mr.bin"
--#define WL127X_FW_NAME_SINGLE "ti-connectivity/wl127x-fw-4-sr.bin"
--
--#define WL128X_FW_NAME_MULTI "ti-connectivity/wl128x-fw-4-mr.bin"
--#define WL128X_FW_NAME_SINGLE "ti-connectivity/wl128x-fw-4-sr.bin"
--
--#define WL127X_PLT_FW_NAME "ti-connectivity/wl127x-fw-4-plt.bin"
--#define WL128X_PLT_FW_NAME "ti-connectivity/wl128x-fw-4-plt.bin"
--
- /*
-  * wl127x and wl128x are using the same NVS file name. However, the
-  * ini parameters between them are different.  The driver validates
--- 
-1.7.10
 
