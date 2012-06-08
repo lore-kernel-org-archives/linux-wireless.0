@@ -1,199 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:58523 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758002Ab2FAOVu convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49847 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983Ab2FHPsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 10:21:50 -0400
-Received: by gglu4 with SMTP id u4so1768493ggl.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 07:21:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338542980-16015-1-git-send-email-sgruszka@redhat.com>
-References: <1338542980-16015-1-git-send-email-sgruszka@redhat.com>
-Date: Fri, 1 Jun 2012 16:21:49 +0200
-Message-ID: <CAGXE3d86A5-MqcesjgBOSx31hcSYUXJ0puE_O0hkREVtkrcrQA@mail.gmail.com> (sfid-20120601_162154_445851_9F5EA35A)
-Subject: Re: [PATCH] rt2x00: use atomic variable for seqno
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 8 Jun 2012 11:48:33 -0400
+Message-ID: <1339170510.5748.9.camel@jlt3.sipsolutions.net> (sfid-20120608_174837_380556_4700EE77)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andre Heider <a.heider@gmail.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 17:48:30 +0200
+In-Reply-To: <1339170287.5748.8.camel@jlt3.sipsolutions.net> (sfid-20120608_174453_828379_B54E3AF3)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
+	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
+	 <20120607180325.7752b3c0@milhouse>
+	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
+	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
+	 <4FD11B47.10002@lwfinger.net>
+	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 (sfid-20120608_173825_724071_61477734) <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 (sfid-20120608_174309_875550_ADC4A235) <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 (sfid-20120608_174453_828379_B54E3AF3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 1, 2012 at 11:29 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Remove spinlock as atomic_t can be used instead. Note we use only 16
-> lower bits, upper bits are changed but we impilcilty cast to u16.
->
-> This fix possible deadlock on IBSS mode reproted by lockdep:
->
-> =================================
-> [ INFO: inconsistent lock state ]
-> 3.4.0-wl+ #4 Not tainted
-> ---------------------------------
-> inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
-> kworker/u:2/30374 [HC0[0]:SC0[0]:HE1:SE1] takes:
->  (&(&intf->seqlock)->rlock){+.?...}, at: [<f9979a20>] rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
-> {IN-SOFTIRQ-W} state was registered at:
->  [<c04978ab>] __lock_acquire+0x47b/0x1050
->  [<c0498504>] lock_acquire+0x84/0xf0
->  [<c0835733>] _raw_spin_lock+0x33/0x40
->  [<f9979a20>] rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->  [<f9979f2a>] rt2x00queue_write_tx_frame+0x1a/0x300 [rt2x00lib]
->  [<f997834f>] rt2x00mac_tx+0x7f/0x380 [rt2x00lib]
->  [<f98fe363>] __ieee80211_tx+0x1b3/0x300 [mac80211]
->  [<f98ffdf5>] ieee80211_tx+0x105/0x130 [mac80211]
->  [<f99000dd>] ieee80211_xmit+0xad/0x100 [mac80211]
->  [<f9900519>] ieee80211_subif_start_xmit+0x2d9/0x930 [mac80211]
->  [<c0782e87>] dev_hard_start_xmit+0x307/0x660
->  [<c079bb71>] sch_direct_xmit+0xa1/0x1e0
->  [<c0784bb3>] dev_queue_xmit+0x183/0x730
->  [<c078c27a>] neigh_resolve_output+0xfa/0x1e0
->  [<c07b436a>] ip_finish_output+0x24a/0x460
->  [<c07b4897>] ip_output+0xb7/0x100
->  [<c07b2d60>] ip_local_out+0x20/0x60
->  [<c07e01ff>] igmpv3_sendpack+0x4f/0x60
->  [<c07e108f>] igmp_ifc_timer_expire+0x29f/0x330
->  [<c04520fc>] run_timer_softirq+0x15c/0x2f0
->  [<c0449e3e>] __do_softirq+0xae/0x1e0
-> irq event stamp: 18380437
-> hardirqs last  enabled at (18380437): [<c0526027>] __slab_alloc.clone.3+0x67/0x5f0
-> hardirqs last disabled at (18380436): [<c0525ff3>] __slab_alloc.clone.3+0x33/0x5f0
-> softirqs last  enabled at (18377616): [<c0449eb3>] __do_softirq+0x123/0x1e0
-> softirqs last disabled at (18377611): [<c041278d>] do_softirq+0x9d/0xe0
->
-> other info that might help us debug this:
->  Possible unsafe locking scenario:
->
->       CPU0
->       ----
->  lock(&(&intf->seqlock)->rlock);
->  <Interrupt>
->    lock(&(&intf->seqlock)->rlock);
->
->  *** DEADLOCK ***
->
-> 4 locks held by kworker/u:2/30374:
->  #0:  (wiphy_name(local->hw.wiphy)){++++.+}, at: [<c045cf99>] process_one_work+0x109/0x3f0
->  #1:  ((&sdata->work)){+.+.+.}, at: [<c045cf99>] process_one_work+0x109/0x3f0
->  #2:  (&ifibss->mtx){+.+.+.}, at: [<f98f005b>] ieee80211_ibss_work+0x1b/0x470 [mac80211]
->  #3:  (&intf->beacon_skb_mutex){+.+...}, at: [<f997a644>] rt2x00queue_update_beacon+0x24/0x50 [rt2x00lib]
->
-> stack backtrace:
-> Pid: 30374, comm: kworker/u:2 Not tainted 3.4.0-wl+ #4
-> Call Trace:
->  [<c04962a6>] print_usage_bug+0x1f6/0x220
->  [<c0496a12>] mark_lock+0x2c2/0x300
->  [<c0495ff0>] ? check_usage_forwards+0xc0/0xc0
->  [<c04978ec>] __lock_acquire+0x4bc/0x1050
->  [<c0527890>] ? __kmalloc_track_caller+0x1c0/0x1d0
->  [<c0777fb6>] ? copy_skb_header+0x26/0x90
->  [<c0498504>] lock_acquire+0x84/0xf0
->  [<f9979a20>] ? rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->  [<c0835733>] _raw_spin_lock+0x33/0x40
->  [<f9979a20>] ? rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->  [<f9979a20>] rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->  [<f997a5cf>] rt2x00queue_update_beacon_locked+0x5f/0xb0 [rt2x00lib]
->  [<f997a64d>] rt2x00queue_update_beacon+0x2d/0x50 [rt2x00lib]
->  [<f9977e3a>] rt2x00mac_bss_info_changed+0x1ca/0x200 [rt2x00lib]
->  [<f9977c70>] ? rt2x00mac_remove_interface+0x70/0x70 [rt2x00lib]
->  [<f98e4dd0>] ieee80211_bss_info_change_notify+0xe0/0x1d0 [mac80211]
->  [<f98ef7b8>] __ieee80211_sta_join_ibss+0x3b8/0x610 [mac80211]
->  [<c0496ab4>] ? mark_held_locks+0x64/0xc0
->  [<c0440012>] ? virt_efi_query_capsule_caps+0x12/0x50
->  [<f98efb09>] ieee80211_sta_join_ibss+0xf9/0x140 [mac80211]
->  [<f98f0456>] ieee80211_ibss_work+0x416/0x470 [mac80211]
->  [<c0496d8b>] ? trace_hardirqs_on+0xb/0x10
->  [<c077683b>] ? skb_dequeue+0x4b/0x70
->  [<f98f207f>] ieee80211_iface_work+0x13f/0x230 [mac80211]
->  [<c045cf99>] ? process_one_work+0x109/0x3f0
->  [<c045d015>] process_one_work+0x185/0x3f0
->  [<c045cf99>] ? process_one_work+0x109/0x3f0
->  [<f98f1f40>] ? ieee80211_teardown_sdata+0xa0/0xa0 [mac80211]
->  [<c045ed86>] worker_thread+0x116/0x270
->  [<c045ec70>] ? manage_workers+0x1e0/0x1e0
->  [<c0462f64>] kthread+0x84/0x90
->  [<c0462ee0>] ? __init_kthread_worker+0x60/0x60
->  [<c083d382>] kernel_thread_helper+0x6/0x10
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On Fri, 2012-06-08 at 17:44 +0200, Johannes Berg wrote:
+> On Fri, 2012-06-08 at 17:43 +0200, Johannes Berg wrote:
+> > On Fri, 2012-06-08 at 10:38 -0500, Larry Finger wrote:
+> > 
+> > > I got the same result as Andre when using open-source firmware - endless MAC 
+> > > suspend failures. It works OK with the proprietary fw, with or without a "qos=0" 
+> > > module parameter.
+> > 
+> > I just noticed one more bug -- I need to number the ACs the other way
+> > around, changing
+> > 	vif->hw_queue[i] = i;
+> > to
+> > 	vif->hw_queue[i] = 3 - i;
+> > 
+> > in main.c, because 0 is BK and 3 is VO, rather than 0 VO/3 BK like in
+> > mac80211.
+> > 
+> > http://p.sipsolutions.net/449d71a3c76656f1.txt
+> 
+> Ahrg! I keep numbering them wrong, this should be fixed:
+> http://p.sipsolutions.net/3bbdb9c6294dad70.txt
 
-Looks good to me. I always thought about removing the lock completely
-but wasn't entirely sure if it is safe but using an atomic variable is
-definitely safe and should also be a bit more optimized then using the
-spinlock, at least on most platforms ...
+Nope, still wrong, I shouldn't be using skb_get_queue_mapping but rather
+info->index since now mac80211 is giving us the right *queue number*
+rather than just *AC*
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+johannes
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h      |    3 +--
->  drivers/net/wireless/rt2x00/rt2x00mac.c   |    1 -
->  drivers/net/wireless/rt2x00/rt2x00queue.c |   13 ++++++-------
->  3 files changed, 7 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index ca36ccc..8f75402 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -396,8 +396,7 @@ struct rt2x00_intf {
->         * for hardware which doesn't support hardware
->         * sequence counting.
->         */
-> -       spinlock_t seqlock;
-> -       u16 seqno;
-> +       atomic_t seqno;
->  };
->
->  static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index ef8b984..4ff26c2 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -277,7 +277,6 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
->        else
->                rt2x00dev->intf_sta_count++;
->
-> -       spin_lock_init(&intf->seqlock);
->        mutex_init(&intf->beacon_skb_mutex);
->        intf->beacon = entry;
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index 4c662ec..2fd8301 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -207,6 +207,7 @@ static void rt2x00queue_create_tx_descriptor_seq(struct rt2x00_dev *rt2x00dev,
->        struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
->        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
->        struct rt2x00_intf *intf = vif_to_intf(tx_info->control.vif);
-> +       u16 seqno;
->
->        if (!(tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
->                return;
-> @@ -238,15 +239,13 @@ static void rt2x00queue_create_tx_descriptor_seq(struct rt2x00_dev *rt2x00dev,
->         * sequence counting per-frame, since those will override the
->         * sequence counter given by mac80211.
->         */
-> -       spin_lock(&intf->seqlock);
-> -
->        if (test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags))
-> -               intf->seqno += 0x10;
-> -       hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> -       hdr->seq_ctrl |= cpu_to_le16(intf->seqno);
-> -
-> -       spin_unlock(&intf->seqlock);
-> +               seqno = atomic_add_return(0x10, &intf->seqno);
-> +       else
-> +               seqno = atomic_read(&intf->seqno);
->
-> +       hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> +       hdr->seq_ctrl |= cpu_to_le16(seqno);
->  }
->
->  static void rt2x00queue_create_tx_descriptor_plcp(struct rt2x00_dev *rt2x00dev,
-> --
-> 1.7.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
