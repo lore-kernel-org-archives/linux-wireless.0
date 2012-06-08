@@ -1,88 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:41166 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758972Ab2FAIN6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58225 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761337Ab2FHQ21 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 04:13:58 -0400
-Received: by wgbdr13 with SMTP id dr13so1692567wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 01:13:57 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: clear ifmgd->bssid only after building DELBA
-Date: Fri,  1 Jun 2012 11:14:03 +0300
-Message-Id: <1338538443-23172-1-git-send-email-eliad@wizery.com> (sfid-20120601_101426_512766_847B35B5)
+	Fri, 8 Jun 2012 12:28:27 -0400
+Message-ID: <1339172904.5748.18.camel@jlt3.sipsolutions.net> (sfid-20120608_182830_970108_66658378)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andre Heider <a.heider@gmail.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Fri, 08 Jun 2012 18:28:24 +0200
+In-Reply-To: <4FD22727.7000500@lwfinger.net> (sfid-20120608_182413_078769_E0EF593E)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 <4FD22727.7000500@lwfinger.net> (sfid-20120608_182413_078769_E0EF593E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_set_disassoc() clears ifmgd->bssid before
-building DELBA frames, resulting in frames with invalid
-bssid ("00:00:00:00:00:00").
+On Fri, 2012-06-08 at 11:24 -0500, Larry Finger wrote:
+> On 06/08/2012 11:05 AM, Andre Heider wrote:
 
-Fix it by clearing ifmgd->bssid only after building
-all the needed frames.
+> >>>> Hopefully this is better: http://p.sipsolutions.net/017d73ac0688f863.txt
 
-After this change, we no longer need to save the
-bssid (before clearing it), so remove the local array.
+> Strange. I commented out the BUILD_BUG statements in version 017d73a,
 
-Reported-by: Ido Yariv <ido@wizery.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/mlme.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+Right, that would do it. I think we may want to add a
+#define B43_HW_QUEUE_NUM 5
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index da52587..96a7f64 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1327,7 +1327,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	u32 changed = 0;
--	u8 bssid[ETH_ALEN];
- 
- 	ASSERT_MGD_MTX(ifmgd);
- 
-@@ -1337,10 +1336,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON(!ifmgd->associated))
- 		return;
- 
--	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
--
- 	ifmgd->associated = NULL;
--	memset(ifmgd->bssid, 0, ETH_ALEN);
- 
- 	/*
- 	 * we need to commit the associated = NULL change because the
-@@ -1360,7 +1356,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	netif_carrier_off(sdata->dev);
- 
- 	mutex_lock(&local->sta_mtx);
--	sta = sta_info_get(sdata, bssid);
-+	sta = sta_info_get(sdata, ifmgd->bssid);
- 	if (sta) {
- 		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
- 		ieee80211_sta_tear_down_BA_sessions(sta, tx);
-@@ -1369,13 +1365,16 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	/* deauthenticate/disassociate now */
- 	if (tx || frame_buf)
--		ieee80211_send_deauth_disassoc(sdata, bssid, stype, reason,
--					       tx, frame_buf);
-+		ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
-+					       reason, tx, frame_buf);
- 
- 	/* flush out frame */
- 	if (tx)
- 		drv_flush(local, false);
- 
-+	/* clear bssid only after building the needed mgmt frames */
-+	memset(ifmgd->bssid, 0, ETH_ALEN);
-+
- 	/* remove AP and TDLS peers */
- 	sta_info_flush(local, sdata);
- 
--- 
-1.7.6.401.g6a319
+and then use it in all the right places instead of changing
+B43_QOS_QUEUE_NUM maybe?
+
+>  and it 
+> worked for me with both flavors of fw.
+
+Well, good to know... I wonder what Andre's bug is then, maybe not
+related to this?
+
+johannes
 
