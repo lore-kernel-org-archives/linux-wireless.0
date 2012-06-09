@@ -1,46 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19198 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752445Ab2FKPqY (ORCPT
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:43868 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752819Ab2FIWAW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 11:46:24 -0400
-Message-ID: <4FD612CA.1050604@qca.qualcomm.com> (sfid-20120611_174628_222726_8126DA28)
-Date: Mon, 11 Jun 2012 18:46:18 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sat, 9 Jun 2012 18:00:22 -0400
+Message-ID: <4FD3C76A.1030803@xenotime.net> (sfid-20120610_000048_431817_7BDFB220)
+Date: Sat, 09 Jun 2012 15:00:10 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <me@bobcopeland.com>,
-	<mickflemm@gmail.com>
-Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
-References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>   <1339228530.4539.0.camel@jlt3.sipsolutions.net>   <4FD3A936.8070600@broadcom.com>  <1339399952.4520.13.camel@jlt3.sipsolutions.net>  <4FD60369.80108@qca.qualcomm.com> <1339425944.4520.27.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339425944.4520.27.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+CC: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+Subject: Re: kernel-doc warnings (3.5-rc1)
+References: <4FD28ED7.6070506@xenotime.net>	 (sfid-20120609_014646_473500_8E65425E) <1339229158.4539.4.camel@jlt3.sipsolutions.net> <1339229241.4539.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339229241.4539.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/11/2012 05:45 PM, Johannes Berg wrote:
-> On Mon, 2012-06-11 at 17:40 +0300, Kalle Valo wrote:
+On 06/09/2012 01:07 AM, Johannes Berg wrote:
+
+> On Sat, 2012-06-09 at 10:05 +0200, Johannes Berg wrote:
+>> On Fri, 2012-06-08 at 16:46 -0700, Randy Dunlap wrote:
+>>> Would someone please add/fix the kernel-doc warnings?
+>>
+>> I'll commit the below patch for these:
 > 
->> I would compare this with NL80211_TESTMODE, we don't want distributions
->> to enable that either. Of course nothing prevents distros to enable
->> CFG80211_EXPERT but we need to be active to make sure it's not enabled
->> (ie. check the distro configs and file bugs etc).
+> D'oh.
 > 
-> Right, but that's actually a feature. I see little value in a pretty
-> much meaningless "EXPERT wireless" Kconfig symbol that only groups
-> others.
+> 
+> 
+> mac80211: add some missing kernel-doc
+> 
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Add a few kernel-doc descriptions that were missed
+> during development.
+> 
+> Reported-by: Randy Dunlap <rdunlap@xenotime.net>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Ah, I see.
 
-> If, as Arend suggested, it actually has some meaning, then it
-> may make more sense.
+Acked-by: Randy Dunlap <rdunlap@xenotime.net>
 
-Yeah, I see your point.
+Thanks :)
 
-FWIW I do see the value with CFG80211_EXPERT as it makes more difficult
-for users to accidentally enable certain features. And it makes it
-easier for us to search for distros which have CFG80211_EXPERT enabled.
+> ---
+>  include/net/mac80211.h  |    6 ++++++
+>  net/mac80211/sta_info.h |    2 ++
+>  2 files changed, 8 insertions(+)
+> 
+> --- a/include/net/mac80211.h	2012-06-09 10:04:15.000000000 +0200
+> +++ b/include/net/mac80211.h	2012-06-09 10:04:19.000000000 +0200
+> @@ -1945,6 +1945,11 @@ enum ieee80211_rate_control_changed {
+>   *	to also unregister the device. If it returns 1, then mac80211
+>   *	will also go through the regular complete restart on resume.
+>   *
+> + * @set_wakeup: Enable or disable wakeup when WoWLAN configuration is
+> + *	modified. The reason is that device_set_wakeup_enable() is
+> + *	supposed to be called when the configuration changes, not only
+> + *	in suspend().
+> + *
+>   * @add_interface: Called when a netdevice attached to the hardware is
+>   *	enabled. Because it is not called for monitor mode devices, @start
+>   *	and @stop must be implemented.
+> @@ -2974,6 +2979,7 @@ __le16 ieee80211_ctstoself_duration(stru
+>   * ieee80211_generic_frame_duration - Calculate the duration field for a frame
+>   * @hw: pointer obtained from ieee80211_alloc_hw().
+>   * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+> + * @band: the band to calculate the frame duration on
+>   * @frame_len: the length of the frame.
+>   * @rate: the rate at which the frame is going to be transmitted.
+>   *
+> --- a/net/mac80211/sta_info.h	2012-06-09 10:04:15.000000000 +0200
+> +++ b/net/mac80211/sta_info.h	2012-06-09 10:04:19.000000000 +0200
+> @@ -278,6 +278,8 @@ struct sta_ampdu_mlme {
+>   * @sta: station information we share with the driver
+>   * @sta_state: duplicates information about station state (for debug)
+>   * @beacon_loss_count: number of times beacon loss has triggered
+> + * @supports_40mhz: tracks whether the station advertised 40 MHz support
+> + *	as we overwrite its HT parameters with the currently used value
+>   */
+>  struct sta_info {
+>  	/* General information, mostly static */
+> 
+> 
+> --
 
-Kalle
+
+-- 
+~Randy
