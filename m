@@ -1,29 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34291 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757581Ab2FECxn (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11355 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752875Ab2FIWD1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 22:53:43 -0400
-Received: by bkcji2 with SMTP id ji2so4193690bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2012 19:53:41 -0700 (PDT)
+	Sat, 9 Jun 2012 18:03:27 -0400
+Date: Sat, 9 Jun 2012 15:03:12 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [RFC 2/2] mac80211: support rssi threshold scan
+Message-ID: <20120609220310.GA3185@pista> (sfid-20120610_000330_631829_DCA37571)
+References: <1339036996-6199-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1339036996-6199-2-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1339229392.4539.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Date: Tue, 5 Jun 2012 10:53:41 +0800
-Message-ID: <CALx5=V8gS-FudA0EAmoEs=xwQ7hr_BntO4Jr_+6tR9pYSNDUdg@mail.gmail.com> (sfid-20120605_045346_656263_57F140A7)
-Subject: Connected standby support ?
-From: Matt Chen <mattsled@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, users@rt2x00.serialmonkey.com
-Cc: joeyli <jlee@suse.com>, Michael Chang <mchang@suse.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1339229392.4539.8.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi list,
-As the incoming UEFI new design for BIOS, Microsoft has already
-provided a model, "connected standby",  for power management. There
-are 3 modes which are S0, Low Power S0 and S5.
-I am wondering if there is already any support for the connected
-standby in wifi of Linux ?
+On Sat, Jun 09, 2012 at 10:09:52AM +0200, Johannes Berg wrote:
+> On Wed, 2012-06-06 at 19:43 -0700, Thomas Pedersen wrote:
+> 
+> > +	if (sdata->local->scan_req->rssi &&
+> > +	    rx_status->signal < sdata->local->scan_req->rssi)
+> > +		return RX_DROP_MONITOR;
+> 
+> I believe that should be RX_CONTINUE
 
--- 
-Thank you.
+Thanks. Since this is considered a performance optimization, it makes
+little sense to even implement it in mac80211?
+
+Thomas
