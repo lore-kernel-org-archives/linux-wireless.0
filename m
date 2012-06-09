@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3466 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753375Ab2F1LIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 07:08:15 -0400
-Message-ID: <4FEC3B0E.3040001@broadcom.com> (sfid-20120628_130817_932480_C3340B96)
-Date: Thu, 28 Jun 2012 13:07:58 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54784 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761984Ab2FIADl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jun 2012 20:03:41 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Luciano Coelho" <coelho@ti.com>
-cc: linux-wireless@vger.kernel.org, arik@wizery.com,
-	"Eliad Peller" <eliad@wizery.com>
-Subject: Re: [PATCH] wlcore: implement .flush callback
-References: <1340813387-18407-1-git-send-email-coelho@ti.com>
-In-Reply-To: <1340813387-18407-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20434.37522.581625.203653@gargle.gargle.HOWL> (sfid-20120609_020345_916996_DFA397B5)
+Date: Sat, 9 Jun 2012 05:32:26 +0530
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/9] ath9k_hw: Fix AR9462 power consumption on idle associated
+In-Reply-To: <1339177148-21672-3-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<1339177148-21672-3-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/27/2012 06:09 PM, Luciano Coelho wrote:
-> From: Eliad Peller <eliad@wizery.com>
-> 
-> implement the .flush() callback by simply calling wl1271_tx_flush().
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> +static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
-> +{
-> +	struct wl1271 *wl = hw->priv;
+Rajkumar Manoharan wrote:
+> +	if (!AR_SREV_9462_20(ah))
+> +		goto skip_btcoex;
 > +
-> +	wl1271_tx_flush(wl);
-> +}
+> +	for (i = 0; i < AH_WAIT_TIMEOUT; i++) {
+> +		btcoex_ctrl2 = REG_READ(ah, AR_BTCOEX_CTRL2);
+> +		if (btcoex_ctrl2 != 0xdeadbeef)
+> +			break;
+> +		udelay(AH_TIME_QUANTUM);
+> +	}
+> +	REG_WRITE(ah, AR_BTCOEX_CTRL2, (btcoex_ctrl2 | BIT(23)));
 > +
+> +	for (i = 0; i < AH_WAIT_TIMEOUT; i++) {
+> +		diag_sw = REG_READ(ah, AR_DIAG_SW);
+> +		if (diag_sw != 0xdeadbeef)
+> +			break;
+> +		udelay(AH_TIME_QUANTUM);
+> +	}
+> +	REG_WRITE(ah, AR_DIAG_SW, (diag_sw | BIT(27) | BIT(19) | BIT(18)));
+> +	lna_ctrl = REG_READ(ah, AR_OBS_BUS_CTRL) & 0x3;
+> +	bt_sleep = REG_READ(ah, AR_MCI_RX_STATUS) & AR_MCI_RX_REMOTE_SLEEP;
+> +
+> +	REG_WRITE(ah, AR_BTCOEX_CTRL2, btcoex_ctrl2);
+> +	REG_WRITE(ah, AR_DIAG_SW, diag_sw);
+> +
+> +	if (bt_sleep && (lna_ctrl == 2)) {
+> +		REG_SET_BIT(ah, AR_BTCOEX_RC, 0x1);
+> +		REG_CLR_BIT(ah, AR_BTCOEX_RC, 0x1);
+> +		udelay(50);
+> +	}
+> +
+> +skip_btcoex:
 
-So not taking the drop flag into account? Any plan to change that?
+It would be cleaner to use a helper function for this and also check
+whether MCI/BTCOEX is actually enabled.
 
-Gr. AvS
-
+Sujith
