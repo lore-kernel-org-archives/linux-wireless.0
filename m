@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:58179 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752240Ab2FKQyu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47115 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab2FIH7b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 12:54:50 -0400
-Message-ID: <1339433759.4999.64.camel@lappy> (sfid-20120611_185519_962035_03BBE5CD)
-Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
-From: Sasha Levin <levinsasha928@gmail.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-	David Miller <davem@davemloft.net>,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	Dave Jones <davej@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 11 Jun 2012 18:55:59 +0200
-In-Reply-To: <1339426726.6001.2309.camel@edumazet-glaptop>
-References: <1339423241.4999.53.camel@lappy>
-	 <20120611144134.GX22557@sortiz-mobl>
-	 <1339425693.6001.2268.camel@edumazet-glaptop>
-	 <1339426241.4999.62.camel@lappy>
-	 <1339426726.6001.2309.camel@edumazet-glaptop>
+	Sat, 9 Jun 2012 03:59:31 -0400
+Message-ID: <1339228767.4539.3.camel@jlt3.sipsolutions.net> (sfid-20120609_095934_001921_2A6986E0)
+Subject: Re: [RFC] mac80211: follow 802.11-2007 11.5.3 Error recovery upon
+ HT BA failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Sean Patrick Santos <quantheory@gmail.com>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	helmut.schaa@googlemail.com, mar.kolya@gmail.com,
+	Per-Erik Westerberg <per-erik.westerberg@bredband.net>,
+	=?UTF-8?Q?Miko=C5=82aj?= Kuligowski <mikolaj.q@wp.pl>
+Date: Sat, 09 Jun 2012 09:59:27 +0200
+In-Reply-To: <201206090311.21153.chunkeey@googlemail.com> (sfid-20120609_031203_315241_7A41DF31)
+References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
+	 <CAFR4AqahHPR9s4vn+1HFMFk+-oi2ROxLGrqa79ufLJ=Gmzb5rQ@mail.gmail.com>
+	 <201206090218.27603.chunkeey@googlemail.com>
+	 <201206090311.21153.chunkeey@googlemail.com>
+	 (sfid-20120609_031203_315241_7A41DF31)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-06-11 at 16:58 +0200, Eric Dumazet wrote:
-> On Mon, 2012-06-11 at 16:50 +0200, Sasha Levin wrote:
-> 
-> > Eric, Is there something that documents at what state each of the
-> > callbacks in the network subsystem can be called? Like a big flow chart
-> > of some sorts?
-> > 
-> > I'm asking because I've looked at this as well before sending this mail,
-> > and while the fix does look trivial, I wasn't sure whether it is really
-> > the correct fix, or the problem is that this callback wasn't supposed be
-> > called at all so something else is broken (we had such issue with
-> > namespaces and unshare() not long ago).
-> > 
-> 
-> I am not aware of such 'document'.
-> 
-> Things change, and only *good* reference is actual source code.
-> 
-> Now, take a look at sock_graft()/sock_orphan()/inet_release() ...
 
-I see.
+> introduced a TX BA session timeout timer. However the
+> timer was reset for each outgoing transmission instead
+> what 802.11-2007 11.5.3 specifies: 
 
-I grepped for release callbacks and the first few in the result (atm,
-ax_25) did check for !sk, so I guess I'll just follow what I see in
-other code in the future :)
+You should probably reference 802.11-2012 now since some things were
+renumbered.
+
+> "The inactivity timer at the originator is reset when a
+> BlockAck frame corresponding to the TID for which the
+> Block Ack policy is set is received."
+
+> This patch was only compile-tested and the design has 
+> some rather big problems: 
+
+Maybe then we should just revert Nikolay's patch?
+
+>  - The spec says we should test for BlockAcks, however
+>    that is not feasible because it is a control frame
+>    (so FIF_CONTROL might filter it on some hardware).
+
+In some way, all devices are going to have to report these frames. Maybe
+not as the frame itself, but as some other notification, to allow
+cleaning up the TX queues accordingly, I think? There's a BA
+notification in iwlwifi for example.
+
+> +++ b/net/mac80211/status.c
+> @@ -439,6 +439,29 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  			}
+>  		}
+>  
+> +		if (ieee80211_is_data_qos(fc) && acked &&
+> +		    info->flags & IEEE80211_TX_CTL_AMPDU &&
+> +		    local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) {
+
+I'm confused -- what does this have to do with HW_HAS_RATE_CONTROL?
+
+johannes
 
