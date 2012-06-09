@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:64423 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751821Ab2FKSRr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 14:17:47 -0400
-Received: by pbbrp8 with SMTP id rp8so5925542pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 11:17:46 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:2388 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752812Ab2FIVZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2012 17:25:31 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 0/5] brcm80211: small fixes and debugfs support in
+ brcmfmac
+Date: Sat, 9 Jun 2012 22:51:40 +0200
+Message-ID: <1339275105-3593-1-git-send-email-arend@broadcom.com> (sfid-20120609_232536_721890_FD0551AE)
 MIME-Version: 1.0
-In-Reply-To: <CAOreOvXM9MPRz67+WCoCwODrz0_FG4GTR5v9imQJyZt5DTDWQw@mail.gmail.com>
-References: <CA+7oygd1dfn=Vj7V1h_vVvXPNym_Ake7UNWf1UuVWfxzm5g+NQ@mail.gmail.com>
-	<CAOreOvXM9MPRz67+WCoCwODrz0_FG4GTR5v9imQJyZt5DTDWQw@mail.gmail.com>
-Date: Mon, 11 Jun 2012 14:17:46 -0400
-Message-ID: <CA+7oygcfLTRsPKMQkb-0vYQaE42i+j_E3bQg75UzVGVG51dhjA@mail.gmail.com> (sfid-20120611_201751_100406_BDD5437E)
-Subject: Re: anyone know any dual-band USB devices with monitoring mode in Linux?
-From: George Nychis <gnychis@gmail.com>
-To: Mark Davis <marked86@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for your suggestions!  I ended up grabbing an RaLink RT3572 for
-$12 on Amazon with the AE1000:
-http://www.amazon.com/gp/product/B003VYH1UE/ref=oh_details_o00_s00_i00
+This series contains couple of fixes for brcmsmac that were reported
+on the wireless list. Also exposed some brcmfmac internals through
+debugfs.
 
-Not a problem kicking it in to monitoring mode with the rt2x00 driver,
-and it is reporting proper signal strengths unlike my ar9280.
-Perfect.
+Arend van Spriel (5):
+  brcmsmac: remove brcms_set_hint() function
+  brcmsmac: fix smatch warning found in ampdu.c
+  brcmfmac: add debugfs helper functions
+  brcmfmac: expose sdio internal counters in debugfs
+  brcmfmac: introduce checkdied debugfs functionality
 
-- George
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    2 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    3 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c  |  126 +++++
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |   59 +++
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    7 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  499 ++++++++++++++++----
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |    5 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   14 +-
+ 8 files changed, 608 insertions(+), 107 deletions(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c
+
+-- 
+1.7.9.5
 
 
-On Thu, Jun 7, 2012 at 6:24 PM, Mark Davis <marked86@gmail.com> wrote:
->
-> On Wed, Jun 6, 2012 at 11:14 PM, George Nychis <gnychis@gmail.com> wrote:
-> > Hi all,
-> >
-> > I've been using the Sony UWA-BR100 (AR9280) with ath9k_htc, and there
-> > is clearly a bug with reporting signal strengths which I need to be
-> > correct.  I've reported the bug, but this might not be fixed in time
-> > for a deadline I have coming up, and the bug is in the firmware out of
-> > my reach.
-> >
-> > So I was wondering if anyone knows of any alternative USB dual-band
-> > wireless cards that support monitoring mode in Linux.  I'd _greatly_
-> > appreciate it... doesn't need to be Atheros based.
-> >
-> > - George
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> http://bit.ly/LzgJiA
->
-> I primarily use AWUS050NH / AWUS051NHs. Dell Wireless 1450 adapters
-> are also decent (though they probably perform better in 2.4GHz than
-> 5GHz). I'm not really a fan of AR9170 hardware.
->
-> -mark
