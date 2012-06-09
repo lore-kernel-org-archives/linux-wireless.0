@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1351 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750713Ab2FFJbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 05:31:35 -0400
-Message-ID: <4FCF2372.6080506@broadcom.com> (sfid-20120606_113138_509139_6A7CAE24)
-Date: Wed, 6 Jun 2012 11:31:30 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
+Received: from h1355771.stratoserver.net ([85.214.105.140]:55431 "EHLO
+	h1355771.stratoserver.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602Ab2FINnA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2012 09:43:00 -0400
+Subject: poor performance with W2CBW003 (Marvell 8686)
+From: Andreas Kemnade <andreas@kemnade.info>
+To: dsd@laptop.org, dcbw@redhat.com, libertas-dev@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/18] brcmsmac: remove si_pmu_init() and
- si_pmu_res_init()
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-7-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338937641-8519-7-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
+Date: Sat, 09 Jun 2012 15:03:27 +0200
+Message-ID: <1339247007.5895.373.camel@localhost> (sfid-20120609_154336_516104_954CE8F1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
-> This is already done by bcma_pmu_init() and bcma_pmu_resources_init() in bcma.
+Hi,
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    2 -
->  drivers/net/wireless/brcm80211/brcmsmac/pmu.c     |   76 ---------------------
->  drivers/net/wireless/brcm80211/brcmsmac/pmu.h     |    2 -
->  3 files changed, 80 deletions(-)
+on the GTA04 (www.gta04.org) 
+which has a W2CBW003 chip for wifi connected to a DM3730CBP CPU. data
+rates are quite low using the libertas driver from kernel 3.2-3.4 
+(https://github.com/neilbrown/gta04/branches)
+even near an accesspoint. That seems not depend on the encryption
+settings. Rates are around 100KByte/s. iwconfig shows 5.5Mb/s if it is
+not connected to an accesspoint with specially configured rates (but
+still the throughput is low).
 
+In contrary data rates are high (>1MByte/s) with a kernel based on
+the 2.6.32  BeagleBoard XM hw-validation kernel
+https://github.com/goldelico/gta04-kernel
+That behaviour was reported by several people.
+
+I tried also the libertas-tf driver with kernel 3.2 using the
+instructions here:
+http://corysohrakoff.wordpress.com/2011/09/13/enabling-wifi-ap-mode-on-a-gumstix-overo/
+That was also slow.
+
+Any hints?
+
+Greetings
+Andreas Kemnade
 
