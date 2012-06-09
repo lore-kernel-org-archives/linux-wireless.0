@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40495 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60834 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902Ab2FSOvb (ORCPT
+	with ESMTP id S1751505Ab2FIIqM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:31 -0400
+	Sat, 9 Jun 2012 04:46:12 -0400
+Message-ID: <1339231570.4539.31.camel@jlt3.sipsolutions.net> (sfid-20120609_104616_477339_4522FE6E)
+Subject: Re: [PATCH v2 3/4] mac80211: implement the proactive PREP generation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 14/17] mac80211: remove unused function
-Date: Tue, 19 Jun 2012 16:50:53 +0200
-Message-Id: <1340117456-10154-15-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165138_975530_C409B0FF)
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Date: Sat, 09 Jun 2012 10:46:10 +0200
+In-Reply-To: <1339043963-2043-4-git-send-email-yeohchunyeow@gmail.com> (sfid-20120607_063955_450825_23A6CF28)
+References: <1339043963-2043-1-git-send-email-yeohchunyeow@gmail.com>
+	 <1339043963-2043-4-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20120607_063955_450825_23A6CF28)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2012-06-07 at 12:39 +0800, Chun-Yeow Yeoh wrote:
 
-Remove the unused function is_ieee80211_device().
+> v2: adhere to Linux kernel coding style (Johannes)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c |    6 ------
- 1 file changed, 6 deletions(-)
+> +			if (!is_broadcast_ether_addr(target_addr)) {
+> +				mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
+> +				    cpu_to_le32(orig_sn), 0, target_addr,
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index af25c4e..6f39beb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -175,12 +175,6 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 	return cpu_to_le16(dur);
- }
- 
--static inline int is_ieee80211_device(struct ieee80211_local *local,
--				      struct net_device *dev)
--{
--	return local == wdev_priv(dev->ieee80211_ptr);
--}
--
- /* tx handlers */
- static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
--- 
-1.7.10
+four spaces to indent? I don't think that's right right style :-)
+
+This function really looks rife for refactoring, it's got way too many
+indentation levels now.
+
+johannes
+
 
