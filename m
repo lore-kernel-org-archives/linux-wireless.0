@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39473 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59408 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752795Ab2FAGoj (ORCPT
+	with ESMTP id S1752245Ab2FIIdj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 02:44:39 -0400
-Message-ID: <1338533070.4884.4.camel@jlt3.sipsolutions.net> (sfid-20120601_084443_162860_857A14A0)
-Subject: Re: [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
+	Sat, 9 Jun 2012 04:33:39 -0400
+Message-ID: <1339230816.4539.22.camel@jlt3.sipsolutions.net> (sfid-20120609_103352_288435_7385B376)
+Subject: Re: [PATCH] cfg80211: check iface combinations only when iface is
+ running
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, stable@vger.kernel.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Date: Fri, 01 Jun 2012 08:44:30 +0200
-In-Reply-To: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120601_083956_399882_A3D65832)
-References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>
-	 (sfid-20120601_083956_399882_A3D65832)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Sat, 09 Jun 2012 10:33:36 +0200
+In-Reply-To: <1339145744-9154-1-git-send-email-michal.kazior@tieto.com>
+References: <1339145744-9154-1-git-send-email-michal.kazior@tieto.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-01 at 12:09 +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Fri, 2012-06-08 at 10:55 +0200, Michal Kazior wrote:
+> Don't validate interface combinations on a stopped
+> interface. Otherwise we might end up being able to
+> create a new interface with a certain type, but
+> won't be able to change an existing interface
+> into that type.
 > 
-> In ath9k we make sure the following two things
-> *if the first interface is ADHOC we cannot have any other interface.
-> *we cannot add an ADHOC interface if there is already an interface
-> is present.
+> This also skips some other functions when
+> interface is stopped and changing interface type.
 
-> -	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
-> -	    ((vif->type == NL80211_IFTYPE_ADHOC) &&
-> -	     sc->nvifs > 0)) {
-> -		ath_err(common, "Cannot create ADHOC interface when other"
-> -			" interfaces already exist.\n");
-> +	if ((ah->opmode == NL80211_IFTYPE_ADHOC) && (sc->nvifs > 0)) {
-> +		ath_err(common, "Cannot create any other interface when an ADHOC interface already exists.\n");
-> +		ret = -EINVAL;
-> +		goto out;
-> +	}
-> +
-> +	if ((vif->type == NL80211_IFTYPE_ADHOC) && (sc->nvifs > 0)) {
-> +		ath_err(common, "Cannot create ADHOC interface when other interfaces already exist.\n");
-
-You could just remove the entire check since the interface combinations
-you advertise don't allow it, I think? Or just fix those
-combinations :-)
+Applied for 3.5
 
 johannes
+
 
