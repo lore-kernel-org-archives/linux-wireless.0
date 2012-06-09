@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2160 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754175Ab2FKMiU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 08:38:20 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath9k: fix btcoex duty cycle
-Date: Mon, 11 Jun 2012 18:09:14 +0530
-Message-ID: <1339418354-1843-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_143825_560033_39A21F36)
-In-Reply-To: <1339418354-1843-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339418354-1843-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4613 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751401Ab2FITvt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2012 15:51:49 -0400
+Message-ID: <4FD3A936.8070600@broadcom.com> (sfid-20120609_215228_356644_0FAAE448)
+Date: Sat, 9 Jun 2012 21:51:18 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, me@bobcopeland.com,
+	mickflemm@gmail.com, kvalo@qca.qualcomm.com
+Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
+References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>
+ <1339228530.4539.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339228530.4539.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reset duty cycle before updating btcoex scheme. Otherwise duty cycle
-  reaches max limit and never be reduced again
-* Adjust duty cycle with proper BDR profile value
+On 06/09/2012 09:55 AM, Johannes Berg wrote:
+> On Fri, 2012-06-08 at 17:51 -0700, Luis R. Rodriguez wrote:
+>> From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+>>
+>> Turns out that standard Linux distributions leave CONFIG_EXPERT
+>> enabled. This makes this option useless for wireless testing / research
+>> purposes as we don't want certain features enabled on all kernel
+>> builds. This adds a new CONFIG_CFG80211_EXPERT and makes a few
+>> features depend on them.
+> 
+> I'm not sure I see the point in CFG80211_EXPERT. All the features you're
+> putting in there have nothing to do with cfg80211 at all anyway.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/mci.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+My understanding of this is that CFG80211_EXPERT was chosen because
+cfg80211 provides the kernel side of the regulatory framework.
 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index e53df86..5246067 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -120,6 +120,9 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
- 	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
- 		goto skip_tuning;
- 
-+	btcoex->duty_cycle = num_profile ? ath_mci_duty_cycle[num_profile] :
-+					   ATH_BTCOEX_DEF_DUTY_CYCLE;
-+
- 	if (num_profile == 1) {
- 		info = list_first_entry(&mci->info,
- 					struct ath_mci_profile_info,
-@@ -178,7 +181,7 @@ skip_tuning:
- 	if (IS_CHAN_5GHZ(sc->sc_ah->curchan))
- 		return;
- 
--	btcoex->duty_cycle += (mci->num_bdr ? ATH_MCI_MAX_DUTY_CYCLE : 0);
-+	btcoex->duty_cycle += (mci->num_bdr ? ATH_MCI_BDR_DUTY_CYCLE : 0);
- 	if (btcoex->duty_cycle > ATH_MCI_MAX_DUTY_CYCLE)
- 		btcoex->duty_cycle = ATH_MCI_MAX_DUTY_CYCLE;
- 
--- 
-1.7.10.4
+Gr. AvS
+
 
