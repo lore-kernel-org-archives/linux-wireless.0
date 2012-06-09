@@ -1,203 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:56780 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932113Ab2FOF4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 01:56:49 -0400
-From: Joe Perches <joe@perches.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 09/20] libertas: Use pr_<level>
-Date: Thu, 14 Jun 2012 22:53:49 -0700
-Message-Id: <73130fc990ee58986bec347cc9a605edb8c13b2c.1339739416.git.joe@perches.com> (sfid-20120615_080137_233215_73DDFDFC)
-In-Reply-To: <cover.1339739415.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:44301 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab2FIIHY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2012 04:07:24 -0400
+Message-ID: <1339229241.4539.5.camel@jlt3.sipsolutions.net> (sfid-20120609_100730_544646_2D585056)
+Subject: Re: kernel-doc warnings (3.5-rc1)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+Date: Sat, 09 Jun 2012 10:07:21 +0200
+In-Reply-To: <1339229158.4539.4.camel@jlt3.sipsolutions.net>
+References: <4FD28ED7.6070506@xenotime.net>
+	 (sfid-20120609_014646_473500_8E65425E) <1339229158.4539.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a more current logging style.
+On Sat, 2012-06-09 at 10:05 +0200, Johannes Berg wrote:
+> On Fri, 2012-06-08 at 16:46 -0700, Randy Dunlap wrote:
+> > Would someone please add/fix the kernel-doc warnings?
+> 
+> I'll commit the below patch for these:
 
-Convert printks to pr_<level>.
-Convert printk(KERN_DEBUG to pr_debug(.
-Coalesce formats, align arguments.
+D'oh.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+
+
+mac80211: add some missing kernel-doc
+
+From: Johannes Berg <johannes.berg@intel.com>
+
+Add a few kernel-doc descriptions that were missed
+during development.
+
+Reported-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/libertas/cmd.c     |    2 ++
- drivers/net/wireless/libertas/cmdresp.c |    2 ++
- drivers/net/wireless/libertas/if_cs.c   |   14 ++++++--------
- drivers/net/wireless/libertas/if_sdio.c |    6 +++---
- drivers/net/wireless/libertas/if_spi.c  |    4 ++--
- drivers/net/wireless/libertas/if_usb.c  |    4 ++--
- drivers/net/wireless/libertas/tx.c      |    3 +++
- 7 files changed, 20 insertions(+), 15 deletions(-)
+ include/net/mac80211.h  |    6 ++++++
+ net/mac80211/sta_info.h |    2 ++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index d798bcc..7f7da1f 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -3,6 +3,8 @@
-  * It prepares command and sends it to firmware when it is ready.
+--- a/include/net/mac80211.h	2012-06-09 10:04:15.000000000 +0200
++++ b/include/net/mac80211.h	2012-06-09 10:04:19.000000000 +0200
+@@ -1945,6 +1945,11 @@ enum ieee80211_rate_control_changed {
+  *	to also unregister the device. If it returns 1, then mac80211
+  *	will also go through the regular complete restart on resume.
+  *
++ * @set_wakeup: Enable or disable wakeup when WoWLAN configuration is
++ *	modified. The reason is that device_set_wakeup_enable() is
++ *	supposed to be called when the configuration changes, not only
++ *	in suspend().
++ *
+  * @add_interface: Called when a netdevice attached to the hardware is
+  *	enabled. Because it is not called for monitor mode devices, @start
+  *	and @stop must be implemented.
+@@ -2974,6 +2979,7 @@ __le16 ieee80211_ctstoself_duration(stru
+  * ieee80211_generic_frame_duration - Calculate the duration field for a frame
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @band: the band to calculate the frame duration on
+  * @frame_len: the length of the frame.
+  * @rate: the rate at which the frame is going to be transmitted.
+  *
+--- a/net/mac80211/sta_info.h	2012-06-09 10:04:15.000000000 +0200
++++ b/net/mac80211/sta_info.h	2012-06-09 10:04:19.000000000 +0200
+@@ -278,6 +278,8 @@ struct sta_ampdu_mlme {
+  * @sta: station information we share with the driver
+  * @sta_state: duplicates information about station state (for debug)
+  * @beacon_loss_count: number of times beacon loss has triggered
++ * @supports_40mhz: tracks whether the station advertised 40 MHz support
++ *	as we overwrite its HT parameters with the currently used value
   */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/hardirq.h>
- #include <linux/kfifo.h>
- #include <linux/sched.h>
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 178b222..a15ac8e 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -3,6 +3,8 @@
-  * responses as well as events generated by firmware.
-  */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/hardirq.h>
- #include <linux/slab.h>
- #include <linux/delay.h>
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index 16beaf3..79ed0d0 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -110,14 +110,14 @@ static inline unsigned int if_cs_read8(struct if_cs_card *card, uint reg)
- {
- 	unsigned int val = ioread8(card->iobase + reg);
- 	if (debug_output)
--		printk(KERN_INFO "inb %08x<%02x\n", reg, val);
-+		pr_info("inb %08x<%02x\n", reg, val);
- 	return val;
- }
- static inline unsigned int if_cs_read16(struct if_cs_card *card, uint reg)
- {
- 	unsigned int val = ioread16(card->iobase + reg);
- 	if (debug_output)
--		printk(KERN_INFO "inw %08x<%04x\n", reg, val);
-+		pr_info("inw %08x<%04x\n", reg, val);
- 	return val;
- }
- static inline void if_cs_read16_rep(
-@@ -127,22 +127,21 @@ static inline void if_cs_read16_rep(
- 	unsigned long count)
- {
- 	if (debug_output)
--		printk(KERN_INFO "insw %08x<(0x%lx words)\n",
--			reg, count);
-+		pr_info("insw %08x<(0x%lx words)\n", reg, count);
- 	ioread16_rep(card->iobase + reg, buf, count);
- }
- 
- static inline void if_cs_write8(struct if_cs_card *card, uint reg, u8 val)
- {
- 	if (debug_output)
--		printk(KERN_INFO "outb %08x>%02x\n", reg, val);
-+		pr_info("outb %08x>%02x\n", reg, val);
- 	iowrite8(val, card->iobase + reg);
- }
- 
- static inline void if_cs_write16(struct if_cs_card *card, uint reg, u16 val)
- {
- 	if (debug_output)
--		printk(KERN_INFO "outw %08x>%04x\n", reg, val);
-+		pr_info("outw %08x>%04x\n", reg, val);
- 	iowrite16(val, card->iobase + reg);
- }
- 
-@@ -153,8 +152,7 @@ static inline void if_cs_write16_rep(
- 	unsigned long count)
- {
- 	if (debug_output)
--		printk(KERN_INFO "outsw %08x>(0x%lx words)\n",
--			reg, count);
-+		pr_info("outsw %08x>(0x%lx words)\n", reg, count);
- 	iowrite16_rep(card->iobase + reg, buf, count);
- }
- 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 76caeba..860555a 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -1063,7 +1063,7 @@ static void if_sdio_reset_card_worker(struct work_struct *work)
- 	 * instance for that reason.
- 	 */
- 
--	pr_info("Resetting card...");
-+	pr_info("Resetting card...\n");
- 	mmc_remove_host(reset_host);
- 	mmc_add_host(reset_host);
- }
-@@ -1391,8 +1391,8 @@ static int __init if_sdio_init_module(void)
- 
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
--	printk(KERN_INFO "libertas_sdio: Libertas SDIO driver\n");
--	printk(KERN_INFO "libertas_sdio: Copyright Pierre Ossman\n");
-+	pr_info("Libertas SDIO driver\n");
-+	pr_info("Copyright Pierre Ossman\n");
- 
- 	ret = sdio_register_driver(&if_sdio_driver);
- 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 9604a1c..aca22aa 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -624,7 +624,7 @@ static int if_spi_prog_main_firmware(struct if_spi_card *card,
- 		if (crc_err) {
- 			/* Previous transfer failed. */
- 			if (++num_crc_errs > MAX_MAIN_FW_LOAD_CRC_ERR) {
--				pr_err("Too many CRC errors encountered in firmware load.\n");
-+				pr_err("Too many CRC errors encountered in firmware load\n");
- 				err = -EIO;
- 				goto out;
- 			}
-@@ -1301,7 +1301,7 @@ static int __init if_spi_init_module(void)
- {
- 	int ret = 0;
- 	lbs_deb_enter(LBS_DEB_SPI);
--	printk(KERN_INFO "libertas_spi: Libertas SPI driver\n");
-+	pr_info("Libertas SPI driver\n");
- 	ret = spi_register_driver(&libertas_spi_driver);
- 	lbs_deb_leave(LBS_DEB_SPI);
- 	return ret;
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index cd3b0d4..8b5d0f3 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -180,7 +180,7 @@ static void if_usb_fw_timeo(unsigned long priv)
- #ifdef CONFIG_OLPC
- static void if_usb_reset_olpc_card(struct lbs_private *priv)
- {
--	printk(KERN_CRIT "Resetting OLPC wireless via EC...\n");
-+	pr_crit("Resetting OLPC wireless via EC...\n");
- 	olpc_ec_cmd(0x25, NULL, 0, NULL, 0);
- }
- #endif
-@@ -544,7 +544,7 @@ static void if_usb_receive_fwload(struct urb *urb)
- 				cardp->bootcmdresp = -1;
- 			} else {
- 				pr_info("boot cmd response wrong magic number (0x%x)\n",
--					    le32_to_cpu(bootcmdresp.magic));
-+					le32_to_cpu(bootcmdresp.magic));
- 			}
- 		} else if ((bootcmdresp.cmd != BOOT_CMD_FW_BY_USB) &&
- 			   (bootcmdresp.cmd != BOOT_CMD_UPDATE_FW) &&
-diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-index c025f9c..cb60fa4 100644
---- a/drivers/net/wireless/libertas/tx.c
-+++ b/drivers/net/wireless/libertas/tx.c
-@@ -1,6 +1,9 @@
- /*
-  * This file contains the handling of TX in wlan driver.
-  */
-+
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/hardirq.h>
- #include <linux/netdevice.h>
- #include <linux/etherdevice.h>
--- 
-1.7.8.111.gad25c.dirty
+ struct sta_info {
+ 	/* General information, mostly static */
+
 
