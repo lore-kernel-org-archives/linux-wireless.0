@@ -1,199 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:54939 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751211Ab2FTGgL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:36:11 -0400
-Received: by obbwc20 with SMTP id wc20so11166541obb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 23:36:09 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
-Subject: [PATCH v4] mac80211: add command to get current rssi
-Date: Wed, 20 Jun 2012 09:32:55 +0300
-Message-Id: <1340173975-13609-1-git-send-email-victorg@ti.com> (sfid-20120620_083614_901471_631249E6)
+Received: from mms2.broadcom.com ([216.31.210.18]:2420 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752431Ab2FIVZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2012 17:25:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/5] brcmsmac: fix smatch warning found in ampdu.c
+Date: Sat, 9 Jun 2012 22:51:42 +0200
+Message-ID: <1339275105-3593-3-git-send-email-arend@broadcom.com> (sfid-20120609_232528_729771_0BD8CCED)
+In-Reply-To: <1339275105-3593-1-git-send-email-arend@broadcom.com>
+References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Get current rssi (in dBm) from the driver/FW.
+This patch fixes potential NULL pointer dereference in ampdu. This
+was found running smatch static code checker. Smatch warning says:
 
-Instead of reporting the signal received in the last
-rx packet, which might be inaccurate if rx traffic is
-low and beacon filtering is enabled, get the singal
-from the driver/FW.
+drivers/net/wireless/brcm80211/brcmsmac/ampdu.c:741 brcms_c_sendampdu()
+	 warn: variable dereferenced before check 'p'
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-v4:
-	Trace also station mac address.
-	
-
- include/net/mac80211.h      |    5 +++++
- net/mac80211/cfg.c          |   21 +++++++++++++--------
- net/mac80211/driver-ops.h   |   16 ++++++++++++++++
- net/mac80211/driver-trace.h |    6 ++++++
- 4 files changed, 40 insertions(+), 8 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 95e39b6..c65564e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2246,6 +2246,9 @@ enum ieee80211_rate_control_changed {
-  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
-  *	and perhaps other supported types of ethtool data-sets.
-  *
-+ * @get_rssi: Get current signal strength in dBm, the function is optional
-+ *	and can sleep.
-+ *
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -2385,6 +2388,8 @@ struct ieee80211_ops {
- 	void	(*get_et_strings)(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif,
- 				  u32 sset, u8 *data);
-+	int	(*get_rssi)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			    struct ieee80211_sta *sta, s8 *rssi_dbm);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7d5108a..bcbfb23 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -353,6 +353,7 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_local *local = sdata->local;
- 	struct timespec uptime;
- 
- 	sinfo->generation = sdata->local->sta_generation;
-@@ -388,7 +389,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
- 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
- 		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
--		sinfo->signal = (s8)sta->last_signal;
-+		if (!local->ops->get_rssi ||
-+		    drv_get_rssi(local, sdata, &sta->sta, &sinfo->signal))
-+			sinfo->signal = (s8)sta->last_signal;
- 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
- 	}
- 
-@@ -517,7 +520,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 	 * network device.
- 	 */
- 
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		sta = sta_info_get_bss(sdata, sdata->u.mgd.bssid);
-@@ -546,7 +549,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 			data[i] = (u8)sinfo.signal_avg;
- 		i++;
- 	} else {
--		list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		list_for_each_entry(sta, &local->sta_list, list) {
- 			/* Make sure this station belongs to the proper dev */
- 			if (sta->sdata->dev != dev)
- 				continue;
-@@ -603,7 +606,7 @@ do_survey:
- 	else
- 		data[i++] = -1LL;
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	if (WARN_ON(i != STA_STATS_LEN))
- 		return;
-@@ -629,10 +632,11 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 				 int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	int ret = -ENOENT;
- 
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	sta = sta_info_get_by_idx(sdata, idx);
- 	if (sta) {
-@@ -641,7 +645,7 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 		sta_set_sinfo(sta, sinfo);
- 	}
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	return ret;
- }
-@@ -658,10 +662,11 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	int ret = -ENOENT;
- 
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	sta = sta_info_get_bss(sdata, mac);
- 	if (sta) {
-@@ -669,7 +674,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 		sta_set_sinfo(sta, sinfo);
- 	}
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	return ret;
- }
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 6d33a0c..370c721 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -845,4 +845,20 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
- 						  more_data);
- 	trace_drv_return_void(local);
- }
-+
-+static inline int drv_get_rssi(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				struct ieee80211_sta *sta,
-+				s8 *rssi_dbm)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	trace_drv_get_rssi(local, sdata);
-+	ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 6de00b2..23928c5 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -1218,6 +1218,12 @@ DEFINE_EVENT(release_evt, drv_allow_buffered_frames,
- 	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
- );
- 
-+DEFINE_EVENT(local_sdata_addr_evt, drv_get_rssi,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index 95b5902..01b190a 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -735,10 +735,8 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+ 		 * a candidate for aggregation
+ 		 */
+ 		p = pktq_ppeek(&qi->q, prec);
+-		/* tx_info must be checked with current p */
+-		tx_info = IEEE80211_SKB_CB(p);
+-
+ 		if (p) {
++			tx_info = IEEE80211_SKB_CB(p);
+ 			if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
+ 			    ((u8) (p->priority) == tid)) {
+ 				plen = p->len + AMPDU_MAX_MPDU_OVERHEAD;
+@@ -759,6 +757,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+ 					p = NULL;
+ 					continue;
+ 				}
++				/* next packet fit for aggregation so dequeue */
+ 				p = brcmu_pktq_pdeq(&qi->q, prec);
+ 			} else {
+ 				p = NULL;
 -- 
-1.7.5.4
+1.7.9.5
+
 
