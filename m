@@ -1,99 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63833 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752367Ab2FTHK5 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:53520 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366Ab2FIVWa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 03:10:57 -0400
-Date: Wed, 20 Jun 2012 12:42:10 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Michael Leun <lkml20120218@newton.leun.net>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
-Message-ID: <20120620071208.GA9619@vmraj-lnx.qca.qualcomm.com> (sfid-20120620_091117_789264_C16F39D8)
-References: <20120619085137.337838c0@xenia.leun.net>
- <CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com>
- <20120620003315.2eaf6460@xenia.leun.net>
- <20120620061303.GA8738@vmraj-lnx.qca.qualcomm.com>
- <20120620085515.421571e1@xenia.leun.net>
+	Sat, 9 Jun 2012 17:22:30 -0400
+Received: by obbtb18 with SMTP id tb18so4397182obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Jun 2012 14:22:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20120620085515.421571e1@xenia.leun.net>
+In-Reply-To: <1339231988.4539.35.camel@jlt3.sipsolutions.net>
+References: <1339187469-12778-1-git-send-email-jason@cozybit.com>
+ <1339187469-12778-2-git-send-email-jason@cozybit.com> <1339231988.4539.35.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Sat, 9 Jun 2012 14:22:09 -0700
+Message-ID: <CAPjQAd9VY3+K9qTnqjpAJPUspUsSyPM0imM=o05JOWG1cQQWHg@mail.gmail.com> (sfid-20120609_232305_946133_DF223E26)
+Subject: Re: [PATCH 1/2] mac80211: Keep tx rate averages for mesh peers for
+ better metric calculation.
+To: devel@lists.open80211s.org
+Cc: Jason Abele <jason@cozybit.com>, nbd <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 08:55:15AM +0200, Michael Leun wrote:
-> On Wed, 20 Jun 2012 11:43:05 +0530
-> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
-> 
-> > On Wed, Jun 20, 2012 at 12:33:15AM +0200, Michael Leun wrote:
-> > > On Tue, 19 Jun 2012 15:11:38 +0530
-> > > Mohammed Shafi <shafi.wireless@gmail.com> wrote:
-> > > 
-> > > > Hi,
-> > > > 
-> > > > On Tue, Jun 19, 2012 at 12:21 PM, Michael Leun
-> > > > <lkml20120218@newton.leun.net> wrote:
-> > > > > Hi,
-> > > > >
-> > > > > ne-wlan1@elektra:/home/ml4> ping 192.168.2.1
-> > > > > PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=2010 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=1011 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=11.5 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=1.12 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=5 ttl=64 time=1002 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=6 ttl=64 time=3.83 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=7 ttl=64 time=1003 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=8 ttl=64 time=4.10 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=9 ttl=64 time=1003 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=10 ttl=64 time=3.95 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=11 ttl=64 time=1003 ms
-> > > > > 64 bytes from 192.168.2.1: icmp_seq=12 ttl=64 time=3.78 ms
-> > > > >
-> > > > >
-> > > > > Please note the additional delay of ~1000ms every 2nd packet.
-> > > > > This is Kernel 3.4.3, have seen it in 3.4.2 also. Does NOT
-> > > > > happen in 3.3.1.
-> > > > >
-> > > > > Is this Issue already known? If so, I can save the work
-> > > > > bisecting...
-> > > > 
-> > > > looks like some one reported this bug in kernel bugzilla. would be
-> > > > saving us lot of time
-> > > > if you can bisect it!
-> > > > 
-> > > 
-> > > 0775f9f90cdaf40fbf69b3192b3dddb2b3436f45 is the first bad commit
-> > > commit 0775f9f90cdaf40fbf69b3192b3dddb2b3436f45
-> > > Author: Johannes Berg <johannes.berg@intel.com>
-> > > Date:   Thu Mar 8 15:02:06 2012 +0100
-> > > 
-> > >     mac80211: remove spurious BSSID change flag
-> > > 
-> > >     The BSSID has been set a lot earlier already and
-> > >     didn't change again in ieee80211_set_associated().
-> > > 
-> > >     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > >     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > > 
-> > > :040000 040000 67a19a39e4b04c16921a3758ddd2362e02e81dd3
-> > > 4a7cbd327b59345b83fa613f893770fbf44220bb M      net
-> > > 
-> > > Reverting 0775f9f90cdaf40fbf69b3192b3dddb2b3436f45 from 3.4.3 fixes
-> > > the issue.
-> > > 
-> > Michael,
-> > 
-> > Thanks for the analysis. Can you please try with the attached patch
-> > without reverting mac80211 change?
-> 
-> [forgotten attachment was added in later mail]
-> 
-> Yes, that also solves the issue. I guess, you will look into getting
-> that into mainline and stable asap?
-> 
-Thanks Michael. I already posted the patch to l-w.
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/93099
+Hi Johannes,
 
--Rajkumar
+On Sat, Jun 9, 2012 at 1:53 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-06-08 at 13:31 -0700, Jason Abele wrote:
+>> From: Javier Cardona <javier@cozybit.com>
+>>
+>> The mesh metric is computed every time it was requested by the path
+>> selection framework.  At that time only the last_tx_rate was taken into
+>> account when computing the metric.  This last frame may not reflect the
+>> average data rate that was possible ver that peer link (it could be a
+>> management frame, a rate control probe, or other outlier).
+>>
+>> This patch maintains an average tx rate for each peer link which is used
+>> in metric calculation.
+>
+> I don't think this makes a lot of sense, the TX rate is supposed to be
+> the "best rate" that the rate control algorithm decided on
+
+Yes, but last_tx_rate is not that.  This is a snippet from
+ieee80211_tx_h_rate_ctrl():
+
+txrc.skb = tx->skb;
+txrc.reported_rate.idx = -1;
+(...)
+rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+(...)
+if (txrc.reported_rate.idx < 0) {
+        txrc.reported_rate = info->control.rates[0];
+            if (tx->sta && ieee80211_is_data(hdr->frame_control))
+                 tx->sta->last_tx_rate = txrc.reported_rate;
+} else if (tx->sta)
+            tx->sta->last_tx_rate = txrc.reported_rate;
+
+last_tx_rate is just the last rate used to send a data frame, not the
+average data rate.  For instance, if the last data frame is a
+broadcast frame transmitted at the lowest rate, last_tx_rate will
+report that low rate and not the much higher rate used for unicast
+data frames.  Using that low rate to compute the airtime link metric
+is an aberration.
+
+Cheers,
+
+Javier
+
+>
+>> +++ b/net/mac80211/sta_info.h
+>> @@ -330,6 +330,7 @@ struct sta_info {
+>>       unsigned long tx_retry_failed, tx_retry_count;
+>>       /* moving percentage of failed MSDUs */
+>>       unsigned int fail_avg;
+>> +     struct ewma avg_rate;
+>
+> and in any case this is missing kernel-doc
+>
+> johannes
+>
+> _______________________________________________
+> Devel mailing list
+> Devel@lists.open80211s.org
+> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
