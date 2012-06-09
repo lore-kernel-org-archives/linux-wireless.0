@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4063 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2420 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752507Ab2FZT1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 15:27:23 -0400
+	id S1752431Ab2FIVZV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jun 2012 17:25:21 -0400
 From: "Arend van Spriel" <arend@broadcom.com>
 To: "John W. Linville" <linville@tuxdriver.com>
 cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
 	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 7/7] brcmfmac: fix sparse warning introduced with
- checkdied patch
-Date: Tue, 26 Jun 2012 21:26:40 +0200
-Message-ID: <1340738800-14087-8-git-send-email-arend@broadcom.com> (sfid-20120626_212728_914623_12D08FE2)
-In-Reply-To: <1340738800-14087-1-git-send-email-arend@broadcom.com>
-References: <1340738800-14087-1-git-send-email-arend@broadcom.com>
+Subject: [PATCH 1/5] brcmsmac: remove brcms_set_hint() function
+Date: Sat, 9 Jun 2012 22:51:41 +0200
+Message-ID: <1339275105-3593-2-git-send-email-arend@broadcom.com> (sfid-20120609_232524_979459_4650AFD2)
+In-Reply-To: <1339275105-3593-1-git-send-email-arend@broadcom.com>
+References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "brcmfmac: introduce checkdied debugfs functionality"
-also introduced a sparse warning:
+The function brcms_set_hint() does not add any functionality
+so regulatory_hint() can be called directly. The error value
+has been removed from the message when regulatory_hint() fails.
 
-..../brcmfmac/dhd_sdio.c:3147:45: sparse: cast to restricted __le32
-
-This patch fixes this sparse warning.
-
-Reported-by: Fengguang Wu <wfg@linux.intel.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reported-by: Seth Forshee <seth.forshee@canonical.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 5c5f1cd..5c868ba 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3145,7 +3145,7 @@ static int brcmf_sdio_trap_info(struct brcmf_sdio *bus, struct sdpcm_shared *sh,
- 			le32_to_cpu(tr.type), le32_to_cpu(tr.epc),
- 			le32_to_cpu(tr.cpsr), le32_to_cpu(tr.spsr),
- 			le32_to_cpu(tr.r13), le32_to_cpu(tr.r14),
--			le32_to_cpu(tr.pc), le32_to_cpu(sh->trap_addr),
-+			le32_to_cpu(tr.pc), sh->trap_addr,
- 			le32_to_cpu(tr.r0), le32_to_cpu(tr.r1),
- 			le32_to_cpu(tr.r2), le32_to_cpu(tr.r3),
- 			le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 50f92a0..341e06a 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -721,14 +721,6 @@ static const struct ieee80211_ops brcms_ops = {
+ 	.flush = brcms_ops_flush,
+ };
+ 
+-/*
+- * is called in brcms_bcma_probe() context, therefore no locking required.
+- */
+-static int brcms_set_hint(struct brcms_info *wl, char *abbrev)
+-{
+-	return regulatory_hint(wl->pub->ieee_hw->wiphy, abbrev);
+-}
+-
+ void brcms_dpc(unsigned long data)
+ {
+ 	struct brcms_info *wl;
+@@ -1068,9 +1060,9 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
+ 		wiphy_err(wl->wiphy, "%s: ieee80211_register_hw failed, status"
+ 			  "%d\n", __func__, err);
+ 
+-	if (wl->pub->srom_ccode[0] && brcms_set_hint(wl, wl->pub->srom_ccode))
+-		wiphy_err(wl->wiphy, "%s: regulatory_hint failed, status %d\n",
+-			  __func__, err);
++	if (wl->pub->srom_ccode[0] &&
++	    regulatory_hint(wl->wiphy, wl->pub->srom_ccode))
++		wiphy_err(wl->wiphy, "%s: regulatory hint failed\n", __func__);
+ 
+ 	n_adapters_found++;
+ 	return wl;
 -- 
 1.7.9.5
 
