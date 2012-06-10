@@ -1,171 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:38933 "HELO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753158Ab2FLBOq (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:21055 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954Ab2FJPjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 21:14:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/4] mwifiex: add 11n support for AP mode
-Date: Mon, 11 Jun 2012 18:14:18 -0700
-Message-Id: <1339463659-10736-3-git-send-email-bzhao@marvell.com> (sfid-20120612_031449_661395_EE5E9722)
-In-Reply-To: <1339463659-10736-1-git-send-email-bzhao@marvell.com>
-References: <1339463659-10736-1-git-send-email-bzhao@marvell.com>
+	Sun, 10 Jun 2012 11:39:49 -0400
+Date: Sun, 10 Jun 2012 18:39:20 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: walter harms <wharms@bfs.de>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch v2] iwlwifi: turn on a lockdep assertion
+Message-ID: <20120610153920.GP4400@mwanda> (sfid-20120610_174021_636742_65BC3325)
+References: <20120610112521.GA20676@elgon.mountain>
+ <4FD4BC51.80407@bfs.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FD4BC51.80407@bfs.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Sun, Jun 10, 2012 at 05:25:05PM +0200, walter harms wrote:
+> 
+> 
+> Am 10.06.2012 13:25, schrieb Dan Carpenter:
+> > CMD_SYNC is zero so the if (cmd->flags & CMD_SYNC) is never true and we
+> > never check the assertion.
+> > 
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > ---
+> > v2: enables the assertion even more than v1 (based on feedback from
+> > Johannes Berg).
+> 
+> The important part is CMD_SYNC -> CMD_ASYNC
 
-Parse HT IE from cfg80211 and set HT capabilities accordingly
-to FW. If HT IE is missing, 11n would be disabled in FW.
+Not really, no.  I considered Johannes's version for my first patch
+but I decided to be conservative because I didn't know the code well
+enough to say what is safe.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    2 +
- drivers/net/wireless/mwifiex/fw.h       |    6 ++++
- drivers/net/wireless/mwifiex/ioctl.h    |    1 +
- drivers/net/wireless/mwifiex/main.h     |    3 ++
- drivers/net/wireless/mwifiex/uap_cmd.c  |   48 +++++++++++++++++++++++++++++++
- 5 files changed, 60 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 7b4eaf4..5af3f97 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -978,6 +978,8 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -1;
- 	}
- 
-+	mwifiex_set_ht_params(priv, bss_cfg, params);
-+
- 	if (mwifiex_send_cmd_sync(priv, HostCmd_CMD_UAP_BSS_STOP,
- 				  HostCmd_ACT_GEN_SET, 0, NULL)) {
- 		wiphy_err(wiphy, "Failed to stop the BSS\n");
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 561452a..9686f6f 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -162,6 +162,12 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- 
- #define ISSUPP_11NENABLED(FwCapInfo) (FwCapInfo & BIT(11))
- 
-+#define MWIFIEX_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
-+				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
-+				 IEEE80211_HT_CAP_SM_PS)
-+
-+#define MWIFIEX_DEF_AMPDU	IEEE80211_HT_AMPDU_PARM_FACTOR
-+
- /* dev_cap bitmap
-  * BIT
-  * 0-16		reserved
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index e6be6ee..8c8e47c 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -90,6 +90,7 @@ struct mwifiex_uap_bss_param {
- 	u16 key_mgmt;
- 	u16 key_mgmt_operation;
- 	struct wpa_param wpa_cfg;
-+	struct ieee80211_ht_cap ht_cap;
- };
- 
- enum {
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 512481e..0b3b5aa 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -840,6 +840,9 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 			      struct mwifiex_uap_bss_param *bss_config,
- 			      struct cfg80211_ap_settings *params);
-+void mwifiex_set_ht_params(struct mwifiex_private *priv,
-+			   struct mwifiex_uap_bss_param *bss_cfg,
-+			   struct cfg80211_ap_settings *params);
- 
- /*
-  * This function checks if the queuing is RA based or not.
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 38a49a1..b01a0c7 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -127,6 +127,33 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 	return 0;
- }
- 
-+/* This function updates 11n related parameters from IE and sets them into
-+ * bss_config structure.
-+ */
-+void
-+mwifiex_set_ht_params(struct mwifiex_private *priv,
-+		      struct mwifiex_uap_bss_param *bss_cfg,
-+		      struct cfg80211_ap_settings *params)
-+{
-+	const u8 *ht_ie;
-+
-+	if (!ISSUPP_11NENABLED(priv->adapter->fw_cap_info))
-+		return;
-+
-+	ht_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, params->beacon.tail,
-+				 params->beacon.tail_len);
-+	if (ht_ie) {
-+		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
-+		       sizeof(struct ieee80211_ht_cap));
-+	} else {
-+		memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
-+		bss_cfg->ht_cap.cap_info = MWIFIEX_DEF_HT_CAP;
-+		bss_cfg->ht_cap.ampdu_params_info = MWIFIEX_DEF_AMPDU;
-+	}
-+
-+	return;
-+}
-+
- /* This function initializes some of mwifiex_uap_bss_param variables.
-  * This helps FW in ignoring invalid values. These values may or may not
-  * be get updated to valid ones at later stage.
-@@ -163,6 +190,7 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 	struct host_cmd_tlv_auth_type *auth_type;
- 	struct host_cmd_tlv_passphrase *passphrase;
- 	struct host_cmd_tlv_akmp *tlv_akmp;
-+	struct mwifiex_ie_types_htcap *htcap;
- 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
- 	u16 cmd_size = *param_size;
- 
-@@ -339,6 +367,26 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 		tlv += sizeof(struct host_cmd_tlv_encrypt_protocol);
- 	}
- 
-+	if (bss_cfg->ht_cap.cap_info) {
-+		htcap = (struct mwifiex_ie_types_htcap *)tlv;
-+		htcap->header.type = cpu_to_le16(WLAN_EID_HT_CAPABILITY);
-+		htcap->header.len =
-+				cpu_to_le16(sizeof(struct ieee80211_ht_cap));
-+		htcap->ht_cap.cap_info = cpu_to_le16(bss_cfg->ht_cap.cap_info);
-+		htcap->ht_cap.ampdu_params_info =
-+					     bss_cfg->ht_cap.ampdu_params_info;
-+		memcpy(&htcap->ht_cap.mcs, &bss_cfg->ht_cap.mcs,
-+		       sizeof(struct ieee80211_mcs_info));
-+		htcap->ht_cap.extended_ht_cap_info =
-+			cpu_to_le16(bss_cfg->ht_cap.extended_ht_cap_info);
-+		htcap->ht_cap.tx_BF_cap_info =
-+				cpu_to_le32(bss_cfg->ht_cap.tx_BF_cap_info);
-+		htcap->ht_cap.antenna_selection_info =
-+					bss_cfg->ht_cap.antenna_selection_info;
-+		cmd_size += sizeof(struct mwifiex_ie_types_htcap);
-+		tlv += sizeof(struct mwifiex_ie_types_htcap);
-+	}
-+
- 	*param_size = cmd_size;
- 
- 	return 0;
--- 
-1.7.0.2
-
+regards,
+dan carpenter
