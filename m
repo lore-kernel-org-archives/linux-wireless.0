@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29285 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319Ab2F2GjW (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:35539 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889Ab2FJStS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:39:22 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 4/5] ath9k: fix power consumption on network sleep when BTCOEX is enabled
-Date: Fri, 29 Jun 2012 12:10:08 +0530
-Message-ID: <1340952009-12223-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120629_083925_278602_15DC54AB)
-In-Reply-To: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Sun, 10 Jun 2012 14:49:18 -0400
+Received: by eeit10 with SMTP id t10so1614204eei.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2012 11:49:17 -0700 (PDT)
+Message-ID: <13109287F3F94FB397BD55908527913A@drejoasus> (sfid-20120610_204922_580452_EECD3DA0)
+From: "Sertac TULLUK" <stulluk@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: compat-wireless for 2.6.12.5
+Date: Sun, 10 Jun 2012 21:49:16 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-9";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chip is waken up for every 45ms in btcoex timer cycle to
-for sharing the radio between BT and WLAN. Whenever the wlan
-interface is in network sleep mode, do not schedule hw timers.
-This could reduce power consumption on idle associated state.
+Dear All;
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+I have full source of Celestial CSM1203 ( ARM 926 EJ-S core) Kernel ( which 
+is modified from 2.6.12.5).
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 9ae6a4d..c17168e 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -194,6 +194,16 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	struct ath_mci_profile *mci = &btcoex->mci;
- 	u32 timer_period;
- 	bool is_btscan;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	if (sc->sc_ah->power_mode == ATH9K_PM_NETWORK_SLEEP) {
-+		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+		if (btcoex->hw_timer_enabled)
-+			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
-+		goto skip_hw_wakeup;
-+	}
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
- 	ath9k_ps_wakeup(sc);
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
-@@ -232,6 +242,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	}
- 
- 	ath9k_ps_restore(sc);
-+skip_hw_wakeup:
- 	timer_period = btcoex->btcoex_period;
- 	mod_timer(&btcoex->period_timer, jiffies + msecs_to_jiffies(timer_period));
- }
--- 
-1.7.11.1
+The source and toolchain can be downloaded from here: 
+http://www.merihvideo.com.tr/chipbox-source.php
+
+(.config and CSM1203 defconfig can be seen from the source)
+
+I know that compat-wireless support down to 2.6.24 and newer, but may be you 
+can help to give support for USB WIFI for RALINK based solutions on my very 
+old kernel.
+
+I also need CIFS support for recording streams to windows shares. I hope 
+compat team may give some suggestions about implementing CIFS on 2.6.12.5 
+too.
+
+Waiting for your helps.
+
+Best Regards
+
+Sertac 
 
