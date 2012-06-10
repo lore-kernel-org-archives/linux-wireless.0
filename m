@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43235 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757882Ab2FOVFf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 17:05:35 -0400
-Message-ID: <4FDBA39A.60809@openwrt.org> (sfid-20120615_230540_112526_E6FF98A5)
-Date: Fri, 15 Jun 2012 23:05:30 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com, c_manoha@qca.qualcomm.com
-Subject: Re: [PATCH 2/9] ath9k_hw: fix OFDM weak signal detection handling
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org> <1339766727-61926-2-git-send-email-nbd@openwrt.org> <20120615173814.GA648@vmraj-lnx.qca.qualcomm.com>
-In-Reply-To: <20120615173814.GA648@vmraj-lnx.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:56489 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751205Ab2FJJuI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jun 2012 05:50:08 -0400
+Received: by lahi5 with SMTP id i5so2809552lah.14
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2012 02:50:05 -0700 (PDT)
+Message-ID: <1339321803.3840.40.camel@cumari.coelho.fi> (sfid-20120610_115014_359681_500A3919)
+Subject: Re: [RFC 1/2] nl80211: specify RSSI threshold when scanning
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Date: Sun, 10 Jun 2012 12:50:03 +0300
+In-Reply-To: <1339229344.4539.7.camel@jlt3.sipsolutions.net>
+References: <1339036996-6199-1-git-send-email-c_tpeder@qca.qualcomm.com>
+	 <4FD0570D.50303@qca.qualcomm.com> <20120607183820.GA2950@pista>
+	 <4FD0F8A0.3000704@qca.qualcomm.com> <20120607191803.GA4323@pista>
+	 <1339229344.4539.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-06-15 7:38 PM, Rajkumar Manoharan wrote:
-> On Fri, Jun 15, 2012 at 03:25:20PM +0200, Felix Fietkau wrote:
->> Commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
->> was unifying some code related to overriding OFDM weak signal detection,
->> but seems to have gotten some of the original intent wrong, probably
->> because of a misnamed variable.
->> 
->> The beacon RSSI is only valid in station mode, and the main reason to check
->> it in ath9k_hw_set_ofdm_nil is to make sure that OFDM weak signal detection
->> stays enabled if the RSSI is low, even when the OFDM noise immunity entry
->> is supposed to disable it.
->> 
->> The above commit removed the mode checks and changed the code so that
->> OFDM weak signal detection would only be changed if the rssi is high, which
->> is wrong for everything but client mode.
->> 
->> This patch restores the old behavior in a simplified form.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->>  drivers/net/wireless/ath/ath9k/ani.c |   11 +++++++----
->>  1 files changed, 7 insertions(+), 4 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
->> index 18ce69d..cf31050 100644
->> --- a/drivers/net/wireless/ath/ath9k/ani.c
->> +++ b/drivers/net/wireless/ath/ath9k/ani.c
->> @@ -265,6 +265,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
->>  	struct ath_common *common = ath9k_hw_common(ah);
->>  	const struct ani_ofdm_level_entry *entry_ofdm;
->>  	const struct ani_cck_level_entry *entry_cck;
->> +	bool weak_sig;
->>  
->>  	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
->>  		aniState->ofdmNoiseImmunityLevel,
->> @@ -290,13 +291,15 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
->>  				     ATH9K_ANI_FIRSTEP_LEVEL,
->>  				     entry_ofdm->fir_step_level);
->>  
->> -	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
->> -	    (!aniState->ofdmWeakSigDetectOff !=
->> -	     entry_ofdm->ofdm_weak_signal_on)) {
->> +	weak_sig = entry_ofdm->ofdm_weak_signal_on;
->> +	if (ah->opmode == NL80211_IFTYPE_STATION &&
->> +	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
->> +		weak_sig = true;
->> +
->> +	if (!aniState->ofdmWeakSigDetectOff != weak_sig)
+On Sat, 2012-06-09 at 10:09 +0200, Johannes Berg wrote:
+> On Thu, 2012-06-07 at 12:18 -0700, Pedersen, Thomas wrote:
+> > On Thu, Jun 07, 2012 at 09:53:20PM +0300, Kalle Valo wrote:
+> > > On 06/07/2012 09:38 PM, Pedersen, Thomas wrote:
+> > > >>> +	WIPHY_FLAG_SUPPORTS_RSSI_SCAN		= BIT(22),
+> > > >>> > >  };
+> > > >> > 
+> > > >> > Is this flag really needed? For me this looks like an optimisation more
+> > > >> > than a functional change. If the driver supports this, that's great and
+> > > >> > we can save some power. But if the driver does not support it does it
+> > > >> > really make any difference for the user space? Would user space act
+> > > >> > differently if this feature is not supported by the driver?
+> > > >
+> > > > Well, this allows cfg80211 to return an error if this feature is
+> > > > requested but not supported by the driver / fw.
+> > > 
+> > > But do we want to return an error when the driver doesn't support this?
+> > > I was thinking that driver should just ignore the attribute in that case
+> > > and let user space filter the results.
+> > > 
+> > > Kalle
+> > 
+> > Sure, we can just let userspace unconditionally filter the results when
+> > we do something like:
+> > 
+> > iw wlan0 scan rssi -40
+> > 
+> > Johannes, does this look OK to you?
 > 
-> beacon rssi is updated and used in both station and ibss mode. isn't it?
-Yeah, but in ibss mode it does not make much sense when there are
-multiple peers and a less frequent update interval (due to distributed
-beaconing).
+> I don't see a need to filter in iw, but I agree with Kalle that we
+> shouldn't impose any restrictions on a performance optimisation.
 
-- Felix
+Yeah, I also agree that the flag is probably unnecessary.  We can't
+prevent results that are below the threshold anyway, because results
+from other scans might be cached in the scan results.  So the userspace
+must always be ready to receive results that need to be dropped.
+
+
+-- 
+Cheers,
+Luca.
+
