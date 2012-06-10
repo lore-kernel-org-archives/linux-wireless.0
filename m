@@ -1,66 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51609 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472Ab2FHPOQ (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:53998 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859Ab2FJFN2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 11:14:16 -0400
-Message-ID: <1339168452.5748.0.camel@jlt3.sipsolutions.net> (sfid-20120608_171420_397861_867305D6)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andre Heider <a.heider@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 17:14:12 +0200
-In-Reply-To: <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com> (sfid-20120608_170415_375251_68B65A73)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
-	 <20120607180325.7752b3c0@milhouse>
-	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
-	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
-	 <4FD11B47.10002@lwfinger.net>
-	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 (sfid-20120608_170415_375251_68B65A73)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 10 Jun 2012 01:13:28 -0400
+Received: by wgbdr13 with SMTP id dr13so2085080wgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Jun 2012 22:13:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201206091601.34601.chunkeey@googlemail.com>
+References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
+	<201206091414.41940.chunkeey@googlemail.com>
+	<1339244892.5763.1.camel@jlt3.sipsolutions.net>
+	<201206091601.34601.chunkeey@googlemail.com>
+Date: Sun, 10 Jun 2012 08:13:25 +0300
+Message-ID: <CANUX_P3smm6Pci-69aXA+PmW23nUSg-s2LGSv5Mn_rvTF-Q9-Q@mail.gmail.com> (sfid-20120610_071404_575300_A80889F8)
+Subject: Re: [RFC v3] mac80211: follow 802.11-2007 11.5.3 Error recovery upon
+ HT BA failure
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sean Patrick Santos <quantheory@gmail.com>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	helmut.schaa@googlemail.com, mar.kolya@gmail.com,
+	Per-Erik Westerberg <per-erik.westerberg@bredband.net>,
+	=?ISO-8859-2?Q?Miko=B3aj_Kuligowski?= <mikolaj.q@wp.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 17:04 +0200, Andre Heider wrote:
-
-> >> > http://p.sipsolutions.net/854d460da251f9d6.txt
-> >>
-> >> Sorry, still not loading any firmware.
+> The path is
+> 11. -> MLME
+>        5. -> Block Ack operation
+>                3. -> Error Recovery upon a peer failure
+>
+> > > > >  - The spec says we should test for BlockAcks, however
+> > > > >    that is not feasible because it is a control frame
+> > > > >    (so FIF_CONTROL might filter it on some hardware).
+> > > >
+> > > > In some way, all devices are going to have to report these
+> > > > frames. Maybe not as the frame itself, but as some other
+> > > > notification, to allow cleaning up the TX queues
+> > > > accordingly, I think? There's a BA notification in iwlwifi
+> > > > for example.
+> > > Alright, I guess this means that we probably need a new HW
+> > > feature flag like:
+> > >     IEEE80211_HW_REPORTS_BA_NOTIFICATION
+> > > for hardware/firmware which filter BA frames, but have a BA
+> > > notification trap. And every other driver need to pass BA
+> > > to the stack where a new rx handler will update the last_tx
+> > > accordingly.
 > >
-> > So you're going to have to tell me what happens :-)
-> 
-> Well, nothing ;)
-> 
-> I just see this in dmesg:
-> 
-> [    1.012107] b43-sdio mmc1:0001:1: Chip ID 14e4:4318
-> [    1.018765] ssb: Found chip with id 0x4318, rev 0x02 and package 0x02
-> [    1.096506] ssb: chipcommon status is 0x0
-> [    1.105314] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
-> 
-> Hence the device doesn't get up and there's no way for me to interact
-> with the system.
+> > But that notification trap would also have to call some function
+> > in the stack, and the drivers that don't have it (or don't
+> > implement it yet) need something more like this patch?
+>
+> (see v3 attached to this mail).
+>
+> Yes, drivers that don't pass BAs to the stack and won't call
+> ieee80211_ba_notification will have their BA sessions "removed" in v3.
+> Of course, we can also retain the old behavoir and reset the
+> tx ba session timeout until we know we don't break anything.
 
-Ok, well, bugger :-)
+But if the peer acked a packet sent in a BA session, then it must send
+a BA (spec AFAIK), so when the driver calls ieee80211_tx_status at the
+originator side, mac80211 can assume that a BA was received, right ?
 
-Can you go to main.c and print out the return value of
-ieee80211_register_hw()? I have a feeling that's where the failure is
-though I don't really know why.
+Even if you still want a specific notification from the driver to
+mac80211, what about adding it to ieee80211_tx_info.status ?
+We have a trade-off here. We can have a new notification which is a
+new API (which is a disadvantage in terms of runtime and design) but
+can be called once per batch: meaning that we will reset the the timer
+once every 15 packets or so. Or we can have a bit in the
+ieee80211_tx_info.status which would be in every packet, but then, no
+need for new API.
+Maybe the best way is to have the driver set the new bit in
+ieee80211_tx_info.status only for the last packet of the batch (or the
+first, whatever).
 
-johannes
-
+But I don't see why we cannot rely on the assumption I made in the
+beginning of this mail to start with.
