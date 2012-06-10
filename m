@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3649 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752457Ab2FSQur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 12:50:47 -0400
-Message-ID: <4FE0ADB6.5080105@broadcom.com> (sfid-20120619_185050_536251_B818D786)
-Date: Tue, 19 Jun 2012 18:49:58 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50539 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755766Ab2FJTiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jun 2012 15:38:01 -0400
+Message-ID: <4FD4F793.2030507@hauke-m.de> (sfid-20120610_213806_084878_0EC09CD9)
+Date: Sun, 10 Jun 2012 21:37:55 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes.berg@intel.com>
-Subject: Re: [RFC 13/17] nl80211: move scan API to wdev
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
- <1340117456-10154-14-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1340117456-10154-14-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Florian Fainelli <florian@openwrt.org>, linville@tuxdriver.com,
+	b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/8] bcma: handle SoCs in pmu initialization
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de> <1338933307-13446-7-git-send-email-hauke@hauke-m.de> <2716026.rMfCBzMpF9@flexo> <CACna6rw_5dcR9tu_Nnq_0Z3u+KJ--Lmx7yi+uHJm-kJPepqrng@mail.gmail.com>
+In-Reply-To: <CACna6rw_5dcR9tu_Nnq_0Z3u+KJ--Lmx7yi+uHJm-kJPepqrng@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/19/2012 04:50 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 06/10/2012 06:54 PM, Rafał Miłecki wrote:
+> 2012/6/6 Florian Fainelli <florian@openwrt.org>:
+>> Hi Hauke,
+>>
+>> On Tuesday 05 June 2012 23:55:05 Hauke Mehrtens wrote:
+>>> The SoCs do not need any special handling in bcma_pmu_pll_init(),
+>>> bcma_pmu_resources_init(), bcma_pmu_swreg_init() and
+>>> bcma_pmu_workarounds. This patches suppresses some warnings in the log.
+>>
+>> This does not look like it scales very good, how about you turn the pr_err()
+>> into a pr_debug() so that developpers porting bcma on a new chip need to turn
+>> on the appropriate debug knobs to get the message?
 > 
-> The new P2P Device will have to be able to scan for
-> P2P search, so move scanning to use struct wireless_dev
-> instead of struct net_device.
+> debug sounds fine for me
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> index 404e87c..a507b6e 100644
-> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> @@ -908,11 +908,11 @@ static int ath6kl_set_probed_ssids(struct ath6kl *ar,
->  	return 0;
->  }
->  
-> -static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
-> +static int ath6kl_cfg80211_scan(struct wiphy *wiphy,
->  				struct cfg80211_scan_request *request)
+Hi Rafał,
 
-Lot of indent issues in this variety of drivers. Do you care to fix that
-as well or leave it to .... whom it may concern.
+bcma_pmu_swreg_init() and bcma_pmu_pll_init() are doing nothing should
+they get removed? In the current version of the patch I also removed the
+chip ids of the PCIe based cards from the switch case statement if they
+just ended in a break, is that ok with you?
 
-Gr. AvS
-
+Hauke
