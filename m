@@ -1,72 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41652 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932595Ab2FAONX (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:47229 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859Ab2FJFOs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 10:13:23 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] bcma: add ext PA workaround for BCM4331 and BCM43431
-Date: Fri,  1 Jun 2012 09:13:17 -0500
-Message-Id: <1338559997-4356-1-git-send-email-seth.forshee@canonical.com> (sfid-20120601_161327_753574_FF6029BE)
+	Sun, 10 Jun 2012 01:14:48 -0400
+Received: by eeit10 with SMTP id t10so1515254eei.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Jun 2012 22:14:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FD42939.2020404@broadcom.com>
+References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
+ <1339275105-3593-6-git-send-email-arend@broadcom.com> <CA+XFjioPG4aT-umi1BD+RH0q0a3AEY=QXTAFapGhz3x25cLdSw@mail.gmail.com>
+ <4FD42939.2020404@broadcom.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 10 Jun 2012 07:14:27 +0200
+Message-ID: <CA+XFjioaw4Bmxd_Wy_hjWO4G+LWWx4YmRAMFEgU4H_hFdoRVuw@mail.gmail.com> (sfid-20120610_071451_519647_3FBB0E7F)
+Subject: Re: [PATCH 5/5] brcmfmac: introduce checkdied debugfs functionality
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MacBook Pro models with BCM4331 wireless have been found to have the ext
-PA lines disabled after resuming from S3 without external power attach.
-This causes them to be unable to transmit. Add a workaround to ensure
-that the ext PA lines are enabled on BCM4331. Also extend all handling
-of ext PA line muxing to BCM43431 as is done in the Broadcom SDK.
+On Sun, Jun 10, 2012 at 6:57 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 06/10/2012 04:13 AM, Gábor Stefanik wrote:
+>> On Sat, Jun 9, 2012 at 10:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> The checkdied functionality provides useful information for analyzing
+>>> firmware crashes. By exposing this information to a debugfs file users
+>>> can easily provide its content in bug reports. The functionality is
+>>> available only when CONFIG_BRCMDBG is selected.
+>>>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>> ---
+>>>  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  332 +++++++++++++++++++-
+>>>  1 file changed, 331 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+>>> index a07fb01..5a33b42 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+>>> @@ -31,6 +31,7 @@
+>>>  #include <linux/firmware.h>
+>>>  #include <linux/module.h>
+>>>  #include <linux/bcma/bcma.h>
+>>> +#include <linux/debugfs.h>
+>>>  #include <asm/unaligned.h>
+>>>  #include <defs.h>
+>>>  #include <brcmu_wifi.h>
+>>> @@ -48,6 +49,9 @@
+>>>
+>>>  #define CBUF_LEN       (128)
+>>>
+>>> +/* Device console log buffer state */
+>>> +#define CONSOLE_BUFFER_MAX     2024
+>>
+>> Just out of curiosity; what is the significance of this number?
+>
+> It is used in the code fragment below. I have to admit the comment is
+> not explaining its significance.
 
-BugLink: http://bugs.launchpad.net/bugs/925577
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: stable@vger.kernel.org
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/bcma/driver_chipcommon_pmu.c |    4 +++-
- drivers/bcma/sprom.c                 |    4 ++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
+But why this particular number? Did you mean 2048?
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index a058842..61ce405 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -139,7 +139,9 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- 		bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
- 		break;
- 	case 0x4331:
--		/* BCM4331 workaround is SPROM-related, we put it in sprom.c */
-+	case 43431:
-+		/* Ext PA lines must be enabled for tx on BCM4331 */
-+		bcma_chipco_bcm4331_ext_pa_lines_ctl(cc, true);
- 		break;
- 	case 43224:
- 		if (bus->chipinfo.rev == 0) {
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index c7f9335..f16f42d 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -579,13 +579,13 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	if (!sprom)
- 		return -ENOMEM;
- 
--	if (bus->chipinfo.id == 0x4331)
-+	if (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43431)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
- 
- 	pr_debug("SPROM offset 0x%x\n", offset);
- 	bcma_sprom_read(bus, offset, sprom);
- 
--	if (bus->chipinfo.id == 0x4331)
-+	if (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43431)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
- 
- 	err = bcma_sprom_valid(sprom);
+>
+>>> +       /* allocate buffer for console data */
+>>> +       if (console_size <= CONSOLE_BUFFER_MAX)
+>>> +               conbuf = kzalloc(console_size+1, GFP_ATOMIC);
+>>> +
+>>> +       if (!conbuf)
+>>> +               return -ENOMEM;
+>
+> Probably would be better to use vmalloc() here or at least use
+> GFP_KERNEL here.
+>
+> John, any recommendations?
+>
+> Gr. AvS
+>
+
+
+
 -- 
-1.7.9.5
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
