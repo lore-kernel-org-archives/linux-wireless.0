@@ -1,128 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48393 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352Ab2FKGtB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 02:49:01 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 5/9] ath9k_hw: fix incorrect LNA register settings
-Date: Mon, 11 Jun 2012 12:19:33 +0530
-Message-ID: <1339397377-3374-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_084905_572480_60E59875)
-In-Reply-To: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49730 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753529Ab2FJNKa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jun 2012 09:10:30 -0400
+Message-ID: <4FD49CC1.6030704@hauke-m.de> (sfid-20120610_151055_442504_96D321BE)
+Date: Sun, 10 Jun 2012 15:10:25 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, brudley@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
+References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-15-git-send-email-hauke@hauke-m.de> <4FCF2FD4.6010103@broadcom.com> <4FD0AD96.1050500@hauke-m.de> <4FD0FF3D.2060805@broadcom.com>
+In-Reply-To: <4FD0FF3D.2060805@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After a full reset, mci_reset will put LNA update to the setting
-for 2G mode. Those registers need to be forced to update when
-the channel is in 5G.
+On 06/07/2012 09:21 PM, Arend van Spriel wrote:
+> On 06/07/2012 03:33 PM, Hauke Mehrtens wrote:
+>> On 06/06/2012 12:24 PM, Arend van Spriel wrote:
+>>> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+>>>> The xmtfifo_sz array contains the queue sizes for the different chip
+>>>> revs. This array missed the sizes for the core rev 17 and 28. This
+>>>
+>>> Should probably use core revs instead of chip revs and I think we are
+>>> talking about the 80211 core rev here.
+>> Yes I will change this comment.
+>>
+>> Are there any devices with the same phy type using different fifo sizes?
+>> If this is not the case I think it is better to do this based on the phy
+>> type.
+> 
+> I dived into this and basically there is no correlation to the phy type.
+> There are chips with same 80211 core rev and different phy type as there
+> are chips with different 80211 core rev and the same phy type.
+> 
+> Gr. AvS
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |   24 +++++++++---------------
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c         |    2 +-
- 3 files changed, 11 insertions(+), 17 deletions(-)
+Hi Arend,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index cbeff9c..c11dbaa 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1013,38 +1013,32 @@ static void ar9003_mci_queue_unsent_gpm(struct ath_hw *ah, u8 header,
- 	}
- }
- 
--void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
-+void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
- {
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
- 
--	if (!mci->update_2g5g)
-+	if (!mci->update_2g5g && !force)
- 		return;
- 
- 	if (mci->is_2g) {
- 		ar9003_mci_send_2g5g_status(ah, true);
--		ar9003_mci_send_lna_transfer(ah, true);
--		udelay(5);
- 
--		REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
-+		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
- 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
- 		REG_CLR_BIT(ah, AR_PHY_GLB_CONTROL,
- 			    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
- 
- 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
--			REG_SET_BIT(ah, AR_BTCOEX_CTRL,
--				    AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
-+			ar9003_mci_osla_setup(ah, true);
- 	} else {
--		ar9003_mci_send_lna_take(ah, true);
--		udelay(5);
--
- 		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
- 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
- 		REG_SET_BIT(ah, AR_PHY_GLB_CONTROL,
- 			    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
--		REG_CLR_BIT(ah, AR_BTCOEX_CTRL,
--			    AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
- 
--		ar9003_mci_send_2g5g_status(ah, true);
-+		ar9003_mci_osla_setup(ah, false);
-+		if (!force)
-+			ar9003_mci_send_2g5g_status(ah, true);
- 	}
- }
- 
-@@ -1313,7 +1307,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 		if (mci->unhalt_bt_gpm)
- 			ar9003_mci_send_coex_halt_bt_gpm(ah, false, true);
- 
--		ar9003_mci_2g5g_switch(ah, true);
-+		ar9003_mci_2g5g_switch(ah, false);
- 		break;
- 	case MCI_STATE_SET_BT_CAL_START:
- 		mci->bt_state = MCI_BT_CAL_START;
-@@ -1394,7 +1388,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 		mci->query_bt = true;
- 		mci->need_flush_btinfo = true;
- 		ar9003_mci_send_coex_wlan_channels(ah, true);
--		ar9003_mci_2g5g_switch(ah, true);
-+		ar9003_mci_2g5g_switch(ah, false);
- 		break;
- 	case MCI_STATE_NEED_FTP_STOMP:
- 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 45624e1..8cb3307 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -276,7 +276,7 @@ void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep);
- void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
- void ar9003_mci_init_cal_done(struct ath_hw *ah);
- void ar9003_mci_set_full_sleep(struct ath_hw *ah);
--void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
-+void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force);
- void ar9003_mci_check_bt(struct ath_hw *ah);
- bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
- int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8412128..a9d328c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1711,7 +1711,7 @@ static int ath9k_hw_do_fastcc(struct ath_hw *ah, struct ath9k_channel *chan)
- 	ath9k_hw_start_nfcal(ah, true);
- 
- 	if (ath9k_hw_mci_is_enabled(ah))
--		ar9003_mci_2g5g_switch(ah, true);
-+		ar9003_mci_2g5g_switch(ah, false);
- 
- 	if (AR_SREV_9271(ah))
- 		ar9002_hw_load_ani_reg(ah, chan);
--- 
-1.7.10.4
+Ok, then I will leave it based on the core rev like it is now. Are the
+values I added there for core rev 17 and 28 correct? They are just
+copied from the other phy-n device which has the same values set after
+powering up and before they are explicitly set. The core rev 17 device
+is working for me, but the core rev 28 is not, but I do not know why. I
+was unable to find these values in b43 or the spec b43 is based on.
 
+Hauke
