@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61991 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932119Ab2FGSSP (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:60534 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149Ab2FJQxL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 14:18:15 -0400
-Date: Thu, 7 Jun 2012 11:18:12 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCH 4/8] brcm80211: smac: inform mac80211 of the X2
- regulatory domain
-Message-ID: <20120607181812.GD4603@tux> (sfid-20120607_201819_064185_48FA1AD9)
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <1334607462-5387-5-git-send-email-seth.forshee@canonical.com>
- <4FC008AB.4080107@broadcom.com>
- <20120526171800.GC11759@ubuntu-mba>
+	Sun, 10 Jun 2012 12:53:11 -0400
+Received: by wibhm6 with SMTP id hm6so2675266wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2012 09:53:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20120526171800.GC11759@ubuntu-mba>
+In-Reply-To: <1338933307-13446-8-git-send-email-hauke@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+	<1338933307-13446-8-git-send-email-hauke@hauke-m.de>
+Date: Sun, 10 Jun 2012 18:53:10 +0200
+Message-ID: <CACna6rwbS9YTM7gqX14T71Lart2HbUsFo4su8h6HEhv91C_9XA@mail.gmail.com> (sfid-20120610_185337_631921_E1EAC165)
+Subject: Re: [PATCH 7/8] bcma: add bcma_pmu_spuravoid_pllupdate()
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, b43-dev@lists.infradead.org,
+	arend@broadcom.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 26, 2012 at 12:18:00PM -0500, Seth Forshee wrote:
-> My understanding of DFS is pretty rudamentary. Could you explain what
-> support is needed? I do see that mac80211 doesn't really support power
-> measurement requests, but if we can at least stop transmission when
-> radar is present couldn't we still operate on the channels?
-> 
-> Luis, any insight you can offer on the subject would be appreciated.
+2012/6/5 Hauke Mehrtens <hauke@hauke-m.de>:
+> This function is needed by brcmsmac. This code is based on code from
+> the Broadcom SDK.
 
-You can forget about DFS master support at this point. DFS client mode
-is handled by mac80211 though.
+This is already implemented in b43/phy_n.c:
 
-  Luis
+/* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
+static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+
+I guess we should replace b43 code with a call to introduced function.
+
+-- 
+Rafał
