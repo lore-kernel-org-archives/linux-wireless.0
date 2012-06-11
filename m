@@ -1,117 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:53700 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528Ab2FFMWL (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:62084 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120Ab2FKTTe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 08:22:11 -0400
-Received: by eeit10 with SMTP id t10so2297832eei.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 05:22:07 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/8] bcma: handle SoCs in pmu initialization
-Date: Wed, 06 Jun 2012 14:19:53 +0200
-Message-ID: <2716026.rMfCBzMpF9@flexo> (sfid-20120606_142214_865011_F1C58855)
-In-Reply-To: <1338933307-13446-7-git-send-email-hauke@hauke-m.de>
-References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de> <1338933307-13446-7-git-send-email-hauke@hauke-m.de>
+	Mon, 11 Jun 2012 15:19:34 -0400
+Received: by ghrr11 with SMTP id r11so2811752ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 12:19:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAFub=KQ9qrE=u_nfVXK90o6k_itLjE5bP0LQOymB6cJmQQaA1A@mail.gmail.com>
+References: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
+ <1338733814-31438-2-git-send-email-hauke@hauke-m.de> <CAFub=KQ9qrE=u_nfVXK90o6k_itLjE5bP0LQOymB6cJmQQaA1A@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 11 Jun 2012 12:19:13 -0700
+Message-ID: <CAB=NE6XGj7Zr-GfTmFF0jU462HkfWaauR8YKPi-S-ihjras1VQ@mail.gmail.com> (sfid-20120611_211937_910151_F67C4314)
+Subject: Re: [Lf_driver_backport] [PATCH 2/2] compat-wireless: update some
+ urls to git trees in docs
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hauke,
+On Sun, Jun 3, 2012 at 11:31 PM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+>> --- a/scripts/admin-update.sh
+>> +++ b/scripts/admin-update.sh
+>> @@ -2,21 +2,21 @@
+>>  #
+>>  # Copyright 2007, 2008, 2010   Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+>>  #
+>> -# Use this to update compat-wireless-2.6 to the latest
+>> -# wireless-testing.git tree you have.
+>> +# Use this to update compat-wireless to the latest
+>> +# linux-nex.git tree you have.
+>
+> There's a typo in here, linux-nex.
+>
+>>  #
+>> -# Usage: you should have the latest pull of wireless-2.6.git
+>> -# git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>> -# We assume you have it on your ~/devel/wireless-testing/ directory. If you do,
+>> -# just run this script from the compat-wireless-2.6 directory.
+>> +# Usage: you should have the latest pull of linux-nex.git
+>
+> Same typo in here too, :)
 
-On Tuesday 05 June 2012 23:55:05 Hauke Mehrtens wrote:
-> The SoCs do not need any special handling in bcma_pmu_pll_init(),
-> bcma_pmu_resources_init(), bcma_pmu_swreg_init() and
-> bcma_pmu_workarounds. This patches suppresses some warnings in the log.
+Hauke, let me know if you plan on resending. Thanks,
 
-This does not look like it scales very good, how about you turn the pr_err() 
-into a pr_debug() so that developpers porting bcma on a new chip need to turn 
-on the appropriate debug knobs to get the message?
-
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/bcma/driver_chipcommon_pmu.c |   32 
-++++++++++++++++++++++++++++++++
->  1 file changed, 32 insertions(+)
-> 
-> diff --git a/drivers/bcma/driver_chipcommon_pmu.c 
-b/drivers/bcma/driver_chipcommon_pmu.c
-> index 2ebba9c..9bf2dff 100644
-> --- a/drivers/bcma/driver_chipcommon_pmu.c
-> +++ b/drivers/bcma/driver_chipcommon_pmu.c
-> @@ -63,6 +63,14 @@ static void bcma_pmu_pll_init(struct bcma_drv_cc *cc)
->  	case BCMA_CHIP_ID_BCM4331:
->  	case BCMA_CHIP_ID_BCM43224:
->  	case BCMA_CHIP_ID_BCM43225:
-> +	case BCMA_CHIP_ID_BCM4716:
-> +	case BCMA_CHIP_ID_BCM4748:
-> +	case BCMA_CHIP_ID_BCM47162:
-> +	case BCMA_CHIP_ID_BCM4749:
-> +	case BCMA_CHIP_ID_BCM5357:
-> +	case BCMA_CHIP_ID_BCM5356:
-> +	case BCMA_CHIP_ID_BCM53572:
-> +	case BCMA_CHIP_ID_BCM4706:
->  		break;
->  	default:
->  		pr_err("PLL init unknown for device 0x%04X\n",
-> @@ -83,6 +91,14 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc 
-*cc)
->  	case BCMA_CHIP_ID_BCM4331:
->  	case BCMA_CHIP_ID_BCM43224:
->  	case BCMA_CHIP_ID_BCM43225:
-> +	case BCMA_CHIP_ID_BCM4716:
-> +	case BCMA_CHIP_ID_BCM4748:
-> +	case BCMA_CHIP_ID_BCM47162:
-> +	case BCMA_CHIP_ID_BCM4749:
-> +	case BCMA_CHIP_ID_BCM5357:
-> +	case BCMA_CHIP_ID_BCM5356:
-> +	case BCMA_CHIP_ID_BCM53572:
-> +	case BCMA_CHIP_ID_BCM4706:
->  		break;
->  	default:
->  		pr_err("PMU resource config unknown for device 0x%04X\n",
-> @@ -105,6 +121,14 @@ static void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
->  	case BCMA_CHIP_ID_BCM4331:
->  	case BCMA_CHIP_ID_BCM43224:
->  	case BCMA_CHIP_ID_BCM43225:
-> +	case BCMA_CHIP_ID_BCM4716:
-> +	case BCMA_CHIP_ID_BCM4748:
-> +	case BCMA_CHIP_ID_BCM47162:
-> +	case BCMA_CHIP_ID_BCM4749:
-> +	case BCMA_CHIP_ID_BCM5357:
-> +	case BCMA_CHIP_ID_BCM5356:
-> +	case BCMA_CHIP_ID_BCM53572:
-> +	case BCMA_CHIP_ID_BCM4706:
->  		break;
->  	default:
->  		pr_err("PMU switch/regulators init unknown for device "
-> @@ -168,6 +192,14 @@ static void bcma_pmu_workarounds(struct bcma_drv_cc 
-*cc)
->  		}
->  		break;
->  	case BCMA_CHIP_ID_BCM43225:
-> +	case BCMA_CHIP_ID_BCM4716:
-> +	case BCMA_CHIP_ID_BCM4748:
-> +	case BCMA_CHIP_ID_BCM47162:
-> +	case BCMA_CHIP_ID_BCM4749:
-> +	case BCMA_CHIP_ID_BCM5357:
-> +	case BCMA_CHIP_ID_BCM5356:
-> +	case BCMA_CHIP_ID_BCM53572:
-> +	case BCMA_CHIP_ID_BCM4706:
->  		break;
->  	default:
->  		pr_err("Workarounds unknown for device 0x%04X\n",
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-Florian
+  Luis
