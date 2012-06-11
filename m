@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1671 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217Ab2FEJyp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 05:54:45 -0400
-Message-ID: <4FCDD74B.9070203@qca.qualcomm.com> (sfid-20120605_115448_251279_DC642B88)
-Date: Tue, 5 Jun 2012 15:24:19 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Received: from mga01.intel.com ([192.55.52.88]:35610 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755355Ab2FKOqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 10:46:30 -0400
+Date: Mon, 11 Jun 2012 16:57:00 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Sasha Levin <levinsasha928@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	Dave Jones <davej@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
+Message-ID: <20120611145700.GY22557@sortiz-mobl> (sfid-20120611_164658_480456_D8218415)
+References: <1339423241.4999.53.camel@lappy>
+ <20120611144134.GX22557@sortiz-mobl>
+ <1339425693.6001.2268.camel@edumazet-glaptop>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211: Fix incompatible interfaces combination
-References: <1338824836-2283-1-git-send-email-mohammed@qca.qualcomm.com>			 <1338825141.4512.14.camel@jlt3.sipsolutions.net>			 <4FCCDB63.3040806@qca.qualcomm.com>			 <1338826398.4512.23.camel@jlt3.sipsolutions.net>			 <4FCCDF78.4040606@qca.qualcomm.com>			 <1338826731.4512.24.camel@jlt3.sipsolutions.net>			 (sfid-20120604_181856_034243_5406D052) <1338826773.4512.25.camel@jlt3.sipsolutions.net>		 <4FCDA8DB.9000000@qca.qualcomm.com>	 <1338878939.4514.11.camel@jlt3.sipsolutions.net>	 <4FCDC838.9010209@qca.qualcomm.com> <1338888804.4514.25.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338888804.4514.25.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1339425693.6001.2268.camel@edumazet-glaptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 June 2012 03:03 PM, Johannes Berg wrote:
-> Hi Mohammed,
->
->>>> static const struct ieee80211_iface_limit a[] = {
->>>>            { .max = 2,     .types = BIT(NL80211_IFTYPE_STATION) },
->>>> };
->>>>
->>>> static const struct ieee80211_iface_limit b[] = {
->>>>            { .max = 2,     .types = BIT(NL80211_IFTYPE_MESH_POINT) },
->>>> };
->>>>
->>>> static const struct ieee80211_iface_combination if_comb[] = {
->>>>            {.limits = a,
->>>>            .n_limits = ARRAY_SIZE(a),
->>>>            .max_interfaces = 2,
->>>>            .num_different_channels = 1,
->>>>            },
->>>>            {.limits = b,
->>>>            .n_limits = ARRAY_SIZE(b),
->>>>            .max_interfaces = 2,
->>>>            .num_different_channels = 1,
->>>>            },
->>>>
->>>> };
->>>>
->>>> i could not add mesh interface if a managed interface is already there
->>>> and vice versa. if this is the expected behavior, then fine.
->>>
->>> No, that's not expected! Another bug!
->
-> Actually, I'm sorry -- clearly I wasn't paying attention before -- it is
-> expected. The above means you can add two managed or two mesh interface,
-> but no combinations of them. Basically, the things in if_comb are XOR,
-> and the things inside each limit are AND.
->
+Hi Eric,
 
-thanks, then the updated http://p.sipsolutions.net/fedf39a8d08b28b7.txt
-seems to solve the issue.
+On Mon, Jun 11, 2012 at 04:41:33PM +0200, Eric Dumazet wrote:
+> On Mon, 2012-06-11 at 16:41 +0200, Samuel Ortiz wrote:
+> > Hi Sasha,
+> > 
+> > On Mon, Jun 11, 2012 at 04:00:41PM +0200, Sasha Levin wrote:
+> > > Hi all,
+> > > 
+> > > I've stumbled on the following while fuzzing with trinity inside a KVM tools guest, running on 3.5-rc2:
+> > > 
+> > Thanks for the report, it could be worth adding this one to
+> > bugzilla.kernel.org.
+> > 
+> > What's trinity ?
+> > Also, if this one is reproducible, would you mind sharing some details about
+> > how we could reproduce it ?
+> 
+> Well, bugfix should be trivial enough ;)
+Yep, I looked at the code only after looking at Sasha's report.
+
+Thanks for the patch, do you mind if I add your SOB to it ?
+
+Cheers,
+Samuel.
 
 -- 
-thanks,
-shafi
+Intel Open Source Technology Centre
+http://oss.intel.com/
