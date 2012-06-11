@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52357 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755121Ab2FWQBF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48541 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab2FKJyP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 12:01:05 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 04/10] ath9k_hw: advertise WoW support for capable chipsets
-Date: Sat, 23 Jun 2012 21:29:48 +0530
-Message-ID: <1340467194-16930-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120623_180109_442678_E3737425)
-In-Reply-To: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 11 Jun 2012 05:54:15 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Brandon Misemer <brandon.misemer@intel.com>
+Subject: [PATCH 10/13] iwlwifi: Fix Makefile build order for built-in driver
+Date: Mon, 11 Jun 2012 11:53:09 +0200
+Message-Id: <1339408392-19425-11-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115424_398673_ABA4D870)
+In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Brandon Misemer <brandon.misemer@intel.com>
 
-support WoW for all chipsets starting from AR9280, AR9285, AR9287,
-AR9380, AR9382, AR9485, AR9462. Really all hardware may not support
-WoW even though the flag is set and the WoW working depends on
-your laptop, BIOS apart from the hardware.
+When the driver is built into the kernel instead of a module
+when the system boots it results in a panic. The order things are built in
+results in their initialization order when built into the kernel. Wifi
+has to be initialized before mvm or dvm.
 
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Reviewed-by: Donald H Fry <donald.h.fry@intel.com>
+Tested-by: Donald H Fry <donald.h.fry@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Brandon Misemer <brandon.misemer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/Makefile |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a42c26f..041d797 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2572,6 +2572,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index afa9758..170ec33 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -1,7 +1,3 @@
+-obj-$(CONFIG_IWLDVM)	+= dvm/
+-
+-CFLAGS_iwl-devtrace.o := -I$(src)
+-
+ # common
+ obj-$(CONFIG_IWLWIFI)	+= iwlwifi.o
+ iwlwifi-objs		+= iwl-io.o
+@@ -16,3 +12,8 @@ iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
+ iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TESTMODE) += iwl-test.o
  
- 
-+	if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		pCap->hw_caps |= ATH9K_HW_WOW_DEVICE_CAPABLE |
-+				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
+ ccflags-y += -D__CHECK_ENDIAN__ -I$(src)
 +
-+		if (AR_SREV_9280(ah))
-+			pCap->hw_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
-+	}
 +
- 	return 0;
- }
- 
++obj-$(CONFIG_IWLDVM)	+= dvm/
++
++CFLAGS_iwl-devtrace.o := -I$(src)
 -- 
-1.7.0.4
+1.7.10
 
