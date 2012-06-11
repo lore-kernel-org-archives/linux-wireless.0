@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53874 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754214Ab2F3NRy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:54 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 12/18] brcmsmac: add a conditions for core rev 17 again
-Date: Sat, 30 Jun 2012 15:16:15 +0200
-Message-Id: <1341062181-28071-13-git-send-email-hauke@hauke-m.de> (sfid-20120630_151759_564019_AEA3E013)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:48539 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab2FKJyN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 05:54:13 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/13] iwlwifi: print even more info when a queue is stuck
+Date: Mon, 11 Jun 2012 11:53:10 +0200
+Message-Id: <1339408392-19425-12-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115424_481134_FD033289)
+In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts some changes made in this commit:
-commit 7234592364e2efe8b4ac1040c99b1d7ef01cf502
-Author: Roland Vossen <rvossen@broadcom.com>
-Date:   Mon Feb 14 12:16:45 2011 +0100
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-    staging: brcm80211: removal of inactive d11 code
+Since the queue gets stuck from time to time, we are trying
+to get as much information as we can when this occurs.
 
-The bcm4716 has a rev 17 wireless core and this condition is needed.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/trans.c |   25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 8bad8b6..547ae5b 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -1942,7 +1942,8 @@ static bool brcms_b_radio_read_hwdisabled(struct brcms_hardware *wlc_hw)
- 		 * accesses phyreg throughput mac. This can be skipped since
- 		 * only mac reg is accessed below
- 		 */
--		flags |= SICF_PCLKE;
-+		if (D11REV_GE(wlc_hw->corerev, 18))
-+			flags |= SICF_PCLKE;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 4d4cbae..d426e3d 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -315,10 +315,6 @@ static void iwl_trans_pcie_queue_stuck_timer(unsigned long data)
+ 		jiffies_to_msecs(trans_pcie->wd_timeout));
+ 	IWL_ERR(trans, "Current SW read_ptr %d write_ptr %d\n",
+ 		txq->q.read_ptr, txq->q.write_ptr);
+-	IWL_ERR(trans, "Current HW read_ptr %d write_ptr %d\n",
+-		iwl_read_prph(trans, SCD_QUEUE_RDPTR(txq->q.id))
+-					& (TFD_QUEUE_SIZE_MAX - 1),
+-		iwl_read_prph(trans, SCD_QUEUE_WRPTR(txq->q.id)));
  
- 		/*
- 		 * TODO: test suspend/resume
-@@ -2023,7 +2024,8 @@ void brcms_b_corereset(struct brcms_hardware *wlc_hw, u32 flags)
- 	 * phyreg throughput mac, AND phy_reset is skipped at early stage when
- 	 * band->pi is invalid. need to enable PHY CLK
- 	 */
--	flags |= SICF_PCLKE;
-+	if (D11REV_GE(wlc_hw->corerev, 18))
-+		flags |= SICF_PCLKE;
+ 	iwl_read_targ_mem_bytes(trans, scd_sram_addr, buf, sizeof(buf));
  
- 	/*
- 	 * reset the core
+@@ -328,6 +324,27 @@ static void iwl_trans_pcie_queue_stuck_timer(unsigned long data)
+ 		IWL_ERR(trans, "FH TRBs(%d) = 0x%08x\n", i,
+ 			iwl_read_direct32(trans, FH_TX_TRB_REG(i)));
+ 
++	for (i = 0; i < trans->cfg->base_params->num_of_queues; i++) {
++		u32 status = iwl_read_prph(trans, SCD_QUEUE_STATUS_BITS(i));
++		u8 fifo = (status >> SCD_QUEUE_STTS_REG_POS_TXF) & 0x7;
++		bool active = !!(status & BIT(SCD_QUEUE_STTS_REG_POS_ACTIVE));
++		u32 tbl_dw =
++			iwl_read_targ_mem(trans,
++					  trans_pcie->scd_base_addr +
++					  SCD_TRANS_TBL_OFFSET_QUEUE(i));
++
++		if (i & 0x1)
++			tbl_dw = (tbl_dw & 0xFFFF0000) >> 16;
++		else
++			tbl_dw = tbl_dw & 0x0000FFFF;
++
++		IWL_ERR(trans,
++			"Q %d is %sactive and mapped to fifo %d ra_tid 0x%04x [%d,%d]\n",
++			i, active ? "" : "in", fifo, tbl_dw,
++			iwl_read_prph(trans, SCD_QUEUE_RDPTR(i)),
++			iwl_read_prph(trans, SCD_QUEUE_WRPTR(i)));
++	}
++
+ 	iwl_op_mode_nic_error(trans->op_mode);
+ }
+ 
 -- 
-1.7.9.5
+1.7.10
 
