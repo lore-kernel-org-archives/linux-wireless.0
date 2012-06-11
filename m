@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59889 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751117Ab2FEWmt (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:42581 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755Ab2FKSac convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 18:42:49 -0400
-Received: by lahd3 with SMTP id d3so4201481lah.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 15:42:48 -0700 (PDT)
+	Mon, 11 Jun 2012 14:30:32 -0400
 MIME-Version: 1.0
-In-Reply-To: <loom.20120605T221743-446@post.gmane.org>
-References: <loom.20120605T215520-645@post.gmane.org> <4FCE67CA.2020502@lwfinger.net>
- <loom.20120605T221743-446@post.gmane.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 6 Jun 2012 08:42:28 +1000
-Message-ID: <CAGRGNgVLnsnP_vR-Yc8-ep4mQ=gw_CXVy5PKrx9iHQwgahHLew@mail.gmail.com> (sfid-20120606_004253_750492_A3D9262D)
-Subject: Re: usb.c
-To: Ouyang <ilhebe999@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1338115108-19091-1-git-send-email-ozancag@gmail.com>
+References: <1338115108-19091-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 11 Jun 2012 11:30:12 -0700
+Message-ID: <CAB=NE6WyAa7fhC-VvMr+19A80x_VNbbPOrZJCp+6tv5Q+HONxA@mail.gmail.com> (sfid-20120611_203037_562582_F2C5C069)
+Subject: Re: [PATCH 1/2] bin/ckmake: Relax distribution check
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: mcgrof@kernel.org, lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, May 27, 2012 at 3:38 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> Do not check specifically for Ubuntu as we will be using Ubuntu vanilla
+> kernels for every distribution.
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-On Wed, Jun 6, 2012 at 6:23 AM, Ouyang <ilhebe999@gmail.com> wrote:
-> I am still a little confused. Would you please set an example for
-> drivers/net/wireless/rtlwifi/usb.c ?
+This change removes the lsb check but -- at this point in the patch
+life cycle if you run this code it will not work for other Linux
+distributions. Its best to leave this patch then for later *after* you
+have addressed fixing using the script for other Linux distributions.
 
-That contains some of the code for dealing with USB RTLWifi devices.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+  Luis
