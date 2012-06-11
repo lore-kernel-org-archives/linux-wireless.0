@@ -1,72 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:53255 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755595Ab2FYKIl (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:64423 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821Ab2FKSRr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 06:08:41 -0400
-Received: by bkcji2 with SMTP id ji2so2945687bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 03:08:40 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH v3] compat: Define include guard for vga_switcheroo.h
-Date: Mon, 25 Jun 2012 13:08:32 +0300
-Message-Id: <1340618912-6845-1-git-send-email-ozancag@gmail.com> (sfid-20120625_120845_477937_4E969469)
+	Mon, 11 Jun 2012 14:17:47 -0400
+Received: by pbbrp8 with SMTP id rp8so5925542pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 11:17:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAOreOvXM9MPRz67+WCoCwODrz0_FG4GTR5v9imQJyZt5DTDWQw@mail.gmail.com>
+References: <CA+7oygd1dfn=Vj7V1h_vVvXPNym_Ake7UNWf1UuVWfxzm5g+NQ@mail.gmail.com>
+	<CAOreOvXM9MPRz67+WCoCwODrz0_FG4GTR5v9imQJyZt5DTDWQw@mail.gmail.com>
+Date: Mon, 11 Jun 2012 14:17:46 -0400
+Message-ID: <CA+7oygcfLTRsPKMQkb-0vYQaE42i+j_E3bQg75UzVGVG51dhjA@mail.gmail.com> (sfid-20120611_201751_100406_BDD5437E)
+Subject: Re: anyone know any dual-band USB devices with monitoring mode in Linux?
+From: George Nychis <gnychis@gmail.com>
+To: Mark Davis <marked86@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check is missing in upstream. Patch sent but until this gets
-merged, define it in compat tree for fixing compat-drm builds.
+Thanks for your suggestions!  I ended up grabbing an RaLink RT3572 for
+$12 on Amazon with the AE1000:
+http://www.amazon.com/gp/product/B003VYH1UE/ref=oh_details_o00_s00_i00
 
-Trying kernel  3.4.0-030400-generic [OK]
-Trying kernel  3.3.7-030307-generic [OK]
-Trying kernel  3.2.2-030202-generic [OK]
-Trying kernel  3.1.10-030110-generic [OK]
-Trying kernel  3.0.18-030018-generic [OK]
-Trying kernel  2.6.39-02063904-generic [OK]
-Trying kernel  2.6.38-02063808-generic [OK]
-Trying kernel  2.6.37-02063706-generic [OK]
-Trying kernel  2.6.36-02063604-generic [OK]
-Trying kernel  2.6.35-02063512-generic [OK]
-Trying kernel  2.6.34-02063410-generic [OK]
-Trying kernel  2.6.33-02063305-generic [OK]
-Trying kernel  2.6.32-02063255-generic [OK]
-Trying kernel  2.6.31-02063113-generic [OK]
-Trying kernel  2.6.30-02063010-generic [OK]
-Trying kernel  2.6.29-02062906-generic [OK]
-Trying kernel  2.6.28-02062810-generic [OK]
-Trying kernel  2.6.27-020627-generic [OK]
-Trying kernel  2.6.26-020626-generic [OK]
-Trying kernel  2.6.25-020625-generic [OK]
-Trying kernel  2.6.24-020624-generic [OK]
+Not a problem kicking it in to monitoring mode with the rt2x00 driver,
+and it is reporting proper signal strengths unlike my ar9280.
+Perfect.
 
-Signed-off-by: Ozan Ã‡aÄŸlayan <ozancag@gmail.com>
----
- include/linux/vga_switcheroo.h |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
- create mode 100644 include/linux/vga_switcheroo.h
+- George
 
-diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
-new file mode 100644
-index 0000000..4bda17b
---- /dev/null
-+++ b/include/linux/vga_switcheroo.h
-@@ -0,0 +1,12 @@
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+/*
-+ * XXX: The include guard was sent upstream, drop this
-+ * once the guard is merged.
-+ */
-+#ifndef LINUX_VGA_SWITCHEROO_H /* in case this gets upstream */
-+#include_next <linux/vga_switcheroo.h>
-+#ifndef LINUX_VGA_SWITCHEROO_H /* do not redefine once this gets upstream */
-+#define LINUX_VGA_SWITCHEROO_H
-+#endif /* case 1 LINUX_VGA_SWITCHEROO_H */
-+#endif /* case 2 LINUX_VGA_SWITCHEROO_H */
-+#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
--- 
-1.7.10.2
 
+On Thu, Jun 7, 2012 at 6:24 PM, Mark Davis <marked86@gmail.com> wrote:
+>
+> On Wed, Jun 6, 2012 at 11:14 PM, George Nychis <gnychis@gmail.com> wrote:
+> > Hi all,
+> >
+> > I've been using the Sony UWA-BR100 (AR9280) with ath9k_htc, and there
+> > is clearly a bug with reporting signal strengths which I need to be
+> > correct.  I've reported the bug, but this might not be fixed in time
+> > for a deadline I have coming up, and the bug is in the firmware out of
+> > my reach.
+> >
+> > So I was wondering if anyone knows of any alternative USB dual-band
+> > wireless cards that support monitoring mode in Linux.  I'd _greatly_
+> > appreciate it... doesn't need to be Atheros based.
+> >
+> > - George
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> http://bit.ly/LzgJiA
+>
+> I primarily use AWUS050NH / AWUS051NHs. Dell Wireless 1450 adapters
+> are also decent (though they probably perform better in 2.4GHz than
+> 5GHz). I'm not really a fan of AR9170 hardware.
+>
+> -mark
