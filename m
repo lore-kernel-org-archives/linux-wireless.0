@@ -1,46 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36858 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751951Ab2FRPi6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 11:38:58 -0400
-Date: Mon, 18 Jun 2012 17:38:52 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] wireless: rt2x00: rt2800: remove
- unsupported rf and chips
-Message-ID: <20120618153852.GA3965@redhat.com> (sfid-20120618_173900_838749_8D892F79)
-References: <1339882592-17680-1-git-send-email-xose.vazquez@gmail.com>
- <CAL1gcdNwChERae_B7S_TpZmi=Pi2MwUbDiwh+SFys8px96TFDA@mail.gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38053 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753040Ab2FKGsv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 02:48:51 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 4/9] ath9k_hw: check GPM HW write pointer before chip reset
+Date: Mon, 11 Jun 2012 12:19:32 +0530
+Message-ID: <1339397377-3374-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_084854_547330_ECDEAE53)
+In-Reply-To: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL1gcdNwChERae_B7S_TpZmi=Pi2MwUbDiwh+SFys8px96TFDA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 18, 2012 at 11:01:54AM +0200, Gertjan van Wingerde wrote:
-> Hi Xose,
-> 
-> On Sat, Jun 16, 2012 at 11:36 PM, Xose Vazquez Perez
-> <xose.vazquez@gmail.com> wrote:
-> > removed, no support for:
-> >
-> > RF2853 2.4G/5G 3T3R
-> > RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-> > RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
-> >
-> > RT3593
-> > RT3883
-> >
-> > Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> 
-> I don't mind removing the RT chipset definitions, but I would like to
-> retain the RF chipset definitions. Even
-> though these definitions are not used in the code, the do represent
-> values we could see from devices, so
-> I consider the list to be documentation as well.
+Both "MAC Warm Reset" and "MCI Reset Rx" will reset GPM HW write_ptr.
+We should check software cached write_ptr against HW write_ptr before
+reset. Otherwise the pending DMA data will be lost.
 
-Perhaps we can comment them out, as compromise :-)
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +++
+ 3 files changed, 22 insertions(+)
 
-Stanislaw
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 13907f6..cbeff9c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -893,6 +893,9 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		udelay(100);
+ 	}
+ 
++	/* Check pending GPM msg before MCI Reset Rx */
++	ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
++
+ 	regval |= SM(1, AR_MCI_COMMAND2_RESET_RX);
+ 	REG_WRITE(ah, AR_MCI_COMMAND2, regval);
+ 	udelay(1);
+@@ -1190,6 +1193,21 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
+ 		mci->gpm_idx = value;
+ 		break;
++	case MCI_STATE_CHECK_GPM_OFFSET:
++		/*
++		 * This should only be called before "MAC Warm Reset" or
++		 * "MCI Reset Rx".
++		 */
++		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
++		if (mci->gpm_idx == value)
++			break;
++		ath_dbg(common, MCI,
++			"GPM cached write pointer mismatch %d %d\n",
++			mci->gpm_idx, value);
++		mci->query_bt = true;
++		mci->need_flush_btinfo = true;
++		mci->gpm_idx = 0;
++		break;
+ 	case MCI_STATE_NEXT_GPM_OFFSET:
+ 	case MCI_STATE_LAST_GPM_OFFSET:
+ 		/*
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 2a8c764..45624e1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -190,6 +190,7 @@ enum mci_bt_state {
+ enum mci_state_type {
+ 	MCI_STATE_ENABLE,
+ 	MCI_STATE_INIT_GPM_OFFSET,
++	MCI_STATE_CHECK_GPM_OFFSET,
+ 	MCI_STATE_NEXT_GPM_OFFSET,
+ 	MCI_STATE_LAST_GPM_OFFSET,
+ 	MCI_STATE_BT,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 6d89333..8412128 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1348,6 +1348,9 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 		}
+ 	}
+ 
++	if (ath9k_hw_mci_is_enabled(ah))
++		ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
++
+ 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-- 
+1.7.10.4
+
