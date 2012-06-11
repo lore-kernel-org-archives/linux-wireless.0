@@ -1,75 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63803 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756359Ab2FNUVF convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:54199 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752679Ab2FKQzl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 16:21:05 -0400
-From: "Singh, Naveen" <navesing@qca.qualcomm.com>
-To: "Chadd, Adrian" <achadd@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-CC: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"victorg@ti.com" <victorg@ti.com>
-Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
-Date: Thu, 14 Jun 2012 20:21:01 +0000
-Message-ID: <43ED1A9ABC336248B5D371B7C9CCFB96016F339C@nasanexd02b.na.qualcomm.com> (sfid-20120614_222110_328837_86494BDD)
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <1339566003.4519.1.camel@jlt3.sipsolutions.net>
- <1339587447.3840.272.camel@cumari.coelho.fi>
- <4FD87FEA.3070208@qca.qualcomm.com> <20120613205007.GB3043@pista>
- <4FD984C1.8090903@qca.qualcomm.com>
- <48EC4E8D43A28947B1AB2639FA97CDB90BECBC62@nasanexd02a.na.qualcomm.com>
-In-Reply-To: <48EC4E8D43A28947B1AB2639FA97CDB90BECBC62@nasanexd02a.na.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 11 Jun 2012 12:55:41 -0400
+Message-ID: <1339433810.4999.65.camel@lappy> (sfid-20120611_185602_173547_07FBB445)
+Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
+From: Sasha Levin <levinsasha928@gmail.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	Dave Jones <davej@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 11 Jun 2012 18:56:50 +0200
+In-Reply-To: <20120611152007.GZ22557@sortiz-mobl>
+References: <1339423241.4999.53.camel@lappy>
+	 <20120611144134.GX22557@sortiz-mobl>
+	 <1339425693.6001.2268.camel@edumazet-glaptop>
+	 <20120611145700.GY22557@sortiz-mobl>
+	 <1339426778.6001.2312.camel@edumazet-glaptop>
+	 <20120611152007.GZ22557@sortiz-mobl>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fw memory is generally very limited. Maintaining the complete scan results is almost next to impossible. There are also other implications like taking care of duplicates, in case of similar taking the one with higher signal strength, for same AP taking care of size differences b/w probe response and beacon etc. 
+On Mon, 2012-06-11 at 17:20 +0200, Samuel Ortiz wrote:
+> On Mon, Jun 11, 2012 at 04:59:38PM +0200, Eric Dumazet wrote:
+> > On Mon, 2012-06-11 at 16:57 +0200, Samuel Ortiz wrote:
+> > > Hi Eric,
+> > > 
+> > > On Mon, Jun 11, 2012 at 04:41:33PM +0200, Eric Dumazet wrote:
+> > > > On Mon, 2012-06-11 at 16:41 +0200, Samuel Ortiz wrote:
+> > > > > Hi Sasha,
+> > > > > 
+> > > > > On Mon, Jun 11, 2012 at 04:00:41PM +0200, Sasha Levin wrote:
+> > > > > > Hi all,
+> > > > > > 
+> > > > > > I've stumbled on the following while fuzzing with trinity inside a KVM tools guest, running on 3.5-rc2:
+> > > > > > 
+> > > > > Thanks for the report, it could be worth adding this one to
+> > > > > bugzilla.kernel.org.
+> > > > > 
+> > > > > What's trinity ?
+> > > > > Also, if this one is reproducible, would you mind sharing some details about
+> > > > > how we could reproduce it ?
+> > > > 
+> > > > Well, bugfix should be trivial enough ;)
+> > > Yep, I looked at the code only after looking at Sasha's report.
+> > > 
+> > > Thanks for the patch, do you mind if I add your SOB to it ?
+> > 
+> > I  would prefer making sure it fixes the bug first ;)
+> Sure, although your patch makes sense regardless of that :)
+> I'll still wait for Sasha to confirm that it fixes his crash.
 
-Passing the results as you receive avoids lot of these complications.
-
-Regards
-Naveen
-
------Original Message-----
-From: Chadd, Adrian 
-Sent: Thursday, June 14, 2012 12:40 PM
-To: Valo, Kalle; Pedersen, Thomas
-Cc: Luciano Coelho; Johannes Berg; ath6kl-devel; linux-wireless@vger.kernel.org; victorg@ti.com
-Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
-
-Why then doesn't the host just stay asleep and let the firmware aggregate some scan results, and then fire those up in one message, waking the host up only once?
+I don't have a direct way of reproducing it, but I've put it in the test
+vm and the fuzzer is running, I'll let you know tomorrow if it happened
+again.
 
 
-
-Adrian
-
------Original Message-----
-From: Valo, Kalle
-Sent: Wednesday, June 13, 2012 11:29 PM
-To: Pedersen, Thomas
-Cc: Luciano Coelho; Johannes Berg; ath6kl-devel; linux-wireless@vger.kernel.org; victorg@ti.com
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-
-On 06/13/2012 11:50 PM, Pedersen, Thomas wrote:
-> On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
->
->> Funnily enough I don't have any idea how ath6kl has implemented this 
->> feature, but in theory this feature is useful also for the current 
->> normal scan (when the firmware/hardware supports it) as we can avoid 
->> host wakeups. If there are 10 APs, but all are below the RSSI 
->> threshold, we will have only 1 host wakeup (scan ready event) opposed 
->> to 11 wakeups
->> (10 AP found events plus 1 scan ready event).
-> 
-> But can the host even sleep on normal scans?
-
-It's "implementation defined", the good ones can and bad ones can't :)
-
-But from our (wireless developer) perspective we don't need to care about that, our job is to minimise all possible host wakeup events (timers, interrupts etc) as much as possible. That will allow the host to sleep more.
-
-Kalle
