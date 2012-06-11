@@ -1,84 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41312 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756294Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 09:25:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com
-Subject: [PATCH 4/9] ath9k_hw: clean up / fix ANI mode checks related to beacon RSSI
-Date: Fri, 15 Jun 2012 15:25:22 +0200
-Message-Id: <1339766727-61926-4-git-send-email-nbd@openwrt.org> (sfid-20120615_152543_208050_EA2FDAB9)
-In-Reply-To: <1339766727-61926-3-git-send-email-nbd@openwrt.org>
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
- <1339766727-61926-2-git-send-email-nbd@openwrt.org>
- <1339766727-61926-3-git-send-email-nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50560 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431Ab2FKGtd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 02:49:33 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 9/9] ath9k: keep btcoex period in milliseconds
+Date: Mon, 11 Jun 2012 12:19:37 +0530
+Message-ID: <1339397377-3374-9-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_084936_220627_E751030F)
+In-Reply-To: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beacon RSSI is only meaningful in station mode - in ad-hoc mode it
-fluctuates, depending on which peer last sent a beacon, and in other
-modes it is not set at all.
-Fix places in ANI where the beacon RSSI is used to limit their use
-to station mode only.
+btcoex periord is converted into micro seconds during initialization
+and converted back to milli seconds while starting timer. As MCI code
+handles btcoex period in msec, lets keep the btcoex timer in msec and
+convert them into other form whenever needed.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/gpio.c |    8 ++++----
+ drivers/net/wireless/ath/ath9k/mci.c  |    3 +--
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index aef8170..4949d8b 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -176,7 +176,7 @@ static void ath9k_hw_ani_ofdm_err_trigger_old(struct ath_hw *ah)
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index af6d273..00ff5ab 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -232,7 +232,7 @@ static void ath_btcoex_period_timer(unsigned long data)
  	}
  
--	if (ah->opmode == NL80211_IFTYPE_AP) {
-+	if (ah->opmode != NL80211_IFTYPE_STATION) {
- 		if (aniState->firstepLevel < HAL_FIRST_STEP_MAX) {
- 			ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL,
- 					     aniState->firstepLevel + 1);
-@@ -236,7 +236,7 @@ static void ath9k_hw_ani_cck_err_trigger_old(struct ath_hw *ah)
- 			return;
- 		}
- 	}
--	if (ah->opmode == NL80211_IFTYPE_AP) {
-+	if (ah->opmode != NL80211_IFTYPE_STATION) {
- 		if (aniState->firstepLevel < HAL_FIRST_STEP_MAX) {
- 			ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL,
- 					     aniState->firstepLevel + 1);
-@@ -335,8 +335,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
- 		BEACON_RSSI(ah), aniState->rssiThrLow,
- 		aniState->rssiThrHigh);
+ 	ath9k_ps_restore(sc);
+-	timer_period = btcoex->btcoex_period / 1000;
++	timer_period = btcoex->btcoex_period;
+ 	mod_timer(&btcoex->period_timer, jiffies + msecs_to_jiffies(timer_period));
+ }
  
--	if ((ah->opmode == NL80211_IFTYPE_STATION ||
--	     ah->opmode == NL80211_IFTYPE_ADHOC) &&
-+	if (ah->opmode == NL80211_IFTYPE_STATION &&
- 	    BEACON_RSSI(ah) <= aniState->rssiThrLow &&
- 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
- 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
-@@ -390,7 +389,7 @@ static void ath9k_hw_ani_lower_immunity_old(struct ath_hw *ah)
+@@ -267,10 +267,10 @@ static int ath_init_btcoex_timer(struct ath_softc *sc)
+ {
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
  
- 	aniState = &ah->curchan->ani;
+-	btcoex->btcoex_period = ATH_BTCOEX_DEF_BT_PERIOD * 1000;
+-	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) *
++	btcoex->btcoex_period = ATH_BTCOEX_DEF_BT_PERIOD;
++	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) * 1000 *
+ 		btcoex->btcoex_period / 100;
+-	btcoex->btscan_no_stomp = (100 - ATH_BTCOEX_BTSCAN_DUTY_CYCLE) *
++	btcoex->btscan_no_stomp = (100 - ATH_BTCOEX_BTSCAN_DUTY_CYCLE) * 1000 *
+ 				   btcoex->btcoex_period / 100;
  
--	if (ah->opmode == NL80211_IFTYPE_AP) {
-+	if (ah->opmode != NL80211_IFTYPE_STATION) {
- 		if (aniState->firstepLevel > 0) {
- 			if (ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL,
- 						 aniState->firstepLevel - 1))
-@@ -474,8 +473,7 @@ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
+ 	setup_timer(&btcoex->period_timer, ath_btcoex_period_timer,
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 2ea5e93..92d61cc 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -182,8 +182,7 @@ skip_tuning:
+ 	if (btcoex->duty_cycle > ATH_MCI_MAX_DUTY_CYCLE)
+ 		btcoex->duty_cycle = ATH_MCI_MAX_DUTY_CYCLE;
  
- 	aniState = &ah->curchan->ani;
+-	btcoex->btcoex_period *= 1000;
+-	btcoex->btcoex_no_stomp =  btcoex->btcoex_period *
++	btcoex->btcoex_no_stomp =  btcoex->btcoex_period * 1000 *
+ 		(100 - btcoex->duty_cycle) / 100;
  
--	if (ah->opmode != NL80211_IFTYPE_STATION
--	    && ah->opmode != NL80211_IFTYPE_ADHOC) {
-+	if (ah->opmode != NL80211_IFTYPE_STATION) {
- 		ath_dbg(common, ANI, "Reset ANI state opmode %u\n", ah->opmode);
- 		ah->stats.ast_ani_reset++;
- 
+ 	ath9k_hw_btcoex_enable(sc->sc_ah);
 -- 
-1.7.3.2
+1.7.10.4
 
