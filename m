@@ -1,25 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:41202 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757329Ab2FOVyL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6820 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563Ab2FKNO0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 17:54:11 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 15 Jun 2012 14:53:41 -0700
-Subject: RE: mwifiex mwifiex_add_virtual_intf return value
-Message-ID: <477F20668A386D41ADCC57781B1F7043083A8A7162@SC-VEXCH1.marvell.com> (sfid-20120615_235414_253423_8513B462)
-References: <1339796838.16369.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339796838.16369.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 11 Jun 2012 09:14:26 -0400
+Message-ID: <4FD5EF2D.7050801@qca.qualcomm.com> (sfid-20120611_151433_000022_5D603345)
+Date: Mon, 11 Jun 2012 16:14:21 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V3 1/2] ath6kl: Fix race in aggregation reorder logic
+References: <1338361032-6098-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1338361032-6098-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gSSB3YXMganVzdCBsb29raW5nIGF0IHRoaXMgYmVjYXVzZSBJJ20g
-Y2hhbmdpbmcgaXQgZnJvbSByZXR1cm5pbmcgYQ0KPiBuZXRkZXYgdG8gc3RydWN0IHdpcmVsZXNz
-X2RldiwgYnV0IEkgbm90aWNlIHRoYXQgeW91J3JlIHJldHVybmluZyB0aGUNCj4gd3JvbmcgdGhp
-bmcgb24gZXJyb3JzIC0tIHlvdSBuZWVkIHRvIHJldHVybiBhbiBFUlJfUFRSKCksIG5vdCBOVUxM
-LA0KPiBvdGhlcndpc2UgY2ZnODAyMTEgd2lsbCBjcmFzaC4NCg0KVGhhbmtzIGZvciBwb2ludGlu
-ZyBpdCBvdXQuIEknbGwgZml4IGl0Lg0KDQpSZWdhcmRzLA0KQmluZw0KDQo=
+On 05/30/2012 09:57 AM, Vasanthakumar Thiagarajan wrote:
+> There are many places where tid data are accessed without
+> the lock (rxtid->lock), this can lead to a race condition
+> when the timeout handler for aggregatin reorder and the
+> receive function are getting executed at the same time.
+> Fix this race, but still there are races which can not
+> be fixed without rewriting the whole aggregation reorder
+> logic, for now fix the obvious ones.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+
+Thanks, both patches applied.
+
+Kalle
