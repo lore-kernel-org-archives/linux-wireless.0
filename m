@@ -1,81 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753848Ab2FTGOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:14:30 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFCv2 10/13] cfg80211: set initial monitor channel
-Date: Wed, 20 Jun 2012 08:14:16 +0200
-Message-ID: <1340172859-18146-11-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081451_497950_D3FDDE2C)
-In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:48524 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610Ab2FKJxd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 05:53:33 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/13] iwlwifi: s/iwl_read_targ_mem_words/iwl_read_targ_mem_bytes
+Date: Mon, 11 Jun 2012 11:53:03 +0200
+Message-Id: <1339408392-19425-5-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115338_659477_DBC6CA96)
+In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implements behaviour seen in mac80211. A running
-monitor always has a channel - even before
-.set_channel. This way we won't break current
-behaviour.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This macro gets the bufsize in bytes.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/core.c |   31 +++++++++++++++++++++++++++++++
- 1 files changed, 31 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/main.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-io.h   |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 8315c2a..5b3f74e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -776,6 +776,35 @@ static struct device_type wiphy_type = {
- 	.name	= "wlan",
- };
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index 656ed31..e620af3 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -406,7 +406,7 @@ static void iwl_continuous_event_trace(struct iwl_priv *priv)
  
-+static struct ieee80211_channel *
-+cfg80211_get_any_chan(struct cfg80211_registered_device *rdev)
-+{
-+	struct ieee80211_supported_band *sband;
-+	int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		sband = rdev->wiphy.bands[i];
-+		if (sband && sband->n_channels > 0)
-+			return &sband->channels[0];
-+	}
-+
-+	return NULL;
-+}
-+
-+static void cfg80211_init_mon_chan(struct cfg80211_registered_device *rdev)
-+{
-+	struct ieee80211_channel *chan;
-+
-+	chan = cfg80211_get_any_chan(rdev);
-+	if (WARN_ON(!chan))
-+		return;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	WARN_ON(cfg80211_set_monitor_channel(rdev, chan->center_freq,
-+					     NL80211_CHAN_NO_HT));
-+	mutex_unlock(&rdev->devlist_mtx);
-+}
-+
- void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 			       enum nl80211_iftype iftype, int num)
- {
-@@ -796,6 +825,8 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 		if (!has_monitors_only_new) {
- 			rdev->monitor_channel = NULL;
- 			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
-+		} else {
-+			cfg80211_init_mon_chan(rdev);
- 		}
+ 	base = priv->device_pointers.log_event_table;
+ 	if (iwlagn_hw_valid_rtc_data_addr(base)) {
+-		iwl_read_targ_mem_words(priv->trans, base, &read, sizeof(read));
++		iwl_read_targ_mem_bytes(priv->trans, base, &read, sizeof(read));
+ 		capacity = read.capacity;
+ 		mode = read.mode;
+ 		num_wraps = read.wrap_counter;
+@@ -1671,7 +1671,7 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
  	}
- }
+ 
+ 	/*TODO: Update dbgfs with ISR error stats obtained below */
+-	iwl_read_targ_mem_words(trans, base, &table, sizeof(table));
++	iwl_read_targ_mem_bytes(trans, base, &table, sizeof(table));
+ 
+ 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
+ 		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 4a9a45f..45a59c9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -79,7 +79,7 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask);
+ void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 			      void *buf, int words);
+ 
+-#define iwl_read_targ_mem_words(trans, addr, buf, bufsize)	\
++#define iwl_read_targ_mem_bytes(trans, addr, buf, bufsize)	\
+ 	do {							\
+ 		BUILD_BUG_ON((bufsize) % sizeof(u32));		\
+ 		_iwl_read_targ_mem_words(trans, addr, buf,	\
 -- 
-1.7.0.4
+1.7.10
 
