@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:56285 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932193Ab2FOP1J (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:61981 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515Ab2FKVq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 11:27:09 -0400
-Received: by wgbdr13 with SMTP id dr13so3233367wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 08:27:08 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	xose.vazquez@gmail.com
-Subject: [PATCH] wireless: rtl818x: rtl8180 add devices ids
-Date: Fri, 15 Jun 2012 17:27:05 +0200
-Message-Id: <1339774025-16246-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120615_172714_011032_8C7C28EB)
+	Mon, 11 Jun 2012 17:46:27 -0400
+Received: by weyu7 with SMTP id u7so2403515wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 14:46:26 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: mcgrof@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH] bin/ckmake: Drop Ubuntu check
+Date: Tue, 12 Jun 2012 00:46:19 +0300
+Message-Id: <1339451179-21171-1-git-send-email-ozancag@gmail.com> (sfid-20120611_234630_584397_A53F847B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-from windows driver:
-0x1186, 0x3301 D-Link Air DWL-510 Wireless PCI Adapter
-0x1432, 0x7106 LevelOne WPC-0101 11Mbps Wireless PCMCIA CardBus Adapter
+Don't check for distribution as it is now possible to use ckmake
+on every distribution.
 
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 ---
- drivers/net/wireless/rtl818x/rtl8180/dev.c |    2 ++
- 1 file changed, 2 insertions(+)
+ bin/ckmake |   15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index 2bebcb7..3b50539 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -47,6 +47,8 @@ static DEFINE_PCI_DEVICE_TABLE(rtl8180_table) = {
- 	{ PCI_DEVICE(0x1799, 0x6001) },
- 	{ PCI_DEVICE(0x1799, 0x6020) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_DLINK, 0x3300) },
-+	{ PCI_DEVICE(0x1186, 0x3301) },
-+	{ PCI_DEVICE(0x1432, 0x7106) },
- 	{ }
- };
+diff --git a/bin/ckmake b/bin/ckmake
+index 2d422af..9956cf1 100755
+--- a/bin/ckmake
++++ b/bin/ckmake
+@@ -31,18 +31,9 @@ ARGS=""
  
+ RET=""
+ 
+-LSB_RED_ID=$(/usr/bin/lsb_release -i -s)
+-case $LSB_RED_ID in
+-"Ubuntu")
+-	for i in $(find /lib/modules/ -type d -name \*generic\* | sort -n -r | grep -v -E '\-[[:alnum:]]{1,2}\-'); do
+-		KLIBS="$KLIBS $i"
+-	done
+-	;;
+-*)
+-	echo -e "Unsupported distribution"
+-	exit
+-	;;
+-esac
++for i in $(find /lib/modules/ -type d -name \*generic\* | sort -n -r | grep -v -E '\-[[:alnum:]]{1,2}\-'); do
++	KLIBS="$KLIBS $i"
++done
+ 
+ function tee_color_split()
+ {
 -- 
 1.7.10.2
 
