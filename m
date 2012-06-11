@@ -1,140 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58298 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760006Ab2FDK7o (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44337 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876Ab2FKRXk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:59:44 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38108.548476.991534@gargle.gargle.HOWL> (sfid-20120604_132059_153682_F191F0A2)
-Date: Mon, 4 Jun 2012 16:28:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 17/20] ath9k: BT coex performance tuning for AR9462
+	Mon, 11 Jun 2012 13:23:40 -0400
+Received: by pbbrp8 with SMTP id rp8so5863679pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 10:23:39 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	rdunlap@xenotime.net, devel@lists.open80211s.org,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH] mac80211: add missing kernel-doc
+Date: Mon, 11 Jun 2012 10:23:35 -0700
+Message-Id: <1339435415-9417-1-git-send-email-ashok@cozybit.com> (sfid-20120611_192343_428787_BBACA51F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Add a few kernel-doc descriptions that were missed
+during mesh development.
 
-Use smaller aggregation limit and increasing aggregation threshold
-for osla that could improve wlan performance when there is HID profile.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Reported-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |    3 --
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 -
- drivers/net/wireless/ath/ath9k/mci.c        |   54 +++++++++++++++++----------
- 3 files changed, 35 insertions(+), 23 deletions(-)
+ net/mac80211/sta_info.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 8b09a82..b1ced2a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1381,9 +1381,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 	case MCI_STATE_NEED_FTP_STOMP:
- 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
- 		break;
--	case MCI_STATE_NEED_TUNING:
--		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_TUNING);
--		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index f4a6a44..10282e2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -212,7 +212,6 @@ enum mci_state_type {
- 	MCI_STATE_SET_CONCUR_TX_PRI,
- 	MCI_STATE_RECOVER_RX,
- 	MCI_STATE_NEED_FTP_STOMP,
--	MCI_STATE_NEED_TUNING,
- 	MCI_STATE_DEBUG,
- 	MCI_STATE_MAX
- };
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 7b553f6..49137f4 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -116,42 +116,58 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_mci_profile *mci = &btcoex->mci;
-+	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
- 	struct ath_mci_profile_info *info;
- 	u32 num_profile = NUM_PROF(mci);
- 
-+	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
-+		goto skip_tuning;
-+
- 	if (num_profile == 1) {
- 		info = list_first_entry(&mci->info,
- 					struct ath_mci_profile_info,
- 					list);
--		if (mci->num_sco && info->T == 12) {
--			mci->aggr_limit = 8;
-+		if (mci->num_sco) {
-+			if (info->T == 12)
-+				mci->aggr_limit = 8;
-+			else if (info->T == 6) {
-+				mci->aggr_limit = 6;
-+				btcoex->duty_cycle = 30;
-+			}
- 			ath_dbg(common, MCI,
--				"Single SCO, aggregation limit 2 ms\n");
--		} else if ((info->type == MCI_GPM_COEX_PROFILE_BNEP) &&
--			   !info->master) {
--			btcoex->btcoex_period = 60;
-+				"Single SCO, aggregation limit %d 1/4 ms\n",
-+				mci->aggr_limit);
-+		} else if (mci->num_pan || mci->num_other_acl) {
-+			/*
-+			 * For single PAN/FTP profile, allocate 35% for BT
-+			 * to improve WLAN throughput.
-+			 */
-+			btcoex->duty_cycle = 35;
-+			btcoex->btcoex_period = 53;
- 			ath_dbg(common, MCI,
--				"Single slave PAN/FTP, bt period 60 ms\n");
--		} else if ((info->type == MCI_GPM_COEX_PROFILE_HID) &&
--			 (info->T > 0 && info->T < 50) &&
--			 (info->A > 1 || info->W > 1)) {
-+				"Single PAN/FTP bt period %d ms dutycycle %d\n",
-+				btcoex->duty_cycle, btcoex->btcoex_period);
-+		} else if (mci->num_hid) {
- 			btcoex->duty_cycle = 30;
--			mci->aggr_limit = 8;
-+			mci->aggr_limit = 6;
- 			ath_dbg(common, MCI,
- 				"Multiple attempt/timeout single HID "
--				"aggregation limit 2 ms dutycycle 30%%\n");
-+				"aggregation limit 1.5 ms dutycycle 30%%\n");
- 		}
--	} else if ((num_profile == 2) && (mci->num_hid == 2)) {
--		btcoex->duty_cycle = 30;
--		mci->aggr_limit = 8;
--		ath_dbg(common, MCI,
--			"Two HIDs aggregation limit 2 ms dutycycle 30%%\n");
--	} else if (num_profile > 3) {
-+	} else if (num_profile == 2) {
-+		if (mci->num_hid == 2)
-+			btcoex->duty_cycle = 30;
- 		mci->aggr_limit = 6;
- 		ath_dbg(common, MCI,
--			"Three or more profiles aggregation limit 1.5 ms\n");
-+			"Two BT profiles aggr limit 1.5 ms dutycycle %d%%\n",
-+			btcoex->duty_cycle);
-+	} else if (num_profile >= 3) {
-+		mci->aggr_limit = 4;
-+		ath_dbg(common, MCI,
-+			"Three or more profiles aggregation limit 1 ms\n");
- 	}
- 
-+skip_tuning:
- 	if (IS_CHAN_2GHZ(sc->sc_ah->curchan)) {
- 		if (IS_CHAN_HT(sc->sc_ah->curchan))
- 			ath_mci_adjust_aggr_limit(btcoex);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 3bb24a1..672d9c6 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -271,6 +271,9 @@ struct sta_ampdu_mlme {
+  * @plink_timer: peer link watch timer
+  * @plink_timer_was_running: used by suspend/resume to restore timers
+  * @t_offset: timing offset relative to this host
++ * @t_offset_setpoint: reference timing offset of this sta to be used when
++ * 	calculating clockdrift
++ * @ch_type: peer's channel type
+  * @debugfs: debug filesystem info
+  * @dead: set to true when sta is unlinked
+  * @uploaded: set to true when sta is uploaded to the driver
 -- 
-1.7.10.3
+1.7.5.4
 
