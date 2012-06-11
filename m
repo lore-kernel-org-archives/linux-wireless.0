@@ -1,135 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42277 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965392Ab2FAQPz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 12:15:55 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 07/10] brcm80211: smac: enable/disable radio on regulatory updates
-Date: Fri,  1 Jun 2012 11:15:33 -0500
-Message-Id: <1338567336-12076-8-git-send-email-seth.forshee@canonical.com> (sfid-20120601_181611_008333_8290F1E9)
-In-Reply-To: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
-References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
+Received: from mga11.intel.com ([192.55.52.93]:50591 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753883Ab2FKPJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 11:09:29 -0400
+Date: Mon, 11 Jun 2012 17:20:07 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Sasha Levin <levinsasha928@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	Dave Jones <davej@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
+Message-ID: <20120611152007.GZ22557@sortiz-mobl> (sfid-20120611_170949_264448_F2622D89)
+References: <1339423241.4999.53.camel@lappy>
+ <20120611144134.GX22557@sortiz-mobl>
+ <1339425693.6001.2268.camel@edumazet-glaptop>
+ <20120611145700.GY22557@sortiz-mobl>
+ <1339426778.6001.2312.camel@edumazet-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1339426778.6001.2312.camel@edumazet-glaptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the radio disable state is only updated during initialization,
-and it's only checked against the internal world domain. This is
-unnecessary, as there are always valid channels against this domain.
-Instead, check whether any channels are enabled in the regulatory
-notifier and update the radio state accordingly.
+On Mon, Jun 11, 2012 at 04:59:38PM +0200, Eric Dumazet wrote:
+> On Mon, 2012-06-11 at 16:57 +0200, Samuel Ortiz wrote:
+> > Hi Eric,
+> > 
+> > On Mon, Jun 11, 2012 at 04:41:33PM +0200, Eric Dumazet wrote:
+> > > On Mon, 2012-06-11 at 16:41 +0200, Samuel Ortiz wrote:
+> > > > Hi Sasha,
+> > > > 
+> > > > On Mon, Jun 11, 2012 at 04:00:41PM +0200, Sasha Levin wrote:
+> > > > > Hi all,
+> > > > > 
+> > > > > I've stumbled on the following while fuzzing with trinity inside a KVM tools guest, running on 3.5-rc2:
+> > > > > 
+> > > > Thanks for the report, it could be worth adding this one to
+> > > > bugzilla.kernel.org.
+> > > > 
+> > > > What's trinity ?
+> > > > Also, if this one is reproducible, would you mind sharing some details about
+> > > > how we could reproduce it ?
+> > > 
+> > > Well, bugfix should be trivial enough ;)
+> > Yep, I looked at the code only after looking at Sasha's report.
+> > 
+> > Thanks for the patch, do you mind if I add your SOB to it ?
+> 
+> I would prefer making sure it fixes the bug first ;)
+Sure, although your patch makes sense regardless of that :)
+I'll still wait for Sasha to confirm that it fixes his crash.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   67 ++++++++-------------
- 1 file changed, 26 insertions(+), 41 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 56089d1..9dbc1dd 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -677,46 +677,6 @@ brcms_c_channel_min_txpower_limits_with_local_constraint(
- 
- }
- 
--/* Update the radio state (enable/disable) and tx power targets
-- * based on a new set of channel/regulatory information
-- */
--static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
--{
--	struct brcms_c_info *wlc = wlc_cm->wlc;
--	uint chan;
--
--	/* search for the existence of any valid channel */
--	for (chan = 0; chan < MAXCHANNEL; chan++) {
--		if (brcms_c_valid_channel20_db(wlc->cmi, chan))
--			break;
--	}
--	if (chan == MAXCHANNEL)
--		chan = INVCHANNEL;
--
--	/*
--	 * based on the channel search above, set or
--	 * clear WL_RADIO_COUNTRY_DISABLE.
--	 */
--	if (chan == INVCHANNEL) {
--		/*
--		 * country/locale with no valid channels, set
--		 * the radio disable bit
--		 */
--		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
--		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\" "
--			  "nbands %d bandlocked %d\n", wlc->pub->unit,
--			  __func__, wlc_cm->world_regd->regdomain->alpha2,
--			  wlc->pub->_nbands, wlc->bandlocked);
--	} else if (mboolisset(wlc->pub->radio_disabled,
--			      WL_RADIO_COUNTRY_DISABLE)) {
--		/*
--		 * country/locale with valid channel, clear
--		 * the radio disable bit
--		 */
--		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
--	}
--}
--
- static int
- brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 		      const struct country_info *country)
-@@ -762,7 +722,6 @@ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 	}
- 
- 	brcms_c_quiet_channels_reset(wlc_cm);
--	brcms_c_channels_commit(wlc_cm);
- 
- 	return 0;
- }
-@@ -1202,10 +1161,36 @@ static int brcms_reg_notifier(struct wiphy *wiphy,
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct brcms_info *wl = hw->priv;
- 	struct brcms_c_info *wlc = wl->wlc;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *ch;
-+	int band, i;
-+	bool ch_found = false;
- 
- 	if (request && request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
- 		brcms_reg_apply_beaconing_flags(wiphy, request->initiator);
- 
-+	/* Disable radio if all channels disallowed by regulatory */
-+	for (band = 0; !ch_found && band < IEEE80211_NUM_BANDS; band++) {
-+		sband = wiphy->bands[band];
-+		if (!sband)
-+			continue;
-+
-+		for (i = 0; !ch_found && i < sband->n_channels; i++) {
-+			ch = &sband->channels[i];
-+
-+			if (!(ch->flags & IEEE80211_CHAN_DISABLED))
-+				ch_found = true;
-+		}
-+	}
-+
-+	if (likely(ch_found)) {
-+		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-+	} else {
-+		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-+		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\"\n",
-+			  wlc->pub->unit, __func__, request->alpha2);
-+	}
-+
- 	if (wlc->pub->_nbands > 1 || wlc->band->bandtype == BRCM_BAND_2G)
- 		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
- 					brcms_c_japan_ccode(request->alpha2));
 -- 
-1.7.9.5
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
