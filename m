@@ -1,136 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:54258 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756524Ab2FZMha (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:37:30 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Kazior Michal <Michal.Kazior@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v3 6/7] mac80211: refactor set_channel_type
-Date: Tue, 26 Jun 2012 14:37:21 +0200
-Message-ID: <1340714242-20032-7-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143734_731336_AFABBE17)
-In-Reply-To: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
-References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55888 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830Ab2FKEtp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 00:49:45 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20437.30884.885802.512693@gargle.gargle.HOWL> (sfid-20120611_064948_822391_224E6372)
+Date: Mon, 11 Jun 2012 10:18:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k_hw: Update initvals for AR9462
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kazior Michal <Michal.Kazior@tieto.com>
+Adjust quick_drop value in the baseband AGC register to
+improve RX in HT20 mode.
 
-Split functionality for further reuse.
-
-Will prevent code duplication when channel context
-channel_type merging is introduced.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/chan.c |   57 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 38 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 1aa553d..fe1ea01 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -69,16 +69,14 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
- 	return mode;
- }
- 
--bool ieee80211_set_channel_type(struct ieee80211_local *local,
--				struct ieee80211_sub_if_data *sdata,
--				enum nl80211_channel_type chantype)
-+static enum nl80211_channel_type
-+ieee80211_get_superchan(struct ieee80211_local *local,
-+			struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_sub_if_data *tmp;
- 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
--	bool result;
-+	struct ieee80211_sub_if_data *tmp;
- 
- 	mutex_lock(&local->iflist_mtx);
--
- 	list_for_each_entry(tmp, &local->interfaces, list) {
- 		if (tmp == sdata)
- 			continue;
-@@ -104,41 +102,62 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 			break;
- 		}
- 	}
-+	mutex_unlock(&local->iflist_mtx);
-+
-+	return superchan;
-+}
- 
--	switch (superchan) {
-+static bool
-+ieee80211_channel_types_are_compatible(enum nl80211_channel_type chantype1,
-+				       enum nl80211_channel_type chantype2,
-+				       enum nl80211_channel_type *compat)
-+{
-+	switch (chantype1) {
- 	case NL80211_CHAN_NO_HT:
- 	case NL80211_CHAN_HT20:
- 		/*
- 		 * allow any change that doesn't go to no-HT
- 		 * (if it already is no-HT no change is needed)
- 		 */
--		if (chantype == NL80211_CHAN_NO_HT)
-+		if (chantype2 == NL80211_CHAN_NO_HT)
- 			break;
--		superchan = chantype;
-+		*compat = chantype2;
- 		break;
- 	case NL80211_CHAN_HT40PLUS:
- 	case NL80211_CHAN_HT40MINUS:
-+		*compat = chantype1;
- 		/* allow smaller bandwidth and same */
--		if (chantype == NL80211_CHAN_NO_HT)
-+		if (chantype2 == NL80211_CHAN_NO_HT)
- 			break;
--		if (chantype == NL80211_CHAN_HT20)
-+		if (chantype2 == NL80211_CHAN_HT20)
- 			break;
--		if (superchan == chantype)
-+		if (chantype2 == chantype1)
- 			break;
--		result = false;
--		goto out;
-+		return false;
- 	}
- 
--	local->_oper_channel_type = superchan;
-+	return true;
-+}
-+
-+bool ieee80211_set_channel_type(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				enum nl80211_channel_type chantype)
-+{
-+	enum nl80211_channel_type superchan;
-+	enum nl80211_channel_type compatchan = NL80211_CHAN_NO_HT;
-+
-+	superchan = ieee80211_get_superchan(local, sdata);
-+	if (!ieee80211_channel_types_are_compatible(superchan, chantype,
-+						    &compatchan))
-+		return false;
-+
-+	local->_oper_channel_type = compatchan;
- 
- 	if (sdata)
- 		sdata->vif.bss_conf.channel_type = chantype;
- 
--	result = true;
-- out:
--	mutex_unlock(&local->iflist_mtx);
-+	return true;
- 
--	return result;
- }
- 
- static struct ieee80211_chanctx *
+diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+index 4a93e15..8f406ff 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+@@ -52,7 +52,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
+ 	{0x00009e04, 0x001c2020, 0x001c2020, 0x001c2020, 0x001c2020},
+ 	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000d8},
+ 	{0x00009e10, 0x92c88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x7ec86d2e},
+-	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3376605e, 0x33795d5e},
++	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3376605e, 0x32395d5e},
+ 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
 -- 
-1.7.0.4
+1.7.10.4
 
