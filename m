@@ -1,76 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55635 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933341Ab2FBRpm (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22244 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab2FKGsX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 13:45:42 -0400
-Message-ID: <1338659135.12823.3.camel@jlt3.sipsolutions.net> (sfid-20120602_194546_516403_30F52500)
-Subject: Re: [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, stable@vger.kernel.org,
+	Mon, 11 Jun 2012 02:48:23 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
 	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Date: Sat, 02 Jun 2012 19:45:35 +0200
-In-Reply-To: <4FCA30DE.4080805@qca.qualcomm.com>
-References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>
-			 (sfid-20120601_083956_399882_A3D65832) <1338533070.4884.4.camel@jlt3.sipsolutions.net>
-		 <4FC86AB4.9020602@qca.qualcomm.com>
-	 <1338534832.4884.7.camel@jlt3.sipsolutions.net>
-	 <4FCA30DE.4080805@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: [PATCH v2 1/9] ath9k: choose legacy rate as last rate of MRR series
+Date: Mon, 11 Jun 2012 12:19:29 +0530
+Message-ID: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_084827_543379_D5A7BBAF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+Choose legacy rate as the last rate of Multi Rate Retry series
+if and only if the last selected rate is MCS and having higher
+PER rate. The current code fills a legacy rate as last one even
+though the previous rates in the series are having good PER value.
+This could limit the aggregation that affects the uplink performance.
 
-> >>> You could just remove the entire check since the interface combinations
-> >>> you advertise don't allow it, I think? Or just fix those
-> >>> combinations :-)
-> >>
-> >> i did not check this before, thanks a lot for your inputs. will send a
-> >> proper v2 after checking this out.
-> >
-> > If this is needed for stable, you might want to keep this patch&  send
-> > another one to remove it.
-> 
-> thanks Johannes.
-> i was looking at how to fix this properly in iface combination 
-> advertised to mac80211.  got few doubts regarding this
-> 
-> *if an interface type is not all advertised in the 
-> ieee80211_iface_combination then it cannot it be co-existing with any 
-> other interfaces ?
-> please let me know is there some other way do that.
-> 
-> if we advertise something like this
-> 
-> static const struct ieee80211_iface_limit if_limits[] = {
-> 	{set1
->      	.... },
-> 	{set 2
-> 	.... },
-> };
-> 
-> then interface types in set1 and set2 co-exist as per the logic in 
-> cfg80211_can_change_interface. is there already a way we can make
-> set1 and set2 interface types mutually exclusive ? thanks!
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-The sets are mutually exclusive, and there are implied sets of each
-interface with a max number of 1. So for example, in iwlwifi we don't
-advertise IBSS in the combinations at all, because it's not compatible
-with anything. In your case, I think the same applies, since you said
-        
-        if the first interface is ADHOC we cannot have any other
-        interface. we cannot add an ADHOC interface if there is already
-        an interface is present
-
-Thus, if you leave IBSS out of the combinations you should get the
-desired behaviour of not being able to combine IBSS with any other
-types.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 92a6c0a..e034add 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -770,7 +770,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	struct ieee80211_tx_rate *rates = tx_info->control.rates;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	__le16 fc = hdr->frame_control;
+-	u8 try_per_rate, i = 0, rix, high_rix;
++	u8 try_per_rate, i = 0, rix;
+ 	int is_probe = 0;
+ 
+ 	if (rate_control_send_low(sta, priv_sta, txrc))
+@@ -791,7 +791,6 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	rate_table = ath_rc_priv->rate_table;
+ 	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
+ 				     &is_probe, false);
+-	high_rix = rix;
+ 
+ 	/*
+ 	 * If we're in HT mode and both us and our peer supports LDPC.
+@@ -839,16 +838,16 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	try_per_rate = 8;
+ 
+ 	/*
+-	 * Use a legacy rate as last retry to ensure that the frame
+-	 * is tried in both MCS and legacy rates.
++	 * If the last rate in the rate series is MCS and has
++	 * more than 80% of per thresh, then use a legacy rate
++	 * as last retry to ensure that the frame is tried in both
++	 * MCS and legacy rate.
+ 	 */
+-	if ((rates[2].flags & IEEE80211_TX_RC_MCS) &&
+-	    (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU) ||
+-	    (ath_rc_priv->per[high_rix] > 45)))
++	ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
++	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy) &&
++	    (ath_rc_priv->per[rix] > 45))
+ 		rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
+ 				&is_probe, true);
+-	else
+-		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
+ 
+ 	/* All other rates in the series have RTS enabled */
+ 	ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+-- 
+1.7.10.4
 
