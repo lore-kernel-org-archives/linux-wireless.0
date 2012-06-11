@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35883 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751885Ab2FEVz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 17:55:29 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/8] bcma: add PCI ID for BCM43224
-Date: Tue,  5 Jun 2012 23:55:03 +0200
-Message-Id: <1338933307-13446-5-git-send-email-hauke@hauke-m.de> (sfid-20120605_235532_423270_79277B9A)
-In-Reply-To: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
-References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:37063 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab2FKTtk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 15:49:40 -0400
+Received: by obbtb18 with SMTP id tb18so7161118obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 12:49:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1338418510-4970-1-git-send-email-hauke@hauke-m.de>
+References: <1338418510-4970-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 11 Jun 2012 12:49:19 -0700
+Message-ID: <CAB=NE6WRP74gu8itYmWoKLrptRpJ879-psKrsrXwpdDpZwiOQg@mail.gmail.com> (sfid-20120611_214943_705306_0FC07D0E)
+Subject: Re: [PATCH] compat-wireless: fix syntax error introduced recently
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This ID was found on the PCIe wireless card on the board of a Netgear
-WNDR3400 using a bcm4716. The device with this ID is identified by b43
-as "Broadcom 43224 WLAN".
+On Wed, May 30, 2012 at 3:55 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> A closing parenthesis was accentually removed in this commit:
+> ommit 86596a46269e9b317ef3ee92f21453320d855018
+> Author: Luis R. Rodriguez <mcgrof@frijolero.org>
+> Date:   Tue May 29 12:50:42 2012 -0700
+>
+>    compat-wireless: fix patches/24-pcmcia.patch for next-20120524
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/host_pci.c |    1 +
- 1 file changed, 1 insertion(+)
+Applied and pushed, thanks!
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index f7fbae7..747efb7 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -269,6 +269,7 @@ static SIMPLE_DEV_PM_OPS(bcma_pm_ops, bcma_host_pci_suspend,
- 
- static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x0576) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43224) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
--- 
-1.7.9.5
-
+  Luis
