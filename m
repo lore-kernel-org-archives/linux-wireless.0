@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40195 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:48543 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505Ab2FIIrB (ORCPT
+	with ESMTP id S1751806Ab2FKJyQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 04:47:01 -0400
-Message-ID: <1339231619.4539.32.camel@jlt3.sipsolutions.net> (sfid-20120609_104706_623046_299144F9)
-Subject: Re: [PATCH v2 4/4] mac80211: invoke the timer only with correct
- dot11MeshHWMPRootMode value
+	Mon, 11 Jun 2012 05:54:16 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Date: Sat, 09 Jun 2012 10:46:59 +0200
-In-Reply-To: <1339043963-2043-5-git-send-email-yeohchunyeow@gmail.com> (sfid-20120607_063956_923873_CB0AB0B8)
-References: <1339043963-2043-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1339043963-2043-5-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20120607_063956_923873_CB0AB0B8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH 12/13] iwlwifi: turn on a lockdep assertion
+Date: Mon, 11 Jun 2012 11:53:11 +0200
+Message-Id: <1339408392-19425-13-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115424_237343_5EFC5B2A)
+In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-07 at 12:39 +0800, Chun-Yeow Yeoh wrote:
-> mesh_path_root_timer is invoked once the dot11MeshHWMPRootMode is larger than 1. This patch
-> also adds the backward compatible to the previous setting on dot11MeshHWMPRootMode. If the
-> user configures as follow, it will still trigger the proactive RANN with Gate Announcement.
-> 
-> iw mesh0 set mesh_param mesh_hwmp_rootmode 1
-> iw mesh0 set mesh_param mesh_gate_announcements 1
-> 
-> similar to the following setting:
-> 
-> iw mesh0 set mesh_param mesh_hwmp_rootmode 4
-> iw mesh0 set mesh_param mesh_gate_announcements 1
-> 
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
-> v2: use constant for dot11MeshHWMPRootMode assignment (Johannes)
-> 
->  net/mac80211/cfg.c  |    4 ++--
->  net/mac80211/mesh.c |    2 +-
->  2 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 38e743f..85c6601 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1564,8 +1564,8 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
->  		 * announcements, so require this ifmsh to also be a root node
->  		 * */
->  		if (nconf->dot11MeshGateAnnouncementProtocol &&
-> -		    !conf->dot11MeshHWMPRootMode) {
-> -			conf->dot11MeshHWMPRootMode = 1;
-> +		    !(conf->dot11MeshHWMPRootMode > 1)) {
-> +			conf->dot11MeshHWMPRootMode = IEEE80211_PROACTIVE_RANN;
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-so, humm, there's still the same constant here.
+CMD_SYNC is zero so the if (cmd->flags & CMD_SYNC) is never true and we
+never check the assertion.
 
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/lib.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> -	if (ifmsh->mshcfg.dot11MeshHWMPRootMode)
-> +	if (ifmsh->mshcfg.dot11MeshHWMPRootMode > 1)
-
-and here.
-
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/dvm/lib.c b/drivers/net/wireless/iwlwifi/dvm/lib.c
+index cb1ca7a..76f2592 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/lib.c
++++ b/drivers/net/wireless/iwlwifi/dvm/lib.c
+@@ -1265,7 +1265,7 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	 * the mutex, this ensures we don't try to send two
+ 	 * (or more) synchronous commands at a time.
+ 	 */
+-	if (cmd->flags & CMD_SYNC)
++	if (!(cmd->flags & CMD_ASYNC))
+ 		lockdep_assert_held(&priv->mutex);
+ 
+ 	if (priv->ucode_owner == IWL_OWNERSHIP_TM &&
+-- 
+1.7.10
 
