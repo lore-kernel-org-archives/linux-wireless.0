@@ -1,66 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:44606 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994Ab2FFXTz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48527 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616Ab2FKJxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 19:19:55 -0400
-Received: by dady13 with SMTP id y13so2117dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 16:19:54 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 4/5] mac80211: Rename stainfo variable for the more common sta
-Date: Wed,  6 Jun 2012 16:19:34 -0700
-Message-Id: <1339024775-15405-5-git-send-email-jason@cozybit.com> (sfid-20120607_011958_938841_87654B96)
-In-Reply-To: <1339024775-15405-1-git-send-email-jason@cozybit.com>
-References: <1339024775-15405-1-git-send-email-jason@cozybit.com>
+	Mon, 11 Jun 2012 05:53:33 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/13] iwlwifi: iwl_{read,write}_targ_mem_words takes dwords
+Date: Mon, 11 Jun 2012 11:53:04 +0200
+Message-Id: <1339408392-19425-6-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115340_774060_1C4F35F2)
+In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Change its name to better reflect this.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh_hwmp.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-io.c       |   20 ++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-io.h       |   12 ++++++------
+ drivers/net/wireless/iwlwifi/iwl-test.c     |    8 ++++----
+ 4 files changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 8fb3e59..22b327a 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -303,7 +303,7 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- }
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index f60be39..7f49526 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -473,7 +473,7 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
+ 			}
  
- void ieee80211s_update_metric(struct ieee80211_local *local,
--		struct sta_info *stainfo, struct sk_buff *skb)
-+		struct sta_info *sta, struct sk_buff *skb)
+ 			if (priv->wowlan_sram)
+-				_iwl_read_targ_mem_words(
++				_iwl_read_targ_mem_dwords(
+ 				      priv->trans, 0x800000,
+ 				      priv->wowlan_sram,
+ 				      img->sec[IWL_UCODE_SECTION_DATA].len / 4);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index 5f2df70..66c8733 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -298,8 +298,8 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask)
+ }
+ EXPORT_SYMBOL_GPL(iwl_clear_bits_prph);
+ 
+-void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+-			      void *buf, int words)
++void _iwl_read_targ_mem_dwords(struct iwl_trans *trans, u32 addr,
++			       void *buf, int dwords)
  {
- 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -317,16 +317,16 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
- 
- 	/* moving average, scaled to 100 */
--	stainfo->fail_avg = ((80 * stainfo->fail_avg + 5) / 100 + 20 * failed);
--	if (stainfo->fail_avg > 95)
--		mesh_plink_broken(stainfo);
-+	sta->fail_avg = ((80 * sta->fail_avg + 5) / 100 + 20 * failed);
-+	if (sta->fail_avg > 95)
-+		mesh_plink_broken(sta);
- 
--	sta_set_rate_info_tx(stainfo, &stainfo->last_tx_rate, &rinfo);
-+	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
- 	rate = cfg80211_calculate_bitrate(&rinfo);
- 	if (WARN_ON(!rate))
- 		return;
- 
--	ewma_add(&stainfo->avg_rate, rate);
-+	ewma_add(&sta->avg_rate, rate);
- 	return;
+ 	unsigned long flags;
+ 	int offs;
+@@ -308,26 +308,26 @@ void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+ 	if (likely(iwl_grab_nic_access(trans))) {
+ 		iwl_write32(trans, HBUS_TARG_MEM_RADDR, addr);
+-		for (offs = 0; offs < words; offs++)
++		for (offs = 0; offs < dwords; offs++)
+ 			vals[offs] = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
+ 		iwl_release_nic_access(trans);
+ 	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
  }
+-EXPORT_SYMBOL_GPL(_iwl_read_targ_mem_words);
++EXPORT_SYMBOL_GPL(_iwl_read_targ_mem_dwords);
  
+ u32 iwl_read_targ_mem(struct iwl_trans *trans, u32 addr)
+ {
+ 	u32 value;
+ 
+-	_iwl_read_targ_mem_words(trans, addr, &value, 1);
++	_iwl_read_targ_mem_dwords(trans, addr, &value, 1);
+ 
+ 	return value;
+ }
+ EXPORT_SYMBOL_GPL(iwl_read_targ_mem);
+ 
+-int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+-				void *buf, int words)
++int _iwl_write_targ_mem_dwords(struct iwl_trans *trans, u32 addr,
++			       void *buf, int dwords)
+ {
+ 	unsigned long flags;
+ 	int offs, result = 0;
+@@ -336,7 +336,7 @@ int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+ 	if (likely(iwl_grab_nic_access(trans))) {
+ 		iwl_write32(trans, HBUS_TARG_MEM_WADDR, addr);
+-		for (offs = 0; offs < words; offs++)
++		for (offs = 0; offs < dwords; offs++)
+ 			iwl_write32(trans, HBUS_TARG_MEM_WDAT, vals[offs]);
+ 		iwl_release_nic_access(trans);
+ 	} else
+@@ -345,10 +345,10 @@ int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 
+ 	return result;
+ }
+-EXPORT_SYMBOL_GPL(_iwl_write_targ_mem_words);
++EXPORT_SYMBOL_GPL(_iwl_write_targ_mem_dwords);
+ 
+ int iwl_write_targ_mem(struct iwl_trans *trans, u32 addr, u32 val)
+ {
+-	return _iwl_write_targ_mem_words(trans, addr, &val, 1);
++	return _iwl_write_targ_mem_dwords(trans, addr, &val, 1);
+ }
+ EXPORT_SYMBOL_GPL(iwl_write_targ_mem);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 45a59c9..50d3819 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -76,18 +76,18 @@ void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 reg,
+ 			    u32 bits, u32 mask);
+ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask);
+ 
+-void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+-			      void *buf, int words);
++void _iwl_read_targ_mem_dwords(struct iwl_trans *trans, u32 addr,
++			       void *buf, int dwords);
+ 
+ #define iwl_read_targ_mem_bytes(trans, addr, buf, bufsize)	\
+ 	do {							\
+ 		BUILD_BUG_ON((bufsize) % sizeof(u32));		\
+-		_iwl_read_targ_mem_words(trans, addr, buf,	\
+-					 (bufsize) / sizeof(u32));\
++		_iwl_read_targ_mem_dwords(trans, addr, buf,	\
++					  (bufsize) / sizeof(u32));\
+ 	} while (0)
+ 
+-int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+-			      void *buf, int words);
++int _iwl_write_targ_mem_dwords(struct iwl_trans *trans, u32 addr,
++			       void *buf, int dwords);
+ 
+ u32 iwl_read_targ_mem(struct iwl_trans *trans, u32 addr);
+ int iwl_write_targ_mem(struct iwl_trans *trans, u32 addr, u32 val);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-test.c b/drivers/net/wireless/iwlwifi/iwl-test.c
+index 7a264ae..81e8c71 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-test.c
++++ b/drivers/net/wireless/iwlwifi/iwl-test.c
+@@ -476,9 +476,9 @@ static int iwl_test_indirect_read(struct iwl_test *tst, u32 addr, u32 size)
+ 			iwl_release_nic_access(trans);
+ 			spin_unlock_irqrestore(&trans->reg_lock, flags);
+ 	} else { /* target memory (SRAM) */
+-		_iwl_read_targ_mem_words(trans, addr,
+-					 tst->mem.addr,
+-					 tst->mem.size / 4);
++		_iwl_read_targ_mem_dwords(trans, addr,
++					  tst->mem.addr,
++					  tst->mem.size / 4);
+ 	}
+ 
+ 	tst->mem.nchunks =
+@@ -522,7 +522,7 @@ static int iwl_test_indirect_write(struct iwl_test *tst, u32 addr,
+ 						       *(u32 *)(buf+i));
+ 			}
+ 	} else if (iwl_test_valid_hw_addr(tst, addr)) {
+-		_iwl_write_targ_mem_words(trans, addr, buf, size/4);
++		_iwl_write_targ_mem_dwords(trans, addr, buf, size / 4);
+ 	} else {
+ 		return -EINVAL;
+ 	}
 -- 
-1.7.9.5
+1.7.10
 
