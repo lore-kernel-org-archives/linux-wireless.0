@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:56068 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62672 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761242Ab2FGSx1 (ORCPT
+	with ESMTP id S1751456Ab2FKSDx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 14:53:27 -0400
-Message-ID: <4FD0F8A0.3000704@qca.qualcomm.com> (sfid-20120607_205345_315518_D8636841)
-Date: Thu, 7 Jun 2012 21:53:20 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 11 Jun 2012 14:03:53 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 2/2] ath9k: fix btcoex duty cycle
+Date: Mon, 11 Jun 2012 23:34:05 +0530
+Message-ID: <1339437845-4055-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_200356_728548_D5E0888C)
+In-Reply-To: <1339437845-4055-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339437845-4055-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<ath6kl-devel@qualcomm.com>
-Subject: Re: [RFC 1/2] nl80211: specify RSSI threshold when scanning
-References: <1339036996-6199-1-git-send-email-c_tpeder@qca.qualcomm.com> <4FD0570D.50303@qca.qualcomm.com> <20120607183820.GA2950@pista>
-In-Reply-To: <20120607183820.GA2950@pista>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 09:38 PM, Pedersen, Thomas wrote:
->>> +	WIPHY_FLAG_SUPPORTS_RSSI_SCAN		= BIT(22),
->>> > >  };
->> > 
->> > Is this flag really needed? For me this looks like an optimisation more
->> > than a functional change. If the driver supports this, that's great and
->> > we can save some power. But if the driver does not support it does it
->> > really make any difference for the user space? Would user space act
->> > differently if this feature is not supported by the driver?
->
-> Well, this allows cfg80211 to return an error if this feature is
-> requested but not supported by the driver / fw.
+* Reset duty cycle before updating btcoex scheme. Otherwise duty cycle
+  reaches max limit and never be reduced again
+* Adjust duty cycle with proper BDR profile value
 
-But do we want to return an error when the driver doesn't support this?
-I was thinking that driver should just ignore the attribute in that case
-and let user space filter the results.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mci.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Kalle
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index e53df86..5246067 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -120,6 +120,9 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
+ 		goto skip_tuning;
+ 
++	btcoex->duty_cycle = num_profile ? ath_mci_duty_cycle[num_profile] :
++					   ATH_BTCOEX_DEF_DUTY_CYCLE;
++
+ 	if (num_profile == 1) {
+ 		info = list_first_entry(&mci->info,
+ 					struct ath_mci_profile_info,
+@@ -178,7 +181,7 @@ skip_tuning:
+ 	if (IS_CHAN_5GHZ(sc->sc_ah->curchan))
+ 		return;
+ 
+-	btcoex->duty_cycle += (mci->num_bdr ? ATH_MCI_MAX_DUTY_CYCLE : 0);
++	btcoex->duty_cycle += (mci->num_bdr ? ATH_MCI_BDR_DUTY_CYCLE : 0);
+ 	if (btcoex->duty_cycle > ATH_MCI_MAX_DUTY_CYCLE)
+ 		btcoex->duty_cycle = ATH_MCI_MAX_DUTY_CYCLE;
+ 
+-- 
+1.7.10.4
+
