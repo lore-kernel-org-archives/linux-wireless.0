@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35973 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276Ab2FZGuP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 02:50:15 -0400
-Message-ID: <1340693409.4662.0.camel@jlt3.sipsolutions.net> (sfid-20120626_085020_669020_8C29E557)
-Subject: Re: [PATCH v3 09/10] ath9k: Add WoW related mac80211 callbacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	vadivel@qca.qualcomm.com, rhu@qca.qualcomm.com,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Date: Tue, 26 Jun 2012 08:50:09 +0200
-In-Reply-To: <4FE9477E.5000902@qca.qualcomm.com> (sfid-20120626_072440_884254_F5CE58F6)
-References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
-		<1340633579-7514-10-git-send-email-mohammed@qca.qualcomm.com>
-	 <20456.47690.633636.869442@gargle.gargle.HOWL>
-	 <4FE9477E.5000902@qca.qualcomm.com> (sfid-20120626_072440_884254_F5CE58F6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:2267 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750891Ab2FKTjW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 15:39:22 -0400
+Date: Mon, 11 Jun 2012 21:49:46 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dave Jones <davej@redhat.com>,
+	Sasha Levin <levinsasha928@gmail.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
+Message-ID: <20120611194946.GA22557@sortiz-mobl> (sfid-20120611_213941_247714_17AD309C)
+References: <1339423241.4999.53.camel@lappy>
+ <20120611144134.GX22557@sortiz-mobl>
+ <1339425693.6001.2268.camel@edumazet-glaptop>
+ <20120611145700.GY22557@sortiz-mobl>
+ <1339426778.6001.2312.camel@edumazet-glaptop>
+ <20120611152007.GZ22557@sortiz-mobl>
+ <1339433810.4999.65.camel@lappy>
+ <20120611172545.GA1776@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120611172545.GA1776@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-26 at 10:54 +0530, Mohammed Shafi Shajakhan wrote:
+Hi Dave,
 
-> the user pattern needs bit more stuff, we need to convert it to our chip 
-> specific format(ie proper 802.11 format), previously there was
-> a logic of duplicate patterns before programming to HW, where a list in 
-> the driver was necessary, i removed it to simplify few things.
+On Mon, Jun 11, 2012 at 01:25:45PM -0400, Dave Jones wrote:
+> On Mon, Jun 11, 2012 at 06:56:50PM +0200, Sasha Levin wrote:
+> 
+>  > > > > > > What's trinity ?
+>  > > > > > > Also, if this one is reproducible, would you mind sharing some details about
+>  > > > > > > how we could reproduce it ?
+>  > > > > > 
+>  > > > > > Well, bugfix should be trivial enough ;)
+>  > > > > Yep, I looked at the code only after looking at Sasha's report.
+>  > > > > 
+>  > > > > Thanks for the patch, do you mind if I add your SOB to it ?
+>  > > > 
+>  > > > I  would prefer making sure it fixes the bug first ;)
+>  > > Sure, although your patch makes sense regardless of that :)
+>  > > I'll still wait for Sasha to confirm that it fixes his crash.
+>  > 
+>  > I don't have a direct way of reproducing it, but I've put it in the test
+>  > vm and the fuzzer is running, I'll let you know tomorrow if it happened
+>  > again.
+> 
+> You might be able to trigger it faster by using -P PF_NFC, which will 
+> force trinity to only use NFC sockets.
+> 
+> sidenote: most protocols trigger the module to be auto-loaded when a socket
+> is created. This doesn't seem to happen with nfc, making me need to manually
+> modprobe it first. Intentional ?
+No, I'm missing the MODULE_ALIAS_NETPROTO() call for NFC. Thanks for the
+report.
 
-You might consider adding new API for 802.11-based patterns as the 802.3
-patterns could match multiple 802.11 frames etc.
+Cheers,
+Samuel.
 
-johannes
-
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
