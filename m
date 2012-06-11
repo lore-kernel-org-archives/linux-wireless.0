@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54893 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066Ab2FKSIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 14:08:24 -0400
-Date: Mon, 11 Jun 2012 13:25:45 -0400
-From: Dave Jones <davej@redhat.com>
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
-Message-ID: <20120611172545.GA1776@redhat.com> (sfid-20120611_200843_449581_B1254D70)
-References: <1339423241.4999.53.camel@lappy>
- <20120611144134.GX22557@sortiz-mobl>
- <1339425693.6001.2268.camel@edumazet-glaptop>
- <20120611145700.GY22557@sortiz-mobl>
- <1339426778.6001.2312.camel@edumazet-glaptop>
- <20120611152007.GZ22557@sortiz-mobl>
- <1339433810.4999.65.camel@lappy>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:58415 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418Ab2FKRZh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 13:25:37 -0400
+Received: by obbtb18 with SMTP id tb18so7001964obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 10:25:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1339433810.4999.65.camel@lappy>
+In-Reply-To: <1339430102.4520.30.camel@jlt3.sipsolutions.net>
+References: <4FD28ED7.6070506@xenotime.net> <1339229158.4539.4.camel@jlt3.sipsolutions.net>
+ <1339229241.4539.5.camel@jlt3.sipsolutions.net> <4FD61395.8030901@xenotime.net>
+ <1339430102.4520.30.camel@jlt3.sipsolutions.net>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Mon, 11 Jun 2012 10:25:17 -0700
+Message-ID: <CACcxo+rSFKaYYrJ6c4DT9wiK3iOY1tobEGZ7NyXOOJK+V8kXcg@mail.gmail.com> (sfid-20120611_192540_430254_21678107)
+Subject: Re: kernel-doc warnings (3.5-rc1)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Randy Dunlap <rdunlap@xenotime.net>,
+	linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 06:56:50PM +0200, Sasha Levin wrote:
+Hi Randy and Johannes,
 
- > > > > > > What's trinity ?
- > > > > > > Also, if this one is reproducible, would you mind sharing some details about
- > > > > > > how we could reproduce it ?
- > > > > > 
- > > > > > Well, bugfix should be trivial enough ;)
- > > > > Yep, I looked at the code only after looking at Sasha's report.
- > > > > 
- > > > > Thanks for the patch, do you mind if I add your SOB to it ?
- > > > 
- > > > I  would prefer making sure it fixes the bug first ;)
- > > Sure, although your patch makes sense regardless of that :)
- > > I'll still wait for Sasha to confirm that it fixes his crash.
- > 
- > I don't have a direct way of reproducing it, but I've put it in the test
- > vm and the fuzzer is running, I'll let you know tomorrow if it happened
- > again.
+I have sent a patch adding kernel-docs to these variables just now.
 
-You might be able to trigger it faster by using -P PF_NFC, which will 
-force trinity to only use NFC sockets.
+Thanks,
+Ashok
 
-sidenote: most protocols trigger the module to be auto-loaded when a socket
-is created. This doesn't seem to happen with nfc, making me need to manually
-modprobe it first. Intentional ?
-
-	Dave
-
+On Mon, Jun 11, 2012 at 8:55 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-06-11 at 08:49 -0700, Randy Dunlap wrote:
+>
+>> There are still 2 warnings from sta_info.h after applying
+>> your patch:
+>>
+>> Warning(net/mac80211/sta_info.h:384): No description found for parameter 't_offset_setpoint'
+>> Warning(net/mac80211/sta_info.h:384): No description found for parameter 'ch_type'
+>
+> Right, I wasn't sure what the descriptions should be so asked Javier &
+> team to address those.
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
