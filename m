@@ -1,126 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:44606 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994Ab2FFXT4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39027 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040Ab2FKOku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 19:19:56 -0400
-Received: by mail-pz0-f46.google.com with SMTP id y13so2117dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 16:19:56 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 5/5] mac80211: Use signal strength as a proxy for expected datarate.
-Date: Wed,  6 Jun 2012 16:19:35 -0700
-Message-Id: <1339024775-15405-6-git-send-email-jason@cozybit.com> (sfid-20120607_012000_484046_7CC77C13)
-In-Reply-To: <1339024775-15405-1-git-send-email-jason@cozybit.com>
-References: <1339024775-15405-1-git-send-email-jason@cozybit.com>
+	Mon, 11 Jun 2012 10:40:50 -0400
+Message-ID: <4FD60369.80108@qca.qualcomm.com> (sfid-20120611_164106_295809_3866D61C)
+Date: Mon, 11 Jun 2012 17:40:41 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <me@bobcopeland.com>,
+	<mickflemm@gmail.com>
+Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
+References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>  <1339228530.4539.0.camel@jlt3.sipsolutions.net>  <4FD3A936.8070600@broadcom.com> <1339399952.4520.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339399952.4520.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On 06/11/2012 10:32 AM, Johannes Berg wrote:
+> On Sat, 2012-06-09 at 21:51 +0200, Arend van Spriel wrote:
+>> On 06/09/2012 09:55 AM, Johannes Berg wrote:
+>>> On Fri, 2012-06-08 at 17:51 -0700, Luis R. Rodriguez wrote:
+>>>> From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+>>>> 
+>>>> Turns out that standard Linux distributions leave
+>>>> CONFIG_EXPERT enabled. This makes this option useless for
+>>>> wireless testing / research purposes as we don't want certain
+>>>> features enabled on all kernel builds. This adds a new
+>>>> CONFIG_CFG80211_EXPERT and makes a few features depend on
+>>>> them.
+>>> 
+>>> I'm not sure I see the point in CFG80211_EXPERT. All the features
+>>> you're putting in there have nothing to do with cfg80211 at all
+>>> anyway.
+>> 
+>> My understanding of this is that CFG80211_EXPERT was chosen
+>> because cfg80211 provides the kernel side of the regulatory
+>> framework.
+> 
+> It just happens though that the two options are related to regulatory
+> -- maybe then this should have a different name?
 
-When establishing mesh paths with new stations, there is no historic
-datarate information to compute the airtime link metric.  Up until now
-we were just using a poor initial metric.  A better approach is to
-use the signal strength as an indicator of how good the new link will
-be.  Once traffic is exchanged with the station, the average datarate is
-computed and the signal strength is not used anymore.
+It could be more than that, for example we could also add nl80211
+testmode under CFG80211_EXPERT.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-Reviewed-by: Jason Abele <jason@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |   68 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 66 insertions(+), 2 deletions(-)
+> I still don't see the need. What would you put under it in
+> brcm[sf]mac? I certainly wouldn't see any reason to put anything
+> under it in our driver since it's much simpler to .
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 22b327a..86fc9e5 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -330,6 +330,67 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	return;
- }
- 
-+/* estimate link rate as a function of last rssi for sta */
-+static unsigned int rssi_get_rate(struct sta_info *sta)
-+{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	/* XXX: oper_channel is moving to sdata upstream */
-+	enum ieee80211_band band = sta->local->oper_channel->band;
-+	struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.ht_cap;
-+	struct rate_info rinfo;
-+	int i, rssi, rate, rate_max, rate_min = 10, maxidx = 0;
-+	const int rssi_min = -100;
-+	const int rssi_max = -20;
-+
-+	if (sta->last_signal >= 0)
-+		return rate_min;
-+
-+	memset(&rinfo, sizeof(rinfo), 0);
-+
-+	if (ht_cap->ht_supported) {
-+		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
-+			if (ht_cap->mcs.rx_mask[i])
-+				maxidx = i*8 + fls(ht_cap->mcs.rx_mask[i]) - 1;
-+		}
-+		rinfo.flags |= RATE_INFO_FLAGS_MCS;
-+		rinfo.flags |= (sta->sta.ht_cap.cap &
-+				IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
-+					RATE_INFO_FLAGS_40_MHZ_WIDTH :
-+					0;
-+		rinfo.flags |= (sta->sta.ht_cap.cap &
-+				(IEEE80211_HT_CAP_SGI_20 |
-+				 IEEE80211_HT_CAP_SGI_40)) ?
-+						RATE_INFO_FLAGS_SHORT_GI :
-+						0;
-+		rinfo.mcs = maxidx;
-+	} else {
-+		struct ieee80211_supported_band *sband;
-+
-+		maxidx = fls(sta->sta.supp_rates[band]) - 1;
-+		if (WARN_ON(maxidx < 0))
-+			return rate_min;
-+		sband = sta->local->hw.wiphy->bands[band];
-+		rinfo.legacy = sband->bitrates[maxidx].bitrate;
-+	}
-+
-+	rate_max = cfg80211_calculate_bitrate(&rinfo);
-+
-+	rssi = max(rssi_min, sta->last_signal);
-+	rssi = min(rssi_max, rssi);
-+
-+	rate = ((rssi - rssi_min) * rate_max +
-+		(rssi_max - rssi) * rate_min) /
-+		(rssi_max - rssi_min);
-+
-+	if (WARN_ON(!rate))
-+		rate = rate_min;
-+
-+	mhwmp_dbg("\nest. %d Mbps for %pM with rssi %d\n",
-+		  rate/10, sta->sta.addr, sta->last_signal);
-+
-+	return rate;
-+}
-+
- static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 				   struct sta_info *sta)
- {
-@@ -345,8 +406,11 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	if (sta->fail_avg >= 100)
- 		return MAX_METRIC;
- 
--	/* If not enough values accumulated in rate average, assume 1 Mbps */
--	rate = max(ewma_read(&sta->avg_rate), 10UL);
-+	if (sta->tx_packets > 100)
-+		rate = max(ewma_read(&sta->avg_rate), 10UL);
-+	else
-+		/* Not enough traffic sent, use rx signal strengh as proxy */
-+		rate = rssi_get_rate(sta);
- 
- 	/* bitrate is in units of 100 Kbps, while we need rate in units of
- 	 * 1Mbps. This will be corrected on tx_time computation.
--- 
-1.7.9.5
+Looks like something is missing here?
 
+> Also, the argument about distros doesn't really work that way, if
+> there are users interested in something then the distros will
+> certainly enable this (CFG80211_EXPERT) option to get something
+> hidden behind it.
+
+I would compare this with NL80211_TESTMODE, we don't want distributions
+to enable that either. Of course nothing prevents distros to enable
+CFG80211_EXPERT but we need to be active to make sure it's not enabled
+(ie. check the distro configs and file bugs etc).
+
+Kalle
