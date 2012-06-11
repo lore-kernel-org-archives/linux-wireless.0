@@ -1,37 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42266 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755680Ab2FTPcp (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46623 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507Ab2FKTqv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 11:32:45 -0400
-Message-ID: <1340206362.4655.73.camel@jlt3.sipsolutions.net> (sfid-20120620_173248_217003_D885E01B)
-Subject: Re: [PATCH] mac80211: use the correct capability info in
- ieee80211_set_associated()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 20 Jun 2012 17:32:42 +0200
-In-Reply-To: <1340202204-20536-1-git-send-email-coelho@ti.com> (sfid-20120620_162341_295812_9D0560B4)
-References: <1340202204-20536-1-git-send-email-coelho@ti.com>
-	 (sfid-20120620_162341_295812_9D0560B4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Jun 2012 15:46:51 -0400
+Received: by obbtb18 with SMTP id tb18so7157849obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 12:46:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
+References: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 11 Jun 2012 12:46:27 -0700
+Message-ID: <CAB=NE6VANknE1e+6j3GCu_Otw9Kxp3h6HAPi-V5c0Lb_hx6FcQ@mail.gmail.com> (sfid-20120611_214654_210413_A548CD9A)
+Subject: Re: [PATCH 1/2] compat-wireless: add additional header file for bluetooth
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 17:23 +0300, Luciano Coelho wrote:
-> If an AP is beaconing with different capabilities than the one we get
-> in the associate response, we were still using the capabilities
-> received in the beacons.  One example is when the AP is beaconing with
-> the short slot bit set to zero and then we try to connect to it with
-> long slot.  In this case, we would keep using long slot until the next
-> beacon was received.
-> 
-> Fix this by using the correct capability value when calling
-> ieee80211_handle_bss_capability().  We were using cbss->capability,
-> but we should use the bss_conf->assoc_capability instead.
+On Sun, Jun 3, 2012 at 7:30 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This fixes a compile problem with all kernel versions.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Applied.
+Applied and pushed, thanks!
 
-johannes
-
+  Luis
