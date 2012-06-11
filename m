@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:34526 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757665Ab2FQRMy (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37809 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754941Ab2FKPI6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2012 13:12:54 -0400
-Received: by eeit10 with SMTP id t10so1337080eei.19
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2012 10:12:52 -0700 (PDT)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Schrober <franzschrober@yahoo.de>
-Subject: Re: ath9k bug in country domain handling
-Date: Sun, 17 Jun 2012 19:12:29 +0200
-Message-ID: <1416482.lsS5g7Br9z@sylvesterjr.cmi.ua.ac.be> (sfid-20120617_191304_706591_B64F9CE6)
-In-Reply-To: <CAGRGNgXO21GfXm02MigmUdeiYd5osnZVeDRLxz6LEyDCYy5Q+A@mail.gmail.com>
-References: <9709270.9fbk3VIit7@sylvesterjr.cmi.ua.ac.be> <1425745.oeb9uPtGCl@sylvesterjr.cmi.ua.ac.be> <CAGRGNgXO21GfXm02MigmUdeiYd5osnZVeDRLxz6LEyDCYy5Q+A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 11 Jun 2012 11:08:58 -0400
+Message-ID: <1339427336.4520.29.camel@jlt3.sipsolutions.net> (sfid-20120611_170902_404052_E07986A8)
+Subject: Re: [PATCH] wlcore: send EAPOLs with basic rate policy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eyal Shapira <eyal@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Date: Mon, 11 Jun 2012 17:08:56 +0200
+In-Reply-To: <1339426884-6591-1-git-send-email-eyal@wizery.com> (sfid-20120611_170225_495226_E5119F12)
+References: <1339426884-6591-1-git-send-email-eyal@wizery.com>
+	 (sfid-20120611_170225_495226_E5119F12)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2012-06-11 at 18:01 +0300, Eyal Shapira wrote:
+> EAPOLs are sent at high rates as they are considered
+> data packets. Some APs don't respond well to these rates
+> and don't respond with EAPOL 3/4.
+> Send EAPOLs with basic rate policy in order to avoid that.
+> 
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/tx.c |   10 +++++++---
+>  1 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+> index 6983e7a..8ee82b9 100644
+> --- a/drivers/net/wireless/ti/wlcore/tx.c
+> +++ b/drivers/net/wireless/ti/wlcore/tx.c
+> @@ -305,11 +305,15 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>  	if (is_dummy || !wlvif)
+>  		rate_idx = 0;
+>  	else if (wlvif->bss_type != BSS_TYPE_AP_BSS) {
+> -		/* if the packets are destined for AP (have a STA entry)
+> -		   send them with AP rate policies, otherwise use default
+> -		   basic rates */
+> +		/*
+> +		 * if the packets are destined for AP (have a STA entry)
+> +		 * send them with AP rate policies (EAPOLs are an exception),
+> +		 * otherwise use default basic rates
+> +		 */
 
-On Sunday 17 June 2012 12:15:47 Julian Calaby wrote:
-> There are two places where the country codes and their associated
-> restrictions come from:
-> 1. The user, by saying "iw reg set XX" or having some other program
-> set that for them.
-> 2. The driver, by asking the card which country it's been configured for.
-> 
-> The kernel regulatory framework then takes these two sets of
-> regulatory data, finds the intersection of them, and restricts the
-> channels and options available for the card based on that.
-> 
-> Why?
-> 
-> I'm not sure of the exact details, but I know that most wireless cards
-> are configured, by which I mean calibrated, adjusted and tuned to work
-> in a particular country. Some are configured for the entire world, but
-> most are configured for a single country's requirements. The driver
-> cannot assume that if it asks the card to do anything outside the
-> country it's been configured for, that it will perform predictably.
-> So, for example, if the driver asks your card to use a channel that is
-> outside the US's regulatory requirements, the driver cannot guarantee
-> that, even if it instructs the card how to use that channel correctly,
-> it will actually use that channel in a manner consistent with
-> Belgium's regulatory requirements.
-> 
-> The driver's behaviour when it encounters the unset regulatory
-> information on the card will be to use the default information for
-> that card. Which in this case is the US regulatory restrictions.
-> 
-> I hate to say it, but the issue here is *not* the driver itself. The
-> supplier of that card has not set it up correctly for Belgium, and the
-> driver is compensating for that as best as it can.
-> 
-> I have a similar card at home in Australia, it's configured for use in
-> China, and thankfully the intersection of China's and Australia's
-> regulatory requirements are such that I can use it for the purpose I
-> purchased it for.
-> 
+Might be worth indicating what APs have this bug, and possibly putting
+something like this into mac80211 (as well)?
 
-Ow., this is new to me. Thanks a lot for the explanation, now I see why things 
-are like they are!
-
-Thanks a lot!
-Erwin
+johannes
 
