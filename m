@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58225 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761337Ab2FHQ21 (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:57491 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733Ab2FKTO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 12:28:27 -0400
-Message-ID: <1339172904.5748.18.camel@jlt3.sipsolutions.net> (sfid-20120608_182830_970108_66658378)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andre Heider <a.heider@gmail.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 18:28:24 +0200
-In-Reply-To: <4FD22727.7000500@lwfinger.net> (sfid-20120608_182413_078769_E0EF593E)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 <4FD22727.7000500@lwfinger.net> (sfid-20120608_182413_078769_E0EF593E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Jun 2012 15:14:27 -0400
+Received: by ghrr11 with SMTP id r11so2806923ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 12:14:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <13109287F3F94FB397BD55908527913A@drejoasus>
+References: <13109287F3F94FB397BD55908527913A@drejoasus>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 11 Jun 2012 12:14:06 -0700
+Message-ID: <CAB=NE6UdsEMJoD8TfxHRZ61zN-urtbM3X51UM0A8apKcu1nQ2A@mail.gmail.com> (sfid-20120611_211432_139720_6393D719)
+Subject: Re: compat-wireless for 2.6.12.5
+To: Sertac TULLUK <stulluk@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 11:24 -0500, Larry Finger wrote:
-> On 06/08/2012 11:05 AM, Andre Heider wrote:
+On Sun, Jun 10, 2012 at 11:49 AM, Sertac TULLUK <stulluk@gmail.com> wrote:
+> Dear All;
+>
+> I have full source of Celestial CSM1203 ( ARM 926 EJ-S core) Kernel ( which
+> is modified from 2.6.12.5).
+>
+> The source and toolchain can be downloaded from here:
+> http://www.merihvideo.com.tr/chipbox-source.php
+>
+> (.config and CSM1203 defconfig can be seen from the source)
+>
+> I know that compat-wireless support down to 2.6.24 and newer, but may be you
+> can help to give support for USB WIFI for RALINK based solutions on my very
+> old kernel.
 
-> >>>> Hopefully this is better: http://p.sipsolutions.net/017d73ac0688f863.txt
+Compat-wireless strives to support at the very least all kernels
+listed on kernel.org, these are supported kernels. From a community
+perspective it makes no sense to support older kernels as that would
+also mean subtly recommending older kernels which we do not and we
+cannot given that those are unsupported kernels. If companies / users
+wants to take support down to even older kernels that's fine too --
+patches are welcomed.
 
-> Strange. I commented out the BUILD_BUG statements in version 017d73a,
+I will say that we have looked at backporting a lot of USB drivers to
+older kernels but USB has changed quite a lot since 2.6.12 so even
+architecturally its a pain in the ass to try to backport to such an
+old kernel. I'd frankly give up and choose at the minimum 2.6.29,
+given that we have another USB driver starting to support that kernel
+carl9170, but I will note that 2.6.29 is no longer supported (its not
+even listed on kernel.org). So -- just upgrade.
 
-Right, that would do it. I think we may want to add a
-#define B43_HW_QUEUE_NUM 5
+> I also need CIFS support for recording streams to windows shares. I hope
+> compat team may give some suggestions about implementing CIFS on 2.6.12.5
+> too.
 
-and then use it in all the right places instead of changing
-B43_QOS_QUEUE_NUM maybe?
+If its a module then just throw it on to compat and ensure you can
+compile it on older kernels as well using ckmake, if it compiles
+chances are high it will load fine. Ozan has patches for to enable
+ckmake to be distribution agnostic, otherwise you have to use Ubuntu
+for now.
 
->  and it 
-> worked for me with both flavors of fw.
+Best of luck.
 
-Well, good to know... I wonder what Andre's bug is then, maybe not
-related to this?
-
-johannes
-
+  Luis
