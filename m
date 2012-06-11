@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54784 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:65073 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761984Ab2FIADl (ORCPT
+	with ESMTP id S1751861Ab2FKR6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 20:03:41 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 11 Jun 2012 13:58:03 -0400
+Date: Mon, 11 Jun 2012 23:29:18 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath9k: defer btcoex scheme update
+Message-ID: <20120611175916.GA2821@vmraj-lnx.users.atheros.com> (sfid-20120611_195808_815501_1EC0A896)
+References: <1339418354-1843-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <20437.61328.931380.948942@gargle.gargle.HOWL>
+ <20120611174018.GA2655@vmraj-lnx.users.atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20434.37522.581625.203653@gargle.gargle.HOWL> (sfid-20120609_020345_916996_DFA397B5)
-Date: Sat, 9 Jun 2012 05:32:26 +0530
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/9] ath9k_hw: Fix AR9462 power consumption on idle associated
-In-Reply-To: <1339177148-21672-3-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1339177148-21672-3-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <20120611174018.GA2655@vmraj-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> +	if (!AR_SREV_9462_20(ah))
-> +		goto skip_btcoex;
-> +
-> +	for (i = 0; i < AH_WAIT_TIMEOUT; i++) {
-> +		btcoex_ctrl2 = REG_READ(ah, AR_BTCOEX_CTRL2);
-> +		if (btcoex_ctrl2 != 0xdeadbeef)
-> +			break;
-> +		udelay(AH_TIME_QUANTUM);
-> +	}
-> +	REG_WRITE(ah, AR_BTCOEX_CTRL2, (btcoex_ctrl2 | BIT(23)));
-> +
-> +	for (i = 0; i < AH_WAIT_TIMEOUT; i++) {
-> +		diag_sw = REG_READ(ah, AR_DIAG_SW);
-> +		if (diag_sw != 0xdeadbeef)
-> +			break;
-> +		udelay(AH_TIME_QUANTUM);
-> +	}
-> +	REG_WRITE(ah, AR_DIAG_SW, (diag_sw | BIT(27) | BIT(19) | BIT(18)));
-> +	lna_ctrl = REG_READ(ah, AR_OBS_BUS_CTRL) & 0x3;
-> +	bt_sleep = REG_READ(ah, AR_MCI_RX_STATUS) & AR_MCI_RX_REMOTE_SLEEP;
-> +
-> +	REG_WRITE(ah, AR_BTCOEX_CTRL2, btcoex_ctrl2);
-> +	REG_WRITE(ah, AR_DIAG_SW, diag_sw);
-> +
-> +	if (bt_sleep && (lna_ctrl == 2)) {
-> +		REG_SET_BIT(ah, AR_BTCOEX_RC, 0x1);
-> +		REG_CLR_BIT(ah, AR_BTCOEX_RC, 0x1);
-> +		udelay(50);
-> +	}
-> +
-> +skip_btcoex:
+On Mon, Jun 11, 2012 at 11:10:20PM +0530, Rajkumar Manoharan wrote:
+> On Mon, Jun 11, 2012 at 06:46:00PM +0530, Sujith Manoharan wrote:
+> > Rajkumar Manoharan wrote:
+> > > As btcoex scheme updation might sleep, remove the function call
+> > > from tasklet context and queue it up as a separate work.
+> > > 
+> > > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> > > ---
+> > > --- a/drivers/net/wireless/ath/ath9k/main.c
+> > > +++ b/drivers/net/wireless/ath/ath9k/main.c
+> > > @@ -188,6 +188,9 @@ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
+> > >  
+> > >  	ath9k_debug_samp_bb_mac(sc);
+> > >  	ath9k_hw_disable_interrupts(ah);
+> > > +#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+> > > +	cancel_work_sync(&sc->mci_work);
+> > > +#endif
+> > 
+> > I think this should go inside __ath_cancel_work(), otherwise there is a
+> > chance that this would not be cleaned up properly when stopping the
+> > interface or unloading the driver.
+> >
+> mci_work is queued up by the ath9k_tasklet that is triggered by interrupt
+> routine. So it is safer to cancel the mci_work after disabling interrupt.
+> Does it make sense?
+>
+Sujith,
 
-It would be cleaner to use a helper function for this and also check
-whether MCI/BTCOEX is actually enabled.
+you are correct. I'll move it into ath_cancel_work.
 
-Sujith
+Rajkumar
