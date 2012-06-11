@@ -1,29 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:57704 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033Ab2FSNaQ (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:45763 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885Ab2FKUKa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 09:30:16 -0400
-Received: by lbbgm6 with SMTP id gm6so5761895lbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:30:14 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 19 Jun 2012 21:30:14 +0800
-Message-ID: <CAL74qpEwZZF2LrfH1xxYNOxCGPBtT=6UKD99w4hsFr5Hzf8h+Q@mail.gmail.com> (sfid-20120619_153020_137104_345BC7D3)
-Subject: turn off scanning
-From: =?GB2312?B?1bLUtA==?= <zhanyuan.roger@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 11 Jun 2012 16:10:30 -0400
+Date: Mon, 11 Jun 2012 13:10:29 -0700 (PDT)
+Message-Id: <20120611.131029.1674560821412898381.davem@davemloft.net> (sfid-20120611_221103_433950_05CB46AE)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-06-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120611191718.GD30086@tuxdriver.com>
+References: <20120611191718.GD30086@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, all!
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 11 Jun 2012 15:17:18 -0400
 
-I want to modify the 802.11 stack code to turn off sw_scanning in STA.
-It's just a personal purpose because my STA has no need to connect to
-a AP. STA just stays on the operation channel.
+> Here is another group of fixes intended for 3.5.
 
-So I want to know which part in mac80211 folder(or other places)
-should I modify? I am a new kernel developer, and it's my pleasure to
-get any help!
-
-Roger
+Pulled, thanks a lot.
