@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:44889 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951Ab2FLKm2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 06:42:28 -0400
-Received: by ghrr11 with SMTP id r11so3232156ghr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 03:42:27 -0700 (PDT)
-Message-ID: <4FD71D0F.2080101@gmail.com> (sfid-20120612_124330_167536_03DE690F)
-Date: Tue, 12 Jun 2012 12:42:23 +0200
-From: sylvain_gmail <sylvain.roger.rieunier@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: nbd@openwrt.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] minstrel_ht: enable frame aggregation for fixed rate
-References: <1339141443-10135-1-git-send-email-sylvain.roger.rieunier@gmail.com>  <1339229456.4539.9.camel@jlt3.sipsolutions.net>  <4FD605DD.9020800@gmail.com> (sfid-20120611_165113_242964_A25B4D05) <1339426690.4520.28.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339426690.4520.28.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from plane.gmane.org ([80.91.229.3]:47503 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752911Ab2FKNZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 09:25:08 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Se4cC-0001c0-GC
+	for linux-wireless@vger.kernel.org; Mon, 11 Jun 2012 15:25:04 +0200
+Received: from 194.42.38.169 ([194.42.38.169])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 15:25:04 +0200
+Received: from contact by 194.42.38.169 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 15:25:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Antonis Hadjiantonis <contact@antonis.mobi>
+Subject: Fixed rate for ath9k 
+Date: Mon, 11 Jun 2012 13:21:46 +0000 (UTC)
+Message-ID: <loom.20120611T150700-482@post.gmane.org> (sfid-20120611_152517_200109_C0406714)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Johannes ans Felix,
+Hello,
 
-This is my new change log version :
+I am experimenting with Rate Control of ath9k (minstrel_ht) and tried to fix the
+rate to a value. I fix it to an index (e.g. 2) using the relevant patch and
+debugfs and confirm the value is changed:
+echo 2 > /sys/kernel/debug/ieee80211/phy0/rc/fixed_rate_idx
 
-"This patch adds frame aggregation for fixed rate mode through debugfs.
-Instead of using sample_idx, which set IEEE80211_TX_CTL_RATE_CTRL_PROBE 
-flag,
-which disabled frame aggregation, we set max_tp_rate and max_tp_rate2 which
-  do not disable frame aggregation."
+It seems though the value is ignored, and minstrel RC works unaffected:
+>From the rcstat file:
+rate     throughput  ewma prob   this prob  this succ/attempt success  attempts
+     1         0.1       15.5       50.0          0(  0)         23         121
+     2         0.4       25.0      100.0          0(  0)          1           1
+     5.5       0.0        0.0        0.0          0(  0)          0           0
+  P 11         4.5       47.9       85.7         24( 28)        334         737
+     6         1.3       24.6        0.0          0(  0)          2           8
+     9         1.5       18.7        0.0          0(  0)          1           5
+    12         2.1       19.2        0.0          0(  0)          3          22
+    18         1.8       11.0        0.0          0(  0)         96         311
+ t  24         6.5       30.9      100.0          1(  1)         14         151
+T   36         8.7       28.8      100.0          1(  1)        157         822
+    48         1.4        3.8        0.0          0(  0)         85         421
+    54         1.9        4.3        0.0          0(  0)      18336       19723
 
-What's is your opinion?
+I am using OpenWrt Backfire (10.03.1, r29592) on a WRT160nl and connect with it
+over 802.11g using iperf on a smartphone.
 
-Sylvain
+As this is my first ever post on the list, please be nice :)
 
-Le 11/06/2012 16:58, Johannes Berg a écrit :
-> On Mon, 2012-06-11 at 16:51 +0200, sylvain_gmail wrote:
->> Dear Johannes and Felix ,
->>
->> Here is the description of my patch that I can offer :
->>
->> "After trying to fix rate control with minstrel_ht. I realized that,
->> that fix rate was not allowed to make frames aggregation.
->> This was due to enable  IEEE80211_TX_CTL_RATE_CTRL_PROBE flag of the
->> ieee80211_tx_info structure.
->> Because when IEEE80211_TX_CTL_RATE_CTRL_PROBE flag is set frame
->> aggregation is disabled.
->>   So instead of used sample_idx, who set
->> IEEE80211_TX_CTL_RATE_CTRL_PROBE flag. I suggest using max_tp_rate and
->> max_tp_rate2 which do not disabled frame aggregation."
->>
->> what is your opinion?
-> Makes more sense than before, but isn't really a viable changelog entry
-> yet :)
->
-> johannes
->
+Thanks in advance,
+Antonis
 
