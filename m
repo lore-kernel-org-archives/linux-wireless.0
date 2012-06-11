@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:60534 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149Ab2FJQxL convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55331 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767Ab2FKFDl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2012 12:53:11 -0400
-Received: by wibhm6 with SMTP id hm6so2675266wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2012 09:53:10 -0700 (PDT)
+	Mon, 11 Jun 2012 01:03:41 -0400
+Message-ID: <4FD57C18.5010401@qca.qualcomm.com> (sfid-20120611_070345_643357_7120E0DB)
+Date: Mon, 11 Jun 2012 10:33:20 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1338933307-13446-8-git-send-email-hauke@hauke-m.de>
-References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
-	<1338933307-13446-8-git-send-email-hauke@hauke-m.de>
-Date: Sun, 10 Jun 2012 18:53:10 +0200
-Message-ID: <CACna6rwbS9YTM7gqX14T71Lart2HbUsFo4su8h6HEhv91C_9XA@mail.gmail.com> (sfid-20120610_185337_631921_E1EAC165)
-Subject: Re: [PATCH 7/8] bcma: add bcma_pmu_spuravoid_pllupdate()
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, b43-dev@lists.infradead.org,
-	arend@broadcom.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <stable@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k: Fix softlockup in AR9485
+References: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com>	<20422.56106.127697.13731@gargle.gargle.HOWL>	<4FC702E4.9000906@qca.qualcomm.com>	<20423.1188.258292.959073@gargle.gargle.HOWL>	<4FC70737.1070708@qca.qualcomm.com> <20433.60690.664811.750413@gargle.gargle.HOWL>
+In-Reply-To: <20433.60690.664811.750413@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/6/5 Hauke Mehrtens <hauke@hauke-m.de>:
-> This function is needed by brcmsmac. This code is based on code from
-> the Broadcom SDK.
+Hi Sujith,
 
-This is already implemented in b43/phy_n.c:
+On Friday 08 June 2012 05:46 PM, Sujith Manoharan wrote:
+> Mohammed Shafi Shajakhan wrote:
+>>> HZ can be configured to a user-defined value, so we need to make sure
+>>> that the timing for the PLL work is what we want.
+>>
+>> ok, then we will change it.
+>
+> Shafi, will you be sending an updated version of this patch ?
+> AR9485 is unusable currently - just bringing up the interface is
+> enough to hang the machine...
+>
 
-/* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
-static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+i will send an updated version based on the latest wireless-testing 
+tree. thanks.
 
-I guess we should replace b43 code with a call to introduced function.
 
 -- 
-Rafał
+thanks,
+shafi
