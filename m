@@ -1,64 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53561 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755888Ab2FEOeQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64775 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278Ab2FKNHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 10:34:16 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 1/9] brcm80211: smac: don't set up tx power limits during initialization
-Date: Tue,  5 Jun 2012 09:34:01 -0500
-Message-Id: <1338906849-26135-2-git-send-email-seth.forshee@canonical.com> (sfid-20120605_163421_057943_EE7C94E0)
-In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+	Mon, 11 Jun 2012 09:07:41 -0400
+Message-ID: <4FD5ED97.3020505@qca.qualcomm.com> (sfid-20120611_150744_613008_8C5A1546)
+Date: Mon, 11 Jun 2012 16:07:35 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Etay Luz <eluz@qca.qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Add missing newline terminations
+References: <1338363787-12314-1-git-send-email-kvalo@qca.qualcomm.com>  <1338365645.28696.0.camel@joe2Laptop> <4FC5D73A.9040807@qca.qualcomm.com> <1338368319.28696.3.camel@joe2Laptop>
+In-Reply-To: <1338368319.28696.3.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code is unnecessary, and in fact it's never executed because the
-interface is never up when brcms_c_channels_commit() is called. Removing
-it helps simplify the implementation of proper regulatory support.
+On 05/30/2012 11:58 AM, Joe Perches wrote:
+> Messages without newlines can be interleaved.
+> Avoid this by adding terminations.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |    8 --------
- 1 file changed, 8 deletions(-)
+Thanks, applied.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index eb77ac3..049d78f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -908,7 +908,6 @@ static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
- {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
- 	uint chan;
--	struct txpwr_limits txpwr;
- 
- 	/* search for the existence of any valid channel */
- 	for (chan = 0; chan < MAXCHANNEL; chan++) {
-@@ -949,13 +948,6 @@ static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
- 		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
- 						     brcms_c_japan(wlc) ? true :
- 						     false);
--
--	if (wlc->pub->up && chan != INVCHANNEL) {
--		brcms_c_channel_reg_limits(wlc_cm, wlc->chanspec, &txpwr);
--		brcms_c_channel_min_txpower_limits_with_local_constraint(wlc_cm,
--			&txpwr, BRCMS_TXPWR_MAX);
--		wlc_phy_txpower_limit_set(wlc->band->pi, &txpwr, wlc->chanspec);
--	}
- }
- 
- static int
--- 
-1.7.9.5
-
+Kalle
