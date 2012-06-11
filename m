@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:48655 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754542Ab2FGMdm (ORCPT
+Received: from nm18-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.210]:24793 "HELO
+	nm18-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750948Ab2FKWlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 08:33:42 -0400
-Message-ID: <1339072491.3279.6.camel@lappy> (sfid-20120607_143403_120928_12961A9D)
-Subject: iwlwifi: kernel panic during boot due to module load order
-From: Sasha Levin <levinsasha928@gmail.com>
-To: donald.h.fry@intel.com, emmanuel.grumbach@intel.com,
-	johannes.berg@intel.com, linville@tuxdriver.com,
-	wey-yi.w.guy@intel.com
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Thu, 07 Jun 2012 14:34:51 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Jun 2012 18:41:51 -0400
+References: <1339452813.67695.YahooMailNeo@web81603.mail.mud.yahoo.com>
+Message-ID: <1339454087.28071.YahooMailNeo@web81608.mail.mud.yahoo.com> (sfid-20120612_004155_278113_E1B9DEBE)
+Date: Mon, 11 Jun 2012 15:34:47 -0700 (PDT)
+From: Peter Tam <peterctam@yahoo.com>
+Reply-To: Peter Tam <peterctam@yahoo.com>
+Subject: Atheros 6K WiFi USB adaptors
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1339452813.67695.YahooMailNeo@web81603.mail.mud.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
 
-Commit cc5f7e397 ("iwlwifi: implement dynamic opmode loading") causes a
-kernel panic during boot in the following scenario:
+I thought I saw support code usb.c for that AR6000 wifi chip set. I know there is extensive support for the SDIO interface version. But on detail examination, the usb.c code is missing a lot of hif_ops interfce routines.
 
-1. All drivers are built-in.
-2. Due to their build order, iwl_init gets called before iwl_drv_init.
-3. iwl_init will call iwl_opmode_register which will iterate the new op
-list, and cause a NULL ptr deref when trying to list_for_each_entry the
-dev list, which won't be empty since it wasn't initialized (iwl_drv_init
-wasn't called yet).
+The equivalents of 
+.read_write_sync = ath6kl_sdio_read_write_sync,
+.write_async = ath6kl_sdio_write_async,
+.irq_enable = ath6kl_sdio_irq_enable,
+.irq_disable = ath6kl_sdio_irq_disable,
+.scatter_req_get = ath6kl_sdio_scatter_req_get,
+.scatter_req_add = ath6kl_sdio_scatter_req_add,
+.enable_scatter = ath6kl_sdio_enable_scatter,
+.scat_req_rw = ath6kl_sdio_async_rw_scatter,
+.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
 
-While it's possible to easily fix the actual deref, I suspect that the
-init function call order is wrong. I've looked at getting it right in
-the Makefile, but it seems to have specific ordering behind it, so I'd
-rather not try patching it myself.
+are missing in usb.c vs sdio.c for examples.
 
-Thanks,
-Sasha.
+Can some decent soul tell me where
+.read_write_sync = ath6kl_usb_read_write_sync,
+.write_async = ath6kl_usb_write_async,
+.irq_enable = ath6kl_usb_irq_enable,
+.irq_disable = ath6kl_usb_irq_disable,
+.scatter_req_get = ath6kl_usb_scatter_req_get,
+.scatter_req_add = ath6kl_usb_scatter_req_add,
+.enable_scatter = ath6kl_usb_enable_scatter,
+.scat_req_rw = ath6kl_usb_async_rw_scatter,
+.cleanup_scatter = ath6kl_usb_cleanup_scatter,
 
+are sourced from?
+
+
+
+Peter
