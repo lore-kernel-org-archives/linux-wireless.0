@@ -1,50 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:62084 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120Ab2FKTTe convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33741 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab2FKSsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 15:19:34 -0400
-Received: by ghrr11 with SMTP id r11so2811752ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 12:19:34 -0700 (PDT)
+	Mon, 11 Jun 2012 14:48:08 -0400
+Date: Mon, 11 Jun 2012 14:43:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/5] brcmfmac: introduce checkdied debugfs functionality
+Message-ID: <20120611184330.GC30086@tuxdriver.com> (sfid-20120611_204812_734267_CB246A7A)
+References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
+ <1339275105-3593-6-git-send-email-arend@broadcom.com>
+ <CA+XFjioPG4aT-umi1BD+RH0q0a3AEY=QXTAFapGhz3x25cLdSw@mail.gmail.com>
+ <4FD42939.2020404@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFub=KQ9qrE=u_nfVXK90o6k_itLjE5bP0LQOymB6cJmQQaA1A@mail.gmail.com>
-References: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
- <1338733814-31438-2-git-send-email-hauke@hauke-m.de> <CAFub=KQ9qrE=u_nfVXK90o6k_itLjE5bP0LQOymB6cJmQQaA1A@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 11 Jun 2012 12:19:13 -0700
-Message-ID: <CAB=NE6XGj7Zr-GfTmFF0jU462HkfWaauR8YKPi-S-ihjras1VQ@mail.gmail.com> (sfid-20120611_211937_910151_F67C4314)
-Subject: Re: [Lf_driver_backport] [PATCH 2/2] compat-wireless: update some
- urls to git trees in docs
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4FD42939.2020404@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 3, 2012 at 11:31 PM, Ozan Çağlayan <ozancag@gmail.com> wrote:
->> --- a/scripts/admin-update.sh
->> +++ b/scripts/admin-update.sh
->> @@ -2,21 +2,21 @@
->>  #
->>  # Copyright 2007, 2008, 2010   Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
->>  #
->> -# Use this to update compat-wireless-2.6 to the latest
->> -# wireless-testing.git tree you have.
->> +# Use this to update compat-wireless to the latest
->> +# linux-nex.git tree you have.
->
-> There's a typo in here, linux-nex.
->
->>  #
->> -# Usage: you should have the latest pull of wireless-2.6.git
->> -# git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->> -# We assume you have it on your ~/devel/wireless-testing/ directory. If you do,
->> -# just run this script from the compat-wireless-2.6 directory.
->> +# Usage: you should have the latest pull of linux-nex.git
->
-> Same typo in here too, :)
+On Sun, Jun 10, 2012 at 06:57:29AM +0200, Arend van Spriel wrote:
+> On 06/10/2012 04:13 AM, G�bor Stefanik wrote:
+> > On Sat, Jun 9, 2012 at 10:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> >> The checkdied functionality provides useful information for analyzing
+> >> firmware crashes. By exposing this information to a debugfs file users
+> >> can easily provide its content in bug reports. The functionality is
+> >> available only when CONFIG_BRCMDBG is selected.
+> >>
+> >> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> >> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> >> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> >> ---
+> >>  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  332 +++++++++++++++++++-
+> >>  1 file changed, 331 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> >> index a07fb01..5a33b42 100644
+> >> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> >> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> >> @@ -31,6 +31,7 @@
+> >>  #include <linux/firmware.h>
+> >>  #include <linux/module.h>
+> >>  #include <linux/bcma/bcma.h>
+> >> +#include <linux/debugfs.h>
+> >>  #include <asm/unaligned.h>
+> >>  #include <defs.h>
+> >>  #include <brcmu_wifi.h>
+> >> @@ -48,6 +49,9 @@
+> >>
+> >>  #define CBUF_LEN       (128)
+> >>
+> >> +/* Device console log buffer state */
+> >> +#define CONSOLE_BUFFER_MAX     2024
+> > 
+> > Just out of curiosity; what is the significance of this number?
+> 
+> It is used in the code fragment below. I have to admit the comment is
+> not explaining its significance.
+> 
+> >> +       /* allocate buffer for console data */
+> >> +       if (console_size <= CONSOLE_BUFFER_MAX)
+> >> +               conbuf = kzalloc(console_size+1, GFP_ATOMIC);
+> >> +
+> >> +       if (!conbuf)
+> >> +               return -ENOMEM;
+> 
+> Probably would be better to use vmalloc() here or at least use
+> GFP_KERNEL here.
+> 
+> John, any recommendations?
 
-Hauke, let me know if you plan on resending. Thanks,
+vmalloc seems reasonable...
 
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
