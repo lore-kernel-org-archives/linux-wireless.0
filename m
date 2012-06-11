@@ -1,82 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50587 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757862Ab2FHQYM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48393 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352Ab2FKGtB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 12:24:12 -0400
-Message-ID: <1339172649.5748.16.camel@jlt3.sipsolutions.net> (sfid-20120608_182416_999915_0E0629D3)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andre Heider <a.heider@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 18:24:09 +0200
-In-Reply-To: <1339172402.5748.15.camel@jlt3.sipsolutions.net> (sfid-20120608_182011_815432_531593AA)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	 <1339053364.4517.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
-	 <20120607180325.7752b3c0@milhouse>
-	 <1339094215.4630.7.camel@jlt3.sipsolutions.net>
-	 <1339102567.4630.8.camel@jlt3.sipsolutions.net>
-	 <4FD11B47.10002@lwfinger.net>
-	 <CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 <1339171694.5748.12.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-fZQ0auLAd_8rqaoNfLF-2UghRrB7S7qgu1RrqesbW4Q@mail.gmail.com>
-	 (sfid-20120608_181648_775335_FE32999F) <1339172402.5748.15.camel@jlt3.sipsolutions.net>
-	 (sfid-20120608_182011_815432_531593AA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Jun 2012 02:49:01 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 5/9] ath9k_hw: fix incorrect LNA register settings
+Date: Mon, 11 Jun 2012 12:19:33 +0530
+Message-ID: <1339397377-3374-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_084905_572480_60E59875)
+In-Reply-To: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 18:20 +0200, Johannes Berg wrote:
-> On Fri, 2012-06-08 at 18:16 +0200, Andre Heider wrote:
-> 
-> > >> > http://p.sipsolutions.net/511dda98892d2c9a.txt
-> 
-> > >> [   17.597307] wlan0: authenticate with d8:5d:4c:9c:31:14
-> > >> [   17.638399] wlan0: send auth to d8:5d:4c:9c:31:14 (try 1/3)
-> > >> [   17.851085] wlan0: send auth to d8:5d:4c:9c:31:14 (try 2/3)
-> > >> [   18.063086] wlan0: send auth to d8:5d:4c:9c:31:14 (try 3/3)
-> > >> [   18.275081] wlan0: authentication with d8:5d:4c:9c:31:14 timed out
-> > >>
-> > >> Tried it 3 times, always times out.
-> > >
-> > > So you didn't get the warning, but can you still check what
-> > > info->hw_queue is in pio.c?
-> > 
-> > always "1"
-> 
-> Ok, so that's correct. Hmm.
-> 
-> Can you check in mac80211's debugfs if the queues are ever started? Or
-> maybe somewhere else? That's the only thing I can think of, if this is
-> getting 1 I finally got the mapping right ...
+After a full reset, mci_reset will put LNA update to the setting
+for 2G mode. Those registers need to be forced to update when
+the channel is in 5G.
 
-I'd be very surprised if the queue is stopped, it doesn't look that
-way .. but maybe you can figure that out with mac80211 tracing:
-http://linuxwireless.org/en/developers/Documentation/mac80211/tracing
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   24 +++++++++---------------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.c         |    2 +-
+ 3 files changed, 11 insertions(+), 17 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index cbeff9c..c11dbaa 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1013,38 +1013,32 @@ static void ar9003_mci_queue_unsent_gpm(struct ath_hw *ah, u8 header,
+ 	}
+ }
+ 
+-void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
++void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+-	if (!mci->update_2g5g)
++	if (!mci->update_2g5g && !force)
+ 		return;
+ 
+ 	if (mci->is_2g) {
+ 		ar9003_mci_send_2g5g_status(ah, true);
+-		ar9003_mci_send_lna_transfer(ah, true);
+-		udelay(5);
+ 
+-		REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
++		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
+ 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+ 		REG_CLR_BIT(ah, AR_PHY_GLB_CONTROL,
+ 			    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
+ 
+ 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
+-			REG_SET_BIT(ah, AR_BTCOEX_CTRL,
+-				    AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
++			ar9003_mci_osla_setup(ah, true);
+ 	} else {
+-		ar9003_mci_send_lna_take(ah, true);
+-		udelay(5);
+-
+ 		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
+ 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+ 		REG_SET_BIT(ah, AR_PHY_GLB_CONTROL,
+ 			    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
+-		REG_CLR_BIT(ah, AR_BTCOEX_CTRL,
+-			    AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
+ 
+-		ar9003_mci_send_2g5g_status(ah, true);
++		ar9003_mci_osla_setup(ah, false);
++		if (!force)
++			ar9003_mci_send_2g5g_status(ah, true);
+ 	}
+ }
+ 
+@@ -1313,7 +1307,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 		if (mci->unhalt_bt_gpm)
+ 			ar9003_mci_send_coex_halt_bt_gpm(ah, false, true);
+ 
+-		ar9003_mci_2g5g_switch(ah, true);
++		ar9003_mci_2g5g_switch(ah, false);
+ 		break;
+ 	case MCI_STATE_SET_BT_CAL_START:
+ 		mci->bt_state = MCI_BT_CAL_START;
+@@ -1394,7 +1388,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 		mci->query_bt = true;
+ 		mci->need_flush_btinfo = true;
+ 		ar9003_mci_send_coex_wlan_channels(ah, true);
+-		ar9003_mci_2g5g_switch(ah, true);
++		ar9003_mci_2g5g_switch(ah, false);
+ 		break;
+ 	case MCI_STATE_NEED_FTP_STOMP:
+ 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 45624e1..8cb3307 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -276,7 +276,7 @@ void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep);
+ void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
+ void ar9003_mci_init_cal_done(struct ath_hw *ah);
+ void ar9003_mci_set_full_sleep(struct ath_hw *ah);
+-void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
++void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force);
+ void ar9003_mci_check_bt(struct ath_hw *ah);
+ bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
+ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8412128..a9d328c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1711,7 +1711,7 @@ static int ath9k_hw_do_fastcc(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	ath9k_hw_start_nfcal(ah, true);
+ 
+ 	if (ath9k_hw_mci_is_enabled(ah))
+-		ar9003_mci_2g5g_switch(ah, true);
++		ar9003_mci_2g5g_switch(ah, false);
+ 
+ 	if (AR_SREV_9271(ah))
+ 		ar9002_hw_load_ani_reg(ah, chan);
+-- 
+1.7.10.4
 
