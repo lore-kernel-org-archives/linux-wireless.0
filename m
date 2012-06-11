@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44414 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756035Ab2FTOT3 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:36616 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150Ab2FKOti (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 10:19:29 -0400
-Message-ID: <1340201968.4655.67.camel@jlt3.sipsolutions.net> (sfid-20120620_161932_944234_2E16D7E5)
-Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on
- op-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Wed, 20 Jun 2012 16:19:28 +0200
-In-Reply-To: <4FE1D26D.8060702@neratec.com>
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
-	    <1340111463-4554-3-git-send-email-victorg@ti.com>
-	    <1340181856.4655.37.camel@jlt3.sipsolutions.net>
-	    (sfid-20120620_104434_561430_DB0A480E) <1340181992.4655.39.camel@jlt3.sipsolutions.net>
-	   <4FE1B9CB.2090206@neratec.com>
-	  <1340193471.4655.57.camel@jlt3.sipsolutions.net>
-	  <4FE1C8EC.4040902@neratec.com>
-	 <1340197920.4655.62.camel@jlt3.sipsolutions.net>
-	 <4FE1D26D.8060702@neratec.com>
+	Mon, 11 Jun 2012 10:49:38 -0400
+Message-ID: <1339426241.4999.62.camel@lappy> (sfid-20120611_164956_141861_A9C0D7D4)
+Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
+From: Sasha Levin <levinsasha928@gmail.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+	David Miller <davem@davemloft.net>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	Dave Jones <davej@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 11 Jun 2012 16:50:41 +0200
+In-Reply-To: <1339425693.6001.2268.camel@edumazet-glaptop>
+References: <1339423241.4999.53.camel@lappy>
+	 <20120611144134.GX22557@sortiz-mobl>
+	 <1339425693.6001.2268.camel@edumazet-glaptop>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 15:38 +0200, Zefir Kurtisi wrote:
-
-> No, it serves its purpose to ensure hostapd is not going mad and tries
-> to enable TX before the CAC is over via redundant checks.
+On Mon, 2012-06-11 at 16:41 +0200, Eric Dumazet wrote:
+> On Mon, 2012-06-11 at 16:41 +0200, Samuel Ortiz wrote:
+> > Hi Sasha,
+> > 
+> > On Mon, Jun 11, 2012 at 04:00:41PM +0200, Sasha Levin wrote:
+> > > Hi all,
+> > > 
+> > > I've stumbled on the following while fuzzing with trinity inside a KVM tools guest, running on 3.5-rc2:
+> > > 
+> > Thanks for the report, it could be worth adding this one to
+> > bugzilla.kernel.org.
+> > 
+> > What's trinity ?
+> > Also, if this one is reproducible, would you mind sharing some details about
+> > how we could reproduce it ?
 > 
-> What I'm saying is this: we defined that DFS regulatory compliance is
-> provided by and distributed over driver, mac80211, and hostapd. We
-> always must ensure that a working combination of those operates in
-> compliance. But we have no control over it when a component is exchanged
-> or modified.
+> Well, bugfix should be trivial enough ;)
+> 
+> diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+> index ec1134c..208416e 100644
+> --- a/net/nfc/rawsock.c
+> +++ b/net/nfc/rawsock.c
+> @@ -54,11 +54,12 @@ static int rawsock_release(struct socket *sock)
+>  {
+>  	struct sock *sk = sock->sk;
+>  
+> -	pr_debug("sock=%p\n", sock);
+> -
+> -	sock_orphan(sk);
+> -	sock_put(sk);
+> +	pr_debug("sock=%p sk=%p\n", sock, sk);
+>  
+> +	if (sk) {
+> +		sock_orphan(sk);
+> +		sock_put(sk);
+> +	}
+>  	return 0;
+>  }
 
-Right, but if hostapd does something unexpected, in the code the kernel
-attempts to verify that it did in fact do radar checking for a certain
-minimum amount of time. I pointed out how those checks are ineffective,
-and how they should be fixed.
+Eric, Is there something that documents at what state each of the
+callbacks in the network subsystem can be called? Like a big flow chart
+of some sorts?
 
-> Back to topic: as stated above, radar_detection_timeout should be per
-> wiphy. That would also resolve your concern, right?
+I'm asking because I've looked at this as well before sending this mail,
+and while the fix does look trivial, I wasn't sure whether it is really
+the correct fix, or the problem is that this callback wasn't supposed be
+called at all so something else is broken (we had such issue with
+namespaces and unshare() not long ago).
 
-No.
 
-johannes
 
