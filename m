@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43511 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755344Ab2FOQKF (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:49986 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750854Ab2FKWKC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 12:10:05 -0400
-Message-ID: <4FDB5E52.1020608@qca.qualcomm.com> (sfid-20120615_181010_923131_5919712F)
-Date: Fri, 15 Jun 2012 19:09:54 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 11 Jun 2012 18:10:02 -0400
+Received: by wibhn6 with SMTP id hn6so3424780wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 15:10:00 -0700 (PDT)
+Message-ID: <4FD66CB6.6080606@gmail.com> (sfid-20120612_001007_450048_75BB9B1E)
+Date: Tue, 12 Jun 2012 00:09:58 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <me@bobcopeland.com>,
-	<mickflemm@gmail.com>
-Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
-References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com> <1339228530.4539.0.camel@jlt3.sipsolutions.net> <4FD3A936.8070600@broadcom.com> <1339399952.4520.13.camel@jlt3.sipsolutions.net> <4FD60369.80108@qca.qualcomm.com> <1339425944.4520.27.camel@jlt3.sipsolutions.net> <20120614193104.GD32257@tux> <1339748211.4512.6.camel@jlt3.sipsolutions.net> <4FDAF096.200@qca.qualcomm.com> <4FDB1740.60707@broadcom.com>
-In-Reply-To: <4FDB1740.60707@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] rt2x00: missing devices/chips
+References: <4FBBF88F.5060508@gmail.com> <CAGXE3d-GJDPN70AHnYRBXhNdfXg2quL1xCYwJ-VoSNjhHHZDhQ@mail.gmail.com>
+In-Reply-To: <CAGXE3d-GJDPN70AHnYRBXhNdfXg2quL1xCYwJ-VoSNjhHHZDhQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2012 02:06 PM, Arend van Spriel wrote:
-> On 06/15/2012 10:21 AM, Kalle Valo wrote:
->> On 06/15/2012 11:16 AM, Johannes Berg wrote:
->>>> As for a name, I thought about it for a while and given that we have different
->>>>> "wireless" technologies -- bluetooth, NFC, naming this CONFIG_WIRELESS_EXPERT
->>>>> seemed odd, and given that our 802.11 framework is under cfg80211 naming it
->>>>> CONFIG_CFG80211_EXPERT seemed appropriate. But even if its under cfg80211
->>>>> perhaps something more explicit about the implications may be better, how
->>>>> about CONFIG_CFG80211_MAY_BREAK_CERTIFICATION ?
->>>
->>> Or you could just be explicit about it and call it
->>> CONFIG_WIRELESS_REGULATORY_BREAKAGE or something like that :-)
->>
->> CONFIG_WIRELESS_CERTIFIED?
-> 
-> That one looks familiar ;-)
+On 05/23/2012 01:35 PM, Helmut Schaa wrote:
 
-Sorry, did you suggest that already? I missed that. I guess I need to
-start organising my email better :)
+> On Tue, May 22, 2012 at 10:35 PM, Xose Vazquez Perez
+> <xose.vazquez@gmail.com> wrote:
+>> Those were my final patches, from now on MediaTek Inc. guys
+>> should take over it.
+>
+> That would indeed be nice, let's see what the future brings.
+>
+> However, thanks a lot for all your contributions!
+> Helmut
 
-Kalle
+missing in rt2800pci :
+
+0x1814, 0x3290   RT3290LE 802.11b/g/n Wireless LAN Adapter
+0x1814, 0x359f   RT3592   802.11a/b/g/n 2x2 WiFi Adapter
+0x1814, 0x5360   RT5360   (D-Link DWA-525 Wireless N 150 Desktop PCI Adapter A2) only in linux-next
+0x1814, 0x5592   RT5592   (ASUS PCE-N53 300Mbps 11n Dual band Wireless LAN PCI-E Card)
