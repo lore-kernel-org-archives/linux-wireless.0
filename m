@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36262 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753315Ab2FEXId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 19:08:33 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 11/18] brcmsmac: remove some unnessessacry casts and void pointer
-Date: Wed,  6 Jun 2012 01:07:14 +0200
-Message-Id: <1338937641-8519-12-git-send-email-hauke@hauke-m.de> (sfid-20120606_012943_364595_4CBFF0CB)
-In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:30814 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640Ab2FKUgR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jun 2012 16:36:17 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: fix fw capability parsing
+Date: Mon, 11 Jun 2012 13:36:12 -0700
+Message-ID: <1339446972-3793-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120611_223654_779472_4A4BF646)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch fixes a bug where no capabilites are parsed when the number
+of firmware capability bits translate into fewer bytes than the host has
+knowledge of. Instead just process number of capability bytes as
+reported by the firmware.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 8cfa8bb..a07ff0a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4231,9 +4231,8 @@ static void brcms_c_radio_timer(void *arg)
- }
- 
- /* common low-level watchdog code */
--static void brcms_b_watchdog(void *arg)
-+static void brcms_b_watchdog(struct brcms_c_info *wlc)
- {
--	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
- 	struct brcms_hardware *wlc_hw = wlc->hw;
- 
- 	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
-@@ -4254,10 +4253,8 @@ static void brcms_b_watchdog(void *arg)
- }
- 
- /* common watchdog code */
--static void brcms_c_watchdog(void *arg)
-+static void brcms_c_watchdog(struct brcms_c_info *wlc)
- {
--	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index daf24ee..0a13425 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -996,9 +996,6 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+ 				   ar->hw.reserved_ram_size);
+ 			break;
+ 		case ATH6KL_FW_IE_CAPABILITIES:
+-			if (ie_len < DIV_ROUND_UP(ATH6KL_FW_CAPABILITY_MAX, 8))
+-				break;
 -
- 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+ 			ath6kl_dbg(ATH6KL_DBG_BOOT,
+ 				   "found firmware capabilities ie (%zd B)\n",
+ 				   ie_len);
+@@ -1007,6 +1004,9 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
+ 				index = i / 8;
+ 				bit = i % 8;
  
- 	if (!wlc->pub->up)
-@@ -4297,7 +4294,9 @@ static void brcms_c_watchdog(void *arg)
- 
- static void brcms_c_watchdog_by_timer(void *arg)
- {
--	brcms_c_watchdog(arg);
-+	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
++				if (index == ie_len)
++					break;
 +
-+	brcms_c_watchdog(wlc);
- }
- 
- static bool brcms_c_timers_init(struct brcms_c_info *wlc, int unit)
+ 				if (data[index] & (1 << bit))
+ 					__set_bit(i, ar->fw_capabilities);
+ 			}
 -- 
-1.7.9.5
+1.7.4.1
 
