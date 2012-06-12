@@ -1,46 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43595 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752852Ab2FNLY6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4393 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752145Ab2FLOrn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 07:24:58 -0400
-Message-ID: <1339673095.4461.2.camel@jlt3.sipsolutions.net> (sfid-20120614_132502_022325_E0CC951E)
-Subject: Re: [PATCH] mac80211: add support for userspace to handle auth
- frames on adhoc ifaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: Will Hawkins <hawkinsw@opentechinstitute.org>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 14 Jun 2012 13:24:55 +0200
-In-Reply-To: <4FD99A24.3020907@lri.fr>
-References: <4FD8B5D4.8060305@opentechinstitute.org>
-	 <4FD99A24.3020907@lri.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Jun 2012 10:47:43 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 3/8] ath9k_hw: remove MCI_STATE_SEND_WLAN_CHANNELS
+Date: Tue, 12 Jun 2012 20:18:18 +0530
+Message-ID: <1339512503-26670-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120612_164746_804743_A2639C9F)
+In-Reply-To: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-14 at 10:00 +0200, Nicolas Cavallari wrote:
+Add a MCI util function to send wlan channel info to BT.
 
-> I just have a question here : when auth frames are not delivered to
-> userspace, mac80211 will respond to them, and also uses them to detect
-> node reboot. If you register for auth frames, mac80211 will still send
-> auth frames as soon as a new station is seen, which might be confusing
-> for user space. Is that ok to do this ? Or should userspace have more
-> control over how mac80211 sends auth frames ?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   25 +++++++++----------------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    2 +-
+ drivers/net/wireless/ath/ath9k/mci.c        |    2 +-
+ 3 files changed, 11 insertions(+), 18 deletions(-)
 
-Please read the code. If userspace registers for them, mac80211 will
-never do anything with the frame.
-
-> There is also another thing to consider if you want to send auth frames
-> from userspace, as CMD_FRAME requires a frequency, which in IBSS mode,
-> can change anytime without userspace being notified. If you only have to
-> answer to received auth frames, this is easier as you can reuse the
-> frequency given by nl80211 when receiving the auth frame. But if you
-> want to send a auth frame independently, how do you get the frequency to
-> use ?
-
-You check the BSS info, that's trivial.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index a021e74..3b44ebe 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1238,22 +1238,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	case MCI_STATE_SEND_WLAN_COEX_VERSION:
+ 		ar9003_mci_send_coex_version_response(ah, true);
+ 		break;
+-	case MCI_STATE_SEND_WLAN_CHANNELS:
+-		if (p_data) {
+-			if (((mci->wlan_channels[1] & 0xffff0000) ==
+-			     (*(p_data + 1) & 0xffff0000)) &&
+-			    (mci->wlan_channels[2] == *(p_data + 2)) &&
+-			    (mci->wlan_channels[3] == *(p_data + 3)))
+-				break;
+-
+-			mci->wlan_channels[0] = *p_data++;
+-			mci->wlan_channels[1] = *p_data++;
+-			mci->wlan_channels[2] = *p_data++;
+-			mci->wlan_channels[3] = *p_data++;
+-		}
+-		mci->wlan_channels_update = true;
+-		ar9003_mci_send_coex_wlan_channels(ah, true);
+-		break;
+ 	case MCI_STATE_SEND_VERSION_QUERY:
+ 		ar9003_mci_send_coex_version_query(ah, true);
+ 		break;
+@@ -1453,3 +1437,12 @@ void ar9003_mci_set_bt_version(struct ath_hw *ah, u8 major, u8 minor)
+ 		mci->bt_ver_major, mci->bt_ver_minor);
+ }
+ EXPORT_SYMBOL(ar9003_mci_set_bt_version);
++
++void ar9003_mci_send_wlan_channels(struct ath_hw *ah)
++{
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++
++	mci->wlan_channels_update = true;
++	ar9003_mci_send_coex_wlan_channels(ah, true);
++}
++EXPORT_SYMBOL(ar9003_mci_send_wlan_channels);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index d4e7739..05f42a9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -201,7 +201,6 @@ enum mci_state_type {
+ 	MCI_STATE_CONT_TXRX,
+ 	MCI_STATE_RESET_REQ_WAKE,
+ 	MCI_STATE_SEND_WLAN_COEX_VERSION,
+-	MCI_STATE_SEND_WLAN_CHANNELS,
+ 	MCI_STATE_SEND_VERSION_QUERY,
+ 	MCI_STATE_SEND_STATUS_QUERY,
+ 	MCI_STATE_NEED_FLUSH_BT_INFO,
+@@ -263,6 +262,7 @@ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
+ u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more);
+ void ar9003_mci_set_bt_version(struct ath_hw *ah, u8 major, u8 minor);
++void ar9003_mci_send_wlan_channels(struct ath_hw *ah);
+ /*
+  * These functions are used by ath9k_hw.
+  */
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 6f4188a..dbc8e1d 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -312,7 +312,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 		ar9003_mci_set_bt_version(ah, major, minor);
+ 		break;
+ 	case MCI_GPM_COEX_STATUS_QUERY:
+-		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_CHANNELS, NULL);
++		ar9003_mci_send_wlan_channels(ah);
+ 		break;
+ 	case MCI_GPM_COEX_BT_PROFILE_INFO:
+ 		memcpy(&profile_info,
+-- 
+1.7.10.4
 
