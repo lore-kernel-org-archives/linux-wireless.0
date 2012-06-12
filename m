@@ -1,89 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18720 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36999 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765Ab2FRJ6L (ORCPT
+	with ESMTP id S1754069Ab2FLUrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 05:58:11 -0400
-Message-ID: <4FDEFBA8.40807@qca.qualcomm.com> (sfid-20120618_115837_997029_1F2965A7)
-Date: Mon, 18 Jun 2012 15:28:00 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Tue, 12 Jun 2012 16:47:07 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: support rssi threshold for sched scan
+Date: Tue, 12 Jun 2012 13:46:19 -0700
+Message-ID: <1339533979-32084-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120612_224757_316312_0C1E36AA)
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<stable@vger.kernel.org>,
-	Rolf Offermanns <rolf.offermanns@gmx.net>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k_hw: avoid possible infinite loop in ar9003_get_pll_sqsum_dvc
-References: <1340005410-11256-1-git-send-email-mohammed@qca.qualcomm.com> <20120618080453.GA3818@vmraj-lnx.qca.qualcomm.com>
-In-Reply-To: <20120618080453.GA3818@vmraj-lnx.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Raj,
+The ath6kl firmware can filter scan results based on rssi. This is
+useful to limit hosts wakeups on scheduled scans.
 
-On Monday 18 June 2012 01:34 PM, Rajkumar Manoharan wrote:
-> On Mon, Jun 18, 2012 at 01:13:30PM +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> "ath9k: Fix softlockup in AR9485" with commit id
->> 64bc1239c790e051ff677e023435d770d2ffa174 fixed the reported
->> issue, yet its better to avoid the possible infinite loop
->> in ar9003_get_pll_sqsum_dvc by having a timeout as suggested
->> by ath9k maintainers.
->> http://www.spinics.net/lists/linux-wireless/msg92126.html.
->> Based on my testing PLL's locking measurement is done in
->> ~200us (2 iterations).
->>
->> Cc: stable@vger.kernel.org
->> Cc: Rolf Offermanns<rolf.offermanns@gmx.net>
->> Cc: Sujith Manoharan<c_manoha@qca.qualcomm.com>
->> Cc: Senthil Balasubramanian<senthilb@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++++++++-
->>   1 files changed, 13 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
->> index 784baee..a42c26f 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.c
->> +++ b/drivers/net/wireless/ath/ath9k/hw.c
->> @@ -773,13 +773,25 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
->>
->>   u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah)
->>   {
->> +	struct ath_common *common = ath9k_hw_common(ah);
->> +	int i = 0;
->> +
->>   	REG_CLR_BIT(ah, PLL3, PLL3_DO_MEAS_MASK);
->>   	udelay(100);
->>   	REG_SET_BIT(ah, PLL3, PLL3_DO_MEAS_MASK);
->>
->> -	while ((REG_READ(ah, PLL4)&  PLL4_MEAS_DONE) == 0)
->> +	while ((REG_READ(ah, PLL4)&  PLL4_MEAS_DONE) == 0) {
->> +
->>   		udelay(100);
->>
->> +		if (WARN_ON_ONCE(i>= 100)) {
->> +			ath_err(common, "PLL4 meaurement not done\n");
->> +			break;
->> +		}
->> +
->> +		i++;
-> How did you come up with 100 as max limit to break the loop?
->
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   10 ++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    3 +++
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   10 ++++++++++
+ 4 files changed, 41 insertions(+), 0 deletions(-)
 
-i assumed its a sufficient arbitrary max value to confirm that the PLL 
-locking measurement does not happens. Based on my quite a few of 
-tests(idle associated, with traffic)PLL immediately locksup in 200us (2 
-iterations). As per your suggestion i will quickly check with the 
-System's team if we can give a proper value, rather than 100 * 100 us as 
-timeout. thanks for reviewing it!
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 6f20998..4f20693 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3267,6 +3267,16 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 			return ret;
+ 	}
+ 
++	if (test_bit(ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD,
++		     ar->fw_capabilities)) {
++		ret = ath6kl_wmi_set_rssi_filter_cmd(ar->wmi, vif->fw_vif_idx,
++						    request->rssi_thold);
++		if (ret) {
++			ath6kl_err("failed to set RSSI threshold for scan");
++			return ret;
++		}
++	}
++
+ 	/* fw uses seconds, also make sure that it's >0 */
+ 	interval = max_t(u16, 1, request->interval / 1000);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 17a44fa..69b194c 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -115,6 +115,9 @@ enum ath6kl_fw_capability {
+ 	 */
+ 	ATH6KL_FW_CAPABILITY_SCHED_SCAN_MATCH_LIST,
+ 
++	/* Firmware supports filtering BSS results by RSSI */
++	ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD,
++
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 43bce9c..6966a29 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1515,6 +1515,24 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 	return 0;
+ }
+ 
++int ath6kl_wmi_set_rssi_filter_cmd(struct wmi *wmi, u8 if_idx, s8 rssi)
++{
++	struct sk_buff *skb;
++	struct wmi_set_rssi_filter_cmd *cmd;
++	int ret;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_set_rssi_filter_cmd *) skb->data;
++	cmd->rssi = rssi;
++
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_RSSI_FILTER_CMDID,
++				  NO_SYNC_WMIFLAG);
++	return ret;
++}
++
+ static int ath6kl_wmi_send_snr_threshold_params(struct wmi *wmi,
+ 			struct wmi_snr_threshold_params_cmd *snr_cmd)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 7c94fe3..128f8fe 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -628,6 +628,10 @@ enum wmi_cmd_id {
+ 	WMI_SET_MCASTRATE,
+ 
+ 	WMI_STA_BMISS_ENHANCE_CMDID,
++
++	WMI_SET_REGDOMAIN_CMDID,
++
++	WMI_SET_RSSI_FILTER_CMDID,
+ };
+ 
+ enum wmi_mgmt_frame_type {
+@@ -1276,6 +1280,11 @@ struct wmi_snr_threshold_params_cmd {
+ 	u8 reserved[3];
+ } __packed;
+ 
++/* Don't report BSSs with signal (RSSI) below this threshold */
++struct wmi_set_rssi_filter_cmd {
++	s8 rssi;
++} __packed;
++
+ enum wmi_preamble_policy {
+ 	WMI_IGNORE_BARKER_IN_ERP = 0,
+ 	WMI_FOLLOW_BARKER_IN_ERP,
+@@ -2588,6 +2597,7 @@ int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
+ 				   const u8 *mask);
+ int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
+ 				   u16 list_id, u16 filter_id);
++int ath6kl_wmi_set_rssi_filter_cmd(struct wmi *wmi, u8 if_idx, s8 rssi);
+ int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi);
+ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid);
+ int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
 -- 
-thanks,
-shafi
+1.7.4.1
+
