@@ -1,27 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32917 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951Ab2FYBA6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37382 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752532Ab2FLLd0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2012 21:00:58 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20455.47109.203396.141311@gargle.gargle.HOWL> (sfid-20120625_030110_856298_39693A50)
-Date: Mon, 25 Jun 2012 06:29:49 +0530
-To: Guido Iribarren <guidoiribarren@buenosaireslibre.org>
-CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-Subject: Regression on ath9k_htc managed mode
-In-Reply-To: <CAHD-aq+nNs4L0iZNxYSABX-1Wk+B=s-Avqc1TFYfO-8JOOZ5kA@mail.gmail.com>
-References: <CAHD-aq+nNs4L0iZNxYSABX-1Wk+B=s-Avqc1TFYfO-8JOOZ5kA@mail.gmail.com>
+	Tue, 12 Jun 2012 07:33:26 -0400
+Message-ID: <1339500801.4531.2.camel@jlt3.sipsolutions.net> (sfid-20120612_133329_198553_07B60033)
+Subject: Re: [PATCH] mac80211: Disallow changing chan type on monitor when
+ CHAN_MODE_FIXED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Tue, 12 Jun 2012 13:33:21 +0200
+In-Reply-To: <4FD725FF.1030108@gmail.com> (sfid-20120612_132035_802191_87C8E8E9)
+References: <1339499167-26225-1-git-send-email-pontus.fuchs@gmail.com>
+	  (sfid-20120612_130639_458885_983B325C) <1339499291.4531.1.camel@jlt3.sipsolutions.net>
+	 <4FD725FF.1030108@gmail.com> (sfid-20120612_132035_802191_87C8E8E9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guido Iribarren wrote:
-> Hello nice people,
-> we've recently found a bug when using infrastructure mode with tplink
-> wn722n usb dongles (ath9k_htc driver)
+On Tue, 2012-06-12 at 13:20 +0200, Pontus Fuchs wrote:
+> On 2012-06-12 13:08, Johannes Berg wrote:
+> > If you add a monitor interface in paralell to a normal interface
+> > mac80211 will let you to change the channel type on the monitor
+> > interface even if you are connected. Add an explicit check to
+> > disallow this.
+> > Is this against 3.5, and is it really needed there? It's a corner case
+> > to start with.
+> It's against wireless-next. 
 
-Can you try this patch : http://tinyurl.com/7ywqzoz ?
+Right, sorry, I was looking at the wrong code :(
 
-Sujith
+> It's a real corner case indeed. With the
+> wireshark toolbar I create monitors on demand for all phy's so I
+> see it quite often myself. If it needs fixing is up to you to decide :)
+
+Yeah, like we discussed, maybe it should or should not be allowed? With
+the new changes Michal is doing it'll probably be disallowed anyway?
+
+I'll apply it, but can you rediff and remove the "is_monitor" argument,
+since dev == NULL is equivalent? :)
+
+johannes
+
