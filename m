@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50402 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755417Ab2FZMag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:30:36 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v3 04/13] cfg80211: track ibss fixed channel
-Date: Tue, 26 Jun 2012 14:30:09 +0200
-Message-ID: <1340713818-28549-5-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143040_973945_94F10E34)
-In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:52664 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623Ab2FLQ4r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 12:56:47 -0400
+Date: Tue, 12 Jun 2012 11:56:42 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 0/9] brcm80211: smac: rework regulatory support
+Message-ID: <20120612165642.GG11723@thinkpad-t410> (sfid-20120612_185651_490237_7DA179C9)
+References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IBSS may hop between channels. It is necessary to
-account this special case when considering
-interface combinations.
+On Tue, Jun 05, 2012 at 09:34:00AM -0500, Seth Forshee wrote:
+> brcmsmac has its own internal regulatory implementation which attempts
+> to enforce a Broadcom defined domain named X2. This code has no
+> integration with mac80211 regulatory other than supplying regulatory
+> hints, and thus each implementation operates independently of the other,
+> enforcing conflicting sets of rules.
+> 
+> This series of patches converts brcmsmac to relying on the mac80211
+> regulatory implementation. The X2 domain is registered with mac80211,
+> and brcmsmac is converted to using the constraints from mac80211 for
+> hardware configuration. Much code is removed in the process :)
+> 
+> There is one holdover from the old regulatory implementation. The MIMO
+> tx power limits for brcmsmac are still being configured based on
+> internal data for the X2 domain. Arend is trying to find out how these
+> need to be handled, but this can be changed at a later time.
+> 
+> Changes since version 1:
+> 
+>  - Dropped patch to remove support for DFS channels
+>  - Added back application of flags for radar channels on regulatory
+>    updates from RFC patches, with minor simplifications
+>  - Removed unneeded NULL pointer check from regulatory notifier callback
+> 
+> Thanks,
+> Seth
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- include/net/cfg80211.h |    2 ++
- net/wireless/ibss.c    |    1 +
- 2 files changed, 3 insertions(+), 0 deletions(-)
+Any more issues with this round that need to be addressed? If so I'd
+like to get to work on them soon, so that we can hopefully get this
+stuff in for 3.6.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0f9d7b4..92fdd02 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2338,6 +2338,8 @@ struct wireless_dev {
- 	/* for AP and mesh channel tracking */
- 	struct ieee80211_channel *channel;
- 
-+	bool ibss_fixed;
-+
- 	bool ps;
- 	int ps_timeout;
- 
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 89baa33..b90fd86 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -113,6 +113,7 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 		kfree(wdev->connect_keys);
- 	wdev->connect_keys = connkeys;
- 
-+	wdev->ibss_fixed = params->channel_fixed;
- #ifdef CONFIG_CFG80211_WEXT
- 	wdev->wext.ibss.channel = params->channel;
- #endif
--- 
-1.7.0.4
+Thanks,
+Seth
 
