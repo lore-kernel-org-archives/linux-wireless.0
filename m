@@ -1,130 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8077 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218Ab2FLOra (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 10:47:30 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/8] ath9k_hw: add utility function to set BT version
-Date: Tue, 12 Jun 2012 20:18:17 +0530
-Message-ID: <1339512503-26670-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120612_164734_641403_9E18C3A5)
-In-Reply-To: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:60958 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752061Ab2FLTSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 15:18:09 -0400
+Message-ID: <1339528734.14638.14.camel@dcbw.foobar.com> (sfid-20120612_211813_445395_72207AF4)
+Subject: Re: poor performance with W2CBW003 (Marvell 8686)
+From: Dan Williams <dcbw@redhat.com>
+To: Andreas Kemnade <andreas@kemnade.info>
+Cc: dsd@laptop.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Date: Tue, 12 Jun 2012 14:18:54 -0500
+In-Reply-To: <1339247007.5895.373.camel@localhost>
+References: <1339247007.5895.373.camel@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a utility function to set bluetooth version and remove
-MCI_STATE_SET_BT_COEX_VERSION.
+On Sat, 2012-06-09 at 15:03 +0200, Andreas Kemnade wrote:
+> Hi,
+> 
+> on the GTA04 (www.gta04.org) 
+> which has a W2CBW003 chip for wifi connected to a DM3730CBP CPU. data
+> rates are quite low using the libertas driver from kernel 3.2-3.4 
+> (https://github.com/neilbrown/gta04/branches)
+> even near an accesspoint. That seems not depend on the encryption
+> settings. Rates are around 100KByte/s. iwconfig shows 5.5Mb/s if it is
+> not connected to an accesspoint with specially configured rates (but
+> still the throughput is low).
+> 
+> In contrary data rates are high (>1MByte/s) with a kernel based on
+> the 2.6.32  BeagleBoard XM hw-validation kernel
+> https://github.com/goldelico/gta04-kernel
+> That behaviour was reported by several people.
+> 
+> I tried also the libertas-tf driver with kernel 3.2 using the
+> instructions here:
+> http://corysohrakoff.wordpress.com/2011/09/13/enabling-wifi-ap-mode-on-a-gumstix-overo/
+> That was also slow.
+> 
+> Any hints?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |   25 ++++++++++++-------------
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    2 +-
- drivers/net/wireless/ath/ath9k/mci.c        |   11 +++--------
- 3 files changed, 16 insertions(+), 22 deletions(-)
+GSPI or SDIO?  What SD host controller?  Does the controller support
+4-bit mode correctly?  What block sizes does it support?  Most often the
+issue is with crappy  host controllers that need workarounds or quirks
+to correctly support the higher speeds that the driver can do.  The
+benchmark I always used was that on a laptop with a Ricoh SD controller,
+I could easily pull megabits per second even 15 feet away.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 0433f2b..a021e74 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1166,7 +1166,6 @@ EXPORT_SYMBOL(ar9003_mci_cleanup);
- 
- u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- {
--	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
- 	u32 value = 0;
- 	u8 query_type;
-@@ -1239,18 +1238,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 	case MCI_STATE_SEND_WLAN_COEX_VERSION:
- 		ar9003_mci_send_coex_version_response(ah, true);
- 		break;
--	case MCI_STATE_SET_BT_COEX_VERSION:
--		if (!p_data)
--			ath_dbg(common, MCI,
--				"MCI Set BT Coex version with NULL data!!\n");
--		else {
--			mci->bt_ver_major = (*p_data >> 8) & 0xff;
--			mci->bt_ver_minor = (*p_data) & 0xff;
--			mci->bt_version_known = true;
--			ath_dbg(common, MCI, "MCI BT version set: %d.%d\n",
--				mci->bt_ver_major, mci->bt_ver_minor);
--		}
--		break;
- 	case MCI_STATE_SEND_WLAN_CHANNELS:
- 		if (p_data) {
- 			if (((mci->wlan_channels[1] & 0xffff0000) ==
-@@ -1454,3 +1441,15 @@ out:
- 	return offset;
- }
- EXPORT_SYMBOL(ar9003_mci_get_next_gpm_offset);
-+
-+void ar9003_mci_set_bt_version(struct ath_hw *ah, u8 major, u8 minor)
-+{
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+
-+	mci->bt_ver_major = major;
-+	mci->bt_ver_minor = minor;
-+	mci->bt_version_known = true;
-+	ath_dbg(ath9k_hw_common(ah), MCI, "MCI BT version set: %d.%d\n",
-+		mci->bt_ver_major, mci->bt_ver_minor);
-+}
-+EXPORT_SYMBOL(ar9003_mci_set_bt_version);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 163d156..d4e7739 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -201,7 +201,6 @@ enum mci_state_type {
- 	MCI_STATE_CONT_TXRX,
- 	MCI_STATE_RESET_REQ_WAKE,
- 	MCI_STATE_SEND_WLAN_COEX_VERSION,
--	MCI_STATE_SET_BT_COEX_VERSION,
- 	MCI_STATE_SEND_WLAN_CHANNELS,
- 	MCI_STATE_SEND_VERSION_QUERY,
- 	MCI_STATE_SEND_STATUS_QUERY,
-@@ -263,6 +262,7 @@ void ar9003_mci_cleanup(struct ath_hw *ah);
- void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 			      u32 *rx_msg_intr);
- u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more);
-+void ar9003_mci_set_bt_version(struct ath_hw *ah, u8 major, u8 minor);
- /*
-  * These functions are used by ath9k_hw.
-  */
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 9e15231..6f4188a 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -299,22 +299,17 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- 	struct ath_mci_profile_info profile_info;
- 	struct ath_mci_profile_status profile_status;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	u32 version;
--	u8 major;
--	u8 minor;
-+	u8 major, minor;
- 	u32 seq_num;
- 
- 	switch (opcode) {
- 	case MCI_GPM_COEX_VERSION_QUERY:
--		version = ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_COEX_VERSION,
--					   NULL);
-+		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_COEX_VERSION, NULL);
- 		break;
- 	case MCI_GPM_COEX_VERSION_RESPONSE:
- 		major = *(rx_payload + MCI_GPM_COEX_B_MAJOR_VERSION);
- 		minor = *(rx_payload + MCI_GPM_COEX_B_MINOR_VERSION);
--		version = (major << 8) + minor;
--		version = ar9003_mci_state(ah, MCI_STATE_SET_BT_COEX_VERSION,
--					   &version);
-+		ar9003_mci_set_bt_version(ah, major, minor);
- 		break;
- 	case MCI_GPM_COEX_STATUS_QUERY:
- 		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_CHANNELS, NULL);
--- 
-1.7.10.4
+(that's not to say there aren't inefficiencies in the driver, just that
+we know that given a good SDHC and a good SDHC driver, that the libertas
+driver itself is not the bottleneck).
+
+Dan
 
