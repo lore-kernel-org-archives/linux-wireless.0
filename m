@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754103Ab2FCSd7 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:46095 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283Ab2FLJoo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 14:33:59 -0400
-Message-ID: <1338748437.15431.0.camel@jlt3.sipsolutions.net> (sfid-20120603_203402_477935_01C03F39)
-Subject: Re: IWLWIFI should depend on SUSPEND
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sebastian Kemper <sebastian_ml@gmx.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 03 Jun 2012 20:33:57 +0200
-In-Reply-To: <20120603164905.GA2056@wolfgang> (sfid-20120603_184923_810965_27443E1D)
-References: <20120519201958.GA2313@wolfgang>
-	 <1337540836.4585.1.camel@jlt3.sipsolutions.net>
-	 <1338384543.4511.18.camel@jlt3.sipsolutions.net>
-	 <20120603091643.GA2191@wolfgang>
-	 <1338735736.4972.0.camel@jlt3.sipsolutions.net>
-	 <20120603164905.GA2056@wolfgang> (sfid-20120603_184923_810965_27443E1D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Jun 2012 05:44:44 -0400
+Received: by wibhn6 with SMTP id hn6so3907917wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 02:44:43 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wlcore: update basic rates on channel switch
+Date: Tue, 12 Jun 2012 12:45:27 +0300
+Message-Id: <1339494327-28246-1-git-send-email-eliad@wizery.com> (sfid-20120612_114448_078180_65CC9BA9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-06-03 at 18:49 +0200, Sebastian Kemper wrote:
-> On Sun, Jun 03, 2012 at 05:02:16PM +0200, Johannes Berg wrote:
-> > Oh, so this goes back much further than I thought.
-> > 
-> > Well, the easiest is probably if you find the wowlan.pattern_max_len
-> > stuff etc. and put #ifdef around the whole wowlan block manually, like
-> > in my patch.
-> > 
-> > johannes
-> > 
-> 
-> Hello again,
-> 
-> I didn't try it out yet, although I did find the block you're talking
-> about. I didn't because I *think* that
-> 
-> #ifdef CONFIG_PM
-> …
-> #endif
-> 
-> wouldn't work.
+On channel switch we have to update the basic rates, in
+order to reflect possible band changes (otherwise, we
+might start beaconing on 11a with the default rates
+of 11g).
 
-You're right, it should be CONFIG_PM_SLEEP or something ... I'll have to
-sort it out. It looks like in iwlwifi, the suspend/resume methods are
-under CONFIG_PM_SLEEP, while in mac80211 they're under CONFIG_PM.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 1156e3f..21e0547 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2454,6 +2454,7 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		wlvif->channel_type = conf->channel_type;
+ 
+ 		if (is_ap) {
++			wl1271_set_band_rate(wl, wlvif);
+ 			ret = wl1271_init_ap_rates(wl, wlvif);
+ 			if (ret < 0)
+ 				wl1271_error("AP rate policy change failed %d",
+-- 
+1.7.6.401.g6a319
 
