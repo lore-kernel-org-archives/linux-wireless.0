@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33708 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753294Ab2FFNXb (ORCPT
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:35157 "HELO
+	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753158Ab2FLBOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:23:31 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 11 Jun 2012 21:14:30 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/29] iwlwifi: use iwl_trans_set_wr_ptrs to init the queues
-Date: Wed,  6 Jun 2012 15:21:58 +0200
-Message-Id: <1338988930-11561-17-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152337_463715_F5AA8A68)
-In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
-References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] ieee80211: definitions for Microsoft Vendor OUI and WPA OUI type
+Date: Mon, 11 Jun 2012 18:14:16 -0700
+Message-Id: <1339463656-10709-1-git-send-email-bzhao@marvell.com> (sfid-20120612_031446_328016_7EEE1F0F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Avinash Patil <patila@marvell.com>
 
-This functions does the job so use it instead of duplicating
-the code.
+Reference: http://standards.ieee.org/develop/regauth/oui/oui.txt
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/trans.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ include/linux/ieee80211.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 2d33015..0d0c7d8 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1060,8 +1060,7 @@ static void iwl_tx_start(struct iwl_trans *trans)
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index ce9af89..7013513 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1589,6 +1589,8 @@ enum ieee80211_sa_query_action {
  
- 	/* initiate the queues */
- 	for (i = 0; i < trans->cfg->base_params->num_of_queues; i++) {
--		iwl_write_prph(trans, SCD_QUEUE_RDPTR(i), 0);
--		iwl_write_direct32(trans, HBUS_TARG_WRPTR, 0 | (i << 8));
-+		iwl_trans_set_wr_ptrs(trans, i, 0);
- 		iwl_write_targ_mem(trans, trans_pcie->scd_base_addr +
- 				SCD_CONTEXT_QUEUE_OFFSET(i), 0);
- 		iwl_write_targ_mem(trans, trans_pcie->scd_base_addr +
-@@ -1075,8 +1074,6 @@ static void iwl_tx_start(struct iwl_trans *trans)
- 				SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK));
- 	}
+ #define WLAN_OUI_WFA			0x506f9a
+ #define WLAN_OUI_TYPE_WFA_P2P		9
++#define WLAN_OUI_MICROSOFT		0x0050f2
++#define WLAN_OUI_TYPE_MICROSOFT_WPA	1
  
--	iwl_trans_set_wr_ptrs(trans, trans_pcie->cmd_queue, 0);
--
- 	for (i = 0; i < trans_pcie->n_q_to_fifo; i++) {
- 		int fifo = trans_pcie->setup_q_to_fifo[i];
- 
+ /*
+  * WMM/802.11e Tspec Element
 -- 
-1.7.10
+1.7.0.2
 
