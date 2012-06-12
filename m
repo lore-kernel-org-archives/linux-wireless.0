@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv04.lahn.de ([213.239.197.57]:35450 "EHLO serv04.lahn.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751658Ab2FTGQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:16:05 -0400
-Date: Wed, 20 Jun 2012 08:15:53 +0200
-From: Michael Leun <lkml20120218@newton.leun.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
-Message-ID: <20120620081553.040171f4@xenia.leun.net> (sfid-20120620_081608_495131_3B8F4440)
-In-Reply-To: <20120620061303.GA8738@vmraj-lnx.qca.qualcomm.com>
-References: <20120619085137.337838c0@xenia.leun.net>
-	<CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com>
-	<20120620003315.2eaf6460@xenia.leun.net>
-	<20120620061303.GA8738@vmraj-lnx.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:44444 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995Ab2FLHvo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 03:51:44 -0400
+Received: by dady13 with SMTP id y13so6514254dad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 00:51:44 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, thomas@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v3 0/4] Support proactive PREQ mechanism in Mesh
+Date: Tue, 12 Jun 2012 15:50:41 +0800
+Message-Id: <1339487445-25428-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120612_095148_045286_A7EF50B1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 20 Jun 2012 11:43:05 +0530
-Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+These series of patches allow the support of proactive PREQ mechanism as defined in
+Sec. 13.10.4.2 of IEEE Std. 802.11-2012 based on the setting of dot11MeshHWMPRootMode
+as follow:
 
+dot11MeshHWMPRootMode (2): Proactive PREQ no PREP
+dot11MeshHWMPRootMode (3): Proactive PREQ with PREP
 
-> Thanks for the analysis. Can you please try with the attached patch
-> without reverting mac80211 change?
+Proactive RANN is now supported if the dot11MeshHWMPRootMode is set as (4).
 
-Radio Eriwan answers: In principle yes, but you forgot the
-attachment ;-)
+This v3 is modified according to Johannes's comments on v2.
 
--- 
-MfG,
+Chun-Yeow Yeoh (4):
+  {nl,cfg,mac}80211: implement dot11MeshHWMProotInterval and
+    dot11MeshHWMPactivePathToRootTimeout
+  mac80211: implement the proactive PREQ generation
+  mac80211: implement the proactive PREP generation
+  mac80211: invoke the timer only with correct dot11MeshHWMPRootMode
+    value
 
-Michael Leun
+ include/linux/ieee80211.h     |   39 ++++++++++++++++++++++++++
+ include/linux/nl80211.h       |    9 ++++++
+ include/net/cfg80211.h        |    9 ++++++
+ net/mac80211/cfg.c            |   10 +++++-
+ net/mac80211/debugfs_netdev.c |    6 ++++
+ net/mac80211/mesh.c           |   12 ++++++--
+ net/mac80211/mesh_hwmp.c      |   61 +++++++++++++++++++++++++++++++++++++----
+ net/wireless/mesh.c           |    4 +++
+ net/wireless/nl80211.c        |   15 +++++++++-
+ 9 files changed, 153 insertions(+), 12 deletions(-)
 
