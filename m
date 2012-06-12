@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43851 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754129Ab2FHRiQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57750 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116Ab2FLTfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 13:38:16 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 3/9] ath9k_hw: Fix AR9462 power consumption on idle associated
-Date: Fri, 8 Jun 2012 23:09:02 +0530
-Message-ID: <1339177148-21672-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120608_193819_354026_373B234F)
-In-Reply-To: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 12 Jun 2012 15:35:11 -0400
+Message-ID: <1339529708.4531.16.camel@jlt3.sipsolutions.net> (sfid-20120612_213515_620367_C55C07FC)
+Subject: Re: [PATCH 3/3] [nl,cfg,mac]80211: Allow user to configure basic
+ rates when joining
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	javier@cozybit.com, devel@lists.open80211s.org
+Date: Tue, 12 Jun 2012 21:35:08 +0200
+In-Reply-To: <CACcxo+ptw_-fgnrROmQXBkRONLw_hwwuufgqK_rzDQa6Ge7xNQ@mail.gmail.com> (sfid-20120612_213332_522627_061EF506)
+References: <1339122086-23190-1-git-send-email-ashok@cozybit.com>
+	 <1339122086-23190-3-git-send-email-ashok@cozybit.com>
+	 <1339231815.4539.33.camel@jlt3.sipsolutions.net>
+	 <CACcxo+ptw_-fgnrROmQXBkRONLw_hwwuufgqK_rzDQa6Ge7xNQ@mail.gmail.com>
+	 (sfid-20120612_213332_522627_061EF506)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HW statemachine is sometimes found stuck in the state
-WL_LNA_CTRL_DISABLE when BT is in sleep, which will cause
-TX_HOLD always asserted and resmgr stuck in PENDING_TX state
+On Tue, 2012-06-12 at 12:33 -0700, Ashok Nagarajan wrote:
+> Hello Johannes,
+> 
+> On Sat, Jun 9, 2012 at 1:50 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Thu, 2012-06-07 at 19:21 -0700, Ashok Nagarajan wrote:
+> >> Currently mesh uses mandatory rates as default basic rates. This patch
+> >> introduces basic rates to be configured at the time of joining mesh.
+> >
+> >> +     if (!sdata->vif.bss_conf.basic_rates)
+> >> +             sdata->vif.bss_conf.basic_rates =
+> >> +                     ieee80211_mandatory_rates(sdata, band);
+> >
+> > I think this default should come from cfg80211 instead, there's little
+> > point in imposing this calculation on all drivers that want to use mesh.
+> >
+> 
+> This default initialization uses the mac80211 utility function which
+> will not be accessible from cfg80211. 
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   34 +++++++++++++++++++++++++++++++++-
- 1 file changed, 33 insertions(+), 1 deletion(-)
+cfg80211 has the same data though, the function only uses channel flags.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 45e6700..db3dfc9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2086,8 +2086,9 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- 
- static bool ath9k_hw_set_power_awake(struct ath_hw *ah)
- {
--	u32 val;
-+	u32 val, btcoex_ctrl2, diag_sw;
- 	int i;
-+	u8 lna_ctrl, bt_sleep;
- 
- 	/* Set Bits 14 and 17 of AR_WA before powering on the chip. */
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
-@@ -2111,6 +2112,37 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah)
- 		    AR_RTC_FORCE_WAKE_EN);
- 	udelay(50);
- 
-+	if (!AR_SREV_9462_20(ah))
-+		goto skip_btcoex;
-+
-+	for (i = 0; i < AH_WAIT_TIMEOUT; i++) {
-+		btcoex_ctrl2 = REG_READ(ah, AR_BTCOEX_CTRL2);
-+		if (btcoex_ctrl2 != 0xdeadbeef)
-+			break;
-+		udelay(AH_TIME_QUANTUM);
-+	}
-+	REG_WRITE(ah, AR_BTCOEX_CTRL2, (btcoex_ctrl2 | BIT(23)));
-+
-+	for (i = 0; i < AH_WAIT_TIMEOUT; i++) {
-+		diag_sw = REG_READ(ah, AR_DIAG_SW);
-+		if (diag_sw != 0xdeadbeef)
-+			break;
-+		udelay(AH_TIME_QUANTUM);
-+	}
-+	REG_WRITE(ah, AR_DIAG_SW, (diag_sw | BIT(27) | BIT(19) | BIT(18)));
-+	lna_ctrl = REG_READ(ah, AR_OBS_BUS_CTRL) & 0x3;
-+	bt_sleep = REG_READ(ah, AR_MCI_RX_STATUS) & AR_MCI_RX_REMOTE_SLEEP;
-+
-+	REG_WRITE(ah, AR_BTCOEX_CTRL2, btcoex_ctrl2);
-+	REG_WRITE(ah, AR_DIAG_SW, diag_sw);
-+
-+	if (bt_sleep && (lna_ctrl == 2)) {
-+		REG_SET_BIT(ah, AR_BTCOEX_RC, 0x1);
-+		REG_CLR_BIT(ah, AR_BTCOEX_RC, 0x1);
-+		udelay(50);
-+	}
-+
-+skip_btcoex:
- 	for (i = POWER_UP_TIME / 50; i > 0; i--) {
- 		val = REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M;
- 		if (val == AR_RTC_STATUS_ON)
--- 
-1.7.10.3
+> Could you please explain what is
+> the advantage/purpose of imposing this calculation up in cfg80211.
+
+If there are ever non-mac80211 drivers using it they don't have to re-do
+the same calculations.
+
+johannes
 
