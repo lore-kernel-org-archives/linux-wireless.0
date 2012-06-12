@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:38709 "EHLO plane.gmane.org"
+Received: from mga03.intel.com ([143.182.124.21]:51299 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751550Ab2FHH0J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 03:26:09 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Scta8-0001Jr-0D
-	for linux-wireless@vger.kernel.org; Fri, 08 Jun 2012 09:26:04 +0200
-Received: from cph-ex1.sdesigns.com ([192.215.56.171])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 09:26:03 +0200
-Received: from hanskroner by cph-ex1.sdesigns.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 09:26:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Hans =?utf-8?b?S3LDtm5lcg==?= <hanskroner@gmail.com>
-Subject: Re: mwifiex:Testing AP functionality with hostapd
-Date: Fri, 8 Jun 2012 07:25:55 +0000 (UTC)
-Message-ID: <loom.20120608T092416-603@post.gmane.org> (sfid-20120608_092614_388954_B2D35D17)
-References: <loom.20120607T100950-564@post.gmane.org> <477F20668A386D41ADCC57781B1F7043083A7F0979@SC-VEXCH1.marvell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1750918Ab2FLLEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 07:04:37 -0400
+From: "Spinadel, David" <david.spinadel@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [RFC/RFT] mac80211: stop connection monitor on dissassoc
+Date: Tue, 12 Jun 2012 11:02:38 +0000
+Message-ID: <F781B6216F70FE49AB7B89F25E2F80C0187C1B@HASMSX103.ger.corp.intel.com> (sfid-20120612_130440_814423_DC14B4C0)
+References: <20120612095850.GA2612@redhat.com>
+	 <F781B6216F70FE49AB7B89F25E2F80C0187B2A@HASMSX103.ger.corp.intel.com>
+	 <20120612102023.GB2612@redhat.com>
+ <1339498908.4531.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339498908.4531.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I updated the firmware with the one provided by Bing in his message and built
-hostapd from the commit id I got from Avinash. hostapd starts up correctly and
-is exposing the access point.
-
-Thanks to the both of you for your help!!!
-
-Best Regards,
-
-Hans
+T2ssIG9uZSBtaW51dGUuDQoNCkRhdmlkDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0N
+CkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSAN
+ClNlbnQ6IFR1ZXNkYXksIEp1bmUgMTIsIDIwMTIgMTQ6MDINClRvOiBTdGFuaXNsYXcgR3J1c3pr
+YQ0KQ2M6IFNwaW5hZGVsLCBEYXZpZDsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpT
+dWJqZWN0OiBSZTogW1JGQy9SRlRdIG1hYzgwMjExOiBzdG9wIGNvbm5lY3Rpb24gbW9uaXRvciBv
+biBkaXNzYXNzb2MNCg0KT24gVHVlLCAyMDEyLTA2LTEyIGF0IDEyOjIwICswMjAwLCBTdGFuaXNs
+YXcgR3J1c3prYSB3cm90ZToNCj4gSGkuDQo+IA0KPiBPbiBUdWUsIEp1biAxMiwgMjAxMiBhdCAx
+MDowNTo1MkFNICswMDAwLCBTcGluYWRlbCwgRGF2aWQgd3JvdGU6DQo+ID4gVGhpcyBwcm9ibGVt
+IGlzIG5vdCBlYXN5IHRvIHJlcHJvZHVjZS4NCj4gPiBBdHRhY2hlZCBteSBwYXRjaCBJIGp1c3Qg
+c2VudCB0byBKb2hhbm5lcywgaXQgc2VlbXMgdG8gd29yayBoZXJlLiANCj4gPiBJdCBiYXNpY2Fs
+bHkgdGhlIHNhbWUgY2hhbmdlIGFzIHlvdXJzLCBidXQgSSBhbHNvIHJlbW92ZWQgc3RvcF9wb2xs
+IGZyb20gaWVlZTgwMjExX3N0YV9jb25uZWN0aW9uX2xvc3QoKS4NCj4gDQo+IE1ha2Ugc2Vuc2Uu
+IEpvaGFubmVzIHBsZXNlIHByb2Nlc3Mgd2l0aCBEYXZpZCBwYXRjaC4NCg0KT2ssIHdpbGwgZG8u
+IERhdmlkLCBjYW4geW91IHBsZWFzZSBzdWJtaXQgaXQgaW50ZXJuYWxseSwgSSdsbCB0YWtlIGl0
+IGZyb20gdGhlcmUuDQoNCmpvaGFubmVzDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpBIG1lbWJlciBvZiB0aGUg
+SW50ZWwgQ29ycG9yYXRpb24gZ3JvdXAgb2YgY29tcGFuaWVzCgpUaGlzIGUtbWFpbCBhbmQgYW55
+IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IKdGhlIHNv
+bGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykuIEFueSByZXZpZXcgb3IgZGlzdHJp
+YnV0aW9uCmJ5IG90aGVycyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0
+aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGFuZCBkZWxl
+dGUgYWxsIGNvcGllcy4K
 
