@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36042 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483Ab2FFGi2 (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:50037 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751374Ab2FLLUf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 02:38:28 -0400
-Message-ID: <1338964705.4513.3.camel@jlt3.sipsolutions.net> (sfid-20120606_083831_157225_2D71E88F)
-Subject: Re: [PATCH v2] mac80211: stop Rx during HW reconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Jun 2012 08:38:25 +0200
-In-Reply-To: <1338964357-21685-1-git-send-email-arik@wizery.com> (sfid-20120606_083243_872029_F444401F)
-References: <1338964357-21685-1-git-send-email-arik@wizery.com>
-	 (sfid-20120606_083243_872029_F444401F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Jun 2012 07:20:35 -0400
+Received: by lahd3 with SMTP id d3so3415066lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 04:20:34 -0700 (PDT)
+Message-ID: <4FD725FF.1030108@gmail.com> (sfid-20120612_132039_089213_B1A0521A)
+Date: Tue, 12 Jun 2012 13:20:31 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Disallow changing chan type on monitor when
+ CHAN_MODE_FIXED
+References: <1339499167-26225-1-git-send-email-pontus.fuchs@gmail.com>  (sfid-20120612_130639_458885_983B325C) <1339499291.4531.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339499291.4531.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-06 at 09:32 +0300, Arik Nemtsov wrote:
+On 2012-06-12 13:08, Johannes Berg wrote:
+> If you add a monitor interface in paralell to a normal interface
+> mac80211 will let you to change the channel type on the monitor
+> interface even if you are connected. Add an explicit check to
+> disallow this.
+> Is this against 3.5, and is it really needed there? It's a corner case
+> to start with.
+It's against wireless-next. It's a real corner case indeed. With the
+wireshark toolbar I create monitors on demand for all phy's so I
+see it quite often myself. If it needs fixing is up to you to decide :)
 
-> +++ b/net/mac80211/rx.c
-> @@ -3023,6 +3023,9 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  	if (WARN_ON(!sband))
->  		goto drop;
->  
-> +	/* make sure we get the latest values for the next variable checks */
-> +	smp_rmb();
-> +
+Cheers,
 
-I still don't think this makes a lot of sense. It's guaranteed racy, so
-what does this buy us?
-
-johannes
+Pontus
 
