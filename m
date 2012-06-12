@@ -1,82 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38111 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752881Ab2F2PxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 11:53:11 -0400
-Message-ID: <4FEDCF60.9020800@ti.com> (sfid-20120629_175317_498983_E1AE7EEE)
-Date: Fri, 29 Jun 2012 10:53:04 -0500
-From: Jon Hunter <jon-hunter@ti.com>
-MIME-Version: 1.0
-To: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
-CC: Franky Lin <frankyl@broadcom.com>, Kevin Hilman <khilman@ti.com>,
-	<b-cousson@ti.com>, <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<grant.likely@secretlab.ca>, <santosh.shilimkar@ti.com>,
-	<linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com> <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com> <4FECCB91.7090609@broadcom.com> <4FECD2E5.1060603@ti.com> <4FECE067.7000809@broadcom.com> <4FECE1BD.80906@ti.com> <4FECE45E.6040506@broadcom.com> <4FECEE9A.5070300@ti.com> <4FECFDD8.5060105@broadcom.com> <CAC83ZvJJw-7Xt4Ey4_OT70D6MGHEfwURYVuj5wYTLe5oYiMuRw@mail.gmail.com>
-In-Reply-To: <CAC83ZvJJw-7Xt4Ey4_OT70D6MGHEfwURYVuj5wYTLe5oYiMuRw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:55612 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750711Ab2FLLGj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 07:06:39 -0400
+Received: by lahd3 with SMTP id d3so3407476lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 04:06:38 -0700 (PDT)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH] mac80211: Disallow changing chan type on monitor when CHAN_MODE_FIXED
+Date: Tue, 12 Jun 2012 13:06:07 +0200
+Message-Id: <1339499167-26225-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20120612_130643_380290_CB631933)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If you add a monitor interface in paralell to a normal interface
+mac80211 will let you to change the channel type on the monitor
+interface even if you are connected. Add an explicit check to
+disallow this.
 
-On 06/28/2012 11:07 PM, DebBarma, Tarun Kanti wrote:
-> On Fri, Jun 29, 2012 at 6:29 AM, Franky Lin <frankyl@broadcom.com> wrote:
->> On 06/28/2012 04:54 PM, Jon Hunter wrote:
->>>
->>> I am wondering if this could be the bug ... on start-up I see that we do
->>> a context restore on bank1 during the probe which is before we have done
->>> the first suspend! In other words, we could restore a bad/uninitialised
->>> context for bank1. In the case of bank1, the loss count starts at 1 and
->>> not 0 and so we falsely think we need to perform a restore :-(
->>>
->>> [    0.176269] omap_gpio_runtime_resume: bank @ 0xfc310000
->>> [    0.177276] omap_gpio_runtime_resume: count 0, now 1
->>> [    0.177276] gpiochip_add: registered GPIOs 0 to 31 on device: gpio
->>> [    0.177642] omap_gpio_runtime_suspend: bank @ 0xfc310000
->>>
->>> Can you try ...
->>>
->>> diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
->>> index c4ed172..9623408 100644
->>> --- a/drivers/gpio/gpio-omap.c
->>> +++ b/drivers/gpio/gpio-omap.c
->>> @@ -1086,6 +1086,9 @@ static int __devinit omap_gpio_probe(struct
->>> platform_device *pdev)
->>>  #ifdef CONFIG_OF_GPIO
->>>         bank->chip.of_node = of_node_get(node);
->>>  #endif
->>> +       if (bank->get_context_loss_count)
->>> +               bank->context_loss_count =
->>> +                               bank->get_context_loss_count(bank->dev);
->>>
->>>         bank->irq_base = irq_alloc_descs(-1, 0, bank->width, 0);
->>>         if (bank->irq_base < 0) {
->>>
->>
->> Looks like you found the culprit. :) It does fix the problem.
-> So this looks similar to what NeilBrown <neilb@suse.de> reported in
-> another thread.
-> The reason was context_loss_count = 1 for GPIO BANK#0 which of course is in the
-> WKUP domain. In fact he tried out with the same fix. Anyways, we
-> should hear from
-> Kevin now whether it is feasible to fix the context_loss_count for the WKUP GPIO
-> bank or to put the workaround here in the gpio driver.
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+---
+ net/mac80211/cfg.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-Ok, so I have been looking at this some more today. I believe that the
-actual bug is that we are not checking to see if "loses_context" is true
-before populating "get_context_loss_count" (see omap dmtimer driver).
-For bank0 loses_context is false and so we should never be calling
-"get_context_loss_count" in the first place.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 498c94e..9f673bf 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -677,7 +677,8 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ static int ieee80211_set_channel(struct wiphy *wiphy,
+ 				 struct net_device *netdev,
+ 				 struct ieee80211_channel *chan,
+-				 enum nl80211_channel_type channel_type)
++				 enum nl80211_channel_type channel_type,
++				 bool is_monitor)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+@@ -689,7 +690,8 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
+ 	case CHAN_MODE_HOPPING:
+ 		return -EBUSY;
+ 	case CHAN_MODE_FIXED:
+-		if (local->oper_channel != chan)
++		if (local->oper_channel != chan ||
++		    (is_monitor && local->_oper_channel_type != channel_type))
+ 			return -EBUSY;
+ 		if (!sdata && local->_oper_channel_type == channel_type)
+ 			return 0;
+@@ -713,7 +715,7 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
+ 					 struct ieee80211_channel *chan,
+ 					 enum nl80211_channel_type channel_type)
+ {
+-	return ieee80211_set_channel(wiphy, NULL, chan, channel_type);
++	return ieee80211_set_channel(wiphy, NULL, chan, channel_type, true);
+ }
+ 
+ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
+@@ -831,7 +833,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EALREADY;
+ 
+ 	err = ieee80211_set_channel(wiphy, dev, params->channel,
+-				    params->channel_type);
++				    params->channel_type, false);
+ 	if (err)
+ 		return err;
+ 
+@@ -1607,7 +1609,7 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+ 		return err;
+ 
+ 	err = ieee80211_set_channel(wiphy, dev, setup->channel,
+-				    setup->channel_type);
++				    setup->channel_type, false);
+ 	if (err)
+ 		return err;
+ 
+-- 
+1.7.5.4
 
-I will send out a patch to fix this and will copy Kevin and Franky.
-
-Franky, if you can test and confirm it works that would be great.
-
-Kevin, if you can review that would be great too.
-
-Cheers
-Jon
