@@ -1,61 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:60623 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755724Ab2FNMJC (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42181 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753469Ab2FLUn7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 08:09:02 -0400
-Received: by obbtb18 with SMTP id tb18so2333883obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 05:09:01 -0700 (PDT)
+	Tue, 12 Jun 2012 16:43:59 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<johannes@sipsolutions.net>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH] nl80211: specify RSSI threshold when scanning
+Date: Tue, 12 Jun 2012 13:43:21 -0700
+Message-ID: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120612_224402_828536_6FD36347)
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEfBzLBP48f930tcGbSZ=jqEkuNd9RDUJYEWQUDodczqeg@mail.gmail.com>
-References: <CAMJBoFN48EZ0Bh6wSwtHz950PMS-bUR30aHq0v2hXg3spKbHFA@mail.gmail.com>
-	<CAB3XZEfBzLBP48f930tcGbSZ=jqEkuNd9RDUJYEWQUDodczqeg@mail.gmail.com>
-Date: Thu, 14 Jun 2012 14:09:01 +0200
-Message-ID: <CAMJBoFMHD8ukfOTonYOt+1wxC+hQbK=XAQMj+wiPev4ZKGV2ew@mail.gmail.com> (sfid-20120614_140913_663290_A0F76E87)
-Subject: Re: bug in __ieee80211_suspend?
-From: Vitaly Wool <vitalywool@gmail.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eliad,
+Support configuring an RSSI threshold in dBm (s32) when requesting
+scheduled scan, below which a BSS won't be reported by the cfg80211
+driver.
 
-On Thu, Jun 14, 2012 at 1:42 PM, Eliad Peller <eliad@wizery.com> wrote:
-> hi Vitaly,
->
-> On Thu, Jun 14, 2012 at 1:48 PM, Vitaly Wool <vitalywool@gmail.com> wrote:
->> I have some doubts about the following patch: "mac80211: quiesce vif
->> before suspending". In fact, I think it introduces a hard-to-track
->> bug: when a driver signals disconnection from the AP and the device
->> goes to sleep shortly thereafter, beacon_connection_loss_work will get
->> cancelled and the actual disconnection will never happen. Shouldn't we
->> fix that or is there something I'm missing?
->>
->
-> i think that flush_workqueue(local->workqueue) should handle the
-> normal disconnect-before-suspend case.
-> however, there's probably still some race condition when the work is
-> scheduled between the flush_workqueue() and the drv_suspend() call.
-> i'm not sure what is the right solution regarding it. maybe add
-> another flush_workqueue() after drv_suspend?
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-Maybe, but aren't we increasing the probability of hitting the 3s
-suspend timeout and thus crashing the system here?
+---
+v2:
+	naming (Kalle)
+	remove WIPHY_FLAG (Kalle)
+	use sched_scan_match_attr (Luca)
 
-> additionally, i don't think that the patch itself is the issue here,
-> as without it beacon_connection_loss_work might run after mac80211 was
-> already suspended, which might result in unexpected outcome as well...
+ include/linux/nl80211.h |    3 +++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |    6 +++++-
+ 3 files changed, 10 insertions(+), 1 deletions(-)
 
-Well, the patch is the issue because previously the driver could just
-stall the work and now it has no control over it.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 970afdf..5c0767f 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1956,6 +1956,8 @@ enum nl80211_reg_rule_attr {
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_INVALID: attribute number 0 is reserved
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_SSID: SSID to be used for matching,
+  * only report BSS with matching SSID.
++ * @NL80211_ATTR_SCHED_SCAN_MATCH_RSSI: RSSI threshold (in dBm) for reporting a
++ *	BSS in scan results. 0 to turn off filtering.
+  * @NL80211_SCHED_SCAN_MATCH_ATTR_MAX: highest scheduled scan filter
+  *	attribute number currently defined
+  * @__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST: internal use
+@@ -1964,6 +1966,7 @@ enum nl80211_sched_scan_match_attr {
+ 	__NL80211_SCHED_SCAN_MATCH_ATTR_INVALID,
+ 
+ 	NL80211_ATTR_SCHED_SCAN_MATCH_SSID,
++	NL80211_ATTR_SCHED_SCAN_MATCH_RSSI,
+ 
+ 	/* keep last */
+ 	__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7319f25..891fcd1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -975,6 +975,7 @@ struct cfg80211_match_set {
+  * @wiphy: the wiphy this was for
+  * @dev: the interface
+  * @channels: channels to scan
++ * @rssi_thold: don't report scan results below this threshold
+  */
+ struct cfg80211_sched_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -985,6 +986,7 @@ struct cfg80211_sched_scan_request {
+ 	size_t ie_len;
+ 	struct cfg80211_match_set *match_sets;
+ 	int n_match_sets;
++	s32 rssi_thold;
+ 
+ 	/* internal */
+ 	struct wiphy *wiphy;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7ae54b8..3945ad6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -252,6 +252,7 @@ static const struct nla_policy
+ nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
+ 	[NL80211_ATTR_SCHED_SCAN_MATCH_SSID] = { .type = NLA_BINARY,
+ 						 .len = IEEE80211_MAX_SSID_LEN },
++	[NL80211_ATTR_SCHED_SCAN_MATCH_RSSI] = { .type = NLA_U32 },
+ };
+ 
+ /* ifidx get helper */
+@@ -4241,7 +4242,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 		nla_for_each_nested(attr,
+ 				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
+ 				    tmp) {
+-			struct nlattr *ssid;
++			struct nlattr *ssid, *rssi;
+ 
+ 			nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
+ 				  nla_data(attr), nla_len(attr),
+@@ -4257,6 +4258,9 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 				request->match_sets[i].ssid.ssid_len =
+ 					nla_len(ssid);
+ 			}
++			rssi = tb[NL80211_ATTR_SCHED_SCAN_MATCH_SSID];
++			if (rssi)
++				request->rssi_thold = nla_get_u32(rssi);
+ 			i++;
+ 		}
+ 	}
+-- 
+1.7.4.1
 
-I think there are two opportunities to look into:
-
-1. Freeze workqueues on suspend without flushing
-2. Reject suspend if an important work is pending (and yes, connection
-loss work *is* important!)
-
-Thanks,
-   Vitaly
