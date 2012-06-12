@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38833 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754255Ab2FVX4M (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33048 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937Ab2FLEmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 19:56:12 -0400
-Date: Fri, 22 Jun 2012 16:56:11 -0700 (PDT)
-Message-Id: <20120622.165611.2220193371527786713.davem@davemloft.net> (sfid-20120623_015629_926189_9315BB32)
-To: c_manoha@qca.qualcomm.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-06-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20453.302.671438.533390@gargle.gargle.HOWL>
-References: <20120622201716.GB13918@tuxdriver.com>
-	<20452.64701.760819.559191@gargle.gargle.HOWL>
-	<20453.302.671438.533390@gargle.gargle.HOWL>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 12 Jun 2012 00:42:50 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v3 2/2] ath9k: fix btcoex duty cycle
+Date: Tue, 12 Jun 2012 10:13:54 +0530
+Message-ID: <1339476234-7364-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120612_064312_594735_20BBE3CF)
+In-Reply-To: <1339476234-7364-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339476234-7364-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Date: Sat, 23 Jun 2012 05:05:10 +0530
+* Reset duty cycle before updating btcoex scheme. Otherwise duty cycle
+  reaches max limit and never be reduced again
+* Adjust duty cycle with proper BDR profile value
 
-> Sujith Manoharan wrote:
->> John W. Linville wrote:
->> > Mohammed Shafi Shajakhan (1):
->> >       ath9k_hw: avoid possible infinite loop in ar9003_get_pll_sqsum_dvc
->> 
->> Um, this commit doesn't really fix anything - the timeout is also
->> arbitrary. Can you remove this from the 3.5 queue ? Thanks.
-> 
-> A review of the patch later, I think it's good. At least there's a
-> WARN_ON_ONCE() to indicate the situation in which the measurement fails.
-> It might come in handy as a debugging aid.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mci.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Thanks for wasting our time.
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index e53df86..f0c8fa4 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -20,7 +20,7 @@
+ #include "ath9k.h"
+ #include "mci.h"
+ 
+-static const u8 ath_mci_duty_cycle[] = { 0, 50, 60, 70, 80, 85, 90, 95, 98 };
++static const u8 ath_mci_duty_cycle[] = { 55, 50, 60, 70, 80, 85, 90, 95, 98 };
+ 
+ static struct ath_mci_profile_info*
+ ath_mci_find_profile(struct ath_mci_profile *mci,
+@@ -120,6 +120,8 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
+ 		goto skip_tuning;
+ 
++	btcoex->duty_cycle = ath_mci_duty_cycle[num_profile];
++
+ 	if (num_profile == 1) {
+ 		info = list_first_entry(&mci->info,
+ 					struct ath_mci_profile_info,
+@@ -178,7 +180,7 @@ skip_tuning:
+ 	if (IS_CHAN_5GHZ(sc->sc_ah->curchan))
+ 		return;
+ 
+-	btcoex->duty_cycle += (mci->num_bdr ? ATH_MCI_MAX_DUTY_CYCLE : 0);
++	btcoex->duty_cycle += (mci->num_bdr ? ATH_MCI_BDR_DUTY_CYCLE : 0);
+ 	if (btcoex->duty_cycle > ATH_MCI_MAX_DUTY_CYCLE)
+ 		btcoex->duty_cycle = ATH_MCI_MAX_DUTY_CYCLE;
+ 
+@@ -247,14 +249,12 @@ static void ath_mci_process_profile(struct ath_softc *sc,
+ 	btcoex->btcoex_period = ATH_MCI_DEF_BT_PERIOD;
+ 	mci->aggr_limit = mci->num_sco ? 6 : 0;
+ 
+-	if (NUM_PROF(mci)) {
++	btcoex->duty_cycle = ath_mci_duty_cycle[NUM_PROF(mci)];
++	if (NUM_PROF(mci))
+ 		btcoex->bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+-		btcoex->duty_cycle = ath_mci_duty_cycle[NUM_PROF(mci)];
+-	} else {
++	else
+ 		btcoex->bt_stomp_type = mci->num_mgmt ? ATH_BTCOEX_STOMP_ALL :
+ 							ATH_BTCOEX_STOMP_LOW;
+-		btcoex->duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
+-	}
+ 
+ 	ieee80211_queue_work(sc->hw, &sc->mci_work);
+ }
+-- 
+1.7.10.4
 
-Make these determinations when changes to into John's tree, not
-later when he asks me to pull them into mine.
