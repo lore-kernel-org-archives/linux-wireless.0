@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dd27218.kasserver.com ([85.13.142.250]:51440 "EHLO
-	dd27218.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757902Ab2FZQLm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753621Ab2FLT66 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 12:11:42 -0400
-Received: from proton.localnet (p4FD79DFA.dip.t-dialin.net [79.215.157.250])
-	by dd27218.kasserver.com (Postfix) with ESMTPSA id D9AB12EA188C
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 18:04:01 +0200 (CEST)
-From: Andreas Messer <andi@bastelmap.de>
-To: linux-wireless@vger.kernel.org
-Subject: rt73usb not working since linux 3.4
-Date: Tue, 26 Jun 2012 18:03:56 +0200
-Message-ID: <1364831.ftJE0YjeaD@proton> (sfid-20120626_181146_731057_B582BF78)
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3020572.pXkr0TspJv"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+	Tue, 12 Jun 2012 15:58:58 -0400
+Message-ID: <1339531131.4531.22.camel@jlt3.sipsolutions.net> (sfid-20120612_215902_061392_F20E91FB)
+Subject: Re: Why "iwlwifi: read multiple MAC addresses"?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lekensteyn <lekensteyn@gmail.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 12 Jun 2012 21:58:51 +0200
+In-Reply-To: <3586963.qbQ3i1FPTG@penguin> (sfid-20120612_151131_759795_10C84786)
+References: <3586963.qbQ3i1FPTG@penguin>
+	 (sfid-20120612_151131_759795_10C84786)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2012-06-12 at 15:11 +0200, Lekensteyn wrote:
 
---nextPart3020572.pXkr0TspJv
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+> I wonder what the following commit is used for:
+> commit c6fa17ed3fadaf056173c409c0877df428a152ec
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Thu Jul 15 05:58:30 2010 -0700
+> 
+>     iwlwifi: read multiple MAC addresses
 
-Dear all,
+That commit is so that you see this:
 
-updating my pc from linux kernel 3.3 to linux kernel 3.4 broke my wlan. I'm 
-using rt2571 based wlan module from qcom: LR802UKG, which is wired to an 
-internal usb port of my media center pc. The rfkill switch is hardwired to 
-make wlan active all the time. This setup is (almost) properly working since 
-about three years now. (If i ignore the occasional vendor_request_error 
-things)
-When I use kernel 3.4., i get a lot of additional devices reported by the 
-kernel - three leds and a rfkill switch which have not been there before. (or 
-at least I did not notice them) The wlan device now refuses to go online, 
-saying that the kill switch is active, which of course can not be as it is 
-working with linux kernel 3.3. Furthermore, the driver reports three leds, but 
-my wlan device has only one, so probably a bad eeprom? i dont know...
-Anyway, I noticed, that when I set the radio led to brightness 255, which 
-takes a lot of time and gives me some vendor_request_errors, the rfkill switch 
-gets turned off (sys/class/rfkill/../hard = 0). Unfortunately, this doesn't 
-help to bring the interface online: After doing that I get frequent 
-vendor_request_failed messages, even the PC becomes stuck on shutdown. 
-(Probably NetworkManager waiting for something...)
-So, what can I do to track down the problem?
+> I was trying to debug wireless issues, and noticed that I had two MAC 
+> addresses with only the last bit being different:
+> 
+>     $ cat /sys/class/ieee80211/phy0/addresses
+>     00:23:14:xx:xx:x8
+>     00:23:14:xx:xx:x9
+> 
+> Looking at a dump provided by /sys/kernel/debug/cfg80211/phy0/iwlwifi/data/nvm, 
+> I see that the 16-bit word at 0x98 contains the value 4. What does this mean? 
 
-Cheers,
-Andreas
---nextPart3020572.pXkr0TspJv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
+The 4 actually means that there are 4 addresses assigned to this device,
+for use in P2P scenarios etc. We only support 2 virtual interfaces in
+Linux today, so we don't expose 4 (though we probably could.)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+> Can this break something?
 
-iEYEABECAAYFAk/p3XAACgkQkLO6qowrr1E9XQCfffimhVTIYV8OAO+GSMt8hW20
-nTIAn2ixuVuFTaauQp9d3s8S7VjM7+q4
-=gHGg
------END PGP SIGNATURE-----
+No.
 
---nextPart3020572.pXkr0TspJv--
+johannes
 
