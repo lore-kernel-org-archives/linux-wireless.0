@@ -1,83 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:53289 "HELO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755713Ab2F2DbM (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:53507 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752801Ab2FLOu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 23:31:12 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/6] mwifiex: add change_beacon cfg80211 handler
-Date: Thu, 28 Jun 2012 20:30:28 -0700
-Message-Id: <1340940630-27172-5-git-send-email-bzhao@marvell.com> (sfid-20120629_053120_468044_E57C212E)
-In-Reply-To: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
-References: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
+	Tue, 12 Jun 2012 10:50:58 -0400
+Received: by dady13 with SMTP id y13so6965830dad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 07:50:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339510185.4531.12.camel@jlt3.sipsolutions.net>
+References: <1339497630-31589-1-git-send-email-eyal@wizery.com> <1339510185.4531.12.camel@jlt3.sipsolutions.net>
+From: Eyal Shapira <eyal@wizery.com>
+Date: Tue, 12 Jun 2012 17:50:37 +0300
+Message-ID: <CAF8O4-ziVXstVZ19tjnQyCZYEArvrcizw17Pb13EfRe7Kg3iwQ@mail.gmail.com> (sfid-20120612_165102_443866_CF7CAE38)
+Subject: Re: [PATCH] mac80211: handle auth failure returned with unmatching
+ auth algo
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On 12 June 2012 17:09, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Tue, 2012-06-12 at 13:40 +0300, Eyal Shapira wrote:
+> > Some Netgear APs like WNAP210 have a quirk behavior when
+> > configured for WEP Shared. They send an auth response with algo
+> > SHARED and status code NOT_SUPPORTED_AUTH_ALG (13) when being
+> > sent a request made with auth algo OPEN. Enable such response to
+> > propagate to userspace instead of discarding it so wpa_s can
+> > reattempt to auth with SHARED.
+>
+> Does cfg80211 need to handle this? How does wpa_s even handle it?
 
-This patch adds support for change_beacon handler which is needed
-for setting modified management IEs to driver and FW.
+wpa_s has the following code in wpa_supplicant/sme.c/sme_event_auth()
+to automatically
+"escalate" in the auth algorithms it tries (from OPEN to SHARED to LEAP) :
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+		switch (data->auth.auth_type) {
+		case WLAN_AUTH_OPEN:
+			wpa_s->current_ssid->auth_alg = WPA_AUTH_ALG_SHARED;
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index fce8155..1c5edc2 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -914,6 +914,33 @@ static int mwifiex_cfg80211_set_cqm_rssi_config(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+/* cfg80211 operation handler for change_beacon.
-+ * Function retrieves and sets modified management IEs to FW.
-+ */
-+static int mwifiex_cfg80211_change_beacon(struct wiphy *wiphy,
-+					  struct net_device *dev,
-+					  struct cfg80211_beacon_data *data)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+
-+	if (priv->bss_type != MWIFIEX_BSS_TYPE_UAP) {
-+		wiphy_err(wiphy, "%s: bss_type mismatched\n", __func__);
-+		return -EINVAL;
-+	}
-+
-+	if (!priv->bss_started) {
-+		wiphy_err(wiphy, "%s: bss not started\n", __func__);
-+		return -EINVAL;
-+	}
-+
-+	if (mwifiex_set_mgmt_ies(priv, data)) {
-+		wiphy_err(wiphy, "%s: setting mgmt ies failed\n", __func__);
-+		return -EFAULT;
-+	}
-+
-+	return 0;
-+}
-+
- /* cfg80211 operation handler for stop ap.
-  * Function stops BSS running at uAP interface.
-  */
-@@ -1696,6 +1723,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.set_bitrate_mask = mwifiex_cfg80211_set_bitrate_mask,
- 	.start_ap = mwifiex_cfg80211_start_ap,
- 	.stop_ap = mwifiex_cfg80211_stop_ap,
-+	.change_beacon = mwifiex_cfg80211_change_beacon,
- 	.set_cqm_rssi_config = mwifiex_cfg80211_set_cqm_rssi_config,
- };
- 
--- 
-1.7.0.2
+			wpa_dbg(wpa_s, MSG_DEBUG, "SME: Trying SHARED auth");
+			wpa_supplicant_associate(wpa_s, wpa_s->current_bss,
+						 wpa_s->current_ssid);
+			return;
 
+		case WLAN_AUTH_SHARED_KEY:
+			wpa_s->current_ssid->auth_alg = WPA_AUTH_ALG_LEAP;
+
+			wpa_dbg(wpa_s, MSG_DEBUG, "SME: Trying LEAP auth");
+			wpa_supplicant_associate(wpa_s, wpa_s->current_bss,
+						 wpa_s->current_ssid);
+			return;
+
+I have a patch for that code in wpa_s as well which attempts SHARED in
+case we sent OPEN
+and got the NOT_SUPPORTED_AUTH_ALG response on SHARED.
+I first wanted to see that the kernel patch which allows the response
+to go through is accepted.
+
+You're right of course that I also need to take care of cfg80211 when
+using its SME.
+I'll send an additional patch for that.
+
+>
+> johannes
+>
