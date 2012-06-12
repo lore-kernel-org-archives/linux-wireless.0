@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:49614 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932738Ab2F1KH1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 06:07:27 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 10/13] cfg80211: set initial monitor channel
-Date: Thu, 28 Jun 2012 12:07:02 +0200
-Message-ID: <1340878025-2695-11-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120739_722618_3916E78F)
-In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
-References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:50197 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283Ab2FLJkH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 05:40:07 -0400
+Received: by wibhn6 with SMTP id hn6so3903457wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 02:40:06 -0700 (PDT)
+From: Eyal Shapira <eyal@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] wlcore: send EAPOLs with basic rate policy
+Date: Tue, 12 Jun 2012 12:39:55 +0300
+Message-Id: <1339493995-17944-1-git-send-email-eyal@wizery.com> (sfid-20120612_114012_688973_6BB690E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implements behaviour seen in mac80211. A running
-monitor always has a channel - even before
-.set_channel. This way we won't break current
-behaviour.
+EAPOLs are sent at high rates as they are considered
+data packets. Some APs like Motorola Symbol AP7131 and AP650
+don't respond well to these rates and don't respond with
+EAPOL 3/4 consistently. When sending EAPOL 2/4 at 54Mbps
+we've seen approx 30% success rate in getting EAPOL 3/4 response
+while using 11Mbps we got 100% success.
+To increase the chances of successful 4-Way handshake with
+such APs, send EAPOLs with basic rate policy in order to avoid
+high rates.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
 ---
- net/wireless/core.c |   31 +++++++++++++++++++++++++++++++
- 1 files changed, 31 insertions(+), 0 deletions(-)
+v2: added info about the APs and problem (Thanks Johannes!)
+Aside from that I'll send a separate patch for mac80211 so non HW rate
+control drivers will do the same.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 8315c2a..5b3f74e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -776,6 +776,35 @@ static struct device_type wiphy_type = {
- 	.name	= "wlan",
- };
- 
-+static struct ieee80211_channel *
-+cfg80211_get_any_chan(struct cfg80211_registered_device *rdev)
-+{
-+	struct ieee80211_supported_band *sband;
-+	int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		sband = rdev->wiphy.bands[i];
-+		if (sband && sband->n_channels > 0)
-+			return &sband->channels[0];
-+	}
-+
-+	return NULL;
-+}
-+
-+static void cfg80211_init_mon_chan(struct cfg80211_registered_device *rdev)
-+{
-+	struct ieee80211_channel *chan;
-+
-+	chan = cfg80211_get_any_chan(rdev);
-+	if (WARN_ON(!chan))
-+		return;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	WARN_ON(cfg80211_set_monitor_channel(rdev, chan->center_freq,
-+					     NL80211_CHAN_NO_HT));
-+	mutex_unlock(&rdev->devlist_mtx);
-+}
-+
- void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 			       enum nl80211_iftype iftype, int num)
- {
-@@ -796,6 +825,8 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 		if (!has_monitors_only_new) {
- 			rdev->monitor_channel = NULL;
- 			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
-+		} else {
-+			cfg80211_init_mon_chan(rdev);
- 		}
- 	}
- }
+ drivers/net/wireless/ti/wlcore/tx.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 6983e7a..8ee82b9 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -305,11 +305,15 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	if (is_dummy || !wlvif)
+ 		rate_idx = 0;
+ 	else if (wlvif->bss_type != BSS_TYPE_AP_BSS) {
+-		/* if the packets are destined for AP (have a STA entry)
+-		   send them with AP rate policies, otherwise use default
+-		   basic rates */
++		/*
++		 * if the packets are destined for AP (have a STA entry)
++		 * send them with AP rate policies (EAPOLs are an exception),
++		 * otherwise use default basic rates
++		 */
+ 		if (control->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+ 			rate_idx = wlvif->sta.p2p_rate_idx;
++		else if (skb->protocol == cpu_to_be16(ETH_P_PAE))
++			rate_idx = wlvif->sta.basic_rate_idx;
+ 		else if (control->control.sta)
+ 			rate_idx = wlvif->sta.ap_rate_idx;
+ 		else
 -- 
-1.7.0.4
+1.7.4.1
 
