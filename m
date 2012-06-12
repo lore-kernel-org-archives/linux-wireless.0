@@ -1,63 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:60403 "HELO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754481Ab2F2DbG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4446 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879Ab2FLOr4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 23:31:06 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/6] mwifiex: overwrite earlier IE buffers for new set IE request
-Date: Thu, 28 Jun 2012 20:30:27 -0700
-Message-Id: <1340940630-27172-4-git-send-email-bzhao@marvell.com> (sfid-20120629_053119_242427_B366F658)
-In-Reply-To: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
-References: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
+	Tue, 12 Jun 2012 10:47:56 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 5/8] ath9k_hw: remove p_data argument from ar9003_mci_state
+Date: Tue, 12 Jun 2012 20:18:20 +0530
+Message-ID: <1339512503-26670-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120612_164758_690166_4AA22DB9)
+In-Reply-To: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+As p_data is unuse, lets remove it from ar9003_mci_state.
 
-All IE buffers are freshly supplied. In such case, there is no need
-to preserve earlier buffers with same management mask and index.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/ie.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    6 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    2 +-
+ drivers/net/wireless/ath/ath9k/gpio.c       |    2 +-
+ drivers/net/wireless/ath/ath9k/mci.c        |   49 ++++++++++++---------------
+ 4 files changed, 27 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
-index 018ae4a..1f2d4b9 100644
---- a/drivers/net/wireless/mwifiex/ie.c
-+++ b/drivers/net/wireless/mwifiex/ie.c
-@@ -51,8 +51,7 @@ mwifiex_ie_get_autoidx(struct mwifiex_private *priv, u16 subtype_mask,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9a761a1..d6e90f5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -321,7 +321,7 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
  
- 	for (i = 0; i < priv->adapter->max_mgmt_ie_index; i++) {
- 		mask = le16_to_cpu(priv->mgmt_ie[i].mgmt_subtype_mask);
--		len = le16_to_cpu(priv->mgmt_ie[i].ie_length) +
--		      le16_to_cpu(ie->ie_length);
-+		len = le16_to_cpu(ie->ie_length);
+-	if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) &&
++	if (ar9003_mci_state(ah, MCI_STATE_ENABLE) &&
+ 	    (mci->bt_state != MCI_BT_SLEEP) &&
+ 	    !mci->halted_bt_gpm) {
+ 		ar9003_mci_send_coex_halt_bt_gpm(ah, true, true);
+@@ -484,7 +484,7 @@ static void ar9003_mci_sync_bt_state(struct ath_hw *ah)
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 cur_bt_state;
  
- 		if (mask == MWIFIEX_AUTO_IDX_MASK)
- 			continue;
-@@ -108,10 +107,8 @@ mwifiex_update_autoindex_ies(struct mwifiex_private *priv,
- 				return -1;
+-	cur_bt_state = ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL);
++	cur_bt_state = ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP);
  
- 			tmp = (u8 *)&priv->mgmt_ie[index].ie_buffer;
--			tmp += le16_to_cpu(priv->mgmt_ie[index].ie_length);
- 			memcpy(tmp, &ie->ie_buffer, le16_to_cpu(ie->ie_length));
--			le16_add_cpu(&priv->mgmt_ie[index].ie_length,
--				     le16_to_cpu(ie->ie_length));
-+			priv->mgmt_ie[index].ie_length = ie->ie_length;
- 			priv->mgmt_ie[index].ie_index = cpu_to_le16(index);
- 			priv->mgmt_ie[index].mgmt_subtype_mask =
- 							cpu_to_le16(mask);
+ 	if (mci->bt_state != cur_bt_state)
+ 		mci->bt_state = cur_bt_state;
+@@ -1164,7 +1164,7 @@ void ar9003_mci_cleanup(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ar9003_mci_cleanup);
+ 
+-u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
++u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 value = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index a7c17e5..697a56c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -253,7 +253,7 @@ enum mci_gpm_coex_opcode {
+ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 			     u32 *payload, u8 len, bool wait_done,
+ 			     bool check_bt);
+-u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
++u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type);
+ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 		      u16 len, u32 sched_addr);
+ void ar9003_mci_cleanup(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 00ff5ab..26032cb 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -202,7 +202,7 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 
+ 	btcoex->bt_wait_time += btcoex->btcoex_period;
+ 	if (btcoex->bt_wait_time > ATH_BTCOEX_RX_WAIT_TIME) {
+-		if (ar9003_mci_state(ah, MCI_STATE_NEED_FTP_STOMP, NULL) &&
++		if (ar9003_mci_state(ah, MCI_STATE_NEED_FTP_STOMP) &&
+ 		    (mci->num_pan || mci->num_other_acl))
+ 			ah->btcoex_hw.mci.stomp_ftp =
+ 				(sc->rx.num_pkts < ATH_BTCOEX_STOMP_FTP_THRESH);
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index dbc8e1d..61a68e8 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -199,16 +199,16 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 
+ 	switch (opcode) {
+ 	case MCI_GPM_BT_CAL_REQ:
+-		if (ar9003_mci_state(ah, MCI_STATE_BT, NULL) == MCI_BT_AWAKE) {
+-			ar9003_mci_state(ah, MCI_STATE_SET_BT_CAL_START, NULL);
++		if (ar9003_mci_state(ah, MCI_STATE_BT) == MCI_BT_AWAKE) {
++			ar9003_mci_state(ah, MCI_STATE_SET_BT_CAL_START);
+ 			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 		} else {
+ 			ath_dbg(common, MCI, "MCI State mismatch: %d\n",
+-				ar9003_mci_state(ah, MCI_STATE_BT, NULL));
++				ar9003_mci_state(ah, MCI_STATE_BT));
+ 		}
+ 		break;
+ 	case MCI_GPM_BT_CAL_DONE:
+-		ar9003_mci_state(ah, MCI_STATE_BT, NULL);
++		ar9003_mci_state(ah, MCI_STATE_BT);
+ 		break;
+ 	case MCI_GPM_BT_CAL_GRANT:
+ 		MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_DONE);
+@@ -304,7 +304,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 
+ 	switch (opcode) {
+ 	case MCI_GPM_COEX_VERSION_QUERY:
+-		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_COEX_VERSION, NULL);
++		ar9003_mci_state(ah, MCI_STATE_SEND_WLAN_COEX_VERSION);
+ 		break;
+ 	case MCI_GPM_COEX_VERSION_RESPONSE:
+ 		major = *(rx_payload + MCI_GPM_COEX_B_MAJOR_VERSION);
+@@ -415,7 +415,7 @@ void ath_mci_intr(struct ath_softc *sc)
+ 
+ 	ar9003_mci_get_interrupt(sc->sc_ah, &mci_int, &mci_int_rxmsg);
+ 
+-	if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) == 0) {
++	if (ar9003_mci_state(ah, MCI_STATE_ENABLE) == 0) {
+ 		ar9003_mci_get_next_gpm_offset(ah, true, NULL);
+ 		return;
+ 	}
+@@ -435,46 +435,41 @@ void ath_mci_intr(struct ath_softc *sc)
+ 					NULL, 0, true, false);
+ 
+ 		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE;
+-		ar9003_mci_state(ah, MCI_STATE_RESET_REQ_WAKE, NULL);
++		ar9003_mci_state(ah, MCI_STATE_RESET_REQ_WAKE);
+ 
+ 		/*
+ 		 * always do this for recovery and 2G/5G toggling and LNA_TRANS
+ 		 */
+-		ar9003_mci_state(ah, MCI_STATE_SET_BT_AWAKE, NULL);
++		ar9003_mci_state(ah, MCI_STATE_SET_BT_AWAKE);
+ 	}
+ 
+ 	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_SYS_WAKING) {
+ 		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_SYS_WAKING;
+ 
+-		if (ar9003_mci_state(ah, MCI_STATE_BT, NULL) == MCI_BT_SLEEP) {
+-			if (ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL) !=
+-			    MCI_BT_SLEEP)
+-				ar9003_mci_state(ah, MCI_STATE_SET_BT_AWAKE,
+-						 NULL);
+-		}
++		if ((ar9003_mci_state(ah, MCI_STATE_BT) == MCI_BT_SLEEP) &&
++		    (ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP) !=
++		     MCI_BT_SLEEP))
++			ar9003_mci_state(ah, MCI_STATE_SET_BT_AWAKE);
+ 	}
+ 
+ 	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_SYS_SLEEPING) {
+ 		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_SYS_SLEEPING;
+ 
+-		if (ar9003_mci_state(ah, MCI_STATE_BT, NULL) == MCI_BT_AWAKE) {
+-			if (ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL) !=
+-			    MCI_BT_AWAKE)
+-				ar9003_mci_state(ah, MCI_STATE_SET_BT_SLEEP,
+-						 NULL);
+-		}
++		if ((ar9003_mci_state(ah, MCI_STATE_BT) == MCI_BT_AWAKE) &&
++		    (ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP) !=
++		     MCI_BT_AWAKE))
++			ar9003_mci_state(ah, MCI_STATE_SET_BT_SLEEP);
+ 	}
+ 
+ 	if ((mci_int & AR_MCI_INTERRUPT_RX_INVALID_HDR) ||
+ 	    (mci_int & AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT)) {
+-		ar9003_mci_state(ah, MCI_STATE_RECOVER_RX, NULL);
++		ar9003_mci_state(ah, MCI_STATE_RECOVER_RX);
+ 		skip_gpm = true;
+ 	}
+ 
+ 	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO) {
+ 		mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO;
+-		offset = ar9003_mci_state(ah, MCI_STATE_LAST_SCHD_MSG_OFFSET,
+-					  NULL);
++		offset = ar9003_mci_state(ah, MCI_STATE_LAST_SCHD_MSG_OFFSET);
+ 	}
+ 
+ 	if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_GPM) {
+@@ -526,21 +521,21 @@ void ath_mci_intr(struct ath_softc *sc)
+ 
+ 		if (mci_int_rxmsg & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO) {
+ 			int value_dbm = ar9003_mci_state(ah,
+-						 MCI_STATE_CONT_RSSI_POWER, NULL);
++						 MCI_STATE_CONT_RSSI_POWER);
+ 
+ 			mci_int_rxmsg &= ~AR_MCI_INTERRUPT_RX_MSG_CONT_INFO;
+ 
+-			if (ar9003_mci_state(ah, MCI_STATE_CONT_TXRX, NULL))
++			if (ar9003_mci_state(ah, MCI_STATE_CONT_TXRX))
+ 				ath_dbg(common, MCI,
+ 					"MCI CONT_INFO: (tx) pri = %d, pwr = %d dBm\n",
+ 					ar9003_mci_state(ah,
+-						 MCI_STATE_CONT_PRIORITY, NULL),
++						 MCI_STATE_CONT_PRIORITY),
+ 					value_dbm);
+ 			else
+ 				ath_dbg(common, MCI,
+ 					"MCI CONT_INFO: (rx) pri = %d,pwr = %d dBm\n",
+ 					ar9003_mci_state(ah,
+-						 MCI_STATE_CONT_PRIORITY, NULL),
++						 MCI_STATE_CONT_PRIORITY),
+ 					value_dbm);
+ 		}
+ 
 -- 
-1.7.0.2
+1.7.10.4
 
