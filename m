@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f51.google.com ([209.85.213.51]:39951 "EHLO
-	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752904Ab2FYPlo (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38635 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752972Ab2FLMDc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 11:41:44 -0400
-Received: by yhnn12 with SMTP id n12so3472394yhn.10
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 08:41:44 -0700 (PDT)
-Message-ID: <4FE886B3.7020202@lwfinger.net> (sfid-20120625_174150_593774_CCF36035)
-Date: Mon, 25 Jun 2012 10:41:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 12 Jun 2012 08:03:32 -0400
+Received: by pbbrp8 with SMTP id rp8so710393pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 05:03:32 -0700 (PDT)
 MIME-Version: 1.0
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com
-Subject: Question about BCM43228 and outdated description in MAINTAINERS
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1339502090.4531.4.camel@jlt3.sipsolutions.net>
+References: <1339463659-10736-1-git-send-email-bzhao@marvell.com>
+	<1339463659-10736-2-git-send-email-bzhao@marvell.com>
+	<1339502090.4531.4.camel@jlt3.sipsolutions.net>
+Date: Tue, 12 Jun 2012 17:33:32 +0530
+Message-ID: <CAJwzM1kPXkHcyq3Qu=1xXJ-UGJD+pcBbU6HgBem2Rbm2cj7g8Q@mail.gmail.com> (sfid-20120612_140338_198494_D34650DD)
+Subject: Re: [PATCH 2/4] mwifiex: parse WPA IE and support WPA/WPA2 mixed mode
+ for uAP
+From: Avinash Patil <avinashapatil@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Johannes,
 
-I recently received a donated BCM43228 (14e4:4359) mini-PCIe card. At the 
-moment, neither b43 nor brcmsmac support it. Although, grepping the proprietary 
-driver wl shows that it would recognize that PCI ID, that driver does not load 
-as it requires routine lockdep_init_map(), which is exported only for GPL 
-modules. As a result, owners of this device can only use it with Linux if they 
-can find a suitable Windows driver for use with ndiswrapper. In my experience, 
-that means that 64-bit users are out of luck.
+Of course we do use crypto_settings to set WPA/WPA2 mixed mode. IE
+parsing is only used for the purpose of setting WPA IE in
+beacons/probe responses/assoc responses. Please see changes in
+uap_cmd.c where we are using crypto settings for setting mixed mode.
 
-Reverse engineering this device to be able to drive it with b43 would involve a 
-lot of effort. If your group is planning on adding it to brcmsmac, then I would 
-not undertake this project. To the fullest extent that you can, please advise me 
-regarding this matter.
+Best Regards,
+Avinash
 
-When getting your addresses from file MAINTAINERS, I noticed that it was not 
-updated for the name change from brcm80211 to brcmsmac. The current info is as 
-follows:
-
-BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-M:
-M:      Roland Vossen <rvossen@broadcom.com>
-M:      Arend van Spriel <arend@broadcom.com>
-M:      Franky (Zhenhui) Lin <frankyl@broadcom.com>
-M:      Kan Yan <kanyan@broadcom.com>
-L:      linux-wireless@vger.kernel.org
-L:      brcm80211-dev-list@broadcom.com
-S:      Supported
-F:      drivers/net/wireless/brcm80211/
-
-Thanks,
-
-Larry
+On Tue, Jun 12, 2012 at 5:24 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-06-11 at 18:14 -0700, Bing Zhao wrote:
+>> From: Avinash Patil <patila@marvell.com>
+>>
+>> Add support for parsing WPA IE from beacon parameter of
+>> cfg80211_ap_settings and set it to FW.
+>>
+>> WPA/WPA2 mixed mode is supported with this patch.
+>
+> There's the crypto settings thing -- does that not supported mixed mode?
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
