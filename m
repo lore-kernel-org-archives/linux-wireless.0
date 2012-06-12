@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:59728 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932306Ab2FNQ4C (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:46976 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696Ab2FLNL1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 12:56:02 -0400
-Message-ID: <4FDA179F.1020501@opentechinstitute.org> (sfid-20120614_185618_345813_45871920)
-Date: Thu, 14 Jun 2012 12:55:59 -0400
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
+	Tue, 12 Jun 2012 09:11:27 -0400
+Received: by eeit10 with SMTP id t10so2208193eei.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 06:11:26 -0700 (PDT)
+From: Lekensteyn <lekensteyn@gmail.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Why "iwlwifi: read multiple MAC addresses"?
+Date: Tue, 12 Jun 2012 15:11:20 +0200
+Message-ID: <3586963.qbQ3i1FPTG@penguin> (sfid-20120612_151131_759795_10C84786)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add support for userspace to handle auth frames
- on adhoc ifaces
-References: <4FD8B5D4.8060305@opentechinstitute.org>   <4FD99A24.3020907@lri.fr> <1339673095.4461.2.camel@jlt3.sipsolutions.net>  <4FD9DD35.4070709@lri.fr> <1339692819.9786.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339692819.9786.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Wey-Yi,
 
+I wonder what the following commit is used for:
+commit c6fa17ed3fadaf056173c409c0877df428a152ec
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Thu Jul 15 05:58:30 2010 -0700
 
-On 06/14/2012 12:53 PM, Johannes Berg wrote:
-> On Thu, 2012-06-14 at 14:46 +0200, Nicolas Cavallari wrote:
->> On 14/06/2012 13:24, Johannes Berg wrote:
->>> On Thu, 2012-06-14 at 10:00 +0200, Nicolas Cavallari wrote:
->>>
->>>> I just have a question here : when auth frames are not delivered to
->>>> userspace, mac80211 will respond to them, and also uses them to detect
->>>> node reboot. If you register for auth frames, mac80211 will still send
->>>> auth frames as soon as a new station is seen, which might be confusing
->>>> for user space. Is that ok to do this ? Or should userspace have more
->>>> control over how mac80211 sends auth frames ?
->>>
->>> Please read the code. If userspace registers for them, mac80211 will
->>> never do anything with the frame.
->>
->> I didn't say the contrary. But if you read ieee80211_ibss_finish_sta(),
->> you see that mac80211 sends auth frames to each discovered station, even
->> if userspace want to handle auth frames. This seems strange to be able
->> to receive and handle auth frames from userspace while mac80211 sends
->> them behind userspace's back.
-> 
-> Oops, sorry, yes. I forgot all about that code!
-> 
-> I suppose we'd have to check whether userspace is handling
-> authentication?
+    iwlwifi: read multiple MAC addresses
 
-Could use the control_port flag to check for that condition?
+    Some devices may have multiple MAC
+    addresses in their EEPROM, read them
+    and advertise them to cfg80211.
 
-> 
->>>> There is also another thing to consider if you want to send auth frames
->>>> from userspace, as CMD_FRAME requires a frequency, which in IBSS mode,
->>>> can change anytime without userspace being notified. If you only have to
->>>> answer to received auth frames, this is easier as you can reuse the
->>>> frequency given by nl80211 when receiving the auth frame. But if you
->>>> want to send a auth frame independently, how do you get the frequency to
->>>> use ?
->>>
->>> You check the BSS info, that's trivial.
->>
->> There is no GET_BSS from userspace. when merging IBSS, only the new
->> BSSID is notified. The only way to get this info from userspace would be
->> to dump the scan result and check the "we joined that ibss" flag, and
->> this isn't race-free. That, or using fixed_freq.
-> 
-> Yeah, I guess that's true -- we should probably just allow not giving a
-> frequency attribute at all and then it only works if you're
-> connected/... but uses the right frequency.
-> 
-> johannes
-> 
-> 
+I was trying to debug wireless issues, and noticed that I had two MAC 
+addresses with only the last bit being different:
+
+    $ cat /sys/class/ieee80211/phy0/addresses
+    00:23:14:xx:xx:x8
+    00:23:14:xx:xx:x9
+
+Looking at a dump provided by /sys/kernel/debug/cfg80211/phy0/iwlwifi/data/nvm, 
+I see that the 16-bit word at 0x98 contains the value 4. What does this mean? 
+Can this break something?
+
+If you are interested, the wireless card I own is a Centrino Advanced-N 6200 
+(device ID 422c, rev 35). I can reproduce this behaviour on Linux 3.4.2, 3.5-
+rc1 (the wireless testing tree from 2012-06-11) and 3.3.5.
+
+Regards,
+Peter
