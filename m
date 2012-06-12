@@ -1,77 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:55980 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755763Ab2FJSzv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45469 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753391Ab2FLT5k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2012 14:55:51 -0400
-Received: by weyu7 with SMTP id u7so1615032wey.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2012 11:55:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201206101420.30607.chunkeey@googlemail.com>
-References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
-	<201206091601.34601.chunkeey@googlemail.com>
-	<CANUX_P3smm6Pci-69aXA+PmW23nUSg-s2LGSv5Mn_rvTF-Q9-Q@mail.gmail.com>
-	<201206101420.30607.chunkeey@googlemail.com>
-Date: Sun, 10 Jun 2012 21:55:50 +0300
-Message-ID: <CANUX_P2gF0mHBCDz_F8w5gFTXTsudPGtohpC8QWy4qk3cXWQDw@mail.gmail.com> (sfid-20120610_205617_900090_04D079DB)
-Subject: Re: [RFC v3] mac80211: follow 802.11-2007 11.5.3 Error recovery upon
- HT BA failure
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Sean Patrick Santos <quantheory@gmail.com>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	helmut.schaa@googlemail.com, mar.kolya@gmail.com,
-	Per-Erik Westerberg <per-erik.westerberg@bredband.net>,
-	=?ISO-8859-2?Q?Miko=B3aj_Kuligowski?= <mikolaj.q@wp.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 12 Jun 2012 15:57:40 -0400
+Message-ID: <1339531055.4531.21.camel@jlt3.sipsolutions.net> (sfid-20120612_215743_461598_2A44FF39)
+Subject: Re: iwlwifi updates for 3.6
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 12 Jun 2012 21:57:35 +0200
+In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115334_801449_87F3D667)
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120611_115334_801449_87F3D667)
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-IYgsYAEheXhO8pqNwmQm"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > > But that notification trap would also have to call some function
->> > > in the stack, and the drivers that don't have it (or don't
->> > > implement it yet) need something more like this patch?
->> >
->> > (see v3 attached to this mail).
->> >
->> > Yes, drivers that don't pass BAs to the stack and won't call
->> > ieee80211_ba_notification will have their BA sessions "removed" in v3.
->> > Of course, we can also retain the old behavoir and reset the
->> > tx ba session timeout until we know we don't break anything.
->>
->> But if the peer acked a packet sent in a BA session, then it must send
->> a BA (spec AFAIK), so when the driver calls ieee80211_tx_status at the
->> originator side, mac80211 can assume that a BA was received, right?
-> Not necessarily, some wifi devices (especially USB) just don't provide
-> a status report. I think rtlwifi is a example for this case, since it
-> just sticks "STAT_ACK" on every package.
->
-> (Also, when the signal is bad, some devices fall back to legacy (retry)
-> rates and abandon aggregation at least for the time... so no, we
-> have to look elsewhere. Furthermore, I haven't found any
-> references in the spec that explicitly says that you can't
-> do that (e.g. A-MSDU vs A-MPDU mixed, etc...), so do you know
-> the paragraph that says BAs and normal acks can't be mixed?)
 
-Frankly I am not an expert at browsing the spec :-)
-I just know that Cisco sends BA all the time, but it is Cisco and I
-don't remember what other APs do.
+--=-IYgsYAEheXhO8pqNwmQm
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
->> Even if you still want a specific notification from the driver to
->> mac80211, what about adding it to ieee80211_tx_info.status ?
->> We have a trade-off here. We can have a new notification which is a
->> new API (which is a disadvantage in terms of runtime and design) but
->> can be called once per batch: meaning that we will reset the the timer
->> once every 15 packets or so. Or we can have a bit in the
->> ieee80211_tx_info.status which would be in every packet, but then, no
->> need for new API.
->> Maybe the best way is to have the driver set the new bit in
->> ieee80211_tx_info.status only for the last packet of the batch (or the
->> first, whatever).
-> If you look in ieee80211_tx_prep_agg you'll see that in the current
-> design the timer is already updated for every frame as well. So if
-> we just move this to a different place so the "cost" should remain
-> the same, right?
->
+John,
 
-That sounds right
+please pull the iwlwifi-next tree.
+
+I've included the patches here, in slightly fixed up versions, a small
+additional warning that we need to flag/debug some issues, and also of
+course the fix for the EEPROM refactoring vs. addition of the separate
+configuration structure for 6035 devices.
+
+The patches I posted previously included a few fixes for code that went
+into the tree in my last pull and more debugging utilities.
+
+johannes
+
+
+The following changes since commit a59f975a78f0606a3a364939dfa9b949d5f87521=
+:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless (2012-06-12 14:11:13 -0400)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 7cd9174d02e2d6df3b6de25fea61ae1b7602d012:
+
+  iwlwifi: fix 6035 device parameters (2012-06-12 21:43:28 +0200)
+
+----------------------------------------------------------------
+Brandon Misemer (1):
+      iwlwifi: Fix Makefile build order for built-in driver
+
+Dan Carpenter (1):
+      iwlwifi: turn on a lockdep assertion
+
+Emmanuel Grumbach (9):
+      iwlwifi: s/iwl_read_targ_mem_words/iwl_read_targ_mem_bytes
+      iwlwifi: iwl_{read,write}_targ_mem_words takes dwords
+      iwlwifi: print more info when a queue is stuck
+      iwlwifi: don't configure a txq that is being disabled
+      iwlwifi: remove lock around txq_enable
+      iwlwifi: comment that setting driver_data overrides info->control
+      iwlwifi: print even more info when a queue is stuck
+      iwlwifi: don't modify the timer if we don't Tx
+      iwlwifi: warn if TFD index and WiFi Seq don't match
+
+Ilan Peer (2):
+      iwlwifi: refactor testmode
+      iwlwifi: decouple testmode and iwl-test
+
+Johannes Berg (3):
+      iwlwifi: fix dynamic loading
+      Merge remote-tracking branch 'wireless-next/master' into iwlwifi-next
+      iwlwifi: fix 6035 device parameters
+
+ drivers/net/wireless/iwlwifi/Makefile              |   10 +-
+ drivers/net/wireless/iwlwifi/dvm/agn.h             |   17 +-
+ drivers/net/wireless/iwlwifi/dvm/dev.h             |   26 +-
+ drivers/net/wireless/iwlwifi/dvm/lib.c             |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c            |    6 +-
+ drivers/net/wireless/iwlwifi/dvm/rx.c              |   24 +-
+ drivers/net/wireless/iwlwifi/dvm/testmode.c        |  778 ++--------------=
+--
+ drivers/net/wireless/iwlwifi/dvm/tx.c              |    1 +
+ drivers/net/wireless/iwlwifi/iwl-drv.c             |   15 +
+ drivers/net/wireless/iwlwifi/iwl-fh.h              |    2 +
+ drivers/net/wireless/iwlwifi/iwl-io.c              |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-io.h              |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-test.c            |  856 ++++++++++++++++=
+++++
+ drivers/net/wireless/iwlwifi/iwl-test.h            |  161 ++++
+ .../iwlwifi/{dvm/testmode.h =3D> iwl-testmode.h}     |    0
+ drivers/net/wireless/iwlwifi/pcie/6000.c           |    1 +
+ drivers/net/wireless/iwlwifi/pcie/internal.h       |    9 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c          |   60 +-
+ drivers/net/wireless/iwlwifi/pcie/tx.c             |   95 +--
+ 20 files changed, 1243 insertions(+), 856 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-test.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-test.h
+ rename drivers/net/wireless/iwlwifi/{dvm/testmode.h =3D> iwl-testmode.h} (=
+100%)
+
+
+--=-IYgsYAEheXhO8pqNwmQm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJP158vAAoJEDBSmw7B7bqrAlcP/1zt1eElwyDi1NhHGpP0cTFb
+VKbwEXlWN4n2COn6yBoSEo81uvJeIw/Uh2g6FnnIKyn8DzJ+vipgxwV1rhmtmUdR
+eCavbbh7i8+IDG7nhirrQQsbwwYvRfLwP9/ndV1xw3Lso749W1cZpEnYExhDdEra
+bPrx/vqHgB/cgPyvdU07e7XuxavNn+K0txR5q0HjIUn0GYJSFMPURVxMImGRwZFj
+ymdtz/DVNJ204CVNdfi7cgTDWMw+N753Mkm1OFsM0PaRhpfE3Oq0Njmkkm/SG65i
+K/zmKPE+i4Dq7ykNfQs8yHN/ODF8vTyIBHZhkGSz7iMBteoybWFsocu4t8BFq0rb
+jwuayFtqIT5gLvYw+B45s0KKjIRRSSuuo/iFSG4sr6Gzmp7EIIriFVdQO730OCk7
+KVJ7TTny/9FN6JIlgJiXDp6mRGYeyGr4mM1LvDyX2DkbTqKQZ24szitWVdnXW/La
+w2S9F3/Lz8FvJOMPYs5d0L1tTROBaN2Y8GilybxEGUYcGw7cFcD8Ue54lpajt+vN
+9FxEzc/a9RBT7OzHXOWhorRO3DfMHA6Yk5ZE5C3tQPLtBvW0Fm2qupInSOs/QqGn
+7molelOlRTlUT26z5dlmFP1enOxd+U24QM11gxod+ZHmqEktoq/+68B57EKhe47M
+08jpILEwNWMcqERsQ5ou
+=ZVxk
+-----END PGP SIGNATURE-----
+
+--=-IYgsYAEheXhO8pqNwmQm--
+
