@@ -1,40 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:49052 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751801Ab2FXHiS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2012 03:38:18 -0400
-Received: by lbok6 with SMTP id k6so6540429lbo.32
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2012 00:38:14 -0700 (PDT)
-Message-ID: <1340523493.1631.420.camel@cumari.coelho.fi> (sfid-20120624_093821_665168_ED67FE16)
-Subject: Re: [PATCH 00/18] wlcore: improvements in SDIO error handling
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, ido@wizery.com
-Date: Sun, 24 Jun 2012 10:38:13 +0300
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:7910 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751437Ab2FLP3a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 11:29:30 -0400
+Date: Tue, 12 Jun 2012 17:28:58 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Woody Hung <Woody.Hung@mediatek.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH] rt2x00 : RT3290 chip support v3
+Message-ID: <20120612152853.GC5657@redhat.com> (sfid-20120612_172934_494917_C333630A)
+References: <1339491889-3587-1-git-send-email-Woody.Hung@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1339491889-3587-1-git-send-email-Woody.Hung@mediatek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-06-23 at 09:41 +0300, Luciano Coelho wrote:
-> Hi,
-> 
-> This series with patches from Ido and Arik improve the driver's
-> handling of SDIO errors.  Ido's series propagates the errors up for
-> better handling and Arik's series ensures that suspend/resume don't
-> get messed up when such errors occur.
-> 
-> There is also one patch by Arkady (welcome!) that allows the userspace
-> to read/write to the chip's memory directly for firmware debugging
-> purposes.
-> 
-> Please review.
+On Tue, Jun 12, 2012 at 05:04:49PM +0800, Woody Hung wrote:
+> + * RFCSR 29:
+> + */
+> +#define RFCSR29_BIT0			FIELD8(0x01)
+> +#define RFCSR29_BIT1			FIELD8(0x02)
+> +#define RFCSR29_BIT2			FIELD8(0x04)
+> +#define RFCSR29_BIT3			FIELD8(0x08)
+> +#define RFCSR29_BIT4			FIELD8(0x10)
+> +#define RFCSR29_BIT5			FIELD8(0x20)
+> +#define RFCSR29_BIT6			FIELD8(0x40)
+> +#define RFCSR29_BIT7			FIELD8(0x80)
+[snip]
+> + * RFCSR 47:
+> + */
+> +#define RFCSR47_BIT0			FIELD8(0x01)
+> +#define RFCSR47_BIT1			FIELD8(0x02)
+> +#define RFCSR47_BIT2			FIELD8(0x04)
+> +#define RFCSR47_BIT3			FIELD8(0x08)
+> +#define RFCSR47_BIT4			FIELD8(0x10)
+> +#define RFCSR47_BIT5			FIELD8(0x20)
+> +#define RFCSR47_BIT6			FIELD8(0x40)
+> +#define RFCSR47_BIT7			FIELD8(0x80)
+I would like to see descriptive names. Those does not tell much.
 
-Applied and push this series to wl12xx.git/master.
+> +
+> +		rt2800_bbp_read(rt2x00dev, 47, &value);
+> +		value = ((value & ~0x80) | 0x80);
+No, please use rt2x00_set_field8 function as in previous version of
+the patch, but with descriptive name.
+> +		rt2800_bbp_write(rt2x00dev, 47, value);
+> +
+> +		rt2800_bbp_read(rt2x00dev, 3, &value);
+> +		value = ((value & ~0xc0) | 0xc0);
+The same here.
+> +	do {
+> +		/*
+> +		 * Check PLL_LD & XTAL_RDY.
+> +		 */
+> +		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+> +			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
+> +			if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
+> +				(rt2x00_get_field32(reg, XTAL_RDY) == 1))
+> +				break;
+Indention.
+> +			if (count >= 10)
+> +				return -EFAULT;
+-EFAULT mean "Bad address", which is not quite good error code, -EIO seems
+to be most appropriate.
+> +		} else {
+> +			rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+What for you read this register here?
+> +			count = 0;
+> +		}
+> +	return 0;
+> +}
+>  static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+>  {
+>  	int retval;
+> @@ -1028,6 +1095,17 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+>  	 */
+>  	rt2x00dev->rssi_offset = DEFAULT_RSSI_OFFSET;
+>  
+> +	/*
+> +	 * In probe phase call rt2800_enable_wlan_rt3290 to enable wlan
+> +	 * clk for rt3290. That avoid the MCU fail in start phase.
+> +	 */
+> +	if (rt2x00_rt(rt2x00dev, RT3290)) {
+> +		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
+> +
+> +		if (retval)
+> +			return retval;
+Probably moving this part just after
 
---
-Luca.
+        retval = rt2800_probe_hw_mode(rt2x00dev);
+        if (retval)
+                return retval;
 
+will be more appropriate.
+
+Thanks
+Stanislaw
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
