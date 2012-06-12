@@ -1,241 +1,360 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932875Ab2F1KHa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 06:07:30 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8062 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753166Ab2FLOrV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jun 2012 10:47:21 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
 CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 13/13] cfg80211: respect iface combinations when starting operation
-Date: Thu, 28 Jun 2012 12:07:05 +0200
-Message-ID: <1340878025-2695-14-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120734_731781_A78DA75D)
-In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
-References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/8] ath9k_hw: cleanup MCI gpm offset state
+Date: Tue, 12 Jun 2012 20:18:16 +0530
+Message-ID: <1339512503-26670-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120612_164727_256359_2FE30B4E)
+In-Reply-To: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-devlist_mtx locking is changed to accomodate changes.
+Add utility functions to get and test GPM offset and
+remove MCI_STATE*_GPM_OFFSET states.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- net/wireless/core.c    |    2 ++
- net/wireless/ibss.c    |   10 ++++++++++
- net/wireless/mesh.c    |   12 ++++++++++++
- net/wireless/mlme.c    |   16 ++++++++++++++++
- net/wireless/nl80211.c |    8 ++++++++
- net/wireless/util.c    |    9 ++++-----
- 6 files changed, 52 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  198 ++++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    9 +-
+ drivers/net/wireless/ath/ath9k/hw.c         |    2 +-
+ drivers/net/wireless/ath/ath9k/mci.c        |    6 +-
+ 4 files changed, 110 insertions(+), 105 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 2fed61b..5752067 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1049,7 +1049,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 			return notifier_from_errno(-EOPNOTSUPP);
- 		if (rfkill_blocked(rdev->rfkill))
- 			return notifier_from_errno(-ERFKILL);
-+		mutex_lock(&rdev->devlist_mtx);
- 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
-+		mutex_unlock(&rdev->devlist_mtx);
- 		if (ret)
- 			return notifier_from_errno(ret);
- 		cfg80211_lock_rdev(rdev);
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index b90fd86..ca5672f 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -118,6 +118,16 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 	wdev->wext.ibss.channel = params->channel;
- #endif
- 	wdev->sme_state = CFG80211_SME_CONNECTING;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index c11dbaa..0433f2b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -593,8 +593,7 @@ static u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
+ 		if (!time_out)
+ 			break;
+ 
+-		offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
+-					  &more_data);
++		offset = ar9003_mci_get_next_gpm_offset(ah, false, &more_data);
+ 
+ 		if (offset == MCI_GPM_INVALID)
+ 			continue;
+@@ -658,8 +657,7 @@ static u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
+ 		time_out = 0;
+ 
+ 	while (more_data == MCI_GPM_MORE) {
+-		offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
+-					  &more_data);
++		offset = ar9003_mci_get_next_gpm_offset(ah, false, &more_data);
+ 		if (offset == MCI_GPM_INVALID)
+ 			break;
+ 
+@@ -894,7 +892,7 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 	}
+ 
+ 	/* Check pending GPM msg before MCI Reset Rx */
+-	ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
++	ar9003_mci_check_gpm_offset(ah);
+ 
+ 	regval |= SM(1, AR_MCI_COMMAND2_RESET_RX);
+ 	REG_WRITE(ah, AR_MCI_COMMAND2, regval);
+@@ -902,7 +900,7 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 	regval &= ~SM(1, AR_MCI_COMMAND2_RESET_RX);
+ 	REG_WRITE(ah, AR_MCI_COMMAND2, regval);
+ 
+-	ar9003_mci_state(ah, MCI_STATE_INIT_GPM_OFFSET, NULL);
++	ar9003_mci_get_next_gpm_offset(ah, true, NULL);
+ 
+ 	REG_WRITE(ah, AR_MCI_MSG_ATTRIBUTES_TABLE,
+ 		  (SM(0xe801, AR_MCI_MSG_ATTRIBUTES_TABLE_INVALID_HDR) |
+@@ -1170,7 +1168,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+-	u32 value = 0, more_gpm = 0, gpm_ptr;
++	u32 value = 0;
+ 	u8 query_type;
+ 
+ 	switch (state_type) {
+@@ -1183,96 +1181,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 		}
+ 		value &= AR_BTCOEX_CTRL_MCI_MODE_EN;
+ 		break;
+-	case MCI_STATE_INIT_GPM_OFFSET:
+-		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
+-		mci->gpm_idx = value;
+-		break;
+-	case MCI_STATE_CHECK_GPM_OFFSET:
+-		/*
+-		 * This should only be called before "MAC Warm Reset" or
+-		 * "MCI Reset Rx".
+-		 */
+-		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
+-		if (mci->gpm_idx == value)
+-			break;
+-		ath_dbg(common, MCI,
+-			"GPM cached write pointer mismatch %d %d\n",
+-			mci->gpm_idx, value);
+-		mci->query_bt = true;
+-		mci->need_flush_btinfo = true;
+-		mci->gpm_idx = 0;
+-		break;
+-	case MCI_STATE_NEXT_GPM_OFFSET:
+-	case MCI_STATE_LAST_GPM_OFFSET:
+-		/*
+-		* This could be useful to avoid new GPM message interrupt which
+-		* may lead to spurious interrupt after power sleep, or multiple
+-		* entry of ath_mci_intr().
+-		* Adding empty GPM check by returning HAL_MCI_GPM_INVALID can
+-		* alleviate this effect, but clearing GPM RX interrupt bit is
+-		* safe, because whether this is called from hw or driver code
+-		* there must be an interrupt bit set/triggered initially
+-		*/
+-		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
+-			  AR_MCI_INTERRUPT_RX_MSG_GPM);
+-
+-		gpm_ptr = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
+-		value = gpm_ptr;
+-
+-		if (value == 0)
+-			value = mci->gpm_len - 1;
+-		else if (value >= mci->gpm_len) {
+-			if (value != 0xFFFF)
+-				value = 0;
+-		} else {
+-			value--;
+-		}
+-
+-		if (value == 0xFFFF) {
+-			value = MCI_GPM_INVALID;
+-			more_gpm = MCI_GPM_NOMORE;
+-		} else if (state_type == MCI_STATE_NEXT_GPM_OFFSET) {
+-			if (gpm_ptr == mci->gpm_idx) {
+-				value = MCI_GPM_INVALID;
+-				more_gpm = MCI_GPM_NOMORE;
+-			} else {
+-				for (;;) {
+-					u32 temp_index;
+-
+-					/* skip reserved GPM if any */
+-
+-					if (value != mci->gpm_idx)
+-						more_gpm = MCI_GPM_MORE;
+-					else
+-						more_gpm = MCI_GPM_NOMORE;
+-
+-					temp_index = mci->gpm_idx;
+-					mci->gpm_idx++;
+-
+-					if (mci->gpm_idx >=
+-					    mci->gpm_len)
+-						mci->gpm_idx = 0;
+-
+-					if (ar9003_mci_is_gpm_valid(ah,
+-								    temp_index)) {
+-						value = temp_index;
+-						break;
+-					}
+-
+-					if (more_gpm == MCI_GPM_NOMORE) {
+-						value = MCI_GPM_INVALID;
+-						break;
+-					}
+-				}
+-			}
+-			if (p_data)
+-				*p_data = more_gpm;
+-		}
+-
+-		if (value != MCI_GPM_INVALID)
+-			value <<= 4;
+-
+-		break;
+ 	case MCI_STATE_LAST_SCHD_MSG_OFFSET:
+ 		value = MS(REG_READ(ah, AR_MCI_RX_STATUS),
+ 				    AR_MCI_RX_LAST_SCHD_MSG_INDEX);
+@@ -1450,3 +1358,99 @@ void ar9003_mci_set_power_awake(struct ath_hw *ah)
+ 		udelay(50);
+ 	}
+ }
 +
-+	err = cfg80211_can_use_chan(rdev, wdev, params->channel,
-+				    params->channel_fixed
-+				    ? CHAN_MODE_SHARED
-+				    : CHAN_MODE_EXCLUSIVE);
-+	if (err) {
-+		wdev->connect_keys = NULL;
-+		return err;
++void ar9003_mci_check_gpm_offset(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u32 offset;
++
++	/*
++	 * This should only be called before "MAC Warm Reset" or "MCI Reset Rx".
++	 */
++	offset = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
++	if (mci->gpm_idx == offset)
++		return;
++	ath_dbg(common, MCI, "GPM cached write pointer mismatch %d %d\n",
++		mci->gpm_idx, offset);
++	mci->query_bt = true;
++	mci->need_flush_btinfo = true;
++	mci->gpm_idx = 0;
++}
++
++u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more)
++{
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u32 offset, more_gpm = 0, gpm_ptr;
++
++	if (first) {
++		gpm_ptr = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
++		mci->gpm_idx = gpm_ptr;
++		return gpm_ptr;
 +	}
 +
- 	err = rdev->ops->join_ibss(&rdev->wiphy, dev, params);
- 	if (err) {
- 		wdev->connect_keys = NULL;
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 4f218c1..97f6c41 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -149,6 +149,11 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 					  setup->channel_type))
- 		return -EINVAL;
- 
-+	err = cfg80211_can_use_chan(rdev, wdev, setup->channel,
-+				    CHAN_MODE_SHARED);
-+	if (err)
-+		return err;
++	/*
++	 * This could be useful to avoid new GPM message interrupt which
++	 * may lead to spurious interrupt after power sleep, or multiple
++	 * entry of ath_mci_intr().
++	 * Adding empty GPM check by returning HAL_MCI_GPM_INVALID can
++	 * alleviate this effect, but clearing GPM RX interrupt bit is
++	 * safe, because whether this is called from hw or driver code
++	 * there must be an interrupt bit set/triggered initially
++	 */
++	REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
++			AR_MCI_INTERRUPT_RX_MSG_GPM);
 +
- 	err = rdev->ops->join_mesh(&rdev->wiphy, dev, conf, setup);
- 	if (!err) {
- 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
-@@ -167,9 +172,11 @@ int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
- 
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
- 	err = __cfg80211_join_mesh(rdev, dev, setup, conf);
- 	wdev_unlock(wdev);
-+	mutex_unlock(&rdev->devlist_mtx);
- 
- 	return err;
- }
-@@ -202,6 +209,11 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
- 		if (!netif_running(wdev->netdev))
- 			return -ENETDOWN;
- 
-+		err = cfg80211_can_use_chan(rdev, wdev, channel,
-+					    CHAN_MODE_SHARED);
-+		if (err)
-+			return err;
++	gpm_ptr = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
++	offset = gpm_ptr;
 +
- 		err = rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
- 							   wdev->netdev,
- 							   channel);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index a7882eb..d4fece3 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -302,8 +302,14 @@ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
- 	if (!req.bss)
- 		return -ENOENT;
- 
-+	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
-+				    CHAN_MODE_SHARED);
-+	if (err)
++	if (!offset)
++		offset = mci->gpm_len - 1;
++	else if (offset >= mci->gpm_len) {
++		if (offset != 0xFFFF)
++			offset = 0;
++	} else {
++		offset--;
++	}
++
++	if ((offset == 0xFFFF) || (gpm_ptr == mci->gpm_idx)) {
++		offset = MCI_GPM_INVALID;
++		more_gpm = MCI_GPM_NOMORE;
 +		goto out;
++	}
++	for (;;) {
++		u32 temp_index;
 +
- 	err = rdev->ops->auth(&rdev->wiphy, dev, &req);
- 
++		/* skip reserved GPM if any */
++
++		if (offset != mci->gpm_idx)
++			more_gpm = MCI_GPM_MORE;
++		else
++			more_gpm = MCI_GPM_NOMORE;
++
++		temp_index = mci->gpm_idx;
++		mci->gpm_idx++;
++
++		if (mci->gpm_idx >= mci->gpm_len)
++			mci->gpm_idx = 0;
++
++		if (ar9003_mci_is_gpm_valid(ah, temp_index)) {
++			offset = temp_index;
++			break;
++		}
++
++		if (more_gpm == MCI_GPM_NOMORE) {
++			offset = MCI_GPM_INVALID;
++			break;
++		}
++	}
++
++	if (offset != MCI_GPM_INVALID)
++		offset <<= 4;
 +out:
- 	cfg80211_put_bss(req.bss);
- 	return err;
- }
-@@ -317,11 +323,13 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
++	if (more)
++		*more = more_gpm;
++
++	return offset;
++}
++EXPORT_SYMBOL(ar9003_mci_get_next_gpm_offset);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 8cb3307..163d156 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -189,10 +189,6 @@ enum mci_bt_state {
+ /* Type of state query */
+ enum mci_state_type {
+ 	MCI_STATE_ENABLE,
+-	MCI_STATE_INIT_GPM_OFFSET,
+-	MCI_STATE_CHECK_GPM_OFFSET,
+-	MCI_STATE_NEXT_GPM_OFFSET,
+-	MCI_STATE_LAST_GPM_OFFSET,
+ 	MCI_STATE_BT,
+ 	MCI_STATE_SET_BT_SLEEP,
+ 	MCI_STATE_SET_BT_AWAKE,
+@@ -266,6 +262,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ void ar9003_mci_cleanup(struct ath_hw *ah);
+ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
++u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more);
+ /*
+  * These functions are used by ath9k_hw.
+  */
+@@ -286,6 +283,7 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
+ void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
+ void ar9003_mci_set_power_awake(struct ath_hw *ah);
++void ar9003_mci_check_gpm_offset(struct ath_hw *ah);
+ 
+ #else
+ 
+@@ -329,6 +327,9 @@ static inline void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah)
+ static inline void ar9003_mci_set_power_awake(struct ath_hw *ah)
  {
- 	int err;
- 
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(dev->ieee80211_ptr);
- 	err = __cfg80211_mlme_auth(rdev, dev, chan, auth_type, bssid,
- 				   ssid, ssid_len, ie, ie_len,
- 				   key, key_len, key_idx);
- 	wdev_unlock(dev->ieee80211_ptr);
-+	mutex_unlock(&rdev->devlist_mtx);
- 
- 	return err;
  }
-@@ -397,8 +405,14 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 		return -ENOENT;
++static inline void ar9003_mci_check_gpm_offset(struct ath_hw *ah)
++{
++}
+ #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4ec496d..784baee 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1349,7 +1349,7 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
  	}
  
-+	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
-+				    CHAN_MODE_SHARED);
-+	if (err)
-+		goto out;
-+
- 	err = rdev->ops->assoc(&rdev->wiphy, dev, &req);
+ 	if (ath9k_hw_mci_is_enabled(ah))
+-		ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
++		ar9003_mci_check_gpm_offset(ah);
  
-+out:
- 	if (err) {
- 		if (was_connected)
- 			wdev->sme_state = CFG80211_SME_CONNECTED;
-@@ -421,11 +435,13 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
+ 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
  
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
- 	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
- 				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
- 				    assoc_flags, ht_capa, ht_capa_mask);
- 	wdev_unlock(wdev);
-+	mutex_unlock(&rdev->devlist_mtx);
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index f0c8fa4..9e15231 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -421,7 +421,7 @@ void ath_mci_intr(struct ath_softc *sc)
+ 	ar9003_mci_get_interrupt(sc->sc_ah, &mci_int, &mci_int_rxmsg);
  
- 	return err;
- }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6773488..f316c22 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2350,6 +2350,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 					  params.channel_type))
- 		return -EINVAL;
- 
-+	mutex_lock(&rdev->devlist_mtx);
-+	err = cfg80211_can_use_chan(rdev, wdev, params.channel,
-+				    CHAN_MODE_SHARED);
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	if (err)
-+		return err;
-+
- 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
- 	if (!err) {
- 		wdev->beacon_interval = params.beacon_interval;
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 4713cea..a9260ac 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -805,8 +805,10 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 		return -EBUSY;
- 
- 	if (ntype != otype && netif_running(dev)) {
-+		mutex_lock(&rdev->devlist_mtx);
- 		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
- 						    ntype);
-+		mutex_unlock(&rdev->devlist_mtx);
- 		if (err)
- 			return err;
- 
-@@ -956,6 +958,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	int i, j;
- 
- 	ASSERT_RTNL();
-+	lockdep_assert_held(&rdev->devlist_mtx);
- 
- 	/* Always allow software iftypes */
- 	if (rdev->wiphy.software_iftypes & BIT(iftype))
-@@ -979,7 +982,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 		break;
+ 	if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) == 0) {
+-		ar9003_mci_state(ah, MCI_STATE_INIT_GPM_OFFSET, NULL);
++		ar9003_mci_get_next_gpm_offset(ah, true, NULL);
+ 		return;
  	}
  
--	mutex_lock(&rdev->devlist_mtx);
- 	list_for_each_entry(wdev_iter, &rdev->netdev_list, list) {
- 		if (wdev_iter == wdev)
- 			continue;
-@@ -999,10 +1001,8 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 				if (!used_channels[i] || used_channels[i] == ch)
- 					break;
+@@ -488,8 +488,8 @@ void ath_mci_intr(struct ath_softc *sc)
+ 		while (more_data == MCI_GPM_MORE) {
  
--			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS) {
--				mutex_unlock(&rdev->devlist_mtx);
-+			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS)
- 				return -EBUSY;
--			}
+ 			pgpm = mci->gpm_buf.bf_addr;
+-			offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
+-						  &more_data);
++			offset = ar9003_mci_get_next_gpm_offset(ah, false,
++								&more_data);
  
- 			if (used_channels[i] == NULL) {
- 				used_channels[i] = ch;
-@@ -1018,7 +1018,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 		total++;
- 		used_iftypes |= BIT(wdev_iter->iftype);
- 	}
--	mutex_unlock(&rdev->devlist_mtx);
- 
- 	if (total == 1)
- 		return 0;
+ 			if (offset == MCI_GPM_INVALID)
+ 				break;
 -- 
-1.7.0.4
+1.7.10.4
 
