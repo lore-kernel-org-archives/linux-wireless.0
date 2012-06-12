@@ -1,66 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:54671 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263Ab2FKOli (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:51698 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752613Ab2FLMPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 10:41:38 -0400
-Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Sasha Levin <levinsasha928@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	Dave Jones <davej@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20120611144134.GX22557@sortiz-mobl>
-References: <1339423241.4999.53.camel@lappy>
-	 <20120611144134.GX22557@sortiz-mobl>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Jun 2012 16:41:33 +0200
-Message-ID: <1339425693.6001.2268.camel@edumazet-glaptop> (sfid-20120611_164212_055129_368046C4)
-Mime-Version: 1.0
+	Tue, 12 Jun 2012 08:15:49 -0400
+Received: by lahd3 with SMTP id d3so3447631lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 05:15:48 -0700 (PDT)
+Message-ID: <4FD732F1.8070607@gmail.com> (sfid-20120612_141552_278516_30A796D2)
+Date: Tue, 12 Jun 2012 14:15:45 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Disallow changing chan type on monitor when
+ CHAN_MODE_FIXED
+References: <1339499167-26225-1-git-send-email-pontus.fuchs@gmail.com>   (sfid-20120612_130639_458885_983B325C) <1339499291.4531.1.camel@jlt3.sipsolutions.net>  <4FD725FF.1030108@gmail.com> (sfid-20120612_132035_802191_87C8E8E9) <1339500801.4531.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339500801.4531.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-06-11 at 16:41 +0200, Samuel Ortiz wrote:
-> Hi Sasha,
-> 
-> On Mon, Jun 11, 2012 at 04:00:41PM +0200, Sasha Levin wrote:
-> > Hi all,
-> > 
-> > I've stumbled on the following while fuzzing with trinity inside a KVM tools guest, running on 3.5-rc2:
-> > 
-> Thanks for the report, it could be worth adding this one to
-> bugzilla.kernel.org.
-> 
-> What's trinity ?
-> Also, if this one is reproducible, would you mind sharing some details about
-> how we could reproduce it ?
+On 2012-06-12 13:33, Johannes Berg wrote:
+> Yeah, like we discussed, maybe it should or should not be allowed? With
+> the new changes Michal is doing it'll probably be disallowed anyway?
+>
+> I'll apply it, but can you rediff and remove the "is_monitor" argument,
+> since dev == NULL is equivalent? :)
 
-Well, bugfix should be trivial enough ;)
+Thanks, that's a lot smarter. I was confused by the old code. V2 sent.
 
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index ec1134c..208416e 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -54,11 +54,12 @@ static int rawsock_release(struct socket *sock)
- {
- 	struct sock *sk = sock->sk;
- 
--	pr_debug("sock=%p\n", sock);
--
--	sock_orphan(sk);
--	sock_put(sk);
-+	pr_debug("sock=%p sk=%p\n", sock, sk);
- 
-+	if (sk) {
-+		sock_orphan(sk);
-+		sock_put(sk);
-+	}
- 	return 0;
- }
- 
+Cheers,
 
-
+Pontus
