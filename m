@@ -1,67 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:51733 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362Ab2FNRAH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46589 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751802Ab2FLOJs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 13:00:07 -0400
-Received: by obbtb18 with SMTP id tb18so2652511obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 10:00:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1339691877.9786.0.camel@jlt3.sipsolutions.net>
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	<4FD21C6B.5000402@lwfinger.net>
-	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	<4FD22727.7000500@lwfinger.net>
-	<1339180580.5748.32.camel@jlt3.sipsolutions.net>
-	<1339180948.5748.35.camel@jlt3.sipsolutions.net>
-	<1339182289.5748.36.camel@jlt3.sipsolutions.net>
-	<1339576294.4519.17.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
-	<1339602402.4519.48.camel@jlt3.sipsolutions.net>
-	<20120613204230.474d1b6c@milhouse>
-	<CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com>
-	<1339691877.9786.0.camel@jlt3.sipsolutions.net>
-Date: Thu, 14 Jun 2012 19:00:05 +0200
-Message-ID: <CAHsu+b9XNO5roFZNETAgs8_5OLymCaKNcTU1XUsc2fXBu+4kpg@mail.gmail.com> (sfid-20120614_190012_948539_4C828F42)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
-From: Andre Heider <a.heider@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 12 Jun 2012 10:09:48 -0400
+Message-ID: <1339510185.4531.12.camel@jlt3.sipsolutions.net> (sfid-20120612_161006_162567_11B3F97A)
+Subject: Re: [PATCH] mac80211: handle auth failure returned with unmatching
+ auth algo
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eyal Shapira <eyal@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 12 Jun 2012 16:09:45 +0200
+In-Reply-To: <1339497630-31589-1-git-send-email-eyal@wizery.com> (sfid-20120612_124040_149514_85613F43)
+References: <1339497630-31589-1-git-send-email-eyal@wizery.com>
+	 (sfid-20120612_124040_149514_85613F43)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 14, 2012 at 6:37 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-06-14 at 18:26 +0200, Andre Heider wrote:
->
->> > This just seems to be a follow-up oops and the original one scrolled off screen.
->>
->> Indeed, the framebuffer showed up too late on TV and I didn't even notice ;)
->>
->> pause_on_oops=30 made that easier, and the offender is
->> drivers/net/wireless/b43/main.c:5294 from the patch:
->> wldev->qos_enabled = true;
->
-> Ok ... seems wldev doesn't exist then? Doesn't make any sense to me, but
-> I don't understand the code ... not that it matters, try this:
->
-> http://p.sipsolutions.net/9c830800d14f3ff8.txt
+On Tue, 2012-06-12 at 13:40 +0300, Eyal Shapira wrote:
+> Some Netgear APs like WNAP210 have a quirk behavior when
+> configured for WEP Shared. They send an auth response with algo
+> SHARED and status code NOT_SUPPORTED_AUTH_ALG (13) when being
+> sent a request made with auth algo OPEN. Enable such response to
+> propagate to userspace instead of discarding it so wpa_s can
+> reattempt to auth with SHARED.
 
-This still oopses: if (!modparam_qos || wldev->fw.opensource)
+Does cfg80211 need to handle this? How does wpa_s even handle it?
 
-I do get a working wlan0 if I force "hw->queues = 1;" without that
-offending line, but just a `dmesg` over wlan+ssh yields another one
-(prolly the same one I already described on an older patch):
-http://i.imgur.com/epdRF.jpg
+johannes
+
