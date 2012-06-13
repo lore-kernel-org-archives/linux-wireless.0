@@ -1,85 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from opensource.wolfsonmicro.com ([80.75.67.52]:34032 "EHLO
-	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756506Ab2FTKrq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 06:47:46 -0400
-Date: Wed, 20 Jun 2012 11:47:44 +0100
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Wei Ni <wni@nvidia.com>, 'Philip Rakity' <prakity@marvell.com>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: Where to power on the wifi device before loading the driver.
-Message-ID: <20120620104744.GK3978@opensource.wolfsonmicro.com> (sfid-20120620_124752_841519_C01778B3)
-References: <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
- <4FDB5976.20809@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
- <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com>
- <20120619091719.GZ3974@opensource.wolfsonmicro.com>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD626@HKMAIL01.nvidia.com>
- <4FE112F2.7000506@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="F55Y67F01HNW3AgB"
-In-Reply-To: <4FE112F2.7000506@wwwdotorg.org>
+Received: from bues.ch ([80.190.117.144]:51732 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752943Ab2FMSmm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 14:42:42 -0400
+Date: Wed, 13 Jun 2012 20:42:30 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andre Heider <a.heider@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+Message-ID: <20120613204230.474d1b6c@milhouse> (sfid-20120613_204246_189004_E4255C9D)
+In-Reply-To: <1339602402.4519.48.camel@jlt3.sipsolutions.net>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	<4FD21C6B.5000402@lwfinger.net>
+	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	<4FD22727.7000500@lwfinger.net>
+	<1339180580.5748.32.camel@jlt3.sipsolutions.net>
+	<1339180948.5748.35.camel@jlt3.sipsolutions.net>
+	<1339182289.5748.36.camel@jlt3.sipsolutions.net>
+	<1339576294.4519.17.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
+	<1339602402.4519.48.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/AQdaI11w1T9ZT2YfjJ/c=O1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--Sig_/AQdaI11w1T9ZT2YfjJ/c=O1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
---F55Y67F01HNW3AgB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Wed, 13 Jun 2012 17:46:42 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-On Tue, Jun 19, 2012 at 06:01:54PM -0600, Stephen Warren wrote:
+> On Wed, 2012-06-13 at 17:39 +0200, Andre Heider wrote:
+> > On Wed, Jun 13, 2012 at 10:31 AM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> > > On Fri, 2012-06-08 at 21:04 +0200, Johannes Berg wrote:
+> > >
+> > >> Ahrg, b43 only sets fw.opensource too late ... this moves it:
+> > >> http://p.sipsolutions.net/00c0056dc206e247.txt
+> > >
+> > > Has anyone tested this?
+> >=20
+> > Sorry, missed that one.
+> > I get this crash with that patch: http://i.imgur.com/2CMzA.png
+>=20
+> Huh, that doesn't make a lot of sense to me, I don't move any
+> locking ...
 
-> Unfortunately, it should be noted that the WiFi device socket on Cardhu
-> apparently isn't some standardized thing (like PCIe) but something
-> rather more custom, although there are apparently devices available to
-> plug into it from multiple module vendors which contain WiFi chips from
-> multiple chip vendors.
+This just seems to be a follow-up oops and the original one scrolled off sc=
+reen.
 
-Right, and indeed someone may decide to plug in something that isn't a
-WiFi device at all but some other SDIO attached device with totally
-different uses for those GPIOs.  Really these boards are an example of
-the sort of thing I was talking about with modular reference systems,
-though a simpler case as given what's brought out you probably can just
-do something like list all the options that are there and allow hotplug
-to sort things out.
+--=20
+Greetings, Michael.
 
---F55Y67F01HNW3AgB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+PGP encryption is encouraged / 908D8B0E
+
+--Sig_/AQdaI11w1T9ZT2YfjJ/c=O1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAEBAgAGBQJP4apGAAoJEBus8iNuMP3dfD0P/2Xtd5aTLHDWOxvbicUix1CW
-v+mfFEHoglO0I8GcC7QWEibEStlIlXDdXQ63CZLPia08XiCqyb9ls57ZWppTTpY8
-CH049NpfmHRMHkPe865wYf62TcQd5oQf7qGVjEU6GF8WP/6Wajc+HwTUmhRGAarN
-cuLNP4lF2qKqJAVORe5bLUdgChtNLSn0XQCReyC9aVtWJ7VrNZv+BLe55a5jAZpM
-9Io+wIo+z40X3xVqAaNhdk2ZkEE+l2Ytd8bju8u1xl4gTMx2hS3g/Nyn2uHxng8R
-HQgYvHX9hybf9njdbIgWAHm+6fz3JPE/Jass7iQ6V2+iqnX2HvEkbtaLBtxCTKc+
-k2XdW4/IggN195pr3HMWU7ssjpkvrXwxi49dqWzvY0yCWGUSDaw8CKy6kGGtKvvd
-W1TAVxmLlz6r4CcS0t9v2UF19bswuy8z22TKRIRsh3EO23X1OY/DTk0tMS16in3U
-CcdvsXFPwa+xolqSkFGUf98Y3dr3G7q7zNF3EoebiXrsung7/lRo1psMFjasV6ur
-5aluaQ4cvtYgdVAJf5hKmiAankNhvIAGK0HLnZNhK3Al/3jh/KML0WPZQAukXO4B
-Cm8yVf2N5w9KW3NGajbVl5/AoyZZgU2sOl4jVKLPniWddZpTqj0DuGXNlg3qW26F
-/j0HH7ZJPXBuLCBHM6rI
-=RgVm
+iQIcBAEBAgAGBQJP2N8WAAoJEPUyvh2QjYsOmmcQAJVO+zJsT5kJDSo3onjGNjTJ
++Uy+fLMLHU4mNwSAWxrqaDEXYQttq7TJIGFLAIeqiVOFn/ZLRsp8vTK/grEeom8+
+Ut+1+0yM6Fqzld7WXQnRmA2K3TI23Z4AtBoNSeVMU8j3jorxJmfu9jxhf/0OkN9o
+dPauueOx2RruZBDTt7r/WTKKvcCUiT6Rt5LZHIkp70gPDgW//2ICJCeC+s/vFaZa
+20xQ9g8/C8obDUsgvjoXilQv0CsqGlXcyQRXYP6URoPzqpkRL34Fc8vrd9lOE4NA
+7ngEvsXO1FPbhGGE03+Mm+HyCR14itxc5Spjs8MPpKKoJRfgZbwvSEWvo0OQtkwv
+4YjqzTESpBZn5SDw2KWJXrVRgv2qcSTrcPtwFu8pubmhe1utHS3qb4Fwu/DKFfWd
+GQHYo6hTBqPnujNmCGrb9aMGXb+Lrzv+GI1nO2h0pdys7H5ur5xCCLw+/NoC2Yed
+TCgJZDksaa/8h3MGUW11Cc4MMX1MY4kq66BFkWFqMxx89zTKjXvgUsOqbcAF1hQb
+QvH2DniTRgBX6H4Dwjnyac2TYcJMlYYfq3UvTCLj0FMhvpMPHnYtYQE3pcouxCfa
+a/cf4T2xpQse2XQTgh3GI2kZOOT19/EK0w8A0HWH8n2nJqeRp51/wpKjYg07uklS
+BpOR4rbPDxkU0EXSLxuK
+=TmOd
 -----END PGP SIGNATURE-----
 
---F55Y67F01HNW3AgB--
+--Sig_/AQdaI11w1T9ZT2YfjJ/c=O1--
