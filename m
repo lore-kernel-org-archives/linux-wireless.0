@@ -1,46 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61063 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790Ab2FKNTX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45611 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752600Ab2FMNzL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 09:19:23 -0400
-Message-ID: <4FD5F044.2000307@qca.qualcomm.com> (sfid-20120611_151926_727828_74E4AF4A)
-Date: Mon, 11 Jun 2012 16:19:00 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Naveen Singh <navesing@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [patch v4] ath6kl: Different version for different FW binaries
-References: <1339055042-27696-1-git-send-email-navesing@qca.qualcomm.com>
-In-Reply-To: <1339055042-27696-1-git-send-email-navesing@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 13 Jun 2012 09:55:11 -0400
+Message-ID: <1339595707.4519.44.camel@jlt3.sipsolutions.net> (sfid-20120613_155516_276957_E6DA854E)
+Subject: Re: pull-request: mac80211.git 2012-06-13
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Jun 2012 15:55:07 +0200
+In-Reply-To: <1339595539.4519.42.camel@jlt3.sipsolutions.net> (sfid-20120613_155224_024594_44042E09)
+References: <1339595539.4519.42.camel@jlt3.sipsolutions.net>
+	 (sfid-20120613_155224_024594_44042E09)
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-mVrF9dKZ7oS9wnHdWeCR"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 10:44 AM, Naveen Singh wrote:
-> Need to have different FW versioning for different FW binaries.
-> This is handled by appending different meta data in firmware
-> binaries.
-> 
-> Signed-off-by: Naveen Singh <navesing@qca.qualcomm.com>
 
-Thanks, applied with minor changes:
+--=-mVrF9dKZ7oS9wnHdWeCR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-commit b5b6f6a9a07ac230d54a85a9fb9e691c85f2eb0a
-Author: Naveen Singh <navesing@qca.qualcomm.com>
-Date:   Thu Jun 7 00:44:02 2012 -0700
+On Wed, 2012-06-13 at 15:52 +0200, Johannes Berg wrote:
+> John,
+>=20
+> Please pull my mac80211.git tree to get the recent fixes for the stack
+> that are relevant for 3.5 still.
+>=20
+> I've included David's fix for leaving a scan request dangling if we
+> abort a connection while polling it, a few kernel-doc fixes, Michal's
+> fix to interface validation and two fixes from Eliad, one to avoid a
+> possible deadlock and one to not call the driver unexpectedly.
+>=20
+> Thanks,
+> johannes
+>=20
+> -----
+>=20
+> The following changes since commit 6aee4ca3d2217d3f76469e5ed576d62695f091=
+2a:
+>=20
+>   mac80211: add back channel change flag (2012-06-08 13:47:08 -0400)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-jo=
+hn
+>=20
+> for you to fetch changes up to 79543d8eecc0957ac6fe3ec1e2486ad31d4b67a3:
+>=20
+>   mac80211: stop polling in disassociation (2012-06-13 10:17:55 +0200)
 
-    ath6kl: use firmware version from FW IE
+...
 
-    Need to have different FW versioning for different FW binaries.
-    This is handled by appending different meta data in firmware
-    binaries.
+now with signature (and yes, I've re-verified the commit ID)
 
-    kvalo: add an empty line before a debug message, use '0' instead of
-'0x00',
-    fix indentation
+johannes
 
-    Signed-off-by: Naveen Singh <navesing@qca.qualcomm.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+--=-mVrF9dKZ7oS9wnHdWeCR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-Kalle
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJP2Ju8AAoJEDBSmw7B7bqr4tEP/1Ij5PMglwXfkE+qjCRKJFGh
+IkQVhBwGdJeObuJOFufc//CMgDfZUy64bIsCuJ1OvjdxQF11DI+BEAZUJCRd+xdx
+xOj6laUKcn95YiVRV+JEvB2Aa4S+0E4WyYxjxW3C0WrNNz/VAauWklsf3Rp3EwPj
+g9c9ryybJSfDRwNxgzDynzwxJdXSVYeini0IL0077N9sDMMILQUH2CWrCjtADBbc
+z3SlcWpv4khX6HqQH/P8b8VTSoK/jNnRp1IBvA2XzXFkzaNQzeWCtp/yiXxxXPfs
+co65E2Cx5vBz4k9hHYd9krLa82r6hRlTWTrYMnhv4CK8cF41xL+q215V5GDD07D5
++j217T3tJaxxKF5M0UrasRQF+QtiVCFHANRl1z5a0zGE1BPIlMjWNqzVdA9iX7TS
+P38BzWkM7eh4gjINmBLiUFmSyH22DnECe9ail9RADH14lT6gcinXUM9j3IdXoyXz
+EhnmBeYgUHbAvuydktM4QcfdwnbCNd/N6T3VfDUqXWPKp3X4fkX2tYDksOMc4Qnc
+G16oppeKgp9Nv0x7Df92yPJ2HB+VlMWogHRgWSRIO8c8LQ8Q2Sia2RDZWl7FeQ85
+P36l7NxPoIhte5vcso/SIG66QuI+9pwxotpVP30JofspTrTxk4AsXMOyEdxkSx9q
+U4/Tge4f6EkLw+v0G3l6
+=C0Qq
+-----END PGP SIGNATURE-----
+
+--=-mVrF9dKZ7oS9wnHdWeCR--
+
