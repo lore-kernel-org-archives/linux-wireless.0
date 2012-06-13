@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22244 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab2FKGsX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57234 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372Ab2FMGvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 02:48:23 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 1/9] ath9k: choose legacy rate as last rate of MRR series
-Date: Mon, 11 Jun 2012 12:19:29 +0530
-Message-ID: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_084827_543379_D5A7BBAF)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 13 Jun 2012 02:51:39 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SehQX-0007eE-HU
+	for linux-wireless@vger.kernel.org; Wed, 13 Jun 2012 08:51:37 +0200
+Message-ID: <1339570296.4519.7.camel@jlt3.sipsolutions.net> (sfid-20120613_085142_360174_9A201487)
+Subject: [PATCH 3.5] mac80211: stop polling in disassociation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Jun 2012 08:51:36 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Choose legacy rate as the last rate of Multi Rate Retry series
-if and only if the last selected rate is MCS and having higher
-PER rate. The current code fills a legacy rate as last one even
-though the previous rates in the series are having good PER value.
-This could limit the aggregation that affects the uplink performance.
+From: David Spinadel <david.spinadel@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Stop connection monitor poll during disassociation.
+This clears the polling flags and if a scan was
+deferred it will be run.
+
+Without this fix, if a scan was deferred due to
+connection monitoring while disassociation happens,
+this scan blocks further scan requests until interface
+down/up which causes problems connecting to another AP.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/rc.c |   17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+Will apply this soon to fix the bug.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 92a6c0a..e034add 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -770,7 +770,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	struct ieee80211_tx_rate *rates = tx_info->control.rates;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	__le16 fc = hdr->frame_control;
--	u8 try_per_rate, i = 0, rix, high_rix;
-+	u8 try_per_rate, i = 0, rix;
- 	int is_probe = 0;
+ net/mac80211/mlme.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0f45d02..9aefcc3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1329,6 +1329,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	u32 changed = 0;
+ 	u8 bssid[ETH_ALEN];
  
- 	if (rate_control_send_low(sta, priv_sta, txrc))
-@@ -791,7 +791,6 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	rate_table = ath_rc_priv->rate_table;
- 	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
- 				     &is_probe, false);
--	high_rix = rix;
++	ieee80211_stop_poll(sdata);
++
+ 	ASSERT_MGD_MTX(ifmgd);
  
- 	/*
- 	 * If we're in HT mode and both us and our peer supports LDPC.
-@@ -839,16 +838,16 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	try_per_rate = 8;
+ 	if (WARN_ON_ONCE(tx && !frame_buf))
+@@ -2592,8 +2594,6 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[DEAUTH_DISASSOC_LEN];
  
- 	/*
--	 * Use a legacy rate as last retry to ensure that the frame
--	 * is tried in both MCS and legacy rates.
-+	 * If the last rate in the rate series is MCS and has
-+	 * more than 80% of per thresh, then use a legacy rate
-+	 * as last retry to ensure that the frame is tried in both
-+	 * MCS and legacy rate.
- 	 */
--	if ((rates[2].flags & IEEE80211_TX_RC_MCS) &&
--	    (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU) ||
--	    (ath_rc_priv->per[high_rix] > 45)))
-+	ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
-+	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy) &&
-+	    (ath_rc_priv->per[rix] > 45))
- 		rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
- 				&is_probe, true);
--	else
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
- 
- 	/* All other rates in the series have RTS enabled */
- 	ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+-	ieee80211_stop_poll(sdata);
+-
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
+ 			       false, frame_buf);
+ 	mutex_unlock(&ifmgd->mtx);
 -- 
-1.7.10.4
+1.7.10
+
+
 
