@@ -1,109 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4068 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752408Ab2FZT1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 15:27:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>
-Subject: [PATCH 6/7] brcmfmac: add BCM4334 support
-Date: Tue, 26 Jun 2012 21:26:39 +0200
-Message-ID: <1340738800-14087-7-git-send-email-arend@broadcom.com> (sfid-20120626_212736_811084_6BA8C80E)
-In-Reply-To: <1340738800-14087-1-git-send-email-arend@broadcom.com>
-References: <1340738800-14087-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:56076 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750732Ab2FMVGG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 17:06:06 -0400
+Received: by lagz14 with SMTP id z14so960137lag.35
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 14:06:01 -0700 (PDT)
+Message-ID: <1339621559.10534.95.camel@cumari.coelho.fi> (sfid-20120613_230610_620896_723B8DDA)
+Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
+From: Luciano Coelho <coelho@ti.com>
+To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org,
+	victorg@ti.com
+Date: Thu, 14 Jun 2012 00:05:59 +0300
+In-Reply-To: <20120613205007.GB3043@pista>
+References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
+	 <1339566003.4519.1.camel@jlt3.sipsolutions.net>
+	 <1339587447.3840.272.camel@cumari.coelho.fi>
+	 <4FD87FEA.3070208@qca.qualcomm.com> <20120613205007.GB3043@pista>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Wed, 2012-06-13 at 13:50 -0700, Pedersen, Thomas wrote:
+> On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
+> > On 06/13/2012 02:37 PM, Luciano Coelho wrote:
+> > > On Wed, 2012-06-13 at 07:40 +0200, Johannes Berg wrote:
+> > >> On Tue, 2012-06-12 at 13:43 -0700, Thomas Pedersen wrote:
+> > >>> Support configuring an RSSI threshold in dBm (s32) when requesting
+> > >>> scheduled scan, below which a BSS won't be reported by the cfg80211
+> > >>> driver.
+> > >>
+> > >> I'm confused -- were you going to do scheduled scan only? Makes sense,
+> > >> but if you could maybe change the subject a bit to "specify ... in
+> > >> scheduled scan"?
+> > > 
+> > > It makes more sense with scheduled scans, but maybe it is also desirable
+> > > with normal scans to reduce the amount of scan results traffic?
+> > > 
+> > > At least if we consider the intermediate scan results that Victor has
+> > > been working on... We may want to report all scan results at the end,
+> > > but only send intermediate events if all the matches are satisfied, for
+> > > example.
+> > > 
+> > > Just thinking out loud a bit.
+> > 
+> > Good point.
+> > 
+> > Funnily enough I don't have any idea how ath6kl has implemented this
+> > feature, but in theory this feature is useful also for the current
+> > normal scan (when the firmware/hardware supports it) as we can avoid
+> > host wakeups. If there are 10 APs, but all are below the RSSI threshold,
+> > we will have only 1 host wakeup (scan ready event) opposed to 11 wakeups
+> > (10 AP found events plus 1 scan ready event).
+> 
+> But can the host even sleep on normal scans?
 
-BCM4334 is a dualband a/b/g/n WiFi chip support 20MHz/40MHz
-channels. This patch adds support for its SDIO interface.
+Why not? If you're doing a full scan in 11bg + 11a channels it can take
+a long time...
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 ++
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   17 +++++++++++++++++
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
- 4 files changed, 22 insertions(+)
+Some applications may use very frequent scans, for example for location
+services, so saving some wake-ups every time can prove a big improvement
+in power consumption in the long run...
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 82f51db..49765d3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -44,6 +44,7 @@
- 
- #define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
- #define SDIO_DEVICE_ID_BROADCOM_4330	0x4330
-+#define SDIO_DEVICE_ID_BROADCOM_4334	0x4334
- 
- #define SDIO_FUNC1_BLOCKSIZE		64
- #define SDIO_FUNC2_BLOCKSIZE		512
-@@ -52,6 +53,7 @@
- static const struct sdio_device_id brcmf_sdmmc_ids[] = {
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4329)},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4330)},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4334)},
- 	{ /* end: all zeroes */ },
- };
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 2ee19c1..5c5f1cd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3885,6 +3885,8 @@ static bool brcmf_sdbrcm_chipmatch(u16 chipid)
- 		return true;
- 	if (chipid == BCM4330_CHIP_ID)
- 		return true;
-+	if (chipid == BCM4334_CHIP_ID)
-+		return true;
- 	return false;
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index f8e1f1c..58155e2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -403,6 +403,23 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
- 		ci->c_inf[3].cib = 0x03004211;
- 		ci->ramsize = 0x48000;
- 		break;
-+	case BCM4334_CHIP_ID:
-+		ci->c_inf[0].wrapbase = 0x18100000;
-+		ci->c_inf[0].cib = 0x29004211;
-+		ci->c_inf[1].id = BCMA_CORE_SDIO_DEV;
-+		ci->c_inf[1].base = 0x18002000;
-+		ci->c_inf[1].wrapbase = 0x18102000;
-+		ci->c_inf[1].cib = 0x0d004211;
-+		ci->c_inf[2].id = BCMA_CORE_INTERNAL_MEM;
-+		ci->c_inf[2].base = 0x18004000;
-+		ci->c_inf[2].wrapbase = 0x18104000;
-+		ci->c_inf[2].cib = 0x13080401;
-+		ci->c_inf[3].id = BCMA_CORE_ARM_CM3;
-+		ci->c_inf[3].base = 0x18003000;
-+		ci->c_inf[3].wrapbase = 0x18103000;
-+		ci->c_inf[3].cib = 0x07004211;
-+		ci->ramsize = 0x80000;
-+		break;
- 	default:
- 		brcmf_dbg(ERROR, "chipid 0x%x is not supported\n", ci->chip);
- 		return -ENODEV;
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 333193f..bcc79b4 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -37,5 +37,6 @@
- #define BCM4329_CHIP_ID		0x4329
- #define BCM4330_CHIP_ID		0x4330
- #define BCM4331_CHIP_ID		0x4331
-+#define BCM4334_CHIP_ID		0x4334
- 
- #endif				/* _BRCM_HW_IDS_H_ */
--- 
-1.7.9.5
+> If so, maybe it makes sense to convert NL80211_ATTR_SCHED_SCAN_MATCH
+> into general scan matching parameters instead of having a set for each
+> scan type?
 
+I'm sure I discussed this with Johannes a long time ago, but now I can't
+remember why we decided to keep it for sched scans only...
+
+--
+Luca.
 
