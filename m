@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.121.35]:15483 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab2FOGKL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 02:10:11 -0400
-From: Wei Ni <wni@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Fri, 15 Jun 2012 14:09:41 +0800
-Subject: RE: Where to power on the wifi device before loading the driver.
-Message-ID: <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com> (sfid-20120615_081018_180155_096DE4C9)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
- <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
- <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
-In-Reply-To: <4FDA092E.10301@wwwdotorg.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:47297 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751540Ab2FMOO3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 10:14:29 -0400
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id q5DEETaV004674
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 09:14:29 -0500
+Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id q5DEESgr022545
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 09:14:28 -0500
+From: Yair Shapira <yair.shapira@ti.com>
+To: <linux-wireless@vger.kernel.org>, <coelho@ti.com>
+CC: <yair.shapira@ti.com>
+Subject: [PATCH 0/2] wlcore/wl12xx: add suppoprt for HP and SKW FEM radio manufacturers
+Date: Wed, 13 Jun 2012 17:14:20 +0300
+Message-ID: <1339596862-2488-1-git-send-email-yair.shapira@ti.com> (sfid-20120613_161432_867068_19F6C522)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 14, 2012 at 23:54:22, Stephen Warren wrote:
->>>> The core of the issue is that:
->>
->>>> * Tegra30 support is via device tree. * We have an SDIO bus, and 
->>>> the WiFi device attached to that bus is enumerable. * Since the 
->>>> WiFi device is enumerable, no node exists in the DT to represent 
->>>> it. * However, the driver for the WiFi device needs certain 
->>>> information, such as the reset GPIO ID and perhaps power GPIO.
->>
->>> PCI devices are also enumerable and yet they can be matched up with 
->>> nodes in the device tree. Perhaps something similar could be added 
->>> for the SDIO bus?
->>
->> This seems to make the most sense - pushing this through the 
->> regulator API is just a bodge.
->
->Yes, that seems reasonable.
->
->Presumably the power GPIO should be a fixed regulator though, since it 
->is a power control not just a plain old GPIO? That said, the current driver apparently deals with this as a GPIO already.
->
->The reset GPIO can separately/directly controlled by the WiFi driver though.
+Add support for HP(High Performance TQS fem type 3) and SKW (fem type 2)
+in radio params. BIP Calibration (PLT mode) of new radio types is supported
+In addition new log added to display BIP calibration radio_status
 
-I talked with Franky, this power sequence is generally for 4329, so it mean this sequence can be put into the wifi driver.
-We can use the virtual platform device both for OOB and non OOB.
-I will send out patches later.
+Yair Shapira (2):
+  wlcore/wl12xx: add suppoprt for HP and SKW FEM radio manufacturers
+  wlcore: add print logs of radio_status in case of BIP calibration
 
----
-nvpublic
+ drivers/net/wireless/ti/wl12xx/cmd.c      |   16 ++++++++++------
+ drivers/net/wireless/ti/wlcore/cmd.h      |   21 +++++++++++++++++++++
+ drivers/net/wireless/ti/wlcore/ini.h      |   22 +++++++++++++++++-----
+ drivers/net/wireless/ti/wlcore/testmode.c |   14 ++++++++++++++
+ 4 files changed, 62 insertions(+), 11 deletions(-)
+ mode change 100644 => 100755 drivers/net/wireless/ti/wl12xx/cmd.c
+ mode change 100644 => 100755 drivers/net/wireless/ti/wlcore/cmd.h
+ mode change 100644 => 100755 drivers/net/wireless/ti/wlcore/ini.h
+ mode change 100644 => 100755 drivers/net/wireless/ti/wlcore/testmode.c
+
+-- 
+1.7.9.5
+
