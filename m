@@ -1,36 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53100 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713Ab2FFIz5 (ORCPT
+Received: from [85.214.105.140] ([85.214.105.140]:59299 "EHLO
+	h1355771.stratoserver.net" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752687Ab2FMRns (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:55:57 -0400
-Message-ID: <1338972956.4513.28.camel@jlt3.sipsolutions.net> (sfid-20120606_105600_957434_2C5E7787)
-Subject: Re: [RFC 05/14] cfg80211: add channel tracking for AP and mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Jun 2012 10:55:56 +0200
-In-Reply-To: <1338203942-5667-6-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-	 <1338203942-5667-6-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 13 Jun 2012 13:43:48 -0400
+Date: Wed, 13 Jun 2012 19:42:54 +0200
+From: Andreas Kemnade <andreas@kemnade.info>
+To: hong zhang <henryzhang62@yahoo.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	dsd@laptop.org, libertas-dev@lists.infradead.org
+Subject: Re: poor performance with W2CBW003 (Marvell 8686)
+Message-ID: <20120613194254.076268a8@kemnade.info> (sfid-20120613_194352_108330_37502908)
+In-Reply-To: <1339607214.55182.YahooMailClassic@web161701.mail.bf1.yahoo.com>
+References: <1339539360.3284.235.camel@localhost>
+	<1339607214.55182.YahooMailClassic@web161701.mail.bf1.yahoo.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/3=rV_qZh7Bqk.jWqD+02Bh/";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
-> We need to know which channel is used by a running
-> AP and mesh for channel context accounting and
-> finding matching/active interface combination.
-> 
-> STA/IBSS have current_bss already which allows us
-> to check which channel a vif is tuned to.
+--Sig_/3=rV_qZh7Bqk.jWqD+02Bh/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-For IBSS this assumption is dangerous though since the channel can
-change at will when it decides to merge with a different cell on a
-different channel.
+Hi,
 
-I don't mind tracking the channel for AP/mesh of course.
+On Wed, 13 Jun 2012 10:06:54 -0700 (PDT)
+hong zhang <henryzhang62@yahoo.com> wrote:
 
-johannes
+> > 4 bit is supported.
+> > The hardware does not impose unresolvable limitations, the
+> > 2.6.32 kernel
+> > gives high performance. But since that kernel is not
+> > mainstream, it is
+> > very hard to find out which patch gives the slowdown. git
+> > bisect
+> > is not very useful in that situation.
+> > SD memory card reading speed is always ok (on another of the
+> > integrated
+> > sd host controllers).
+>=20
+> Have you tested receive throughput? Any difference between TX and Rx thro=
+ughput?=20
+>=20
+I tested both.
+No significant difference with 3.x.
 
+Greetings
+Andreas Kemnade
+
+--Sig_/3=rV_qZh7Bqk.jWqD+02Bh/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAk/Y0R4ACgkQvUy8S31NDebG5wCgpeWATENoVsLZ9tbaz2A6WY+w
+HjIAoJyM+I+om1LmQFIEkiaFYO8pP0KD
+=sW+D
+-----END PGP SIGNATURE-----
+
+--Sig_/3=rV_qZh7Bqk.jWqD+02Bh/--
