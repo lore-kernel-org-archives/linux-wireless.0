@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35759 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754709Ab2F0Osm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 10:48:42 -0400
-Message-ID: <4FEB1D43.7080706@openwrt.org> (sfid-20120627_164846_112305_11B2669D)
-Date: Wed, 27 Jun 2012 16:48:35 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:34101 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982Ab2FMIAB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 04:00:01 -0400
+Received: by obbtb18 with SMTP id tb18so509789obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 01:00:01 -0700 (PDT)
 MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: Fix signedness in a MCI debug message
-References: <1340807427-5774-1-git-send-email-mohammed@qca.qualcomm.com> <1340807427-5774-2-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1340807427-5774-2-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1339570296.4519.7.camel@jlt3.sipsolutions.net>
+References: <1339570296.4519.7.camel@jlt3.sipsolutions.net>
+Date: Wed, 13 Jun 2012 11:00:01 +0300
+Message-ID: <CAB3XZEf++ayd3s1v61Z9BAeDEFVcehddaAPVabenm25Fhf_6Rw@mail.gmail.com> (sfid-20120613_100007_084191_42644787)
+Subject: Re: [PATCH 3.5] mac80211: stop polling in disassociation
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-06-27 4:30 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> 
-> seems i got a message like this
-> ath: phy0: BT_Status_Update: is_link=0, linkId=2,
-> state=1, SEQ=-2085766476 initially.
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Jun 13, 2012 at 9:51 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: David Spinadel <david.spinadel@intel.com>
+>
+> Stop connection monitor poll during disassociation.
+> This clears the polling flags and if a scan was
+> deferred it will be run.
+>
+> Without this fix, if a scan was deferred due to
+> connection monitoring while disassociation happens,
+> this scan blocks further scan requests until interface
+> down/up which causes problems connecting to another AP.
+>
+> Signed-off-by: David Spinadel <david.spinadel@intel.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
->  drivers/net/wireless/ath/ath9k/mci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-> index c40e568..64cc782 100644
-> --- a/drivers/net/wireless/ath/ath9k/mci.c
-> +++ b/drivers/net/wireless/ath/ath9k/mci.c
-> @@ -348,7 +348,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
->  
->  		seq_num = *((u32 *)(rx_payload + 12));
->  		ath_dbg(common, MCI,
-> -			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%d\n",
-> +			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%u\n",
->  			profile_status.is_link, profile_status.conn_handle,
->  			profile_status.is_critical, seq_num);
-What about endian here? Also, wouldn't it be better to have a struct for
-the rx payload data with proper endian annotation instead of using the
-weird way of dereferencing the rx_payload pointer?
+[...]
 
-- Felix
+> @@ -1329,6 +1329,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+>        u32 changed = 0;
+>        u8 bssid[ETH_ALEN];
+>
+> +       ieee80211_stop_poll(sdata);
+> +
+>        ASSERT_MGD_MTX(ifmgd);
+
+it doesn't matter much, but maybe better add the call after the
+function "prologue" (lockdep, WARN_ONs, ...)?
+
+Eliad.
