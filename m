@@ -1,67 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52365 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217Ab2FSOvC (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:59654 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141Ab2FMKFJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:02 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 05/17] nl80211: use __cfg80211_rdev_from_attrs for testmode
-Date: Tue, 19 Jun 2012 16:50:44 +0200
-Message-Id: <1340117456-10154-6-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165115_503956_60A325B5)
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 13 Jun 2012 06:05:09 -0400
+Received: by mail-pz0-f52.google.com with SMTP id o14so846449dan.11
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 03:05:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339521048.8774.YahooMailNeo@web192304.mail.sg3.yahoo.com>
+References: <1339521048.8774.YahooMailNeo@web192304.mail.sg3.yahoo.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 13 Jun 2012 13:04:53 +0300
+Message-ID: <CA+XVXfc06i8woWkwzZvF3yoJyJVSzEJRHRspfv5G4W8tfcay4Q@mail.gmail.com> (sfid-20120613_120514_667968_9E2A85DD)
+Subject: Re: TDLS implementation clarifications
+To: Dino Joseph Mycle <dinomycle@yahoo.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Jun 12, 2012 at 8:10 PM, Dino Joseph Mycle <dinomycle@yahoo.com> wrote:
+> hello all,
+>
+>    I want to know more about the TDLS implementation. According to IEEE
+> 802.11z(http://standards.ieee.org/news/2011/80211z.html) which is
+> incorporated to IEEE 802.11-2012 document. It says that "A TDLS direct link is set up automatically, without need for user
+> intervention, while the connection with the AP is maintained". But in the mac80211 we need to configure the peer mac to make it work(using
+> wpa_supplicant), so as said by IEEE, without the need for user
+> intervention spec is not met right ?
 
-To fix the testmode cross-namespace access problem,
-use __cfg80211_rdev_from_attrs() to get the device
-instead of open-coding similar functionality.
+I don't think it necessarily contradicts the spec. The TDLS connection
+can be made by a higher layer that gives commands to wpa_supplicant.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+I think part of this is because HW limitations. Some devices can only
+support a limited number of TDLS peers. So decisions have to be made
+about who we want to connect to.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7e94d4d..06623d0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5230,21 +5230,18 @@ static int nl80211_testmode_dump(struct sk_buff *skb,
- 				  nl80211_policy);
- 		if (err)
- 			return err;
--		if (nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]) {
--			phy_idx = nla_get_u32(
--				nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]);
--		} else {
--			struct net_device *netdev;
- 
--			err = get_rdev_dev_by_ifindex(sock_net(skb->sk),
--						      nl80211_fam.attrbuf,
--						      &rdev, &netdev);
--			if (err)
--				return err;
--			dev_put(netdev);
--			phy_idx = rdev->wiphy_idx;
--			cfg80211_unlock_rdev(rdev);
-+		mutex_lock(&cfg80211_mutex);
-+		rdev = __cfg80211_rdev_from_attrs(sock_net(skb->sk),
-+						  nl80211_fam.attrbuf);
-+		if (IS_ERR(rdev)) {
-+			mutex_unlock(&cfg80211_mutex);
-+			return PTR_ERR(rdev);
- 		}
-+		phy_idx = rdev->wiphy_idx;
-+		rdev = NULL;
-+		mutex_unlock(&cfg80211_mutex);
-+
- 		if (nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA])
- 			cb->args[1] =
- 				(long)nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA];
--- 
-1.7.10
+Channel switch is not always supported as well, so if we connect to a
+TDLS peer, it might congest the network.
 
+What I'm saying is - policy is not clear cut for TDLS.
+
+Arik
