@@ -1,95 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39603 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439Ab2FTGTe (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5058 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753289Ab2FMBCl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:19:34 -0400
-Date: Wed, 20 Jun 2012 11:50:49 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Michael Leun <lkml20120218@newton.leun.net>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
-Message-ID: <20120620062047.GB8738@vmraj-lnx.qca.qualcomm.com> (sfid-20120620_081949_983428_63A5BE47)
-References: <20120619085137.337838c0@xenia.leun.net>
- <CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com>
- <20120620003315.2eaf6460@xenia.leun.net>
- <20120620061303.GA8738@vmraj-lnx.qca.qualcomm.com>
- <20120620081553.040171f4@xenia.leun.net>
+	Tue, 12 Jun 2012 21:02:41 -0400
+Date: Tue, 12 Jun 2012 18:02:38 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: <kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: support rssi threshold for sched scan
+Message-ID: <20120613010238.GA540@pista> (sfid-20120613_030245_564020_A81803E0)
+References: <1339533979-32084-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1339534531.4501.3.camel@joe2Laptop>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="d6Gm4EdcadzBjdND"
-In-Reply-To: <20120620081553.040171f4@xenia.leun.net>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1339534531.4501.3.camel@joe2Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-
-On Wed, Jun 20, 2012 at 08:15:53AM +0200, Michael Leun wrote:
-> On Wed, 20 Jun 2012 11:43:05 +0530
-> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+On Tue, Jun 12, 2012 at 01:55:31PM -0700, Joe Perches wrote:
+> On Tue, 2012-06-12 at 13:46 -0700, Thomas Pedersen wrote:
+> > The ath6kl firmware can filter scan results based on rssi. This is
+> > useful to limit hosts wakeups on scheduled scans.
+> []
+> > diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > index 6f20998..4f20693 100644
+> > --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > @@ -3267,6 +3267,16 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+> >  			return ret;
+> >  	}
+> >  
+> > +	if (test_bit(ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD,
+> > +		     ar->fw_capabilities)) {
+> > +		ret = ath6kl_wmi_set_rssi_filter_cmd(ar->wmi, vif->fw_vif_idx,
+> > +						    request->rssi_thold);
 > 
+> poor argument alignment.
 > 
-> > Thanks for the analysis. Can you please try with the attached patch
-> > without reverting mac80211 change?
+> > +		if (ret) {
+> > +			ath6kl_err("failed to set RSSI threshold for scan");
 > 
-> Radio Eriwan answers: In principle yes, but you forgot the
-> attachment ;-)
-> 
-Oops. Sorry.  
+> missing newline termination.
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: attachment;
-	filename="0001-ath9k_htc-configure-bssid-on-ASSOC-IBSS-change.patch"
+Rats. Thanks Joe.
 
->From 025f26a70c1f8bab443a49f0fe3e7c6627e6550c Mon Sep 17 00:00:00 2001
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Date: Wed, 20 Jun 2012 11:33:37 +0530
-Subject: [PATCH] ath9k_htc: configure bssid on ASSOC/IBSS change
-
-After the change "mac80211: remove spurious BSSID change flag",
-BSS_CHANGED_BSSID will not be passed on association or IBSS
-status changes. So it could be better to program bssid on ASSOC
-or IBSS change notification. Not doing so, is affecting the
-packet transmission.
-
-Reported-by: Michael Leun <lkml20120218@newton.leun.net>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 2b8f61c..abbd6ef 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1496,6 +1496,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 			priv->num_sta_assoc_vif++ : priv->num_sta_assoc_vif--;
- 
- 		if (priv->ah->opmode == NL80211_IFTYPE_STATION) {
-+			ath9k_htc_choose_set_bssid(priv);
- 			if (bss_conf->assoc && (priv->num_sta_assoc_vif == 1))
- 				ath9k_htc_start_ani(priv);
- 			else if (priv->num_sta_assoc_vif == 0)
-@@ -1503,13 +1504,11 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	if (changed & BSS_CHANGED_BSSID) {
-+	if (changed & BSS_CHANGED_IBSS) {
- 		if (priv->ah->opmode == NL80211_IFTYPE_ADHOC) {
- 			common->curaid = bss_conf->aid;
- 			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
- 			ath9k_htc_set_bssid(priv);
--		} else if (priv->ah->opmode == NL80211_IFTYPE_STATION) {
--			ath9k_htc_choose_set_bssid(priv);
- 		}
- 	}
- 
--- 
-1.7.11
-
-
---d6Gm4EdcadzBjdND--
+Thomas
