@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:47571 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757918Ab2FZQ1O (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35509 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754507Ab2FMSDH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 12:27:14 -0400
-Received: by eaak11 with SMTP id k11so58208eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 09:27:13 -0700 (PDT)
-From: Mariusz Fik <fisiu82@jabster.pl>
-To: linux-wireless@vger.kernel.org
-Subject: Intel N 1030 desn't connect to AP with WPA2 | Linux 3.4.2
-Date: Tue, 26 Jun 2012 18:27:09 +0200
-Message-ID: <2073595.T30nNVXCf4@pendrak> (sfid-20120626_182719_237485_C45FA59E)
+	Wed, 13 Jun 2012 14:03:07 -0400
+Date: Wed, 13 Jun 2012 13:50:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/5] brcmfmac: introduce checkdied debugfs functionality
+Message-ID: <20120613175030.GB6473@tuxdriver.com> (sfid-20120613_200311_515348_C49520E2)
+References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
+ <1339275105-3593-6-git-send-email-arend@broadcom.com>
+ <CA+XFjioPG4aT-umi1BD+RH0q0a3AEY=QXTAFapGhz3x25cLdSw@mail.gmail.com>
+ <4FD42939.2020404@broadcom.com>
+ <20120611184330.GC30086@tuxdriver.com>
+ <4FD89720.1020903@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart20631156.jZn3OH1Oub"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4FD89720.1020903@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 13, 2012 at 03:35:28PM +0200, Arend van Spriel wrote:
+> On 06/11/2012 08:43 PM, John W. Linville wrote:
+> > On Sun, Jun 10, 2012 at 06:57:29AM +0200, Arend van Spriel wrote:
+> >> On 06/10/2012 04:13 AM, Gábor Stefanik wrote:
+> >>> On Sat, Jun 9, 2012 at 10:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> >>>> The checkdied functionality provides useful information for analyzing
+> >>>> firmware crashes. By exposing this information to a debugfs file users
+> >>>> can easily provide its content in bug reports. The functionality is
+> >>>> available only when CONFIG_BRCMDBG is selected.
+> >>>>
+> >>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> >>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> >>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> >>>> ---
+> 
+> >>>> +       /* allocate buffer for console data */
+> >>>> +       if (console_size <= CONSOLE_BUFFER_MAX)
+> >>>> +               conbuf = kzalloc(console_size+1, GFP_ATOMIC);
+> >>>> +
+> >>>> +       if (!conbuf)
+> >>>> +               return -ENOMEM;
+> >>
+> >> Probably would be better to use vmalloc() here or at least use
+> >> GFP_KERNEL here.
+> >>
+> >> John, any recommendations?
+> > 
+> > vmalloc seems reasonable...
+> > 
+> 
+> Thanks, John
+> 
+> Can you take the first four patches? I will make a v2 for this one. Let
+> me know if that is ok with you.
 
---nextPart20631156.jZn3OH1Oub
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Sure, fine.
 
-Hi,
-
-I installed openSUSE 12.2 Beta 2 with linux 3.4.2 recently and my wifi card 
-has problems with connecting to AP with WPA2. Hardware I have:
-| 02:00.0 Network controller [0280]: Intel Corporation Centrino Wireless-N 
-1030 [8086:008a] (rev 34)
-
-After boot I connected to my AP and wifi worked fine. After few seconds 
-connection was disconnected and nm asked me again for password. Every try of 
-connection was unsuccessful since now. `dmesg`, in the time of trying to 
-connect, gives me:
-| [  434.134710] wlan0: authenticate with 00:22:15:0b:55:a3
-| [  434.143822] wlan0: direct probe to 00:22:15:0b:55:a3 (try 1/3)
-| [  434.344492] wlan0: direct probe to 00:22:15:0b:55:a3 (try 2/3)
-| [  434.545185] wlan0: send auth to 00:22:15:0b:55:a3 (try 3/3)
-| [  434.745882] wlan0: authentication with 00:22:15:0b:55:a3 timed out
-| [  434.747111] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 
-0 addr 00:22:15:0b:55:a3
-
-Full dmesg is available here: http://wklej.org/hash/1dc3164fa7/
-
-Any hints about solving it?
 -- 
-Pozdrawiam / Best regards,
-Mariusz Fik
-openSUSE Community Member
-GPG: 5FCE 7241 B3B9 32FD 455B C30E 42D6 6C88 9E83 7C3D
---nextPart20631156.jZn3OH1Oub
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEYEABECAAYFAk/p4t0ACgkQQtZsiJ6DfD1NDQCg3EYkgVlze7DVAvA230UDvzeZ
-9sAAnjBS2/hBMhm5PI0fpplnmSgtx7lR
-=5Vel
------END PGP SIGNATURE-----
-
---nextPart20631156.jZn3OH1Oub--
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
