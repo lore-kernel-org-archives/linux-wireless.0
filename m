@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:64564 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932139Ab2FGS3u (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5987 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753815Ab2FML4d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 14:29:50 -0400
-Received: by yhmm54 with SMTP id m54so672704yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 11:29:49 -0700 (PDT)
-Message-ID: <4FD0F319.3060306@lwfinger.net> (sfid-20120607_202953_423196_9DC3E2C7)
-Date: Thu, 07 Jun 2012 13:29:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 13 Jun 2012 07:56:33 -0400
+Message-ID: <4FD87FEA.3070208@qca.qualcomm.com> (sfid-20120613_135637_198525_78EA68E4)
+Date: Wed, 13 Jun 2012 14:56:26 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
-CC: Andre Heider <a.heider@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i]
- >= n_queues))
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com> <1339014959.4523.0.camel@jlt3.sipsolutions.net> <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com> <1339053364.4517.0.camel@jlt3.sipsolutions.net> <CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com> <20120607180325.7752b3c0@milhouse> <4FD0E3F3.2060900@lwfinger.net> <20120607193027.05389791@milhouse>
-In-Reply-To: <20120607193027.05389791@milhouse>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Luciano Coelho <coelho@ti.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
+	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<victorg@ti.com>
+Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
+References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>  <1339566003.4519.1.camel@jlt3.sipsolutions.net> <1339587447.3840.272.camel@cumari.coelho.fi>
+In-Reply-To: <1339587447.3840.272.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 12:30 PM, Michael Büsch wrote:
-> On Thu, 07 Jun 2012 12:25:07 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
->> I do not understand what is different about your system than mine.
->
-> I think the difference is that he runs opensource firmware, for which the queuenumber
-> patching comes into effect. You should be able to reproduce even with standard
-> firmware by disabling QOS with the module parameter.
+On 06/13/2012 02:37 PM, Luciano Coelho wrote:
+> On Wed, 2012-06-13 at 07:40 +0200, Johannes Berg wrote:
+>> On Tue, 2012-06-12 at 13:43 -0700, Thomas Pedersen wrote:
+>>> Support configuring an RSSI threshold in dBm (s32) when requesting
+>>> scheduled scan, below which a BSS won't be reported by the cfg80211
+>>> driver.
+>>
+>> I'm confused -- were you going to do scheduled scan only? Makes sense,
+>> but if you could maybe change the subject a bit to "specify ... in
+>> scheduled scan"?
+> 
+> It makes more sense with scheduled scans, but maybe it is also desirable
+> with normal scans to reduce the amount of scan results traffic?
+> 
+> At least if we consider the intermediate scan results that Victor has
+> been working on... We may want to report all scan results at the end,
+> but only send intermediate events if all the matches are satisfied, for
+> example.
+> 
+> Just thinking out loud a bit.
 
-Loading b43 with the qos=0 option works, but using the open-source firmware does 
-fail.
+Good point.
 
-Larry
+Funnily enough I don't have any idea how ath6kl has implemented this
+feature, but in theory this feature is useful also for the current
+normal scan (when the firmware/hardware supports it) as we can avoid
+host wakeups. If there are 10 APs, but all are below the RSSI threshold,
+we will have only 1 host wakeup (scan ready event) opposed to 11 wakeups
+(10 AP found events plus 1 scan ready event).
 
-
-
+Kalle
