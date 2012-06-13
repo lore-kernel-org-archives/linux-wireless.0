@@ -1,120 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45228 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054Ab2FDK7A (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37826 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab2FML2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:59:00 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38064.659900.146154@gargle.gargle.HOWL> (sfid-20120604_125904_523828_2C8FAAE0)
-Date: Mon, 4 Jun 2012 16:27:52 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 09/20] ath9k: Remove SC_OP_OFFCHANNEL
+	Wed, 13 Jun 2012 07:28:21 -0400
+Message-ID: <1339586895.4519.33.camel@jlt3.sipsolutions.net> (sfid-20120613_132824_326377_F93F7166)
+Subject: Re: [PATCH] cfg80211/nl80211: Fix for wireless-testing kernel crash
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Jun 2012 13:28:15 +0200
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0A6BFE@mbx022-e1-nj-10.exch022.domain.local>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0A6BFE@mbx022-e1-nj-10.exch022.domain.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211's IEEE80211_CONF_OFFCHANNEL can be used directly
-to track offchannel state. Also pass the correct boolean
-value to ath9k_hw_startpcureceive().
+On Wed, 2012-06-13 at 11:15 +0000, Mahesh Palivela wrote:
+> I saw wireless-testing kernel crash at nl80211 survey_dump function. we can see this crash only when run wpa_supplicant of hostap dev branch. This patch is fix for it.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |   13 ++++++-------
- drivers/net/wireless/ath/ath9k/main.c  |   11 +++--------
- drivers/net/wireless/ath/ath9k/recv.c  |    4 ++--
- 3 files changed, 11 insertions(+), 17 deletions(-)
+Please break long lines, include information about the crash and why
+this fixes it, and don't reference wireless-testing ... it's not
+specific in that particular tree
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a277cf6..e204648 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -586,13 +586,12 @@ struct ath_ant_comb {
- 
- #define SC_OP_INVALID                BIT(0)
- #define SC_OP_BEACONS                BIT(1)
--#define SC_OP_OFFCHANNEL             BIT(2)
--#define SC_OP_RXFLUSH                BIT(3)
--#define SC_OP_TSF_RESET              BIT(4)
--#define SC_OP_BT_PRIORITY_DETECTED   BIT(5)
--#define SC_OP_BT_SCAN                BIT(6)
--#define SC_OP_ANI_RUN                BIT(7)
--#define SC_OP_PRIM_STA_VIF           BIT(8)
-+#define SC_OP_RXFLUSH                BIT(2)
-+#define SC_OP_TSF_RESET              BIT(3)
-+#define SC_OP_BT_PRIORITY_DETECTED   BIT(4)
-+#define SC_OP_BT_SCAN                BIT(5)
-+#define SC_OP_ANI_RUN                BIT(6)
-+#define SC_OP_PRIM_STA_VIF           BIT(7)
- 
- /* Powersave flags */
- #define PS_WAIT_FOR_BEACON        BIT(0)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1acccd0..7777f43 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -152,7 +152,7 @@ void ath_start_ani(struct ath_common *common)
- 	if (!(sc->sc_flags & SC_OP_ANI_RUN))
- 		return;
- 
--	if (sc->sc_flags & SC_OP_OFFCHANNEL)
-+	if (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
- 		return;
- 
- 	common->ani.longcal_timer = timestamp;
-@@ -282,7 +282,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- 
--	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
-+	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) && start) {
- 		if (sc->sc_flags & SC_OP_BEACONS)
- 			ath_set_beacon(sc);
- 
-@@ -328,7 +328,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
- 
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
--	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
-+	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)) {
- 		fastcc = false;
- 		caldata = &sc->caldata;
- 	}
-@@ -1626,11 +1626,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		if (ah->curchan)
- 			old_pos = ah->curchan - &ah->channels[0];
- 
--		if (hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
--			sc->sc_flags |= SC_OP_OFFCHANNEL;
--		else
--			sc->sc_flags &= ~SC_OP_OFFCHANNEL;
--
- 		ath_dbg(common, CONFIG, "Set channel: %d MHz type: %d\n",
- 			curchan->center_freq, conf->channel_type);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 544e549..7fa1e01 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -303,7 +303,7 @@ static void ath_edma_start_recv(struct ath_softc *sc)
- 
- 	ath_opmode_init(sc);
- 
--	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
-+	ath9k_hw_startpcureceive(sc->sc_ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
- 
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- }
-@@ -500,7 +500,7 @@ int ath_startrecv(struct ath_softc *sc)
- 
- start_recv:
- 	ath_opmode_init(sc);
--	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
-+	ath9k_hw_startpcureceive(ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
- 
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- 
--- 
-1.7.10.3
+Thanks.
+
+johannes
+
+
 
