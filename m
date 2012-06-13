@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46266 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756822Ab2FDLnO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43498 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752249Ab2FMAjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 07:43:14 -0400
-Message-ID: <1338810191.4512.10.camel@jlt3.sipsolutions.net> (sfid-20120604_134322_137939_988A2C37)
-Subject: [PATCH 3.5 v2] iwlwifi: disable WoWLAN if !CONFIG_PM_SLEEP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sebastian Kemper <sebastian_ml@gmx.net>
-Date: Mon, 04 Jun 2012 13:43:11 +0200
-In-Reply-To: <1338533803.4884.6.camel@jlt3.sipsolutions.net> (sfid-20120601_085648_998164_987CB355)
-References: <1338533803.4884.6.camel@jlt3.sipsolutions.net>
-	 (sfid-20120601_085648_998164_987CB355)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Jun 2012 20:39:09 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Message-ID: <20439.57561.33348.10834@gargle.gargle.HOWL> (sfid-20120613_023914_286030_01A49F66)
+Date: Wed, 13 Jun 2012 06:07:45 +0530
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+CC: <linux-wireless@vger.kernel.org>
+Subject: 3.5-rc wireless breakage
+In-Reply-To: <20120612221431.2131d6fe@pyramind.ukuu.org.uk>
+References: <20120612221431.2131d6fe@pyramind.ukuu.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Alan Cox wrote:
+> Boot hangs and eventually the watchdog kicks in with the following trace
+> 
+> 
+> __delay
+> __const_udelay
+> ar9003_get_pll_sqsum_dvc
+> ath_hw_pll_work
+> process_one_work
+> ath_tx_complete_poll_work
+> 
+> 
+> Platform is an HP Mini-210-4i
+> 
+> 
+> Is this a known bug or does it warrant more digging ?
 
-If CONFIG_PM_SLEEP is disabled, then iwlwifi doesn't
-support suspend/resume handlers and thus mac80211
-(correctly) refuses advertising WoWLAN. Disable
-WoWLAN in the driver in this case.
+A patch has been posted for this:
+http://marc.info/?l=linux-wireless&m=133951273906549&w=2
 
-Cc: stable@kernel.org
-Reported-by: Sebastian Kemper <sebastian_ml@gmx.net>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 ++
- 1 file changed, 2 insertions(+)
+A version for 3.5 will be sent soon so that Linville can
+pick it up.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index ab2f4d7..5d158ca 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -199,6 +199,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
- 			    WIPHY_FLAG_IBSS_RSN;
- 
-+#ifdef CONFIG_PM_SLEEP
- 	if (priv->fw->img[IWL_UCODE_WOWLAN].sec[0].len &&
- 	    priv->trans->ops->wowlan_suspend &&
- 	    device_can_wakeup(priv->trans->dev)) {
-@@ -217,6 +218,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 		hw->wiphy->wowlan.pattern_max_len =
- 					IWLAGN_WOWLAN_MAX_PATTERN_LEN;
- 	}
-+#endif
- 
- 	if (iwlwifi_mod_params.power_save)
- 		hw->wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
--- 
-1.7.10
-
-
-
+Sujith
