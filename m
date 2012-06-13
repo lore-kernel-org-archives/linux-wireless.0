@@ -1,133 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:37761 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965826Ab2FBVes (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:38920 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540Ab2FMOOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 17:34:48 -0400
-Received: by wgbdr13 with SMTP id dr13so2930595wgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2012 14:34:47 -0700 (PDT)
-Message-ID: <4FCA86F5.3070801@gmail.com> (sfid-20120602_233453_372974_3A7E63DA)
-Date: Sat, 02 Jun 2012 23:34:45 +0200
-From: kuba <kuba.g4@gmail.com>
+	Wed, 13 Jun 2012 10:14:30 -0400
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id q5DEEU94019869
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 09:14:30 -0500
+Received: from DFLE70.ent.ti.com (dfle70.ent.ti.com [128.247.5.40])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id q5DEEUV1022563
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 09:14:30 -0500
+From: Yair Shapira <yair.shapira@ti.com>
+To: <linux-wireless@vger.kernel.org>, <coelho@ti.com>
+CC: <yair.shapira@ti.com>
+Subject: [PATCH 1/2] wlcore/wl12xx: add suppoprt for HP and SKW FEM radio manufacturers
+Date: Wed, 13 Jun 2012 17:14:21 +0300
+Message-ID: <1339596862-2488-2-git-send-email-yair.shapira@ti.com> (sfid-20120613_161434_680036_839BFBF8)
+In-Reply-To: <1339596862-2488-1-git-send-email-yair.shapira@ti.com>
+References: <1339596862-2488-1-git-send-email-yair.shapira@ti.com>
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Slow wifi connection AR9287 with ath9k 3.x kernel
-References: <4F569512.4000109@gmail.com> <CAD2nsn0e6zGbquTf7DG4_hM6rr+q0GgYwpDuX+jQyGOHWHrdSg@mail.gmail.com> <CAD2nsn1RZVkv3r7JredsLhuSL_+FAObugyryuThhdaA4ihtFnw@mail.gmail.com>
-In-Reply-To: <CAD2nsn1RZVkv3r7JredsLhuSL_+FAObugyryuThhdaA4ihtFnw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 07.03.2012 06:37, Mohammed Shafi pisze:
-> On Wed, Mar 7, 2012 at 11:05 AM, Mohammed Shafi
-> <shafi.wireless@gmail.com>  wrote:
->> On Wed, Mar 7, 2012 at 4:22 AM, kuba<kuba.g4@gmail.com>  wrote:
->>> Hello,
->> hi,
->>
->>> I have submitted bug on Kernel bug tracker and provide info, but it seems
->>> that no one there is interested in this topic. I discovered that since
->>> 2.6.38 kernel version there is bug in ath9k driver (using AR9287 chipset).
->>> I've posted some additional info at this adress:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=42352
->> please provide as much info as possible, in which mode you are
->> operating, how noisy is the environment, distance between STA and AP.
->> anything specific etc.
->> i just tried  compat-wireless-2012-02-04, distance between STA and AP
->> at least 5ms, a bit of noisy environment, channel 6 HT40 plus, AES
->> ping RTT is good only. i  may be missing something
->>
->>
->>> The last working version is 2.6.37.6.
->> if we are very clear about the working one and non-working doing the
->> following things will make our work very easier
->> lets say 2.6.37.6 is working fine and 2.6.38 is broken for you
->>
->> we can work with our wireless-testing tree kernel
->> git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->>
->> then please do git tag
->>
->> *git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep AR9287
->> 07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
->> AR9287 devices
->> f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
->> for AR9287 devices (PCI/USB)
->>
->> *even with 3.3-rc5 we got less commits
->>
->> 6321eb0977b011ac61dfca36e7c69b2c4325b104 ath9k_hw: Fix number of GPIO
->> pins for AR9287/9300
->> a7be039d347743c289b7280d5de82abf7bbdf1d8 ath9k: Fix eifs/usec timeout
->> for AR9287 v1.3+
->> 49c99520f3b15300156830904f9ffcf51cb1160e ath9k_hw: Add dump_eeprom
->> support for AR9287
->> 087b6ff682ff62c49c9a36ddfd24fc781367b1d1 ath9k_hw: fix MAC clock rate
->> for AR9287 v1.3+
->> 1df85ecec36ad5da3f0165760704310d6c03f65f ath9k: Fix AR9287 calibration
->> 2d05a0c2b4ac614cb5e0eba75d39a37205d129e8 ath9k_hw: Remove unused code
->> in AR9287 eeprom
->> 81544026e4cecb85a8b727d5f64cb3c8a8cb64a3 ath9k_hw: Fix throughput
->> drops in HT40 mode for AR9287 chips
->> 6d64ab7f9240e3201fde3fd16ce4227bd795d2ab ath9k_htc: Fix LED pin for
->> AR9287 HTC device
->> 07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
->> AR9287 devices
->> f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
->> for AR9287 devices (PCI/USB)
->>
->>
->> *git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k_hw
->>
->> *git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k
->>
->>
-> please do try with the latest wireless-testing tree if you can get the
-> same problem, also please try to check if this issue occurs with some
-> other AP too.
->
->>> I can provide more data if anyone is interested.
->>> Cheers,
->>> Kuba
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->> --
->> thanks,
->> shafi
->
->
+Add support for HP(High Performance TQS fem type 3) and SKW
+(fem type 2). This is done by increasing the number of FEM
+manufacturers to 4
 
-Hi,
+Usually FEM parameters from ini file are read from nvs file and
+passed to firmware using TEST_CMD_INI_FILE_RADIO_PARAM. Still,
+because the nvs file has only place for 2 FEMs, we need to pass the
+new FEM types information in one of the available entries
 
-I didn't have access to my notebook for 3 months, so I can't anwser, sorry.
-I have tried kernel 3.3.4 and I can still reproduce this error. This 
-issue occurs with all AP, even if my notebook stands close to AP (1-5 
-m). I've noticed that wireless card works better with 3.3.4 but there 
-are times when connection slows down and looks like this:
+This is done by mapping new fem types 2,3 to entry 0. This solution
+works for manual FEM selection. AutoDetect-FEM still support only
+fem types 0 and 1
 
---- 192.168.1.1 ping statistics ---
-35 packets transmitted, 26 received, 25% packet loss, time 34017ms
-rtt min/avg/max/mdev = 0.986/6194.909/9659.450/2844.281 ms, pipe 10
+Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+---
+ drivers/net/wireless/ti/wl12xx/cmd.c |   16 ++++++++++------
+ drivers/net/wireless/ti/wlcore/ini.h |   22 +++++++++++++++++-----
+ 2 files changed, 27 insertions(+), 11 deletions(-)
+ mode change 100644 => 100755 drivers/net/wireless/ti/wl12xx/cmd.c
+ mode change 100644 => 100755 drivers/net/wireless/ti/wlcore/ini.h
 
-It's a ping to gateway, ping to random website looks even worse. 
-Wireless-testing doesn't solve this problem.
-
-lspci -v
-03:00.0 Network controller: Atheros Communications Inc. AR9287 Wireless 
-Network Adapter (PCI-Express) (rev 01)
-         Subsystem: Foxconn International, Inc. Device e034
-         Flags: bus master, fast devsel, latency 0, IRQ 17
-         Memory at b5100000 (64-bit, non-prefetchable) [size=64K]
-         Capabilities: <access denied>
-         Kernel driver in use: ath9k
-
-I can provide more data, just tell me what should I paste here.
-
-Cheers,
-Kuba
+diff --git a/drivers/net/wireless/ti/wl12xx/cmd.c b/drivers/net/wireless/ti/wl12xx/cmd.c
+old mode 100644
+new mode 100755
+index 50ba748..30be784
+--- a/drivers/net/wireless/ti/wl12xx/cmd.c
++++ b/drivers/net/wireless/ti/wl12xx/cmd.c
+@@ -174,7 +174,7 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
+ 	struct wl1271_nvs_file *nvs = (struct wl1271_nvs_file *)wl->nvs;
+ 	struct wl1271_radio_parms_cmd *radio_parms;
+ 	struct wl1271_ini_general_params *gp = &nvs->general_params;
+-	int ret;
++	int ret, fem_idx;
+ 
+ 	if (!wl->nvs)
+ 		return -ENODEV;
+@@ -185,11 +185,13 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
+ 
+ 	radio_parms->test.id = TEST_CMD_INI_FILE_RADIO_PARAM;
+ 
++	fem_idx = WL12XX_FEM_TO_NVS_ENTRY(gp->tx_bip_fem_manufacturer);
++
+ 	/* 2.4GHz parameters */
+ 	memcpy(&radio_parms->static_params_2, &nvs->stat_radio_params_2,
+ 	       sizeof(struct wl1271_ini_band_params_2));
+ 	memcpy(&radio_parms->dyn_params_2,
+-	       &nvs->dyn_radio_params_2[gp->tx_bip_fem_manufacturer].params,
++	       &nvs->dyn_radio_params_2[fem_idx].params,
+ 	       sizeof(struct wl1271_ini_fem_params_2));
+ 
+ 	/* 5GHz parameters */
+@@ -197,7 +199,7 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
+ 	       &nvs->stat_radio_params_5,
+ 	       sizeof(struct wl1271_ini_band_params_5));
+ 	memcpy(&radio_parms->dyn_params_5,
+-	       &nvs->dyn_radio_params_5[gp->tx_bip_fem_manufacturer].params,
++	       &nvs->dyn_radio_params_5[fem_idx].params,
+ 	       sizeof(struct wl1271_ini_fem_params_5));
+ 
+ 	wl1271_dump(DEBUG_CMD, "TEST_CMD_INI_FILE_RADIO_PARAM: ",
+@@ -216,7 +218,7 @@ int wl128x_cmd_radio_parms(struct wl1271 *wl)
+ 	struct wl128x_nvs_file *nvs = (struct wl128x_nvs_file *)wl->nvs;
+ 	struct wl128x_radio_parms_cmd *radio_parms;
+ 	struct wl128x_ini_general_params *gp = &nvs->general_params;
+-	int ret;
++	int ret, fem_idx;
+ 
+ 	if (!wl->nvs)
+ 		return -ENODEV;
+@@ -227,11 +229,13 @@ int wl128x_cmd_radio_parms(struct wl1271 *wl)
+ 
+ 	radio_parms->test.id = TEST_CMD_INI_FILE_RADIO_PARAM;
+ 
++	fem_idx = WL12XX_FEM_TO_NVS_ENTRY(gp->tx_bip_fem_manufacturer);
++
+ 	/* 2.4GHz parameters */
+ 	memcpy(&radio_parms->static_params_2, &nvs->stat_radio_params_2,
+ 	       sizeof(struct wl128x_ini_band_params_2));
+ 	memcpy(&radio_parms->dyn_params_2,
+-	       &nvs->dyn_radio_params_2[gp->tx_bip_fem_manufacturer].params,
++	       &nvs->dyn_radio_params_2[fem_idx].params,
+ 	       sizeof(struct wl128x_ini_fem_params_2));
+ 
+ 	/* 5GHz parameters */
+@@ -239,7 +243,7 @@ int wl128x_cmd_radio_parms(struct wl1271 *wl)
+ 	       &nvs->stat_radio_params_5,
+ 	       sizeof(struct wl128x_ini_band_params_5));
+ 	memcpy(&radio_parms->dyn_params_5,
+-	       &nvs->dyn_radio_params_5[gp->tx_bip_fem_manufacturer].params,
++	       &nvs->dyn_radio_params_5[fem_idx].params,
+ 	       sizeof(struct wl128x_ini_fem_params_5));
+ 
+ 	radio_parms->fem_vendor_and_options = nvs->fem_vendor_and_options;
+diff --git a/drivers/net/wireless/ti/wlcore/ini.h b/drivers/net/wireless/ti/wlcore/ini.h
+old mode 100644
+new mode 100755
+index 4cf9ecc..d24fe3b
+--- a/drivers/net/wireless/ti/wlcore/ini.h
++++ b/drivers/net/wireless/ti/wlcore/ini.h
+@@ -172,7 +172,19 @@ struct wl128x_ini_fem_params_5 {
+ 
+ /* NVS data structure */
+ #define WL1271_INI_NVS_SECTION_SIZE		     468
+-#define WL1271_INI_FEM_MODULE_COUNT                  2
++
++/* We have four FEM module types: 0-RFMD, 1-TQS, 2-SKW, 3-TQS_HP */
++#define WL1271_INI_FEM_MODULE_COUNT                  4
++
++/*
++ * In NVS we only store two FEM module entries -
++ *	  FEM modules 0,2,3 are stored in entry 0
++ *	  FEM module 1 is stored in entry 1
++ */
++#define WL12XX_NVS_FEM_MODULE_COUNT                  2
++
++#define WL12XX_FEM_TO_NVS_ENTRY(ini_fem_module)      \
++	((ini_fem_module) == 1 ? 1 : 0)
+ 
+ #define WL1271_INI_LEGACY_NVS_FILE_SIZE              800
+ 
+@@ -188,13 +200,13 @@ struct wl1271_nvs_file {
+ 	struct {
+ 		struct wl1271_ini_fem_params_2 params;
+ 		u8 padding;
+-	} dyn_radio_params_2[WL1271_INI_FEM_MODULE_COUNT];
++	} dyn_radio_params_2[WL12XX_NVS_FEM_MODULE_COUNT];
+ 	struct wl1271_ini_band_params_5 stat_radio_params_5;
+ 	u8 padding3;
+ 	struct {
+ 		struct wl1271_ini_fem_params_5 params;
+ 		u8 padding;
+-	} dyn_radio_params_5[WL1271_INI_FEM_MODULE_COUNT];
++	} dyn_radio_params_5[WL12XX_NVS_FEM_MODULE_COUNT];
+ } __packed;
+ 
+ struct wl128x_nvs_file {
+@@ -209,12 +221,12 @@ struct wl128x_nvs_file {
+ 	struct {
+ 		struct wl128x_ini_fem_params_2 params;
+ 		u8 padding;
+-	} dyn_radio_params_2[WL1271_INI_FEM_MODULE_COUNT];
++	} dyn_radio_params_2[WL12XX_NVS_FEM_MODULE_COUNT];
+ 	struct wl128x_ini_band_params_5 stat_radio_params_5;
+ 	u8 padding3;
+ 	struct {
+ 		struct wl128x_ini_fem_params_5 params;
+ 		u8 padding;
+-	} dyn_radio_params_5[WL1271_INI_FEM_MODULE_COUNT];
++	} dyn_radio_params_5[WL12XX_NVS_FEM_MODULE_COUNT];
+ } __packed;
+ #endif
+-- 
+1.7.9.5
 
