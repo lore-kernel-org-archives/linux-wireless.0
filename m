@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59312 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44653 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265Ab2FNS5O (ORCPT
+	with ESMTP id S1753525Ab2FMNUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 14:57:14 -0400
-Message-ID: <1339700228.9786.11.camel@jlt3.sipsolutions.net> (sfid-20120614_205748_629041_5C921042)
-Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
+	Wed, 13 Jun 2012 09:20:45 -0400
+Message-ID: <1339593640.4519.39.camel@jlt3.sipsolutions.net> (sfid-20120613_152116_072262_6A4F16D6)
+Subject: Re: [BUG] iwldvm lock oops
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Date: Thu, 14 Jun 2012 20:57:08 +0200
-In-Reply-To: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120614_182507_952715_CCD89317)
-References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20120614_182507_952715_CCD89317)
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Date: Wed, 13 Jun 2012 15:20:40 +0200
+In-Reply-To: <20120613131725.GA2052@localhost> (sfid-20120613_151753_455745_D624F0E8)
+References: <20120613131725.GA2052@localhost>
+	 (sfid-20120613_151753_455745_D624F0E8)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-15 at 00:23 +0800, Chun-Yeow Yeoh wrote:
-> This patch fixes the wrong assignment of mesh element TTL.
+Hi Fengguang,
 
-Since I haven't pushed to John yet, should I rebase and merge this with
-one of the previous patches?
+> The kernel compiled from commit b35032f ("iwlwifi: don't configure a
+> txq that is being disabled") in
+> 
+>         git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git  master
+> 
+> triggers a kernel oops below.
+> 
+> That particular commit may well not be the root cause. I'm just hoping
+> you may have better idea which recent change may be relevant.
+
+Thanks for the report. This particular problem is due to the fact that
+we have the objects linked into the kernel in the wrong order, we have a
+fix pending for it. git.kernel.org is down right now so I can't link to
+it, but it's in the iwlwifi/iwlwifi-next.git tree:
+
+commit 65fe593a519c4d7c62289d3b0a17ca412e95b037
+Author: Brandon Misemer <brandon.misemer@intel.com>
+Date:   Fri Jun 8 14:59:27 2012 -0700
+
+    iwlwifi: Fix Makefile build order for built-in driver
+
 
 johannes
-
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->  net/mac80211/cfg.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 85ac364..43eb8d9 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1529,7 +1529,7 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
->  	if (_chg_mesh_attr(NL80211_MESHCONF_TTL, mask))
->  		conf->dot11MeshTTL = nconf->dot11MeshTTL;
->  	if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
-> -		conf->dot11MeshTTL = nconf->element_ttl;
-> +		conf->element_ttl = nconf->element_ttl;
->  	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
->  		conf->auto_open_plinks = nconf->auto_open_plinks;
->  	if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
-
 
