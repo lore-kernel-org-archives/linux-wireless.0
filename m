@@ -1,63 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31972 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9502 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757564Ab2F0PA4 (ORCPT
+	with ESMTP id S1754215Ab2FMP6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 11:00:56 -0400
-Message-ID: <4FEB201D.1020009@qca.qualcomm.com> (sfid-20120627_170108_598755_3E4FA5E2)
-Date: Wed, 27 Jun 2012 20:30:45 +0530
+	Wed, 13 Jun 2012 11:58:18 -0400
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
 	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
 	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: Fix signedness in a MCI debug message
-References: <1340807427-5774-1-git-send-email-mohammed@qca.qualcomm.com> <1340807427-5774-2-git-send-email-mohammed@qca.qualcomm.com> <4FEB1D43.7080706@openwrt.org>
-In-Reply-To: <4FEB1D43.7080706@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 3.0+] ath9k: Fix softlockup in AR9485(backported)
+Date: Wed, 13 Jun 2012 21:28:09 +0530
+Message-ID: <1339603089-16090-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120613_175822_409145_CB99D380)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-On Wednesday 27 June 2012 08:18 PM, Felix Fietkau wrote:
-> On 2012-06-27 4:30 PM, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> seems i got a message like this
->> ath: phy0: BT_Status_Update: is_link=0, linkId=2,
->> state=1, SEQ=-2085766476 initially.
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/mci.c |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
->> index c40e568..64cc782 100644
->> --- a/drivers/net/wireless/ath/ath9k/mci.c
->> +++ b/drivers/net/wireless/ath/ath9k/mci.c
->> @@ -348,7 +348,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
->>
->>   		seq_num = *((u32 *)(rx_payload + 12));
->>   		ath_dbg(common, MCI,
->> -			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%d\n",
->> +			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%u\n",
->>   			profile_status.is_link, profile_status.conn_handle,
->>   			profile_status.is_critical, seq_num);
-> What about endian here? Also, wouldn't it be better to have a struct for
-> the rx payload data with proper endian annotation instead of using the
-> weird way of dereferencing the rx_payload pointer?
->
+Please note this is the backported version for the linux
+stable tree, while the patch for wireless-testing tree
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/92608
 
-ok, we shall fix it soon.
+steps to recreate:
+load latest ath9k driver with AR9485
+stop the network-manager and wpa_supplicant
+bring the interface up
 
+	Call Trace:
+	[<ffffffffa0517490>] ? ath_hw_check+0xe0/0xe0 [ath9k]
+	[<ffffffff812cd1e8>] __const_udelay+0x28/0x30
+	[<ffffffffa03bae7a>] ar9003_get_pll_sqsum_dvc+0x4a/0x80 [ath9k_hw]
+	[<ffffffffa05174eb>] ath_hw_pll_work+0x5b/0xe0 [ath9k]
+	[<ffffffff810744fe>] process_one_work+0x11e/0x470
+	[<ffffffff8107530f>] worker_thread+0x15f/0x360
+	[<ffffffff810751b0>] ? manage_workers+0x230/0x230
+	[<ffffffff81079af3>] kthread+0x93/0xa0
+	[<ffffffff815fd3a4>] kernel_thread_helper+0x4/0x10
+	[<ffffffff81079a60>] ? kthread_freezable_should_stop+0x70/0x70
+	[<ffffffff815fd3a0>] ? gs_change+0x13/0x13
 
+ensure that the PLL-WAR for AR9485/AR9340 is executed only if the STA is
+associated (or) IBSS/AP mode had started beaconing. Ideally this WAR
+is needed to recover from some rare beacon stuck during stress testing.
+Before the STA is associated/IBSS had started beaconing, PLL4(0x1618c)
+always seem to have zero even though we had configured PLL3(0x16188) to
+query about PLL's locking status. When we keep on polling infinitely PLL4's
+8th bit(ie check for PLL locking measurements is done), machine hangs
+due to softlockup.
+
+fixes https://bugzilla.redhat.com/show_bug.cgi?id=811142
+
+Reported-by: Rolf Offermanns <rolf.offermanns@gmx.net>
+Cc: stable@vger.kernel.org [3.0+]
+Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4de4473..41096f6 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -971,6 +971,15 @@ void ath_hw_pll_work(struct work_struct *work)
+ 					    hw_pll_work.work);
+ 	u32 pll_sqsum;
+ 
++	/*
++	 * ensure that the PLL WAR is executed only
++	 * after the STA is associated (or) if the
++	 * beaconing had started in interfaces that
++	 * uses beacons.
++	 */
++	if (!(sc->sc_flags & SC_OP_BEACONS))
++		return;
++
+ 	if (AR_SREV_9485(sc->sc_ah)) {
+ 
+ 		ath9k_ps_wakeup(sc);
 -- 
-thanks,
-shafi
+1.7.4.1
+
