@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:53402 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754897Ab2FOJ01 convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:36463 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753734Ab2FMLhd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 05:26:27 -0400
-Received: by gglu4 with SMTP id u4so2125891ggl.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 02:26:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1339748416.4512.9.camel@jlt3.sipsolutions.net>
-References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
-	<1339700228.9786.11.camel@jlt3.sipsolutions.net>
-	<CAEFj985xi0LNsLqHn1cgAw0oMVsfWrh_ioPuzUva8ZLbUTn=ZQ@mail.gmail.com>
-	<1339748416.4512.9.camel@jlt3.sipsolutions.net>
-Date: Fri, 15 Jun 2012 17:26:26 +0800
-Message-ID: <CAEFj9846z0=Lif42m_Fd4wq3XvS=o_OZ7rTZw2V5gJaHLJ0onA@mail.gmail.com> (sfid-20120615_112631_398617_994F180B)
-Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+	Wed, 13 Jun 2012 07:37:33 -0400
+Received: by lahi5 with SMTP id i5so415246lah.0
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 04:37:29 -0700 (PDT)
+Message-ID: <1339587447.3840.272.camel@cumari.coelho.fi> (sfid-20120613_133753_379544_1C9B8729)
+Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
+From: Luciano Coelho <coelho@ti.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
+	kvalo@qca.qualcomm.com, ath6kl-devel@qualcomm.com,
+	linux-wireless@vger.kernel.org, victorg@ti.com
+Date: Wed, 13 Jun 2012 14:37:27 +0300
+In-Reply-To: <1339566003.4519.1.camel@jlt3.sipsolutions.net>
+References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
+	 <1339566003.4519.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
+On Wed, 2012-06-13 at 07:40 +0200, Johannes Berg wrote:
+> On Tue, 2012-06-12 at 13:43 -0700, Thomas Pedersen wrote:
+> > Support configuring an RSSI threshold in dBm (s32) when requesting
+> > scheduled scan, below which a BSS won't be reported by the cfg80211
+> > driver.
+> 
+> I'm confused -- were you going to do scheduled scan only? Makes sense,
+> but if you could maybe change the subject a bit to "specify ... in
+> scheduled scan"?
 
-No. I think that I am actually fixing the wrong assignment of the
-previous patch.
+It makes more sense with scheduled scans, but maybe it is also desirable
+with normal scans to reduce the amount of scan results traffic?
 
-if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
-     conf->dot11MeshTTL = nconf->element_ttl;
-to
-     conf->element_ttl = nconf->element_ttl;
+At least if we consider the intermediate scan results that Victor has
+been working on... We may want to report all scan results at the end,
+but only send intermediate events if all the matches are satisfied, for
+example.
 
-Regards,
-Chun-Yeow
+Just thinking out loud a bit.
 
-On Fri, Jun 15, 2012 at 4:20 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-06-15 at 08:32 +0800, Yeoh Chun-Yeow wrote:
->> Yes.
->>
->> On Fri, Jun 15, 2012 at 2:57 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Fri, 2012-06-15 at 00:23 +0800, Chun-Yeow Yeoh wrote:
->> >> This patch fixes the wrong assignment of mesh element TTL.
->> >
->> > Since I haven't pushed to John yet, should I rebase and merge this with
->> > one of the previous patches?
->
-> Umm, I actually shouldn't ... The patch this fixes has been merged by
-> John way back:
->
-> commit 45904f21655cf4f0ae7d0fab5906fe51bf56ecf4
-> Author:     Javier Cardona <javier@cozybit.com>
-> AuthorDate: Fri Dec 3 09:20:40 2010 +0100
-> Commit:     John W. Linville <linville@tuxdriver.com>
-> CommitDate: Mon Dec 6 16:01:28 2010 -0500
->
->    nl80211/mac80211: define and allow configuring mesh element TTL
->
->
-> WAY WAY back. Maybe this patch should go into 3.5 and even stable?
->
-> johannes
->
+--
+Luca.
+
