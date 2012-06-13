@@ -1,81 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:59924 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab2FFWtG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49826 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753671Ab2FMN6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 18:49:06 -0400
-Received: by dady13 with SMTP id y13so9416638dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:06 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/6] mac80211_hwsim: Report rate info in tx status
-Date: Wed,  6 Jun 2012 15:48:47 -0700
-Message-Id: <1339022932-14240-2-git-send-email-jason@cozybit.com> (sfid-20120607_004912_873381_93ECA500)
-In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
-References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+	Wed, 13 Jun 2012 09:58:12 -0400
+Message-ID: <1339595889.4519.46.camel@jlt3.sipsolutions.net> (sfid-20120613_155816_462406_0F4989CC)
+Subject: pull-request: iwlwifi-next 2012-06-13
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Jun 2012 15:58:09 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-LmT/yzFz6YVIon/sQpWZ"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Timo Lindhorst <tlnd@online.de>
 
-Assuming an ideal channel, always the first transmission is considered
-successful if an ACK is received. If no ACK is received, the
-rates/attempts are reported as set by the rate control.
+--=-LmT/yzFz6YVIon/sQpWZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Timo Lindhorst <tlnd@online.de>
----
- drivers/net/wireless/mac80211_hwsim.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+John,
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4c9336c..52ba3e6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -715,6 +715,14 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
-+	u8 tx_count[IEEE80211_TX_MAX_RATES];
-+	int i;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	if (ieee80211_is_beacon(mgmt->frame_control) ||
-+	    ieee80211_is_probe_resp(mgmt->frame_control))
-+		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
- 
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
-@@ -745,6 +753,10 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (txi->control.sta)
- 		hwsim_check_sta_magic(txi->control.sta);
- 
-+	if (!ack)
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			tx_count[i] = txi->control.rates[i].count;
-+
- 	ieee80211_tx_info_clear_status(txi);
- 
- 	/* frame was transmitted at most favorable rate at first attempt */
-@@ -753,6 +765,15 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
-+
-+	if (ack) {
-+		txi->status.rates[0].count = 1;
-+		txi->status.rates[1].idx = -1;
-+	} else {
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			txi->control.rates[i].count = tx_count[i];
-+	}
-+
- 	ieee80211_tx_status_irqsafe(hw, skb);
- }
- 
--- 
-1.7.9.5
+Please pull my iwlwifi-next tree. I've included debugging aids, fixes
+for recently introduced bugs (the Makefile order & dynamic loading
+locking/list corruption), some refactoring and various other changes.
+Also, I've fixed the 6035 device configuration which was added in
+wireless but in wireless-next now needs an EEPROM configuration pointer.
+
+Thanks!
+
+johannes
+
+------
+
+The following changes since commit a59f975a78f0606a3a364939dfa9b949d5f87521=
+:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless (2012-06-12 14:11:13 -0400)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 67711c17fc8bcab8f9e92c49049b8356f9a557c1:
+
+  iwlwifi: WARN only once when we have trouble in reclaim (2012-06-13 09:02=
+:09 +0200)
+
+----------------------------------------------------------------
+Brandon Misemer (1):
+      iwlwifi: Fix Makefile build order for built-in driver
+
+Dan Carpenter (1):
+      iwlwifi: turn on a lockdep assertion
+
+Emmanuel Grumbach (10):
+      iwlwifi: s/iwl_read_targ_mem_words/iwl_read_targ_mem_bytes
+      iwlwifi: iwl_{read,write}_targ_mem_words takes dwords
+      iwlwifi: print more info when a queue is stuck
+      iwlwifi: don't configure a txq that is being disabled
+      iwlwifi: remove lock around txq_enable
+      iwlwifi: comment that setting driver_data overrides info->control
+      iwlwifi: print even more info when a queue is stuck
+      iwlwifi: don't modify the timer if we don't Tx
+      iwlwifi: warn if TFD index and WiFi Seq don't match
+      iwlwifi: WARN only once when we have trouble in reclaim
+
+Ilan Peer (2):
+      iwlwifi: refactor testmode
+      iwlwifi: decouple testmode and iwl-test
+
+Johannes Berg (4):
+      iwlwifi: fix dynamic loading
+      Merge remote-tracking branch 'wireless-next/master' into iwlwifi-next
+      iwlwifi: fix 6035 device parameters
+      iwlwifi: use request_module instead of _nowait
+
+ drivers/net/wireless/iwlwifi/Makefile              |   10 +-
+ drivers/net/wireless/iwlwifi/dvm/agn.h             |   17 +-
+ drivers/net/wireless/iwlwifi/dvm/dev.h             |   26 +-
+ drivers/net/wireless/iwlwifi/dvm/lib.c             |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c            |    6 +-
+ drivers/net/wireless/iwlwifi/dvm/rx.c              |   24 +-
+ drivers/net/wireless/iwlwifi/dvm/testmode.c        |  778 ++--------------=
+--
+ drivers/net/wireless/iwlwifi/dvm/tx.c              |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-drv.c             |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-fh.h              |    2 +
+ drivers/net/wireless/iwlwifi/iwl-io.c              |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-io.h              |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-test.c            |  856 ++++++++++++++++=
+++++
+ drivers/net/wireless/iwlwifi/iwl-test.h            |  161 ++++
+ .../iwlwifi/{dvm/testmode.h =3D> iwl-testmode.h}     |    0
+ drivers/net/wireless/iwlwifi/pcie/6000.c           |    1 +
+ drivers/net/wireless/iwlwifi/pcie/internal.h       |    9 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c          |   60 +-
+ drivers/net/wireless/iwlwifi/pcie/tx.c             |   95 +--
+ 20 files changed, 1263 insertions(+), 858 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-test.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-test.h
+ rename drivers/net/wireless/iwlwifi/{dvm/testmode.h =3D> iwl-testmode.h} (=
+100%)
+
+
+--=-LmT/yzFz6YVIon/sQpWZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJP2JxxAAoJEDBSmw7B7bqrfZ4P/iy2KraXNQKhF0GroKTns3Zk
+pCXJxN73SQMCQXf4s9rJkXmnDvZgXoa/KM6LUnKNZ/6SkBQ2fGZ1EBGDcfSrIjwN
+jxQSDS5hvaThuFzUF0Yj3amBTNOKSXfFGv+XWCvEkyssDpXCuWSWr+otv6g2q1k1
+LQau9hsnGuAtbSFVsVhjSlzJenEilMn1QEInu2SMIkvrlBNHjfGA2Qxj3bUoTUN2
+KcUkZvyewmo9j7sDhRI6VPslce0XUMfZO0FrP6a0EOvqOEM3G64LSlir5WInbvCA
+z7UcuP+dg+v1NSrvkQ6Tx/yW/l29Fr8XsYmNO3bTSP8Vi7z/xXFukunjoIf+Og9W
+BOere7bfiyL/WuEsUSzxmbR1BzLNoENuS6ej0OV2sQ16rBZoPrkyk8dawSCjaIic
+0EsRipB2Tud3LzsOx7wBjzzUES2TjAIoPF2o1QJJy3Q3Asa4Rvkf5z0Q2diZmTD4
+xxc3+O6Yhls9nxQ/S+RlKhVV2p5HBBF15IQlWW9MDiKar3YPNlDnppwknfPNqvA8
+uMRjluWHidV26U0vM4dD0ZrGQJ+f5lqIjEYIJIgbU2+MVTiJq0yJ1QOVqoMyxiKI
+htx4htItstrZ2nP9wxOyhybLdGssI3ahTmgkVFldXYKobFI7tlvBGRZiZ9geN2O5
+/JGjva5zguMsZRBUVzL1
+=AhMZ
+-----END PGP SIGNATURE-----
+
+--=-LmT/yzFz6YVIon/sQpWZ--
 
