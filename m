@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46919 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:32939 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704Ab2F1SDH (ORCPT
+	with ESMTP id S1752688Ab2FMGNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 14:03:07 -0400
-Message-ID: <1340906581.4491.46.camel@jlt3.sipsolutions.net> (sfid-20120628_200312_152031_43B5D967)
-Subject: Re: [RFC 60g 1/5] wireless: add 802.11ad (60gHz band)
+	Wed, 13 Jun 2012 02:13:38 -0400
+Message-ID: <1339568015.4519.5.camel@jlt3.sipsolutions.net> (sfid-20120613_081412_126044_06DA1191)
+Subject: Re: iwlwifi updates for 3.6
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 28 Jun 2012 20:03:01 +0200
-In-Reply-To: <1340882220-31768-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131740_615363_14B4E645)
-References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1340882220-31768-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 (sfid-20120628_131740_615363_14B4E645)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 13 Jun 2012 08:13:35 +0200
+In-Reply-To: <1339531055.4531.21.camel@jlt3.sipsolutions.net> (sfid-20120612_215743_461598_2A44FF39)
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120611_115334_801449_87F3D667) <1339531055.4531.21.camel@jlt3.sipsolutions.net>
+	 (sfid-20120612_215743_461598_2A44FF39)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-28 at 14:16 +0300, Vladimir Kondratiev wrote:
+On Tue, 2012-06-12 at 21:57 +0200, Johannes Berg wrote:
+> John,
+> 
+> please pull the iwlwifi-next tree.
+> 
+> I've included the patches here, in slightly fixed up versions, a small
+> additional warning that we need to flag/debug some issues, and also of
+> course the fix for the EEPROM refactoring vs. addition of the separate
+> configuration structure for 6035 devices.
+> 
+> The patches I posted previously included a few fixes for code that went
+> into the tree in my last pull and more debugging utilities.
 
-> @@ -60,8 +70,12 @@ int ieee80211_frequency_to_channel(int freq)
->  		return (freq - 2407) / 5;
->  	else if (freq >= 4910 && freq <= 4980)
->  		return (freq - 4000) / 5;
-> -	else
-> +	else if (freq <= 6000) /* TODO: check band 5.2 upper limit */
-
-Looks fine, but whose TODO is this? :-)
+Please hold off. We found a crash when firmware is missing due to one of
+the patches here (that fix something else unfortunately) -- I'll roll in
+the fix and rebuild the pull request today.
 
 johannes
 
