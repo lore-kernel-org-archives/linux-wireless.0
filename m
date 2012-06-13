@@ -1,27 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48517 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319Ab2FKJxb (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:52668 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754490Ab2FMP5B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 05:53:31 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Se1JS-0004zk-CU
-	for linux-wireless@vger.kernel.org; Mon, 11 Jun 2012 11:53:30 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi updates for 3.6
-Date: Mon, 11 Jun 2012 11:52:59 +0200
-Message-Id: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115334_801449_87F3D667)
+	Wed, 13 Jun 2012 11:57:01 -0400
+Message-ID: <4FD8B5D4.8060305@opentechinstitute.org> (sfid-20120613_175709_471115_3C85BD4F)
+Date: Wed, 13 Jun 2012 11:46:28 -0400
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: add support for userspace to handle auth frames
+ on adhoc ifaces
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's another set of iwlwifi updates. We continue some refactoring
-and have a bunch of random updates all over.
+Hello all!
 
-I'll submit a pull request in a few days, but only after my you pull
-my previous request, and maybe I'll combine more patches in too.
+This patch allows userspace applications to use nl80211 to register for
+AUTH frames received on adhoc interfaces.
 
-johannes
+Thanks,
+Will
 
+Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+---
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d81c178..4467162 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -455,7 +455,9 @@ static const struct ieee80211_txrx_stypes
+ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+        [NL80211_IFTYPE_ADHOC] = {
+                .tx = 0xffff,
+-               .rx = BIT(IEEE80211_STYPE_ACTION >> 4),
++               .rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++                       BIT(IEEE80211_STYPE_AUTH >> 4) |
++                       BIT(IEEE80211_STYPE_DEAUTH >> 4),
+        },
+        [NL80211_IFTYPE_STATION] = {
+                .tx = 0xffff,
