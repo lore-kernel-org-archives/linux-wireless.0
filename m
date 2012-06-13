@@ -1,91 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:63532 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756457Ab2FNRxH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43068 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752849Ab2FMUzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 13:53:07 -0400
-Received: by wgbdr13 with SMTP id dr13so2190594wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 10:53:06 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: mcgrof@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH 1/3] compat: Backport vga_switcheroo_client_ops
-Date: Thu, 14 Jun 2012 20:52:44 +0300
-Message-Id: <1339696366-26970-1-git-send-email-ozancag@gmail.com> (sfid-20120614_195311_791899_133420E9)
+	Wed, 13 Jun 2012 16:55:03 -0400
+Date: Wed, 13 Jun 2012 13:50:07 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<victorg@ti.com>
+Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
+Message-ID: <20120613205007.GB3043@pista> (sfid-20120613_225509_204417_A1F9A48C)
+References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1339566003.4519.1.camel@jlt3.sipsolutions.net>
+ <1339587447.3840.272.camel@cumari.coelho.fi>
+ <4FD87FEA.3070208@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4FD87FEA.3070208@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This backports:
+On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
+> On 06/13/2012 02:37 PM, Luciano Coelho wrote:
+> > On Wed, 2012-06-13 at 07:40 +0200, Johannes Berg wrote:
+> >> On Tue, 2012-06-12 at 13:43 -0700, Thomas Pedersen wrote:
+> >>> Support configuring an RSSI threshold in dBm (s32) when requesting
+> >>> scheduled scan, below which a BSS won't be reported by the cfg80211
+> >>> driver.
+> >>
+> >> I'm confused -- were you going to do scheduled scan only? Makes sense,
+> >> but if you could maybe change the subject a bit to "specify ... in
+> >> scheduled scan"?
+> > 
+> > It makes more sense with scheduled scans, but maybe it is also desirable
+> > with normal scans to reduce the amount of scan results traffic?
+> > 
+> > At least if we consider the intermediate scan results that Victor has
+> > been working on... We may want to report all scan results at the end,
+> > but only send intermediate events if all the matches are satisfied, for
+> > example.
+> > 
+> > Just thinking out loud a bit.
+> 
+> Good point.
+> 
+> Funnily enough I don't have any idea how ath6kl has implemented this
+> feature, but in theory this feature is useful also for the current
+> normal scan (when the firmware/hardware supports it) as we can avoid
+> host wakeups. If there are 10 APs, but all are below the RSSI threshold,
+> we will have only 1 host wakeup (scan ready event) opposed to 11 wakeups
+> (10 AP found events plus 1 scan ready event).
 
-  From 26ec685ff9d9c16525d8ec4c97e52fcdb187b302 Mon Sep 17 00:00:00
+But can the host even sleep on normal scans?
 
-  From: Takashi Iwai <tiwai@suse.de>
-  Date: Fri, 11 May 2012 07:51:17 +0200
-  Subject: [PATCH] vga_switcheroo: Introduce struct vga_switcheroo_client_ops
+If so, maybe it makes sense to convert NL80211_ATTR_SCHED_SCAN_MATCH
+into general scan matching parameters instead of having a set for each
+scan type?
 
-  only for kernels >= 2.6.34 in which vga_switcheroo is available.
-
-  Trying kernel                     3.4.0-030400-generic    [OK]
-  Trying kernel                     3.3.7-030307-generic    [OK]
-  Trying kernel                     3.2.2-030202-generic    [OK]
-  Trying kernel                    3.1.10-030110-generic    [OK]
-  Trying kernel                    3.0.18-030018-generic    [OK]
-  Trying kernel                  2.6.39-02063904-generic    [OK]
-  Trying kernel                  2.6.38-02063808-generic    [OK]
-  Trying kernel                  2.6.37-02063706-generic    [OK]
-  Trying kernel                  2.6.36-02063604-generic    [OK]
-  Trying kernel                  2.6.35-02063512-generic    [OK]
-  Trying kernel                  2.6.34-02063410-generic    [OK]
-  Trying kernel                  2.6.33-02063305-generic    [OK]
-  Trying kernel                  2.6.32-02063255-generic    [OK]
-  Trying kernel                  2.6.31-02063113-generic    [OK]
-  Trying kernel                  2.6.30-02063010-generic    [OK]
-  Trying kernel                  2.6.29-02062906-generic    [OK]
-  Trying kernel                  2.6.28-02062810-generic    [OK]
-  Trying kernel                    2.6.27-020627-generic    [OK]
-  Trying kernel                    2.6.26-020626-generic    [OK]
-  Trying kernel                    2.6.25-020625-generic    [OK]
-  Trying kernel                    2.6.24-020624-generic    [OK]
-
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
----
- include/linux/compat-3.5.h |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
-index 3f97a3d..1d9128a 100644
---- a/include/linux/compat-3.5.h
-+++ b/include/linux/compat-3.5.h
-@@ -8,6 +8,26 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0))
- 
-+/* switcheroo is available on >= 2.6.34 */
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+#include <linux/vga_switcheroo.h>
-+/*
-+ * This backports:
-+ *
-+ *   From 26ec685ff9d9c16525d8ec4c97e52fcdb187b302 Mon Sep 17 00:00:00 2001
-+ *   From: Takashi Iwai <tiwai@suse.de>
-+ *   Date: Fri, 11 May 2012 07:51:17 +0200
-+ *   Subject: [PATCH] vga_switcheroo: Introduce struct vga_switcheroo_client_ops
-+ *
-+ */
-+
-+struct vga_switcheroo_client_ops {
-+    void (*set_gpu_state)(struct pci_dev *dev, enum vga_switcheroo_state);
-+    void (*reprobe)(struct pci_dev *dev);
-+    bool (*can_switch)(struct pci_dev *dev);
-+};
-+#endif
-+
- /*
-  * This backports:
-  *
--- 
-1.7.10.2
-
+Thomas
