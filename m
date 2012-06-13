@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4669 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752089Ab2FKHwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 03:52:16 -0400
-Message-ID: <4FD5A39F.4090805@broadcom.com> (sfid-20120611_095232_489496_F681C4BC)
-Date: Mon, 11 Jun 2012 09:51:59 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47061 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353Ab2FME7a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 00:59:30 -0400
+Message-ID: <4FD81E2C.1000507@qca.qualcomm.com> (sfid-20120613_065934_563792_EB6CAA48)
+Date: Wed, 13 Jun 2012 10:29:24 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/18] brcmsmac: remove PCIE() makro
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-2-git-send-email-hauke@hauke-m.de>
- <4FD10989.6040701@broadcom.com> <4FD4A102.20805@hauke-m.de>
-In-Reply-To: <4FD4A102.20805@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: Joe Perches <joe@perches.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
+References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com>	 <1339053852.6009.13.camel@joe2Laptop> <4FD05A27.80102@qca.qualcomm.com>	 <1339055836.6009.20.camel@joe2Laptop> <4FD0688F.5020603@qca.qualcomm.com> <1339098774.14838.4.camel@joe2Laptop>
+In-Reply-To: <1339098774.14838.4.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2012 03:28 PM, Hauke Mehrtens wrote:
-> On 06/07/2012 10:05 PM, Arend van Spriel wrote:
->> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->>> Instead of checking if there is a PCIe core on the bus, better check if
->>> hosttype is PCIe.
+Hi Joe,
+
+On Friday 08 June 2012 01:22 AM, Joe Perches wrote:
+> On Thu, 2012-06-07 at 14:08 +0530, Mohammed Shafi Shajakhan wrote:
+>> On Thursday 07 June 2012 01:27 PM, Joe Perches wrote:
+>>> On Thu, 2012-06-07 at 13:07 +0530, Mohammed Shafi Shajakhan wrote:
+>>>> what about the other wiphy_debug messages, we would
+>>>> still retain them know
+>>>
+>>> Yes, and...
+>>>
+>>> No, you know those should now still be wiphy_debug
+>>> unless the message is HT related and need a new change.
 >>
->> I was under the impression that the macro was used for code needed when
->> the chip has a PCIe core instead of a PCI core. Maybe BCMA only supports
->> chips with PCIe core and in the respect checking the hosttype is
->> essentially the same, but I would not necessarily call it better.
->>
-> 
-> The code from the initial submission to staging looked like this:
-> 
-> #define PCIE(si) ((BUSTYPE((si)->pub.bustype) == PCI_BUS) &&	\
-> 		  ((si)->pub.buscoretype == PCIE_CORE_ID))
-> 
-> I have never seen a device using the AI bus (bcma) and a PCI core and
-> not a PCIe core and I do not think bcma will work with a PCI device or
-> core. The bustype in your old code is the same as the hosttype in bcma,
-> so under the assumption that all device are using PCIe that are coming
-> to this code the code now does the same as in the initial submission to
-> staging.
+>> sure. so lets drop this patch and do that generic stuff.
+>
+> I did a little while ago.
+> Please modify the patch based on wireless-next commit d63e9ae3b12
 
-If bcma does not work with a PCI core, maybe we could/should add a
-WARN_ON() in host_pci.c when it has no PCIe core.
+sorry for the delayed reply. so you had already posted the change you 
+had suggested in (netdev@vger.kernel.org mailing list ?) and i have to 
+do any changes based on that patch right ? thank you!
 
-Gr. AvS
 
+-- 
+thanks,
+shafi
