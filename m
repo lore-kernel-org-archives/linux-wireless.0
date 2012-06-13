@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:43945 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753237Ab2FOAcT convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37817 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984Ab2FMGCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 20:32:19 -0400
-Received: by gglu4 with SMTP id u4so1914255ggl.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 17:32:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1339700228.9786.11.camel@jlt3.sipsolutions.net>
-References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
-	<1339700228.9786.11.camel@jlt3.sipsolutions.net>
-Date: Fri, 15 Jun 2012 08:32:18 +0800
-Message-ID: <CAEFj985xi0LNsLqHn1cgAw0oMVsfWrh_ioPuzUva8ZLbUTn=ZQ@mail.gmail.com> (sfid-20120615_023224_791905_B208BE4C)
-Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 13 Jun 2012 02:02:42 -0400
+Message-ID: <1339567354.4519.3.camel@jlt3.sipsolutions.net> (sfid-20120613_080246_094005_663DA5DB)
+Subject: Re: Why "iwlwifi: read multiple MAC addresses"?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lekensteyn <lekensteyn@gmail.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 13 Jun 2012 08:02:34 +0200
+In-Reply-To: <3484697.jSSpon72n2@penguin> (sfid-20120612_220734_681638_D9517088)
+References: <3586963.qbQ3i1FPTG@penguin>
+	 <1339531131.4531.22.camel@jlt3.sipsolutions.net>
+	 <3484697.jSSpon72n2@penguin> (sfid-20120612_220734_681638_D9517088)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes.
+On Tue, 2012-06-12 at 22:07 +0200, Lekensteyn wrote:
+> On Tuesday 12 June 2012 21:58:51 Johannes Berg wrote:
+> > On Tue, 2012-06-12 at 15:11 +0200, Lekensteyn wrote:
+> > > Looking at a dump provided by
+> > > /sys/kernel/debug/cfg80211/phy0/iwlwifi/data/nvm, I see that the 16-bit
+> > > word at 0x98 contains the value 4. What does this mean?
+> > The 4 actually means that there are 4 addresses assigned to this device,
+> > for use in P2P scenarios etc. We only support 2 virtual interfaces in
+> > Linux today, so we don't expose 4 (though we probably could.)
+> > 
+> > > Can this break something?
+> > 
+> > No.
+> 
+> Okay, thanks for your quick answer. I have noticed that the first address is 
+> stored at 0x3A while the second one is stored at 0x92. Did you make an 
+> assumption that this address is other address + 1?
 
-On Fri, Jun 15, 2012 at 2:57 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-06-15 at 00:23 +0800, Chun-Yeow Yeoh wrote:
->> This patch fixes the wrong assignment of mesh element TTL.
->
-> Since I haven't pushed to John yet, should I rebase and merge this with
-> one of the previous patches?
->
-> johannes
->
->> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
->> ---
->>  net/mac80211/cfg.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
->> index 85ac364..43eb8d9 100644
->> --- a/net/mac80211/cfg.c
->> +++ b/net/mac80211/cfg.c
->> @@ -1529,7 +1529,7 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
->>       if (_chg_mesh_attr(NL80211_MESHCONF_TTL, mask))
->>               conf->dot11MeshTTL = nconf->dot11MeshTTL;
->>       if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
->> -             conf->dot11MeshTTL = nconf->element_ttl;
->> +             conf->element_ttl = nconf->element_ttl;
->>       if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
->>               conf->auto_open_plinks = nconf->auto_open_plinks;
->>       if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
->
->
+That's how it was specified.
+
+johannes
+
