@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm18-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.210]:24793 "HELO
-	nm18-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750948Ab2FKWlv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 18:41:51 -0400
-References: <1339452813.67695.YahooMailNeo@web81603.mail.mud.yahoo.com>
-Message-ID: <1339454087.28071.YahooMailNeo@web81608.mail.mud.yahoo.com> (sfid-20120612_004155_278113_E1B9DEBE)
-Date: Mon, 11 Jun 2012 15:34:47 -0700 (PDT)
-From: Peter Tam <peterctam@yahoo.com>
-Reply-To: Peter Tam <peterctam@yahoo.com>
-Subject: Atheros 6K WiFi USB adaptors
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1339452813.67695.YahooMailNeo@web81603.mail.mud.yahoo.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4491 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752509Ab2FMRdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 13:33:18 -0400
+Message-ID: <4FD8CED9.6030901@broadcom.com> (sfid-20120613_193323_362012_62A9856D)
+Date: Wed, 13 Jun 2012 10:33:13 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Wei Ni" <wni@nvidia.com>
+cc: "Stephen Warren" <swarren@nvidia.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Mursalin Akon" <makon@nvidia.com>,
+	"Rakesh Kumar" <krakesh@nvidia.com>
+Subject: Re: Where to power on the wifi device before loading the
+ driver.
+References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
+In-Reply-To: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Wei,
 
-I thought I saw support code usb.c for that AR6000 wifi chip set. I know there is extensive support for the SDIO interface version. But on detail examination, the usb.c code is missing a lot of hif_ops interfce routines.
+On 06/13/2012 03:40 AM, Wei Ni wrote:
+> In the brcmfmac init routine, it call sdio_register_driver() to register driver, if the wifi device is powered on, then the mmc driver will enumerate it, and call the probe callback routine.
+>
+> On the Cardhu, the wifi's power is controlled by two gpios (power-gpio and reset-gpio), the default state is power-off. So we need to power on it before calling sdio_register_driver(), if not, the mmc driver can't enumerate it, and will not call the probe routine.
+> This power on sequence is:
+> set power-gpio to 1 ;
+> mdelay(100) ;
+> set reset-gpio to 1 ;
+> mdelay(200);
+>
+> My question is where to power on the wifi. We may have three places to power on it:
+> 1. power on it in the brcmfmac driver before calling sdio_register_driver(). But I think this power sequence is special for tegra30 cardhu, it's not good to add it in the generic wifi driver, because different board may use the different way to power on the wifi.
+> 2. power on it in the mmc driver. In our tegra SD driver, it has power-gpios property, which allow the slot to be powered. But this power is for mmc slot, could we add this wifi power sequence in the tegra SD driver?
+> 3. hard-coded into DT. Set these gpios in the DT, something like pinmux settings, but in this way, it's not good to put the mdelay() value in the DT.
 
-The equivalents of 
-.read_write_sync = ath6kl_sdio_read_write_sync,
-.write_async = ath6kl_sdio_write_async,
-.irq_enable = ath6kl_sdio_irq_enable,
-.irq_disable = ath6kl_sdio_irq_disable,
-.scatter_req_get = ath6kl_sdio_scatter_req_get,
-.scatter_req_add = ath6kl_sdio_scatter_req_add,
-.enable_scatter = ath6kl_sdio_enable_scatter,
-.scat_req_rw = ath6kl_sdio_async_rw_scatter,
-.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
+We introduced oob interrupt support in 3.5 [1]. We are using a virtual 
+platform device to retrieve board specific oob interrupt GPIO setting. 
+You should be able to implement the power control in this way as well. 
+Brcmfmac gets the GPIOs through platform device interface, powers up the 
+chip and triggers a card detection. Then 4329 should be enumerated by 
+MMC stack. The reason we didn't implement this is the card detection. 
+Some design doesn't have hardware card detection since the WiFi chip is 
+already on board. And the current MMC stack doesn't have virtual card 
+detection interface.
 
-are missing in usb.c vs sdio.c for examples.
+Franky
 
-Can some decent soul tell me where
-.read_write_sync = ath6kl_usb_read_write_sync,
-.write_async = ath6kl_usb_write_async,
-.irq_enable = ath6kl_usb_irq_enable,
-.irq_disable = ath6kl_usb_irq_disable,
-.scatter_req_get = ath6kl_usb_scatter_req_get,
-.scatter_req_add = ath6kl_usb_scatter_req_add,
-.enable_scatter = ath6kl_usb_enable_scatter,
-.scat_req_rw = ath6kl_usb_async_rw_scatter,
-.cleanup_scatter = ath6kl_usb_cleanup_scatter,
+[1]: http://www.spinics.net/lists/linux-wireless/msg89335.html
 
-are sourced from?
-
-
-
-Peter
