@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17430 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851Ab2FNG32 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 02:29:28 -0400
-Message-ID: <4FD984C1.8090903@qca.qualcomm.com> (sfid-20120614_082933_244641_C73CE4B6)
-Date: Thu, 14 Jun 2012 09:29:21 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mga11.intel.com ([192.55.52.93]:49970 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754033Ab2FMNcX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 09:32:23 -0400
+Date: Wed, 13 Jun 2012 21:32:17 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [BUG] iwldvm lock oops
+Message-ID: <20120613133217.GA2170@localhost> (sfid-20120613_153239_097498_0F534223)
+References: <20120613131725.GA2052@localhost>
+ <1339593640.4519.39.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-CC: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<victorg@ti.com>
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com> <1339566003.4519.1.camel@jlt3.sipsolutions.net> <1339587447.3840.272.camel@cumari.coelho.fi> <4FD87FEA.3070208@qca.qualcomm.com> <20120613205007.GB3043@pista>
-In-Reply-To: <20120613205007.GB3043@pista>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1339593640.4519.39.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/13/2012 11:50 PM, Pedersen, Thomas wrote:
-> On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
->
->> Funnily enough I don't have any idea how ath6kl has implemented this
->> feature, but in theory this feature is useful also for the current
->> normal scan (when the firmware/hardware supports it) as we can avoid
->> host wakeups. If there are 10 APs, but all are below the RSSI threshold,
->> we will have only 1 host wakeup (scan ready event) opposed to 11 wakeups
->> (10 AP found events plus 1 scan ready event).
+Hi Johannes,
+
+On Wed, Jun 13, 2012 at 03:20:40PM +0200, Johannes Berg wrote:
+> Hi Fengguang,
 > 
-> But can the host even sleep on normal scans?
+> > The kernel compiled from commit b35032f ("iwlwifi: don't configure a
+> > txq that is being disabled") in
+> > 
+> >         git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git  master
+> > 
+> > triggers a kernel oops below.
+> > 
+> > That particular commit may well not be the root cause. I'm just hoping
+> > you may have better idea which recent change may be relevant.
+> 
+> Thanks for the report. This particular problem is due to the fact that
+> we have the objects linked into the kernel in the wrong order, we have a
+> fix pending for it. git.kernel.org is down right now so I can't link to
+> it, but it's in the iwlwifi/iwlwifi-next.git tree:
+> 
+> commit 65fe593a519c4d7c62289d3b0a17ca412e95b037
+> Author: Brandon Misemer <brandon.misemer@intel.com>
+> Date:   Fri Jun 8 14:59:27 2012 -0700
+> 
+>     iwlwifi: Fix Makefile build order for built-in driver
 
-It's "implementation defined", the good ones can and bad ones can't :)
+Good to know this. Thank you for the quick feedback!
 
-But from our (wireless developer) perspective we don't need to care
-about that, our job is to minimise all possible host wakeup events
-(timers, interrupts etc) as much as possible. That will allow the host
-to sleep more.
-
-Kalle
+Thanks,
+Fengguang
