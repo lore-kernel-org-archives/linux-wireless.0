@@ -1,108 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:33829 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758301Ab2FUDVl (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56871 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab2FMNqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 23:21:41 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.5 4/4] mwifiex: improve error path handling in usb.c
-Date: Wed, 20 Jun 2012 20:21:13 -0700
-Message-Id: <1340248873-5455-5-git-send-email-bzhao@marvell.com> (sfid-20120621_052144_287690_4256ED6F)
-In-Reply-To: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
-References: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
+	Wed, 13 Jun 2012 09:46:53 -0400
+Date: Wed, 13 Jun 2012 08:46:51 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 7/9] brcm80211: smac: use mac80211 channel data for tx
+ power limits
+Message-ID: <20120613134651.GB3490@thinkpad-t410> (sfid-20120613_154656_987925_08FDF630)
+References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+ <1338906849-26135-8-git-send-email-seth.forshee@canonical.com>
+ <4FD85FE3.3090604@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FD85FE3.3090604@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, Jun 13, 2012 at 11:39:47AM +0200, Arend van Spriel wrote:
+> On 06/05/2012 04:34 PM, Seth Forshee wrote:
+> > Currently the limits from the internal X2 domain are used, regardless
+> > of what regulatory rules are in effect. Instead use the power limits set
+> > by the higher-level regulatory support.
+> > 
+> > The rules for the MIMO power limits are still always derived from the
+> > world domain. Guidance from Broadcom is needed on how these limits
+> > should be determined for other regulatory domains.
+> 
+> Have not got definite answer yet. Luis indicated that Qualcomm/Atheros
+> had similar construct, but that is was not really needed and could be
+> derived. I will have to follow up on it in a separate patch.
 
-skb allocated during initialisation is reused for receiving
-commands/events by USB interface. We miss to reset skb->data in
-failure cases. This patch takes care of it.
+Thanks, that confirms my understanding of the state of things from
+previous discussion.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/usb.c |   22 +++++++++++++++++-----
- 1 files changed, 17 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index e6d796f..22a5916 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -49,6 +49,7 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 	struct device *dev = adapter->dev;
- 	u32 recv_type;
- 	__le32 tmp;
-+	int ret;
- 
- 	if (adapter->hs_activated)
- 		mwifiex_process_hs_config(adapter);
-@@ -69,16 +70,19 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 		case MWIFIEX_USB_TYPE_CMD:
- 			if (skb->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
- 				dev_err(dev, "CMD: skb->len too large\n");
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			} else if (!adapter->curr_cmd) {
- 				dev_dbg(dev, "CMD: no curr_cmd\n");
- 				if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
- 					mwifiex_process_sleep_confirm_resp(
- 							adapter, skb->data,
- 							skb->len);
--					return 0;
-+					ret = 0;
-+					goto exit_restore_skb;
- 				}
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			}
- 
- 			adapter->curr_cmd->resp_skb = skb;
-@@ -87,7 +91,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 		case MWIFIEX_USB_TYPE_EVENT:
- 			if (skb->len < sizeof(u32)) {
- 				dev_err(dev, "EVENT: skb->len too small\n");
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			}
- 			skb_copy_from_linear_data(skb, &tmp, sizeof(u32));
- 			adapter->event_cause = le32_to_cpu(tmp);
-@@ -95,7 +100,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 
- 			if (skb->len > MAX_EVENT_SIZE) {
- 				dev_err(dev, "EVENT: event body too large\n");
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			}
- 
- 			memcpy(adapter->event_body, skb->data +
-@@ -124,6 +130,12 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 	}
- 
- 	return -EINPROGRESS;
-+
-+exit_restore_skb:
-+	/* The buffer will be reused for further cmds/events */
-+	skb_push(skb, INTF_HEADER_LEN);
-+
-+	return ret;
- }
- 
- static void mwifiex_usb_rx_complete(struct urb *urb)
--- 
-1.7.0.2
+Would you like me to modify that statement in some way? Or was your
+comment purely informational? Reading it again, I probably will at least
+add a comment to indicate that the state of things is workable for now
+and will be improved later.
 
