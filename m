@@ -1,50 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56773 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750795Ab2FHSgX (ORCPT
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:29814 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417Ab2FMUei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 14:36:23 -0400
-Message-ID: <1339180580.5748.32.camel@jlt3.sipsolutions.net> (sfid-20120608_203626_490471_92895C0D)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andre Heider <a.heider@gmail.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 20:36:20 +0200
-In-Reply-To: <4FD22727.7000500@lwfinger.net> (sfid-20120608_182415_948584_8403B5AF)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 <4FD22727.7000500@lwfinger.net> (sfid-20120608_182415_948584_8403B5AF)
+	Wed, 13 Jun 2012 16:34:38 -0400
+Message-ID: <1339619670.13326.22.camel@lorien2> (sfid-20120613_223454_078644_0C058E00)
+Subject: [PATCH] leds: Rename led_brightness_set() to led_set_brightness()
+From: Shuah Khan <shuahkhan@gmail.com>
+Reply-To: shuahkhan@gmail.com
+To: bryan.wu@canonical.com, rpurdie@rpsys.net,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	davem@davemloft.net
+Cc: shuahkhan@gmail.com, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 13 Jun 2012 14:34:30 -0600
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let's go back to the root of this problem ...
+Rename leds external interface led_brightness_set() to led_set_brightness().
+This is the second phase of the change to reduce confusion between the
+leds internal and external interfaces that set brightness. With this change,
+now the external interface is led_set_brightness(). The first phase renamed
+the internal interface led_set_brightness() to __led_set_brightness().
+There are no changes to the interface implementations.
 
-Is there *any* open firmware that enables QoS today? If not, this is
-probably a much better choice for a patch for now, even though my other
-patch contained code improvements for b43 in various areas.
+Signed-off-by: Shuah Khan <shuahkhan@gmail.com>
+---
+ drivers/leds/led-class.c       |    2 +-
+ drivers/leds/led-core.c        |    4 ++--
+ drivers/leds/led-triggers.c    |    2 +-
+ drivers/leds/ledtrig-oneshot.c |    2 +-
+ drivers/leds/ledtrig-timer.c   |    2 +-
+ include/linux/leds.h           |    4 ++--
+ net/mac80211/led.c             |    2 +-
+ 7 files changed, 9 insertions(+), 9 deletions(-)
 
-http://p.sipsolutions.net/d486b77caacf3dbb.txt
+diff --git a/drivers/leds/led-class.c b/drivers/leds/led-class.c
+index cb0a6eb..c599095 100644
+--- a/drivers/leds/led-class.c
++++ b/drivers/leds/led-class.c
+@@ -222,7 +222,7 @@ void led_classdev_unregister(struct led_classdev *led_cdev)
+ #endif
+ 
+ 	/* Stop blinking */
+-	led_brightness_set(led_cdev, LED_OFF);
++	led_set_brightness(led_cdev, LED_OFF);
+ 
+ 	device_unregister(led_cdev->dev);
+ 
+diff --git a/drivers/leds/led-core.c b/drivers/leds/led-core.c
+index 176961b..8a09c5f 100644
+--- a/drivers/leds/led-core.c
++++ b/drivers/leds/led-core.c
+@@ -103,7 +103,7 @@ void led_blink_set_oneshot(struct led_classdev *led_cdev,
+ }
+ EXPORT_SYMBOL(led_blink_set_oneshot);
+ 
+-void led_brightness_set(struct led_classdev *led_cdev,
++void led_set_brightness(struct led_classdev *led_cdev,
+ 			enum led_brightness brightness)
+ {
+ 	/* stop and clear soft-blink timer */
+@@ -113,4 +113,4 @@ void led_brightness_set(struct led_classdev *led_cdev,
+ 
+ 	__led_set_brightness(led_cdev, brightness);
+ }
+-EXPORT_SYMBOL(led_brightness_set);
++EXPORT_SYMBOL(led_set_brightness);
+diff --git a/drivers/leds/led-triggers.c b/drivers/leds/led-triggers.c
+index f8b14dd..57721f2 100644
+--- a/drivers/leds/led-triggers.c
++++ b/drivers/leds/led-triggers.c
+@@ -112,7 +112,7 @@ void led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trig)
+ 		if (led_cdev->trigger->deactivate)
+ 			led_cdev->trigger->deactivate(led_cdev);
+ 		led_cdev->trigger = NULL;
+-		led_brightness_set(led_cdev, LED_OFF);
++		led_set_brightness(led_cdev, LED_OFF);
+ 	}
+ 	if (trig) {
+ 		write_lock_irqsave(&trig->leddev_list_lock, flags);
+diff --git a/drivers/leds/ledtrig-oneshot.c b/drivers/leds/ledtrig-oneshot.c
+index 5cbab41..2c029aa 100644
+--- a/drivers/leds/ledtrig-oneshot.c
++++ b/drivers/leds/ledtrig-oneshot.c
+@@ -177,7 +177,7 @@ static void oneshot_trig_deactivate(struct led_classdev *led_cdev)
+ 	}
+ 
+ 	/* Stop blinking */
+-	led_brightness_set(led_cdev, LED_OFF);
++	led_set_brightness(led_cdev, LED_OFF);
+ }
+ 
+ static struct led_trigger oneshot_led_trigger = {
+diff --git a/drivers/leds/ledtrig-timer.c b/drivers/leds/ledtrig-timer.c
+index 9010f7a..f774d05 100644
+--- a/drivers/leds/ledtrig-timer.c
++++ b/drivers/leds/ledtrig-timer.c
+@@ -104,7 +104,7 @@ static void timer_trig_deactivate(struct led_classdev *led_cdev)
+ 	}
+ 
+ 	/* Stop blinking */
+-	led_brightness_set(led_cdev, LED_OFF);
++	led_set_brightness(led_cdev, LED_OFF);
+ }
+ 
+ static struct led_trigger timer_led_trigger = {
+diff --git a/include/linux/leds.h b/include/linux/leds.h
+index dd93a22..3aade1d 100644
+--- a/include/linux/leds.h
++++ b/include/linux/leds.h
+@@ -124,7 +124,7 @@ extern void led_blink_set_oneshot(struct led_classdev *led_cdev,
+ 				  unsigned long *delay_off,
+ 				  int invert);
+ /**
+- * led_brightness_set - set LED brightness
++ * led_set_brightness - set LED brightness
+  * @led_cdev: the LED to set
+  * @brightness: the brightness to set it to
+  *
+@@ -132,7 +132,7 @@ extern void led_blink_set_oneshot(struct led_classdev *led_cdev,
+  * software blink timer that implements blinking when the
+  * hardware doesn't.
+  */
+-extern void led_brightness_set(struct led_classdev *led_cdev,
++extern void led_set_brightness(struct led_classdev *led_cdev,
+ 			       enum led_brightness brightness);
+ 
+ /*
+diff --git a/net/mac80211/led.c b/net/mac80211/led.c
+index 1bf7903..bcffa69 100644
+--- a/net/mac80211/led.c
++++ b/net/mac80211/led.c
+@@ -276,7 +276,7 @@ static void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local)
+ 
+ 	read_lock(&tpt_trig->trig.leddev_list_lock);
+ 	list_for_each_entry(led_cdev, &tpt_trig->trig.led_cdevs, trig_list)
+-		led_brightness_set(led_cdev, LED_OFF);
++		led_set_brightness(led_cdev, LED_OFF);
+ 	read_unlock(&tpt_trig->trig.leddev_list_lock);
+ }
+ 
+-- 
+1.7.9.5
 
-johannes
+
 
