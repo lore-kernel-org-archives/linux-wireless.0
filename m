@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:40941 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699Ab2FKEDB convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Mon, 11 Jun 2012 00:03:01 -0400
-Received: by bkcji2 with SMTP id ji2so3148861bkc.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2012 21:02:47 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:4667 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752664Ab2FMJqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 05:46:34 -0400
+Message-ID: <4FD860DD.4060700@broadcom.com> (sfid-20120613_114637_684059_70000AD0)
+Date: Wed, 13 Jun 2012 11:43:57 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1338894402.4514.28.camel@jlt3.sipsolutions.net>
-References: <CALx5=V8gS-FudA0EAmoEs=xwQ7hr_BntO4Jr_+6tR9pYSNDUdg@mail.gmail.com>
-	<1338894402.4514.28.camel@jlt3.sipsolutions.net>
-Date: Mon, 11 Jun 2012 12:02:47 +0800
-Message-ID: <CALx5=V9GPe0ad2=im4bvS0AMdXVQ7TF-dkW_dgUG1H1S1ek=3A@mail.gmail.com> (sfid-20120611_060305_312609_51B79A07)
-Subject: Re: Connected standby support ?
-From: Matt Chen <machen@suse.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, users@rt2x00.serialmonkey.com,
-	joeyli <jlee@suse.com>, Michael Chang <mchang@suse.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 0/9] brcm80211: smac: rework regulatory support
+References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 06/05/2012 04:34 PM, Seth Forshee wrote:
+> brcmsmac has its own internal regulatory implementation which attempts
+> to enforce a Broadcom defined domain named X2. This code has no
+> integration with mac80211 regulatory other than supplying regulatory
+> hints, and thus each implementation operates independently of the other,
+> enforcing conflicting sets of rules.
 
-What is wowlan ? Does it need BIOS suuport ?
+Hi Seth,
 
-2012/6/5 Johannes Berg <johannes@sipsolutions.net>:
-> On Tue, 2012-06-05 at 10:53 +0800, Matt Chen wrote:
->> Hi list,
->> As the incoming UEFI new design for BIOS, Microsoft has already
->> provided a model, "connected standby",  for power management. There
->> are 3 modes which are S0, Low Power S0 and S5.
->> I am wondering if there is already any support for the connected
->> standby in wifi of Linux ?
->
-> That's what we call wowlan, right? Or can be implemented using it?
->
-> johannes
->
->
+This series looks fine. I have sent two small comment replies on it.
+Actually, only one reply is on the code change. I want to run some
+testing today/tomorrow and let you know the results.
 
+Gr. AvS
 
-
--- 
-Thank you.
