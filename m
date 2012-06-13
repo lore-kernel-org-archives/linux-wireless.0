@@ -1,75 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41180 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab2FMJIM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 05:08:12 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SejYg-00016X-9q
-	for linux-wireless@vger.kernel.org; Wed, 13 Jun 2012 11:08:10 +0200
-Message-ID: <1339578489.4519.21.camel@jlt3.sipsolutions.net> (sfid-20120613_110815_937855_E25C00EE)
-Subject: [PATCH] nl80211: fix sched scan match attribute name
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Jun 2012 11:08:09 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3093 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752265Ab2FMO02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 10:26:28 -0400
+Message-ID: <4FD8A307.8060705@broadcom.com> (sfid-20120613_162631_924763_5472AEDC)
+Date: Wed, 13 Jun 2012 16:26:15 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 6/9] brcm80211: smac: enable/disable radio on
+ regulatory updates
+References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+ <1338906849-26135-7-git-send-email-seth.forshee@canonical.com>
+ <4FD85D47.8070609@broadcom.com> <20120613134330.GA3490@thinkpad-t410>
+In-Reply-To: <20120613134330.GA3490@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/13/2012 03:43 PM, Seth Forshee wrote:
+> On Wed, Jun 13, 2012 at 11:28:39AM +0200, Arend van Spriel wrote:
+>> When we were having fun in staging GregKH indicated that use of likely()
+>> should be justified with profiling data. Probably not really needed here.
+> 
+> Okay, I'll remove it. This isn't performance critical code anyhow.
+> 
 
-It should be NL80211_SCHED_SCAN_MATCH_ATTR_SSID as
-documented, not NL80211_ATTR_SCHED_SCAN_MATCH_SSID.
+That was my (un)educated guess as well. Thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/nl80211.h |    5 ++++-
- net/wireless/nl80211.c  |    4 ++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
-
---- a/include/linux/nl80211.h	2012-06-13 10:57:25.000000000 +0200
-+++ b/include/linux/nl80211.h	2012-06-13 10:58:24.000000000 +0200
-@@ -1959,7 +1959,7 @@ enum nl80211_reg_rule_attr {
- enum nl80211_sched_scan_match_attr {
- 	__NL80211_SCHED_SCAN_MATCH_ATTR_INVALID,
- 
--	NL80211_ATTR_SCHED_SCAN_MATCH_SSID,
-+	NL80211_SCHED_SCAN_MATCH_ATTR_SSID,
- 
- 	/* keep last */
- 	__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST,
-@@ -1967,6 +1967,9 @@ enum nl80211_sched_scan_match_attr {
- 		__NL80211_SCHED_SCAN_MATCH_ATTR_AFTER_LAST - 1
- };
- 
-+/* only for backward compatibility */
-+#define NL80211_ATTR_SCHED_SCAN_MATCH_SSID NL80211_SCHED_SCAN_MATCH_ATTR_SSID
-+
- /**
-  * enum nl80211_reg_rule_flags - regulatory rule flags
-  *
---- a/net/wireless/nl80211.c	2012-06-13 10:55:02.000000000 +0200
-+++ b/net/wireless/nl80211.c	2012-06-13 10:58:05.000000000 +0200
-@@ -250,7 +250,7 @@ nl80211_rekey_policy[NUM_NL80211_REKEY_D
- 
- static const struct nla_policy
- nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
--	[NL80211_ATTR_SCHED_SCAN_MATCH_SSID] = { .type = NLA_BINARY,
-+	[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] = { .type = NLA_BINARY,
- 						 .len = IEEE80211_MAX_SSID_LEN },
- };
- 
-@@ -4190,7 +4190,7 @@ static int nl80211_start_sched_scan(stru
- 			nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
- 				  nla_data(attr), nla_len(attr),
- 				  nl80211_match_policy);
--			ssid = tb[NL80211_ATTR_SCHED_SCAN_MATCH_SSID];
-+			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
- 			if (ssid) {
- 				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
- 					err = -EINVAL;
+Gr. AvS
 
 
