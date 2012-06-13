@@ -1,156 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35801 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750772Ab2F0M6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 08:58:32 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k: fix ANI operation in AP mode
-Date: Wed, 27 Jun 2012 14:58:19 +0200
-Message-Id: <1340801899-45263-1-git-send-email-nbd@openwrt.org> (sfid-20120627_145836_688395_9723A5AF)
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:46629 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255Ab2FMPjl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jun 2012 11:39:41 -0400
+Received: by yhmm54 with SMTP id m54so644950yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 08:39:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339576294.4519.17.camel@jlt3.sipsolutions.net>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	<1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	<1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	<1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	<4FD21C6B.5000402@lwfinger.net>
+	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	<4FD22727.7000500@lwfinger.net>
+	<1339180580.5748.32.camel@jlt3.sipsolutions.net>
+	<1339180948.5748.35.camel@jlt3.sipsolutions.net>
+	<1339182289.5748.36.camel@jlt3.sipsolutions.net>
+	<1339576294.4519.17.camel@jlt3.sipsolutions.net>
+Date: Wed, 13 Jun 2012 17:39:39 +0200
+Message-ID: <CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com> (sfid-20120613_173944_752171_9D74F484)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+From: Andre Heider <a.heider@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_ani_reset (which is called at reset time) uses a state variable
-ani->update_ani to prevent the ANI noise immunity state on the operating
-channel from being overwritten by background scans. Unfortunately this
-is also being set for AP mode, since it's mixed with code that is only
-supposed to change the default settings after a reset.
+On Wed, Jun 13, 2012 at 10:31 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2012-06-08 at 21:04 +0200, Johannes Berg wrote:
+>
+>> Ahrg, b43 only sets fw.opensource too late ... this moves it:
+>> http://p.sipsolutions.net/00c0056dc206e247.txt
+>
+> Has anyone tested this?
 
-In AP mode this has the side effect of having ANI run, but being unable to
-change its runtime noise immunity level, making it effectively useless.
-
-Fix this by getting rid of ani->update_ani and passing a parameter to
-ath9k_hw_set_ofdm_nil and ath9k_hw_set_cck_nil instead.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   29 +++++++++++++++--------------
- drivers/net/wireless/ath/ath9k/ani.h |    1 -
- 2 files changed, 15 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 7ebc346..ff007f5 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -140,7 +140,8 @@ static void ath9k_ani_restart(struct ath_hw *ah)
- }
- 
- /* Adjust the OFDM Noise Immunity Level */
--static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
-+static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
-+				  bool scan)
- {
- 	struct ar5416AniState *aniState = &ah->curchan->ani;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -153,7 +154,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
- 		immunityLevel, BEACON_RSSI(ah),
- 		aniState->rssiThrLow, aniState->rssiThrHigh);
- 
--	if (aniState->update_ani)
-+	if (!scan)
- 		aniState->ofdmNoiseImmunityLevel = immunityLevel;
- 
- 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
-@@ -199,13 +200,14 @@ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
- 	aniState = &ah->curchan->ani;
- 
- 	if (aniState->ofdmNoiseImmunityLevel < ATH9K_ANI_OFDM_MAX_LEVEL)
--		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1);
-+		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1, false);
- }
- 
- /*
-  * Set the ANI settings to match an CCK level.
-  */
--static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
-+static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
-+				 bool scan)
- {
- 	struct ar5416AniState *aniState = &ah->curchan->ani;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -222,7 +224,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
- 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
- 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
- 
--	if (aniState->update_ani)
-+	if (!scan)
- 		aniState->cckNoiseImmunityLevel = immunityLevel;
- 
- 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
-@@ -254,7 +256,8 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
- 	aniState = &ah->curchan->ani;
- 
- 	if (aniState->cckNoiseImmunityLevel < ATH9K_ANI_CCK_MAX_LEVEL)
--		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1);
-+		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1,
-+				     false);
- }
- 
- /*
-@@ -270,13 +273,15 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
- 	/* lower OFDM noise immunity */
- 	if (aniState->ofdmNoiseImmunityLevel > 0 &&
- 	    (aniState->ofdmsTurn || aniState->cckNoiseImmunityLevel == 0)) {
--		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel - 1);
-+		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel - 1,
-+				      false);
- 		return;
- 	}
- 
- 	/* lower CCK noise immunity */
- 	if (aniState->cckNoiseImmunityLevel > 0)
--		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel - 1);
-+		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel - 1,
-+				     false);
- }
- 
- /*
-@@ -338,7 +343,6 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 				aniState->ofdmNoiseImmunityLevel,
- 				aniState->cckNoiseImmunityLevel);
- 
--			aniState->update_ani = false;
- 			ofdm_nil = ATH9K_ANI_OFDM_DEF_LEVEL;
- 			cck_nil = ATH9K_ANI_CCK_DEF_LEVEL;
- 		}
-@@ -354,11 +358,9 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 			is_scanning,
- 			aniState->ofdmNoiseImmunityLevel,
- 			aniState->cckNoiseImmunityLevel);
--
--			aniState->update_ani = true;
- 	}
--	ath9k_hw_set_ofdm_nil(ah, ofdm_nil);
--	ath9k_hw_set_cck_nil(ah, cck_nil);
-+	ath9k_hw_set_ofdm_nil(ah, ofdm_nil, is_scanning);
-+	ath9k_hw_set_cck_nil(ah, cck_nil, is_scanning);
- 
- 	/*
- 	 * enable phy counters if hw supports or if not, enable phy
-@@ -534,7 +536,6 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 		ani->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
- 		ani->cckNoiseImmunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
- 		ani->ofdmNoiseImmunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
--		ani->update_ani = false;
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index e9d841b..1485bf5 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -114,7 +114,6 @@ struct ar5416AniState {
- 	u8 firstepLevel;
- 	u8 ofdmWeakSigDetect;
- 	u8 cckWeakSigThreshold;
--	bool update_ani;
- 	u32 listenTime;
- 	int32_t rssiThrLow;
- 	int32_t rssiThrHigh;
--- 
-1.7.3.2
-
+Sorry, missed that one.
+I get this crash with that patch: http://i.imgur.com/2CMzA.png
