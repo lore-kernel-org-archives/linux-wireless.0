@@ -1,93 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:42901 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755771Ab2FWGmP (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:62679 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752344Ab2FMCWC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 02:42:15 -0400
-Received: by lbbgm6 with SMTP id gm6so4926492lbb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:12 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
-Subject: [PATCH 14/18] wlcore: don't allow SDIO read/writes after failure
-Date: Sat, 23 Jun 2012 09:41:25 +0300
-Message-Id: <1340433689-24320-15-git-send-email-coelho@ti.com> (sfid-20120623_085130_707324_185C7FB7)
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
+	Tue, 12 Jun 2012 22:22:02 -0400
+Received: by gglu4 with SMTP id u4so57168ggl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 19:22:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339542016-22501-1-git-send-email-ozancag@gmail.com>
+References: <1339542016-22501-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 12 Jun 2012 19:21:40 -0700
+Message-ID: <CAB=NE6UvDZ6q2gngssTRT1AAHMYuKYUtOMGT1J+oUfGfxYYSnw@mail.gmail.com> (sfid-20120613_042211_983251_9B64889A)
+Subject: Re: [PATCH] compat: Add SIZE_MAX
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
+	lf_driver_backport@lists.linux-foundation.org
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
-
-Set a flag and after the first read/write failure is encountered.
-This flag will disallow further SDIO read/writes until op_stop() is
-executed, which will clear all flags.
-
-This prevents further errors from occurring, since one error usually
-indicates that IO operations won't work anymore until the chip is
-rebooted.  By blocking more calls, we avoid extra timeouts and having
-to wait for them to occur.
-
-[Added second paragraph explaining why the change is needed. -- Luca]
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/io.h       |   22 ++++++++++++++++++++--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    1 +
- 2 files changed, 21 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-index 1cd545b..fef80ad 100644
---- a/drivers/net/wireless/ti/wlcore/io.h
-+++ b/drivers/net/wireless/ti/wlcore/io.h
-@@ -57,14 +57,32 @@ static inline int __must_check wlcore_raw_write(struct wl1271 *wl, int addr,
- 						void *buf, size_t len,
- 						bool fixed)
- {
--	return wl->if_ops->write(wl->dev, addr, buf, len, fixed);
-+	int ret;
-+
-+	if (test_bit(WL1271_FLAG_SDIO_FAILED, &wl->flags))
-+		return -EIO;
-+
-+	ret = wl->if_ops->write(wl->dev, addr, buf, len, fixed);
-+	if (ret)
-+		set_bit(WL1271_FLAG_SDIO_FAILED, &wl->flags);
-+
-+	return ret;
- }
- 
- static inline int __must_check wlcore_raw_read(struct wl1271 *wl, int addr,
- 					       void *buf, size_t len,
- 					       bool fixed)
- {
--	return wl->if_ops->read(wl->dev, addr, buf, len, fixed);
-+	int ret;
-+
-+	if (test_bit(WL1271_FLAG_SDIO_FAILED, &wl->flags))
-+		return -EIO;
-+
-+	ret = wl->if_ops->read(wl->dev, addr, buf, len, fixed);
-+	if (ret)
-+		set_bit(WL1271_FLAG_SDIO_FAILED, &wl->flags);
-+
-+	return ret;
- }
- 
- static inline int __must_check wlcore_raw_read_data(struct wl1271 *wl, int reg,
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index e5a34dd..4273a21 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -247,6 +247,7 @@ enum wl12xx_flags {
- 	WL1271_FLAG_RECOVERY_IN_PROGRESS,
- 	WL1271_FLAG_VIF_CHANGE_IN_PROGRESS,
- 	WL1271_FLAG_INTENDED_FW_RECOVERY,
-+	WL1271_FLAG_SDIO_FAILED,
- };
- 
- enum wl12xx_vif_flags {
--- 
-1.7.10
-
+T24gVHVlLCBKdW4gMTIsIDIwMTIgYXQgNDowMCBQTSwgT3phbiDDh2HEn2xheWFuIDxvemFuY2Fn
+QGdtYWlsLmNvbT4gd3JvdGU6Cj4gVGhpcyBiYWNrcG9ydHM6Cj4KPiDCoEZyb20gYTM4NjBjMWM1
+ZGQxMTM3ZGIyM2Q3Nzg2ZDI4NDkzOWM1NzYxZDUxNyBNb24gU2VwIDE3IDAwOjAwOjAwCj4gwqBG
+cm9tOiBYaSBXYW5nIDx4aS53YW5nQGdtYWlsLmNvbT4KPiDCoERhdGU6IFRodSwgMzEgTWF5IDIw
+MTIgMTY6MjY6MDQgLTA3MDAKPiDCoFN1YmplY3Q6IFtQQVRDSF0gaW50cm9kdWNlIFNJWkVfTUFY
+Cj4KPiBUaGlzIGlzIG5lZWRlZCBieSBpbmNsdWRlL2RybS9kcm1fbWVtX3V0aWwuaAo+Cj4gVHJ5
+aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAzLjQuMC0wMzA0MDAtZ2Vu
+ZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IDMuMy43LTAzMDMwNy1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgMy4yLjItMDMwMjAyLWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtl
+cm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDMuMS4xMC0wMzAxMTAtZ2VuZXJpYyDC
+oFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMy4wLjE4
+LTAzMDAxOC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAyLjYuMzktMDIwNjM5MDQtZ2VuZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42LjM4LTAyMDYzODA4LWdlbmVyaWMgwqBbT0tdCj4g
+VHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4zNy0wMjA2MzcwNi1n
+ZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAy
+LjYuMzYtMDIwNjM2MDQtZ2VuZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgMi42LjM1LTAyMDYzNTEyLWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtl
+cm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4zNC0wMjA2MzQxMC1nZW5lcmljIMKg
+W09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzMtMDIw
+NjMzMDUtZ2VuZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgMi42LjMyLTAyMDYzMjU1LWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4zMS0wMjA2MzExMy1nZW5lcmljIMKgW09LXQo+IFRy
+eWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzAtMDIwNjMwMTAtZ2Vu
+ZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42
+LjI5LTAyMDYyOTA2LWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoDIuNi4yOC0wMjA2MjgxMC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJu
+ZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMjctMDIwNjI3LWdlbmVyaWMgwqBb
+T0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4yNi0w
+MjA2MjYtZ2VuZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgMi42LjI1LTAyMDYyNS1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMjQtMDIwNjI0LWdlbmVyaWMgwqBbT0tdCj4K
+PiBTaWduZWQtb2ZmLWJ5OiBPemFuIMOHYcSfbGF5YW4gPG96YW5jYWdAZ21haWwuY29tPgoKQXBw
+bGllZCBhbmQgcHVzaGVkLCB0aGFua3MhCgogIEx1aXMK
