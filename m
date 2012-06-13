@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:50094 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664Ab2FKW7w (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54823 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752172Ab2FMPqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 18:59:52 -0400
-Received: by weyu7 with SMTP id u7so2438000wey.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 15:59:51 -0700 (PDT)
-Message-ID: <4FD67864.6000900@gmail.com> (sfid-20120612_005956_028322_B5E4F8F0)
-Date: Tue, 12 Jun 2012 00:59:48 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] rt2x00: missing devices/chips
-References: <4FBBF88F.5060508@gmail.com> <CAGXE3d-GJDPN70AHnYRBXhNdfXg2quL1xCYwJ-VoSNjhHHZDhQ@mail.gmail.com>
-In-Reply-To: <CAGXE3d-GJDPN70AHnYRBXhNdfXg2quL1xCYwJ-VoSNjhHHZDhQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 13 Jun 2012 11:46:44 -0400
+Message-ID: <1339602402.4519.48.camel@jlt3.sipsolutions.net> (sfid-20120613_174647_942840_37CC8279)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Wed, 13 Jun 2012 17:46:42 +0200
+In-Reply-To: <CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com> (sfid-20120613_173942_534457_89B175CF)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
+	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
+	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
+	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 <4FD22727.7000500@lwfinger.net>
+	 <1339180580.5748.32.camel@jlt3.sipsolutions.net>
+	 <1339180948.5748.35.camel@jlt3.sipsolutions.net>
+	 <1339182289.5748.36.camel@jlt3.sipsolutions.net>
+	 <1339576294.4519.17.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
+	 (sfid-20120613_173942_534457_89B175CF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2012 01:35 PM, Helmut Schaa wrote:
+On Wed, 2012-06-13 at 17:39 +0200, Andre Heider wrote:
+> On Wed, Jun 13, 2012 at 10:31 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Fri, 2012-06-08 at 21:04 +0200, Johannes Berg wrote:
+> >
+> >> Ahrg, b43 only sets fw.opensource too late ... this moves it:
+> >> http://p.sipsolutions.net/00c0056dc206e247.txt
+> >
+> > Has anyone tested this?
+> 
+> Sorry, missed that one.
+> I get this crash with that patch: http://i.imgur.com/2CMzA.png
 
-> On Tue, May 22, 2012 at 10:35 PM, Xose Vazquez Perez
-> <xose.vazquez@gmail.com> wrote:
->> Those were my final patches, from now on MediaTek Inc. guys
->> should take over it.
->
-> That would indeed be nice, let's see what the future brings.
->
-> However, thanks a lot for all your contributions!
-> Helmut
+Huh, that doesn't make a lot of sense to me, I don't move any
+locking ...
 
-And a bunch of unknown rt2800usb devices:
+johannes
 
-0x04bb, 0x094e
-0x050d, 0x1103
-0x0789, 0x016b
-0x0846, 0x9012
-0x0b05, 0x17a7
-0x0b05, 0x17ad
-0x0b05, 0x17bc
-0x0df6, 0x0067
-0x0df6, 0x0069
-0x0df6, 0x006a
-0x0e66, 0x0020
-0x0e66, 0x0021
-0x13d3, 0x3340
-0x13d3, 0x3399
-0x13d3, 0x3400
-0x13d3, 0x3401
-0x148f, 0x3573
-0x148f, 0x5572
-0x148f, 0xf301
-0x1740, 0x0600
-0x177f, 0x0254
-0x1b75, 0x7733
-0x2001, 0x3c1a
-0x2019, 0xed19
-0x7392, 0x7733
-0xf201, 0x5370
+
