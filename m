@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:55797 "EHLO purkki.adurom.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:2973 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751052Ab2FRHXK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 03:23:10 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: set only VO as a U-APSD enabled AC
-References: <1340003971-7037-1-git-send-email-arik@wizery.com>
-Date: Mon, 18 Jun 2012 10:23:09 +0300
-In-Reply-To: <1340003971-7037-1-git-send-email-arik@wizery.com> (Arik
-	Nemtsov's message of "Mon, 18 Jun 2012 10:19:31 +0300")
-Message-ID: <87aa015bj6.fsf@purkki.adurom.net> (sfid-20120618_092313_464036_92F13FEA)
+	id S1755531Ab2FNMym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 08:54:42 -0400
+Message-ID: <4FD9DF08.4020304@broadcom.com> (sfid-20120614_145446_236922_5E53026F)
+Date: Thu, 14 Jun 2012 14:54:32 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Arend van Spriel" <arend@broadcom.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 5/5] brcmfmac: introduce checkdied debugfs
+ functionality
+References: <1339669017-13388-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1339669017-13388-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arik Nemtsov <arik@wizery.com> writes:
+On 06/14/2012 12:16 PM, Arend van Spriel wrote:
+> The checkdied functionality provides useful information for analyzing
+> firmware crashes. By exposing this information to a debugfs file users
+> can easily provide its content in bug reports. The functionality is
+> available only when CONFIG_BRCMDBG is selected.
+> 
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> This patch changes kzalloc() to vzalloc(). This replaces patch with
+> message-id <1339275105-3593-6-git-send-email-arend@broadcom.com>.
+> 
+> All 5 patches apply to latest wireless-next/master branch.
 
-> Some APs experience problems when working with U-APSD. Decrease the
-> probability of that happening by using legacy mode for all ACs but VO.
->
-> The AP that caused us troubles was a Cisco 4410N. It ignores our
-> setting, and always treats non-VO ACs as legacy.
->
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Hi John,
 
-[...]
+Just fetched wireless-next and noticed you already applied the first 4
+patches. I tried and this fifth patch does apply to wireless-next/master.
 
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -56,10 +56,7 @@ struct ieee80211_local;
->  #define TU_TO_EXP_TIME(x)	(jiffies + TU_TO_JIFFIES(x))
->  
->  #define IEEE80211_DEFAULT_UAPSD_QUEUES \
-> -	(IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |	\
-> -	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE |	\
-> -	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI |	\
-> -	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
-> +	IEEE80211_WMM_IE_STA_QOSINFO_AC_VO
+Gr. AvS
 
-Am I in your kill file now? :)
-
-http://www.spinics.net/lists/linux-wireless/msg92159.html
-
--- 
-Kalle Valo
