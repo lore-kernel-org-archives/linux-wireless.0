@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3047 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758785Ab2FAIMq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 04:12:46 -0400
-Message-ID: <4FC8796E.4060800@broadcom.com> (sfid-20120601_101325_509484_7993E122)
-Date: Fri, 1 Jun 2012 10:12:30 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] bcma: fix null pointer in bcma_core_pci_irq_ctl
-References: <1338496770-16381-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338496770-16381-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:59312 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab2FNS5O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 14:57:14 -0400
+Message-ID: <1339700228.9786.11.camel@jlt3.sipsolutions.net> (sfid-20120614_205748_629041_5C921042)
+Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Date: Thu, 14 Jun 2012 20:57:08 +0200
+In-Reply-To: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120614_182507_952715_CCD89317)
+References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20120614_182507_952715_CCD89317)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/31/2012 10:39 PM, Hauke Mehrtens wrote:
-> pc could be null if hosttype != BCMA_HOSTTYPE_PCI.
-> If we are on a device without a pci core this function is called with
-> pc = null by b43 and brcmsmac. If the host type is PCI we have a pci
-> core as well and pc can not be null.
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/bcma/driver_pci.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-> index 9a96f14..884b7af 100644
-> --- a/drivers/bcma/driver_pci.c
-> +++ b/drivers/bcma/driver_pci.c
-> @@ -232,7 +232,7 @@ void __devinit bcma_core_pci_init(struct bcma_drv_pci *pc)
->  int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc, struct bcma_device *core,
->  			  bool enable)
->  {
-> -	struct pci_dev *pdev = pc->core->bus->host_pci;
-> +	struct pci_dev *pdev;
->  	u32 coremask, tmp;
->  	int err = 0;
->  
-> @@ -243,6 +243,8 @@ int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc, struct bcma_device *core,
-Could you change the if statement as well:
-  - if (core->bus->hosttype != BCMA_HOSTTYPE_PCI) {
-  + if (!pc || core->bus->hosttype != BCMA_HOSTTYPE_PCI)
->  		goto out;
-  -  	}
->  
-> +	pdev = pc->core->bus->host_pci;
-> +
->  	err = pci_read_config_dword(pdev, BCMA_PCI_IRQMASK, &tmp);
->  	if (err)
->  		goto out;
+On Fri, 2012-06-15 at 00:23 +0800, Chun-Yeow Yeoh wrote:
+> This patch fixes the wrong assignment of mesh element TTL.
 
-Gr. AvS
+Since I haven't pushed to John yet, should I rebase and merge this with
+one of the previous patches?
+
+johannes
+
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+>  net/mac80211/cfg.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 85ac364..43eb8d9 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -1529,7 +1529,7 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+>  	if (_chg_mesh_attr(NL80211_MESHCONF_TTL, mask))
+>  		conf->dot11MeshTTL = nconf->dot11MeshTTL;
+>  	if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
+> -		conf->dot11MeshTTL = nconf->element_ttl;
+> +		conf->element_ttl = nconf->element_ttl;
+>  	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
+>  		conf->auto_open_plinks = nconf->auto_open_plinks;
+>  	if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
+
 
