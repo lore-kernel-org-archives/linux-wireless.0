@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53837 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43595 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754373Ab2FTM3z (ORCPT
+	with ESMTP id S1752852Ab2FNLY6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 08:29:55 -0400
-Message-ID: <1340195389.4655.61.camel@jlt3.sipsolutions.net> (sfid-20120620_143019_490657_F18BE753)
-Subject: Re: [PATCH v2 1/7] nl80211/cfg80211: add radar detection
- command/event
+	Thu, 14 Jun 2012 07:24:58 -0400
+Message-ID: <1339673095.4461.2.camel@jlt3.sipsolutions.net> (sfid-20120614_132502_022325_E0CC951E)
+Subject: Re: [PATCH] mac80211: add support for userspace to handle auth
+ frames on adhoc ifaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Wed, 20 Jun 2012 14:29:49 +0200
-In-Reply-To: <4FE1C06A.3060605@neratec.com>
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
-	 <1340181600.4655.34.camel@jlt3.sipsolutions.net>
-	 <4FE1C06A.3060605@neratec.com>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: Will Hawkins <hawkinsw@opentechinstitute.org>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 14 Jun 2012 13:24:55 +0200
+In-Reply-To: <4FD99A24.3020907@lri.fr>
+References: <4FD8B5D4.8060305@opentechinstitute.org>
+	 <4FD99A24.3020907@lri.fr>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 14:22 +0200, Zefir Kurtisi wrote:
-> On 06/20/2012 10:40 AM, Johannes Berg wrote:
-> > [...]
-> > 
-> > How do you intend to handle HT40?
-> > 
-> > johannes
-> > 
-> 
-> Not to mention VHT ante portas...
-> 
-> We should start with HT20 support only to have something to start
-> testing with and add HT40 gradually (assuming it will require a lot more
-> locations to be patched to be available initially).
+On Thu, 2012-06-14 at 10:00 +0200, Nicolas Cavallari wrote:
 
-Ok, fin with me. However, then somewhere in this code there should be a
-channel type check ... otherwise you can do the CAC on 20 MHz and then
-use 40 anyway, no? I see no channel type handling anywhere. Or just add
-the code to check if all affected channels had CAC to start with, that
-will refuse HT40 then
+> I just have a question here : when auth frames are not delivered to
+> userspace, mac80211 will respond to them, and also uses them to detect
+> node reboot. If you register for auth frames, mac80211 will still send
+> auth frames as soon as a new station is seen, which might be confusing
+> for user space. Is that ok to do this ? Or should userspace have more
+> control over how mac80211 sends auth frames ?
+
+Please read the code. If userspace registers for them, mac80211 will
+never do anything with the frame.
+
+> There is also another thing to consider if you want to send auth frames
+> from userspace, as CMD_FRAME requires a frequency, which in IBSS mode,
+> can change anytime without userspace being notified. If you only have to
+> answer to received auth frames, this is easier as you can reuse the
+> frequency given by nl80211 when receiving the auth frame. But if you
+> want to send a auth frame independently, how do you get the frequency to
+> use ?
+
+You check the BSS info, that's trivial.
 
 johannes
 
