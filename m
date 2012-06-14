@@ -1,125 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48520 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab2FKJxd (ORCPT
+Received: from nbd.name ([46.4.11.11]:58851 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212Ab2FNV14 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 05:53:33 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 14 Jun 2012 17:27:56 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/13] iwlwifi: fix dynamic loading
-Date: Mon, 11 Jun 2012 11:53:02 +0200
-Message-Id: <1339408392-19425-4-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115337_111495_27D6974B)
-In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
-References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	c_manoha@qca.qualcomm.com, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 3.5] ath9k: fix invalid pointer access in the tx path
+Date: Thu, 14 Jun 2012 23:27:42 +0200
+Message-Id: <1339709262-59805-1-git-send-email-nbd@openwrt.org> (sfid-20120614_232800_078515_095ADB91)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+After setup_frame_info has been called, only info->control.rates is still
+valid, other control fields have been overwritten by the ath_frame_info
+data. Move the access to info->control.vif for checking short preamble
+to setup_frame_info before it gets overwritten.
 
-Add locking to the dynamic loading code to prevent
-corrupting the list if multiple device ever init at
-the same time (which cannot happen for multiple PCI
-devices, but could happen when different busses init
-concurrently.)
+This regression was introduced in commit d47a61aa
+"ath9k: Fix multi-VIF BSS handling"
 
-Also remove a device from the list when it stops so
-the list isn't left corrupted.
-
-Reviewed-by: Donald H Fry <donald.h.fry@intel.com>
-Tested-by: Donald H Fry <donald.h.fry@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Thomas Hühn <thomas@net.t-labs.tu-berlin.de>
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: stable@vger.kernel.org [3.4]
 ---
- drivers/net/wireless/iwlwifi/iwl-drv.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c  |   10 ++++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index cdfdfae..cc7fed0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -131,6 +131,8 @@ struct iwl_drv {
- #define DVM_OP_MODE	0
- #define MVM_OP_MODE	1
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a277cf6..b5136a1 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -214,6 +214,7 @@ struct ath_frame_info {
+ 	enum ath9k_key_type keytype;
+ 	u8 keyix;
+ 	u8 retries;
++	bool short_preamble;
+ };
  
-+/* Protects the table contents, i.e. the ops pointer & drv list */
-+static struct mutex iwlwifi_opmode_table_mtx;
- static struct iwlwifi_opmode_table {
- 	const char *name;			/* name: iwldvm, iwlmvm, etc */
- 	const struct iwl_op_mode_ops *ops;	/* pointer to op_mode ops */
-@@ -899,6 +901,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	release_firmware(ucode_raw);
- 	complete(&drv->request_firmware_complete);
- 
-+	mutex_lock(&iwlwifi_opmode_table_mtx);
- 	op = &iwlwifi_opmode_table[DVM_OP_MODE];
- 
- 	/* add this device to the list of devices using this op_mode */
-@@ -910,6 +913,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	} else {
- 		request_module_nowait("%s", op->name);
- 	}
-+	mutex_unlock(&iwlwifi_opmode_table_mtx);
- 
- 	return;
- 
-@@ -966,6 +970,9 @@ void iwl_drv_stop(struct iwl_drv *drv)
- 
- 	iwl_dealloc_ucode(drv);
- 
-+	mutex_lock(&iwlwifi_opmode_table_mtx);
-+	list_del(&drv->list);
-+	mutex_unlock(&iwlwifi_opmode_table_mtx);
- 	kfree(drv);
- }
- 
-@@ -988,6 +995,7 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
+ struct ath_buf_state {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index d59dd01..59fbe5b 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -938,6 +938,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct ieee80211_tx_rate *rates;
+ 	const struct ieee80211_rate *rate;
+ 	struct ieee80211_hdr *hdr;
++	struct ath_frame_info *fi = get_frame_info(bf->bf_mpdu);
  	int i;
- 	struct iwl_drv *drv;
+ 	u8 rix = 0;
  
-+	mutex_lock(&iwlwifi_opmode_table_mtx);
- 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
- 		if (strcmp(iwlwifi_opmode_table[i].name, name))
- 			continue;
-@@ -995,8 +1003,10 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
- 		list_for_each_entry(drv, &iwlwifi_opmode_table[i].drv, list)
- 			drv->op_mode = ops->start(drv->trans, drv->cfg,
- 						  &drv->fw);
-+		mutex_unlock(&iwlwifi_opmode_table_mtx);
- 		return 0;
- 	}
-+	mutex_unlock(&iwlwifi_opmode_table_mtx);
- 	return -EIO;
- }
- EXPORT_SYMBOL_GPL(iwl_opmode_register);
-@@ -1006,6 +1016,7 @@ void iwl_opmode_deregister(const char *name)
- 	int i;
- 	struct iwl_drv *drv;
+@@ -957,8 +958,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 	rate = ieee80211_get_rts_cts_rate(sc->hw, tx_info);
+ 	info->rtscts_rate = rate->hw_value;
  
-+	mutex_lock(&iwlwifi_opmode_table_mtx);
- 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
- 		if (strcmp(iwlwifi_opmode_table[i].name, name))
- 			continue;
-@@ -1018,8 +1029,10 @@ void iwl_opmode_deregister(const char *name)
- 				drv->op_mode = NULL;
- 			}
- 		}
-+		mutex_unlock(&iwlwifi_opmode_table_mtx);
- 		return;
- 	}
-+	mutex_unlock(&iwlwifi_opmode_table_mtx);
- }
- EXPORT_SYMBOL_GPL(iwl_opmode_deregister);
+-	if (tx_info->control.vif &&
+-	    tx_info->control.vif->bss_conf.use_short_preamble)
++	if (fi->short_preamble)
+ 		info->rtscts_rate |= rate->hw_value_short;
  
-@@ -1027,6 +1040,8 @@ static int __init iwl_drv_init(void)
- {
- 	int i;
- 
-+	mutex_init(&iwlwifi_opmode_table_mtx);
+ 	for (i = 0; i < 4; i++) {
+@@ -1779,6 +1779,11 @@ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+ 	struct ath_node *an = NULL;
+ 	enum ath9k_key_type keytype;
++	bool short_preamble = false;
 +
- 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++)
- 		INIT_LIST_HEAD(&iwlwifi_opmode_table[i].drv);
++	if (tx_info->control.vif &&
++	    tx_info->control.vif->bss_conf.use_short_preamble)
++		short_preamble = true;
  
+ 	keytype = ath9k_cmn_get_hw_crypto_keytype(skb);
+ 
+@@ -1794,6 +1799,7 @@ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		fi->keyix = ATH9K_TXKEYIX_INVALID;
+ 	fi->keytype = keytype;
+ 	fi->framelen = framelen;
++	fi->short_preamble = short_preamble;
+ }
+ 
+ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
 -- 
-1.7.10
+1.7.3.2
 
