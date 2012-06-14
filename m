@@ -1,96 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33627 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754129Ab2FHRif (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:3738 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756055Ab2FNQqz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 13:38:35 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 4/9] ath9k_hw: check GPM HW write pointer before chip reset
-Date: Fri, 8 Jun 2012 23:09:03 +0530
-Message-ID: <1339177148-21672-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120608_193838_700058_0956CC43)
-In-Reply-To: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Thu, 14 Jun 2012 12:46:55 -0400
+Message-ID: <4FDA1544.1020701@broadcom.com> (sfid-20120614_184658_811893_DB5EDD24)
+Date: Thu, 14 Jun 2012 09:45:56 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Wei Ni" <wni@nvidia.com>
+cc: "Stephen Warren" <swarren@nvidia.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Mursalin Akon" <makon@nvidia.com>,
+	"Rakesh Kumar" <krakesh@nvidia.com>
+Subject: Re: Where to power on the wifi device before loading the
+ driver.
+References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
+ <4FD8CED9.6030901@broadcom.com>
+ <6B4D417B830BC44B8026029FD256F7F1C377BFFE89@HKMAIL01.nvidia.com>
+In-Reply-To: <6B4D417B830BC44B8026029FD256F7F1C377BFFE89@HKMAIL01.nvidia.com>
+Content-Type: text/plain;
+ charset=windows-1252;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both "MAC Warm Reset" and "MCI Reset Rx" will reset GPM HW write_ptr.
-We should check software cached write_ptr against HW write_ptr before
-reset. Otherwise the pending DMA data will be lost.
+On 06/13/2012 09:17 PM, Wei Ni wrote:
+> Wei: Yes, in OOB mode, it's easy to add a device node in the DT, to pass
+> the gpio property to brcmfmac driver. But the NO-OOB mode doesn’t use the
+> virtual platform device, so we can't pass the gpio to driver. We need to find
+> a way to support these two mode both.
+> Could we use the virtual platform device both for OOB and NO-OOB mode? so that
+> we can implement power control in these two mode, and we can add a flags to
+> control if need to power on or not.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |   18 ++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 +
- drivers/net/wireless/ath/ath9k/hw.c         |    3 +++
- 3 files changed, 22 insertions(+)
+Of course you can use it for non OOB.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index b1ced2a..96a8a5f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -893,6 +893,9 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 		udelay(100);
- 	}
- 
-+	/* Check pending GPM msg before MCI Reset Rx */
-+	ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
-+
- 	regval |= SM(1, AR_MCI_COMMAND2_RESET_RX);
- 	REG_WRITE(ah, AR_MCI_COMMAND2, regval);
- 	udelay(1);
-@@ -1190,6 +1193,21 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
- 		mci->gpm_idx = value;
- 		break;
-+	case MCI_STATE_CHECK_GPM_OFFSET:
-+		/*
-+		 * This should only be called before "MAC Warm Reset" or
-+		 * "MCI Reset Rx".
-+		 */
-+		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
-+		if (mci->gpm_idx == value)
-+			break;
-+		ath_dbg(common, MCI,
-+			"GPM cached write pointer mismatch %d %d\n",
-+			mci->gpm_idx, value);
-+		mci->query_bt = true;
-+		mci->need_flush_btinfo = true;
-+		mci->gpm_idx = 0;
-+		break;
- 	case MCI_STATE_NEXT_GPM_OFFSET:
- 	case MCI_STATE_LAST_GPM_OFFSET:
- 		/*
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 10282e2..b36c885 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -190,6 +190,7 @@ enum mci_bt_state {
- enum mci_state_type {
- 	MCI_STATE_ENABLE,
- 	MCI_STATE_INIT_GPM_OFFSET,
-+	MCI_STATE_CHECK_GPM_OFFSET,
- 	MCI_STATE_NEXT_GPM_OFFSET,
- 	MCI_STATE_LAST_GPM_OFFSET,
- 	MCI_STATE_BT,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index db3dfc9..e3ccb45 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1348,6 +1348,9 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
- 		}
- 	}
- 
-+	if (ath9k_hw_mci_is_enabled(ah))
-+		ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
-+
- 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
- 
- 	REGWRITE_BUFFER_FLUSH(ah);
--- 
-1.7.10.3
+> BTW, does that power on sequence is generally for 4329?
+
+Yes.
+
+Regards.
+Franky
 
