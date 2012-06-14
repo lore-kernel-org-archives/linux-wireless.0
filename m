@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:51865 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751590Ab2FHNco (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52429 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154Ab2FNR2K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 09:32:44 -0400
-Received: by lagz14 with SMTP id z14so1711714lag.21
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 06:32:32 -0700 (PDT)
-Message-ID: <1339162351.7078.145.camel@cumari.coelho.fi> (sfid-20120608_153246_748030_2BA10AA5)
-Subject: Re: [PATCH 0/5] wl18xx: some alignment with new FWs and conf
- improvements
-From: Luciano Coelho <coelho@ti.com>
+	Thu, 14 Jun 2012 13:28:10 -0400
+Received: by pbbrp8 with SMTP id rp8so4097916pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 10:28:10 -0700 (PDT)
+From: Jeongdo Son <sohn9086@gmail.com>
 To: linux-wireless@vger.kernel.org
-Date: Fri, 08 Jun 2012 16:32:31 +0300
-In-Reply-To: <1339137055-30095-1-git-send-email-coelho@ti.com>
-References: <1339137055-30095-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Jeongdo Son <sohn9086@gmail.com>
+Subject: [PATCH] rt2x00: Add support for BUFFALO WLI-UC-GNM2 to rt2800usb.
+Date: Fri, 15 Jun 2012 02:28:01 +0900
+Message-Id: <1339694881-2158-1-git-send-email-sohn9086@gmail.com> (sfid-20120614_192814_694623_3D30294C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 09:30 +0300, Luciano Coelho wrote:
-> Hi,
-> 
-> Here are a few more patches for wl18xx (or directly related to it).
-> Two of them align features and the ABI of newer firmware versions: the
-> new statistics structure format by Ido and the support for FW logger
-> by default with PG2.0 chips by Arik.
-> 
-> Then there are three more patches by Arik that improve the conf binary
-> handling.  Align the entire phy structure with the one used by the
-> firmware, fix the module parameters to reflect the new placement of
-> the settings (which are now in the conf structure) and make the NVS
-> file optional, in preparation for total removal from wl18xx.
-> 
-> Thanks guys for these patches!
-> 
-> Cheers,
-> Luca.
-> 
-> Arik Nemtsov (4):
->   wl18xx: allow FW-log by default for PG2.0
->   wl18xx: align wl18xx_conf_phy with FW variant and remove it
->   wl18xx: clean up phy module parameters
->   wlcore/wl12xx/wl18xx: make NVS file optional for wl18xx
-> 
-> Ido Reis (1):
->   wl18xx: update fw statistics
-> 
->  drivers/net/wireless/ti/wl18xx/acx.h     |   33 ++++--
->  drivers/net/wireless/ti/wl18xx/conf.h    |   37 ++++++-
->  drivers/net/wireless/ti/wl18xx/debugfs.c |   56 ++++++----
->  drivers/net/wireless/ti/wl18xx/main.c    |  165 +++++++++++-------------------
->  drivers/net/wireless/ti/wl18xx/reg.h     |   57 -----------
->  drivers/net/wireless/ti/wl18xx/wl18xx.h  |    2 -
->  drivers/net/wireless/ti/wlcore/boot.c    |    4 +-
->  drivers/net/wireless/ti/wlcore/main.c    |   22 ++--
->  8 files changed, 166 insertions(+), 210 deletions(-)
+This is a RT3070 based device.
 
-Applied and pushed!
+Signed-off-by: Jeongdo Son <sohn9086@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+ 1 file changed, 1 insertion(+)
 
---
-Luca.
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index cb71e88..9c08399 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -922,6 +922,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0411, 0x0158) },
+ 	{ USB_DEVICE(0x0411, 0x016f) },
+ 	{ USB_DEVICE(0x0411, 0x01a2) },
++	{ USB_DEVICE(0x0411, 0x01ee) },
+ 	/* Corega */
+ 	{ USB_DEVICE(0x07aa, 0x002f) },
+ 	{ USB_DEVICE(0x07aa, 0x003c) },
+-- 
+1.7.9.5
 
