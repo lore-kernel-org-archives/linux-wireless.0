@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50874 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932732Ab2F1Iy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 04:54:57 -0400
-Message-ID: <4FEC1BDF.8080607@tieto.com> (sfid-20120628_105514_528253_80E3F9EB)
-Date: Thu, 28 Jun 2012 10:54:55 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:36564 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab2FNVaZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 17:30:25 -0400
+Received: by ghrr11 with SMTP id r11so1809346ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 14:30:24 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v3] initial channel context implementation
-References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>     <1340718188.14634.47.camel@jlt3.sipsolutions.net>     <4FEAB698.5070309@tieto.com>    <1340784614.8305.8.camel@jlt3.sipsolutions.net>    <4FEADCAE.5080508@tieto.com>   <1340795424.11012.11.camel@jlt3.sipsolutions.net>   <4FEAFFF1.7080706@tieto.com>  <1340805730.11012.33.camel@jlt3.sipsolutions.net>  <4FEC015B.4020603@tieto.com> <1340871351.4491.19.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340871351.4491.19.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1339696366-26970-3-git-send-email-ozancag@gmail.com>
+References: <1339696366-26970-1-git-send-email-ozancag@gmail.com> <1339696366-26970-3-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 14 Jun 2012 14:30:02 -0700
+Message-ID: <CAB=NE6UPXy7WFSX5FP0vBEOUgApkZxQ9P0T4dNyUy0mVEks+8Q@mail.gmail.com> (sfid-20120614_233028_808620_DFDEBC64)
+Subject: Re: [PATCH 3/3] compat: Backport fault_in_multipages_{writeable,readable}
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2012-06-28 at 09:01 +0200, Michal Kazior wrote:
->
->>>> Hmm.. Yeah we need to now, sort of. FullMAC drivers could suffer, but we
->>>> could drop connections upon CSA in mac80211 for the time being.
->>>>
->>>> cfg80211 could provide:
->>>>     * cfg80211_sta_can_switch_chan
->>>>     * cfg80211_sta_ch_switch_notify
->>>>
->>>> mac80211 could then be able to know whether num_different_channels has
->>>> been reached (cfg80211_sta_can_switch_chan) and eventually notify upon
->>>> channel switch (cfg80211_sta_ch_switch_notify).
->>>>
->>>> Channel switch would happen if either:
->>>>     * cfg80211_sta_can_switch_chan is true
->>>>     * channel context for target CSA channel already exists
->>>>
->>>> I'm just unsure about the current_bss thing - whether we should e.g.
->>>> initiate a scan to update it, or can we shamelessly update the channel
->>>> in the structure directly?
->>>
->>> Today mac80211 just updates it, yeah.
->>
->> Should I send the ,,respect channels in iface combinations'' as a
->> [PATCH] now, or should the CSA issue (in cfg80211) be addressed first?
->
-> Good question. Even if we don't do CSA first, I guess we don't really
-> break anything right now, do we? And if the driver/mac80211 just changes
-> the channel, that means it could seem to go over the limit of 1 channel
-> but things just break down like they do today?
-
-Yeah, probably. We might end up in a funny state (e.g. rejecting some 
-actions which would otherwise be possible) after doing CSA until we 
-disconnect.
-
-
-> I guess I'd like to have the CSA stuff addressed, but it seems we
-> haven't really closed on the best way yet, and I don't want to hold off
-> your work for it for too long?
-
-If you're okay with that then I'll just send out the [PATCH].
-
-
--- 
-Pozdrawiam / Best regards, Michal Kazior.
-
+T24gVGh1LCBKdW4gMTQsIDIwMTIgYXQgMTA6NTIgQU0sIE96YW4gw4dhxJ9sYXlhbiA8b3phbmNh
+Z0BnbWFpbC5jb20+IHdyb3RlOgo+IFRoaXMgYmFja3BvcnRzOgo+Cj4gY29tbWl0IGY1NmY4MjFm
+ZWI3YjM2MjIzZjMwOWUwZWMwNTk4NmJiMTM3Y2U0MTgKPiBBdXRob3I6IERhbmllbCBWZXR0ZXIg
+PGRhbmllbC52ZXR0ZXJAZmZ3bGwuY2g+Cj4gRGF0ZTogwqAgU3VuIE1hciAyNSAxOTo0Nzo0MSAy
+MDEyICswMjAwCj4KPiDCoCDCoG1tOiBleHRlbmQgcHJlZmF1bHQgaGVscGVycyB0byBmYXVsdCBp
+biBtb3JlIHRoYW4gUEFHRV9TSVpFCj4KPiBUaGUgbmV3IGZ1bmN0aW9ucyBhcmUgdXNlZCBieSBk
+cm0vaTkxNSBkcml2ZXIuCj4KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIDMuNC4wLTAzMDQwMC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMy4zLjctMDMwMzA3LWdlbmVyaWMgwqBbT0tdCj4gVHJ5
+aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAzLjIuMi0wMzAyMDItZ2Vu
+ZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+My4xLjEwLTAzMDExMC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAzLjAuMTgtMDMwMDE4LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+IFRy
+eWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzktMDIwNjM5MDQtZ2Vu
+ZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42
+LjM4LTAyMDYzODA4LWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoDIuNi4zNy0wMjA2MzcwNi1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJu
+ZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzYtMDIwNjM2MDQtZ2VuZXJpYyDCoFtP
+S10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42LjM1LTAyMDYz
+NTEyLWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoDIuNi4zNC0wMjA2MzQxMC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzMtMDIwNjMzMDUtZ2VuZXJpYyDCoFtPS10KPiBUcnlp
+bmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42LjMyLTAyMDYzMjU1LWdlbmVy
+aWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4z
+MS0wMjA2MzExMy1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAyLjYuMzAtMDIwNjMwMTAtZ2VuZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVs
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42LjI5LTAyMDYyOTA2LWdlbmVyaWMgwqBbT0td
+Cj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4yOC0wMjA2Mjgx
+MC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAyLjYuMjctMDIwNjI3LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+IFRyeWluZyBrZXJuZWwg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMjYtMDIwNjI2LWdlbmVyaWMgwqAgwqAg
+wqAgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYu
+MjUtMDIwNjI1LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMjQtMDIwNjI0LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+
+Cj4gU2lnbmVkLW9mZi1ieTogT3phbiDDh2HEn2xheWFuIDxvemFuY2FnQGdtYWlsLmNvbT4KPiAt
+LS0KCkFwcGxpZWQgYWxsIDMgYW5kIHB1c2hlZCwgdGhhbmtzIQoKICBMdWlzCg==
