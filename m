@@ -1,64 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4181 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760090Ab2FGTeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 15:34:36 -0400
-Message-ID: <4FD1023D.4040604@broadcom.com> (sfid-20120607_213440_503845_73942474)
-Date: Thu, 7 Jun 2012 21:34:21 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from www19.servergod.com ([64.89.16.20]:51720 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755394Ab2FNS04 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 14:26:56 -0400
+Message-ID: <4FDA2CED.8090303@opentechinstitute.org> (sfid-20120614_202659_531023_FA7A0F57)
+Date: Thu, 14 Jun 2012 14:26:53 -0400
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 13/18] brcmsmac: add some workarounds for other
- chips again
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-14-git-send-email-hauke@hauke-m.de>
- <4FCF2AF1.8020200@broadcom.com> <4FD0B062.1080606@hauke-m.de>
-In-Reply-To: <4FD0B062.1080606@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Subject: Re: [PATCH] mac80211: add support for userspace to handle auth frames
+ on adhoc ifaces
+References: <4FD8B5D4.8060305@opentechinstitute.org>    <4FD99A24.3020907@lri.fr> <1339673095.4461.2.camel@jlt3.sipsolutions.net>   <4FD9DD35.4070709@lri.fr> <1339692819.9786.4.camel@jlt3.sipsolutions.net>  <4FDA179F.1020501@opentechinstitute.org> <1339693721.9786.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339693721.9786.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 03:45 PM, Hauke Mehrtens wrote:
-> On 06/06/2012 12:03 PM, Arend van Spriel wrote:
->> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->>> This adds some workarounds for the BCM4716, BCM47162, BCM43421, BCM5357
->>> and BCM6362 to the phy code again. This patch reverts the following
+
+
+On 06/14/2012 01:08 PM, Johannes Berg wrote:
+> On Thu, 2012-06-14 at 12:55 -0400, Will Hawkins wrote:
 >>
->> Has brcmsmac been tested for all these chips? At this moment I do not
->> have any bandwidth to do that. I am not too comfortable adding this code
->> without having some testing coverage. It was the reason to remove the
->> snippets from brcmsmac.
-> I have just tested BCM4716 and BCM5357, BCM5357 is not working. ;-)
-> I do not have all the devices to test this and for the BCM6362 some
-> infrastructure code is still missing.
-> The adding of the BCM5357 is part of my start adding support for that
-> chip, which is not complete. As the device detection code in brcmsmac
-> is not changed in this commit, no more devices are detected by brcmsmac
-> now. I talked to Jonas Gorski about the BCM6362 and he thinks about
-> adding support for that device to the Linux kernel in some time.
-
-Yes. Jonas tested brcmsmac on bcm6362 host during our mainlining days.
-
-> I could reduce the code into adding support for the BCM4716 and BCM5357
-> if that is fine with you and if someone else wants to add support for
-> some other chip in the future he has to add the code again.
-
-I prefer that over adding the code untested even if it is not yet active
-code so please do.
-
+>> On 06/14/2012 12:53 PM, Johannes Berg wrote:
+>>> On Thu, 2012-06-14 at 14:46 +0200, Nicolas Cavallari wrote:
+>>>> On 14/06/2012 13:24, Johannes Berg wrote:
+>>>>> On Thu, 2012-06-14 at 10:00 +0200, Nicolas Cavallari wrote:
+>>>>>
+>>>>>> I just have a question here : when auth frames are not delivered to
+>>>>>> userspace, mac80211 will respond to them, and also uses them to detect
+>>>>>> node reboot. If you register for auth frames, mac80211 will still send
+>>>>>> auth frames as soon as a new station is seen, which might be confusing
+>>>>>> for user space. Is that ok to do this ? Or should userspace have more
+>>>>>> control over how mac80211 sends auth frames ?
+>>>>>
+>>>>> Please read the code. If userspace registers for them, mac80211 will
+>>>>> never do anything with the frame.
+>>>>
+>>>> I didn't say the contrary. But if you read ieee80211_ibss_finish_sta(),
+>>>> you see that mac80211 sends auth frames to each discovered station, even
+>>>> if userspace want to handle auth frames. This seems strange to be able
+>>>> to receive and handle auth frames from userspace while mac80211 sends
+>>>> them behind userspace's back.
+>>>
+>>> Oops, sorry, yes. I forgot all about that code!
+>>>
+>>> I suppose we'd have to check whether userspace is handling
+>>> authentication?
 >>
->>> patch expect the part with the workaround for the BCM43236, which is an
->>> usb chip and will be unsupported by brcmsmac.
->>
->> 'expect' should be 'except'. Indeed, BCM43236 is a fullmac usb chip and
->> as such supported by brcmfmac.
-> Yes that's the reason I removed it here because this will never be
-> supported by this code.
+>> Could use the control_port flag to check for that condition?
+> 
+> Not really, that's not necessarily the same thing -- I think we might
+> want to also allow to offload open auth to userspace.
+> 
+> I think it wouldn't be difficult to notify mac80211 about frame
+> registrations so it can keep track for this purpose?
+> 
+> johannes
 
-Agree.
+I am happy to code something like this up. I've already taken a look at
+it and don't think it will be too big of a problem. I am going to be AFK
+until Monday so I won't get to it until then. I hope that's not a problem.
 
-Gr. AvS
+Will
 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
