@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:35777 "HELO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751704Ab2FGEO3 (ORCPT
+Received: from opensource.wolfsonmicro.com ([80.75.67.52]:53303 "EHLO
+	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755742Ab2FNMMh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 00:14:29 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/3] mwifiex: shorten per channel scan time
-Date: Wed,  6 Jun 2012 21:12:40 -0700
-Message-Id: <1339042362-30317-2-git-send-email-bzhao@marvell.com> (sfid-20120607_061434_393888_E9794312)
-In-Reply-To: <1339042362-30317-1-git-send-email-bzhao@marvell.com>
-References: <1339042362-30317-1-git-send-email-bzhao@marvell.com>
+	Thu, 14 Jun 2012 08:12:37 -0400
+Date: Thu, 14 Jun 2012 13:12:34 +0100
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, Wei Ni <wni@nvidia.com>,
+	Mursalin Akon <makon@nvidia.com>,
+	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Rakesh Kumar <krakesh@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: Where to power on the wifi device before loading the driver.
+Message-ID: <20120614121234.GC3913@opensource.wolfsonmicro.com> (sfid-20120614_141242_157793_CCA3AE63)
+References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
+ <4FD90352.9090606@wwwdotorg.org>
+ <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="NU0Ex4SbNnrxsi6C"
+In-Reply-To: <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the scan time per channel for active scanning is set to
-200ms. It takes quite a while to finsh scanning on all channels,
-especially with a dual band configuration.
 
-Change the per channel scan time settings to the following values:
+--NU0Ex4SbNnrxsi6C
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-passive scan: 110ms
-active scan: 30ms
-specific scan: 30ms
+On Thu, Jun 14, 2012 at 08:31:20AM +0200, Thierry Reding wrote:
+> On Wed, Jun 13, 2012 at 03:17:06PM -0600, Stephen Warren wrote:
 
-Above settings have been tested on x86 and arm platforms.
+> > The core of the issue is that:
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> > * Tegra30 support is via device tree.
+> > * We have an SDIO bus, and the WiFi device attached to that bus is
+> > enumerable.
+> > * Since the WiFi device is enumerable, no node exists in the DT to
+> > represent it.
+> > * However, the driver for the WiFi device needs certain information,
+> > such as the reset GPIO ID and perhaps power GPIO.
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index bd3b0bf..cbad00d 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -79,9 +79,9 @@ enum {
- 
- #define SCAN_BEACON_ENTRY_PAD			6
- 
--#define MWIFIEX_PASSIVE_SCAN_CHAN_TIME	200
--#define MWIFIEX_ACTIVE_SCAN_CHAN_TIME	200
--#define MWIFIEX_SPECIFIC_SCAN_CHAN_TIME	110
-+#define MWIFIEX_PASSIVE_SCAN_CHAN_TIME	110
-+#define MWIFIEX_ACTIVE_SCAN_CHAN_TIME	30
-+#define MWIFIEX_SPECIFIC_SCAN_CHAN_TIME	30
- 
- #define SCAN_RSSI(RSSI)					(0x100 - ((u8)(RSSI)))
- 
--- 
-1.7.0.2
+> PCI devices are also enumerable and yet they can be matched up with nodes in
+> the device tree. Perhaps something similar could be added for the SDIO bus?
 
+This seems to make the most sense - pushing this through the regulator
+API is just a bodge.
+
+--NU0Ex4SbNnrxsi6C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJP2dRnAAoJEBus8iNuMP3dZv8P/iRUNp/d1E9ekU/9muMqEHqN
+YuYrh5eoSB+n/Z5L3NhfNHooqJ4AGlxLKKaBYy1vuuonCvmzQzPhmVsR3EIjPqWS
+AGcNnmcg/Kwxw9JNiIpglRxBK6WLUyxN2ru9gll9y7/rDi5ghFwL/Y/Wjg4NqFaJ
+E8CqUraBHvWM0KFlOakj0Ho54/tLY5tQ1jjubIX6PJ2dTgEYObEoGPe6wdvd30dZ
+6MUgfZ5mpevjnCYk8s+Y1DGSkztlsbiMhMRU/op4cDlojCBg4Q1WzwgiLmq8RCEq
+1da0m6RpJEByMVmoT9lVa6iWweOV6iLnah9xTFIPS6dm6J/rNXkRu9TPDlkf1pK7
+MjyHLTjLNGYqjpAnqKbcYBsRcVjagIggxK96KqecFGMUxL8Sj4I/eG04Qug5SDfL
+xRQFXhyCpTkTDgg99nRw0gadt+FOI5VHXxO4fYQuiImO1eN2D7r76pVMC0qDjffv
+wDZjckI7UHqDsYZSNzv+gfWmwVTHT8NfuEhY0az7bxIyZ+1vbNgBd++Apyyu30XC
+5d+IG1BBLTmszZSkVMu52skbe7jg1cRcn6KQTsRDz+bJ2u50imPk8axdF2iPeL7Y
+6CDdxWFooC/lXfCHIUSp03ncdUSLCWY9KAiBw0r54S450wp7Xb+k8UvWq2HO1ql6
+H0xwR/e7wiWw8QuvBrIt
+=2m8d
+-----END PGP SIGNATURE-----
+
+--NU0Ex4SbNnrxsi6C--
