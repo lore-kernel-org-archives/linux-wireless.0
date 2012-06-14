@@ -1,59 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3094 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752929Ab2FUNt1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 09:49:27 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: [PATCH] brcmsmac: fix NULL pointer crash in brcms_c_regd_init()
-Date: Thu, 21 Jun 2012 15:49:13 +0200
-Message-ID: <1340286553-12053-1-git-send-email-arend@broadcom.com> (sfid-20120621_155001_233564_A47F7CD5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from h1355771.stratoserver.net ([85.214.105.140]:52715 "EHLO
+	h1355771.stratoserver.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732Ab2FNGue (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 02:50:34 -0400
+Date: Thu, 14 Jun 2012 07:45:45 +0200
+From: Andreas Kemnade <andreas@kemnade.info>
+To: hong zhang <henryzhang62@yahoo.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	dsd@laptop.org, libertas-dev@lists.infradead.org
+Subject: Re: poor performance with W2CBW003 (Marvell 8686)
+Message-ID: <20120614074545.105a459d@kemnade.info> (sfid-20120614_085037_174476_3BC3AC4E)
+In-Reply-To: <1339612748.69001.YahooMailClassic@web161703.mail.bf1.yahoo.com>
+References: <20120613194254.076268a8@kemnade.info>
+	<1339612748.69001.YahooMailClassic@web161703.mail.bf1.yahoo.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/hnLahwjvpLBeE9xYX093dB4";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the function brcms_c_regd_init() the channels are validated
-against the device capabilities. This is done for both 2.4G and
-5G band, but there are devices that are 2.4G only, ie. BCM4313.
-For that device this leads to a NULL dereference. This patch adds
-a check in brcms_c_regd_init() to fix this.
+--Sig_/hnLahwjvpLBeE9xYX093dB4
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Issue introduced in wireless-next tree by following commit:
-cf03c5d brcm80211: smac: inform mac80211 of the X2 regulatory domain
+Hi,
 
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Noticed that one of smoketest machines actually was not sending results
-ever since I staged regulatory fixes for it. This particular system has
-a 2.4G card fitted so the root cause was quickly found.
+On Wed, 13 Jun 2012 11:39:08 -0700 (PDT)
+hong zhang <henryzhang62@yahoo.com> wrote:
 
-Gr. AvS
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |    5 +++++
- 1 file changed, 5 insertions(+)
+> You have to identify problem caused by=20
+> SDIO host controller or wifi driver.
+>=20
+> If driver is working well in x86 with Roch SDIO, that means wifi driver i=
+s ok.=20
+>=20
+> You have to find out
+> 1. SDIO interface if using Interrupt or PIO
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index d3c7260..2d365d3 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -768,6 +768,11 @@ void brcms_c_regd_init(struct brcms_c_info *wlc)
- 			band = wlc->bandstate[BAND_2G_INDEX];
- 		else
- 			band = wlc->bandstate[BAND_5G_INDEX];
-+
-+		/* skip if band not initialized */
-+		if (band->pi == NULL)
-+			continue;
-+
- 		wlc_phy_chanspec_band_validch(band->pi, band->bandtype,
- 					      &sup_chan);
- 
--- 
-1.7.9.5
+Hmm, very interesting point, of course, there are interrupts. But after rea=
+ding
+the commit logs in the patched 2.6.32 kernel I see there is a patch enabling
+asynchronous *sdio* interrupts. That looks clearly suspicious.=20
 
+> 2. 1 bit or 4 bit
 
+Hmm, 4bit.
+
+Greetings
+Andreas Kemnade
+
+--Sig_/hnLahwjvpLBeE9xYX093dB4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAk/ZeooACgkQvUy8S31NDebPmgCeOZbPYKkwr8Xy7xhO2Ku/jysP
+qnUAnR65lNJ1eqFnWkNxiHCroJauERgK
+=nGiz
+-----END PGP SIGNATURE-----
+
+--Sig_/hnLahwjvpLBeE9xYX093dB4--
