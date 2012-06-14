@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:53436 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752126Ab2FFISE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21778 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562Ab2FNWEz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:18:04 -0400
-Received: by lbbgj10 with SMTP id gj10so4726748lbb.9
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:18:01 -0700 (PDT)
-Message-ID: <1338970679.7078.1.camel@cumari.coelho.fi> (sfid-20120606_101811_476499_EFFF4972)
-Subject: Re: [PATCH v2] wl12xx: fix fm_coex parameters configuration
-From: Luciano Coelho <coelho@ti.com>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com
-Date: Wed, 06 Jun 2012 11:17:59 +0300
-In-Reply-To: <1336658913-11396-1-git-send-email-victorg@ti.com>
-References: <1336658913-11396-1-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Jun 2012 18:04:55 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Message-ID: <20442.24505.509266.393452@gargle.gargle.HOWL> (sfid-20120615_000459_190355_45A29452)
+Date: Fri, 15 Jun 2012 03:33:37 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>, <c_manoha@qca.qualcomm.com>,
+	<thomas@net.t-labs.tu-berlin.de>
+Subject: [PATCH 3.5] ath9k: fix invalid pointer access in the tx path
+In-Reply-To: <1339709262-59805-1-git-send-email-nbd@openwrt.org>
+References: <1339709262-59805-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 17:08 +0300, Victor Goldenshtein wrote:
-> Wrong fm_coex parameters were set during wl12xx
-> init phase, fix it.
+Felix Fietkau wrote:
+> After setup_frame_info has been called, only info->control.rates is still
+> valid, other control fields have been overwritten by the ath_frame_info
+> data. Move the access to info->control.vif for checking short preamble
+> to setup_frame_info before it gets overwritten.
 > 
-> Signed-off-by: Ziv Riesel <zivriesel@ti.com>
-> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-> ---
+> This regression was introduced in commit d47a61aa
+> "ath9k: Fix multi-VIF BSS handling"
 > 
-> v2: changed the subject wlcore -> wl12xx
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Reported-by: Thomas Hühn <thomas@net.t-labs.tu-berlin.de>
+> Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> Cc: stable@vger.kernel.org [3.4]
 
-Applied and pushed, thanks!
+Acked-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
---
-Luca.
-
+Sujith
