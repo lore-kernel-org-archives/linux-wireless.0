@@ -1,35 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4427 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752403Ab2FFJpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 05:45:12 -0400
-Message-ID: <4FCF2698.6070401@broadcom.com> (sfid-20120606_114516_860984_00F47929)
-Date: Wed, 6 Jun 2012 11:44:56 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 10/18] brcmsmac: use chip and package id constants
- from bcma
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-11-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338937641-8519-11-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:39180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756578Ab2FNSij (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 14:38:39 -0400
+Message-ID: <1339699110.9786.9.camel@jlt3.sipsolutions.net> (sfid-20120614_203846_395420_1F3EE948)
+Subject: Re: [patch -next] iwlwifi: unlock on error path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Thu, 14 Jun 2012 20:38:30 +0200
+In-Reply-To: <20120614183526.GD6383@elgon.mountain> (sfid-20120614_203557_447921_E8796EB4)
+References: <20120614183526.GD6383@elgon.mountain>
+	 (sfid-20120614_203557_447921_E8796EB4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
+On Thu, 2012-06-14 at 21:35 +0300, Dan Carpenter wrote:
+> We introduced a lock here in ff1ffb850b ("iwlwifi: fix dynamic
+> loading").  But we missed an error path which needs an unlock.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |   10 ----------
->  drivers/net/wireless/brcm80211/brcmsmac/main.c     |   12 ++++++------
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   10 +++++-----
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   20 ++++++++++----------
->  drivers/net/wireless/brcm80211/brcmsmac/pmu.c      |   12 ++++++------
->  5 files changed, 27 insertions(+), 37 deletions(-)
+Thanks Dan. John, this is the other merge issue I was talking about :-)
 
+johannes
 
