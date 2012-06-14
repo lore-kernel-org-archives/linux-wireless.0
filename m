@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:40664 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754404Ab2FTNWh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 09:22:37 -0400
-Received: by eekd17 with SMTP id d17so2967370eek.22
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 06:22:35 -0700 (PDT)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:60623 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755724Ab2FNMJC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 08:09:02 -0400
+Received: by obbtb18 with SMTP id tb18so2333883obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 05:09:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1340180149.4655.23.camel@jlt3.sipsolutions.net>
-References: <1340173975-13609-1-git-send-email-victorg@ti.com>
-	<1340180149.4655.23.camel@jlt3.sipsolutions.net>
-Date: Wed, 20 Jun 2012 16:22:35 +0300
-Message-ID: <CAK80WHYa566m+K8TtRo6nvDQHd4J-1A5MD5y_N6_OJMVVnVMgA@mail.gmail.com> (sfid-20120620_152241_034353_F19066CF)
-Subject: Re: [PATCH v4] mac80211: add command to get current rssi
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <CAB3XZEfBzLBP48f930tcGbSZ=jqEkuNd9RDUJYEWQUDodczqeg@mail.gmail.com>
+References: <CAMJBoFN48EZ0Bh6wSwtHz950PMS-bUR30aHq0v2hXg3spKbHFA@mail.gmail.com>
+	<CAB3XZEfBzLBP48f930tcGbSZ=jqEkuNd9RDUJYEWQUDodczqeg@mail.gmail.com>
+Date: Thu, 14 Jun 2012 14:09:01 +0200
+Message-ID: <CAMJBoFMHD8ukfOTonYOt+1wxC+hQbK=XAQMj+wiPev4ZKGV2ew@mail.gmail.com> (sfid-20120614_140913_663290_A0F76E87)
+Subject: Re: bug in __ieee80211_suspend?
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 11:15 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-06-20 at 09:32 +0300, Victor Goldenshtein wrote:
+Hi Eliad,
+
+On Thu, Jun 14, 2012 at 1:42 PM, Eliad Peller <eliad@wizery.com> wrote:
+> hi Vitaly,
 >
->> +     trace_drv_get_rssi(local, sdata);
->> +     ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
->> +     trace_drv_return_int(local, ret);
+> On Thu, Jun 14, 2012 at 1:48 PM, Vitaly Wool <vitalywool@gmail.com> wrote:
+>> I have some doubts about the following patch: "mac80211: quiesce vif
+>> before suspending". In fact, I think it introduces a hard-to-track
+>> bug: when a driver signals disconnection from the AP and the device
+>> goes to sleep shortly thereafter, beacon_connection_loss_work will get
+>> cancelled and the actual disconnection will never happen. Shouldn't we
+>> fix that or is there something I'm missing?
+>>
 >
-> Where are you tracing the sta?
->
+> i think that flush_workqueue(local->workqueue) should handle the
+> normal disconnect-before-suspend case.
+> however, there's probably still some race condition when the work is
+> scheduled between the flush_workqueue() and the drv_suspend() call.
+> i'm not sure what is the right solution regarding it. maybe add
+> another flush_workqueue() after drv_suspend?
 
-We talked about print sta address with "local_sdata_addr_evt" event
-macro, the output looks like this:
+Maybe, but aren't we increasing the probability of hitting the 3s
+suspend timeout and thus crashing the system here?
 
-#           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
-#              | |       |                     ||||       |         |
-              iw-1394  [000]        ...1  1083.713867: drv_get_rssi:
-phy0 vif:wlan0(2) addr:08:00:28:cc:65:43
-              iw-1394  [000]        ...1  1083.729736: drv_return_int: phy0 - 0
+> additionally, i don't think that the patch itself is the issue here,
+> as without it beacon_connection_loss_work might run after mac80211 was
+> already suspended, which might result in unexpected outcome as well...
 
-> And why not trace the value returned in *rssi_dbm?
->
+Well, the patch is the issue because previously the driver could just
+stall the work and now it has no control over it.
 
-Is it really required ? there are various driver-ops which are "get
-stuff" without printing them in the tracer.
+I think there are two opportunities to look into:
 
--- 
+1. Freeze workqueues on suspend without flushing
+2. Reject suspend if an important work is pending (and yes, connection
+loss work *is* important!)
+
 Thanks,
-Victor.
+   Vitaly
