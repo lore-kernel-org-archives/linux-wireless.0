@@ -1,130 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36461 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753366Ab2FESdG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63803 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756359Ab2FNUVF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 14:33:06 -0400
-Date: Tue, 5 Jun 2012 14:24:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Seth Forshee <seth.forshee@gmail.com>
-Cc: Oleksij Rempel <bug-track@fisher-privat.net>,
-	b43-dev@lists.infradead.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] b43: do not call ieee80211_unregister_hw if we are
- not registred
-Message-ID: <20120605182410.GA1937@tuxdriver.com> (sfid-20120605_203311_061685_729B2685)
-References: <1338536240-4392-1-git-send-email-bug-track@fisher-privat.net>
- <1338536240-4392-2-git-send-email-bug-track@fisher-privat.net>
- <20120605164945.GB18176@thinkpad-t410>
+	Thu, 14 Jun 2012 16:21:05 -0400
+From: "Singh, Naveen" <navesing@qca.qualcomm.com>
+To: "Chadd, Adrian" <achadd@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+CC: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"victorg@ti.com" <victorg@ti.com>
+Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
+Date: Thu, 14 Jun 2012 20:21:01 +0000
+Message-ID: <43ED1A9ABC336248B5D371B7C9CCFB96016F339C@nasanexd02b.na.qualcomm.com> (sfid-20120614_222110_328837_86494BDD)
+References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1339566003.4519.1.camel@jlt3.sipsolutions.net>
+ <1339587447.3840.272.camel@cumari.coelho.fi>
+ <4FD87FEA.3070208@qca.qualcomm.com> <20120613205007.GB3043@pista>
+ <4FD984C1.8090903@qca.qualcomm.com>
+ <48EC4E8D43A28947B1AB2639FA97CDB90BECBC62@nasanexd02a.na.qualcomm.com>
+In-Reply-To: <48EC4E8D43A28947B1AB2639FA97CDB90BECBC62@nasanexd02a.na.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120605164945.GB18176@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Could someone repost a clean version to linux-wireless@vger.kernel.org?
+Fw memory is generally very limited. Maintaining the complete scan results is almost next to impossible. There are also other implications like taking care of duplicates, in case of similar taking the one with higher signal strength, for same AP taking care of size differences b/w probe response and beacon etc. 
 
-On Tue, Jun 05, 2012 at 11:49:45AM -0500, Seth Forshee wrote:
-> (I don't have access to the original message, so I appologize if any
->  Cc's were dropped. I added some additional Cc's.)
-> 
-> On Fri, Jun 01, 2012 at 09:37:20AM +0200, Oleksij Rempel wrote:
-> > this patch fixes kernel Oops on "rmmod b43" if firmware was not loaded:
-> > 
-> > BUG: unable to handle kernel NULL pointer dereference at 0000000000000088
-> > IP: [<ffffffff8104e988>] drain_workqueue+0x25/0x142
-> > PGD 153ac6067 PUD 153b82067 PMD 0
-> > Oops: 0000 [#1] SMP
-> > 
-> > Signed-off-by: Oleksij Rempel <bug-track-M18mAb7Tlt0yCq4wW13eYl6hYfS7NtTn@public.gmane.org>
-> 
-> This issue is affecting the Ubuntu installer, and I've verified the
-> patch fixes the problem on a Mac Mini 5,2.
-> 
-> Tested-by: Seth Forshee <seth.forshee@canonical.com>
-> 
-> This issue affects 3.4, probably introduced in 6b6fa58 (b43: Load
-> firmware from a work queue and not from the probe routine), so I'd
-> suggest a Cc for stable also be added.
-> 
-> > ---
-> >  drivers/net/wireless/b43/b43.h  |    4 ++++
-> >  drivers/net/wireless/b43/main.c |   19 ++++++++++++-------
-> >  2 files changed, 16 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-> > index 67c13af..c06b6cb 100644
-> > --- a/drivers/net/wireless/b43/b43.h
-> > +++ b/drivers/net/wireless/b43/b43.h
-> > @@ -877,6 +877,10 @@ struct b43_wl {
-> >  	 * from the mac80211 subsystem. */
-> >  	u16 mac80211_initially_registered_queues;
-> >  
-> > +	/* Set this if we call ieee80211_register_hw() and check if we call
-> > +	 * ieee80211_unregister_hw(). */
-> > +	bool hw_registred;
-> > +
-> >  	/* We can only have one operating interface (802.11 core)
-> >  	 * at a time. General information about this interface follows.
-> >  	 */
-> > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> > index e4d6dc2..747079b 100644
-> > --- a/drivers/net/wireless/b43/main.c
-> > +++ b/drivers/net/wireless/b43/main.c
-> > @@ -2437,6 +2437,7 @@ start_ieee80211:
-> >  	err = ieee80211_register_hw(wl->hw);
-> >  	if (err)
-> >  		goto err_one_core_detach;
-> > +	wl->hw_registred = true;
-> >  	b43_leds_register(wl->current_dev);
-> >  	goto out;
-> >  
-> > @@ -5283,6 +5284,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
-> >  
-> >  	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
-> >  	wl->mac80211_initially_registered_queues = hw->queues;
-> > +	wl->hw_registred = false;
-> >  	hw->max_rates = 2;
-> >  	SET_IEEE80211_DEV(hw, dev->dev);
-> >  	if (is_valid_ether_addr(sprom->et1mac))
-> > @@ -5354,12 +5356,15 @@ static void b43_bcma_remove(struct bcma_device *core)
-> >  	 * as the ieee80211 unreg will destroy the workqueue. */
-> >  	cancel_work_sync(&wldev->restart_work);
-> >  
-> > -	/* Restore the queues count before unregistering, because firmware detect
-> > -	 * might have modified it. Restoring is important, so the networking
-> > -	 * stack can properly free resources. */
-> > -	wl->hw->queues = wl->mac80211_initially_registered_queues;
-> > -	b43_leds_stop(wldev);
-> > -	ieee80211_unregister_hw(wl->hw);
-> > +	B43_WARN_ON(!wl);
-> > +	if (wl->current_dev == wldev && wl->hw_registred) {
-> > +		/* Restore the queues count before unregistering, because firmware detect
-> > +		 * might have modified it. Restoring is important, so the networking
-> > +		 * stack can properly free resources. */
-> > +		wl->hw->queues = wl->mac80211_initially_registered_queues;
-> > +		b43_leds_stop(wldev);
-> > +		ieee80211_unregister_hw(wl->hw);
-> > +	}
-> >  
-> >  	b43_one_core_detach(wldev->dev);
-> >  
-> > @@ -5430,7 +5435,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
-> >  	cancel_work_sync(&wldev->restart_work);
-> >  
-> >  	B43_WARN_ON(!wl);
-> > -	if (wl->current_dev == wldev) {
-> > +	if (wl->current_dev == wldev && wl->hw_registred) {
-> >  		/* Restore the queues count before unregistering, because firmware detect
-> >  		 * might have modified it. Restoring is important, so the networking
-> >  		 * stack can properly free resources. */
-> > -- 
-> > 1.7.9.5
-> > 
-> 
+Passing the results as you receive avoids lot of these complications.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards
+Naveen
+
+-----Original Message-----
+From: Chadd, Adrian 
+Sent: Thursday, June 14, 2012 12:40 PM
+To: Valo, Kalle; Pedersen, Thomas
+Cc: Luciano Coelho; Johannes Berg; ath6kl-devel; linux-wireless@vger.kernel.org; victorg@ti.com
+Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
+
+Why then doesn't the host just stay asleep and let the firmware aggregate some scan results, and then fire those up in one message, waking the host up only once?
+
+
+
+Adrian
+
+-----Original Message-----
+From: Valo, Kalle
+Sent: Wednesday, June 13, 2012 11:29 PM
+To: Pedersen, Thomas
+Cc: Luciano Coelho; Johannes Berg; ath6kl-devel; linux-wireless@vger.kernel.org; victorg@ti.com
+Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
+
+On 06/13/2012 11:50 PM, Pedersen, Thomas wrote:
+> On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
+>
+>> Funnily enough I don't have any idea how ath6kl has implemented this 
+>> feature, but in theory this feature is useful also for the current 
+>> normal scan (when the firmware/hardware supports it) as we can avoid 
+>> host wakeups. If there are 10 APs, but all are below the RSSI 
+>> threshold, we will have only 1 host wakeup (scan ready event) opposed 
+>> to 11 wakeups
+>> (10 AP found events plus 1 scan ready event).
+> 
+> But can the host even sleep on normal scans?
+
+It's "implementation defined", the good ones can and bad ones can't :)
+
+But from our (wireless developer) perspective we don't need to care about that, our job is to minimise all possible host wakeup events (timers, interrupts etc) as much as possible. That will allow the host to sleep more.
+
+Kalle
