@@ -1,86 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60987 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756563Ab2FYMuy (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:59728 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932306Ab2FNQ4C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 08:50:54 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Sj8km-0002mm-UI
-	for linux-wireless@vger.kernel.org; Mon, 25 Jun 2012 14:50:53 +0200
-Message-ID: <1340628649.4485.0.camel@jlt3.sipsolutions.net> (sfid-20120625_145135_903697_1A290E60)
-Subject: [PATCH] mac80211_hwsim: fix smatch/sparse complaints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 25 Jun 2012 14:50:49 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Jun 2012 12:56:02 -0400
+Message-ID: <4FDA179F.1020501@opentechinstitute.org> (sfid-20120614_185618_345813_45871920)
+Date: Thu, 14 Jun 2012 12:55:59 -0400
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add support for userspace to handle auth frames
+ on adhoc ifaces
+References: <4FD8B5D4.8060305@opentechinstitute.org>   <4FD99A24.3020907@lri.fr> <1339673095.4461.2.camel@jlt3.sipsolutions.net>  <4FD9DD35.4070709@lri.fr> <1339692819.9786.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1339692819.9786.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The code is fine in both cases as-is, but we can
-write it slightly differently to fix smatch/sparse
-complaints:
- * compare the skb pointer (which we use as a cookie)
-   by casting the skb to unsigned long rather than the
-   cookie to a pointer (fixes "different address spaces")
- * when transmitting, data->channel must be assigned,
-   don't check it (fixes "dereferenced before check")
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-(will commit to mac80211-next unless somebody objects?)
-
- drivers/net/wireless/mac80211_hwsim.c |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index bd63501..ab106d6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -678,8 +678,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 			continue;
- 
- 		if (data2->idle || !data2->started ||
--		    !hwsim_ps_rx_ok(data2, skb) ||
--		    !data->channel || !data2->channel ||
-+		    !hwsim_ps_rx_ok(data2, skb) || !data2->channel ||
- 		    data->channel->center_freq != data2->channel->center_freq ||
- 		    !(data->group & data2->group))
- 			continue;
-@@ -1486,7 +1485,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	struct mac80211_hwsim_data *data2;
- 	struct ieee80211_tx_info *txi;
- 	struct hwsim_tx_rate *tx_attempts;
--	struct sk_buff __user *ret_skb;
-+	unsigned long ret_skb_ptr;
- 	struct sk_buff *skb, *tmp;
- 	struct mac_address *src;
- 	unsigned int hwsim_flags;
-@@ -1504,8 +1503,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 				   info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
- 	hwsim_flags = nla_get_u32(info->attrs[HWSIM_ATTR_FLAGS]);
- 
--	ret_skb = (struct sk_buff __user *)
--		  (unsigned long) nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
-+	ret_skb_ptr = nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
- 
- 	data2 = get_hwsim_data_ref_from_addr(src);
- 
-@@ -1514,7 +1512,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 
- 	/* look for the skb matching the cookie passed back from user */
- 	skb_queue_walk_safe(&data2->pending, skb, tmp) {
--		if (skb == ret_skb) {
-+		if ((unsigned long)skb == ret_skb_ptr) {
- 			skb_unlink(skb, &data2->pending);
- 			found = true;
- 			break;
--- 
-1.7.10
 
 
+On 06/14/2012 12:53 PM, Johannes Berg wrote:
+> On Thu, 2012-06-14 at 14:46 +0200, Nicolas Cavallari wrote:
+>> On 14/06/2012 13:24, Johannes Berg wrote:
+>>> On Thu, 2012-06-14 at 10:00 +0200, Nicolas Cavallari wrote:
+>>>
+>>>> I just have a question here : when auth frames are not delivered to
+>>>> userspace, mac80211 will respond to them, and also uses them to detect
+>>>> node reboot. If you register for auth frames, mac80211 will still send
+>>>> auth frames as soon as a new station is seen, which might be confusing
+>>>> for user space. Is that ok to do this ? Or should userspace have more
+>>>> control over how mac80211 sends auth frames ?
+>>>
+>>> Please read the code. If userspace registers for them, mac80211 will
+>>> never do anything with the frame.
+>>
+>> I didn't say the contrary. But if you read ieee80211_ibss_finish_sta(),
+>> you see that mac80211 sends auth frames to each discovered station, even
+>> if userspace want to handle auth frames. This seems strange to be able
+>> to receive and handle auth frames from userspace while mac80211 sends
+>> them behind userspace's back.
+> 
+> Oops, sorry, yes. I forgot all about that code!
+> 
+> I suppose we'd have to check whether userspace is handling
+> authentication?
 
+Could use the control_port flag to check for that condition?
+
+> 
+>>>> There is also another thing to consider if you want to send auth frames
+>>>> from userspace, as CMD_FRAME requires a frequency, which in IBSS mode,
+>>>> can change anytime without userspace being notified. If you only have to
+>>>> answer to received auth frames, this is easier as you can reuse the
+>>>> frequency given by nl80211 when receiving the auth frame. But if you
+>>>> want to send a auth frame independently, how do you get the frequency to
+>>>> use ?
+>>>
+>>> You check the BSS info, that's trivial.
+>>
+>> There is no GET_BSS from userspace. when merging IBSS, only the new
+>> BSSID is notified. The only way to get this info from userspace would be
+>> to dump the scan result and check the "we joined that ibss" flag, and
+>> this isn't race-free. That, or using fixed_freq.
+> 
+> Yeah, I guess that's true -- we should probably just allow not giving a
+> frequency attribute at all and then it only works if you're
+> connected/... but uses the right frequency.
+> 
+> johannes
+> 
+> 
