@@ -1,143 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:58324 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750982Ab2FOIgT (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:52728 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756580Ab2FNRXB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 04:36:19 -0400
-Received: by lagw12 with SMTP id w12so1729643lag.38
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 01:36:16 -0700 (PDT)
-Message-ID: <1339749374.4502.80.camel@cumari.coelho.fi> (sfid-20120615_103643_839154_C4E57EF4)
-Subject: Re: [PATCH wireless-next 18/20] ti: Use pr_<level>
-From: Luciano Coelho <coelho@ti.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Fri, 15 Jun 2012 11:36:14 +0300
-In-Reply-To: <a4533db379be3689e3b29ed9b0d170263d875f7d.1339739416.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
-	 <a4533db379be3689e3b29ed9b0d170263d875f7d.1339739416.git.joe@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Jun 2012 13:23:01 -0400
+Received: by obbtb18 with SMTP id tb18so2679093obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 10:23:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339694227.9786.7.camel@jlt3.sipsolutions.net>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	<4FD21C6B.5000402@lwfinger.net>
+	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	<4FD22727.7000500@lwfinger.net>
+	<1339180580.5748.32.camel@jlt3.sipsolutions.net>
+	<1339180948.5748.35.camel@jlt3.sipsolutions.net>
+	<1339182289.5748.36.camel@jlt3.sipsolutions.net>
+	<1339576294.4519.17.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
+	<1339602402.4519.48.camel@jlt3.sipsolutions.net>
+	<20120613204230.474d1b6c@milhouse>
+	<CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com>
+	<1339691877.9786.0.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9XNO5roFZNETAgs8_5OLymCaKNcTU1XUsc2fXBu+4kpg@mail.gmail.com>
+	<1339693777.9786.6.camel@jlt3.sipsolutions.net>
+	<1339694227.9786.7.camel@jlt3.sipsolutions.net>
+Date: Thu, 14 Jun 2012 19:23:00 +0200
+Message-ID: <CAHsu+b85rvSsGBfJQFFjdMhrF=Ycw0+pxxjf=U=xA2Or2q9jXQ@mail.gmail.com> (sfid-20120614_192306_387636_8F9F1BAF)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+From: Andre Heider <a.heider@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+On Thu, Jun 14, 2012 at 7:17 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-06-14 at 19:09 +0200, Johannes Berg wrote:
+>> On Thu, 2012-06-14 at 19:00 +0200, Andre Heider wrote:
+>>
+>> > > http://p.sipsolutions.net/9c830800d14f3ff8.txt
+>> >
+>> > This still oopses: if (!modparam_qos || wldev->fw.opensource)
+>> >
+>> > I do get a working wlan0 if I force "hw->queues = 1;" without that
+>> > offending line, but just a `dmesg` over wlan+ssh yields another one
+>> > (prolly the same one I already described on an older patch):
+>> > http://i.imgur.com/epdRF.jpg
+>>
+>> Doh, of course, I still have wldev ... I'm in a meeting now, will check
+>> again later.
+>
+> Let's just move the hw->queues setup ...
+>
+> http://p.sipsolutions.net/e45e57bbc9509e69.txt
 
-On Thu, 2012-06-14 at 22:53 -0700, Joe Perches wrote:
-> Use a more current logging style.
-> 
-> Convert printks to pr_<level>.
-> Coalesce formats, align arguments.
-> 
-> Add newlines to calls, remove from macros.
-> Remove unnecessary duplicate newlines from calls.
-> Remove spaces before newlines.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
-
-As Johannes already mentioned, I have to also ask why do you need to do
-this? I see the point, slightly, with the wl1251 code, because it is
-still using printks, but with wlcore and friends, there's no functional
-change.
-
-[...]
-
-> diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
-> index 9d8f581..e4d0063 100644
-> --- a/drivers/net/wireless/ti/wl1251/wl1251.h
-> +++ b/drivers/net/wireless/ti/wl1251/wl1251.h
-> @@ -54,22 +54,22 @@ enum {
->  
->  #define DEBUG_DUMP_LIMIT 1024
->  
-> -#define wl1251_error(fmt, arg...) \
-> -	printk(KERN_ERR DRIVER_PREFIX "ERROR " fmt "\n", ##arg)
-> +#define wl1251_err(fmt, arg...)				\
-> +	pr_err(DRIVER_PREFIX "ERROR " fmt, ##arg)
->  
-> -#define wl1251_warning(fmt, arg...) \
-> -	printk(KERN_WARNING DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
-> +#define wl1251_warn(fmt, arg...)				\
-> +	pr_warn(DRIVER_PREFIX "WARNING " fmt, ##arg)
->  
-> -#define wl1251_notice(fmt, arg...) \
-> -	printk(KERN_INFO DRIVER_PREFIX fmt "\n", ##arg)
-> +#define wl1251_notice(fmt, arg...)		\
-> +	pr_info(DRIVER_PREFIX fmt, ##arg)
->  
-> -#define wl1251_info(fmt, arg...) \
-> -	printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg)
-> +#define wl1251_info(fmt, arg...)				\
-> +	printk(KERN_DEBUG DRIVER_PREFIX fmt, ##arg)
->  
->  #define wl1251_debug(level, fmt, arg...) \
-> -	do { \
-> +	do {				 \
->  		if (level & DEBUG_LEVEL) \
-> -			printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg); \
-> +			printk(KERN_DEBUG DRIVER_PREFIX fmt, ##arg); \
->  	} while (0)
-
-As mentioned above, this change here is acceptable, but removing the \n
-from the macro and adding it at the end of each and every call is
-useless and will just skew git-blame and make it harder to do rebase or
-apply patches because of conflicts.
-
-[...]
-
-> diff --git a/drivers/net/wireless/ti/wlcore/debug.h b/drivers/net/wireless/ti/wlcore/debug.h
-> index 6b800b3..83b72c2 100644
-> --- a/drivers/net/wireless/ti/wlcore/debug.h
-> +++ b/drivers/net/wireless/ti/wlcore/debug.h
-> @@ -61,22 +61,22 @@ extern u32 wl12xx_debug_level;
->  
->  #define DEBUG_DUMP_LIMIT 1024
->  
-> -#define wl1271_error(fmt, arg...) \
-> -	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg)
-> +#define wl1271_err(fmt, arg...)				\
-> +	pr_err(DRIVER_PREFIX "ERROR " fmt, ##arg)
->  
-> -#define wl1271_warning(fmt, arg...) \
-> -	pr_warning(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
-> +#define wl1271_warn(fmt, arg...)				\
-> +	pr_warn(DRIVER_PREFIX "WARNING " fmt, ##arg)
-
-Using pr_warn instead of pr_warning is pointless.  pr_warning is the
-main definition, actually, and pr_warn is just a "mirror".
-
-
-> -#define wl1271_notice(fmt, arg...) \
-> -	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
-> +#define wl1271_notice(fmt, arg...)		\
-> +	pr_info(DRIVER_PREFIX fmt, ##arg)
->  
-> -#define wl1271_info(fmt, arg...) \
-> -	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
-> +#define wl1271_info(fmt, arg...)		\
-> +	pr_info(DRIVER_PREFIX fmt, ##arg)
->  
-> -#define wl1271_debug(level, fmt, arg...) \
-> -	do { \
-> +#define wl1271_debug(level, fmt, arg...)	\
-> +	do {					\
->  		if (level & wl12xx_debug_level) \
-> -			pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
-> +			pr_debug(DRIVER_PREFIX fmt, ##arg); \
->  	} while (0)
-
-Again, moving the \n from the macro definition and changing all the
-callers is an unnecessary, intrusive change.
-
-We have wanted to change "wl1271" to "wl12xx" for a long time, but we
-don't do it exactly because this means we need to change the calls
-everywhere.
-
-So, this is a NACK from me, unless you have a really good reason why
-this change is needed.
-
---
-Luca.
-
+No oops during loading the fw or bringing the device up, but same
+crash as in the picture above ;)
