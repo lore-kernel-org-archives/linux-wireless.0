@@ -1,72 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41780 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210Ab2FORhD (ORCPT
+Received: from nm18-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.138]:38434 "HELO
+	nm18-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754352Ab2FNQgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 13:37:03 -0400
-Date: Fri, 15 Jun 2012 23:08:16 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>, <c_manoha@qca.qualcomm.com>
-Subject: Re: [PATCH 2/9] ath9k_hw: fix OFDM weak signal detection handling
-Message-ID: <20120615173814.GA648@vmraj-lnx.qca.qualcomm.com> (sfid-20120615_193709_064658_07CAC1C8)
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
- <1339766727-61926-2-git-send-email-nbd@openwrt.org>
+	Thu, 14 Jun 2012 12:36:10 -0400
+Message-ID: <1339691433.76573.YahooMailClassic@web161705.mail.bf1.yahoo.com> (sfid-20120614_183614_098557_9F4F0A6D)
+Date: Thu, 14 Jun 2012 09:30:33 -0700 (PDT)
+From: hong zhang <henryzhang62@yahoo.com>
+Subject: Re: poor performance with W2CBW003 (Marvell 8686)
+To: Andreas Kemnade <andreas@kemnade.info>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	dsd@laptop.org, libertas-dev@lists.infradead.org
+In-Reply-To: <1339690266.19412.YahooMailClassic@web161704.mail.bf1.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1339766727-61926-2-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 15, 2012 at 03:25:20PM +0200, Felix Fietkau wrote:
-> Commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
-> was unifying some code related to overriding OFDM weak signal detection,
-> but seems to have gotten some of the original intent wrong, probably
-> because of a misnamed variable.
-> 
-> The beacon RSSI is only valid in station mode, and the main reason to check
-> it in ath9k_hw_set_ofdm_nil is to make sure that OFDM weak signal detection
-> stays enabled if the RSSI is low, even when the OFDM noise immunity entry
-> is supposed to disable it.
-> 
-> The above commit removed the mode checks and changed the code so that
-> OFDM weak signal detection would only be changed if the rssi is high, which
-> is wrong for everything but client mode.
-> 
-> This patch restores the old behavior in a simplified form.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ani.c |   11 +++++++----
->  1 files changed, 7 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-> index 18ce69d..cf31050 100644
-> --- a/drivers/net/wireless/ath/ath9k/ani.c
-> +++ b/drivers/net/wireless/ath/ath9k/ani.c
-> @@ -265,6 +265,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
->  	struct ath_common *common = ath9k_hw_common(ah);
->  	const struct ani_ofdm_level_entry *entry_ofdm;
->  	const struct ani_cck_level_entry *entry_cck;
-> +	bool weak_sig;
->  
->  	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
->  		aniState->ofdmNoiseImmunityLevel,
-> @@ -290,13 +291,15 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
->  				     ATH9K_ANI_FIRSTEP_LEVEL,
->  				     entry_ofdm->fir_step_level);
->  
-> -	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
-> -	    (!aniState->ofdmWeakSigDetectOff !=
-> -	     entry_ofdm->ofdm_weak_signal_on)) {
-> +	weak_sig = entry_ofdm->ofdm_weak_signal_on;
-> +	if (ah->opmode == NL80211_IFTYPE_STATION &&
-> +	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
-> +		weak_sig = true;
-> +
-> +	if (!aniState->ofdmWeakSigDetectOff != weak_sig)
+Actually, you have to check SDIO driver done by TI.
+There are 5 SDIO pins need to check. 4 data pins and one clock pin.
 
-beacon rssi is updated and used in both station and ibss mode. isn't it?
+Double check the SDIO pins muxs and clock rate using TI reference manual.
 
--Rajkumar
+By performance issues.
+1. bit modes 1 or 4
+2. interrupt/PIO
+3. SDIO clock rate
+
+Command 52 and 53 are important.
+See this link for SDIO reference.
+http://www.sandisk.com/Assets/File/OEM/Manuals/SD_SDIO_specsv1.pdf
+
+--- On Thu, 6/14/12, hong zhang <henryzhang62@yahoo.com> wrote:
+
+> From: hong zhang <henryzhang62@yahoo.com>
+> Subject: Re: poor performance with W2CBW003 (Marvell 8686)
+> To: "Andreas Kemnade" <andreas@kemnade.info>
+> Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org, dsd@laptop.org, libertas-dev@lists.infradead.org
+> Date: Thursday, June 14, 2012, 11:11 AM
+> bit mode and interrupt or PIO are
+> configured in SDIO hoster side.
+> Not in driver side.
+> 
+> --- On Thu, 6/14/12, Andreas Kemnade <andreas@kemnade.info>
+> wrote:
+> 
+> > From: Andreas Kemnade <andreas@kemnade.info>
+> > Subject: Re: poor performance with W2CBW003 (Marvell
+> 8686)
+> > To: "hong zhang" <henryzhang62@yahoo.com>
+> > Cc: "Dan Williams" <dcbw@redhat.com>,
+> linux-wireless@vger.kernel.org,
+> dsd@laptop.org, libertas-dev@lists.infradead.org
+> > Date: Thursday, June 14, 2012, 12:45 AM
+> > Hi,
+> > 
+> > On Wed, 13 Jun 2012 11:39:08 -0700 (PDT)
+> > hong zhang <henryzhang62@yahoo.com>
+> > wrote:
+> > 
+> > > You have to identify problem caused by 
+> > > SDIO host controller or wifi driver.
+> > > 
+> > > If driver is working well in x86 with Roch SDIO,
+> that
+> > means wifi driver is ok. 
+> > > 
+> > > You have to find out
+> > > 1. SDIO interface if using Interrupt or PIO
+> > 
+> > Hmm, very interesting point, of course, there are
+> > interrupts. But after reading
+> > the commit logs in the patched 2.6.32 kernel I see
+> there is
+> > a patch enabling
+> > asynchronous *sdio* interrupts. That looks clearly
+> > suspicious. 
+> > 
+> > > 2. 1 bit or 4 bit
+> > 
+> > Hmm, 4bit.
+> > 
+> > Greetings
+> > Andreas Kemnade
+> > 
+> 
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
+> 
