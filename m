@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756626Ab2FZN3a (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40906 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753727Ab2FNPSL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 09:29:30 -0400
-Message-ID: <1340717368.14634.36.camel@jlt3.sipsolutions.net> (sfid-20120626_152933_994346_02326C6A)
-Subject: Re: [RFC v3 12/13] cfg80211: add channel checking for iface
- combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Jun 2012 15:29:28 +0200
-In-Reply-To: <1340713818-28549-13-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-	 <1340713818-28549-13-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Jun 2012 11:18:11 -0400
+Received: by lahd3 with SMTP id d3so1333096lah.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 08:18:09 -0700 (PDT)
+Message-ID: <4FDA00A2.8020800@googlemail.com> (sfid-20120614_171828_525466_A9D42E45)
+Date: Thu, 14 Jun 2012 16:17:54 +0100
+From: Michael Zintakis <michael.zintakis@googlemail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Is there a changelog for compat wireless ?
+References: <773DB8A82AB6A046AE0195C68612A319012CA16F@sbs2003.acksys.local> <4FC6A68D.1010002@hauke-m.de> <CAB=NE6UxQ=w3shKs8pWRYsjPpTdMAN4Vs=a9jwkHsfTe-WVVDQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6UxQ=w3shKs8pWRYsjPpTdMAN4Vs=a9jwkHsfTe-WVVDQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-26 at 14:30 +0200, Michal Kazior wrote:
 
-> +#define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10
-
-Might make sense to put this into cfg80211.h, since e.g. hwsim could
-support this many channels?
-
-> +		cfg80211_get_chan_state(rdev, wdev_iter, &ch, &chmode);
-> +
-> +		switch (chmode) {
-> +		case CHAN_MODE_UNDEFINED:
-> +			break;
-> +		case CHAN_MODE_SHARED:
-> +			for (i = 0; i < CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
-> +				if (!used_channels[i] || used_channels[i] == ch)
-> +					break;
-> +
-> +			BUG_ON(i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS);
-
-I'd prefer not to use BUG_ON(), maybe WARN_ON() and return some error?
-It seems it could actually happen with buggy drivers that suddenly go
-above their num_different_channels by switching around themselves or
-something?
-
-johannes
+>> The changelog for compat-wireless is here:
+>> https://github.com/mcgrof/compat-wireless/commits/master
+>> for compat here:
+>> https://github.com/mcgrof/compat/commits/master
+>> and for wireless-testing here:
+>> https://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=shortlog
+>>     
+>
+> And then we have unified changelogs for stable releases these are
+> listed on the stable page:
+>
+> http://wireless.kernel.org/en/users/Download/stable/
+>
+> For example:
+>
+> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ChangeLog-3.4-rc3
+>   
+According to grep I've run on all available Changelogs, the only driver 
+which appears to support .11w is ath9k. Is there any other driver which 
+currently has this support? What about ath9k_usb?
 
