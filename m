@@ -1,71 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:52810 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752894Ab2FSNOv (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:47241 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756541Ab2FNQ0p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 09:14:51 -0400
-Received: by obcva7 with SMTP id va7so2286772obc.34
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:14:50 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v2 7/7] mac80211: add DFS support to monitor interface
-Date: Tue, 19 Jun 2012 16:11:03 +0300
-Message-Id: <1340111463-4554-7-git-send-email-victorg@ti.com> (sfid-20120619_151454_179258_C0E46355)
-In-Reply-To: <1340111463-4554-1-git-send-email-victorg@ti.com>
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
+	Thu, 14 Jun 2012 12:26:45 -0400
+Received: by ghrr11 with SMTP id r11so1522245ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 09:26:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120613204230.474d1b6c@milhouse>
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	<4FD21C6B.5000402@lwfinger.net>
+	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	<4FD22727.7000500@lwfinger.net>
+	<1339180580.5748.32.camel@jlt3.sipsolutions.net>
+	<1339180948.5748.35.camel@jlt3.sipsolutions.net>
+	<1339182289.5748.36.camel@jlt3.sipsolutions.net>
+	<1339576294.4519.17.camel@jlt3.sipsolutions.net>
+	<CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
+	<1339602402.4519.48.camel@jlt3.sipsolutions.net>
+	<20120613204230.474d1b6c@milhouse>
+Date: Thu, 14 Jun 2012 18:26:43 +0200
+Message-ID: <CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com> (sfid-20120614_183108_174169_72B9411F)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+From: Andre Heider <a.heider@gmail.com>
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AP mode uses monitor interfaces to transmit
-management frames which were blocked for "radar
-channels" until now.
+On Wed, Jun 13, 2012 at 8:42 PM, Michael Büsch <m@bues.ch> wrote:
+> On Wed, 13 Jun 2012 17:46:42 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>> On Wed, 2012-06-13 at 17:39 +0200, Andre Heider wrote:
+>> > On Wed, Jun 13, 2012 at 10:31 AM, Johannes Berg
+>> > <johannes@sipsolutions.net> wrote:
+>> > > On Fri, 2012-06-08 at 21:04 +0200, Johannes Berg wrote:
+>> > >
+>> > >> Ahrg, b43 only sets fw.opensource too late ... this moves it:
+>> > >> http://p.sipsolutions.net/00c0056dc206e247.txt
+>> > >
+>> > > Has anyone tested this?
+>> >
+>> > Sorry, missed that one.
+>> > I get this crash with that patch: http://i.imgur.com/2CMzA.png
+>>
+>> Huh, that doesn't make a lot of sense to me, I don't move any
+>> locking ...
+>
+> This just seems to be a follow-up oops and the original one scrolled off screen.
 
-Stop dropping packets if we are on 'radar channel'
-and the DFS is enabled.
+Indeed, the framebuffer showed up too late on TV and I didn't even notice ;)
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
- net/mac80211/tx.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e453212..8c7f365 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1595,6 +1595,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
- 	u16 len_rthdr;
- 	int hdrlen;
-+	bool dfs_supported = !!(local->hw.wiphy->features &
-+				NL80211_FEATURE_DFS);
- 
- 	/*
- 	 * Frame injection is not allowed if beaconing is not allowed
-@@ -1607,13 +1609,13 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * flag.
- 	 *
- 	 * Since AP mode uses monitor interfaces to inject/TX management
--	 * frames we can make AP mode the exception to this rule once it
--	 * supports radar detection as its implementation can deal with
--	 * radar detection by itself. We can do that later by adding a
--	 * monitor flag interfaces used for AP support.
-+	 * frames we can make AP mode the exception to this rule, in the
-+	 * case the driver supports radar detection, allow usage of radar
-+	 * channels.
- 	 */
--	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
--	     IEEE80211_CHAN_PASSIVE_SCAN)))
-+	if ((!(chan->flags & IEEE80211_CHAN_RADAR) || !dfs_supported) &&
-+	    ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
-+			     IEEE80211_CHAN_PASSIVE_SCAN))))
- 		goto fail;
- 
- 	/* check for not even having the fixed radiotap header part */
--- 
-1.7.5.4
-
+pause_on_oops=30 made that easier, and the offender is
+drivers/net/wireless/b43/main.c:5294 from the patch:
+wldev->qos_enabled = true;
