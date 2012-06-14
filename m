@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38109 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755800Ab2FYUXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 16:23:03 -0400
-Message-ID: <4FE8C89E.8040607@hauke-m.de> (sfid-20120625_222307_796830_96E029B2)
-Date: Mon, 25 Jun 2012 22:22:54 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50036 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917Ab2FNUlZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 16:41:25 -0400
+From: "Chadd, Adrian" <achadd@qca.qualcomm.com>
+To: "Singh, Naveen" <navesing@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+CC: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"victorg@ti.com" <victorg@ti.com>
+Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
+Date: Thu, 14 Jun 2012 20:41:23 +0000
+Message-ID: <48EC4E8D43A28947B1AB2639FA97CDB90BECBC90@nasanexd02a.na.qualcomm.com> (sfid-20120614_224128_784936_6894658F)
+References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1339566003.4519.1.camel@jlt3.sipsolutions.net>
+ <1339587447.3840.272.camel@cumari.coelho.fi>
+ <4FD87FEA.3070208@qca.qualcomm.com> <20120613205007.GB3043@pista>
+ <4FD984C1.8090903@qca.qualcomm.com>
+ <48EC4E8D43A28947B1AB2639FA97CDB90BECBC62@nasanexd02a.na.qualcomm.com>
+ <43ED1A9ABC336248B5D371B7C9CCFB96016F339C@nasanexd02b.na.qualcomm.com>
+In-Reply-To: <43ED1A9ABC336248B5D371B7C9CCFB96016F339C@nasanexd02b.na.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: Question about BCM43228 and outdated description in MAINTAINERS
-References: <4FE886B3.7020202@lwfinger.net> <4FE88E1A.9050202@hauke-m.de> <1340654635.3413.19.camel@gnutoo-hplaptop>
-In-Reply-To: <1340654635.3413.19.camel@gnutoo-hplaptop>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/25/2012 10:03 PM, Denis 'GNUtoo' Carikli wrote:
-> On Mon, 2012-06-25 at 18:13 +0200, Hauke Mehrtens wrote:
->> Add support for more chips, including (near term) BCM43227, BCM43228,
->> and BCM4331. Support for additional new chips to follow. 
-> What about the BCM43231?
-> There was some plans about it:
-> http://lists.infradead.org/pipermail/b43-dev/2012-January/002297.html
-> 
-> But the thread ends and then it seem that nothing was achieved.
-> 
-> I've a BCM43231:
-> Bus 001 Device 008: ID 0846:9020 NetGear, Inc. WNA3100(v1) Wireless-N
-> 300 [Broadcom BCM43231]
-> 
-> Are there some wireless kernels developers in Italy or in France that
-> would accept a bcm43231 card in exchange of working on a driver?
-> 
-> Denis.
+Right. What platforms would this be more doable on? Mckinley? Peregrine?
 
-I just found a driver for "Dongle BUS interface for USB, SDIO, SPI,
-etc." which seams to also support the BCM43231 licensed under a
-permissive license in the GPL source tar of the ASUS RT-AC66U. [0] I
-haven't found the firmware for that specific device, but someone could
-try to get that driver running with a normal Linux kernel. I am also
-interested in that as I have a USB device in my router not supported by
-brcmfmac.
-Currently I do not have time for that, but I will probably have a closer
-look into that driver soon.
 
-Hauke
+Adrian
 
-[0] asuswrt/release/src-rt-6.x/shared/dbus*
+-----Original Message-----
+From: Singh, Naveen 
+Sent: Thursday, June 14, 2012 1:21 PM
+To: Chadd, Adrian; Valo, Kalle; Pedersen, Thomas
+Cc: Luciano Coelho; Johannes Berg; ath6kl-devel; linux-wireless@vger.kernel.org; victorg@ti.com
+Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
+
+Fw memory is generally very limited. Maintaining the complete scan results is almost next to impossible. There are also other implications like taking care of duplicates, in case of similar taking the one with higher signal strength, for same AP taking care of size differences b/w probe response and beacon etc. 
+
+Passing the results as you receive avoids lot of these complications.
+
+Regards
+Naveen
+
+-----Original Message-----
+From: Chadd, Adrian
+Sent: Thursday, June 14, 2012 12:40 PM
+To: Valo, Kalle; Pedersen, Thomas
+Cc: Luciano Coelho; Johannes Berg; ath6kl-devel; linux-wireless@vger.kernel.org; victorg@ti.com
+Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
+
+Why then doesn't the host just stay asleep and let the firmware aggregate some scan results, and then fire those up in one message, waking the host up only once?
+
+
+
+Adrian
+
+-----Original Message-----
+From: Valo, Kalle
+Sent: Wednesday, June 13, 2012 11:29 PM
+To: Pedersen, Thomas
+Cc: Luciano Coelho; Johannes Berg; ath6kl-devel; linux-wireless@vger.kernel.org; victorg@ti.com
+Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
+
+On 06/13/2012 11:50 PM, Pedersen, Thomas wrote:
+> On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
+>
+>> Funnily enough I don't have any idea how ath6kl has implemented this 
+>> feature, but in theory this feature is useful also for the current 
+>> normal scan (when the firmware/hardware supports it) as we can avoid 
+>> host wakeups. If there are 10 APs, but all are below the RSSI 
+>> threshold, we will have only 1 host wakeup (scan ready event) opposed 
+>> to 11 wakeups
+>> (10 AP found events plus 1 scan ready event).
+> 
+> But can the host even sleep on normal scans?
+
+It's "implementation defined", the good ones can and bad ones can't :)
+
+But from our (wireless developer) perspective we don't need to care about that, our job is to minimise all possible host wakeup events (timers, interrupts etc) as much as possible. That will allow the host to sleep more.
+
+Kalle
