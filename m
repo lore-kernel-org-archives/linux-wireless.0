@@ -1,242 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53865 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754103Ab2F3NRu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:50 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 10/18] brcmsmac: use chip and package id constants from bcma
-Date: Sat, 30 Jun 2012 15:16:13 +0200
-Message-Id: <1341062181-28071-11-git-send-email-hauke@hauke-m.de> (sfid-20120630_151755_314441_C828FFF7)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:64571 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277Ab2FNEst convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 00:48:49 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120612194429.GB1932@tuxdriver.com>
+References: <1339512223-17514-1-git-send-email-mohammed@qca.qualcomm.com>
+	<20120612194429.GB1932@tuxdriver.com>
+Date: Thu, 14 Jun 2012 10:18:48 +0530
+Message-ID: <CAD2nsn3MTAMm52=THaRUhkLgvsCCd2uLgiH5w-P9SbhssGaqjA@mail.gmail.com> (sfid-20120614_064853_977834_94221E9E)
+Subject: Re: [PATCH] ath9k: Fix softlockup in AR9485
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@venema.h4ckr.net,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch depends on addin the chip IDs to bcma done in this commit in
-my pending patch series for bcma.
-Author: Hauke Mehrtens <hauke@hauke-m.de>
-Date:   Sun Jun 3 18:17:57 2012 +0200
+Hi,
 
-    bcma: add constants for chip ids
+On Wed, Jun 13, 2012 at 1:14 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> Do you have a version that applies to 3.5 and earlier?
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |   10 ----------
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   12 ++++++------
- .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   10 +++++-----
- .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   20 ++++++++++----------
- drivers/net/wireless/brcm80211/brcmsmac/pmu.c      |   12 ++++++------
- 5 files changed, 27 insertions(+), 37 deletions(-)
+the back ported version of this patch
+http://www.spinics.net/lists/linux-wireless/msg92125.html
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 3a5358c..89562c1 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -88,16 +88,6 @@
- #define	CLKD_OTP		0x000f0000
- #define	CLKD_OTP_SHIFT		16
- 
--/* Package IDs */
--#define	BCM4717_PKG_ID		9	/* 4717 package id */
--#define	BCM4718_PKG_ID		10	/* 4718 package id */
--#define BCM43224_FAB_SMIC	0xa	/* the chip is manufactured by SMIC */
--
--/* these are router chips */
--#define	BCM4716_CHIP_ID		0x4716	/* 4716 chipcommon chipid */
--#define	BCM47162_CHIP_ID	47162	/* 47162 chipcommon chipid */
--#define	BCM4748_CHIP_ID		0x4748	/* 4716 chipcommon chipid (OTP, RBBU) */
--
- /* dynamic clock control defines */
- #define	LPOMINFREQ		25000	/* low power oscillator min */
- #define	LPOMAXFREQ		43000	/* low power oscillator max */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 8776fbc..478b374 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2126,8 +2126,8 @@ void brcms_b_switch_macfreq(struct brcms_hardware *wlc_hw, u8 spurmode)
- {
- 	struct bcma_device *core = wlc_hw->d11core;
- 
--	if ((ai_get_chip_id(wlc_hw->sih) == BCM43224_CHIP_ID) ||
--	    (ai_get_chip_id(wlc_hw->sih) == BCM43225_CHIP_ID)) {
-+	if ((ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM43224) ||
-+	    (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM43225)) {
- 		if (spurmode == WL_SPURAVOID_ON2) {	/* 126Mhz */
- 			bcma_write16(core, D11REGOFFS(tsf_clk_frac_l), 0x2082);
- 			bcma_write16(core, D11REGOFFS(tsf_clk_frac_h), 0x8);
-@@ -2791,7 +2791,7 @@ void brcms_b_core_phypll_ctl(struct brcms_hardware *wlc_hw, bool on)
- 	tmp = 0;
- 
- 	if (on) {
--		if ((ai_get_chip_id(wlc_hw->sih) == BCM4313_CHIP_ID)) {
-+		if ((ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313)) {
- 			bcma_set32(core, D11REGOFFS(clk_ctl_st),
- 				   CCS_ERSRC_REQ_HT |
- 				   CCS_ERSRC_REQ_D11PLL |
-@@ -4528,7 +4528,7 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 	else
- 		wlc_hw->_nbands = 1;
- 
--	if ((ai_get_chip_id(wlc_hw->sih) == BCM43225_CHIP_ID))
-+	if ((ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM43225))
- 		wlc_hw->_nbands = 1;
- 
- 	/* BMAC_NOTE: remove init of pub values when brcms_c_attach()
-@@ -5036,7 +5036,7 @@ static void brcms_b_hw_up(struct brcms_hardware *wlc_hw)
- 	wlc_hw->wlc->pub->hw_up = true;
- 
- 	if ((wlc_hw->boardflags & BFL_FEM)
--	    && (ai_get_chip_id(wlc_hw->sih) == BCM4313_CHIP_ID)) {
-+	    && (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313)) {
- 		if (!
- 		    (wlc_hw->boardrev >= 0x1250
- 		     && (wlc_hw->boardflags & BFL_FEM_BT)))
-@@ -5130,7 +5130,7 @@ int brcms_c_up(struct brcms_c_info *wlc)
- 	}
- 
- 	if ((wlc->pub->boardflags & BFL_FEM)
--	    && (ai_get_chip_id(wlc->hw->sih) == BCM4313_CHIP_ID)) {
-+	    && (ai_get_chip_id(wlc->hw->sih) == BCMA_CHIP_ID_BCM4313)) {
- 		if (wlc->pub->boardrev >= 0x1250
- 		    && (wlc->pub->boardflags & BFL_FEM_BT))
- 			brcms_b_mhf(wlc->hw, MHF5, MHF5_4313_GPIOCTRL,
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-index 264f8c4..d16cbec 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -837,7 +837,7 @@ wlc_phy_table_addr(struct brcms_phy *pi, uint tbl_id, uint tbl_offset,
- 	pi->tbl_data_hi = tblDataHi;
- 	pi->tbl_data_lo = tblDataLo;
- 
--	if (pi->sh->chip == BCM43224_CHIP_ID &&
-+	if (pi->sh->chip == BCMA_CHIP_ID_BCM43224 &&
- 	    pi->sh->chiprev == 1) {
- 		pi->tbl_addr = tblAddr;
- 		pi->tbl_save_id = tbl_id;
-@@ -847,7 +847,7 @@ wlc_phy_table_addr(struct brcms_phy *pi, uint tbl_id, uint tbl_offset,
- 
- void wlc_phy_table_data_write(struct brcms_phy *pi, uint width, u32 val)
- {
--	if ((pi->sh->chip == BCM43224_CHIP_ID) &&
-+	if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) &&
- 	    (pi->sh->chiprev == 1) &&
- 	    (pi->tbl_save_id == NPHY_TBL_ID_ANTSWCTRLLUT)) {
- 		read_phy_reg(pi, pi->tbl_data_lo);
-@@ -881,7 +881,7 @@ wlc_phy_write_table(struct brcms_phy *pi, const struct phytbl_info *ptbl_info,
- 
- 	for (idx = 0; idx < ptbl_info->tbl_len; idx++) {
- 
--		if ((pi->sh->chip == BCM43224_CHIP_ID) &&
-+		if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) &&
- 		    (pi->sh->chiprev == 1) &&
- 		    (tbl_id == NPHY_TBL_ID_ANTSWCTRLLUT)) {
- 			read_phy_reg(pi, tblDataLo);
-@@ -918,7 +918,7 @@ wlc_phy_read_table(struct brcms_phy *pi, const struct phytbl_info *ptbl_info,
- 
- 	for (idx = 0; idx < ptbl_info->tbl_len; idx++) {
- 
--		if ((pi->sh->chip == BCM43224_CHIP_ID) &&
-+		if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) &&
- 		    (pi->sh->chiprev == 1)) {
- 			(void)read_phy_reg(pi, tblDataLo);
- 
-@@ -2894,7 +2894,7 @@ const u8 *wlc_phy_get_ofdm_rate_lookup(void)
- 
- void wlc_lcnphy_epa_switch(struct brcms_phy *pi, bool mode)
- {
--	if ((pi->sh->chip == BCM4313_CHIP_ID) &&
-+	if ((pi->sh->chip == BCMA_CHIP_ID_BCM4313) &&
- 	    (pi->sh->boardflags & BFL_FEM)) {
- 		if (mode) {
- 			u16 txant = 0;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-index a4ae93e..14da744 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-@@ -19309,8 +19309,8 @@ void wlc_phy_init_nphy(struct brcms_phy *pi)
- 		pi->measure_hold |= PHY_HOLD_FOR_NOT_ASSOC;
- 
- 	if ((ISNPHY(pi)) && (NREV_GE(pi->pubpi.phy_rev, 5)) &&
--	    ((pi->sh->chippkg == BCM4717_PKG_ID) ||
--	     (pi->sh->chippkg == BCM4718_PKG_ID))) {
-+	    ((pi->sh->chippkg == BCMA_PKG_ID_BCM4717) ||
-+	     (pi->sh->chippkg == BCMA_PKG_ID_BCM4718))) {
- 		if ((pi->sh->boardflags & BFL_EXTLNA) &&
- 		    (CHSPEC_IS2G(pi->radio_chanspec)))
- 			ai_cc_reg(pi->sh->sih,
-@@ -20751,11 +20751,11 @@ wlc_phy_chanspec_radio2056_setup(struct brcms_phy *pi,
- 				cascbias = 0x20;
- 
- 				if ((pi->sh->chip ==
--				     BCM43224_CHIP_ID)
-+				     BCMA_CHIP_ID_BCM43224)
- 				    || (pi->sh->chip ==
--					BCM43225_CHIP_ID)) {
-+					BCMA_CHIP_ID_BCM43225)) {
- 					if (pi->sh->chippkg ==
--					    BCM43224_FAB_SMIC) {
-+					    BCMA_PKG_ID_BCM43224_FAB_SMIC) {
- 						bias = 0x2a;
- 						cascbias = 0x38;
- 					}
-@@ -20863,9 +20863,9 @@ wlc_phy_chanspec_radio2056_setup(struct brcms_phy *pi,
- 
- 			cascbias = 0x30;
- 
--			if ((pi->sh->chip == BCM43224_CHIP_ID) ||
--			    (pi->sh->chip == BCM43225_CHIP_ID)) {
--				if (pi->sh->chippkg == BCM43224_FAB_SMIC)
-+			if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) ||
-+			    (pi->sh->chip == BCMA_CHIP_ID_BCM43225)) {
-+				if (pi->sh->chippkg == BCMA_PKG_ID_BCM43224_FAB_SMIC)
- 					cascbias = 0x35;
- 			}
- 
-@@ -21193,8 +21193,8 @@ wlc_phy_chanspec_nphy_setup(struct brcms_phy *pi, u16 chanspec,
- 		bcma_pmu_spuravoid_pllupdate(&sii->icbus->drv_cc, spuravoid);
- 		wlapi_bmac_core_phypll_ctl(pi->sh->physhim, true);
- 
--		if ((pi->sh->chip == BCM43224_CHIP_ID) ||
--		    (pi->sh->chip == BCM43225_CHIP_ID)) {
-+		if ((pi->sh->chip == BCMA_CHIP_ID_BCM43224) ||
-+		    (pi->sh->chip == BCMA_CHIP_ID_BCM43225)) {
- 			if (spuravoid == 1) {
- 				bcma_write16(pi->d11core,
- 					     D11REGOFFS(tsf_clk_frac_l),
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-index 6b4344f..7e9df56 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-@@ -103,9 +103,9 @@ u16 si_pmu_fast_pwrup_delay(struct si_pub *sih)
- 	uint delay = PMU_MAX_TRANSITION_DLY;
- 
- 	switch (ai_get_chip_id(sih)) {
--	case BCM43224_CHIP_ID:
--	case BCM43225_CHIP_ID:
--	case BCM4313_CHIP_ID:
-+	case BCMA_CHIP_ID_BCM43224:
-+	case BCMA_CHIP_ID_BCM43225:
-+	case BCMA_CHIP_ID_BCM4313:
- 		delay = 3700;
- 		break;
- 	default:
-@@ -156,9 +156,9 @@ u32 si_pmu_alp_clock(struct si_pub *sih)
- 		return clock;
- 
- 	switch (ai_get_chip_id(sih)) {
--	case BCM43224_CHIP_ID:
--	case BCM43225_CHIP_ID:
--	case BCM4313_CHIP_ID:
-+	case BCMA_CHIP_ID_BCM43224:
-+	case BCMA_CHIP_ID_BCM43225:
-+	case BCMA_CHIP_ID_BCM4313:
- 		/* always 20Mhz */
- 		clock = 20000 * 1000;
- 		break;
+>
+> On Tue, Jun 12, 2012 at 08:13:43PM +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>>
+>> steps to recreate:
+>> load latest ath9k driver with AR9485
+>> stop the network-manager and wpa_supplicant
+>> bring the interface up
+>>
+>>       Call Trace:
+>>       [<ffffffffa0517490>] ? ath_hw_check+0xe0/0xe0 [ath9k]
+>>       [<ffffffff812cd1e8>] __const_udelay+0x28/0x30
+>>       [<ffffffffa03bae7a>] ar9003_get_pll_sqsum_dvc+0x4a/0x80 [ath9k_hw]
+>>       [<ffffffffa05174eb>] ath_hw_pll_work+0x5b/0xe0 [ath9k]
+>>       [<ffffffff810744fe>] process_one_work+0x11e/0x470
+>>       [<ffffffff8107530f>] worker_thread+0x15f/0x360
+>>       [<ffffffff810751b0>] ? manage_workers+0x230/0x230
+>>       [<ffffffff81079af3>] kthread+0x93/0xa0
+>>       [<ffffffff815fd3a4>] kernel_thread_helper+0x4/0x10
+>>       [<ffffffff81079a60>] ? kthread_freezable_should_stop+0x70/0x70
+>>       [<ffffffff815fd3a0>] ? gs_change+0x13/0x13
+>>
+>> ensure that the PLL-WAR for AR9485/AR9340 is executed only if the STA is
+>> associated (or) IBSS/AP mode had started beaconing. Ideally this WAR
+>> is needed to recover from some rare beacon stuck during stress testing.
+>> Before the STA is associated/IBSS had started beaconing, PLL4(0x1618c)
+>> always seem to have zero even though we had configured PLL3(0x16188) to
+>> query about PLL's locking status. When we keep on polling infinitely PLL4's
+>> 8th bit(ie check for PLL locking measurements is done), machine hangs
+>> due to softlockup.
+>>
+>> fixes https://bugzilla.redhat.com/show_bug.cgi?id=811142
+>>
+>> Reported-by: Rolf Offermanns <rolf.offermanns@gmx.net>
+>> Cc: stable@vger.kernel.org
+>> Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/link.c |    8 ++++++++
+>>  1 files changed, 8 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+>> index 0cc4c70..a105c94 100644
+>> --- a/drivers/net/wireless/ath/ath9k/link.c
+>> +++ b/drivers/net/wireless/ath/ath9k/link.c
+>> @@ -136,6 +136,14 @@ void ath_hw_pll_work(struct work_struct *work)
+>>       u32 pll_sqsum;
+>>       struct ath_softc *sc = container_of(work, struct ath_softc,
+>>                                           hw_pll_work.work);
+>> +     /*
+>> +      * ensure that the PLL WAR is executed only
+>> +      * after the STA is associated (or) if the
+>> +      * beaconing had started in interfaces that
+>> +      * uses beacons.
+>> +      */
+>> +     if (!test_bit(SC_OP_BEACONS, &sc->sc_flags))
+>> +             return;
+>>
+>>       ath9k_ps_wakeup(sc);
+>>       pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
+>> --
+>> 1.7.0.4
+>>
+>>
+>
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.9.5
-
+thanks,
+shafi
