@@ -1,56 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46896 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952Ab2FGHQJ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35726 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014Ab2FNEgd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 03:16:09 -0400
-Message-ID: <1339053364.4517.0.camel@jlt3.sipsolutions.net> (sfid-20120607_091613_817277_CE2D2799)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andre Heider <a.heider@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Date: Thu, 07 Jun 2012 09:16:04 +0200
-In-Reply-To: <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com> (sfid-20120607_091004_706603_FD40A49F)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	 (sfid-20120607_091004_706603_FD40A49F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Jun 2012 00:36:33 -0400
+Message-ID: <4FD96A4B.9080803@qca.qualcomm.com> (sfid-20120614_063637_825179_CE4EB561)
+Date: Thu, 14 Jun 2012 10:06:27 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 3.0+] ath9k: Fix softlockup in AR9485(backported)
+References: <1339603089-16090-1-git-send-email-mohammed@qca.qualcomm.com> <20440.47742.504036.782035@gargle.gargle.HOWL>
+In-Reply-To: <20440.47742.504036.782035@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-07 at 09:10 +0200, Andre Heider wrote:
-> On Wed, Jun 6, 2012 at 10:35 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2012-06-06 at 21:10 +0200, Andre Heider wrote:
-> >> Hi,
-> >>
-> >> the wlan daughterboard on a nintendo wii stopped working with current master.
-> >> Building from the v3.4 tag gives me a working device.
-> >>
-> >> I bisected this to:
-> >>
-> >> commit 3a25a8c8b75b430c4f4022918e26fa51d557ecde
-> >> Author: Johannes Berg <johannes.berg@intel.com>
-> >>
-> >> The hw queues fail the check in ieee80211_check_queues(). When I hack
-> >> that function to always "return 0;" wlan works again.
-> >
-> > There's a fix for this on the way since Larry had also reported the bug,
-> > but I don't know where it is right now.
-> 
-> Okay, nice. Then I won't go hunting and just try the next -rc.
+Hi Sujith,
 
-Found the commit now:
+On Wednesday 13 June 2012 09:36 PM, Sujith Manoharan wrote:
+> Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> Please note this is the backported version for the linux
+>> stable tree, while the patch for wireless-testing tree
+>> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/92608
+>>
+>> steps to recreate:
+>> load latest ath9k driver with AR9485
+>> stop the network-manager and wpa_supplicant
+>> bring the interface up
+>>
+>> 	Call Trace:
+>> 	[<ffffffffa0517490>] ? ath_hw_check+0xe0/0xe0 [ath9k]
+>> 	[<ffffffff812cd1e8>] __const_udelay+0x28/0x30
+>> 	[<ffffffffa03bae7a>] ar9003_get_pll_sqsum_dvc+0x4a/0x80 [ath9k_hw]
+>> 	[<ffffffffa05174eb>] ath_hw_pll_work+0x5b/0xe0 [ath9k]
+>> 	[<ffffffff810744fe>] process_one_work+0x11e/0x470
+>> 	[<ffffffff8107530f>] worker_thread+0x15f/0x360
+>> 	[<ffffffff810751b0>] ? manage_workers+0x230/0x230
+>> 	[<ffffffff81079af3>] kthread+0x93/0xa0
+>> 	[<ffffffff815fd3a4>] kernel_thread_helper+0x4/0x10
+>> 	[<ffffffff81079a60>] ? kthread_freezable_should_stop+0x70/0x70
+>> 	[<ffffffff815fd3a0>] ? gs_change+0x13/0x13
+>>
+>> ensure that the PLL-WAR for AR9485/AR9340 is executed only if the STA is
+>> associated (or) IBSS/AP mode had started beaconing. Ideally this WAR
+>> is needed to recover from some rare beacon stuck during stress testing.
+>> Before the STA is associated/IBSS had started beaconing, PLL4(0x1618c)
+>> always seem to have zero even though we had configured PLL3(0x16188) to
+>> query about PLL's locking status. When we keep on polling infinitely PLL4's
+>> 8th bit(ie check for PLL locking measurements is done), machine hangs
+>> due to softlockup.
+>
+> While I do agree that this patch fixes the regression for AR9485 chipsets,
+> the code in ar9003_get_pll_sqsum_dvc needs to be fixed, i.e., to not loop
+> till the end of time and have a timeout.
+>
 
-commit a9d3c05cca51d80ef2b9eddabf794c9458e36c2c
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Mon May 7 17:45:29 2012 +0200
+agreed, i already have a patch for that and did some tests too :)
 
-    mac80211: fix single queue drivers
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c 
+b/drivers/net/wireless/ath/ath9k/hw.c
+index 6fa8128..932199c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -719,13 +719,26 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
+
+  u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah)
+  {
++       int i = 0;
++       struct ath_common *common = ath9k_hw_common(ah);
++
+         REG_CLR_BIT(ah, PLL3, PLL3_DO_MEAS_MASK);
+         udelay(100);
+         REG_SET_BIT(ah, PLL3, PLL3_DO_MEAS_MASK);
+
+-       while ((REG_READ(ah, PLL4) & PLL4_MEAS_DONE) == 0)
++       while ((REG_READ(ah, PLL4) & PLL4_MEAS_DONE) == 0) {
++
++               i++;
+                 udelay(100);
+
++               if (i > 100) {
++                       ath_err(common, "PLL4 meaurement not done");
++                       WARN_ON(1);
++                       break;
++               }
++
++       }
++
+         return (REG_READ(ah, PLL3) & SQSUM_DVC_MASK) >> 3;
+  }
+  EXPORT_SYMBOL(ar9003_get_pll_sqsum_dvc);
 
 
-johannes
+during my testing i found that, when things are fine we would usually 
+break out when i = 2. will send this patch too. thanks for your thoughts!
 
+
+-- 
+thanks,
+shafi
