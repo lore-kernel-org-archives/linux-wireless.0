@@ -1,43 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3009 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754762Ab2FGTVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 15:21:48 -0400
-Message-ID: <4FD0FF3D.2060805@broadcom.com> (sfid-20120607_212151_357780_B4DF5565)
-Date: Thu, 7 Jun 2012 21:21:33 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:48656 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754775Ab2FNKsL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 06:48:11 -0400
+Received: by ghrr11 with SMTP id r11so1202101ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 03:48:10 -0700 (PDT)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-15-git-send-email-hauke@hauke-m.de>
- <4FCF2FD4.6010103@broadcom.com> <4FD0AD96.1050500@hauke-m.de>
-In-Reply-To: <4FD0AD96.1050500@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Date: Thu, 14 Jun 2012 12:48:10 +0200
+Message-ID: <CAMJBoFN48EZ0Bh6wSwtHz950PMS-bUR30aHq0v2hXg3spKbHFA@mail.gmail.com> (sfid-20120614_124814_888199_CF554215)
+Subject: bug in __ieee80211_suspend?
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 03:33 PM, Hauke Mehrtens wrote:
-> On 06/06/2012 12:24 PM, Arend van Spriel wrote:
->> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->>> The xmtfifo_sz array contains the queue sizes for the different chip
->>> revs. This array missed the sizes for the core rev 17 and 28. This
->>
->> Should probably use core revs instead of chip revs and I think we are
->> talking about the 80211 core rev here.
-> Yes I will change this comment.
-> 
-> Are there any devices with the same phy type using different fifo sizes?
-> If this is not the case I think it is better to do this based on the phy
-> type.
+Hi Eliad,
 
-I dived into this and basically there is no correlation to the phy type.
-There are chips with same 80211 core rev and different phy type as there
-are chips with different 80211 core rev and the same phy type.
+I have some doubts about the following patch: "mac80211: quiesce vif
+before suspending". In fact, I think it introduces a hard-to-track
+bug: when a driver signals disconnection from the AP and the device
+goes to sleep shortly thereafter, beacon_connection_loss_work will get
+cancelled and the actual disconnection will never happen. Shouldn't we
+fix that or is there something I'm missing?
 
-Gr. AvS
-
-
+Thanks,
+   Vitaly
