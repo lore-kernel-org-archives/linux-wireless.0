@@ -1,67 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53562 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754211Ab2FEOeQ (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:60954 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247Ab2FNXT2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 10:34:16 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 0/9] brcm80211: smac: rework regulatory support
-Date: Tue,  5 Jun 2012 09:34:00 -0500
-Message-Id: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com> (sfid-20120605_163419_232832_387435D7)
+	Thu, 14 Jun 2012 19:19:28 -0400
+Received: by qcro28 with SMTP id o28so1325285qcr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 16:19:28 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 14 Jun 2012 19:11:41 -0400
+Message-ID: <CAGjArBf8XTAUUXXO3D-URMQr76QsV0hQNC2zCxEohRatkPq5_w@mail.gmail.com> (sfid-20120615_011932_936544_010AF360)
+Subject: cfg80211 can lock up the kernel when resuming from low power mode
+From: Charles Gordon <digigordo@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmsmac has its own internal regulatory implementation which attempts
-to enforce a Broadcom defined domain named X2. This code has no
-integration with mac80211 regulatory other than supplying regulatory
-hints, and thus each implementation operates independently of the other,
-enforcing conflicting sets of rules.
+Hi,
 
-This series of patches converts brcmsmac to relying on the mac80211
-regulatory implementation. The X2 domain is registered with mac80211,
-and brcmsmac is converted to using the constraints from mac80211 for
-hardware configuration. Much code is removed in the process :)
+I'm seeing the kernel occasionally lock up when I put the system into
+low power mode and then wake it up.  The lock up occurs while the
+system is trying to resume from low power mode.  What happens is that
+cfg80211 will sometimes kick off a process to update CRDA information.
+ It prints the mesage "cfg80211: Calling CRDA for country: US".  When
+it does this, call_crda in reg.c calls kobject_uevent_env to notify
+the system that CRDA information has changed.  This eventually causes
+the system to try to run /sbin/mdev.  That is where the lock up
+occurs.
 
-There is one holdover from the old regulatory implementation. The MIMO
-tx power limits for brcmsmac are still being configured based on
-internal data for the X2 domain. Arend is trying to find out how these
-need to be handled, but this can be changed at a later time.
+I'm running on a development system where I'm using NFS over Ethernet
+to access the root file system.  When the system resumes from low
+power mode, the Ethernet PHY driver renegotiates the Ethernet links.
+This takes a couple seconds.  If cfg80211 attempts to run /sbin/mdev
+before the Ethernet links are up, then the system won't be able to
+access /sbin/mdev over NFS and this will cause a lock up.
 
-Changes since version 1:
+I'm using the very latest Atheros ath6kl Wi-Fi driver.  It is built
+using compat-wireless which includes the cfg80211 code.
 
- - Dropped patch to remove support for DFS channels
- - Added back application of flags for radar channels on regulatory
-   updates from RFC patches, with minor simplifications
- - Removed unneeded NULL pointer check from regulatory notifier callback
-
-Thanks,
-Seth
+Is this a known problem?  Can you recommend a solution for it?
 
 
-Seth Forshee (9):
-  brcm80211: smac: don't set up tx power limits during initialization
-  brcm80211: smac: always set channel specified by mac80211
-  brcm80211: smac: remove unused code for 40MHz channels
-  brcm80211: smac: clean up channel.c
-  brcm80211: smac: inform mac80211 of the X2 regulatory domain
-  brcm80211: smac: enable/disable radio on regulatory updates
-  brcm80211: smac: use mac80211 channel data for tx power limits
-  brcm80211: smac: don't validate channels against internal regulatory
-    data
-  brcm80211: smac: use current regulatory domain when checking whether
-    OFDM is allowed
-
- drivers/net/wireless/brcm80211/brcmsmac/channel.c  | 1221 ++++----------------
- drivers/net/wireless/brcm80211/brcmsmac/channel.h  |    4 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    2 +
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   36 +-
- 4 files changed, 261 insertions(+), 1002 deletions(-)
-
+---- Charles
