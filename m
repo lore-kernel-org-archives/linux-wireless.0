@@ -1,486 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53588 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758092Ab2FEOev (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39338 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754256Ab2FNRJl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 10:34:51 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 8/9] brcm80211: smac: don't validate channels against internal regulatory data
-Date: Tue,  5 Jun 2012 09:34:08 -0500
-Message-Id: <1338906849-26135-9-git-send-email-seth.forshee@canonical.com> (sfid-20120605_163455_033303_BC1BD10C)
-In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+	Thu, 14 Jun 2012 13:09:41 -0400
+Message-ID: <1339693777.9786.6.camel@jlt3.sipsolutions.net> (sfid-20120614_190943_928674_FB4FDBB2)
+Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
+ n_queues))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andre Heider <a.heider@gmail.com>
+Cc: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Date: Thu, 14 Jun 2012 19:09:37 +0200
+In-Reply-To: <CAHsu+b9XNO5roFZNETAgs8_5OLymCaKNcTU1XUsc2fXBu+4kpg@mail.gmail.com> (sfid-20120614_190008_118343_0FC0739E)
+References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
+	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
+	 <4FD21C6B.5000402@lwfinger.net>
+	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
+	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
+	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
+	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
+	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
+	 <4FD22727.7000500@lwfinger.net>
+	 <1339180580.5748.32.camel@jlt3.sipsolutions.net>
+	 <1339180948.5748.35.camel@jlt3.sipsolutions.net>
+	 <1339182289.5748.36.camel@jlt3.sipsolutions.net>
+	 <1339576294.4519.17.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
+	 <1339602402.4519.48.camel@jlt3.sipsolutions.net>
+	 <20120613204230.474d1b6c@milhouse>
+	 <CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com>
+	 <1339691877.9786.0.camel@jlt3.sipsolutions.net>
+	 <CAHsu+b9XNO5roFZNETAgs8_5OLymCaKNcTU1XUsc2fXBu+4kpg@mail.gmail.com>
+	 (sfid-20120614_190008_118343_0FC0739E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The core regulatory support will disable channels not allowed by
-regulatory rules, so brcmsmac doesn't need to check whether or not the
-requested channel is permitted by regulatory.
+On Thu, 2012-06-14 at 19:00 +0200, Andre Heider wrote:
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |  344 +--------------------
- 1 file changed, 6 insertions(+), 338 deletions(-)
+> > http://p.sipsolutions.net/9c830800d14f3ff8.txt
+> 
+> This still oopses: if (!modparam_qos || wldev->fw.opensource)
+> 
+> I do get a working wlan0 if I force "hw->queues = 1;" without that
+> offending line, but just a `dmesg` over wlan+ssh yields another one
+> (prolly the same one I already described on an older patch):
+> http://i.imgur.com/epdRF.jpg
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index e9f3291..ef517c0 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -30,40 +30,6 @@
- /* QDB() macro takes a dB value and converts to a quarter dB value */
- #define QDB(n) ((n) * BRCMS_TXPWR_DB_FACTOR)
- 
--#define  LOCALE_CHAN_01_11	 (1<<0)
--#define  LOCALE_CHAN_12_13	 (1<<1)
--#define  LOCALE_CHAN_14		 (1<<2)
--#define  LOCALE_SET_5G_LOW_JP1   (1<<3)	/* 34-48, step 2 */
--#define  LOCALE_SET_5G_LOW_JP2   (1<<4)	/* 34-46, step 4 */
--#define  LOCALE_SET_5G_LOW1      (1<<5)	/* 36-48, step 4 */
--#define  LOCALE_SET_5G_LOW2      (1<<6)	/* 52 */
--#define  LOCALE_SET_5G_LOW3      (1<<7)	/* 56-64, step 4 */
--#define  LOCALE_SET_5G_MID1      (1<<8)	/* 100-116, step 4 */
--#define  LOCALE_SET_5G_MID2	 (1<<9)	/* 120-124, step 4 */
--#define  LOCALE_SET_5G_MID3      (1<<10)	/* 128 */
--#define  LOCALE_SET_5G_HIGH1     (1<<11)	/* 132-140, step 4 */
--#define  LOCALE_SET_5G_HIGH2     (1<<12)	/* 149-161, step 4 */
--#define  LOCALE_SET_5G_HIGH3     (1<<13)	/* 165 */
--#define  LOCALE_CHAN_52_140_ALL  (1<<14)
--#define  LOCALE_SET_5G_HIGH4     (1<<15)	/* 184-216 */
--
--#define  LOCALE_CHAN_36_64	(LOCALE_SET_5G_LOW1 | \
--				 LOCALE_SET_5G_LOW2 | \
--				 LOCALE_SET_5G_LOW3)
--#define  LOCALE_CHAN_52_64	(LOCALE_SET_5G_LOW2 | LOCALE_SET_5G_LOW3)
--#define  LOCALE_CHAN_100_124	(LOCALE_SET_5G_MID1 | LOCALE_SET_5G_MID2)
--#define  LOCALE_CHAN_100_140	(LOCALE_SET_5G_MID1 | LOCALE_SET_5G_MID2 | \
--				  LOCALE_SET_5G_MID3 | LOCALE_SET_5G_HIGH1)
--#define  LOCALE_CHAN_149_165	(LOCALE_SET_5G_HIGH2 | LOCALE_SET_5G_HIGH3)
--#define  LOCALE_CHAN_184_216	LOCALE_SET_5G_HIGH4
--
--#define  LOCALE_CHAN_01_14	(LOCALE_CHAN_01_11 | \
--				 LOCALE_CHAN_12_13 | \
--				 LOCALE_CHAN_14)
--
--#define  LOCALE_RESTRICTED_NONE		  0
--#define  LOCALE_RESTRICTED_SET_2G_SHORT   1
--
- #define LOCALE_2G_IDX_i			0
- #define LOCALE_5G_IDX_11		0
- #define LOCALE_MIMO_IDX_bn		0
-@@ -134,10 +100,6 @@ static const struct ieee80211_regdomain brcms_regdom_x2 = {
- struct brcms_cm_band {
- 	/* struct locale_info flags */
- 	u8 locale_flags;
--	/* List of valid channels in the country */
--	struct brcms_chanvec valid_channels;
--	/* List of restricted use channels */
--	const struct brcms_chanvec *restricted_channels;
- };
- 
-  /* locale per-channel tx power limits for MIMO frames
-@@ -171,211 +133,17 @@ struct brcms_cm_info {
- 	const struct brcms_regd *world_regd;
- 	/* per-band state (one per phy/radio) */
- 	struct brcms_cm_band bandstate[MAXBANDS];
--	/* quiet channels currently for radar sensitivity or 11h support */
--	/* channels on which we cannot transmit */
--	struct brcms_chanvec quiet_channels;
- };
- 
- /* locale channel and power info. */
- struct locale_info {
--	u32 valid_channels;
--	/* List of channels used only if APs are detected */
--	u8 restricted_channels;
- 	u8 flags;
- };
- 
--/* Regulatory Matrix Spreadsheet (CLM) MIMO v3.7.9 */
--
--/*
-- * Some common channel sets
-- */
--
--/* No channels */
--static const struct brcms_chanvec chanvec_none = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--/*
-- * Restricted channel sets
-- */
--
--/* Channels 12, 13 */
--static const struct brcms_chanvec restricted_set_2g_short = {
--	{0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--/* global memory to provide working buffer for expanded locale */
--
--static const struct brcms_chanvec *g_table_restricted_chan[] = {
--	&chanvec_none,		/* restricted_set_none */
--	&restricted_set_2g_short,
--};
--
--static const struct brcms_chanvec locale_2g_01_11 = {
--	{0xfe, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_2g_12_13 = {
--	{0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_2g_14 = {
--	{0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_LOW_JP1 = {
--	{0x00, 0x00, 0x00, 0x00, 0x54, 0x55, 0x01, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_LOW_JP2 = {
--	{0x00, 0x00, 0x00, 0x00, 0x44, 0x44, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_LOW1 = {
--	{0x00, 0x00, 0x00, 0x00, 0x10, 0x11, 0x01, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_LOW2 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_LOW3 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
--	 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_MID1 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x10, 0x11, 0x11, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_MID2 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_MID3 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_HIGH1 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x10, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_HIGH2 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x20, 0x22, 0x02, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_HIGH3 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_52_140_ALL = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x11,
--	 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
--	 0x11, 0x11, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00}
--};
--
--static const struct brcms_chanvec locale_5g_HIGH4 = {
--	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
--	 0x11, 0x11, 0x11, 0x11}
--};
--
--static const struct brcms_chanvec *g_table_locale_base[] = {
--	&locale_2g_01_11,
--	&locale_2g_12_13,
--	&locale_2g_14,
--	&locale_5g_LOW_JP1,
--	&locale_5g_LOW_JP2,
--	&locale_5g_LOW1,
--	&locale_5g_LOW2,
--	&locale_5g_LOW3,
--	&locale_5g_MID1,
--	&locale_5g_MID2,
--	&locale_5g_MID3,
--	&locale_5g_HIGH1,
--	&locale_5g_HIGH2,
--	&locale_5g_HIGH3,
--	&locale_5g_52_140_ALL,
--	&locale_5g_HIGH4
--};
--
--static void brcms_c_locale_add_channels(struct brcms_chanvec *target,
--				    const struct brcms_chanvec *channels)
--{
--	u8 i;
--	for (i = 0; i < sizeof(struct brcms_chanvec); i++)
--		target->vec[i] |= channels->vec[i];
--}
--
--static void brcms_c_locale_get_channels(const struct locale_info *locale,
--				    struct brcms_chanvec *channels)
--{
--	u8 i;
--
--	memset(channels, 0, sizeof(struct brcms_chanvec));
--
--	for (i = 0; i < ARRAY_SIZE(g_table_locale_base); i++) {
--		if (locale->valid_channels & (1 << i))
--			brcms_c_locale_add_channels(channels,
--						g_table_locale_base[i]);
--	}
--}
--
- /*
-  * Locale Definitions - 2.4 GHz
-  */
- static const struct locale_info locale_i = {	/* locale i. channel 1 - 13 */
--	LOCALE_CHAN_01_11 | LOCALE_CHAN_12_13,
--	LOCALE_RESTRICTED_SET_2G_SHORT,
- 	BRCMS_EIRP
- };
- 
-@@ -383,9 +151,6 @@ static const struct locale_info locale_i = {	/* locale i. channel 1 - 13 */
-  * Locale Definitions - 5 GHz
-  */
- static const struct locale_info locale_11 = {
--	/* locale 11. channel 36 - 48, 52 - 64, 100 - 140, 149 - 165 */
--	LOCALE_CHAN_36_64 | LOCALE_CHAN_100_140 | LOCALE_CHAN_149_165,
--	LOCALE_RESTRICTED_NONE,
- 	BRCMS_EIRP | BRCMS_DFS_EU
- };
- 
-@@ -521,62 +286,6 @@ static const struct brcms_regd *brcms_default_world_regd(void)
- 	return &cntry_locales[0];
- }
- 
--/*
-- * reset the quiet channels vector to the union
-- * of the restricted and radar channel sets
-- */
--static void brcms_c_quiet_channels_reset(struct brcms_cm_info *wlc_cm)
--{
--	struct brcms_c_info *wlc = wlc_cm->wlc;
--	uint i, j;
--	struct brcms_band *band;
--	const struct brcms_chanvec *chanvec;
--
--	memset(&wlc_cm->quiet_channels, 0, sizeof(struct brcms_chanvec));
--
--	band = wlc->band;
--	for (i = 0; i < wlc->pub->_nbands;
--	     i++, band = wlc->bandstate[OTHERBANDUNIT(wlc)]) {
--
--		/* initialize quiet channels for restricted channels */
--		chanvec = wlc_cm->bandstate[band->bandunit].restricted_channels;
--		for (j = 0; j < sizeof(struct brcms_chanvec); j++)
--			wlc_cm->quiet_channels.vec[j] |= chanvec->vec[j];
--
--	}
--}
--
--/* Is the channel valid for the current locale and current band? */
--static bool brcms_c_valid_channel20(struct brcms_cm_info *wlc_cm, uint val)
--{
--	struct brcms_c_info *wlc = wlc_cm->wlc;
--
--	return ((val < MAXCHANNEL) &&
--		isset(wlc_cm->bandstate[wlc->band->bandunit].valid_channels.vec,
--		      val));
--}
--
--/* Is the channel valid for the current locale and specified band? */
--static bool brcms_c_valid_channel20_in_band(struct brcms_cm_info *wlc_cm,
--					    uint bandunit, uint val)
--{
--	return ((val < MAXCHANNEL)
--		&& isset(wlc_cm->bandstate[bandunit].valid_channels.vec, val));
--}
--
--/* Is the channel valid for the current locale? (but don't consider channels not
-- *   available due to bandlocking)
-- */
--static bool brcms_c_valid_channel20_db(struct brcms_cm_info *wlc_cm, uint val)
--{
--	struct brcms_c_info *wlc = wlc_cm->wlc;
--
--	return brcms_c_valid_channel20(wlc->cmi, val) ||
--		(!wlc->bandlocked
--		 && brcms_c_valid_channel20_in_band(wlc->cmi,
--						    OTHERBANDUNIT(wlc), val));
--}
--
- /* JP, J1 - J10 are Japan ccodes */
- static bool brcms_c_japan_ccode(const char *ccode)
- {
-@@ -664,10 +373,9 @@ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 		      const struct country_info *country)
- {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
--	uint i, j;
-+	uint i;
- 	struct brcms_band *band;
- 	const struct locale_info *li;
--	struct brcms_chanvec sup_chan;
- 	const struct locale_mimo_info *li_mimo;
- 
- 	band = wlc->band;
-@@ -685,26 +393,8 @@ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 		/* merge the mimo non-mimo locale flags */
- 		wlc_cm->bandstate[band->bandunit].locale_flags |=
- 		    li_mimo->flags;
--
--		wlc_cm->bandstate[band->bandunit].restricted_channels =
--		    g_table_restricted_chan[li->restricted_channels];
--
--		/*
--		 * set the channel availability, masking out the channels
--		 * that may not be supported on this phy.
--		 */
--		wlc_phy_chanspec_band_validch(band->pi, band->bandtype,
--					      &sup_chan);
--		brcms_c_locale_get_channels(li,
--					&wlc_cm->bandstate[band->bandunit].
--					valid_channels);
--		for (j = 0; j < sizeof(struct brcms_chanvec); j++)
--			wlc_cm->bandstate[band->bandunit].valid_channels.
--			    vec[j] &= sup_chan.vec[j];
- 	}
- 
--	brcms_c_quiet_channels_reset(wlc_cm);
--
- 	return 0;
- }
- 
-@@ -794,23 +484,12 @@ brcms_c_channel_locale_flags_in_band(struct brcms_cm_info *wlc_cm,
- 	return wlc_cm->bandstate[bandunit].locale_flags;
- }
- 
--static bool
--brcms_c_quiet_chanspec(struct brcms_cm_info *wlc_cm, u16 chspec)
--{
--	return (wlc_cm->wlc->pub->_n_enab & SUPPORT_11N) &&
--		CHSPEC_IS40(chspec) ?
--		(isset(wlc_cm->quiet_channels.vec,
--		       lower_20_sb(CHSPEC_CHANNEL(chspec))) ||
--		 isset(wlc_cm->quiet_channels.vec,
--		       upper_20_sb(CHSPEC_CHANNEL(chspec)))) :
--		isset(wlc_cm->quiet_channels.vec, CHSPEC_CHANNEL(chspec));
--}
--
- void
- brcms_c_channel_set_chanspec(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 			 u8 local_constraint_qdbm)
- {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
-+	struct ieee80211_channel *ch = wlc->pub->ieee_hw->conf.channel;
- 	struct txpwr_limits txpwr;
- 
- 	brcms_c_channel_reg_limits(wlc_cm, chanspec, &txpwr);
-@@ -820,7 +499,7 @@ brcms_c_channel_set_chanspec(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 	);
- 
- 	brcms_b_set_chanspec(wlc->hw, chanspec,
--			      (brcms_c_quiet_chanspec(wlc_cm, chanspec) != 0),
-+			      !!(ch->flags & IEEE80211_CHAN_PASSIVE_SCAN),
- 			      &txpwr);
- }
- 
-@@ -1036,8 +715,7 @@ static bool brcms_c_chspec_malformed(u16 chanspec)
-  * and they are also a legal HT combination
-  */
- static bool
--brcms_c_valid_chanspec_ext(struct brcms_cm_info *wlc_cm, u16 chspec,
--			   bool dualband)
-+brcms_c_valid_chanspec_ext(struct brcms_cm_info *wlc_cm, u16 chspec)
- {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
- 	u8 channel = CHSPEC_CHANNEL(chspec);
-@@ -1053,22 +731,12 @@ brcms_c_valid_chanspec_ext(struct brcms_cm_info *wlc_cm, u16 chspec,
- 	    chspec_bandunit(chspec))
- 		return false;
- 
--	/* Check a 20Mhz channel */
--	if (CHSPEC_IS20(chspec)) {
--		if (dualband)
--			return brcms_c_valid_channel20_db(wlc_cm->wlc->cmi,
--							  channel);
--		else
--			return brcms_c_valid_channel20(wlc_cm->wlc->cmi,
--						       channel);
--	}
--
--	return false;
-+	return true;
- }
- 
- bool brcms_c_valid_chanspec_db(struct brcms_cm_info *wlc_cm, u16 chspec)
- {
--	return brcms_c_valid_chanspec_ext(wlc_cm, chspec, true);
-+	return brcms_c_valid_chanspec_ext(wlc_cm, chspec);
- }
- 
- static bool brcms_is_radar_freq(u16 center_freq)
--- 
-1.7.9.5
+Doh, of course, I still have wldev ... I'm in a meeting now, will check
+again later.
+
+johannes
 
