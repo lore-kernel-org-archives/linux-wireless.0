@@ -1,77 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gosford.compton.nu ([217.169.17.27]:47071 "EHLO
-	gosford.compton.nu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546Ab2F0SZ2 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60514 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753881Ab2FNMoe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 14:25:28 -0400
-From: Tom Hughes <tom@compton.nu>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	Tom Hughes <tom@compton.nu>
-Subject: [PATCH] ath9k: fix panic caused by returning a descriptor we have queued for reuse
-Date: Wed, 27 Jun 2012 18:21:15 +0100
-Message-Id: <1340817675-26911-1-git-send-email-tom@compton.nu> (sfid-20120627_202532_228038_A539A3AF)
+	Thu, 14 Jun 2012 08:44:34 -0400
+Message-ID: <4FD9DCAC.1000507@qca.qualcomm.com> (sfid-20120614_144439_344392_3F98710C)
+Date: Thu, 14 Jun 2012 15:44:28 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Pull request: ath6kl 20120614
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 3a2923e83c introduced a bug when a corrupt descriptor
-is encountered - although the following descriptor is discarded
-and returned to the queue for reuse the associated frame is
-also returned for processing. This leads to a panic:
+Hi John,
 
-BUG: unable to handle kernel NULL pointer dereference at 000000000000003a
-IP: [<ffffffffa02599a5>] ath_rx_tasklet+0x165/0x1b00 [ath9k]
-Call Trace:
-<IRQ>
-[<ffffffff812d7fa0>] ? map_single+0x60/0x60
-[<ffffffffa028f044>] ? ath9k_ioread32+0x34/0x90 [ath9k]
-[<ffffffffa0292eec>] athk9k_tasklet+0xdc/0x160 [ath9k]
-[<ffffffff8105e133>] tasklet_action+0x63/0xd0
-[<ffffffff8105dbc0>] __do_softirq+0xc0/0x1e0
-[<ffffffff8101a873>] ? native_sched_clock+0x13/0x80
-[<ffffffff815f9d5c>] call_softirq+0x1c/0x30
-[<ffffffff810151f5>] do_softirq+0x75/0xb0
-[<ffffffff8105df95>] irq_exit+0xb5/0xc0
-[<ffffffff815fa5b3>] do_IRQ+0x63/0xe0
-[<ffffffff815f0cea>] common_interrupt+0x6a/0x6a
-<EOI>
-[<ffffffff8131840a>] ? intel_idle+0xea/0x150
-[<ffffffff813183eb>] ? intel_idle+0xcb/0x150
-[<ffffffff814a1db9>] cpuidle_enter+0x19/0x20
-[<ffffffff814a23d9>] cpuidle_idle_call+0xa9/0x240
-[<ffffffff8101c4bf>] cpu_idle+0xaf/0x120
-[<ffffffff815cda8e>] rest_init+0x72/0x74
-[<ffffffff81cf4c1a>] start_kernel+0x3b7/0x3c4
-[<ffffffff81cf4662>] ? repair_env_string+0x5e/0x5e
-[<ffffffff81cf4346>] x86_64_start_reservations+0x131/0x135
-[<ffffffff81cf444a>] x86_64_start_kernel+0x100/0x10f
+here's a pull request of latest ath6kl changes. New features there are
+enhanced beacon miss detection, match ssid support in scheduled scan,
+setting tx rateset and chanding DTIM in AP mode. But all the patches are
+pretty small in size which makes me happy.
 
-Making sure bf is cleared to NULL in this case restores the
-old behaviour.
+There's also few bugfixes and some code cleanup.
 
-Signed-off-by: Tom Hughes <tom@compton.nu>
----
- drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Please let me know if you have any problems.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 05185fc..6a7dd26 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -658,9 +658,9 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
- 			__skb_unlink(skb, &rx_edma->rx_fifo);
- 			list_add_tail(&bf->list, &sc->rx.rxbuf);
- 			ath_rx_edma_buf_link(sc, qtype);
--		} else {
--			bf = NULL;
- 		}
-+
-+		bf = NULL;
- 	}
- 
- 	*dest = bf;
--- 
-1.7.10.2
+Kalle
 
+The following changes since commit 211c17aaee644bb808fbdeef547ac99db92c01ed:
+
+  Merge branch 'master' of
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless
+(2012-06-13 15:35:35 -0400)
+
+are available in the git repository at:
+
+  git://github.com/kvalo/ath6kl.git for-linville
+
+Bala Shanmugam (1):
+      ath6kl: Add support for setting tx rateset.
+
+Etay Luz (1):
+      ath6kl: support changing dtim period on AP mode
+
+Joe Perches (1):
+      ath6kl: Add missing newline terminations
+
+Jouni Malinen (1):
+      ath6kl: Use correct max-scan-SSIDs limit
+
+Kalle Valo (1):
+      Merge remote branch 'wireless-next/master' into ath6kl-next
+
+Kiran Reddy (1):
+      ath6kl: separate ht cap for each band
+
+Naveen Gangadharan (1):
+      ath6kl: Add wow multicast firmware capability support
+
+Naveen Singh (2):
+      ath6kl: Include match ssid list in scheduled scan
+      ath6kl: use firmware version from FW IE
+
+Raja Mani (2):
+      ath6kl: Remove unneeded memset in roam related config func
+      ath6kl: Fix typo in htc mbox debug print msg
+
+Thomas Pedersen (3):
+      ath6kl: enable enhanced bmiss detection
+      ath6kl: issue wmi disconnect after notifying cfg80211
+      ath6kl: fix fw capability parsing
+
+Vasanthakumar Thiagarajan (3):
+      ath6kl: Fix missing gpio pin 9 configuration
+      ath6kl: Fix race in aggregation reorder logic
+      ath6kl: Fix unstable downlink throughput
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  208
++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +
+ drivers/net/wireless/ath/ath6kl/core.h     |   38 +++++-
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |    2 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |   28 ++++-
+ drivers/net/wireless/ath/ath6kl/main.c     |   27 +++--
+ drivers/net/wireless/ath/ath6kl/target.h   |    1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   48 ++++----
+ drivers/net/wireless/ath/ath6kl/wmi.c      |  148 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   58 ++++++++-
+ 10 files changed, 477 insertions(+), 83 deletions(-)
