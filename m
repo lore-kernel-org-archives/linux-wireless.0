@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:62624 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753620Ab2FVR1X (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:37199 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752835Ab2FNHtN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 13:27:23 -0400
-Received: by obbuo13 with SMTP id uo13so2212243obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 10:27:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340385295.4491.38.camel@jlt3.sipsolutions.net>
-References: <1340385295.4491.38.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 22 Jun 2012 10:27:02 -0700
-Message-ID: <CAB=NE6X99pFYfOfAS4exozVtJ=sjujamUanPR_A2aGzX+KziFA@mail.gmail.com> (sfid-20120622_192727_245609_7CF60F73)
-Subject: Re: [PATCH] compat-wireless: add patch to fix iwlwifi tracing
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Jun 2012 03:49:13 -0400
+Received: by wibhj8 with SMTP id hj8so6195622wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 00:49:12 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@adurom.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [RFC] mac80211: set only VO as a U-APSD enabled AC
+Date: Thu, 14 Jun 2012 10:49:06 +0300
+Message-Id: <1339660146-21030-1-git-send-email-arik@wizery.com> (sfid-20120614_094916_792399_D0F652E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 22, 2012 at 10:14 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> See the description in the file -- the current code
-> is safe only on recent upstream kernels, with 3.1
-> for example it can crash. The new code is safe on
-> all kernels that even support %pV, others just get
-> a pointer unfortunately.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Some APs experience problems when working with U-APSD. Decrease the
+probability of that happening by using legacy mode for all ACs but VO.
 
-Applied and pushed!
+The AP that caused us troubles was a Cisco 4410N. It ignores our
+setting, and always treats non-VO ACs as legacy.
 
-  Luis
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+Let's have another go at this :)
+
+ net/mac80211/ieee80211_i.h |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ddf768f..58436c3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -56,10 +56,7 @@ struct ieee80211_local;
+ #define TU_TO_EXP_TIME(x)	(jiffies + TU_TO_JIFFIES(x))
+ 
+ #define IEEE80211_DEFAULT_UAPSD_QUEUES \
+-	(IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |	\
+-	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE |	\
+-	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI |	\
+-	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
++	IEEE80211_WMM_IE_STA_QOSINFO_AC_VO
+ 
+ #define IEEE80211_DEFAULT_MAX_SP_LEN		\
+ 	IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+-- 
+1.7.9.5
+
