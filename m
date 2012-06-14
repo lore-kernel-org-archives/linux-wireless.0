@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:44253 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750954Ab2FOEkf (ORCPT
+Received: from hqemgate04.nvidia.com ([216.228.121.35]:1725 "EHLO
+	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750702Ab2FNERb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 00:40:35 -0400
-Received: by laai10 with SMTP id i10so3036184laa.27
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 21:40:33 -0700 (PDT)
-Message-ID: <1339735230.4502.10.camel@cumari.coelho.fi> (sfid-20120615_064039_111525_BF7FB778)
-Subject: RE: [PATCH] nl80211: specify RSSI threshold when scanning
-From: Luciano Coelho <coelho@ti.com>
-To: "Chadd, Adrian" <achadd@qca.qualcomm.com>
-Cc: "Singh, Naveen" <navesing@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"victorg@ti.com" <victorg@ti.com>
-Date: Fri, 15 Jun 2012 07:40:30 +0300
-In-Reply-To: <48EC4E8D43A28947B1AB2639FA97CDB90BECBD6F@nasanexd02a.na.qualcomm.com>
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
-	 <1339566003.4519.1.camel@jlt3.sipsolutions.net>
-	 <1339587447.3840.272.camel@cumari.coelho.fi>
-	 <4FD87FEA.3070208@qca.qualcomm.com> <20120613205007.GB3043@pista>
-	 <4FD984C1.8090903@qca.qualcomm.com>
-	 <48EC4E8D43A28947B1AB2639FA97CDB90BECBC62@nasanexd02a.na.qualcomm.com>
-	 <43ED1A9ABC336248B5D371B7C9CCFB96016F339C@nasanexd02b.na.qualcomm.com>
-	 <48EC4E8D43A28947B1AB2639FA97CDB90BECBC90@nasanexd02a.na.qualcomm.com>
-	 <43ED1A9ABC336248B5D371B7C9CCFB96016F347E@nasanexd02b.na.qualcomm.com>
-	 <48EC4E8D43A28947B1AB2639FA97CDB90BECBD6F@nasanexd02a.na.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Jun 2012 00:17:31 -0400
+From: Wei Ni <wni@nvidia.com>
+To: 'Franky Lin' <frankyl@broadcom.com>
+CC: Stephen Warren <swarren@nvidia.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mursalin Akon <makon@nvidia.com>,
+	Rakesh Kumar <krakesh@nvidia.com>
+Date: Thu, 14 Jun 2012 12:17:26 +0800
+Subject: RE: Where to power on the wifi device before loading the driver.
+Message-ID: <6B4D417B830BC44B8026029FD256F7F1C377BFFE89@HKMAIL01.nvidia.com> (sfid-20120614_061736_013510_90E7EC25)
+References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
+ <4FD8CED9.6030901@broadcom.com>
+In-Reply-To: <4FD8CED9.6030901@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="Windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-14 at 22:16 +0000, Chadd, Adrian wrote:
-> Well, my idea was to keep the host asleep for as long as possible. So maybe only wake up the host when you have either:
-> 
-> * filled the "scan memory" with scan results - so flush those to the host before continuing;
+Hi, Franky
 
-Couldn't getting the "scan memory" full potentially cause you to lose
-some results? You might be getting responses while you're processing it,
-I guess.
+On Thu, Jun 14, 2012 at 01:33:13, Franky Lin wrote:
+>Hi Wei,
+>
+>On 06/13/2012 03:40 AM, Wei Ni wrote:
+>> In the brcmfmac init routine, it call sdio_register_driver() to 
+>> register driver, if the wifi device is powered on, then the mmc
+>> driver will enumerate it, and call the probe callback routine.
+>>
+>> On the Cardhu, the wifi's power is controlled by two gpios 
+>> (power-gpio and reset-gpio), the default state is power-off.
+>> So we need to power on it before calling sdio_register_driver(),
+>> if not, the mmc driver can't enumerate it, and will not call
+>> the probe routine.
+>> This power on sequence is:
+>> set power-gpio to 1 ;
+>> mdelay(100) ;
+>> set reset-gpio to 1 ;
+>> mdelay(200);
+>>
+>> My question is where to power on the wifi. We may have three places 
+>> to power on it:
+>> 1. power on it in the brcmfmac driver before calling
+>> sdio_register_driver(). But I think this power sequence is special for 
+>> tegra30 cardhu, it's not good to add it in the generic wifi driver, 
+>> because different board may use the different way to power on the wifi.
+>> 2. power on it in the mmc driver. In our tegra SD driver, it has 
+>> power-gpios property, which allow the slot to be powered. But this power is 
+>> for mmc slot, could we add this wifi power sequence in the tegra SD driver?
+>> 3. hard-coded into DT. Set these gpios in the DT, something like 
+>> pinmux settings, but in this way, it's not good to put the mdelay() value
+>> in the DT.
+>
+>We introduced oob interrupt support in 3.5 [1]. We are using a virtual 
+>platform device to retrieve board specific oob interrupt GPIO setting.
+>You should be able to implement the power control in this way as well.
+>Brcmfmac gets the GPIOs through platform device interface, powers up 
+>the chip and triggers a card detection. Then 4329 should be enumerated 
+>by MMC stack. The reason we didn't implement this is the card detection.
+>Some design doesn't have hardware card detection since the WiFi chip is 
+>already on board. And the current MMC stack doesn't have virtual card 
+>detection interface.
+
+Wei: Yes, in OOB mode, it's easy to add a device node in the DT, to pass
+the gpio property to brcmfmac driver. But the NO-OOB mode doesn’t use the
+virtual platform device, so we can't pass the gpio to driver. We need to find
+a way to support these two mode both.
+Could we use the virtual platform device both for OOB and NO-OOB mode? so that
+we can implement power control in these two mode, and we can add a flags to
+control if need to power on or not.
+BTW, does that power on sequence is generally for 4329?
+
+>
+>Franky
+>
+>[1]: http://www.spinics.net/lists/linux-wireless/msg89335.html
 
 
-> * finished the scan, and flushing the remaining scan results out.
-> 
-> I'm just raising the idea, it may not be worth doing.. :)
-
-One other thing to keep in mind, that is not directly related with this
-last discussion, is the "intermediate scan results" that Victor has
-proposed some time ago[1].  For long scans (11bg + 11a), we want to tell
-the userspace about the results before the scan completes to save some
-time, but we don't want to wake it up excessively when the results don't
-really matter.
-
-[1] http://comments.gmane.org/gmane.linux.kernel.wireless.general/76708
-
---
-Luca.
 
