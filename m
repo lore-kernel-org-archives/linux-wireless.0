@@ -1,214 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:54171 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932160Ab2FOF5T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 01:57:19 -0400
-From: Joe Perches <joe@perches.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 12/20] mwl8k: Use pr_<level>
-Date: Thu, 14 Jun 2012 22:53:52 -0700
-Message-Id: <f6b98c85e5cfd71c05078643f2388fb9797d1561.1339739416.git.joe@perches.com> (sfid-20120615_075746_882007_2CEBA5A7)
-In-Reply-To: <cover.1339739415.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:59580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756037Ab2FNSvK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 14:51:10 -0400
+Message-ID: <1339699864.9786.10.camel@jlt3.sipsolutions.net> (sfid-20120614_205114_216219_31F1CF6B)
+Subject: Re: [PATCH] mac80211: add support for userspace to handle auth
+ frames on adhoc ifaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Hawkins <hawkinsw@opentechinstitute.org>
+Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 14 Jun 2012 20:51:04 +0200
+In-Reply-To: <4FDA2CED.8090303@opentechinstitute.org>
+References: <4FD8B5D4.8060305@opentechinstitute.org>
+	    <4FD99A24.3020907@lri.fr>
+	 <1339673095.4461.2.camel@jlt3.sipsolutions.net>   <4FD9DD35.4070709@lri.fr>
+	 <1339692819.9786.4.camel@jlt3.sipsolutions.net>
+	  <4FDA179F.1020501@opentechinstitute.org>
+	 <1339693721.9786.5.camel@jlt3.sipsolutions.net>
+	 <4FDA2CED.8090303@opentechinstitute.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a more current logging style.
 
-Convert printks to pr_<level>.
-Coalesce formats, align arguments.
-Add missing newline terminations.
+> >>> Oops, sorry, yes. I forgot all about that code!
+> >>>
+> >>> I suppose we'd have to check whether userspace is handling
+> >>> authentication?
+> >>
+> >> Could use the control_port flag to check for that condition?
+> > 
+> > Not really, that's not necessarily the same thing -- I think we might
+> > want to also allow to offload open auth to userspace.
+> > 
+> > I think it wouldn't be difficult to notify mac80211 about frame
+> > registrations so it can keep track for this purpose?
+> > 
+> > johannes
+> 
+> I am happy to code something like this up. I've already taken a look at
+> it and don't think it will be too big of a problem. I am going to be AFK
+> until Monday so I won't get to it until then. I hope that's not a problem.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/mwl8k.c |   53 ++++++++++++++++++++---------------------
- 1 files changed, 26 insertions(+), 27 deletions(-)
+No problem, take your time! I'm not in any hurry with this feature :-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index cf7bdc6..7197e80 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -9,6 +9,8 @@
-  * warranty of any kind, whether express or implied.
-  */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/init.h>
- #include <linux/interrupt.h>
- #include <linux/module.h>
-@@ -522,7 +524,7 @@ static int mwl8k_request_firmware(struct mwl8k_priv *priv, char *fw_image,
- 			rc = mwl8k_request_fw(priv, di->helper_image,
- 					      &priv->fw_helper, false);
- 		if (rc)
--			printk(KERN_ERR "%s: Error requesting helper fw %s\n",
-+			pr_err("%s: Error requesting helper fw %s\n",
- 			       pci_name(priv->pdev), di->helper_image);
- 
- 		if (rc || nowait)
-@@ -542,7 +544,7 @@ static int mwl8k_request_firmware(struct mwl8k_priv *priv, char *fw_image,
- 		rc = mwl8k_request_fw(priv, fw_image,
- 				      &priv->fw_ucode, false);
- 	if (rc) {
--		printk(KERN_ERR "%s: Error requesting firmware file %s\n",
-+		pr_err("%s: Error requesting firmware file %s\n",
- 		       pci_name(priv->pdev), fw_image);
- 		mwl8k_release_fw(&priv->fw_helper);
- 		return rc;
-@@ -712,15 +714,15 @@ static int mwl8k_load_firmware(struct ieee80211_hw *hw)
- 		const struct firmware *helper = priv->fw_helper;
- 
- 		if (helper == NULL) {
--			printk(KERN_ERR "%s: helper image needed but none "
--			       "given\n", pci_name(priv->pdev));
-+			pr_err("%s: helper image needed but none given\n",
-+			       pci_name(priv->pdev));
- 			return -EINVAL;
- 		}
- 
- 		rc = mwl8k_load_fw_image(priv, helper->data, helper->size);
- 		if (rc) {
--			printk(KERN_ERR "%s: unable to load firmware "
--			       "helper image\n", pci_name(priv->pdev));
-+			pr_err("%s: unable to load firmware helper image\n",
-+			       pci_name(priv->pdev));
- 			return rc;
- 		}
- 		msleep(20);
-@@ -731,7 +733,7 @@ static int mwl8k_load_firmware(struct ieee80211_hw *hw)
- 	}
- 
- 	if (rc) {
--		printk(KERN_ERR "%s: unable to load firmware image\n",
-+		pr_err("%s: unable to load firmware image\n",
- 		       pci_name(priv->pdev));
- 		return rc;
- 	}
-@@ -2425,8 +2427,7 @@ static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
- 
- 		api_version = le32_to_cpu(cmd->fw_api_version);
- 		if (priv->device_info->fw_api_ap != api_version) {
--			printk(KERN_ERR "%s: Unsupported fw API version for %s."
--			       "  Expected %d got %d.\n", MWL8K_NAME,
-+			pr_err("Unsupported fw API version for %s.  Expected %d got %d.\n",
- 			       priv->device_info->part_name,
- 			       priv->device_info->fw_api_ap,
- 			       api_version);
-@@ -5278,12 +5279,12 @@ MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
- static int mwl8k_request_alt_fw(struct mwl8k_priv *priv)
- {
- 	int rc;
--	printk(KERN_ERR "%s: Error requesting preferred fw %s.\n"
--	       "Trying alternative firmware %s\n", pci_name(priv->pdev),
--	       priv->fw_pref, priv->fw_alt);
-+	pr_err("%s: Error requesting preferred fw %s.\n"
-+	       "Trying alternative firmware %s\n",
-+	       pci_name(priv->pdev), priv->fw_pref, priv->fw_alt);
- 	rc = mwl8k_request_fw(priv, priv->fw_alt, &priv->fw_ucode, true);
- 	if (rc) {
--		printk(KERN_ERR "%s: Error requesting alt fw %s\n",
-+		pr_err("%s: Error requesting alt fw %s\n",
- 		       pci_name(priv->pdev), priv->fw_alt);
- 		return rc;
- 	}
-@@ -5300,7 +5301,7 @@ static void mwl8k_fw_state_machine(const struct firmware *fw, void *context)
- 	switch (priv->fw_state) {
- 	case FW_STATE_INIT:
- 		if (!fw) {
--			printk(KERN_ERR "%s: Error requesting helper fw %s\n",
-+			pr_err("%s: Error requesting helper fw %s\n",
- 			       pci_name(priv->pdev), di->helper_image);
- 			goto fail;
- 		}
-@@ -5339,7 +5340,7 @@ static void mwl8k_fw_state_machine(const struct firmware *fw, void *context)
- 
- 	case FW_STATE_LOADING_ALT:
- 		if (!fw) {
--			printk(KERN_ERR "%s: Error requesting alt fw %s\n",
-+			pr_err("%s: Error requesting alt fw %s\n",
- 			       pci_name(priv->pdev), di->helper_image);
- 			goto fail;
- 		}
-@@ -5352,8 +5353,8 @@ static void mwl8k_fw_state_machine(const struct firmware *fw, void *context)
- 		break;
- 
- 	default:
--		printk(KERN_ERR "%s: Unexpected firmware loading state: %d\n",
--		       MWL8K_NAME, priv->fw_state);
-+		pr_err("Unexpected firmware loading state: %d\n",
-+		       priv->fw_state);
- 		BUG_ON(1);
- 	}
- 
-@@ -5607,7 +5608,7 @@ static int mwl8k_reload_firmware(struct ieee80211_hw *hw, char *fw_image)
- 	return rc;
- 
- fail:
--	printk(KERN_WARNING "mwl8k: Failed to reload firmware image.\n");
-+	pr_warn("Failed to reload firmware image\n");
- 	return rc;
- }
- 
-@@ -5725,22 +5726,20 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	int rc;
- 
- 	if (!printed_version) {
--		printk(KERN_INFO "%s version %s\n", MWL8K_DESC, MWL8K_VERSION);
-+		pr_info("%s version %s\n", MWL8K_DESC, MWL8K_VERSION);
- 		printed_version = 1;
- 	}
- 
- 
- 	rc = pci_enable_device(pdev);
- 	if (rc) {
--		printk(KERN_ERR "%s: Cannot enable new PCI device\n",
--		       MWL8K_NAME);
-+		pr_err("Cannot enable new PCI device\n");
- 		return rc;
- 	}
- 
- 	rc = pci_request_regions(pdev, MWL8K_NAME);
- 	if (rc) {
--		printk(KERN_ERR "%s: Cannot obtain PCI resources\n",
--		       MWL8K_NAME);
-+		pr_err("Cannot obtain PCI resources\n");
- 		goto err_disable_device;
- 	}
- 
-@@ -5749,7 +5748,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 
- 	hw = ieee80211_alloc_hw(sizeof(*priv), &mwl8k_ops);
- 	if (hw == NULL) {
--		printk(KERN_ERR "%s: ieee80211 alloc failed\n", MWL8K_NAME);
-+		pr_err("ieee80211 alloc failed\n");
- 		rc = -ENOMEM;
- 		goto err_free_reg;
- 	}
-@@ -5796,10 +5795,10 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 		priv->fw_pref = di->fw_image_sta;
- 		priv->fw_alt = di->fw_image_ap;
- 	} else if (ap_mode_default && !di->fw_image_ap && di->fw_image_sta) {
--		printk(KERN_WARNING "AP fw is unavailable.  Using STA fw.");
-+		pr_warn("AP fw is unavailable.  Using STA fw.\n");
- 		priv->fw_pref = di->fw_image_sta;
- 	} else if (!ap_mode_default && !di->fw_image_sta && di->fw_image_ap) {
--		printk(KERN_WARNING "STA fw is unavailable.  Using AP fw.");
-+		pr_warn("STA fw is unavailable.  Using AP fw.\n");
- 		priv->fw_pref = di->fw_image_ap;
- 	}
- 	rc = mwl8k_init_firmware(hw, priv->fw_pref, true);
-@@ -5834,7 +5833,7 @@ err_disable_device:
- 
- static void __devexit mwl8k_shutdown(struct pci_dev *pdev)
- {
--	printk(KERN_ERR "===>%s(%u)\n", __func__, __LINE__);
-+	pr_err("===>%s(%u)\n", __func__, __LINE__);
- }
- 
- static void __devexit mwl8k_remove(struct pci_dev *pdev)
--- 
-1.7.8.111.gad25c.dirty
+johannes
 
