@@ -1,112 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:44444 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995Ab2FLHvw (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:63169 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362Ab2FNOR7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 03:51:52 -0400
-Received: by mail-pz0-f46.google.com with SMTP id y13so6514254dad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 00:51:52 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v3 3/4] mac80211: implement the proactive PREP generation
-Date: Tue, 12 Jun 2012 15:50:44 +0800
-Message-Id: <1339487445-25428-4-git-send-email-yeohchunyeow@gmail.com> (sfid-20120612_095155_207033_A3F0E980)
-In-Reply-To: <1339487445-25428-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1339487445-25428-1-git-send-email-yeohchunyeow@gmail.com>
+	Thu, 14 Jun 2012 10:17:59 -0400
+Received: by gglu4 with SMTP id u4so1391694ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 07:17:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMJBoFMHD8ukfOTonYOt+1wxC+hQbK=XAQMj+wiPev4ZKGV2ew@mail.gmail.com>
+References: <CAMJBoFN48EZ0Bh6wSwtHz950PMS-bUR30aHq0v2hXg3spKbHFA@mail.gmail.com>
+	<CAB3XZEfBzLBP48f930tcGbSZ=jqEkuNd9RDUJYEWQUDodczqeg@mail.gmail.com>
+	<CAMJBoFMHD8ukfOTonYOt+1wxC+hQbK=XAQMj+wiPev4ZKGV2ew@mail.gmail.com>
+Date: Thu, 14 Jun 2012 17:17:58 +0300
+Message-ID: <CAB3XZEd1OYkpA4giY-gd6sCxCuP=jzLP7dcrwFC6qxhu-cNYbA@mail.gmail.com> (sfid-20120614_161802_882401_A47E9A9C)
+Subject: Re: bug in __ieee80211_suspend?
+From: Eliad Peller <eliad@wizery.com>
+To: Vitaly Wool <vitalywool@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generate the proactive PREP element in Proactive PREQ mode as defined in
-Sec. 13.10.10.3 (Case D) of IEEE Std. 802.11-2012.
+On Thu, Jun 14, 2012 at 3:09 PM, Vitaly Wool <vitalywool@gmail.com> wrote:
+>>> I have some doubts about the following patch: "mac80211: quiesce vif
+>>> before suspending". In fact, I think it introduces a hard-to-track
+>>> bug: when a driver signals disconnection from the AP and the device
+>>> goes to sleep shortly thereafter, beacon_connection_loss_work will get
+>>> cancelled and the actual disconnection will never happen. Shouldn't we
+>>> fix that or is there something I'm missing?
+>>>
+>>
+>> i think that flush_workqueue(local->workqueue) should handle the
+>> normal disconnect-before-suspend case.
+>> however, there's probably still some race condition when the work is
+>> scheduled between the flush_workqueue() and the drv_suspend() call.
+>> i'm not sure what is the right solution regarding it. maybe add
+>> another flush_workqueue() after drv_suspend?
+>
+> Maybe, but aren't we increasing the probability of hitting the 3s
+> suspend timeout and thus crashing the system here?
+>
+flush_workqueue() will do it anyway (if the work was queued before),
+so i don't think it's much different.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
-v2: adhere to Linux kernel coding style (Johannes)
-v3: eliminate 4 spaces indentation (Johannes)
+>> additionally, i don't think that the patch itself is the issue here,
+>> as without it beacon_connection_loss_work might run after mac80211 was
+>> already suspended, which might result in unexpected outcome as well...
+>
+> Well, the patch is the issue because previously the driver could just
+> stall the work and now it has no control over it.
+>
+> I think there are two opportunities to look into:
+>
+> 1. Freeze workqueues on suspend without flushing
+hmm... this might be a bit unexpected - userspace might want to use
+wowlan only while connected. so postponing the disconnection after the
+resume (while the ap is already gone) might be wrong.
 
- net/mac80211/mesh_hwmp.c |   35 ++++++++++++++++++++++++++++++++---
- 1 files changed, 32 insertions(+), 3 deletions(-)
+> 2. Reject suspend if an important work is pending (and yes, connection
+> loss work *is* important!)
+>
+i think this solution is easier and more correct.
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 3ce131b..1d2a122 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -519,10 +519,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 	struct mesh_path *mpath = NULL;
- 	u8 *target_addr, *orig_addr;
- 	const u8 *da;
--	u8 target_flags, ttl;
--	u32 orig_sn, target_sn, lifetime;
-+	u8 target_flags, ttl, flags;
-+	u32 orig_sn, target_sn, lifetime, orig_metric;
- 	bool reply = false;
- 	bool forward = true;
-+	bool root_is_gate;
- 
- 	/* Update target SN, if present */
- 	target_addr = PREQ_IE_TARGET_ADDR(preq_elem);
-@@ -530,6 +531,10 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 	target_sn = PREQ_IE_TARGET_SN(preq_elem);
- 	orig_sn = PREQ_IE_ORIG_SN(preq_elem);
- 	target_flags = PREQ_IE_TARGET_F(preq_elem);
-+	orig_metric = metric;
-+	/* Proactive PREQ gate announcements */
-+	flags = PREQ_IE_FLAGS(preq_elem);
-+	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
- 
- 	mhwmp_dbg("received PREQ from %pM", orig_addr);
- 
-@@ -544,6 +549,22 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 			target_sn = ++ifmsh->sn;
- 			ifmsh->last_sn_update = jiffies;
- 		}
-+	} else if (is_broadcast_ether_addr(target_addr) &&
-+		   (target_flags & TO_FLAG)) {
-+		rcu_read_lock();
-+		mpath = mesh_path_lookup(orig_addr, sdata);
-+		if (mpath) {
-+			if (flags & PROACTIVE_PREP_FLAG) {
-+				reply = true;
-+				target_addr = sdata->vif.addr;
-+				target_sn = ++ifmsh->sn;
-+				metric = 0;
-+				ifmsh->last_sn_update = jiffies;
-+			}
-+			if (root_is_gate)
-+				mesh_path_add_gate(mpath);
-+		}
-+		rcu_read_unlock();
- 	} else {
- 		rcu_read_lock();
- 		mpath = mesh_path_lookup(target_addr, sdata);
-@@ -576,8 +597,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 				cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
- 				cpu_to_le32(lifetime), cpu_to_le32(metric),
- 				0, sdata);
--		} else
-+		} else {
- 			ifmsh->mshstats.dropped_frames_ttl++;
-+		}
- 	}
- 
- 	if (forward && ifmsh->mshcfg.dot11MeshForwarding) {
-@@ -597,6 +619,13 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 		hopcount = PREQ_IE_HOPCOUNT(preq_elem) + 1;
- 		da = (mpath && mpath->is_root) ?
- 			mpath->rann_snd_addr : broadcast_addr;
-+
-+		if (flags & PROACTIVE_PREP_FLAG) {
-+			target_addr = PREQ_IE_TARGET_ADDR(preq_elem);
-+			target_sn = PREQ_IE_TARGET_SN(preq_elem);
-+			metric = orig_metric;
-+		}
-+
- 		mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
- 				cpu_to_le32(orig_sn), target_flags, target_addr,
- 				cpu_to_le32(target_sn), da,
--- 
-1.7.0.4
-
+Eliad.
