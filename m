@@ -1,66 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f66.google.com ([209.85.210.66]:37295 "EHLO
-	mail-pz0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753339Ab2FGAcu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 20:32:50 -0400
-Received: by mail-pz0-f66.google.com with SMTP id o14so24667dad.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 17:32:50 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:60601 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751464Ab2FOFze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 01:55:34 -0400
+From: Joe Perches <joe@perches.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 4/5] mac80211: Rename stainfo variable for the more common sta
-Date: Wed,  6 Jun 2012 17:29:40 -0700
-Message-Id: <1339028981-17097-5-git-send-email-jason@cozybit.com> (sfid-20120607_023254_398502_76252604)
-In-Reply-To: <1339028981-17097-1-git-send-email-jason@cozybit.com>
-References: <1339028981-17097-1-git-send-email-jason@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 03/20] at76c50x-usb: Use pr_<level>
+Date: Thu, 14 Jun 2012 22:53:43 -0700
+Message-Id: <4146d28583e1c579daf612f9c0e338403f7a39a4.1339739416.git.joe@perches.com> (sfid-20120615_080237_221000_1CCE0761)
+In-Reply-To: <cover.1339739415.git.joe@perches.com>
+References: <cover.1339739415.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+Use a more current logging style.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Convert printks to pr_<level>.
+Coalesce formats, align arguments.
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- net/mac80211/mesh_hwmp.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/at76c50x-usb.c |   15 +++++++--------
+ 1 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 8fb3e59..22b327a 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -303,7 +303,7 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- }
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index efc162e..817fd7b 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -25,6 +25,8 @@
+  *
+  */
  
- void ieee80211s_update_metric(struct ieee80211_local *local,
--		struct sta_info *stainfo, struct sk_buff *skb)
-+		struct sta_info *sta, struct sk_buff *skb)
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/sched.h>
+@@ -2120,8 +2122,7 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
+ 
+ 	hw = ieee80211_alloc_hw(sizeof(struct at76_priv), &at76_ops);
+ 	if (!hw) {
+-		printk(KERN_ERR DRIVER_NAME ": could not register"
+-		       " ieee80211_hw\n");
++		pr_err("could not register ieee80211_hw\n");
+ 		return NULL;
+ 	}
+ 
+@@ -2301,8 +2302,7 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 
+ 	ret = ieee80211_register_hw(priv->hw);
+ 	if (ret) {
+-		printk(KERN_ERR "cannot register mac80211 hw (status %d)!\n",
+-		       ret);
++		pr_err("cannot register mac80211 hw (status %d)!\n", ret);
+ 		goto exit;
+ 	}
+ 
+@@ -2493,15 +2493,14 @@ static int __init at76_mod_init(void)
  {
- 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -317,16 +317,16 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
+ 	int result;
  
- 	/* moving average, scaled to 100 */
--	stainfo->fail_avg = ((80 * stainfo->fail_avg + 5) / 100 + 20 * failed);
--	if (stainfo->fail_avg > 95)
--		mesh_plink_broken(stainfo);
-+	sta->fail_avg = ((80 * sta->fail_avg + 5) / 100 + 20 * failed);
-+	if (sta->fail_avg > 95)
-+		mesh_plink_broken(sta);
+-	printk(KERN_INFO DRIVER_DESC " " DRIVER_VERSION " loading\n");
++	pr_info(DRIVER_DESC " " DRIVER_VERSION " loading\n");
  
--	sta_set_rate_info_tx(stainfo, &stainfo->last_tx_rate, &rinfo);
-+	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
- 	rate = cfg80211_calculate_bitrate(&rinfo);
- 	if (WARN_ON(!rate))
- 		return;
+ 	mutex_init(&fw_mutex);
  
--	ewma_add(&stainfo->avg_rate, rate);
-+	ewma_add(&sta->avg_rate, rate);
- 	return;
- }
+ 	/* register this driver with the USB subsystem */
+ 	result = usb_register(&at76_driver);
+ 	if (result < 0)
+-		printk(KERN_ERR DRIVER_NAME
+-		       ": usb_register failed (status %d)\n", result);
++		pr_err("usb_register failed (status %d)\n", result);
  
+ 	led_trigger_register_simple("at76_usb-tx", &ledtrig_tx);
+ 	return result;
+@@ -2511,7 +2510,7 @@ static void __exit at76_mod_exit(void)
+ {
+ 	int i;
+ 
+-	printk(KERN_INFO DRIVER_DESC " " DRIVER_VERSION " unloading\n");
++	pr_info(DRIVER_DESC " " DRIVER_VERSION " unloading\n");
+ 	usb_deregister(&at76_driver);
+ 	for (i = 0; i < ARRAY_SIZE(firmwares); i++)
+ 		release_firmware(firmwares[i].fw);
 -- 
-1.7.9.5
+1.7.8.111.gad25c.dirty
 
