@@ -1,106 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:37847 "EHLO
+Received: from perches-mx.perches.com ([206.117.179.246]:35686 "EHLO
 	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754117Ab2FWQDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 12:03:21 -0400
-Message-ID: <1340467400.7758.19.camel@joe2Laptop> (sfid-20120623_180323_610174_09BAD2AD)
-Subject: Re: [PATCH 4/6] mac80211: clean up debugging
+	id S1751827Ab2FOFzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 01:55:24 -0400
 From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Sat, 23 Jun 2012 09:03:20 -0700
-In-Reply-To: <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
-References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
-	 <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 02/20] airo_cs: Use pr_<level>
+Date: Thu, 14 Jun 2012 22:53:42 -0700
+Message-Id: <2166780c7f792e05c57d84f3b9ddf63b14ffb37c.1339739416.git.joe@perches.com> (sfid-20120615_080244_697944_6204E101)
+In-Reply-To: <cover.1339739415.git.joe@perches.com>
+References: <cover.1339739415.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-22 at 19:18 +0200, Johannes Berg wrote:
-[]
-> diff --git a/net/mac80211/debug.h b/net/mac80211/debug.h
-[]
-> +#ifdef CONFIG_MAC80211_IBSS_DEBUG
-> +#define MAC80211_IBSS_DEBUG 1
-> +#else
-> +#define MAC80211_IBSS_DEBUG 0
-> +#endif
+Use a more current logging style.
 
-[ a bunch of these...]
+Convert printks to pr_<level>.
+Convert printk(KERN_DEBUG to pr_debug(.
+Coalesce formats, align arguments.
 
-> +#ifdef CONFIG_MAC80211_MLME_DEBUG
-> +#define MAC80211_MLME_DEBUG 1
-> +#else
-> +#define MAC80211_MLME_DEBUG 0
-> +#endif
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/airo_cs.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-This is kind of ugly using UPPER_CASE globals.
-
-Maybe something like:
-
-extern unsigned int mac80211_debug;
-
-#define MAC80211_DEBUG_IBSS	BIT(0)
-...
-#define MAC80211_DEBUG_MLME	BIT(x)
-
-and in each appropriate location or with a
-static inline somethingorother
-
-#ifdef CONFIG_MAC80211_MLME_DEBUG
-	mac80211_debug |= MAC80211_DEBUG_MLME;
-#endif
-
-
-> +#define _sdata_info(sdata, fmt, ...)					\
-> +do {									\
-> +	pr_info("%s: " fmt,						\
-> +		(sdata)->name, ##__VA_ARGS__);				\
-> +} while (0)
-> +
-> +#define _sdata_dbg(print, sdata, fmt, ...)				\
-> +do {									\
-> +	if (print)							\
-> +		pr_debug("%s: " fmt,					\
-> +			 (sdata)->name, ##__VA_ARGS__);			\
-> +} while (0)
-> +
-> +#define _sdata_err(sdata, fmt, ...)					\
-> +do {									\
-> +	pr_debug("%s: " fmt,						\
-> +		 (sdata)->name, ##__VA_ARGS__);				\
-> +} while (0)
-> +
-> +#define _wiphy_dbg(print, wiphy, fmt, ...)				\
-> +do {									\
-> +	if (print)							\
-> +		wiphy_dbg((wiphy), fmt, ##__VA_ARGS__);			\
-> +} while (0)
-> +
-> +#define sdata_info(sdata, fmt, ...)					\
-> +	_sdata_info(sdata, fmt, ##__VA_ARGS__)
-> +#define sdata_err(sdata, fmt, ...)					\
-> +	_sdata_err(sdata, fmt, ##__VA_ARGS__)
-> +#define sdata_dbg(sdata, fmt, ...)					\
-> +	_sdata_dbg(1, sdata, fmt, ##__VA_ARGS__)
-
-Then maybe sdata_dbg become mac80211_dbg()
-
-> +
-> +#define ht_dbg(sdata, fmt, ...)						\
-> +	_sdata_dbg(MAC80211_HT_DEBUG,					\
-> +		   sdata, fmt, ##__VA_ARGS__)
-
-
-> +
-> +#define ht_dbg_ratelimited(sdata, fmt, ...)				\
-> +	_sdata_dbg(MAC80211_HT_DEBUG && net_ratelimit(),		\
-> +		   sdata, fmt, ##__VA_ARGS__)
-
-[ a bunch more ]
-
-and all these wrappers stay.
-
+diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
+index 630577d..1a723be 100644
+--- a/drivers/net/wireless/airo_cs.c
++++ b/drivers/net/wireless/airo_cs.c
+@@ -20,6 +20,8 @@
+ 
+ ======================================================================*/
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #ifdef __IN_PCMCIA_PACKAGE__
+ #include <pcmcia/k_compat.h>
+ #endif
+@@ -70,7 +72,7 @@ static int airo_probe(struct pcmcia_device *p_dev)
+ 	/* Allocate space for private device-specific data */
+ 	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
+ 	if (!local) {
+-		printk(KERN_ERR "airo_cs: no memory for new device\n");
++		pr_err("no memory for new device\n");
+ 		return -ENOMEM;
+ 	}
+ 	p_dev->priv = local;
+-- 
+1.7.8.111.gad25c.dirty
 
