@@ -1,176 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:39373 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755046Ab2FUONa (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:48073 "HELO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757522Ab2FOTcn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 10:13:30 -0400
-Received: by eaak11 with SMTP id k11so255480eaa.33
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 07:13:24 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+	Fri, 15 Jun 2012 15:32:43 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 04/12] wlcore: reconfigure sleep_auth when removing interfaces
-Date: Thu, 21 Jun 2012 17:13:03 +0300
-Message-Id: <1340287991-15241-5-git-send-email-coelho@ti.com> (sfid-20120621_161543_482768_A3DF9845)
-In-Reply-To: <1340287991-15241-1-git-send-email-coelho@ti.com>
-References: <1340287991-15241-1-git-send-email-coelho@ti.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v3 1/5] mwifiex: set channel via start_ap handler for AP interface
+Date: Fri, 15 Jun 2012 12:21:51 -0700
+Message-Id: <1339788115-20596-2-git-send-email-bzhao@marvell.com> (sfid-20120615_213248_589419_CAD49A78)
+In-Reply-To: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
+References: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Avinash Patil <patila@marvell.com>
 
-The sleep_auth value of the last interface to be set up prevailed when
-an interface was removed. Take care of this by correctly configuring the
-value according to the remaining STA/AP interfaces.
+This patch adds functionality to set channel info received from
+cfg80211_ap_settings in start_ap handler.
 
-Take this opportunity to refactor the sleep_auth setting code for better
-readability.
+Since set_channel cfg80211 handler has been removed and we need
+not explicitely call mwifiex_uap_set_channel(); hence this
+function definition is also removed.
 
-[Small style fix. -- Luca]
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ti/wlcore/acx.c  |    5 +++-
- drivers/net/wireless/ti/wlcore/init.c |   49 ++++++++++++++-------------------
- drivers/net/wireless/ti/wlcore/main.c |   21 ++++++++++++--
- 3 files changed, 43 insertions(+), 32 deletions(-)
+v3: resending as 1/5, no change since v1
+v2: resending as 1/4, no change since v1
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index 3384bc1..ce108a7 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -81,8 +81,11 @@ int wl1271_acx_sleep_auth(struct wl1271 *wl, u8 sleep_auth)
- 	auth->sleep_auth = sleep_auth;
+ drivers/net/wireless/mwifiex/cfg80211.c |   23 +++++++++++++++++------
+ drivers/net/wireless/mwifiex/main.h     |    1 -
+ drivers/net/wireless/mwifiex/uap_cmd.c  |   30 ------------------------------
+ 3 files changed, 17 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 015fec3..7b4eaf4 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -384,13 +384,13 @@ mwifiex_set_rf_channel(struct mwifiex_private *priv,
+ 	cfp.freq = chan->center_freq;
+ 	cfp.channel = ieee80211_frequency_to_channel(chan->center_freq);
  
- 	ret = wl1271_cmd_configure(wl, ACX_SLEEP_AUTH, auth, sizeof(*auth));
--	if (ret < 0)
-+	if (ret < 0) {
-+		wl1271_error("could not configure sleep_auth to %d: %d",
-+			     sleep_auth, ret);
- 		goto out;
+-	if (mwifiex_bss_set_channel(priv, &cfp))
+-		return -EFAULT;
+-
+-	if (priv->bss_type == MWIFIEX_BSS_TYPE_STA)
++	if (priv->bss_type == MWIFIEX_BSS_TYPE_STA) {
++		if (mwifiex_bss_set_channel(priv, &cfp))
++			return -EFAULT;
+ 		return mwifiex_drv_change_adhoc_chan(priv, cfp.channel);
+-	else
+-		return mwifiex_uap_set_channel(priv, cfp.channel);
 +	}
- 
- 	wl->sleep_auth = sleep_auth;
- out:
-diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
-index 3fb9352..8a8a897 100644
---- a/drivers/net/wireless/ti/wlcore/init.c
-+++ b/drivers/net/wireless/ti/wlcore/init.c
-@@ -554,35 +554,28 @@ int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
- 	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
- 	int ret, i;
- 
--	/*
--	 * consider all existing roles before configuring psm.
--	 * TODO: reconfigure on interface removal.
--	 */
--	if (!wl->ap_count) {
--		if (is_ap) {
--			/* Configure for power always on */
-+	/* consider all existing roles before configuring psm. */
 +
-+	if (wl->ap_count == 0 && is_ap) { /* first AP */
-+		/* Configure for power always on */
-+		ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
-+		if (ret < 0)
-+			return ret;
-+	/* first STA, no APs */
-+	} else if (wl->sta_count == 0 && wl->ap_count == 0 && !is_ap) {
-+		u8 sta_auth = wl->conf.conn.sta_sleep_auth;
-+		/* Configure for power according to debugfs */
-+		if (sta_auth != WL1271_PSM_ILLEGAL)
-+			ret = wl1271_acx_sleep_auth(wl, sta_auth);
-+		/* Configure for power always on */
-+		else if (wl->quirks & WLCORE_QUIRK_NO_ELP)
- 			ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
--			if (ret < 0)
--				return ret;
--		} else if (!wl->sta_count) {
--			u8 sta_auth = wl->conf.conn.sta_sleep_auth;
--			if (sta_auth != WL1271_PSM_ILLEGAL) {
--				/* Configure for power according to debugfs */
--				ret = wl1271_acx_sleep_auth(wl, sta_auth);
--				if (ret < 0)
--					return ret;
--			} else if (wl->quirks & WLCORE_QUIRK_NO_ELP) {
--				/* Configure for power always on */
--				ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
--				if (ret < 0)
--					return ret;
--			} else {
--				/* Configure for ELP power saving */
--				ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
--				if (ret < 0)
--					return ret;
--			}
--		}
-+		/* Configure for ELP power saving */
-+		else
-+			ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
-+
-+		if (ret < 0)
-+			return ret;
++	return 0;
+ }
+ 
+ /*
+@@ -961,6 +961,17 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		return -EINVAL;
  	}
  
- 	/* Mode specific init */
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 69643d1..3279a94 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1082,7 +1082,7 @@ int wl1271_plt_stop(struct wl1271 *wl)
- 	mutex_lock(&wl->mutex);
- 	wl1271_power_off(wl);
- 	wl->flags = 0;
--	wl->sleep_auth = WL1271_PSM_CAM;
-+	wl->sleep_auth = WL1271_PSM_ILLEGAL;
- 	wl->state = WL1271_STATE_OFF;
- 	wl->plt = false;
- 	wl->rx_counter = 0;
-@@ -1741,7 +1741,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->ap_fw_ps_map = 0;
- 	wl->ap_ps_map = 0;
- 	wl->sched_scanning = false;
--	wl->sleep_auth = WL1271_PSM_CAM;
-+	wl->sleep_auth = WL1271_PSM_ILLEGAL;
- 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
- 	memset(wl->links_map, 0, sizeof(wl->links_map));
- 	memset(wl->roc_map, 0, sizeof(wl->roc_map));
-@@ -2148,6 +2148,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- {
- 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	int i, ret;
-+	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
- 
-@@ -2228,11 +2229,25 @@ deinit:
- 	wlvif->role_id = WL12XX_INVALID_ROLE_ID;
- 	wlvif->dev_role_id = WL12XX_INVALID_ROLE_ID;
- 
--	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
-+	if (is_ap)
- 		wl->ap_count--;
- 	else
- 		wl->sta_count--;
- 
-+	/* Last AP, have more stations. Configure according to STA. */
-+	if (wl->ap_count == 0 && is_ap && wl->sta_count) {
-+		u8 sta_auth = wl->conf.conn.sta_sleep_auth;
-+		/* Configure for power according to debugfs */
-+		if (sta_auth != WL1271_PSM_ILLEGAL)
-+			wl1271_acx_sleep_auth(wl, sta_auth);
-+		/* Configure for power always on */
-+		else if (wl->quirks & WLCORE_QUIRK_NO_ELP)
-+			wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
-+		/* Configure for ELP power saving */
-+		else
-+			wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
++	bss_cfg->channel =
++	    (u8)ieee80211_frequency_to_channel(params->channel->center_freq);
++	bss_cfg->band_cfg = BAND_CONFIG_MANUAL;
++
++	if (mwifiex_set_rf_channel(priv, params->channel,
++				   params->channel_type)) {
++		kfree(bss_cfg);
++		wiphy_err(wiphy, "Failed to set band config information!\n");
++		return -1;
 +	}
 +
- 	mutex_unlock(&wl->mutex);
+ 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
+ 		kfree(bss_cfg);
+ 		wiphy_err(wiphy, "Failed to parse secuirty parameters!\n");
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5b32221..512481e 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -990,7 +990,6 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
  
- 	del_timer_sync(&wlvif->rx_streaming_timer);
+ int mwifiex_main_process(struct mwifiex_adapter *);
+ 
+-int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel);
+ int mwifiex_bss_set_channel(struct mwifiex_private *,
+ 			    struct mwifiex_chan_freq_power *cfp);
+ int mwifiex_get_bss_info(struct mwifiex_private *,
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 89f9a2a..fb0c6cb 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -421,33 +421,3 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 
+ 	return 0;
+ }
+-
+-/* This function sets the RF channel for AP.
+- *
+- * This function populates channel information in AP config structure
+- * and sends command to configure channel information in AP.
+- */
+-int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel)
+-{
+-	struct mwifiex_uap_bss_param *bss_cfg;
+-	struct wiphy *wiphy = priv->wdev->wiphy;
+-
+-	bss_cfg = kzalloc(sizeof(struct mwifiex_uap_bss_param), GFP_KERNEL);
+-	if (!bss_cfg)
+-		return -ENOMEM;
+-
+-	mwifiex_set_sys_config_invalid_data(bss_cfg);
+-	bss_cfg->band_cfg = BAND_CONFIG_MANUAL;
+-	bss_cfg->channel = channel;
+-
+-	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
+-				   HostCmd_ACT_GEN_SET,
+-				   UAP_BSS_PARAMS_I, bss_cfg)) {
+-		wiphy_err(wiphy, "Failed to set the uAP channel\n");
+-		kfree(bss_cfg);
+-		return -1;
+-	}
+-
+-	kfree(bss_cfg);
+-	return 0;
+-}
 -- 
-1.7.10
+1.7.0.2
 
