@@ -1,65 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:44915 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756129Ab2FUONd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 10:13:33 -0400
-Received: by eaak11 with SMTP id k11so238063eaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 07:13:28 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+Received: from nbd.name ([46.4.11.11]:41311 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756359Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 09:25:38 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 07/12] wlcore: do not report noise level in get survey op
-Date: Thu, 21 Jun 2012 17:13:06 +0300
-Message-Id: <1340287991-15241-8-git-send-email-coelho@ti.com> (sfid-20120621_161413_642133_A26E3F8C)
-In-Reply-To: <1340287991-15241-1-git-send-email-coelho@ti.com>
-References: <1340287991-15241-1-git-send-email-coelho@ti.com>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	c_manoha@qca.qualcomm.com
+Subject: [PATCH 8/9] ath9k_hw: fix setting lower noise immunity values
+Date: Fri, 15 Jun 2012 15:25:26 +0200
+Message-Id: <1339766727-61926-8-git-send-email-nbd@openwrt.org> (sfid-20120615_152546_300570_3811ABF2)
+In-Reply-To: <1339766727-61926-7-git-send-email-nbd@openwrt.org>
+References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-2-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-3-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-4-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-5-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-6-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-7-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yoni Divinsky <yoni.divinsky@ti.com>
+Commit af1e8a6f "ath9k: reset noiseimmunity level to default" was supposed
+to ensure that the default noise immunity level is above the INI
+values, however it prevents setting lower noise immunity values altogether.
+Fix this by moving the checks to the right function.
 
-The get survey op expects the low level driver to report
-the noise level for a a given channel.
-
-The noise calculated in wlcore is (rssi-snr/2), but since
-the snr reported by the FW is a derivative from the rssi
-this calculation is useless, and should not be reported
-to the user space.
-
-Reporting incorrect noise, results in the wpa_supplicant
-miscalculating the roaming candidate priority, thus causing
-a situation where an AP with a lower rssi level would be
-chosen over a better AP.
-
-Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ti/wlcore/main.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 3279a94..a7c5e32 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4108,16 +4108,13 @@ out:
- static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 				struct survey_info *survey)
- {
--	struct wl1271 *wl = hw->priv;
- 	struct ieee80211_conf *conf = &hw->conf;
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index da73fa2..6ee0875 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -154,9 +154,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 		aniState->rssiThrLow, aniState->rssiThrHigh);
  
- 	if (idx != 0)
- 		return -ENOENT;
+ 	if (aniState->update_ani)
+-		aniState->ofdmNoiseImmunityLevel =
+-			(immunityLevel > ATH9K_ANI_OFDM_DEF_LEVEL) ?
+-			immunityLevel : ATH9K_ANI_OFDM_DEF_LEVEL;
++		aniState->ofdmNoiseImmunityLevel = immunityLevel;
  
- 	survey->channel = conf->channel;
--	survey->filled = SURVEY_INFO_NOISE_DBM;
--	survey->noise = wl->noise;
--
-+	survey->filled = 0;
- 	return 0;
- }
+ 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
+ 	entry_cck = &cck_level_table[aniState->cckNoiseImmunityLevel];
+@@ -217,9 +215,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
+ 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
  
+ 	if (aniState->update_ani)
+-		aniState->cckNoiseImmunityLevel =
+-			(immunityLevel > ATH9K_ANI_CCK_DEF_LEVEL) ?
+-			immunityLevel : ATH9K_ANI_CCK_DEF_LEVEL;
++		aniState->cckNoiseImmunityLevel = immunityLevel;
+ 
+ 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
+ 	entry_cck = &cck_level_table[aniState->cckNoiseImmunityLevel];
+@@ -285,6 +281,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 	struct ar5416AniState *aniState = &ah->curchan->ani;
+ 	struct ath9k_channel *chan = ah->curchan;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	int ofdm_nil, cck_nil;
+ 
+ 	if (!DO_ANI(ah))
+ 		return;
+@@ -306,6 +303,11 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 	/* always allow mode (on/off) to be controlled */
+ 	ah->ani_function |= ATH9K_ANI_MODE;
+ 
++	ofdm_nil = max_t(int, ATH9K_ANI_OFDM_DEF_LEVEL,
++			 aniState->ofdmNoiseImmunityLevel);
++	cck_nil = max_t(int, ATH9K_ANI_CCK_DEF_LEVEL,
++			 aniState->cckNoiseImmunityLevel);
++
+ 	if (is_scanning ||
+ 	    (ah->opmode != NL80211_IFTYPE_STATION &&
+ 	     ah->opmode != NL80211_IFTYPE_ADHOC)) {
+@@ -329,8 +331,8 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 				aniState->cckNoiseImmunityLevel);
+ 
+ 			aniState->update_ani = false;
+-			ath9k_hw_set_ofdm_nil(ah, ATH9K_ANI_OFDM_DEF_LEVEL);
+-			ath9k_hw_set_cck_nil(ah, ATH9K_ANI_CCK_DEF_LEVEL);
++			ofdm_nil = ATH9K_ANI_OFDM_DEF_LEVEL;
++			cck_nil = ATH9K_ANI_CCK_DEF_LEVEL;
+ 		}
+ 	} else {
+ 		/*
+@@ -346,11 +348,9 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 			aniState->cckNoiseImmunityLevel);
+ 
+ 			aniState->update_ani = true;
+-			ath9k_hw_set_ofdm_nil(ah,
+-					      aniState->ofdmNoiseImmunityLevel);
+-			ath9k_hw_set_cck_nil(ah,
+-					     aniState->cckNoiseImmunityLevel);
+ 	}
++	ath9k_hw_set_ofdm_nil(ah, ofdm_nil);
++	ath9k_hw_set_cck_nil(ah, cck_nil);
+ 
+ 	/*
+ 	 * enable phy counters if hw supports or if not, enable phy
 -- 
-1.7.10
+1.7.3.2
 
