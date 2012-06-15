@@ -1,75 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15421 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755159Ab2FYON7 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:49681 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752932Ab2FOCV0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 10:13:59 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3 03/10] ath9k_hw: Add WoW hardware capability flags
-Date: Mon, 25 Jun 2012 19:42:52 +0530
-Message-ID: <1340633579-7514-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120625_161409_916121_F63B8D36)
-In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 14 Jun 2012 22:21:26 -0400
+Received: by yhmm54 with SMTP id m54so2100466yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 19:21:25 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: fix and improve mesh RANN processing
+Date: Fri, 15 Jun 2012 10:20:02 +0800
+Message-Id: <1339726802-14441-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120615_042130_403599_2E22BADB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+This patch fixes the problem of dropping RANN element if the TTL
+is 1. If the received RANN element TTL is 1 or greater than 1, the
+RANN is processed. However, forwarding of received RANN element
+with TTL 1 or less is prohibited according to the standard. This
+is previously reported by Monthadar Al Jaberi.
 
-have seperate wow capability flags for
-*basic wow support
-*device capable of matching exact user defined pattern
-or de-authentication/disassoc pattern
-*device such AR9280 requires first four bytes for
-all sort of patterns
+Besides, this patch also avoid the processing of unicast PREQ
+generation if the RANN element does not meet the acceptance
+criteria mentioned in Sec. 13.10.12.4.2 of IEEE Std. 802.11-2012.
 
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Reported-by: Monthadar Al Jaberi <monthadar@gmail.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.h |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ net/mac80211/mesh_hwmp.c |   43 +++++++++++++++++++++++++------------------
+ 1 files changed, 25 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 2d5ae5e..c8b800d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -228,8 +228,22 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_RTT			= BIT(14),
- 	ATH9K_HW_CAP_MCI			= BIT(15),
- 	ATH9K_HW_CAP_DFS			= BIT(16),
-+	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
-+	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(18),
-+	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(19),
- };
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 616c940..d0e925d 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -772,11 +772,6 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	bool root_is_gate;
  
-+/*
-+ * WoW device capabilities
-+ * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
-+ * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
-+ * an exact user defined pattern or de-authentication/disassoc pattern.
-+ * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
-+ * bytes of the pattern for user defined pattern, de-authentication and
-+ * disassociation patterns for all types of possible frames recieved
-+ * of those types.
-+ */
+ 	ttl = rann->rann_ttl;
+-	if (ttl <= 1) {
+-		ifmsh->mshstats.dropped_frames_ttl++;
+-		return;
+-	}
+-	ttl--;
+ 	flags = rann->rann_flags;
+ 	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+ 	orig_addr = rann->rann_addr;
+@@ -813,37 +808,49 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
++	if (!(SN_LT(mpath->sn, orig_sn)) &&
++	    !(mpath->sn == orig_sn && metric < mpath->rann_metric)) {
++		rcu_read_unlock();
++		return;
++	}
 +
- struct ath9k_hw_capabilities {
- 	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
- 	u16 rts_aggr_limit;
+ 	if ((!(mpath->flags & (MESH_PATH_ACTIVE | MESH_PATH_RESOLVING)) ||
+ 	     (time_after(jiffies, mpath->last_preq_to_root +
+ 				  root_path_confirmation_jiffies(sdata)) ||
+ 	     time_before(jiffies, mpath->last_preq_to_root))) &&
+-	     !(mpath->flags & MESH_PATH_FIXED)) {
++	     !(mpath->flags & MESH_PATH_FIXED) && (ttl != 0)) {
+ 		mhwmp_dbg("%s time to refresh root mpath %pM", sdata->name,
+ 							       orig_addr);
+ 		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
+ 		mpath->last_preq_to_root = jiffies;
+ 	}
+ 
+-	if ((SN_LT(mpath->sn, orig_sn) || (mpath->sn == orig_sn &&
+-	   metric < mpath->rann_metric)) && ifmsh->mshcfg.dot11MeshForwarding) {
++	mpath->sn = orig_sn;
++	mpath->rann_metric = metric + metric_txsta;
++	mpath->is_root = true;
++	/* Recording RANNs sender address to send individually
++	 * addressed PREQs destined for root mesh STA */
++	memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
++
++	if (root_is_gate)
++		mesh_path_add_gate(mpath);
++
++	if (ttl <= 1) {
++		ifmsh->mshstats.dropped_frames_ttl++;
++		rcu_read_unlock();
++		return;
++	}
++	ttl--;
++
++	if (ifmsh->mshcfg.dot11MeshForwarding) {
+ 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
+ 				       cpu_to_le32(orig_sn),
+ 				       0, NULL, 0, broadcast_addr,
+ 				       hopcount, ttl, cpu_to_le32(interval),
+ 				       cpu_to_le32(metric + metric_txsta),
+ 				       0, sdata);
+-		mpath->sn = orig_sn;
+-		mpath->rann_metric = metric + metric_txsta;
+-		/* Recording RANNs sender address to send individually
+-		 * addressed PREQs destined for root mesh STA */
+-		memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
+ 	}
+ 
+-	mpath->is_root = true;
+-
+-	if (root_is_gate)
+-		mesh_path_add_gate(mpath);
+-
+ 	rcu_read_unlock();
+ }
+ 
 -- 
 1.7.0.4
 
