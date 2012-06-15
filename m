@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39844 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932087Ab2FNQxn (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:43945 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753237Ab2FOAcT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 12:53:43 -0400
-Message-ID: <1339692819.9786.4.camel@jlt3.sipsolutions.net> (sfid-20120614_185349_413162_789FD6AA)
-Subject: Re: [PATCH] mac80211: add support for userspace to handle auth
- frames on adhoc ifaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: Will Hawkins <hawkinsw@opentechinstitute.org>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 14 Jun 2012 18:53:39 +0200
-In-Reply-To: <4FD9DD35.4070709@lri.fr>
-References: <4FD8B5D4.8060305@opentechinstitute.org>
-	  <4FD99A24.3020907@lri.fr> <1339673095.4461.2.camel@jlt3.sipsolutions.net>
-	 <4FD9DD35.4070709@lri.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Jun 2012 20:32:19 -0400
+Received: by gglu4 with SMTP id u4so1914255ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 17:32:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339700228.9786.11.camel@jlt3.sipsolutions.net>
+References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
+	<1339700228.9786.11.camel@jlt3.sipsolutions.net>
+Date: Fri, 15 Jun 2012 08:32:18 +0800
+Message-ID: <CAEFj985xi0LNsLqHn1cgAw0oMVsfWrh_ioPuzUva8ZLbUTn=ZQ@mail.gmail.com> (sfid-20120615_023224_791905_B208BE4C)
+Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-14 at 14:46 +0200, Nicolas Cavallari wrote:
-> On 14/06/2012 13:24, Johannes Berg wrote:
-> > On Thu, 2012-06-14 at 10:00 +0200, Nicolas Cavallari wrote:
-> > 
-> >> I just have a question here : when auth frames are not delivered to
-> >> userspace, mac80211 will respond to them, and also uses them to detect
-> >> node reboot. If you register for auth frames, mac80211 will still send
-> >> auth frames as soon as a new station is seen, which might be confusing
-> >> for user space. Is that ok to do this ? Or should userspace have more
-> >> control over how mac80211 sends auth frames ?
-> > 
-> > Please read the code. If userspace registers for them, mac80211 will
-> > never do anything with the frame.
-> 
-> I didn't say the contrary. But if you read ieee80211_ibss_finish_sta(),
-> you see that mac80211 sends auth frames to each discovered station, even
-> if userspace want to handle auth frames. This seems strange to be able
-> to receive and handle auth frames from userspace while mac80211 sends
-> them behind userspace's back.
+Yes.
 
-Oops, sorry, yes. I forgot all about that code!
-
-I suppose we'd have to check whether userspace is handling
-authentication?
-
-> >> There is also another thing to consider if you want to send auth frames
-> >> from userspace, as CMD_FRAME requires a frequency, which in IBSS mode,
-> >> can change anytime without userspace being notified. If you only have to
-> >> answer to received auth frames, this is easier as you can reuse the
-> >> frequency given by nl80211 when receiving the auth frame. But if you
-> >> want to send a auth frame independently, how do you get the frequency to
-> >> use ?
-> > 
-> > You check the BSS info, that's trivial.
-> 
-> There is no GET_BSS from userspace. when merging IBSS, only the new
-> BSSID is notified. The only way to get this info from userspace would be
-> to dump the scan result and check the "we joined that ibss" flag, and
-> this isn't race-free. That, or using fixed_freq.
-
-Yeah, I guess that's true -- we should probably just allow not giving a
-frequency attribute at all and then it only works if you're
-connected/... but uses the right frequency.
-
-johannes
-
+On Fri, Jun 15, 2012 at 2:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2012-06-15 at 00:23 +0800, Chun-Yeow Yeoh wrote:
+>> This patch fixes the wrong assignment of mesh element TTL.
+>
+> Since I haven't pushed to John yet, should I rebase and merge this with
+> one of the previous patches?
+>
+> johannes
+>
+>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>> ---
+>>  net/mac80211/cfg.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+>> index 85ac364..43eb8d9 100644
+>> --- a/net/mac80211/cfg.c
+>> +++ b/net/mac80211/cfg.c
+>> @@ -1529,7 +1529,7 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+>>       if (_chg_mesh_attr(NL80211_MESHCONF_TTL, mask))
+>>               conf->dot11MeshTTL = nconf->dot11MeshTTL;
+>>       if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
+>> -             conf->dot11MeshTTL = nconf->element_ttl;
+>> +             conf->element_ttl = nconf->element_ttl;
+>>       if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
+>>               conf->auto_open_plinks = nconf->auto_open_plinks;
+>>       if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
+>
+>
