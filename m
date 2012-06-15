@@ -1,73 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53798 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751682Ab2F3NRN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:13 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 01/18] brcmsmac: remove PCIE() macro
-Date: Sat, 30 Jun 2012 15:16:04 +0200
-Message-Id: <1341062181-28071-2-git-send-email-hauke@hauke-m.de> (sfid-20120630_151717_399202_2CB833B3)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from perches-mx.perches.com ([206.117.179.246]:36960 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751600Ab2FOF4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 01:56:07 -0400
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 06/20] b43legacy: Use pr_<level>
+Date: Thu, 14 Jun 2012 22:53:46 -0700
+Message-Id: <2440160df6fe1e91d7bcb074290d0a18a9d84147.1339739416.git.joe@perches.com> (sfid-20120615_075632_079438_BBC54826)
+In-Reply-To: <cover.1339739415.git.joe@perches.com>
+References: <cover.1339739415.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of checking if there is a PCIe core on the bus, better check if
-hosttype is PCIe.
+Use a more current logging style.
 
-In the original submission to staging PCIE() checked, if the bustype is
-PCI and the buscore is a PCIe core. Now we assume that all cores bcma
-supports are PCIe based, so we just have to check if the bustype is PCI.
+Convert printks to pr_<level>.
+Coalesce formats, align arguments.
 
-The old code bcmsmac currently uses searches for a PCIe core on the bus
-and if there is one assumes that this is the buscore, which is wrong.
-Some SoCs have a PCIe core operating in host mode and this is not the
-bus core. The old code also caused a null pointer in
-ai_get_buscoretype() and ai_get_buscorerev() if buscore was not set
-because there was no PCIe core on the bus.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/b43legacy/b43legacy.h |   14 ++++++--------
+ drivers/net/wireless/b43legacy/debugfs.c   |    4 +++-
+ drivers/net/wireless/b43legacy/dma.c       |    2 ++
+ drivers/net/wireless/b43legacy/main.c      |   16 +++++++++-------
+ drivers/net/wireless/b43legacy/phy.c       |    2 ++
+ drivers/net/wireless/b43legacy/radio.c     |    5 +++--
+ drivers/net/wireless/b43legacy/xmit.c      |    2 ++
+ 7 files changed, 27 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index 3c6f9b1..c942a88 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -318,9 +318,8 @@
- #define	IS_SIM(chippkg)	\
- 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/b43legacy/b43legacy.h
+index a29da67..e77083e 100644
+--- a/drivers/net/wireless/b43legacy/b43legacy.h
++++ b/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -325,20 +325,18 @@ enum {
+ #define B43legacy_SBIMSTATE_IB_ERROR		0x20000
+ #define B43legacy_SBIMSTATE_TIMEOUT		0x40000
  
--#define PCIE(sih)	(ai_get_buscoretype(sih) == PCIE_CORE_ID)
--
--#define PCI_FORCEHT(sih) (PCIE(sih) && (ai_get_chip_id(sih) == BCM4716_CHIP_ID))
-+#define PCI_FORCEHT(sih) ((ai_get_buscoretype(sih) == PCIE_CORE_ID) && \
-+			  (ai_get_chip_id(sih) == BCM4716_CHIP_ID))
+-#define PFX		KBUILD_MODNAME ": "
+ #ifdef assert
+ # undef assert
+ #endif
+ #ifdef CONFIG_B43LEGACY_DEBUG
+ # define B43legacy_WARN_ON(x)	WARN_ON(x)
+ # define B43legacy_BUG_ON(expr)						\
+-	do {								\
+-		if (unlikely((expr))) {					\
+-			printk(KERN_INFO PFX "Test (%s) failed\n",	\
+-					      #expr);			\
+-			BUG_ON(expr);					\
+-		}							\
+-	} while (0)
++do {									\
++	if (unlikely((expr))) {						\
++		pr_info("Test (%s) failed\n", #expr);			\
++		BUG_ON(expr);						\
++	}								\
++} while (0)
+ # define B43legacy_DEBUG	1
+ #else
+ /* This will evaluate the argument even if debugging is disabled. */
+diff --git a/drivers/net/wireless/b43legacy/debugfs.c b/drivers/net/wireless/b43legacy/debugfs.c
+index 1965edb..7678005 100644
+--- a/drivers/net/wireless/b43legacy/debugfs.c
++++ b/drivers/net/wireless/b43legacy/debugfs.c
+@@ -23,6 +23,8 @@
  
- #ifdef DEBUG
- #define	SI_MSG(fmt, ...)	pr_debug(fmt, ##__VA_ARGS__)
-@@ -774,7 +773,7 @@ void ai_pci_up(struct si_pub *sih)
- 		bcma_core_set_clockmode(cc, BCMA_CLKMODE_FAST);
- 	}
+ */
  
--	if (PCIE(sih))
-+	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
- 		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci, true);
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/fs.h>
+ #include <linux/debugfs.h>
+ #include <linux/slab.h>
+@@ -71,7 +73,7 @@ struct b43legacy_dfs_file * fops_to_dfs_file(struct b43legacy_wldev *dev,
+ 					  bufsize - count,	\
+ 					  fmt , ##x);		\
+ 		else						\
+-			printk(KERN_ERR "b43legacy: fappend overflow\n"); \
++			pr_err("fappend overflow\n");		\
+ 	} while (0)
+ 
+ 
+diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
+index f1f8bd0..6b42488 100644
+--- a/drivers/net/wireless/b43legacy/dma.c
++++ b/drivers/net/wireless/b43legacy/dma.c
+@@ -27,6 +27,8 @@
+ 
+ */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include "b43legacy.h"
+ #include "dma.h"
+ #include "main.h"
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index 8b06ca5..b0536a5 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -29,6 +29,8 @@
+  *
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/module.h>
+@@ -190,8 +192,8 @@ void b43legacyinfo(struct b43legacy_wl *wl, const char *fmt, ...)
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	printk(KERN_INFO "b43legacy-%s: %pV",
+-	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
++	pr_info("%s: %pV",
++		(wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
+ 
+ 	va_end(args);
  }
+@@ -209,7 +211,7 @@ void b43legacyerr(struct b43legacy_wl *wl, const char *fmt, ...)
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
  
-@@ -792,7 +791,7 @@ void ai_pci_down(struct si_pub *sih)
- 		bcma_core_set_clockmode(cc, BCMA_CLKMODE_DYNAMIC);
- 	}
+-	printk(KERN_ERR "b43legacy-%s ERROR: %pV",
++	pr_err("%s ERROR: %pV",
+ 	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
  
--	if (PCIE(sih))
-+	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
- 		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci, false);
+ 	va_end(args);
+@@ -228,8 +230,8 @@ void b43legacywarn(struct b43legacy_wl *wl, const char *fmt, ...)
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	printk(KERN_WARNING "b43legacy-%s warning: %pV",
+-	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
++	pr_warn("%s warning: %pV",
++		(wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
+ 
+ 	va_end(args);
  }
+@@ -245,7 +247,7 @@ void b43legacydbg(struct b43legacy_wl *wl, const char *fmt, ...)
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
  
+-	printk(KERN_DEBUG "b43legacy-%s debug: %pV",
++	printk(KERN_DEBUG pr_fmt("%s debug: %pV"),
+ 	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
+ 
+ 	va_end(args);
+@@ -4001,7 +4003,7 @@ static void b43legacy_print_driverinfo(void)
+ #ifdef CONFIG_B43LEGACY_DMA
+ 	feat_dma = "D";
+ #endif
+-	printk(KERN_INFO "Broadcom 43xx-legacy driver loaded "
++	pr_info("Broadcom 43xx-legacy driver loaded "
+ 	       "[ Features: %s%s%s%s ]\n",
+ 	       feat_pci, feat_leds, feat_pio, feat_dma);
+ }
+diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/b43legacy/phy.c
+index 995c7d0..e03851d 100644
+--- a/drivers/net/wireless/b43legacy/phy.c
++++ b/drivers/net/wireless/b43legacy/phy.c
+@@ -29,6 +29,8 @@
+ 
+ */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/delay.h>
+ #include <linux/pci.h>
+ #include <linux/sched.h>
+diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
+index 8961776..ff3f996 100644
+--- a/drivers/net/wireless/b43legacy/radio.c
++++ b/drivers/net/wireless/b43legacy/radio.c
+@@ -29,6 +29,8 @@
+ 
+ */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/delay.h>
+ 
+ #include "b43legacy.h"
+@@ -78,8 +80,7 @@ u16 channel2freq_bg(u8 channel)
+ 	};
+ 
+ 	if (unlikely(channel < 1 || channel > 14)) {
+-		printk(KERN_INFO "b43legacy: Channel %d is out of range\n",
+-				  channel);
++		pr_info("Channel %d is out of range\n", channel);
+ 		dump_stack();
+ 		return 2412;
+ 	}
+diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
+index a8012f2..385eb72 100644
+--- a/drivers/net/wireless/b43legacy/xmit.c
++++ b/drivers/net/wireless/b43legacy/xmit.c
+@@ -28,6 +28,8 @@
+ 
+ */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <net/dst.h>
+ 
+ #include "xmit.h"
 -- 
-1.7.9.5
+1.7.8.111.gad25c.dirty
 
