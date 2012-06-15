@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33684 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754530Ab2FFNXJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:23:09 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 29/29] iwlwifi: remove extern opmode ops declarations
-Date: Wed,  6 Jun 2012 15:22:10 +0200
-Message-Id: <1338988930-11561-29-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152326_868089_FC82B901)
-In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
-References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:43235 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757882Ab2FOVFf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 17:05:35 -0400
+Message-ID: <4FDBA39A.60809@openwrt.org> (sfid-20120615_230540_112526_E6FF98A5)
+Date: Fri, 15 Jun 2012 23:05:30 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com, c_manoha@qca.qualcomm.com
+Subject: Re: [PATCH 2/9] ath9k_hw: fix OFDM weak signal detection handling
+References: <1339766727-61926-1-git-send-email-nbd@openwrt.org> <1339766727-61926-2-git-send-email-nbd@openwrt.org> <20120615173814.GA648@vmraj-lnx.qca.qualcomm.com>
+In-Reply-To: <20120615173814.GA648@vmraj-lnx.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2012-06-15 7:38 PM, Rajkumar Manoharan wrote:
+> On Fri, Jun 15, 2012 at 03:25:20PM +0200, Felix Fietkau wrote:
+>> Commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
+>> was unifying some code related to overriding OFDM weak signal detection,
+>> but seems to have gotten some of the original intent wrong, probably
+>> because of a misnamed variable.
+>> 
+>> The beacon RSSI is only valid in station mode, and the main reason to check
+>> it in ath9k_hw_set_ofdm_nil is to make sure that OFDM weak signal detection
+>> stays enabled if the RSSI is low, even when the OFDM noise immunity entry
+>> is supposed to disable it.
+>> 
+>> The above commit removed the mode checks and changed the code so that
+>> OFDM weak signal detection would only be changed if the rssi is high, which
+>> is wrong for everything but client mode.
+>> 
+>> This patch restores the old behavior in a simplified form.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/ani.c |   11 +++++++----
+>>  1 files changed, 7 insertions(+), 4 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+>> index 18ce69d..cf31050 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ani.c
+>> +++ b/drivers/net/wireless/ath/ath9k/ani.c
+>> @@ -265,6 +265,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+>>  	struct ath_common *common = ath9k_hw_common(ah);
+>>  	const struct ani_ofdm_level_entry *entry_ofdm;
+>>  	const struct ani_cck_level_entry *entry_cck;
+>> +	bool weak_sig;
+>>  
+>>  	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
+>>  		aniState->ofdmNoiseImmunityLevel,
+>> @@ -290,13 +291,15 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+>>  				     ATH9K_ANI_FIRSTEP_LEVEL,
+>>  				     entry_ofdm->fir_step_level);
+>>  
+>> -	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
+>> -	    (!aniState->ofdmWeakSigDetectOff !=
+>> -	     entry_ofdm->ofdm_weak_signal_on)) {
+>> +	weak_sig = entry_ofdm->ofdm_weak_signal_on;
+>> +	if (ah->opmode == NL80211_IFTYPE_STATION &&
+>> +	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
+>> +		weak_sig = true;
+>> +
+>> +	if (!aniState->ofdmWeakSigDetectOff != weak_sig)
+> 
+> beacon rssi is updated and used in both station and ibss mode. isn't it?
+Yeah, but in ibss mode it does not make much sense when there are
+multiple peers and a less frequent update interval (due to distributed
+beaconing).
 
-There's no need to declare the opmode ops
-as extern since they're now dynamically
-registered.
-
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/main.c    |    4 +++-
- drivers/net/wireless/iwlwifi/iwl-op-mode.h |    5 -----
- 2 files changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index ec0b77b..1c2d023 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -81,6 +81,8 @@ MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
- 
-+static const struct iwl_op_mode_ops iwl_dvm_ops;
-+
- void iwl_update_chain_flags(struct iwl_priv *priv)
- {
- 	struct iwl_rxon_context *ctx;
-@@ -2163,7 +2165,7 @@ static void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
- }
- 
--const struct iwl_op_mode_ops iwl_dvm_ops = {
-+static const struct iwl_op_mode_ops iwl_dvm_ops = {
- 	.start = iwl_op_mode_dvm_start,
- 	.stop = iwl_op_mode_dvm_stop,
- 	.rx = iwl_rx_dispatch,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-index cec133c..cd9ef11 100644
---- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-@@ -221,9 +221,4 @@ static inline void iwl_op_mode_wimax_active(struct iwl_op_mode *op_mode)
- 	op_mode->ops->wimax_active(op_mode);
- }
- 
--/*****************************************************
--* Op mode layers implementations
--******************************************************/
--extern const struct iwl_op_mode_ops iwl_dvm_ops;
--
- #endif /* __iwl_op_mode_h__ */
--- 
-1.7.10
-
+- Felix
