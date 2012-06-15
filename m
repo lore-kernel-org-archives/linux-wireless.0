@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:39084 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab2FOQxY (ORCPT
+Received: from h1355771.stratoserver.net ([85.214.105.140]:37564 "EHLO
+	h1355771.stratoserver.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965Ab2FOGTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 12:53:24 -0400
-Received: by ghrr11 with SMTP id r11so2493219ghr.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 09:53:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FDB5E52.1020608@qca.qualcomm.com>
-References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>
- <1339228530.4539.0.camel@jlt3.sipsolutions.net> <4FD3A936.8070600@broadcom.com>
- <1339399952.4520.13.camel@jlt3.sipsolutions.net> <4FD60369.80108@qca.qualcomm.com>
- <1339425944.4520.27.camel@jlt3.sipsolutions.net> <20120614193104.GD32257@tux>
- <1339748211.4512.6.camel@jlt3.sipsolutions.net> <4FDAF096.200@qca.qualcomm.com>
- <4FDB1740.60707@broadcom.com> <4FDB5E52.1020608@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Fri, 15 Jun 2012 09:53:03 -0700
-Message-ID: <CAB=NE6X=pO5c_yUqMmqU1jm92WJKqBbYioYm-2S4AYS2JXYRTA@mail.gmail.com> (sfid-20120615_185328_195463_A155D9DC)
-Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, me@bobcopeland.com,
-	mickflemm@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Fri, 15 Jun 2012 02:19:02 -0400
+Date: Fri, 15 Jun 2012 08:18:50 +0200
+From: Andreas Kemnade <andreas@kemnade.info>
+To: hong zhang <henryzhang62@yahoo.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	dsd@laptop.org, libertas-dev@lists.infradead.org
+Subject: Re: poor performance with W2CBW003 (Marvell 8686)
+Message-ID: <20120615081850.77454e10@kemnade.info> (sfid-20120615_081907_013150_94E4E9FF)
+In-Reply-To: <1339690266.19412.YahooMailClassic@web161704.mail.bf1.yahoo.com>
+References: <20120614074545.105a459d@kemnade.info>
+	<1339690266.19412.YahooMailClassic@web161704.mail.bf1.yahoo.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/nobSRgKBGyJ+7vNG8U70Xkb";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 15, 2012 at 9:09 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> On 06/15/2012 02:06 PM, Arend van Spriel wrote:
->> On 06/15/2012 10:21 AM, Kalle Valo wrote:
->>> On 06/15/2012 11:16 AM, Johannes Berg wrote:
->>>>> As for a name, I thought about it for a while and given that we have different
->>>>>> "wireless" technologies -- bluetooth, NFC, naming this CONFIG_WIRELESS_EXPERT
->>>>>> seemed odd, and given that our 802.11 framework is under cfg80211 naming it
->>>>>> CONFIG_CFG80211_EXPERT seemed appropriate. But even if its under cfg80211
->>>>>> perhaps something more explicit about the implications may be better, how
->>>>>> about CONFIG_CFG80211_MAY_BREAK_CERTIFICATION ?
->>>>
->>>> Or you could just be explicit about it and call it
->>>> CONFIG_WIRELESS_REGULATORY_BREAKAGE or something like that :-)
->>>
->>> CONFIG_WIRELESS_CERTIFIED?
->>
->> That one looks familiar ;-)
->
-> Sorry, did you suggest that already? I missed that. I guess I need to
-> start organising my email better :)
+--Sig_/nobSRgKBGyJ+7vNG8U70Xkb
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-We have CONFIG_ATH9K_DFS_CERTIFIED. I like something like
-CONFIG_CFG80211_MAY_BREAK_CERTIFICATION given that
-CONFIG_WIRELESS_CERTIFIED only assumes the kconfig options it would
-depend on are all neatly  developed but they could be still under
-development. The only thing about
-CONFIG_CFG80211_MAY_BREAK_CERTIFICATION is I suspect not many folks
-would be willing to ship with that enabled at all even *after* they do
-their homework.
+Hi,
 
-So how about CONFIG_CFG80211_CERTIFICATION_ONUS which can be defined
-as an option for features / options whereby the onus for regulatory
-certification is being accepted by the option enabler? Pretty simple
-and to the point, and would allow for research code but also code
-whereby a bit more work is required on the enabler like DFS
-certification.
+On Thu, 14 Jun 2012 09:11:06 -0700 (PDT)
+hong zhang <henryzhang62@yahoo.com> wrote:
 
-  Luis
+> bit mode and interrupt or PIO are configured in SDIO hoster side.
+> Not in driver side.
+>=20
+yes, I wrote the last email just to say that I have found something to look=
+ at.
+That is of course in the host driver. So the thing I did was reading
+commit logs of the 2.6.32 kernel working well.
+
+The only thing which puzzles me is the 5.5Mb/s data rate iwconfig shows.
+After playing with the host side driver, it also shows higher rates. But
+why does host driver affects *that* data rate of link qualitiy is good?
+
+Thanks for all your ideas where to look at.
+
+Greetings
+Andreas Kemnade
+
+--Sig_/nobSRgKBGyJ+7vNG8U70Xkb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAk/a08oACgkQvUy8S31NDea/9QCghMvn8MXk71psi+KKWzFQUkc8
+K+IAoLtCWTfZomTKa3PTPvVjnrKJXE3i
+=rYLV
+-----END PGP SIGNATURE-----
+
+--Sig_/nobSRgKBGyJ+7vNG8U70Xkb--
