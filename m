@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:41715 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924Ab2FRM0G (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51821 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab2FOUDl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 08:26:06 -0400
-Received: by eeit10 with SMTP id t10so1539583eei.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 05:26:04 -0700 (PDT)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: ath9k bug in country domain handling
-Date: Mon, 18 Jun 2012 14:25:58 +0200
-Message-ID: <4283314.5zPdis6seJ@sylvesterjr.cmi.ua.ac.be> (sfid-20120618_142610_876335_C2307D8F)
-In-Reply-To: <4FDE1EF5.9030805@gmail.com>
-References: <4FDE1EF5.9030805@gmail.com>
+	Fri, 15 Jun 2012 16:03:41 -0400
+Received: by yenl2 with SMTP id l2so2235112yen.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 13:03:40 -0700 (PDT)
+Date: Fri, 15 Jun 2012 16:03:29 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
+	linville@tuxdriver.com
+Cc: johannes.berg@intel.com
+Subject: [PATCH] ath5k: remove _bh from inner locks
+Message-ID: <20120615200329.GA19999@localhost> (sfid-20120615_220418_079389_DA7537E0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 17 June 2012 20:16:21 Xose Vazquez Perez wrote:
-> Erwin Van de Velde wrote:
-> > I have 802.11n cards with an atheros chipset with no default country
-> > domain. Upon initialization, crda is set to US domain, after which I try
-> > to change it to another domain, the driver only accepts further
-> > limitations: i.e. if a channel is allowed in the US but not in Belgium,
-> > it is disabled, but the other way round: if a channel is not allowed in
-> > the US, but is allowed in Belgium it is not enabled.
-> 
-> "no default country domain" :-???
-> 
-> # dmesg | grep ath:
-> 
-> look for:
-> ath: EEPROM regdomain: XXX
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: Country alpha2 being used: XX
-> ath: Regpair used: XXX
-> 
-> 
-> This is a Atheros *driver* feature.
-> Channels are restricted based on the EEPROM value.
-> And crda/wireless-regdb only can makes things _worse_.
+spin_unlock_bh(&txq->lock) already disables softirqs so we don't want
+to do it here.  Fixes smatch warnings:
 
-The output I get is:
-[ 8.931463] ath: EEPROM regdomain: 0x0
-[ 8.931483] ath: EEPROM indicates default country code should be used
-[ 8.931502] ath: doing EEPROM country->regdmn map search
-[ 8.931526] ath: country maps to regdmn code: 0x3a
-[ 8.931544] ath: Country alpha2 being used: US
-[ 8.931561] ath: Regpair used: 0x3a
+   drivers/net/wireless/ath/ath5k/base.c:1048 ath5k_drain_tx_buffs() error: double lock 'bottom_half:'
+   drivers/net/wireless/ath/ath5k/base.c:1056 ath5k_drain_tx_buffs() error: double unlock 'bottom_half:'
 
-As I see it, the regdomain is 00 and not US, so why does the ath9k driver 
-decide to put me in the US? US should not be the default country code, but 
-world reg domain. The preferred solution in my opinion is that the driver 
-would require a regdomain to be given if it is not already set by the card. 
-Choosing US as a default seems purely random . It would make far more sense to 
-have no restricions by default if no regdomain is given and require it as a 
-parameter, so everyone can set it correctly to his correct domain. The current 
-method not only disallows valid channels to be used, but can also allow for 
-legally forbidden channels to be used, which could be even worse.
+Reported-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Regards,
-Erwin
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index fbaa309..44ad6fe 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1045,11 +1045,11 @@ ath5k_drain_tx_buffs(struct ath5k_hw *ah)
+ 
+ 				ath5k_txbuf_free_skb(ah, bf);
+ 
+-				spin_lock_bh(&ah->txbuflock);
++				spin_lock(&ah->txbuflock);
+ 				list_move_tail(&bf->list, &ah->txbuf);
+ 				ah->txbuf_len++;
+ 				txq->txq_len--;
+-				spin_unlock_bh(&ah->txbuflock);
++				spin_unlock(&ah->txbuflock);
+ 			}
+ 			txq->link = NULL;
+ 			txq->txq_poll_mark = false;
+-- 
+1.7.2.5
 
+-- 
+Bob Copeland %% www.bobcopeland.com
