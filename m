@@ -1,101 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48999 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680Ab2FESYg (ORCPT
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:46146 "HELO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758171Ab2FOW4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 14:24:36 -0400
-Message-ID: <1338920677.4514.51.camel@jlt3.sipsolutions.net> (sfid-20120605_202439_954292_F6016948)
-Subject: [PATCH 3.5 v2] iwlwifi: use correct supported firmware for 6035 and
- 6000g2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 05 Jun 2012 20:24:37 +0200
-In-Reply-To: <1338904477.4514.46.camel@jlt3.sipsolutions.net> (sfid-20120605_155441_808766_F14DC0C8)
-References: <1338904477.4514.46.camel@jlt3.sipsolutions.net>
-	 (sfid-20120605_155441_808766_F14DC0C8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 15 Jun 2012 18:56:35 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.5] mwifiex: fix wrong return values in add_virtual_intf() error cases
+Date: Fri, 15 Jun 2012 15:49:54 -0700
+Message-Id: <1339800594-21720-1-git-send-email-bzhao@marvell.com> (sfid-20120616_005638_668110_4C9A9C9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+add_virtual_intf() needs to return an ERR_PTR(), instead of NULL,
+on errors, otherwise cfg80211 will crash.
 
-My patch
-
-   iwlwifi: use correct released ucode version
-
-did not correctly report supported firmware
-for the 6035 device. This patch fixes it. The
-minimum supported firmware version for 6035
-is v6.
-
-Also correct the minimum supported firmware
-version for the 6000g2 series of devices.
-
-Cc: stable@kernel.org
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |   23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+This patch should go to linux-stable too. But it has merge conflict.
+I'll resend a backport patch to linux-stable as soon as this patch reaches
+upstream mainline.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 19f7ee8..e5e8ada 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -35,17 +35,20 @@
- #define IWL6000_UCODE_API_MAX 6
- #define IWL6050_UCODE_API_MAX 5
- #define IWL6000G2_UCODE_API_MAX 6
-+#define IWL6035_UCODE_API_MAX 6
+ drivers/net/wireless/mwifiex/cfg80211.c |   25 +++++++++++--------------
+ 1 files changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 9c2e08e..ef5a88b 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1525,7 +1525,7 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	struct wireless_dev *wdev;
  
- /* Oldest version we won't warn about */
- #define IWL6000_UCODE_API_OK 4
- #define IWL6000G2_UCODE_API_OK 5
- #define IWL6050_UCODE_API_OK 5
- #define IWL6000G2B_UCODE_API_OK 6
-+#define IWL6035_UCODE_API_OK 6
+ 	if (!adapter)
+-		return NULL;
++		return ERR_PTR(-EFAULT);
  
- /* Lowest firmware API version supported */
- #define IWL6000_UCODE_API_MIN 4
- #define IWL6050_UCODE_API_MIN 4
--#define IWL6000G2_UCODE_API_MIN 4
-+#define IWL6000G2_UCODE_API_MIN 5
-+#define IWL6035_UCODE_API_MIN 6
+ 	switch (type) {
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+@@ -1535,12 +1535,12 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		if (priv->bss_mode) {
+ 			wiphy_err(wiphy,
+ 				  "cannot create multiple sta/adhoc ifaces\n");
+-			return NULL;
++			return ERR_PTR(-EINVAL);
+ 		}
  
- /* EEPROM versions */
- #define EEPROM_6000_TX_POWER_VERSION	(4)
-@@ -227,9 +230,25 @@ const struct iwl_cfg iwl6030_2bg_cfg = {
- 	IWL_DEVICE_6030,
- };
+ 		wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
+ 		if (!wdev)
+-			return NULL;
++			return ERR_PTR(-ENOMEM);
  
-+#define IWL_DEVICE_6035						\
-+	.fw_name_pre = IWL6030_FW_PRE,				\
-+	.ucode_api_max = IWL6035_UCODE_API_MAX,			\
-+	.ucode_api_ok = IWL6035_UCODE_API_OK,			\
-+	.ucode_api_min = IWL6035_UCODE_API_MIN,			\
-+	.device_family = IWL_DEVICE_FAMILY_6030,		\
-+	.max_inst_size = IWL60_RTC_INST_SIZE,			\
-+	.max_data_size = IWL60_RTC_DATA_SIZE,			\
-+	.eeprom_ver = EEPROM_6030_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
-+	.base_params = &iwl6000_g2_base_params,			\
-+	.bt_params = &iwl6000_bt_params,			\
-+	.need_temp_offset_calib = true,				\
-+	.led_mode = IWL_LED_RF_STATE,				\
-+	.adv_pm = true
-+
- const struct iwl_cfg iwl6035_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6235 AGN",
--	IWL_DEVICE_6030,
-+	IWL_DEVICE_6035,
- 	.ht_params = &iwl6000_ht_params,
- };
+ 		wdev->wiphy = wiphy;
+ 		priv->wdev = wdev;
+@@ -1563,12 +1563,12 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 		if (priv->bss_mode) {
+ 			wiphy_err(wiphy, "Can't create multiple AP interfaces");
+-			return NULL;
++			return ERR_PTR(-EINVAL);
+ 		}
+ 
+ 		wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
+ 		if (!wdev)
+-			return NULL;
++			return ERR_PTR(-ENOMEM);
+ 
+ 		priv->wdev = wdev;
+ 		wdev->wiphy = wiphy;
+@@ -1585,14 +1585,15 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		break;
+ 	default:
+ 		wiphy_err(wiphy, "type not supported\n");
+-		return NULL;
++		return ERR_PTR(-EINVAL);
+ 	}
+ 
+ 	dev = alloc_netdev_mq(sizeof(struct mwifiex_private *), name,
+ 			      ether_setup, 1);
+ 	if (!dev) {
+ 		wiphy_err(wiphy, "no memory available for netdevice\n");
+-		goto error;
++		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
++		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+ 	mwifiex_init_priv_params(priv, dev);
+@@ -1623,7 +1624,9 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	/* Register network device */
+ 	if (register_netdevice(dev)) {
+ 		wiphy_err(wiphy, "cannot register virtual network device\n");
+-		goto error;
++		free_netdev(dev);
++		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
++		return ERR_PTR(-EFAULT);
+ 	}
+ 
+ 	sema_init(&priv->async_sem, 1);
+@@ -1635,12 +1638,6 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	mwifiex_dev_debugfs_init(priv);
+ #endif
+ 	return dev;
+-error:
+-	if (dev && (dev->reg_state == NETREG_UNREGISTERED))
+-		free_netdev(dev);
+-	priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+-
+-	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
  
 -- 
-1.7.10
-
-
+1.7.0.2
 
