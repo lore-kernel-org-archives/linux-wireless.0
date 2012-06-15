@@ -1,80 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21170 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754420Ab2FDOzQ (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:58324 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750982Ab2FOIgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 10:55:16 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.52233.825371.168242@gargle.gargle.HOWL> (sfid-20120604_165526_210385_840486A8)
-Date: Mon, 4 Jun 2012 20:24:01 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] ath9k: Handle fatal interrupts properly
+	Fri, 15 Jun 2012 04:36:19 -0400
+Received: by lagw12 with SMTP id w12so1729643lag.38
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 01:36:16 -0700 (PDT)
+Message-ID: <1339749374.4502.80.camel@cumari.coelho.fi> (sfid-20120615_103643_839154_C4E57EF4)
+Subject: Re: [PATCH wireless-next 18/20] ti: Use pr_<level>
+From: Luciano Coelho <coelho@ti.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Fri, 15 Jun 2012 11:36:14 +0300
+In-Reply-To: <a4533db379be3689e3b29ed9b0d170263d875f7d.1339739416.git.joe@perches.com>
+References: <cover.1339739415.git.joe@perches.com>
+	 <a4533db379be3689e3b29ed9b0d170263d875f7d.1339739416.git.joe@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a fatal interrupt is received or it is detected that the baseband
-has hung, the chip has to be reset immediately.  Otherwise, we end up
-processing spurious interrupts. Ensure that we bail out properly in
-the ISR when the reset work hasn't completed yet.
+Hi Joe,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    7 ++++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+On Thu, 2012-06-14 at 22:53 -0700, Joe Perches wrote:
+> Use a more current logging style.
+> 
+> Convert printks to pr_<level>.
+> Coalesce formats, align arguments.
+> 
+> Add newlines to calls, remove from macros.
+> Remove unnecessary duplicate newlines from calls.
+> Remove spaces before newlines.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index ae43de1..02fc1c1 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -611,6 +611,7 @@ enum sc_op_flags {
- 	SC_OP_TSF_RESET,
- 	SC_OP_ANI_RUN,
- 	SC_OP_PRIM_STA_VIF,
-+	SC_OP_HW_RESET,
- };
- 
- /* Powersave flags */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 86bfea9..6ff33c9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -218,6 +218,8 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 
- 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
- 			       sc->config.txpowlimit, &sc->curtxpow);
-+
-+	clear_bit(SC_OP_HW_RESET, &sc->sc_flags);
- 	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- 
-@@ -362,6 +364,7 @@ void ath9k_tasklet(unsigned long data)
- 
- 		RESET_STAT_INC(sc, type);
- #endif
-+		set_bit(SC_OP_HW_RESET, &sc->sc_flags);
- 		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 		goto out;
- 	}
-@@ -438,12 +441,14 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
- 		return IRQ_NONE;
- 
--
- 	/* shared irq, not for us */
- 
- 	if (!ath9k_hw_intrpend(ah))
- 		return IRQ_NONE;
- 
-+	if(test_bit(SC_OP_HW_RESET, &sc->sc_flags))
-+		return IRQ_HANDLED;
-+
- 	/*
- 	 * Figure out the reason(s) for the interrupt.  Note
- 	 * that the hal returns a pseudo-ISR that may include
--- 
-1.7.10.3
+As Johannes already mentioned, I have to also ask why do you need to do
+this? I see the point, slightly, with the wl1251 code, because it is
+still using printks, but with wlcore and friends, there's no functional
+change.
+
+[...]
+
+> diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+> index 9d8f581..e4d0063 100644
+> --- a/drivers/net/wireless/ti/wl1251/wl1251.h
+> +++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+> @@ -54,22 +54,22 @@ enum {
+>  
+>  #define DEBUG_DUMP_LIMIT 1024
+>  
+> -#define wl1251_error(fmt, arg...) \
+> -	printk(KERN_ERR DRIVER_PREFIX "ERROR " fmt "\n", ##arg)
+> +#define wl1251_err(fmt, arg...)				\
+> +	pr_err(DRIVER_PREFIX "ERROR " fmt, ##arg)
+>  
+> -#define wl1251_warning(fmt, arg...) \
+> -	printk(KERN_WARNING DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
+> +#define wl1251_warn(fmt, arg...)				\
+> +	pr_warn(DRIVER_PREFIX "WARNING " fmt, ##arg)
+>  
+> -#define wl1251_notice(fmt, arg...) \
+> -	printk(KERN_INFO DRIVER_PREFIX fmt "\n", ##arg)
+> +#define wl1251_notice(fmt, arg...)		\
+> +	pr_info(DRIVER_PREFIX fmt, ##arg)
+>  
+> -#define wl1251_info(fmt, arg...) \
+> -	printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg)
+> +#define wl1251_info(fmt, arg...)				\
+> +	printk(KERN_DEBUG DRIVER_PREFIX fmt, ##arg)
+>  
+>  #define wl1251_debug(level, fmt, arg...) \
+> -	do { \
+> +	do {				 \
+>  		if (level & DEBUG_LEVEL) \
+> -			printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg); \
+> +			printk(KERN_DEBUG DRIVER_PREFIX fmt, ##arg); \
+>  	} while (0)
+
+As mentioned above, this change here is acceptable, but removing the \n
+from the macro and adding it at the end of each and every call is
+useless and will just skew git-blame and make it harder to do rebase or
+apply patches because of conflicts.
+
+[...]
+
+> diff --git a/drivers/net/wireless/ti/wlcore/debug.h b/drivers/net/wireless/ti/wlcore/debug.h
+> index 6b800b3..83b72c2 100644
+> --- a/drivers/net/wireless/ti/wlcore/debug.h
+> +++ b/drivers/net/wireless/ti/wlcore/debug.h
+> @@ -61,22 +61,22 @@ extern u32 wl12xx_debug_level;
+>  
+>  #define DEBUG_DUMP_LIMIT 1024
+>  
+> -#define wl1271_error(fmt, arg...) \
+> -	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg)
+> +#define wl1271_err(fmt, arg...)				\
+> +	pr_err(DRIVER_PREFIX "ERROR " fmt, ##arg)
+>  
+> -#define wl1271_warning(fmt, arg...) \
+> -	pr_warning(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
+> +#define wl1271_warn(fmt, arg...)				\
+> +	pr_warn(DRIVER_PREFIX "WARNING " fmt, ##arg)
+
+Using pr_warn instead of pr_warning is pointless.  pr_warning is the
+main definition, actually, and pr_warn is just a "mirror".
+
+
+> -#define wl1271_notice(fmt, arg...) \
+> -	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
+> +#define wl1271_notice(fmt, arg...)		\
+> +	pr_info(DRIVER_PREFIX fmt, ##arg)
+>  
+> -#define wl1271_info(fmt, arg...) \
+> -	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
+> +#define wl1271_info(fmt, arg...)		\
+> +	pr_info(DRIVER_PREFIX fmt, ##arg)
+>  
+> -#define wl1271_debug(level, fmt, arg...) \
+> -	do { \
+> +#define wl1271_debug(level, fmt, arg...)	\
+> +	do {					\
+>  		if (level & wl12xx_debug_level) \
+> -			pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
+> +			pr_debug(DRIVER_PREFIX fmt, ##arg); \
+>  	} while (0)
+
+Again, moving the \n from the macro definition and changing all the
+callers is an unnecessary, intrusive change.
+
+We have wanted to change "wl1271" to "wl12xx" for a long time, but we
+don't do it exactly because this means we need to change the calls
+everywhere.
+
+So, this is a NACK from me, unless you have a really good reason why
+this change is needed.
+
+--
+Luca.
 
