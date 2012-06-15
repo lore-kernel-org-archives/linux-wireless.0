@@ -1,45 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:38163 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756138Ab2FVRAa convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:33586 "HELO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757441Ab2FOTcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 13:00:30 -0400
-Received: by obbuo13 with SMTP id uo13so2182797obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 10:00:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340371854-24101-1-git-send-email-ozancag@gmail.com>
-References: <1340371854-24101-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Fri, 22 Jun 2012 10:00:05 -0700
-Message-ID: <CAB=NE6XAMQmU3pU+hD3+RZMCj4kiKS50phtLdmYtYhM7mxy+-w@mail.gmail.com> (sfid-20120622_190033_365356_D065B7B1)
-Subject: Re: [PATCH] compat-wireless: Naturally sort patch prefixes
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 15 Jun 2012 15:32:18 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v3 4/5] mwifiex: separate uAP WPA/WPA2 parsing from other BSS parameters
+Date: Fri, 15 Jun 2012 12:21:54 -0700
+Message-Id: <1339788115-20596-5-git-send-email-bzhao@marvell.com> (sfid-20120615_213221_202180_A177C23E)
+In-Reply-To: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
+References: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 22, 2012 at 6:30 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> Use ls -v to get a naturally sorted list of patches like:
->
-> patches/00-vga_switcheroo_client_ops.patch
-> patches/01-dma_buf_ops-addition.patch
-> patches/02-revert-vm_mmap.patch
-> patches/98-pr_fmt.patch
-> patches/99-change-makefile.patch
-> patches/9999-FIXME-dont-build-i915-for-i2c-problems.patch
->
-> instead of:
->
-> patches/00-vga_switcheroo_client_ops.patch
-> patches/01-dma_buf_ops-addition.patch
-> patches/02-revert-vm_mmap.patch
-> patches/98-pr_fmt.patch
-> patches/9999-FIXME-dont-build-i915-for-i2c-problems.patch
-> patches/99-change-makefile.patch
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+From: Avinash Patil <patila@marvell.com>
 
-Groovy, thanks applied and pushed!
+To enhance readability, create a separate function for parsing
+WPA/WPA2 related parameters from cfg80211_ap_settings.
+There is no functional change in this patch.
 
-  Luis
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+v3: resending as 4/5, no change since v1
+v2: resending as 4/4, no change since v1
+
+ drivers/net/wireless/mwifiex/uap_cmd.c |  145 +++++++++++++++++---------------
+ 1 files changed, 78 insertions(+), 67 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index f13982d..4b39551 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -171,6 +171,82 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
+ }
+ 
+ /* This function parses BSS related parameters from structure
++ * and prepares TLVs specific to WPA/WPA2 security.
++ * These TLVs are appended to command buffer.
++ */
++static void
++mwifiex_uap_bss_wpa(u8 **tlv_buf, void *cmd_buf, u16 *param_size)
++{
++	struct host_cmd_tlv_pwk_cipher *pwk_cipher;
++	struct host_cmd_tlv_gwk_cipher *gwk_cipher;
++	struct host_cmd_tlv_passphrase *passphrase;
++	struct host_cmd_tlv_akmp *tlv_akmp;
++	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
++	u16 cmd_size = *param_size;
++	u8 *tlv = *tlv_buf;
++
++	tlv_akmp = (struct host_cmd_tlv_akmp *)tlv;
++	tlv_akmp->tlv.type = cpu_to_le16(TLV_TYPE_UAP_AKMP);
++	tlv_akmp->tlv.len = cpu_to_le16(sizeof(struct host_cmd_tlv_akmp) -
++					sizeof(struct host_cmd_tlv));
++	tlv_akmp->key_mgmt_operation = cpu_to_le16(bss_cfg->key_mgmt_operation);
++	tlv_akmp->key_mgmt = cpu_to_le16(bss_cfg->key_mgmt);
++	cmd_size += sizeof(struct host_cmd_tlv_akmp);
++	tlv += sizeof(struct host_cmd_tlv_akmp);
++
++	if (bss_cfg->wpa_cfg.pairwise_cipher_wpa & VALID_CIPHER_BITMAP) {
++		pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
++		pwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_PWK_CIPHER);
++		pwk_cipher->tlv.len =
++			cpu_to_le16(sizeof(struct host_cmd_tlv_pwk_cipher) -
++				    sizeof(struct host_cmd_tlv));
++		pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA);
++		pwk_cipher->cipher = bss_cfg->wpa_cfg.pairwise_cipher_wpa;
++		cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
++		tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
++	}
++
++	if (bss_cfg->wpa_cfg.pairwise_cipher_wpa2 & VALID_CIPHER_BITMAP) {
++		pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
++		pwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_PWK_CIPHER);
++		pwk_cipher->tlv.len =
++			cpu_to_le16(sizeof(struct host_cmd_tlv_pwk_cipher) -
++				    sizeof(struct host_cmd_tlv));
++		pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA2);
++		pwk_cipher->cipher = bss_cfg->wpa_cfg.pairwise_cipher_wpa2;
++		cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
++		tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
++	}
++
++	if (bss_cfg->wpa_cfg.group_cipher & VALID_CIPHER_BITMAP) {
++		gwk_cipher = (struct host_cmd_tlv_gwk_cipher *)tlv;
++		gwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_GWK_CIPHER);
++		gwk_cipher->tlv.len =
++			cpu_to_le16(sizeof(struct host_cmd_tlv_gwk_cipher) -
++				    sizeof(struct host_cmd_tlv));
++		gwk_cipher->cipher = bss_cfg->wpa_cfg.group_cipher;
++		cmd_size += sizeof(struct host_cmd_tlv_gwk_cipher);
++		tlv += sizeof(struct host_cmd_tlv_gwk_cipher);
++	}
++
++	if (bss_cfg->wpa_cfg.length) {
++		passphrase = (struct host_cmd_tlv_passphrase *)tlv;
++		passphrase->tlv.type = cpu_to_le16(TLV_TYPE_UAP_WPA_PASSPHRASE);
++		passphrase->tlv.len = cpu_to_le16(bss_cfg->wpa_cfg.length);
++		memcpy(passphrase->passphrase, bss_cfg->wpa_cfg.passphrase,
++		       bss_cfg->wpa_cfg.length);
++		cmd_size += sizeof(struct host_cmd_tlv) +
++			    bss_cfg->wpa_cfg.length;
++		tlv += sizeof(struct host_cmd_tlv) + bss_cfg->wpa_cfg.length;
++	}
++
++	*param_size = cmd_size;
++	*tlv_buf = tlv;
++
++	return;
++}
++
++/* This function parses BSS related parameters from structure
+  * and prepares TLVs. These TLVs are appended to command buffer.
+ */
+ static int
+@@ -184,12 +260,8 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 	struct host_cmd_tlv_frag_threshold *frag_threshold;
+ 	struct host_cmd_tlv_rts_threshold *rts_threshold;
+ 	struct host_cmd_tlv_retry_limit *retry_limit;
+-	struct host_cmd_tlv_pwk_cipher *pwk_cipher;
+-	struct host_cmd_tlv_gwk_cipher *gwk_cipher;
+ 	struct host_cmd_tlv_encrypt_protocol *encrypt_protocol;
+ 	struct host_cmd_tlv_auth_type *auth_type;
+-	struct host_cmd_tlv_passphrase *passphrase;
+-	struct host_cmd_tlv_akmp *tlv_akmp;
+ 	struct mwifiex_ie_types_htcap *htcap;
+ 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
+ 	u16 cmd_size = *param_size;
+@@ -280,70 +352,9 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 	}
+ 	if ((bss_cfg->protocol & PROTOCOL_WPA) ||
+ 	    (bss_cfg->protocol & PROTOCOL_WPA2) ||
+-	    (bss_cfg->protocol & PROTOCOL_EAP)) {
+-		tlv_akmp = (struct host_cmd_tlv_akmp *)tlv;
+-		tlv_akmp->tlv.type = cpu_to_le16(TLV_TYPE_UAP_AKMP);
+-		tlv_akmp->tlv.len =
+-		    cpu_to_le16(sizeof(struct host_cmd_tlv_akmp) -
+-				sizeof(struct host_cmd_tlv));
+-		tlv_akmp->key_mgmt_operation =
+-			cpu_to_le16(bss_cfg->key_mgmt_operation);
+-		tlv_akmp->key_mgmt = cpu_to_le16(bss_cfg->key_mgmt);
+-		cmd_size += sizeof(struct host_cmd_tlv_akmp);
+-		tlv += sizeof(struct host_cmd_tlv_akmp);
+-
+-		if (bss_cfg->wpa_cfg.pairwise_cipher_wpa &
+-				VALID_CIPHER_BITMAP) {
+-			pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
+-			pwk_cipher->tlv.type =
+-				cpu_to_le16(TLV_TYPE_PWK_CIPHER);
+-			pwk_cipher->tlv.len = cpu_to_le16(
+-				sizeof(struct host_cmd_tlv_pwk_cipher) -
+-				sizeof(struct host_cmd_tlv));
+-			pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA);
+-			pwk_cipher->cipher =
+-				bss_cfg->wpa_cfg.pairwise_cipher_wpa;
+-			cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
+-			tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
+-		}
+-		if (bss_cfg->wpa_cfg.pairwise_cipher_wpa2 &
+-				VALID_CIPHER_BITMAP) {
+-			pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
+-			pwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_PWK_CIPHER);
+-			pwk_cipher->tlv.len = cpu_to_le16(
+-				sizeof(struct host_cmd_tlv_pwk_cipher) -
+-				sizeof(struct host_cmd_tlv));
+-			pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA2);
+-			pwk_cipher->cipher =
+-				bss_cfg->wpa_cfg.pairwise_cipher_wpa2;
+-			cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
+-			tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
+-		}
+-		if (bss_cfg->wpa_cfg.group_cipher & VALID_CIPHER_BITMAP) {
+-			gwk_cipher = (struct host_cmd_tlv_gwk_cipher *)tlv;
+-			gwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_GWK_CIPHER);
+-			gwk_cipher->tlv.len = cpu_to_le16(
+-				sizeof(struct host_cmd_tlv_gwk_cipher) -
+-				sizeof(struct host_cmd_tlv));
+-			gwk_cipher->cipher = bss_cfg->wpa_cfg.group_cipher;
+-			cmd_size += sizeof(struct host_cmd_tlv_gwk_cipher);
+-			tlv += sizeof(struct host_cmd_tlv_gwk_cipher);
+-		}
+-		if (bss_cfg->wpa_cfg.length) {
+-			passphrase = (struct host_cmd_tlv_passphrase *)tlv;
+-			passphrase->tlv.type =
+-				cpu_to_le16(TLV_TYPE_UAP_WPA_PASSPHRASE);
+-			passphrase->tlv.len =
+-				cpu_to_le16(bss_cfg->wpa_cfg.length);
+-			memcpy(passphrase->passphrase,
+-			       bss_cfg->wpa_cfg.passphrase,
+-			       bss_cfg->wpa_cfg.length);
+-			cmd_size += sizeof(struct host_cmd_tlv) +
+-				    bss_cfg->wpa_cfg.length;
+-			tlv += sizeof(struct host_cmd_tlv) +
+-			       bss_cfg->wpa_cfg.length;
+-		}
+-	}
++	    (bss_cfg->protocol & PROTOCOL_EAP))
++		mwifiex_uap_bss_wpa(&tlv, cmd_buf, &cmd_size);
++
+ 	if ((bss_cfg->auth_mode <= WLAN_AUTH_SHARED_KEY) ||
+ 	    (bss_cfg->auth_mode == MWIFIEX_AUTH_MODE_AUTO)) {
+ 		auth_type = (struct host_cmd_tlv_auth_type *)tlv;
+-- 
+1.7.0.2
+
