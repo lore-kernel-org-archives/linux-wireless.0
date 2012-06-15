@@ -1,111 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:54292 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753305Ab2FSAUD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 20:20:03 -0400
-Message-ID: <4FDFC5B2.1010807@opentechinstitute.org> (sfid-20120619_022007_340967_58722B8D)
-Date: Mon, 18 Jun 2012 20:20:02 -0400
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
+Received: from smtp2.u-psud.fr ([129.175.33.42]:47198 "EHLO smtp2.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932261Ab2FOQdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 12:33:49 -0400
+Received: from smtp2.u-psud.fr (localhost [127.0.0.1])
+	by localhost (MTA) with SMTP id 0DFC334D654
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 18:33:48 +0200 (CEST)
+Received: from ext.lri.fr (ext.lri.fr [129.175.15.4])
+	by smtp2.u-psud.fr (MTA) with ESMTP id E1EF134D660
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 18:33:47 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by ext.lri.fr (Postfix) with ESMTP id E16544084F
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 18:33:47 +0200 (CEST)
+Received: from ext.lri.fr ([127.0.0.1])
+	by localhost (ext.lri.fr [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Mh4K86FueHKq for <linux-wireless@vger.kernel.org>;
+	Fri, 15 Jun 2012 18:33:47 +0200 (CEST)
+Received: from smtp-ng.lri.fr (smtp [129.175.3.73])
+	by ext.lri.fr (Postfix) with ESMTP id C1D303FE9D
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 18:33:47 +0200 (CEST)
+Received: from [129.175.25.36] (lri25-36 [129.175.25.36])
+	by smtp-ng.lri.fr (Postfix) with ESMTP id AFA5C60F4D
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 18:33:47 +0200 (CEST)
+Message-ID: <4FDB63EC.5030802@lri.fr> (sfid-20120615_183353_188178_21C243A0)
+Date: Fri, 15 Jun 2012 18:33:48 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCH 1/2 v3] mac80211/cfg80211: add support for userspace to handle
- auth frames on adhoc ifaces
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [resent to correct list address][RFC] mac80211: tx: do not drop management
+ frames to non-MFP STA.
+References: <1339777624-27826-1-git-send-email-cavallar@lri.fr>
+In-Reply-To: <1339777624-27826-1-git-send-email-cavallar@lri.fr>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add cfg80211_mgmt_reg_match to cfg80211 to check for userspace
-application registrations for management frames rx'd from a specific
-interface. This function will be used by IBSS code to determine whether
-or not to send out "open" authentication frames.
+When drop_unencrypted is enabled and MFP is disabled,
+non-robust management frames for not-yet associated STA are dropped.
+This isn't visible as many management frames sent from the kernel
+have TX_INTFL_DONT_ENCRYPT set and management frames injected
+from a monitor vif have TX_CTL_INJECTED so aren't dropped.
+But management frames sent from userspace via NL80211_CMD_FRAME
+do not have this flag set, so are dropped.
 
-Update documentation for cfg80211_rx_mgmt to note that "query" frames
-are sent to matching userspace applications.
+This patch make it drop non-management frames as usual, but
+only MFP STA are subject to drops when drop_unencrypted is set to 1.
 
+This shouldn't break anything, as drop_unencrypted is only enabled
+in IBSS mode when PRIVACY is requested.
 
-Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
+
 ---
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7319f25..fd84880 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3238,6 +3238,18 @@ void cfg80211_new_sta(struct net_device *dev,
-const u8 *mac_addr,
- void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t
-gfp);
 
- /**
-+ * cfg80211_mgmt_reg_match - check for userspace mgmt frame registrations
-+ *
-+ * @dev: the netdev
-+ * @frame_type: mgmt frame type to match against. Should be or'd
-+ * with IEEE80211_FTYPE_MGMT before being passed.
-+ *
-+ * Returns %true if a user space application has registered for this
-+ * frame type. Returns %false otherwise.
-+ */
-+int cfg80211_mgmt_reg_match(struct net_device *dev, u16 frame_type);
-+			
-+/**
-  * cfg80211_rx_mgmt - notification of received, unprocessed management
-frame
-  * @dev: network device
-  * @freq: Frequency on which the frame was received in MHz
-@@ -3247,6 +3259,7 @@ void cfg80211_del_sta(struct net_device *dev,
-const u8 *mac_addr, gfp_t gfp);
-  * @gfp: context flags
-  *
-  * Returns %true if a user space application has registered for this frame.
-+ * When a user space application is registered for this frame, it is
-notified.
-  * For action frames, that makes it responsible for rejecting unrecognized
-  * action frames; %false otherwise, in which case for action frames the
-  * driver is responsible for rejecting the frame.
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index da4406f..2d5e6dd 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -609,6 +609,41 @@ struct cfg80211_mgmt_registration {
- 	u8 match[];
- };
+Found this while trying to handle auth frames in userspace
+on a IBSS RSN network.
+I'm a bit surprised that drop_unencrypted is disabled both
+in AP and managed mode, but only enabled in IBSS RSN, which
+does not support MFP yet, so the MFP handling is somewhat useless for now.
 
-+int cfg80211_mgmt_reg_match(struct net_device *dev, u16 frame_type)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_mgmt_registration *reg;
-+	int matched = 0;
-+	u16 mgmt_type;
-+
-+	if (!wdev->wiphy->mgmt_stypes)
-+		return 0;
-+
-+	if ((frame_type & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT)
-+		return 0;
-+
-+	if (frame_type & ~(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE))
-+		return 0;
-+
-+	mgmt_type = (frame_type & IEEE80211_FCTL_STYPE) >> 4;
-+	if (!(wdev->wiphy->mgmt_stypes[wdev->iftype].rx & BIT(mgmt_type)))
-+		return 0;
-+
-+	spin_lock_bh(&wdev->mgmt_registrations_lock);
-+
-+	list_for_each_entry(reg, &wdev->mgmt_registrations, list) {
-+		if (frame_type == le16_to_cpu(reg->frame_type)) {
-+			matched = 1;
-+			break;
-+		}
-+	}
-+
-+	spin_unlock_bh(&wdev->mgmt_registrations_lock);
-+
-+	return matched;
-+}
-+EXPORT_SYMBOL(cfg80211_mgmt_reg_match);
-+
- int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_pid,
- 				u16 frame_type, const u8 *match_data,
- 				int match_len)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index af25c4e..9f61e64 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -558,9 +558,10 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 	else if (tx->sdata->drop_unencrypted &&
+ 		 (tx->skb->protocol != tx->sdata->control_port_protocol) &&
+ 		 !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+-		 (!ieee80211_is_robust_mgmt_frame(hdr) ||
+-		  (ieee80211_is_action(hdr->frame_control) &&
+-		   tx->sta && test_sta_flag(tx->sta, WLAN_STA_MFP)))) {
++		 (!ieee80211_is_mgmt(hdr->frame_control) ||
++		  (!ieee80211_is_robust_mgmt_frame(hdr) ||
++		   ieee80211_is_action(hdr->frame_control)) &&
++		   tx->sta && test_sta_flag(tx->sta, WLAN_STA_MFP))) {
+ 		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
+ 		return TX_DROP;
+ 	} else
+-- 1.7.10.4
