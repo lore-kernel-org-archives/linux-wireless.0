@@ -1,173 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53849 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752177Ab2F3NRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:43 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 07/18] brcmsmac: remove si_pmu_spuravoid_pllupdate()
-Date: Sat, 30 Jun 2012 15:16:10 +0200
-Message-Id: <1341062181-28071-8-git-send-email-hauke@hauke-m.de> (sfid-20120630_151747_459506_62F5D744)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from perches-mx.perches.com ([206.117.179.246]:36970 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751827Ab2FOFzP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 01:55:15 -0400
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 01/20] adm8211: Use pr_<level>
+Date: Thu, 14 Jun 2012 22:53:41 -0700
+Message-Id: <a20e15809f23f2e6b3131a23b1631cbf5bf065b8.1339739416.git.joe@perches.com> (sfid-20120615_080259_505368_76DC03C8)
+In-Reply-To: <cover.1339739415.git.joe@perches.com>
+References: <cover.1339739415.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-si_pmu_spuravoid_pllupdate() is now replaced by
-bcma_pmu_spuravoid_pllupdate() which does the same thing, but supports
-more chips.
+Use a more current logging style.
 
-This function is in my pending patch series for bcma.
-Author: Hauke Mehrtens <hauke@hauke-m.de>
-Date:   Mon Jun 4 01:31:32 2012 +0200
+Convert printks to pr_<level>.
+Convert printk(KERN_DEBUG to pr_debug(.
+Coalesce formats, align arguments.
 
-    bcma: add bcma_pmu_spuravoid_pllupdate()
-
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |    3 +-
- drivers/net/wireless/brcm80211/brcmsmac/pmu.c      |   84 --------------------
- drivers/net/wireless/brcm80211/brcmsmac/pmu.h      |    1 -
- 3 files changed, 2 insertions(+), 86 deletions(-)
+ drivers/net/wireless/adm8211.c |   67 ++++++++++++++++++----------------------
+ 1 files changed, 30 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-index 3667181..a4ae93e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-@@ -21106,6 +21106,7 @@ wlc_phy_chanspec_nphy_setup(struct brcms_phy *pi, u16 chanspec,
- 			    const struct nphy_sfo_cfg *ci)
- {
- 	u16 val;
-+	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
- 
- 	val = read_phy_reg(pi, 0x09) & NPHY_BandControl_currentBand;
- 	if (CHSPEC_IS5G(chanspec) && !val) {
-@@ -21189,7 +21190,7 @@ wlc_phy_chanspec_nphy_setup(struct brcms_phy *pi, u16 chanspec,
- 			spuravoid = 1;
- 
- 		wlapi_bmac_core_phypll_ctl(pi->sh->physhim, false);
--		si_pmu_spuravoid_pllupdate(pi->sh->sih, spuravoid);
-+		bcma_pmu_spuravoid_pllupdate(&sii->icbus->drv_cc, spuravoid);
- 		wlapi_bmac_core_phypll_ctl(pi->sh->physhim, true);
- 
- 		if ((pi->sh->chip == BCM43224_CHIP_ID) ||
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-index 045f43a..6b4344f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pmu.c
-@@ -74,16 +74,6 @@
-  * PMU<rev>_PLL<num>_XX where <rev> is PMU corerev and <num> is an arbitrary
-  * number to differentiate different PLLs controlled by the same PMU rev.
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 0ac09a2..5d2d1b5 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -15,6 +15,8 @@
+  * more details.
   */
--/* pllcontrol registers:
-- * ndiv_pwrdn, pwrdn_ch<x>, refcomp_pwrdn, dly_ch<x>,
-- * p1div, p2div, _bypass_sdmod
-- */
--#define PMU1_PLL0_PLLCTL0		0
--#define PMU1_PLL0_PLLCTL1		1
--#define PMU1_PLL0_PLLCTL2		2
--#define PMU1_PLL0_PLLCTL3		3
--#define PMU1_PLL0_PLLCTL4		4
--#define PMU1_PLL0_PLLCTL5		5
  
- /* pmu XtalFreqRatio */
- #define	PMU_XTALFREQ_REG_ILPCTR_MASK	0x00001FFF
-@@ -108,80 +98,6 @@
- #define	RES4313_HT_AVAIL_RSRC		14
- #define	RES4313_MACPHY_CLK_AVAIL_RSRC	15
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/if.h>
+@@ -151,8 +153,8 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->rf_type = ADM8211_TYPE_AIROHA;
  
--void si_pmu_spuravoid_pllupdate(struct si_pub *sih, u8 spuravoid)
--{
--	u32 tmp = 0;
--	struct si_info *sii = container_of(sih, struct si_info, pub);
--	struct bcma_device *core;
--
--	/* switch to chipc */
--	core = sii->icbus->drv_cc.core;
--
--	switch (ai_get_chip_id(sih)) {
--	case BCM43224_CHIP_ID:
--	case BCM43225_CHIP_ID:
--		if (spuravoid == 1) {
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL0);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x11500010);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL1);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x000C0C06);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL2);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x0F600a08);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL3);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x00000000);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL4);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x2001E920);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL5);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x88888815);
--		} else {
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL0);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x11100010);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL1);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x000c0c06);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL2);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x03000a08);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL3);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x00000000);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL4);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x200005c0);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_addr),
--				     PMU1_PLL0_PLLCTL5);
--			bcma_write32(core, CHIPCREGOFFS(pllcontrol_data),
--				     0x88888815);
--		}
--		tmp = 1 << 10;
--		break;
--
--	default:
--		/* bail out */
--		return;
--	}
--
--	bcma_set32(core, CHIPCREGOFFS(pmucontrol), tmp);
--}
--
- u16 si_pmu_fast_pwrup_delay(struct si_pub *sih)
- {
- 	uint delay = PMU_MAX_TRANSITION_DLY;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pmu.h b/drivers/net/wireless/brcm80211/brcmsmac/pmu.h
-index 2f0ad28..f7cff87 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pmu.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pmu.h
-@@ -26,7 +26,6 @@ extern u32 si_pmu_chipcontrol(struct si_pub *sih, uint reg, u32 mask, u32 val);
- extern u32 si_pmu_regcontrol(struct si_pub *sih, uint reg, u32 mask, u32 val);
- extern u32 si_pmu_alp_clock(struct si_pub *sih);
- extern void si_pmu_pllupd(struct si_pub *sih);
--extern void si_pmu_spuravoid_pllupdate(struct si_pub *sih, u8 spuravoid);
- extern u32 si_pmu_pllcontrol(struct si_pub *sih, uint reg, u32 mask, u32 val);
- extern u32 si_pmu_measure_alpclk(struct si_pub *sih);
+-		printk(KERN_WARNING "%s (adm8211): Unknown RFtype %d\n",
+-		       pci_name(priv->pdev), (cr49 >> 3) & 0x7);
++		pr_warn("%s: Unknown RFtype %d\n",
++			pci_name(priv->pdev), (cr49 >> 3) & 0x7);
+ 	}
+ 
+ 	priv->bbp_type = cr49 & 0x7;
+@@ -169,20 +171,21 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->bbp_type = ADM8211_TYPE_ADMTEK;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown BBPtype: %d\n",
+-		       pci_name(priv->pdev), cr49 >> 3);
++		pr_warn("%s: Unknown BBPtype: %d\n",
++			pci_name(priv->pdev), cr49 >> 3);
+ 	}
+ 
+ 	if (priv->eeprom->country_code >= ARRAY_SIZE(cranges)) {
+-		printk(KERN_WARNING "%s (adm8211): Invalid country code (%d)\n",
+-		       pci_name(priv->pdev), priv->eeprom->country_code);
++		pr_warn("%s: Invalid country code (%d)\n",
++			pci_name(priv->pdev), priv->eeprom->country_code);
+ 
+ 		chan_range = cranges[2];
+ 	} else
+ 		chan_range = cranges[priv->eeprom->country_code];
+ 
+-	printk(KERN_DEBUG "%s (adm8211): Channel range: %d - %d\n",
+-	       pci_name(priv->pdev), (int)chan_range.min, (int)chan_range.max);
++	pr_debug("%s: Channel range: %d - %d\n",
++		 pci_name(priv->pdev),
++		 (int)chan_range.min, (int)chan_range.max);
+ 
+ 	BUILD_BUG_ON(sizeof(priv->channels) != sizeof(adm8211_channels));
+ 
+@@ -209,8 +212,8 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->specific_bbptype = ADM8211_BBP_ADM8011;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown specific BBP: %d\n",
+-		       pci_name(priv->pdev), priv->eeprom->specific_bbptype);
++		pr_warn("%s: Unknown specific BBP: %d\n",
++			pci_name(priv->pdev), priv->eeprom->specific_bbptype);
+ 	}
+ 
+ 	switch (priv->eeprom->specific_rftype) {
+@@ -230,15 +233,16 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else if (priv->pdev->revision == ADM8211_REV_AB)
+ 			priv->transceiver_type = ADM8211_RFMD2948;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown transceiver: %d\n",
+-		       pci_name(priv->pdev), priv->eeprom->specific_rftype);
++		pr_warn("%s: Unknown transceiver: %d\n",
++			pci_name(priv->pdev), priv->eeprom->specific_rftype);
+ 
+ 		break;
+ 	}
+ 
+-	printk(KERN_DEBUG "%s (adm8211): RFtype=%d BBPtype=%d Specific BBP=%d "
+-               "Transceiver=%d\n", pci_name(priv->pdev), priv->rf_type,
+-	       priv->bbp_type, priv->specific_bbptype, priv->transceiver_type);
++	pr_debug("%s: RFtype=%d BBPtype=%d Specific BBP=%d Transceiver=%d\n",
++		 pci_name(priv->pdev), priv->rf_type,
++		 priv->bbp_type, priv->specific_bbptype,
++		 priv->transceiver_type);
+ 
+ 	return 0;
+ }
+@@ -1773,8 +1777,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+-		printk(KERN_ERR "%s (adm8211): Cannot enable new PCI device\n",
+-		       pci_name(pdev));
++		pr_err("%s: Cannot enable new PCI device\n", pci_name(pdev));
+ 		return err;
+ 	}
+ 
+@@ -1783,8 +1786,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 	mem_addr = pci_resource_start(pdev, 1);
+ 	mem_len = pci_resource_len(pdev, 1);
+ 	if (io_len < 256 || mem_len < 1024) {
+-		printk(KERN_ERR "%s (adm8211): Too short PCI resources\n",
+-		       pci_name(pdev));
++		pr_err("%s: Too short PCI resources\n", pci_name(pdev));
+ 		goto err_disable_pdev;
+ 	}
+ 
+@@ -1792,22 +1794,19 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 	/* check signature */
+ 	pci_read_config_dword(pdev, 0x80 /* CR32 */, &reg);
+ 	if (reg != ADM8211_SIG1 && reg != ADM8211_SIG2) {
+-		printk(KERN_ERR "%s (adm8211): Invalid signature (0x%x)\n",
+-		       pci_name(pdev), reg);
++		pr_err("%s: Invalid signature (0x%x)\n", pci_name(pdev), reg);
+ 		goto err_disable_pdev;
+ 	}
+ 
+ 	err = pci_request_regions(pdev, "adm8211");
+ 	if (err) {
+-		printk(KERN_ERR "%s (adm8211): Cannot obtain PCI resources\n",
+-		       pci_name(pdev));
++		pr_err("%s: Cannot obtain PCI resources\n", pci_name(pdev));
+ 		return err; /* someone else grabbed it? don't disable it */
+ 	}
+ 
+ 	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
+ 	    pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
+-		printk(KERN_ERR "%s (adm8211): No suitable DMA available\n",
+-		       pci_name(pdev));
++		pr_err("%s: No suitable DMA available\n", pci_name(pdev));
+ 		goto err_free_reg;
+ 	}
+ 
+@@ -1815,8 +1814,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 
+ 	dev = ieee80211_alloc_hw(sizeof(*priv), &adm8211_ops);
+ 	if (!dev) {
+-		printk(KERN_ERR "%s (adm8211): ieee80211 alloc failed\n",
+-		       pci_name(pdev));
++		pr_err("%s: ieee80211 alloc failed\n", pci_name(pdev));
+ 		err = -ENOMEM;
+ 		goto err_free_reg;
+ 	}
+@@ -1834,8 +1832,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 		priv->map = pci_iomap(pdev, 0, io_len);
+ 
+ 	if (!priv->map) {
+-		printk(KERN_ERR "%s (adm8211): Cannot map device memory\n",
+-		       pci_name(pdev));
++		pr_err("%s: Cannot map device memory\n", pci_name(pdev));
+ 		goto err_free_dev;
+ 	}
+ 
+@@ -1843,8 +1840,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 	priv->tx_ring_size = tx_ring_size;
+ 
+ 	if (adm8211_alloc_rings(dev)) {
+-		printk(KERN_ERR "%s (adm8211): Cannot allocate TX/RX ring\n",
+-		       pci_name(pdev));
++		pr_err("%s: Cannot allocate TX/RX ring\n", pci_name(pdev));
+ 		goto err_iounmap;
+ 	}
+ 
+@@ -1853,8 +1849,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 		cpu_to_le16(ADM8211_CSR_READ(PAR1) & 0xFFFF);
+ 
+ 	if (!is_valid_ether_addr(perm_addr)) {
+-		printk(KERN_WARNING "%s (adm8211): Invalid hwaddr in EEPROM!\n",
+-		       pci_name(pdev));
++		pr_warn("%s: Invalid hwaddr in EEPROM!\n", pci_name(pdev));
+ 		random_ether_addr(perm_addr);
+ 	}
+ 	SET_IEEE80211_PERM_ADDR(dev, perm_addr);
+@@ -1887,8 +1882,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 
+ 	err = adm8211_read_eeprom(dev);
+ 	if (err) {
+-		printk(KERN_ERR "%s (adm8211): Can't alloc eeprom buffer\n",
+-		       pci_name(pdev));
++		pr_err("%s: Can't alloc eeprom buffer\n", pci_name(pdev));
+ 		goto err_free_desc;
+ 	}
+ 
+@@ -1898,8 +1892,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 
+ 	err = ieee80211_register_hw(dev);
+ 	if (err) {
+-		printk(KERN_ERR "%s (adm8211): Cannot register device\n",
+-		       pci_name(pdev));
++		pr_err("%s: Cannot register device\n", pci_name(pdev));
+ 		goto err_free_eeprom;
+ 	}
  
 -- 
-1.7.9.5
+1.7.8.111.gad25c.dirty
 
