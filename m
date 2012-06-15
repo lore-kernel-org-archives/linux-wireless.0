@@ -1,116 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33663 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754548Ab2FFNWW (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:39084 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751678Ab2FOQxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:22:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 05/29] iwlwifi: trust mac80211 channel setting
-Date: Wed,  6 Jun 2012 15:21:46 +0200
-Message-Id: <1338988930-11561-5-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152231_477839_92E0740A)
-In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
-References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 15 Jun 2012 12:53:24 -0400
+Received: by ghrr11 with SMTP id r11so2493219ghr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 09:53:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FDB5E52.1020608@qca.qualcomm.com>
+References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>
+ <1339228530.4539.0.camel@jlt3.sipsolutions.net> <4FD3A936.8070600@broadcom.com>
+ <1339399952.4520.13.camel@jlt3.sipsolutions.net> <4FD60369.80108@qca.qualcomm.com>
+ <1339425944.4520.27.camel@jlt3.sipsolutions.net> <20120614193104.GD32257@tux>
+ <1339748211.4512.6.camel@jlt3.sipsolutions.net> <4FDAF096.200@qca.qualcomm.com>
+ <4FDB1740.60707@broadcom.com> <4FDB5E52.1020608@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Fri, 15 Jun 2012 09:53:03 -0700
+Message-ID: <CAB=NE6X=pO5c_yUqMmqU1jm92WJKqBbYioYm-2S4AYS2JXYRTA@mail.gmail.com> (sfid-20120615_185328_195463_A155D9DC)
+Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, me@bobcopeland.com,
+	mickflemm@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jun 15, 2012 at 9:09 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> On 06/15/2012 02:06 PM, Arend van Spriel wrote:
+>> On 06/15/2012 10:21 AM, Kalle Valo wrote:
+>>> On 06/15/2012 11:16 AM, Johannes Berg wrote:
+>>>>> As for a name, I thought about it for a while and given that we have different
+>>>>>> "wireless" technologies -- bluetooth, NFC, naming this CONFIG_WIRELESS_EXPERT
+>>>>>> seemed odd, and given that our 802.11 framework is under cfg80211 naming it
+>>>>>> CONFIG_CFG80211_EXPERT seemed appropriate. But even if its under cfg80211
+>>>>>> perhaps something more explicit about the implications may be better, how
+>>>>>> about CONFIG_CFG80211_MAY_BREAK_CERTIFICATION ?
+>>>>
+>>>> Or you could just be explicit about it and call it
+>>>> CONFIG_WIRELESS_REGULATORY_BREAKAGE or something like that :-)
+>>>
+>>> CONFIG_WIRELESS_CERTIFIED?
+>>
+>> That one looks familiar ;-)
+>
+> Sorry, did you suggest that already? I missed that. I guess I need to
+> start organising my email better :)
 
-mac80211 will never set, switch to, or scan on an
-invalid channel, so remove the code to validate
-the channels against the driver channel list.
+We have CONFIG_ATH9K_DFS_CERTIFIED. I like something like
+CONFIG_CFG80211_MAY_BREAK_CERTIFICATION given that
+CONFIG_WIRELESS_CERTIFIED only assumes the kconfig options it would
+depend on are all neatly  developed but they could be still under
+development. The only thing about
+CONFIG_CFG80211_MAY_BREAK_CERTIFICATION is I suspect not many folks
+would be willing to ship with that enabled at all even *after* they do
+their homework.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    9 ---------
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    7 -------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   12 +-----------
- 3 files changed, 1 insertion(+), 27 deletions(-)
+So how about CONFIG_CFG80211_CERTIFICATION_ONUS which can be defined
+as an option for features / options whereby the onus for regulatory
+certification is being accepted by the option enabler? Pretty simple
+and to the point, and would allow for research code but also code
+whereby a bit more work is required on the enabler like DFS
+certification.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index c570318..36b4965 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -1182,7 +1182,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	struct iwl_rxon_context *ctx;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	struct ieee80211_channel *channel = conf->channel;
--	const struct iwl_channel_info *ch_info;
- 	int ret = 0;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter: changed %#x\n", changed);
-@@ -1216,14 +1215,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
--		ch_info = iwl_get_channel_info(priv, channel->band,
--					       channel->hw_value);
--		if (!is_channel_valid(ch_info)) {
--			IWL_DEBUG_MAC80211(priv, "leave - invalid channel\n");
--			ret = -EINVAL;
--			goto out;
--		}
--
- 		for_each_context(priv, ctx) {
- 			/* Configure HT40 channels */
- 			if (ctx->ht.enabled != conf_is_ht(conf))
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index d0b64cd..19e5235 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -844,7 +844,6 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 				      struct ieee80211_channel_switch *ch_switch)
- {
- 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
--	const struct iwl_channel_info *ch_info;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	struct ieee80211_channel *channel = ch_switch->channel;
- 	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
-@@ -881,12 +880,6 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 	if (le16_to_cpu(ctx->active.channel) == ch)
- 		goto out;
- 
--	ch_info = iwl_get_channel_info(priv, channel->band, ch);
--	if (!is_channel_valid(ch_info)) {
--		IWL_DEBUG_MAC80211(priv, "invalid channel\n");
--		goto out;
--	}
--
- 	priv->current_ht_config.smps = conf->smps_mode;
- 
- 	/* Configure HT40 channels */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index eb0ded7..ea05ae8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -534,7 +534,6 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- {
- 	struct ieee80211_channel *chan;
- 	const struct ieee80211_supported_band *sband;
--	const struct iwl_channel_info *ch_info;
- 	u16 passive_dwell = 0;
- 	u16 active_dwell = 0;
- 	int added, i;
-@@ -559,16 +558,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- 		channel = chan->hw_value;
- 		scan_ch->channel = cpu_to_le16(channel);
- 
--		ch_info = iwl_get_channel_info(priv, band, channel);
--		if (!is_channel_valid(ch_info)) {
--			IWL_DEBUG_SCAN(priv,
--				       "Channel %d is INVALID for this band.\n",
--				       channel);
--			continue;
--		}
--
--		if (!is_active || is_channel_passive(ch_info) ||
--		    (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN))
-+		if (!is_active || (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN))
- 			scan_ch->type = SCAN_CHANNEL_TYPE_PASSIVE;
- 		else
- 			scan_ch->type = SCAN_CHANNEL_TYPE_ACTIVE;
--- 
-1.7.10
-
+  Luis
