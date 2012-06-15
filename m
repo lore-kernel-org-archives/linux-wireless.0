@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:47503 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752911Ab2FKNZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 09:25:08 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Se4cC-0001c0-GC
-	for linux-wireless@vger.kernel.org; Mon, 11 Jun 2012 15:25:04 +0200
-Received: from 194.42.38.169 ([194.42.38.169])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 15:25:04 +0200
-Received: from contact by 194.42.38.169 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 15:25:04 +0200
-To: linux-wireless@vger.kernel.org
-From: Antonis Hadjiantonis <contact@antonis.mobi>
-Subject: Fixed rate for ath9k 
-Date: Mon, 11 Jun 2012 13:21:46 +0000 (UTC)
-Message-ID: <loom.20120611T150700-482@post.gmane.org> (sfid-20120611_152517_200109_C0406714)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43511 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755344Ab2FOQKF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 12:10:05 -0400
+Message-ID: <4FDB5E52.1020608@qca.qualcomm.com> (sfid-20120615_181010_923131_5919712F)
+Date: Fri, 15 Jun 2012 19:09:54 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <me@bobcopeland.com>,
+	<mickflemm@gmail.com>
+Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
+References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com> <1339228530.4539.0.camel@jlt3.sipsolutions.net> <4FD3A936.8070600@broadcom.com> <1339399952.4520.13.camel@jlt3.sipsolutions.net> <4FD60369.80108@qca.qualcomm.com> <1339425944.4520.27.camel@jlt3.sipsolutions.net> <20120614193104.GD32257@tux> <1339748211.4512.6.camel@jlt3.sipsolutions.net> <4FDAF096.200@qca.qualcomm.com> <4FDB1740.60707@broadcom.com>
+In-Reply-To: <4FDB1740.60707@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 06/15/2012 02:06 PM, Arend van Spriel wrote:
+> On 06/15/2012 10:21 AM, Kalle Valo wrote:
+>> On 06/15/2012 11:16 AM, Johannes Berg wrote:
+>>>> As for a name, I thought about it for a while and given that we have different
+>>>>> "wireless" technologies -- bluetooth, NFC, naming this CONFIG_WIRELESS_EXPERT
+>>>>> seemed odd, and given that our 802.11 framework is under cfg80211 naming it
+>>>>> CONFIG_CFG80211_EXPERT seemed appropriate. But even if its under cfg80211
+>>>>> perhaps something more explicit about the implications may be better, how
+>>>>> about CONFIG_CFG80211_MAY_BREAK_CERTIFICATION ?
+>>>
+>>> Or you could just be explicit about it and call it
+>>> CONFIG_WIRELESS_REGULATORY_BREAKAGE or something like that :-)
+>>
+>> CONFIG_WIRELESS_CERTIFIED?
+> 
+> That one looks familiar ;-)
 
-I am experimenting with Rate Control of ath9k (minstrel_ht) and tried to fix the
-rate to a value. I fix it to an index (e.g. 2) using the relevant patch and
-debugfs and confirm the value is changed:
-echo 2 > /sys/kernel/debug/ieee80211/phy0/rc/fixed_rate_idx
+Sorry, did you suggest that already? I missed that. I guess I need to
+start organising my email better :)
 
-It seems though the value is ignored, and minstrel RC works unaffected:
->From the rcstat file:
-rate     throughput  ewma prob   this prob  this succ/attempt success  attempts
-     1         0.1       15.5       50.0          0(  0)         23         121
-     2         0.4       25.0      100.0          0(  0)          1           1
-     5.5       0.0        0.0        0.0          0(  0)          0           0
-  P 11         4.5       47.9       85.7         24( 28)        334         737
-     6         1.3       24.6        0.0          0(  0)          2           8
-     9         1.5       18.7        0.0          0(  0)          1           5
-    12         2.1       19.2        0.0          0(  0)          3          22
-    18         1.8       11.0        0.0          0(  0)         96         311
- t  24         6.5       30.9      100.0          1(  1)         14         151
-T   36         8.7       28.8      100.0          1(  1)        157         822
-    48         1.4        3.8        0.0          0(  0)         85         421
-    54         1.9        4.3        0.0          0(  0)      18336       19723
-
-I am using OpenWrt Backfire (10.03.1, r29592) on a WRT160nl and connect with it
-over 802.11g using iperf on a smartphone.
-
-As this is my first ever post on the list, please be nice :)
-
-Thanks in advance,
-Antonis
-
+Kalle
