@@ -1,108 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49329 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885Ab2FTJFY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41780 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210Ab2FORhD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 05:05:24 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] nl80211: fix netns separation
-Date: Wed, 20 Jun 2012 11:05:17 +0200
-Message-Id: <1340183119-15340-4-git-send-email-johannes@sipsolutions.net> (sfid-20120620_110550_857244_BDED9009)
-In-Reply-To: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
-References: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 15 Jun 2012 13:37:03 -0400
+Date: Fri, 15 Jun 2012 23:08:16 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>, <c_manoha@qca.qualcomm.com>
+Subject: Re: [PATCH 2/9] ath9k_hw: fix OFDM weak signal detection handling
+Message-ID: <20120615173814.GA648@vmraj-lnx.qca.qualcomm.com> (sfid-20120615_193709_064658_07CAC1C8)
+References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-2-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1339766727-61926-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jun 15, 2012 at 03:25:20PM +0200, Felix Fietkau wrote:
+> Commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
+> was unifying some code related to overriding OFDM weak signal detection,
+> but seems to have gotten some of the original intent wrong, probably
+> because of a misnamed variable.
+> 
+> The beacon RSSI is only valid in station mode, and the main reason to check
+> it in ath9k_hw_set_ofdm_nil is to make sure that OFDM weak signal detection
+> stays enabled if the RSSI is low, even when the OFDM noise immunity entry
+> is supposed to disable it.
+> 
+> The above commit removed the mode checks and changed the code so that
+> OFDM weak signal detection would only be changed if the rssi is high, which
+> is wrong for everything but client mode.
+> 
+> This patch restores the old behavior in a simplified form.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/ani.c |   11 +++++++----
+>  1 files changed, 7 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+> index 18ce69d..cf31050 100644
+> --- a/drivers/net/wireless/ath/ath9k/ani.c
+> +++ b/drivers/net/wireless/ath/ath9k/ani.c
+> @@ -265,6 +265,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+>  	struct ath_common *common = ath9k_hw_common(ah);
+>  	const struct ani_ofdm_level_entry *entry_ofdm;
+>  	const struct ani_cck_level_entry *entry_cck;
+> +	bool weak_sig;
+>  
+>  	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
+>  		aniState->ofdmNoiseImmunityLevel,
+> @@ -290,13 +291,15 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+>  				     ATH9K_ANI_FIRSTEP_LEVEL,
+>  				     entry_ofdm->fir_step_level);
+>  
+> -	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
+> -	    (!aniState->ofdmWeakSigDetectOff !=
+> -	     entry_ofdm->ofdm_weak_signal_on)) {
+> +	weak_sig = entry_ofdm->ofdm_weak_signal_on;
+> +	if (ah->opmode == NL80211_IFTYPE_STATION &&
+> +	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
+> +		weak_sig = true;
+> +
+> +	if (!aniState->ofdmWeakSigDetectOff != weak_sig)
 
-There are currently a few ways to "escape"
-the network namespace and access a wiphy
-that belongs to another namespace. Add a
-netns argument to the relevant functions
-to fix this.
+beacon rssi is updated and used in both station and ibss mode. isn't it?
 
-One remaining issue with testmode will be
-fixed in a follow-up patch.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0ec9779..af23291 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -71,7 +71,7 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
- }
- 
- static struct cfg80211_registered_device *
--__cfg80211_rdev_from_info(struct genl_info *info)
-+__cfg80211_rdev_from_info(struct net *netns, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = NULL, *tmp;
- 	struct net_device *netdev;
-@@ -88,7 +88,7 @@ __cfg80211_rdev_from_info(struct genl_info *info)
- 
- 	if (info->attrs[NL80211_ATTR_IFINDEX]) {
- 		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
--		netdev = dev_get_by_index(genl_info_net(info), ifindex);
-+		netdev = dev_get_by_index(netns, ifindex);
- 		if (netdev) {
- 			if (netdev->ieee80211_ptr)
- 				tmp = wiphy_to_dev(
-@@ -110,10 +110,13 @@ __cfg80211_rdev_from_info(struct genl_info *info)
- 		}
- 	}
- 
--	if (rdev)
--		return rdev;
-+	if (!rdev)
-+		return ERR_PTR(-ENODEV);
- 
--	return ERR_PTR(-ENODEV);
-+	if (netns != wiphy_net(&rdev->wiphy))
-+		return ERR_PTR(-ENODEV);
-+
-+	return rdev;
- }
- 
- /*
-@@ -137,12 +140,12 @@ __cfg80211_rdev_from_info(struct genl_info *info)
-  * be checked with IS_ERR() for errors.
-  */
- static struct cfg80211_registered_device *
--cfg80211_get_dev_from_info(struct genl_info *info)
-+cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev;
- 
- 	mutex_lock(&cfg80211_mutex);
--	rdev = __cfg80211_rdev_from_info(info);
-+	rdev = __cfg80211_rdev_from_info(netns, info);
- 
- 	/* if it is not an error we grab the lock on
- 	 * it to assure it won't be going away while
-@@ -1419,7 +1422,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	if (!netdev) {
--		rdev = __cfg80211_rdev_from_info(info);
-+		rdev = __cfg80211_rdev_from_info(genl_info_net(info), info);
- 		if (IS_ERR(rdev)) {
- 			mutex_unlock(&cfg80211_mutex);
- 			return PTR_ERR(rdev);
-@@ -6623,7 +6626,7 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
- 		rtnl_lock();
- 
- 	if (ops->internal_flags & NL80211_FLAG_NEED_WIPHY) {
--		rdev = cfg80211_get_dev_from_info(info);
-+		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
- 		if (IS_ERR(rdev)) {
- 			if (rtnl)
- 				rtnl_unlock();
--- 
-1.7.10
-
+-Rajkumar
