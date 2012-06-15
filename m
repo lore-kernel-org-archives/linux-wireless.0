@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61629 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755592Ab2FFKHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:39 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 17/29] NFC: Reset poll mod list when stopping pn533 poll
-Date: Wed,  6 Jun 2012 12:16:34 +0200
-Message-Id: <1338977806-30279-18-git-send-email-sameo@linux.intel.com> (sfid-20120606_120742_584958_1A9F5FE0)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:43211 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758494Ab2FOXhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 19:37:17 -0400
+Message-ID: <1339803436.26435.4.camel@joe2Laptop> (sfid-20120616_013721_454151_14FB0FA3)
+Subject: Re: [PATCH wireless-next 00/20] Use pr_<level>
+From: Joe Perches <joe@perches.com>
+To: Ted Ts'o <tytso@mit.edu>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 15 Jun 2012 16:37:16 -0700
+In-Reply-To: <20120615225057.GD7363@thunk.org>
+References: <cover.1339739415.git.joe@perches.com>
+	 <1339745811.4512.0.camel@jlt3.sipsolutions.net>
+	 <1339757319.24527.21.camel@joe2Laptop> <20120615225057.GD7363@thunk.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Fri, 2012-06-15 at 18:50 -0400, Ted Ts'o wrote:
+> On Fri, Jun 15, 2012 at 03:48:39AM -0700, Joe Perches wrote:
+> > To tee up conversions of:
+> > 	pr_<level>("%s: ...", ([truct netdevice *]foo)->name, ...)
+> > to
+> > 	netdev_<level>(foo, "...", ...) 
+> 
+> If the goal is to do the latter, why introduce needless patch churn
+> now just to get to pr_<level>?  Having a standardized netdev_<label>()
+> adds real benefit that can be weighed against the cost of code churn.
+> Why not just wait until the netdev_<level> infrastructure can be
+> introduced?  It will save effort on everybody's part.
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index db40787..6b8a65c 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -1371,6 +1371,8 @@ static void pn533_stop_poll(struct nfc_dev *nfc_dev)
- 
- 	/* prevent pn533_start_poll_complete to issue a new poll meanwhile */
- 	usb_kill_urb(dev->in_urb);
-+
-+	pn533_poll_reset_mod_list(dev);
- }
- 
- static int pn533_activate_target_nfcdep(struct pn533 *dev)
--- 
-1.7.9.1
+Not really.  This standardizes prefixes as is.
+
+The newlines and such will still occur.
+The git blame noise etc too.
+
+The standardization via spatch will be
+significantly easier this way.  It's also
+a far easier pattern to verify.
 
