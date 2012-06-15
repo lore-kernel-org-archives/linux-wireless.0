@@ -1,100 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:61953 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752332Ab2FNGbg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 02:31:36 -0400
-Date: Thu, 14 Jun 2012 08:31:20 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Wei Ni <wni@nvidia.com>, Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Where to power on the wifi device before loading the driver.
-Message-ID: <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de> (sfid-20120614_083141_306880_B5551626)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HlL+5n6rz5pIUxbD"
-In-Reply-To: <4FD90352.9090606@wwwdotorg.org>
+Received: from perches-mx.perches.com ([206.117.179.246]:49227 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752229Ab2FOKmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 06:42:12 -0400
+Message-ID: <1339756931.24527.16.camel@joe2Laptop> (sfid-20120615_124231_978309_5FF1D94C)
+Subject: Re: [PATCH wireless-next 18/20] ti: Use pr_<level>
+From: Joe Perches <joe@perches.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Fri, 15 Jun 2012 03:42:11 -0700
+In-Reply-To: <1339749374.4502.80.camel@cumari.coelho.fi>
+References: <cover.1339739415.git.joe@perches.com>
+	 <a4533db379be3689e3b29ed9b0d170263d875f7d.1339739416.git.joe@perches.com>
+	 <1339749374.4502.80.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2012-06-15 at 11:36 +0300, Luciano Coelho wrote:
+> Hi Joe,
 
---HlL+5n6rz5pIUxbD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Luciano.
 
-On Wed, Jun 13, 2012 at 03:17:06PM -0600, Stephen Warren wrote:
-> On 06/13/2012 04:40 AM, Wei Ni wrote:
-> > Hi, all
-> > I'm working on the tegra30 wifi upstream issue.
-> >=20
-> > The tegra30 board (Cardhu) use Broadcom 4329 as wifi device, and use br=
-cmfmac as the wifi driver.
-> >=20
-> > In the brcmfmac init routine, it call sdio_register_driver() to registe=
-r driver, if the wifi device is powered on, then the mmc driver will enumer=
-ate it, and call the probe callback routine.
-> >=20
-> > On the Cardhu, the wifi's power is controlled by two gpios (power-gpio =
-and reset-gpio), the default state is power-off. So we need to power on it =
-before calling sdio_register_driver(), if not, the mmc driver can't enumera=
-te it, and will not call the probe routine.
-> > This power on sequence is:=20
-> > set power-gpio to 1 ;
-> > mdelay(100) ;
-> > set reset-gpio to 1 ;
-> > mdelay(200);
-> >=20
-> > My question is where to power on the wifi. We may have three places to =
-power on it:
-> > 1. power on it in the brcmfmac driver before calling sdio_register_driv=
-er(). But I think this power sequence is special for tegra30 cardhu, it's n=
-ot good to add it in the generic wifi driver, because different board may u=
-se the different way to power on the wifi.
-> > 2. power on it in the mmc driver. In our tegra SD driver, it has power-=
-gpios property, which allow the slot to be powered. But this power is for m=
-mc slot, could we add this wifi power sequence in the tegra SD driver?
-> > 3. hard-coded into DT. Set these gpios in the DT, something like pinmux=
- settings, but in this way, it's not good to put the mdelay() value in the =
-DT.
-> >=20
-> > I have no good idea for it, does anyone has suggestion?
->=20
-> The core of the issue is that:
->=20
-> * Tegra30 support is via device tree.
-> * We have an SDIO bus, and the WiFi device attached to that bus is
-> enumerable.
-> * Since the WiFi device is enumerable, no node exists in the DT to
-> represent it.
-> * However, the driver for the WiFi device needs certain information,
-> such as the reset GPIO ID and perhaps power GPIO.
+> As Johannes already mentioned, I have to also ask why do you need to do
+> this?
 
-PCI devices are also enumerable and yet they can be matched up with nodes in
-the device tree. Perhaps something similar could be added for the SDIO bus?
+To use a more consistent logging style.
+To minimize unnecessary changes when adding
+similar drivers based on this code.
 
-Thierry
+>  I see the point, slightly, with the wl1251 code, because it is
+> still using printks, but with wlcore and friends, there's no functional
+> change.
 
---HlL+5n6rz5pIUxbD
-Content-Type: application/pgp-signature
+Using a consistent logging style minimizes defects.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+> As mentioned above, this change here is acceptable, but removing the \n
+> from the macro and adding it at the end of each and every call is
+> useless and will just skew git-blame and make it harder to do rebase or
+> apply patches because of conflicts.
 
-iEYEARECAAYFAk/ZhTgACgkQZ+BJyKLjJp88uQCgkjDTLq4PyPRa8IqlfJDbJHdP
-sHoAoK8a2JRjCjNc+RDMQbODI5Fbnhcx
-=xT51
------END PGP SIGNATURE-----
+In practice, the merging won't be much of an issue.
+Neither will git blame.
 
---HlL+5n6rz5pIUxbD--
+> > -#define wl1271_warning(fmt, arg...) \
+> > -	pr_warning(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
+> > +#define wl1271_warn(fmt, arg...)				\
+> > +	pr_warn(DRIVER_PREFIX "WARNING " fmt, ##arg)
+> 
+> Using pr_warn instead of pr_warning is pointless.  pr_warning is the
+> main definition, actually, and pr_warn is just a "mirror".
+
+I expect one day to reverse the definitions.
+
+The kernel is moving, albeit slowly to prefer
+pr_warn to mirror dev_warn, netdev_warn, etc.
+
+Most of these uses will eventually become netdev_warn.
+netdev_warn still uses a \n.
+
+> Again, moving the \n from the macro definition and changing all the
+> callers is an unnecessary, intrusive change.
+> 
+> We have wanted to change "wl1271" to "wl12xx" for a long time, but we
+> don't do it exactly because this means we need to change the calls
+> everywhere.
+
+Nothing in ever _needed_, no child will go
+hungry or fed here.  This is a consistency change.
+
+There are a couple of instances where \n is
+currently used unnecessarily that are fixed in
+the conversion.
+
+$ git grep -E  "\bwl12[0-9]+_[a-z]+\s*\(.*\\\\n\"" drivers/net/wireless/ti
+drivers/net/wireless/ti/wl12xx/cmd.c:   wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
+drivers/net/wireless/ti/wl12xx/cmd.c:   wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
+drivers/net/wireless/ti/wlcore/main.c:          wl1271_error("Incorrect ampdu action id=%x\n", action);
+
+People make these mistakes because the more
+common and adjacent dev_<level> code _use_
+a newline.  Using a consistent style minimzes
+these defects.
+
+cheers, Joe
+
