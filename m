@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm12-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.246]:44113
-	"HELO nm12-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750812Ab2F2H4Q (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59081 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394Ab2FOJhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 03:56:16 -0400
-From: Schrober <franzschrober@yahoo.de>
-To: thomas <thomas@net.t-labs.tu-berlin.de>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org
-Subject: Re: [PATCH] mac80211: correct size the argument to kzalloc in minstrel_ht
-Date: Fri, 29 Jun 2012 09:50:57 +0200
-Message-ID: <1487602.AtWAA39W7Q@bentobox> (sfid-20120629_095620_422030_E0CE5303)
-In-Reply-To: <4FED3679.4080107@net.t-labs.tu-berlin.de>
-References: <1340926085-54416-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <CAGRGNgXCoQNYbs7MVtEsDdoPUgvV+JDP28tCbKWG2cBHcJ60kQ@mail.gmail.com> <4FED3679.4080107@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 15 Jun 2012 05:37:54 -0400
+Message-ID: <1339753070.13702.1.camel@jlt3.sipsolutions.net> (sfid-20120615_113758_124340_B709DCDF)
+Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Date: Fri, 15 Jun 2012 11:37:50 +0200
+In-Reply-To: <CAEFj9846z0=Lif42m_Fd4wq3XvS=o_OZ7rTZw2V5gJaHLJ0onA@mail.gmail.com> (sfid-20120615_112628_825277_2B9DE7A8)
+References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
+	 <1339700228.9786.11.camel@jlt3.sipsolutions.net>
+	 <CAEFj985xi0LNsLqHn1cgAw0oMVsfWrh_ioPuzUva8ZLbUTn=ZQ@mail.gmail.com>
+	 <1339748416.4512.9.camel@jlt3.sipsolutions.net>
+	 <CAEFj9846z0=Lif42m_Fd4wq3XvS=o_OZ7rTZw2V5gJaHLJ0onA@mail.gmail.com>
+	 (sfid-20120615_112628_825277_2B9DE7A8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 28 June 2012 22:00:41 thomas wrote:
-> Hi Julian,
+On Fri, 2012-06-15 at 17:26 +0800, Yeoh Chun-Yeow wrote:
+> Hi, Johannes
 > 
-> Compiler wise both of our suggestions will lead to the same machine code.
-> So beside the matter of taste, I just followed the other overall usage
-> pattern of kzalloc in minstrel_ht.
-> And it seems to be explicitly using the struct type.
+> No. I think that I am actually fixing the wrong assignment of the
+> previous patch.
 
-http://lxr.linux.no/linux/Documentation/CodingStyle
+Please clarify *which* previous patch.
 
-                Chapter 14: Allocating memory
+> > commit 45904f21655cf4f0ae7d0fab5906fe51bf56ecf4
+> > Author:     Javier Cardona <javier@cozybit.com>
+> > AuthorDate: Fri Dec 3 09:20:40 2010 +0100
+> > Commit:     John W. Linville <linville@tuxdriver.com>
+> > CommitDate: Mon Dec 6 16:01:28 2010 -0500
+> >
+> >    nl80211/mac80211: define and allow configuring mesh element TTL
 
-The kernel provides the following general purpose memory allocators:
-kmalloc(), kzalloc(), kcalloc(), vmalloc(), and vzalloc().  Please refer to
-the API documentation for further information about them.
+This patch looked like this:
 
-The preferred form for passing a size of a struct is the following:
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1024,6 +1024,8 @@ static int ieee80211_set_mesh_params(struct wiphy *wiphy,
+                conf->dot11MeshMaxRetries = nconf->dot11MeshMaxRetries;
+        if (_chg_mesh_attr(NL80211_MESHCONF_TTL, mask))
+                conf->dot11MeshTTL = nconf->dot11MeshTTL;
++       if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
++               conf->dot11MeshTTL = nconf->element_ttl;
+        if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
+                conf->auto_open_plinks = nconf->auto_open_plinks;
+        if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES, mask))
 
-        p = kmalloc(sizeof(*p), ...);
 
-The alternative form where struct name is spelled out hurts readability and
-introduces an opportunity for a bug when the pointer variable type is changed
-but the corresponding sizeof that is passed to a memory allocator is not.
+Are you telling me you're not fixing that code?
 
-Casting the return value which is a void pointer is redundant. The conversion
-from void pointer to any other pointer type is guaranteed by the C programming
-language.
--- 
-Franz Schrober
+johannes
+
