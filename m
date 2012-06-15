@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51280 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754445Ab2FFHDD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 03:03:03 -0400
-Message-ID: <1338966180.4513.4.camel@jlt3.sipsolutions.net> (sfid-20120606_090315_192637_937163DE)
-Subject: Re: [ANN] new wireless stack trees
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 06 Jun 2012 09:03:00 +0200
-In-Reply-To: <87sje86i1j.fsf@purkki.adurom.net>
-References: <1338898271.4514.38.camel@jlt3.sipsolutions.net>
-	 <87sje86i1j.fsf@purkki.adurom.net>
+Received: from perches-mx.perches.com ([206.117.179.246]:38356 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756449Ab2FOKsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 06:48:39 -0400
+Message-ID: <1339757319.24527.21.camel@joe2Laptop> (sfid-20120615_124857_518359_956E4FA3)
+Subject: Re: [PATCH wireless-next 00/20] Use pr_<level>
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 15 Jun 2012 03:48:39 -0700
+In-Reply-To: <1339745811.4512.0.camel@jlt3.sipsolutions.net>
+References: <cover.1339739415.git.joe@perches.com>
+	 (sfid-20120615_080311_586023_85E50A2D) <1339745811.4512.0.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-06 at 10:00 +0300, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
+On Fri, 2012-06-15 at 09:36 +0200, Johannes Berg wrote:
+> On Thu, 2012-06-14 at 22:53 -0700, Joe Perches wrote:
+> > Update logging style
 > 
-> > Given the amount of work going on in the various wireless stack
-> > components, I've decided that I'll reflect my maintainer role also in
-> > git trees. I've created new trees and will pick patches for
-> >  * mac80211
-> >  * cfg80211
-> >  * rfkill (if needed)
-> >
-> > into the new trees
-> >  * http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211.git;a=summary
-> >  * http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git;a=summary
-> 
-> Great!
-> 
-> > I won't maintain an integration tree like John's wireless-testing,
-> > please continue to use his. If merge conflicts make it necessary, I'll
-> > resolve them in separate branches etc. and work it out with John.
-> 
-> So when working on mac80211 or cfg80211 changes you still recommend the
-> developer to use wireless-testing, did I understand this correctly?
+> So ... since we make everybody else explain *why* they make a change, I
+> think you should too.
 
-Most of the time, I probably won't care. You might want to give me hints
-as to which tree I should apply the patch to but I'm pretty confident I
-can also make that call most of the time :-)
-
-johannes
+To improve logging style consistency.
+To reduce logging defects.
+To standardize logging prefixes.
+To tee up conversions of:
+	pr_<level>("%s: ...", ([truct netdevice *]foo)->name, ...)
+to
+	netdev_<level>(foo, "...", ...) 
 
