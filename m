@@ -1,64 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52373 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492Ab2FSOvD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:41314 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756774Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 09:25:38 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 09/17] nl80211: don't assume wdev->netdev exists
-Date: Tue, 19 Jun 2012 16:50:48 +0200
-Message-Id: <1340117456-10154-10-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165111_209939_0BBDF409)
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	c_manoha@qca.qualcomm.com
+Subject: [PATCH 9/9] ath9k_hw: clean up ANI OFDM trigger handling
+Date: Fri, 15 Jun 2012 15:25:27 +0200
+Message-Id: <1339766727-61926-9-git-send-email-nbd@openwrt.org> (sfid-20120615_152555_303116_0E809950)
+In-Reply-To: <1339766727-61926-8-git-send-email-nbd@openwrt.org>
+References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-2-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-3-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-4-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-5-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-6-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-7-git-send-email-nbd@openwrt.org>
+ <1339766727-61926-8-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Adjust ah->config.ofdm_trig_{high,low} when setting noise immunity values
+to simplify threshold checks in ath9k_hw_ani_monitor
 
-There are a few places that iterate the wdev
-list and assume wdev->netdev exists, check
-there. The rfkill one has to be extended for
-each non-netdev type later.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/wireless/core.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ani.c |   23 ++++++++++-------------
+ 1 files changed, 10 insertions(+), 13 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 280e54d..458de46 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -177,6 +177,8 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 6ee0875..a90aa0b 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -179,6 +179,14 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 			ath9k_hw_ani_control(ah,
+ 				ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
+ 				entry_ofdm->ofdm_weak_signal_on);
++
++	if (aniState->ofdmNoiseImmunityLevel >= ATH9K_ANI_OFDM_DEF_LEVEL) {
++		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH;
++		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI;
++	} else {
++		ah->config.ofdm_trig_high = ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI;
++		ah->config.ofdm_trig_low = ATH9K_ANI_OFDM_TRIG_LOW;
++	}
+ }
  
- 	list_for_each_entry(wdev, &rdev->wdev_list, list) {
-+		if (!wdev->netdev)
-+			continue;
- 		wdev->netdev->features &= ~NETIF_F_NETNS_LOCAL;
- 		err = dev_change_net_namespace(wdev->netdev, net, "wlan%d");
- 		if (err)
-@@ -190,6 +192,8 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
+@@ -428,21 +436,10 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
  
- 		list_for_each_entry_continue_reverse(wdev, &rdev->wdev_list,
- 						     list) {
-+			if (!wdev->netdev)
-+				continue;
- 			wdev->netdev->features &= ~NETIF_F_NETNS_LOCAL;
- 			err = dev_change_net_namespace(wdev->netdev, net,
- 							"wlan%d");
-@@ -227,7 +231,8 @@ static int cfg80211_rfkill_set_block(void *data, bool blocked)
- 	mutex_lock(&rdev->devlist_mtx);
- 
- 	list_for_each_entry(wdev, &rdev->wdev_list, list)
--		dev_close(wdev->netdev);
-+		if (wdev->netdev)
-+			dev_close(wdev->netdev);
- 
- 	mutex_unlock(&rdev->devlist_mtx);
- 	rtnl_unlock();
+ 	if (aniState->listenTime > ah->aniperiod) {
+ 		if (cckPhyErrRate < ah->config.cck_trig_low &&
+-		    ((ofdmPhyErrRate < ah->config.ofdm_trig_low &&
+-		      aniState->ofdmNoiseImmunityLevel <
+-		      ATH9K_ANI_OFDM_DEF_LEVEL) ||
+-		     (ofdmPhyErrRate < ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI &&
+-		      aniState->ofdmNoiseImmunityLevel >=
+-		      ATH9K_ANI_OFDM_DEF_LEVEL))) {
++		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
+ 			ath9k_hw_ani_lower_immunity(ah);
+ 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
+-		} else if ((ofdmPhyErrRate > ah->config.ofdm_trig_high &&
+-			    aniState->ofdmNoiseImmunityLevel >=
+-			    ATH9K_ANI_OFDM_DEF_LEVEL) ||
+-			   (ofdmPhyErrRate >
+-			    ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI &&
+-			    aniState->ofdmNoiseImmunityLevel <
+-			    ATH9K_ANI_OFDM_DEF_LEVEL)) {
++		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
+ 			ath9k_hw_ani_ofdm_err_trigger(ah);
+ 			aniState->ofdmsTurn = false;
+ 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
 -- 
-1.7.10
+1.7.3.2
 
