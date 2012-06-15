@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:40452 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754737Ab2F1MC4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 08:02:56 -0400
-Received: by wgbdr13 with SMTP id dr13so2124583wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 05:02:54 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: allow calling ieee80211_ap_probereq_get() during auth/assoc
-Date: Thu, 28 Jun 2012 15:03:13 +0300
-Message-Id: <1340884993-31432-1-git-send-email-eliad@wizery.com> (sfid-20120628_140304_539345_68902FA9)
+Received: from perches-mx.perches.com ([206.117.179.246]:59224 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932097Ab2FOF5q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 01:57:46 -0400
+From: Joe Perches <joe@perches.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 14/20] p54: Use pr_<level>
+Date: Thu, 14 Jun 2012 22:53:54 -0700
+Message-Id: <388e95fcf40ae223fb9227166800f7cc733eaa5e.1339739416.git.joe@perches.com> (sfid-20120615_075811_071287_5F1FC713)
+In-Reply-To: <cover.1339739415.git.joe@perches.com>
+References: <cover.1339739415.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers might need getting the probe request
-(e.g. in order to extract the ssid) even during
-auth/assoc.
+Use a more current logging style.
 
-Make ieee80211_ap_probereq_get() support it
-by considering auth_data/assoc_data as well.
+Convert printks to pr_<level>.
+Coalesce formats, align arguments.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- net/mac80211/mlme.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/net/wireless/p54/fwio.c   |    6 ++++--
+ drivers/net/wireless/p54/p54spi.c |    4 +++-
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4b8e0a4..1ad9a59 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1621,6 +1621,7 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct cfg80211_bss *cbss;
- 	struct sk_buff *skb;
- 	const u8 *ssid;
- 	int ssid_len;
-@@ -1630,16 +1631,22 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
+index 18e82b3..ea64d5d 100644
+--- a/drivers/net/wireless/p54/fwio.c
++++ b/drivers/net/wireless/p54/fwio.c
+@@ -16,6 +16,8 @@
+  * published by the Free Software Foundation.
+  */
  
- 	ASSERT_MGD_MTX(ifmgd);
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/init.h>
+ #include <linux/slab.h>
+ #include <linux/firmware.h>
+@@ -100,8 +102,8 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+ 				 4 + /* rx alignment */
+ 				 IEEE80211_MAX_FRAG_THRESHOLD;
+ 			if (priv->rx_mtu > maxlen && PAGE_SIZE == 4096) {
+-				printk(KERN_INFO "p54: rx_mtu reduced from %d "
+-				       "to %d\n", priv->rx_mtu, maxlen);
++				pr_info("rx_mtu reduced from %d to %d\n",
++					priv->rx_mtu, maxlen);
+ 				priv->rx_mtu = maxlen;
+ 			}
+ 			break;
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index f792990..8bf4a01 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -20,6 +20,8 @@
+  * 02110-1301 USA
+  */
  
--	if (!ifmgd->associated)
-+	if (ifmgd->associated)
-+		cbss = ifmgd->associated;
-+	else if (ifmgd->auth_data)
-+		cbss = ifmgd->auth_data->bss;
-+	else if (ifmgd->assoc_data)
-+		cbss = ifmgd->assoc_data->bss;
-+	else
- 		return NULL;
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/interrupt.h>
+@@ -719,7 +721,7 @@ static int __init p54spi_init(void)
  
--	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
-+	ssid = ieee80211_bss_get_ie(cbss, WLAN_EID_SSID);
- 	if (WARN_ON_ONCE(ssid == NULL))
- 		ssid_len = 0;
- 	else
- 		ssid_len = ssid[1];
- 
--	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
-+	skb = ieee80211_build_probe_req(sdata, cbss->bssid,
- 					(u32) -1, ssid + 2, ssid_len,
- 					NULL, 0, true);
+ 	ret = spi_register_driver(&p54spi_driver);
+ 	if (ret < 0) {
+-		printk(KERN_ERR "failed to register SPI driver: %d", ret);
++		pr_err("failed to register SPI driver: %d\n", ret);
+ 		goto out;
+ 	}
  
 -- 
-1.7.6.401.g6a319
+1.7.8.111.gad25c.dirty
 
