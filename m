@@ -1,114 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:34786 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128Ab2FYFPp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 01:15:45 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com, Sven Eckelmann <sven@narfation.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH] ath9k: raise aggregation limit to 64k for HT IBSS
-Date: Mon, 25 Jun 2012 07:15:22 +0200
-Message-Id: <1340601322-1802-1-git-send-email-sven@narfation.org> (sfid-20120625_071550_205917_B4AEA1EB)
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53225 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751902Ab2FOCFh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 22:05:37 -0400
+Message-ID: <1339725919.4942.75.camel@deadeye.wl.decadent.org.uk> (sfid-20120615_040604_446483_80524DE2)
+Subject: Re: [PATCH] rt2800pci:Firmware update v1
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Woody Hung <Woody.Hung@mediatek.com>
+Cc: dwmw2@infradead.org, linux-kernel@vger.kernel.org,
+	xose.vazquez@gmail.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Date: Fri, 15 Jun 2012 03:05:19 +0100
+In-Reply-To: <1339657061-19482-1-git-send-email-Woody.Hung@mediatek.com>
+References: <1339657061-19482-1-git-send-email-Woody.Hung@mediatek.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-7k35+b9Q8cVEmescWFBh"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 adds stations in HT IBSS as soon as a frame comes by,
-even if the HT capabilities are not known yet (they are often
-received later, e.g. in beacons). So far, ampdu factor/density
-are only calculated when the station is initially added.
 
-This patch changes this to update ampdu factor/density settings
-when starting a blockack session.
+--=-7k35+b9Q8cVEmescWFBh
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Using this patch, we had performance boosts from 60 to 150 MBit/s
-between two 2x2 Atheros devices in 5 GHz HT IBSS mode.
+On Thu, 2012-06-14 at 14:57 +0800, Woody Hung wrote:
+> Update firmwrae that support the rt3290 chip.
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
-This is a resent of an RFC (1340355904-861-1-git-send-email-sven@narfation.org,
-but now marked as patch). No changes were made because no problems were found
-during the review.
+Applied, but:
 
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    6 ++++--
- drivers/net/wireless/ath/ath9k/xmit.c  |   12 ++++++++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+[...]
+>  ------------------------------------------------------------------------=
+--
+> =20
+> -Driver: rt2800pci - Ralink RT2860, RT2890, RT3090, RT5390 wireless MACs
+> +Driver: rt2800pci - Ralink RT2860, RT2890, RT3090, RT3290, RT5390 wirele=
+ss MACs
+> =20
+>  File: rt2860.bin
+> +File: rt3290.bin
+> =20
+>  Licence: Redistributable. See LICENCE.ralink-firmware.txt for details
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f72c4a3..fe39eb4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -722,6 +722,7 @@ extern int ath9k_modparam_nohwcrypt;
- extern int led_blink;
- extern bool is_ath9k_unloaded;
- 
-+u8 ath9k_parse_mpdudensity(u8 mpdudensity);
- irqreturn_t ath_isr(int irq, void *dev);
- int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		    const struct ath_bus_ops *bus_ops);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 85f9ab4..e2e6958 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -19,7 +19,7 @@
- #include "ath9k.h"
- #include "btcoex.h"
- 
--static u8 parse_mpdudensity(u8 mpdudensity)
-+u8 ath9k_parse_mpdudensity(u8 mpdudensity)
- {
- 	/*
- 	 * 802.11n D2.0 defined values for "Minimum MPDU Start Spacing":
-@@ -320,6 +320,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 			    struct ieee80211_vif *vif)
- {
- 	struct ath_node *an;
-+	u8 density;
- 	an = (struct ath_node *)sta->drv_priv;
- 
- #ifdef CONFIG_ATH9K_DEBUGFS
-@@ -334,7 +335,8 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 		ath_tx_node_init(sc, an);
- 		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
- 				     sta->ht_cap.ampdu_factor);
--		an->mpdudensity = parse_mpdudensity(sta->ht_cap.ampdu_density);
-+		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
-+		an->mpdudensity = density;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 8d83060..cafb4a0 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1165,6 +1165,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- {
- 	struct ath_atx_tid *txtid;
- 	struct ath_node *an;
-+	u8 density;
- 
- 	an = (struct ath_node *)sta->drv_priv;
- 	txtid = ATH_AN_2_TID(an, tid);
-@@ -1172,6 +1173,17 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
- 		return -EAGAIN;
- 
-+	/* update ampdu factor/density, they may have changed. This may happen
-+	 * in HT IBSS when a beacon with HT-info is received after the station
-+	 * has already been added.
-+	 */
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
-+		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+				     sta->ht_cap.ampdu_factor);
-+		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
-+		an->mpdudensity = density;
-+	}
-+
- 	txtid->state |= AGGR_ADDBA_PROGRESS;
- 	txtid->paused = true;
- 	*ssn = txtid->seq_start = txtid->seq_next;
--- 
-1.7.10
+Maybe this licence text should also be updated?
+
+Ben.
+
+--=20
+Ben Hutchings
+Computers are not intelligent.	They only think they are.
+
+--=-7k35+b9Q8cVEmescWFBh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAT9qYX+e/yOyVhhEJAQq6Bw/+K9mFhrlh1w0IlpwX9F/TKpBhZ+Dd3dpn
+ym+EsNeiVKzmkCIaDzhOZE2i5HC6uNrvC6y2Olc1EMgajsHWblFvAjdxa5RBxnM7
+Pcq0egqyGAGdBQDxXg6v2CdzQ6xZcOe4lh71hXCjXw3cypKxxBf7IoEl7cCVkHii
+b3pBa7ju3Wwy5z+vgzp1TmIcm+1S8iOLf05JDvmQyrxHgUkN0IPlGz2SsjAsI8eM
+MrS9Oiw7cjmBsiq6Nk/mbJarvQf3Rur1zqRPtsY03eugu5HoXzHr3wjs5FM2e6VG
+2vEAL1lt5BzGq0R/INI4IED9LkJV4b71mE2iDwaC9FMEOcXw/fCES9/98JzXWjGx
+zoWRas7H1O4q4nyvOYDH5g5rJPcSVDBAcuNWhuglfT5hWGvOsaSdvFw/dADUhqad
+NB8wEGq05lFNrUCQA+onzTeOLFDiyTZ+QdoVtDjxLb8J4UDTtPzIFS3I8NG3BpCp
+DASd2yat2VzoJo/+AgoE9RqjS69/T0WfBIB7WHOzgTvCBREuuoCdutT3107kwqWw
+31Cs+cmA2DGcLk7vNDdOpVGTCQqVpu3sgMwn0KMY618u31DQ6c0gkb/hHxA+1FvL
+JEVHNdM3UZzPe7yZvzhN3+LlZckWI7vCPfojlWZLbRwTS8an/M2ff8sUtQsXgM9b
+TQfFjhwTzgE=
+=xgQ3
+-----END PGP SIGNATURE-----
+
+--=-7k35+b9Q8cVEmescWFBh--
