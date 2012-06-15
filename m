@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17207 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:41625 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752573Ab2FFKGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:06:52 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 05/29] NFC: LLCP's MIUX is 10 bytes long, not 7
-Date: Wed,  6 Jun 2012 12:16:22 +0200
-Message-Id: <1338977806-30279-6-git-send-email-sameo@linux.intel.com> (sfid-20120606_120654_719723_0DB4DAEC)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+	id S1754271Ab2FOBFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jun 2012 21:05:06 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	c_manoha@qca.qualcomm.com, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 3.5 1/2] ath9k: fix a tx rate duration calculation bug
+Date: Fri, 15 Jun 2012 03:04:52 +0200
+Message-Id: <1339722293-28613-1-git-send-email-nbd@openwrt.org> (sfid-20120615_030511_786110_309A605D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mask is 0x7ff and not 0x7f and the return value is an u16.
+The rate pointer variable for a rate series is used in a loop before it is
+initialized. This went unnoticed because it was used earlier for the RTS/CTS
+rate. This bug can lead to the wrong PHY type being passed to the
+duration calculation function.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
 ---
- net/nfc/llcp/commands.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
-index 850e5cf..b982b5b 100644
---- a/net/nfc/llcp/commands.c
-+++ b/net/nfc/llcp/commands.c
-@@ -51,7 +51,7 @@ static u8 llcp_tlv8(u8 *tlv, u8 type)
- 	return tlv[2];
- }
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index d59dd01..efb7f00 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1001,13 +1001,13 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 		}
  
--static u8 llcp_tlv16(u8 *tlv, u8 type)
-+static u16 llcp_tlv16(u8 *tlv, u8 type)
- {
- 	if (tlv[0] != type || tlv[1] != llcp_tlv_length[tlv[0]])
- 		return 0;
-@@ -67,7 +67,7 @@ static u8 llcp_tlv_version(u8 *tlv)
+ 		/* legacy rates */
++		rate = &sc->sbands[tx_info->band].bitrates[rates[i].idx];
+ 		if ((tx_info->band == IEEE80211_BAND_2GHZ) &&
+ 		    !(rate->flags & IEEE80211_RATE_ERP_G))
+ 			phy = WLAN_RC_PHY_CCK;
+ 		else
+ 			phy = WLAN_RC_PHY_OFDM;
  
- static u16 llcp_tlv_miux(u8 *tlv)
- {
--	return llcp_tlv16(tlv, LLCP_TLV_MIUX) & 0x7f;
-+	return llcp_tlv16(tlv, LLCP_TLV_MIUX) & 0x7ff;
- }
- 
- static u16 llcp_tlv_wks(u8 *tlv)
+-		rate = &sc->sbands[tx_info->band].bitrates[rates[i].idx];
+ 		info->rates[i].Rate = rate->hw_value;
+ 		if (rate->hw_value_short) {
+ 			if (rates[i].flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
 -- 
-1.7.9.1
+1.7.3.2
 
