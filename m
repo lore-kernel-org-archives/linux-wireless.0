@@ -1,116 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39615 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892Ab2FTHiW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 03:38:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:41313 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756627Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 09:25:38 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/12] iwlwifi: protect use_ict with irq_lock
-Date: Wed, 20 Jun 2012 09:38:09 +0200
-Message-Id: <1340177894-12992-8-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093837_729351_237F89BA)
-In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
-References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	c_manoha@qca.qualcomm.com
+Subject: [PATCH 1/9] ath9k_hw: remove aniState->noiseFloor
+Date: Fri, 15 Jun 2012 15:25:19 +0200
+Message-Id: <1339766727-61926-1-git-send-email-nbd@openwrt.org> (sfid-20120615_152551_509602_74F6FE74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+I don't know why somebody decided to keep a cached copy of beacon rssi in a
+variable called 'noiseFloor', but the caching is unnecessary and the variable
+name is confusing, so let's just get rid of it entirely.
 
-This variable was accessed without taking the lock.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/pcie/rx.c |   30 ++++++++++++++----------------
- 1 file changed, 14 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c |   11 ++++-------
+ drivers/net/wireless/ath/ath9k/ani.h |    1 -
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index d6860c0..be143eb 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -867,24 +867,23 @@ void iwl_disable_ict(struct iwl_trans *trans)
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index b4c77f9..18ce69d 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -266,11 +266,9 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 	const struct ani_ofdm_level_entry *entry_ofdm;
+ 	const struct ani_cck_level_entry *entry_cck;
  
-+/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
- static irqreturn_t iwl_isr(int irq, void *data)
- {
- 	struct iwl_trans *trans = data;
--	struct iwl_trans_pcie *trans_pcie;
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta, inta_mask;
--	unsigned long flags;
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	u32 inta_fh;
- #endif
-+
-+	lockdep_assert_held(&trans_pcie->irq_lock);
-+
- 	if (!trans)
- 		return IRQ_NONE;
- 
- 	trace_iwlwifi_dev_irq(trans->dev);
- 
--	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	aniState->noiseFloor = BEACON_RSSI(ah);
 -
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
--
- 	/* Disable (but don't clear!) interrupts here to avoid
- 	 *    back-to-back ISRs and sporadic interrupts from our NIC.
- 	 * If we have something to service, the tasklet will re-enable ints.
-@@ -907,7 +906,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 		/* Hardware disappeared. It might have already raised
- 		 * an interrupt */
- 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		goto unplugged;
-+		return IRQ_HANDLED;
- 	}
+ 	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
+ 		aniState->ofdmNoiseImmunityLevel,
+-		immunityLevel, aniState->noiseFloor,
++		immunityLevel, BEACON_RSSI(ah),
+ 		aniState->rssiThrLow, aniState->rssiThrHigh);
  
- #ifdef CONFIG_IWLWIFI_DEBUG
-@@ -926,18 +925,13 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 		 !trans_pcie->inta)
- 		iwl_enable_interrupts(trans);
+ 	if (aniState->update_ani)
+@@ -292,7 +290,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 				     ATH9K_ANI_FIRSTEP_LEVEL,
+ 				     entry_ofdm->fir_step_level);
  
-- unplugged:
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--	return IRQ_HANDLED;
--
-- none:
-+none:
- 	/* re-enable interrupts here since we don't have anything to service. */
- 	/* only Re-enable if disabled by irq  and no schedules tasklet. */
- 	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
- 	    !trans_pcie->inta)
- 		iwl_enable_interrupts(trans);
+-	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
++	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
+ 	    (!aniState->ofdmWeakSigDetectOff !=
+ 	     entry_ofdm->ofdm_weak_signal_on)) {
+ 			ath9k_hw_ani_control(ah,
+@@ -329,15 +327,14 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
+ 	const struct ani_ofdm_level_entry *entry_ofdm;
+ 	const struct ani_cck_level_entry *entry_cck;
  
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 	return IRQ_NONE;
- }
+-	aniState->noiseFloor = BEACON_RSSI(ah);
+ 	ath_dbg(common, ANI, "**** ccklevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
+ 		aniState->cckNoiseImmunityLevel, immunityLevel,
+-		aniState->noiseFloor, aniState->rssiThrLow,
++		BEACON_RSSI(ah), aniState->rssiThrLow,
+ 		aniState->rssiThrHigh);
  
-@@ -963,15 +957,19 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
+ 	if ((ah->opmode == NL80211_IFTYPE_STATION ||
+ 	     ah->opmode == NL80211_IFTYPE_ADHOC) &&
+-	    aniState->noiseFloor <= aniState->rssiThrLow &&
++	    BEACON_RSSI(ah) <= aniState->rssiThrLow &&
+ 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
+ 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
  
- 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-+	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+
- 	/* dram interrupt table not set yet,
- 	 * use legacy interrupt.
- 	 */
--	if (!trans_pcie->use_ict)
--		return iwl_isr(irq, data);
-+	if (unlikely(!trans_pcie->use_ict)) {
-+		irqreturn_t ret = iwl_isr(irq, data);
-+		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+		return ret;
-+	}
- 
- 	trace_iwlwifi_dev_irq(trans->dev);
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
- 
- 	/* Disable (but don't clear!) interrupts here to avoid
- 	 * back-to-back ISRs and sporadic interrupts from our NIC.
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 72e2b87..c04d167 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -128,7 +128,6 @@ struct ar5416AniState {
+ 	u32 listenTime;
+ 	int32_t rssiThrLow;
+ 	int32_t rssiThrHigh;
+-	u32 noiseFloor;
+ 	u32 ofdmPhyErrCount;
+ 	u32 cckPhyErrCount;
+ 	int16_t pktRssi[2];
 -- 
-1.7.10
+1.7.3.2
 
