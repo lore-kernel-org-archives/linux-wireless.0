@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:43361 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756636Ab2FHGbI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 02:31:08 -0400
-Received: by lbbgj10 with SMTP id gj10so1503512lbb.37
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 23:31:05 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+Received: from nbd.name ([46.4.11.11]:41315 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756514Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jun 2012 09:25:38 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Subject: [PATCH 0/5] wl18xx: some alignment with new FWs and conf improvements
-Date: Fri,  8 Jun 2012 09:30:50 +0300
-Message-Id: <1339137055-30095-1-git-send-email-coelho@ti.com> (sfid-20120608_083113_882210_00849332)
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	c_manoha@qca.qualcomm.com
+Subject: [PATCH 2/9] ath9k_hw: fix OFDM weak signal detection handling
+Date: Fri, 15 Jun 2012 15:25:20 +0200
+Message-Id: <1339766727-61926-2-git-send-email-nbd@openwrt.org> (sfid-20120615_152552_964511_2D60A641)
+In-Reply-To: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
+References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
+was unifying some code related to overriding OFDM weak signal detection,
+but seems to have gotten some of the original intent wrong, probably
+because of a misnamed variable.
 
-Here are a few more patches for wl18xx (or directly related to it).
-Two of them align features and the ABI of newer firmware versions: the
-new statistics structure format by Ido and the support for FW logger
-by default with PG2.0 chips by Arik.
+The beacon RSSI is only valid in station mode, and the main reason to check
+it in ath9k_hw_set_ofdm_nil is to make sure that OFDM weak signal detection
+stays enabled if the RSSI is low, even when the OFDM noise immunity entry
+is supposed to disable it.
 
-Then there are three more patches by Arik that improve the conf binary
-handling.  Align the entire phy structure with the one used by the
-firmware, fix the module parameters to reflect the new placement of
-the settings (which are now in the conf structure) and make the NVS
-file optional, in preparation for total removal from wl18xx.
+The above commit removed the mode checks and changed the code so that
+OFDM weak signal detection would only be changed if the rssi is high, which
+is wrong for everything but client mode.
 
-Thanks guys for these patches!
+This patch restores the old behavior in a simplified form.
 
-Cheers,
-Luca.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-Arik Nemtsov (4):
-  wl18xx: allow FW-log by default for PG2.0
-  wl18xx: align wl18xx_conf_phy with FW variant and remove it
-  wl18xx: clean up phy module parameters
-  wlcore/wl12xx/wl18xx: make NVS file optional for wl18xx
-
-Ido Reis (1):
-  wl18xx: update fw statistics
-
- drivers/net/wireless/ti/wl18xx/acx.h     |   33 ++++--
- drivers/net/wireless/ti/wl18xx/conf.h    |   37 ++++++-
- drivers/net/wireless/ti/wl18xx/debugfs.c |   56 ++++++----
- drivers/net/wireless/ti/wl18xx/main.c    |  165 +++++++++++-------------------
- drivers/net/wireless/ti/wl18xx/reg.h     |   57 -----------
- drivers/net/wireless/ti/wl18xx/wl18xx.h  |    2 -
- drivers/net/wireless/ti/wlcore/boot.c    |    4 +-
- drivers/net/wireless/ti/wlcore/main.c    |   22 ++--
- 8 files changed, 166 insertions(+), 210 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 18ce69d..cf31050 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -265,6 +265,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	const struct ani_ofdm_level_entry *entry_ofdm;
+ 	const struct ani_cck_level_entry *entry_cck;
++	bool weak_sig;
+ 
+ 	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
+ 		aniState->ofdmNoiseImmunityLevel,
+@@ -290,13 +291,15 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 				     ATH9K_ANI_FIRSTEP_LEVEL,
+ 				     entry_ofdm->fir_step_level);
+ 
+-	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
+-	    (!aniState->ofdmWeakSigDetectOff !=
+-	     entry_ofdm->ofdm_weak_signal_on)) {
++	weak_sig = entry_ofdm->ofdm_weak_signal_on;
++	if (ah->opmode == NL80211_IFTYPE_STATION &&
++	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
++		weak_sig = true;
++
++	if (!aniState->ofdmWeakSigDetectOff != weak_sig)
+ 			ath9k_hw_ani_control(ah,
+ 				ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
+ 				entry_ofdm->ofdm_weak_signal_on);
+-	}
+ }
+ 
+ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
 -- 
-1.7.10
+1.7.3.2
 
