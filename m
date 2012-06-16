@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:59654 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141Ab2FMKFJ convert rfc822-to-8bit (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42638 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121Ab2FPMsA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 06:05:09 -0400
-Received: by mail-pz0-f52.google.com with SMTP id o14so846449dan.11
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 03:05:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1339521048.8774.YahooMailNeo@web192304.mail.sg3.yahoo.com>
-References: <1339521048.8774.YahooMailNeo@web192304.mail.sg3.yahoo.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 13 Jun 2012 13:04:53 +0300
-Message-ID: <CA+XVXfc06i8woWkwzZvF3yoJyJVSzEJRHRspfv5G4W8tfcay4Q@mail.gmail.com> (sfid-20120613_120514_667968_9E2A85DD)
-Subject: Re: TDLS implementation clarifications
-To: Dino Joseph Mycle <dinomycle@yahoo.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 16 Jun 2012 08:48:00 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3 0/9][RESEND] brcm80211: smac: rework regulatory support
+Date: Sat, 16 Jun 2012 07:47:47 -0500
+Message-Id: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com> (sfid-20120616_144804_206195_BBC17EC7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 12, 2012 at 8:10 PM, Dino Joseph Mycle <dinomycle@yahoo.com> wrote:
-> hello all,
->
->    I want to know more about the TDLS implementation. According to IEEE
-> 802.11z(http://standards.ieee.org/news/2011/80211z.html) which is
-> incorporated to IEEE 802.11-2012 document. It says that "A TDLS direct link is set up automatically, without need for user
-> intervention, while the connection with the AP is maintained". But in the mac80211 we need to configure the peer mac to make it work(using
-> wpa_supplicant), so as said by IEEE, without the need for user
-> intervention spec is not met right ?
+[Resending because I fat-fingered the list address the first time]
 
-I don't think it necessarily contradicts the spec. The TDLS connection
-can be made by a higher layer that gives commands to wpa_supplicant.
+brcmsmac has its own internal regulatory implementation which attempts
+to enforce a Broadcom defined domain named X2. This code has no
+integration with mac80211 regulatory other than supplying regulatory
+hints, and thus each implementation operates independently of the other,
+enforcing conflicting sets of rules.
 
-I think part of this is because HW limitations. Some devices can only
-support a limited number of TDLS peers. So decisions have to be made
-about who we want to connect to.
+This series of patches converts brcmsmac to relying on the mac80211
+regulatory implementation. The X2 domain is registered with mac80211,
+and brcmsmac is converted to using the constraints from mac80211 for
+hardware configuration. Much code is removed in the process :)
 
-Channel switch is not always supported as well, so if we connect to a
-TDLS peer, it might congest the network.
+There is one holdover from the old regulatory implementation. The MIMO
+tx power limits for brcmsmac are still being configured based on
+internal data for the X2 domain. Arend is trying to find out how these
+need to be handled, but this can be changed at a later time.
 
-What I'm saying is - policy is not clear cut for TDLS.
+Changes since version 2:
 
-Arik
+ - Removed likely() from condition for radio enable/disable
+ - Clarified description for patch 7
+
+Thanks,
+Seth
+
+
+Seth Forshee (9):
+  brcm80211: smac: don't set up tx power limits during initialization
+  brcm80211: smac: always set channel specified by mac80211
+  brcm80211: smac: remove unused code for 40MHz channels
+  brcm80211: smac: clean up channel.c
+  brcm80211: smac: inform mac80211 of the X2 regulatory domain
+  brcm80211: smac: enable/disable radio on regulatory updates
+  brcm80211: smac: use mac80211 channel data for tx power limits
+  brcm80211: smac: don't validate channels against internal regulatory
+    data
+  brcm80211: smac: use current regulatory domain when checking whether
+    OFDM is allowed
+
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  | 1221 ++++----------------
+ drivers/net/wireless/brcm80211/brcmsmac/channel.h  |    4 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    2 +
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   36 +-
+ 4 files changed, 261 insertions(+), 1002 deletions(-)
+
