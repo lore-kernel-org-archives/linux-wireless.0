@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2806 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751493Ab2FFLXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 07:23:34 -0400
-Message-ID: <4FCF3DA7.1080508@broadcom.com> (sfid-20120606_132337_921695_73C2B299)
-Date: Wed, 6 Jun 2012 13:23:19 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 16/18] brcmsmac: do not call brcms_c_chipmatch() for
- non PCI
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-17-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338937641-8519-17-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:49280 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756021Ab2FPT05 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jun 2012 15:26:57 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so4227687wgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2012 12:26:57 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH 2/3] wl1251: always report beacon loss to the stack
+Date: Sat, 16 Jun 2012 22:26:47 +0300
+Message-Id: <1339874808-9991-3-git-send-email-notasas@gmail.com> (sfid-20120616_212739_253254_4BE55FC9)
+In-Reply-To: <1339874808-9991-1-git-send-email-notasas@gmail.com>
+References: <1339874808-9991-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
-> brcms_c_chipmatch() just works for PCIe devices and returns false for
-> non PCIe devices. This stops brcms_ops_stop() from calling it when the
-> devices is not a PCIe device.
+Always report beacon loss to the stack, not only when in powersave
+state. This is because there's possibility that the driver disables
+PSM before it handles old BSS_LOSE_EVENT, so beacon loss has to be
+reported.
 
-Although this is true you may want to consider what this function
-provides. The intent is to have a more accurate filter to determine
-support the device by the driver, ie. more accurate than what is in the
-driver device table.
+Patch based on old maemo patch by:
+Janne Ylalehto <janne.ylalehto@nokia.com>
+Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Luciano Coelho <luciano.coelho@nokia.com>
+Yuri Ershov <ext-yuri.ershov@nokia.com>
 
-So in brcms_c_chipmatch() we may want a host-type independent filtering
-and validate bcma_device_id, bcma_chipinfo, and possibly bcma_boardinfo.
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/event.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   22 +++++++++++++-------
->  1 file changed, 14 insertions(+), 8 deletions(-)
+diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
+index 9f15cca..5ec50a4 100644
+--- a/drivers/net/wireless/ti/wl1251/event.c
++++ b/drivers/net/wireless/ti/wl1251/event.c
+@@ -76,8 +76,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 		}
+ 	}
+ 
+-	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID &&
+-	    wl->station_mode != STATION_ACTIVE_MODE) {
++	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
+ 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
+ 
+ 		/* indicate to the stack, that beacons have been lost */
+-- 
+1.7.0.4
 
