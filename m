@@ -1,138 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39622 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755241Ab2FTHiv (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:53710 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756819Ab2FPTb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 03:38:51 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 12/12] iwlwifi: remove sku field from hw_params
-Date: Wed, 20 Jun 2012 09:38:14 +0200
-Message-Id: <1340177894-12992-13-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093854_742758_35D95951)
-In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
-References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+	Sat, 16 Jun 2012 15:31:59 -0400
+Received: by mail-we0-f174.google.com with SMTP id u7so2780503wey.19
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2012 12:31:59 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH 3/3] wl1251: send filters to firmware as they are set
+Date: Sat, 16 Jun 2012 22:31:50 +0300
+Message-Id: <1339875110-10260-4-git-send-email-notasas@gmail.com> (sfid-20120616_213204_454338_FF6BF390)
+In-Reply-To: <1339875110-10260-1-git-send-email-notasas@gmail.com>
+References: <1339875110-10260-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Firmware supports changing filters using ACX_RX_CFG command,
+so use it in .configure_filter callback. Firmware also supports
+probe request filtering, so add it too along the way.
+This will also re-enable BSSID filter which is now removed by
+join command while associating.
 
-Now that the eeprom parsing code overrides the sku
-field directly with 11n_disable parameters, there's
-no longer a need to keep a copy of this field.
-
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/dev.h      |    2 --
- drivers/net/wireless/iwlwifi/dvm/lib.c      |    2 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c |    4 ++--
- drivers/net/wireless/iwlwifi/dvm/main.c     |   13 +++++--------
- 4 files changed, 8 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ti/wl1251/main.c |   27 +++++++++++++++++++++++----
+ 1 files changed, 23 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/dev.h b/drivers/net/wireless/iwlwifi/dvm/dev.h
-index 4620b65..54cf085 100644
---- a/drivers/net/wireless/iwlwifi/dvm/dev.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/dev.h
-@@ -568,7 +568,6 @@ enum iwl_scan_type {
-  *
-  * @tx_chains_num: Number of TX chains
-  * @rx_chains_num: Number of RX chains
-- * @sku: sku read from EEPROM
-  * @ct_kill_threshold: temperature threshold - in hw dependent unit
-  * @ct_kill_exit_threshold: when to reeable the device - in hw dependent unit
-  *	relevant for 1000, 6000 and up
-@@ -579,7 +578,6 @@ struct iwl_hw_params {
- 	u8  tx_chains_num;
- 	u8  rx_chains_num;
- 	bool use_rts_for_aggregation;
--	u16 sku;
- 	u32 ct_kill_threshold;
- 	u32 ct_kill_exit_threshold;
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 6094e3f..3118c42 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -659,13 +659,15 @@ out:
+ 				  FIF_FCSFAIL | \
+ 				  FIF_BCN_PRBRESP_PROMISC | \
+ 				  FIF_CONTROL | \
+-				  FIF_OTHER_BSS)
++				  FIF_OTHER_BSS | \
++				  FIF_PROBE_REQ)
  
-diff --git a/drivers/net/wireless/iwlwifi/dvm/lib.c b/drivers/net/wireless/iwlwifi/dvm/lib.c
-index 76f2592..207ae91 100644
---- a/drivers/net/wireless/iwlwifi/dvm/lib.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/lib.c
-@@ -160,7 +160,7 @@ int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control)
- 				IWL_PAN_SCD_BK_MSK | IWL_PAN_SCD_MGMT_MSK |
- 				IWL_PAN_SCD_MULTICAST_MSK;
- 
--	if (priv->hw_params.sku & EEPROM_SKU_CAP_11N_ENABLE)
-+	if (priv->eeprom_data->sku & EEPROM_SKU_CAP_11N_ENABLE)
- 		flush_cmd.fifo_control |= IWL_AGG_TX_QUEUE_MSK;
- 
- 	IWL_DEBUG_INFO(priv, "fifo queue control: 0X%x\n",
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index c577263..b581f03 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -164,7 +164,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	hw->max_tx_aggregation_subframes = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
- 	 */
- 
--	if (priv->hw_params.sku & EEPROM_SKU_CAP_11N_ENABLE)
-+	if (priv->eeprom_data->sku & EEPROM_SKU_CAP_11N_ENABLE)
- 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
- 			     IEEE80211_HW_SUPPORTS_STATIC_SMPS;
- 
-@@ -649,7 +649,7 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 	IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
- 		     sta->addr, tid);
- 
--	if (!(priv->hw_params.sku & EEPROM_SKU_CAP_11N_ENABLE))
-+	if (!(priv->eeprom_data->sku & EEPROM_SKU_CAP_11N_ENABLE))
- 		return -EACCES;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index c642c21..abfd791 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -1187,9 +1187,6 @@ static void iwl_set_hw_params(struct iwl_priv *priv)
- 		priv->hw_params.use_rts_for_aggregation =
- 			priv->cfg->ht_params->use_rts_for_aggregation;
- 
--	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
--		priv->hw_params.sku &= ~EEPROM_SKU_CAP_11N_ENABLE;
--
- 	/* Device-specific setup */
- 	priv->lib->set_hw_params(priv);
- }
-@@ -1234,20 +1231,20 @@ static int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
+ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+ 				       unsigned int changed,
+ 				       unsigned int *total,u64 multicast)
  {
- 	u16 radio_cfg;
+ 	struct wl1251 *wl = hw->priv;
++	int ret;
  
--	priv->hw_params.sku = priv->eeprom_data->sku;
-+	priv->eeprom_data->sku = priv->eeprom_data->sku;
+ 	wl1251_debug(DEBUG_MAC80211, "mac80211 configure filter");
  
--	if (priv->hw_params.sku & EEPROM_SKU_CAP_11N_ENABLE &&
-+	if (priv->eeprom_data->sku & EEPROM_SKU_CAP_11N_ENABLE &&
- 	    !priv->cfg->ht_params) {
- 		IWL_ERR(priv, "Invalid 11n configuration\n");
- 		return -EINVAL;
+@@ -676,7 +678,7 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+ 		/* no filters which we support changed */
+ 		return;
+ 
+-	/* FIXME: wl->rx_config and wl->rx_filter are not protected */
++	mutex_lock(&wl->mutex);
+ 
+ 	wl->rx_config = WL1251_DEFAULT_RX_CONFIG;
+ 	wl->rx_filter = WL1251_DEFAULT_RX_FILTER;
+@@ -699,8 +701,25 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
  	}
+ 	if (*total & FIF_CONTROL)
+ 		wl->rx_filter |= CFG_RX_CTL_EN;
+-	if (*total & FIF_OTHER_BSS)
+-		wl->rx_filter &= ~CFG_BSSID_FILTER_EN;
++	if (*total & FIF_OTHER_BSS || is_zero_ether_addr(wl->bssid))
++		wl->rx_config &= ~CFG_BSSID_FILTER_EN;
++	if (*total & FIF_PROBE_REQ)
++		wl->rx_filter |= CFG_RX_PREQ_EN;
++
++	if (wl->state == WL1251_STATE_OFF)
++		goto out;
++
++	ret = wl1251_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	/* send filters to firmware */
++	wl1251_acx_rx_config(wl, wl->rx_config, wl->rx_filter);
++
++	wl1251_ps_elp_sleep(wl);
++
++out:
++	mutex_unlock(&wl->mutex);
+ }
  
--	if (!priv->hw_params.sku) {
-+	if (!priv->eeprom_data->sku) {
- 		IWL_ERR(priv, "Invalid device sku\n");
- 		return -EINVAL;
- 	}
- 
--	IWL_INFO(priv, "Device SKU: 0x%X\n", priv->hw_params.sku);
-+	IWL_INFO(priv, "Device SKU: 0x%X\n", priv->eeprom_data->sku);
- 
- 	radio_cfg = priv->eeprom_data->radio_cfg;
- 
-@@ -1453,7 +1450,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	 ************************/
- 	iwl_set_hw_params(priv);
- 
--	if (!(priv->hw_params.sku & EEPROM_SKU_CAP_IPAN_ENABLE)) {
-+	if (!(priv->eeprom_data->sku & EEPROM_SKU_CAP_IPAN_ENABLE)) {
- 		IWL_DEBUG_INFO(priv, "Your EEPROM disabled PAN");
- 		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
- 		/*
+ /* HW encryption */
 -- 
-1.7.10
+1.7.0.4
 
