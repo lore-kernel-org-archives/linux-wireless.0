@@ -1,120 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:40856 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932122Ab2FGUka (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:46316 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756153Ab2FPTb6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 16:40:30 -0400
-Received: by lagu2 with SMTP id u2so809676lag.40
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 13:39:42 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH 1/9] wlcore: add support macros to easily add conf debugfs entries
-Date: Thu,  7 Jun 2012 23:39:20 +0300
-Message-Id: <1339101568-25346-2-git-send-email-coelho@ti.com> (sfid-20120607_224039_199656_CEE464D8)
-In-Reply-To: <1339101568-25346-1-git-send-email-coelho@ti.com>
-References: <1339101568-25346-1-git-send-email-coelho@ti.com>
+	Sat, 16 Jun 2012 15:31:58 -0400
+Received: by wgbdr13 with SMTP id dr13so4229776wgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2012 12:31:57 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH 2/3] wl1251: fix filtering support
+Date: Sat, 16 Jun 2012 22:31:49 +0300
+Message-Id: <1339875110-10260-3-git-send-email-notasas@gmail.com> (sfid-20120616_213201_960907_F00BC340)
+In-Reply-To: <1339875110-10260-1-git-send-email-notasas@gmail.com>
+References: <1339875110-10260-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+This driver has a hack in cmd.c which effectively disables all filtering.
+This seems to be triggering a firmware bug where it stops reporting any
+rx packets after random time on some routers, which is eliminated (or at
+least appears much more rarely) when filtering is on.
+I have found that only BSSID filter needs to be disabled for association
+to work, so disable only that instead of all filtering.
 
-The current debugfs code contains too much code duplication
-of bolierplate code. Add some macro magic to avoid this and
-enable adding new debugfs entries by using just a few lines.
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
- drivers/net/wireless/ti/wlcore/debugfs.c |   75 ++++++++++++++++++++++++++++++
- 1 file changed, 75 insertions(+)
+ drivers/net/wireless/ti/wl1251/cmd.c  |    9 ---------
+ drivers/net/wireless/ti/wl1251/main.c |    6 ++++++
+ 2 files changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index fcd6063..50300ff 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -102,6 +102,81 @@ static const struct file_operations tx_queue_len_ops = {
- 	.llseek = default_llseek,
- };
+diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
+index d14d69d..6822b84 100644
+--- a/drivers/net/wireless/ti/wl1251/cmd.c
++++ b/drivers/net/wireless/ti/wl1251/cmd.c
+@@ -277,15 +277,6 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 	join->rx_config_options = wl->rx_config;
+ 	join->rx_filter_options = wl->rx_filter;
  
-+static void chip_op_handler(struct wl1271 *wl, unsigned long value,
-+			    void *arg)
-+{
-+	int ret;
-+	int (*chip_op) (struct wl1271 *wl);
-+
-+	if (!arg) {
-+		wl1271_warning("debugfs chip_op_handler with no callback");
-+		return;
-+	}
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		return;
-+
-+	chip_op = arg;
-+	chip_op(wl);
-+
-+	wl1271_ps_elp_sleep(wl);
-+}
-+
-+
-+static inline void no_write_handler(struct wl1271 *wl,
-+				    unsigned long value,
-+				    unsigned long param)
-+{
-+}
-+
-+#define WL12XX_CONF_DEBUGFS(param, conf_sub_struct,			\
-+			    min_val, max_val, write_handler_locked,	\
-+			    write_handler_arg)				\
-+	static ssize_t param##_read(struct file *file,			\
-+				      char __user *user_buf,		\
-+				      size_t count, loff_t *ppos)	\
-+	{								\
-+	struct wl1271 *wl = file->private_data;				\
-+	return wl1271_format_buffer(user_buf, count,			\
-+				    ppos, "%d\n",			\
-+				    wl->conf.conf_sub_struct.param);	\
-+	}								\
-+									\
-+	static ssize_t param##_write(struct file *file,			\
-+				     const char __user *user_buf,	\
-+				     size_t count, loff_t *ppos)	\
-+	{								\
-+	struct wl1271 *wl = file->private_data;				\
-+	unsigned long value;						\
-+	int ret;							\
-+									\
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);		\
-+	if (ret < 0) {							\
-+		wl1271_warning("illegal value for " #param);		\
-+		return -EINVAL;						\
-+	}								\
-+									\
-+	if (value < min_val || value > max_val) {			\
-+		wl1271_warning(#param " is not in valid range");	\
-+		return -ERANGE;						\
-+	}								\
-+									\
-+	mutex_lock(&wl->mutex);						\
-+	wl->conf.conf_sub_struct.param = value;				\
-+									\
-+	write_handler_locked(wl, value, write_handler_arg);		\
-+									\
-+	mutex_unlock(&wl->mutex);					\
-+	return count;							\
-+	}								\
-+									\
-+	static const struct file_operations param##_ops = {		\
-+		.read = param##_read,					\
-+		.write = param##_write,					\
-+		.open = simple_open,					\
-+		.llseek = default_llseek,				\
-+	};
- static ssize_t gpio_power_read(struct file *file, char __user *user_buf,
- 			  size_t count, loff_t *ppos)
- {
+-	/*
+-	 * FIXME: disable temporarily all filters because after commit
+-	 * 9cef8737 "mac80211: fix managed mode BSSID handling" broke
+-	 * association. The filter logic needs to be implemented properly
+-	 * and once that is done, this hack can be removed.
+-	 */
+-	join->rx_config_options = 0;
+-	join->rx_filter_options = WL1251_DEFAULT_RX_FILTER;
+-
+ 	join->basic_rate_set = RATE_MASK_1MBPS | RATE_MASK_2MBPS |
+ 		RATE_MASK_5_5MBPS | RATE_MASK_11MBPS;
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index ff60a7a..6094e3f 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -334,6 +334,12 @@ static int wl1251_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	/*
++	 * Join command applies filters, and if we are not associated,
++	 * BSSID filter must be disabled for association to work.
++	 */
++	if (is_zero_ether_addr(wl->bssid))
++		wl->rx_config &= ~CFG_BSSID_FILTER_EN;
+ 
+ 	ret = wl1251_cmd_join(wl, bss_type, channel, beacon_interval,
+ 			      dtim_period);
 -- 
-1.7.10
+1.7.0.4
 
