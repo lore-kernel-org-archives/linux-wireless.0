@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:42141 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756230Ab2F0RXj (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:40931 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756222Ab2FPVgi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 13:23:39 -0400
-From: Arvydas Sidorenko <asido4@gmail.com>
-To: mcgrof@qca.qualcomm.com
-Cc: jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	asido4@gmail.com
-Subject: [PATCH] Build fix in drivers/net/wireless/ath/ath9k/main.c
-Date: Wed, 27 Jun 2012 21:19:39 +0200
-Message-Id: <1340824779-5157-1-git-send-email-asido4@gmail.com> (sfid-20120627_192357_974330_4EB359F2)
+	Sat, 16 Jun 2012 17:36:38 -0400
+Received: by weyu7 with SMTP id u7so2816241wey.19
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2012 14:36:36 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: xose.vazquez@gmail.com, IvDoorn@gmail.com, gwingerde@gmail.com,
+	helmut.schaa@googlemail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH] wireless: rt2x00: rt2800: remove unsupported rf and chips
+Date: Sat, 16 Jun 2012 23:36:32 +0200
+Message-Id: <1339882592-17680-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120616_233721_204981_669FFBA8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit fad29cd2f59949581050a937786c2c9bc78b2f04 broke the build if
-no CONFIG_ATH9K_BTCOEX_SUPPORT is enabled.
+removed, no support for:
 
-Signed-off-by: Arvydas Sidorenko <asido4@gmail.com>
+RF2853 2.4G/5G 3T3R
+RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
+RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+
+RT3593
+RT3883
+
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h |    6 ------
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 --
+ 2 files changed, 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c14cf5a..e4e73f0 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -151,8 +151,10 @@ static void __ath_cancel_work(struct ath_softc *sc)
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 9348521..b483c23 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -47,10 +47,7 @@
+  * RF3021 2.4G 1T2R
+  * RF3022 2.4G 2T2R
+  * RF3052 2.4G/5G 2T2R
+- * RF2853 2.4G/5G 3T3R
+  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
+- * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
+- * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+  * RF5370 2.4G 1T1R
+  * RF5390 2.4G 1T1R
+  */
+@@ -63,10 +60,7 @@
+ #define RF3021				0x0007
+ #define RF3022				0x0008
+ #define RF3052				0x0009
+-#define RF2853				0x000a
+ #define RF3320				0x000b
+-#define RF3322				0x000c
+-#define RF3053				0x000d
+ #define RF5370				0x5370
+ #define RF5372				0x5372
+ #define RF5390				0x5390
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 8f75402..0395881 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -189,8 +189,6 @@ struct rt2x00_chip {
+ #define RT3090		0x3090	/* 2.4GHz PCIe */
+ #define RT3390		0x3390
+ #define RT3572		0x3572
+-#define RT3593		0x3593
+-#define RT3883		0x3883	/* WSOC */
+ #define RT5390		0x5390  /* 2.4GHz */
+ #define RT5392		0x5392  /* 2.4GHz */
  
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
- 		cancel_work_sync(&sc->mci_work);
-+#endif
- }
- 
- static void ath_cancel_work(struct ath_softc *sc)
 -- 
-1.7.8.6
+1.7.10.4
 
