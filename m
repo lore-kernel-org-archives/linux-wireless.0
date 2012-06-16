@@ -1,63 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:36308 "HELO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758494Ab2FOXaU (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42657 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121Ab2FPMs3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 19:30:20 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.5] mwifiex: fix uAP TX packet timeout issue
-Date: Fri, 15 Jun 2012 16:21:53 -0700
-Message-Id: <1339802513-22009-1-git-send-email-bzhao@marvell.com> (sfid-20120616_013025_944165_91ABBCFE)
+	Sat, 16 Jun 2012 08:48:29 -0400
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3 6/9] brcm80211: smac: enable/disable radio on regulatory updates
+Date: Sat, 16 Jun 2012 07:47:53 -0500
+Message-Id: <1339850876-8020-7-git-send-email-seth.forshee@canonical.com> (sfid-20120616_144832_286985_FBB9A461)
+In-Reply-To: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
+References: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Currently the radio disable state is only updated during initialization,
+and it's only checked against the internal world domain. This is
+unnecessary, as there are always valid channels against this domain.
+Instead, check whether any channels are enabled in the regulatory
+notifier and update the radio state accordingly.
 
-When running heavy traffic we stop the tx queue if the pending
-packet count reaches certain threshold. Later, the tx queue should
-be woken up as soon as the packet count falls below the threshold.
-
-Current code wakes TX queue up on STA interface only. Removing the
-check for STA interface will allow both STA and AP interfaces to
-resume transmit when tx_pending count becomes low.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- drivers/net/wireless/mwifiex/txrx.c |   10 +++-------
- 1 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c |   67 ++++++++-------------
+ 1 file changed, 26 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index e2faec4..cecb272 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -161,15 +161,11 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
- 		goto done;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+index 65ef60b..3951ccf 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+@@ -677,46 +677,6 @@ brcms_c_channel_min_txpower_limits_with_local_constraint(
  
- 	for (i = 0; i < adapter->priv_num; i++) {
+ }
+ 
+-/* Update the radio state (enable/disable) and tx power targets
+- * based on a new set of channel/regulatory information
+- */
+-static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
+-{
+-	struct brcms_c_info *wlc = wlc_cm->wlc;
+-	uint chan;
 -
- 		tpriv = adapter->priv[i];
- 
--		if ((GET_BSS_ROLE(tpriv) == MWIFIEX_BSS_ROLE_STA) &&
--		    (tpriv->media_connected)) {
--			if (netif_queue_stopped(tpriv->netdev))
--				mwifiex_wake_up_net_dev_queue(tpriv->netdev,
--							      adapter);
--		}
-+		if (tpriv->media_connected &&
-+		    netif_queue_stopped(tpriv->netdev))
-+			mwifiex_wake_up_net_dev_queue(tpriv->netdev, adapter);
+-	/* search for the existence of any valid channel */
+-	for (chan = 0; chan < MAXCHANNEL; chan++) {
+-		if (brcms_c_valid_channel20_db(wlc->cmi, chan))
+-			break;
+-	}
+-	if (chan == MAXCHANNEL)
+-		chan = INVCHANNEL;
+-
+-	/*
+-	 * based on the channel search above, set or
+-	 * clear WL_RADIO_COUNTRY_DISABLE.
+-	 */
+-	if (chan == INVCHANNEL) {
+-		/*
+-		 * country/locale with no valid channels, set
+-		 * the radio disable bit
+-		 */
+-		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
+-		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\" "
+-			  "nbands %d bandlocked %d\n", wlc->pub->unit,
+-			  __func__, wlc_cm->world_regd->regdomain->alpha2,
+-			  wlc->pub->_nbands, wlc->bandlocked);
+-	} else if (mboolisset(wlc->pub->radio_disabled,
+-			      WL_RADIO_COUNTRY_DISABLE)) {
+-		/*
+-		 * country/locale with valid channel, clear
+-		 * the radio disable bit
+-		 */
+-		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
+-	}
+-}
+-
+ static int
+ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
+ 		      const struct country_info *country)
+@@ -762,7 +722,6 @@ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
  	}
- done:
- 	dev_kfree_skb_any(skb);
+ 
+ 	brcms_c_quiet_channels_reset(wlc_cm);
+-	brcms_c_channels_commit(wlc_cm);
+ 
+ 	return 0;
+ }
+@@ -1235,12 +1194,38 @@ static int brcms_reg_notifier(struct wiphy *wiphy,
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct brcms_info *wl = hw->priv;
+ 	struct brcms_c_info *wlc = wl->wlc;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	int band, i;
++	bool ch_found = false;
+ 
+ 	brcms_reg_apply_radar_flags(wiphy);
+ 
+ 	if (request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
+ 		brcms_reg_apply_beaconing_flags(wiphy, request->initiator);
+ 
++	/* Disable radio if all channels disallowed by regulatory */
++	for (band = 0; !ch_found && band < IEEE80211_NUM_BANDS; band++) {
++		sband = wiphy->bands[band];
++		if (!sband)
++			continue;
++
++		for (i = 0; !ch_found && i < sband->n_channels; i++) {
++			ch = &sband->channels[i];
++
++			if (!(ch->flags & IEEE80211_CHAN_DISABLED))
++				ch_found = true;
++		}
++	}
++
++	if (ch_found) {
++		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
++	} else {
++		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
++		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\"\n",
++			  wlc->pub->unit, __func__, request->alpha2);
++	}
++
+ 	if (wlc->pub->_nbands > 1 || wlc->band->bandtype == BRCM_BAND_2G)
+ 		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
+ 					brcms_c_japan_ccode(request->alpha2));
 -- 
-1.7.0.2
+1.7.9.5
 
