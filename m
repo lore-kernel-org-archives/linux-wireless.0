@@ -1,79 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:57896 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932359Ab2FOF7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 01:59:10 -0400
-From: Joe Perches <joe@perches.com>
-To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 20/20] zd_usb: Use pr_<level>
-Date: Thu, 14 Jun 2012 22:54:00 -0700
-Message-Id: <23bc83f167ea60e3192341166fb9f566cd1215d5.1339739416.git.joe@perches.com> (sfid-20120615_075956_678812_8ADC9C41)
-In-Reply-To: <cover.1339739415.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:33552 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757775Ab2FQSQ0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jun 2012 14:16:26 -0400
+Received: by eeit10 with SMTP id t10so1345486eei.19
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2012 11:16:25 -0700 (PDT)
+Message-ID: <4FDE1EF5.9030805@gmail.com> (sfid-20120617_201629_456776_12494CEC)
+Date: Sun, 17 Jun 2012 20:16:21 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: erwin.vandevelde@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: ath9k bug in country domain handling
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a more current logging style.
+Erwin Van de Velde wrote:
 
-Convert printks to pr_<level>.
-Coalesce formats, align arguments.
+> I have 802.11n cards with an atheros chipset with no default country domain.
+> Upon initialization, crda is set to US domain, after which I try to change it
+> to another domain, the driver only accepts further limitations: i.e. if a
+> channel is allowed in the US but not in Belgium, it is disabled, but the other
+> way round: if a channel is not allowed in the US, but is allowed in Belgium it
+> is not enabled.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/zd1211rw/zd_usb.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+"no default country domain" :-???
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index af83c43..7acaa1d 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -19,6 +19,8 @@
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-  */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/kernel.h>
- #include <linux/init.h>
- #include <linux/firmware.h>
-@@ -1551,29 +1553,28 @@ static int __init usb_init(void)
- {
- 	int r;
- 
--	pr_debug("%s usb_init()\n", driver.name);
-+	pr_debug("usb_init()\n");
- 
- 	zd_workqueue = create_singlethread_workqueue(driver.name);
- 	if (zd_workqueue == NULL) {
--		printk(KERN_ERR "%s couldn't create workqueue\n", driver.name);
-+		pr_err("couldn't create workqueue\n");
- 		return -ENOMEM;
- 	}
- 
- 	r = usb_register(&driver);
- 	if (r) {
- 		destroy_workqueue(zd_workqueue);
--		printk(KERN_ERR "%s usb_register() failed. Error number %d\n",
--		       driver.name, r);
-+		pr_err("usb_register() failed. Error number %d\n", r);
- 		return r;
- 	}
- 
--	pr_debug("%s initialized\n", driver.name);
-+	pr_debug("initialized\n");
- 	return 0;
- }
- 
- static void __exit usb_exit(void)
- {
--	pr_debug("%s usb_exit()\n", driver.name);
-+	pr_debug("usb_exit()\n");
- 	usb_deregister(&driver);
- 	destroy_workqueue(zd_workqueue);
- }
--- 
-1.7.8.111.gad25c.dirty
+# dmesg | grep ath:
 
+look for:
+ath: EEPROM regdomain: XXX
+ath: EEPROM indicates we should expect a direct regpair map
+ath: Country alpha2 being used: XX
+ath: Regpair used: XXX
+
+
+This is a Atheros *driver* feature.
+Channels are restricted based on the EEPROM value.
+And crda/wireless-regdb only can makes things _worse_.
+
+Solutions:
+- modify the driver
+- reprogramming of the EEPROM
+- buy another board and keep away from Atheros chipsets
+
+You should read:
+http://wireless.kernel.org/en/users/Drivers/ath#Regulatory
+http://marc.info/?l=linux-wireless&m=125072768530674
+http://marc.info/?l=linux-wireless&m=125078520924477
+http://wiki.openwrt.org/doc/howto/wireless.utilities?s[]=regulatory#iw  see "Note:"
+
+In linux source code, see regd* files:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=tree;f=drivers/net/wireless/ath
