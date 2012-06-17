@@ -1,85 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49331 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755898Ab2FTJFZ (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:61482 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757643Ab2FQU6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 05:05:25 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/5] nl80211: change __cfg80211_rdev_from_info
-Date: Wed, 20 Jun 2012 11:05:18 +0200
-Message-Id: <1340183119-15340-5-git-send-email-johannes@sipsolutions.net> (sfid-20120620_110547_536995_EB05AA7B)
-In-Reply-To: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
-References: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 17 Jun 2012 16:58:37 -0400
+Received: by eaak11 with SMTP id k11so1356351eaa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2012 13:58:36 -0700 (PDT)
+From: Lekensteyn <lekensteyn@gmail.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlwifi: fix Oops on reading debugfs log_event
+Date: Sun, 17 Jun 2012 22:58:30 +0200
+Message-ID: <7841457.8s9HYuaGXa@penguin> (sfid-20120617_225841_623189_7D659120)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Before this patch, reading log_event would print the event log to syslog and
+crash if CONFIG_IWLWIFI_DEBUG was disabled (while CONFIG_IWLWIFI_DEBUGFS was
+enabled of course). The crash was caused by (1) iwl_dbgfs_log_event_read failing
+to initialize variable buf, thereby causing the following kfree(buf) to be
+executed. (2) iwl_dump_nic_event_log does not initialize buf if
+CONFIG_IWLWIFI_DEBUG was disabled.
 
-Change the function to __cfg80211_rdev_from_attrs
-to take attributes instead of the info struct to
-make it usable from dump callbacks for testmode.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Tested-by: Lekensteyn <lekensteyn@gmail.com>
+Signed-off-by: Lekensteyn <lekensteyn@gmail.com>
 ---
- net/wireless/nl80211.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c    |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index af23291..7e94d4d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -71,23 +71,23 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
- }
- 
- static struct cfg80211_registered_device *
--__cfg80211_rdev_from_info(struct net *netns, struct genl_info *info)
-+__cfg80211_rdev_from_attrs(struct net *netns, struct nlattr **attrs)
+diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+index 8a2d9e6..e315dc7 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+@@ -2233,7 +2233,7 @@ static ssize_t iwl_dbgfs_log_event_read(struct file *file,
+ 					 size_t count, loff_t *ppos)
  {
- 	struct cfg80211_registered_device *rdev = NULL, *tmp;
- 	struct net_device *netdev;
+ 	struct iwl_priv *priv = file->private_data;
+-	char *buf;
++	char *buf = NULL;
+ 	int pos = 0;
+ 	ssize_t ret = -ENOMEM;
  
- 	assert_cfg80211_lock();
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index e620af3..b28ab67 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -1915,7 +1915,6 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 	IWL_ERR(priv, "Start IWL Event Log Dump: display last %u entries\n",
+ 		size);
  
--	if (!info->attrs[NL80211_ATTR_WIPHY] &&
--	    !info->attrs[NL80211_ATTR_IFINDEX])
-+	if (!attrs[NL80211_ATTR_WIPHY] &&
-+	    !attrs[NL80211_ATTR_IFINDEX])
- 		return ERR_PTR(-EINVAL);
- 
--	if (info->attrs[NL80211_ATTR_WIPHY])
-+	if (attrs[NL80211_ATTR_WIPHY])
- 		rdev = cfg80211_rdev_by_wiphy_idx(
--				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
-+				nla_get_u32(attrs[NL80211_ATTR_WIPHY]));
- 
--	if (info->attrs[NL80211_ATTR_IFINDEX]) {
--		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
-+	if (attrs[NL80211_ATTR_IFINDEX]) {
-+		int ifindex = nla_get_u32(attrs[NL80211_ATTR_IFINDEX]);
- 		netdev = dev_get_by_index(netns, ifindex);
- 		if (netdev) {
- 			if (netdev->ieee80211_ptr)
-@@ -145,7 +145,7 @@ cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev;
- 
- 	mutex_lock(&cfg80211_mutex);
--	rdev = __cfg80211_rdev_from_info(netns, info);
-+	rdev = __cfg80211_rdev_from_attrs(netns, info->attrs);
- 
- 	/* if it is not an error we grab the lock on
- 	 * it to assure it won't be going away while
-@@ -1422,7 +1422,8 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+-#ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (display) {
+ 		if (full_log)
+ 			bufsz = capacity * 48;
+@@ -1925,6 +1924,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 		if (!*buf)
+ 			return -ENOMEM;
  	}
- 
- 	if (!netdev) {
--		rdev = __cfg80211_rdev_from_info(genl_info_net(info), info);
-+		rdev = __cfg80211_rdev_from_attrs(genl_info_net(info),
-+						  info->attrs);
- 		if (IS_ERR(rdev)) {
- 			mutex_unlock(&cfg80211_mutex);
- 			return PTR_ERR(rdev);
++#ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (iwl_have_debug_level(IWL_DL_FW_ERRORS) || full_log) {
+ 		/*
+ 		 * if uCode has wrapped back to top of log,
 -- 
-1.7.10
+1.7.9.5
+
 
