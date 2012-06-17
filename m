@@ -1,292 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:57937 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754779Ab2FWGmL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 02:42:11 -0400
-Received: by lbgc1 with SMTP id c1so3794537lbg.15
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:08 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
-Subject: [PATCH 11/18] wlcore: Force checking of io functions' return values
-Date: Sat, 23 Jun 2012 09:41:22 +0300
-Message-Id: <1340433689-24320-12-git-send-email-coelho@ti.com> (sfid-20120623_084225_858170_70D48C16)
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
+Received: from nbd.name ([46.4.11.11]:43917 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752757Ab2FQOgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jun 2012 10:36:08 -0400
+Message-ID: <4FDDEB50.2040503@openwrt.org> (sfid-20120617_163612_950462_41176129)
+Date: Sun, 17 Jun 2012 16:36:00 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH 5/9] ath9k_hw: remove the old ANI implementation
+References: <1339766727-61926-1-git-send-email-nbd@openwrt.org> <1339766727-61926-2-git-send-email-nbd@openwrt.org> <1339766727-61926-3-git-send-email-nbd@openwrt.org> <1339766727-61926-4-git-send-email-nbd@openwrt.org> <1339766727-61926-5-git-send-email-nbd@openwrt.org> <20445.11677.349633.688444@gargle.gargle.HOWL>
+In-Reply-To: <20445.11677.349633.688444@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+On 2012-06-17 3:06 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> It was found to be buggy on a variety of chipsets from AR913x to AR928x.
+>> The new version (which was introduced along with AR93xx support) is more
+>> reliable in preventing connectivity dropouts and also fixes MIB interrupt
+>> storm issues.
+> 
+> What bugs exactly ? Can you elaborate which cases show improvement ?
+> OFDM weak signal detection ?
+> CCK weak signal detection ?
+> Noise immunity ?
+> Firstep_Level ?
+I don't know which of those parameters are relevant, I don't have a
+reproducible test case myself.
+I don't have links to all relevant bug reports anymore, here are a few
+that I could find:
+https://dev.openwrt.org/ticket/10166
+https://dev.openwrt.org/ticket/11442
 
-All io functions' return values should be propagated and handled. Add a
-__must_check annotation to verify that the return values are checked and
-to avoid future mistakes.
+Some of the discussion is missing in those tickets, as I had some email
+exchanges with some of the bug reporters off-list.
+What is not very visible in the ticket discussion is that I gave some
+test patches to a few users with various parts of Raj's commit reverted
+to try to pinpoint the source of the regression, but that didn't work
+out, there may be other changes that we haven't found yet that break
+old-ANI as well.
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/main.c     |    6 ++-
- drivers/net/wireless/ti/wl18xx/io.h       |    4 +-
- drivers/net/wireless/ti/wlcore/io.h       |   61 +++++++++++++++++------------
- drivers/net/wireless/ti/wlcore/sdio.c     |    8 ++--
- drivers/net/wireless/ti/wlcore/spi.c      |    8 ++--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    8 ++--
- 6 files changed, 55 insertions(+), 40 deletions(-)
+> MIB interrupt storms will not be seen because they aren't used at all.
+Right, the old implementation depends on MIB interrupt support, the new
+one doesn't.
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 3a4ab65..47ba2e0 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -688,7 +688,8 @@ out:
- 	return ret;
- }
- 
--static int wl12xx_top_reg_write(struct wl1271 *wl, int addr, u16 val)
-+static int __must_check wl12xx_top_reg_write(struct wl1271 *wl, int addr,
-+					     u16 val)
- {
- 	int ret;
- 
-@@ -712,7 +713,8 @@ out:
- 	return ret;
- }
- 
--static int wl12xx_top_reg_read(struct wl1271 *wl, int addr, u16 *out)
-+static int __must_check wl12xx_top_reg_read(struct wl1271 *wl, int addr,
-+					    u16 *out)
- {
- 	u32 val;
- 	int timeout = OCP_CMD_LOOP;
-diff --git a/drivers/net/wireless/ti/wl18xx/io.h b/drivers/net/wireless/ti/wl18xx/io.h
-index 0e1b8d2..c32ae30 100644
---- a/drivers/net/wireless/ti/wl18xx/io.h
-+++ b/drivers/net/wireless/ti/wl18xx/io.h
-@@ -22,7 +22,7 @@
- #ifndef __WL18XX_IO_H__
- #define __WL18XX_IO_H__
- 
--int wl18xx_top_reg_write(struct wl1271 *wl, int addr, u16 val);
--int wl18xx_top_reg_read(struct wl1271 *wl, int addr, u16 *out);
-+int __must_check wl18xx_top_reg_write(struct wl1271 *wl, int addr, u16 val);
-+int __must_check wl18xx_top_reg_read(struct wl1271 *wl, int addr, u16 *out);
- 
- #endif /* __WL18XX_IO_H__ */
-diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-index 4a6688b..1cd545b 100644
---- a/drivers/net/wireless/ti/wlcore/io.h
-+++ b/drivers/net/wireless/ti/wlcore/io.h
-@@ -53,31 +53,36 @@ void wl1271_io_init(struct wl1271 *wl);
- int wlcore_translate_addr(struct wl1271 *wl, int addr);
- 
- /* Raw target IO, address is not translated */
--static inline int wlcore_raw_write(struct wl1271 *wl, int addr, void *buf,
--				   size_t len, bool fixed)
-+static inline int __must_check wlcore_raw_write(struct wl1271 *wl, int addr,
-+						void *buf, size_t len,
-+						bool fixed)
- {
- 	return wl->if_ops->write(wl->dev, addr, buf, len, fixed);
- }
- 
--static inline int wlcore_raw_read(struct wl1271 *wl, int addr, void *buf,
--				  size_t len, bool fixed)
-+static inline int __must_check wlcore_raw_read(struct wl1271 *wl, int addr,
-+					       void *buf, size_t len,
-+					       bool fixed)
- {
- 	return wl->if_ops->read(wl->dev, addr, buf, len, fixed);
- }
- 
--static inline int wlcore_raw_read_data(struct wl1271 *wl, int reg, void *buf,
--				       size_t len, bool fixed)
-+static inline int __must_check wlcore_raw_read_data(struct wl1271 *wl, int reg,
-+						    void *buf, size_t len,
-+						    bool fixed)
- {
- 	return wlcore_raw_read(wl, wl->rtable[reg], buf, len, fixed);
- }
- 
--static inline int wlcore_raw_write_data(struct wl1271 *wl, int reg, void *buf,
--					size_t len, bool fixed)
-+static inline int __must_check wlcore_raw_write_data(struct wl1271 *wl, int reg,
-+						     void *buf, size_t len,
-+						     bool fixed)
- {
- 	return wlcore_raw_write(wl, wl->rtable[reg], buf, len, fixed);
- }
- 
--static inline int wlcore_raw_read32(struct wl1271 *wl, int addr, u32 *val)
-+static inline int __must_check wlcore_raw_read32(struct wl1271 *wl, int addr,
-+						 u32 *val)
- {
- 	int ret;
- 
-@@ -92,15 +97,16 @@ static inline int wlcore_raw_read32(struct wl1271 *wl, int addr, u32 *val)
- 	return 0;
- }
- 
--static inline int wlcore_raw_write32(struct wl1271 *wl, int addr, u32 val)
-+static inline int __must_check wlcore_raw_write32(struct wl1271 *wl, int addr,
-+						  u32 val)
- {
- 	wl->buffer_32 = cpu_to_le32(val);
- 	return wlcore_raw_write(wl, addr, &wl->buffer_32,
- 				sizeof(wl->buffer_32), false);
- }
- 
--static inline int wlcore_read(struct wl1271 *wl, int addr, void *buf,
--			      size_t len, bool fixed)
-+static inline int __must_check wlcore_read(struct wl1271 *wl, int addr,
-+					   void *buf, size_t len, bool fixed)
- {
- 	int physical;
- 
-@@ -109,8 +115,8 @@ static inline int wlcore_read(struct wl1271 *wl, int addr, void *buf,
- 	return wlcore_raw_read(wl, physical, buf, len, fixed);
- }
- 
--static inline int wlcore_write(struct wl1271 *wl, int addr, void *buf,
--			       size_t len, bool fixed)
-+static inline int __must_check wlcore_write(struct wl1271 *wl, int addr,
-+					    void *buf, size_t len, bool fixed)
- {
- 	int physical;
- 
-@@ -119,20 +125,23 @@ static inline int wlcore_write(struct wl1271 *wl, int addr, void *buf,
- 	return wlcore_raw_write(wl, physical, buf, len, fixed);
- }
- 
--static inline int wlcore_write_data(struct wl1271 *wl, int reg, void *buf,
--				    size_t len, bool fixed)
-+static inline int __must_check wlcore_write_data(struct wl1271 *wl, int reg,
-+						 void *buf, size_t len,
-+						 bool fixed)
- {
- 	return wlcore_write(wl, wl->rtable[reg], buf, len, fixed);
- }
- 
--static inline int wlcore_read_data(struct wl1271 *wl, int reg, void *buf,
--				    size_t len, bool fixed)
-+static inline int __must_check wlcore_read_data(struct wl1271 *wl, int reg,
-+						void *buf, size_t len,
-+						bool fixed)
- {
- 	return wlcore_read(wl, wl->rtable[reg], buf, len, fixed);
- }
- 
--static inline int wlcore_read_hwaddr(struct wl1271 *wl, int hwaddr,
--				      void *buf, size_t len, bool fixed)
-+static inline int __must_check wlcore_read_hwaddr(struct wl1271 *wl, int hwaddr,
-+						  void *buf, size_t len,
-+						  bool fixed)
- {
- 	int physical;
- 	int addr;
-@@ -145,24 +154,28 @@ static inline int wlcore_read_hwaddr(struct wl1271 *wl, int hwaddr,
- 	return wlcore_raw_read(wl, physical, buf, len, fixed);
- }
- 
--static inline int wlcore_read32(struct wl1271 *wl, int addr, u32 *val)
-+static inline int __must_check wlcore_read32(struct wl1271 *wl, int addr,
-+					     u32 *val)
- {
- 	return wlcore_raw_read32(wl, wlcore_translate_addr(wl, addr), val);
- }
- 
--static inline int wlcore_write32(struct wl1271 *wl, int addr, u32 val)
-+static inline int __must_check wlcore_write32(struct wl1271 *wl, int addr,
-+					      u32 val)
- {
- 	return wlcore_raw_write32(wl, wlcore_translate_addr(wl, addr), val);
- }
- 
--static inline int wlcore_read_reg(struct wl1271 *wl, int reg, u32 *val)
-+static inline int __must_check wlcore_read_reg(struct wl1271 *wl, int reg,
-+					       u32 *val)
- {
- 	return wlcore_raw_read32(wl,
- 				 wlcore_translate_addr(wl, wl->rtable[reg]),
- 				 val);
- }
- 
--static inline int wlcore_write_reg(struct wl1271 *wl, int reg, u32 val)
-+static inline int __must_check wlcore_write_reg(struct wl1271 *wl, int reg,
-+						u32 val)
- {
- 	return wlcore_raw_write32(wl,
- 				  wlcore_translate_addr(wl, wl->rtable[reg]),
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 9069dc9..204e69f 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -71,8 +71,8 @@ static void wl1271_sdio_set_block_size(struct device *child,
- 	sdio_release_host(func);
- }
- 
--static int wl12xx_sdio_raw_read(struct device *child, int addr, void *buf,
--				size_t len, bool fixed)
-+static int __must_check wl12xx_sdio_raw_read(struct device *child, int addr,
-+					     void *buf, size_t len, bool fixed)
- {
- 	int ret;
- 	struct wl12xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-@@ -109,8 +109,8 @@ static int wl12xx_sdio_raw_read(struct device *child, int addr, void *buf,
- 	return ret;
- }
- 
--static int wl12xx_sdio_raw_write(struct device *child, int addr, void *buf,
--				 size_t len, bool fixed)
-+static int __must_check wl12xx_sdio_raw_write(struct device *child, int addr,
-+					      void *buf, size_t len, bool fixed)
- {
- 	int ret;
- 	struct wl12xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index d6768e9..6420aba 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -193,8 +193,8 @@ static int wl12xx_spi_read_busy(struct device *child)
- 	return -ETIMEDOUT;
- }
- 
--static int wl12xx_spi_raw_read(struct device *child, int addr, void *buf,
--			       size_t len, bool fixed)
-+static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
-+					    void *buf, size_t len, bool fixed)
- {
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
- 	struct wl1271 *wl = dev_get_drvdata(child);
-@@ -260,8 +260,8 @@ static int wl12xx_spi_raw_read(struct device *child, int addr, void *buf,
- 	return 0;
- }
- 
--static int wl12xx_spi_raw_write(struct device *child, int addr, void *buf,
--				size_t len, bool fixed)
-+static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
-+					     void *buf, size_t len, bool fixed)
- {
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
- 	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 5ab31ff..e5a34dd 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -209,10 +209,10 @@ struct wl1271_scan {
- };
- 
- struct wl1271_if_operations {
--	int (*read)(struct device *child, int addr, void *buf, size_t len,
--		    bool fixed);
--	int (*write)(struct device *child, int addr, void *buf, size_t len,
--		     bool fixed);
-+	int __must_check (*read)(struct device *child, int addr, void *buf,
-+				 size_t len, bool fixed);
-+	int __must_check (*write)(struct device *child, int addr, void *buf,
-+				  size_t len, bool fixed);
- 	void (*reset)(struct device *child);
- 	void (*init)(struct device *child);
- 	int (*power)(struct device *child, bool enable);
--- 
-1.7.10
+> False positives are an issue with ANI and has this been studied with the
+> move to the new algorithm ?
+What kind of false positives?
 
+> The new ANI algorithm is designed to take advantage of the HW improvements
+> in AR300 and above. Has it been verified that the older HW generation can actually
+> conform to the requirements of the new algorithm ?
+I did review pretty much all of the code, and the knobs that the ANI
+code tweaks really haven't changed much compared to the old
+implementation. It's split up into different functions, which makes it a
+bit harder to see the similarities.
+The main implementation differences that I can find is that the new
+implementation does not tweak the AGC parameters anymore (commit log
+mentions something about this messing up RIFS Rx) and that the old
+implementation tries to tune all available ANI control parameters
+individually, whereas the new implementation contains a table that
+describes how the parameters are raised/lowered at once (split into OFDM
+and CCK).
+This simplifies the state machine quite a bit and makes it easier to
+make sure that it does not get stuck somewhere.
+As for hw specific improvements, old hw does not tweak MRC
+enable/disable for CCK, this is dealt with properly in the code.
+
+> If there are bugs or regressions in the existing code in ath9k, we can surely
+> fix them. But IMHO, saying 'general stability is improved' is not really a
+> justification for code extermination. Why can't we opt for a more evolutionary
+> approach ?
+Having two similar implementations of the same thing in the code,
+partially overlapping, makes the code hard to follow and hard to fix.
+Also, as I pointed out, the issue of regressions creeping in because of
+complex code is not theoretical, it has already happened, and I believe
+it is likely to happen again unless the root cause (spaghetti code) is
+fixed.
+The main state machine of the new implementation is much easier to
+understand and follow than the old one, and I'm confident that it'll be
+much easier for us to fix bugs there.
+
+- Felix
