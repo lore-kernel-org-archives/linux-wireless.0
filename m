@@ -1,28 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49099 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687Ab2F2HB6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42633 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab2FRGWN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 03:01:58 -0400
-Message-ID: <1340953315.4488.2.camel@jlt3.sipsolutions.net> (sfid-20120629_090202_153661_C2630C59)
-Subject: Re: [PATCH] mac80211: VHT Cap IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 29 Jun 2012 09:01:55 +0200
-In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D6345@mbx022-e1-nj-10.exch022.domain.local>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D6345@mbx022-e1-nj-10.exch022.domain.local>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Jun 2012 02:22:13 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 00/10] Add support for WOW in ath9k
+Date: Mon, 18 Jun 2012 11:51:44 +0530
+Message-ID: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120618_082216_802434_CA6EFE92)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-29 at 06:17 +0000, Mahesh Palivela wrote:
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> +u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-> +							   u32 cap);
+Add support for hardware WoW in ath9k. Magic-packet,
+beacon loss triggers are tested with AR9485, AR9280.
+Hardware code was cleaned up addressing Rajkumar's
+comments. User pattern needs a bit of investigation 
+on parsing to appropriate 802.11 format,
+few bug related to that are addressed.
+this RFC series is better tested and cleaned up compared
+to the WIP series. one more final review needed 
+to fix any possible bugs and correctness of the code.
 
-Ummmm, Arend was pretty specific... no?
+Thanks a lot to Vadivel, Rajkumar and Russell for
+their invaluable help.
 
-johannes
+Mohammed Shafi Shajakhan (10):
+  ath9k_hw: Add register definitions for WoW support
+  ath9k: Add definitions and structures to support WoW
+  ath9k_hw: Add WoW hardware capability flags
+  ath9k_hw: advertise WoW support for capable chipsets
+  ath9k: advertise supported WoW flags to upper layer
+  ath9k_hw: INI changes for WoW for AR9002 chipsets
+  ath9k_hw: Add hardware code for WoW
+  ath: Add Wake-on-Wireless debug mask
+  ath9k: Add WoW related mac80211 callbacks
+  ath9k: do not disable hardware while wow is enabled
+
+ drivers/net/wireless/ath/ath.h                   |    2 +
+ drivers/net/wireless/ath/ath9k/Makefile          |    1 +
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 +
+ drivers/net/wireless/ath/ath9k/ath9k.h           |   29 ++
+ drivers/net/wireless/ath/ath9k/hw.c              |    8 +
+ drivers/net/wireless/ath/ath9k/hw.h              |   75 +++
+ drivers/net/wireless/ath/ath9k/init.c            |   21 +-
+ drivers/net/wireless/ath/ath9k/main.c            |  375 ++++++++++++++-
+ drivers/net/wireless/ath/ath9k/pci.c             |    6 +
+ drivers/net/wireless/ath/ath9k/reg.h             |  145 ++++++-
+ drivers/net/wireless/ath/ath9k/wow.c             |  554 ++++++++++++++++++++++
+ 12 files changed, 1223 insertions(+), 12 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
 
