@@ -1,84 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:55468 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757508Ab2FZQoh (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41888 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab2FRGXB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 12:44:37 -0400
-Message-ID: <4FE9E6F0.2070909@opentechinstitute.org> (sfid-20120626_184440_447068_65258E12)
-Date: Tue, 26 Jun 2012 12:44:32 -0400
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
+	Mon, 18 Jun 2012 02:23:01 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [RFC 02/10] ath9k: Add definitions and structures to support WoW
+Date: Mon, 18 Jun 2012 11:51:46 +0530
+Message-ID: <1340000514-7779-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120618_082305_205755_E990B4E9)
+In-Reply-To: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Will Hawkins <hawkinsw@opentechinitiative.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Help tracing NL80211_CMD_AUTHENTICATE as event in IBSS mode
-References: <24f-4fe93400-17-239c5900@2266046>   (sfid-20120626_061218_757773_249E152D) <1340693584.4662.3.camel@jlt3.sipsolutions.net>  <4FE9E201.1010903@opentechinstitute.org> <1340728873.4484.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340728873.4484.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
+*add structures, macros and variables for WoW, so that the driver
+can make use of it.
+*maintain a list for user enabled patterns and masks
+*track pattern slots for the hardware limitation on the
+maximum number of patterns that can be stored.
+*track interrupts enabled before WoW suspend, so
+that can be reconfigured after resume
+*have macros to parse user defined wow configurations to
+hardware code
 
-On 06/26/2012 12:41 PM, Johannes Berg wrote:
-> On Tue, 2012-06-26 at 12:23 -0400, Will Hawkins wrote:
-> 
->>>> "When used as an event, this reports reception of an Authentication
->>>> frame in station and IBSS modes when the local MLME processed the
->>>> frame, i.e., it was for the local STA and was received in correct
->>>> state."
->>>>
->>>> I very much want this to be true for IBSS modes. However, I cannot
->>>> seem to trace through the source code to confirm that this actually
->>>> happens. I can easily follow the code for the case when the interface
->>>> is in station mode but lose the trail for IBSS. 
->>>
->>> I'm afraid that isn't actually true for IBSS. The event you get there
->>> will be NL80211_CMD_NEW_STATION.
->>
->> Thank you for the sanity check! Do you think it's worthwhile to patch
->> the nl80211.h file to address this?
-> 
-> Yes, we should remove the IBSS text here :-)
-> 
->>> I think in your case though, what you really want is a NL80211_CMD_FRAME
->>> event? You register for auth frames, also to prevent mac80211 from
->>> handling them itself, and then they get diverted to cfg80211_rx_mgmt()
->>> and on to nl80211_send_mgmt().
->>
->> Thanks for this, as well. As far as the patch that I submitted, you are
->> exactly correct. I was only investigating this other method since it
->> appears that's how wpa_supplicant claims to support IBSS RSN.
->> wpa_supplicant never actually registers for AUTH frames (through
->> NL80211_CMD_REGISTER) and relies solely on the NL80211_CMD_AUTHENTICATE
->> to actually receive copies of those frames.
-> 
-> Huh, now I'm confused, why would it need the authenticate frames for
-> IBSS? As far as I can tell, it looks at CMD_NEW_STA, which calls
-> nl80211_new_station_event(), 
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |   20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h    |   21 +++++++++++++++++++++
+ 2 files changed, 41 insertions(+), 0 deletions(-)
 
-This is what I understand as well.
-
-which in IBSS sends EVENT_IBSS_RSN_START to
-> the supplicant core -- that will trigger the 4-way-handshake. No? Hence
-> it doesn't need to register for auth frames, it never needs them, since
-> RSN uses open auth, if any is even used in IBSS at all.
-
-This is where I am still trying to figure out exactly how it works.
-
-No false modesty, but I'm sure you are correct and I was wrong. I've
-only started to really dive into the wpa_supplicant stuff. Either way, I
-will submit a patch for that documentation and continue my work :-)
-
-Thanks again!
-Will
-
-> 
-> johannes
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a8c0500..264c25b 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -505,6 +505,19 @@ static inline u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc,
+ }
+ #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ 
++struct ath9k_wow_pattern {
++	bool slot;
++	u8 pattern_bytes[MAX_PATTERN_SIZE];
++	u8 mask_bytes[MAX_PATTERN_SIZE];
++	u32 pattern_len;
++	struct list_head list;
++};
++
++struct ath9k_wow_info {
++	u32 num_of_patterns;
++	struct list_head wow_patterns;
++};
++
+ /********************/
+ /*   LED Control    */
+ /********************/
+@@ -706,6 +719,13 @@ struct ath_softc {
+ 	struct ath_ant_comb ant_comb;
+ 	u8 ant_tx, ant_rx;
+ 	struct dfs_pattern_detector *dfs_detector;
++
++#ifdef CONFIG_PM_SLEEP
++	bool wow_got_bmiss_intr;
++	bool wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
++	u32 wow_intr_before_sleep;
++	struct ath9k_wow_info wow_info;
++#endif
+ };
+ 
+ void ath9k_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 03d5909..d0e14a3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -179,6 +179,24 @@
+ #define PAPRD_TABLE_SZ			24
+ #define PAPRD_IDEAL_AGC2_PWR_RANGE	0xe0
+ 
++/* Wake on Wireless */
++
++#define MAX_PATTERN_SIZE		256
++#define MAX_PATTERN_MASK_SIZE		32
++#define MAX_NUM_PATTERN			8
++#define MAX_NUM_USER_PATTERN		6 /*  deducting the disassociate and
++					      deauthenticate packets */
++
++/*
++ * WoW trigger mapping to hardware code
++ */
++
++#define AH_WOW_USER_PATTERN_EN		BIT(0)
++#define AH_WOW_MAGIC_PATTERN_EN		BIT(1)
++#define AH_WOW_LINK_CHANGE		BIT(2)
++#define AH_WOW_BEACON_MISS		BIT(3)
++#define AH_WOW_MAX_EVENTS		4
++
+ enum ath_hw_txq_subtype {
+ 	ATH_TXQ_AC_BE = 0,
+ 	ATH_TXQ_AC_BK = 1,
+@@ -861,6 +879,9 @@ struct ath_hw {
+ 	/* Enterprise mode cap */
+ 	u32 ent_mode;
+ 
++#ifdef CONFIG_PM_SLEEP
++	u32 wow_event_mask;
++#endif
+ 	bool is_clk_25mhz;
+ 	int (*get_mac_revision)(void);
+ 	int (*external_reset)(void);
+-- 
+1.7.0.4
 
