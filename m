@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2737 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753690Ab2FCUqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 16:46:04 -0400
-Message-ID: <4FCBCCFC.7000905@broadcom.com> (sfid-20120603_224608_952298_105DD702)
-Date: Sun, 3 Jun 2012 22:45:48 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35133 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752870Ab2FRWb5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jun 2012 18:31:57 -0400
+Received: by weyu7 with SMTP id u7so3989387wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 15:31:56 -0700 (PDT)
+Message-ID: <4FDFAC59.7000801@gmail.com> (sfid-20120619_003201_142118_4A7E2B12)
+Date: Tue, 19 Jun 2012 00:31:53 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 05/10] brcm80211: smac: remove DFS channels from
- 5GHz band
-References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
- <1338567336-12076-6-git-send-email-seth.forshee@canonical.com>
- <2D7FF7D769509245B7AD0DB511D0FD3A17AB30@SJEXCHMB09.corp.ad.broadcom.com>
- <20120601181625.GA31517@thinkpad-t410>
-In-Reply-To: <20120601181625.GA31517@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k bug in country domain handling
+References: <4FDE1EF5.9030805@gmail.com> <4283314.5zPdis6seJ@sylvesterjr.cmi.ua.ac.be>
+In-Reply-To: <4283314.5zPdis6seJ@sylvesterjr.cmi.ua.ac.be>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2012 08:16 PM, Seth Forshee wrote:
-> On Fri, Jun 01, 2012 at 05:52:55PM +0000, Brett Rudley wrote:
->>
->> Not quite understanding this. Why does a STA need radar detection when the NO_IBSS flag is set?
-> 
-> Arend specifically suggested removing these channels due to lack of DFS
-> support [1]. I replied asking whether it was at least possible to detect
-> radar presence and stop transmitting in order to be able to use these
-> channels. The last response from Arend was that he was going to check on
-> the firmware capabilities.
+On 06/18/2012 02:25 PM, Erwin Van de Velde wrote:
 
-I did not follow up with you, but I exchanged some emails with Brett on
-this. As brcmsmac does not support AP mode (yet) it does not need radar
-detection. Detection and appropriate action is coordinated by the AP.
+> The output I get is:
+> [ 8.931463] ath: EEPROM regdomain: 0x0
+> [ 8.931483] ath: EEPROM indicates default country code should be used
+> [ 8.931502] ath: doing EEPROM country->regdmn map search
+> [ 8.931526] ath: country maps to regdmn code: 0x3a
+> [ 8.931544] ath: Country alpha2 being used: US
+> [ 8.931561] ath: Regpair used: 0x3a
+>
+> As I see it, the regdomain is 00 and not US, so why does the ath9k driver
+> decide to put me in the US? US should not be the default country code, but
 
-> I'm more than happy to drop this patch if there's not regulatory
-> impedement to operating on the DFS channels.
-> 
+It seems natural to think that 0x0 is a 'neutral' region, far from it.
+0x0 is US.
 
-Let's drop it then. Sorry for not informing you sooner. I will have a
-look at the other patches as well.
+> world reg domain. The preferred solution in my opinion is that the driver
+> would require a regdomain to be given if it is not already set by the card.
+> Choosing US as a default seems purely random . It would make far more sense to
+> have no restricions by default if no regdomain is given and require it as a
+> parameter, so everyone can set it correctly to his correct domain. The current
+> method not only disallows valid channels to be used, but can also allow for
+> legally forbidden channels to be used, which could be even worse.
 
-Gr. AvS
+You didn't read any links of my previous e-mail, please do it.
 
+
+I can provide you some info how to fix it, out of this mailing list.
+Because it's a bit annoying to buy a Atheros  wireless card, and ignore their
+programmed values. Manufacturers: yellow stickers are cheap and visible!!!
