@@ -1,107 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:48186 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758223Ab2FUDV1 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:41715 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924Ab2FRM0G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 23:21:27 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	"3.0.y, 3.1.y, 3.2.y, 3.3.y, 3.4.y" <stable@vger.kernel.org>
-Subject: [PATCH 3.5 1/4] mwifiex: fix 11n rx packet drop issue
-Date: Wed, 20 Jun 2012 20:21:10 -0700
-Message-Id: <1340248873-5455-2-git-send-email-bzhao@marvell.com> (sfid-20120621_052130_968004_FF282A19)
-In-Reply-To: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
-References: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
+	Mon, 18 Jun 2012 08:26:06 -0400
+Received: by eeit10 with SMTP id t10so1539583eei.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 05:26:04 -0700 (PDT)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: ath9k bug in country domain handling
+Date: Mon, 18 Jun 2012 14:25:58 +0200
+Message-ID: <4283314.5zPdis6seJ@sylvesterjr.cmi.ua.ac.be> (sfid-20120618_142610_876335_C2307D8F)
+In-Reply-To: <4FDE1EF5.9030805@gmail.com>
+References: <4FDE1EF5.9030805@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+On Sunday 17 June 2012 20:16:21 Xose Vazquez Perez wrote:
+> Erwin Van de Velde wrote:
+> > I have 802.11n cards with an atheros chipset with no default country
+> > domain. Upon initialization, crda is set to US domain, after which I try
+> > to change it to another domain, the driver only accepts further
+> > limitations: i.e. if a channel is allowed in the US but not in Belgium,
+> > it is disabled, but the other way round: if a channel is not allowed in
+> > the US, but is allowed in Belgium it is not enabled.
+> 
+> "no default country domain" :-???
+> 
+> # dmesg | grep ath:
+> 
+> look for:
+> ath: EEPROM regdomain: XXX
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: Country alpha2 being used: XX
+> ath: Regpair used: XXX
+> 
+> 
+> This is a Atheros *driver* feature.
+> Channels are restricted based on the EEPROM value.
+> And crda/wireless-regdb only can makes things _worse_.
 
-Currently we check the sequence number of last packet received
-against start_win. If a sequence hole is detected, start_win is
-updated to next sequence number.
+The output I get is:
+[ 8.931463] ath: EEPROM regdomain: 0x0
+[ 8.931483] ath: EEPROM indicates default country code should be used
+[ 8.931502] ath: doing EEPROM country->regdmn map search
+[ 8.931526] ath: country maps to regdmn code: 0x3a
+[ 8.931544] ath: Country alpha2 being used: US
+[ 8.931561] ath: Regpair used: 0x3a
 
-Since the rx sequence number is initialized to 0, a corner case
-exists when BA setup happens immediately after association. As
-0 is a valid sequence number, start_win gets increased to 1
-incorrectly. This causes the first packet with sequence number 0
-being dropped.
+As I see it, the regdomain is 00 and not US, so why does the ath9k driver 
+decide to put me in the US? US should not be the default country code, but 
+world reg domain. The preferred solution in my opinion is that the driver 
+would require a regdomain to be given if it is not already set by the card. 
+Choosing US as a default seems purely random . It would make far more sense to 
+have no restricions by default if no regdomain is given and require it as a 
+parameter, so everyone can set it correctly to his correct domain. The current 
+method not only disallows valid channels to be used, but can also allow for 
+legally forbidden channels to be used, which could be even worse.
 
-Initialize rx sequence number as 0xffff and skip adjusting
-start_win if the sequence number remains 0xffff. The sequence
-number will be updated once the first packet is received.
-
-Cc: "3.0.y, 3.1.y, 3.2.y, 3.3.y, 3.4.y" <stable@vger.kernel.org>
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n_rxreorder.c |    5 +++--
- drivers/net/wireless/mwifiex/11n_rxreorder.h |    7 +++++++
- drivers/net/wireless/mwifiex/wmm.c           |    2 ++
- 3 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 9c44088..900ee12 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -256,7 +256,8 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
- 	else
- 		last_seq = priv->rx_seq[tid];
- 
--	if (last_seq >= new_node->start_win)
-+	if (last_seq != MWIFIEX_DEF_11N_RX_SEQ_NUM &&
-+	    last_seq >= new_node->start_win)
- 		new_node->start_win = last_seq + 1;
- 
- 	new_node->win_size = win_size;
-@@ -596,5 +597,5 @@ void mwifiex_11n_cleanup_reorder_tbl(struct mwifiex_private *priv)
- 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- 
- 	INIT_LIST_HEAD(&priv->rx_reorder_tbl_ptr);
--	memset(priv->rx_seq, 0, sizeof(priv->rx_seq));
-+	mwifiex_reset_11n_rx_seq_num(priv);
- }
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-index f1bffeb..6c9815a 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-@@ -37,6 +37,13 @@
- 
- #define ADDBA_RSP_STATUS_ACCEPT 0
- 
-+#define MWIFIEX_DEF_11N_RX_SEQ_NUM	0xffff
-+
-+static inline void mwifiex_reset_11n_rx_seq_num(struct mwifiex_private *priv)
-+{
-+	memset(priv->rx_seq, 0xff, sizeof(priv->rx_seq));
-+}
-+
- int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *,
- 			       u16 seqNum,
- 			       u16 tid, u8 *ta,
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index f3fc655..8c2b5c0 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -404,6 +404,8 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
- 		priv->add_ba_param.tx_win_size = MWIFIEX_AMPDU_DEF_TXWINSIZE;
- 		priv->add_ba_param.rx_win_size = MWIFIEX_AMPDU_DEF_RXWINSIZE;
- 
-+		mwifiex_reset_11n_rx_seq_num(priv);
-+
- 		atomic_set(&priv->wmm.tx_pkts_queued, 0);
- 		atomic_set(&priv->wmm.highest_queued_prio, HIGH_PRIO_TID);
- 	}
--- 
-1.7.0.2
+Regards,
+Erwin
 
