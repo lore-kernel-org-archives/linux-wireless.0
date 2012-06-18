@@ -1,277 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:58857 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759176Ab2FUJgP (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:60722 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752464Ab2FROto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 05:36:15 -0400
-Received: by obbwd20 with SMTP id wd20so723484obb.9
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 02:36:14 -0700 (PDT)
+	Mon, 18 Jun 2012 10:49:44 -0400
+Received: by obbtb18 with SMTP id tb18so7954364obb.33
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:49:42 -0700 (PDT)
 From: Victor Goldenshtein <victorg@ti.com>
 To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>, <eliad@wizery.com>
-Subject: [PATCH v4 1/2] nl80211/cfg80211: add scan channel times to scan command
-Date: Thu, 21 Jun 2012 12:33:04 +0300
-Message-Id: <1340271185-7070-1-git-send-email-victorg@ti.com> (sfid-20120621_113619_610864_2B3A8BFA)
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: =?UTF-8?q?=5BPATCH=200/7=5D=20nl/cfg/mac80211=3A=20add=20DFS=20master=20ability?=
+Date: Mon, 18 Jun 2012 17:46:31 +0300
+Message-Id: <1340030798-28992-1-git-send-email-victorg@ti.com> (sfid-20120618_164949_461072_E3F833D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to give the usermode an ability to configure
-scan channel times, and as it required for the beacon
-reports in the 802.11k standard.
-
-Add to the scan command min/max channel times. Add
-min/max passive channel times, since a single scan
-can contain both passive and active channels due to
-regulatory constraints.
-
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
-
-v4:
-	1. Use the scan time attributes only if NL80211_FEATURE_SCAN_TIMES is set.
-	2. Use only a pair of both min and max scan times, otherwise return -EINVAL.
-	3. Updated documentation for the scan time attributes. 
+In continuation to proposed RFC, this patch set (with hostap patch series) adds support for DFS (Dynamic Frequency Selection) according 802.11h.
 
 
- include/linux/ieee80211.h |    9 +++++++++
- include/linux/nl80211.h   |   27 +++++++++++++++++++++++++++
- include/net/cfg80211.h    |   11 +++++++++++
- net/wireless/core.h       |    1 +
- net/wireless/nl80211.c    |   32 +++++++++++++++++++++++++++++++-
- net/wireless/scan.c       |   38 ++++++++++++++++++++++++++++++++++++++
- 6 files changed, 117 insertions(+), 1 deletions(-)
+Main idea
+=========
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ce9af89..9522b7e 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1856,6 +1856,15 @@ static inline unsigned long ieee80211_tu_to_usec(unsigned long tu)
- }
- 
- /**
-+ * ieee80211_msec_to_tu - convert milliseconds to time units (TU)
-+ * @msec: the milliseconds
-+ */
-+static inline unsigned long ieee80211_msec_to_tu(unsigned long msec)
-+{
-+	return msec * 1000 / 1024;
-+}
-+
-+/**
-  * ieee80211_check_tim - check if AID bit is set in TIM
-  * @tim: the TIM IE
-  * @tim_len: length of the TIM IE
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 970afdf..bee74ba 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1224,6 +1224,25 @@ enum nl80211_commands {
-  * @NL80211_ATTR_BG_SCAN_PERIOD: Background scan period in seconds
-  *      or 0 to disable background scan.
-  *
-+ * @NL80211_ATTR_SCAN_MIN_CH_TIME: Minimum active scan time (in msec),
-+ *	u32 attribute to setup minimum time to wait on each channel, if received
-+ *	at least one probe_resp/beacon during this period will continue waiting
-+ *	@NL80211_ATTR_SCAN_MAX_CH_TIME, otherwise will move to next channel.
-+ * @NL80211_ATTR_SCAN_MAX_CH_TIME: Maximum active scan time (in msec),
-+ *	u32 attribute to setup maximum time to wait on the channel.
-+ * @NL80211_ATTR_SCAN_PSV_MIN_CH_TIME: Minimum passive scan time (in msec),
-+ *	u32 attribute (similar to @NL80211_ATTR_SCAN_MIN_CH_TIME).
-+ * @NL80211_ATTR_SCAN_PSV_MAX_CH_TIME: Maximum passive scan time (in msec),
-+ *	u32 attribute (similar to @NL80211_ATTR_SCAN_MAX_CH_TIME).
-+ *	Note:
-+ *	 The above channel time attributes are for the %NL80211_CMD_TRIGGER_SCAN
-+ *	 command. The attributes are optional, the driver will use default
-+ *	 channel time values if the attributes are not in use. When using the
-+ *	 attributes, the driver must support @NL80211_FEATURE_SCAN_TIMES and a
-+ *	 pair of both min and max scan times must be set, moreover if one of the
-+ *	 min times will be greater than max or set to zero, -EINVAL will be
-+ *	 returned.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1475,6 +1494,11 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_BG_SCAN_PERIOD,
- 
-+	NL80211_ATTR_SCAN_MIN_CH_TIME,
-+	NL80211_ATTR_SCAN_MAX_CH_TIME,
-+	NL80211_ATTR_SCAN_PSV_MIN_CH_TIME,
-+	NL80211_ATTR_SCAN_PSV_MAX_CH_TIME,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2875,11 +2899,14 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_HT_IBSS: This driver supports IBSS with HT datarates.
-  * @NL80211_FEATURE_INACTIVITY_TIMER: This driver takes care of freeing up
-  *	the connected inactive stations in AP mode.
-+ * @NL80211_FEATURE_SCAN_TIMES: This driver supports min/max scan times
-+ *	configuration for the %NL80211_CMD_TRIGGER_SCAN command.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
- 	NL80211_FEATURE_HT_IBSS		= 1 << 1,
- 	NL80211_FEATURE_INACTIVITY_TIMER = 1 << 2,
-+	NL80211_FEATURE_SCAN_TIMES	= 1 << 3,
- };
- 
- /**
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7319f25..4cc3a69 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -929,6 +929,12 @@ struct cfg80211_ssid {
-  * @dev: the interface
-  * @aborted: (internal) scan request was notified as aborted
-  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
-+ * @min_ch_time: minimum time to wait on each channel for active scans
-+ * @max_ch_time: maximum time to wait on each channel for active scans
-+ * @min_passive_ch_time: minimum time to wait on each channel for passive scans
-+ * @max_passive_ch_time: maximum time to wait on each channel for passive scans
-+ *  Note: If the above channel times are not set, the default channel times
-+ *  will be used. The channel times are in TUs.
-  */
- struct cfg80211_scan_request {
- 	struct cfg80211_ssid *ssids;
-@@ -945,6 +951,11 @@ struct cfg80211_scan_request {
- 	bool aborted;
- 	bool no_cck;
- 
-+	u32 min_ch_time;
-+	u32 max_ch_time;
-+	u32 min_passive_ch_time;
-+	u32 max_passive_ch_time;
-+
- 	/* keep last */
- 	struct ieee80211_channel *channels[0];
- };
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9348a47..95e2107 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -419,6 +419,7 @@ void cfg80211_sme_scan_done(struct net_device *dev);
- void cfg80211_sme_rx_auth(struct net_device *dev, const u8 *buf, size_t len);
- void cfg80211_sme_disassoc(struct net_device *dev,
- 			   struct cfg80211_internal_bss *bss);
-+int cfg80211_trigger_scan(struct cfg80211_registered_device *rdev);
- void __cfg80211_scan_done(struct work_struct *wk);
- void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak);
- void __cfg80211_sched_scan_results(struct work_struct *wk);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ae54b8..8dd8979 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -206,6 +206,10 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
- 	[NL80211_ATTR_INACTIVITY_TIMEOUT] = { .type = NLA_U16 },
- 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
-+	[NL80211_ATTR_SCAN_MIN_CH_TIME] = { .type = NLA_U32 },
-+	[NL80211_ATTR_SCAN_MAX_CH_TIME] = { .type = NLA_U32 },
-+	[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME] = { .type = NLA_U32 },
-+	[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -4020,6 +4024,32 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		       request->ie_len);
- 	}
- 
-+	if ((wiphy->features & NL80211_FEATURE_SCAN_TIMES) &&
-+	    info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME] &&
-+	    info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME]) {
-+		request->min_ch_time =
-+			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME]);
-+		request->max_ch_time =
-+			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME]);
-+		if (!request->min_ch_time || !request->max_ch_time ||
-+		    (request->min_ch_time > request->max_ch_time))
-+			return -EINVAL;
-+	}
-+
-+	if ((wiphy->features & NL80211_FEATURE_SCAN_TIMES) &&
-+	    info->attrs[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME] &&
-+	    info->attrs[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME]) {
-+		request->min_passive_ch_time =
-+		    nla_get_u32(info->attrs[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME]);
-+		request->max_passive_ch_time =
-+		    nla_get_u32(info->attrs[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME]);
-+		if (!request->min_passive_ch_time ||
-+		    !request->max_passive_ch_time ||
-+		    (request->min_passive_ch_time >
-+		     request->max_passive_ch_time))
-+			return -EINVAL;
-+	}
-+
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
- 		if (wiphy->bands[i])
- 			request->rates[i] =
-@@ -4051,7 +4081,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	request->wiphy = &rdev->wiphy;
- 
- 	rdev->scan_req = request;
--	err = rdev->ops->scan(&rdev->wiphy, dev, request);
-+	err = cfg80211_trigger_scan(rdev);
- 
- 	if (!err) {
- 		nl80211_send_scan_start(rdev, dev);
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index af2b1ca..4229efb 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -20,6 +20,30 @@
- 
- #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
- 
-+#define IEEE80211_CH_TIME_MSEC		30
-+#define IEEE80211_PSV_CH_TIME_MSEC	125
-+
-+int cfg80211_trigger_scan(struct cfg80211_registered_device *rdev)
-+{
-+	struct cfg80211_scan_request *request;
-+
-+	ASSERT_RDEV_LOCK(rdev);
-+
-+	request = rdev->scan_req;
-+
-+	if (!request)
-+		return -EINVAL;
-+
-+	if (!request->min_passive_ch_time)
-+		request->min_passive_ch_time =
-+			ieee80211_msec_to_tu(IEEE80211_PSV_CH_TIME_MSEC);
-+	if (!request->min_ch_time)
-+		request->min_ch_time =
-+			ieee80211_msec_to_tu(IEEE80211_CH_TIME_MSEC);
-+
-+	return rdev->ops->scan(&rdev->wiphy, request->dev, request);
-+}
-+
- void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- {
- 	struct cfg80211_scan_request *request;
-@@ -1023,6 +1047,20 @@ int cfg80211_wext_siwscan(struct net_device *dev,
- 		if (wiphy->bands[i])
- 			creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
- 
-+	if (wreq->min_channel_time) {
-+		creq->min_ch_time = wreq->min_channel_time;
-+		if (wreq->scan_type == IW_SCAN_TYPE_ACTIVE)
-+			creq->min_passive_ch_time =
-+			       ieee80211_msec_to_tu(IEEE80211_PSV_CH_TIME_MSEC);
-+		else
-+			creq->min_passive_ch_time = wreq->min_channel_time;
-+	} else {
-+		creq->min_ch_time =
-+			ieee80211_msec_to_tu(IEEE80211_CH_TIME_MSEC);
-+		creq->min_passive_ch_time =
-+			ieee80211_msec_to_tu(IEEE80211_PSV_CH_TIME_MSEC);
-+	}
-+
- 	rdev->scan_req = creq;
- 	err = rdev->ops->scan(wiphy, dev, creq);
- 	if (err) {
+DFS master algorithm is implemented in the hostapd, while nl/cfg/mac80211 will pipe relevant commands/events to the driver/hostapd.
+Based on the assumption that the device/driver supports radar interference detection i.e., it is capable to generate radar_detected event by using different pattern detection techniques:
+
+1. Pattern detection in the HW: the device generates 'radar_detected' event.
+2. Pattern detection in the driver: the driver receives radar pulses from the device and generates 'radar detected' event.
+
+
+Main DFS procedures
+===================
+
+1. Hostapd gets driver's dfs and channel switch capabilities.
+2. If 80211h is enabled in the hostapd.conf, the driver supports one of the above radar detection techniques and supports an AP channel switch, hostapd may use DFS channels.
+3. Hostapd selects an operational channel (default from hostapd.conf), if selected channel is a DFS channel, hostapd sends start_radar_detection command to the device/driver which starts monitoring for radar interference while hostapd sets a timer for a CAC (Channel Availability Check) time, which is 60 seconds.
+4. As CAC timer expires and no radar has been detected, hostapd may continue with the init flow, otherwise if interference is detected hostapd selects another channel (random selection) and repeats the CAC on the new channel (in case the new channel is also a DFS channel), while the original channel is added to a "black list" for a period of ''No-Occupancy'' time (time that the channel can't be used/selected).
+5. While using the channel the device/driver continuously monitors for potential radar interference. If interference is detected hostapd is notified with 'radar detected' event, which selects a new channel and triggers a channel switch procedure, if the new channel is also a DFS channel, hostapd performs the CAC test, once it's successfully passed hostapd instructs the driver to initiate the transmission on the channel.
+
+
+Updates & changes from the proposed RFC
+=======================================
+
+1.   Added safeguards to protect from userspace stupidities to enable TX on DFS channel prior performing a CAC.
+2.   Removed IEEE80211_HW_SUPPORTS_RADAR_DETECTION & WIPHY_FLAG_SUPPORTS_DFS flags.
+3.   Removed "hw_ prefix" & "_notify" suffix from function names.
+4.   Don't set default return value “ int ret = -ENOENT” In the ieee80211_dfs_start_radar_detection().
+5.   Removed mutex protection from drv_start_radar_detection() & drv_dfs_en_tx().
+6.   Change the tracer to trace_drv_return_int() in drv_start_radar_detection & drv_dfs_en_tx.
+7.   Added "dfs_supported" sanity checks in.
+8.   Updated commit log in - mac80211: add radar detection command/event.
+9.   Renamed NL80211_CMD_DFS_RADAR_DETECTION to CMD_RADAR_DETECT.
+10. Renamed dfs_start_radar_detection() to start_radar_detection().
+11. Added “unit” in  "@freq: radar detected" event documentation.
+12. Removed ASSERT_RDEV_LOCK from nl80211_dfs_start_radar_detection, nl80211_dfs_en_tx and nl80211_ap_channel_switch.
+13. Updated documentation for the CMD_RADAR_DETECT.
+14. Updated commit log in - nl80211/cfg80211: add ap channel switch command/event.
+15. New "NL80211_FEATURE_AP_CH_SWITCH" which is enabled if drv_ap_channel_switch() is set by the driver.
+16. New "ieee80211_ap_channel_switch" struct & drv_ap_channel_switch() callback.
+17. Moved the “if (!new_ch || new_ch->flags&  IEEE80211_CHAN_DISABLED)” from "mac80211: add ap channel switch command/event" to upper nl80211/cfg80211 layer.
+18. Removed the “nl80211_put_feature_flags, driver will set DFS capabilities directly.
+
+
+Victor Goldenshtein (7):
+  nl80211/cfg80211: add radar detection command/event
+  mac80211: add radar detection command/event
+  nl80211/cfg80211: add ability to enable TX on op-channel
+  mac80211: add ability to enable TX on op-channel
+  nl80211/cfg80211: add ap channel switch command/event
+  mac80211: add ap channel switch command/event
+  mac80211: add DFS support to monitor interface
+
+ include/linux/nl80211.h     |   43 ++++++++++
+ include/net/cfg80211.h      |   40 +++++++++
+ include/net/mac80211.h      |   60 ++++++++++++++
+ net/mac80211/cfg.c          |   57 +++++++++++++
+ net/mac80211/driver-ops.h   |   37 +++++++++
+ net/mac80211/driver-trace.h |   43 ++++++++++
+ net/mac80211/main.c         |    3 +
+ net/mac80211/mlme.c         |   17 ++++
+ net/mac80211/tx.c           |   14 ++--
+ net/wireless/core.h         |    6 ++
+ net/wireless/mlme.c         |   47 +++++++++++
+ net/wireless/nl80211.c      |  189 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h      |   10 +++
+ 13 files changed, 560 insertions(+), 6 deletions(-)
+
 -- 
 1.7.5.4
 
