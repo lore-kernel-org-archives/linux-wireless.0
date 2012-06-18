@@ -1,38 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:40796 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754339Ab2FTMWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 08:22:06 -0400
-Message-ID: <4FE1C06A.3060605@neratec.com> (sfid-20120620_142210_577566_A1DB7F3F)
-Date: Wed, 20 Jun 2012 14:22:02 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23931 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545Ab2FRGXD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jun 2012 02:23:03 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [RFC 03/10] ath9k_hw: Add WoW hardware capability flags
+Date: Mon, 18 Jun 2012 11:51:47 +0530
+Message-ID: <1340000514-7779-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120618_082308_242137_73E9D52C)
+In-Reply-To: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH v2 1/7] nl80211/cfg80211: add radar detection command/event
-References: <1340111463-4554-1-git-send-email-victorg@ti.com> <1340181600.4655.34.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340181600.4655.34.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/20/2012 10:40 AM, Johannes Berg wrote:
-> [...]
-> 
-> How do you intend to handle HT40?
-> 
-> johannes
-> 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Not to mention VHT ante portas...
+have seperate wow capability flags for
+*basic wow support
+*device capable of matching exact user defined pattern
+or de-authentication/disassoc pattern
+*device such AR9280 requires first four bytes for
+all sort of patterns
 
-We should start with HT20 support only to have something to start
-testing with and add HT40 gradually (assuming it will require a lot more
-locations to be patched to be available initially).
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index d0e14a3..73a1238 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -231,6 +231,23 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_DFS			= BIT(16),
+ };
+ 
++/*
++ * enum ath9k_hw_wow_caps - WoW device capabilities
++ * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
++ * an exact user defined pattern or de-authentication/disassoc pattern.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
++ * bytes of the pattern for user defined pattern, de-authentication and
++ * disassociation patterns for all types of possible frames recieved
++ * of those types.
++ */
++
++enum ath9k_hw_wow_caps {
++	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(0),
++	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(1),
++	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(2),
++};
++
+ struct ath9k_hw_capabilities {
+ 	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
+ 	u16 rts_aggr_limit;
+@@ -246,6 +263,9 @@ struct ath9k_hw_capabilities {
+ 	u8 txs_len;
+ 	u16 pcie_lcr_offset;
+ 	bool pcie_lcr_extsync_en;
++#ifdef	CONFIG_PM_SLEEP
++	enum ath9k_hw_wow_caps wow_caps;
++#endif
+ };
+ 
+ struct ath9k_ops_config {
+-- 
+1.7.0.4
 
