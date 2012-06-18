@@ -1,88 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43917 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752757Ab2FQOgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2012 10:36:08 -0400
-Message-ID: <4FDDEB50.2040503@openwrt.org> (sfid-20120617_163612_950462_41176129)
-Date: Sun, 17 Jun 2012 16:36:00 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43221 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab2FRNck (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jun 2012 09:32:40 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] mac80211: cleanup offchannel_ps_enable argument
+Date: Mon, 18 Jun 2012 19:03:52 +0530
+Message-ID: <1340026432-18947-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120618_153243_568687_A7913C76)
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH 5/9] ath9k_hw: remove the old ANI implementation
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org> <1339766727-61926-2-git-send-email-nbd@openwrt.org> <1339766727-61926-3-git-send-email-nbd@openwrt.org> <1339766727-61926-4-git-send-email-nbd@openwrt.org> <1339766727-61926-5-git-send-email-nbd@openwrt.org> <20445.11677.349633.688444@gargle.gargle.HOWL>
-In-Reply-To: <20445.11677.349633.688444@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-06-17 3:06 AM, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> It was found to be buggy on a variety of chipsets from AR913x to AR928x.
->> The new version (which was introduced along with AR93xx support) is more
->> reliable in preventing connectivity dropouts and also fixes MIB interrupt
->> storm issues.
-> 
-> What bugs exactly ? Can you elaborate which cases show improvement ?
-> OFDM weak signal detection ?
-> CCK weak signal detection ?
-> Noise immunity ?
-> Firstep_Level ?
-I don't know which of those parameters are relevant, I don't have a
-reproducible test case myself.
-I don't have links to all relevant bug reports anymore, here are a few
-that I could find:
-https://dev.openwrt.org/ticket/10166
-https://dev.openwrt.org/ticket/11442
+The 'tell_ap' argument is always true. So that remove it
+and simplify the function.
 
-Some of the discussion is missing in those tickets, as I had some email
-exchanges with some of the bug reporters off-list.
-What is not very visible in the ticket discussion is that I gave some
-test patches to a few users with various parts of Raj's commit reverted
-to try to pinpoint the source of the regression, but that didn't work
-out, there may be other changes that we haven't found yet that break
-old-ANI as well.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ net/mac80211/offchannel.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-> MIB interrupt storms will not be seen because they aren't used at all.
-Right, the old implementation depends on MIB interrupt support, the new
-one doesn't.
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index abb226d..1d9d687 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -25,8 +25,7 @@
+  * because we *may* be doing work on-operating channel, and want our
+  * hardware unconditionally awake, but still let the AP send us normal frames.
+  */
+-static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata,
+-					   bool tell_ap)
++static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -47,8 +46,8 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 	}
+ 
+-	if (tell_ap && (!local->offchannel_ps_enabled ||
+-			!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)))
++	if (!local->offchannel_ps_enabled ||
++	    !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
+ 		/*
+ 		 * If power save was enabled, no need to send a nullfunc
+ 		 * frame because AP knows that we are sleeping. But if the
+@@ -133,7 +132,7 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+ 			if (offchannel_ps_enable &&
+ 			    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
+ 			    sdata->u.mgd.associated)
+-				ieee80211_offchannel_ps_enable(sdata, true);
++				ieee80211_offchannel_ps_enable(sdata);
+ 		}
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+-- 
+1.7.10.4
 
-> False positives are an issue with ANI and has this been studied with the
-> move to the new algorithm ?
-What kind of false positives?
-
-> The new ANI algorithm is designed to take advantage of the HW improvements
-> in AR300 and above. Has it been verified that the older HW generation can actually
-> conform to the requirements of the new algorithm ?
-I did review pretty much all of the code, and the knobs that the ANI
-code tweaks really haven't changed much compared to the old
-implementation. It's split up into different functions, which makes it a
-bit harder to see the similarities.
-The main implementation differences that I can find is that the new
-implementation does not tweak the AGC parameters anymore (commit log
-mentions something about this messing up RIFS Rx) and that the old
-implementation tries to tune all available ANI control parameters
-individually, whereas the new implementation contains a table that
-describes how the parameters are raised/lowered at once (split into OFDM
-and CCK).
-This simplifies the state machine quite a bit and makes it easier to
-make sure that it does not get stuck somewhere.
-As for hw specific improvements, old hw does not tweak MRC
-enable/disable for CCK, this is dealt with properly in the code.
-
-> If there are bugs or regressions in the existing code in ath9k, we can surely
-> fix them. But IMHO, saying 'general stability is improved' is not really a
-> justification for code extermination. Why can't we opt for a more evolutionary
-> approach ?
-Having two similar implementations of the same thing in the code,
-partially overlapping, makes the code hard to follow and hard to fix.
-Also, as I pointed out, the issue of regressions creeping in because of
-complex code is not theoretical, it has already happened, and I believe
-it is likely to happen again unless the root cause (spaghetti code) is
-fixed.
-The main state machine of the new implementation is much easier to
-understand and follow than the old one, and I'm confident that it'll be
-much easier for us to fix bugs there.
-
-- Felix
