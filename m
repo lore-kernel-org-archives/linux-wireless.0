@@ -1,79 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44301 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55717 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962Ab2FIIHY (ORCPT
+	with ESMTP id S1751052Ab2FRLps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 04:07:24 -0400
-Message-ID: <1339229241.4539.5.camel@jlt3.sipsolutions.net> (sfid-20120609_100730_544646_2D585056)
-Subject: Re: kernel-doc warnings (3.5-rc1)
+	Mon, 18 Jun 2012 07:45:48 -0400
+Message-ID: <1340019946.4615.3.camel@jlt3.sipsolutions.net> (sfid-20120618_134552_300335_4A263DD8)
+Subject: Re: [RFC 0/5] bind filters and multicast list to subif
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-Date: Sat, 09 Jun 2012 10:07:21 +0200
-In-Reply-To: <1339229158.4539.4.camel@jlt3.sipsolutions.net>
-References: <4FD28ED7.6070506@xenotime.net>
-	 (sfid-20120609_014646_473500_8E65425E) <1339229158.4539.4.camel@jlt3.sipsolutions.net>
+To: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 18 Jun 2012 13:45:46 +0200
+In-Reply-To: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com>
+References: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-06-09 at 10:05 +0200, Johannes Berg wrote:
-> On Fri, 2012-06-08 at 16:46 -0700, Randy Dunlap wrote:
-> > Would someone please add/fix the kernel-doc warnings?
+On Mon, 2012-06-18 at 12:57 +0200, Lukasz Kucharczyk wrote:
+> Hi,
 > 
-> I'll commit the below patch for these:
+> Following patches enables configuring filters and multicast list for
+> specific interface. That probably might be useful in implementation
+> of multi-channel operation.
 
-D'oh.
+"Might be useful"?
 
+I guess I can see that, but we need
+ a) driver updates
+ b) to keep a global filter setting for drivers that don't have
+    per-interface settings
 
-
-mac80211: add some missing kernel-doc
-
-From: Johannes Berg <johannes.berg@intel.com>
-
-Add a few kernel-doc descriptions that were missed
-during development.
-
-Reported-by: Randy Dunlap <rdunlap@xenotime.net>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h  |    6 ++++++
- net/mac80211/sta_info.h |    2 ++
- 2 files changed, 8 insertions(+)
-
---- a/include/net/mac80211.h	2012-06-09 10:04:15.000000000 +0200
-+++ b/include/net/mac80211.h	2012-06-09 10:04:19.000000000 +0200
-@@ -1945,6 +1945,11 @@ enum ieee80211_rate_control_changed {
-  *	to also unregister the device. If it returns 1, then mac80211
-  *	will also go through the regular complete restart on resume.
-  *
-+ * @set_wakeup: Enable or disable wakeup when WoWLAN configuration is
-+ *	modified. The reason is that device_set_wakeup_enable() is
-+ *	supposed to be called when the configuration changes, not only
-+ *	in suspend().
-+ *
-  * @add_interface: Called when a netdevice attached to the hardware is
-  *	enabled. Because it is not called for monitor mode devices, @start
-  *	and @stop must be implemented.
-@@ -2974,6 +2979,7 @@ __le16 ieee80211_ctstoself_duration(stru
-  * ieee80211_generic_frame_duration - Calculate the duration field for a frame
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @band: the band to calculate the frame duration on
-  * @frame_len: the length of the frame.
-  * @rate: the rate at which the frame is going to be transmitted.
-  *
---- a/net/mac80211/sta_info.h	2012-06-09 10:04:15.000000000 +0200
-+++ b/net/mac80211/sta_info.h	2012-06-09 10:04:19.000000000 +0200
-@@ -278,6 +278,8 @@ struct sta_ampdu_mlme {
-  * @sta: station information we share with the driver
-  * @sta_state: duplicates information about station state (for debug)
-  * @beacon_loss_count: number of times beacon loss has triggered
-+ * @supports_40mhz: tracks whether the station advertised 40 MHz support
-+ *	as we overwrite its HT parameters with the currently used value
-  */
- struct sta_info {
- 	/* General information, mostly static */
-
+johannes
 
