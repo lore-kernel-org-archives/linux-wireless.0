@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36122 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190Ab2FOQsC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 12:48:02 -0400
-Message-ID: <1339778927.22782.25.camel@dcbw.foobar.com> (sfid-20120615_184806_616487_455E5E38)
-Subject: Re: poor performance with W2CBW003 (Marvell 8686)
-From: Dan Williams <dcbw@redhat.com>
-To: Andreas Kemnade <andreas@kemnade.info>
-Cc: hong zhang <henryzhang62@yahoo.com>,
-	linux-wireless@vger.kernel.org, dsd@laptop.org,
-	libertas-dev@lists.infradead.org
-Date: Fri, 15 Jun 2012 11:48:47 -0500
-In-Reply-To: <20120615081850.77454e10@kemnade.info>
-References: <20120614074545.105a459d@kemnade.info>
-	 <1339690266.19412.YahooMailClassic@web161704.mail.bf1.yahoo.com>
-	 <20120615081850.77454e10@kemnade.info>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24308 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752348Ab2FRKNl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jun 2012 06:13:41 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20446.65282.390682.126822@gargle.gargle.HOWL> (sfid-20120618_121346_260615_83CC4638)
+Date: Mon, 18 Jun 2012 15:42:18 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH 5/9] ath9k_hw: remove the old ANI implementation
+In-Reply-To: <4FDDEB50.2040503@openwrt.org>
+References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
+	<1339766727-61926-2-git-send-email-nbd@openwrt.org>
+	<1339766727-61926-3-git-send-email-nbd@openwrt.org>
+	<1339766727-61926-4-git-send-email-nbd@openwrt.org>
+	<1339766727-61926-5-git-send-email-nbd@openwrt.org>
+	<20445.11677.349633.688444@gargle.gargle.HOWL>
+	<4FDDEB50.2040503@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-15 at 08:18 +0200, Andreas Kemnade wrote:
-> Hi,
-> 
-> On Thu, 14 Jun 2012 09:11:06 -0700 (PDT)
-> hong zhang <henryzhang62@yahoo.com> wrote:
-> 
-> > bit mode and interrupt or PIO are configured in SDIO hoster side.
-> > Not in driver side.
-> > 
-> yes, I wrote the last email just to say that I have found something to look at.
-> That is of course in the host driver. So the thing I did was reading
-> commit logs of the 2.6.32 kernel working well.
-> 
-> The only thing which puzzles me is the 5.5Mb/s data rate iwconfig shows.
-> After playing with the host side driver, it also shows higher rates. But
-> why does host driver affects *that* data rate of link qualitiy is good?
+Felix Fietkau wrote:
+> Having two similar implementations of the same thing in the code,
+> partially overlapping, makes the code hard to follow and hard to fix.
+> Also, as I pointed out, the issue of regressions creeping in because of
+> complex code is not theoretical, it has already happened, and I believe
+> it is likely to happen again unless the root cause (spaghetti code) is
+> fixed.
+> The main state machine of the new implementation is much easier to
+> understand and follow than the old one, and I'm confident that it'll be
+> much easier for us to fix bugs there.
 
-As said, that's the WiFi air link rate which is determined by the
-firmware based on the link quality with the AP, on things like RSSI,
-missed beacons, TX/RX errors, etc.  That's not the SDIO data rate which
-is completely independent.
+Speaking of bugs, ANI doesn't even get triggered on a system with HZ=1000
+and PowerSave is enabled. The check for the power state causes it to exit
+early, I think.
 
-Dan
-
+Sujith
