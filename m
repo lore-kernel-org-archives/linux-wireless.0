@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59995 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318Ab2FYIGl (ORCPT
+Received: from mailgw02.mediatek.com ([210.61.82.184]:39019 "EHLO
+	mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751510Ab2FRQ1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 04:06:41 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Sj4Jk-0006va-2V
-	for linux-wireless@vger.kernel.org; Mon, 25 Jun 2012 10:06:40 +0200
-Message-ID: <1340611597.4589.7.camel@jlt3.sipsolutions.net> (sfid-20120625_100645_795855_BCBF8F0E)
-Subject: Re: [RFC 0/17] add P2P Device support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 25 Jun 2012 10:06:37 +0200
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165120_048461_9B077046)
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120619_165120_048461_9B077046)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Jun 2012 12:27:38 -0400
+From: =?utf-8?B?V29vZHkgSHVuZyAo5rSq56eL56u5KQ==?=
+	<woody.hung@mediatek.com>
+To: Matt Chen <machen@suse.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Date: Tue, 19 Jun 2012 00:22:30 +0800
+Subject: RE: [rt2x00-users] [PATCH] rt2x00 : RT3290 chip support v4
+Message-ID: <599E416D1C5C994980C45977191D726906AC82C5C2@MTKMBS03.mediatek.inc> (sfid-20120618_182742_840857_E536323F)
+References: <4FD867DB.9070806@gmail.com>
+ <CALx5=V97QacZXoZ6XfwMc+scD05ixFAo7LBDYp0SjurAMzjsEA@mail.gmail.com>
+In-Reply-To: <CALx5=V97QacZXoZ6XfwMc+scD05ixFAo7LBDYp0SjurAMzjsEA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-19 at 16:50 +0200, Johannes Berg wrote:
-> In order to support different P2P Device addresses, I've
-> been working on patches to support a P2P Device abstraction.
-> 
-> A big part of it is changing nl80211 to be able to identify
-> wireless_dev structs by their new wdev_id rather than only
-> by interface index.
-> 
-> Then there's code to actually make some APIs netdev independent
-> and finally to actually create a P2P Device abstraction in both
-> cfg80211 and mac80211.
-
-FWIW, if anyone was curious, I consider this code pretty much done and
-have done some testing on it, but we're working on the corresponding
-wpa_s changes to use it and that I don't want to commit these patches
-(except for the first few cleanups that are already in John's tree)
-before we've had more testing with the entire system including wpa_s.
-
-johannes
+RGVhciBBbGw6DQoNCglJIGhhdmUgc2VuZCBpdCB0byB0aGUgaHR0cDovL2dpdC5rZXJuZWwub3Jn
+Lz9wPWxpbnV4L2tlcm5lbC9naXQvZmlybXdhcmUvbGludXgtZmlybXdhcmUuZ2l0Lg0KCUFuZCBp
+dCBoYXZlIGJlZW4gYXBwbGllZCAzIGRheXMgYWdvLg0KCVBsZWFzZSBzZWUgdGhlIHNob3J0IGxv
+ZyAicnQyODAwcGNpOkZpcm13YXJlIHVwZGF0ZSB2MSIuDQoJRG8gSSBtaXNzIHNvbWV0aGluZyBv
+ciBzb21lIHJ1bGUgSSBuZWVkIHRvIGZvbGxvdz8/Pw0KDQpCUiwNCldvb2R5IEh1bmcNCi0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBNYXR0IENoZW4gW21haWx0bzptYWNoZW5Ac3Vz
+ZS5jb21dIA0KU2VudDogTW9uZGF5LCBKdW5lIDE4LCAyMDEyIDU6MTcgUE0NClRvOiBYb3NlIFZh
+enF1ZXogUGVyZXoNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IHVzZXJzQHJ0
+MngwMC5zZXJpYWxtb25rZXkuY29tOyBXb29keSBIdW5nICjmtKrnp4vnq7kpDQpTdWJqZWN0OiBS
+ZTogW3J0MngwMC11c2Vyc10gW1BBVENIXSBydDJ4MDAgOiBSVDMyOTAgY2hpcCBzdXBwb3J0IHY0
+DQoNCjIwMTIvNi8xMyBYb3NlIFZhenF1ZXogUGVyZXogPHhvc2UudmF6cXVlekBnbWFpbC5jb20+
+Og0KPiBXb29keSBIdW5nIHdyb3RlOg0KPg0KPj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+cnQyeDAwL3J0MjgwMHBjaS5oDQo+PiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAv
+cnQyODAwcGNpLmgNCj4+IEBAIC00Nyw2ICs0Nyw3IEBADQo+PiDCoCogODA1MSBmaXJtd2FyZSBp
+bWFnZS4NCj4+IMKgKi8NCj4+IMKgI2RlZmluZSBGSVJNV0FSRV9SVDI4NjAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAicnQyODYwLmJpbiINCj4+ICsjZGVmaW5lIEZJUk1XQVJF
+X1JUMzI5MCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCJydDMyOTAuYmluIg0K
+Pg0KPg0KPiBUaGVyZSBpcyBubyBydDMyOTAgZncgaW4gbGludXgtZmlybXdhcmUgWzFdIFBsZWFz
+ZSwgc2VuZCBpdCBBU0FQLg0KSW5kZWVkLCBJIGZvdW5kIHRoZSBmaXJtd2FyZSBpcyBvbmx5IGlu
+DQpodHRwOi8vd3d3LnJhbGluay5jb20udHcvZW4vMDRfc3VwcG9ydC9zdXBwb3J0LnBocD9zbj01
+MDEsIFJUMzI5MCBQQ0llIGRyaXZlciB0YXIgYmFsbC4NCg0KSGkgV29vZHksDQpQbGVhc2Ugc2Vu
+ZCB0aGUgZmlybXdhcmUgdG8gdGhlIGxpbnV4LWZpcm13YXJlIEFTQVAuIDopDQoNCj4gWzFdIA0K
+PiBodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgva2VybmVsL2dpdC9maXJtd2FyZS9saW51
+eC1maXJtd2FyZS5naXQNCj4NCj4NCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18NCj4gdXNlcnMgbWFpbGluZyBsaXN0DQo+IHVzZXJzQHJ0MngwMC5zZXJp
+YWxtb25rZXkuY29tDQo+IGh0dHA6Ly9ydDJ4MDAuc2VyaWFsbW9ua2V5LmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3VzZXJzX3J0MngwMC5zZXJpYWxtb24NCj4ga2V5LmNvbQ0KPg0KDQoNCg0KLS0NClRo
+YW5rIHlvdS4NCgoqKioqKioqKioqKioqIEVtYWlsIENvbmZpZGVudGlhbGl0eSBOb3RpY2UgKioq
+KioqKioqKioqKioqKioqKioNClRoZSBpbmZvcm1hdGlvbiBjb250YWluZWQgaW4gdGhpcyBlLW1h
+aWwgbWVzc2FnZSAoaW5jbHVkaW5nIGFueSANCmF0dGFjaG1lbnRzKSBtYXkgYmUgY29uZmlkZW50
+aWFsLCBwcm9wcmlldGFyeSwgcHJpdmlsZWdlZCwgb3Igb3RoZXJ3aXNlDQpleGVtcHQgZnJvbSBk
+aXNjbG9zdXJlIHVuZGVyIGFwcGxpY2FibGUgbGF3cy4gSXQgaXMgaW50ZW5kZWQgdG8gYmUgDQpj
+b252ZXllZCBvbmx5IHRvIHRoZSBkZXNpZ25hdGVkIHJlY2lwaWVudChzKS4gQW55IHVzZSwgZGlz
+c2VtaW5hdGlvbiwgDQpkaXN0cmlidXRpb24sIHByaW50aW5nLCByZXRhaW5pbmcgb3IgY29weWlu
+ZyBvZiB0aGlzIGUtbWFpbCAoaW5jbHVkaW5nIGl0cyANCmF0dGFjaG1lbnRzKSBieSB1bmludGVu
+ZGVkIHJlY2lwaWVudChzKSBpcyBzdHJpY3RseSBwcm9oaWJpdGVkIGFuZCBtYXkgDQpiZSB1bmxh
+d2Z1bC4gSWYgeW91IGFyZSBub3QgYW4gaW50ZW5kZWQgcmVjaXBpZW50IG9mIHRoaXMgZS1tYWls
+LCBvciBiZWxpZXZlIA0KdGhhdCB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBlcnJv
+ciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIA0KaW1tZWRpYXRlbHkgKGJ5IHJlcGx5aW5nIHRv
+IHRoaXMgZS1tYWlsKSwgZGVsZXRlIGFueSBhbmQgYWxsIGNvcGllcyBvZiANCnRoaXMgZS1tYWls
+IChpbmNsdWRpbmcgYW55IGF0dGFjaG1lbnRzKSBmcm9tIHlvdXIgc3lzdGVtLCBhbmQgZG8gbm90
+DQpkaXNjbG9zZSB0aGUgY29udGVudCBvZiB0aGlzIGUtbWFpbCB0byBhbnkgb3RoZXIgcGVyc29u
+LiBUaGFuayB5b3Uh
 
