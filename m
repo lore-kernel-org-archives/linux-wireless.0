@@ -1,64 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42759 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754129Ab2FGTbW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55169 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914Ab2FRLBA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 15:31:22 -0400
-Received: by dady13 with SMTP id y13so1303518dad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 12:31:22 -0700 (PDT)
+	Mon, 18 Jun 2012 07:01:00 -0400
+From: Vivek Natarajan <nataraja@qca.qualcomm.com>
+To: <jouni@qca.qualcomm.com>, <johannes@sipsolutions.net>,
+	<kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] cfg80211: Support for automatic channel selection in AP mode
+Date: Mon, 18 Jun 2012 16:30:40 +0530
+Message-ID: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120618_130105_470903_112816CB)
 MIME-Version: 1.0
-In-Reply-To: <201206071518.21171.chunkeey@googlemail.com>
-References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
-	<201206071518.21171.chunkeey@googlemail.com>
-Date: Thu, 7 Jun 2012 13:31:21 -0600
-Message-ID: <CAFR4AqZvhnB3kD_t+817zvEiw16QvNsvMgTwbFxAiogYcSCXEg@mail.gmail.com> (sfid-20120607_213138_842806_EEA16E38)
-Subject: Re: carl9170 issue
-From: Sean Patrick Santos <quantheory@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the quick response, Christian,
+If the driver sets WIPHY_FLAG_SUPPORTS_ACS, auto_channel_select
+is passed to the driver as ap settings and frequency setting is
+skipped. When the AP mode comes up in the new channel, it is 
+intimated to cfg80211 through cfg80211_ch_switch_notify which
+in turn notifies the channel information to wpa_supplicant
+through CH_SWITCH event.
 
->> Plus, I'm somewhat stuck with the situation,
->> since I don't have much control over how things are arranged in this
->> space, and because the other adapter I have on hand is even worse off,
->> both in terms of hardware and drivers.
-> Fair enough. But what's the other adapter?
+Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+---
+v2: Add a new flag attribute for _START_AP command to indicate ACS request.
+    Update the channel/frequency information using ch_switch_notify
+    once the driver (firmware) has selected the channel.
 
-It's a Belkin N150 (http://www.wikidevi.com/wiki/Belkin_F9L1001),
-which didn't seem to work for more that 30 seconds at a time, and had
-low throughput even then. The driver may have improved, or be easier
-to fix, since the last time I tried it, but the actual antenna on the
-device is not suitable for this environment and so I haven't been
-motivated to make it work. The "official" driver on Windows gave
-halfway serviceable performance, emphasis firmly on the "halfway". I
-may get around to re-testing/troubleshooting it if I want to use it
-elsewhere or if I'm bored some time, but that's really a different
-question.
+For P2P, the operating channel needs to be known before group negotiation starts.
+This is true in case of P2P GO or client. It needs a separate p2p command from
+wpa_cli to get the acs-based best channel information from the driver.
 
-> Your problems sound somewhat familiar to
-> "Re: carl9170 driver - network connection breaks"
-> <http://permalink.gmane.org/gmane.linux.kernel.wireless.general/88223>
->
-> So far no-one has been able to bisect the bug (last good was 3.1, so
-> to breakage must have occurred between 3.1 and 3.2). I would have
-> looked into it long ago, but I can't reproduce.
+ include/linux/nl80211.h |    5 +++++
+ include/net/cfg80211.h  |    4 ++++
+ net/wireless/nl80211.c  |    7 +++++++
+ 3 files changed, 16 insertions(+), 0 deletions(-)
 
-I may see if I can bisect it, since evidently I can reproduce the bug
-quite easily. At the least I can find out if this really is the same
-problem and not present in kernel 3.1. I'll let you know if I find
-anything interesting.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 970afdf..ed6653b 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1224,6 +1224,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_BG_SCAN_PERIOD: Background scan period in seconds
+  *      or 0 to disable background scan.
+  *
++ * @NL80211_ATTR_ACS: Enable automatic channel selection by the driver
++ *	for AP mode.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1475,6 +1478,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_BG_SCAN_PERIOD,
+ 
++	NL80211_ATTR_ACS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7319f25..b0262b5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -417,6 +417,7 @@ struct cfg80211_beacon_data {
+  * @privacy: the BSS uses privacy
+  * @auth_type: Authentication type (algorithm)
+  * @inactivity_timeout: time in seconds to determine station's inactivity.
++ * @auto_channel_select: automatic channel selection
+  */
+ struct cfg80211_ap_settings {
+ 	struct ieee80211_channel *channel;
+@@ -432,6 +433,7 @@ struct cfg80211_ap_settings {
+ 	bool privacy;
+ 	enum nl80211_auth_type auth_type;
+ 	int inactivity_timeout;
++	bool auto_channel_select;
+ };
+ 
+ /**
+@@ -1810,6 +1812,7 @@ struct cfg80211_ops {
+  *	responds to probe-requests in hardware.
+  * @WIPHY_FLAG_OFFCHAN_TX: Device supports direct off-channel TX.
+  * @WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL: Device supports remain-on-channel call.
++ * @WIPHY_FLAG_SUPPORTS_ACS: Device supports automatic channel selection.
+  */
+ enum wiphy_flags {
+ 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
+@@ -1833,6 +1836,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD	= BIT(19),
+ 	WIPHY_FLAG_OFFCHAN_TX			= BIT(20),
+ 	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
++	WIPHY_FLAG_SUPPORTS_ACS			= BIT(22),
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7ae54b8..26f8c03 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -206,6 +206,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_INACTIVITY_TIMEOUT] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
++	[NL80211_ATTR_ACS] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2348,6 +2349,12 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	} else if (wdev->preset_chan) {
+ 		params.channel = wdev->preset_chan;
+ 		params.channel_type = wdev->preset_chantype;
++	} else if (info->attrs[NL80211_ATTR_ACS]) {
++		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_ACS)
++			params.auto_channel_select =
++				!!info->attrs[NL80211_ATTR_ACS];
++		else
++			return -EINVAL;
+ 	} else
+ 		return -EINVAL;
+ 
+-- 
+1.7.4.1
 
-> PS: If your kernel was compiled with CONFIG_MAC80211_DEBUGFS you can
-> "restart" BA/aggregation sessions by
-> echo "tx stop 0" > /sys/kernel/debug/ieee80211/phyX/netdev:wlanXY/stations/AP-MAC/agg_status
-> echo "rx stop 0" > /sys/kernel/debug/ieee80211/phyX/netdev:wlanXY/stations/AP-MAC/agg_status
-> alternatively: you can disable ht by loading the module with 'noht=1' parameter
-
-Thanks for the suggestion; I'll try this. I should note that, although
-I can't change the physical locations of anything here (at least for
-another month or two), I do manage both the machine and the wireless
-router.
