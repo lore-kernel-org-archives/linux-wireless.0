@@ -1,75 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:59001 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755216Ab2FUFfb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 01:35:31 -0400
-Received: by obbuo13 with SMTP id uo13so427341obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 22:35:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340213979.4655.78.camel@jlt3.sipsolutions.net>
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
-	<1340111463-4554-5-git-send-email-victorg@ti.com>
-	<1340182072.4655.41.camel@jlt3.sipsolutions.net>
-	<CAK80WHYpxpPftCcO0+Uv4meZOg7h5Ys1GfJFg2SQDf3AiiJMNg@mail.gmail.com>
-	<1340213979.4655.78.camel@jlt3.sipsolutions.net>
-Date: Thu, 21 Jun 2012 08:35:29 +0300
-Message-ID: <CAK80WHabv2ajEKREHLgnrezs7ydjpyOXWq7DNQOtdaA0WsCELA@mail.gmail.com> (sfid-20120621_073534_681924_B7CC693A)
-Subject: Re: [PATCH v2 5/7] nl80211/cfg80211: add ap channel switch command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
-Content-Type: text/plain; charset=UTF-8
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:60218 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752464Ab2FROtz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jun 2012 10:49:55 -0400
+Received: by obbta17 with SMTP id ta17so3255032obb.22
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:49:53 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH 2/7] mac80211: add radar detection command/event
+Date: Mon, 18 Jun 2012 17:46:33 +0300
+Message-Id: <1340030798-28992-3-git-send-email-victorg@ti.com> (sfid-20120618_164958_358706_2A07F0F3)
+In-Reply-To: <1340030798-28992-1-git-send-email-victorg@ti.com>
+References: <1340030798-28992-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 8:39 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-06-20 at 20:17 +0300, Goldenshtein, Victor wrote:
->
->> >>   * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
->> >> + * @NL80211_FEATURE_AP_CH_SWITCH: This driver supports AP channel switch.
->> >
->> > what point is there in separating these flags?
->> >
->>
->> One may support AP channel switch without DFS support, i.e. switching
->> to non DFS channels.
->
-> Oh, right, makes sense, though I'd enforce that DFS must support
-> chanswitch?
->
+Add command to trigger radar detection in the driver/FW.
+Once radar detection is started it should continuously
+monitor for radars as long as the channel active.
+If radar is detected usermode notified with 'radar
+detected' event.
 
-we already do that, hostapd can start working on DFS channels only if
-both flags are set.
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/cfg.c          |   16 ++++++++++++++++
+ net/mac80211/driver-ops.h   |   14 ++++++++++++++
+ net/mac80211/driver-trace.h |    6 ++++++
+ net/mac80211/mlme.c         |    8 ++++++++
+ 5 files changed, 61 insertions(+), 0 deletions(-)
 
->> >
->> >> +     int     (*ap_channel_switch)(struct wiphy *wiphy, struct net_device *dev,
->> >> +                                  u32 count, bool block_tx,
->> >> +                                  bool post_switch_block_tx,
->> >> +                                  struct ieee80211_channel *new_ch);
->> >
->> > If mac80211 needs a struct, why not have one here already rather than
->> > all the parameters?
->> >
->>
->> OK, it I will just require additional mac patch before current one, I
->> will split the "mac80211: add ap channel switch command/event".
->
-> Well, you'll have to move the struct definition into cfg80211 and into
-> this patch I think.
->
-
-The STA channel switch struct (struct ieee80211_channel_switch) is
-defined in mac80211.h, thus I think the new struct for the ap channel
-switch should be also there, I will just split the mac patch into two.
-
-
-And, almost forgot, thanks for reviewing so many patches in one day ;-)
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 95e39b6..a2222cf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2246,6 +2246,10 @@ enum ieee80211_rate_control_changed {
+  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
+  *	and perhaps other supported types of ethtool data-sets.
+  *
++ * @start_radar_detection: Start radar detection on current operational
++ *	channel, once started it will continuously monitor for radars as long
++ *	as the channel active.
++ *
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2385,6 +2389,9 @@ struct ieee80211_ops {
+ 	void	(*get_et_strings)(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  u32 sset, u8 *data);
++	int (*start_radar_detection)(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_channel *chan);
+ };
+ 
+ /**
+@@ -3557,6 +3564,16 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       gfp_t gfp);
+ 
+ /**
++ * ieee80211_radar_detected - inform a configured connection that
++ * radar was detected on the current channel
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @freq: frequency of the 'radar detected' channel.
++ * @gfp: context flags.
++ */
++void ieee80211_radar_detected(struct ieee80211_vif *vif, u16 freq, gfp_t gfp);
++
++/**
+  * ieee80211_get_operstate - get the operstate of the vif
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7d5108a..541b274 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2211,6 +2211,21 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 	return ieee80211_wk_cancel_remain_on_channel(sdata, cookie);
+ }
+ 
++static int ieee80211_start_radar_detection(struct wiphy *wiphy,
++					   struct net_device *dev,
++					   struct ieee80211_channel *chan)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	int ret;
++
++	if (!local->ops->start_radar_detection)
++		return -EOPNOTSUPP;
++
++	ret = drv_start_radar_detection(local, sdata, chan);
++	return ret;
++}
++
+ static enum work_done_result
+ ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
+ {
+@@ -2979,4 +2994,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.get_et_sset_count = ieee80211_get_et_sset_count,
+ 	.get_et_stats = ieee80211_get_et_stats,
+ 	.get_et_strings = ieee80211_get_et_strings,
++	.start_radar_detection = ieee80211_start_radar_detection,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 6d33a0c..57185df 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -329,6 +329,20 @@ static inline void drv_cancel_hw_scan(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int drv_start_radar_detection(struct ieee80211_local *local,
++					    struct ieee80211_sub_if_data *sdata,
++					    struct ieee80211_channel *chan)
++{
++	int ret;
++
++	might_sleep();
++
++	trace_drv_start_radar_detection(local, sdata);
++	ret = local->ops->start_radar_detection(&local->hw, &sdata->vif, chan);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
+ static inline int
+ drv_sched_scan_start(struct ieee80211_local *local,
+ 		     struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6de00b2..4112aa3 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -484,6 +484,12 @@ DEFINE_EVENT(local_sdata_evt, drv_cancel_hw_scan,
+ 	TP_ARGS(local, sdata)
+ );
+ 
++DEFINE_EVENT(local_sdata_evt, drv_start_radar_detection,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
+ DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata),
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 66e4fcd..37ed827 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3562,6 +3562,14 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ }
+ EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
+ 
++void ieee80211_radar_detected(struct ieee80211_vif *vif, u16 freq, gfp_t gfp)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	cfg80211_radar_detected(sdata->dev, freq, gfp);
++}
++EXPORT_SYMBOL(ieee80211_radar_detected);
++
+ unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 -- 
-Victor.
+1.7.5.4
+
