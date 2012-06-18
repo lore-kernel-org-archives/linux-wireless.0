@@ -1,139 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:48073 "HELO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757522Ab2FOTcn (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:43935 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751016Ab2FRO6n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 15:32:43 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v3 1/5] mwifiex: set channel via start_ap handler for AP interface
-Date: Fri, 15 Jun 2012 12:21:51 -0700
-Message-Id: <1339788115-20596-2-git-send-email-bzhao@marvell.com> (sfid-20120615_213248_589419_CAD49A78)
-In-Reply-To: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
-References: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
+	Mon, 18 Jun 2012 10:58:43 -0400
+Received: by yhjj63 with SMTP id j63so4450732yhj.37
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:58:39 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH 4/7] hostapd: add dfs support into interface init flow
+Date: Mon, 18 Jun 2012 17:49:43 +0300
+Message-Id: <1340030986-29118-5-git-send-email-victorg@ti.com> (sfid-20120618_165846_875334_ABA38967)
+In-Reply-To: <1340030986-29118-1-git-send-email-victorg@ti.com>
+References: <1340030986-29118-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Implement Channel Availability Check (CAC) during initialization
+phase. According to DFS requirements the AP should monitor 'radar
+channels' for potential radar interference for a minimum CAC time
+prior enabling the transmissions.
 
-This patch adds functionality to set channel info received from
-cfg80211_ap_settings in start_ap handler.
+Add dfs support into hw features, allow the usage of the radar
+channels if ieee80211h is enabled in the hostapd.conf and the
+driver supports radar detection with AP channel switch ability.
 
-Since set_channel cfg80211 handler has been removed and we need
-not explicitely call mwifiex_uap_set_channel(); hence this
-function definition is also removed.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-hostap: Boris Presman <boris.presman@ti.com>
+Signed-hostap: Victor Goldenshtein <victorg@ti.com>
 ---
-v3: resending as 1/5, no change since v1
-v2: resending as 1/4, no change since v1
+ src/ap/hostapd.c             |   16 ++++++++++------
+ src/ap/hw_features.c         |   30 ++++++++++++++++++++----------
+ src/ap/hw_features.h         |    9 +++++++++
+ src/drivers/driver.h         |    5 +++++
+ src/drivers/driver_nl80211.c |    9 +++++++++
+ src/utils/eloop.c            |    1 +
+ 6 files changed, 54 insertions(+), 16 deletions(-)
 
- drivers/net/wireless/mwifiex/cfg80211.c |   23 +++++++++++++++++------
- drivers/net/wireless/mwifiex/main.h     |    1 -
- drivers/net/wireless/mwifiex/uap_cmd.c  |   30 ------------------------------
- 3 files changed, 17 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 015fec3..7b4eaf4 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -384,13 +384,13 @@ mwifiex_set_rf_channel(struct mwifiex_private *priv,
- 	cfp.freq = chan->center_freq;
- 	cfp.channel = ieee80211_frequency_to_channel(chan->center_freq);
- 
--	if (mwifiex_bss_set_channel(priv, &cfp))
--		return -EFAULT;
--
--	if (priv->bss_type == MWIFIEX_BSS_TYPE_STA)
-+	if (priv->bss_type == MWIFIEX_BSS_TYPE_STA) {
-+		if (mwifiex_bss_set_channel(priv, &cfp))
-+			return -EFAULT;
- 		return mwifiex_drv_change_adhoc_chan(priv, cfp.channel);
--	else
--		return mwifiex_uap_set_channel(priv, cfp.channel);
-+	}
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index 01f083e..dd5dc45 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -772,6 +772,12 @@ static int setup_interface(struct hostapd_iface *iface)
+ 				   "be completed in a callback");
+ 			return 0;
+ 		}
 +
-+	return 0;
++		if (iface->current_mode->dfs_supported &&
++		    iface->conf->ieee80211h) {
++			wpa_printf(MSG_DEBUG, "DFS support is enabled");
++			iface->dfs_state |= DFS_ENABLED;
++		}
+ 	}
+ 	return hostapd_setup_interface_complete(iface, 0);
  }
+@@ -797,14 +803,12 @@ int hostapd_setup_interface_complete(struct hostapd_iface *iface, int err)
+ 			   hostapd_hw_mode_txt(hapd->iconf->hw_mode),
+ 			   hapd->iconf->channel, iface->freq);
  
- /*
-@@ -961,6 +961,17 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -EINVAL;
+-		if (hostapd_set_freq(hapd, hapd->iconf->hw_mode, iface->freq,
+-				     hapd->iconf->channel,
+-				     hapd->iconf->ieee80211n,
+-				     hapd->iconf->secondary_channel)) {
+-			wpa_printf(MSG_ERROR, "Could not set channel for "
+-				   "kernel driver");
++		if (hostapd_check_set_freq(hapd)) {
++			wpa_printf(MSG_ERROR, "Couldn't check/set freq");
+ 			return -1;
+ 		}
++
++		wpa_printf(MSG_DEBUG, "Continuing with init flow");
  	}
  
-+	bss_cfg->channel =
-+	    (u8)ieee80211_frequency_to_channel(params->channel->center_freq);
-+	bss_cfg->band_cfg = BAND_CONFIG_MANUAL;
+ 	if (iface->current_mode) {
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index bbd2b03..3fc43eb 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -70,26 +70,36 @@ int hostapd_get_hw_features(struct hostapd_iface *iface)
+ 
+ 	for (i = 0; i < num_modes; i++) {
+ 		struct hostapd_hw_modes *feature = &modes[i];
++		u8 dfs_enabled = (hapd->iconf->ieee80211h &&
++				  feature->dfs_supported);
+ 		/* set flag for channels we can use in current regulatory
+ 		 * domain */
+ 		for (j = 0; j < feature->num_channels; j++) {
++			u8 dfs = FALSE;
+ 			/*
+ 			 * Disable all channels that are marked not to allow
+-			 * IBSS operation or active scanning. In addition,
+-			 * disable all channels that require radar detection,
+-			 * since that (in addition to full DFS) is not yet
+-			 * supported.
++			 * IBSS operation or active scanning.
++			 * Use radar channels only if the driver supports
++			 * DFS.
+ 			 */
+-			if (feature->channels[j].flag &
+-			    (HOSTAPD_CHAN_NO_IBSS |
+-			     HOSTAPD_CHAN_PASSIVE_SCAN |
+-			     HOSTAPD_CHAN_RADAR))
++			if ((feature->channels[j].flag &
++			    HOSTAPD_CHAN_RADAR) && dfs_enabled) {
++				dfs = TRUE;
++			} else if (feature->channels[j].flag &
++				   (HOSTAPD_CHAN_NO_IBSS |
++				   HOSTAPD_CHAN_PASSIVE_SCAN |
++				   HOSTAPD_CHAN_DISABLED)) {
+ 				feature->channels[j].flag |=
+ 					HOSTAPD_CHAN_DISABLED;
+-			if (feature->channels[j].flag & HOSTAPD_CHAN_DISABLED)
++			}
 +
-+	if (mwifiex_set_rf_channel(priv, params->channel,
-+				   params->channel_type)) {
-+		kfree(bss_cfg);
-+		wiphy_err(wiphy, "Failed to set band config information!\n");
-+		return -1;
-+	}
++			if (feature->channels[j].flag & HOSTAPD_CHAN_DISABLED) {
+ 				continue;
+-			wpa_printf(MSG_MSGDUMP, "Allowed channel: mode=%d "
++			}
 +
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
- 		kfree(bss_cfg);
- 		wiphy_err(wiphy, "Failed to parse secuirty parameters!\n");
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5b32221..512481e 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -990,7 +990,6 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
++			wpa_printf(MSG_WARNING, "Allowed %schannel: mode=%d "
+ 				   "chan=%d freq=%d MHz max_tx_power=%d dBm",
++				   dfs ? "(DFS) " : "",
+ 				   feature->mode,
+ 				   feature->channels[j].chan,
+ 				   feature->channels[j].freq,
+diff --git a/src/ap/hw_features.h b/src/ap/hw_features.h
+index b8e287b..67bab44 100644
+--- a/src/ap/hw_features.h
++++ b/src/ap/hw_features.h
+@@ -46,6 +46,11 @@ static inline int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ 	return -100;
+ }
  
- int mwifiex_main_process(struct mwifiex_adapter *);
- 
--int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel);
- int mwifiex_bss_set_channel(struct mwifiex_private *,
- 			    struct mwifiex_chan_freq_power *cfp);
- int mwifiex_get_bss_info(struct mwifiex_private *,
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 89f9a2a..fb0c6cb 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -421,33 +421,3 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 
++static inline int hostapd_select_radar_detector(struct hostapd_iface *iface)
++{
++	return -1;
++}
++
+ static inline const char * hostapd_hw_mode_txt(int mode)
+ {
+ 	return NULL;
+@@ -67,6 +72,10 @@ static inline int hostapd_prepare_rates(struct hostapd_iface *iface,
  	return 0;
  }
--
--/* This function sets the RF channel for AP.
-- *
-- * This function populates channel information in AP config structure
-- * and sends command to configure channel information in AP.
-- */
--int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel)
--{
--	struct mwifiex_uap_bss_param *bss_cfg;
--	struct wiphy *wiphy = priv->wdev->wiphy;
--
--	bss_cfg = kzalloc(sizeof(struct mwifiex_uap_bss_param), GFP_KERNEL);
--	if (!bss_cfg)
--		return -ENOMEM;
--
--	mwifiex_set_sys_config_invalid_data(bss_cfg);
--	bss_cfg->band_cfg = BAND_CONFIG_MANUAL;
--	bss_cfg->channel = channel;
--
--	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
--				   HostCmd_ACT_GEN_SET,
--				   UAP_BSS_PARAMS_I, bss_cfg)) {
--		wiphy_err(wiphy, "Failed to set the uAP channel\n");
--		kfree(bss_cfg);
--		return -1;
--	}
--
--	kfree(bss_cfg);
--	return 0;
--}
+ 
++static inline int hostapd_get_channel_flag(struct hostapd_data *hapd, int chan)
++{
++	return 0;
++}
+ #endif /* NEED_AP_MLME */
+ 
+ #endif /* HW_FEATURES_H */
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 44f6af0..daf66f1 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -130,6 +130,11 @@ struct hostapd_hw_modes {
+ 	u8 a_mpdu_params;
+ 
+ 	unsigned int flags; /* HOSTAPD_MODE_FLAG_* */
++
++	/**
++	 * dfs_supported - DFS radar detection is supported in driver/HW.
++	 */
++	u8 dfs_supported;
+ };
+ 
+ 
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 92a7de0..f6a0c98 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -4730,6 +4730,15 @@ static int phy_info_handler(struct nl_msg *msg, void *arg)
+ 		mode->flags = HOSTAPD_MODE_FLAG_HT_INFO_KNOWN;
+ 		*(phy_info->num_modes) += 1;
+ 
++		if (tb_msg[NL80211_ATTR_FEATURE_FLAGS]) {
++			u32 drv_feature_flags =
++				nla_get_u32(tb_msg[NL80211_ATTR_FEATURE_FLAGS]);
++			mode->dfs_supported = ((drv_feature_flags &
++						NL80211_FEATURE_DFS) &&
++						(drv_feature_flags &
++						NL80211_FEATURE_AP_CH_SWITCH));
++		}
++
+ 		nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band),
+ 			  nla_len(nl_band), NULL);
+ 
+diff --git a/src/utils/eloop.c b/src/utils/eloop.c
+index 5691f15..89611b7 100644
+--- a/src/utils/eloop.c
++++ b/src/utils/eloop.c
+@@ -774,6 +774,7 @@ void eloop_run(void)
+ 	}
+ 
+ out:
++	eloop.terminate = 0;
+ #ifndef CONFIG_ELOOP_POLL
+ 	os_free(rfds);
+ 	os_free(wfds);
 -- 
-1.7.0.2
+1.7.5.4
 
