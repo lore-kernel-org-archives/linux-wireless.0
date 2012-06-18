@@ -1,217 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:33215 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753970Ab2FUH7w (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24495 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab2FRHnn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 03:59:52 -0400
-Received: by obbta17 with SMTP id ta17so953567obb.22
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 00:59:48 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
-Subject: [PATCH v5] mac80211: add command to get current rssi
-Date: Thu, 21 Jun 2012 10:56:46 +0300
-Message-Id: <1340265406-25099-1-git-send-email-victorg@ti.com> (sfid-20120621_095957_226424_20A69380)
+	Mon, 18 Jun 2012 03:43:43 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	<stable@vger.kernel.org>,
+	Rolf Offermanns <rolf.offermanns@gmx.net>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: avoid possible infinite loop in ar9003_get_pll_sqsum_dvc
+Date: Mon, 18 Jun 2012 13:13:30 +0530
+Message-ID: <1340005410-11256-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120618_094347_579331_B0256110)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Get current rssi (in dBm) from the driver/FW.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Instead of reporting the signal received in the last
-rx packet, which might be inaccurate if rx traffic is
-low and beacon filtering is enabled, get the singal
-from the driver/FW.
+"ath9k: Fix softlockup in AR9485" with commit id
+64bc1239c790e051ff677e023435d770d2ffa174 fixed the reported
+issue, yet its better to avoid the possible infinite loop
+in ar9003_get_pll_sqsum_dvc by having a timeout as suggested
+by ath9k maintainers.
+http://www.spinics.net/lists/linux-wireless/msg92126.html.
+Based on my testing PLL's locking measurement is done in
+~200us (2 iterations).
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Cc: stable@vger.kernel.org
+Cc: Rolf Offermanns <rolf.offermanns@gmx.net>
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-v5:
-	Tracer also returned rssi + sta address.
-
- include/net/mac80211.h      |    5 +++++
- net/mac80211/cfg.c          |   21 +++++++++++++--------
- net/mac80211/driver-ops.h   |   15 +++++++++++++++
- net/mac80211/driver-trace.h |   26 ++++++++++++++++++++++++++
- 4 files changed, 59 insertions(+), 8 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6914f99..3d43ad8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2254,6 +2254,9 @@ enum ieee80211_rate_control_changed {
-  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
-  *	and perhaps other supported types of ethtool data-sets.
-  *
-+ * @get_rssi: Get current signal strength in dBm, the function is optional
-+ *	and can sleep.
-+ *
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -2393,6 +2396,8 @@ struct ieee80211_ops {
- 	void	(*get_et_strings)(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif,
- 				  u32 sset, u8 *data);
-+	int	(*get_rssi)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			    struct ieee80211_sta *sta, s8 *rssi_dbm);
- };
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 784baee..a42c26f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -773,13 +773,25 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 85ac364..0a2a56b 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -353,6 +353,7 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah)
  {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_local *local = sdata->local;
- 	struct timespec uptime;
++	struct ath_common *common = ath9k_hw_common(ah);
++	int i = 0;
++
+ 	REG_CLR_BIT(ah, PLL3, PLL3_DO_MEAS_MASK);
+ 	udelay(100);
+ 	REG_SET_BIT(ah, PLL3, PLL3_DO_MEAS_MASK);
  
- 	sinfo->generation = sdata->local->sta_generation;
-@@ -388,7 +389,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
- 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
- 		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
--		sinfo->signal = (s8)sta->last_signal;
-+		if (!local->ops->get_rssi ||
-+		    drv_get_rssi(local, sdata, &sta->sta, &sinfo->signal))
-+			sinfo->signal = (s8)sta->last_signal;
- 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
- 	}
+-	while ((REG_READ(ah, PLL4) & PLL4_MEAS_DONE) == 0)
++	while ((REG_READ(ah, PLL4) & PLL4_MEAS_DONE) == 0) {
++
+ 		udelay(100);
  
-@@ -517,7 +520,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 	 * network device.
- 	 */
- 
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		sta = sta_info_get_bss(sdata, sdata->u.mgd.bssid);
-@@ -546,7 +549,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 			data[i] = (u8)sinfo.signal_avg;
- 		i++;
- 	} else {
--		list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		list_for_each_entry(sta, &local->sta_list, list) {
- 			/* Make sure this station belongs to the proper dev */
- 			if (sta->sdata->dev != dev)
- 				continue;
-@@ -603,7 +606,7 @@ do_survey:
- 	else
- 		data[i++] = -1LL;
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	if (WARN_ON(i != STA_STATS_LEN))
- 		return;
-@@ -629,10 +632,11 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 				 int idx, u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	int ret = -ENOENT;
- 
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	sta = sta_info_get_by_idx(sdata, idx);
- 	if (sta) {
-@@ -641,7 +645,7 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 		sta_set_sinfo(sta, sinfo);
- 	}
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	return ret;
++		if (WARN_ON_ONCE(i >= 100)) {
++			ath_err(common, "PLL4 meaurement not done\n");
++			break;
++		}
++
++		i++;
++	}
++
+ 	return (REG_READ(ah, PLL3) & SQSUM_DVC_MASK) >> 3;
  }
-@@ -658,10 +662,11 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *mac, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	int ret = -ENOENT;
- 
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	sta = sta_info_get_bss(sdata, mac);
- 	if (sta) {
-@@ -669,7 +674,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 		sta_set_sinfo(sta, sinfo);
- 	}
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	return ret;
- }
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 6d33a0c..9330269 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -845,4 +845,19 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
- 						  more_data);
- 	trace_drv_return_void(local);
- }
-+
-+static inline int drv_get_rssi(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				struct ieee80211_sta *sta,
-+				s8 *rssi_dbm)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
-+	trace_drv_get_rssi(local, sta, *rssi_dbm, ret);
-+
-+	return ret;
-+}
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 6de00b2..a0f7d35 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -1218,6 +1218,32 @@ DEFINE_EVENT(release_evt, drv_allow_buffered_frames,
- 	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
- );
- 
-+TRACE_EVENT(drv_get_rssi,
-+	TP_PROTO(struct ieee80211_local *local, struct ieee80211_sta *sta,
-+		 s8 rssi, int ret),
-+
-+	TP_ARGS(local, sta, rssi, ret),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		STA_ENTRY
-+		__field(s8, rssi)
-+		__field(int, ret)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->rssi = rssi;
-+		__entry->ret = ret;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT STA_PR_FMT " rssi:%d ret:%d",
-+		LOCAL_PR_ARG, STA_PR_ARG, __entry->rssi, __entry->ret
-+	)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
+ EXPORT_SYMBOL(ar9003_get_pll_sqsum_dvc);
 -- 
-1.7.5.4
+1.7.0.4
 
