@@ -1,31 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53091 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713Ab2FFIyf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2888 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951Ab2FRPil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:54:35 -0400
-Message-ID: <1338972874.4513.27.camel@jlt3.sipsolutions.net> (sfid-20120606_105438_602503_9442464A)
-Subject: Re: [RFC 04/14] cfg80211: .stop_ap when interface is going down
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Jun 2012 10:54:34 +0200
-In-Reply-To: <1338203942-5667-5-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-	 <1338203942-5667-5-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Jun 2012 11:38:41 -0400
+Date: Mon, 18 Jun 2012 08:37:42 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <me@bobcopeland.com>,
+	<mickflemm@gmail.com>
+Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
+Message-ID: <20120618153742.GB12526@tux> (sfid-20120618_173845_649694_5ADD2ED4)
+References: <1339399952.4520.13.camel@jlt3.sipsolutions.net>
+ <4FD60369.80108@qca.qualcomm.com>
+ <1339425944.4520.27.camel@jlt3.sipsolutions.net>
+ <20120614193104.GD32257@tux>
+ <1339748211.4512.6.camel@jlt3.sipsolutions.net>
+ <4FDAF096.200@qca.qualcomm.com>
+ <4FDB1740.60707@broadcom.com>
+ <4FDB5E52.1020608@qca.qualcomm.com>
+ <CAB=NE6X=pO5c_yUqMmqU1jm92WJKqBbYioYm-2S4AYS2JXYRTA@mail.gmail.com>
+ <4FDC7887.8090907@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4FDC7887.8090907@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
-> We'll need this for proper channel tracking (which
-> is going to be needed for channel context
-> accounting and finding matching/active interface
-> combination).
+On Sat, Jun 16, 2012 at 02:13:59PM +0200, Arend van Spriel wrote:
+> On 06/15/2012 06:53 PM, Luis R. Rodriguez wrote:
+> > So how about CONFIG_CFG80211_CERTIFICATION_ONUS which can be defined
+> > as an option for features / options whereby the onus for regulatory
+> > certification is being accepted by the option enabler? Pretty simple
+> > and to the point, and would allow for research code but also code
+> > whereby a bit more work is required on the enabler like DFS
+> > certification.
+> 
+> English is not my native language so I had to look up the meaning of the
+> word 'onus'. I guess I am fine with it.
 
-I've not quite made up my mind about full channel tracking in cfg80211,
-but this totally makes sense anyway.
+Great, I'll respin.
 
-johannes
+> Apart from the naming I addressed that if would be better to have it
+> device on CONFIG_WLAN instead of CFG80211 as it will be used to enable
+> 802.11 device driver features. Any thoughts on that?
 
+OK so we have CONFIG_WLAN for devices and CONFIG_WIRELESS for the subsystem
+which is enabled if anyone enables CONFIG_WLAN. The kconfig entry will not only
+be used for 802.11 device drivers, it will also be used for some generic
+subsystem options, I'll send patches for an idea there later after the first
+slew go in.
+
+  Luis
