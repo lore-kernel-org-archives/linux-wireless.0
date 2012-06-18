@@ -1,151 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52330 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758913Ab2FAKj6 (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:47378 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751220Ab2FROw4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 06:39:58 -0400
-Message-ID: <1338547195.4884.16.camel@jlt3.sipsolutions.net> (sfid-20120601_124023_742827_1A34F686)
-Subject: [PATCH] mac80211: do remain-on-channel while idle
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 01 Jun 2012 12:39:55 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Jun 2012 10:52:56 -0400
+Received: by obceq6 with SMTP id eq6so9068698obc.9
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:52:52 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH 1/7] hostapd: implement dfs drv ops functions
+Date: Mon, 18 Jun 2012 17:49:40 +0300
+Message-Id: <1340030986-29118-2-git-send-email-victorg@ti.com> (sfid-20120618_165302_373962_E83EF1F4)
+In-Reply-To: <1340030986-29118-1-git-send-email-victorg@ti.com>
+References: <1340030986-29118-1-git-send-email-victorg@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add nl80211 driver operation functions:
+hostapd_enable_tx – to enable tx on DFS channel after
+channel availability check.
+hostapd_channel_switch – to handle channel switch request.
+hostapd_start_radar_detection – to enable radar detection
+on DFS channel.
 
-The IDLE handling in HW off-channel is broken right
-now since we turn off IDLE only when the off-channel
-period already started. Therefore, all drivers that
-use it today (only iwlwifi!) must support off-channel
-while idle, so playing with idle isn't needed at all.
-
-Also document a small caveat for reporting TX status
-from off-channel frames in HW remain-on-channel.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-hostap: Victor Goldenshtein <victorg@ti.com>
 ---
- include/net/mac80211.h    |    8 +++++++-
- net/mac80211/cfg.c        |    7 +++----
- net/mac80211/iface.c      |    9 ++-------
- net/mac80211/offchannel.c |    4 ----
- 4 files changed, 12 insertions(+), 16 deletions(-)
+ src/ap/ap_config.h   |    3 ++
+ src/ap/ap_drv_ops.c  |   83 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/ap/ap_drv_ops.h  |    5 +++
+ src/ap/hostapd.h     |    6 +++
+ src/drivers/driver.h |   48 +++++++++++++++++++++++++++++
+ 5 files changed, 145 insertions(+), 0 deletions(-)
 
---- a/include/net/mac80211.h	2012-06-01 10:23:19.000000000 +0200
-+++ b/include/net/mac80211.h	2012-06-01 10:33:10.000000000 +0200
-@@ -2183,7 +2183,13 @@ enum ieee80211_rate_control_changed {
-  *	offload. Frames to transmit on the off-channel channel are transmitted
-  *	normally except for the %IEEE80211_TX_CTL_TX_OFFCHAN flag. When the
-  *	duration (which will always be non-zero) expires, the driver must call
-- *	ieee80211_remain_on_channel_expired(). This callback may sleep.
-+ *	ieee80211_remain_on_channel_expired().
-+ *	The driver must not call ieee80211_remain_on_channel_expired() before
-+ *	the TX status for a frame that was sent off-channel, otherwise the TX
-+ *	status is reported to userspace in an invalid way.
-+ *	Note that this callback may be called while the device is in IDLE and
-+ *	must be accepted in this case.
-+ *	This callback may sleep.
-  * @cancel_remain_on_channel: Requests that an ongoing off-channel period is
-  *	aborted before it expires. This callback may sleep.
-  *
---- a/net/mac80211/cfg.c	2012-06-01 10:33:10.000000000 +0200
-+++ b/net/mac80211/cfg.c	2012-06-01 10:34:30.000000000 +0200
-@@ -2187,8 +2187,6 @@ static int ieee80211_cancel_remain_on_ch
- 	local->hw_roc_cookie = 0;
- 	local->hw_roc_channel = NULL;
+diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
+index 78c9068..8b18b4e 100644
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -430,6 +430,9 @@ struct hostapd_config {
  
--	ieee80211_recalc_idle(local);
--
- 	return 0;
+ 	int ieee80211d;
+ 
++	/* DFS */
++	int channel_switch_count;
++
+ 	struct hostapd_tx_queue_params tx_queue[NUM_TX_QUEUES];
+ 
+ 	/*
+diff --git a/src/ap/ap_drv_ops.c b/src/ap/ap_drv_ops.c
+index 859b529..40c3132 100644
+--- a/src/ap/ap_drv_ops.c
++++ b/src/ap/ap_drv_ops.c
+@@ -596,3 +596,86 @@ int hostapd_drv_send_action(struct hostapd_data *hapd, unsigned int freq,
+ 					 hapd->own_addr, hapd->own_addr, data,
+ 					 len, 0);
  }
++
++int hostapd_enable_tx(struct hostapd_data *hapd, int freq, int flags)
++{
++	struct os_time now;
++
++	if (!hapd->driver || !hapd->driver->enable_tx)
++		return 0;
++
++	if ((flags & HOSTAPD_CHAN_RADAR) &&
++	    !(hapd->iface->dfs_state & DFS_ENABLED)) {
++		wpa_printf(MSG_ERROR, "Can't enable tx, "
++			   "DFS functionality is not enabled");
++		return -1;
++	}
++
++	os_get_time(&now);
++
++	if ((flags & HOSTAPD_CHAN_RADAR) &&
++	    now.sec - hapd->iface->dfs_start_cac_ts < DFS_MIN_CAC_TIME_SEC) {
++		wpa_printf(MSG_ERROR, "Can't enable tx, "
++			   "DFS min CAC time hasn't passed");
++		return -1;
++	}
++
++	hapd->iface->dfs_start_cac_ts = 0;
++
++	return hapd->driver->enable_tx(hapd->drv_priv, freq);
++}
++
++
++int hostapd_channel_switch(struct hostapd_data *hapd, int freq, int flags,
++			   u8 tx_block, u8 post_switch_block_tx)
++{
++	struct hostapd_channel_switch params;
++
++	if (!hapd->driver || !hapd->driver->hapd_channel_switch)
++		return 0;
++
++	if ((flags & HOSTAPD_CHAN_RADAR) &&
++	    !(hapd->iface->dfs_state & DFS_ENABLED)) {
++		wpa_printf(MSG_ERROR, "Can't switch to radar channel, "
++			   "DFS functionality is not enabled");
++		return -1;
++	}
++
++	params.freq = freq;
++	params.tx_block = tx_block;
++	params.post_switch_block_tx = post_switch_block_tx;
++	params.ch_switch_count = hapd->iface->conf->channel_switch_count;
++
++	return hapd->driver->hapd_channel_switch(hapd->drv_priv, &params);
++}
++
++int hostapd_start_radar_detection(struct hostapd_data *hapd, int freq,
++				  int flags)
++{
++	int ret;
++	struct os_time now;
++
++	if (!hapd->driver || !hapd->driver->start_radar_detection)
++		return 0;
++
++	if (!(flags & HOSTAPD_CHAN_RADAR)) {
++		wpa_printf(MSG_ERROR, "Can't start radar detection, the channel"
++			   " %d is not DFS channel", (int)hapd->iconf->channel);
++		return -1;
++	}
++
++	if (!(hapd->iface->dfs_state & DFS_ENABLED)) {
++		wpa_printf(MSG_ERROR, "Can't start radar detection, "
++			   "DFS functionality is not enabled");
++		return -1;
++	}
++
++	ret = hapd->driver->start_radar_detection(hapd->drv_priv, freq);
++	if (!ret) {
++		os_get_time(&now);
++		hapd->iface->dfs_start_cac_ts = now.sec;
++	} else
++		hapd->iface->dfs_start_cac_ts = 0;
++
++	return ret;
++}
+diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
+index 169c91b..0f60d3c 100644
+--- a/src/ap/ap_drv_ops.h
++++ b/src/ap/ap_drv_ops.h
+@@ -97,6 +97,11 @@ int hostapd_sta_assoc(struct hostapd_data *hapd, const u8 *addr,
+ 		      int reassoc, u16 status, const u8 *ie, size_t len);
+ int hostapd_add_tspec(struct hostapd_data *hapd, const u8 *addr,
+ 		      u8 *tspec_ie, size_t tspec_ielen);
++int hostapd_enable_tx(struct hostapd_data *hapd, int freq, int flags);
++int hostapd_channel_switch(struct hostapd_data *hapd, int freq, int flags,
++			   u8 tx_block, u8 post_switch_block_tx);
++int hostapd_start_radar_detection(struct hostapd_data *hapd, int freq,
++				  int flags);
  
-@@ -2248,7 +2246,7 @@ static int ieee80211_mgmt_tx(struct wiph
- 	struct ieee80211_work *wk;
- 	const struct ieee80211_mgmt *mgmt = (void *)buf;
- 	u32 flags;
--	bool is_offchan = false;
-+	bool is_offchan = false, in_hw_roc = false;
  
- 	if (dont_wait_for_ack)
- 		flags = IEEE80211_TX_CTL_NO_ACK;
-@@ -2268,6 +2266,7 @@ static int ieee80211_mgmt_tx(struct wiph
- 	if (chan == local->hw_roc_channel) {
- 		/* TODO: check channel type? */
- 		is_offchan = false;
-+		in_hw_roc = true;
- 		flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
- 	}
+ #include "drivers/driver.h"
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index 4e45d59..fe153f7 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -240,6 +240,12 @@ struct hostapd_iface {
+ 	int olbc_ht;
  
-@@ -2368,7 +2367,7 @@ static int ieee80211_mgmt_tx(struct wiph
- 	 * wait is involved, we might otherwise not be on
- 	 * the right channel for long enough!
+ 	u16 ht_op_mode;
++
++	/* dfs states */
++	u8 dfs_state;
++	/* dfs start channel availability check time stamp */
++	os_time_t dfs_start_cac_ts;
++
+ 	void (*scan_cb)(struct hostapd_iface *iface);
+ 
+ 	int (*ctrl_iface_init)(struct hostapd_data *hapd);
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 102ea46..0a809fe 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -29,6 +29,19 @@
+ #define HOSTAPD_CHAN_HT40MINUS 0x00000020
+ #define HOSTAPD_CHAN_HT40 0x00000040
+ 
++/*
++ * DFS functionality is enabled.
++ */
++#define DFS_ENABLED			BIT(0)
++
++/*
++ * DFS Channel Availability Check Time - the time a system shall monitor a
++ * 'radar channel' for presence of radar prior to initiating a TX, spec defines
++ * it as 60 seconds.
++ * Driver will block any attempt to enable the TX prior this minimal CAC time.
++ */
++#define DFS_MIN_CAC_TIME_SEC		60
++
+ /**
+  * struct hostapd_channel_data - Channel information
+  */
+@@ -878,6 +891,16 @@ struct hostapd_freq_params {
+ 				 * enabled, secondary channel above primary */
+ };
+ 
++struct hostapd_channel_switch {
++	int freq;
++	int tx_block;			/* immediately block the tx on the
++					 * operational channel
++					 * (prior channel switch) */
++	int post_switch_block_tx;	/* block tx on the target ch (after
++					 * channel switch) */
++	int ch_switch_count;
++};
++
+ enum wpa_driver_if_type {
+ 	/**
+ 	 * WPA_IF_STATION - Station mode interface
+@@ -2548,6 +2571,31 @@ struct wpa_driver_ops {
+ 	 * avoid frequency conflict in single channel concurrency.
  	 */
--	if (!is_offchan && !wait && !sdata->vif.bss_conf.idle) {
-+	if (!is_offchan && !wait && (in_hw_roc || !sdata->vif.bss_conf.idle)) {
- 		ieee80211_tx_skb(sdata, skb);
- 		return 0;
- 	}
---- a/net/mac80211/iface.c	2012-06-01 10:33:10.000000000 +0200
-+++ b/net/mac80211/iface.c	2012-06-01 10:33:10.000000000 +0200
-@@ -1454,7 +1454,7 @@ u32 __ieee80211_recalc_idle(struct ieee8
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int count = 0;
--	bool working = false, scanning = false, hw_roc = false;
-+	bool working = false, scanning = false;
- 	struct ieee80211_work *wk;
- 	unsigned int led_trig_start = 0, led_trig_stop = 0;
+ 	int (*switch_channel)(void *priv, unsigned int freq);
++
++	/**
++	 * hapd_channel_switch - Perform an AP channel switch
++	 * @priv: Private driver interface data
++	 * @params: Channels switch parameters
++	 * Returns: 0 on success, -1 on failure
++	 */
++	int (*hapd_channel_switch)(void *priv,
++				   struct hostapd_channel_switch *params);
++
++	/**
++	 * enable_tx - Enable TX
++	 * @priv: Private driver interface data
++	 * @freq: Frequency (in MHz) of the channel
++	 * Returns: 0 on success, -1 on failure
++	 */
++	int (*enable_tx)(void *priv, int freq);
++
++	/**
++	 * start_radar_detection - Listen for radar interference on the channel.
++	 * @priv: Private driver interface data
++	 * @freq: Frequency (in MHz) of the channel
++	 * Returns: 0 on success, -1 on failure
++	 */
++	int (*start_radar_detection)(void *priv, int freq);
+ };
  
-@@ -1502,9 +1502,6 @@ u32 __ieee80211_recalc_idle(struct ieee8
- 		local->scan_sdata->vif.bss_conf.idle = false;
- 	}
  
--	if (local->hw_roc_channel)
--		hw_roc = true;
--
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
- 		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-@@ -1516,7 +1513,7 @@ u32 __ieee80211_recalc_idle(struct ieee8
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
- 	}
- 
--	if (working || scanning || hw_roc)
-+	if (working || scanning)
- 		led_trig_start |= IEEE80211_TPT_LEDTRIG_FL_WORK;
- 	else
- 		led_trig_stop |= IEEE80211_TPT_LEDTRIG_FL_WORK;
-@@ -1528,8 +1525,6 @@ u32 __ieee80211_recalc_idle(struct ieee8
- 
- 	ieee80211_mod_tpt_led_trig(local, led_trig_start, led_trig_stop);
- 
--	if (hw_roc)
--		return ieee80211_idle_off(local, "hw remain-on-channel");
- 	if (working)
- 		return ieee80211_idle_off(local, "working");
- 	if (scanning)
---- a/net/mac80211/offchannel.c	2012-06-01 10:33:10.000000000 +0200
-+++ b/net/mac80211/offchannel.c	2012-06-01 10:33:10.000000000 +0200
-@@ -207,8 +207,6 @@ static void ieee80211_hw_roc_start(struc
- 					  GFP_KERNEL);
- 	}
- 
--	ieee80211_recalc_idle(local);
--
- 	mutex_unlock(&local->mtx);
- }
- 
-@@ -260,8 +258,6 @@ static void ieee80211_hw_roc_done(struct
- 	local->hw_roc_channel = NULL;
- 	local->hw_roc_cookie = 0;
- 
--	ieee80211_recalc_idle(local);
--
- 	mutex_unlock(&local->mtx);
- }
- 
-
+-- 
+1.7.5.4
 
