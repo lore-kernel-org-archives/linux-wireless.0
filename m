@@ -1,63 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55807 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755159Ab2FWQCC (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:57232 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768Ab2FRJB4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 12:02:02 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: [PATCH v2 08/10] ath: Add Wake-on-Wireless debug mask
-Date: Sat, 23 Jun 2012 21:29:52 +0530
-Message-ID: <1340467194-16930-9-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120623_180208_838400_EFC093DA)
-In-Reply-To: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
+	Mon, 18 Jun 2012 05:01:56 -0400
+Received: by lbbgm6 with SMTP id gm6so4121064lbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 02:01:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1339882592-17680-1-git-send-email-xose.vazquez@gmail.com>
+References: <1339882592-17680-1-git-send-email-xose.vazquez@gmail.com>
+Date: Mon, 18 Jun 2012 11:01:54 +0200
+Message-ID: <CAL1gcdNwChERae_B7S_TpZmi=Pi2MwUbDiwh+SFys8px96TFDA@mail.gmail.com> (sfid-20120618_110202_387236_10BF809E)
+Subject: Re: [PATCH] wireless: rt2x00: rt2800: remove unsupported rf and chips
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: IvDoorn@gmail.com, helmut.schaa@googlemail.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi Xose,
 
-to help the developers and users to debug/know
-whats happening with WoW
+On Sat, Jun 16, 2012 at 11:36 PM, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> removed, no support for:
+>
+> RF2853 2.4G/5G 3T3R
+> RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
+> RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+>
+> RT3593
+> RT3883
+>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I don't mind removing the RT chipset definitions, but I would like to
+retain the RF chipset definitions. Even
+though these definitions are not used in the code, the do represent
+values we could see from devices, so
+I consider the list to be documentation as well.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index c54b7d3..9bd0248 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -215,6 +215,7 @@ void ath_printk(const char *level, const struct ath_common *common,
-  *	used exclusively for WLAN-BT coexistence starting from
-  *	AR9462.
-  * @ATH_DBG_DFS: radar datection
-+ * @ATH_DBG_WOW: Wake on Wireless
-  * @ATH_DBG_ANY: enable all debugging
-  *
-  * The debug level is used to control the amount and type of debugging output
-@@ -242,6 +243,7 @@ enum ATH_DEBUG {
- 	ATH_DBG_BSTUCK		= 0x00008000,
- 	ATH_DBG_MCI		= 0x00010000,
- 	ATH_DBG_DFS		= 0x00020000,
-+	ATH_DBG_WOW		= 0x00040000,
- 	ATH_DBG_ANY		= 0xffffffff
- };
- 
+> ---
+>  drivers/net/wireless/rt2x00/rt2800.h |    6 ------
+>  drivers/net/wireless/rt2x00/rt2x00.h |    2 --
+>  2 files changed, 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index 9348521..b483c23 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -47,10 +47,7 @@
+>  * RF3021 2.4G 1T2R
+>  * RF3022 2.4G 2T2R
+>  * RF3052 2.4G/5G 2T2R
+> - * RF2853 2.4G/5G 3T3R
+>  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
+> - * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
+> - * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+>  * RF5370 2.4G 1T1R
+>  * RF5390 2.4G 1T1R
+>  */
+> @@ -63,10 +60,7 @@
+>  #define RF3021                         0x0007
+>  #define RF3022                         0x0008
+>  #define RF3052                         0x0009
+> -#define RF2853                         0x000a
+>  #define RF3320                         0x000b
+> -#define RF3322                         0x000c
+> -#define RF3053                         0x000d
+>  #define RF5370                         0x5370
+>  #define RF5372                         0x5372
+>  #define RF5390                         0x5390
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 8f75402..0395881 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -189,8 +189,6 @@ struct rt2x00_chip {
+>  #define RT3090         0x3090  /* 2.4GHz PCIe */
+>  #define RT3390         0x3390
+>  #define RT3572         0x3572
+> -#define RT3593         0x3593
+> -#define RT3883         0x3883  /* WSOC */
+>  #define RT5390         0x5390  /* 2.4GHz */
+>  #define RT5392         0x5392  /* 2.4GHz */
+>
+> --
+> 1.7.10.4
+>
+
+
+
 -- 
-1.7.0.4
-
+---
+Gertjan
