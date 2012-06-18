@@ -1,126 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33692 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753934Ab2FFNXU (ORCPT
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:43051 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751658Ab2FRGGX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:23:20 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 13/29] iwlwifi: unify tx_chains_num setting
-Date: Wed,  6 Jun 2012 15:21:54 +0200
-Message-Id: <1338988930-11561-13-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152404_200009_59AEA606)
-In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
-References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 18 Jun 2012 02:06:23 -0400
+Message-ID: <4FDEC547.1080701@xenotime.net> (sfid-20120618_080626_893269_2B11C36E)
+Date: Sun, 17 Jun 2012 23:05:59 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+MIME-Version: 1.0
+To: Ouyang <ilhebe999@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: make moduels tx.c error
+References: <loom.20120617T234255-222@post.gmane.org>
+In-Reply-To: <loom.20120617T234255-222@post.gmane.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/17/2012 02:45 PM, Ouyang wrote:
 
-There's no need to copy the same code for all
-devices since none of the 5000 series devices
-(that don't have the RX SISO override) don't
-set the rx_with_siso_diversity variable.
+>  Anyone can tell me how to figure this problem? I do not have much experience on
+> linux kernel compiling.
+> make modules
+> make[1]: Nothing to be done for `all'.
+>   CHK     include/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CALL    scripts/checksyscalls.sh
+>   CC [M]  net/mac80211/tx.o
+> net/mac80211/tx.c: In function ‘ieee80211_tx’:
+> net/mac80211/tx.c:1327:2: error: implicit declaration of function
+> ‘ieee80211_tx_prepare’ [-W
+> net/mac80211/tx.c: At top level:
+> net/mac80211/tx.c:1601:1: error: conflicting types for ‘ieee80211_tx_prepare’
+> net/mac80211/tx.c:1327:16: note: previous implicit declaration of
+> ‘ieee80211_tx_prepare’ was
+> net/mac80211/tx.c: In function ‘ieee80211_tx_prepare’:
+> net/mac80211/tx.c:1643:7: warning: passing argument 1 of
+> ‘__ieee80211_parse_tx_radiotap’ fro
+> net/mac80211/tx.c:1516:13: note: expected ‘struct sk_buff *’ but argument is of
+> type ‘struct
+> net/mac80211/tx.c:1643:7: error: too many arguments to function
+> ‘__ieee80211_parse_tx_radiot
+> net/mac80211/tx.c:1516:13: note: declared here
+> net/mac80211/tx.c: In function ‘ieee80211_monitor_start_xmit’:
+> net/mac80211/tx.c:1790:2: error: implicit declaration of function
+> ‘ieee80211_parse_tx_radiot
+> cc1: some warnings being treated as errors
+> make[2]: *** [net/mac80211/tx.o] Error 1
+> make[1]: *** [net/mac80211] Error 2
+> make: *** [net] Error 2
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/devices.c |   34 ----------------------------
- drivers/net/wireless/iwlwifi/dvm/eeprom.c  |    8 +++++++
- 2 files changed, 8 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/devices.c b/drivers/net/wireless/iwlwifi/dvm/devices.c
-index ac5675d..7d3bb1e 100644
---- a/drivers/net/wireless/iwlwifi/dvm/devices.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/devices.c
-@@ -173,14 +173,6 @@ static void iwl1000_hw_set_hw_params(struct iwl_priv *priv)
- {
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
- 
--	priv->hw_params.tx_chains_num =
--		num_of_ant(priv->hw_params.valid_tx_ant);
--	if (priv->cfg->rx_with_siso_diversity)
--		priv->hw_params.rx_chains_num = 1;
--	else
--		priv->hw_params.rx_chains_num =
--			num_of_ant(priv->hw_params.valid_rx_ant);
--
- 	iwl1000_set_ct_threshold(priv);
- 
- 	/* Set initial sensitivity parameters */
-@@ -254,14 +246,6 @@ static void iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- {
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
- 
--	priv->hw_params.tx_chains_num =
--		num_of_ant(priv->hw_params.valid_tx_ant);
--	if (priv->cfg->rx_with_siso_diversity)
--		priv->hw_params.rx_chains_num = 1;
--	else
--		priv->hw_params.rx_chains_num =
--			num_of_ant(priv->hw_params.valid_rx_ant);
--
- 	iwl2000_set_ct_threshold(priv);
- 
- 	/* Set initial sensitivity parameters */
-@@ -408,11 +392,6 @@ static void iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
- 
--	priv->hw_params.tx_chains_num =
--		num_of_ant(priv->hw_params.valid_tx_ant);
--	priv->hw_params.rx_chains_num =
--		num_of_ant(priv->hw_params.valid_rx_ant);
--
- 	iwl5000_set_ct_threshold(priv);
- 
- 	/* Set initial sensitivity parameters */
-@@ -424,11 +403,6 @@ static void iwl5150_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
- 
--	priv->hw_params.tx_chains_num =
--		num_of_ant(priv->hw_params.valid_tx_ant);
--	priv->hw_params.rx_chains_num =
--		num_of_ant(priv->hw_params.valid_rx_ant);
--
- 	iwl5150_set_ct_threshold(priv);
- 
- 	/* Set initial sensitivity parameters */
-@@ -623,14 +597,6 @@ static void iwl6000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
- 
--	priv->hw_params.tx_chains_num =
--		num_of_ant(priv->hw_params.valid_tx_ant);
--	if (priv->cfg->rx_with_siso_diversity)
--		priv->hw_params.rx_chains_num = 1;
--	else
--		priv->hw_params.rx_chains_num =
--			num_of_ant(priv->hw_params.valid_rx_ant);
--
- 	iwl6000_set_ct_threshold(priv);
- 
- 	/* Set initial sensitivity parameters */
-diff --git a/drivers/net/wireless/iwlwifi/dvm/eeprom.c b/drivers/net/wireless/iwlwifi/dvm/eeprom.c
-index 69d280f..b4da76d 100644
---- a/drivers/net/wireless/iwlwifi/dvm/eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/eeprom.c
-@@ -285,6 +285,14 @@ int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
- 		return -EINVAL;
- 	}
- 
-+	priv->hw_params.tx_chains_num =
-+		num_of_ant(priv->hw_params.valid_tx_ant);
-+	if (priv->cfg->rx_with_siso_diversity)
-+		priv->hw_params.rx_chains_num = 1;
-+	else
-+		priv->hw_params.rx_chains_num =
-+			num_of_ant(priv->hw_params.valid_rx_ant);
-+
- 	IWL_INFO(priv, "Valid Tx ant: 0x%X, Valid Rx ant: 0x%X\n",
- 		 priv->hw_params.valid_tx_ant, priv->hw_params.valid_rx_ant);
- 
+
+What kernel version is this?
+
+What commands did you use to do the build?
+
+thanks,
+
 -- 
-1.7.10
-
+~Randy
