@@ -1,136 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59404 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756996Ab2FYPxk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17536 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545Ab2FRGXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 11:53:40 -0400
-Subject: [PATCH] net: nfc: fix panic in accept()
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: Dave Jones <davej@redhat.com>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	David Miller <davem@davemloft.net>,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CA+1xoqcwr-5dzHvqkt9x0-xj9EFAywVfva=asbHXvX-LSBWqdA@mail.gmail.com>
-References: <1339423241.4999.53.camel@lappy>
-	 <20120611144134.GX22557@sortiz-mobl>
-	 <1339425693.6001.2268.camel@edumazet-glaptop>
-	 <20120611145700.GY22557@sortiz-mobl>
-	 <1339426778.6001.2312.camel@edumazet-glaptop>
-	 <20120611152007.GZ22557@sortiz-mobl> <1339433810.4999.65.camel@lappy>
-	 <20120611172545.GA1776@redhat.com>
-	 <CA+1xoqcwr-5dzHvqkt9x0-xj9EFAywVfva=asbHXvX-LSBWqdA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Jun 2012 17:53:32 +0200
-Message-ID: <1340639612.10893.84.camel@edumazet-glaptop> (sfid-20120625_175401_885322_EEA382A2)
-Mime-Version: 1.0
+	Mon, 18 Jun 2012 02:23:20 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [RFC 04/10] ath9k_hw: advertise WoW support for capable chipsets
+Date: Mon, 18 Jun 2012 11:51:48 +0530
+Message-ID: <1340000514-7779-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120618_082322_728455_2B7B63E0)
+In-Reply-To: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340000514-7779-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <edumazet@google.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Sasha Levin reported following panic :
+support WoW for all chipsets starting from AR9280, AR9285, AR9287,
+AR9380, AR9382, AR9485, AR9462. Really all hardware may not support
+WoW even though the flag is set and the WoW working depends on
+your laptop, BIOS apart from the hardware.
 
-[ 2136.383310] BUG: unable to handle kernel NULL pointer dereference at
-00000000000003b0
-[ 2136.384022] IP: [<ffffffff8114e400>] __lock_acquire+0xc0/0x4b0
-[ 2136.384022] PGD 131c4067 PUD 11c0c067 PMD 0 
-[ 2136.388106] Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-[ 2136.388106] CPU 1 
-[ 2136.388106] Pid: 24855, comm: trinity-child1 Tainted: G        W
-3.5.0-rc2-sasha-00015-g7b268f7 #374  
-[ 2136.388106] RIP: 0010:[<ffffffff8114e400>]  [<ffffffff8114e400>]
-__lock_acquire+0xc0/0x4b0
-[ 2136.388106] RSP: 0018:ffff8800130b3ca8  EFLAGS: 00010046
-[ 2136.388106] RAX: 0000000000000086 RBX: ffff88001186b000 RCX:
-0000000000000000
-[ 2136.388106] RDX: 0000000000000000 RSI: 0000000000000000 RDI:
-0000000000000000
-[ 2136.388106] RBP: ffff8800130b3d08 R08: 0000000000000001 R09:
-0000000000000000
-[ 2136.388106] R10: 0000000000000000 R11: 0000000000000001 R12:
-0000000000000002
-[ 2136.388106] R13: 00000000000003b0 R14: 0000000000000000 R15:
-0000000000000000
-[ 2136.388106] FS:  00007fa5b1bd4700(0000) GS:ffff88001b800000(0000)
-knlGS:0000000000000000
-[ 2136.388106] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 2136.388106] CR2: 00000000000003b0 CR3: 0000000011d1f000 CR4:
-00000000000406e0
-[ 2136.388106] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-0000000000000000
-[ 2136.388106] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-0000000000000400
-[ 2136.388106] Process trinity-child1 (pid: 24855, threadinfo
-ffff8800130b2000, task ffff88001186b000)
-[ 2136.388106] Stack:
-[ 2136.388106]  ffff8800130b3cd8 ffffffff81121785 ffffffff81236774
-000080d000000001
-[ 2136.388106]  ffff88001b9d6c00 00000000001d6c00 ffffffff130b3d08
-ffff88001186b000
-[ 2136.388106]  0000000000000000 0000000000000002 0000000000000000
-0000000000000000
-[ 2136.388106] Call Trace:
-[ 2136.388106]  [<ffffffff81121785>] ? sched_clock_local+0x25/0x90
-[ 2136.388106]  [<ffffffff81236774>] ? get_empty_filp+0x74/0x220
-[ 2136.388106]  [<ffffffff8114e97a>] lock_acquire+0x18a/0x1e0
-[ 2136.388106]  [<ffffffff836b37df>] ? rawsock_release+0x4f/0xa0
-[ 2136.388106]  [<ffffffff837c0ef0>] _raw_write_lock_bh+0x40/0x80
-[ 2136.388106]  [<ffffffff836b37df>] ? rawsock_release+0x4f/0xa0
-[ 2136.388106]  [<ffffffff836b37df>] rawsock_release+0x4f/0xa0
-[ 2136.388106]  [<ffffffff8321cfe8>] sock_release+0x18/0x70
-[ 2136.388106]  [<ffffffff8321d069>] sock_close+0x29/0x30
-[ 2136.388106]  [<ffffffff81236bca>] __fput+0x11a/0x2c0
-[ 2136.388106]  [<ffffffff81236d85>] fput+0x15/0x20
-[ 2136.388106]  [<ffffffff8321de34>] sys_accept4+0x1b4/0x200
-[ 2136.388106]  [<ffffffff837c165c>] ? _raw_spin_unlock_irq+0x4c/0x80
-[ 2136.388106]  [<ffffffff837c1669>] ? _raw_spin_unlock_irq+0x59/0x80
-[ 2136.388106]  [<ffffffff837c2565>] ? sysret_check+0x22/0x5d
-[ 2136.388106]  [<ffffffff8321de8b>] sys_accept+0xb/0x10
-[ 2136.388106]  [<ffffffff837c2539>] system_call_fastpath+0x16/0x1b
-[ 2136.388106] Code: ec 04 00 0f 85 ea 03 00 00 be d5 0b 00 00 48 c7 c7
-8a c1 40 84 e8 b1 a5 f8 ff 31 c0 e9 d4 03 00 00 66 2e 0f 1f 84 00 00 00
-00 00 <49> 81 7d 00 60 73 5e 85 b8 01 00 00 00 44 0f 44 e0 83 fe 01 77 
-[ 2136.388106] RIP  [<ffffffff8114e400>] __lock_acquire+0xc0/0x4b0
-[ 2136.388106]  RSP <ffff8800130b3ca8>
-[ 2136.388106] CR2: 00000000000003b0
-[ 2136.388106] ---[ end trace 6d450e935ee18982 ]---
-[ 2136.388106] Kernel panic - not syncing: Fatal exception in interrupt
-
-rawsock_release() should test if sock->sk is NULL before calling
-sock_orphan()/sock_put()
-
-Reported-by: Sasha Levin <levinsasha928@gmail.com>
-Tested-by: Sasha Levin <levinsasha928@gmail.com>
-Signed-off-by: Eric Dumazet <edumazet@google.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- net/nfc/rawsock.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index ec1134c..208416e 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -54,11 +54,12 @@ static int rawsock_release(struct socket *sock)
- {
- 	struct sock *sk = sock->sk;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 784baee..fea7f24 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2560,6 +2560,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
  
--	pr_debug("sock=%p\n", sock);
--
--	sock_orphan(sk);
--	sock_put(sk);
-+	pr_debug("sock=%p sk=%p\n", sock, sk);
  
-+	if (sk) {
-+		sock_orphan(sk);
-+		sock_put(sk);
++	if (AR_SREV_9280_20_OR_LATER(ah)) {
++		pCap->wow_caps = ATH9K_HW_WOW_DEVICE_CAPABLE |
++				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
++
++		if (AR_SREV_9280(ah))
++			pCap->wow_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
 +	}
++
  	return 0;
  }
  
-
+-- 
+1.7.0.4
 
