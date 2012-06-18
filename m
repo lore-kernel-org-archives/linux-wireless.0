@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49333 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755899Ab2FTJFZ (ORCPT
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:44926 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751265Ab2FROud (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 05:05:25 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/5] nl80211: use __cfg80211_rdev_from_attrs for testmode
-Date: Wed, 20 Jun 2012 11:05:19 +0200
-Message-Id: <1340183119-15340-6-git-send-email-johannes@sipsolutions.net> (sfid-20120620_110546_914664_029F811D)
-In-Reply-To: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
-References: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 18 Jun 2012 10:50:33 -0400
+Received: by ggnk3 with SMTP id k3so3525736ggn.38
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:50:24 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH 7/7] mac80211: add DFS support to monitor interface
+Date: Mon, 18 Jun 2012 17:46:38 +0300
+Message-Id: <1340030798-28992-8-git-send-email-victorg@ti.com> (sfid-20120618_165035_965619_30122D02)
+In-Reply-To: <1340030798-28992-1-git-send-email-victorg@ti.com>
+References: <1340030798-28992-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Stop dropping packets if we are on 'radar channel'
+and the DFS is enabled/supported.
 
-To fix the testmode cross-namespace access problem,
-use __cfg80211_rdev_from_attrs() to get the device
-instead of open-coding similar functionality.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- net/wireless/nl80211.c |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ net/mac80211/tx.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7e94d4d..06623d0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5230,21 +5230,18 @@ static int nl80211_testmode_dump(struct sk_buff *skb,
- 				  nl80211_policy);
- 		if (err)
- 			return err;
--		if (nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]) {
--			phy_idx = nla_get_u32(
--				nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]);
--		} else {
--			struct net_device *netdev;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e453212..b6a7cee 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1595,6 +1595,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
+ 	u16 len_rthdr;
+ 	int hdrlen;
++	bool dfs_supported = !!(local->hw.wiphy->features &
++				NL80211_FEATURE_DFS);
  
--			err = get_rdev_dev_by_ifindex(sock_net(skb->sk),
--						      nl80211_fam.attrbuf,
--						      &rdev, &netdev);
--			if (err)
--				return err;
--			dev_put(netdev);
--			phy_idx = rdev->wiphy_idx;
--			cfg80211_unlock_rdev(rdev);
-+		mutex_lock(&cfg80211_mutex);
-+		rdev = __cfg80211_rdev_from_attrs(sock_net(skb->sk),
-+						  nl80211_fam.attrbuf);
-+		if (IS_ERR(rdev)) {
-+			mutex_unlock(&cfg80211_mutex);
-+			return PTR_ERR(rdev);
- 		}
-+		phy_idx = rdev->wiphy_idx;
-+		rdev = NULL;
-+		mutex_unlock(&cfg80211_mutex);
-+
- 		if (nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA])
- 			cb->args[1] =
- 				(long)nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA];
+ 	/*
+ 	 * Frame injection is not allowed if beaconing is not allowed
+@@ -1607,13 +1609,13 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	 * flag.
+ 	 *
+ 	 * Since AP mode uses monitor interfaces to inject/TX management
+-	 * frames we can make AP mode the exception to this rule once it
+-	 * supports radar detection as its implementation can deal with
+-	 * radar detection by itself. We can do that later by adding a
+-	 * monitor flag interfaces used for AP support.
++	 * frames we can make AP mode the exception to this rule, in the
++	 * case the driver supports radar detection, allow usage of radar
++	 * channels.
+ 	 */
+-	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
+-	     IEEE80211_CHAN_PASSIVE_SCAN)))
++	if ((!(chan->flags & IEEE80211_CHAN_RADAR) || !dfs_supported) &&
++	    ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
++	    IEEE80211_CHAN_PASSIVE_SCAN))))
+ 		goto fail;
+ 
+ 	/* check for not even having the fixed radiotap header part */
 -- 
-1.7.10
+1.7.5.4
 
