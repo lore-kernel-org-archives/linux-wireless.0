@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39235 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab2FKRjF (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36969 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052Ab2FRHZx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 13:39:05 -0400
-Date: Mon, 11 Jun 2012 23:10:20 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath9k: defer btcoex scheme update
-Message-ID: <20120611174018.GA2655@vmraj-lnx.users.atheros.com> (sfid-20120611_193910_375656_5DFD946E)
-References: <1339418354-1843-1-git-send-email-rmanohar@qca.qualcomm.com>
- <20437.61328.931380.948942@gargle.gargle.HOWL>
+	Mon, 18 Jun 2012 03:25:53 -0400
+Received: by bkcji2 with SMTP id ji2so3717051bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 00:25:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20437.61328.931380.948942@gargle.gargle.HOWL>
+In-Reply-To: <87aa015bj6.fsf@purkki.adurom.net>
+References: <1340003971-7037-1-git-send-email-arik@wizery.com> <87aa015bj6.fsf@purkki.adurom.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 18 Jun 2012 10:25:37 +0300
+Message-ID: <CA+XVXffspZumrisT181KjSxSFRQJHGEg_01HMuFQ063RHag3Gg@mail.gmail.com> (sfid-20120618_092556_155665_D58A06D8)
+Subject: Re: [PATCH] mac80211: set only VO as a U-APSD enabled AC
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 06:46:00PM +0530, Sujith Manoharan wrote:
-> Rajkumar Manoharan wrote:
-> > As btcoex scheme updation might sleep, remove the function call
-> > from tasklet context and queue it up as a separate work.
-> > 
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> > ---
-> > --- a/drivers/net/wireless/ath/ath9k/main.c
-> > +++ b/drivers/net/wireless/ath/ath9k/main.c
-> > @@ -188,6 +188,9 @@ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
-> >  
-> >  	ath9k_debug_samp_bb_mac(sc);
-> >  	ath9k_hw_disable_interrupts(ah);
-> > +#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-> > +	cancel_work_sync(&sc->mci_work);
-> > +#endif
-> 
-> I think this should go inside __ath_cancel_work(), otherwise there is a
-> chance that this would not be cleaned up properly when stopping the
-> interface or unloading the driver.
+On Mon, Jun 18, 2012 at 10:23 AM, Kalle Valo <kvalo@adurom.com> wrote:
+> Arik Nemtsov <arik@wizery.com> writes:
 >
-mci_work is queued up by the ath9k_tasklet that is triggered by interrupt
-routine. So it is safer to cancel the mci_work after disabling interrupt.
-Does it make sense?
+>> Some APs experience problems when working with U-APSD. Decrease the
+>> probability of that happening by using legacy mode for all ACs but VO.
+>>
+>> The AP that caused us troubles was a Cisco 4410N. It ignores our
+>> setting, and always treats non-VO ACs as legacy.
+>>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>
+> [...]
+>
+>> --- a/net/mac80211/ieee80211_i.h
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -56,10 +56,7 @@ struct ieee80211_local;
+>>  #define TU_TO_EXP_TIME(x)    (jiffies + TU_TO_JIFFIES(x))
+>>
+>>  #define IEEE80211_DEFAULT_UAPSD_QUEUES \
+>> -     (IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |   \
+>> -      IEEE80211_WMM_IE_STA_QOSINFO_AC_BE |   \
+>> -      IEEE80211_WMM_IE_STA_QOSINFO_AC_VI |   \
+>> -      IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
+>> +     IEEE80211_WMM_IE_STA_QOSINFO_AC_VO
+>
+> Am I in your kill file now? :)
+>
+> http://www.spinics.net/lists/linux-wireless/msg92159.html
 
---
-Rajkumar
+Oh missed your comment. I'll resend.
