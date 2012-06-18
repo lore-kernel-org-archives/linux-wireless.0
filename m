@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:36160 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758257Ab2FTWaT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3781 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147Ab2FRLBN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 18:30:19 -0400
-Received: by wgbds11 with SMTP id ds11so4066873wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 15:30:18 -0700 (PDT)
-Message-ID: <4FE24EF4.5010607@gmail.com> (sfid-20120621_003025_965646_7BB943DC)
-Date: Thu, 21 Jun 2012 00:30:12 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Mon, 18 Jun 2012 07:01:13 -0400
+From: Vivek Natarajan <nataraja@qca.qualcomm.com>
+To: <jouni@qca.qualcomm.com>, <johannes@sipsolutions.net>,
+	<kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath6kl: Enable auto channel selection for AP mode
+Date: Mon, 18 Jun 2012 16:30:42 +0530
+Message-ID: <1340017242-6436-3-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120618_130128_900504_CCC8E9A2)
+In-Reply-To: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com>
+References: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Erwin Van de Velde <erwin.vandevelde@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k bug in country domain handling
-References: <4FDE1EF5.9030805@gmail.com> <4283314.5zPdis6seJ@sylvesterjr.cmi.ua.ac.be> <CAGRGNgXaWHMi3xDygVAzDcm6qLnHPO2nXnidPW6K+e-v1=Hm3Q@mail.gmail.com>
-In-Reply-To: <CAGRGNgXaWHMi3xDygVAzDcm6qLnHPO2nXnidPW6K+e-v1=Hm3Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/19/2012 01:46 AM, Julian Calaby wrote:
+Also update the new channel information through ch_switch_notify.
 
-> As I explained previously, the cards are tuned and configured for a
-> particular regulatory domain when they're manufactured. The driver
-> cannot assume that the card will be capable of complying with another
-> regulatory domain.
+Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
 
-That's false.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index f27e973..4a30bdc 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2762,7 +2762,16 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	p.ssid_len = vif->ssid_len;
+ 	memcpy(p.ssid, vif->ssid, vif->ssid_len);
+ 	p.dot11_auth_mode = vif->dot11_auth_mode;
+-	p.ch = cpu_to_le16(info->channel->center_freq);
++
++	if (info->auto_channel_select)
++		ar->want_ch_switch |= 1 << vif->fw_vif_idx;
++
++	if (info->channel) {
++		p.ch = cpu_to_le16(info->channel->center_freq);
++		if (ath6kl_set_htcap(vif, info->channel->band,
++				     info->channel_type != NL80211_CHAN_NO_HT))
++			return -EIO;
++	}
+ 
+ 	/* Enable uAPSD support by default */
+ 	res = ath6kl_wmi_ap_set_apsd(ar->wmi, vif->fw_vif_idx, true);
+@@ -2786,10 +2795,6 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			return res;
+ 	}
+ 
+-	if (ath6kl_set_htcap(vif, info->channel->band,
+-			     info->channel_type != NL80211_CHAN_NO_HT))
+-		return -EIO;
+-
+ 	/*
+ 	 * Get the PTKSA replay counter in the RSN IE. Supplicant
+ 	 * will use the RSN IE in M3 message and firmware has to
+@@ -3502,7 +3507,8 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+ 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM |
+ 			    WIPHY_FLAG_HAVE_AP_SME |
+ 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+-			    WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
++			    WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
++			    WIPHY_FLAG_SUPPORTS_ACS;
+ 
+ 	if (test_bit(ATH6KL_FW_CAPABILITY_SCHED_SCAN, ar->fw_capabilities))
+ 		ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
+-- 
+1.7.4.1
 
-Atheros does not produce distinct chips for different countries or
-markets.
-
-<http://marc.info/?l=linux-wireless&m=125072768530674>
-
-There is only ONE chip, with custom "regdomain" values in the EEPROM.
-And the *driver* applies constraints based on that value. No more no less.
-Then, crda/wireless-regdb only can narrows things a bit more.
-
-
-Atheros chips can go beyond IEEE 802.11 frecuencies.
-
-dd-wrt is selling "DD-WRT Superchannel Extension":
-http://www.dd-wrt.com/shop/catalog/product_info.php?cPath=22&products_id=717
-[...]
-SuperChannel allows you to use special frequencies
-from 2.3 Ghz - 2.7 Ghz (802.11g capable devices only)
-and 4.9 Ghz - 6.1 Ghz (802.11a capable devices only).
-[...]
-Please note that the DD-WRT Superchannel license can only be
-applied to certain routers equipped with Atheros based WLAN-hardware.
-http://www.qsl.net/kb9mwr/projects/wireless/ddwrt-ham.jpg
-
-Mikrotik also sells a 'code' to unlock "custom" frequencies:
-http://www.mikrotik.com/documentation//manual_2.7/Interface/Wireless.html#ht2761782821
-
-Ubiquiti used to do it: http://www.qsl.net/kb9mwr/projects/wireless/airos-ham.jpg
-
-
-
-You can read further info in: http://www.qsl.net/kb9mwr/projects/wireless/modify.html
