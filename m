@@ -1,36 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34957 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753922Ab2FTGPU (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:52398 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752281Ab2FRHRh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:15:20 -0400
-Message-ID: <1340172917.4655.4.camel@jlt3.sipsolutions.net> (sfid-20120620_081525_035723_5C902D94)
-Subject: Re: [RFC v2] cfg80211: 802.11ac change
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Jun 2012 08:15:17 +0200
-In-Reply-To: <1340172817.4655.3.camel@jlt3.sipsolutions.net> (sfid-20120620_081349_178237_07CAE090)
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0A4FA6@mbx022-e1-nj-10.exch022.domain.local>
-	 <1340172817.4655.3.camel@jlt3.sipsolutions.net>
-	 (sfid-20120620_081349_178237_07CAE090)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Jun 2012 03:17:37 -0400
+Received: by bkcji2 with SMTP id ji2so3711906bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 00:17:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1338971102-4872-1-git-send-email-arik@wizery.com>
+References: <1338971102-4872-1-git-send-email-arik@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 18 Jun 2012 10:17:19 +0300
+Message-ID: <CA+XVXfdWCX-M01UeixuGPh-hb1coL1DcHfj_1JKJ3Purgm16aQ@mail.gmail.com> (sfid-20120618_091740_609437_8DCE5003)
+Subject: Re: [PATCH v3] mac80211: stop Rx during HW reconfig
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 08:13 +0200, Johannes Berg wrote:
-> On Tue, 2012-06-05 at 10:42 +0000, Mahesh Palivela wrote:
-> > nl80211 change to push hw VHT caps and new structs, ieee defines per Draft 2.1 AC spec.
-> 
-> Sorry, I somehow missed this RFC. Could you split the patch into
-> ieee80211.h changes and cfg80211 changes? I'd like to merge the
-> ieee80211.h changes soon so everyone has them to start working with, and
-> the cfg80211/nl80211 might need more discussion.
+On Wed, Jun 6, 2012 at 11:25 AM, Arik Nemtsov <arik@wizery.com> wrote:
+> While HW reconfig is in progress, drop all incoming Rx. This prevents
+> incoming packets from changing the internal state of the driver or
+> calling callbacks of the low level driver while it is in inconsistent
+> state.
+>
 
-Also, I wouldn't mind more complete VHT definitions in ieee80211.h if
-you know them :-)
-
-johannes
-
+Ping?
