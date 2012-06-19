@@ -1,94 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58041 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752944Ab2FGGxc (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:43831 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753289Ab2FSNOc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 02:53:32 -0400
-Received: by dady13 with SMTP id y13so442304dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 23:53:32 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 7 Jun 2012 00:53:32 -0600
-Message-ID: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com> (sfid-20120607_085336_733742_267EC859)
-Subject: 
-From: Sean Patrick Santos <quantheory@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 Jun 2012 09:14:32 -0400
+Received: by obbta17 with SMTP id ta17so5399751obb.22
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:14:29 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on op-channel
+Date: Tue, 19 Jun 2012 16:10:59 +0300
+Message-Id: <1340111463-4554-3-git-send-email-victorg@ti.com> (sfid-20120619_151449_036771_4234AA32)
+In-Reply-To: <1340111463-4554-1-git-send-email-victorg@ti.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+The dfs master device should monitor radar channels
+for potential radar interference for a minimum of
+CAC (channel availability check) time, during this
+period no tx can occur. If no radar interference
+is detected the dfs master may initiate the tx with
+new NL80211_CMD_DFS_ENABLE_TX command.
 
-I have had a couple of problems with an adapter using carl9170 (the
-device is an X.USB from AirLive). This is with the in-kernel version
-from 3.4, and having build the git version of the firmware (although I
-switched to an older binary at some point and saw no difference; I
-can't date it though).
+If this command is invoked prior performing a CAC or
+the time passed sines the beginning of the CAC is
+less than min CAC time (60 sec), -EPERM is returned.
 
-The first "problem", which is actually mild enough that I wouldn't
-bother writing in about it if it was the only issue, is that I get a
-lot of messages like these:
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ include/linux/nl80211.h |   11 +++++++++++
+ include/net/cfg80211.h  |    5 +++++
+ net/wireless/nl80211.c  |   36 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 52 insertions(+), 0 deletions(-)
 
-[13215.559590] ieee80211 phy2: channel change: 2432 -> 2437 failed (2).
-[13215.844041] ieee80211 phy2: channel change: -1 -> 2437 failed (2).
-[13215.844044] usb 3-1.2: restart device (7)
-[13216.983593] usb 3-1.2: device restarted successfully.
-[13216.988414] ieee80211 phy2: Hardware restart was requested
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index ea6ce93..2f869a4 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -556,6 +556,15 @@
+  * @NL80211_CMD_RADAR_DETECT: Start radar detection in the driver/HW. Once
+  *	radar detected usermode notified with this event.
+  *
++ * @NL80211_CMD_DFS_ENABLE_TX: Initiate tx after verifying radar clearness on
++ *	dfs channel. The dfs master device should monitor radar channels
++ *	for potential radar interference for a minimum of CAC (channel
++ *	availability check) time, during this period no tx can occur. If no
++ *	radar interference is detected during this period the dfs master may
++ *	initiate the tx. If this command is invoked prior performing a CAC or
++ *	the time passed sines the beginning of the CAC is less than
++ *	NL80211_DFS_MIN_CAC_TIME_MS, -EPERM is returned.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -701,6 +710,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_RADAR_DETECT,
+ 
++	NL80211_CMD_DFS_ENABLE_TX,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 523d953..f7fe44e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1531,6 +1531,8 @@ struct cfg80211_gtk_rekey_data {
+  *	See @ethtool_ops.get_strings
+  *
+  * @start_radar_detection: Start radar detection in the driver.
++ *
++ * @dfs_en_tx: Enable tx after radar interference check.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1740,6 +1742,9 @@ struct cfg80211_ops {
+ 	int	(*start_radar_detection)(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+ 					 struct ieee80211_channel *chan);
++
++	int	(*dfs_en_tx)(struct wiphy *wiphy, struct net_device *dev,
++			     struct ieee80211_channel *chan);
+ };
+ 
+ /*
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 573c966..966f7cc 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4273,6 +4273,34 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	return cfg80211_start_radar_detection(rdev, dev, chan);
+ }
+ 
++static int nl80211_dfs_en_tx(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	bool dfs_supported = !!(rdev->wiphy.features & NL80211_FEATURE_DFS);
++	struct ieee80211_channel *chan;
++	int freq;
++
++	if (!rdev->ops->dfs_en_tx || !dfs_supported)
++		return -EOPNOTSUPP;
++
++	if (info->attrs[NL80211_ATTR_WIPHY_FREQ])
++		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
++	else
++		return -EINVAL;
++
++	chan = ieee80211_get_channel(&rdev->wiphy, freq);
++	if (!chan)
++		return -EINVAL;
++
++	if ((!chan->radar_detect_timeout ||
++	     time_is_after_jiffies(chan->radar_detect_timeout)) &&
++	    (chan->flags & IEEE80211_CHAN_RADAR))
++		return -EPERM;
++
++	return rdev->ops->dfs_en_tx(&rdev->wiphy, dev, chan);
++}
++
+ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			    u32 seq, int flags,
+ 			    struct cfg80211_registered_device *rdev,
+@@ -7030,6 +7058,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_DFS_ENABLE_TX,
++		.doit = nl80211_dfs_en_tx,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ 
+ };
+ 
+-- 
+1.7.5.4
 
-Also occasional blocks like these:
-
-[13548.136457] ieee80211 phy2: invalid plcp cck rate (0).
-[13597.224429] ieee80211 phy2: invalid plcp cck rate (0).
-[13601.512838] ieee80211 phy2: invalid plcp cck rate (0).
-
-I gather from a previous post on this mailing list that these are
-signs of interference in the area, which doesn't surprise me. I have a
-draft-N router that can only use the 2.4Ghz range, and there are three
-cordless phones, a wall, a microwave, and several other wireless
-devices between the adapter and the router. This doesn't bother me
-that much, because when the above messages are being printed
-performance is usually still OK, and when a restart does happen the
-device recovers rapidly. Plus, I'm somewhat stuck with the situation,
-since I don't have much control over how things are arranged in this
-space, and because the other adapter I have on hand is even worse off,
-both in terms of hardware and drivers.
-
-The second, more troubling problem is that I seem to get a "silent"
-failure (at least I can't find any errors) if I start a large download
-or set of downloads that take more than 10 seconds to a minute (in
-particular, trying to clone large directories using mercurial is
-impossible, because it will always trigger this problem, though for
-some reason git and subversion work most, but not all, of the time).
-What I mean by "failure" is that one of these two things will happen:
-
-1. The device will simply fail to receive anything (or trickle out to
-a rate of 500 bytes/min), at which point it will remain in that state
-for hours, occasionally registering minuscule amounts of activity,
-unless it is dis/reconnected to the wireless network (toggling power
-to the device or reloading the module also work, but do neither better
-nor worse than just reassociating). Upon reconnecting it immediately
-works fine, as long as I don't trigger the same problem again.
-
-2. Less often, the device will fail as above, but then suddenly start
-working again another minute or so later, allowing the process that
-had been overworking it (mercurial, wget, firefox, whatever) to
-continue what it was doing for another 10-50 seconds, at which point
-the connection trickles out again. This cycle keeps happening until
-the process either completes successfully, errors and dies, hangs, or
-is killed, at which point everything seems fine again. (Killing the
-process does not solve the problem, it just prevents the same process
-from causing the problem *again* in the event that the device
-spontaneously recovers within a minute or two).
-
-I know that it's physically possible to get a stable connection here,
-because the Windows installation on the same machine can almost always
-get fairly good speeds with the same device in the same place on the
-same network at the same time of day (~25Mbps, lose connection maybe
-once per 40 hours of use). I also know this because I can always fix
-the problem manually on Linux by reconnecting the device. What I'm not
-sure about is what the problem is with carl9170, or how to convince it
-to be more fault-tolerant. (Is this behavior an overreaction to the
-noise level? Is it hanging while waiting for some event that may never
-happen?) I'm afraid I'm not even sure how to diagnose the problem
-further; wireless adapters are not familiar territory for me.
-
--Sean
