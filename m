@@ -1,95 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:63143 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754845Ab2FFIZK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58040 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958Ab2FSRTg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:25:10 -0400
-Received: by weyu7 with SMTP id u7so4144205wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:25:09 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3] mac80211: stop Rx during HW reconfig
-Date: Wed,  6 Jun 2012 11:25:02 +0300
-Message-Id: <1338971102-4872-1-git-send-email-arik@wizery.com> (sfid-20120606_102518_331941_00D7BF99)
+	Tue, 19 Jun 2012 13:19:36 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	<aeolus@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Tue, 19 Jun 2012 22:50:49 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: Re: [PATCH 03/10] ath9k_hw: Add WoW hardware capability flags
+Message-ID: <20120619172047.GA7105@vmraj-lnx.qca.qualcomm.com> (sfid-20120619_191940_304162_DAB68F78)
+References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1340120850-9155-4-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1340120850-9155-4-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While HW reconfig is in progress, drop all incoming Rx. This prevents
-incoming packets from changing the internal state of the driver or
-calling callbacks of the low level driver while it is in inconsistent
-state.
+On Tue, Jun 19, 2012 at 09:17:23PM +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> 
+> have seperate wow capability flags for
+> *basic wow support
+> *device capable of matching exact user defined pattern
+> or de-authentication/disassoc pattern
+> *device such AR9280 requires first four bytes for
+> all sort of patterns
+> 
+> Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Cc: vadivel@qca.qualcomm.com
+> Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hw.h |   20 ++++++++++++++++++++
+>  1 files changed, 20 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> index d0e14a3..73a1238 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -231,6 +231,23 @@ enum ath9k_hw_caps {
+>  	ATH9K_HW_CAP_DFS			= BIT(16),
+>  };
+>  
+> +/*
+> + * enum ath9k_hw_wow_caps - WoW device capabilities
+> + * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
+> + * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
+> + * an exact user defined pattern or de-authentication/disassoc pattern.
+> + * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
+> + * bytes of the pattern for user defined pattern, de-authentication and
+> + * disassociation patterns for all types of possible frames recieved
+> + * of those types.
+> + */
+> +
+> +enum ath9k_hw_wow_caps {
+> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(0),
+> +	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(1),
+> +	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(2),
+> +};
+> +
+>  struct ath9k_hw_capabilities {
+>  	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
+>  	u16 rts_aggr_limit;
+> @@ -246,6 +263,9 @@ struct ath9k_hw_capabilities {
+>  	u8 txs_len;
+>  	u16 pcie_lcr_offset;
+>  	bool pcie_lcr_extsync_en;
+> +#ifdef	CONFIG_PM_SLEEP
+> +	enum ath9k_hw_wow_caps wow_caps;
+> +#endif
+Why can't you align with existing HW_CAP_* flags? why do you need a separate
+place holder?
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/main.c        |    7 +++++++
- net/mac80211/rx.c          |    4 ++++
- net/mac80211/util.c        |    3 +++
- 4 files changed, 17 insertions(+)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ae046b5..04e8912 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -912,6 +912,9 @@ struct ieee80211_local {
- 	/* device is started */
- 	bool started;
- 
-+	/* device is during a HW reconfig */
-+	bool in_reconfig;
-+
- 	/* wowlan is enabled -- don't reconfig on resume */
- 	bool wowlan;
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b70f7f0..eb4a5b9 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -345,6 +345,13 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
- 	ieee80211_stop_queues_by_reason(hw,
- 		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
- 
-+	/*
-+	 * Stop all Rx during the reconfig. We don't want state changes
-+	 * or driver callbacks while this is in progress.
-+	 */
-+	local->in_reconfig = true;
-+	barrier();
-+
- 	schedule_work(&local->restart_work);
- }
- EXPORT_SYMBOL(ieee80211_restart_hw);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d5ac02f..3b488e3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3033,6 +3033,10 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (unlikely(local->quiescing || local->suspended))
- 		goto drop;
- 
-+	/* We might be during a HW reconfig, prevent Rx for the same reason */
-+	if (unlikely(local->in_reconfig))
-+		goto drop;
-+
- 	/*
- 	 * The same happens when we're not even started,
- 	 * but that's worth a warning.
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 76f90c1..ee46273 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1399,6 +1399,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		if (ieee80211_sdata_running(sdata))
- 			ieee80211_enable_keys(sdata);
- 
-+	local->in_reconfig = false;
-+	barrier();
-+
-  wake_up:
- 	/*
- 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
--- 
-1.7.9.5
-
+-Rajkumar
