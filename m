@@ -1,259 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52538 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755485Ab2F2XqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 19:46:23 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 8/9] bcma: add bcma_pmu_spuravoid_pllupdate()
-Date: Sat, 30 Jun 2012 01:44:44 +0200
-Message-Id: <1341013486-2520-9-git-send-email-hauke@hauke-m.de> (sfid-20120630_014630_338885_C7FD4351)
-In-Reply-To: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
-References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26898 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754542Ab2FSPtm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 11:49:42 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	<aeolus@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 06/10] ath9k_hw: INI changes for WoW for AR9002 chipsets
+Date: Tue, 19 Jun 2012 21:17:26 +0530
+Message-ID: <1340120850-9155-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120619_175326_091788_70EA2050)
+In-Reply-To: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function is needed by brcmsmac. This code is based on code from
-the Broadcom SDK.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+for AR9002 family of chipsets and for WoW sleep, we reprogram
+the SerDes so that the PLL and CHK REQ are both enabled. this
+uses more power but in certain cases this is required as otherwise
+WoW sleep is unstable and chip may disappear.
+
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/bcma/driver_chipcommon_pmu.c        |  183 ++++++++++++++++++++++++++-
- include/linux/bcma/bcma_driver_chipcommon.h |   14 ++
- 2 files changed, 196 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +++++
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 ++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h              |    3 +++
+ 3 files changed, 22 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 1a7a72f..35c9130 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -3,7 +3,8 @@
-  * ChipCommon Power Management Unit driver
-  *
-  * Copyright 2009, Michael Buesch <m@bues.ch>
-- * Copyright 2007, Broadcom Corporation
-+ * Copyright 2007, 2011, Broadcom Corporation
-+ * Copyright 2011, 2012, Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  * Licensed under the GNU/GPL. See COPYING for details.
-  */
-@@ -284,3 +285,183 @@ u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index d9a69fc..3779043 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -47,6 +47,11 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdes,
+ 			   ar9280PciePhy_clkreq_always_on_L1_9280,
+ 			   ARRAY_SIZE(ar9280PciePhy_clkreq_always_on_L1_9280), 2);
++#ifdef CONFIG_PM_SLEEP
++		INIT_INI_ARRAY(&ah->iniPcieSerdesWow,
++			       ar9280PciePhy_awow,
++			       ARRAY_SIZE(ar9280PciePhy_awow), 2);
++#endif
  
- 	return bcma_pmu_get_clockcontrol(cc);
- }
-+
-+static void bcma_pmu_spuravoid_pll_write(struct bcma_drv_cc *cc, u32 offset,
-+					 u32 value)
-+{
-+	bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR, offset);
-+	bcma_cc_write32(cc, BCMA_CC_PLLCTL_DATA, value);
-+}
-+
-+void bcma_pmu_spuravoid_pllupdate(struct bcma_drv_cc *cc, int spuravoid)
-+{
-+	u32 tmp = 0;
-+	u8 phypll_offset = 0;
-+	u8 bcm5357_bcm43236_p1div[] = {0x1, 0x5, 0x5};
-+	u8 bcm5357_bcm43236_ndiv[] = {0x30, 0xf6, 0xfc};
-+	struct bcma_bus *bus = cc->core->bus;
-+
-+	switch (bus->chipinfo.id) {
-+	case BCMA_CHIP_ID_BCM5357:
-+	case BCMA_CHIP_ID_BCM4749:
-+	case BCMA_CHIP_ID_BCM53572:
-+		/* 5357[ab]0, 43236[ab]0, and 6362b0 */
-+
-+		/* BCM5357 needs to touch PLL1_PLLCTL[02],
-+		   so offset PLL0_PLLCTL[02] by 6 */
-+		phypll_offset = (bus->chipinfo.id == BCMA_CHIP_ID_BCM5357 ||
-+		       bus->chipinfo.id == BCMA_CHIP_ID_BCM4749 ||
-+		       bus->chipinfo.id == BCMA_CHIP_ID_BCM53572) ? 6 : 0;
-+
-+		/* RMW only the P1 divider */
-+		bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR,
-+				BCMA_CC_PMU_PLL_CTL0 + phypll_offset);
-+		tmp = bcma_cc_read32(cc, BCMA_CC_PLLCTL_DATA);
-+		tmp &= (~(BCMA_CC_PMU1_PLL0_PC0_P1DIV_MASK));
-+		tmp |= (bcm5357_bcm43236_p1div[spuravoid] << BCMA_CC_PMU1_PLL0_PC0_P1DIV_SHIFT);
-+		bcma_cc_write32(cc, BCMA_CC_PLLCTL_DATA, tmp);
-+
-+		/* RMW only the int feedback divider */
-+		bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR,
-+				BCMA_CC_PMU_PLL_CTL2 + phypll_offset);
-+		tmp = bcma_cc_read32(cc, BCMA_CC_PLLCTL_DATA);
-+		tmp &= ~(BCMA_CC_PMU1_PLL0_PC2_NDIV_INT_MASK);
-+		tmp |= (bcm5357_bcm43236_ndiv[spuravoid]) << BCMA_CC_PMU1_PLL0_PC2_NDIV_INT_SHIFT;
-+		bcma_cc_write32(cc, BCMA_CC_PLLCTL_DATA, tmp);
-+
-+		tmp = 1 << 10;
-+		break;
-+
-+	case BCMA_CHIP_ID_BCM4331:
-+	case BCMA_CHIP_ID_BCM43431:
-+		if (spuravoid == 2) {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11500014);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x0FC00a08);
-+		} else if (spuravoid == 1) {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11500014);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x0F600a08);
-+		} else {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11100014);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x03000a08);
-+		}
-+		tmp = 1 << 10;
-+		break;
-+
-+	case BCMA_CHIP_ID_BCM43224:
-+	case BCMA_CHIP_ID_BCM43225:
-+	case BCMA_CHIP_ID_BCM43421:
-+		if (spuravoid == 1) {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11500010);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL1,
-+						     0x000C0C06);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x0F600a08);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL3,
-+						     0x00000000);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL4,
-+						     0x2001E920);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL5,
-+						     0x88888815);
-+		} else {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11100010);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL1,
-+						     0x000c0c06);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x03000a08);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL3,
-+						     0x00000000);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL4,
-+						     0x200005c0);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL5,
-+						     0x88888815);
-+		}
-+		tmp = 1 << 10;
-+		break;
-+
-+	case BCMA_CHIP_ID_BCM4716:
-+	case BCMA_CHIP_ID_BCM4748:
-+	case BCMA_CHIP_ID_BCM47162:
-+		if (spuravoid == 1) {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11500060);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL1,
-+						     0x080C0C06);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x0F600000);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL3,
-+						     0x00000000);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL4,
-+						     0x2001E924);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL5,
-+						     0x88888815);
-+		} else {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11100060);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL1,
-+						     0x080c0c06);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x03000000);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL3,
-+						     0x00000000);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL4,
-+						     0x200005c0);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL5,
-+						     0x88888815);
-+		}
-+
-+		tmp = 3 << 9;
-+		break;
-+
-+	case BCMA_CHIP_ID_BCM43227:
-+	case BCMA_CHIP_ID_BCM43228:
-+	case BCMA_CHIP_ID_BCM43428:
-+		/* LCNXN */
-+		/* PLL Settings for spur avoidance on/off mode,
-+		   no on2 support for 43228A0 */
-+		if (spuravoid == 1) {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x01100014);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL1,
-+						     0x040C0C06);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x03140A08);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL3,
-+						     0x00333333);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL4,
-+						     0x202C2820);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL5,
-+						     0x88888815);
-+		} else {
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL0,
-+						     0x11100014);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL1,
-+						     0x040c0c06);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL2,
-+						     0x03000a08);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL3,
-+						     0x00000000);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL4,
-+						     0x200005c0);
-+			bcma_pmu_spuravoid_pll_write(cc, BCMA_CC_PMU_PLL_CTL5,
-+						     0x88888815);
-+		}
-+		tmp = 1 << 10;
-+		break;
-+	default:
-+		pr_err("unknown spuravoidance settings for chip 0x%04X, not changing PLL\n",
-+		       bus->chipinfo.id);
-+		break;
-+	}
-+
-+	tmp |= bcma_cc_read32(cc, BCMA_CC_PMU_CTL);
-+	bcma_cc_write32(cc, BCMA_CC_PMU_CTL, tmp);
-+}
-+EXPORT_SYMBOL_GPL(bcma_pmu_spuravoid_pllupdate);
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 09f31ad..12975ea 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -308,6 +308,19 @@
- #define BCMA_CC_PPL_PCHI_OFF		5
- #define BCMA_CC_PPL_PCHI_MASK		0x0000003f
+ 	if (AR_SREV_9287_11_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModes, ar9287Modes_9287_1_1,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+index 4d18c66..beb6162 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+@@ -925,6 +925,20 @@ static const u32 ar9280PciePhy_clkreq_always_on_L1_9280[][2] = {
+ 	{0x00004044, 0x00000000},
+ };
  
-+#define BCMA_CC_PMU_PLL_CTL0		0
-+#define BCMA_CC_PMU_PLL_CTL1		1
-+#define BCMA_CC_PMU_PLL_CTL2		2
-+#define BCMA_CC_PMU_PLL_CTL3		3
-+#define BCMA_CC_PMU_PLL_CTL4		4
-+#define BCMA_CC_PMU_PLL_CTL5		5
++static const u32 ar9280PciePhy_awow[][2] = {
++	/* Addr      allmodes  */
++	{0x00004040, 0x9248fd00},
++	{0x00004040, 0x24924924},
++	{0x00004040, 0xa8000019},
++	{0x00004040, 0x13160820},
++	{0x00004040, 0xe5980560},
++	{0x00004040, 0xc01dcffd},
++	{0x00004040, 0x1aaabe41},
++	{0x00004040, 0xbe105554},
++	{0x00004040, 0x00043007},
++	{0x00004044, 0x00000000},
++};
 +
-+#define BCMA_CC_PMU1_PLL0_PC0_P1DIV_MASK	0x00f00000
-+#define BCMA_CC_PMU1_PLL0_PC0_P1DIV_SHIFT	20
-+
-+#define BCMA_CC_PMU1_PLL0_PC2_NDIV_INT_MASK	0x1ff00000
-+#define BCMA_CC_PMU1_PLL0_PC2_NDIV_INT_SHIFT	20
-+
- /* BCM4331 ChipControl numbers. */
- #define BCMA_CHIPCTL_4331_BT_COEXIST		BIT(0)	/* 0 disable */
- #define BCMA_CHIPCTL_4331_SECI			BIT(1)	/* 0 SECI is disabled (JATG functional) */
-@@ -420,5 +433,6 @@ extern void bcma_chipco_chipctl_maskset(struct bcma_drv_cc *cc,
- 					u32 offset, u32 mask, u32 set);
- extern void bcma_chipco_regctl_maskset(struct bcma_drv_cc *cc,
- 				       u32 offset, u32 mask, u32 set);
-+extern void bcma_pmu_spuravoid_pllupdate(struct bcma_drv_cc *cc, int spuravoid);
- 
- #endif /* LINUX_BCMA_DRIVER_CC_H_ */
+ static const u32 ar9285Modes_9285_1_2[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 73a1238..2a20216 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -852,6 +852,9 @@ struct ath_hw {
+ 	struct ar5416IniArray iniBank7;
+ 	struct ar5416IniArray iniAddac;
+ 	struct ar5416IniArray iniPcieSerdes;
++#ifdef CONFIG_PM_SLEEP
++	struct ar5416IniArray iniPcieSerdesWow;
++#endif
+ 	struct ar5416IniArray iniPcieSerdesLowPower;
+ 	struct ar5416IniArray iniModesFastClock;
+ 	struct ar5416IniArray iniAdditional;
 -- 
-1.7.9.5
+1.7.0.4
 
