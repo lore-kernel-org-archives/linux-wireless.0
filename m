@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3649 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753622Ab2FTGO3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:14:29 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFCv2 08/13] cfg80211: refuse to .set_monitor_channel when non-monitors are present
-Date: Wed, 20 Jun 2012 08:14:14 +0200
-Message-ID: <1340172859-18146-9-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081457_417405_D0385192)
-In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+	id S1752457Ab2FSQur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 12:50:47 -0400
+Message-ID: <4FE0ADB6.5080105@broadcom.com> (sfid-20120619_185050_536251_B818D786)
+Date: Tue, 19 Jun 2012 18:49:58 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes.berg@intel.com>
+Subject: Re: [RFC 13/17] nl80211: move scan API to wdev
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+ <1340117456-10154-14-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1340117456-10154-14-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Having .set_monitor_channel work with non-monitor
-interfaces running would make interface
-combinations accounting ambiguous.
+On 06/19/2012 04:50 PM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The new P2P Device will have to be able to scan for
+> P2P search, so move scanning to use struct wireless_dev
+> instead of struct net_device.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> index 404e87c..a507b6e 100644
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -908,11 +908,11 @@ static int ath6kl_set_probed_ssids(struct ath6kl *ar,
+>  	return 0;
+>  }
+>  
+> -static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+> +static int ath6kl_cfg80211_scan(struct wiphy *wiphy,
+>  				struct cfg80211_scan_request *request)
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/wireless/chan.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Lot of indent issues in this variety of drivers. Do you care to fix that
+as well or leave it to .... whom it may concern.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 167e7cb..019401b 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -85,6 +85,8 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 
- 	if (!rdev->ops->set_monitor_channel)
- 		return -EOPNOTSUPP;
-+	if (!cfg80211_has_monitors_only(rdev))
-+		return -EBUSY;
- 
- 	chan = rdev_freq_to_chan(rdev, freq, chantype);
- 	if (!chan)
--- 
-1.7.0.4
+Gr. AvS
 
