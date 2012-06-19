@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35788 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677Ab2FDK6L (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:49561 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754994Ab2FSV7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:58:11 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38015.498868.190388@gargle.gargle.HOWL> (sfid-20120604_125816_772488_408C79F0)
-Date: Mon, 4 Jun 2012 16:27:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 00/20] ath9k patches
+	Tue, 19 Jun 2012 17:59:42 -0400
+Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
+	by www19.servergod.com (Postfix) with ESMTP id 87A5E11FFEE
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 14:59:42 -0700 (PDT)
+Received: by mail0.frost.chambana.net (Postfix) with SMTP id 44BBB59A067
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 21:59:42 +0000
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+To: hawkinsw@opentechinstitute.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 2/3] mac80211: Check auth frame registration count
+Date: Tue, 19 Jun 2012 17:59:13 -0400
+Message-Id: <4ae0ad92e1f9e353497820c5196d80d28bb3f782.1340142553.git.hawkinsw@opentechinstitute.org> (sfid-20120619_235947_088865_835093B4)
+In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Check the auth frame registration count before sending
+"open system" authentication messages when a new station
+registers on a particular adhoc network. This
+stops a station from sending out multiple authentication
+messages with different authentication algorithms.
 
-This is v3 of the earlier series, the difference being:
+Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+---
+ net/mac80211/ibss.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-* Drop the patch, "ath9k: always perform ani calibration at poll"
-* Change "ath9k: Use separate operational flags for BTCOEX" to use atomic ops.
-
-Sujith
-
-
-Rajkumar Manoharan (10):
-  ath9k_hw: update ar9462 initval table to fix rx nfcal
-  ath9k: cleanup MCI indentation
-  ath9k_hw: fix IQ calibration chain index
-  ath9k_hw: program BT to control SPDT
-  ath9k_hw: configure ar9462 switching regulator discontinuous mode
-  ath9k_hw: fix BT RF performance
-  ath9k: BT coex performance tuning for AR9462
-  ath: do not update cycle counters with sleep mode results
-  ath9k_hw: fix power state for MCI
-  ath9k: improve BT FTP/PAN performance
-
-Sujith Manoharan (10):
-  ath9k: Prune ath9k_init_device
-  ath9k: Handle ASPM properly
-  ath9k: Setup MCI interrupts properly
-  ath9k_hw: Fix AR_RTC_KEEP_AWAKE usage
-  ath9k_hw: Fix MCI usage
-  ath9k_hw: Cleanup power mode API
-  ath9k: Add MCI interrupt to debugfs statistics
-  ath9k_hw: Fix variable usage
-  ath9k: Remove SC_OP_OFFCHANNEL
-  ath9k: Use separate operational flags for BTCOEX
-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c      |   20 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |    1 +
- drivers/net/wireless/ath/ath9k/ar9003_mci.c        |  457 ++++++++++----------
- drivers/net/wireless/ath/ath9k/ar9003_mci.h        |   10 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    4 +
- .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |    4 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |   19 +-
- drivers/net/wireless/ath/ath9k/btcoex.c            |   10 +-
- drivers/net/wireless/ath/ath9k/btcoex.h            |    4 +
- drivers/net/wireless/ath/ath9k/debug.c             |    3 +
- drivers/net/wireless/ath/ath9k/debug.h             |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c              |   36 +-
- drivers/net/wireless/ath/ath9k/hw.c                |  212 ++++-----
- drivers/net/wireless/ath/ath9k/hw.h                |   10 +-
- drivers/net/wireless/ath/ath9k/init.c              |   18 +-
- drivers/net/wireless/ath/ath9k/main.c              |   15 +-
- drivers/net/wireless/ath/ath9k/mci.c               |   65 ++-
- drivers/net/wireless/ath/ath9k/mci.h               |   11 +-
- drivers/net/wireless/ath/ath9k/pci.c               |    5 +
- drivers/net/wireless/ath/ath9k/recv.c              |    5 +-
- drivers/net/wireless/ath/ath9k/reg.h               |    2 +
- 21 files changed, 481 insertions(+), 431 deletions(-)
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 725cb4b..ff46ff4 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -279,7 +279,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
+ 	/* If it fails, maybe we raced another insertion? */
+ 	if (sta_info_insert_rcu(sta))
+ 		return sta_info_get(sdata, addr);
+-	if (auth) {
++	if (auth && !sdata->u.ibss.auth_frame_registrations) {
+ 		ibss_vdbg("TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
+ 			  sdata->vif.addr, sdata->u.ibss.bssid, addr);
+ 		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
 -- 
-1.7.10.3
+1.7.9.5
+
 
