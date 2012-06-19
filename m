@@ -1,28 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36172 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145Ab2FZHdc (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:58814 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086Ab2FSJli convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 03:33:32 -0400
-Message-ID: <1340696006.4662.9.camel@jlt3.sipsolutions.net> (sfid-20120626_093335_967671_94C4B6A1)
-Subject: Re: [PATCH v4] nl80211: specify RSSI threshold in scheduled scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Jun 2012 09:33:26 +0200
-In-Reply-To: <1340302194-3760-1-git-send-email-c_tpeder@qca.qualcomm.com>
-References: <1340302194-3760-1-git-send-email-c_tpeder@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 Jun 2012 05:41:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120619085137.337838c0@xenia.leun.net>
+References: <20120619085137.337838c0@xenia.leun.net>
+Date: Tue, 19 Jun 2012 15:11:38 +0530
+Message-ID: <CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com> (sfid-20120619_114157_445931_C9F6FE6E)
+Subject: Re: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Michael Leun <lkml20120218@newton.leun.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-21 at 11:09 -0700, Thomas Pedersen wrote:
-> Support configuring an RSSI threshold in dBm (s32) when requesting
-> scheduled scan, below which a BSS won't be reported by the cfg80211
-> driver.
+Hi,
 
-Applied, thanks.
+On Tue, Jun 19, 2012 at 12:21 PM, Michael Leun
+<lkml20120218@newton.leun.net> wrote:
+> Hi,
+>
+> ne-wlan1@elektra:/home/ml4> ping 192.168.2.1
+> PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+> 64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=2010 ms
+> 64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=1011 ms
+> 64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=11.5 ms
+> 64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=1.12 ms
+> 64 bytes from 192.168.2.1: icmp_seq=5 ttl=64 time=1002 ms
+> 64 bytes from 192.168.2.1: icmp_seq=6 ttl=64 time=3.83 ms
+> 64 bytes from 192.168.2.1: icmp_seq=7 ttl=64 time=1003 ms
+> 64 bytes from 192.168.2.1: icmp_seq=8 ttl=64 time=4.10 ms
+> 64 bytes from 192.168.2.1: icmp_seq=9 ttl=64 time=1003 ms
+> 64 bytes from 192.168.2.1: icmp_seq=10 ttl=64 time=3.95 ms
+> 64 bytes from 192.168.2.1: icmp_seq=11 ttl=64 time=1003 ms
+> 64 bytes from 192.168.2.1: icmp_seq=12 ttl=64 time=3.78 ms
+>
+>
+> Please note the additional delay of ~1000ms every 2nd packet. This is
+> Kernel 3.4.3, have seen it in 3.4.2 also. Does NOT happen in 3.3.1.
+>
+> Is this Issue already known? If so, I can save the work bisecting...
 
-johannes
+looks like some one reported this bug in kernel bugzilla. would be
+saving us lot of time
+if you can bisect it!
 
+>
+> Happens with two different ath9k_htc cards:
+>
+> Bus 002 Device 012: ID 0846:9018 NetGear, Inc. WNDA3200 802.11abgn Wireless Adapter [Atheros AR7010+AR9280]
+> Bus 002 Device 004: ID 0cf3:7015 Atheros Communications, Inc. TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
+>
+> Does NOT happen with an atk9k (mini pci express) card.
+
+thanks for the info!
+
+>
+> --
+> MfG,
+>
+> Michael Leun
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+thanks,
+shafi
