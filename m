@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:37935 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754779Ab2FWGmV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 02:42:21 -0400
-Received: by lbon10 with SMTP id n10so7625646lbo.27
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:18 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
-Subject: [PATCH 18/18] wlcore: prevent recovery in the middle of resume
-Date: Sat, 23 Jun 2012 09:41:29 +0300
-Message-Id: <1340433689-24320-19-git-send-email-coelho@ti.com> (sfid-20120623_085130_946627_21D99F10)
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
+Received: from serv04.lahn.de ([213.239.197.57]:46451 "EHLO serv04.lahn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752251Ab2FSHHm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 03:07:42 -0400
+Date: Tue, 19 Jun 2012 08:51:37 +0200
+From: Michael Leun <lkml20120218@newton.leun.net>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
+Message-ID: <20120619085137.337838c0@xenia.leun.net> (sfid-20120619_090816_215887_2637B89F)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Hi,
 
-Take the mutex early in the resume handler and use the locked version of
-the IRQ routine. This ensures any recoveries queued will only take place
-after resume has fully completed.
+ne-wlan1@elektra:/home/ml4> ping 192.168.2.1
+PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=2010 ms
+64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=1011 ms
+64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=11.5 ms
+64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=1.12 ms
+64 bytes from 192.168.2.1: icmp_seq=5 ttl=64 time=1002 ms
+64 bytes from 192.168.2.1: icmp_seq=6 ttl=64 time=3.83 ms
+64 bytes from 192.168.2.1: icmp_seq=7 ttl=64 time=1003 ms
+64 bytes from 192.168.2.1: icmp_seq=8 ttl=64 time=4.10 ms
+64 bytes from 192.168.2.1: icmp_seq=9 ttl=64 time=1003 ms
+64 bytes from 192.168.2.1: icmp_seq=10 ttl=64 time=3.95 ms
+64 bytes from 192.168.2.1: icmp_seq=11 ttl=64 time=1003 ms
+64 bytes from 192.168.2.1: icmp_seq=12 ttl=64 time=3.78 ms
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 0c1e075..372ccf2 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1723,6 +1723,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 	struct wl12xx_vif *wlvif;
- 	unsigned long flags;
- 	bool run_irq_work = false, pending_recovery;
-+	int ret;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
- 		     wl->wow_enabled);
-@@ -1738,6 +1739,8 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 		run_irq_work = true;
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
-+	mutex_lock(&wl->mutex);
-+
- 	/* test the recovery flag before calling any SDIO functions */
- 	pending_recovery = test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS,
- 				    &wl->flags);
-@@ -1747,13 +1750,15 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 			     "run postponed irq_work directly");
- 
- 		/* don't talk to the HW if recovery is pending */
--		if (!pending_recovery)
--			wlcore_irq(0, wl);
-+		if (!pending_recovery) {
-+			ret = wlcore_irq_locked(wl);
-+			if (ret)
-+				wl12xx_queue_recovery_work(wl);
-+		}
- 
- 		wlcore_enable_interrupts(wl);
- 	}
- 
--	mutex_lock(&wl->mutex);
- 	if (pending_recovery) {
- 		wl1271_warning("queuing forgotten recovery on resume");
- 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+Please note the additional delay of ~1000ms every 2nd packet. This is
+Kernel 3.4.3, have seen it in 3.4.2 also. Does NOT happen in 3.3.1.
+
+Is this Issue already known? If so, I can save the work bisecting...
+
+Happens with two different ath9k_htc cards:
+
+Bus 002 Device 012: ID 0846:9018 NetGear, Inc. WNDA3200 802.11abgn Wireless Adapter [Atheros AR7010+AR9280]
+Bus 002 Device 004: ID 0cf3:7015 Atheros Communications, Inc. TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
+
+Does NOT happen with an atk9k (mini pci express) card.
+
 -- 
-1.7.10
+MfG,
+
+Michael Leun
 
