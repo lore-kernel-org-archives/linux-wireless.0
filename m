@@ -1,88 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36243 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753315Ab2FEXI2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 19:08:28 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 08/18] brcmsmac: remove some redundant chip common workarounds
-Date: Wed,  6 Jun 2012 01:07:11 +0200
-Message-Id: <1338937641-8519-9-git-send-email-hauke@hauke-m.de> (sfid-20120606_010830_302050_54345465)
-In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:51567 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753271Ab2FSHUu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 03:20:50 -0400
+Message-ID: <1340090445.4482.8.camel@jlt3.sipsolutions.net> (sfid-20120619_092054_479219_B167B438)
+Subject: Re: [PATCH] iwlwifi: fix Oops on reading debugfs log_event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lekensteyn <lekensteyn@gmail.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 19 Jun 2012 09:20:45 +0200
+In-Reply-To: <7841457.8s9HYuaGXa@penguin> (sfid-20120617_225841_623189_7D659120)
+References: <7841457.8s9HYuaGXa@penguin>
+	 (sfid-20120617_225841_623189_7D659120)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The removed workarounds are already performed in bcma_pmu_workarounds()
-and bcma_core_chipcommon_init()
+On Sun, 2012-06-17 at 22:58 +0200, Lekensteyn wrote:
+> Before this patch, reading log_event would print the event log to syslog and
+> crash if CONFIG_IWLWIFI_DEBUG was disabled (while CONFIG_IWLWIFI_DEBUGFS was
+> enabled of course). The crash was caused by (1) iwl_dbgfs_log_event_read failing
+> to initialize variable buf, thereby causing the following kfree(buf) to be
+> executed. (2) iwl_dump_nic_event_log does not initialize buf if
+> CONFIG_IWLWIFI_DEBUG was disabled.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   42 ---------------------
- 1 file changed, 42 deletions(-)
+I've applied a different fix for this, just disabling the log_event file
+when CONFIG_IWLWIFI_DEBUG is disabled. This looks like it could use some
+disentangling but I'm not sure what you did is really the right
+approach, some refactoring would seem to be better.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index 01837fb..5997624 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -476,11 +476,7 @@ static struct si_info *ai_doattach(struct si_info *sii,
- 				   struct bcma_bus *pbus)
- {
- 	struct si_pub *sih = &sii->pub;
--	u32 w, savewin;
- 	struct bcma_device *cc;
--	struct ssb_sprom *sprom = &pbus->sprom;
--
--	savewin = 0;
- 
- 	sii->icbus = pbus;
- 	sii->pcibus = pbus->host_pci;
-@@ -506,44 +502,6 @@ static struct si_info *ai_doattach(struct si_info *sii,
- 		(void)si_pmu_measure_alpclk(sih);
- 	}
- 
--	/* setup the GPIO based LED powersave register */
--	w = (sprom->leddc_on_time << BCMA_CC_GPIOTIMER_ONTIME_SHIFT) |
--		 (sprom->leddc_off_time << BCMA_CC_GPIOTIMER_OFFTIME_SHIFT);
--	if (w == 0)
--		w = DEFAULT_GPIOTIMERVAL;
--	ai_cc_reg(sih, offsetof(struct chipcregs, gpiotimerval),
--		  ~0, w);
--
--	if (ai_get_chip_id(sih) == BCM43224_CHIP_ID) {
--		/*
--		 * enable 12 mA drive strenth for 43224 and
--		 * set chipControl register bit 15
--		 */
--		if (ai_get_chiprev(sih) == 0) {
--			SI_MSG("Applying 43224A0 WARs\n");
--			ai_cc_reg(sih, offsetof(struct chipcregs, chipcontrol),
--				  CCTRL43224_GPIO_TOGGLE,
--				  CCTRL43224_GPIO_TOGGLE);
--			si_pmu_chipcontrol(sih, 0, CCTRL_43224A0_12MA_LED_DRIVE,
--					   CCTRL_43224A0_12MA_LED_DRIVE);
--		}
--		if (ai_get_chiprev(sih) >= 1) {
--			SI_MSG("Applying 43224B0+ WARs\n");
--			si_pmu_chipcontrol(sih, 0, CCTRL_43224B0_12MA_LED_DRIVE,
--					   CCTRL_43224B0_12MA_LED_DRIVE);
--		}
--	}
--
--	if (ai_get_chip_id(sih) == BCM4313_CHIP_ID) {
--		/*
--		 * enable 12 mA drive strenth for 4313 and
--		 * set chipControl register bit 1
--		 */
--		SI_MSG("Applying 4313 WARs\n");
--		si_pmu_chipcontrol(sih, 0, CCTRL_4313_12MA_LED_DRIVE,
--				   CCTRL_4313_12MA_LED_DRIVE);
--	}
--
- 	return sii;
- 
-  exit:
--- 
-1.7.9.5
+Also, is "Lekensteyn" really your full name? Not that it matters now
+because I didn't apply your patch, but for patch submissions please read
+the "developer's certificate of origin" in the kernel sources.
+
+Thanks for the report!
+
+johannes
 
