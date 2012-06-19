@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11350 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757250Ab2FZOIS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754481Ab2FSOi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 10:08:18 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC] ath9k_hw: make use of the wrapper to check for MCI init
-Date: Tue, 26 Jun 2012 19:38:08 +0530
-Message-ID: <1340719688-13236-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120626_160822_320161_B6F49DD7)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 19 Jun 2012 10:38:29 -0400
+Message-ID: <1340116707.4482.11.camel@jlt3.sipsolutions.net> (sfid-20120619_163847_998586_FB627AE2)
+Subject: Re: [RFC 0/5] bind filters and multicast list to subif
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 19 Jun 2012 16:38:27 +0200
+In-Reply-To: <4FE08D6F.30105@tieto.com>
+References: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com>
+	 <1340019946.4615.3.camel@jlt3.sipsolutions.net> <4FE08D6F.30105@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, 2012-06-19 at 16:32 +0200, Lukasz Kucharczyk wrote:
+> On 06/18/2012 01:45 PM, Johannes Berg wrote:
+> > On Mon, 2012-06-18 at 12:57 +0200, Lukasz Kucharczyk wrote:
+> >> Hi,
+> >>
+> >> Following patches enables configuring filters and multicast list for
+> >> specific interface. That probably might be useful in implementation
+> >> of multi-channel operation.
+> >
+> > "Might be useful"?
+> >
+> > I guess I can see that, but we need
+> >   a) driver updates
+> >   b) to keep a global filter setting for drivers that don't have
+> >      per-interface settings
+> >
+> 
+> Ok, so I will need indication from driver what it supports.
+> Do you think adding single flag to ieee80211_hw_flags (like 
+> IEEE80211_HW_SUPPORTS_IFCE_FILTERS) would be sufficient for that purpose?
 
-ath9k_hw_mci_is_enabled wrapper also takes care of
-ATH9K_HW_CAP_MCI being set for the AR9462 under test.
+I'm not sure that's needed? We'll have to maintain both a global and a
+per-interface list anyway, so you could just add new per-interface
+callbacks or so instead of changing the existing ones, and then the
+driver can pick which ones it wants?
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 26032cb..9ae6a4d 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -416,7 +416,7 @@ int ath9k_init_btcoex(struct ath_softc *sc)
- 		txq = sc->tx.txq_map[WME_AC_BE];
- 		ath9k_hw_init_btcoex_hw(sc->sc_ah, txq->axq_qnum);
- 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
--		if (AR_SREV_9462(ah)) {
-+		if (ath9k_hw_mci_is_enabled(ah)) {
- 			sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
- 			INIT_LIST_HEAD(&sc->btcoex.mci.info);
- 
--- 
-1.7.0.4
+johannes
 
