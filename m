@@ -1,107 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54420 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922Ab2FESx3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52369 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752392Ab2FSOvD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 14:53:29 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <bug-track@fisher-privat.net>,
-	b43-dev@lists.infradead.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] b43: do not call ieee80211_unregister_hw if we are not registred
-Date: Tue,  5 Jun 2012 13:53:22 -0500
-Message-Id: <1338922402-6855-1-git-send-email-seth.forshee@canonical.com> (sfid-20120605_205333_347842_EA78E748)
-In-Reply-To: <20120605182410.GA1937@tuxdriver.com>
-References: <20120605182410.GA1937@tuxdriver.com>
+	Tue, 19 Jun 2012 10:51:03 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 07/17] nl80211: add NL80211_FLAG_NEED_WDEV
+Date: Tue, 19 Jun 2012 16:50:46 +0200
+Message-Id: <1340117456-10154-8-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165112_727485_7D9F3038)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oleksij Rempel <bug-track@fisher-privat.net>
+From: Johannes Berg <johannes.berg@intel.com>
 
-this patch fixes kernel Oops on "rmmod b43" if firmware was not loaded:
+Some nl80211 callbacks will soon need the wdev instead
+of the netdev, so add NL80211_FLAG_NEED_WDEV to allow
+them to request that. Add NL80211_FLAG_NEED_WDEV_UP as
+well which checks the netdev is UP if one exists.
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000088
-IP: [<ffffffff8104e988>] drain_workqueue+0x25/0x142
-PGD 153ac6067 PUD 153b82067 PMD 0
-Oops: 0000 [#1] SMP
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-Tested-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/b43/b43.h  |    4 ++++
- drivers/net/wireless/b43/main.c |   19 ++++++++++++-------
- 2 files changed, 16 insertions(+), 7 deletions(-)
+ net/wireless/nl80211.c |   57 +++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 39 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 67c13af..c06b6cb 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -877,6 +877,10 @@ struct b43_wl {
- 	 * from the mac80211 subsystem. */
- 	u16 mac80211_initially_registered_queues;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6bf9da0..375a1cf 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6671,6 +6671,10 @@ static int nl80211_register_beacons(struct sk_buff *skb, struct genl_info *info)
+ #define NL80211_FLAG_CHECK_NETDEV_UP	0x08
+ #define NL80211_FLAG_NEED_NETDEV_UP	(NL80211_FLAG_NEED_NETDEV |\
+ 					 NL80211_FLAG_CHECK_NETDEV_UP)
++#define NL80211_FLAG_NEED_WDEV		0x10
++/* If a netdev is associated, it must be UP */
++#define NL80211_FLAG_NEED_WDEV_UP	(NL80211_FLAG_NEED_WDEV |\
++					 NL80211_FLAG_CHECK_NETDEV_UP)
  
-+	/* Set this if we call ieee80211_register_hw() and check if we call
-+	 * ieee80211_unregister_hw(). */
-+	bool hw_registred;
+ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
+ 			    struct genl_info *info)
+@@ -6691,7 +6695,8 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
+ 			return PTR_ERR(rdev);
+ 		}
+ 		info->user_ptr[0] = rdev;
+-	} else if (ops->internal_flags & NL80211_FLAG_NEED_NETDEV) {
++	} else if (ops->internal_flags & NL80211_FLAG_NEED_NETDEV ||
++		   ops->internal_flags & NL80211_FLAG_NEED_WDEV) {
+ 		mutex_lock(&cfg80211_mutex);
+ 		wdev = __cfg80211_wdev_from_attrs(genl_info_net(info),
+ 						  info->attrs);
+@@ -6702,31 +6707,39 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
+ 			return PTR_ERR(wdev);
+ 		}
+ 
+-		if (!wdev->netdev) {
+-			mutex_unlock(&cfg80211_mutex);
+-			if (rtnl)
+-				rtnl_unlock();
+-			return -EINVAL;
+-		}
+-
+ 		dev = wdev->netdev;
+ 		rdev = wiphy_to_dev(wdev->wiphy);
+ 
+-		if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
+-		    !netif_running(dev)) {
+-			mutex_unlock(&cfg80211_mutex);
+-			if (rtnl)
+-				rtnl_unlock();
+-			return -ENETDOWN;
++		if (ops->internal_flags & NL80211_FLAG_NEED_NETDEV) {
++			if (!dev) {
++				mutex_unlock(&cfg80211_mutex);
++				if (rtnl)
++					rtnl_unlock();
++				return -EINVAL;
++			}
 +
- 	/* We can only have one operating interface (802.11 core)
- 	 * at a time. General information about this interface follows.
- 	 */
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index e4d6dc2..747079b 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2437,6 +2437,7 @@ start_ieee80211:
- 	err = ieee80211_register_hw(wl->hw);
- 	if (err)
- 		goto err_one_core_detach;
-+	wl->hw_registred = true;
- 	b43_leds_register(wl->current_dev);
- 	goto out;
++			info->user_ptr[1] = dev;
++		} else {
++			info->user_ptr[1] = wdev;
++		}
++
++		if (dev) {
++			if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
++			    !netif_running(dev)) {
++				mutex_unlock(&cfg80211_mutex);
++				if (rtnl)
++					rtnl_unlock();
++				return -ENETDOWN;
++			}
++
++			dev_hold(dev);
+ 		}
  
-@@ -5283,6 +5284,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+-		dev_hold(dev);
+ 		cfg80211_lock_rdev(rdev);
  
- 	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
- 	wl->mac80211_initially_registered_queues = hw->queues;
-+	wl->hw_registred = false;
- 	hw->max_rates = 2;
- 	SET_IEEE80211_DEV(hw, dev->dev);
- 	if (is_valid_ether_addr(sprom->et1mac))
-@@ -5354,12 +5356,15 @@ static void b43_bcma_remove(struct bcma_device *core)
- 	 * as the ieee80211 unreg will destroy the workqueue. */
- 	cancel_work_sync(&wldev->restart_work);
+ 		mutex_unlock(&cfg80211_mutex);
  
--	/* Restore the queues count before unregistering, because firmware detect
--	 * might have modified it. Restoring is important, so the networking
--	 * stack can properly free resources. */
--	wl->hw->queues = wl->mac80211_initially_registered_queues;
--	b43_leds_stop(wldev);
--	ieee80211_unregister_hw(wl->hw);
-+	B43_WARN_ON(!wl);
-+	if (wl->current_dev == wldev && wl->hw_registred) {
-+		/* Restore the queues count before unregistering, because firmware detect
-+		 * might have modified it. Restoring is important, so the networking
-+		 * stack can properly free resources. */
-+		wl->hw->queues = wl->mac80211_initially_registered_queues;
-+		b43_leds_stop(wldev);
-+		ieee80211_unregister_hw(wl->hw);
+ 		info->user_ptr[0] = rdev;
+-		info->user_ptr[1] = dev;
+ 	}
+ 
+ 	return 0;
+@@ -6737,8 +6750,16 @@ static void nl80211_post_doit(struct genl_ops *ops, struct sk_buff *skb,
+ {
+ 	if (info->user_ptr[0])
+ 		cfg80211_unlock_rdev(info->user_ptr[0]);
+-	if (info->user_ptr[1])
+-		dev_put(info->user_ptr[1]);
++	if (info->user_ptr[1]) {
++		if (ops->internal_flags & NL80211_FLAG_NEED_WDEV) {
++			struct wireless_dev *wdev = info->user_ptr[1];
++
++			if (wdev->netdev)
++				dev_put(wdev->netdev);
++		} else {
++			dev_put(info->user_ptr[1]);
++		}
 +	}
- 
- 	b43_one_core_detach(wldev->dev);
- 
-@@ -5430,7 +5435,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 	cancel_work_sync(&wldev->restart_work);
- 
- 	B43_WARN_ON(!wl);
--	if (wl->current_dev == wldev) {
-+	if (wl->current_dev == wldev && wl->hw_registred) {
- 		/* Restore the queues count before unregistering, because firmware detect
- 		 * might have modified it. Restoring is important, so the networking
- 		 * stack can properly free resources. */
+ 	if (ops->internal_flags & NL80211_FLAG_NEED_RTNL)
+ 		rtnl_unlock();
+ }
 -- 
-1.7.9.5
+1.7.10
 
