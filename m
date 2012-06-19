@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51602 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760188Ab2FVGyx (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:61351 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113Ab2FSAUA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 02:54:53 -0400
-Message-ID: <1340348085.4491.2.camel@jlt3.sipsolutions.net> (sfid-20120622_085456_699839_85EE45F4)
-Subject: RE: [RFC v3] cfg80211/mac80211: 802.11ac changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Jun 2012 08:54:45 +0200
-In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E0F@mbx022-e1-nj-10.exch022.domain.local>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3CE8@mbx022-e1-nj-10.exch022.domain.local>
-	 <1340302471.4489.43.camel@jlt3.sipsolutions.net>
-	 <4FE36942.1090801@broadcom.com>
-	 <1340303967.4489.44.camel@jlt3.sipsolutions.net>
-	 ,<4FE36FC1.2020702@broadcom.com>
-	 <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3D6F@mbx022-e1-nj-10.exch022.domain.local>
-	,<1340346809.4491.0.camel@jlt3.sipsolutions.net>
-	 <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E0F@mbx022-e1-nj-10.exch022.domain.local>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Jun 2012 20:20:00 -0400
+Message-ID: <4FDFC5AE.1080004@opentechinstitute.org> (sfid-20120619_022004_773957_8DA0C700)
+Date: Mon, 18 Jun 2012 20:19:58 -0400
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linville@tuxdriver.com
+Subject: [PATCH 0/2 v3] mac80211/cfg80211: add support for userspace to handle
+ auth frames on adhoc ifaces
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-22 at 06:47 +0000, Mahesh Palivela wrote:
+Hello!
 
-> > [MP] Should I declare another constant for this?
-> > +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895   0
-> 
-> Yes I think that would be good
+I am sending along 2 patches to add support for user space applications
+to register for authentication frames on adhoc interfaces. These are
+revisions to a previous patch that I submitted to accomplish the same
+thing.
 
-> But every VHT capability bitfields value zero has a meaning.
-> Max_MPDU_len field is 2 bits. 0 - 3895, 1 - 7991, 2 - 11454, 3 - reserved
-> Supp_ch_width field is 2 bits. 0 - 160 MHz not supp, 1 - 160 MHz supp, 2 - 160/80+80 supp.
-> My point is should we have constant defines for all of those?
+Patch 1/2 adds a cfg80211_mgmt_reg_match function to cfg80211 to
+check whether a user space application is registered for a particular
+type of management frame rx'd on a particular device. The new function
+is very similar to cfg80211_rx_mgmt. cfg80211_rx_mgmt could not be
+reused because of its side-effect of transmitting the "query" frames to
+the registered userspace applications. This patch modifies the
+documentation for cfg80211_rx_mgmt to reflect that.
 
-Not all, some are truly boolean like IEEE80211_VHT_CAP_TXSTBC which you
-can turn on and off. I just think that for the ones that aren't really
-bool because they occupy more than one bit would be worthwhile to list
-all option?
+Patch 2/2 sets the necessary flags to allow userspace
+applications to register for authentication frames on adhoc interfaces.
+It also adds a check to make sure that "open" authentication frames are
+not sent when a user space application is registered for authentication
+frames.
 
-Oh also can you send as [PATCH] soon? :)
+As I've said before, I'm still new to this process so I look forward to
+your feedback on improving.
 
-johannes
-
+Will
