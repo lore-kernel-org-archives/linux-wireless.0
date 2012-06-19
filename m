@@ -1,130 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59351 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756093Ab2FVRSs (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:57444 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247Ab2FSV7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 13:18:48 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/6] mac80211: remove TKIP debug
-Date: Fri, 22 Jun 2012 19:18:40 +0200
-Message-Id: <1340385525-14487-2-git-send-email-johannes@sipsolutions.net> (sfid-20120622_191852_471622_A00F53ED)
-In-Reply-To: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
-References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 19 Jun 2012 17:59:41 -0400
+Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
+	by www19.servergod.com (Postfix) with ESMTP id 8FA4911F85A
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 14:59:40 -0700 (PDT)
+Received: by mail0.frost.chambana.net (Postfix) with SMTP id 41B9B59A058
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 21:59:40 +0000
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+To: hawkinsw@opentechinstitute.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 0/3 v4] mac80211: add support for userspace to handle auth frames on adhoc ifaces
+Date: Tue, 19 Jun 2012 17:59:11 -0400
+Message-Id: <cover.1340142553.git.hawkinsw@opentechinstitute.org> (sfid-20120619_235944_999732_F08793DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello!
 
-The TKIP code hasn't been changed in a very long
-time, so it seems unlikely that anyone really has
-a need for the TKIP debug code. Remove it.
+I am sending along 3 patches to add support for user space applications
+to register for authentication frames on adhoc interfaces. These are
+revisions to a previous patch that I submitted to accomplish the same
+thing.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/Kconfig |   11 -----------
- net/mac80211/tkip.c  |   43 +------------------------------------------
- 2 files changed, 1 insertion(+), 53 deletions(-)
+Patch 1/3 adds support for tracking whether userspace applications
+are registered for authentication frames received by an adhoc
+interface. This count is used in Patch 2/3 to determine 
+if an "open system" authentication frame is sent when a new 
+station joins an adhoc network.
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 8d249d7..323aa19 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -152,17 +152,6 @@ config MAC80211_HT_DEBUG
- 
- 	  Do not select this option.
- 
--config MAC80211_TKIP_DEBUG
--	bool "Verbose TKIP debugging"
--	depends on MAC80211_DEBUG_MENU
--	---help---
--	  Selecting this option causes mac80211 to print out
--	  very verbose TKIP debugging messages. It should not
--	  be selected on production systems as those messages
--	  are remotely triggerable.
--
--	  Do not select this option.
--
- config MAC80211_IBSS_DEBUG
- 	bool "Verbose IBSS debugging"
- 	depends on MAC80211_DEBUG_MENU
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 68be47c..57e14d5 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -260,16 +260,6 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
- 	keyid = pos[3];
- 	iv32 = get_unaligned_le32(pos + 4);
- 	pos += 8;
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--	{
--		int i;
--		pr_debug("TKIP decrypt: data(len=%zd)", payload_len);
--		for (i = 0; i < payload_len; i++)
--			printk(" %02x", payload[i]);
--		printk("\n");
--		pr_debug("TKIP decrypt: iv16=%04x iv32=%08x\n", iv16, iv32);
--	}
--#endif
- 
- 	if (!(keyid & (1 << 5)))
- 		return TKIP_DECRYPT_NO_EXT_IV;
-@@ -280,15 +270,8 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
- 	if (key->u.tkip.rx[queue].state != TKIP_STATE_NOT_INIT &&
- 	    (iv32 < key->u.tkip.rx[queue].iv32 ||
- 	     (iv32 == key->u.tkip.rx[queue].iv32 &&
--	      iv16 <= key->u.tkip.rx[queue].iv16))) {
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--		pr_debug("TKIP replay detected for RX frame from %pM (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
--			 ta, iv32, iv16,
--			 key->u.tkip.rx[queue].iv32,
--			 key->u.tkip.rx[queue].iv16);
--#endif
-+	      iv16 <= key->u.tkip.rx[queue].iv16)))
- 		return TKIP_DECRYPT_REPLAY;
--	}
- 
- 	if (only_iv) {
- 		res = TKIP_DECRYPT_OK;
-@@ -300,21 +283,6 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
- 	    key->u.tkip.rx[queue].iv32 != iv32) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--		{
--			int i;
--			u8 key_offset = NL80211_TKIP_DATA_OFFSET_ENCR_KEY;
--			pr_debug("TKIP decrypt: Phase1 TA=%pM TK=", ta);
--			for (i = 0; i < 16; i++)
--				printk("%02x ",
--				       key->conf.key[key_offset + i]);
--			printk("\n");
--			pr_debug("TKIP decrypt: P1K=");
--			for (i = 0; i < 5; i++)
--				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
--			printk("\n");
--		}
--#endif
- 	}
- 	if (key->local->ops->update_tkip_key &&
- 	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
-@@ -330,15 +298,6 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
- 	}
- 
- 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
--#ifdef CONFIG_MAC80211_TKIP_DEBUG
--	{
--		int i;
--		pr_debug("TKIP decrypt: Phase2 rc4key=");
--		for (i = 0; i < 16; i++)
--			printk("%02x ", rc4key[i]);
--		printk("\n");
--	}
--#endif
- 
- 	res = ieee80211_wep_decrypt_data(tfm, rc4key, 16, pos, payload_len - 12);
-  done:
+Patch 2/3 adds support for checking the registration count
+before sending out "open system" authentication frames when a 
+new station joins an adhoc network. If there are no userspace
+applications registered for the authentication frames then 
+an "open system" authentication frame is broadcast. 
+
+Patch 3/3 sets the necessary flags to allow userspace
+applications to register for authentication frames on adhoc interfaces.
+frames.
+
+As I've said before, I'm still new to this process so I look forward to
+your feedback on improving.
+
+Will
+
+Will Hawkins (3):
+  mac80211: Track auth frame registrations on IBSS ifaces
+  mac80211: Check auth frame registration count
+  mac80211: Allow userspace application to register for authentication
+    frames
+
+ net/mac80211/cfg.c         |   10 ++++++++++
+ net/mac80211/ibss.c        |    2 +-
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/main.c        |    4 +++-
+ 4 files changed, 15 insertions(+), 2 deletions(-)
+
 -- 
-1.7.10
+1.7.9.5
+
 
