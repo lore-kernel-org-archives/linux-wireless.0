@@ -1,66 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:47965 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755386Ab2FVL4g (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26764 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754580Ab2FSPtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 07:56:36 -0400
-Date: Fri, 22 Jun 2012 14:55:59 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
-Message-ID: <20120622115559.GD5390@mwanda> (sfid-20120622_135639_607991_DE24F820)
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
- <87ipej4xz0.fsf@purkki.adurom.net>
+	Tue, 19 Jun 2012 11:49:35 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	<aeolus@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/10] ath9k: advertise supported WoW flags to upper layer
+Date: Tue, 19 Jun 2012 21:17:25 +0530
+Message-ID: <1340120850-9155-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120619_175359_940371_34CA5728)
+In-Reply-To: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ipej4xz0.fsf@purkki.adurom.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 22, 2012 at 10:17:23AM +0300, Kalle Valo wrote:
-> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
-> 
-> > ath9k_get_et_stats() warn: side effect in macro
-> > 'AWDATA' doing 'i++'
-> >
-> > Cc: Ben Greear <greearb@candelatech.com>
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> 
-> [...]
-> 
-> >  	do {								\
-> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> > +		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> > +		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> > +		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> > +		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> > +		i += 4; \
-> >  	} while (0)
-> 
-> I agree with Ben, this is a useless change as the end result is still
-> the same (the side effect is that i is increased with four). You are
-> just hiding that from smatch and once smatch is fixed it will warn again
-> about the same thing.
-> 
-> I recommend fixing this properly so that the macro doesn't have any side
-> effects.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Uh.  Sorry, also I thought I had pushed a fix to add this to the
-ignored macro list, but I forgot.  I've pushed it now.
+currently the code supports WoW triggers due to
+*magic packet
+*user defined patterns
+*deauth and disassoc patterns
+*disconnect - beacon miss, last beacon received timeout,
+no ack for keeep alive frames.
 
-I don't think this check has ever found a bug.  These bugs are very
-rare and we are careful about macro side effects in the kernel.  I
-have disabled the check by default and it's only enabled when you
-pass --spammy.  I told the Ruby people I was going to do this
-earlier in the week but I've been out of the office and delayed.
+we need to support other WoW offload features in the
+near future. also a minor cleanup.
 
-regards,
-dan carpenter
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |   20 ++++++++++++++++++--
+ 1 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 9dfce1a..d08824f 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -688,8 +688,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+ 
+-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+-		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
++		hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+ 
+ 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+@@ -713,6 +713,22 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
++#ifdef CONFIG_PM_SLEEP
++
++	if ((ah->caps.wow_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
++	    device_can_wakeup(sc->dev)) {
++
++		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
++					  WIPHY_WOWLAN_DISCONNECT;
++		hw->wiphy->wowlan.n_patterns = MAX_NUM_USER_PATTERN;
++		hw->wiphy->wowlan.pattern_min_len = 1;
++		hw->wiphy->wowlan.pattern_max_len = MAX_PATTERN_SIZE;
++		INIT_LIST_HEAD(&sc->wow_info.wow_patterns);
++
++	}
++
++#endif
++
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+ 	hw->channel_change_time = 5000;
+-- 
+1.7.0.4
 
