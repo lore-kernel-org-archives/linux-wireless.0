@@ -1,80 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostingsmtp05.register.it ([81.88.50.246]:55223 "EHLO
-	hostingsmtp.register.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932557Ab2FBQ5q (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52359 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212Ab2FSOvB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 12:57:46 -0400
-Message-Id: <201206021650.q52GovY3011788@vivaldi39.register.it> (sfid-20120602_185749_727317_3B8401BB)
-From: "Guido Trentalancia" <guido@trentalancia.com>
-Reply-To: "Guido Trentalancia" <guido@trentalancia.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v1]: iw: fix the Makefile for multiple libnl installations
-Date: Sat, 02 Jun 2012 18:50:57 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+	Tue, 19 Jun 2012 10:51:01 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 03/17] nl80211: fix netns separation
+Date: Tue, 19 Jun 2012 16:50:42 +0200
+Message-Id: <1340117456-10154-4-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165122_966773_881B0FBB)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All different versions of libnl can cohexist on a system (libnl-1, libnl-2, libnl-3.0, libnl-3.1 and libnl-3.2). When multiple versions are installed only link against the highest versioned one, otherwise there might be unpredictable results (including segmentation faults).
+From: Johannes Berg <johannes.berg@intel.com>
 
-Program received signal SIGSEGV, Segmentation fault.
-0x00007ffff7bd7f7d in genl_unregister () from /usr/lib64/libnl-genl.so.3
-(gdb) where
-#0  0x00007ffff7bd7f7d in genl_unregister () from /usr/lib64/libnl-genl.so.3
-#1  0x00007ffff7de9c17 in _dl_fini () at dl-fini.c:254
-#2  0x00007ffff7433c01 in __run_exit_handlers (status=0, listp=0x7ffff77b06b8, run_list_atexit=run_list_atexit@entry=true) at exit.c:78
-#3  0x00007ffff7433c85 in __GI_exit (status=<optimized out>) at exit.c:100
-#4  0x00007ffff741ba4c in __libc_start_main (main=0x401c20 <main>, argc=1, ubp_av=0x7fffffffe368, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>, stack_end=0x7fffffffe358) at libc-start.c:258
-#5  0x0000000000401f61 in _start () at ../sysdeps/x86_64/elf/start.S:113
+There are currently a few ways to "escape"
+the network namespace and access a wiphy
+that belongs to another namespace. Add a
+netns argument to the relevant functions
+to fix this.
 
-This is the simplest (v1) patch which fixes the Makefile. A slightly more elaborate modification (v2) also allows to manually select the desired nl library version by passing the appropriate NLLIBNAME, CFLAGS and LIBS variables to make.
+One remaining issue with testmode will be
+fixed in a follow-up patch.
 
-Signed-off-by: Guido Trentalancia <guido@trentalancia.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- Makefile |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ net/wireless/nl80211.c |   21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
---- iw-3.4/Makefile	2012-03-29 11:05:04.000000000 +0200
-+++ iw-3.4-multiple-libnl-installations/Makefile	2012-06-02 16:53:25.621169916 +0200
-@@ -33,30 +33,30 @@ NLLIBNAME = libnl-1
- endif
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 0ec9779..af23291 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -71,7 +71,7 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
+ }
  
- ifeq ($(NL2FOUND),Y)
--CFLAGS += -DCONFIG_LIBNL20
--LIBS += -lnl-genl
-+CFLAGS = -DCONFIG_LIBNL20
-+LIBS = -lnl-genl
- NLLIBNAME = libnl-2.0
- endif
+ static struct cfg80211_registered_device *
+-__cfg80211_rdev_from_info(struct genl_info *info)
++__cfg80211_rdev_from_info(struct net *netns, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = NULL, *tmp;
+ 	struct net_device *netdev;
+@@ -88,7 +88,7 @@ __cfg80211_rdev_from_info(struct genl_info *info)
  
- ifeq ($(NL3xFOUND),Y)
- # libnl 3.2 might be found as 3.2 and 3.0
- NL3FOUND = N
--CFLAGS += -DCONFIG_LIBNL30
--LIBS += -lnl-genl-3
-+CFLAGS = -DCONFIG_LIBNL30
-+LIBS = -lnl-genl-3
- NLLIBNAME = libnl-3.0
- endif
+ 	if (info->attrs[NL80211_ATTR_IFINDEX]) {
+ 		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
+-		netdev = dev_get_by_index(genl_info_net(info), ifindex);
++		netdev = dev_get_by_index(netns, ifindex);
+ 		if (netdev) {
+ 			if (netdev->ieee80211_ptr)
+ 				tmp = wiphy_to_dev(
+@@ -110,10 +110,13 @@ __cfg80211_rdev_from_info(struct genl_info *info)
+ 		}
+ 	}
  
- ifeq ($(NL3FOUND),Y)
--CFLAGS += -DCONFIG_LIBNL30
--LIBS += -lnl-genl
-+CFLAGS = -DCONFIG_LIBNL30
-+LIBS = -lnl-genl
- NLLIBNAME = libnl-3.0
- endif
+-	if (rdev)
+-		return rdev;
++	if (!rdev)
++		return ERR_PTR(-ENODEV);
  
- # nl-3.1 has a broken libnl-gnl-3.1.pc file
- # as show by pkg-config --debug --libs --cflags --exact-version=3.1 libnl-genl-3.1;echo $?
- ifeq ($(NL31FOUND),Y)
--CFLAGS += -DCONFIG_LIBNL30
--LIBS += -lnl-genl
-+CFLAGS = -DCONFIG_LIBNL30
-+LIBS = -lnl-genl
- NLLIBNAME = libnl-3.1
- endif
-  
+-	return ERR_PTR(-ENODEV);
++	if (netns != wiphy_net(&rdev->wiphy))
++		return ERR_PTR(-ENODEV);
++
++	return rdev;
+ }
+ 
+ /*
+@@ -137,12 +140,12 @@ __cfg80211_rdev_from_info(struct genl_info *info)
+  * be checked with IS_ERR() for errors.
+  */
+ static struct cfg80211_registered_device *
+-cfg80211_get_dev_from_info(struct genl_info *info)
++cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev;
+ 
+ 	mutex_lock(&cfg80211_mutex);
+-	rdev = __cfg80211_rdev_from_info(info);
++	rdev = __cfg80211_rdev_from_info(netns, info);
+ 
+ 	/* if it is not an error we grab the lock on
+ 	 * it to assure it won't be going away while
+@@ -1419,7 +1422,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (!netdev) {
+-		rdev = __cfg80211_rdev_from_info(info);
++		rdev = __cfg80211_rdev_from_info(genl_info_net(info), info);
+ 		if (IS_ERR(rdev)) {
+ 			mutex_unlock(&cfg80211_mutex);
+ 			return PTR_ERR(rdev);
+@@ -6623,7 +6626,7 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
+ 		rtnl_lock();
+ 
+ 	if (ops->internal_flags & NL80211_FLAG_NEED_WIPHY) {
+-		rdev = cfg80211_get_dev_from_info(info);
++		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
+ 		if (IS_ERR(rdev)) {
+ 			if (rtnl)
+ 				rtnl_unlock();
+-- 
+1.7.10
 
