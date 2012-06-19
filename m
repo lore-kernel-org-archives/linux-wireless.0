@@ -1,46 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:37681 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498Ab2FLTM2 (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:53169 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754129Ab2FSNOq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 15:12:28 -0400
-From: Sasha Levin <levinsasha928@gmail.com>
-To: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	linville@tuxdriver.com
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Sasha Levin <levinsasha928@gmail.com>
-Subject: [PATCH] iwlwifi: re-order module_init order to prevent NULL ptr deref
-Date: Tue, 12 Jun 2012 21:13:32 +0200
-Message-Id: <1339528412-4163-1-git-send-email-levinsasha928@gmail.com> (sfid-20120612_211247_722972_E0F3BAE7)
+	Tue, 19 Jun 2012 09:14:46 -0400
+Received: by obbef5 with SMTP id ef5so10719445obb.16
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:14:45 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v2 6/7] mac80211: add ap channel switch command/event
+Date: Tue, 19 Jun 2012 16:11:02 +0300
+Message-Id: <1340111463-4554-6-git-send-email-victorg@ti.com> (sfid-20120619_151451_662650_8436FF29)
+In-Reply-To: <1340111463-4554-1-git-send-email-victorg@ti.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to make sure iwl_drv_init is called before iwl_init, since otherwise
-iwl_init will NULL ptr deref when trying to add a new mode.
+Add ieee80211_ap_process_chanswitch(), to handle a channel switch
+request for AP.
 
-Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+Add ieee80211_ap_ch_switch_complete_notify() which notifies upper
+layers about channel switch complete event.
+
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- drivers/net/wireless/iwlwifi/Makefile |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ include/net/mac80211.h      |   39 +++++++++++++++++++++++++++++++++++++++
+ net/mac80211/cfg.c          |   26 ++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h   |   10 ++++++++++
+ net/mac80211/driver-trace.h |   31 +++++++++++++++++++++++++++++++
+ net/mac80211/main.c         |    3 +++
+ net/mac80211/mlme.c         |    9 +++++++++
+ 6 files changed, 118 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 98c8f64..16e39a4 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -1,5 +1,3 @@
--obj-$(CONFIG_IWLDVM)	+= dvm/
--
- CFLAGS_iwl-devtrace.o := -I$(src)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 82e5ee7..79239a0 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -865,6 +865,32 @@ struct ieee80211_channel_switch {
+ };
  
- # common
-@@ -14,4 +12,6 @@ iwlwifi-objs		+= pcie/1000.o pcie/2000.o pcie/5000.o pcie/6000.o
- 
- iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
- 
-+obj-$(CONFIG_IWLDVM)    += dvm/
+ /**
++ * struct ieee80211_ap_channel_switch - holds the ap channel switch data
++ *
++ * The information provided in this structure is required for the ap channel
++ * switch operation.
++ *
++ * @timestamp: value in microseconds of the 64-bit Time Synchronization
++ *	Function (TSF) timer when the frame containing the channel switch
++ *	announcement was received. This is simply the rx.mactime parameter
++ *	the driver passed into mac80211.
++ * @block_tx: Indicates whether transmission must be blocked before the
++ *	scheduled channel switch, as indicated by the AP.
++ * @post_switch_block_tx: Indicates whether transmission must be blocked after
++ *	the scheduled channel switch, this should be set if the target channel
++ *	is DFS channel.
++ * @channel: the new channel to switch to
++ * @count: the number of TBTT's until the channel switch event
++ */
++struct ieee80211_ap_channel_switch {
++	u64 timestamp;
++	bool block_tx;
++	bool post_switch_block_tx;
++	struct ieee80211_channel *channel;
++	u8 count;
++};
 +
- ccflags-y += -D__CHECK_ENDIAN__ -I$(src)
++/**
+  * enum ieee80211_vif_flags - virtual interface flags
+  *
+  * @IEEE80211_VIF_BEACON_FILTER: the device performs beacon filtering
+@@ -2354,6 +2380,8 @@ struct ieee80211_ops {
+ 	void (*flush)(struct ieee80211_hw *hw, bool drop);
+ 	void (*channel_switch)(struct ieee80211_hw *hw,
+ 			       struct ieee80211_channel_switch *ch_switch);
++	void (*ap_channel_switch)(struct ieee80211_hw *hw,
++			      struct ieee80211_ap_channel_switch *ap_ch_switch);
+ 	int (*napi_poll)(struct ieee80211_hw *hw, int budget);
+ 	int (*set_antenna)(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant);
+ 	int (*get_antenna)(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
+@@ -3578,6 +3606,17 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ void ieee80211_radar_detected(struct ieee80211_vif *vif, u16 freq, gfp_t gfp);
+ 
+ /**
++ * ieee80211_ap_ch_switch_complete_notify - inform a configured connection that
++ * channel switch is complete
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @gfp: context flags
++ *
++ */
++void ieee80211_ap_ch_switch_complete_notify(struct ieee80211_vif *vif,
++					    u16 freq, gfp_t gfp);
++
++/**
+  * ieee80211_get_operstate - get the operstate of the vif
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a48d055..d017972 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2240,6 +2240,31 @@ static int ieee80211_dfs_en_tx(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
+ 
++static int ieee80211_ap_process_chanswitch(struct wiphy *wiphy,
++					   struct net_device *dev,
++					   u32 count, bool block_tx,
++					   bool post_switch_block_tx,
++					   struct ieee80211_channel *new_ch)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_ap_channel_switch ap_ch_switch;
++
++	if (!local->ops->channel_switch)
++		return -EOPNOTSUPP;
++
++	memset(&ap_ch_switch, 0, sizeof(ap_ch_switch));
++	ap_ch_switch.channel = new_ch;
++	ap_ch_switch.count = count;
++	ap_ch_switch.block_tx = block_tx;
++	ap_ch_switch.post_switch_block_tx = post_switch_block_tx;
++
++	mutex_lock(&local->mtx);
++	drv_ap_channel_switch(local, &ap_ch_switch);
++	mutex_unlock(&local->mtx);
++	return 0;
++}
++
+ static enum work_done_result
+ ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
+ {
+@@ -3010,4 +3035,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.get_et_strings = ieee80211_get_et_strings,
+ 	.start_radar_detection = ieee80211_start_radar_detection,
+ 	.dfs_en_tx = ieee80211_dfs_en_tx,
++	.ap_channel_switch = ieee80211_ap_process_chanswitch,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index f49b76b..7f7e6d0 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -711,6 +711,16 @@ static inline void drv_channel_switch(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline void
++drv_ap_channel_switch(struct ieee80211_local *local,
++		      struct ieee80211_ap_channel_switch *ap_ch_switch)
++{
++	might_sleep();
++
++	trace_drv_ap_channel_switch(local, ap_ch_switch);
++	local->ops->ap_channel_switch(&local->hw, ap_ch_switch);
++	trace_drv_return_void(local);
++}
+ 
+ static inline int drv_set_antenna(struct ieee80211_local *local,
+ 				  u32 tx_ant, u32 rx_ant)
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6df02c4..972be66 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -927,6 +927,37 @@ TRACE_EVENT(drv_channel_switch,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_ap_channel_switch,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_ap_channel_switch *ap_ch_switch),
++
++	TP_ARGS(local, ap_ch_switch),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(u64, timestamp)
++		__field(bool, block_tx)
++		__field(bool, post_switch_block_tx)
++		__field(u16, freq)
++		__field(u8, count)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->timestamp = ap_ch_switch->timestamp;
++		__entry->block_tx = ap_ch_switch->block_tx;
++		__entry->post_switch_block_tx =
++			ap_ch_switch->post_switch_block_tx;
++		__entry->freq = ap_ch_switch->channel->center_freq;
++		__entry->count = ap_ch_switch->count;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " new freq:%u count:%d",
++		LOCAL_PR_ARG, __entry->freq, __entry->count
++	)
++);
++
+ TRACE_EVENT(drv_set_antenna,
+ 	TP_PROTO(struct ieee80211_local *local, u32 tx_ant, u32 rx_ant, int ret),
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index f5548e9..18094cc 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -567,6 +567,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	wiphy->features = NL80211_FEATURE_SK_TX_STATUS |
+ 			  NL80211_FEATURE_HT_IBSS;
+ 
++	if (ops->ap_channel_switch)
++		wiphy->features |= NL80211_FEATURE_AP_CH_SWITCH;
++
+ 	if (!ops->set_key)
+ 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 37ed827..ab7e430 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3570,6 +3570,15 @@ void ieee80211_radar_detected(struct ieee80211_vif *vif, u16 freq, gfp_t gfp)
+ }
+ EXPORT_SYMBOL(ieee80211_radar_detected);
+ 
++void ieee80211_ap_ch_switch_complete_notify(struct ieee80211_vif *vif,
++					    u16 freq, gfp_t gfp)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	cfg80211_ap_ch_switch_complete_notify(sdata->dev, freq, gfp);
++}
++EXPORT_SYMBOL(ieee80211_ap_ch_switch_complete_notify);
++
+ unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 -- 
-1.7.8.6
+1.7.5.4
 
