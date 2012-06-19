@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.u-psud.fr ([129.175.33.42]:19281 "EHLO smtp2.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755534Ab2FNMqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 08:46:47 -0400
-Message-ID: <4FD9DD35.4070709@lri.fr> (sfid-20120614_144650_366485_8E051F11)
-Date: Thu, 14 Jun 2012 14:46:45 +0200
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:57003 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753664Ab2FST21 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 15:28:27 -0400
+Received: by gglu4 with SMTP id u4so4998256ggl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 12:28:26 -0700 (PDT)
+Date: Tue, 19 Jun 2012 14:28:18 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Roland Vossen <rvossen@broadcom.com>
+Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20120619192818.GA19971@burratino> (sfid-20120619_212844_313339_68A8947A)
+References: <20120601174237.GA31781@burratino>
+ <CAKprTDHepfbCKquvnG8CQ2=-tSNbgOSkT6R0GQmEx9UyuiZyMQ@mail.gmail.com>
+ <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
+ <20120604084200.GA30645@tiikeri.vuoristo.local>
+ <20120604173121.GA9238@stt008.linux.site>
+ <20120605050620.GC3118@burratino>
+ <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
+ <20120611031544.GB3092@burratino>
+ <20120619181522.GB19354@burratino>
+ <4FE0CFD4.4000300@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Will Hawkins <hawkinsw@opentechinstitute.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add support for userspace to handle auth frames
- on adhoc ifaces
-References: <4FD8B5D4.8060305@opentechinstitute.org>  <4FD99A24.3020907@lri.fr> <1339673095.4461.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1339673095.4461.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4FE0CFD4.4000300@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14/06/2012 13:24, Johannes Berg wrote:
-> On Thu, 2012-06-14 at 10:00 +0200, Nicolas Cavallari wrote:
-> 
->> I just have a question here : when auth frames are not delivered to
->> userspace, mac80211 will respond to them, and also uses them to detect
->> node reboot. If you register for auth frames, mac80211 will still send
->> auth frames as soon as a new station is seen, which might be confusing
->> for user space. Is that ok to do this ? Or should userspace have more
->> control over how mac80211 sends auth frames ?
-> 
-> Please read the code. If userspace registers for them, mac80211 will
-> never do anything with the frame.
+Arend van Spriel wrote:
+> On 06/19/2012 08:15 PM, Jonathan Nieder wrote:
 
-I didn't say the contrary. But if you read ieee80211_ibss_finish_sta(),
-you see that mac80211 sends auth frames to each discovered station, even
-if userspace want to handle auth frames. This seems strange to be able
-to receive and handle auth frames from userspace while mac80211 sends
-them behind userspace's back.
+>> This was first reproduced on a kernel closely based on 3.2.9.  It
+>> would typically happen pretty reliably once a day or so.  Four days of
+>> testing a kernel close to 3.2.2 haven't triggered it again[1].
+>>
+>> The only brcm80211 change in that range is
+>>
+>>   f96b08a7e6f6 brcmsmac: fix tx queue flush infinite loop
+>
+> The WARN_ONCE added by the commit above still triggers sometimes. Two
+> recent commits I did regarding this are in 3.4-stable. Not sure if they
+> have been ported to 3.2 as well.
+>
+> 85091fc brcm80211: smac: fix endless retry of A-MPDU transmissions
+> badc4f0 brcm80211: smac: resume transmit fifo upon receiving frames
 
-> 
->> There is also another thing to consider if you want to send auth frames
->> from userspace, as CMD_FRAME requires a frequency, which in IBSS mode,
->> can change anytime without userspace being notified. If you only have to
->> answer to received auth frames, this is easier as you can reuse the
->> frequency given by nl80211 when receiving the auth frame. But if you
->> want to send a auth frame independently, how do you get the frequency to
->> use ?
-> 
-> You check the BSS info, that's trivial.
+Yep, both are in 3.2-stable (added in 3.2.18 and 3.2.17, respectively).
 
-There is no GET_BSS from userspace. when merging IBSS, only the new
-BSSID is notified. The only way to get this info from userspace would be
-to dump the scan result and check the "we joined that ibss" flag, and
-this isn't race-free. That, or using fixed_freq.
+[...]
+> However, I still observe the warning so I am looking what other event
+> trigger this issue.
+
+Feel free to contact Touko Korpela <touko.korpela@iki.fi> and Camaleón
+if you need recent logs or other information about that[1].
+
+I had been hoping that was mostly orthogonal until Camaleón mentioned
+that 3.2.2 doesn't seem to trigger the random reconnects.
+
+Thanks,
+Jonathan
+
+[1] tracked here: http://bugs.debian.org/672891
