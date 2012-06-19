@@ -1,78 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:56076 "EHLO
-	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750732Ab2FMVGG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52361 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab2FSOvC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 17:06:06 -0400
-Received: by lagz14 with SMTP id z14so960137lag.35
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 14:06:01 -0700 (PDT)
-Message-ID: <1339621559.10534.95.camel@cumari.coelho.fi> (sfid-20120613_230610_620896_723B8DDA)
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-From: Luciano Coelho <coelho@ti.com>
-To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org,
-	victorg@ti.com
-Date: Thu, 14 Jun 2012 00:05:59 +0300
-In-Reply-To: <20120613205007.GB3043@pista>
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
-	 <1339566003.4519.1.camel@jlt3.sipsolutions.net>
-	 <1339587447.3840.272.camel@cumari.coelho.fi>
-	 <4FD87FEA.3070208@qca.qualcomm.com> <20120613205007.GB3043@pista>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 Jun 2012 10:51:02 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 01/17] cfg80211: make some functions static
+Date: Tue, 19 Jun 2012 16:50:40 +0200
+Message-Id: <1340117456-10154-2-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165130_029472_DEADFD32)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-13 at 13:50 -0700, Pedersen, Thomas wrote:
-> On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
-> > On 06/13/2012 02:37 PM, Luciano Coelho wrote:
-> > > On Wed, 2012-06-13 at 07:40 +0200, Johannes Berg wrote:
-> > >> On Tue, 2012-06-12 at 13:43 -0700, Thomas Pedersen wrote:
-> > >>> Support configuring an RSSI threshold in dBm (s32) when requesting
-> > >>> scheduled scan, below which a BSS won't be reported by the cfg80211
-> > >>> driver.
-> > >>
-> > >> I'm confused -- were you going to do scheduled scan only? Makes sense,
-> > >> but if you could maybe change the subject a bit to "specify ... in
-> > >> scheduled scan"?
-> > > 
-> > > It makes more sense with scheduled scans, but maybe it is also desirable
-> > > with normal scans to reduce the amount of scan results traffic?
-> > > 
-> > > At least if we consider the intermediate scan results that Victor has
-> > > been working on... We may want to report all scan results at the end,
-> > > but only send intermediate events if all the matches are satisfied, for
-> > > example.
-> > > 
-> > > Just thinking out loud a bit.
-> > 
-> > Good point.
-> > 
-> > Funnily enough I don't have any idea how ath6kl has implemented this
-> > feature, but in theory this feature is useful also for the current
-> > normal scan (when the firmware/hardware supports it) as we can avoid
-> > host wakeups. If there are 10 APs, but all are below the RSSI threshold,
-> > we will have only 1 host wakeup (scan ready event) opposed to 11 wakeups
-> > (10 AP found events plus 1 scan ready event).
-> 
-> But can the host even sleep on normal scans?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Why not? If you're doing a full scan in 11bg + 11a channels it can take
-a long time...
+Some of the functions to retrieve a device can
+be static as they're used only in nl80211.
 
-Some applications may use very frequent scans, for example for location
-services, so saving some wake-ups every time can prove a big improvement
-in power consumption in the long run...
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c    |   63 -------------------------------------
+ net/wireless/core.h    |   26 ---------------
+ net/wireless/nl80211.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 82 insertions(+), 89 deletions(-)
 
-> If so, maybe it makes sense to convert NL80211_ATTR_SCHED_SCAN_MATCH
-> into general scan matching parameters instead of having a set for each
-> scan type?
-
-I'm sure I discussed this with Johannes a long time ago, but now I can't
-remember why we decided to keep it for sched scans only...
-
---
-Luca.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a87d435..907f62c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -96,69 +96,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
+ 	return &rdev->wiphy;
+ }
+ 
+-/* requires cfg80211_mutex to be held! */
+-struct cfg80211_registered_device *
+-__cfg80211_rdev_from_info(struct genl_info *info)
+-{
+-	int ifindex;
+-	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
+-	struct net_device *dev;
+-	int err = -EINVAL;
+-
+-	assert_cfg80211_lock();
+-
+-	if (info->attrs[NL80211_ATTR_WIPHY]) {
+-		bywiphyidx = cfg80211_rdev_by_wiphy_idx(
+-				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
+-		err = -ENODEV;
+-	}
+-
+-	if (info->attrs[NL80211_ATTR_IFINDEX]) {
+-		ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
+-		dev = dev_get_by_index(genl_info_net(info), ifindex);
+-		if (dev) {
+-			if (dev->ieee80211_ptr)
+-				byifidx =
+-					wiphy_to_dev(dev->ieee80211_ptr->wiphy);
+-			dev_put(dev);
+-		}
+-		err = -ENODEV;
+-	}
+-
+-	if (bywiphyidx && byifidx) {
+-		if (bywiphyidx != byifidx)
+-			return ERR_PTR(-EINVAL);
+-		else
+-			return bywiphyidx; /* == byifidx */
+-	}
+-	if (bywiphyidx)
+-		return bywiphyidx;
+-
+-	if (byifidx)
+-		return byifidx;
+-
+-	return ERR_PTR(err);
+-}
+-
+-struct cfg80211_registered_device *
+-cfg80211_get_dev_from_info(struct genl_info *info)
+-{
+-	struct cfg80211_registered_device *rdev;
+-
+-	mutex_lock(&cfg80211_mutex);
+-	rdev = __cfg80211_rdev_from_info(info);
+-
+-	/* if it is not an error we grab the lock on
+-	 * it to assure it won't be going away while
+-	 * we operate on it */
+-	if (!IS_ERR(rdev))
+-		mutex_lock(&rdev->mtx);
+-
+-	mutex_unlock(&cfg80211_mutex);
+-
+-	return rdev;
+-}
+-
+ struct cfg80211_registered_device *
+ cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
+ {
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9348a47..609a579 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -159,32 +159,6 @@ static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
+ struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx);
+ int get_wiphy_idx(struct wiphy *wiphy);
+ 
+-struct cfg80211_registered_device *
+-__cfg80211_rdev_from_info(struct genl_info *info);
+-
+-/*
+- * This function returns a pointer to the driver
+- * that the genl_info item that is passed refers to.
+- * If successful, it returns non-NULL and also locks
+- * the driver's mutex!
+- *
+- * This means that you need to call cfg80211_unlock_rdev()
+- * before being allowed to acquire &cfg80211_mutex!
+- *
+- * This is necessary because we need to lock the global
+- * mutex to get an item off the list safely, and then
+- * we lock the rdev mutex so it doesn't go away under us.
+- *
+- * We don't want to keep cfg80211_mutex locked
+- * for all the time in order to allow requests on
+- * other interfaces to go through at the same time.
+- *
+- * The result of this can be a PTR_ERR and hence must
+- * be checked with IS_ERR() for errors.
+- */
+-extern struct cfg80211_registered_device *
+-cfg80211_get_dev_from_info(struct genl_info *info);
+-
+ /* requires cfg80211_rdev_mutex to be held! */
+ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a363ca1..2d3541c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -70,6 +70,88 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
+ 	return 0;
+ }
+ 
++static struct cfg80211_registered_device *
++__cfg80211_rdev_from_info(struct genl_info *info)
++{
++	int ifindex;
++	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
++	struct net_device *dev;
++	int err = -EINVAL;
++
++	assert_cfg80211_lock();
++
++	if (info->attrs[NL80211_ATTR_WIPHY]) {
++		bywiphyidx = cfg80211_rdev_by_wiphy_idx(
++				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
++		err = -ENODEV;
++	}
++
++	if (info->attrs[NL80211_ATTR_IFINDEX]) {
++		ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
++		dev = dev_get_by_index(genl_info_net(info), ifindex);
++		if (dev) {
++			if (dev->ieee80211_ptr)
++				byifidx =
++					wiphy_to_dev(dev->ieee80211_ptr->wiphy);
++			dev_put(dev);
++		}
++		err = -ENODEV;
++	}
++
++	if (bywiphyidx && byifidx) {
++		if (bywiphyidx != byifidx)
++			return ERR_PTR(-EINVAL);
++		else
++			return bywiphyidx; /* == byifidx */
++	}
++	if (bywiphyidx)
++		return bywiphyidx;
++
++	if (byifidx)
++		return byifidx;
++
++	return ERR_PTR(err);
++}
++
++/*
++ * This function returns a pointer to the driver
++ * that the genl_info item that is passed refers to.
++ * If successful, it returns non-NULL and also locks
++ * the driver's mutex!
++ *
++ * This means that you need to call cfg80211_unlock_rdev()
++ * before being allowed to acquire &cfg80211_mutex!
++ *
++ * This is necessary because we need to lock the global
++ * mutex to get an item off the list safely, and then
++ * we lock the rdev mutex so it doesn't go away under us.
++ *
++ * We don't want to keep cfg80211_mutex locked
++ * for all the time in order to allow requests on
++ * other interfaces to go through at the same time.
++ *
++ * The result of this can be a PTR_ERR and hence must
++ * be checked with IS_ERR() for errors.
++ */
++static struct cfg80211_registered_device *
++cfg80211_get_dev_from_info(struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev;
++
++	mutex_lock(&cfg80211_mutex);
++	rdev = __cfg80211_rdev_from_info(info);
++
++	/* if it is not an error we grab the lock on
++	 * it to assure it won't be going away while
++	 * we operate on it */
++	if (!IS_ERR(rdev))
++		mutex_lock(&rdev->mtx);
++
++	mutex_unlock(&cfg80211_mutex);
++
++	return rdev;
++}
++
+ /* policy for the attributes */
+ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_WIPHY] = { .type = NLA_U32 },
+-- 
+1.7.10
 
