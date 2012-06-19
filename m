@@ -1,41 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26300 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016Ab2FRNcF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52384 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753494Ab2FSOv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 09:32:05 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 3/4] ath9k_hw: update ar9462 dac_async_fifo initval
-Date: Mon, 18 Jun 2012 19:02:39 +0530
-Message-ID: <1340026360-18873-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120618_153209_380304_E4B549B8)
-In-Reply-To: <1340026360-18873-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1340026360-18873-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 19 Jun 2012 10:51:27 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 12/17] nl80211: send interface after creation
+Date: Tue, 19 Jun 2012 16:50:51 +0200
+Message-Id: <1340117456-10154-13-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165142_779412_7697001B)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index 8f406ff..bbf48918a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -61,7 +61,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
- 	{0x00009e44, 0x62321e27, 0x62321e27, 0xfe291e27, 0xfe291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
--	{0x0000a204, 0x013187c0, 0x013187c4, 0x013187c4, 0x013187c0},
-+	{0x0000a204, 0x01318fc0, 0x01318fc4, 0x01318fc4, 0x01318fc0},
- 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
- 	{0x0000a22c, 0x01026a2f, 0x01026a27, 0x01026a2f, 0x01026a2f},
- 	{0x0000a230, 0x0000400a, 0x00004014, 0x00004016, 0x0000400b},
+After a new virtual interface is created, reply
+to userspace with a message detailing it so it
+knows the new wdev identifier.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |   17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9f5e796..861611b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1962,6 +1962,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct vif_params params;
+ 	struct wireless_dev *wdev;
++	struct sk_buff *msg;
+ 	int err;
+ 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 	u32 flags;
+@@ -1988,14 +1989,20 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
+ 
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++
+ 	err = parse_monitor_flags(type == NL80211_IFTYPE_MONITOR ?
+ 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
+ 				  &flags);
+ 	wdev = rdev->ops->add_virtual_intf(&rdev->wiphy,
+ 		nla_data(info->attrs[NL80211_ATTR_IFNAME]),
+ 		type, err ? NULL : &flags, &params);
+-	if (IS_ERR(wdev))
++	if (IS_ERR(wdev)) {
++		nlmsg_free(msg);
+ 		return PTR_ERR(wdev);
++	}
+ 
+ 	if (type == NL80211_IFTYPE_MESH_POINT &&
+ 	    info->attrs[NL80211_ATTR_MESH_ID]) {
+@@ -2009,7 +2016,13 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		wdev_unlock(wdev);
+ 	}
+ 
+-	return 0;
++	if (nl80211_send_iface(msg, info->snd_pid, info->snd_seq, 0,
++			       rdev, wdev) < 0) {
++		nlmsg_free(msg);
++		return -ENOBUFS;
++	}
++
++	return genlmsg_reply(msg, info);
+ }
+ 
+ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
 -- 
-1.7.10.4
+1.7.10
 
