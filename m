@@ -1,63 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45747 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52363 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751945Ab2FFLzD (ORCPT
+	with ESMTP id S1752292Ab2FSOvD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 07:55:03 -0400
-Message-ID: <1338983702.26346.3.camel@jlt3.sipsolutions.net> (sfid-20120606_135507_846580_F3B70483)
-Subject: [PATCH 3.5] iwlwifi: disable the buggy chain extension feature in HW
+	Tue, 19 Jun 2012 10:51:03 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 06 Jun 2012 13:55:02 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 04/17] nl80211: change __cfg80211_rdev_from_info
+Date: Tue, 19 Jun 2012 16:50:43 +0200
+Message-Id: <1340117456-10154-5-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165116_942707_DBA6D131)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This feature has been reported to be buggy and enabled by
-default. We therefore need to disable it manually.
+Change the function to __cfg80211_rdev_from_attrs
+to take attributes instead of the info struct to
+make it usable from dump callbacks for testmode.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-prph.h       |    1 +
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    5 +++++
- 2 files changed, 6 insertions(+)
+ net/wireless/nl80211.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index 3b10692..dfd5466 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -224,6 +224,7 @@
- #define SCD_TXFACT		(SCD_BASE + 0x10)
- #define SCD_ACTIVE		(SCD_BASE + 0x14)
- #define SCD_QUEUECHAIN_SEL	(SCD_BASE + 0xe8)
-+#define SCD_CHAINEXT_EN		(SCD_BASE + 0x244)
- #define SCD_AGGR_SEL		(SCD_BASE + 0x248)
- #define SCD_INTERRUPT_MASK	(SCD_BASE + 0x108)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index af23291..7e94d4d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -71,23 +71,23 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
+ }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index ec6fb39..79c6b91 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1058,6 +1058,11 @@ static void iwl_tx_start(struct iwl_trans *trans)
- 	iwl_write_prph(trans, SCD_DRAM_BASE_ADDR,
- 		       trans_pcie->scd_bc_tbls.dma >> 10);
+ static struct cfg80211_registered_device *
+-__cfg80211_rdev_from_info(struct net *netns, struct genl_info *info)
++__cfg80211_rdev_from_attrs(struct net *netns, struct nlattr **attrs)
+ {
+ 	struct cfg80211_registered_device *rdev = NULL, *tmp;
+ 	struct net_device *netdev;
  
-+	/* The chain extension of the SCD doesn't work well. This feature is
-+	 * enabled by default by the HW, so we need to disable it manually.
-+	 */
-+	iwl_write_prph(trans, SCD_CHAINEXT_EN, 0);
-+
- 	/* Enable DMA channel */
- 	for (chan = 0; chan < FH_TCSR_CHNL_NUM ; chan++)
- 		iwl_write_direct32(trans, FH_TCSR_CHNL_TX_CONFIG_REG(chan),
+ 	assert_cfg80211_lock();
+ 
+-	if (!info->attrs[NL80211_ATTR_WIPHY] &&
+-	    !info->attrs[NL80211_ATTR_IFINDEX])
++	if (!attrs[NL80211_ATTR_WIPHY] &&
++	    !attrs[NL80211_ATTR_IFINDEX])
+ 		return ERR_PTR(-EINVAL);
+ 
+-	if (info->attrs[NL80211_ATTR_WIPHY])
++	if (attrs[NL80211_ATTR_WIPHY])
+ 		rdev = cfg80211_rdev_by_wiphy_idx(
+-				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
++				nla_get_u32(attrs[NL80211_ATTR_WIPHY]));
+ 
+-	if (info->attrs[NL80211_ATTR_IFINDEX]) {
+-		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
++	if (attrs[NL80211_ATTR_IFINDEX]) {
++		int ifindex = nla_get_u32(attrs[NL80211_ATTR_IFINDEX]);
+ 		netdev = dev_get_by_index(netns, ifindex);
+ 		if (netdev) {
+ 			if (netdev->ieee80211_ptr)
+@@ -145,7 +145,7 @@ cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev;
+ 
+ 	mutex_lock(&cfg80211_mutex);
+-	rdev = __cfg80211_rdev_from_info(netns, info);
++	rdev = __cfg80211_rdev_from_attrs(netns, info->attrs);
+ 
+ 	/* if it is not an error we grab the lock on
+ 	 * it to assure it won't be going away while
+@@ -1422,7 +1422,8 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (!netdev) {
+-		rdev = __cfg80211_rdev_from_info(genl_info_net(info), info);
++		rdev = __cfg80211_rdev_from_attrs(genl_info_net(info),
++						  info->attrs);
+ 		if (IS_ERR(rdev)) {
+ 			mutex_unlock(&cfg80211_mutex);
+ 			return PTR_ERR(rdev);
 -- 
 1.7.10
-
-
 
