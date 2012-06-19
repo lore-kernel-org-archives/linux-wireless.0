@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1453 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754817Ab2FUJdu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 05:33:50 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH] brcmfmac: make inclusion of vmalloc.h explicit fixing
- linux-next build
-Date: Thu, 21 Jun 2012 11:33:32 +0200
-Message-ID: <1340271212-12860-1-git-send-email-arend@broadcom.com> (sfid-20120621_113353_677121_5F188610)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:39305 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154Ab2FSJgw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 05:36:52 -0400
+Received: by obbtb18 with SMTP id tb18so9787244obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 02:36:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+Date: Tue, 19 Jun 2012 15:06:52 +0530
+Message-ID: <CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com> (sfid-20120619_113655_976763_21745838)
+Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@suse.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes problem detected in linux-next build for powerpc
-allyesconfig. The error message below is no longer observed:
+Hi Matt,
 
-  CC      drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.o
-drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c: In function 'brcmf_sdio_dump_console':
-drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:3085: error: implicit declaration of function 'vzalloc'
-drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:3085: warning: assignment makes pointer from integer without a cast
-drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:3113: error: implicit declaration of function 'vfree'
-make[2]: *** [drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.o] Error 1
+> I tested the latest kernel v3.5-rc3 ath9k for the Atheros [168c 0034],
+> code name is Miami. I found no matter how I press the wifi button to
+> enable/disable the wifi, it doesn't work to me.
+> Even I found the rfkill status for this interface is not changing.
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    1 +
- 1 file changed, 1 insertion(+)
+its a AR9462please poke at the register  #define AR_GPIO_IN  -> 0x402c : 0x404c)
+i remember testing it in a acer laptop, it was working.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 9971e13..076b772 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -32,6 +32,7 @@
- #include <linux/module.h>
- #include <linux/bcma/bcma.h>
- #include <linux/debugfs.h>
-+#include <linux/vmalloc.h>
- #include <asm/unaligned.h>
- #include <defs.h>
- #include <brcmu_wifi.h>
+>
+> --
+> Thank you.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.9.5
-
-
+thanks,
+shafi
