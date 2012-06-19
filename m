@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:54535 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249Ab2FTQvr (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43729 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430Ab2FSFsM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 12:51:47 -0400
-Message-ID: <4FE1FF9E.4070604@wwwdotorg.org> (sfid-20120620_185156_841725_D3E049A4)
-Date: Wed, 20 Jun 2012 10:51:42 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+	Tue, 19 Jun 2012 01:48:12 -0400
+Received: by pbbrp8 with SMTP id rp8so9185548pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 22:48:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Wei Ni <wni@nvidia.com>
-CC: 'Mark Brown' <broonie@opensource.wolfsonmicro.com>,
-	'Philip Rakity' <prakity@marvell.com>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: Where to power on the wifi device before loading the driver.
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com> <4FD90352.9090606@wwwdotorg.org> <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de> <20120614121234.GC3913@opensource.wolfsonmicro.com> <4FDA092E.10301@wwwdotorg.org> <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com> <4FDB5976.20809@wwwdotorg.org> <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com> <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com> <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com> <20120619091719.GZ3974@opensource.wolfsonmicro.com> <6B4D417B830BC44B8026029FD256F7F1C6EE2DD626@HKMAIL01.nvidia.com> <4FE112F2.7000506@wwwdotorg.org> <6B4D417B830BC44B8026029FD256F7F1C6EE2DD629@HKMAIL01.nvidia.com>
-In-Reply-To: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD629@HKMAIL01.nvidia.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1340076802.66478.YahooMailNeo@web192503.mail.sg3.yahoo.com>
+References: <1339521048.8774.YahooMailNeo@web192304.mail.sg3.yahoo.com>
+ <CA+XVXfc06i8woWkwzZvF3yoJyJVSzEJRHRspfv5G4W8tfcay4Q@mail.gmail.com> <1340076802.66478.YahooMailNeo@web192503.mail.sg3.yahoo.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 19 Jun 2012 08:47:56 +0300
+Message-ID: <CA+XVXffKkYy1THphz9jnLvW4p4M1J_BUxVEABy0oXsZcMwX8=w@mail.gmail.com> (sfid-20120619_074816_067261_492A8E13)
+Subject: Re: TDLS implementation clarifications
+To: Dino Joseph Mycle <dinomycle@yahoo.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/20/2012 05:28 AM, Wei Ni wrote:
-...
-> Stephen, as Rakesh said that in case of bcm4329, the two GPIO (WF_EN
-> and WF_RST) are shorted. So I think we can simply to use the
-> power-gpios properity in the SD driver, just use one gpio I test it
-> in this way, it runs ok, the bcm4329 can be powered up. We can use
-> this option.
+On Tue, Jun 19, 2012 at 6:33 AM, Dino Joseph Mycle <dinomycle@yahoo.com> wrote:
+> Hello Arik
+>
+>   Thanks for the reply.
+>
+> For the TDLS, what you are saying is the IEEE standard does not talk how it
+> can work without user intervention. For using security the user has to
+> select the password (key) and it has to be entered, Also the system should
+> ask the user whether or not the data has to be transferred through TDLS
+> mode.
 
-Wei, again, your emails and not correctly word-wrapped to well under 80
-columns. I know it's a pain to do that with Exchange/Outlook, but it's
-really difficult for anyone to read emails that aren't correctly formatted.
+I'm not sure everything has to reach the user. I'm just saying not
+every policy decision has to be made in kernel or wpa_supplicant.
 
-So yes, once we'd resolved this general issue, that was going to be my
-next topic of discussion.
+As for the security key - I think it is derived from the key for the
+AP network, so no separate key is needed. But you'll have to consult
+the spec, my memory is a bit vague about this point.
 
-I looked at the schematic of the 4329 module, and the GPIOs aren't
-shorted, but rather there's a stuffing option - either WF_EN or WF_RST
-is actually connected to the 4329's WL_SHUTDOWN_N_RST pin. I believe
-WF_EN is the one connected. If the two signals were shorted, you'd need
-to control both of them to avoid sinking power from one of Tegra's GPIO
-outputs into the other if they were set to differing values.
+>
+> For the channel switch, if we do , the connection to the AP will get lost
+> temporarily right, so if we are sending some data to the AP(say i am
+> browsing and want to transfer some huge data to my peer laptop) it will be
+> an issue right ?
 
-So, yes, using the power-gpios property will probably work in this case.
+Well we can get into power-save mode (PSM) vs. the AP, so it can't
+send us more data while we are on the other channel. TDLS also has the
+concept of PSM, to prevent the other peer from sending data.
 
-This rather begs the question: WTF is our downstream kernel doing
-actively controlling both GPIOs with time delays between each? Do you
-have the schematic for the 4330 module, or indeed any other module
-that's used on Cardhu? If so, please do send them to me internally.
-While this workaround might work for the 4329, additional research would
-be useful so we can determine whether we still have a problem to solve
-for other modules.
+Some cards should be able to support multi-channel operation soon, so
+these kind of issues will be dealt with.
 
-Thanks.
+Arik
