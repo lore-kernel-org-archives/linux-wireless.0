@@ -1,178 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:65152 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753570Ab2FCQK7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50495 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508Ab2FSQxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 12:10:59 -0400
-Received: by yenm10 with SMTP id m10so2591299yen.19
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2012 09:10:58 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sun, 3 Jun 2012 18:10:58 +0200
-Message-ID: <CAOUATobNS0XNp6e+-W6VrShXpm2JVVeGUBSKxe9v05M3e00S4g@mail.gmail.com> (sfid-20120603_181111_690511_6A5D61AF)
-Subject: RT2800USB driver problem. txpower stuck at 0
-From: Vilius Palme <palme3000@gmail.com>
-To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Cc: helmut.schaa@googlemail.com, IvDoorn@gmail.com, gwingerde@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Tue, 19 Jun 2012 12:53:17 -0400
+Message-ID: <1340124795.4482.16.camel@jlt3.sipsolutions.net> (sfid-20120619_185320_152884_9129B5BB)
+Subject: Re: [RFC 13/17] nl80211: move scan API to wdev
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 19 Jun 2012 18:53:15 +0200
+In-Reply-To: <4FE0ADB6.5080105@broadcom.com>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+	 <1340117456-10154-14-git-send-email-johannes@sipsolutions.net>
+	 <4FE0ADB6.5080105@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+On Tue, 2012-06-19 at 18:49 +0200, Arend van Spriel wrote:
+> On 06/19/2012 04:50 PM, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > The new P2P Device will have to be able to scan for
+> > P2P search, so move scanning to use struct wireless_dev
+> > instead of struct net_device.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> > diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > index 404e87c..a507b6e 100644
+> > --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > @@ -908,11 +908,11 @@ static int ath6kl_set_probed_ssids(struct ath6kl *ar,
+> >  	return 0;
+> >  }
+> >  
+> > -static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+> > +static int ath6kl_cfg80211_scan(struct wiphy *wiphy,
+> >  				struct cfg80211_scan_request *request)
+> 
+> Lot of indent issues in this variety of drivers. Do you care to fix that
+> as well or leave it to .... whom it may concern.
 
-I'm having some sort of a problem with RT3070 usb dongle. It works
-perfectly fine under 3.3.5 and 3.3.7 kernels, but somewhy refuses to
-set txpower under 3.4.0. kernel .config is the same across all three.
+I think the maintainers of the respective drivers should fix those. I'm
+just making their drivers continue to compile, not pretty :-)
 
-Here's some output:
+johannes
 
-[root@R1 iw]# ifconfig wlan0 up
-[root@R1 iw]# iwconfig wlan0
-wlan0     IEEE 802.11bgn  ESSID:off/any
-         Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm
-         Retry  long limit:7   RTS thr:off   Fragment thr:off
-         Encryption key:off
-         Power Management:off
-
-[root@R1 iw]# iwconfig wlan0 txpower 20
-Error for wireless request "Set Tx Power" (8B26) :
-   SET failed on device wlan0 ; Invalid argument.
-[root@R1 iw]# iwconfig wlan0 txpower 1
-Error for wireless request "Set Tx Power" (8B26) :
-   SET failed on device wlan0 ; Invalid argument.
-[root@R1 iw]# iwconfig wlan0 txpower 0
-[root@R1 iw]#
-
-
-[root@R1 iw]# rfkill list
-0: tpacpi_bluetooth_sw: Bluetooth
-       Soft blocked: no
-       Hard blocked: no
-27: phy26: Wireless LAN
-       Soft blocked: no
-       Hard blocked: no
-[root@R1 iw]#
-
-lsusb -vv output:
-
-Bus 002 Device 020: ID 1737:0078 Linksys WUSB100 v2 RangePlus Wireless
-Network Adapter [Ralink RT3070]
-Device Descriptor:
- bLength                18
- bDescriptorType         1
- bcdUSB               2.00
- bDeviceClass            0 (Defined at Interface level)
- bDeviceSubClass         0
- bDeviceProtocol         0
- bMaxPacketSize0        64
- idVendor           0x1737 Linksys
- idProduct          0x0078 WUSB100 v2 RangePlus Wireless Network
-Adapter [Ralink RT3070]
- bcdDevice            1.01
- iManufacturer           1 Cisco-Linksys LLC
- iProduct                2 Linksys RangePlus Wireless Network USB Adapter
- iSerial                 3
- bNumConfigurations      1
- Configuration Descriptor:
-   bLength                 9
-   bDescriptorType         2
-   wTotalLength           67
-   bNumInterfaces          1
-   bConfigurationValue     1
-   iConfiguration          0
-   bmAttributes         0x80
-     (Bus Powered)
-   MaxPower              450mA
-   Interface Descriptor:
-     bLength                 9
-     bDescriptorType         4
-     bInterfaceNumber        0
-     bAlternateSetting       0
-     bNumEndpoints           7
-     bInterfaceClass       255 Vendor Specific Class
-     bInterfaceSubClass    255 Vendor Specific Subclass
-     bInterfaceProtocol    255 Vendor Specific Protocol
-     iInterface              5
-     Endpoint Descriptor:
-       bLength                 7
-       bDescriptorType         5
-       bEndpointAddress     0x81  EP 1 IN
-       bmAttributes            2
-         Transfer Type            Bulk
-         Synch Type               None
-         Usage Type               Data
-       wMaxPacketSize     0x0200  1x 512 bytes
-       bInterval               0
-     Endpoint Descriptor:
-       bLength                 7
-       bDescriptorType         5
-       bEndpointAddress     0x01  EP 1 OUT
-       bmAttributes            2
-         Transfer Type            Bulk
-         Synch Type               None
-         Usage Type               Data
-       wMaxPacketSize     0x0200  1x 512 bytes
-       bInterval               0
-     Endpoint Descriptor:
-       bLength                 7
-       bDescriptorType         5
-       bEndpointAddress     0x02  EP 2 OUT
-       bmAttributes            2
-         Transfer Type            Bulk
-         Synch Type               None
-         Usage Type               Data
-       wMaxPacketSize     0x0200  1x 512 bytes
-       bInterval               0
-     Endpoint Descriptor:
-       bLength                 7
-       bDescriptorType         5
-       bEndpointAddress     0x03  EP 3 OUT
-       bmAttributes            2
-         Transfer Type            Bulk
-         Synch Type               None
-         Usage Type               Data
-       wMaxPacketSize     0x0200  1x 512 bytes
-       bInterval               0
-     Endpoint Descriptor:
-       bLength                 7
-       bDescriptorType         5
-       bEndpointAddress     0x04  EP 4 OUT
-       bmAttributes            2
-         Transfer Type            Bulk
-         Synch Type               None
-         Usage Type               Data
-       wMaxPacketSize     0x0200  1x 512 bytes
-       bInterval               0
-     Endpoint Descriptor:
-       bLength                 7
-       bDescriptorType         5
-       bEndpointAddress     0x05  EP 5 OUT
-       bmAttributes            2
-         Transfer Type            Bulk
-         Synch Type               None
-         Usage Type               Data
-       wMaxPacketSize     0x0200  1x 512 bytes
-       bInterval               0
-     Endpoint Descriptor:
-       bLength                 7
-       bDescriptorType         5
-       bEndpointAddress     0x06  EP 6 OUT
-       bmAttributes            2
-         Transfer Type            Bulk
-         Synch Type               None
-         Usage Type               Data
-       wMaxPacketSize     0x0200  1x 512 bytes
-       bInterval               0
-Device Qualifier (for other device speed):
- bLength                10
- bDescriptorType         6
- bcdUSB               2.00
- bDeviceClass            0 (Defined at Interface level)
- bDeviceSubClass         0
- bDeviceProtocol         0
- bMaxPacketSize0        64
- bNumConfigurations      1
-Device Status:     0x0000
- (Bus Powered)
-
-Would appreciate any kind of help,
-Vilius
