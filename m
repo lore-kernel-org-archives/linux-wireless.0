@@ -1,60 +1,759 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:3331 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532Ab2FRGUS convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52382 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753424Ab2FSOvZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 02:20:18 -0400
-From: Wei Ni <wni@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>,
-	Rakesh Kumar <krakesh@nvidia.com>
-CC: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Mon, 18 Jun 2012 14:20:11 +0800
-Subject: RE: Where to power on the wifi device before loading the driver.
-Message-ID: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com> (sfid-20120618_082025_356504_5A7AF96E)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
- <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
- <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
- <4FDB5976.20809@wwwdotorg.org>
-In-Reply-To: <4FDB5976.20809@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
+	Tue, 19 Jun 2012 10:51:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 17/17] mac80211: support P2P Device abstraction
+Date: Tue, 19 Jun 2012 16:50:56 +0200
+Message-Id: <1340117456-10154-18-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165132_991729_13933718)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 15, 2012 at 23:49:10, Stephen Warren wrote:
->> I talked with Franky, this power sequence is generally for 4329, so 
->> it mean this sequence can be put into the wifi driver.
->> We can use the virtual platform device both for OOB and non OOB.
->> I will send out patches later.
->
->Can you please expand on what a "virtual platform device" is; device tree typically represents real hardware rather than anything "virtual".
+From: Johannes Berg <johannes.berg@intel.com>
 
-The "virtual platform device" is created before the real wifi device, so that it can pass the gpios to the driver, and power up the device before calling sdio_register_driver.
-But as Franky said, this power sequence is only generally for 4329, not for the USB dongle chips. So it's not a good idea to add this "power up" in brcmfmac.
+After cfg80211 got a P2P Device abstraction, add
+support to mac80211. Whether it really is supported
+or not will depend on whether or not the driver has
+support for it, but mac80211 needs to change to be
+able to support drivers that need a P2P Device.
 
->
->Now if this means adding a child node under the SDIO controller to represent the attached device, and storing any settings required by that device in that child node, that's probably a reasonable basic approach.
->
->BTW, which GPIO is the power GPIO; is it WF_EN on the schematic? That seems reasonable to represent as a GPIO rather than a regulator since it connects directly into the WiFi device as a GPIO, and its use within the WiFi device can indeed be governed purely internally to the WiFi driver/HW. However, if this is some GPIO that controls the power to e.g.
->VBAT3V3_IN_WF, VDDIO_WF, or other power supply to the WiFi card, then it'd be better represented as a regulator, since the control point is outside the WiFi device.
-
-I think Rakesh may can answer this.
-
-Wei.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-nvpublic
+ net/mac80211/cfg.c          |   18 ++++
+ net/mac80211/driver-ops.h   |    2 +-
+ net/mac80211/driver-trace.h |    2 +-
+ net/mac80211/ieee80211_i.h  |    4 +
+ net/mac80211/iface.c        |  221 +++++++++++++++++++++++++++----------------
+ net/mac80211/main.c         |    9 ++
+ net/mac80211/rx.c           |   14 ++-
+ net/mac80211/status.c       |   17 +++-
+ net/mac80211/util.c         |   12 ++-
+ 9 files changed, 209 insertions(+), 90 deletions(-)
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7933eab..144fa37 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -102,6 +102,18 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int ieee80211_start_p2p_device(struct wiphy *wiphy,
++				      struct wireless_dev *wdev)
++{
++	return ieee80211_do_open(wdev, true);
++}
++
++static void ieee80211_stop_p2p_device(struct wiphy *wiphy,
++				      struct wireless_dev *wdev)
++{
++	ieee80211_sdata_stop(IEEE80211_WDEV_TO_SUB_IF(wdev));
++}
++
+ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 				  struct net_device *dev,
+ 				  u16 noack_map)
+@@ -1767,6 +1779,7 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		if (sdata->local->ops->hw_scan)
+@@ -2449,6 +2462,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		if (!sdata->u.mgd.associated)
+ 			need_offchan = true;
+ 		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		need_offchan = true;
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -2981,6 +2997,8 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+ 	.change_virtual_intf = ieee80211_change_iface,
++	.start_p2p_device = ieee80211_start_p2p_device,
++	.stop_p2p_device = ieee80211_stop_p2p_device,
+ 	.add_key = ieee80211_add_key,
+ 	.del_key = ieee80211_del_key,
+ 	.get_key = ieee80211_get_key,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 6d33a0c..9f57009 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -9,7 +9,7 @@ static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
+ {
+ 	WARN(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER),
+ 	     "%s:  Failed check-sdata-in-driver check, flags: 0x%x\n",
+-	     sdata->dev->name, sdata->flags);
++	     sdata->dev ? sdata->dev->name : sdata->name, sdata->flags);
+ }
+ 
+ static inline struct ieee80211_sub_if_data *
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6de00b2..8e81b6c 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -24,7 +24,7 @@
+ 			__string(vif_name, sdata->dev ? sdata->dev->name : "<nodev>")
+ #define VIF_ASSIGN	__entry->vif_type = sdata->vif.type; __entry->sdata = sdata;	\
+ 			__entry->p2p = sdata->vif.p2p;					\
+-			__assign_str(vif_name, sdata->dev ? sdata->dev->name : "<nodev>")
++			__assign_str(vif_name, sdata->dev ? sdata->dev->name : sdata->name)
+ #define VIF_PR_FMT	" vif:%s(%d%s)"
+ #define VIF_PR_ARG	__get_str(vif_name), __entry->vif_type, __entry->p2p ? "/p2p" : ""
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2d2da44..45b33c1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1072,6 +1072,8 @@ struct ieee80211_local {
+ 	struct idr ack_status_frames;
+ 	spinlock_t ack_status_lock;
+ 
++	struct ieee80211_sub_if_data __rcu *p2p_sdata;
++
+ 	/* dummy netdev for use w/ NAPI */
+ 	struct net_device napi_dev;
+ 
+@@ -1290,6 +1292,8 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local);
+ void ieee80211_recalc_idle(struct ieee80211_local *local);
+ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
+ 				    const int offset);
++int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up);
++void ieee80211_sdata_stop(struct ieee80211_sub_if_data *sdata);
+ 
+ static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b64c38a8..63c8ffa 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -84,6 +84,7 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
+ static inline int identical_mac_addr_allowed(int type1, int type2)
+ {
+ 	return type1 == NL80211_IFTYPE_MONITOR ||
++		type1 == NL80211_IFTYPE_P2P_DEVICE ||
+ 		type2 == NL80211_IFTYPE_MONITOR ||
+ 		(type1 == NL80211_IFTYPE_AP && type2 == NL80211_IFTYPE_WDS) ||
+ 		(type1 == NL80211_IFTYPE_WDS &&
+@@ -278,9 +279,10 @@ static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+  * an error on interface type changes that have been pre-checked, so most
+  * checks should be in ieee80211_check_concurrent_iface.
+  */
+-static int ieee80211_do_open(struct net_device *dev, bool coming_up)
++int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	struct net_device *dev = wdev->netdev;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	u32 changed = 0;
+@@ -315,13 +317,13 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_MONITOR:
+ 	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_P2P_DEVICE:
+ 		/* no special treatment */
+ 		break;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NUM_NL80211_IFTYPES:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_P2P_GO:
+-	case NL80211_IFTYPE_P2P_DEVICE:
+ 		/* cannot happen */
+ 		WARN_ON(1);
+ 		break;
+@@ -344,7 +346,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 	 * Copy the hopefully now-present MAC address to
+ 	 * this interface, if it has the special null one.
+ 	 */
+-	if (is_zero_ether_addr(dev->dev_addr)) {
++	if (dev && is_zero_ether_addr(dev->dev_addr)) {
+ 		memcpy(dev->dev_addr,
+ 		       local->hw.wiphy->perm_addr,
+ 		       ETH_ALEN);
+@@ -409,14 +411,15 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 			local->fif_probe_req++;
+ 		}
+ 
+-		changed |= ieee80211_reset_erp_info(sdata);
++		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
++			changed |= ieee80211_reset_erp_info(sdata);
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
+ 		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
+ 		    sdata->vif.type == NL80211_IFTYPE_AP)
+ 			netif_carrier_off(dev);
+-		else
++		else if (dev)
+ 			netif_carrier_on(dev);
+ 
+ 		/*
+@@ -449,6 +452,8 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		}
+ 
+ 		rate_control_rate_init(sta);
++	} else if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE) {
++		rcu_assign_pointer(local->p2p_sdata, sdata);
+ 	}
+ 
+ 	/*
+@@ -474,7 +479,8 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 
+ 	ieee80211_recalc_ps(local, -1);
+ 
+-	netif_tx_start_all_queues(dev);
++	if (dev)
++		netif_tx_start_all_queues(dev);
+ 
+ 	return 0;
+  err_del_interface:
+@@ -504,7 +510,7 @@ static int ieee80211_open(struct net_device *dev)
+ 	if (err)
+ 		return err;
+ 
+-	return ieee80211_do_open(dev, true);
++	return ieee80211_do_open(&sdata->wdev, true);
+ }
+ 
+ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+@@ -525,7 +531,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	/*
+ 	 * Stop TX on this interface first.
+ 	 */
+-	netif_tx_stop_all_queues(sdata->dev);
++	if (sdata->dev)
++		netif_tx_stop_all_queues(sdata->dev);
+ 
+ 	ieee80211_roc_purge(sdata);
+ 
+@@ -564,14 +571,16 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		local->fif_probe_req--;
+ 	}
+ 
+-	netif_addr_lock_bh(sdata->dev);
+-	spin_lock_bh(&local->filter_lock);
+-	__hw_addr_unsync(&local->mc_list, &sdata->dev->mc,
+-			 sdata->dev->addr_len);
+-	spin_unlock_bh(&local->filter_lock);
+-	netif_addr_unlock_bh(sdata->dev);
++	if (sdata->dev) {
++		netif_addr_lock_bh(sdata->dev);
++		spin_lock_bh(&local->filter_lock);
++		__hw_addr_unsync(&local->mc_list, &sdata->dev->mc,
++				 sdata->dev->addr_len);
++		spin_unlock_bh(&local->filter_lock);
++		netif_addr_unlock_bh(sdata->dev);
+ 
+-	ieee80211_configure_filter(local);
++		ieee80211_configure_filter(local);
++	}
+ 
+ 	del_timer_sync(&local->dynamic_ps_timer);
+ 	cancel_work_sync(&local->dynamic_ps_enable_work);
+@@ -632,6 +641,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+ 		ieee80211_configure_filter(local);
+ 		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		/* relies on synchronize_rcu() below */
++		rcu_assign_pointer(local->p2p_sdata, NULL);
++		/* fall through */
+ 	default:
+ 		flush_work(&sdata->work);
+ 		/*
+@@ -750,9 +763,8 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
+  * Called when the netdev is removed or, by the code below, before
+  * the interface type changes.
+  */
+-static void ieee80211_teardown_sdata(struct net_device *dev)
++static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+ 	int flushed;
+ 	int i;
+@@ -773,6 +785,11 @@ static void ieee80211_teardown_sdata(struct net_device *dev)
+ 	WARN_ON(flushed);
+ }
+ 
++static void ieee80211_uninit(struct net_device *dev)
++{
++	ieee80211_teardown_sdata(IEEE80211_DEV_TO_SUB_IF(dev));
++}
++
+ static u16 ieee80211_netdev_select_queue(struct net_device *dev,
+ 					 struct sk_buff *skb)
+ {
+@@ -782,7 +799,7 @@ static u16 ieee80211_netdev_select_queue(struct net_device *dev,
+ static const struct net_device_ops ieee80211_dataif_ops = {
+ 	.ndo_open		= ieee80211_open,
+ 	.ndo_stop		= ieee80211_stop,
+-	.ndo_uninit		= ieee80211_teardown_sdata,
++	.ndo_uninit		= ieee80211_uninit,
+ 	.ndo_start_xmit		= ieee80211_subif_start_xmit,
+ 	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
+ 	.ndo_change_mtu 	= ieee80211_change_mtu,
+@@ -813,7 +830,7 @@ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
+ static const struct net_device_ops ieee80211_monitorif_ops = {
+ 	.ndo_open		= ieee80211_open,
+ 	.ndo_stop		= ieee80211_stop,
+-	.ndo_uninit		= ieee80211_teardown_sdata,
++	.ndo_uninit		= ieee80211_uninit,
+ 	.ndo_start_xmit		= ieee80211_monitor_start_xmit,
+ 	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
+ 	.ndo_change_mtu 	= ieee80211_change_mtu,
+@@ -972,7 +989,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	/* and set some type-dependent values */
+ 	sdata->vif.type = type;
+ 	sdata->vif.p2p = false;
+-	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+ 	sdata->wdev.iftype = type;
+ 
+ 	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
+@@ -980,8 +996,11 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->noack_map = 0;
+ 
+-	/* only monitor differs */
+-	sdata->dev->type = ARPHRD_ETHER;
++	/* only monitor/p2p-device differ */
++	if (sdata->dev) {
++		sdata->dev->netdev_ops = &ieee80211_dataif_ops;
++		sdata->dev->type = ARPHRD_ETHER;
++	}
+ 
+ 	skb_queue_head_init(&sdata->skb_queue);
+ 	INIT_WORK(&sdata->work, ieee80211_iface_work);
+@@ -1019,9 +1038,8 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_AP_VLAN:
+-		break;
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+-		/* not yet supported */
++		break;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NUM_NL80211_IFTYPES:
+ 		BUG();
+@@ -1100,7 +1118,7 @@ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_do_stop(sdata, false);
+ 
+-	ieee80211_teardown_sdata(sdata->dev);
++	ieee80211_teardown_sdata(sdata);
+ 
+ 	ret = drv_change_interface(local, sdata, internal_type, p2p);
+ 	if (ret)
+@@ -1115,7 +1133,7 @@ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_setup_sdata(sdata, type);
+ 
+-	err = ieee80211_do_open(sdata->dev, false);
++	err = ieee80211_do_open(&sdata->wdev, false);
+ 	WARN(err, "type change: do_open returned %d", err);
+ 
+ 	return ret;
+@@ -1142,7 +1160,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+ 			return ret;
+ 	} else {
+ 		/* Purge and reset type-dependent state. */
+-		ieee80211_teardown_sdata(sdata->dev);
++		ieee80211_teardown_sdata(sdata);
+ 		ieee80211_setup_sdata(sdata, type);
+ 	}
+ 
+@@ -1158,8 +1176,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+-				       struct net_device *dev,
+-				       enum nl80211_iftype type)
++				       u8 *perm_addr, enum nl80211_iftype type)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	u64 mask, start, addr, val, inc;
+@@ -1168,7 +1185,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 	int i;
+ 
+ 	/* default ... something at least */
+-	memcpy(dev->perm_addr, local->hw.wiphy->perm_addr, ETH_ALEN);
++	memcpy(perm_addr, local->hw.wiphy->perm_addr, ETH_ALEN);
+ 
+ 	if (is_zero_ether_addr(local->hw.wiphy->addr_mask) &&
+ 	    local->hw.wiphy->n_addresses <= 1)
+@@ -1187,7 +1204,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 		list_for_each_entry(sdata, &local->interfaces, list) {
+ 			if (sdata->vif.type != NL80211_IFTYPE_AP)
+ 				continue;
+-			memcpy(dev->perm_addr, sdata->vif.addr, ETH_ALEN);
++			memcpy(perm_addr, sdata->vif.addr, ETH_ALEN);
+ 			break;
+ 		}
+ 		/* keep default if no AP interface present */
+@@ -1206,7 +1223,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 			}
+ 
+ 			if (!used) {
+-				memcpy(dev->perm_addr,
++				memcpy(perm_addr,
+ 				       local->hw.wiphy->addresses[i].addr,
+ 				       ETH_ALEN);
+ 				break;
+@@ -1257,7 +1274,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 			}
+ 
+ 			if (!used) {
+-				memcpy(dev->perm_addr, tmp_addr, ETH_ALEN);
++				memcpy(perm_addr, tmp_addr, ETH_ALEN);
+ 				break;
+ 			}
+ 			addr = (start & ~mask) | (val & mask);
+@@ -1273,49 +1290,68 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+ 		     struct vif_params *params)
+ {
+-	struct net_device *ndev;
++	struct net_device *ndev = NULL;
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+ 	int ret, i;
+ 	int txqs = 1;
+ 
+ 	ASSERT_RTNL();
+ 
+-	if (local->hw.queues >= IEEE80211_NUM_ACS)
+-		txqs = IEEE80211_NUM_ACS;
++	if (type == NL80211_IFTYPE_P2P_DEVICE) {
++		struct wireless_dev *wdev;
+ 
+-	ndev = alloc_netdev_mqs(sizeof(*sdata) + local->hw.vif_data_size,
+-				name, ieee80211_if_setup, txqs, 1);
+-	if (!ndev)
+-		return -ENOMEM;
+-	dev_net_set(ndev, wiphy_net(local->hw.wiphy));
+-
+-	ndev->needed_headroom = local->tx_headroom +
+-				4*6 /* four MAC addresses */
+-				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
+-				+ 6 /* mesh */
+-				+ 8 /* rfc1042/bridge tunnel */
+-				- ETH_HLEN /* ethernet hard_header_len */
+-				+ IEEE80211_ENCRYPT_HEADROOM;
+-	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
+-
+-	ret = dev_alloc_name(ndev, ndev->name);
+-	if (ret < 0)
+-		goto fail;
+-
+-	ieee80211_assign_perm_addr(local, ndev, type);
+-	memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
+-	SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
+-
+-	/* don't use IEEE80211_DEV_TO_SUB_IF because it checks too much */
+-	sdata = netdev_priv(ndev);
+-	ndev->ieee80211_ptr = &sdata->wdev;
+-	memcpy(sdata->vif.addr, ndev->dev_addr, ETH_ALEN);
+-	memcpy(sdata->name, ndev->name, IFNAMSIZ);
++		sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size,
++				GFP_KERNEL);
++		if (!sdata)
++			return -ENOMEM;
++		wdev = &sdata->wdev;
++
++		sdata->dev = NULL;
++		strlcpy(sdata->name, name, IFNAMSIZ);
++		ieee80211_assign_perm_addr(local, wdev->address, type);
++		memcpy(sdata->vif.addr, wdev->address, ETH_ALEN);
++	} else {
++		if (local->hw.queues >= IEEE80211_NUM_ACS)
++			txqs = IEEE80211_NUM_ACS;
++
++		ndev = alloc_netdev_mqs(sizeof(*sdata) +
++					local->hw.vif_data_size,
++					name, ieee80211_if_setup, txqs, 1);
++		if (!ndev)
++			return -ENOMEM;
++		dev_net_set(ndev, wiphy_net(local->hw.wiphy));
++
++		ndev->needed_headroom = local->tx_headroom +
++					4*6 /* four MAC addresses */
++					+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
++					+ 6 /* mesh */
++					+ 8 /* rfc1042/bridge tunnel */
++					- ETH_HLEN /* ethernet hard_header_len */
++					+ IEEE80211_ENCRYPT_HEADROOM;
++		ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
++
++		ret = dev_alloc_name(ndev, ndev->name);
++		if (ret < 0) {
++			free_netdev(ndev);
++			return ret;
++		}
++
++		ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
++		memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
++		SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
++
++		/* don't use IEEE80211_DEV_TO_SUB_IF -- it checks too much */
++		sdata = netdev_priv(ndev);
++		ndev->ieee80211_ptr = &sdata->wdev;
++		memcpy(sdata->vif.addr, ndev->dev_addr, ETH_ALEN);
++		memcpy(sdata->name, ndev->name, IFNAMSIZ);
++
++		sdata->dev = ndev;
++	}
+ 
+ 	/* initialise type-independent data */
+ 	sdata->wdev.wiphy = local->hw.wiphy;
+ 	sdata->local = local;
+-	sdata->dev = ndev;
+ #ifdef CONFIG_INET
+ 	sdata->arp_filter_state = true;
+ #endif
+@@ -1344,17 +1380,21 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	/* setup type-dependent data */
+ 	ieee80211_setup_sdata(sdata, type);
+ 
+-	if (params) {
+-		ndev->ieee80211_ptr->use_4addr = params->use_4addr;
+-		if (type == NL80211_IFTYPE_STATION)
+-			sdata->u.mgd.use_4addr = params->use_4addr;
+-	}
++	if (ndev) {
++		if (params) {
++			ndev->ieee80211_ptr->use_4addr = params->use_4addr;
++			if (type == NL80211_IFTYPE_STATION)
++				sdata->u.mgd.use_4addr = params->use_4addr;
++		}
+ 
+-	ndev->features |= local->hw.netdev_features;
++		ndev->features |= local->hw.netdev_features;
+ 
+-	ret = register_netdevice(ndev);
+-	if (ret)
+-		goto fail;
++		ret = register_netdevice(ndev);
++		if (ret) {
++			free_netdev(ndev);
++			return ret;
++		}
++	}
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_add_tail_rcu(&sdata->list, &local->interfaces);
+@@ -1364,10 +1404,6 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		*new_wdev = &sdata->wdev;
+ 
+ 	return 0;
+-
+- fail:
+-	free_netdev(ndev);
+-	return ret;
+ }
+ 
+ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+@@ -1382,7 +1418,19 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_clean_sdata(sdata);
+ 
+ 	synchronize_rcu();
+-	unregister_netdevice(sdata->dev);
++
++	if (sdata->dev) {
++		unregister_netdevice(sdata->dev);
++	} else {
++		cfg80211_unregister_wdev(&sdata->wdev);
++		kfree(sdata);
++	}
++}
++
++void ieee80211_sdata_stop(struct ieee80211_sub_if_data *sdata)
++{
++	ieee80211_do_stop(sdata, true);
++	ieee80211_teardown_sdata(sdata);
+ }
+ 
+ /*
+@@ -1393,6 +1441,7 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata, *tmp;
+ 	LIST_HEAD(unreg_list);
++	LIST_HEAD(wdev_list);
+ 
+ 	ASSERT_RTNL();
+ 
+@@ -1402,11 +1451,21 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
+ 
+ 		ieee80211_clean_sdata(sdata);
+ 
+-		unregister_netdevice_queue(sdata->dev, &unreg_list);
++		if (sdata->dev)
++			unregister_netdevice_queue(sdata->dev, &unreg_list);
++		else
++			list_add(&sdata->list, &wdev_list);
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+ 	unregister_netdevice_many(&unreg_list);
+ 	list_del(&unreg_list);
++
++	list_for_each_entry_safe(sdata, tmp, &wdev_list, list) {
++		list_del(&sdata->list);
++		ieee80211_sdata_stop(sdata);
++		cfg80211_unregister_wdev(&sdata->wdev);
++		kfree(sdata);
++	}
+ }
+ 
+ static u32 ieee80211_idle_off(struct ieee80211_local *local,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 976e413..4ae6099 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -207,6 +207,10 @@ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
+ 		sdata->vif.bss_conf.bssid = NULL;
+ 	else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ 		sdata->vif.bss_conf.bssid = zero;
++	} else if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE) {
++		sdata->vif.bss_conf.bssid = sdata->vif.addr;
++		WARN_ONCE(changed & ~(BSS_CHANGED_IDLE),
++			  "P2P Device BSS changed %#x", changed);
+ 	} else {
+ 		WARN_ON(1);
+ 		return;
+@@ -511,6 +515,11 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+ 			BIT(IEEE80211_STYPE_AUTH >> 4) |
+ 			BIT(IEEE80211_STYPE_DEAUTH >> 4),
+ 	},
++	[NL80211_IFTYPE_P2P_DEVICE] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++			BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
++	},
+ };
+ 
+ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 7290c97..c38bd1e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2815,8 +2815,7 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 		if (!bssid) {
+ 			if (!ether_addr_equal(sdata->vif.addr, hdr->addr1))
+ 				return 0;
+-		} else if (!ieee80211_bssid_match(bssid,
+-					sdata->vif.addr)) {
++		} else if (!ieee80211_bssid_match(bssid, sdata->vif.addr)) {
+ 			/*
+ 			 * Accept public action frames even when the
+ 			 * BSSID doesn't match, this is used for P2P
+@@ -2838,9 +2837,18 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 		if (!ether_addr_equal(sdata->u.wds.remote_addr, hdr->addr2))
+ 			return 0;
+ 		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		if (!ieee80211_is_public_action(hdr, skb->len) &&
++		    !ieee80211_is_probe_req(hdr->frame_control) &&
++		    !ieee80211_is_probe_resp(hdr->frame_control) &&
++		    !ieee80211_is_beacon(hdr->frame_control))
++			return 0;
++		if (!ether_addr_equal(sdata->vif.addr, hdr->addr1))
++			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
++		break;
+ 	default:
+ 		/* should never get here */
+-		WARN_ON(1);
++		WARN_ON_ONCE(1);
+ 		break;
+ 	}
+ 
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 975ab03..ab20e69 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -528,13 +528,26 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		 */
+ 
+ 		if (ieee80211_is_nullfunc(hdr->frame_control) ||
+-		    ieee80211_is_qos_nullfunc(hdr->frame_control))
++		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+ 			cfg80211_probe_status(skb->dev, hdr->addr1,
+ 					      cookie, acked, GFP_ATOMIC);
+-		else
++		} else if (skb->dev) {
+ 			cfg80211_mgmt_tx_status(
+ 				skb->dev->ieee80211_ptr, cookie, skb->data,
+ 				skb->len, acked, GFP_ATOMIC);
++		} else {
++			struct ieee80211_sub_if_data *p2p_sdata;
++
++			rcu_read_lock();
++
++			p2p_sdata = rcu_dereference(local->p2p_sdata);
++			if (p2p_sdata) {
++				cfg80211_mgmt_tx_status(
++					&p2p_sdata->wdev, cookie, skb->data,
++					skb->len, acked, GFP_ATOMIC);
++			}
++			rcu_read_unlock();
++		}
+ 	}
+ 
+ 	if (unlikely(info->ack_frame_id)) {
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 864e533..751ecaa 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -272,6 +272,9 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		int ac;
+ 
++		if (!sdata->dev)
++			continue;
++
+ 		if (test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
+ 			continue;
+ 
+@@ -356,6 +359,9 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		int ac;
+ 
++		if (!sdata->dev)
++			continue;
++
+ 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 			if (sdata->vif.hw_queue[ac] == queue ||
+ 			    sdata->vif.cab_queue == queue)
+@@ -882,7 +888,8 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 		drv_conf_tx(local, sdata, ac, &qparam);
+ 	}
+ 
+-	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
++	if (sdata->vif.type != NL80211_IFTYPE_MONITOR &&
++	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE) {
+ 		sdata->vif.bss_conf.qos = enable_qos;
+ 		if (bss_notify)
+ 			ieee80211_bss_info_change_notify(sdata,
+@@ -1363,7 +1370,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			/* ignore virtual */
+ 			break;
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+-			/* not yet supported */
++			changed = BSS_CHANGED_IDLE;
++			break;
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 		case NUM_NL80211_IFTYPES:
+ 		case NL80211_IFTYPE_P2P_CLIENT:
+-- 
+1.7.10
 
