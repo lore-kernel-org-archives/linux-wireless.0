@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:47154 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756160Ab2F0PgW (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:56578 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247Ab2FSV7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 11:36:22 -0400
-Received: by eaae12 with SMTP id e12so532162eaa.26
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 08:36:20 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 3/8] wlcore: don't stop tx queue via watermark if already stopped
-Date: Wed, 27 Jun 2012 18:35:57 +0300
-Message-Id: <1340811362-30441-4-git-send-email-coelho@ti.com> (sfid-20120627_173626_234115_B310E48D)
-In-Reply-To: <1340811362-30441-1-git-send-email-coelho@ti.com>
-References: <1340811362-30441-1-git-send-email-coelho@ti.com>
+	Tue, 19 Jun 2012 17:59:43 -0400
+Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
+	by www19.servergod.com (Postfix) with ESMTP id 6774212000B
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 14:59:43 -0700 (PDT)
+Received: by mail0.frost.chambana.net (Postfix) with SMTP id 263BF59A06C
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 21:59:43 +0000
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+To: hawkinsw@opentechinstitute.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 3/3] mac80211: Allow userspace application to register for authentication frames
+Date: Tue, 19 Jun 2012 17:59:14 -0400
+Message-Id: <561a3f1df991c189e2c20af2ae349ca4fe79f640.1340142553.git.hawkinsw@opentechinstitute.org> (sfid-20120619_235949_311300_FE7E6A7E)
+In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Set the necessary flags to allow user space
+applications to register for authentication frames
+on adhoc interfaces. This is useful for
+situations where userspace applications want
+to control key negotiation between stations.
 
-If a Tx queue is currently stopped because of our Tx watermark flow
-control, don't stop it again. This causes a warning to appear.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
 ---
- drivers/net/wireless/ti/wlcore/main.c |    4 +++-
+ net/mac80211/main.c |    4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 2240cca..1d404fa 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1211,7 +1211,9 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * The workqueue is slow to process the tx_queue and we need stop
- 	 * the queue here, otherwise the queue will get too long.
- 	 */
--	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK &&
-+	    !wlcore_is_queue_stopped_by_reason(wl, q,
-+					WLCORE_QUEUE_STOP_REASON_WATERMARK)) {
- 		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
- 		wlcore_stop_queue_locked(wl, q,
- 					 WLCORE_QUEUE_STOP_REASON_WATERMARK);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d81c178..4467162 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -455,7 +455,9 @@ static const struct ieee80211_txrx_stypes
+ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+ 	[NL80211_IFTYPE_ADHOC] = {
+ 		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++			BIT(IEEE80211_STYPE_AUTH >> 4) |
++			BIT(IEEE80211_STYPE_DEAUTH >> 4),
+ 	},
+ 	[NL80211_IFTYPE_STATION] = {
+ 		.tx = 0xffff,
 -- 
-1.7.10
+1.7.9.5
+
 
