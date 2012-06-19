@@ -1,199 +1,461 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42281 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965393Ab2FAQP5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52376 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752755Ab2FSOvS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 12:15:57 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/10] brcm80211: smac: use mac80211 channel data for tx power limits
-Date: Fri,  1 Jun 2012 11:15:34 -0500
-Message-Id: <1338567336-12076-9-git-send-email-seth.forshee@canonical.com> (sfid-20120601_181607_457217_B32EC325)
-In-Reply-To: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
-References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
+	Tue, 19 Jun 2012 10:51:18 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 13/17] nl80211: move scan API to wdev
+Date: Tue, 19 Jun 2012 16:50:52 +0200
+Message-Id: <1340117456-10154-14-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165147_054111_6FA74E32)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the limits from the internal X2 domain are used, regardless
-of what regulatory rules are in effect. Instead use the power limits set
-by the higher-level regulatory support.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The rules for the MIMO power limits are still always derived from the
-world domain. Guidance from Broadcom is needed on how these limits
-should be determined for other regulatory domains.
+The new P2P Device will have to be able to scan for
+P2P search, so move scanning to use struct wireless_dev
+instead of struct net_device.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   73 ++++-----------------
- 1 file changed, 14 insertions(+), 59 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |    6 ++--
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    3 +-
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c       |    3 +-
+ drivers/net/wireless/libertas/cfg.c                |    1 -
+ drivers/net/wireless/mwifiex/cfg80211.c            |    3 +-
+ drivers/net/wireless/orinoco/cfg.c                 |    2 +-
+ drivers/net/wireless/rndis_wlan.c                  |    5 ++--
+ include/net/cfg80211.h                             |    7 +++--
+ net/mac80211/cfg.c                                 |    5 ++--
+ net/wireless/core.c                                |    2 +-
+ net/wireless/nl80211.c                             |   31 +++++++++++---------
+ net/wireless/nl80211.h                             |    6 ++--
+ net/wireless/scan.c                                |   24 ++++++++-------
+ net/wireless/sme.c                                 |    6 ++--
+ 14 files changed, 57 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 9dbc1dd..19be4f7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -74,15 +74,6 @@
- /* max of BAND_5G_PWR_LVLS and 14 for 2.4 GHz */
- #define BRCMS_MAXPWR_MIMO_TBL_SIZE	14
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 404e87c..a507b6e 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -908,11 +908,11 @@ static int ath6kl_set_probed_ssids(struct ath6kl *ar,
+ 	return 0;
+ }
  
--/* power level in group of 2.4GHz band channels:
-- * maxpwr[0] - CCK  channels [1]
-- * maxpwr[1] - CCK  channels [2-10]
-- * maxpwr[2] - CCK  channels [11-14]
-- * maxpwr[3] - OFDM channels [1]
-- * maxpwr[4] - OFDM channels [2-10]
-- * maxpwr[5] - OFDM channels [11-14]
-- */
--
- /* maxpwr mapping to 5GHz band channels:
-  * maxpwr[0] - channels [34-48]
-  * maxpwr[1] - channels [52-60]
-@@ -101,10 +92,6 @@
- #define LOCALES(band2, band5, mimo2, mimo5) \
- 		{LC_2G(band2), LC_5G(band5), LC(mimo2), LC(mimo5)}
- 
--/* macro to get 2.4 GHz channel group index for tx power */
--#define CHANNEL_POWER_IDX_2G_CCK(c) (((c) < 2) ? 0 : (((c) < 11) ? 1 : 2))
--#define CHANNEL_POWER_IDX_2G_OFDM(c) (((c) < 2) ? 3 : (((c) < 11) ? 4 : 5))
--
- /* macro to get 5 GHz channel group index for tx power */
- #define CHANNEL_POWER_IDX_5G(c) (((c) < 52) ? 0 : \
- 				 (((c) < 62) ? 1 : \
-@@ -194,8 +181,6 @@ struct locale_info {
- 	u32 valid_channels;
- 	/* List of channels used only if APs are detected */
- 	u8 restricted_channels;
--	/* Max tx pwr in qdBm for each sub-band */
--	s8 maxpwr[BRCMS_MAXPWR_TBL_SIZE];
- 	u8 flags;
- };
- 
-@@ -391,8 +376,6 @@ static void brcms_c_locale_get_channels(const struct locale_info *locale,
- static const struct locale_info locale_i = {	/* locale i. channel 1 - 13 */
- 	LOCALE_CHAN_01_11 | LOCALE_CHAN_12_13,
- 	LOCALE_RESTRICTED_SET_2G_SHORT,
--	{QDB(19), QDB(19), QDB(19),
--	 QDB(19), QDB(19), QDB(19)},
- 	BRCMS_EIRP
- };
- 
-@@ -403,7 +386,6 @@ static const struct locale_info locale_11 = {
- 	/* locale 11. channel 36 - 48, 52 - 64, 100 - 140, 149 - 165 */
- 	LOCALE_CHAN_36_64 | LOCALE_CHAN_100_140 | LOCALE_CHAN_149_165,
- 	LOCALE_RESTRICTED_NONE,
--	{QDB(21), QDB(21), QDB(21), QDB(21), QDB(21)},
- 	BRCMS_EIRP | BRCMS_DFS_EU
- };
- 
-@@ -847,6 +829,7 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 		       struct txpwr_limits *txpwr)
+-static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
++static int ath6kl_cfg80211_scan(struct wiphy *wiphy,
+ 				struct cfg80211_scan_request *request)
  {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
-+	struct ieee80211_channel *ch = wlc->pub->ieee_hw->conf.channel;
- 	uint i;
- 	uint chan;
- 	int maxpwr;
-@@ -855,7 +838,6 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 	struct brcms_band *band;
- 	const struct locale_info *li;
- 	int conducted_max = BRCMS_TXPWR_MAX;
--	int conducted_ofdm_max = BRCMS_TXPWR_MAX;
- 	const struct locale_mimo_info *li_mimo;
- 	int maxpwr20, maxpwr40;
- 	int maxpwr_idx;
-@@ -863,6 +845,9 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
+-	struct ath6kl *ar = ath6kl_priv(ndev);
+-	struct ath6kl_vif *vif = netdev_priv(ndev);
++	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(request->wdev);
++	struct ath6kl *ar = ath6kl_priv(vif->ndev);
+ 	s8 n_channels = 0;
+ 	u16 *channels = NULL;
+ 	int ret = 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index d13ae9c..c6a10ca 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -691,9 +691,10 @@ scan_out:
+ }
  
- 	memset(txpwr, 0, sizeof(struct txpwr_limits));
+ static s32
+-brcmf_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
++brcmf_cfg80211_scan(struct wiphy *wiphy,
+ 		 struct cfg80211_scan_request *request)
+ {
++	struct net_device *ndev = request->wdev->netdev;
+ 	s32 err = 0;
  
-+	if (WARN_ON(!ch))
-+		return;
+ 	WL_TRACE("Enter\n");
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index 48e8218..523dd64 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -353,9 +353,10 @@ static int iwm_cfg80211_change_iface(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
+-static int iwm_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
++static int iwm_cfg80211_scan(struct wiphy *wiphy,
+ 			     struct cfg80211_scan_request *request)
+ {
++	struct net_device *ndev = request->wdev->netdev;
+ 	struct iwm_priv *iwm = ndev_to_iwm(ndev);
+ 	int ret;
+ 
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index f4a2030..7067813 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -805,7 +805,6 @@ void lbs_scan_done(struct lbs_private *priv)
+ }
+ 
+ static int lbs_cfg_scan(struct wiphy *wiphy,
+-	struct net_device *dev,
+ 	struct cfg80211_scan_request *request)
+ {
+ 	struct lbs_private *priv = wiphy_priv(wiphy);
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ecf68ab..ab52a85 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1335,9 +1335,10 @@ mwifiex_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+  * it also informs the results.
+  */
+ static int
+-mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
++mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 		      struct cfg80211_scan_request *request)
+ {
++	struct net_device *dev = request->wdev->netdev;
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	int i;
+ 	struct ieee80211_channel *chan;
+diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
+index e156755..7b751fb 100644
+--- a/drivers/net/wireless/orinoco/cfg.c
++++ b/drivers/net/wireless/orinoco/cfg.c
+@@ -138,7 +138,7 @@ static int orinoco_change_vif(struct wiphy *wiphy, struct net_device *dev,
+ 	return err;
+ }
+ 
+-static int orinoco_scan(struct wiphy *wiphy, struct net_device *dev,
++static int orinoco_scan(struct wiphy *wiphy,
+ 			struct cfg80211_scan_request *request)
+ {
+ 	struct orinoco_private *priv = wiphy_priv(wiphy);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 2e9e6af..8997254 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -484,7 +484,7 @@ static int rndis_change_virtual_intf(struct wiphy *wiphy,
+ 					enum nl80211_iftype type, u32 *flags,
+ 					struct vif_params *params);
+ 
+-static int rndis_scan(struct wiphy *wiphy, struct net_device *dev,
++static int rndis_scan(struct wiphy *wiphy,
+ 			struct cfg80211_scan_request *request);
+ 
+ static int rndis_set_wiphy_params(struct wiphy *wiphy, u32 changed);
+@@ -1941,9 +1941,10 @@ static int rndis_get_tx_power(struct wiphy *wiphy, int *dbm)
+ }
+ 
+ #define SCAN_DELAY_JIFFIES (6 * HZ)
+-static int rndis_scan(struct wiphy *wiphy, struct net_device *dev,
++static int rndis_scan(struct wiphy *wiphy,
+ 			struct cfg80211_scan_request *request)
+ {
++	struct net_device *dev = request->wdev->netdev;
+ 	struct usbnet *usbdev = netdev_priv(dev);
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	int ret;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4c1e5d3..f5c4b9d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -978,7 +978,7 @@ struct cfg80211_ssid {
+  * @ie_len: length of ie in octets
+  * @rates: bitmap of rates to advertise for each band
+  * @wiphy: the wiphy this was for
+- * @dev: the interface
++ * @wdev: the wireless device to scan for
+  * @aborted: (internal) scan request was notified as aborted
+  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
+  */
+@@ -991,9 +991,10 @@ struct cfg80211_scan_request {
+ 
+ 	u32 rates[IEEE80211_NUM_BANDS];
+ 
++	struct wireless_dev *wdev;
 +
- 	country = &wlc_cm->world_regd->country;
+ 	/* internal */
+ 	struct wiphy *wiphy;
+-	struct net_device *dev;
+ 	bool aborted;
+ 	bool no_cck;
  
- 	chan = CHSPEC_CHANNEL(chanspec);
-@@ -875,49 +860,24 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 	    brcms_c_get_mimo_5g(country->locale_mimo_5G) :
- 	    brcms_c_get_mimo_2g(country->locale_mimo_2G);
+@@ -1678,7 +1679,7 @@ struct cfg80211_ops {
+ 				       struct ieee80211_channel *chan,
+ 				       enum nl80211_channel_type channel_type);
  
--	if (li->flags & BRCMS_EIRP) {
--		delta = band->antgain;
--	} else {
--		delta = 0;
--		if (band->antgain > QDB(6))
--			delta = band->antgain - QDB(6);	/* Excess over 6 dB */
--	}
-+	delta = band->antgain;
+-	int	(*scan)(struct wiphy *wiphy, struct net_device *dev,
++	int	(*scan)(struct wiphy *wiphy,
+ 			struct cfg80211_scan_request *request);
  
--	if (li == &locale_i) {
-+	if (li == &locale_i)
- 		conducted_max = QDB(22);
--		conducted_ofdm_max = QDB(22);
--	}
+ 	int	(*auth)(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 72987dc..7933eab 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1756,10 +1756,11 @@ static int ieee80211_resume(struct wiphy *wiphy)
+ #endif
+ 
+ static int ieee80211_scan(struct wiphy *wiphy,
+-			  struct net_device *dev,
+ 			  struct cfg80211_scan_request *req)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_sub_if_data *sdata;
 +
-+	maxpwr = QDB(ch->max_power) - delta;
-+	maxpwr = max(maxpwr, 0);
-+	maxpwr = min(maxpwr, conducted_max);
++	sdata = IEEE80211_WDEV_TO_SUB_IF(req->wdev);
  
- 	/* CCK txpwr limits for 2.4G band */
- 	if (band->bandtype == BRCM_BAND_2G) {
--		maxpwr = li->maxpwr[CHANNEL_POWER_IDX_2G_CCK(chan)];
--
--		maxpwr = maxpwr - delta;
--		maxpwr = max(maxpwr, 0);
--		maxpwr = min(maxpwr, conducted_max);
--
- 		for (i = 0; i < BRCMS_NUM_RATES_CCK; i++)
- 			txpwr->cck[i] = (u8) maxpwr;
+ 	switch (ieee80211_vif_type_p2p(&sdata->vif)) {
+ 	case NL80211_IFTYPE_STATION:
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 458de46..12b905a 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -690,7 +690,7 @@ static void wdev_cleanup_work(struct work_struct *work)
+ 
+ 	cfg80211_lock_rdev(rdev);
+ 
+-	if (WARN_ON(rdev->scan_req && rdev->scan_req->dev == wdev->netdev)) {
++	if (WARN_ON(rdev->scan_req && rdev->scan_req->wdev == wdev)) {
+ 		rdev->scan_req->aborted = true;
+ 		___cfg80211_scan_done(rdev, true);
+ 	}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 861611b..e94aac9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4081,7 +4081,7 @@ static int validate_scan_freqs(struct nlattr *freqs)
+ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = info->user_ptr[1];
+ 	struct cfg80211_scan_request *request;
+ 	struct nlattr *attr;
+ 	struct wiphy *wiphy;
+@@ -4241,15 +4241,16 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+-	request->dev = dev;
++	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
+ 
+ 	rdev->scan_req = request;
+-	err = rdev->ops->scan(&rdev->wiphy, dev, request);
++	err = rdev->ops->scan(&rdev->wiphy, request);
+ 
+ 	if (!err) {
+-		nl80211_send_scan_start(rdev, dev);
+-		dev_hold(dev);
++		nl80211_send_scan_start(rdev, wdev);
++		if (wdev->netdev)
++			dev_hold(wdev->netdev);
+ 	} else {
+  out_free:
+ 		rdev->scan_req = NULL;
+@@ -7009,7 +7010,7 @@ static struct genl_ops nl80211_ops[] = {
+ 		.doit = nl80211_trigger_scan,
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+-		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
+@@ -7399,7 +7400,7 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
+ 
+ static int nl80211_send_scan_msg(struct sk_buff *msg,
+ 				 struct cfg80211_registered_device *rdev,
+-				 struct net_device *netdev,
++				 struct wireless_dev *wdev,
+ 				 u32 pid, u32 seq, int flags,
+ 				 u32 cmd)
+ {
+@@ -7410,7 +7411,9 @@ static int nl80211_send_scan_msg(struct sk_buff *msg,
+ 		return -1;
+ 
+ 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+-	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
++	    (wdev->netdev && nla_put_u32(msg, NL80211_ATTR_IFINDEX,
++	    				 wdev->netdev->ifindex)) ||
++	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
+ 		goto nla_put_failure;
+ 
+ 	/* ignore errors and send incomplete event anyway */
+@@ -7447,7 +7450,7 @@ nl80211_send_sched_scan_msg(struct sk_buff *msg,
+ }
+ 
+ void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
+-			     struct net_device *netdev)
++			     struct wireless_dev *wdev)
+ {
+ 	struct sk_buff *msg;
+ 
+@@ -7455,7 +7458,7 @@ void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
+ 	if (!msg)
+ 		return;
+ 
+-	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
++	if (nl80211_send_scan_msg(msg, rdev, wdev, 0, 0, 0,
+ 				  NL80211_CMD_TRIGGER_SCAN) < 0) {
+ 		nlmsg_free(msg);
+ 		return;
+@@ -7466,7 +7469,7 @@ void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
+ }
+ 
+ void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+-			    struct net_device *netdev)
++			    struct wireless_dev *wdev)
+ {
+ 	struct sk_buff *msg;
+ 
+@@ -7474,7 +7477,7 @@ void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+ 	if (!msg)
+ 		return;
+ 
+-	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
++	if (nl80211_send_scan_msg(msg, rdev, wdev, 0, 0, 0,
+ 				  NL80211_CMD_NEW_SCAN_RESULTS) < 0) {
+ 		nlmsg_free(msg);
+ 		return;
+@@ -7485,7 +7488,7 @@ void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+ }
+ 
+ void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+-			       struct net_device *netdev)
++			       struct wireless_dev *wdev)
+ {
+ 	struct sk_buff *msg;
+ 
+@@ -7493,7 +7496,7 @@ void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+ 	if (!msg)
+ 		return;
+ 
+-	if (nl80211_send_scan_msg(msg, rdev, netdev, 0, 0, 0,
++	if (nl80211_send_scan_msg(msg, rdev, wdev, 0, 0, 0,
+ 				  NL80211_CMD_SCAN_ABORTED) < 0) {
+ 		nlmsg_free(msg);
+ 		return;
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 0469303..89ce996 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -7,11 +7,11 @@ int nl80211_init(void);
+ void nl80211_exit(void);
+ void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
+ void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
+-			     struct net_device *netdev);
++			     struct wireless_dev *wdev);
+ void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+-			    struct net_device *netdev);
++			    struct wireless_dev *wdev);
+ void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+-			       struct net_device *netdev);
++			       struct wireless_dev *wdev);
+ void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
+ 			     struct net_device *netdev, u32 cmd);
+ void nl80211_send_sched_scan_results(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index af2b1ca..848523a 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -23,7 +23,7 @@
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ {
+ 	struct cfg80211_scan_request *request;
+-	struct net_device *dev;
++	struct wireless_dev *wdev;
+ #ifdef CONFIG_CFG80211_WEXT
+ 	union iwreq_data wrqu;
+ #endif
+@@ -35,29 +35,31 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ 	if (!request)
+ 		return;
+ 
+-	dev = request->dev;
++	wdev = request->wdev;
+ 
+ 	/*
+ 	 * This must be before sending the other events!
+ 	 * Otherwise, wpa_supplicant gets completely confused with
+ 	 * wext events.
+ 	 */
+-	cfg80211_sme_scan_done(dev);
++	if (wdev->netdev)
++		cfg80211_sme_scan_done(wdev->netdev);
+ 
+ 	if (request->aborted)
+-		nl80211_send_scan_aborted(rdev, dev);
++		nl80211_send_scan_aborted(rdev, wdev);
+ 	else
+-		nl80211_send_scan_done(rdev, dev);
++		nl80211_send_scan_done(rdev, wdev);
+ 
+ #ifdef CONFIG_CFG80211_WEXT
+-	if (!request->aborted) {
++	if (wdev->netdev && !request->aborted) {
+ 		memset(&wrqu, 0, sizeof(wrqu));
+ 
+-		wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
++		wireless_send_event(wdev->netdev, SIOCGIWSCAN, &wrqu, NULL);
+ 	}
+ #endif
+ 
+-	dev_put(dev);
++	if (wdev->netdev)
++		dev_put(wdev->netdev);
+ 
+ 	rdev->scan_req = NULL;
+ 
+@@ -955,7 +957,7 @@ int cfg80211_wext_siwscan(struct net_device *dev,
  	}
  
--	/* OFDM txpwr limits for 2.4G or 5G bands */
--	if (band->bandtype == BRCM_BAND_2G)
--		maxpwr = li->maxpwr[CHANNEL_POWER_IDX_2G_OFDM(chan)];
--	else
--		maxpwr = li->maxpwr[CHANNEL_POWER_IDX_5G(chan)];
--
--	maxpwr = maxpwr - delta;
--	maxpwr = max(maxpwr, 0);
--	maxpwr = min(maxpwr, conducted_ofdm_max);
--
--	/* Keep OFDM lmit below CCK limit */
--	if (band->bandtype == BRCM_BAND_2G)
--		maxpwr = min_t(int, maxpwr, txpwr->cck[0]);
--
--	for (i = 0; i < BRCMS_NUM_RATES_OFDM; i++)
-+	for (i = 0; i < BRCMS_NUM_RATES_OFDM; i++) {
- 		txpwr->ofdm[i] = (u8) maxpwr;
+ 	creq->wiphy = wiphy;
+-	creq->dev = dev;
++	creq->wdev = dev->ieee80211_ptr;
+ 	/* SSIDs come after channels */
+ 	creq->ssids = (void *)&creq->channels[n_channels];
+ 	creq->n_channels = n_channels;
+@@ -1024,12 +1026,12 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
  
--	for (i = 0; i < BRCMS_NUM_RATES_OFDM; i++) {
- 		/*
- 		 * OFDM 40 MHz SISO has the same power as the corresponding
- 		 * MCS0-7 rate unless overriden by the locale specific code.
-@@ -932,14 +892,9 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 		txpwr->ofdm_40_cdd[i] = 0;
- 	}
+ 	rdev->scan_req = creq;
+-	err = rdev->ops->scan(wiphy, dev, creq);
++	err = rdev->ops->scan(wiphy, creq);
+ 	if (err) {
+ 		rdev->scan_req = NULL;
+ 		/* creq will be freed below */
+ 	} else {
+-		nl80211_send_scan_start(rdev, dev);
++		nl80211_send_scan_start(rdev, dev->ieee80211_ptr);
+ 		/* creq now owned by driver */
+ 		creq = NULL;
+ 		dev_hold(dev);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index dec9798..6f39cb8 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -136,15 +136,15 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 		wdev->conn->params.ssid_len);
+ 	request->ssids[0].ssid_len = wdev->conn->params.ssid_len;
  
--	/* MIMO/HT specific limits */
--	if (li_mimo->flags & BRCMS_EIRP) {
--		delta = band->antgain;
--	} else {
--		delta = 0;
--		if (band->antgain > QDB(6))
--			delta = band->antgain - QDB(6);	/* Excess over 6 dB */
--	}
-+	delta = 0;
-+	if (band->antgain > QDB(6))
-+		delta = band->antgain - QDB(6);	/* Excess over 6 dB */
+-	request->dev = wdev->netdev;
++	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
  
- 	if (band->bandtype == BRCM_BAND_2G)
- 		maxpwr_idx = (chan - 1);
+ 	rdev->scan_req = request;
+ 
+-	err = rdev->ops->scan(wdev->wiphy, wdev->netdev, request);
++	err = rdev->ops->scan(wdev->wiphy, request);
+ 	if (!err) {
+ 		wdev->conn->state = CFG80211_CONN_SCANNING;
+-		nl80211_send_scan_start(rdev, wdev->netdev);
++		nl80211_send_scan_start(rdev, wdev);
+ 		dev_hold(wdev->netdev);
+ 	} else {
+ 		rdev->scan_req = NULL;
 -- 
-1.7.9.5
+1.7.10
 
