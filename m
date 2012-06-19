@@ -1,197 +1,329 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:41299 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995Ab2FLHvr (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:50328 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752894Ab2FSNOU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 03:51:47 -0400
-Received: by pbbrp8 with SMTP id rp8so447360pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 00:51:47 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v3 1/4] {nl,cfg,mac}80211: implement dot11MeshHWMProotInterval and dot11MeshHWMPactivePathToRootTimeout
-Date: Tue, 12 Jun 2012 15:50:42 +0800
-Message-Id: <1339487445-25428-2-git-send-email-yeohchunyeow@gmail.com> (sfid-20120612_095150_811126_4AE74AE5)
-In-Reply-To: <1339487445-25428-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1339487445-25428-1-git-send-email-yeohchunyeow@gmail.com>
+	Tue, 19 Jun 2012 09:14:20 -0400
+Received: by obcni5 with SMTP id ni5so10622204obc.41
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:14:19 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v2 1/7] nl80211/cfg80211: add radar detection command/event
+Date: Tue, 19 Jun 2012 16:10:57 +0300
+Message-Id: <1340111463-4554-1-git-send-email-victorg@ti.com> (sfid-20120619_151433_803588_31711EE3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the mesh configuration parameters dot11MeshHWMProotInterval and
-dot11MeshHWMPactivePathToRootTimeout to be used by proactive PREQ mechanism.
+Add new NL80211_CMD_RADAR_DETECT, which triggers radar
+detection in the driver/FW, this command will also notify
+usermode with 'radar detected' event.
+Once radar detection has started it should continuously
+monitor for radars as long as the channel is active.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Add new NL80211_FEATURE_DFS attribute which indicates
+that driver/HW supports radar detection.
+
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
-v2: avoid renumbering the old command ids (Johannes)
-v3: adhere the coding style and add kernel-doc (Johannes)
 
- include/linux/nl80211.h       |    9 +++++++++
- include/net/cfg80211.h        |    9 +++++++++
- net/mac80211/cfg.c            |    6 ++++++
- net/mac80211/debugfs_netdev.c |    6 ++++++
- net/wireless/mesh.c           |    4 ++++
- net/wireless/nl80211.c        |   15 ++++++++++++++-
- 6 files changed, 48 insertions(+), 1 deletions(-)
+v2:
+
+1. Fixed bad indentation in:
+	nl80211/cfg80211: add ability to enable TX on op-channel
+	mac80211: add ap channel switch command/event
+	mac80211: add DFS support to monitor interface
+
+2. Updated commit message in:
+	mac80211: add DFS support to monitor interface
+	mac80211: add ap channel switch command/event     
+
+ include/linux/nl80211.h |    7 +++++
+ include/net/cfg80211.h  |   20 +++++++++++++
+ net/wireless/core.h     |    6 ++++
+ net/wireless/mlme.c     |   36 ++++++++++++++++++++++++
+ net/wireless/nl80211.c  |   69 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    5 +++
+ 6 files changed, 143 insertions(+), 0 deletions(-)
 
 diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 970afdf..a0af908 100644
+index a6959f7..ea6ce93 100644
 --- a/include/linux/nl80211.h
 +++ b/include/linux/nl80211.h
-@@ -2162,6 +2162,13 @@ enum nl80211_mntr_flags {
+@@ -553,6 +553,9 @@
+  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
+  *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
   *
-  * @NL80211_MESHCONF_HT_OPMODE: set mesh HT protection mode.
-  *
-+ * @NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT: The time (in TUs) for
-+ *	which mesh STAs receiving a proactive PREQ shall consider the forwarding
-+ *	information to the root mesh STA to be valid.
++ * @NL80211_CMD_RADAR_DETECT: Start radar detection in the driver/HW. Once
++ *	radar detected usermode notified with this event.
 + *
-+ * @NL80211_MESHCONF_HWMP_ROOT_INTERVAL: The interval of time (in TUs) between
-+ *	proactive PREQs are transmitted.
-+ *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
   */
- enum nl80211_meshconf_params {
-@@ -2188,6 +2195,8 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_RSSI_THRESHOLD,
- 	NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR,
- 	NL80211_MESHCONF_HT_OPMODE,
-+	NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
-+	NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
+@@ -696,6 +699,8 @@ enum nl80211_commands {
  
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7319f25..687be1e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -794,6 +794,13 @@ struct bss_parameters {
-  * struct mesh_config - 802.11s mesh configuration
-  *
-  * These parameters can be changed while the mesh is active.
-+ *
-+ * @dot11MeshHWMPactivePathToRootTimeout: The time (in TUs) for which mesh STAs
-+ *	receiving a proactive PREQ shall consider the forwarding information to
-+ *	the root mesh STA to be valid.
-+ *
-+ * @dot11MeshHWMProotInterval: The interval of time (in TUs) between proactive
-+ *	PREQs are transmitted.
+ 	NL80211_CMD_CH_SWITCH_NOTIFY,
+ 
++	NL80211_CMD_RADAR_DETECT,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -2867,11 +2872,13 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_HT_IBSS: This driver supports IBSS with HT datarates.
+  * @NL80211_FEATURE_INACTIVITY_TIMER: This driver takes care of freeing up
+  *	the connected inactive stations in AP mode.
++ * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
   */
- struct mesh_config {
- 	/* Timeouts in ms */
-@@ -827,6 +834,8 @@ struct mesh_config {
- 	bool dot11MeshForwarding;
- 	s32 rssi_threshold;
- 	u16 ht_opmode;
-+	u32 dot11MeshHWMPactivePathToRootTimeout;
-+	u16 dot11MeshHWMProotInterval;
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
+ 	NL80211_FEATURE_HT_IBSS		= 1 << 1,
+ 	NL80211_FEATURE_INACTIVITY_TIMER = 1 << 2,
++	NL80211_FEATURE_DFS		= 1 << 3,
  };
  
  /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 498c94e..cc8a23e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1590,6 +1590,12 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		sdata->vif.bss_conf.ht_operation_mode = nconf->ht_opmode;
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
- 	}
-+	if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT, mask))
-+		conf->dot11MeshHWMPactivePathToRootTimeout =
-+			nconf->dot11MeshHWMPactivePathToRootTimeout;
-+	if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_ROOT_INTERVAL, mask))
-+		conf->dot11MeshHWMProotInterval =
-+			nconf->dot11MeshHWMProotInterval;
- 	return 0;
- }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0289d4c..523d953 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -127,6 +127,9 @@ enum ieee80211_channel_flags {
+  *	to enable this, this is useful only on 5 GHz band.
+  * @orig_mag: internal use
+  * @orig_mpwr: internal use
++ * @radar_detect_timeout: this timeout indicates the end of the channel
++ *	availability check for radar channels, only after this period the
++ *	user may initiate the tx on the channel.
+  */
+ struct ieee80211_channel {
+ 	enum ieee80211_band band;
+@@ -139,6 +142,7 @@ struct ieee80211_channel {
+ 	bool beacon_found;
+ 	u32 orig_flags;
+ 	int orig_mag, orig_mpwr;
++	unsigned long radar_detect_timeout;
+ };
  
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index d4272ff..9eabfa5 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -510,6 +510,10 @@ IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
- IEEE80211_IF_FILE(dot11MeshForwarding, u.mesh.mshcfg.dot11MeshForwarding, DEC);
- IEEE80211_IF_FILE(rssi_threshold, u.mesh.mshcfg.rssi_threshold, DEC);
- IEEE80211_IF_FILE(ht_opmode, u.mesh.mshcfg.ht_opmode, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMPactivePathToRootTimeout,
-+		  u.mesh.mshcfg.dot11MeshHWMPactivePathToRootTimeout, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMProotInterval,
-+		  u.mesh.mshcfg.dot11MeshHWMProotInterval, DEC);
- #endif
- 
- #define DEBUGFS_ADD_MODE(name, mode) \
-@@ -611,6 +615,8 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
- 	MESHPARAMS_ADD(dot11MeshGateAnnouncementProtocol);
- 	MESHPARAMS_ADD(rssi_threshold);
- 	MESHPARAMS_ADD(ht_opmode);
-+	MESHPARAMS_ADD(dot11MeshHWMPactivePathToRootTimeout);
-+	MESHPARAMS_ADD(dot11MeshHWMProotInterval);
- #undef MESHPARAMS_ADD
- }
- #endif
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index b44c736..2f141cf 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -14,6 +14,8 @@
- 
- #define MESH_PATH_TIMEOUT	5000
- #define MESH_RANN_INTERVAL      5000
-+#define MESH_PATH_TO_ROOT_TIMEOUT      6000
-+#define MESH_ROOT_INTERVAL     5000
+ /**
+@@ -1525,6 +1529,8 @@ struct cfg80211_gtk_rekey_data {
+  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
+  *	and perhaps other supported types of ethtool data-sets.
+  *	See @ethtool_ops.get_strings
++ *
++ * @start_radar_detection: Start radar detection in the driver.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1730,6 +1736,10 @@ struct cfg80211_ops {
+ 				struct ethtool_stats *stats, u64 *data);
+ 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
+ 				  u32 sset, u8 *data);
++
++	int	(*start_radar_detection)(struct wiphy *wiphy,
++					 struct net_device *dev,
++					 struct ieee80211_channel *chan);
+ };
  
  /*
-  * Minimum interval between two consecutive PREQs originated by the same
-@@ -62,6 +64,8 @@ const struct mesh_config default_mesh_config = {
- 	.dot11MeshForwarding = true,
- 	.rssi_threshold = MESH_RSSI_THRESHOLD,
- 	.ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED,
-+	.dot11MeshHWMPactivePathToRootTimeout = MESH_PATH_TO_ROOT_TIMEOUT,
-+	.dot11MeshHWMProotInterval = MESH_ROOT_INTERVAL,
- };
+@@ -3268,6 +3278,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 			      gfp_t gfp);
  
- const struct mesh_setup default_mesh_setup = {
+ /**
++ * cfg80211_radar_detected - radar detection event
++ * @dev: network device
++ * @freq: radar detected on this channel frequency (in MHz)
++ * @gfp: context flags
++ *
++ * This function is called when a radar is detected on the current channel.
++ */
++void cfg80211_radar_detected(struct net_device *dev, u16 freq, gfp_t gfp);
++
++/**
+  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
+  * @dev: network device
+  * @peer: peer's MAC address
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 8523f38..03e9744 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -445,6 +445,12 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev, int freq,
+ 		      enum nl80211_channel_type channel_type);
+ 
++int cfg80211_start_radar_detection(struct cfg80211_registered_device *rdev,
++				   struct net_device *dev,
++				   struct ieee80211_channel *chan);
++
++u16 cfg80211_calculate_bitrate(struct rate_info *rate);
++
+ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+ 			   const u8 *rates, unsigned int n_rates,
+ 			   u32 *mask);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index eb90988..a641db6 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -16,6 +16,8 @@
+ #include "core.h"
+ #include "nl80211.h"
+ 
++#define IEEE80211_DFS_MIN_CAC_TIME_MS	60000
++
+ void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+@@ -982,3 +984,37 @@ bool cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
+ 	return nl80211_unexpected_4addr_frame(dev, addr, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
++
++int cfg80211_start_radar_detection(struct cfg80211_registered_device *rdev,
++				   struct net_device *dev,
++				   struct ieee80211_channel *chan)
++{
++	int err;
++
++	if (!rdev->ops->start_radar_detection)
++		return -EOPNOTSUPP;
++
++	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, chan);
++	if (!err)
++		chan->radar_detect_timeout = jiffies +
++			msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
++	else
++		chan->radar_detect_timeout = 0;
++
++	return err;
++}
++
++void cfg80211_radar_detected(struct net_device *dev, u16 freq, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct ieee80211_channel *chan;
++
++	chan = ieee80211_get_channel(&rdev->wiphy, freq);
++	if (chan)
++		chan->radar_detect_timeout = 0;
++
++	nl80211_radar_detected_notify(rdev, freq, dev, gfp);
++}
++EXPORT_SYMBOL(cfg80211_radar_detected);
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ae54b8..98afac9 100644
+index 206465d..573c966 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -3469,7 +3469,11 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 	    nla_put_u32(msg, NL80211_MESHCONF_RSSI_THRESHOLD,
- 			cur_params.rssi_threshold) ||
- 	    nla_put_u32(msg, NL80211_MESHCONF_HT_OPMODE,
--			cur_params.ht_opmode))
-+			cur_params.ht_opmode) ||
-+	    nla_put_u32(msg, NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
-+			cur_params.dot11MeshHWMPactivePathToRootTimeout) ||
-+	    nla_put_u16(msg, NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
-+			cur_params.dot11MeshHWMProotInterval))
- 		goto nla_put_failure;
- 	nla_nest_end(msg, pinfoattr);
- 	genlmsg_end(msg, hdr);
-@@ -3506,6 +3510,8 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
- 	[NL80211_MESHCONF_FORWARDING] = { .type = NLA_U8 },
- 	[NL80211_MESHCONF_RSSI_THRESHOLD] = { .type = NLA_U32},
- 	[NL80211_MESHCONF_HT_OPMODE] = { .type = NLA_U16},
-+	[NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT] = { .type = NLA_U32 },
-+	[NL80211_MESHCONF_HWMP_ROOT_INTERVAL] = { .type = NLA_U16 },
+@@ -4248,6 +4248,31 @@ static int nl80211_stop_sched_scan(struct sk_buff *skb,
+ 	return err;
+ }
+ 
++static int nl80211_start_radar_detection(struct sk_buff *skb,
++					 struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	bool dfs_supported = !!(rdev->wiphy.features & NL80211_FEATURE_DFS);
++	int freq;
++	struct ieee80211_channel *chan;
++
++	if (!dfs_supported)
++		return -EOPNOTSUPP;
++
++	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
++		return -EINVAL;
++
++	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
++
++	chan = ieee80211_get_channel(&rdev->wiphy, freq);
++
++	if (!chan || !(chan->flags & IEEE80211_CHAN_RADAR))
++		return -EINVAL;
++
++	return cfg80211_start_radar_detection(rdev, dev, chan);
++}
++
+ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			    u32 seq, int flags,
+ 			    struct cfg80211_registered_device *rdev,
+@@ -6997,6 +7022,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_RADAR_DETECT,
++		.doit = nl80211_start_radar_detection,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ 
  };
  
- static const struct nla_policy
-@@ -3605,6 +3611,13 @@ do {\
- 			mask, NL80211_MESHCONF_RSSI_THRESHOLD, nla_get_u32);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode,
- 			mask, NL80211_MESHCONF_HT_OPMODE, nla_get_u16);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
-+				  mask,
-+				  NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
-+				  nla_get_u32);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMProotInterval,
-+				  mask, NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
-+				  nla_get_u16);
- 	if (mask_out)
- 		*mask_out = mask;
+@@ -8101,6 +8134,42 @@ void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
+ }
  
+ void
++nl80211_radar_detected_notify(struct cfg80211_registered_device *rdev,
++			      u16 freq, struct net_device *netdev, gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_RADAR_DETECT);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
++	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, freq))
++		goto nla_put_failure;
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
++void
+ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev, const u8 *peer,
+ 				u32 num_packets, gfp_t gfp)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 01a1122..a333261 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -105,6 +105,11 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
+ 			     struct net_device *netdev,
+ 			     enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			     gfp_t gfp);
++
++void
++nl80211_radar_detected_notify(struct cfg80211_registered_device *rdev,
++			      u16 freq, struct net_device *netdev, gfp_t gfp);
++
+ void
+ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev, const u8 *peer,
 -- 
-1.7.0.4
+1.7.5.4
 
