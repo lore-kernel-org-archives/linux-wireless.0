@@ -1,134 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:35373 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755771Ab2FWGmT (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:42376 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086Ab2FSJjG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 02:42:19 -0400
-Received: by lbok6 with SMTP id k6so5180457lbo.4
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:16 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
-Subject: [PATCH 16/18] wlcore: check Rx-filter functions in the suspend path
-Date: Sat, 23 Jun 2012 09:41:27 +0300
-Message-Id: <1340433689-24320-17-git-send-email-coelho@ti.com> (sfid-20120623_085130_633031_AF0F4545)
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
+	Tue, 19 Jun 2012 05:39:06 -0400
+Received: by mail-ob0-f174.google.com with SMTP id tb18so9789205obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 02:39:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FE03291.5030202@cern.ch>
+References: <4FE03291.5030202@cern.ch>
+Date: Tue, 19 Jun 2012 15:09:06 +0530
+Message-ID: <CAD2nsn1U0UHjrDp7vh7rfvTP=BLB3FA+zLV9sgt1_T7gVvAYgg@mail.gmail.com> (sfid-20120619_113911_507772_1854C09D)
+Subject: Re: Mysterious hangs - cfg80211 - ath9k
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Jon Wikne <Jon.Wikne@cern.ch>
+Cc: linux-wireless@vger.kernel.org, wikne@cheetah.uio.no
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Tue, Jun 19, 2012 at 1:34 PM, Jon Wikne <Jon.Wikne@cern.ch> wrote:
+> Hi List,
+>
+> I am experiencing a puzzling problem with WLAN on a Toshiba Qosmio
+> F750 laptop, running CERN SLC 5.8 (mostly identical to RHEL 5.8),
+> but with kernel 2.6.39.4. (The kernel that came with the distro did
+> not work properly with WLAN on this machine at all.)
 
-Propagate some missing return values for Rx-filter related functions.
-This and makes sure we always fail the suspend in case of SDIO errors.
+please quickly try
+http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   27 +++++++++++++++++++++------
- drivers/net/wireless/ti/wlcore/rx.c   |   11 ++++++++---
- drivers/net/wireless/ti/wlcore/rx.h   |    2 +-
- 3 files changed, 30 insertions(+), 10 deletions(-)
+or the latest wireless testing tree
+http://linuxwireless.org/en/developers/Documentation/git-guide#Cloning_latest_wireless-testing
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 0b51522..e6e6654 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1513,8 +1513,15 @@ static int wl1271_configure_wowlan(struct wl1271 *wl,
- 	int i, ret;
- 
- 	if (!wow || wow->any || !wow->n_patterns) {
--		wl1271_acx_default_rx_filter_enable(wl, 0, FILTER_SIGNAL);
--		wl1271_rx_filter_clear_all(wl);
-+		ret = wl1271_acx_default_rx_filter_enable(wl, 0,
-+							  FILTER_SIGNAL);
-+		if (ret)
-+			goto out;
-+
-+		ret = wl1271_rx_filter_clear_all(wl);
-+		if (ret)
-+			goto out;
-+
- 		return 0;
- 	}
- 
-@@ -1530,8 +1537,13 @@ static int wl1271_configure_wowlan(struct wl1271 *wl,
- 		}
- 	}
- 
--	wl1271_acx_default_rx_filter_enable(wl, 0, FILTER_SIGNAL);
--	wl1271_rx_filter_clear_all(wl);
-+	ret = wl1271_acx_default_rx_filter_enable(wl, 0, FILTER_SIGNAL);
-+	if (ret)
-+		goto out;
-+
-+	ret = wl1271_rx_filter_clear_all(wl);
-+	if (ret)
-+		goto out;
- 
- 	/* Translate WoWLAN patterns into filters */
- 	for (i = 0; i < wow->n_patterns; i++) {
-@@ -1573,7 +1585,10 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
- 	if (ret < 0)
- 		goto out;
- 
--	wl1271_configure_wowlan(wl, wow);
-+	ret = wl1271_configure_wowlan(wl, wow);
-+	if (ret < 0)
-+		goto out_sleep;
-+
- 	ret = wl1271_acx_wake_up_conditions(wl, wlvif,
- 				    wl->conf.conn.suspend_wake_up_event,
- 				    wl->conf.conn.suspend_listen_interval);
-@@ -1581,8 +1596,8 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
- 	if (ret < 0)
- 		wl1271_error("suspend: set wake up conditions failed: %d", ret);
- 
-+out_sleep:
- 	wl1271_ps_elp_sleep(wl);
--
- out:
- 	return ret;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index f42b969..f55e2f9 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -318,14 +318,19 @@ int wl1271_rx_filter_enable(struct wl1271 *wl,
- 	return 0;
- }
- 
--void wl1271_rx_filter_clear_all(struct wl1271 *wl)
-+int wl1271_rx_filter_clear_all(struct wl1271 *wl)
- {
--	int i;
-+	int i, ret = 0;
- 
- 	for (i = 0; i < WL1271_MAX_RX_FILTERS; i++) {
- 		if (!wl->rx_filter_enabled[i])
- 			continue;
--		wl1271_rx_filter_enable(wl, i, 0, NULL);
-+		ret = wl1271_rx_filter_enable(wl, i, 0, NULL);
-+		if (ret)
-+			goto out;
- 	}
-+
-+out:
-+	return ret;
- }
- #endif /* CONFIG_PM */
-diff --git a/drivers/net/wireless/ti/wlcore/rx.h b/drivers/net/wireless/ti/wlcore/rx.h
-index 79f7839..71eba18 100644
---- a/drivers/net/wireless/ti/wlcore/rx.h
-+++ b/drivers/net/wireless/ti/wlcore/rx.h
-@@ -148,6 +148,6 @@ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- int wl1271_rx_filter_enable(struct wl1271 *wl,
- 			    int index, bool enable,
- 			    struct wl12xx_rx_filter *filter);
--void wl1271_rx_filter_clear_all(struct wl1271 *wl);
-+int wl1271_rx_filter_clear_all(struct wl1271 *wl);
- 
- #endif
+>
+> What happens is that the WLAN comes up flawlessly, and works well
+> until it suddenly hangs. This happens when (or seconds after) I see
+> an entry like the following in the log:
+>
+> Jun 18 19:04:42 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+>
+> I do not understand why cfg80211 does this long after the connection
+> has been established. If I understand correctly, this "regulatory
+> domain" business only makes sense when the WLAN interface is started.
+>
+> Subsequent DHCP requests are issued, but never answered:
+>
+> Jun 18 19:23:38 redcat dhclient: DHCPREQUEST on wlan0 to 137.138.16.6 port
+> 67 (xid=0x63998557)
+> Jun 18 19:24:16 redcat last message repeated 3 times
+> Jun 18 19:25:30 redcat last message repeated 6 times
+> .....
+> Jun 18 19:50:10 redcat dhclient: DHCPREQUEST on wlan0 to 255.255.255.255
+> port 67 (xid=0x63998557)
+> Jun 18 19:50:55 redcat last message repeated 3 times
+> .....
+> Jun 18 19:58:41 redcat dhclient: No DHCPOFFERS received.
+>
+> I interpret this as something has (effectively) been turned off,
+> but that the drivers do not realize this.
+>
+> Restarting WLAN when the problem has occurred is simple:
+>
+> root@redcat 97 # /sbin/ifdown wlan0
+> root@redcat 98 # /sbin/ifup wlan0
+>
+> What puzzles me even more is that cfg80211 seems to be activated
+> and mess up things at highly irregular intervals, ranging from
+> a few minutes to many hours:
+>
+> root@redcat 105 # tail -2000l /var/log/messages | grep cfg80211
+> Jun 17 20:28:51 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 17 23:09:37 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 17 23:36:01 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 18 09:27:59 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 18 11:57:48 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 18 18:42:00 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 18 18:46:49 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 18 19:04:42 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+> Jun 18 22:40:42 redcat kernel: cfg80211: Calling CRDA to update world
+> regulatory domain
+>
+> At the time of writing this (Tue 19 Jun 2012 09:27:54 CEST) the WLAN
+> has not stopped since the last entry in the above. What on earth is
+> governing the timing in this?
+>
+> Some relevant info on the laptop:
+>
+> root@redcat 108 # lspci
+> .....
+> 03:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless
+> Network Adapter (PCI-Express) (rev 01)
+> .....
+>
+> root@redcat 109 # lsmod
+> Module                  Size  Used by
+> .....
+> ath9k                  89934  0
+> mac80211              160999  1 ath9k
+> ath9k_common            3051  1 ath9k
+> .....
+> ath9k_hw              291258  2 ath9k,ath9k_common
+> ath                    15289  2 ath9k,ath9k_hw
+> .....
+> cfg80211              141299  3 ath9k,mac80211,ath
+>
+> Any ideas will be greatly appreciated. I will be happy to test
+> patches. Please CC me at jon.wikne@cern.ch since I am not on
+> the list.
+>
+>
+> Regards,
+> -- Jon Wikne
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.10
-
+thanks,
+shafi
