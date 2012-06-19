@@ -1,38 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33283 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754843Ab2FGH5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 03:57:17 -0400
-Message-ID: <1339055836.6009.20.camel@joe2Laptop> (sfid-20120607_095720_859457_C19E1B2B)
-Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
-From: Joe Perches <joe@perches.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 07 Jun 2012 00:57:16 -0700
-In-Reply-To: <4FD05A27.80102@qca.qualcomm.com>
-References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>
-	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com>
-	 <1339053852.6009.13.camel@joe2Laptop> <4FD05A27.80102@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:52810 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752894Ab2FSNOv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 09:14:51 -0400
+Received: by obcva7 with SMTP id va7so2286772obc.34
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:14:50 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v2 7/7] mac80211: add DFS support to monitor interface
+Date: Tue, 19 Jun 2012 16:11:03 +0300
+Message-Id: <1340111463-4554-7-git-send-email-victorg@ti.com> (sfid-20120619_151454_179258_C0E46355)
+In-Reply-To: <1340111463-4554-1-git-send-email-victorg@ti.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-07 at 13:07 +0530, Mohammed Shafi Shajakhan wrote:
-> what about the other wiphy_debug messages, we would 
-> still retain them know
+AP mode uses monitor interfaces to transmit
+management frames which were blocked for "radar
+channels" until now.
 
-Yes, and...
+Stop dropping packets if we are on 'radar channel'
+and the DFS is enabled.
 
-No, you know those should now still be wiphy_debug
-unless the message is HT related and need a new change.
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ net/mac80211/tx.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-All sorts of kneed/need, knitting/nitting bits are in
-my head right now, but I'll spare all of you any more.
-
-English is still a spelt-silly language.
-
-cheers, Joe
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e453212..8c7f365 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1595,6 +1595,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
+ 	u16 len_rthdr;
+ 	int hdrlen;
++	bool dfs_supported = !!(local->hw.wiphy->features &
++				NL80211_FEATURE_DFS);
+ 
+ 	/*
+ 	 * Frame injection is not allowed if beaconing is not allowed
+@@ -1607,13 +1609,13 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	 * flag.
+ 	 *
+ 	 * Since AP mode uses monitor interfaces to inject/TX management
+-	 * frames we can make AP mode the exception to this rule once it
+-	 * supports radar detection as its implementation can deal with
+-	 * radar detection by itself. We can do that later by adding a
+-	 * monitor flag interfaces used for AP support.
++	 * frames we can make AP mode the exception to this rule, in the
++	 * case the driver supports radar detection, allow usage of radar
++	 * channels.
+ 	 */
+-	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
+-	     IEEE80211_CHAN_PASSIVE_SCAN)))
++	if ((!(chan->flags & IEEE80211_CHAN_RADAR) || !dfs_supported) &&
++	    ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
++			     IEEE80211_CHAN_PASSIVE_SCAN))))
+ 		goto fail;
+ 
+ 	/* check for not even having the fixed radiotap header part */
+-- 
+1.7.5.4
 
