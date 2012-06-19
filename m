@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:58193 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334Ab2F1Pwi convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:35507 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753048Ab2FSG5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 11:52:38 -0400
-Received: by wgbdr13 with SMTP id dr13so2348083wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 08:52:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FD4F793.2030507@hauke-m.de>
-References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
-	<1338933307-13446-7-git-send-email-hauke@hauke-m.de>
-	<2716026.rMfCBzMpF9@flexo>
-	<CACna6rw_5dcR9tu_Nnq_0Z3u+KJ--Lmx7yi+uHJm-kJPepqrng@mail.gmail.com>
-	<4FD4F793.2030507@hauke-m.de>
-Date: Thu, 28 Jun 2012 17:52:36 +0200
-Message-ID: <CACna6rwYawBawu_KP4rADKjGTspKdvRrvJbhzA18ApBP1tvAiQ@mail.gmail.com> (sfid-20120628_175241_862981_95E98F19)
-Subject: Re: [PATCH 6/8] bcma: handle SoCs in pmu initialization
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Florian Fainelli <florian@openwrt.org>, linville@tuxdriver.com,
-	b43-dev@lists.infradead.org, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 19 Jun 2012 02:57:11 -0400
+Received: by lbon10 with SMTP id n10so6517194lbo.13
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 23:57:08 -0700 (PDT)
+Message-ID: <1340089024.1631.143.camel@cumari.coelho.fi> (sfid-20120619_085719_159251_D4000C71)
+Subject: Re: [PATCH 7/7] mac80211: add DFS support to monitor interface
+From: Luciano Coelho <coelho@ti.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Victor Goldenshtein <victorg@ti.com>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Date: Tue, 19 Jun 2012 09:57:04 +0300
+In-Reply-To: <4FE01FDD.4080004@adurom.com>
+References: <1340030798-28992-1-git-send-email-victorg@ti.com>
+	 <1340030798-28992-8-git-send-email-victorg@ti.com>
+	 <4FE01FDD.4080004@adurom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/6/10 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 06/10/2012 06:54 PM, Rafał Miłecki wrote:
->> 2012/6/6 Florian Fainelli <florian@openwrt.org>:
->>> Hi Hauke,
->>>
->>> On Tuesday 05 June 2012 23:55:05 Hauke Mehrtens wrote:
->>>> The SoCs do not need any special handling in bcma_pmu_pll_init(),
->>>> bcma_pmu_resources_init(), bcma_pmu_swreg_init() and
->>>> bcma_pmu_workarounds. This patches suppresses some warnings in the log.
->>>
->>> This does not look like it scales very good, how about you turn the pr_err()
->>> into a pr_debug() so that developpers porting bcma on a new chip need to turn
->>> on the appropriate debug knobs to get the message?
->>
->> debug sounds fine for me
->>
-> Hi Rafał,
->
-> bcma_pmu_swreg_init() and bcma_pmu_pll_init() are doing nothing should
-> they get removed? In the current version of the patch I also removed the
-> chip ids of the PCIe based cards from the switch case statement if they
-> just ended in a break, is that ok with you?
+On Tue, 2012-06-19 at 09:44 +0300, Kalle Valo wrote:
+> On 06/18/2012 05:46 PM, Victor Goldenshtein wrote:
+> > Stop dropping packets if we are on 'radar channel'
+> > and the DFS is enabled/supported.
+> > 
+> > Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> 
+> Why? I'm not very familiar with DFS so this change is not clear to me.
 
-Original si_pmu_pll_init had some meaning for BCM4329, BCM4319,
-BCM4336 and BCM4330. I guess all of them are fullmac devices, right?
+That's not a good excuse. :P
 
-Original si_pmu_swreg_init got meaning for BCM4336 and BCM4336.
+> You could write more about the reasoning in the commit log.
 
-Seems both can be dropped?
+But I totally agree that the "why" is missing here. ;)
 
--- 
-Rafał
+--
+Luca.
+
