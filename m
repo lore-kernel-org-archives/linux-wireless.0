@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13608 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756833Ab2FGCnt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52365 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217Ab2FSOvC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 22:43:49 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <ath6kl-devel@qualcomm.com>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [RFC 2/2] mac80211: support rssi threshold scan
-Date: Wed, 6 Jun 2012 19:43:16 -0700
-Message-ID: <1339036996-6199-2-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120607_044353_672897_CABA159E)
-In-Reply-To: <1339036996-6199-1-git-send-email-c_tpeder@qca.qualcomm.com>
-References: <1339036996-6199-1-git-send-email-c_tpeder@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 19 Jun 2012 10:51:02 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 05/17] nl80211: use __cfg80211_rdev_from_attrs for testmode
+Date: Tue, 19 Jun 2012 16:50:44 +0200
+Message-Id: <1340117456-10154-6-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165115_503956_60A325B5)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
----
- net/mac80211/main.c |    3 +++
- net/mac80211/scan.c |    4 ++++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index f5548e9..3f49d1b 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -873,6 +873,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (local->hw.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS)
- 		local->hw.wiphy->flags |= WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+To fix the testmode cross-namespace access problem,
+use __cfg80211_rdev_from_attrs() to get the device
+instead of open-coding similar functionality.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |   23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7e94d4d..06623d0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5230,21 +5230,18 @@ static int nl80211_testmode_dump(struct sk_buff *skb,
+ 				  nl80211_policy);
+ 		if (err)
+ 			return err;
+-		if (nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]) {
+-			phy_idx = nla_get_u32(
+-				nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]);
+-		} else {
+-			struct net_device *netdev;
  
-+	if (local->hw.wiphy->signal_type == CFG80211_SIGNAL_TYPE_MBM)
-+		local->hw.wiphy->flags |= WIPHY_FLAG_SUPPORTS_RSSI_SCAN;
+-			err = get_rdev_dev_by_ifindex(sock_net(skb->sk),
+-						      nl80211_fam.attrbuf,
+-						      &rdev, &netdev);
+-			if (err)
+-				return err;
+-			dev_put(netdev);
+-			phy_idx = rdev->wiphy_idx;
+-			cfg80211_unlock_rdev(rdev);
++		mutex_lock(&cfg80211_mutex);
++		rdev = __cfg80211_rdev_from_attrs(sock_net(skb->sk),
++						  nl80211_fam.attrbuf);
++		if (IS_ERR(rdev)) {
++			mutex_unlock(&cfg80211_mutex);
++			return PTR_ERR(rdev);
+ 		}
++		phy_idx = rdev->wiphy_idx;
++		rdev = NULL;
++		mutex_unlock(&cfg80211_mutex);
 +
- 	result = wiphy_register(local->hw.wiphy);
- 	if (result < 0)
- 		goto fail_wiphy_register;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8282284..1b92405 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -212,6 +212,10 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- 	if (baselen > skb->len)
- 		return RX_DROP_MONITOR;
- 
-+	if (sdata->local->scan_req->rssi &&
-+	    rx_status->signal < sdata->local->scan_req->rssi)
-+		return RX_DROP_MONITOR;
-+
- 	ieee802_11_parse_elems(elements, skb->len - baselen, &elems);
- 
- 	if (elems.ds_params && elems.ds_params_len == 1)
+ 		if (nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA])
+ 			cb->args[1] =
+ 				(long)nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA];
 -- 
-1.7.4.1
+1.7.10
 
