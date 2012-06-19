@@ -1,51 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59830 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52357 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933344Ab2FBRx3 (ORCPT
+	with ESMTP id S1752121Ab2FSOvB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 13:53:29 -0400
-Message-ID: <1338659608.12823.4.camel@jlt3.sipsolutions.net> (sfid-20120602_195354_124758_5B7B5BB4)
-Subject: Re: [PATCH v2]: iw: fix the Makefile for multiple libnl
- installations
+	Tue, 19 Jun 2012 10:51:01 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Guido Trentalancia <guido@trentalancia.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 02 Jun 2012 19:53:28 +0200
-In-Reply-To: <201206021653.q52Gre5c017440@vivaldi07.register.it>
-References: <201206021653.q52Gre5c017440@vivaldi07.register.it>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 02/17] nl80211: refactor __cfg80211_rdev_from_info
+Date: Tue, 19 Jun 2012 16:50:41 +0200
+Message-Id: <1340117456-10154-3-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165109_449712_472A17E6)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-06-02 at 18:53 +0200, Guido Trentalancia wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> -NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
-> -NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
-> -NL3FOUND := $(shell $(PKG_CONFIG) --atleast-version=3 libnl-3.0 && echo Y)
-> -NL31FOUND := $(shell $(PKG_CONFIG) --exact-version=3.1 libnl-3.1 && echo Y)
-> +ifeq ($(NLLIBNAME),)
->  NL3xFOUND := $(shell $(PKG_CONFIG) --atleast-version=3.2 libnl-3.0 && echo Y)
-> +ifneq ($(NL3xFOUND),Y)
-> +NL31FOUND := $(shell $(PKG_CONFIG) --exact-version=3.1 libnl-3.1 && echo Y)
-> +ifneq ($(NL31FOUND),Y)
-> +NL3FOUND := $(shell $(PKG_CONFIG) --atleast-version=3 libnl-3.0 && echo Y)
-> +ifneq ($(NL3FOUND),Y)
-> +NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
-> +ifneq ($(NL2FOUND),Y)
-> +NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
-> +endif
+Refactor the function to make it easier to
+extend.
 
-If you have this part, then
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |   59 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 31 insertions(+), 28 deletions(-)
 
->  ifeq ($(NL2FOUND),Y)
-> -CFLAGS += -DCONFIG_LIBNL20
-> -LIBS += -lnl-genl
-> +CFLAGS = -DCONFIG_LIBNL20
-> +LIBS = -lnl-genl
-
-All these changes aren't necessary, right? I'd prefer not to make these
-changes since people might want to set some CFLAGS somewhere.
-
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2d3541c..0ec9779 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -73,44 +73,47 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
+ static struct cfg80211_registered_device *
+ __cfg80211_rdev_from_info(struct genl_info *info)
+ {
+-	int ifindex;
+-	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
+-	struct net_device *dev;
+-	int err = -EINVAL;
++	struct cfg80211_registered_device *rdev = NULL, *tmp;
++	struct net_device *netdev;
+ 
+ 	assert_cfg80211_lock();
+ 
+-	if (info->attrs[NL80211_ATTR_WIPHY]) {
+-		bywiphyidx = cfg80211_rdev_by_wiphy_idx(
++	if (!info->attrs[NL80211_ATTR_WIPHY] &&
++	    !info->attrs[NL80211_ATTR_IFINDEX])
++		return ERR_PTR(-EINVAL);
++
++	if (info->attrs[NL80211_ATTR_WIPHY])
++		rdev = cfg80211_rdev_by_wiphy_idx(
+ 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
+-		err = -ENODEV;
+-	}
+ 
+ 	if (info->attrs[NL80211_ATTR_IFINDEX]) {
+-		ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
+-		dev = dev_get_by_index(genl_info_net(info), ifindex);
+-		if (dev) {
+-			if (dev->ieee80211_ptr)
+-				byifidx =
+-					wiphy_to_dev(dev->ieee80211_ptr->wiphy);
+-			dev_put(dev);
+-		}
+-		err = -ENODEV;
+-	}
++		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
++		netdev = dev_get_by_index(genl_info_net(info), ifindex);
++		if (netdev) {
++			if (netdev->ieee80211_ptr)
++				tmp = wiphy_to_dev(
++						netdev->ieee80211_ptr->wiphy);
++			else
++				tmp = NULL;
+ 
+-	if (bywiphyidx && byifidx) {
+-		if (bywiphyidx != byifidx)
+-			return ERR_PTR(-EINVAL);
+-		else
+-			return bywiphyidx; /* == byifidx */
++			dev_put(netdev);
++
++			/* not wireless device -- return error */
++			if (!tmp)
++				return ERR_PTR(-EINVAL);
++
++			/* mismatch -- return error */
++			if (rdev && tmp != rdev)
++				return ERR_PTR(-EINVAL);
++
++			rdev = tmp;
++		}
+ 	}
+-	if (bywiphyidx)
+-		return bywiphyidx;
+ 
+-	if (byifidx)
+-		return byifidx;
++	if (rdev)
++		return rdev;
+ 
+-	return ERR_PTR(err);
++	return ERR_PTR(-ENODEV);
+ }
+ 
+ /*
+-- 
+1.7.10
 
