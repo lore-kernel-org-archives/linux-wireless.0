@@ -1,117 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-forward2.uio.no ([129.240.10.71]:41928 "EHLO
-	mail-forward2.uio.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754214Ab2F1Pmf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60982 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab2FSHGH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 11:42:35 -0400
-Received: from exim by mail-out2.uio.no with local-bsmtp (Exim 4.75)
-	(envelope-from <Jon.Wikne@cern.ch>)
-	id 1SkGra-0000pt-5s
-	for linux-wireless@vger.kernel.org; Thu, 28 Jun 2012 17:42:34 +0200
-Message-ID: <4FEC7B66.5060409@cern.ch> (sfid-20120628_174238_703886_D8BCB6B0)
-Date: Thu, 28 Jun 2012 17:42:30 +0200
-From: Jon Wikne <Jon.Wikne@cern.ch>
-MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Mysterious hangs - cfg80211 - ath9k
-References: <4FE03291.5030202@cern.ch> <CAD2nsn1U0UHjrDp7vh7rfvTP=BLB3FA+zLV9sgt1_T7gVvAYgg@mail.gmail.com> <4FE0CA6C.3080002@cern.ch> <4FEC6447.7010007@cern.ch> <CAD2nsn3L6K6obTzpvnjetrWuGk+e+nKV=RsdQfYk3iVCsej66Q@mail.gmail.com>
-In-Reply-To: <CAD2nsn3L6K6obTzpvnjetrWuGk+e+nKV=RsdQfYk3iVCsej66Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 19 Jun 2012 03:06:07 -0400
+Message-ID: <1340089558.4482.5.camel@jlt3.sipsolutions.net> (sfid-20120619_090611_471328_37446184)
+Subject: Re: [PATCH 0/2 v3] mac80211/cfg80211: add support for userspace to
+ handle auth frames on adhoc ifaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Hawkins <hawkinsw@opentechinstitute.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Antonio Quartulli <ordex@autistici.org>
+Date: Tue, 19 Jun 2012 09:05:58 +0200
+In-Reply-To: <4FDFC5AE.1080004@opentechinstitute.org>
+References: <4FDFC5AE.1080004@opentechinstitute.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2012 04:22 PM, Mohammed Shafi wrote:
-> Hi,
->
-> On Thu, Jun 28, 2012 at 7:33 PM, Jon Wikne<Jon.Wikne@cern.ch>  wrote:
->> On 06/19/2012 08:52 PM, Jon Wikne wrote:
->>>
->>> On 06/19/2012 11:39 AM, Mohammed Shafi wrote:
->>>>
->>>> On Tue, Jun 19, 2012 at 1:34 PM, Jon Wikne<Jon.Wikne@cern.ch>  wrote:
->>>>>
->>>>> Hi List,
->>>>>
->>>>> I am experiencing a puzzling problem with WLAN on a Toshiba Qosmio
->>>>> F750 laptop, running CERN SLC 5.8 (mostly identical to RHEL 5.8),
->>>>> but with kernel 2.6.39.4. (The kernel that came with the distro did
->>>>> not work properly with WLAN on this machine at all.)
->>>>
->>>>
->>>> please quickly try
->>>>
->>>> http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
->>>
->>>
->>> I tried to install compat-wireless-2012-05-10. It worked for 4½ hours,
->>> then same problem.
->>>
->>> Maybe there is something wrong with my understanding here, but I do not
->>> see why the "cfg80211: Calling CRDA to update world regulatory domain"
->>> should occur hours after the connection has been established, and what
->>> triggers it, apparently at random....
->>>
->>>> or the latest wireless testing tree
->>>>
->>>> http://linuxwireless.org/en/developers/Documentation/git-guide#Cloning_latest_wireless-testing
->>>
->>>
->>> Is there a reason to believe it could make a difference if I try
->>> this too?
->>
->>
->> Now I downloaded this (more than 1GB), just to realize that it is a
->> complete kernel tree for kernel 3.5.0-rc3. I don't really feel ready
->> for an experimental upgrade from 2.6.39.4 to that right now....
->>
->> With basis in compat-wireless-2012-05-10 I tried to comment out the
->> call to call_crda in net/wireless/reg.c and return -EALREADY in line
->> 1483, just to see if that circumvented the problem. It did not. The
->> damage (whatever that might be) already seems to be done _before_ the
->> call_crda is made in reg.c.
->>
->> I am a bit at a loss as to how to proceed. There are several things
->> i do not understand.
->>
->> 1) The call to update CRDA (even with my crude, experimental, dummy
->> return) seems to cause no trouble when it is done the first time
->> the line comes up. Could someone please explain to me what causes
->> the subsequent calls at highly irregular intervals, and why that
->> seems to be necessary or desirable?
->>
->> 2) Is this a known problem that is being worked on (in which case I
->> will just shut up and wait), or am I the first to report it?
->>
->> Thanks in advance for any further info or suggestions.
->
-> please provide the complete log.
+Hi Will,
 
-There is nothing relevant in the regular logs apart from lines like
-these:
+> I am sending along 2 patches to add support for user space applications
+> to register for authentication frames on adhoc interfaces. These are
+> revisions to a previous patch that I submitted to accomplish the same
+> thing.
 
-Jun 20 17:11:09 redcat kernel: cfg80211: Calling CRDA to update world 
-regulatory domain
-Jun 20 17:11:09 redcat kernel: ath9k 0000:03:00.0: PCI INT A -> GSI 18 
-(level, low) -> IRQ 18
+Thanks.
 
-when the WLAN comes up normally, and and an additional line like this:
+> Patch 1/2 adds a cfg80211_mgmt_reg_match function to cfg80211 to
+> check whether a user space application is registered for a particular
+> type of management frame rx'd on a particular device. The new function
+> is very similar to cfg80211_rx_mgmt. cfg80211_rx_mgmt could not be
+> reused because of its side-effect of transmitting the "query" frames to
+> the registered userspace applications. This patch modifies the
+> documentation for cfg80211_rx_mgmt to reflect that.
 
-Jun 20 17:42:32 redcat kernel: cfg80211: Calling CRDA to update world 
-regulatory domain
+I think this isn't needed: if you look at mac80211/cfg.c, there's a
+handler called ieee80211_mgmt_frame_register() where cfg80211 tells
+mac80211 when a handler is registered/unregistered. mac80211 could just
+keep track (for IBSS type interfaces) all by itself, and then just needs
+to check some flag/variable instead of calling a function.
 
-when it fails / hangs at some unpredictable point in time later.
+> Patch 2/2 sets the necessary flags to allow userspace
+> applications to register for authentication frames on adhoc interfaces.
+> It also adds a check to make sure that "open" authentication frames are
+> not sent when a user space application is registered for authentication
+> frames.
 
-> you can also enable ath9k debugging.
-> sudo modprobe -v ath9k debug=0x601
-> http://linuxwireless.org/en/users/Drivers/ath9k/debug
-> so you need to bring the interface up/down to make it working right ?
+Makes sense. I'll need to check if you caught all conditions, maybe
+Antonio can help out.
 
-OK, done. I don't know when the error might reappear, but I will copy
-the /sys/kernel/debug/ieee80211/phy0/ tree and put on some server for
-forensics when it does. There is a lot of info there which I do not
-know how to interpret.
+> As I've said before, I'm still new to this process so I look forward to
+> your feedback on improving.
 
-Regards,
--- Jon
+There's not a lot of room for improvement :-)
+
+A small detail: the first patch should have been labelled only
+"cfg80211" and the second only "mac80211".
+
+Also, if you could send the patches (1/2 and 2/2) as a reply to the
+cover letter (0/2) that helps keep the series together due to threading.
+With git send-email you can instruct it to do that, but it didn't look
+like you used it.
+
+Thanks!
+
+johannes
 
