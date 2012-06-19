@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40369 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752879Ab2FFNgp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:36:45 -0400
-Message-ID: <1338989804.26346.9.camel@jlt3.sipsolutions.net> (sfid-20120606_153648_683824_0F0BB512)
-Subject: Re: [PATCH 00/29] iwlwifi updates for 3.6
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 06 Jun 2012 15:36:44 +0200
-In-Reply-To: <1338989268.26346.7.camel@jlt3.sipsolutions.net> (sfid-20120606_152755_189002_11E6AA00)
-References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120606_152231_979720_A2082B64) <1338989268.26346.7.camel@jlt3.sipsolutions.net>
-	 (sfid-20120606_152755_189002_11E6AA00)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:43838 "EHLO
+	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753110Ab2FSB1t convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jun 2012 21:27:49 -0400
+From: Philip Rakity <prakity@marvell.com>
+To: Wei Ni <wni@nvidia.com>, 'Stephen Warren' <swarren@wwwdotorg.org>,
+	Rakesh Kumar <krakesh@nvidia.com>
+CC: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Mursalin Akon <makon@nvidia.com>,
+	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Date: Mon, 18 Jun 2012 18:23:35 -0700
+Subject: RE: Where to power on the wifi device before loading the driver.
+Message-ID: <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com> (sfid-20120619_032754_033892_663C504C)
+References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
+ <4FD90352.9090606@wwwdotorg.org>
+ <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
+ <20120614121234.GC3913@opensource.wolfsonmicro.com>
+ <4FDA092E.10301@wwwdotorg.org>
+ <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
+ <4FDB5976.20809@wwwdotorg.org>,<6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
+In-Reply-To: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-06 at 15:27 +0200, Johannes Berg wrote:
-> Hi John,
-> 
-> The following changes since commit fdbfff73408f99799724f583cbc2a0ce3263c6a7:
-> 
->   net/wireless: ipw2200: introduce ipw_read_eeprom function (2012-06-05 17:15:49 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to b1abedada3fd0aa100723aa9b60b7e31c17945cb:
-> 
->   iwlwifi: remove extern opmode ops declarations (2012-06-06 13:26:00 +0200)
-> 
-> 
-> 
-> Unfortunately, conflict resolution between this and wireless.git is
-> tricky -- not the conflicts, but what doesn't conflict:
-> 	.eeprom_params = &iwl6000_eeprom_params,
-> needs to be added to IWL_DEVICE_6035 in pcie/6000.c. How do you want to
-> handle that?
+Why can't you use the regulator notify to get called back on power or voltage change options to plumb in the manipulation of the gpio. I can imagine you might need to add a notify call in core.c if you need to assert the gpio before power is applied
 
-This is my resolution: http://p.sipsolutions.net/4900c9143e20ef10.txt
-(in 3-way format)
 
-johannes
+________________________________________
+From: linux-mmc-owner@vger.kernel.org [linux-mmc-owner@vger.kernel.org] On Behalf Of Wei Ni [wni@nvidia.com]
+Sent: Sunday, June 17, 2012 11:20 PM
+To: 'Stephen Warren'; Rakesh Kumar
+Cc: Mark Brown; 'frankyl@broadcom.com'; Thierry Reding; Mursalin Akon; 'linux-mmc@vger.kernel.org'; devicetree-discuss@lists.ozlabs.org; 'linux-wireless@vger.kernel.org'; linux-tegra@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+Subject: RE: Where to power on the wifi device before loading the driver.
 
+On Fri, Jun 15, 2012 at 23:49:10, Stephen Warren wrote:
+>> I talked with Franky, this power sequence is generally for 4329, so
+>> it mean this sequence can be put into the wifi driver.
+>> We can use the virtual platform device both for OOB and non OOB.
+>> I will send out patches later.
+>
+>Can you please expand on what a "virtual platform device" is; device tree typically represents real hardware rather than anything "virtual".
+
+The "virtual platform device" is created before the real wifi device, so that it can pass the gpios to the driver, and power up the device before calling sdio_register_driver.
+But as Franky said, this power sequence is only generally for 4329, not for the USB dongle chips. So it's not a good idea to add this "power up" in brcmfmac.
+
+>
+>Now if this means adding a child node under the SDIO controller to represent the attached device, and storing any settings required by that device in that child node, that's probably a reasonable basic approach.
+>
+>BTW, which GPIO is the power GPIO; is it WF_EN on the schematic? That seems reasonable to represent as a GPIO rather than a regulator since it connects directly into the WiFi device as a GPIO, and its use within the WiFi device can indeed be governed purely internally to the WiFi driver/HW. However, if this is some GPIO that controls the power to e.g.
+>VBAT3V3_IN_WF, VDDIO_WF, or other power supply to the WiFi card, then it'd be better represented as a regulator, since the control point is outside the WiFi device.
+
+I think Rakesh may can answer this.
+
+Wei.
+---
+nvpublic
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
