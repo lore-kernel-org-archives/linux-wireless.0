@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53439 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761343Ab2FIAGM (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38418 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab2FSWvA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 20:06:12 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Tue, 19 Jun 2012 18:51:00 -0400
+Received: by lbbgm6 with SMTP id gm6so6407558lbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 15:50:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20434.37672.972394.142644@gargle.gargle.HOWL> (sfid-20120609_020617_279536_13E9C48A)
-Date: Sat, 9 Jun 2012 05:34:56 +0530
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/9] ath9k_hw: process MCI interrupts only when btcoex is enabled
-In-Reply-To: <1339177148-21672-7-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1339177148-21672-7-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <CAL74qpEwZZF2LrfH1xxYNOxCGPBtT=6UKD99w4hsFr5Hzf8h+Q@mail.gmail.com>
+References: <CAL74qpEwZZF2LrfH1xxYNOxCGPBtT=6UKD99w4hsFr5Hzf8h+Q@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 20 Jun 2012 08:50:39 +1000
+Message-ID: <CAGRGNgUd_8PvJjgcPk-nCJHA47-SmY7-i1XKDg3C_qNR74OMyQ@mail.gmail.com> (sfid-20120620_005106_387391_88E5F95F)
+Subject: Re: turn off scanning
+To: =?UTF-8?B?6Km55rqQ?= <zhanyuan.roger@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> let us process MCI interrupts only when BTCOEX is enabled to avoid
-> processing bogus interrupts.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_mac.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-> index d9e0824..1c0621d 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-> @@ -302,7 +302,8 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
->  			ar9003_hw_bb_watchdog_read(ah);
->  	}
->  
-> -	if (async_cause & AR_INTR_ASYNC_MASK_MCI)
-> +	if ((async_cause & AR_INTR_ASYNC_MASK_MCI) &&
-> +	    ath9k_hw_mci_is_enabled(ah))
->  		ar9003_mci_get_isr(ah, masked);
+Hi,
 
-I don't see how AR_INTR_ASYNC_MASK_MCI would be generated when
-MCI is disabled ? So the check needs to be one level up.
+On Tue, Jun 19, 2012 at 11:30 PM, 詹源 <zhanyuan.roger@gmail.com> wrote:
+> I want to modify the 802.11 stack code to turn off sw_scanning in STA.
+> It's just a personal purpose because my STA has no need to connect to
+> a AP. STA just stays on the operation channel.
 
-Sujith
+What are you trying to achieve?
+
+Scanning is usually controlled by a userspace process. "Disabling" it
+as simple as making sure that there are no userspace processes, e.g.
+wpa_supplicant, NetworkManager, etc. that might initiate a scan.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
