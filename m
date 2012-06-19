@@ -1,119 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58856 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760077Ab2FHCVf (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:55267 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753289Ab2FSNOZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 22:21:35 -0400
-Received: by dady13 with SMTP id y13so1694346dad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 19:21:34 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 1/3] mac80211: return correct mandatory rates when operating in 2.4GHz band
-Date: Thu,  7 Jun 2012 19:21:24 -0700
-Message-Id: <1339122086-23190-1-git-send-email-ashok@cozybit.com> (sfid-20120608_042138_802046_ED470CE3)
+	Tue, 19 Jun 2012 09:14:25 -0400
+Received: by obbta14 with SMTP id ta14so1344316obb.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:14:24 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v2 2/7] mac80211: add radar detection command/event
+Date: Tue, 19 Jun 2012 16:10:58 +0300
+Message-Id: <1340111463-4554-2-git-send-email-victorg@ti.com> (sfid-20120619_151442_789326_986476C5)
+In-Reply-To: <1340111463-4554-1-git-send-email-victorg@ti.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, the function ieee80211_mandatory_rates() doesn't get 802.11g
-mandatory rates. This patch will make the function to return correct mandatory
-rates when operating in 2.4GHz band.
+Add command to trigger radar detection in the driver/FW.
+Once radar detection is started it should continuously
+monitor for radars as long as the channel active.
+If radar is detected usermode notified with 'radar
+detected' event.
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- net/mac80211/ibss.c        |    6 +++---
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/iface.c       |    2 +-
- net/mac80211/util.c        |    8 ++++++--
- 4 files changed, 11 insertions(+), 7 deletions(-)
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/cfg.c          |   16 ++++++++++++++++
+ net/mac80211/driver-ops.h   |   14 ++++++++++++++
+ net/mac80211/driver-trace.h |    6 ++++++
+ net/mac80211/mlme.c         |    8 ++++++++
+ 5 files changed, 61 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 725cb4b..d3d891d 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -330,7 +330,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 95e39b6..a2222cf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2246,6 +2246,10 @@ enum ieee80211_rate_control_changed {
+  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
+  *	and perhaps other supported types of ethtool data-sets.
+  *
++ * @start_radar_detection: Start radar detection on current operational
++ *	channel, once started it will continuously monitor for radars as long
++ *	as the channel active.
++ *
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2385,6 +2389,9 @@ struct ieee80211_ops {
+ 	void	(*get_et_strings)(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  u32 sset, u8 *data);
++	int (*start_radar_detection)(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_channel *chan);
+ };
  
- 	/* make sure mandatory rates are always added */
- 	sta->sta.supp_rates[band] = supp_rates |
--			ieee80211_mandatory_rates(local, band);
-+			ieee80211_mandatory_rates(sdata, band);
+ /**
+@@ -3557,6 +3564,16 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       gfp_t gfp);
  
- 	return ieee80211_ibss_finish_sta(sta, auth);
- }
-@@ -413,7 +413,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 				prev_rates = sta->sta.supp_rates[band];
- 				/* make sure mandatory rates are always added */
- 				sta->sta.supp_rates[band] = supp_rates |
--					ieee80211_mandatory_rates(local, band);
-+					ieee80211_mandatory_rates(sdata, band);
- 
- 				if (sta->sta.supp_rates[band] != prev_rates) {
- 					ibss_vdbg("%s: updated supp_rates set for %pM based on beacon/probe_resp (0x%x -> 0x%x)\n",
-@@ -588,7 +588,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- 
- 	/* make sure mandatory rates are always added */
- 	sta->sta.supp_rates[band] = supp_rates |
--			ieee80211_mandatory_rates(local, band);
-+			ieee80211_mandatory_rates(sdata, band);
- 
- 	spin_lock(&ifibss->incomplete_lock);
- 	list_add(&sta->list, &ifibss->incomplete_stations);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e6cbf5b..7af7c25 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1399,7 +1399,7 @@ void ieee802_11_parse_elems(u8 *start, size_t len,
- u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc);
--u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
-+u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
- 			      enum ieee80211_band band);
- 
- void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 87aeb4f..994e459 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1147,7 +1147,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
- 
- 	/* reset some values that shouldn't be kept across type changes */
- 	sdata->vif.bss_conf.basic_rates =
--		ieee80211_mandatory_rates(sdata->local,
-+		ieee80211_mandatory_rates(sdata,
- 			sdata->local->hw.conf.channel->band);
- 	sdata->drop_unencrypted = 0;
- 	if (type == NL80211_IFTYPE_STATION)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 1df4019..974e022 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -911,9 +911,10 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_set_wmm_default(sdata, true);
+ /**
++ * ieee80211_radar_detected - inform a configured connection that
++ * radar was detected on the current channel
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @freq: frequency of the 'radar detected' channel.
++ * @gfp: context flags.
++ */
++void ieee80211_radar_detected(struct ieee80211_vif *vif, u16 freq, gfp_t gfp);
++
++/**
+  * ieee80211_get_operstate - get the operstate of the vif
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7d5108a..541b274 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2211,6 +2211,21 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 	return ieee80211_wk_cancel_remain_on_channel(sdata, cookie);
  }
  
--u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
-+u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
- 			      enum ieee80211_band band)
- {
++static int ieee80211_start_radar_detection(struct wiphy *wiphy,
++					   struct net_device *dev,
++					   struct ieee80211_channel *chan)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 +	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rate *bitrates;
- 	u32 mandatory_rates;
-@@ -924,7 +925,10 @@ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 	if (WARN_ON(!sband))
- 		return 1;
++	int ret;
++
++	if (!local->ops->start_radar_detection)
++		return -EOPNOTSUPP;
++
++	ret = drv_start_radar_detection(local, sdata, chan);
++	return ret;
++}
++
+ static enum work_done_result
+ ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
+ {
+@@ -2979,4 +2994,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.get_et_sset_count = ieee80211_get_et_sset_count,
+ 	.get_et_stats = ieee80211_get_et_stats,
+ 	.get_et_strings = ieee80211_get_et_strings,
++	.start_radar_detection = ieee80211_start_radar_detection,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 6d33a0c..57185df 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -329,6 +329,20 @@ static inline void drv_cancel_hw_scan(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
  
--	if (band == IEEE80211_BAND_2GHZ)
-+	if (band == IEEE80211_BAND_2GHZ &&
-+	    sdata->flags & IEEE80211_SDATA_OPERATING_GMODE)
-+		mandatory_flag = IEEE80211_RATE_MANDATORY_G;
-+	else if (band == IEEE80211_BAND_2GHZ)
- 		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
- 	else
- 		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
++static inline int drv_start_radar_detection(struct ieee80211_local *local,
++					    struct ieee80211_sub_if_data *sdata,
++					    struct ieee80211_channel *chan)
++{
++	int ret;
++
++	might_sleep();
++
++	trace_drv_start_radar_detection(local, sdata);
++	ret = local->ops->start_radar_detection(&local->hw, &sdata->vif, chan);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
+ static inline int
+ drv_sched_scan_start(struct ieee80211_local *local,
+ 		     struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6de00b2..4112aa3 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -484,6 +484,12 @@ DEFINE_EVENT(local_sdata_evt, drv_cancel_hw_scan,
+ 	TP_ARGS(local, sdata)
+ );
+ 
++DEFINE_EVENT(local_sdata_evt, drv_start_radar_detection,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
+ DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata),
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 66e4fcd..37ed827 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3562,6 +3562,14 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ }
+ EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
+ 
++void ieee80211_radar_detected(struct ieee80211_vif *vif, u16 freq, gfp_t gfp)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	cfg80211_radar_detected(sdata->dev, freq, gfp);
++}
++EXPORT_SYMBOL(ieee80211_radar_detected);
++
+ unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 -- 
 1.7.5.4
 
