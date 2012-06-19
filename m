@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2497 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755678Ab2FFKYi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:24:38 -0400
-Message-ID: <4FCF2FD4.6010103@broadcom.com> (sfid-20120606_122440_876920_C1DF0530)
-Date: Wed, 6 Jun 2012 12:24:20 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-15-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338937641-8519-15-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:40495 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751902Ab2FSOvb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jun 2012 10:51:31 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 14/17] mac80211: remove unused function
+Date: Tue, 19 Jun 2012 16:50:53 +0200
+Message-Id: <1340117456-10154-15-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165138_975530_C409B0FF)
+In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
-> The xmtfifo_sz array contains the queue sizes for the different chip
-> revs. This array missed the sizes for the core rev 17 and 28. This
+From: Johannes Berg <johannes.berg@intel.com>
 
-Should probably use core revs instead of chip revs and I think we are
-talking about the 80211 core rev here.
+Remove the unused function is_ieee80211_device().
 
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> @@ -268,7 +268,7 @@ struct brcms_c_bit_desc {
->   */
->  
->  /* Starting corerev for the fifo size table */
-> -#define XMTFIFOTBL_STARTREV	20
-> +#define XMTFIFOTBL_STARTREV	10
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
-Why not start the table at rev 17? I do not expect any lower revs to get
-brcmsmac support.
-
-Gr. AvS
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index af25c4e..6f39beb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -175,12 +175,6 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 	return cpu_to_le16(dur);
+ }
+ 
+-static inline int is_ieee80211_device(struct ieee80211_local *local,
+-				      struct net_device *dev)
+-{
+-	return local == wdev_priv(dev->ieee80211_ptr);
+-}
+-
+ /* tx handlers */
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+-- 
+1.7.10
 
