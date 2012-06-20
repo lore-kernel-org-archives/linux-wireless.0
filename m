@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37024 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757152Ab2FAHJs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 03:09:48 -0400
-Message-ID: <4FC86AB4.9020602@qca.qualcomm.com> (sfid-20120601_090952_799232_456E05FF)
-Date: Fri, 1 Jun 2012 12:39:40 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>, <stable@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
-References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>	 (sfid-20120601_083956_399882_A3D65832) <1338533070.4884.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338533070.4884.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from serv04.lahn.de ([213.239.197.57]:35450 "EHLO serv04.lahn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751658Ab2FTGQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 02:16:05 -0400
+Date: Wed, 20 Jun 2012 08:15:53 +0200
+From: Michael Leun <lkml20120218@newton.leun.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
+Message-ID: <20120620081553.040171f4@xenia.leun.net> (sfid-20120620_081608_495131_3B8F4440)
+In-Reply-To: <20120620061303.GA8738@vmraj-lnx.qca.qualcomm.com>
+References: <20120619085137.337838c0@xenia.leun.net>
+	<CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com>
+	<20120620003315.2eaf6460@xenia.leun.net>
+	<20120620061303.GA8738@vmraj-lnx.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Wed, 20 Jun 2012 11:43:05 +0530
+Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
 
-On Friday 01 June 2012 12:14 PM, Johannes Berg wrote:
-> On Fri, 2012-06-01 at 12:09 +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> In ath9k we make sure the following two things
->> *if the first interface is ADHOC we cannot have any other interface.
->> *we cannot add an ADHOC interface if there is already an interface
->> is present.
->
->> -	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
->> -	    ((vif->type == NL80211_IFTYPE_ADHOC)&&
->> -	     sc->nvifs>  0)) {
->> -		ath_err(common, "Cannot create ADHOC interface when other"
->> -			" interfaces already exist.\n");
->> +	if ((ah->opmode == NL80211_IFTYPE_ADHOC)&&  (sc->nvifs>  0)) {
->> +		ath_err(common, "Cannot create any other interface when an ADHOC interface already exists.\n");
->> +		ret = -EINVAL;
->> +		goto out;
->> +	}
->> +
->> +	if ((vif->type == NL80211_IFTYPE_ADHOC)&&  (sc->nvifs>  0)) {
->> +		ath_err(common, "Cannot create ADHOC interface when other interfaces already exist.\n");
->
-> You could just remove the entire check since the interface combinations
-> you advertise don't allow it, I think? Or just fix those
-> combinations :-)
 
-i did not check this before, thanks a lot for your inputs. will send a 
-proper v2 after checking this out.
+> Thanks for the analysis. Can you please try with the attached patch
+> without reverting mac80211 change?
 
+Radio Eriwan answers: In principle yes, but you forgot the
+attachment ;-)
 
 -- 
-thanks,
-shafi
+MfG,
+
+Michael Leun
+
