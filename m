@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52664 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623Ab2FLQ4r (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35065 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755746Ab2FTIwZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 12:56:47 -0400
-Date: Tue, 12 Jun 2012 11:56:42 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 0/9] brcm80211: smac: rework regulatory support
-Message-ID: <20120612165642.GG11723@thinkpad-t410> (sfid-20120612_185651_490237_7DA179C9)
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
+	Wed, 20 Jun 2012 04:52:25 -0400
+Message-ID: <1340182340.4655.46.camel@jlt3.sipsolutions.net> (sfid-20120620_105232_654664_515C4913)
+Subject: Re: [PATCH v2] mac80211: initialize sta pointer to avoid
+ false-positive warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tony@atomide.com
+Date: Wed, 20 Jun 2012 10:52:20 +0200
+In-Reply-To: <1340023971-9754-1-git-send-email-coelho@ti.com>
+References: <1340023971-9754-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 05, 2012 at 09:34:00AM -0500, Seth Forshee wrote:
-> brcmsmac has its own internal regulatory implementation which attempts
-> to enforce a Broadcom defined domain named X2. This code has no
-> integration with mac80211 regulatory other than supplying regulatory
-> hints, and thus each implementation operates independently of the other,
-> enforcing conflicting sets of rules.
+On Mon, 2012-06-18 at 15:52 +0300, Luciano Coelho wrote:
+> Some compilers (eg. gcc 4.4.1 for ARM) report a false positive warning
+> in mlme.c:
 > 
-> This series of patches converts brcmsmac to relying on the mac80211
-> regulatory implementation. The X2 domain is registered with mac80211,
-> and brcmsmac is converted to using the constraints from mac80211 for
-> hardware configuration. Much code is removed in the process :)
+> net/mac80211/mlme.c: In function 'ieee80211_prep_connection':
+> net/mac80211/mlme.c:3035: warning: 'sta' may be used uninitialized in this function
 > 
-> There is one holdover from the old regulatory implementation. The MIMO
-> tx power limits for brcmsmac are still being configured based on
-> internal data for the X2 domain. Arend is trying to find out how these
-> need to be handled, but this can be changed at a later time.
-> 
-> Changes since version 1:
-> 
->  - Dropped patch to remove support for DFS channels
->  - Added back application of flags for radar channels on regulatory
->    updates from RFC patches, with minor simplifications
->  - Removed unneeded NULL pointer check from regulatory notifier callback
-> 
-> Thanks,
-> Seth
+> This is a false positive because the place where 'sta' is used is
+> inside an if with the same condition of where it is set:
 
-Any more issues with this round that need to be addressed? If so I'd
-like to get to work on them soon, so that we can hopefully get this
-stuff in for 3.6.
+I still think it's a workaround, but what the hell ... applied.
 
-Thanks,
-Seth
+johannes
 
