@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61629 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755688Ab2FFKHm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:42 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 18/29] NFC: Unregister device if pn533 initial configuration fails
-Date: Wed,  6 Jun 2012 12:16:35 +0200
-Message-Id: <1338977806-30279-19-git-send-email-sameo@linux.intel.com> (sfid-20120606_120745_206576_58618B5D)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45308 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554Ab2FTIr4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 04:47:56 -0400
+Message-ID: <1340182072.4655.41.camel@jlt3.sipsolutions.net> (sfid-20120620_104759_565910_572C67DE)
+Subject: Re: [PATCH v2 5/7] nl80211/cfg80211: add ap channel switch
+ command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Wed, 20 Jun 2012 10:47:52 +0200
+In-Reply-To: <1340111463-4554-5-git-send-email-victorg@ti.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
+	 <1340111463-4554-5-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+On Tue, 2012-06-19 at 16:11 +0300, Victor Goldenshtein wrote:
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index 6b8a65c..2a7e4e8 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -2112,13 +2112,17 @@ static int pn533_probe(struct usb_interface *interface,
- 	if (rc) {
- 		nfc_dev_err(&dev->interface->dev, "Error on setting MAX_RETRIES"
- 								" config");
--		goto free_nfc_dev;
-+		goto unregister_nfc_dev;
- 	}
- 
- 	return 0;
- 
-+unregister_nfc_dev:
-+	nfc_unregister_device(dev->nfc_dev);
-+
- free_nfc_dev:
- 	nfc_free_device(dev->nfc_dev);
-+
- destroy_wq:
- 	destroy_workqueue(dev->wq);
- error:
--- 
-1.7.9.1
+> @@ -565,6 +565,15 @@
+>   *	the time passed sines the beginning of the CAC is less than
+
+interestingly now I see a typo in the previous patch: "sines"?
+
+
+>   * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
+> + * @NL80211_FEATURE_AP_CH_SWITCH: This driver supports AP channel switch.
+
+what point is there in separating these flags?
+
+
+> +	int	(*ap_channel_switch)(struct wiphy *wiphy, struct net_device *dev,
+> +				     u32 count, bool block_tx,
+> +				     bool post_switch_block_tx,
+> +				     struct ieee80211_channel *new_ch);
+
+If mac80211 needs a struct, why not have one here already rather than
+all the parameters?
+
+johannes
 
