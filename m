@@ -1,78 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from opensource.wolfsonmicro.com ([80.75.67.52]:53303 "EHLO
-	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755742Ab2FNMMh (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58915 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753206Ab2FTFKs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 08:12:37 -0400
-Date: Thu, 14 Jun 2012 13:12:34 +0100
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, Wei Ni <wni@nvidia.com>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Where to power on the wifi device before loading the driver.
-Message-ID: <20120614121234.GC3913@opensource.wolfsonmicro.com> (sfid-20120614_141242_157793_CCA3AE63)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
- <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
+	Wed, 20 Jun 2012 01:10:48 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	<aeolus@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Message-ID: <4FE15B4C.1000304@qca.qualcomm.com> (sfid-20120620_071053_968023_823D6C84)
+Date: Wed, 20 Jun 2012 10:40:36 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NU0Ex4SbNnrxsi6C"
-In-Reply-To: <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: Re: [PATCH 03/10] ath9k_hw: Add WoW hardware capability flags
+References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com> <1340120850-9155-4-git-send-email-mohammed@qca.qualcomm.com> <20120619172047.GA7105@vmraj-lnx.qca.qualcomm.com>
+In-Reply-To: <20120619172047.GA7105@vmraj-lnx.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 19 June 2012 10:50 PM, Rajkumar Manoharan wrote:
+> On Tue, Jun 19, 2012 at 09:17:23PM +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> have seperate wow capability flags for
+>> *basic wow support
+>> *device capable of matching exact user defined pattern
+>> or de-authentication/disassoc pattern
+>> *device such AR9280 requires first four bytes for
+>> all sort of patterns
+>>
+>> Cc: Senthil Balasubramanian<senthilb@qca.qualcomm.com>
+>> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+>> Cc: vadivel@qca.qualcomm.com
+>> Tested-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> Signed-off-by: Luis R. Rodriguez<mcgrof@qca.qualcomm.com>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/hw.h |   20 ++++++++++++++++++++
+>>   1 files changed, 20 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+>> index d0e14a3..73a1238 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.h
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+>> @@ -231,6 +231,23 @@ enum ath9k_hw_caps {
+>>   	ATH9K_HW_CAP_DFS			= BIT(16),
+>>   };
+>>
+>> +/*
+>> + * enum ath9k_hw_wow_caps - WoW device capabilities
+>> + * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
+>> + * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
+>> + * an exact user defined pattern or de-authentication/disassoc pattern.
+>> + * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
+>> + * bytes of the pattern for user defined pattern, de-authentication and
+>> + * disassociation patterns for all types of possible frames recieved
+>> + * of those types.
+>> + */
+>> +
+>> +enum ath9k_hw_wow_caps {
+>> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(0),
+>> +	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(1),
+>> +	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(2),
+>> +};
+>> +
+>>   struct ath9k_hw_capabilities {
+>>   	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
+>>   	u16 rts_aggr_limit;
+>> @@ -246,6 +263,9 @@ struct ath9k_hw_capabilities {
+>>   	u8 txs_len;
+>>   	u16 pcie_lcr_offset;
+>>   	bool pcie_lcr_extsync_en;
+>> +#ifdef	CONFIG_PM_SLEEP
+>> +	enum ath9k_hw_wow_caps wow_caps;
+>> +#endif
+> Why can't you align with existing HW_CAP_* flags? why do you need a separate
+> place holder?
+>
+i just thought as there are three flags specific, it would be nice to 
+have it as a seperate enumeration. Just found a bug that if 
+CONFIG_PM_SLEEP it would be a problem. will address this in v2.
 
---NU0Ex4SbNnrxsi6C
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Thu, Jun 14, 2012 at 08:31:20AM +0200, Thierry Reding wrote:
-> On Wed, Jun 13, 2012 at 03:17:06PM -0600, Stephen Warren wrote:
-
-> > The core of the issue is that:
-
-> > * Tegra30 support is via device tree.
-> > * We have an SDIO bus, and the WiFi device attached to that bus is
-> > enumerable.
-> > * Since the WiFi device is enumerable, no node exists in the DT to
-> > represent it.
-> > * However, the driver for the WiFi device needs certain information,
-> > such as the reset GPIO ID and perhaps power GPIO.
-
-> PCI devices are also enumerable and yet they can be matched up with nodes in
-> the device tree. Perhaps something similar could be added for the SDIO bus?
-
-This seems to make the most sense - pushing this through the regulator
-API is just a bodge.
-
---NU0Ex4SbNnrxsi6C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJP2dRnAAoJEBus8iNuMP3dZv8P/iRUNp/d1E9ekU/9muMqEHqN
-YuYrh5eoSB+n/Z5L3NhfNHooqJ4AGlxLKKaBYy1vuuonCvmzQzPhmVsR3EIjPqWS
-AGcNnmcg/Kwxw9JNiIpglRxBK6WLUyxN2ru9gll9y7/rDi5ghFwL/Y/Wjg4NqFaJ
-E8CqUraBHvWM0KFlOakj0Ho54/tLY5tQ1jjubIX6PJ2dTgEYObEoGPe6wdvd30dZ
-6MUgfZ5mpevjnCYk8s+Y1DGSkztlsbiMhMRU/op4cDlojCBg4Q1WzwgiLmq8RCEq
-1da0m6RpJEByMVmoT9lVa6iWweOV6iLnah9xTFIPS6dm6J/rNXkRu9TPDlkf1pK7
-MjyHLTjLNGYqjpAnqKbcYBsRcVjagIggxK96KqecFGMUxL8Sj4I/eG04Qug5SDfL
-xRQFXhyCpTkTDgg99nRw0gadt+FOI5VHXxO4fYQuiImO1eN2D7r76pVMC0qDjffv
-wDZjckI7UHqDsYZSNzv+gfWmwVTHT8NfuEhY0az7bxIyZ+1vbNgBd++Apyyu30XC
-5d+IG1BBLTmszZSkVMu52skbe7jg1cRcn6KQTsRDz+bJ2u50imPk8axdF2iPeL7Y
-6CDdxWFooC/lXfCHIUSp03ncdUSLCWY9KAiBw0r54S450wp7Xb+k8UvWq2HO1ql6
-H0xwR/e7wiWw8QuvBrIt
-=2m8d
------END PGP SIGNATURE-----
-
---NU0Ex4SbNnrxsi6C--
+-- 
+thanks,
+shafi
