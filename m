@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33741 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761Ab2FKSsI (ORCPT
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:43368 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756634Ab2FTMED (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 14:48:08 -0400
-Date: Mon, 11 Jun 2012 14:43:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/5] brcmfmac: introduce checkdied debugfs functionality
-Message-ID: <20120611184330.GC30086@tuxdriver.com> (sfid-20120611_204812_734267_CB246A7A)
-References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
- <1339275105-3593-6-git-send-email-arend@broadcom.com>
- <CA+XFjioPG4aT-umi1BD+RH0q0a3AEY=QXTAFapGhz3x25cLdSw@mail.gmail.com>
- <4FD42939.2020404@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4FD42939.2020404@broadcom.com>
+	Wed, 20 Jun 2012 08:04:03 -0400
+Received: by lboj14 with SMTP id j14so555202lbo.35
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 05:03:56 -0700 (PDT)
+Message-ID: <1340193834.1631.227.camel@cumari.coelho.fi> (sfid-20120620_140414_435967_84F0CBA1)
+Subject: Re: [PATCH 0/7] nl/cfg/mac80211: add DFS master ability
+From: Luciano Coelho <coelho@ti.com>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
+	assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Date: Wed, 20 Jun 2012 15:03:54 +0300
+In-Reply-To: <CAK80WHbX795ewfKTqFe8D19w3g1mkvni-fX+Et98guC54kD8RQ@mail.gmail.com>
+References: <1340030798-28992-1-git-send-email-victorg@ti.com>
+	 <4FE1A734.4090100@neratec.com>
+	 <CAK80WHbJZMsoV625hT_sQaEvVx3A5XC8M7PH6KfjdCx=MhdtEw@mail.gmail.com>
+	 <1340189345.4655.56.camel@jlt3.sipsolutions.net>
+	 <CAK80WHbX795ewfKTqFe8D19w3g1mkvni-fX+Et98guC54kD8RQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 10, 2012 at 06:57:29AM +0200, Arend van Spriel wrote:
-> On 06/10/2012 04:13 AM, Gábor Stefanik wrote:
-> > On Sat, Jun 9, 2012 at 10:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> >> The checkdied functionality provides useful information for analyzing
-> >> firmware crashes. By exposing this information to a debugfs file users
-> >> can easily provide its content in bug reports. The functionality is
-> >> available only when CONFIG_BRCMDBG is selected.
+On Wed, 2012-06-20 at 14:02 +0300, Goldenshtein, Victor wrote:
+> On Wed, Jun 20, 2012 at 1:49 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2012-06-20 at 13:47 +0300, Goldenshtein, Victor wrote:
+> >> On Wed, Jun 20, 2012 at 1:34 PM, Zefir Kurtisi
+> >> <zefir.kurtisi@neratec.com> wrote:
+> >> > On 06/18/2012 04:46 PM, Victor Goldenshtein wrote:
+> >> >> In continuation to proposed RFC, this patch set (with hostap patch series) adds support for DFS (Dynamic Frequency Selection) according 802.11h.
+> >> >>
+> >> >> [...]
+> >> >
+> >> > Thanks for the updated patches, Victor.
+> >> >
+> >> > Going to test them by preparing the ath9k interface.
+> >> >
+> >> > Right now they do not apply on top of wireless-testing, could you please
+> >> > rebase? Thanks.
 > >>
-> >> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> >> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> >> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> >> ---
-> >>  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  332 +++++++++++++++++++-
-> >>  1 file changed, 331 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> >> index a07fb01..5a33b42 100644
-> >> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> >> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> >> @@ -31,6 +31,7 @@
-> >>  #include <linux/firmware.h>
-> >>  #include <linux/module.h>
-> >>  #include <linux/bcma/bcma.h>
-> >> +#include <linux/debugfs.h>
-> >>  #include <asm/unaligned.h>
-> >>  #include <defs.h>
-> >>  #include <brcmu_wifi.h>
-> >> @@ -48,6 +49,9 @@
-> >>
-> >>  #define CBUF_LEN       (128)
-> >>
-> >> +/* Device console log buffer state */
-> >> +#define CONSOLE_BUFFER_MAX     2024
-> > 
-> > Just out of curiosity; what is the significance of this number?
+> >> The patches are on top of the master branch from:
+> >> git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
+> >
+> > Why would you use that instead of mac80211-next?
+> >
 > 
-> It is used in the code fragment below. I have to admit the comment is
-> not explaining its significance.
-> 
-> >> +       /* allocate buffer for console data */
-> >> +       if (console_size <= CONSOLE_BUFFER_MAX)
-> >> +               conbuf = kzalloc(console_size+1, GFP_ATOMIC);
-> >> +
-> >> +       if (!conbuf)
-> >> +               return -ENOMEM;
-> 
-> Probably would be better to use vmalloc() here or at least use
-> GFP_KERNEL here.
-> 
-> John, any recommendations?
+> Will rebase on top of the mac80211-next.
 
-vmalloc seems reasonable...
+Sorry, I think this was my mistake, because I told Victor to use this
+tree.  I associated mac80211.git with wireless-testing.git.  Now I
+realize that mac80211.git is like wireless.git (ie. contains patches
+that should go to the current kernel, at the moment, 3.5).
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I guess the best thing to do is to keep basing mac80211 patches on top
+of linux-wireless.
+
+--
+Luca.
+
