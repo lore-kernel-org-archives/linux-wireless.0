@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:34765 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758223Ab2FUDVc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39607 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754973Ab2FTHiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 23:21:32 -0400
-From: Bing Zhao <bzhao@marvell.com>
+	Wed, 20 Jun 2012 03:38:21 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, "3.4.y" <stable@vger.kernel.org>
-Subject: [PATCH 3.5 2/4] mwifiex: fix WPS eapol handshake failure
-Date: Wed, 20 Jun 2012 20:21:11 -0700
-Message-Id: <1340248873-5455-3-git-send-email-bzhao@marvell.com> (sfid-20120621_052135_832766_8DD6BD39)
-In-Reply-To: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
-References: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/12] iwlwifi: check that we have enough bits to track the TX queues
+Date: Wed, 20 Jun 2012 09:38:03 +0200
+Message-Id: <1340177894-12992-2-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093843_204800_F2889251)
+In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-After association, STA will go through eapol handshake with WPS
-enabled AP. It's observed that WPS handshake fails with some 11n
-AP. The reason for the failure is that the eapol packet is sent
-via 11n frame aggregation.
-
-The eapol packet should be sent directly without 11n aggregation.
-
-This patch fixes the problem by adding WPS session control while
-dequeuing Tx packets for transmission.
-
-Cc: "3.4.y" <stable@vger.kernel.org>
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/wmm.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/main.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 8c2b5c0..3fa4d41 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -1223,6 +1223,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index e620af3..bba3edf 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -1352,6 +1352,9 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 		trans_cfg.queue_watchdog_timeout = IWL_WATCHDOG_DISABLED;
+ 	trans_cfg.command_names = iwl_dvm_cmd_strings;
  
- 	if (!ptr->is_11n_enabled ||
- 	    mwifiex_is_ba_stream_setup(priv, ptr, tid) ||
-+	    priv->wps.session_enable ||
- 	    ((priv->sec_info.wpa_enabled ||
- 	      priv->sec_info.wpa2_enabled) &&
- 	     !priv->wpa_is_gtk_set)) {
++	WARN_ON(sizeof(priv->transport_queue_stop) * BITS_PER_BYTE <
++		priv->cfg->base_params->num_of_queues);
++
+ 	ucode_flags = fw->ucode_capa.flags;
+ 
+ #ifndef CONFIG_IWLWIFI_P2P
 -- 
-1.7.0.2
+1.7.10
 
