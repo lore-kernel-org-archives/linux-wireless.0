@@ -1,82 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34246 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054Ab2FDK62 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33131 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950Ab2FTMMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:58:28 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38031.779458.461855@gargle.gargle.HOWL> (sfid-20120604_125830_568253_A4BE18C2)
-Date: Mon, 4 Jun 2012 16:27:19 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 03/20] ath9k: Setup MCI interrupts properly
+	Wed, 20 Jun 2012 08:12:25 -0400
+Message-ID: <1340194342.4655.59.camel@jlt3.sipsolutions.net> (sfid-20120620_141229_393516_D9BDFF6B)
+Subject: Re: [PATCH v3 1/2] nl80211/cfg80211: add scan channel times to scan
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, eliad@wizery.com
+Date: Wed, 20 Jun 2012 14:12:22 +0200
+In-Reply-To: <CAK80WHbMVr0GVrKRGL9OD8CUHi8FBVRL0tDGewf9doLm2etb0g@mail.gmail.com>
+References: <1340177634-24568-1-git-send-email-victorg@ti.com>
+	 <1340178370.4655.22.camel@jlt3.sipsolutions.net>
+	 <CAK80WHYU+dOvMQG2aDTP7rO6b=MZXDVcX4a7KGpLizgutVcD8g@mail.gmail.com>
+	 <1340180991.4655.30.camel@jlt3.sipsolutions.net>
+	 <CAK80WHbMVr0GVrKRGL9OD8CUHi8FBVRL0tDGewf9doLm2etb0g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MCI interrupts have to be enabled only when BTCOEX is
-actually in use.
+On Wed, 2012-06-20 at 13:38 +0300, Goldenshtein, Victor wrote:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    3 +--
- drivers/net/wireless/ath/ath9k/mci.c  |   11 +++++++++++
- drivers/net/wireless/ath/ath9k/mci.h  |   11 ++++++++++-
- 3 files changed, 22 insertions(+), 3 deletions(-)
+> Will add this check, so we will read scan attributes only if the
+> NL80211_FEATURE_SCAN_TIMES is set by the  driver.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4de4473..1acccd0 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1045,8 +1045,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		ah->imask |= ATH9K_INT_CST;
- 
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--		ah->imask |= ATH9K_INT_MCI;
-+	ath_mci_enable(sc);
- 
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 	sc->sc_ah->is_monitoring = false;
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 29fe52d..7b553f6 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -538,3 +538,14 @@ void ath_mci_intr(struct ath_softc *sc)
- 		mci_int &= ~(AR_MCI_INTERRUPT_RX_INVALID_HDR |
- 			     AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT);
- }
-+
-+void ath_mci_enable(struct ath_softc *sc)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	if (!common->btcoex_enabled)
-+		return;
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		sc->sc_ah->imask |= ATH9K_INT_MCI;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index c841444..fc14eea 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -130,4 +130,13 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci);
- int ath_mci_setup(struct ath_softc *sc);
- void ath_mci_cleanup(struct ath_softc *sc);
- void ath_mci_intr(struct ath_softc *sc);
--#endif
-+
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+void ath_mci_enable(struct ath_softc *sc);
-+#else
-+static inline void ath_mci_enable(struct ath_softc *sc)
-+{
-+}
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
-+
-+#endif /* MCI_H*/
--- 
-1.7.10.3
+Thx.
+
+> > If I set *ONLY* max_passive_ch_time = 10 via nl80211, what will happen?
+> >
+> 
+> There is no MAX times for the software scan, so the default values
+> will be used ,no problem here.
+
+What if it's hardware scan, not software scan?
+
+> The hw_scan has it's own specific default values, and it should
+> validate that his default min_passive_channel_time is <=
+> max_passive_ch_time from the user request.
+
+I don't think you're understanding it yet ...
+
+Say I have USER_max_passive_time but DEFAULT_min_passive_time -- that
+can cause all kinds of weird things to happen, and forcing drivers to
+validate it seems rather stupid.
+
+> The other option is to enforce usermode to define always min *and*
+> max, something like:
+> if ((info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME]) &&
+>     (info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME])) {
+>              request->min_ch_time =
+> nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME]);
+>              request->max_ch_time =
+> nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME]);
+>     }
+> 
+> Although, not sure that enforcing is the correct way ?
+
+It makes a lot more sense than your way which can result in invalid
+configurations being passed to the driver ...
+
+johannes
 
