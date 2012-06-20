@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35509 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507Ab2FMSDH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39613 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754992Ab2FTHiW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 14:03:07 -0400
-Date: Wed, 13 Jun 2012 13:50:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/5] brcmfmac: introduce checkdied debugfs functionality
-Message-ID: <20120613175030.GB6473@tuxdriver.com> (sfid-20120613_200311_515348_C49520E2)
-References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
- <1339275105-3593-6-git-send-email-arend@broadcom.com>
- <CA+XFjioPG4aT-umi1BD+RH0q0a3AEY=QXTAFapGhz3x25cLdSw@mail.gmail.com>
- <4FD42939.2020404@broadcom.com>
- <20120611184330.GC30086@tuxdriver.com>
- <4FD89720.1020903@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4FD89720.1020903@broadcom.com>
+	Wed, 20 Jun 2012 03:38:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/12] iwlwifi: don't disable interrupt while starting tx
+Date: Wed, 20 Jun 2012 09:38:08 +0200
+Message-Id: <1340177894-12992-7-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093834_593376_61C3A36C)
+In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2012 at 03:35:28PM +0200, Arend van Spriel wrote:
-> On 06/11/2012 08:43 PM, John W. Linville wrote:
-> > On Sun, Jun 10, 2012 at 06:57:29AM +0200, Arend van Spriel wrote:
-> >> On 06/10/2012 04:13 AM, Gábor Stefanik wrote:
-> >>> On Sat, Jun 9, 2012 at 10:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> >>>> The checkdied functionality provides useful information for analyzing
-> >>>> firmware crashes. By exposing this information to a debugfs file users
-> >>>> can easily provide its content in bug reports. The functionality is
-> >>>> available only when CONFIG_BRCMDBG is selected.
-> >>>>
-> >>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> >>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> >>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> >>>> ---
-> 
-> >>>> +       /* allocate buffer for console data */
-> >>>> +       if (console_size <= CONSOLE_BUFFER_MAX)
-> >>>> +               conbuf = kzalloc(console_size+1, GFP_ATOMIC);
-> >>>> +
-> >>>> +       if (!conbuf)
-> >>>> +               return -ENOMEM;
-> >>
-> >> Probably would be better to use vmalloc() here or at least use
-> >> GFP_KERNEL here.
-> >>
-> >> John, any recommendations?
-> > 
-> > vmalloc seems reasonable...
-> > 
-> 
-> Thanks, John
-> 
-> Can you take the first four patches? I will make a v2 for this one. Let
-> me know if that is ok with you.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Sure, fine.
+This is really not needed, we already have a lock inside
+the accesses to the prph.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c |    8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index e20880a..42f369d 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1046,15 +1046,12 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 
+ /*
+  * Activate/Deactivate Tx DMA/FIFO channels according tx fifos mask
+- * must be called under the irq lock and with MAC access
+  */
+ static void iwl_trans_txq_set_sched(struct iwl_trans *trans, u32 mask)
+ {
+ 	struct iwl_trans_pcie __maybe_unused *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	lockdep_assert_held(&trans_pcie->irq_lock);
+-
+ 	iwl_write_prph(trans, SCD_TXFACT, mask);
+ }
+ 
+@@ -1062,12 +1059,9 @@ static void iwl_tx_start(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 a;
+-	unsigned long flags;
+ 	int i, chan;
+ 	u32 reg_val;
+ 
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
+-
+ 	/* make sure all queue are not stopped/used */
+ 	memset(trans_pcie->queue_stopped, 0, sizeof(trans_pcie->queue_stopped));
+ 	memset(trans_pcie->queue_used, 0, sizeof(trans_pcie->queue_used));
+@@ -1118,8 +1112,6 @@ static void iwl_tx_start(struct iwl_trans *trans)
+ 	iwl_write_direct32(trans, FH_TX_CHICKEN_BITS_REG,
+ 			   reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
+ 
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+-
+ 	/* Enable L1-Active */
+ 	iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
+ 			    APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10
+
