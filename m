@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:57738 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760880Ab2FHGbJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 02:31:09 -0400
-Received: by lbbgh12 with SMTP id gh12so1666759lbb.39
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 23:31:06 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 1/5] wl18xx: allow FW-log by default for PG2.0
-Date: Fri,  8 Jun 2012 09:30:51 +0300
-Message-Id: <1339137055-30095-2-git-send-email-coelho@ti.com> (sfid-20120608_083115_329318_BC0454BF)
-In-Reply-To: <1339137055-30095-1-git-send-email-coelho@ti.com>
-References: <1339137055-30095-1-git-send-email-coelho@ti.com>
+Received: from mx.polito.it ([130.192.182.65]:24460 "EHLO mx.polito.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751863Ab2FTJvU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 05:51:20 -0400
+Message-ID: <1340184209.2915.2.camel@MacGyver> (sfid-20120620_115124_226055_94A1A9EF)
+Subject: Re: [PATCH 1/3] wl1251: fix TSF calculation
+From: Guido Gavilanes <gavilanes@ismb.it>
+Reply-To: gavilanes@ismb.it
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Date: Wed, 20 Jun 2012 11:23:29 +0200
+In-Reply-To: <1339874808-9991-2-git-send-email-notasas@gmail.com>
+References: <1339874808-9991-1-git-send-email-notasas@gmail.com>
+	 <1339874808-9991-2-git-send-email-notasas@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Hello all,
 
-This is supported by new FW versions (.88+).
+Regarding the TSF, is there a way to read from an outside program the
+TSF to help stations or programs have a "synchronization" low level
+reference time?
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |    1 -
- 1 file changed, 1 deletion(-)
+Any ideas would be appreciated!
+Thank you!
+Guido
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 9cdf24f..c26015b 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -600,7 +600,6 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
- 		/* wl18xx uses the same firmware for PLT */
- 		wl->plt_fw_name = WL18XX_FW_NAME;
- 		wl->quirks |= WLCORE_QUIRK_NO_ELP |
--			      WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED |
- 			      WLCORE_QUIRK_RX_BLOCKSIZE_ALIGN |
- 			      WLCORE_QUIRK_TX_PAD_LAST_FRAME;
- 
--- 
-1.7.10
+On Sat, 2012-06-16 at 22:26 +0300, Grazvydas Ignotas wrote:
+> Cast MSB part of current TSF to u64 to prevent loss of most
+> significant bits. MSB should also be shifted by 32.
+> 
+> Patch based on old maemo patch by:
+> Yuri Kululin <ext-yuri.kululin@nokia.com>
+> Yuri Ershov <ext-yuri.ershov@nokia.com>
+> 
+> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+> ---
+>  drivers/net/wireless/ti/wl1251/acx.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+> index ad87a1a..db6430c 100644
+> --- a/drivers/net/wireless/ti/wl1251/acx.c
+> +++ b/drivers/net/wireless/ti/wl1251/acx.c
+> @@ -869,7 +869,7 @@ int wl1251_acx_tsf_info(struct wl1251 *wl, u64 *mactime)
+>  	}
+>  
+>  	*mactime = tsf_info->current_tsf_lsb |
+> -		(tsf_info->current_tsf_msb << 31);
+> +		((u64)tsf_info->current_tsf_msb << 32);
+>  
+>  out:
+>  	kfree(tsf_info);
+
+
 
