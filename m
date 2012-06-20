@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-forward2.uio.no ([129.240.10.71]:34953 "EHLO
-	mail-forward2.uio.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728Ab2F1OD5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44402 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756129Ab2FTOS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 10:03:57 -0400
-Received: from exim by mail-out2.uio.no with local-bsmtp (Exim 4.75)
-	(envelope-from <Jon.Wikne@cern.ch>)
-	id 1SkFK8-000144-EO
-	for linux-wireless@vger.kernel.org; Thu, 28 Jun 2012 16:03:56 +0200
-Message-ID: <4FEC6447.7010007@cern.ch> (sfid-20120628_160402_161453_834B30B5)
-Date: Thu, 28 Jun 2012 16:03:51 +0200
-From: Jon Wikne <Jon.Wikne@cern.ch>
-MIME-Version: 1.0
-To: Jon Wikne <Jon.Wikne@cern.ch>
-CC: linux-wireless@vger.kernel.org,
-	Mohammed Shafi <shafi.wireless@gmail.com>
-Subject: Re: Mysterious hangs - cfg80211 - ath9k
-References: <4FE03291.5030202@cern.ch> <CAD2nsn1U0UHjrDp7vh7rfvTP=BLB3FA+zLV9sgt1_T7gVvAYgg@mail.gmail.com> <4FE0CA6C.3080002@cern.ch>
-In-Reply-To: <4FE0CA6C.3080002@cern.ch>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 20 Jun 2012 10:18:28 -0400
+Message-ID: <1340201902.4655.65.camel@jlt3.sipsolutions.net> (sfid-20120620_161831_264796_E554B0E0)
+Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on
+ op-channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Date: Wed, 20 Jun 2012 16:18:22 +0200
+In-Reply-To: <CAK80WHZjvUPvzdKARJF9Z4yOuK8AJW=4v4rWN7ozEU8pyAqg_Q@mail.gmail.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
+	 <1340111463-4554-3-git-send-email-victorg@ti.com>
+	 <1340181856.4655.37.camel@jlt3.sipsolutions.net>
+	 <1340181992.4655.39.camel@jlt3.sipsolutions.net>
+	 <4FE1B9CB.2090206@neratec.com>
+	 <1340193471.4655.57.camel@jlt3.sipsolutions.net>
+	 <4FE1C8EC.4040902@neratec.com>
+	 <1340197920.4655.62.camel@jlt3.sipsolutions.net>
+	 <CAK80WHZjvUPvzdKARJF9Z4yOuK8AJW=4v4rWN7ozEU8pyAqg_Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/19/2012 08:52 PM, Jon Wikne wrote:
-> On 06/19/2012 11:39 AM, Mohammed Shafi wrote:
->> On Tue, Jun 19, 2012 at 1:34 PM, Jon Wikne<Jon.Wikne@cern.ch> wrote:
->>> Hi List,
->>>
->>> I am experiencing a puzzling problem with WLAN on a Toshiba Qosmio
->>> F750 laptop, running CERN SLC 5.8 (mostly identical to RHEL 5.8),
->>> but with kernel 2.6.39.4. (The kernel that came with the distro did
->>> not work properly with WLAN on this machine at all.)
->>
->> please quickly try
->> http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
->
-> I tried to install compat-wireless-2012-05-10. It worked for 4½ hours,
-> then same problem.
->
-> Maybe there is something wrong with my understanding here, but I do not
-> see why the "cfg80211: Calling CRDA to update world regulatory domain"
-> should occur hours after the connection has been established, and what
-> triggers it, apparently at random....
->
->> or the latest wireless testing tree
->> http://linuxwireless.org/en/developers/Documentation/git-guide#Cloning_latest_wireless-testing
->
-> Is there a reason to believe it could make a difference if I try
-> this too?
+On Wed, 2012-06-20 at 16:32 +0300, Goldenshtein, Victor wrote:
+> On Wed, Jun 20, 2012 at 4:12 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2012-06-20 at 14:58 +0200, Zefir Kurtisi wrote:
+> >
+> >> >> No, if you bring it back up on the same DFS channel,
+> >> >> radar_detection_timeout will be set back to +60s by
+> >> >> start_radar_detection(). Looks safe to me.
+> >> >
+> >> > You need to think a bit more outside the regular code flows ... What if
+> >> > I'm not calling start_radar_detection()?
+> >
+> >> If you are not calling start_radar_detection() you are not using
+> >> hostapd. With the design approach we agreed on (when we initially
+> >> discussed DFS years ago) to have all the logic located in hostapd, it is
+> >> inevitable that those who intentionally want to bypass DFS regulatory
+> >> restrictions actually can. You can always replace hostapd by some
+> >> component that handles DFS control without caring the wait times.
+> >
+> > But this kernel patch is attempting to enforce the wait time. Are you
+> > saying it shouldn't even pretend to enforce it?
+> >
+> 
+> It's not just attempts, it's ensures that no transmission will occur
+> until we perform a radar detection on the channel.
+> It's doesn't matter if the usermode use hostapd or some other applications.
 
-Now I downloaded this (more than 1GB), just to realize that it is a
-complete kernel tree for kernel 3.5.0-rc3. I don't really feel ready
-for an experimental upgrade from 2.6.39.4 to that right now....
+As written, it doesn't have that effect.
 
-With basis in compat-wireless-2012-05-10 I tried to comment out the
-call to call_crda in net/wireless/reg.c and return -EALREADY in line
-1483, just to see if that circumvented the problem. It did not. The
-damage (whatever that might be) already seems to be done _before_ the
-call_crda is made in reg.c.
-
-I am a bit at a loss as to how to proceed. There are several things
-i do not understand.
-
-1) The call to update CRDA (even with my crude, experimental, dummy
-return) seems to cause no trouble when it is done the first time
-the line comes up. Could someone please explain to me what causes
-the subsequent calls at highly irregular intervals, and why that
-seems to be necessary or desirable?
-
-2) Is this a known problem that is being worked on (in which case I
-will just shut up and wait), or am I the first to report it?
-
-Thanks in advance for any further info or suggestions.
-
-Regards,
--- Jon Wikne
+johannes
 
 
