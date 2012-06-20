@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:36564 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933Ab2FNVaZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 17:30:25 -0400
-Received: by ghrr11 with SMTP id r11so1809346ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 14:30:24 -0700 (PDT)
+Received: from victor.provo.novell.com ([137.65.250.26]:39520 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754709Ab2FTIxx convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Wed, 20 Jun 2012 04:53:53 -0400
+Received: by vcbf11 with SMTP id f11so3690046vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 01:53:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1339696366-26970-3-git-send-email-ozancag@gmail.com>
-References: <1339696366-26970-1-git-send-email-ozancag@gmail.com> <1339696366-26970-3-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 14 Jun 2012 14:30:02 -0700
-Message-ID: <CAB=NE6UPXy7WFSX5FP0vBEOUgApkZxQ9P0T4dNyUy0mVEks+8Q@mail.gmail.com> (sfid-20120614_233028_808620_DFDEBC64)
-Subject: Re: [PATCH 3/3] compat: Backport fault_in_multipages_{writeable,readable}
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
+References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
+	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
+Date: Wed, 20 Jun 2012 16:53:45 +0800
+Message-ID: <CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com> (sfid-20120620_105357_181145_71E90662)
+Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
+From: Matt Chen <machen@suse.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBKdW4gMTQsIDIwMTIgYXQgMTA6NTIgQU0sIE96YW4gw4dhxJ9sYXlhbiA8b3phbmNh
-Z0BnbWFpbC5jb20+IHdyb3RlOgo+IFRoaXMgYmFja3BvcnRzOgo+Cj4gY29tbWl0IGY1NmY4MjFm
-ZWI3YjM2MjIzZjMwOWUwZWMwNTk4NmJiMTM3Y2U0MTgKPiBBdXRob3I6IERhbmllbCBWZXR0ZXIg
-PGRhbmllbC52ZXR0ZXJAZmZ3bGwuY2g+Cj4gRGF0ZTogwqAgU3VuIE1hciAyNSAxOTo0Nzo0MSAy
-MDEyICswMjAwCj4KPiDCoCDCoG1tOiBleHRlbmQgcHJlZmF1bHQgaGVscGVycyB0byBmYXVsdCBp
-biBtb3JlIHRoYW4gUEFHRV9TSVpFCj4KPiBUaGUgbmV3IGZ1bmN0aW9ucyBhcmUgdXNlZCBieSBk
-cm0vaTkxNSBkcml2ZXIuCj4KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIDMuNC4wLTAzMDQwMC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMy4zLjctMDMwMzA3LWdlbmVyaWMgwqBbT0tdCj4gVHJ5
-aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAzLjIuMi0wMzAyMDItZ2Vu
-ZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-My4xLjEwLTAzMDExMC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAzLjAuMTgtMDMwMDE4LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+IFRy
-eWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzktMDIwNjM5MDQtZ2Vu
-ZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42
-LjM4LTAyMDYzODA4LWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoDIuNi4zNy0wMjA2MzcwNi1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJu
-ZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzYtMDIwNjM2MDQtZ2VuZXJpYyDCoFtP
-S10KPiBUcnlpbmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42LjM1LTAyMDYz
-NTEyLWdlbmVyaWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoDIuNi4zNC0wMjA2MzQxMC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMzMtMDIwNjMzMDUtZ2VuZXJpYyDCoFtPS10KPiBUcnlp
-bmcga2VybmVsIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42LjMyLTAyMDYzMjU1LWdlbmVy
-aWMgwqBbT0tdCj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4z
-MS0wMjA2MzExMy1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAyLjYuMzAtMDIwNjMwMTAtZ2VuZXJpYyDCoFtPS10KPiBUcnlpbmcga2VybmVs
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMi42LjI5LTAyMDYyOTA2LWdlbmVyaWMgwqBbT0td
-Cj4gVHJ5aW5nIGtlcm5lbCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDIuNi4yOC0wMjA2Mjgx
-MC1nZW5lcmljIMKgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAyLjYuMjctMDIwNjI3LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+IFRyeWluZyBrZXJuZWwg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMjYtMDIwNjI2LWdlbmVyaWMgwqAgwqAg
-wqAgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYu
-MjUtMDIwNjI1LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+IFRyeWluZyBrZXJuZWwgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAyLjYuMjQtMDIwNjI0LWdlbmVyaWMgwqAgwqAgwqAgW09LXQo+
-Cj4gU2lnbmVkLW9mZi1ieTogT3phbiDDh2HEn2xheWFuIDxvemFuY2FnQGdtYWlsLmNvbT4KPiAt
-LS0KCkFwcGxpZWQgYWxsIDMgYW5kIHB1c2hlZCwgdGhhbmtzIQoKICBMdWlzCg==
+Hi Mohammed,
+
+2012/6/20 Matt Chen <machen@suse.com>:
+> Hi Mohammed,
+>
+> 2012/6/19 Mohammed Shafi <shafi.wireless@gmail.com>:
+>> Hi Matt,
+>>
+>>> I tested the latest kernel v3.5-rc3 ath9k for the Atheros [168c 0034],
+>>> code name is Miami. I found no matter how I press the wifi button to
+>>> enable/disable the wifi, it doesn't work to me.
+>>> Even I found the rfkill status for this interface is not changing.
+>>
+>> its a AR9462please poke at the register  #define AR_GPIO_IN  -> 0x402c : 0x404c)
+> I do
+> 1) echo 0x402c > regidx
+>     watch -n 1 regval
+> 2) echo 0x404c > regidx
+>    watch -n1 regval
+>> i remember testing it in a acer laptop, it was working.
+> Both 1) and 2) shows no different in their value no matter how I press
+> the wifi button. :(
+I found it is not enabling the
+wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll(struct
+ath_softc *sc).
+The condition for (ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT) is failed.
+Any direction I can dig further ? :)
+>>>
+>>> --
+>>> Thank you.
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>> --
+>> thanks,
+>> shafi
+>>
+>
+>
+>
+> --
+> Thank you.
+
+
+
+-- 
+Thank you.
