@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:33325 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802Ab2FSSP2 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53132 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752277Ab2FTFcy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 14:15:28 -0400
-Received: by gglu4 with SMTP id u4so4923784ggl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 11:15:27 -0700 (PDT)
-Date: Tue, 19 Jun 2012 13:15:22 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Roland Vossen <rvossen@broadcom.com>
-Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
-Message-ID: <20120619181522.GB19354@burratino> (sfid-20120619_201532_244545_4FB1D3CD)
-References: <20120530172713.GH3908@burratino>
- <CAKprTDGtvUFSBb_XK01bi6bJa3dynu73Lq-jTs=E78E3QwSqpA@mail.gmail.com>
- <20120601174237.GA31781@burratino>
- <CAKprTDHepfbCKquvnG8CQ2=-tSNbgOSkT6R0GQmEx9UyuiZyMQ@mail.gmail.com>
- <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
- <20120604084200.GA30645@tiikeri.vuoristo.local>
- <20120604173121.GA9238@stt008.linux.site>
- <20120605050620.GC3118@burratino>
- <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
- <20120611031544.GB3092@burratino>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120611031544.GB3092@burratino>
+	Wed, 20 Jun 2012 01:32:54 -0400
+Message-ID: <1340170374.4655.1.camel@jlt3.sipsolutions.net> (sfid-20120620_073257_581494_63A8D34C)
+Subject: Re: [PATCH 1/3] mac80211: Track auth frame registrations on IBSS
+ ifaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Hawkins <hawkinsw@opentechinstitute.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Wed, 20 Jun 2012 07:32:54 +0200
+In-Reply-To: <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org>
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+	 <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
+On Tue, 2012-06-19 at 17:59 -0400, Will Hawkins wrote:
+> Track userspace registrations for authentication
+> frames received on an IBSS interface. This field
+> will be used to decide whether or not to send
+> "open system" authentication frames when a new
+> station joins an adhoc network.
+> 
+> Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+> ---
+>  net/mac80211/cfg.c         |   10 ++++++++++
+>  net/mac80211/ieee80211_i.h |    1 +
+>  2 files changed, 11 insertions(+)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 498c94e..e00a696 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -2486,6 +2486,16 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
+>  					  u16 frame_type, bool reg)
+>  {
+>  	struct ieee80211_local *local = wiphy_priv(wiphy);
+> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +
+> +	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && 
+> +	    (frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH))) {
+> +		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+> +		if (reg)
+> +			ifibss->auth_frame_registrations++;
+> +		else if (reg > 0)
+> +			ifibss->auth_frame_registrations--;
 
-Jonathan Nieder wrote:
+The "if (reg > 0)" here doesn't seem to make sense?
 
-> As discussed at [1], Camaleón has been experiencing unwanted random
-> wireless reconnects with various 3.2.y kernels up to and including
-> 3.2.19:
+johannes
 
-This was first reproduced on a kernel closely based on 3.2.9.  It
-would typically happen pretty reliably once a day or so.  Four days of
-testing a kernel close to 3.2.2 haven't triggered it again[1].
-
-The only brcm80211 change in that range is
-
-  f96b08a7e6f6 brcmsmac: fix tx queue flush infinite loop
-
-So maybe the timeout is too short and this safety is tripping when it
-shouldn't.  I've asked Camaleón to try a recent 3.2.y kernel with and
-without that commit reverted to test this guess.
-
-That leaves another mystery: which of the 22 changes listed at [2] was
-providing relief in earlier tests?  E.g., does
-
->   c261bdf8acad brcm80211: smac: indicate severe problems to Mac80211
-
-make it easier to recover from this kind of error?  Are there commands
-we should run or diagnostics to try to get a better sense of what is
-going on?
-
-Grasping at straws,
-Jonathan
-
-[1] http://bugs.debian.org/cgi-bin/bugreport.cgi?msg=220;bug=664767
-[2] http://thread.gmane.org/gmane.linux.kernel.wireless.general/92452
