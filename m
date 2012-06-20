@@ -1,94 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:25069 "EHLO mga14.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4682 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755788Ab2FFKIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:08:21 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 28/29] NFC: Convert pn533 from semaphore to mutex
-Date: Wed,  6 Jun 2012 12:16:45 +0200
-Message-Id: <1338977806-30279-29-git-send-email-sameo@linux.intel.com> (sfid-20120606_120840_966521_5442C16E)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+	id S1753852Ab2FTHMN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 03:12:13 -0400
+Message-ID: <4FE177BC.5020106@broadcom.com> (sfid-20120620_091215_757373_20A671A4)
+Date: Wed, 20 Jun 2012 09:11:56 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Jonathan Nieder" <jrnieder@gmail.com>
+cc: "Stanislaw Gruszka" <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	=?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
+References: <20120601174237.GA31781@burratino>
+ <CAKprTDHepfbCKquvnG8CQ2=-tSNbgOSkT6R0GQmEx9UyuiZyMQ@mail.gmail.com>
+ <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
+ <20120604084200.GA30645@tiikeri.vuoristo.local>
+ <20120604173121.GA9238@stt008.linux.site>
+ <20120605050620.GC3118@burratino>
+ <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
+ <20120611031544.GB3092@burratino> <20120619181522.GB19354@burratino>
+ <4FE0CFD4.4000300@broadcom.com> <20120619192818.GA19971@burratino>
+In-Reply-To: <20120619192818.GA19971@burratino>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+On 06/19/2012 09:28 PM, Jonathan Nieder wrote:
+> Arend van Spriel wrote:
+>> However, I still observe the warning so I am looking what other event
+>> trigger this issue.
+> 
+> Feel free to contact Touko Korpela <touko.korpela@iki.fi> and Camaleón
+> if you need recent logs or other information about that[1].
+> 
+> I had been hoping that was mostly orthogonal until Camaleón mentioned
+> that 3.2.2 doesn't seem to trigger the random reconnects.
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index b97e3c8..58c1641 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -329,7 +329,7 @@ struct pn533 {
- 
- 	pn533_cmd_complete_t cmd_complete;
- 	void *cmd_complete_arg;
--	struct semaphore cmd_lock;
-+	struct mutex cmd_lock;
- 	u8 cmd;
- 
- 	struct pn533_poll_modulations *poll_mod_active[PN533_POLL_MOD_MAX + 1];
-@@ -462,7 +462,7 @@ static void pn533_wq_cmd_complete(struct work_struct *work)
- 					PN533_FRAME_CMD_PARAMS_LEN(in_frame));
- 
- 	if (rc != -EINPROGRESS)
--		up(&dev->cmd_lock);
-+		mutex_unlock(&dev->cmd_lock);
- }
- 
- static void pn533_recv_response(struct urb *urb)
-@@ -640,7 +640,7 @@ static int pn533_send_cmd_frame_async(struct pn533 *dev,
- 
- 	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
- 
--	if (down_trylock(&dev->cmd_lock))
-+	if (!mutex_trylock(&dev->cmd_lock))
- 		return -EBUSY;
- 
- 	rc = __pn533_send_cmd_frame_async(dev, out_frame, in_frame,
-@@ -650,7 +650,7 @@ static int pn533_send_cmd_frame_async(struct pn533 *dev,
- 
- 	return 0;
- error:
--	up(&dev->cmd_lock);
-+	mutex_unlock(&dev->cmd_lock);
- 	return rc;
- }
- 
-@@ -1261,7 +1261,7 @@ static void pn533_listen_mode_timer(unsigned long data)
- 
- 	dev->cancel_listen = 1;
- 
--	up(&dev->cmd_lock);
-+	mutex_unlock(&dev->cmd_lock);
- 
- 	pn533_poll_next_mod(dev);
- 
-@@ -2054,7 +2054,7 @@ error_cmd:
- 
- 	kfree(arg);
- 
--	up(&dev->cmd_lock);
-+	mutex_unlock(&dev->cmd_lock);
- }
- 
- static int pn533_set_configuration(struct pn533 *dev, u8 cfgitem, u8 *cfgdata,
-@@ -2114,7 +2114,7 @@ static int pn533_probe(struct usb_interface *interface,
- 
- 	dev->udev = usb_get_dev(interface_to_usbdev(interface));
- 	dev->interface = interface;
--	sema_init(&dev->cmd_lock, 1);
-+	mutex_init(&dev->cmd_lock);
- 
- 	iface_desc = interface->cur_altsetting;
- 	for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
--- 
-1.7.9.1
+I missed this piece of info. So the following statements are true?
+
+1. v3.2.2 and earlier did not show the issue.
+2. v3.2.9 until 3.2.17 have random reconnects.
+3. v3.2.18 does not have random reconnects (or less).
+
+Unfortunately, between v3.2.2 and v3.2.9 the only commit was the
+infinite loop fix from Stanislaw so that does not solve the puzzle.
+It only bails out with a warning, but there probably still is a problem
+in v3.2.2.
+
+Gr. AvS
 
