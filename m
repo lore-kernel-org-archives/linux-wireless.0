@@ -1,94 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:3484 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932075Ab2F2P6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 11:58:55 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: proski@gnu.org, Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>,
-	linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [RFC][PATCH 1/2] lib: printf: append support of '%*p[Mm][FR]'
-Date: Fri, 29 Jun 2012 18:58:32 +0300
-Message-Id: <1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120629_175913_618943_4088ECE5)
-In-Reply-To: <20110930115306.3bc105cb@mj>
-References: <20110930115306.3bc105cb@mj>
+Received: from he.sipsolutions.net ([78.46.109.217]:39660 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515Ab2FTOnN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 10:43:13 -0400
+Message-ID: <1340203389.4655.71.camel@jlt3.sipsolutions.net> (sfid-20120620_164316_120283_8737FB7D)
+Subject: Re: [PATCH 1/3] mac80211: Track auth frame registrations on IBSS
+ ifaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Hawkins <hawkinsw@opentechinstitute.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Wed, 20 Jun 2012 16:43:09 +0200
+In-Reply-To: <4FE1E0DA.8010406@opentechinstitute.org>
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+	  <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org>
+	 <1340170374.4655.1.camel@jlt3.sipsolutions.net>
+	 <4FE1E0DA.8010406@opentechinstitute.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are many places in the kernel where the drivers print small buffers as a
-hex string. This patch adds a support of the variable width buffer to print it
-as a hex string with a delimiter. The idea came from Pavel Roskin here:
-http://www.digipedia.pl/usenet/thread/18835/17449/
+On Wed, 2012-06-20 at 10:40 -0400, Will Hawkins wrote:
+> 
+> On 06/20/2012 01:32 AM, Johannes Berg wrote:
+> > On Tue, 2012-06-19 at 17:59 -0400, Will Hawkins wrote:
+> >> Track userspace registrations for authentication
+> >> frames received on an IBSS interface. This field
+> >> will be used to decide whether or not to send
+> >> "open system" authentication frames when a new
+> >> station joins an adhoc network.
+> >>
+> >> Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+> >> ---
+> >>  net/mac80211/cfg.c         |   10 ++++++++++
+> >>  net/mac80211/ieee80211_i.h |    1 +
+> >>  2 files changed, 11 insertions(+)
+> >>
+> >> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> >> index 498c94e..e00a696 100644
+> >> --- a/net/mac80211/cfg.c
+> >> +++ b/net/mac80211/cfg.c
+> >> @@ -2486,6 +2486,16 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
+> >>  					  u16 frame_type, bool reg)
+> >>  {
+> >>  	struct ieee80211_local *local = wiphy_priv(wiphy);
+> >> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> >> +
+> >> +	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && 
+> >> +	    (frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH))) {
+> >> +		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+> >> +		if (reg)
+> >> +			ifibss->auth_frame_registrations++;
+> >> +		else if (reg > 0)
+> >> +			ifibss->auth_frame_registrations--;
+> > 
+> > The "if (reg > 0)" here doesn't seem to make sense?
+> 
+> Just trying to make sure that it doesn't go negative. I am protecting
+> against unmatched unregisters.
 
-Sample output of
-	pr_info("buf[%d:%d] %*pM\n", from, len, len, &buf[from]);
-could be like this:
-	[ 0.726130] buf[51:8] e8:16:b6:ef:e3:74:45:6e
-	[ 0.750736] buf[59:15] 31:81:b8:3f:35:49:06:ae:df:32:06:05:4a:af:55
-	[ 0.757602] buf[17:5] ac:16:d5:2c:ef
+reg is a bool, did you mean "if (ifibss->auth_frame_registrations > 0)"?
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- lib/vsprintf.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
+in any case, you don't really have to care about unmatched unregisters
+as cfg80211 tracks all of them anyway.
 
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index a0b5f15..1645d7e 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -655,11 +655,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
- }
- 
- static noinline_for_stack
--char *mac_address_string(char *buf, char *end, u8 *addr,
--			 struct printf_spec spec, const char *fmt)
-+char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
-+		 const char *fmt)
- {
--	char mac_addr[sizeof("xx:xx:xx:xx:xx:xx")];
--	char *p = mac_addr;
-+	char hex_str[64*3];	/* support up to 64 bytes to print */
-+	int len = 6;		/* default length is 6 bytes */
-+	char *p = hex_str;
- 	int i;
- 	char separator;
- 	bool reversed = false;
-@@ -678,18 +679,21 @@ char *mac_address_string(char *buf, char *end, u8 *addr,
- 		break;
- 	}
- 
--	for (i = 0; i < 6; i++) {
-+	if (spec.field_width > 0)
-+		len = min_t(int, spec.field_width, 64);
-+
-+	for (i = 0; i < len; i++) {
- 		if (reversed)
--			p = hex_byte_pack(p, addr[5 - i]);
-+			p = hex_byte_pack(p, addr[len - 1 - i]);
- 		else
- 			p = hex_byte_pack(p, addr[i]);
- 
--		if (fmt[0] == 'M' && i != 5)
-+		if (fmt[0] == 'M' && i != len - 1)
- 			*p++ = separator;
- 	}
- 	*p = '\0';
- 
--	return string(buf, end, mac_addr, spec);
-+	return string(buf, end, hex_str, spec);
- }
- 
- static noinline_for_stack
-@@ -1011,7 +1015,7 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
- 	case 'm':			/* Contiguous: 000102030405 */
- 					/* [mM]F (FDDI) */
- 					/* [mM]R (Reverse order; Bluetooth) */
--		return mac_address_string(buf, end, ptr, spec, fmt);
-+		return hex_string(buf, end, ptr, spec, fmt);
- 	case 'I':			/* Formatted IP supported
- 					 * 4:	1.2.3.4
- 					 * 6:	0001:0203:...:0708
--- 
-1.7.10
+johannes
 
