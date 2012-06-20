@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:46371 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751823Ab2FTGJg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:09:36 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
-	assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH 7/7] mac80211: add DFS support to monitor interface
-References: <1340030798-28992-1-git-send-email-victorg@ti.com>
-	<1340030798-28992-8-git-send-email-victorg@ti.com>
-	<4FE01FDD.4080004@adurom.com>
-	<1340089024.1631.143.camel@cumari.coelho.fi>
-Date: Wed, 20 Jun 2012 09:09:19 +0300
-In-Reply-To: <1340089024.1631.143.camel@cumari.coelho.fi> (Luciano Coelho's
-	message of "Tue, 19 Jun 2012 09:57:04 +0300")
-Message-ID: <87mx3y4ir4.fsf@purkki.adurom.net> (sfid-20120620_081002_857924_00124C24)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-we0-f174.google.com ([74.125.82.174]:44994 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532Ab2FTKKY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 06:10:24 -0400
+Received: by weyu7 with SMTP id u7so5102104wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 03:10:23 -0700 (PDT)
+From: Eyal Shapira <eyal@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	Vitaly Wool <vitalywool@gmail.com>,
+	Luciano Coelho <coelho@ti.com>
+Subject: [PATCH] mac80211: fix cleanup if driver suspend callback fails
+Date: Wed, 20 Jun 2012 13:10:14 +0300
+Message-Id: <1340187014-11269-1-git-send-email-eyal@wizery.com> (sfid-20120620_121028_492605_E3588EFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <coelho@ti.com> writes:
+In case the driver suspend callback fails, mac80211 is left
+with stopped queues which prevents any further traffic as well
+as all STAs are left marked with WLAN_STA_BLOCK_BA which will
+cause any further ADDBA requests to be declined. Fix it by
+undoing both before returning from __iee80211_suspend.
 
-> On Tue, 2012-06-19 at 09:44 +0300, Kalle Valo wrote:
->> On 06/18/2012 05:46 PM, Victor Goldenshtein wrote:
->> > Stop dropping packets if we are on 'radar channel'
->> > and the DFS is enabled/supported.
->> > 
->> > Signed-off-by: Victor Goldenshtein <victorg@ti.com>
->> 
->> Why? I'm not very familiar with DFS so this change is not clear to me.
->
-> That's not a good excuse. :P
+Reported-by: Vitaly Wool <vitalywool@gmail.com>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
 
-Heh, I didn't first get your comment but when I reread the patch. I
-thought this patch was about dropping _received_ frames in a monitor
-interface but it was actually about dropping _injected_ frames. Makes
-better sense now :)
+This was discussed in this thread:
+http://comments.gmane.org/gmane.linux.kernel.wireless.general/89571
+but no v2 was submitted. We've had this patch applied
+on our internal tree for a while so here it is.
 
+ net/mac80211/pm.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 98c128b..5c572e7 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -78,6 +78,16 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 		if (err < 0) {
+ 			local->quiescing = false;
+ 			local->wowlan = false;
++			if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
++				mutex_lock(&local->sta_mtx);
++				list_for_each_entry(sta,
++						    &local->sta_list, list) {
++					clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
++				}
++				mutex_unlock(&local->sta_mtx);
++			}
++			ieee80211_wake_queues_by_reason(hw,
++					IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 			return err;
+ 		} else if (err > 0) {
+ 			WARN_ON(err != 1);
 -- 
-Kalle Valo
+1.7.4.1
+
