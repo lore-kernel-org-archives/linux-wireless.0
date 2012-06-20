@@ -1,73 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:38720 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753443Ab2FFEuO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39619 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755026Ab2FTHiX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 00:50:14 -0400
-Date: Wed, 6 Jun 2012 01:50:07 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2012-06-06
-Message-ID: <20120606045007.GB2533@joana> (sfid-20120606_065119_525926_23824296)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
+	Wed, 20 Jun 2012 03:38:23 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 09/12] iwlwifi: delay ROC if doing internal reset scan
+Date: Wed, 20 Jun 2012 09:38:11 +0200
+Message-Id: <1340177894-12992-10-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093830_551987_30045018)
+In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+When the device is doing an internal radio reset
+scan, ROC can be rejected to the supplicant with
+busy status which confuses it.
 
-Hi John,
+One option would be to queue the ROC and handle
+it later, but since the radio reset scan is very
+quick we can just wait for it to finish instead.
 
-We got a quite important fix for 3.5, a regression was preventing important
-features of Bluetooth from working. Please pull. Thanks.
+Also add a warning since we shouldn't run into
+the case of having a scan active when requesting
+a ROC in any other case since mac80211 will not
+scan while ROC or ROC while scanning.
 
-	Gustavo
-
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-The following changes since commit fcb6ff5e2cb83e1de10631f6621f45ca3401bf61:
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-  iwlwifi: disable WoWLAN if !CONFIG_PM_SLEEP (2012-06-04 15:27:07 -0400)
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 9d23748..c577263 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1036,8 +1036,18 @@ static int iwlagn_mac_remain_on_channel(struct ieee80211_hw *hw,
+ 	mutex_lock(&priv->mutex);
+ 
+ 	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		err = -EBUSY;
+-		goto out;
++		/* mac80211 should not scan while ROC or ROC while scanning */
++		if (WARN_ON_ONCE(priv->scan_type != IWL_SCAN_RADIO_RESET)) {
++			err = -EBUSY;
++			goto out;
++		}
++
++		iwl_scan_cancel_timeout(priv, 100);
++
++		if (test_bit(STATUS_SCAN_HW, &priv->status)) {
++			err = -EBUSY;
++			goto out;
++		}
+ 	}
+ 
+ 	priv->hw_roc_channel = channel;
+-- 
+1.7.10
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to ddcd0f41471a1e0394c8840a119ec3986a78462c:
-
-  Bluetooth: Fix checking the wrong flag when accepting a socket (2012-06-05 06:26:26 +0300)
-
-----------------------------------------------------------------
-Vinicius Costa Gomes (1):
-      Bluetooth: Fix checking the wrong flag when accepting a socket
-
- net/bluetooth/af_bluetooth.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---dDRMvlgZJXvWKvBx
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPzuF/AAoJEPs3PUX4s20oEGEP/ihlMtjS5DdBBxIW00h0uJSf
-+QnYwBtaT5+NpFXsdtzJdv8dVv9KJACh1OF18c4+MMzB0Zq/AR8LgXVCqmoL/dgW
-jD2XEVtDOPN73SOvMi7J9ndOvruh14n2j4ap3eRfDme8lLizZ6cHeWKKozn7Fh4X
-gi00vjt/6VptWKXLFaOLdTxcK1dy3HEOQroW2qxfwID/OR2fE/3jIlgKG2Mfk0K7
-vtthCb1Ql76uHnzFMMo0uaBjnOVxXZzgG/1X+BzzYGZcja7B2Ir1ReH+DCJW2zT+
-z2U0MVE8JxxuR9tlvoZghr3J6r9I74crClwoNLky/VKx699A2Mqs3T2DHFi85hRe
-Ngjpjnq8x+9ZBuVWHqSf3YJRp1/gkktwfhf3WWd4klY7arf0lvayqVnBidEWGDia
-LK9QxXXsmbboiohzIpi1JNPqsLCRg5QXOV2h564ly3n4hMG0DjsGWA0B3g0DkuC6
-WJT6tjXsNuyKZ+bYf11XamTKy2+WVJT8GHUHoK9qW4a0JfPJMXXNKDDQ6xwOZgJZ
-FNpifrfY9iGzd5edywGNjr80gTjWxDlq6U5IPYl611wtvoQFoR4t8oktnmZeztKP
-kQhe/7CBIuEYf2Y/90t9BScIul6ilagG4RN2B8ybXfEiem/VeeWpI3zLoFjHNaZD
-5WiUD+1h0Y3mzWg1O9lI
-=3usZ
------END PGP SIGNATURE-----
-
---dDRMvlgZJXvWKvBx--
