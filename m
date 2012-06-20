@@ -1,174 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:34367 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761136Ab2FHPZD convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20586 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751408Ab2FTFQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 11:25:03 -0400
-Received: by qcro28 with SMTP id o28so897448qcr.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 08:25:01 -0700 (PDT)
+	Wed, 20 Jun 2012 01:16:43 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	<aeolus@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Message-ID: <4FE15CAE.501@qca.qualcomm.com> (sfid-20120620_071647_622013_70D1AC0C)
+Date: Wed, 20 Jun 2012 10:46:30 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	<1339014959.4523.0.camel@jlt3.sipsolutions.net>
-	<CAHsu+b-ByqBaci9W-oS3OPEK3LdRcuGphtQPOTQ02hPWNpWgQw@mail.gmail.com>
-	<1339053364.4517.0.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9UjkF6VM_YjJkHVDQzrZqsWqmG-XJKFNeSCdWGbdEngw@mail.gmail.com>
-	<20120607180325.7752b3c0@milhouse>
-	<1339094215.4630.7.camel@jlt3.sipsolutions.net>
-	<1339102567.4630.8.camel@jlt3.sipsolutions.net>
-	<4FD11B47.10002@lwfinger.net>
-	<CAHsu+b9=4i1oSni1onKAKqH4FZ26nye=7GifnnJO-6c5gCaWpQ@mail.gmail.com>
-	<1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	<1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	<1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	<CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	<1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
-Date: Fri, 8 Jun 2012 17:25:00 +0200
-Message-ID: <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com> (sfid-20120608_172509_000779_B87EF4BF)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
-From: Andre Heider <a.heider@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: Re: [PATCH 07/10] ath9k_hw: Add hardware code for WoW
+References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com> <1340120850-9155-8-git-send-email-mohammed@qca.qualcomm.com> <20120619175018.GB7191@vmraj-lnx.qca.qualcomm.com>
+In-Reply-To: <20120619175018.GB7191@vmraj-lnx.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 8, 2012 at 5:16 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2012-06-08 at 17:14 +0200, Johannes Berg wrote:
->> On Fri, 2012-06-08 at 17:04 +0200, Andre Heider wrote:
->>
->> > >> > http://p.sipsolutions.net/854d460da251f9d6.txt
->> > >>
->> > >> Sorry, still not loading any firmware.
->> > >
->> > > So you're going to have to tell me what happens :-)
->> >
->> > Well, nothing ;)
->> >
->> > I just see this in dmesg:
->> >
->> > [    1.012107] b43-sdio mmc1:0001:1: Chip ID 14e4:4318
->> > [    1.018765] ssb: Found chip with id 0x4318, rev 0x02 and package 0x02
->> > [    1.096506] ssb: chipcommon status is 0x0
->> > [    1.105314] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
->> >
->> > Hence the device doesn't get up and there's no way for me to interact
->> > with the system.
->>
->> Ok, well, bugger :-)
->>
->> Can you go to main.c and print out the return value of
->> ieee80211_register_hw()? I have a feeling that's where the failure is
->> though I don't really know why.
->
-> No, wait, I do know why. Sorry!
->
-> Try this new version of the patch:
-> http://p.sipsolutions.net/3f75b09af68fd455.txt
->
-> If my hunch is right then we need to figure out how to not allow
-> off-channel or something.
+Hi Raj,
 
-Now we do have a firmware, but still no working device ;)
+On Tuesday 19 June 2012 11:20 PM, Rajkumar Manoharan wrote:
+> On Tue, Jun 19, 2012 at 09:17:27PM +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> add a new file wow.c which takes care of the hardware code
+>> for WoW.
+> [...]
+>> ---
+>>   3 files changed, 591 insertions(+), 0 deletions(-)
+>>   create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+>> index 9c41232..2ad8f94 100644
+>> --- a/drivers/net/wireless/ath/ath9k/Makefile
+>> +++ b/drivers/net/wireless/ath/ath9k/Makefile
+>> @@ -17,6 +17,7 @@ ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += \
+>>   		dfs.o \
+>>   		dfs_pattern_detector.o \
+>>   		dfs_pri_detector.o
+>> +ath9k-$(CONFIG_PM_SLEEP) += wow.o
+>>
+>>   obj-$(CONFIG_ATH9K) += ath9k.o
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+>> index 2a20216..8e417c1 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.h
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+>> @@ -1110,6 +1110,37 @@ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
+>>   }
+>>   #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+>>
+>> +
+>> +#ifdef CONFIG_PM_SLEEP
+>> +const char *ath9k_hw_wow_event_to_string(u32 wow_event);
+>> +void ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
+>> +				u8 *user_mask, int pattern_count,
+>> +				int pattern_len);
+>> +u32 ath9k_hw_wow_wakeup(struct ath_hw *ah);
+>> +void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable);
+>> +#else
+>> +static inline const char *ath9k_hw_wow_event_to_string(u32 wow_event)
+>> +{
+>> +	return NULL;
+>> +}
+>> +static inline void ath9k_hw_wow_apply_pattern(struct ath_hw *ah,
+>> +					      u8 *user_pattern, u8 *user_mask,
+>> +					      int pattern_count,
+>> +					      int pattern_len)
+>> +{
+>> +	return;
+>> +}
+> No need to return void function and also fix indent for arguments
 
-[    0.553905] b43-sdio mmc1:0001:1: Chip ID 14e4:4318
-[    0.561166] ssb: Found chip with id 0x4318, rev 0x02 and package 0x02
-[    0.568378] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x0D, vendor 0x4243)
-[    0.582703] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x09,
-vendor 0x4243)
-[    0.597831] ssb: Core 2 found: PCI (cc 0x804, rev 0x0C, vendor 0x4243)
-[    0.613445] ssb: Core 3 found: PCMCIA (cc 0x80D, rev 0x07, vendor 0x4243)
-[    0.629924] ssb: chipcommon status is 0x0
-[    0.638689] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
-[    0.651588] EXT4-fs (mmcblk0p2): mounted filesystem with ordered
-data mode. Opts: (null)
-[    0.668126] VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
-[    0.688275] devtmpfs: mounted
-[    0.698550] b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
-[    0.709359] Freeing unused kernel memory: 148k freed
-[    0.719464] b43-phy0 debug: Found Radio: Manuf 0x17F, Version
-0x2050, Revision 8
-[    0.775832] ssb: Sonics Silicon Backplane found on SDIO device mmc1:0001:1
-<30>[    1.691732] udevd[110]: starting version 175
-[    3.438357] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-[    4.274918] Adding 152552k swap on /dev/mmcblk0p3.  Priority:-1
-extents:1 across:152552k SS
-[    4.402116] EXT4-fs (mmcblk0p2): re-mounted. Opts: (null)
-[    4.813161] EXT4-fs (mmcblk0p2): re-mounted. Opts: discard,errors=remount-ro
-[    8.880236] b43-phy0: Loading OpenSource firmware version 410.31754
-[    8.897893] b43-phy0: Hardware crypto acceleration not supported by firmware
-[    8.915844] b43-phy0: QoS not supported by firmware
-[    9.292779] b43-phy0 debug: Chip initialized
-[    9.312654] b43-phy0 debug: PIO initialized
-[    9.323317] b43-phy0 debug: QoS disabled
-[    9.512150] b43-phy0 debug: Wireless interface started
-[    9.654251] b43-phy0 debug: Adding Interface type 2
-[   11.371154] b43-phy0 ERROR: MAC suspend failed
-[   11.811166] b43-phy0 ERROR: MAC suspend failed
-[   12.235095] b43-phy0 ERROR: MAC suspend failed
-[   12.639094] b43-phy0 ERROR: MAC suspend failed
-[   13.043095] b43-phy0 ERROR: MAC suspend failed
-[   13.447165] b43-phy0 ERROR: MAC suspend failed
-[   13.851095] b43-phy0 ERROR: MAC suspend failed
-[   14.255095] b43-phy0 ERROR: MAC suspend failed
-[   14.655095] b43-phy0 ERROR: MAC suspend failed
-[   15.055095] b43-phy0 ERROR: MAC suspend failed
-[   16.383095] net_ratelimit: 2 callbacks suppressed
-[   16.389679] b43-phy0 ERROR: MAC suspend failed
-[   16.859094] b43-phy0 ERROR: MAC suspend failed
-[   17.207095] b43-phy0 ERROR: MAC suspend failed
-[   17.535095] b43-phy0 ERROR: MAC suspend failed
-[   21.863095] b43-phy0 ERROR: MAC suspend failed
-[   22.191095] b43-phy0 ERROR: MAC suspend failed
-[   22.527096] b43-phy0 ERROR: MAC suspend failed
-[   22.919095] b43-phy0 ERROR: MAC suspend failed
-[   23.319095] b43-phy0 ERROR: MAC suspend failed
-[   23.719094] b43-phy0 ERROR: MAC suspend failed
-[   24.119094] b43-phy0 ERROR: MAC suspend failed
-[   24.519095] b43-phy0 ERROR: MAC suspend failed
-[   24.919095] b43-phy0 ERROR: MAC suspend failed
-[   25.267095] b43-phy0 ERROR: MAC suspend failed
-[   27.207095] net_ratelimit: 4 callbacks suppressed
-[   27.210643] b43-phy0 ERROR: MAC suspend failed
-[   27.675094] b43-phy0 ERROR: MAC suspend failed
-[   28.139094] b43-phy0 ERROR: MAC suspend failed
-[   28.607095] b43-phy0 ERROR: MAC suspend failed
-[   28.951095] b43-phy0 ERROR: MAC suspend failed
-[   29.275094] b43-phy0 ERROR: MAC suspend failed
-[   33.615095] b43-phy0 ERROR: MAC suspend failed
-[   33.939095] b43-phy0 ERROR: MAC suspend failed
-[   34.275095] b43-phy0 ERROR: MAC suspend failed
-[   34.663095] b43-phy0 ERROR: MAC suspend failed
-[   35.059095] b43-phy0 ERROR: MAC suspend failed
-[   35.455095] b43-phy0 ERROR: MAC suspend failed
-[   35.851095] b43-phy0 ERROR: MAC suspend failed
-[   36.247095] b43-phy0 ERROR: MAC suspend failed
-[   36.643095] b43-phy0 ERROR: MAC suspend failed
-[   37.039095] b43-phy0 ERROR: MAC suspend failed
-[   39.087095] net_ratelimit: 4 callbacks suppressed
-[   39.089274] b43-phy0 ERROR: MAC suspend failed
-[   39.555111] b43-phy0 ERROR: MAC suspend failed
-[   40.023095] b43-phy0 ERROR: MAC suspend failed
-[   40.367094] b43-phy0 ERROR: MAC suspend failed
-[   40.691159] b43-phy0 ERROR: MAC suspend failed
-[   40.868103] b43-phy0 ERROR: Firmware watchdog: The firmware died!
-[   40.870979] b43-phy0: Controller RESET (Firmware watchdog) ...
-[   41.195093] b43-phy0 ERROR: MAC suspend failed
-[   41.198361] b43-phy0 debug: Wireless interface stopped
-[   42.204236] b43-phy0: Loading OpenSource firmware version 410.31754
-[   42.208043] b43-phy0: Hardware crypto acceleration not supported by firmware
-[   42.215386] b43-phy0: QoS not supported by firmware
-[   42.588772] b43-phy0 debug: Chip initialized
-[   42.603881] b43-phy0 debug: PIO initialized
-[   42.610060] b43-phy0 debug: QoS disabled
-[   42.794869] b43-phy0 debug: Wireless interface started
-[   42.818522] b43-phy0: Controller restarted
-[   45.107095] b43-phy0 ERROR: MAC suspend failed
-[   45.507095] b43-phy0 ERROR: MAC suspend failed
+sorry, will address this.
 
-I let it retry the load/die cycle >5 times, seems to repeat endlessly.
+>> +static inline u32 ath9k_hw_wow_wakeup(struct ath_hw *ah)
+>> +{
+>> +	return 0;
+>> +}
+>> +static inline void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
+>> +{
+>> +}
+>> +#endif
+>> +
+>> +
+>> +
+>>   #define ATH9K_CLOCK_RATE_CCK		22
+>>   #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
+>>   #define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
+>> diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+>> new file mode 100644
+>> index 0000000..66a7a74
+>> --- /dev/null
+>> +++ b/drivers/net/wireless/ath/ath9k/wow.c
+>> @@ -0,0 +1,559 @@
+>> +
+>> +/*
+>> + * Copyright (c) 2008-2011 Atheros Communications Inc.
+>> + *
+> Please update the Copyright.
+
+sure, thanks!
+
+>
+>> +
+>> +#include<linux/export.h>
+>> +#include "ath9k.h"
+>> +#include "reg.h"
+>> +#include "hw-ops.h"
+>> +
+> [...]
+>> +			if (AR_SREV_9285(ah) || AR_SREV_9287(ah))
+>> +				set = AR9285_WA_DEFAULT;
+>> +			else
+>> +				set = AR9280_WA_DEFAULT;
+>> +
+>> +			/*
+>> +			 * In AR9280 and AR9285, bit 14 in WA register
+>> +			 * (disable L1) should only be set when device
+>> +			 * enters D3 state and be cleared when device
+>> +			 * comes back to D0
+>> +			 */
+>> +
+>> +			if (ah->config.pcie_waen&  AR_WA_D3_L1_DISABLE)
+>> +				set = set | AR_WA_D3_L1_DISABLE;
+>> +
+>> +			clr = AR_WA_UNTIE_RESET_EN;
+>> +			set = set | AR_WA_RESET_EN | AR_WA_POR_SHORT;
+> simplify it as |=
+>
+oh ok ,sorry i missed it. thanks.
+
+
+-- 
+thanks,
+shafi
