@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2730 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754709Ab2F1Wxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 18:53:40 -0400
-Message-ID: <4FECE067.7000809@broadcom.com> (sfid-20120629_005345_777921_F9B9EE4B)
-Date: Thu, 28 Jun 2012 15:53:27 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Jon Hunter" <jon-hunter@ti.com>
-cc: "Kevin Hilman" <khilman@ti.com>, b-cousson@ti.com,
-	tony@atomide.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	grant.likely@secretlab.ca, santosh.shilimkar@ti.com,
-	linux-omap@vger.kernel.org, tarun.kanti@ti.com,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com>
- <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com>
- <4FECCB91.7090609@broadcom.com> <4FECD2E5.1060603@ti.com>
-In-Reply-To: <4FECD2E5.1060603@ti.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from www19.servergod.com ([64.89.16.20]:49433 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756874Ab2FTPwD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 11:52:03 -0400
+Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
+	by www19.servergod.com (Postfix) with ESMTP id AB41211F93A
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 08:52:01 -0700 (PDT)
+Received: by mail0.frost.chambana.net (Postfix) with SMTP id 36CD559FFF9
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 15:52:01 +0000
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+To: hawkinsw@opentechinstitute.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 1/3 v5] mac80211: Track auth frame registrations on IBSS ifaces
+Date: Wed, 20 Jun 2012 11:51:14 -0400
+Message-Id: <288b9d33469b594eaa3943a54e129c0661dfd4cb.1340207106.git.hawkinsw@opentechinstitute.org> (sfid-20120620_175207_842263_B2561A5B)
+In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2012 02:55 PM, Jon Hunter wrote:
-> Ok. Any way to manually reset the wlan module to deactivate the gpio
-> when it is hung? I am wondering if the gpio is deactivated if the board
-> comes back to life, indicating it is stuck in the interrupt somewhere.
+Track userspace registrations for authentication
+frames received on an IBSS interface. This field
+will be used to decide whether or not to send
+"open system" authentication frames when a new
+station joins an adhoc network.
 
-The only way I can think of is removing the module manually. But it 
-didn't bring the board back to live.
+Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+---
+ net/mac80211/cfg.c         |   10 ++++++++++
+ net/mac80211/ieee80211_i.h |    1 +
+ 2 files changed, 11 insertions(+)
 
-> Well, at least that is consistent with what I see, but also perplexing
-> that it takes sometime to fail. Can you try the following as a debug
-> patch to see if it is in the context restore that is the problem. From
-> your testing and bisect, the only possible difference in the current
-> kernel is that it could perform the context restore when acquiring the gpio.
->
-> diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
-> index c4ed172..a2401bd 100644
-> --- a/drivers/gpio/gpio-omap.c
-> +++ b/drivers/gpio/gpio-omap.c
-> @@ -1341,6 +1341,8 @@ void omap2_gpio_resume_after_idle(void)
->   #if defined(CONFIG_PM_RUNTIME)
->   static void omap_gpio_restore_context(struct gpio_bank *bank)
->   {
-> +       return;
-> +
->          __raw_writel(bank->context.wake_en,
->                                  bank->base + bank->regs->wkup_en);
->          __raw_writel(bank->context.ctrl, bank->base + bank->regs->ctrl);
->
-
-This one works! It can run more than 20 mins.
-
-I found one interesting thing. When I added the print info to see when 
-runtime_suspend/resume get called, it seems like the suspend/resume is 
-unbalance during boot. Resume got called more than suspend. So I hack 
-the code to make sure suspend and resume are called in pair. A resume 
-without suspend will do nothing and return immediately. This also makes 
-the hang vanish.
-
-Regards,
-Franky
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 498c94e..d623ce9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2486,6 +2486,16 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
+ 					  u16 frame_type, bool reg)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && 
++	    (frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH))) {
++		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++		if (reg)
++			ifibss->auth_frame_registrations++;
++		else
++			ifibss->auth_frame_registrations--;
++	}
+ 
+ 	if (frame_type != (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_REQ))
+ 		return;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e6cbf5b..599f9fd 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -508,6 +508,7 @@ struct ieee80211_if_ibss {
+ 	bool privacy;
+ 
+ 	bool control_port;
++	unsigned int auth_frame_registrations;
+ 
+ 	u8 bssid[ETH_ALEN] __aligned(2);
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+-- 
+1.7.9.5
 
 
