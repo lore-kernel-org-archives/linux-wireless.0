@@ -1,68 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38342 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49331 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362Ab2FMIVI (ORCPT
+	with ESMTP id S1755898Ab2FTJFZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 04:21:08 -0400
-Message-ID: <1339575664.4519.14.camel@jlt3.sipsolutions.net> (sfid-20120613_102115_438948_00822232)
-Subject: Re: [PATCH v3 2/4] mac80211: implement the proactive PREQ generation
+	Wed, 20 Jun 2012 05:05:25 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, thomas@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Date: Wed, 13 Jun 2012 10:21:04 +0200
-In-Reply-To: <1339487445-25428-3-git-send-email-yeohchunyeow@gmail.com> (sfid-20120612_095152_340542_5D4036A2)
-References: <1339487445-25428-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1339487445-25428-3-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20120612_095152_340542_5D4036A2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/5] nl80211: change __cfg80211_rdev_from_info
+Date: Wed, 20 Jun 2012 11:05:18 +0200
+Message-Id: <1340183119-15340-5-git-send-email-johannes@sipsolutions.net> (sfid-20120620_110547_536995_EB05AA7B)
+In-Reply-To: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
+References: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-12 at 15:50 +0800, Chun-Yeow Yeoh wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
->  /**
-> + * enum - mesh PREQ element flags
+Change the function to __cfg80211_rdev_from_attrs
+to take attributes instead of the info struct to
+make it usable from dump callbacks for testmode.
 
-Please fix this -- it has to be
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-enum ieee80211_preq_flags - ...
-
-I was going to fix it up for you, but there are a lot of instances here.
-
-> +/**
-> + * enum - mesh PREQ element per target flags
-> + *
-> + * @TO_FLAG: target only subfield
-> + * @USN_FLAG: unknown target HWMP sequence number subfield
-> + */
-> +enum ieee80211_preq_target_flags {
-> +	TO_FLAG		= 1<<0,
-> +	USN_FLAG	= 1<<2,
-
-Since this is a fairly generic header, maybe they should have some
-prefixes, at least IEEE80211_ or maybe IEEE80211_PREQ_?
-
-> +/**
-> + * enum - root mesh STA mode identifier used by dot11MeshHWMPRootMode
-> + *
-> + * @IEEE80211_NO_ROOT: the mesh STA is not a root mesh STA (default)
-> + * @IEEE80211_ROOT: the mesh STA is a root mesh STA if greater than this value
-> + * @IEEE80211_PROACTIVE_PREQ_NO_PREP: the mesh STA is a root mesh STA supports
-> + *	the proactive PREQ with proactive PREP subfield set to 0
-> + * @IEEE80211_PROACTIVE_PREQ_WITH_PREP: the mesh STA is a root mesh STA
-> + *	supports the proactive PREQ with proactive PREP subfield set to 1
-> + * @IEEE80211_PROACTIVE_RANN: the mesh STA is a root mesh STA supports
-> + *	the proactive RANN
-> + */
-> +enum {
-
-That enum probably needs a name for kernel-doc to work
-
-> +	IEEE80211_NO_ROOT = 0,
-
-These should have more specific prefixes I think?
-
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index af23291..7e94d4d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -71,23 +71,23 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
+ }
+ 
+ static struct cfg80211_registered_device *
+-__cfg80211_rdev_from_info(struct net *netns, struct genl_info *info)
++__cfg80211_rdev_from_attrs(struct net *netns, struct nlattr **attrs)
+ {
+ 	struct cfg80211_registered_device *rdev = NULL, *tmp;
+ 	struct net_device *netdev;
+ 
+ 	assert_cfg80211_lock();
+ 
+-	if (!info->attrs[NL80211_ATTR_WIPHY] &&
+-	    !info->attrs[NL80211_ATTR_IFINDEX])
++	if (!attrs[NL80211_ATTR_WIPHY] &&
++	    !attrs[NL80211_ATTR_IFINDEX])
+ 		return ERR_PTR(-EINVAL);
+ 
+-	if (info->attrs[NL80211_ATTR_WIPHY])
++	if (attrs[NL80211_ATTR_WIPHY])
+ 		rdev = cfg80211_rdev_by_wiphy_idx(
+-				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
++				nla_get_u32(attrs[NL80211_ATTR_WIPHY]));
+ 
+-	if (info->attrs[NL80211_ATTR_IFINDEX]) {
+-		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
++	if (attrs[NL80211_ATTR_IFINDEX]) {
++		int ifindex = nla_get_u32(attrs[NL80211_ATTR_IFINDEX]);
+ 		netdev = dev_get_by_index(netns, ifindex);
+ 		if (netdev) {
+ 			if (netdev->ieee80211_ptr)
+@@ -145,7 +145,7 @@ cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev;
+ 
+ 	mutex_lock(&cfg80211_mutex);
+-	rdev = __cfg80211_rdev_from_info(netns, info);
++	rdev = __cfg80211_rdev_from_attrs(netns, info->attrs);
+ 
+ 	/* if it is not an error we grab the lock on
+ 	 * it to assure it won't be going away while
+@@ -1422,7 +1422,8 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (!netdev) {
+-		rdev = __cfg80211_rdev_from_info(genl_info_net(info), info);
++		rdev = __cfg80211_rdev_from_attrs(genl_info_net(info),
++						  info->attrs);
+ 		if (IS_ERR(rdev)) {
+ 			mutex_unlock(&cfg80211_mutex);
+ 			return PTR_ERR(rdev);
+-- 
+1.7.10
 
