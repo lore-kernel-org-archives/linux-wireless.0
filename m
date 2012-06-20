@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:49561 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754994Ab2FSV7m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 17:59:42 -0400
-Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
-	by www19.servergod.com (Postfix) with ESMTP id 87A5E11FFEE
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 14:59:42 -0700 (PDT)
-Received: by mail0.frost.chambana.net (Postfix) with SMTP id 44BBB59A067
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 21:59:42 +0000
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
-To: hawkinsw@opentechinstitute.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 2/3] mac80211: Check auth frame registration count
-Date: Tue, 19 Jun 2012 17:59:13 -0400
-Message-Id: <4ae0ad92e1f9e353497820c5196d80d28bb3f782.1340142553.git.hawkinsw@opentechinstitute.org> (sfid-20120619_235947_088865_835093B4)
-In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
-References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
-In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
-References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+Received: from victor.provo.novell.com ([137.65.250.26]:38674 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656Ab2FTDYN convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Tue, 19 Jun 2012 23:24:13 -0400
+Received: by bkcji2 with SMTP id ji2so5767984bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 20:24:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
+References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
+Date: Wed, 20 Jun 2012 11:24:03 +0800
+Message-ID: <CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com> (sfid-20120620_052416_705364_BBED8D88)
+Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
+From: Matt Chen <machen@suse.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check the auth frame registration count before sending
-"open system" authentication messages when a new station
-registers on a particular adhoc network. This
-stops a station from sending out multiple authentication
-messages with different authentication algorithms.
+Hi Mohammed,
 
-Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
----
- net/mac80211/ibss.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+2012/6/19 Mohammed Shafi <shafi.wireless@gmail.com>:
+> Hi Matt,
+>
+>> I tested the latest kernel v3.5-rc3 ath9k for the Atheros [168c 0034],
+>> code name is Miami. I found no matter how I press the wifi button to
+>> enable/disable the wifi, it doesn't work to me.
+>> Even I found the rfkill status for this interface is not changing.
+>
+> its a AR9462please poke at the register  #define AR_GPIO_IN  -> 0x402c : 0x404c)
+I do
+1) echo 0x402c > regidx
+     watch -n 1 regval
+2) echo 0x404c > regidx
+    watch -n1 regval
+> i remember testing it in a acer laptop, it was working.
+Both 1) and 2) shows no different in their value no matter how I press
+the wifi button. :(
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 725cb4b..ff46ff4 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -279,7 +279,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
- 	/* If it fails, maybe we raced another insertion? */
- 	if (sta_info_insert_rcu(sta))
- 		return sta_info_get(sdata, addr);
--	if (auth) {
-+	if (auth && !sdata->u.ibss.auth_frame_registrations) {
- 		ibss_vdbg("TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
- 			  sdata->vif.addr, sdata->u.ibss.bssid, addr);
- 		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
+>>
+>> --
+>> Thank you.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+> --
+> thanks,
+> shafi
+>
+
+
+
 -- 
-1.7.9.5
-
-
+Thank you.
