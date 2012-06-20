@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:59312 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753529Ab2F0HrY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 03:47:24 -0400
-Received: by yenl2 with SMTP id l2so663809yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 00:47:23 -0700 (PDT)
+Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754085Ab2FTGO0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 02:14:26 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFCv2 04/13] cfg80211: track ibss fixed channel
+Date: Wed, 20 Jun 2012 08:14:10 +0200
+Message-ID: <1340172859-18146-5-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081509_226063_E8194977)
+In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Date: Wed, 27 Jun 2012 14:47:23 +0700
-Message-ID: <CA+i8gKLOirMGrNRPiCGb4yfSAG2Jeh33SFRpUJ=5VX9-P3C+4Q@mail.gmail.com> (sfid-20120627_094759_223471_0857E44D)
-Subject: wireless-testing: commit fad29cd leads to kernel build failure
-From: Emmanuel Benisty <benisty.e@gmail.com>
-To: linux-wireless@vger.kernel.org, c_manoha@qca.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+IBSS may hop between channels. It is necessary to
+account this special case when considering
+interface combinations.
 
-The following commit breaks wireless-testing kernel build:
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h |    2 ++
+ net/wireless/ibss.c    |    1 +
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-commit fad29cd2f59949581050a937786c2c9bc78b2f04
-Author: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Date:   Mon Jun 25 13:54:22 2012 +0530
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0f9d7b4..92fdd02 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2338,6 +2338,8 @@ struct wireless_dev {
+ 	/* for AP and mesh channel tracking */
+ 	struct ieee80211_channel *channel;
+ 
++	bool ibss_fixed;
++
+ 	bool ps;
+ 	int ps_timeout;
+ 
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 89baa33..b90fd86 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -113,6 +113,7 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 		kfree(wdev->connect_keys);
+ 	wdev->connect_keys = connkeys;
+ 
++	wdev->ibss_fixed = params->channel_fixed;
+ #ifdef CONFIG_CFG80211_WEXT
+ 	wdev->wext.ibss.channel = params->channel;
+ #endif
+-- 
+1.7.0.4
 
-    ath9k: Fix lockdep splat
-
-    Cancel the MCI work only when MCI is actually enabled.
-
-It fails with:
-
-  CC [M]  drivers/net/wireless/ath/ath9k/main.o
-drivers/net/wireless/ath/ath9k/main.c: In function '__ath_cancel_work':
-drivers/net/wireless/ath/ath9k/main.c:155:23: error: 'struct
-ath_softc' has no member named 'mci_work'
-make[5]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
-
-Thanks+regards.
