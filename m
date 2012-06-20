@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:43481 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323Ab2FKTsk convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35072 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754645Ab2FTIzE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 15:48:40 -0400
-Received: by obbtb18 with SMTP id tb18so7159992obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 12:48:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FC6A68D.1010002@hauke-m.de>
-References: <773DB8A82AB6A046AE0195C68612A319012CA16F@sbs2003.acksys.local> <4FC6A68D.1010002@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 11 Jun 2012 12:48:19 -0700
-Message-ID: <CAB=NE6UxQ=w3shKs8pWRYsjPpTdMAN4Vs=a9jwkHsfTe-WVVDQ@mail.gmail.com> (sfid-20120611_214842_930199_89DD1445)
-Subject: Re: Is there a changelog for compat wireless ?
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
+	Wed, 20 Jun 2012 04:55:04 -0400
+Message-ID: <1340182500.4655.47.camel@jlt3.sipsolutions.net> (sfid-20120620_105534_694731_4B51686F)
+Subject: Re: [PATCH 1/2] cfg80211: Support for automatic channel selection
+ in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <nataraja@qca.qualcomm.com>
+Cc: jouni@qca.qualcomm.com, kvalo@qca.qualcomm.com,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Wed, 20 Jun 2012 10:55:00 +0200
+In-Reply-To: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com>
+References: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 30, 2012 at 4:00 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 05/30/2012 07:54 PM, Jean-Pierre TOSONI wrote:
->> Hello all,
->>
->> I am looking for indications as what is changing from one version of
->> compat-wireless to the next.
->>
->> The link for the changelog given at
->>  http://linuxwireless.org/en/users/Download#compat-wireless_ChangeLog
->> is broken.
->>
->> Is there some other place where I can find it ? ww.orbit-labs.org has
->> many, is it that the changes to the wireless software is not backported
->> in the same way to all (supported) versions of the kernel ?
->>
->> Thanks,
->>
->> Jean-Pierre Tosoni
-> Hi
->
-> The changelog for compat-wireless is here:
-> https://github.com/mcgrof/compat-wireless/commits/master
-> for compat here:
-> https://github.com/mcgrof/compat/commits/master
-> and for wireless-testing here:
-> https://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=shortlog
+On Mon, 2012-06-18 at 16:30 +0530, Vivek Natarajan wrote:
+> If the driver sets WIPHY_FLAG_SUPPORTS_ACS, auto_channel_select
+> is passed to the driver as ap settings and frequency setting is
+> skipped. When the AP mode comes up in the new channel, it is 
+> intimated to cfg80211 through cfg80211_ch_switch_notify which
+> in turn notifies the channel information to wpa_supplicant
+> through CH_SWITCH event.
+> 
+> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+> ---
+> v2: Add a new flag attribute for _START_AP command to indicate ACS request.
+>     Update the channel/frequency information using ch_switch_notify
+>     once the driver (firmware) has selected the channel.
+> 
+> For P2P, the operating channel needs to be known before group negotiation starts.
+> This is true in case of P2P GO or client. It needs a separate p2p command from
+> wpa_cli to get the acs-based best channel information from the driver.
 
-And then we have unified changelogs for stable releases these are
-listed on the stable page:
+So .. is there any reason to not do only the second, and then pass that
+channel back here instead?
 
-http://wireless.kernel.org/en/users/Download/stable/
+johannes
 
-For example:
-
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ChangeLog-3.4-rc3
-
-We also now have ckmake logs which are compile test logs against all
-supported kernels, we only post stable releases / linux-next daily
-releases if all compile tests succeed.
-
-  Luis
