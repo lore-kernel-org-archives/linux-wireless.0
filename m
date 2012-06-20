@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46266 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754465Ab2FYHAW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 03:00:22 -0400
-Message-ID: <4FE80C84.8080106@tieto.com> (sfid-20120625_090025_405506_6F8AEF9E)
-Date: Mon, 25 Jun 2012 09:00:20 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFCv2 12/13] cfg80211: add channel checking for iface combinations
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>  <1340172859-18146-13-git-send-email-michal.kazior@tieto.com> <1340291033.4489.37.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340291033.4489.37.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:47459 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756371Ab2FTOYj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 10:24:39 -0400
+Received: by eaak11 with SMTP id k11so2653054eaa.33
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 07:24:37 -0700 (PDT)
+Message-ID: <1340202275.1631.232.camel@cumari.coelho.fi> (sfid-20120620_162443_002790_01EAFDCF)
+Subject: Re: [PATCH] mac80211: use the correct capability info in
+ ieee80211_set_associated()
+From: Luciano Coelho <coelho@ti.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 Jun 2012 17:24:35 +0300
+In-Reply-To: <1340202204-20536-1-git-send-email-coelho@ti.com>
+References: <1340202204-20536-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2012-06-20 at 08:14 +0200, Michal Kazior wrote:
->
->> +		case CHAN_MODE_SHARED:
->> +			for (i = 0; i<  num_max_channels; i++)
->> +				if (!used_channels[i] || used_channels[i] == ch)
->> +					break;
->> +
->> +			if (i == num_max_channels) {
->> +				kfree(used_channels);
->> +				return -ENOMEM;
->> +			}
->
-> Maybe use -EBUSY? -ENOMEM doesn't seem to make much sense? Or maybe I'm
-> misunderstanding that? You allocated a pretty large number before (one
-> for each possible channel) so we can't really run into it anyway I
-> think?
->
-> Or ... maybe we should just do something like
->
->   * force num_different_channels to be less than a constant we define,
->     say #define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10 by checking in
->     wiphy registration -- if somebody needs more .... they can change
->     the constant but that seems very unlikely
->   * use a channel array with that size on the stack here, then we don't
->     even need to alloc memory
+Oops, I mistyped Johannes' address.  Now fixed.
 
-I just get too generic sometimes. Sounds good to me.
+On Wed, 2012-06-20 at 17:23 +0300, Luciano Coelho wrote:
+> If an AP is beaconing with different capabilities than the one we get
+> in the associate response, we were still using the capabilities
+> received in the beacons.  One example is when the AP is beaconing with
+> the short slot bit set to zero and then we try to connect to it with
+> long slot.  In this case, we would keep using long slot until the next
+> beacon was received.
+> 
+> Fix this by using the correct capability value when calling
+> ieee80211_handle_bss_capability().  We were using cbss->capability,
+> but we should use the bss_conf->assoc_capability instead.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  net/mac80211/mlme.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 9caecd4..ffa0b19 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -1323,7 +1323,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+>  
+>  	bss_info_changed |= BSS_CHANGED_BEACON_INT;
+>  	bss_info_changed |= ieee80211_handle_bss_capability(sdata,
+> -		cbss->capability, bss->has_erp_value, bss->erp_value);
+> +		bss_conf->assoc_capability, bss->has_erp_value, bss->erp_value);
+>  
+>  	sdata->u.mgd.beacon_timeout = usecs_to_jiffies(ieee80211_tu_to_usec(
+>  		IEEE80211_BEACON_LOSS_COUNT * bss_conf->beacon_int));
 
 
--- 
-Pozdrawiam / Best regards, Michal Kazior.
