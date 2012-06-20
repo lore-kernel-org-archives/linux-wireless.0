@@ -1,97 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:39245 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209Ab2FZSz0 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39603 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439Ab2FTGTe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 14:55:26 -0400
-Date: Tue, 26 Jun 2012 20:55:34 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Will Hawkins <hawkinsw@opentechinstitute.org>,
-	Will Hawkins <hawkinsw@opentechinitiative.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Help tracing NL80211_CMD_AUTHENTICATE as event in IBSS mode
-Message-ID: <20120626185533.GA7932@ritirata.org> (sfid-20120626_205533_636587_B535033A)
-References: <24f-4fe93400-17-239c5900@2266046>
- <1340693584.4662.3.camel@jlt3.sipsolutions.net>
- <4FE9E201.1010903@opentechinstitute.org>
- <1340728873.4484.6.camel@jlt3.sipsolutions.net>
- <4FE9E6F0.2070909@opentechinstitute.org>
- <1340730210.4484.11.camel@jlt3.sipsolutions.net>
+	Wed, 20 Jun 2012 02:19:34 -0400
+Date: Wed, 20 Jun 2012 11:50:49 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Michael Leun <lkml20120218@newton.leun.net>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
+Message-ID: <20120620062047.GB8738@vmraj-lnx.qca.qualcomm.com> (sfid-20120620_081949_983428_63A5BE47)
+References: <20120619085137.337838c0@xenia.leun.net>
+ <CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com>
+ <20120620003315.2eaf6460@xenia.leun.net>
+ <20120620061303.GA8738@vmraj-lnx.qca.qualcomm.com>
+ <20120620081553.040171f4@xenia.leun.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SLDf9lqlvOQaIe6s"
-In-Reply-To: <1340730210.4484.11.camel@jlt3.sipsolutions.net>
+Content-Type: multipart/mixed; boundary="d6Gm4EdcadzBjdND"
+In-Reply-To: <20120620081553.040171f4@xenia.leun.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---SLDf9lqlvOQaIe6s
-Content-Type: text/plain; charset=utf-8
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 26, 2012 at 07:03:30PM +0200, Johannes Berg wrote:
-> On Tue, 2012-06-26 at 12:44 -0400, Will Hawkins wrote:
->=20
-> > > Huh, now I'm confused, why would it need the authenticate frames for
-> > > IBSS? As far as I can tell, it looks at CMD_NEW_STA, which calls
-> > > nl80211_new_station_event(),=20
-> >=20
-> > This is what I understand as well.
-> >=20
-> > which in IBSS sends EVENT_IBSS_RSN_START to
-> > > the supplicant core -- that will trigger the 4-way-handshake. No? Hen=
-ce
-> > > it doesn't need to register for auth frames, it never needs them, sin=
-ce
-> > > RSN uses open auth, if any is even used in IBSS at all.
-> >=20
-> > This is where I am still trying to figure out exactly how it works.
->=20
-> I believe that when the new station is added (NEW_STA event), it will
-> simply send out a 1/4 EAPOL frame. Since both do that, I guess it does
-> some kind of de-duplication? Whoever sends it first wins or something,
-> but I don't really know. Maybe we should take the discussion to the
-> hostap list at this point :-)
+On Wed, Jun 20, 2012 at 08:15:53AM +0200, Michael Leun wrote:
+> On Wed, 20 Jun 2012 11:43:05 +0530
+> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+> 
+> 
+> > Thanks for the analysis. Can you please try with the attached patch
+> > without reverting mac80211 change?
+> 
+> Radio Eriwan answers: In principle yes, but you forgot the
+> attachment ;-)
+> 
+Oops. Sorry.  
 
-Yeah, Johannes is right when saying that NEW_STA simply makes wpa_s trigger=
- a
-EVENT_IBSS_RSN_START that will start a 4-way handshake.
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: attachment;
+	filename="0001-ath9k_htc-configure-bssid-on-ASSOC-IBSS-change.patch"
 
-Auth frames are not used at all in wpa_s for IBSS/RSN. Auth frames are only=
- used
-in the kernel to remove and then add again a station from the neighbour lis=
-t. In
-this way wpa_s will first purge that station and then will add it again tha=
-nks
-to another NEW_STA event.
+>From 025f26a70c1f8bab443a49f0fe3e7c6627e6550c Mon Sep 17 00:00:00 2001
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Date: Wed, 20 Jun 2012 11:33:37 +0530
+Subject: [PATCH] ath9k_htc: configure bssid on ASSOC/IBSS change
 
-@johannes: de-duplication? IBSS/RSN assumes that each node runs an authenti=
-cator
-and a supplicant. Does this mean that we need exactly two 4-way handshakes?=
- Why
-should we have a "winner"?
+After the change "mac80211: remove spurious BSSID change flag",
+BSS_CHANGED_BSSID will not be passed on association or IBSS
+status changes. So it could be better to program bssid on ASSOC
+or IBSS change notification. Not doing so, is affecting the
+packet transmission.
 
-Cheers,
+Reported-by: Michael Leun <lkml20120218@newton.leun.net>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 2b8f61c..abbd6ef 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1496,6 +1496,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 			priv->num_sta_assoc_vif++ : priv->num_sta_assoc_vif--;
+ 
+ 		if (priv->ah->opmode == NL80211_IFTYPE_STATION) {
++			ath9k_htc_choose_set_bssid(priv);
+ 			if (bss_conf->assoc && (priv->num_sta_assoc_vif == 1))
+ 				ath9k_htc_start_ani(priv);
+ 			else if (priv->num_sta_assoc_vif == 0)
+@@ -1503,13 +1504,11 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BSSID) {
++	if (changed & BSS_CHANGED_IBSS) {
+ 		if (priv->ah->opmode == NL80211_IFTYPE_ADHOC) {
+ 			common->curaid = bss_conf->aid;
+ 			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ 			ath9k_htc_set_bssid(priv);
+-		} else if (priv->ah->opmode == NL80211_IFTYPE_STATION) {
+-			ath9k_htc_choose_set_bssid(priv);
+ 		}
+ 	}
+ 
+-- 
+1.7.11
 
 
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---SLDf9lqlvOQaIe6s
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/qBaUACgkQpGgxIkP9cwcsZgCaA3+OOEn3EjKyl8wO7wAB9nrD
-zV0AnAk1b2E3iIG//sW7FtNzfYXA4vPs
-=jC+S
------END PGP SIGNATURE-----
-
---SLDf9lqlvOQaIe6s--
+--d6Gm4EdcadzBjdND--
