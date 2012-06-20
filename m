@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52384 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753494Ab2FSOv1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:27 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 12/17] nl80211: send interface after creation
-Date: Tue, 19 Jun 2012 16:50:51 +0200
-Message-Id: <1340117456-10154-13-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165142_779412_7697001B)
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:40664 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754404Ab2FTNWh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 09:22:37 -0400
+Received: by eekd17 with SMTP id d17so2967370eek.22
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 06:22:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1340180149.4655.23.camel@jlt3.sipsolutions.net>
+References: <1340173975-13609-1-git-send-email-victorg@ti.com>
+	<1340180149.4655.23.camel@jlt3.sipsolutions.net>
+Date: Wed, 20 Jun 2012 16:22:35 +0300
+Message-ID: <CAK80WHYa566m+K8TtRo6nvDQHd4J-1A5MD5y_N6_OJMVVnVMgA@mail.gmail.com> (sfid-20120620_152241_034353_F19066CF)
+Subject: Re: [PATCH v4] mac80211: add command to get current rssi
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Jun 20, 2012 at 11:15 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2012-06-20 at 09:32 +0300, Victor Goldenshtein wrote:
+>
+>> +     trace_drv_get_rssi(local, sdata);
+>> +     ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
+>> +     trace_drv_return_int(local, ret);
+>
+> Where are you tracing the sta?
+>
 
-After a new virtual interface is created, reply
-to userspace with a message detailing it so it
-knows the new wdev identifier.
+We talked about print sta address with "local_sdata_addr_evt" event
+macro, the output looks like this:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+#           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+#              | |       |                     ||||       |         |
+              iw-1394  [000]        ...1  1083.713867: drv_get_rssi:
+phy0 vif:wlan0(2) addr:08:00:28:cc:65:43
+              iw-1394  [000]        ...1  1083.729736: drv_return_int: phy0 - 0
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9f5e796..861611b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1962,6 +1962,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct vif_params params;
- 	struct wireless_dev *wdev;
-+	struct sk_buff *msg;
- 	int err;
- 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
- 	u32 flags;
-@@ -1988,14 +1989,20 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
- 	err = parse_monitor_flags(type == NL80211_IFTYPE_MONITOR ?
- 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
- 				  &flags);
- 	wdev = rdev->ops->add_virtual_intf(&rdev->wiphy,
- 		nla_data(info->attrs[NL80211_ATTR_IFNAME]),
- 		type, err ? NULL : &flags, &params);
--	if (IS_ERR(wdev))
-+	if (IS_ERR(wdev)) {
-+		nlmsg_free(msg);
- 		return PTR_ERR(wdev);
-+	}
- 
- 	if (type == NL80211_IFTYPE_MESH_POINT &&
- 	    info->attrs[NL80211_ATTR_MESH_ID]) {
-@@ -2009,7 +2016,13 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		wdev_unlock(wdev);
- 	}
- 
--	return 0;
-+	if (nl80211_send_iface(msg, info->snd_pid, info->snd_seq, 0,
-+			       rdev, wdev) < 0) {
-+		nlmsg_free(msg);
-+		return -ENOBUFS;
-+	}
-+
-+	return genlmsg_reply(msg, info);
- }
- 
- static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+> And why not trace the value returned in *rssi_dbm?
+>
+
+Is it really required ? there are various driver-ops which are "get
+stuff" without printing them in the tracer.
+
 -- 
-1.7.10
-
+Thanks,
+Victor.
