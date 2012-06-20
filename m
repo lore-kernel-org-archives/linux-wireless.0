@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756718Ab2FZNbx (ORCPT
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:59457 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753811Ab2FTKra (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 09:31:53 -0400
-Message-ID: <1340717512.14634.38.camel@jlt3.sipsolutions.net> (sfid-20120626_153155_920482_94D03897)
-Subject: Re: [RFC v3] respect channels in iface combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Jun 2012 15:31:52 +0200
-In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 20 Jun 2012 06:47:30 -0400
+Received: by lbbgg6 with SMTP id gg6so441863lbb.36
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 03:47:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FE1A734.4090100@neratec.com>
+References: <1340030798-28992-1-git-send-email-victorg@ti.com>
+	<4FE1A734.4090100@neratec.com>
+Date: Wed, 20 Jun 2012 13:47:26 +0300
+Message-ID: <CAK80WHbJZMsoV625hT_sQaEvVx3A5XC8M7PH6KfjdCx=MhdtEw@mail.gmail.com> (sfid-20120620_124733_711566_7006F14C)
+Subject: Re: [PATCH 0/7] nl/cfg/mac80211: add DFS master ability
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
+	johannes@sipsolutions.net, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-26 at 14:30 +0200, Michal Kazior wrote:
-> Hi,
-> 
-> Here's a respin of my patches.
-> 
-> Changes:
-> 
->  - add libertas set_channel tracking
->  - add channel switch notify support (ap channel tracking)
->  - introduce CFG80211_MAX_NUM_DIFFERENT_CHANNELS
->    (changes channel accounting a bit)
->  - add channel accounting for assoc
-> 
-> Left unchanged:
-> 
->  - set_monitor_enabled callback name
->  - initial monitor channel is set to first one found
+On Wed, Jun 20, 2012 at 1:34 PM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> On 06/18/2012 04:46 PM, Victor Goldenshtein wrote:
+>> In continuation to proposed RFC, this patch set (with hostap patch series) adds support for DFS (Dynamic Frequency Selection) according 802.11h.
+>>
+>> [...]
+>
+> Thanks for the updated patches, Victor.
+>
+> Going to test them by preparing the ath9k interface.
+>
+> Right now they do not apply on top of wireless-testing, could you please
+> rebase? Thanks.
 
-Dziękujemy! (and thanks google too :-D)
+The patches are on top of the master branch from:
+git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
 
-I just saw a few tiny issues, can you repost as [PATCH] and then, unless
-I see other objections, I'll pick this up.
-
-johannes
-
+-- 
+Thanks,
+Victor.
