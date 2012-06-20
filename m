@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4943 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751321Ab2FFLn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 07:43:28 -0400
-Message-ID: <4FCF4250.7080904@broadcom.com> (sfid-20120606_134331_472182_6ECC41F7)
-Date: Wed, 6 Jun 2012 13:43:12 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
+Received: from he.sipsolutions.net ([78.46.109.217]:49635 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756779Ab2FTPlm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 11:41:42 -0400
+Message-ID: <1340206900.4655.77.camel@jlt3.sipsolutions.net> (sfid-20120620_174145_415683_6C6E5A20)
+Subject: Re: [PATCH 1/2] cfg80211: Support for automatic channel selection
+ in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	jouni@qca.qualcomm.com, kvalo@qca.qualcomm.com,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 18/18] brcmsmac: handle non PCI devices in the phy
- code
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-19-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338937641-8519-19-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Date: Wed, 20 Jun 2012 17:41:40 +0200
+In-Reply-To: <CAJqpcCQ34PFxAapy0q1WCQQO8NehV+niwEHpbbTDL+e=rJ7X=w@mail.gmail.com> (sfid-20120620_114256_209959_B1E0B5E9)
+References: <1340017242-6436-1-git-send-email-nataraja@qca.qualcomm.com>
+	 <1340182500.4655.47.camel@jlt3.sipsolutions.net>
+	 <CAJqpcCQ34PFxAapy0q1WCQQO8NehV+niwEHpbbTDL+e=rJ7X=w@mail.gmail.com>
+	 (sfid-20120620_114256_209959_B1E0B5E9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-> @@ -209,9 +211,11 @@ void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
->  		bcma_write16(pi->d11core, D11REGOFFS(phy4wdatalo), val);
->  	}
->  
-> -	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
-> -		(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
-> -		pi->phy_wreg = 0;
-> +	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) {
-> +		if (++pi->phy_wreg >= pi->phy_wreg_limit) {
-> +			(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
-> +			pi->phy_wreg = 0;
-> +		}
->  	}
+On Wed, 2012-06-20 at 15:12 +0530, Vivek Natarajan wrote:
 
-You can loose the outer curly braces or combine into one if statement.
-Same for the other code fragment in this patch.
+> >> For P2P, the operating channel needs to be known before group negotiation starts.
+> >> This is true in case of P2P GO or client. It needs a separate p2p command from
+> >> wpa_cli to get the acs-based best channel information from the driver.
+> >
+> > So .. is there any reason to not do only the second, and then pass that
+> > channel back here instead?
+> 
+> So, what you recommend is, for both AP and P2P GO modes, the logic
+> should be to request the driver for best channel, then the best
+> channel information event to be passed to userspace and then starting
+> the AP/GO mode of operation.
 
-Gr. AvS
+That's what I'm thinking, yes.
+
+> The current ath6kl firmware has some limitation for getting this
+> channel information separately and hence not yet implemented this.
+> Moreover this needs to be a synchronous operation: to request and get
+> the event for best channel after a full cycle of channel assessment is
+> done.
+
+Right, but if you're working on this surely you can do without this
+particular patch for now?
+
+The reason I'm talking about this is the channel concurrency framework
+that Michal is working on, which would conflict somehow with this I
+think.
+
+johannes
 
