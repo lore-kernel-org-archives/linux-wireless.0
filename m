@@ -1,74 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:29880 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932461Ab2FVOcw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 10:32:52 -0400
-Date: Fri, 22 Jun 2012 17:32:18 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
-Message-ID: <20120622143218.GH5390@mwanda> (sfid-20120622_163257_452122_5F83C798)
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
- <87ipej4xz0.fsf@purkki.adurom.net>
- <20120622115559.GD5390@mwanda>
- <4FE48036.1020708@candelatech.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:47920 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753848Ab2FTGOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 02:14:25 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFCv2 03/13] cfg80211: add channel tracking for AP and mesh
+Date: Wed, 20 Jun 2012 08:14:09 +0200
+Message-ID: <1340172859-18146-4-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081503_872842_B1F8BDA3)
+In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FE48036.1020708@candelatech.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 22, 2012 at 07:24:54AM -0700, Ben Greear wrote:
-> On 06/22/2012 04:55 AM, Dan Carpenter wrote:
-> >On Fri, Jun 22, 2012 at 10:17:23AM +0300, Kalle Valo wrote:
-> >>Rajkumar Manoharan<rmanohar@qca.qualcomm.com>  writes:
-> >>
-> >>>ath9k_get_et_stats() warn: side effect in macro
-> >>>'AWDATA' doing 'i++'
-> >>>
-> >>>Cc: Ben Greear<greearb@candelatech.com>
-> >>>Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> >>
-> >>[...]
-> >>
-> >>>  	do {								\
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> >>>+		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> >>>+		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> >>>+		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> >>>+		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> >>>+		i += 4; \
-> >>>  	} while (0)
-> >>
-> >>I agree with Ben, this is a useless change as the end result is still
-> >>the same (the side effect is that i is increased with four). You are
-> >>just hiding that from smatch and once smatch is fixed it will warn again
-> >>about the same thing.
-> >>
-> >>I recommend fixing this properly so that the macro doesn't have any side
-> >>effects.
-> >
-> >Uh.  Sorry, also I thought I had pushed a fix to add this to the
-> >ignored macro list, but I forgot.  I've pushed it now.
-> 
-> The whole point of the macro is to have an affect.  This is not a general
-> purpose macro..it's very specific to this local logic.
-> 
-> I don't think folks should be so dogmatic about these sorts of things.
-> 
+We need to know which channel is used by a running
+AP and mesh for channel context accounting and
+finding matching/active interface combination.
 
-Right.  I have a list of macros which are expected to have side
-effects but this one was only merged into linux-next recently and
-had not been added to my list.
+STA/IBSS have current_bss already which allows us
+to check which channel a vif is tuned to.
+Non-fixed channel IBSS can be handled with
+additional changes.
 
-regards,
-dan carpenter
+Monitor mode is going to be handled differently.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h |    3 +++
+ net/wireless/ap.c      |    4 +++-
+ net/wireless/mesh.c    |    6 +++++-
+ net/wireless/nl80211.c |    5 ++++-
+ 4 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7319f25..0f9d7b4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2335,6 +2335,9 @@ struct wireless_dev {
+ 	struct ieee80211_channel *preset_chan;
+ 	enum nl80211_channel_type preset_chantype;
+ 
++	/* for AP and mesh channel tracking */
++	struct ieee80211_channel *channel;
++
+ 	bool ps;
+ 	int ps_timeout;
+ 
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 45199cc..fcc60d8 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -24,8 +24,10 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		return -ENOENT;
+ 
+ 	err = rdev->ops->stop_ap(&rdev->wiphy, dev);
+-	if (!err)
++	if (!err) {
+ 		wdev->beacon_interval = 0;
++		wdev->channel = NULL;
++	}
+ 
+ 	return err;
+ }
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index b44c736..c9c38e3 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -153,6 +153,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!err) {
+ 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
+ 		wdev->mesh_id_len = setup->mesh_id_len;
++		wdev->channel = setup->channel;
+ 	}
+ 
+ 	return err;
+@@ -243,8 +244,11 @@ static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+ 		return -ENOTCONN;
+ 
+ 	err = rdev->ops->leave_mesh(&rdev->wiphy, dev);
+-	if (!err)
++	if (!err) {
+ 		wdev->mesh_id_len = 0;
++		wdev->channel = NULL;
++	}
++
+ 	return err;
+ }
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c17b57b..5d36124 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2356,8 +2356,11 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
+-	if (!err)
++	if (!err) {
+ 		wdev->beacon_interval = params.beacon_interval;
++		wdev->channel = params.channel;
++	}
++
+ 	return err;
+ }
+ 
+-- 
+1.7.0.4
 
