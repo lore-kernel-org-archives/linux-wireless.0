@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:56025 "HELO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758003Ab2F1C71 (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:40712 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753865Ab2FTPHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 22:59:27 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/4] mwifiex: retrieve correct max_power information in reg_notifier handler
-Date: Wed, 27 Jun 2012 19:57:59 -0700
-Message-Id: <1340852279-24964-5-git-send-email-bzhao@marvell.com> (sfid-20120628_045932_997842_2C6435FB)
-In-Reply-To: <1340852279-24964-1-git-send-email-bzhao@marvell.com>
-References: <1340852279-24964-1-git-send-email-bzhao@marvell.com>
+	Wed, 20 Jun 2012 11:07:20 -0400
+Received: by eaaa12 with SMTP id a12so3404710eaa.30
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 08:06:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1340181992.4655.39.camel@jlt3.sipsolutions.net>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
+	<1340111463-4554-3-git-send-email-victorg@ti.com>
+	<1340181856.4655.37.camel@jlt3.sipsolutions.net>
+	<1340181992.4655.39.camel@jlt3.sipsolutions.net>
+Date: Wed, 20 Jun 2012 18:06:44 +0300
+Message-ID: <CAK80WHYbM5sBX-pPtPZncMVgUR=-pBPUH_o9dnyhV0MvsFXz0g@mail.gmail.com> (sfid-20120620_170731_598977_53DB6F1E)
+Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on op-channel
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, Jun 20, 2012 at 11:46 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Also, it seems that the value should be reset eventually ... at least on
+> interface down or so. Otherwise you can start CAC, then bring the
+> interface down to stop the device, and then bring it back up (CAC check
+> is no longer running) and then you can use the channel after some time
+> even though you never really checked for radar...
+>
 
-As we don't provide custom regulatory rules to cfg80211,
-"chan->max_power" remains uninitialized (0dbm) and
-"chan->max_reg_power" will contain maximum power for a channel
-extracted from regulatory rules provided by CRDA; hence use
-"chan->max_reg_power" in reg_notifier handler instead of
-"chan->max_power" to set max_power in firmware.
+np, will also reset both the timestamp + new flag during interface down.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> And if you start CAC on two different devices on the same channel, but
+> they happen to share channel structs in the driver then this will all
+> conflict quite badly.
+>
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 78fb959..e241f8d 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -260,13 +260,13 @@ static int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy)
- 			flag = 1;
- 			first_chan = (u32) ch->hw_value;
- 			next_chan = first_chan;
--			max_pwr = ch->max_power;
-+			max_pwr = ch->max_reg_power;
- 			no_of_parsed_chan = 1;
- 			continue;
- 		}
- 
- 		if (ch->hw_value == next_chan + 1 &&
--		    ch->max_power == max_pwr) {
-+		    ch->max_reg_power == max_pwr) {
- 			next_chan++;
- 			no_of_parsed_chan++;
- 		} else {
-@@ -277,7 +277,7 @@ static int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy)
- 			no_of_triplet++;
- 			first_chan = (u32) ch->hw_value;
- 			next_chan = first_chan;
--			max_pwr = ch->max_power;
-+			max_pwr = ch->max_reg_power;
- 			no_of_parsed_chan = 1;
- 		}
- 	}
+We can just return EBUSY if the radar detection has already started on
+this specific channel. Btw, this is another argument why the
+"radar_detect_timeout" should be per channel.
+
+
 -- 
-1.7.0.2
-
+Thanks,
+Victor.
