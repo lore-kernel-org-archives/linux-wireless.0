@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48534 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45333 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab2FKJxe (ORCPT
+	with ESMTP id S1752167Ab2FTItF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 05:53:34 -0400
+	Wed, 20 Jun 2012 04:49:05 -0400
+Message-ID: <1340182143.4655.43.camel@jlt3.sipsolutions.net> (sfid-20120620_104909_220907_42616B8D)
+Subject: Re: [PATCH v2 7/7] mac80211: add DFS support to monitor interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/13] iwlwifi: comment that setting driver_data overrides info->control
-Date: Mon, 11 Jun 2012 11:53:08 +0200
-Message-Id: <1339408392-19425-10-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115348_383136_EB75CEA0)
-In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
-References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Wed, 20 Jun 2012 10:49:03 +0200
+In-Reply-To: <1340111463-4554-7-git-send-email-victorg@ti.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
+	 <1340111463-4554-7-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 2012-06-19 at 16:11 +0300, Victor Goldenshtein wrote:
 
-Using the driver_data area in ieee80211_tx_info which
-resides in the CB overrides the info->control field.
-Add a comment to prevent mistakes.
+> +	bool dfs_supported = !!(local->hw.wiphy->features &
+> +				NL80211_FEATURE_DFS);
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/tx.c |    1 +
- 1 file changed, 1 insertion(+)
+No need for !!, also why not inline that into the condition?
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
-index 0dfaf64..1f9457f 100644
---- a/drivers/net/wireless/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
-@@ -403,6 +403,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	info->driver_data[0] = ctx;
- 	info->driver_data[1] = dev_cmd;
-+	/* From now on, we cannot access info->control */
- 
- 	spin_lock(&priv->sta_lock);
- 
--- 
-1.7.10
+johannes
 
