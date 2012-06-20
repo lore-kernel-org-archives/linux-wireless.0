@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:49433 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756874Ab2FTPwD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39625 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755279Ab2FTHiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 11:52:03 -0400
-Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
-	by www19.servergod.com (Postfix) with ESMTP id AB41211F93A
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 08:52:01 -0700 (PDT)
-Received: by mail0.frost.chambana.net (Postfix) with SMTP id 36CD559FFF9
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 15:52:01 +0000
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
-To: hawkinsw@opentechinstitute.org, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 1/3 v5] mac80211: Track auth frame registrations on IBSS ifaces
-Date: Wed, 20 Jun 2012 11:51:14 -0400
-Message-Id: <288b9d33469b594eaa3943a54e129c0661dfd4cb.1340207106.git.hawkinsw@opentechinstitute.org> (sfid-20120620_175207_842263_B2561A5B)
-In-Reply-To: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+	Wed, 20 Jun 2012 03:38:52 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 10/12] iwlwifi: fix 11n_disable EEPROM refactoring regression
+Date: Wed, 20 Jun 2012 09:38:12 +0200
+Message-Id: <1340177894-12992-11-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093856_461372_99714E93)
+In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Track userspace registrations for authentication
-frames received on an IBSS interface. This field
-will be used to decide whether or not to send
-"open system" authentication frames when a new
-station joins an adhoc network.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+My commit 26a7ca9a71a ("iwlwifi: refactor EEPROM reading/parsing")
+broke the 11n_disable module parameter's BIT(0) to disable all HT
+operation (using the other bits to disable aggregation only was
+unaffected). Restore this by overriding the SKU when parsing the
+EEPROM if the module parameter is set.
+
+Reported-by: Matthijs Kooijman <matthijs@stdin.nl>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c         |   10 ++++++++++
- net/mac80211/ieee80211_i.h |    1 +
- 2 files changed, 11 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 498c94e..d623ce9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2486,6 +2486,16 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
- 					  u16 frame_type, bool reg)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+index c87a05c..f10170f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
+@@ -853,6 +853,9 @@ iwl_parse_eeprom_data(struct device *dev, const struct iwl_cfg *cfg,
+ 					     EEPROM_RADIO_CONFIG);
+ 	data->sku = iwl_eeprom_query16(eeprom, eeprom_size,
+ 				       EEPROM_SKU_CAP);
++	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
++		data->sku &= ~EEPROM_SKU_CAP_11N_ENABLE;
 +
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && 
-+	    (frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH))) {
-+		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+		if (reg)
-+			ifibss->auth_frame_registrations++;
-+		else
-+			ifibss->auth_frame_registrations--;
-+	}
+ 	data->eeprom_version = iwl_eeprom_query16(eeprom, eeprom_size,
+ 						  EEPROM_VERSION);
  
- 	if (frame_type != (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_REQ))
- 		return;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e6cbf5b..599f9fd 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -508,6 +508,7 @@ struct ieee80211_if_ibss {
- 	bool privacy;
- 
- 	bool control_port;
-+	unsigned int auth_frame_registrations;
- 
- 	u8 bssid[ETH_ALEN] __aligned(2);
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
 -- 
-1.7.9.5
-
+1.7.10
 
