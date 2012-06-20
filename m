@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:42017 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751491Ab2FTNjk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1351 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752320Ab2FTGJl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 09:39:40 -0400
-Received: by lbbgm6 with SMTP id gm6so624427lbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 06:39:37 -0700 (PDT)
+	Wed, 20 Jun 2012 02:09:41 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_htc: configure bssid on ASSOC/IBSS change
+Date: Wed, 20 Jun 2012 11:40:57 +0530
+Message-ID: <1340172657-8699-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120620_081004_869168_6C80DA43)
 MIME-Version: 1.0
-In-Reply-To: <1340194342.4655.59.camel@jlt3.sipsolutions.net>
-References: <1340177634-24568-1-git-send-email-victorg@ti.com>
-	<1340178370.4655.22.camel@jlt3.sipsolutions.net>
-	<CAK80WHYU+dOvMQG2aDTP7rO6b=MZXDVcX4a7KGpLizgutVcD8g@mail.gmail.com>
-	<1340180991.4655.30.camel@jlt3.sipsolutions.net>
-	<CAK80WHbMVr0GVrKRGL9OD8CUHi8FBVRL0tDGewf9doLm2etb0g@mail.gmail.com>
-	<1340194342.4655.59.camel@jlt3.sipsolutions.net>
-Date: Wed, 20 Jun 2012 16:39:37 +0300
-Message-ID: <CAK80WHbbPHSnbqbirQA5QT_Dbc+fT4xY7iu43VAQo0c-2KuHYg@mail.gmail.com> (sfid-20120620_153943_268587_0FC1C8B6)
-Subject: Re: [PATCH v3 1/2] nl80211/cfg80211: add scan channel times to scan command
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, eliad@wizery.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 3:12 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+After the change "mac80211: remove spurious BSSID change flag",
+BSS_CHANGED_BSSID will not be passed on association or IBSS
+status changes. So it could be better to program bssid on ASSOC
+or IBSS change notification. Not doing so, is affecting the
+packet transmission.
 
->
-> It makes a lot more sense than your way which can result in invalid
-> configurations being passed to the driver ...
->
+Reported-by: Michael Leun <lkml20120218@newton.leun.net>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-
-I will respin.
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 2b8f61c..abbd6ef 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1496,6 +1496,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 			priv->num_sta_assoc_vif++ : priv->num_sta_assoc_vif--;
+ 
+ 		if (priv->ah->opmode == NL80211_IFTYPE_STATION) {
++			ath9k_htc_choose_set_bssid(priv);
+ 			if (bss_conf->assoc && (priv->num_sta_assoc_vif == 1))
+ 				ath9k_htc_start_ani(priv);
+ 			else if (priv->num_sta_assoc_vif == 0)
+@@ -1503,13 +1504,11 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BSSID) {
++	if (changed & BSS_CHANGED_IBSS) {
+ 		if (priv->ah->opmode == NL80211_IFTYPE_ADHOC) {
+ 			common->curaid = bss_conf->aid;
+ 			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ 			ath9k_htc_set_bssid(priv);
+-		} else if (priv->ah->opmode == NL80211_IFTYPE_STATION) {
+-			ath9k_htc_choose_set_bssid(priv);
+ 		}
+ 	}
+ 
 -- 
-Thanks,
-Victor.
+1.7.11
+
