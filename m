@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45594 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493Ab2FZUXe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49322 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755885Ab2FTJFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 16:23:34 -0400
-Date: Tue, 26 Jun 2012 15:05:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Juho-Mikko Pellinen <juho-mikko.pellinen@iki.fi>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: Kernel Oops with 3.5-rc4 and zd1211rw (regression)
-Message-ID: <20120626190506.GC32503@tuxdriver.com> (sfid-20120626_222354_776669_F7204F01)
-References: <4FE9FC2C.6040205@iki.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FE9FC2C.6040205@iki.fi>
+	Wed, 20 Jun 2012 05:05:22 -0400
+Message-ID: <1340183115.4655.50.camel@jlt3.sipsolutions.net> (sfid-20120620_110527_925538_FD983E2E)
+Subject: Re: [PATCH v2] mac80211: initialize sta pointer to avoid
+ false-positive warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tony@atomide.com
+Date: Wed, 20 Jun 2012 11:05:15 +0200
+In-Reply-To: <1340182559.1631.208.camel@cumari.coelho.fi>
+References: <1340023971-9754-1-git-send-email-coelho@ti.com>
+	 <1340182340.4655.46.camel@jlt3.sipsolutions.net>
+	 <1340182559.1631.208.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 26, 2012 at 09:15:08PM +0300, Juho-Mikko Pellinen wrote:
-> Hi!
-> 
-> I just got this kernel oops the first time I compiled and booted 3.5-rc4
-> . Oops message: http://i.imgur.com/oyIhy.jpg
-> 3.4.x-series work just fine.
-> 
-> The Oops happens when I log in to gdm. At that time Network Manager is
-> already up and connected to network because I can ssh to the computer.
-> Naturally after the crash wlan goes down and the computer is unreachable.
-> 
-> The zd1211rw is an usb network card. I have also wlan card with the chip
-> 'rtl8192ce' installed, but not activated because I'm experiencing
-> problems with it.
-> 
-> Attached are lspci, lsusb and dmesg from kernel 3.4.3.
-> I will investigate later on the possibility of setting up netconsole and
-> logging dmesg just before the crash.
-> 
->    -Juho-Mikko Pellinen
+On Wed, 2012-06-20 at 11:55 +0300, Luciano Coelho wrote:
 
-I noticed that you are using CONFIG_CFG80211_INTERNAL_REGDB, but you
-have an empty db.txt file.  Please turn-off that option and install
-a proper CRDA setup.  Alternatively, at least give it an up-to-date
-db.txt file to use for regulatory rules.
+> BTW, when you say you applied, does it mean you have pushed to your
+> tree? We want to remove some of our mac80211 patches from our internal
+> trees and "inherit" them from upstream instead, that's why I'm
+> asking. ;)
 
-You are getting a lot of CR_REG1 timeouts from your zd1211rw device.
-Are you certain that the device is still functioning properly?
+It may or may not mean that, I've not quite figured out the entire
+workflow.
 
-The zd1211rw driver isn't exactly changing rapidly.  I do see that
-commit e1f12eb6ba6f1e74007eb01ed26fad7c5239d62b touches it.  You might
-try reverting that one?  And, of course, you could try to do a git
-bisect between 3.4 and 3.5-rc4 -- as a Gentoo user, I'm sure you are
-up to the task! :-)
+So far, it has basically meant "I'm happy with it and I picked it up
+into my (local) git tree". I will also push it into one of the
+mac80211/mac80211-next repositories.
 
-Does any of that move the ball for us?
+However, I make no guarantees that I don't have to rebase those
+repositories sometimes, if I were you I wouldn't merge from me right
+now, at least until I've figured out my workflow completely...
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I do plan on sending a pull request to John every week or so though, and
+when I do I've obviously committed to the code :)
+
+johannes
+
