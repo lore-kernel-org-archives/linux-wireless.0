@@ -1,131 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36999 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069Ab2FLUrH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755887Ab2FTJFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 16:47:07 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: support rssi threshold for sched scan
-Date: Tue, 12 Jun 2012 13:46:19 -0700
-Message-ID: <1339533979-32084-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120612_224757_316312_0C1E36AA)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 20 Jun 2012 05:05:24 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/5] cfg80211: make some functions static
+Date: Wed, 20 Jun 2012 11:05:15 +0200
+Message-Id: <1340183119-15340-2-git-send-email-johannes@sipsolutions.net> (sfid-20120620_110554_517301_B863D138)
+In-Reply-To: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
+References: <1340183119-15340-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath6kl firmware can filter scan results based on rssi. This is
-useful to limit hosts wakeups on scheduled scans.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Some of the functions to retrieve a device can
+be static as they're used only in nl80211.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   10 ++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    3 +++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   18 ++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |   10 ++++++++++
- 4 files changed, 41 insertions(+), 0 deletions(-)
+ net/wireless/core.c    |   63 -------------------------------------
+ net/wireless/core.h    |   26 ---------------
+ net/wireless/nl80211.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 82 insertions(+), 89 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 6f20998..4f20693 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3267,6 +3267,16 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
- 			return ret;
- 	}
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a87d435..907f62c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -96,69 +96,6 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx)
+ 	return &rdev->wiphy;
+ }
  
-+	if (test_bit(ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD,
-+		     ar->fw_capabilities)) {
-+		ret = ath6kl_wmi_set_rssi_filter_cmd(ar->wmi, vif->fw_vif_idx,
-+						    request->rssi_thold);
-+		if (ret) {
-+			ath6kl_err("failed to set RSSI threshold for scan");
-+			return ret;
-+		}
-+	}
-+
- 	/* fw uses seconds, also make sure that it's >0 */
- 	interval = max_t(u16, 1, request->interval / 1000);
+-/* requires cfg80211_mutex to be held! */
+-struct cfg80211_registered_device *
+-__cfg80211_rdev_from_info(struct genl_info *info)
+-{
+-	int ifindex;
+-	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
+-	struct net_device *dev;
+-	int err = -EINVAL;
+-
+-	assert_cfg80211_lock();
+-
+-	if (info->attrs[NL80211_ATTR_WIPHY]) {
+-		bywiphyidx = cfg80211_rdev_by_wiphy_idx(
+-				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
+-		err = -ENODEV;
+-	}
+-
+-	if (info->attrs[NL80211_ATTR_IFINDEX]) {
+-		ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
+-		dev = dev_get_by_index(genl_info_net(info), ifindex);
+-		if (dev) {
+-			if (dev->ieee80211_ptr)
+-				byifidx =
+-					wiphy_to_dev(dev->ieee80211_ptr->wiphy);
+-			dev_put(dev);
+-		}
+-		err = -ENODEV;
+-	}
+-
+-	if (bywiphyidx && byifidx) {
+-		if (bywiphyidx != byifidx)
+-			return ERR_PTR(-EINVAL);
+-		else
+-			return bywiphyidx; /* == byifidx */
+-	}
+-	if (bywiphyidx)
+-		return bywiphyidx;
+-
+-	if (byifidx)
+-		return byifidx;
+-
+-	return ERR_PTR(err);
+-}
+-
+-struct cfg80211_registered_device *
+-cfg80211_get_dev_from_info(struct genl_info *info)
+-{
+-	struct cfg80211_registered_device *rdev;
+-
+-	mutex_lock(&cfg80211_mutex);
+-	rdev = __cfg80211_rdev_from_info(info);
+-
+-	/* if it is not an error we grab the lock on
+-	 * it to assure it won't be going away while
+-	 * we operate on it */
+-	if (!IS_ERR(rdev))
+-		mutex_lock(&rdev->mtx);
+-
+-	mutex_unlock(&cfg80211_mutex);
+-
+-	return rdev;
+-}
+-
+ struct cfg80211_registered_device *
+ cfg80211_get_dev_from_ifindex(struct net *net, int ifindex)
+ {
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9348a47..609a579 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -159,32 +159,6 @@ static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
+ struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx);
+ int get_wiphy_idx(struct wiphy *wiphy);
  
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 17a44fa..69b194c 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -115,6 +115,9 @@ enum ath6kl_fw_capability {
- 	 */
- 	ATH6KL_FW_CAPABILITY_SCHED_SCAN_MATCH_LIST,
+-struct cfg80211_registered_device *
+-__cfg80211_rdev_from_info(struct genl_info *info);
+-
+-/*
+- * This function returns a pointer to the driver
+- * that the genl_info item that is passed refers to.
+- * If successful, it returns non-NULL and also locks
+- * the driver's mutex!
+- *
+- * This means that you need to call cfg80211_unlock_rdev()
+- * before being allowed to acquire &cfg80211_mutex!
+- *
+- * This is necessary because we need to lock the global
+- * mutex to get an item off the list safely, and then
+- * we lock the rdev mutex so it doesn't go away under us.
+- *
+- * We don't want to keep cfg80211_mutex locked
+- * for all the time in order to allow requests on
+- * other interfaces to go through at the same time.
+- *
+- * The result of this can be a PTR_ERR and hence must
+- * be checked with IS_ERR() for errors.
+- */
+-extern struct cfg80211_registered_device *
+-cfg80211_get_dev_from_info(struct genl_info *info);
+-
+ /* requires cfg80211_rdev_mutex to be held! */
+ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
  
-+	/* Firmware supports filtering BSS results by RSSI */
-+	ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD,
-+
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 43bce9c..6966a29 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1515,6 +1515,24 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a363ca1..2d3541c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -70,6 +70,88 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
  	return 0;
  }
  
-+int ath6kl_wmi_set_rssi_filter_cmd(struct wmi *wmi, u8 if_idx, s8 rssi)
++static struct cfg80211_registered_device *
++__cfg80211_rdev_from_info(struct genl_info *info)
 +{
-+	struct sk_buff *skb;
-+	struct wmi_set_rssi_filter_cmd *cmd;
-+	int ret;
++	int ifindex;
++	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
++	struct net_device *dev;
++	int err = -EINVAL;
 +
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
++	assert_cfg80211_lock();
 +
-+	cmd = (struct wmi_set_rssi_filter_cmd *) skb->data;
-+	cmd->rssi = rssi;
++	if (info->attrs[NL80211_ATTR_WIPHY]) {
++		bywiphyidx = cfg80211_rdev_by_wiphy_idx(
++				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
++		err = -ENODEV;
++	}
 +
-+	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_RSSI_FILTER_CMDID,
-+				  NO_SYNC_WMIFLAG);
-+	return ret;
++	if (info->attrs[NL80211_ATTR_IFINDEX]) {
++		ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
++		dev = dev_get_by_index(genl_info_net(info), ifindex);
++		if (dev) {
++			if (dev->ieee80211_ptr)
++				byifidx =
++					wiphy_to_dev(dev->ieee80211_ptr->wiphy);
++			dev_put(dev);
++		}
++		err = -ENODEV;
++	}
++
++	if (bywiphyidx && byifidx) {
++		if (bywiphyidx != byifidx)
++			return ERR_PTR(-EINVAL);
++		else
++			return bywiphyidx; /* == byifidx */
++	}
++	if (bywiphyidx)
++		return bywiphyidx;
++
++	if (byifidx)
++		return byifidx;
++
++	return ERR_PTR(err);
 +}
 +
- static int ath6kl_wmi_send_snr_threshold_params(struct wmi *wmi,
- 			struct wmi_snr_threshold_params_cmd *snr_cmd)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 7c94fe3..128f8fe 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -628,6 +628,10 @@ enum wmi_cmd_id {
- 	WMI_SET_MCASTRATE,
- 
- 	WMI_STA_BMISS_ENHANCE_CMDID,
++/*
++ * This function returns a pointer to the driver
++ * that the genl_info item that is passed refers to.
++ * If successful, it returns non-NULL and also locks
++ * the driver's mutex!
++ *
++ * This means that you need to call cfg80211_unlock_rdev()
++ * before being allowed to acquire &cfg80211_mutex!
++ *
++ * This is necessary because we need to lock the global
++ * mutex to get an item off the list safely, and then
++ * we lock the rdev mutex so it doesn't go away under us.
++ *
++ * We don't want to keep cfg80211_mutex locked
++ * for all the time in order to allow requests on
++ * other interfaces to go through at the same time.
++ *
++ * The result of this can be a PTR_ERR and hence must
++ * be checked with IS_ERR() for errors.
++ */
++static struct cfg80211_registered_device *
++cfg80211_get_dev_from_info(struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev;
 +
-+	WMI_SET_REGDOMAIN_CMDID,
++	mutex_lock(&cfg80211_mutex);
++	rdev = __cfg80211_rdev_from_info(info);
 +
-+	WMI_SET_RSSI_FILTER_CMDID,
- };
- 
- enum wmi_mgmt_frame_type {
-@@ -1276,6 +1280,11 @@ struct wmi_snr_threshold_params_cmd {
- 	u8 reserved[3];
- } __packed;
- 
-+/* Don't report BSSs with signal (RSSI) below this threshold */
-+struct wmi_set_rssi_filter_cmd {
-+	s8 rssi;
-+} __packed;
++	/* if it is not an error we grab the lock on
++	 * it to assure it won't be going away while
++	 * we operate on it */
++	if (!IS_ERR(rdev))
++		mutex_lock(&rdev->mtx);
 +
- enum wmi_preamble_policy {
- 	WMI_IGNORE_BARKER_IN_ERP = 0,
- 	WMI_FOLLOW_BARKER_IN_ERP,
-@@ -2588,6 +2597,7 @@ int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
- 				   const u8 *mask);
- int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
- 				   u16 list_id, u16 filter_id);
-+int ath6kl_wmi_set_rssi_filter_cmd(struct wmi *wmi, u8 if_idx, s8 rssi);
- int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi);
- int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid);
- int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
++	mutex_unlock(&cfg80211_mutex);
++
++	return rdev;
++}
++
+ /* policy for the attributes */
+ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_WIPHY] = { .type = NLA_U32 },
 -- 
-1.7.4.1
+1.7.10
 
