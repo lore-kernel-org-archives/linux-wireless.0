@@ -1,111 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48654 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932868Ab2FVNOt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 09:14:49 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/6] mac80211: rename driver-trace file
-Date: Fri, 22 Jun 2012 15:14:41 +0200
-Message-Id: <1340370882-9258-6-git-send-email-johannes@sipsolutions.net> (sfid-20120622_151458_530177_94B43C66)
-In-Reply-To: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
-References: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.neratec.com ([80.75.119.105]:42550 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751702Ab2FTNi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 09:38:56 -0400
+Message-ID: <4FE1D26D.8060702@neratec.com> (sfid-20120620_153859_838869_6F9743C4)
+Date: Wed, 20 Jun 2012 15:38:53 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Victor Goldenshtein <victorg@ti.com>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on
+ op-channel
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>    <1340111463-4554-3-git-send-email-victorg@ti.com>    <1340181856.4655.37.camel@jlt3.sipsolutions.net>    (sfid-20120620_104434_561430_DB0A480E) <1340181992.4655.39.camel@jlt3.sipsolutions.net>   <4FE1B9CB.2090206@neratec.com>  <1340193471.4655.57.camel@jlt3.sipsolutions.net>  <4FE1C8EC.4040902@neratec.com> <1340197920.4655.62.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340197920.4655.62.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/20/2012 03:12 PM, Johannes Berg wrote:
+> On Wed, 2012-06-20 at 14:58 +0200, Zefir Kurtisi wrote:
+> 
+>>>> No, if you bring it back up on the same DFS channel,
+>>>> radar_detection_timeout will be set back to +60s by
+>>>> start_radar_detection(). Looks safe to me.
+>>>
+>>> You need to think a bit more outside the regular code flows ... What if
+>>> I'm not calling start_radar_detection()?
+> 
+>> If you are not calling start_radar_detection() you are not using
+>> hostapd. With the design approach we agreed on (when we initially
+>> discussed DFS years ago) to have all the logic located in hostapd, it is
+>> inevitable that those who intentionally want to bypass DFS regulatory
+>> restrictions actually can. You can always replace hostapd by some
+>> component that handles DFS control without caring the wait times.
+> 
+> But this kernel patch is attempting to enforce the wait time. Are you
+> saying it shouldn't even pretend to enforce it?
+> 
+> johannes
+> 
+No, it serves its purpose to ensure hostapd is not going mad and tries
+to enable TX before the CAC is over via redundant checks.
 
-This file will contain more soon, so
-rename it to just trace.
+What I'm saying is this: we defined that DFS regulatory compliance is
+provided by and distributed over driver, mac80211, and hostapd. We
+always must ensure that a working combination of those operates in
+compliance. But we have no control over it when a component is exchanged
+or modified.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/Makefile                    |    4 ++--
- net/mac80211/driver-ops.h                |    2 +-
- net/mac80211/offchannel.c                |    1 -
- net/mac80211/{driver-trace.c => trace.c} |    2 +-
- net/mac80211/{driver-trace.h => trace.h} |    2 +-
- 5 files changed, 5 insertions(+), 6 deletions(-)
- rename net/mac80211/{driver-trace.c => trace.c} (88%)
- rename net/mac80211/{driver-trace.h => trace.h} (99%)
+The regulatory statement we all signed does not even ask for that, it
+states that 'average users should not accidentally fail to comply...'
+which can be denied to be accidental for someone running master mode
+without hostapd.
 
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index 2b1470b..0c140f2 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -24,7 +24,7 @@ mac80211-y := \
- 	wme.o \
- 	event.o \
- 	chan.o \
--	driver-trace.o mlme.o
-+	trace.o mlme.o
- 
- mac80211-$(CONFIG_MAC80211_LEDS) += led.o
- mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
-@@ -42,7 +42,7 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
- 
- mac80211-$(CONFIG_PM) += pm.o
- 
--CFLAGS_driver-trace.o := -I$(src)
-+CFLAGS_trace.o := -I$(src)
- 
- # objects for PID algorithm
- rc80211_pid-y := rc80211_pid_algo.o
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 9330269..44e8c12 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -3,7 +3,7 @@
- 
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
--#include "driver-trace.h"
-+#include "trace.h"
- 
- static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 7f93626..b0fb6a2 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -15,7 +15,6 @@
- #include <linux/export.h>
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
--#include "driver-trace.h"
- #include "driver-ops.h"
- 
- /*
-diff --git a/net/mac80211/driver-trace.c b/net/mac80211/trace.c
-similarity index 88%
-rename from net/mac80211/driver-trace.c
-rename to net/mac80211/trace.c
-index 8ed8711..943da6e 100644
---- a/net/mac80211/driver-trace.c
-+++ b/net/mac80211/trace.c
-@@ -5,5 +5,5 @@
- #ifndef __CHECKER__
- #include "driver-ops.h"
- #define CREATE_TRACE_POINTS
--#include "driver-trace.h"
-+#include "trace.h"
- #endif
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/trace.h
-similarity index 99%
-rename from net/mac80211/driver-trace.h
-rename to net/mac80211/trace.h
-index a0f7d35..392bcc9 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/trace.h
-@@ -1637,5 +1637,5 @@ TRACE_EVENT(stop_queue,
- #undef TRACE_INCLUDE_PATH
- #define TRACE_INCLUDE_PATH .
- #undef TRACE_INCLUDE_FILE
--#define TRACE_INCLUDE_FILE driver-trace
-+#define TRACE_INCLUDE_FILE trace
- #include <trace/define_trace.h>
--- 
-1.7.10
+
+Back to topic: as stated above, radar_detection_timeout should be per
+wiphy. That would also resolve your concern, right?
 
