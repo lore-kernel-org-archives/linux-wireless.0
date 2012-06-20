@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:36993 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757323Ab2FOVv6 (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:34971 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511Ab2FTKC1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 17:51:58 -0400
-Received: by eaak11 with SMTP id k11so1062730eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2012 14:51:56 -0700 (PDT)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Schrober <franzschrober@yahoo.de>
-Subject: Re: ath9k bug in country domain handling
-Date: Fri, 15 Jun 2012 23:51:54 +0200
-Message-ID: <1425745.oeb9uPtGCl@sylvesterjr.cmi.ua.ac.be> (sfid-20120615_235201_230700_266518A2)
-In-Reply-To: <3396938.ZAv4RZqcUo@sven-desktop.home.narfation.org>
-References: <9709270.9fbk3VIit7@sylvesterjr.cmi.ua.ac.be> <3396938.ZAv4RZqcUo@sven-desktop.home.narfation.org>
+	Wed, 20 Jun 2012 06:02:27 -0400
+Received: by gglu4 with SMTP id u4so5461190ggl.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 03:02:27 -0700 (PDT)
+Date: Wed, 20 Jun 2012 05:02:18 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Roland Vossen <rvossen@broadcom.com>
+Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20120620100218.GA4579@burratino> (sfid-20120620_120231_563496_213AA6C0)
+References: <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
+ <20120604084200.GA30645@tiikeri.vuoristo.local>
+ <20120604173121.GA9238@stt008.linux.site>
+ <20120605050620.GC3118@burratino>
+ <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
+ <20120611031544.GB3092@burratino>
+ <20120619181522.GB19354@burratino>
+ <4FE0CFD4.4000300@broadcom.com>
+ <20120619192818.GA19971@burratino>
+ <4FE177BC.5020106@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4FE177BC.5020106@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 June 2012 21:00:23 Schrober wrote:
-> On Wednesday 13 June 2012 13:17:49 Erwin Van de Velde wrote:
-> > Dear all,
-> > 
-> > I have 802.11n cards with an atheros chipset with no default country
-> > domain. Upon initialization, crda is set to US domain, after which I try
-> > to change it to another domain, the driver only accepts further
-> > limitations: i.e. if a channel is allowed in the US but not in Belgium,
-> > it is disabled, but the other way round: if a channel is not allowed in
-> > the US, but is allowed in Belgium it is not enabled.
-> 
-> That is not a bug, but something we call restriction.
-> 
+Arend van Spriel wrote:
+> On 06/19/2012 09:28 PM, Jonathan Nieder wrote:
 
-What? It definitely is a bug, since it restricts something that should not be 
-restricted in Belgium. I am talking about channels you are allowed to use in 
-Belgium, which get disabled by the driver. How can this not be a bug?
-If I call crda for the BE domain, I expect to get _all_ channels that are 
-allowed in Belgium, not just some.
+>> I had been hoping that was mostly orthogonal until Camaleón mentioned
+>> that 3.2.2 doesn't seem to trigger the random reconnects.
+>
+> I missed this piece of info. So the following statements are true?
+>
+> 1. v3.2.2 and earlier did not show the issue.
+> 2. v3.2.9 until 3.2.17 have random reconnects.
+> 3. v3.2.18 does not have random reconnects (or less).
 
-Regards,
-Erwin
-
+(1) and (2) are true.  I don't think (3) is.
