@@ -1,139 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2888 "EHLO mms1.broadcom.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756515Ab2FZSU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 14:20:58 -0400
-Message-ID: <4FE9FD77.7050807@broadcom.com> (sfid-20120626_202104_576941_8A2EA98C)
-Date: Tue, 26 Jun 2012 11:20:39 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1754162Ab2FTGO1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 02:14:27 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFCv2 06/13] cfg80211: track monitor interfaces count
+Date: Wed, 20 Jun 2012 08:14:12 +0200
+Message-ID: <1340172859-18146-7-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081434_762825_44FD235F)
+In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
-cc: khilman@ti.com, tony@atomide.com, santosh.shilimkar@ti.com,
-	b-cousson@ti.com, grant.likely@secretlab.ca,
-	linux-omap@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com>
- <CAC83ZvL2ozQD1DYmtKeFa1PB1pZ1JmBUKFWmDWnbJOCDL3sKNg@mail.gmail.com>
-In-Reply-To: <CAC83ZvL2ozQD1DYmtKeFa1PB1pZ1JmBUKFWmDWnbJOCDL3sKNg@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary=------------090301060502080703010307
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Implements .set_monitor_enabled(wiphy, enabled).
 
---------------090301060502080703010307
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Notifies driver upon change of interface layout.
 
-On 06/26/2012 12:21 AM, DebBarma, Tarun Kanti wrote:
-> On Tue, Jun 26, 2012 at 2:22 AM, Franky Lin <frankyl@broadcom.com> wrote:
->> Hi Kevin, Tarun,
->>
->> We are using the expansion connector A on Panda board to mount a SDIO WiFi
->> dongle on MMC2 with a level triggered interrupt signal connected to GPIO
->> 138. It's been working fine until 3.5 rc1. The board hang randomly within 5
->> mins during a network traffic test. After bisecting we found the culprit is
->> "[PATCH 8/8] gpio/omap: fix missing check in *_runtime_suspend()" [1].
->>
->> I noticed Kevin raised some similar cases on other platforms and also
->> provided two patches in the patch mail thread. But unfortunately those two
->> patches doesn't help in our case. I tested the driver with 3.5-rc3 mainline
->> kernel and the issue is still there. I can only "fix" the hang by either
->> reverting the commit or disabling CONFIG_PM_RUNTIME. Also, the hang only
->> happens on Panda ES board. Old Panda with 4430 works good.
->>
->> Any thoughts and suggestions?
-> I just had a quick look at the code. Can you please check if the
-> attached patch solves
-> the issue? I just boot tested on Panda and Blaze.
-> --
-> Tarun
->
+If only monitor interfaces become present it is
+called with 2nd argument being true. If
+non-monitor interface appears then 2nd argument
+is false. Driver is notified only upon change.
 
-Thanks for the prompt reply.
+This makes it more obvious about the fact that
+cfg80211 supports single monitor channel. Once we
+implement multi-channel we don't want to allow
+setting monitor channel while other interface
+types are running. Otherwise it would be ambiguous
+once we start considering num_different_channels.
 
-Booting is fine even without the patch and revert. The wifi dongle 
-generates interrupt whenever there is data packet available for host to 
-read. So during a traffic test a significant numbers of interrupt will 
-be triggered through the GPIO. So I assume it has something to do with 
-the interrupt GPIO.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h |    4 ++++
+ net/wireless/core.c    |   24 ++++++++++++++++++++++++
+ net/wireless/core.h    |   14 ++++++++++++++
+ net/wireless/util.c    |    5 +++++
+ 4 files changed, 47 insertions(+), 0 deletions(-)
 
-With the patch, the kernel still crashes. But the symptom is slightly 
-different. Now it has a panic log every time. See attachment.
-
-Regards,
-Franky
-
---------------090301060502080703010307
-Content-Type: text/plain;
- name=panic.log
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename=panic.log
-
-[  636.143585] Internal error: Oops - undefined instruction: 0 [#1] SMP ARM                                                                                                         
-[  636.150634] Modules linked in: brcmfmac brcmutil cfg80211                                                                                                                        
-[  636.156311] CPU: 0    Not tainted  (3.5.0-rc4+ #3)                                                                                                                               
-[  636.161346] PC is at __lock_acquire+0x65c/0x1d88                                                                                                                                 
-[  636.166198] LR is at 0x60000093                                                                                                                                                  
-[  636.169494] pc : [<c008e670>]    lr : [<60000093>]    psr: 20000093                                                                                                              
-[  636.169494] sp : c06b1e18  ip : 9e370001  fp : c0724f70                                                                                                                          
-[  636.181549] r10: c06b0000  r9 : 0000001e  r8 : c0b92998                                                                                                                          
-[  636.187042] r7 : c06d2cc8  r6 : 00000000  r5 : c0746d64  r4 : c06d2868                                                                                                           
-[  636.193908] r3 : 00003b0e  r2 : ec3b001d  r1 : 0001d870  r0 : 0000001d                                                                                                           
-[  636.200744] Flags: nzCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel                                                                                                 
-[  636.208526] Control: 10c53c7d  Table: ae39c04a  DAC: 00000017                                                                                                                    
-[  636.214569] Process swapper/0 (pid: 0, stack limit = 0xc06b02f8)                                                                                                                 
-[  636.220855] Stack: (0xc06b1e18 to 0xc06b2000)                                                                                                                                    
-[  636.225433] 1e00:                                                       c06d00f8 00000002                                                                                        
-[  636.234039] 1e20: c0807968 00000001 00000000 00000002 0000001d 00000000 00000001 0001d870                                                                                        
-[  636.242614] 1e40: c08070e8 00000001 00000000 00000002 00000002 00000000 00000000 c00903e4                                                                                        
-[  636.251220] 1e60: 00000002 00000080 00000000 c0066838 00000000 00000000 60000093 00000000                                                                                        
-[  636.259796] 1e80: 60000093 00000000 c06b4324 c06b0000 00000000 00000000 00000002 00000000                                                                                        
-[  636.268402] 1ea0: 00000000 c00903e4 00000002 00000080 00000000 c00a3588 00000000 c14b0aa0                                                                                        
-[  636.276977] 1ec0: 60000093 c06adaa0 00000094 c06b4314 00000002 c06b0000 0000002c 00000000                                                                                        
-[  636.285583] 1ee0: 412fc09a c06d3f80 00000000 c04a2914 00000002 00000000 c00a3588 c0048328                                                                                        
-[  636.294189] 1f00: 00000033 c06b42c0 c06b4314 c00a3588 c06d00f8 c06af318 c06b0000 c009ff98                                                                                        
-[  636.302764] 1f20: 000001da c0014c78 fa24010c c06ced30 c06b1f58 fa240100 00000000 c000848c                                                                                        
-[  636.311370] 1f40: c06d2868 c0014f70 20000013 ffffffff c06b1f8c c04a31e4 057b6e56 00000001                                                                                        
-[  636.319946] 1f60: 00000000 c06d2868 c06b0000 c0744308 c04ae350 c06d3d50 00000000 412fc09a                                                                                        
-[  636.328552] 1f80: c06d3f80 00000000 00000001 c06b1fa0 057b6e57 c0014f70 20000013 ffffffff                                                                                        
-[  636.337127] 1fa0: c06d2868 c001519c c071b85c c06cfdf8 c0744240 c0691fdc c14ad080 8000406a                                                                                        
-[  636.345733] 1fc0: 00000000 c06617ac ffffffff ffffffff c0661230 00000000 00000000 c0691fdc                                                                                        
-[  636.354309] 1fe0: 00000000 10c53c7d c06ced08 c0691fac c06d3d44 80008044 00000000 00000000                                                                                        
-[  636.362915] [<c008e670>] (__lock_acquire+0x65c/0x1d88) from [<c00903e4>] (lock_acquire+0x98/0x100)                                                                               
-[  636.372344] [<c00903e4>] (lock_acquire+0x98/0x100) from [<c04a2914>] (_raw_spin_lock+0x2c/0x3c)                                                                                  
-[  636.381500] [<c04a2914>] (_raw_spin_lock+0x2c/0x3c) from [<c00a3588>] (handle_fasteoi_irq+0x14/0x194)                                                                            
-[  636.391174] [<c00a3588>] (handle_fasteoi_irq+0x14/0x194) from [<c009ff98>] (generic_handle_irq+0x30/0x48)                                                                        
-[  636.401245] [<c009ff98>] (generic_handle_irq+0x30/0x48) from [<c0014c78>] (handle_IRQ+0x4c/0xac)                                                                                 
-[  636.410491] [<c0014c78>] (handle_IRQ+0x4c/0xac) from [<c000848c>] (gic_handle_irq+0x28/0x5c)                                                                                     
-[  636.419342] [<c000848c>] (gic_handle_irq+0x28/0x5c) from [<c04a31e4>] (__irq_svc+0x44/0x60)                                                                                      
-[  636.428131] Exception stack(0xc06b1f58 to 0xc06b1fa0)                                                                                                                            
-[  636.433441] 1f40:                                                       057b6e56 00000001                                                                                        
-[  636.442016] 1f60: 00000000 c06d2868 c06b0000 c0744308 c04ae350 c06d3d50 00000000 412fc09a                                                                                        
-[  636.450622] 1f80: c06d3f80 00000000 00000001 c06b1fa0 057b6e57 c0014f70 20000013 ffffffff                                                                                        
-[  636.459228] [<c04a31e4>] (__irq_svc+0x44/0x60) from [<c0014f70>] (default_idle+0x20/0x44)                                                                                        
-[  636.467803] [<c0014f70>] (default_idle+0x20/0x44) from [<c001519c>] (cpu_idle+0x9c/0x114)                                                                                        
-[  636.476409] [<c001519c>] (cpu_idle+0x9c/0x114) from [<c06617ac>] (start_kernel+0x2b0/0x300)                                                                                      
-[  636.485198] Code: e1a02928 e1a0c182 e089800c e58dc024 (e59f98b4)                                                                                                                 
-[  636.491607] ---[ end trace 5e6c69cac2b687b2 ]---                                                                                                                                 
-[  636.496459] Kernel panic - not syncing: Fatal exception in interrupt                                                                                                             
-[  636.503112] CPU1: stopping                                                                                                                                                       
-[  636.505981] [<c001b61c>] (unwind_backtrace+0x0/0xf0) from [<c0019728>] (handle_IPI+0x130/0x15c)                                                                                  
-[  636.515136] [<c0019728>] (handle_IPI+0x130/0x15c) from [<c00084b8>] (gic_handle_irq+0x54/0x5c)                                                                                   
-[  636.524169] [<c00084b8>] (gic_handle_irq+0x54/0x5c) from [<c04a31e4>] (__irq_svc+0x44/0x60)                                                                                      
-[  636.532958] Exception stack(0xee069f88 to 0xee069fd0)                                                                                                                            
-[  636.538269] 9f80:                   c0724f70 c0014f50 00000000 00000000 ee068000 c0744308                                                                                        
-[  636.546844] 9fa0: c04ae350 c06d3d50 00000000 412fc09a c06d3f80 00000000 00000000 ee069fd0                                                                                        
-[  636.555450] 9fc0: c0014f6c c0014f70 60000113 ffffffff                                                                                                                            
-[  636.560760] [<c04a31e4>] (__irq_svc+0x44/0x60) from [<c0014f70>] (default_idle+0x20/0x44)                                                                                        
-[  636.569366] [<c0014f70>] (default_idle+0x20/0x44) from [<c001519c>] (cpu_idle+0x9c/0x114)                                                                                        
-[  636.577941] [<c001519c>] (cpu_idle+0x9c/0x114) from [<8049bdd4>] (0x8049bdd4)
-
---------------090301060502080703010307--
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 92fdd02..120eae0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1428,6 +1428,8 @@ struct cfg80211_gtk_rekey_data {
+  *	interfaces are active this callback should reject the configuration.
+  *	If no interfaces are active or the device is down, the channel should
+  *	be stored for when a monitor interface becomes active.
++ * @set_monitor_enabled: Notify driver that there are only monitor
++ *	interfaces running.
+  * @get_channel: Get the current operating channel, should return %NULL if
+  *	there's no single defined operating channel if for example the
+  *	device implements channel hopping for multi-channel virtual interfaces.
+@@ -1746,6 +1748,8 @@ struct cfg80211_ops {
+ 				struct ethtool_stats *stats, u64 *data);
+ 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
+ 				  u32 sset, u8 *data);
++
++	void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
+ };
+ 
+ /*
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 46a33ea..9097d6c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -776,6 +776,24 @@ static struct device_type wiphy_type = {
+ 	.name	= "wlan",
+ };
+ 
++void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
++			       enum nl80211_iftype iftype, int num)
++{
++	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
++	bool has_monitors_only_new;
++
++	ASSERT_RDEV_LOCK(rdev);
++
++	rdev->num_running_ifaces += num;
++	if (iftype == NL80211_IFTYPE_MONITOR)
++		rdev->num_running_monitor_ifaces += num;
++
++	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
++	if (has_monitors_only_new != has_monitors_only_old)
++		rdev->ops->set_monitor_enabled(&rdev->wiphy,
++					       has_monitors_only_new);
++}
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *ndev)
+@@ -879,6 +897,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		break;
+ 	case NETDEV_DOWN:
+ 		dev_hold(dev);
++		cfg80211_lock_rdev(rdev);
++		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
++		cfg80211_unlock_rdev(rdev);
+ 		queue_work(cfg80211_wq, &wdev->cleanup_work);
+ 		break;
+ 	case NETDEV_UP:
+@@ -986,6 +1007,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
+ 		if (ret)
+ 			return notifier_from_errno(ret);
++		cfg80211_lock_rdev(rdev);
++		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
++		cfg80211_unlock_rdev(rdev);
+ 		break;
+ 	}
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index bbf2f75..b27fa3b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -56,6 +56,9 @@ struct cfg80211_registered_device {
+ 
+ 	u32 ap_beacons_nlpid;
+ 
++	int num_running_ifaces;
++	int num_running_monitor_ifaces;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
+@@ -223,6 +226,14 @@ static inline void wdev_unlock(struct wireless_dev *wdev)
+ #define ASSERT_RDEV_LOCK(rdev) lockdep_assert_held(&(rdev)->mtx)
+ #define ASSERT_WDEV_LOCK(wdev) lockdep_assert_held(&(wdev)->mtx)
+ 
++static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
++{
++	ASSERT_RDEV_LOCK(rdev);
++
++	return rdev->num_running_ifaces == rdev->num_running_monitor_ifaces &&
++	       rdev->num_running_ifaces > 0;
++}
++
+ enum cfg80211_event_type {
+ 	EVENT_CONNECT_RESULT,
+ 	EVENT_ROAMED,
+@@ -470,6 +481,9 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int);
+ 
++void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
++			       enum nl80211_iftype iftype, int num);
++
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+ #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
+ #else
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index fc948d0..9b92ec5 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -871,6 +871,11 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		}
+ 	}
+ 
++	if (!err && ntype != otype && netif_running(dev)) {
++		cfg80211_update_iface_num(rdev, ntype, 1);
++		cfg80211_update_iface_num(rdev, otype, -1);
++	}
++
+ 	return err;
+ }
+ 
+-- 
+1.7.0.4
 
