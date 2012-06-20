@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:60514 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757832Ab2FHThr (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:51893 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859Ab2FTK3c convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 15:37:47 -0400
-Received: by gglu4 with SMTP id u4so1552566ggl.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2012 12:37:46 -0700 (PDT)
-Message-ID: <4FD25487.7050002@lwfinger.net> (sfid-20120608_213757_197930_88BDC2EA)
-Date: Fri, 08 Jun 2012 14:37:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 20 Jun 2012 06:29:32 -0400
+Received: by vcbf11 with SMTP id f11so3724930vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 03:29:31 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Andre Heider <a.heider@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i]
- >= n_queues))
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com> <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com> <1339168452.5748.0.camel@jlt3.sipsolutions.net> <1339168600.5748.2.camel@jlt3.sipsolutions.net> <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com> <4FD21C6B.5000402@lwfinger.net> <1339170182.5748.7.camel@jlt3.sipsolutions.net> <1339170287.5748.8.camel@jlt3.sipsolutions.net> <1339170510.5748.9.camel@jlt3.sipsolutions.net> <1339170742.5748.10.camel@jlt3.sipsolutions.net> <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com> <1339171159.5748.11.camel@jlt3.sipsolutions.net> <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com> <4FD22727.7000500@lwfinger.net> <1339172904.5748.18.camel@jlt3.sipsolutions.net> <20120608183339.78a7fcbd@milhouse> <4FD239AA.9090708@lwfinger.net> <20120608201053.48548a11@milhouse> <4FD24332.3010202@lwfinger.net> <20120608203131.01dce8e3@milhouse>
-In-Reply-To: <20120608203131.01dce8e3@milhouse>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CALx5=V-+aCcOMXHPrxmqVHwaiosNurT17gHBTi0mTdYJ6bZRMA@mail.gmail.com>
+References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
+	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
+	<CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com>
+	<CAD2nsn35gDLLP3Wkn9qpG5UhxUGPOcn1q_kpP2WexjQ1+LvXFg@mail.gmail.com>
+	<CALx5=V-+aCcOMXHPrxmqVHwaiosNurT17gHBTi0mTdYJ6bZRMA@mail.gmail.com>
+Date: Wed, 20 Jun 2012 15:59:31 +0530
+Message-ID: <CAD2nsn2KrgLh-Oth-npUjY59bh2ycpEv7UocfXH0uE27TD19fQ@mail.gmail.com> (sfid-20120620_122935_668993_AB54FD63)
+Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@suse.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/2012 01:31 PM, Michael BÃ¼sch wrote:
-> On Fri, 08 Jun 2012 13:23:46 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
->> On 06/08/2012 01:10 PM, Michael BÃ¼sch wrote:
->>> On Fri, 08 Jun 2012 12:43:06 -0500
->>> Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>>
->>>> On 06/08/2012 11:33 AM, Michael BÃ¼sch wrote:
->>>>>
->>>>> Larry, did you check with PIO?
->>>>
->>>> No, I only used DMA. With the latest patch, compilation is Ok, and DMA works for
->>>> both kinds of firmware, while PIO fails for both.
->>>
->>> Does PIO even work without that patch and with prop-firmware?
->>
->> No. That seems to be a different bug.
->
-> That's nice. Could you probably bisect it? It used to work at some point.
->
-> PS:
-> I'm sorry that I'm not of much help these days, because I currently
-> don't have a working b43 device around :)
+Hi Matt,
 
-No problem. Most of the time when I'm running b43, it is on one of my older test 
-machines.
+> Both 0x2f and 0x2d can work fine to me of enabling
+> wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll().
+>
+> 1) with 0x2f
+>   0x404c address would change when press wifi button
+>   rfkill block : yes -> 0x00000455
+>   rfkill block : no   -> 0x00000c55
+> 2) with 0x2d
+>   0x404c address would change when press wifi button
+>   rfkill block : yes -> 0x00000455
+>   rfkill block : no   -> 0x00000c55
+>
+>
+> But I don't see the LED is changing, it is staying OFF (Amber).
 
-I need to do a little more testing before I start a bisection of the PIO 
-problem. My PPC Mac fails with kernel 2.6.32, which is as old as I have 
-available. At the moment, I don't have the time to fire up an old i586 notebook 
-to see if we have a PIO problem, or an endian issue with PIO; however, I think 
-Andre's wii is big endian.
+not sure about that, but i think rfkill is working for both of us
+i told 0xeed changes to 0x6ed for me
 
-Larry
+you got 0x455 changes to 0xc55
+
+BIT 12(GPIO pin 11 seems to toggle  4 ->C), you can confirm by rfkill list
+
+-- 
+thanks,
+shafi
