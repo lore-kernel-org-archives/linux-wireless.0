@@ -1,38 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:41882 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785Ab2F3SSH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 14:18:07 -0400
+Received: from ebb05.tieto.com ([131.207.168.36]:47920 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753848Ab2FTGO1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 02:14:27 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFCv2 07/13] mac80211: refactor virtual monitor code
+Date: Wed, 20 Jun 2012 08:14:13 +0200
+Message-ID: <1340172859-18146-8-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081455_515435_ACFDD614)
+In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <1341062406.1911.76.camel@x61.thuisdomein>
-References: <1340786187.1911.24.camel@x61.thuisdomein>
-	<1341062406.1911.76.camel@x61.thuisdomein>
-Date: Sat, 30 Jun 2012 21:18:04 +0300
-Message-ID: <CANUX_P3kypkUv+-meABAOGa6GQ9cR5ugySJj+SjvVfCykCQuYQ@mail.gmail.com> (sfid-20120630_201859_045340_4EA043D3)
-Subject: Re: [PATCH] iwlegacy: print how long queue was actually stuck
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> On Wed, 2012-06-27 at 10:36 +0200, Paul Bolle wrote:
-> > Every now and then, after resuming from suspend, the iwlegacy driver
-> > prints
-> >     iwl4965 0000:03:00.0: Queue 2 stuck for 2000 ms.
-> >     iwl4965 0000:03:00.0: On demand firmware reload
-> >
-> > I have no idea what causes these errors. But the code currently uses
-> > wd_timeout in the first error. wd_timeout will generally be set at
-> > IL_DEF_WD_TIMEOUT (ie, 2000). Perhaps printing for how long the queue
-> > was actually stuck can clarify the cause of these errors.
->
+Use cfg80211 the new .set_monitor_enabled instead
+of tracking it inside mac80211.
 
-You may want to try this one:
-http://www.spinics.net/lists/stable-commits/msg18110.html
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c         |   11 +++++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/iface.c       |   16 ++--------------
+ 3 files changed, 17 insertions(+), 14 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 85ac364..df7332e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2943,6 +2943,16 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy,
+ 	return local->oper_channel;
+ }
+ 
++static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	if (enabled)
++		WARN_ON(ieee80211_add_virtual_monitor(local));
++	else
++		ieee80211_del_virtual_monitor(local);
++}
++
+ #ifdef CONFIG_PM
+ static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
+ {
+@@ -3018,6 +3028,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.set_monitor_enabled = ieee80211_set_monitor_enabled,
+ #ifdef CONFIG_PM
+ 	.set_wakeup = ieee80211_set_wakeup,
+ #endif
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e6cbf5b..9eb3b8b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1472,6 +1472,10 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       enum nl80211_channel_type channel_type,
+ 			       u16 prot_mode);
+ 
++/* virtual monitor */
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
++
+ /* channel management */
+ enum ieee80211_chan_mode {
+ 	CHAN_MODE_UNDEFINED,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 87aeb4f..47f46fd 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -214,7 +214,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
+ }
+ 
+-static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret;
+@@ -255,7 +255,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
+-static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -371,12 +371,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 			break;
+ 		}
+ 
+-		if (local->monitors == 0 && local->open_count == 0) {
+-			res = ieee80211_add_virtual_monitor(local);
+-			if (res)
+-				goto err_stop;
+-		}
+-
+ 		/* must be before the call to ieee80211_configure_filter */
+ 		local->monitors++;
+ 		if (local->monitors == 1) {
+@@ -391,8 +385,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		break;
+ 	default:
+ 		if (coming_up) {
+-			ieee80211_del_virtual_monitor(local);
+-
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+@@ -627,7 +619,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		if (local->monitors == 0) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+-			ieee80211_del_virtual_monitor(local);
+ 		}
+ 
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+@@ -701,9 +692,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+-
+-	if (local->monitors == local->open_count && local->monitors > 0)
+-		ieee80211_add_virtual_monitor(local);
+ }
+ 
+ static int ieee80211_stop(struct net_device *dev)
+-- 
+1.7.0.4
+
