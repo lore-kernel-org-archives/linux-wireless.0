@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50071 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762301Ab2FVPVT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 11:21:19 -0400
-Message-ID: <1340378474.4491.36.camel@jlt3.sipsolutions.net> (sfid-20120622_172123_347166_378FEA80)
-Subject: Re: dynamic debug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: David Miller <davem@davemloft.net>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Jason Baron <jbaron@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Jun 2012 17:21:14 +0200
-In-Reply-To: <1340376114.31821.15.camel@joe2Laptop>
-References: <1340367797.4491.21.camel@jlt3.sipsolutions.net>
-	 <1340375177.31821.7.camel@joe2Laptop>
-	 <1340375643.4491.26.camel@jlt3.sipsolutions.net>
-	 <1340376114.31821.15.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754069Ab2FTGOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 02:14:25 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFCv2 02/13] cfg80211: .stop_ap when interface is going down
+Date: Wed, 20 Jun 2012 08:14:08 +0200
+Message-ID: <1340172859-18146-3-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081507_726138_05ABB85E)
+In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-22 at 07:41 -0700, Joe Perches wrote:
+We'll need this for proper channel tracking (which
+is going to be needed for channel context
+accounting and finding matching/active interface
+combination).
 
-> > > >  That doesn't make any sense at
-> > > > all, and requires teaching everybody new tricks, so I'm basically
-> > > > reverting it for now in favour of pr_info() instead of pr_debug().
-> > > 
-> > > Why not just add #define DEBUG?
-> > 
-> > I guess that works?
-> 
-> That works.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/core.c |    3 +++
+ net/wireless/util.c |    3 +++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-Are you sure? It doesn't really seem to work ...
-
-#if defined(CONFIG_DYNAMIC_DEBUG)
-/* dynamic_pr_debug() uses pr_fmt() internally so we don't need it here */
-#define pr_debug(fmt, ...) \
-        dynamic_pr_debug(fmt, ##__VA_ARGS__)
-#elif defined(DEBUG)
-#define pr_debug(fmt, ...) \
-        printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-
-
-
-So basically, if you have CONFIG_DYNAMIC_DEBUG, you *still* need to
-enable it with the dynamic debug framework, right?
-
-
-johannes
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a87d435..46a33ea 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -869,6 +869,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 			cfg80211_leave_mesh(rdev, dev);
+ 			break;
++		case NL80211_IFTYPE_AP:
++			cfg80211_stop_ap(rdev, dev);
++			break;
+ 		default:
+ 			break;
+ 		}
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 316cfd0..fc948d0 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -814,6 +814,9 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		dev->ieee80211_ptr->mesh_id_up_len = 0;
+ 
+ 		switch (otype) {
++		case NL80211_IFTYPE_AP:
++			cfg80211_stop_ap(rdev, dev);
++			break;
+ 		case NL80211_IFTYPE_ADHOC:
+ 			cfg80211_leave_ibss(rdev, dev, false);
+ 			break;
+-- 
+1.7.0.4
 
