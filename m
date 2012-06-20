@@ -1,128 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30909 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757180Ab2FZFYX (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:48819 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753620Ab2FTJjJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 01:24:23 -0400
-Message-ID: <4FE9477E.5000902@qca.qualcomm.com> (sfid-20120626_072440_884254_F5CE58F6)
-Date: Tue, 26 Jun 2012 10:54:14 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Wed, 20 Jun 2012 05:39:09 -0400
+Received: by vcbf11 with SMTP id f11so3706749vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 02:39:08 -0700 (PDT)
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [PATCH v3 09/10] ath9k: Add WoW related mac80211 callbacks
-References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>	<1340633579-7514-10-git-send-email-mohammed@qca.qualcomm.com> <20456.47690.633636.869442@gargle.gargle.HOWL>
-In-Reply-To: <20456.47690.633636.869442@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com>
+References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
+	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
+	<CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com>
+Date: Wed, 20 Jun 2012 15:09:07 +0530
+Message-ID: <CAD2nsn35gDLLP3Wkn9qpG5UhxUGPOcn1q_kpP2WexjQ1+LvXFg@mail.gmail.com> (sfid-20120620_114002_552047_9FB6FD0E)
+Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@suse.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sujith,
+Hi Matt,
 
-On Tuesday 26 June 2012 12:51 AM, Sujith Manoharan wrote:
-> Mohammed Shafi Shajakhan wrote:
->> +#ifdef CONFIG_PM_SLEEP
->> +
->> +void ath_wow_cleanup(struct ath_softc *sc)
->> +{
->> +	struct ath9k_wow_info *wow_info =&sc->wow_info;
->> +	struct ath9k_wow_pattern *wow_pattern  = NULL, *tmp;
->> +
->> +	if (!(sc->wow_enabled&  AH_WOW_USER_PATTERN_EN))
->> +		return;
->> +
->> +	list_for_each_entry_safe(wow_pattern, tmp,
->> +				&wow_info->wow_patterns, list) {
->> +
->> +		list_del(&wow_pattern->list);
->> +		kfree(wow_pattern);
->> +	}
->> +
->> +}
->
-> I am slightly unclear about this...
->
->> +	u8 dis_deauth_pattern[MAX_PATTERN_SIZE];
->> +	u8 dis_deauth_mask[MAX_PATTERN_SIZE];
->> +
->> +	memset(dis_deauth_pattern, 0, MAX_PATTERN_SIZE);
->> +	memset(dis_deauth_mask, 0, MAX_PATTERN_SIZE);
->
-> MAX_PATTERN_MASK_SIZE ?
 
-thanks, filling up 0xff requires MAX_PATTERN_MASK_SIZE.
+>> I do
+>> 1) echo 0x402c > regidx
+>>     watch -n 1 regval
+>> 2) echo 0x404c > regidx
+>>    watch -n1 regval
+>>> i remember testing it in a acer laptop, it was working.
+>> Both 1) and 2) shows no different in their value no matter how I press
+>> the wifi button. :(
 
->
->> +		memset(wow_pattern->pattern_bytes, 0, MAX_PATTERN_SIZE);
->> +		memset(wow_pattern->mask_bytes, 0, MAX_PATTERN_SIZE);
->
-> The memset() calls are not needed, but maybe I am missing something -
-> why exactly are we maintaining a list of patterns in the driver ?
-> Can't the patterns be retrieved as part of the suspend() callback
-> and just programmed in the HW ?
+if hardrfkill is enabled it should toggle. you are using it as  in a
+built card right ?
+if GPIO11 is not connected to Vcc or ground it would not toggle.
+need to check it out its a regression.
 
-the user pattern needs bit more stuff, we need to convert it to our chip 
-specific format(ie proper 802.11 format), previously there was
-a logic of duplicate patterns before programming to HW, where a list in 
-the driver was necessary, i removed it to simplify few things.
-will check it out if its really needed for any enhancements in future.
+> I found it is not enabling the
+> wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll(struct
+> ath_softc *sc).
+> The condition for (ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT) is failed.
+> Any direction I can dig further ? :)
 
->
->> +
->> +	if (!device_can_wakeup(sc->dev)) {
->> +		ath_dbg(common, WOW, "device_can_wakeup failed, WoW is not enabled\n");
->> +		ret = 1;
->> +		goto fail_wow;
->> +	}
->
-> Can this happen ?
+can you please try this if you can see anything
 
-the wow capabilities are initialized only if
-device_can_wakeup passes. would check it out if this is needed.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 51398f0..d732044 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3002,7 +3002,14 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+          case EEP_OP_MODE:
+                  return pBase->opCapFlags.opFlags;
+          case EEP_RF_SILENT:
+-               return pBase->rfSilent;
++//             return pBase->rfSilent;
++               return 0x2f;
++               /* bit 0 rfkill_enable - 1
++                * bit 1  rfkill_polarity - 1
++                * bit 2,3,4,5 gpio pin select - 1011
++                * so 1011 11
++                *  0x2f
++                */
+          case EEP_TX_MASK:
 
->
->> +	/*
->> +	 * we can now sync irq and kill any running tasklets, since we already
->> +	 * disabled interrupts and not holding a spin lock
->> +	 */
->> +	synchronize_irq(sc->irq);
->> +	tasklet_kill(&sc->intr_tq);
->> +
->> +	ath9k_hw_wow_enable(ah, wow_triggers_enabled);
->> +
->> +	ath9k_ps_restore(sc);
->> +	ath_dbg(common, ANY, "WoW enabled in ath9k\n");
->> +	sc->wow_sleep_proc_intr = true;
->
-> This is racy with the ISR, atomic ops can be used instead, since this
-> (along with wow_got_bmiss_intr) are just boolean variables.
+please try with returning 0x2d (polarity 0 )
 
-thanks, will check this out.
+think i was testing this i got
 
->
->> +static void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled)
->> +{
->> +	struct ath_softc *sc = hw->priv;
->> +
->> +	mutex_lock(&sc->mutex);
->> +	device_init_wakeup(sc->dev, 1);
->> +	device_set_wakeup_enable(sc->dev, enabled);
->> +	mutex_unlock(&sc->mutex);
->> +}
->
-> device_init_wakeup() should be part of the probe sequence, I think.
->
+"in my pci extender i always the got value of '0x6ed' for the 'reg
+0x404c' and when i used the card as a inbuilt one i got '0xeed' and
+'0x6ed'(when i toggle rfkill in the acer laptop)."
+pls let me know if its still not working, i can check with again the
+inbuilt stuff
 
-in v2 i had it in my pci_probe only, but device_init_wakeup seems to 
-call device_set_wakeup_enable. we actually set device_set_wakeup_enable 
-explicitly to 'true' only when wow triggers are enabled, otherwise
-we would set our chip to wakeup capable during pci_probe.
+>>>>
+>>>> --
+>>>> Thank you.
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>>
+>>> --
+>>> thanks,
+>>> shafi
+>>>
+>>
+>>
+>>
+>> --
+>> Thank you.
+>
+>
+>
+> --
+> Thank you.
+
+
 
 -- 
 thanks,
