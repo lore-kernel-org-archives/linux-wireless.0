@@ -1,97 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36425 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753251Ab2FEG2Z (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:48228 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234Ab2FTAB7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 02:28:25 -0400
-Message-ID: <1338877698.4514.7.camel@jlt3.sipsolutions.net> (sfid-20120605_082833_805414_943DC0FB)
-Subject: Re: Wireless networking without CONFIG_PM..
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <linus971@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 05 Jun 2012 08:28:18 +0200
-In-Reply-To: <CA+55aFw96wx_Vp_z=H9q=0A-Y8iYD-JJEmYzVPr-BEU6ez5bqA@mail.gmail.com> (sfid-20120605_051012_943406_4BDCE2C0)
-References: <CA+55aFw96wx_Vp_z=H9q=0A-Y8iYD-JJEmYzVPr-BEU6ez5bqA@mail.gmail.com>
-	 (sfid-20120605_051012_943406_4BDCE2C0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 Jun 2012 20:01:59 -0400
+Message-ID: <4FE112F2.7000506@wwwdotorg.org> (sfid-20120620_020205_708945_33584F55)
+Date: Tue, 19 Jun 2012 18:01:54 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Wei Ni <wni@nvidia.com>
+CC: 'Mark Brown' <broonie@opensource.wolfsonmicro.com>,
+	'Philip Rakity' <prakity@marvell.com>,
+	Rakesh Kumar <krakesh@nvidia.com>,
+	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Mursalin Akon <makon@nvidia.com>,
+	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: Where to power on the wifi device before loading the driver.
+References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com> <4FD90352.9090606@wwwdotorg.org> <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de> <20120614121234.GC3913@opensource.wolfsonmicro.com> <4FDA092E.10301@wwwdotorg.org> <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com> <4FDB5976.20809@wwwdotorg.org> <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com> <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com> <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com> <20120619091719.GZ3974@opensource.wolfsonmicro.com> <6B4D417B830BC44B8026029FD256F7F1C6EE2DD626@HKMAIL01.nvidia.com>
+In-Reply-To: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD626@HKMAIL01.nvidia.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Mon, 2012-06-04 at 20:09 -0700, Linus Torvalds wrote:
-> I wonder if anybody has really ever tested that? Because I think it's broken..
-
-Yeah, it is indeed.
-
-> In particular, I made the mistake of not enabling CONFIG_PM on a new
-> laptop, and it caused some *seriously* nasty-to-debug problems. The
-> mac80211 code goes crazy, that upsets the wireless driver, and then
-> the wrieless driver in question had a nasty bug where it would
-> double-release its firmware, which then caused vmalloc corruption and
-> all kinds of really odd recursive panics etc.
-
-That's pure suck :( I see you already sent a separate patch.
-
-> And as far as I can tell, the root cause of the problem is a bad
-> choice in net/mac80211/main.c:
+On 06/19/2012 03:44 AM, Wei Ni wrote:
+> On Tue, Jun 19, 2012 at 17:17:19, Mark Brown wrote:
+>> * PGP Signed by an unknown key
+>>
+>> On Tue, Jun 19, 2012 at 12:25:58PM +0800, Wei Ni wrote:
+>>
+>> As Stephen previously said please fix your mail formatting - word 
+>> wrapping within paragraphs is important!
+>>
+>>> On Tue, Jun 19, 2012 at 09:23:35, Philip Rakity wrote:
+>>>> Why can't you use the regulator notify to get called back on power 
+>>>> or voltage change options to plumb in the manipulation of the gpio. 
+>>>> I can imagine you might need to add a notify call in core.c if you 
+>>>> need to assert the gpio before power is applied
+>>>
+>>> Yes, we can use the regulator notify, but the Tegra30 support is via 
+>>> device tree, I think there have no special board file to run the call 
+>>> back.
+>>
+>> You can mix board files with device tree for cases where device tree is 
+>> not yet up to the job, though the goal should be to come up with a way of expressing things in device tree.
 > 
->   int ieee80211_register_hw(struct ieee80211_hw *hw)
->   {
->   ...
->         if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns)
->   #ifdef CONFIG_PM
->             && (!local->ops->suspend || !local->ops->resume)
->   #endif
->             )
->                 return -EINVAL;
-> 
-> which means that if the wiphy says it supports wake-on-wireless lan,
-> and CONFIG_PM isn't enabled, we'll return -EINVAL and will refuse to
-> do any wireless at all.
-> 
-> It's that a bit extreme? Or outright stupid? What is the advantage of
-> saying that "if you don't have CONFIG_PM enabled, we'll just refuse to
-> register any hardware that talks about it's wake-on-wireless
-> patterns"?
->
-> Maybe there is some reason for that return -EINVAL, but I don't think
-> it makes sense with that particular placement of #ifdef CONFIG_PM.
-> Maybe if the #ifdef was around the whole test? Or maybe it should just
-> be removed.
+> I think we wish to use the device tree to handle these gpios, pass them to the related driver to assert them.
+> If we mix the board files, we even can set these gpio directly, not use the notify. But I think this is not a goog way.
 
-It should just be around the whole test.
+Yes, I would definitely not want to add this to a board file; there is
+no board file for Cardhu, and we're getting close to deleting all the
+board files that are left for other boards.
 
-> Or am I missing some big reason for why it makes sense to do that? Hmm?
+I think what we need is some way of matching a DT node to a device even
+when that device was instantiated through some probing mechanism such as
+SDIO or USB (and I've heard hints that one can already do this for PCI;
+I should investigate).
 
-No, not really. It was a case of not wanting to compile suspend/resume
-methods when they aren't needed, so they aren't even declared in the ops
-struct in that case, and then I forgot about that and when somebody
-found it they added the ifdef that way here and clearly only tested
-non-WoWLAN devices.
+So, we start off with the plain SDHCI controller node:
 
-> I'll make a separate bug-report email to the intel iwlwifi people
-> about their absolutely horribly broken error handling which then made
-> it such a disaster, but I thought I'd bring the generic mac80211 issue
-> up. I don't think there are a lot of drivers that do the whole wowlan
-> thing, and obviously most people use wireless on laptops where you
-> want CONFIG_PM anyway, so it probably hasn't triggered very much.
+sdhci@78000000 {
+	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+	reg = <0x78000000 0x200>;
+	interrupts = <0 14 0x04>;
+};
 
-For the next release I think I'll just put the ifdef around the entire
-test to avoid this issue. Overall, I'm still debating whether it makes
-sense to leave WoWLAN code and data in when the system will never be
-able to suspend, I have a feeling that maybe it doesn't and we should
-make it a compile error to even try to access wiphy->wowlan when
-CONFIG_PM isn't set ...
+Then, we add a child node to represent the device that's attached:
 
-Interestingly, none of that would actually matter for iwlwifi in
-particular since that has yet another issue -- it only declares
-suspend/resume ops when CONFIG_PM_SLEEP is set since WoWLAN doesn't work
-in other PM cases, so there the #ifdef CONFIG_PM_SLEEP patch that Sedat
-pointed to is actually needed pretty much regardless.
+sdhci@78000000 {
+	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+	reg = <0x78000000 0x200>;
+	interrupts = <0 14 0x04>;
 
-johannes
+	sdio-device {
+		reset-gpios = <...>;
+		enable-gpios = <...>;
+	};
+};
 
+When the SDHCI controller/core instantiates the child device it finds on
+the HW bus, it initializes that struct device's of_node with a pointer
+to the sdio-device node above. From there, the child device can get DT
+properties such as GPIOs in the usual way.
+
+However, there are still some issues that need thought here; what if (as
+is I believe the case on Cardhu) we can in fact plug in multiple
+different types of device into the socket? Might we end up with
+something like:
+
+sdhci@78000000 {
+	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+	reg = <0x78000000 0x200>;
+	interrupts = <0 14 0x04>;
+
+	sdio-device-option@0 {
+		compatible = "broadcom,bcm4239";
+		reset-gpios = <...>;
+		enable-gpios = <...>;
+	};
+
+	sdio-device-option@1 {
+		compatible = "broadcom,bcm4330";
+		reset-gpios = <...>;
+		enable-gpios = <...>;
+	};
+};
+
+and match on compatible value?
+
+But in this case, at least some of the data those two drivers want from
+that node is the same; the 2 GPIOs that control the reset and enable
+signals. Do we just make the bindings for those two devices happen to
+share the same properties so that we can get away with just one node
+irrespective of what device type has been found? What we're really
+modeling is the card slot, and the services it provides, so perhaps we
+should really end up with:
+
+sdhci@78000000 {
+	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+	reg = <0x78000000 0x200>;
+	interrupts = <0 14 0x04>;
+
+	socket {
+		reset-gpios = <...>;
+		enable-gpios = <...>;
+
+		sdio-device-option@0 {
+			compatible = "broadcom,bcm4239";
+		};
+
+		sdio-device-option@1 {
+			compatible = "broadcom,bcm4330";
+		};
+	};
+};
+
+Where somehow the WiFi drivers can obtain the reset/enable service from
+the socket that hosts them, but still have nodes for the attached device
+itself in case any additional driver-specific configuration is needed.
+
+That sounds somewhat similar to the virtual platform device that was
+mentioned earlier in this thread by Broadcom, although I'm not sure
+whether explicitly modeling it as a platform device makes sense, rather
+than the socket providing services to the WiFi module, not necessarily
+through a device.
+
+Unfortunately, it should be noted that the WiFi device socket on Cardhu
+apparently isn't some standardized thing (like PCIe) but something
+rather more custom, although there are apparently devices available to
+plug into it from multiple module vendors which contain WiFi chips from
+multiple chip vendors.
+
+Anyway, these are just some quick thoughts on the topic - obviously more
+flesh is needed.
