@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:41787 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759367Ab2FUPZQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 11:25:16 -0400
-Received: by qcro28 with SMTP id o28so389135qcr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 08:25:15 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH v2] compat: Define include guard for vga_switcheroo.h
-Date: Thu, 21 Jun 2012 18:25:08 +0300
-Message-Id: <1340292308-6993-1-git-send-email-ozancag@gmail.com> (sfid-20120621_172520_767423_D8E6422A)
+Received: from mx1.redhat.com ([209.132.183.28]:47367 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756538Ab2FTOdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 10:33:32 -0400
+Date: Wed, 20 Jun 2012 16:33:31 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: WEP-LEAP regression
+Message-ID: <20120620143330.GA8505@redhat.com> (sfid-20120620_163336_087749_7A317AF8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check is missing in upstream. Patch sent but until this gets
-merged, define it in compat tree for fixing compat-drm builds.
+Our QA reported regression on ath9k connecting to legacy WEP-LEAP AP,
+with the following supplicant parameters:
 
-Also add a temporary header with the same name which will be used
-to check whether the header should be included or not.
+fast_reauth=1
+ap_scan=1
 
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
----
- include/linux/compat-3.5.h     |    6 ++++++
- include/linux/vga_switcheroo.h |    6 ++++++
- 2 files changed, 12 insertions(+)
- create mode 100644 include/linux/vga_switcheroo.h
+eapol_version=1
 
-diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
-index 74c8176..e999aee 100644
---- a/include/linux/compat-3.5.h
-+++ b/include/linux/compat-3.5.h
-@@ -78,6 +78,12 @@ static inline int fault_in_multipages_readable(const char __user *uaddr,
- /* switcheroo is available on >= 2.6.34 */
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
- #include <linux/vga_switcheroo.h>
-+
-+/* FIXME: The include guard is sent upstream, drop this
-+ * once the guard is merged. */
-+#ifndef LINUX_VGA_SWITCHEROO_H
-+#define LINUX_VGA_SWITCHEROO_H
-+#endif
- /*
-  * This backports:
-  *
-diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
-new file mode 100644
-index 0000000..26ac71d
---- /dev/null
-+++ b/include/linux/vga_switcheroo.h
-@@ -0,0 +1,6 @@
-+/* Hack for fixing the missing include guard in upstream
-+ * header. We will drop this when the patch is merged upstream. */
-+
-+#ifndef LINUX_VGA_SWITCHEROO_H
-+#include_next <linux/vga_switcheroo.h>
-+#endif
--- 
-1.7.10.2
+network={
+        ssid="qe-wep-enterprise-cisco"
+        key_mgmt=IEEE8021X
+        auth_alg=LEAP
+        eap=LEAP
+        identity="AAA"
+        password="BBB"
+}
 
+Device associate but DHCP fails (we do no recive any frame).
+
+Reverting both related commits:
+
+commit f88373fa47f3ce6590fdfaa742d0ddacc2ae017f
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Sun Feb 5 21:15:17 2012 +0100
+
+    ath9k: fix a WEP crypto related regression
+
+and
+ 
+commit 7a532fe7131216a02c81a6c1b1f8632da1195a58
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Sat Jan 14 15:08:34 2012 +0100
+
+    ath9k_hw: fix interpretation of the rx KeyMiss flag
+
+fixes the problem.
+
+Felix could you look at this?
+
+Stanislaw
