@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24110 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753709Ab2FHRis (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:51061 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753148Ab2FTI4G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 13:38:48 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 7/9] ath9k_hw: process MCI interrupts only when btcoex is enabled
-Date: Fri, 8 Jun 2012 23:09:06 +0530
-Message-ID: <1339177148-21672-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120608_193851_312359_5C2FE8D7)
-In-Reply-To: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339177148-21672-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 20 Jun 2012 04:56:06 -0400
+Received: by lbbgj10 with SMTP id gj10so302627lbb.9
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 01:56:02 -0700 (PDT)
+Message-ID: <1340182559.1631.208.camel@cumari.coelho.fi> (sfid-20120620_105609_697217_482DE9EF)
+Subject: Re: [PATCH v2] mac80211: initialize sta pointer to avoid
+ false-positive warning
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tony@atomide.com
+Date: Wed, 20 Jun 2012 11:55:59 +0300
+In-Reply-To: <1340182340.4655.46.camel@jlt3.sipsolutions.net>
+References: <1340023971-9754-1-git-send-email-coelho@ti.com>
+	 <1340182340.4655.46.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-let us process MCI interrupts only when BTCOEX is enabled to avoid
-processing bogus interrupts.
+On Wed, 2012-06-20 at 10:52 +0200, Johannes Berg wrote:
+> On Mon, 2012-06-18 at 15:52 +0300, Luciano Coelho wrote:
+> > Some compilers (eg. gcc 4.4.1 for ARM) report a false positive warning
+> > in mlme.c:
+> > 
+> > net/mac80211/mlme.c: In function 'ieee80211_prep_connection':
+> > net/mac80211/mlme.c:3035: warning: 'sta' may be used uninitialized in this function
+> > 
+> > This is a false positive because the place where 'sta' is used is
+> > inside an if with the same condition of where it is set:
+> 
+> I still think it's a workaround, but what the hell ... applied.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Yes, it is a workaround, but a lean one.  :) And I think after your
+suggestion it makes the code slightly more readable.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index d9e0824..1c0621d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -302,7 +302,8 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 			ar9003_hw_bb_watchdog_read(ah);
- 	}
- 
--	if (async_cause & AR_INTR_ASYNC_MASK_MCI)
-+	if ((async_cause & AR_INTR_ASYNC_MASK_MCI) &&
-+	    ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_get_isr(ah, masked);
- 
- 	if (sync_cause) {
--- 
-1.7.10.3
+Thanks for applying!
+
+BTW, when you say you applied, does it mean you have pushed to your
+tree? We want to remove some of our mac80211 patches from our internal
+trees and "inherit" them from upstream instead, that's why I'm
+asking. ;)
+
+--
+Luca.
 
