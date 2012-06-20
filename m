@@ -1,190 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3335 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932805Ab2FASpt (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:54939 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751211Ab2FTGgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 14:45:49 -0400
-Message-ID: <4FC90DD4.8080402@gmail.com> (sfid-20120601_204553_180974_6A766333)
-Date: Fri, 01 Jun 2012 20:45:40 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2x00: use atomic variable for seqno
-References: <1338542980-16015-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1338542980-16015-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 20 Jun 2012 02:36:11 -0400
+Received: by obbwc20 with SMTP id wc20so11166541obb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 23:36:09 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>
+Subject: [PATCH v4] mac80211: add command to get current rssi
+Date: Wed, 20 Jun 2012 09:32:55 +0300
+Message-Id: <1340173975-13609-1-git-send-email-victorg@ti.com> (sfid-20120620_083614_901471_631249E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/12 11:29, Stanislaw Gruszka wrote:
-> Remove spinlock as atomic_t can be used instead. Note we use only 16
-> lower bits, upper bits are changed but we impilcilty cast to u16.
-> 
-> This fix possible deadlock on IBSS mode reproted by lockdep:
-> 
-> =================================
-> [ INFO: inconsistent lock state ]
-> 3.4.0-wl+ #4 Not tainted
-> ---------------------------------
-> inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
-> kworker/u:2/30374 [HC0[0]:SC0[0]:HE1:SE1] takes:
->  (&(&intf->seqlock)->rlock){+.?...}, at: [<f9979a20>] rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
-> {IN-SOFTIRQ-W} state was registered at:
->   [<c04978ab>] __lock_acquire+0x47b/0x1050
->   [<c0498504>] lock_acquire+0x84/0xf0
->   [<c0835733>] _raw_spin_lock+0x33/0x40
->   [<f9979a20>] rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->   [<f9979f2a>] rt2x00queue_write_tx_frame+0x1a/0x300 [rt2x00lib]
->   [<f997834f>] rt2x00mac_tx+0x7f/0x380 [rt2x00lib]
->   [<f98fe363>] __ieee80211_tx+0x1b3/0x300 [mac80211]
->   [<f98ffdf5>] ieee80211_tx+0x105/0x130 [mac80211]
->   [<f99000dd>] ieee80211_xmit+0xad/0x100 [mac80211]
->   [<f9900519>] ieee80211_subif_start_xmit+0x2d9/0x930 [mac80211]
->   [<c0782e87>] dev_hard_start_xmit+0x307/0x660
->   [<c079bb71>] sch_direct_xmit+0xa1/0x1e0
->   [<c0784bb3>] dev_queue_xmit+0x183/0x730
->   [<c078c27a>] neigh_resolve_output+0xfa/0x1e0
->   [<c07b436a>] ip_finish_output+0x24a/0x460
->   [<c07b4897>] ip_output+0xb7/0x100
->   [<c07b2d60>] ip_local_out+0x20/0x60
->   [<c07e01ff>] igmpv3_sendpack+0x4f/0x60
->   [<c07e108f>] igmp_ifc_timer_expire+0x29f/0x330
->   [<c04520fc>] run_timer_softirq+0x15c/0x2f0
->   [<c0449e3e>] __do_softirq+0xae/0x1e0
-> irq event stamp: 18380437
-> hardirqs last  enabled at (18380437): [<c0526027>] __slab_alloc.clone.3+0x67/0x5f0
-> hardirqs last disabled at (18380436): [<c0525ff3>] __slab_alloc.clone.3+0x33/0x5f0
-> softirqs last  enabled at (18377616): [<c0449eb3>] __do_softirq+0x123/0x1e0
-> softirqs last disabled at (18377611): [<c041278d>] do_softirq+0x9d/0xe0
-> 
-> other info that might help us debug this:
->  Possible unsafe locking scenario:
-> 
->        CPU0
->        ----
->   lock(&(&intf->seqlock)->rlock);
->   <Interrupt>
->     lock(&(&intf->seqlock)->rlock);
-> 
->  *** DEADLOCK ***
-> 
-> 4 locks held by kworker/u:2/30374:
->  #0:  (wiphy_name(local->hw.wiphy)){++++.+}, at: [<c045cf99>] process_one_work+0x109/0x3f0
->  #1:  ((&sdata->work)){+.+.+.}, at: [<c045cf99>] process_one_work+0x109/0x3f0
->  #2:  (&ifibss->mtx){+.+.+.}, at: [<f98f005b>] ieee80211_ibss_work+0x1b/0x470 [mac80211]
->  #3:  (&intf->beacon_skb_mutex){+.+...}, at: [<f997a644>] rt2x00queue_update_beacon+0x24/0x50 [rt2x00lib]
-> 
-> stack backtrace:
-> Pid: 30374, comm: kworker/u:2 Not tainted 3.4.0-wl+ #4
-> Call Trace:
->  [<c04962a6>] print_usage_bug+0x1f6/0x220
->  [<c0496a12>] mark_lock+0x2c2/0x300
->  [<c0495ff0>] ? check_usage_forwards+0xc0/0xc0
->  [<c04978ec>] __lock_acquire+0x4bc/0x1050
->  [<c0527890>] ? __kmalloc_track_caller+0x1c0/0x1d0
->  [<c0777fb6>] ? copy_skb_header+0x26/0x90
->  [<c0498504>] lock_acquire+0x84/0xf0
->  [<f9979a20>] ? rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->  [<c0835733>] _raw_spin_lock+0x33/0x40
->  [<f9979a20>] ? rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->  [<f9979a20>] rt2x00queue_create_tx_descriptor+0x380/0x490 [rt2x00lib]
->  [<f997a5cf>] rt2x00queue_update_beacon_locked+0x5f/0xb0 [rt2x00lib]
->  [<f997a64d>] rt2x00queue_update_beacon+0x2d/0x50 [rt2x00lib]
->  [<f9977e3a>] rt2x00mac_bss_info_changed+0x1ca/0x200 [rt2x00lib]
->  [<f9977c70>] ? rt2x00mac_remove_interface+0x70/0x70 [rt2x00lib]
->  [<f98e4dd0>] ieee80211_bss_info_change_notify+0xe0/0x1d0 [mac80211]
->  [<f98ef7b8>] __ieee80211_sta_join_ibss+0x3b8/0x610 [mac80211]
->  [<c0496ab4>] ? mark_held_locks+0x64/0xc0
->  [<c0440012>] ? virt_efi_query_capsule_caps+0x12/0x50
->  [<f98efb09>] ieee80211_sta_join_ibss+0xf9/0x140 [mac80211]
->  [<f98f0456>] ieee80211_ibss_work+0x416/0x470 [mac80211]
->  [<c0496d8b>] ? trace_hardirqs_on+0xb/0x10
->  [<c077683b>] ? skb_dequeue+0x4b/0x70
->  [<f98f207f>] ieee80211_iface_work+0x13f/0x230 [mac80211]
->  [<c045cf99>] ? process_one_work+0x109/0x3f0
->  [<c045d015>] process_one_work+0x185/0x3f0
->  [<c045cf99>] ? process_one_work+0x109/0x3f0
->  [<f98f1f40>] ? ieee80211_teardown_sdata+0xa0/0xa0 [mac80211]
->  [<c045ed86>] worker_thread+0x116/0x270
->  [<c045ec70>] ? manage_workers+0x1e0/0x1e0
->  [<c0462f64>] kthread+0x84/0x90
->  [<c0462ee0>] ? __init_kthread_worker+0x60/0x60
->  [<c083d382>] kernel_thread_helper+0x6/0x10
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Get current rssi (in dBm) from the driver/FW.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Instead of reporting the signal received in the last
+rx packet, which might be inaccurate if rx traffic is
+low and beacon filtering is enabled, get the singal
+from the driver/FW.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h      |    3 +--
->  drivers/net/wireless/rt2x00/rt2x00mac.c   |    1 -
->  drivers/net/wireless/rt2x00/rt2x00queue.c |   13 ++++++-------
->  3 files changed, 7 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index ca36ccc..8f75402 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -396,8 +396,7 @@ struct rt2x00_intf {
->  	 * for hardware which doesn't support hardware
->  	 * sequence counting.
->  	 */
-> -	spinlock_t seqlock;
-> -	u16 seqno;
-> +	atomic_t seqno;
->  };
->  
->  static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index ef8b984..4ff26c2 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -277,7 +277,6 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
->  	else
->  		rt2x00dev->intf_sta_count++;
->  
-> -	spin_lock_init(&intf->seqlock);
->  	mutex_init(&intf->beacon_skb_mutex);
->  	intf->beacon = entry;
->  
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index 4c662ec..2fd8301 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -207,6 +207,7 @@ static void rt2x00queue_create_tx_descriptor_seq(struct rt2x00_dev *rt2x00dev,
->  	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
->  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
->  	struct rt2x00_intf *intf = vif_to_intf(tx_info->control.vif);
-> +	u16 seqno;
->  
->  	if (!(tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
->  		return;
-> @@ -238,15 +239,13 @@ static void rt2x00queue_create_tx_descriptor_seq(struct rt2x00_dev *rt2x00dev,
->  	 * sequence counting per-frame, since those will override the
->  	 * sequence counter given by mac80211.
->  	 */
-> -	spin_lock(&intf->seqlock);
-> -
->  	if (test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags))
-> -		intf->seqno += 0x10;
-> -	hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> -	hdr->seq_ctrl |= cpu_to_le16(intf->seqno);
-> -
-> -	spin_unlock(&intf->seqlock);
-> +		seqno = atomic_add_return(0x10, &intf->seqno);
-> +	else
-> +		seqno = atomic_read(&intf->seqno);
->  
-> +	hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> +	hdr->seq_ctrl |= cpu_to_le16(seqno);
->  }
->  
->  static void rt2x00queue_create_tx_descriptor_plcp(struct rt2x00_dev *rt2x00dev,
-
-
--- 
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
-Gertjan
+
+v4:
+	Trace also station mac address.
+	
+
+ include/net/mac80211.h      |    5 +++++
+ net/mac80211/cfg.c          |   21 +++++++++++++--------
+ net/mac80211/driver-ops.h   |   16 ++++++++++++++++
+ net/mac80211/driver-trace.h |    6 ++++++
+ 4 files changed, 40 insertions(+), 8 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 95e39b6..c65564e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2246,6 +2246,9 @@ enum ieee80211_rate_control_changed {
+  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
+  *	and perhaps other supported types of ethtool data-sets.
+  *
++ * @get_rssi: Get current signal strength in dBm, the function is optional
++ *	and can sleep.
++ *
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2385,6 +2388,8 @@ struct ieee80211_ops {
+ 	void	(*get_et_strings)(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  u32 sset, u8 *data);
++	int	(*get_rssi)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta, s8 *rssi_dbm);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7d5108a..bcbfb23 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -353,6 +353,7 @@ void sta_set_rate_info_tx(struct sta_info *sta,
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_local *local = sdata->local;
+ 	struct timespec uptime;
+ 
+ 	sinfo->generation = sdata->local->sta_generation;
+@@ -388,7 +389,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+ 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+ 		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
+-		sinfo->signal = (s8)sta->last_signal;
++		if (!local->ops->get_rssi ||
++		    drv_get_rssi(local, sdata, &sta->sta, &sinfo->signal))
++			sinfo->signal = (s8)sta->last_signal;
+ 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+ 	}
+ 
+@@ -517,7 +520,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+ 	 * network device.
+ 	 */
+ 
+-	rcu_read_lock();
++	mutex_lock(&local->sta_mtx);
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		sta = sta_info_get_bss(sdata, sdata->u.mgd.bssid);
+@@ -546,7 +549,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+ 			data[i] = (u8)sinfo.signal_avg;
+ 		i++;
+ 	} else {
+-		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		list_for_each_entry(sta, &local->sta_list, list) {
+ 			/* Make sure this station belongs to the proper dev */
+ 			if (sta->sdata->dev != dev)
+ 				continue;
+@@ -603,7 +606,7 @@ do_survey:
+ 	else
+ 		data[i++] = -1LL;
+ 
+-	rcu_read_unlock();
++	mutex_unlock(&local->sta_mtx);
+ 
+ 	if (WARN_ON(i != STA_STATS_LEN))
+ 		return;
+@@ -629,10 +632,11 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 int idx, u8 *mac, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	int ret = -ENOENT;
+ 
+-	rcu_read_lock();
++	mutex_lock(&local->sta_mtx);
+ 
+ 	sta = sta_info_get_by_idx(sdata, idx);
+ 	if (sta) {
+@@ -641,7 +645,7 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 		sta_set_sinfo(sta, sinfo);
+ 	}
+ 
+-	rcu_read_unlock();
++	mutex_unlock(&local->sta_mtx);
+ 
+ 	return ret;
+ }
+@@ -658,10 +662,11 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 u8 *mac, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	int ret = -ENOENT;
+ 
+-	rcu_read_lock();
++	mutex_lock(&local->sta_mtx);
+ 
+ 	sta = sta_info_get_bss(sdata, mac);
+ 	if (sta) {
+@@ -669,7 +674,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 		sta_set_sinfo(sta, sinfo);
+ 	}
+ 
+-	rcu_read_unlock();
++	mutex_unlock(&local->sta_mtx);
+ 
+ 	return ret;
+ }
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 6d33a0c..370c721 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -845,4 +845,20 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
+ 						  more_data);
+ 	trace_drv_return_void(local);
+ }
++
++static inline int drv_get_rssi(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata,
++				struct ieee80211_sta *sta,
++				s8 *rssi_dbm)
++{
++	int ret;
++
++	might_sleep();
++
++	trace_drv_get_rssi(local, sdata);
++	ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6de00b2..23928c5 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -1218,6 +1218,12 @@ DEFINE_EVENT(release_evt, drv_allow_buffered_frames,
+ 	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
+ );
+ 
++DEFINE_EVENT(local_sdata_addr_evt, drv_get_rssi,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+-- 
+1.7.5.4
+
