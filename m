@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:52455 "HELO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757899Ab2FUC7R (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43995 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753254Ab2FTN2q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 22:59:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: wake up main thread to handle Tx traffic if scan is delayed/aborted
-Date: Wed, 20 Jun 2012 19:58:36 -0700
-Message-Id: <1340247517-4593-5-git-send-email-bzhao@marvell.com> (sfid-20120621_045920_245899_4EBEF468)
-In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
-References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+	Wed, 20 Jun 2012 09:28:46 -0400
+Message-ID: <1340198923.4655.64.camel@jlt3.sipsolutions.net> (sfid-20120620_152849_306411_D1EC7FFC)
+Subject: Re: [PATCH v4] mac80211: add command to get current rssi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 Jun 2012 15:28:43 +0200
+In-Reply-To: <CAK80WHYa566m+K8TtRo6nvDQHd4J-1A5MD5y_N6_OJMVVnVMgA@mail.gmail.com>
+References: <1340173975-13609-1-git-send-email-victorg@ti.com>
+	 <1340180149.4655.23.camel@jlt3.sipsolutions.net>
+	 <CAK80WHYa566m+K8TtRo6nvDQHd4J-1A5MD5y_N6_OJMVVnVMgA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, 2012-06-20 at 16:22 +0300, Goldenshtein, Victor wrote:
+> On Wed, Jun 20, 2012 at 11:15 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2012-06-20 at 09:32 +0300, Victor Goldenshtein wrote:
+> >
+> >> +     trace_drv_get_rssi(local, sdata);
+> >> +     ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
+> >> +     trace_drv_return_int(local, ret);
+> >
+> > Where are you tracing the sta?
+> >
+> 
+> We talked about print sta address with "local_sdata_addr_evt" event
+> macro, the output looks like this:
+> 
+> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+> #              | |       |                     ||||       |         |
+>               iw-1394  [000]        ...1  1083.713867: drv_get_rssi:
+> phy0 vif:wlan0(2) addr:08:00:28:cc:65:43
+>               iw-1394  [000]        ...1  1083.729736: drv_return_int: phy0 - 0
 
-This is a flaw in recently implemented logic to handle Tx traffic
-and scan operation simultaneously. We missed to wakeup main thread
-to handle Tx traffic if scan is delayed/aborted.
+That's not the STA address, that's the VIF address.
 
-For some cards (SD8797, for example), firmware will send SLEEP event
-if there is no activity for 50msec. While handling the SLEEP event,
-main thread will be woken up and Tx packet gets sent hence. In worst
-case Tx traffic will be delayed for 50msec.
 
-For other cards, such as USB8797, firmware won't send SLEEP event.
-So, Tx traffic gets stuck if no other event triggers the wakeup of
-main thread.
+> > And why not trace the value returned in *rssi_dbm?
+> >
+> 
+> Is it really required ? there are various driver-ops which are "get
+> stuff" without printing them in the tracer.
 
-This patch fixes above issues.
+It'd be nice to fix all the ones, but I can't make you do that :-)
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/init.c |    1 +
- drivers/net/wireless/mwifiex/main.c |    3 ++-
- 2 files changed, 3 insertions(+), 1 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 0f18ef6..b543a4d 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -103,6 +103,7 @@ static void scan_delay_timer_fn(unsigned long data)
- 				  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
- 			adapter->scan_delay_cnt++;
- 		}
-+		queue_work(priv->adapter->workqueue, &priv->adapter->main_work);
- 	} else {
- 		/*
- 		 * Tx data queue is empty. Get scan command from scan_pending_q
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 0f06f07..f0219ef 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -190,7 +190,8 @@ process_start:
- 			    adapter->tx_lock_flag)
- 				break;
- 
--			if (adapter->scan_processing || adapter->data_sent ||
-+			if ((adapter->scan_processing &&
-+			     !adapter->scan_delay_cnt) || adapter->data_sent ||
- 			    mwifiex_wmm_lists_empty(adapter)) {
- 				if (adapter->cmd_sent || adapter->curr_cmd ||
- 				    (!is_command_pending(adapter)))
--- 
-1.7.0.2
 
