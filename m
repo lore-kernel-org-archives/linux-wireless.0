@@ -1,119 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46035 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:41560 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753168Ab2F1NPW (ORCPT
+	with ESMTP id S1756536Ab2FTPML (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 09:15:22 -0400
-Message-ID: <1340889318.4491.45.camel@jlt3.sipsolutions.net> (sfid-20120628_151526_307209_AC0F223E)
-Subject: [PATCH] compat-wireless: add patch to fix message tracing in
- mac80211
+	Wed, 20 Jun 2012 11:12:11 -0400
+Message-ID: <1340205127.4655.72.camel@jlt3.sipsolutions.net> (sfid-20120620_171215_122401_DC16A629)
+Subject: Re: [PATCH 1/3] mac80211: Track auth frame registrations on IBSS
+ ifaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 28 Jun 2012 15:15:18 +0200
+To: Will Hawkins <hawkinsw@opentechinstitute.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Wed, 20 Jun 2012 17:12:07 +0200
+In-Reply-To: <4FE1E579.3070307@opentechinstitute.org>
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>
+	   <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org>
+	  <1340170374.4655.1.camel@jlt3.sipsolutions.net>
+	  <4FE1E0DA.8010406@opentechinstitute.org>
+	 <1340203389.4655.71.camel@jlt3.sipsolutions.net>
+	 <4FE1E579.3070307@opentechinstitute.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-06-20 at 11:00 -0400, Will Hawkins wrote:
 
-Just like in iwlwifi, the tracing in mac80211 needs to
-copy va_args as some old kernels don't do it for %pV.
+> >> Just trying to make sure that it doesn't go negative. I am protecting
+> >> against unmatched unregisters.
+> > 
+> > reg is a bool, did you mean "if (ifibss->auth_frame_registrations > 0)"?
+> 
+> Yes, of course I did. :-) Not sure how I missed that.
+> 
+> > 
+> > in any case, you don't really have to care about unmatched unregisters
+> > as cfg80211 tracks all of them anyway.
+> 
+> I will take that check out entirely and resubmit.
+> 
+> Is it proper protocol to resubmit this particular part of the patch or
+> the entire set?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- patches/56-mac80211-trace-fix.patch |   79 +++++++++++++++++++++++++++++++++++
- 1 file changed, 79 insertions(+)
- create mode 100644 patches/56-mac80211-trace-fix.patch
+You can resend just this one patch as a reply to the original if you
+wish, or the entire series (it's short, if it was 20 patches I'd ask you
+not to do that :-) )
 
-diff --git a/patches/56-mac80211-trace-fix.patch b/patches/56-mac80211-trace-fix.patch
-new file mode 100644
-index 0000000..1e82fb6
---- /dev/null
-+++ b/patches/56-mac80211-trace-fix.patch
-@@ -0,0 +1,79 @@
-+--- a/net/mac80211/trace.c
-++++ b/net/mac80211/trace.c
-+@@ -15,12 +15,16 @@ void __sdata_info(const char *fmt, ...)
-+ 	struct va_format vaf = {
-+ 		.fmt = fmt,
-+ 	};
-+-	va_list args;
-++	va_list args, args2;
-+ 
-+ 	va_start(args, fmt);
-+-	vaf.va = &args;
-+ 
-++	va_copy(args2, args);
-++	vaf.va = &args2;
-+ 	pr_info("%pV", &vaf);
-++	va_end(args2);
-++
-++	vaf.va = &args;
-+ 	trace_mac80211_info(&vaf);
-+ 	va_end(args);
-+ }
-+@@ -33,10 +37,16 @@ void __sdata_dbg(bool print, const char *fmt, ...)
-+ 	va_list args;
-+ 
-+ 	va_start(args, fmt);
-+-	vaf.va = &args;
-+ 
-+-	if (print)
-++	if (print) {
-++		va_list args2;
-++
-++		va_copy(args2, args);
-++		vaf.va = &args2;
-+ 		pr_debug("%pV", &vaf);
-++		va_end(args2);
-++	}
-++	vaf.va = &args;
-+ 	trace_mac80211_dbg(&vaf);
-+ 	va_end(args);
-+ }
-+@@ -46,12 +56,16 @@ void __sdata_err(const char *fmt, ...)
-+ 	struct va_format vaf = {
-+ 		.fmt = fmt,
-+ 	};
-+-	va_list args;
-++	va_list args, args2;
-+ 
-+ 	va_start(args, fmt);
-+-	vaf.va = &args;
-+ 
-++	va_copy(args2, args);
-++	vaf.va = &args2;
-+ 	pr_err("%pV", &vaf);
-++	va_end(args2);
-++
-++	vaf.va = &args;
-+ 	trace_mac80211_err(&vaf);
-+ 	va_end(args);
-+ }
-+@@ -64,10 +78,16 @@ void __wiphy_dbg(struct wiphy *wiphy, bool print, const char *fmt, ...)
-+ 	va_list args;
-+ 
-+ 	va_start(args, fmt);
-+-	vaf.va = &args;
-+ 
-+-	if (print)
-+-		wiphy_dbg(wiphy, "%pV", &vaf);
-++	if (print) {
-++		va_list args2;
-++
-++		va_copy(args2, args);
-++		vaf.va = &args2;
-++		pr_debug("%pV", &vaf);
-++		va_end(args2);
-++	}
-++	vaf.va = &args;
-+ 	trace_mac80211_dbg(&vaf);
-+ 	va_end(args);
-+ }
--- 
-1.7.10
-
-
+johannes
 
