@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:36684 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755600Ab2FYKqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 06:46:35 -0400
-Message-ID: <4FE84184.4090601@neratec.com> (sfid-20120625_124639_222171_0063A988)
-Date: Mon, 25 Jun 2012 12:46:28 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Chadd, Adrian" <achadd@qca.qualcomm.com>,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: [ANN] DFS testing: use USRP-Radar-Relay for SDR radar pattern generation
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:39605 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754944Ab2FTHiV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 03:38:21 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/12] iwlwifi: print the scratch of all the buffers stuck in a queue
+Date: Wed, 20 Jun 2012 09:38:04 +0200
+Message-Id: <1340177894-12992-3-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093841_566684_1DD9F94F)
+In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello DFS folks,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-now that DFS support is emerging in linux-wireless, we have quite some
-testing ahead.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Testing DFS towards certification at physical layer requires laboratory
-equipment that is very expensive (often going into the 6-digit US$
-range) and makes it non-affordable for independent developers or smaller
-companies.
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index cc93516..c6f53af 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -296,6 +296,7 @@ static void iwlagn_free_dma_ptr(struct iwl_trans *trans,
+ static void iwl_trans_pcie_queue_stuck_timer(unsigned long data)
+ {
+ 	struct iwl_tx_queue *txq = (void *)data;
++	struct iwl_queue *q = &txq->q;
+ 	struct iwl_trans_pcie *trans_pcie = txq->trans_pcie;
+ 	struct iwl_trans *trans = iwl_trans_pcie_get_trans(trans_pcie);
+ 	u32 scd_sram_addr = trans_pcie->scd_base_addr +
+@@ -346,6 +347,14 @@ static void iwl_trans_pcie_queue_stuck_timer(unsigned long data)
+ 			iwl_read_prph(trans, SCD_QUEUE_WRPTR(i)));
+ 	}
+ 
++	for (i = q->read_ptr; i != q->write_ptr;
++	     i = iwl_queue_inc_wrap(i, q->n_bd)) {
++		struct iwl_tx_cmd *tx_cmd =
++			(struct iwl_tx_cmd *)txq->entries[i].cmd->payload;
++		IWL_ERR(trans, "scratch %d = 0x%08x\n", i,
++			get_unaligned_le32(&tx_cmd->scratch));
++	}
++
+ 	iwl_op_mode_nic_error(trans->op_mode);
+ }
+ 
+-- 
+1.7.10
 
-We evaluated a SDR (software defined radio) approach and found it to be
-a very well usable alternative for exorbitant dedicated radar generating
-equipment. Our approach uses an Ettus research USRP N200 device to
-continuously stream radar patterns as waveforms in the time domain to be
-radiated to the attached wiphy.
-
-The SW that abstracts the SDR and the generation of samples for a given
-radar pattern is open sourced and available at [1]. With the
-'USRP-Radar-Relay' SW and SDR you can have a highly customizable and
-flexible radar generating device for less than 2k$ - a definitely lower
-barrier to decentralize DFS testing.
-
-
-Cheers,
-Zefir
-
-
-[1] https://github.com/zefir-kurtisi/USRP-Radar-Relay
