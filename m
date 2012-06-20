@@ -1,48 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59016 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127Ab2FHRsD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 13:48:03 -0400
-Date: Fri, 8 Jun 2012 13:38:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: print info when disabling HT
-Message-ID: <20120608173804.GB13889@tuxdriver.com> (sfid-20120608_194807_552329_B7425ACE)
-References: <1338962733.4513.1.camel@jlt3.sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:54791 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754452Ab2FTT7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 15:59:16 -0400
+Message-ID: <4FE22B8B.4060405@openwrt.org> (sfid-20120620_215923_667187_0165E376)
+Date: Wed, 20 Jun 2012 21:59:07 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1338962733.4513.1.camel@jlt3.sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: WEP-LEAP regression
+References: <20120620143330.GA8505@redhat.com>
+In-Reply-To: <20120620143330.GA8505@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 06, 2012 at 08:05:33AM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 2012-06-20 4:33 PM, Stanislaw Gruszka wrote:
+> Our QA reported regression on ath9k connecting to legacy WEP-LEAP AP,
+> with the following supplicant parameters:
 > 
-> Make mac80211 print a message when it disables
-> HT due to the connection using WEP/TKIP or due
-> to the AP not supporting WMM/QoS.
+> fast_reauth=1
+> ap_scan=1
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> Did this slip through? :-)
+> eapol_version=1
+> 
+> network={
+>         ssid="qe-wep-enterprise-cisco"
+>         key_mgmt=IEEE8021X
+>         auth_alg=LEAP
+>         eap=LEAP
+>         identity="AAA"
+>         password="BBB"
+> }
+> 
+> Device associate but DHCP fails (we do no recive any frame).
+> 
+> Reverting both related commits:
+> 
+> commit f88373fa47f3ce6590fdfaa742d0ddacc2ae017f
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Sun Feb 5 21:15:17 2012 +0100
+> 
+>     ath9k: fix a WEP crypto related regression
+> 
+> and
+>  
+> commit 7a532fe7131216a02c81a6c1b1f8632da1195a58
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Sat Jan 14 15:08:34 2012 +0100
+> 
+>     ath9k_hw: fix interpretation of the rx KeyMiss flag
+> 
+> fixes the problem.
+> 
+> Felix could you look at this?
+Please try this patch:
 
-I've got it on the wireless-next side.
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -143,6 +143,7 @@ struct ath_common {
+ 	u32 keymax;
+ 	DECLARE_BITMAP(keymap, ATH_KEYMAX);
+ 	DECLARE_BITMAP(tkip_keymap, ATH_KEYMAX);
++	DECLARE_BITMAP(ccmp_keymap, ATH_KEYMAX);
+ 	enum ath_crypt_caps crypt_caps;
+ 
+ 	unsigned int clockrate;
+--- a/drivers/net/wireless/ath/key.c
++++ b/drivers/net/wireless/ath/key.c
+@@ -556,6 +556,9 @@ int ath_key_config(struct ath_common *co
+ 		return -EIO;
+ 
+ 	set_bit(idx, common->keymap);
++	if (key->cipher == WLAN_CIPHER_SUITE_CCMP)
++		set_bit(idx, common->ccmp_keymap);
++
+ 	if (key->cipher == WLAN_CIPHER_SUITE_TKIP) {
+ 		set_bit(idx + 64, common->keymap);
+ 		set_bit(idx, common->tkip_keymap);
+@@ -582,6 +585,7 @@ void ath_key_delete(struct ath_common *c
+ 		return;
+ 
+ 	clear_bit(key->hw_key_idx, common->keymap);
++	clear_bit(key->hw_key_idx, common->ccmp_keymap);
+ 	if (key->cipher != WLAN_CIPHER_SUITE_TKIP)
+ 		return;
+ 
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -785,7 +785,8 @@ static bool ath9k_rx_accept(struct ath_c
+ 	 * descriptor does contain a valid key index. This has been observed
+ 	 * mostly with CCMP encryption.
+ 	 */
+-	if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID)
++	if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID ||
++	    !test_bit(rx_stats->rs_keyix, common->ccmp_keymap))
+ 		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
+ 
+ 	if (!rx_stats->rs_datalen) {
 
-commit 1c4cb928e1b7c6ad30a9b7d3e720f26156d92925
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Wed May 30 15:57:00 2012 +0200
-
-    mac80211: print info when disabling HT
-    
-    Make mac80211 print a message when it disables
-    HT due to the connection using WEP/TKIP or due
-    to the AP not supporting WMM/QoS.
-    
-    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
