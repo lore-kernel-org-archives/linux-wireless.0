@@ -1,75 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:56507 "EHLO ebb06.tieto.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756849Ab2FUMDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 08:03:41 -0400
+	id S1753848Ab2FTGOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 02:14:30 -0400
 From: Michal Kazior <michal.kazior@tieto.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
-	Kazior Michal <Michal.Kazior@tieto.com>,
 	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v2 2/7] mac80211: introduce new ieee80211_ops
-Date: Thu, 21 Jun 2012 14:03:31 +0200
-Message-ID: <1340280216-18807-3-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140345_074456_166E8587)
-In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
-References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+Subject: [RFCv2 10/13] cfg80211: set initial monitor channel
+Date: Wed, 20 Jun 2012 08:14:16 +0200
+Message-ID: <1340172859-18146-11-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081451_497950_D3FDDE2C)
+In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kazior Michal <Michal.Kazior@tieto.com>
-
-Introduces channel context callbacks. Channel on a
-context channel is immutable. Channel type will be
-changable later though, thus change_channel_type is
-adveristed.
+Implements behaviour seen in mac80211. A running
+monitor always has a channel - even before
+.set_channel. This way we won't break current
+behaviour.
 
 Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/mac80211.h |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+ net/wireless/core.c |   31 +++++++++++++++++++++++++++++++
+ 1 files changed, 31 insertions(+), 0 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0089798..5040d6d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2295,6 +2295,15 @@ enum ieee80211_rate_control_changed {
-  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
-  *	and perhaps other supported types of ethtool data-sets.
-  *
-+ * @add_chanctx: Notifies device driver about new channel context creation.
-+ * @remove_chanctx: Notifies device driver about channel context destruction.
-+ * @change_chantype: Notifies device driver about channel context channel_type
-+ *	change which may happen when combining different vifs on a same channel
-+ *	with different HTs.
-+ * @assign_vif_chanctx: Notifies device driver about channel context being bound
-+ *	to vif. Possible use is for hw queue remapping.
-+ * @unassign_vif_chanctx: Notifies device driver about channel context being
-+ *	unbound from vif.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -2434,6 +2443,19 @@ struct ieee80211_ops {
- 	void	(*get_et_strings)(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif,
- 				  u32 sset, u8 *data);
-+
-+	void (*add_chanctx)(struct ieee80211_hw *hw,
-+			    struct ieee80211_chanctx_conf *ctx);
-+	void (*remove_chanctx)(struct ieee80211_hw *hw,
-+			       struct ieee80211_chanctx_conf *ctx);
-+	void (*change_chantype)(struct ieee80211_hw *hw,
-+				struct ieee80211_chanctx_conf *ctx);
-+	void (*assign_vif_chanctx)(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_chanctx_conf *ctx);
-+	void (*unassign_vif_chanctx)(struct ieee80211_hw *hw,
-+				     struct ieee80211_vif *vif,
-+				     struct ieee80211_chanctx_conf *ctx);
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 8315c2a..5b3f74e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -776,6 +776,35 @@ static struct device_type wiphy_type = {
+ 	.name	= "wlan",
  };
  
- /**
++static struct ieee80211_channel *
++cfg80211_get_any_chan(struct cfg80211_registered_device *rdev)
++{
++	struct ieee80211_supported_band *sband;
++	int i;
++
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		sband = rdev->wiphy.bands[i];
++		if (sband && sband->n_channels > 0)
++			return &sband->channels[0];
++	}
++
++	return NULL;
++}
++
++static void cfg80211_init_mon_chan(struct cfg80211_registered_device *rdev)
++{
++	struct ieee80211_channel *chan;
++
++	chan = cfg80211_get_any_chan(rdev);
++	if (WARN_ON(!chan))
++		return;
++
++	mutex_lock(&rdev->devlist_mtx);
++	WARN_ON(cfg80211_set_monitor_channel(rdev, chan->center_freq,
++					     NL80211_CHAN_NO_HT));
++	mutex_unlock(&rdev->devlist_mtx);
++}
++
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 			       enum nl80211_iftype iftype, int num)
+ {
+@@ -796,6 +825,8 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		if (!has_monitors_only_new) {
+ 			rdev->monitor_channel = NULL;
+ 			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		} else {
++			cfg80211_init_mon_chan(rdev);
+ 		}
+ 	}
+ }
 -- 
 1.7.0.4
 
