@@ -1,44 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:57473 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754049Ab2FTQu5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 12:50:57 -0400
-Received: by lbol5 with SMTP id l5so894690lbo.20
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 09:50:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340182143.4655.43.camel@jlt3.sipsolutions.net>
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
-	<1340111463-4554-7-git-send-email-victorg@ti.com>
-	<1340182143.4655.43.camel@jlt3.sipsolutions.net>
-Date: Wed, 20 Jun 2012 19:50:54 +0300
-Message-ID: <CAK80WHa2r4c_fNPga+eMPczkr9BJ4SAVENcsAmJFqvr3kYZ_zA@mail.gmail.com> (sfid-20120620_185100_908845_3789593D)
-Subject: Re: [PATCH v2 7/7] mac80211: add DFS support to monitor interface
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:39604 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754916Ab2FTHiV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 03:38:21 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/12] iwlwifi: comment context requirements of the op_mode
+Date: Wed, 20 Jun 2012 09:38:05 +0200
+Message-Id: <1340177894-12992-4-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093828_084235_4D26956B)
+In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 11:49 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2012-06-19 at 16:11 +0300, Victor Goldenshtein wrote:
->
->> +     bool dfs_supported = !!(local->hw.wiphy->features &
->> +                             NL80211_FEATURE_DFS);
->
-> No need for !!, also why not inline that into the condition?
->
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I will remove the "!!", and if it's ok with you I would prefer to
-leave the "dfs_supported" flag, I think it a bit simplifies this big
-"if" statement.
+A few op_mode of the op_mode API functions have requirements
+on the running context of the caller. Document that.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h |   16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index cd9ef11..64886f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -111,22 +111,25 @@ struct iwl_cfg;
+  *	May sleep
+  * @rx: Rx notification to the op_mode. rxb is the Rx buffer itself. Cmd is the
+  *	HCMD the this Rx responds to.
+- *	Must be atomic.
++ *	Must be atomic and called with BH disabled.
+  * @queue_full: notifies that a HW queue is full.
+- *	Must be atomic
++ *	Must be atomic and called with BH disabled.
+  * @queue_not_full: notifies that a HW queue is not full any more.
+- *	Must be atomic
++ *	Must be atomic and called with BH disabled.
+  * @hw_rf_kill:notifies of a change in the HW rf kill switch. True means that
+  *	the radio is killed. Must be atomic.
+  * @free_skb: allows the transport layer to free skbs that haven't been
+  *	reclaimed by the op_mode. This can happen when the driver is freed and
+  *	there are Tx packets pending in the transport layer.
+  *	Must be atomic
+- * @nic_error: error notification. Must be atomic
+- * @cmd_queue_full: Called when the command queue gets full. Must be atomic.
++ * @nic_error: error notification. Must be atomic and must be called with BH
++ *	disabled.
++ * @cmd_queue_full: Called when the command queue gets full. Must be atomic and
++ *	called with BH disabled.
+  * @nic_config: configure NIC, called before firmware is started.
+  *	May sleep
+- * @wimax_active: invoked when WiMax becomes active.  Must be atomic.
++ * @wimax_active: invoked when WiMax becomes active.  Must be atomic and called
++ *	with BH disabled.
+  */
+ struct iwl_op_mode_ops {
+ 	struct iwl_op_mode *(*start)(struct iwl_trans *trans,
+@@ -165,7 +168,6 @@ struct iwl_op_mode {
+ static inline void iwl_op_mode_stop(struct iwl_op_mode *op_mode)
+ {
+ 	might_sleep();
+-
+ 	op_mode->ops->stop(op_mode);
+ }
+ 
 -- 
-Thanks,
-Victor.
+1.7.10
+
