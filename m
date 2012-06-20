@@ -1,83 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33701 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45535 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754788Ab2FFNX0 (ORCPT
+	with ESMTP id S1753365Ab2FTIkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:23:26 -0400
+	Wed, 20 Jun 2012 04:40:06 -0400
+Message-ID: <1340181600.4655.34.camel@jlt3.sipsolutions.net> (sfid-20120620_104013_479030_02593FA0)
+Subject: Re: [PATCH v2 1/7] nl80211/cfg80211: add radar detection
+ command/event
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 24/29] iwlwifi: configure the SKU in the HW
-Date: Wed,  6 Jun 2012 15:22:05 +0200
-Message-Id: <1338988930-11561-24-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152331_318161_ED2DB48D)
-In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
-References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Wed, 20 Jun 2012 10:40:00 +0200
+In-Reply-To: <1340111463-4554-1-git-send-email-victorg@ti.com>
+References: <1340111463-4554-1-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 2012-06-19 at 16:10 +0300, Victor Goldenshtein wrote:
 
-This was missing. Fix the mask of the REV_TYPE on the way.
+> +	NL80211_CMD_RADAR_DETECT,
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/main.c |    9 +++++++++
- drivers/net/wireless/iwlwifi/iwl-csr.h  |   12 ++++++------
- 2 files changed, 15 insertions(+), 6 deletions(-)
+Is there no need to ever stop radar detection?
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index 6cca1f4..10a2800 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -2218,6 +2218,15 @@ static void iwl_nic_config(struct iwl_op_mode *op_mode)
- {
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
- 
-+	/* SKU Control */
-+	iwl_set_bits_mask(priv->trans, CSR_HW_IF_CONFIG_REG,
-+			  CSR_HW_IF_CONFIG_REG_MSK_MAC_DASH |
-+			  CSR_HW_IF_CONFIG_REG_MSK_MAC_STEP,
-+			  (CSR_HW_REV_STEP(priv->trans->hw_rev) <<
-+				CSR_HW_IF_CONFIG_REG_POS_MAC_STEP) |
-+			  (CSR_HW_REV_DASH(priv->trans->hw_rev) <<
-+				CSR_HW_IF_CONFIG_REG_POS_MAC_DASH));
-+
- 	priv->lib->nic_config(priv);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 41dc691..34a5287 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -97,13 +97,10 @@
- /*
-  * Hardware revision info
-  * Bit fields:
-- * 31-8:  Reserved
-- *  7-4:  Type of device:  see CSR_HW_REV_TYPE_xxx definitions
-+ * 31-16:  Reserved
-+ *  15-4:  Type of device:  see CSR_HW_REV_TYPE_xxx definitions
-  *  3-2:  Revision step:  0 = A, 1 = B, 2 = C, 3 = D
-  *  1-0:  "Dash" (-) value, as in A-1, etc.
-- *
-- * NOTE:  Revision step affects calculation of CCK txpower for 4965.
-- * NOTE:  See also CSR_HW_REV_WA_REG (work-around for bug in 4965).
-  */
- #define CSR_HW_REV              (CSR_BASE+0x028)
- 
-@@ -282,7 +279,10 @@
- 
- 
- /* HW REV */
--#define CSR_HW_REV_TYPE_MSK            (0x00001F0)
-+#define CSR_HW_REV_DASH(_val)          (((_val) & 0x0000003) >> 0)
-+#define CSR_HW_REV_STEP(_val)          (((_val) & 0x000000C) >> 2)
-+
-+#define CSR_HW_REV_TYPE_MSK            (0x000FFF0)
- #define CSR_HW_REV_TYPE_5300           (0x0000020)
- #define CSR_HW_REV_TYPE_5350           (0x0000030)
- #define CSR_HW_REV_TYPE_5100           (0x0000050)
--- 
-1.7.10
+> + * @radar_detect_timeout: this timeout indicates the end of the channel
+> + *	availability check for radar channels, only after this period the
+> + *	user may initiate the tx on the channel.
+
+units? internal use, or for use by drivers? should it really be stored
+in the global channel struct that could be shared for multiple devices?
+
+>  /**
+> + * cfg80211_radar_detected - radar detection event
+> + * @dev: network device
+> + * @freq: radar detected on this channel frequency (in MHz)
+> + * @gfp: context flags
+> + *
+> + * This function is called when a radar is detected on the current channel.
+> + */
+> +void cfg80211_radar_detected(struct net_device *dev, u16 freq, gfp_t gfp);
+
+Better to pass the channel pointer?
+
+> +u16 cfg80211_calculate_bitrate(struct rate_info *rate);
+
+??
+
+> +void cfg80211_radar_detected(struct net_device *dev, u16 freq, gfp_t gfp)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct wiphy *wiphy = wdev->wiphy;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+> +	struct ieee80211_channel *chan;
+> +
+> +	chan = ieee80211_get_channel(&rdev->wiphy, freq);
+> +	if (chan)
+> +		chan->radar_detect_timeout = 0;
+
+So how do you distinguish between having ever done radar detection and
+never even having started it? Also, jiffies + ... can return 0.
+
+
+How do you intend to handle HT40?
+
+johannes
 
