@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f51.google.com ([209.85.213.51]:49653 "EHLO
-	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756944Ab2FYPE4 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41305 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752712Ab2FTJJG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 11:04:56 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120611172545.GA1776@redhat.com>
-References: <1339423241.4999.53.camel@lappy> <20120611144134.GX22557@sortiz-mobl>
- <1339425693.6001.2268.camel@edumazet-glaptop> <20120611145700.GY22557@sortiz-mobl>
- <1339426778.6001.2312.camel@edumazet-glaptop> <20120611152007.GZ22557@sortiz-mobl>
- <1339433810.4999.65.camel@lappy> <20120611172545.GA1776@redhat.com>
-From: Sasha Levin <levinsasha928@gmail.com>
-Date: Mon, 25 Jun 2012 17:04:35 +0200
-Message-ID: <CA+1xoqcwr-5dzHvqkt9x0-xj9EFAywVfva=asbHXvX-LSBWqdA@mail.gmail.com> (sfid-20120625_170526_054246_BB368224)
-Subject: Re: net: nfc: BUG and panic in accept() on 3.5-rc2
-To: Dave Jones <davej@redhat.com>,
-	Sasha Levin <levinsasha928@gmail.com>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 20 Jun 2012 05:09:06 -0400
+Message-ID: <1340183344.4655.53.camel@jlt3.sipsolutions.net> (sfid-20120620_110910_143389_A59EF082)
+Subject: Re: [RFCv2 03/13] cfg80211: add channel tracking for AP and mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 20 Jun 2012 11:09:04 +0200
+In-Reply-To: <4FE191E1.2020000@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+	  <1340172859-18146-4-git-send-email-michal.kazior@tieto.com>
+	 <1340180293.4655.24.camel@jlt3.sipsolutions.net>
+	 <4FE191E1.2020000@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 7:25 PM, Dave Jones <davej@redhat.com> wrote:
-> On Mon, Jun 11, 2012 at 06:56:50PM +0200, Sasha Levin wrote:
->
->  > > > > > > What's trinity ?
->  > > > > > > Also, if this one is reproducible, would you mind sharing some details about
->  > > > > > > how we could reproduce it ?
->  > > > > >
->  > > > > > Well, bugfix should be trivial enough ;)
->  > > > > Yep, I looked at the code only after looking at Sasha's report.
->  > > > >
->  > > > > Thanks for the patch, do you mind if I add your SOB to it ?
->  > > >
->  > > > I  would prefer making sure it fixes the bug first ;)
->  > > Sure, although your patch makes sense regardless of that :)
->  > > I'll still wait for Sasha to confirm that it fixes his crash.
->  >
->  > I don't have a direct way of reproducing it, but I've put it in the test
->  > vm and the fuzzer is running, I'll let you know tomorrow if it happened
->  > again.
->
-> You might be able to trigger it faster by using -P PF_NFC, which will
-> force trinity to only use NFC sockets.
->
-> sidenote: most protocols trigger the module to be auto-loaded when a socket
-> is created. This doesn't seem to happen with nfc, making me need to manually
-> modprobe it first. Intentional ?
+On Wed, 2012-06-20 at 11:03 +0200, Michal Kazior wrote:
+> Johannes Berg wrote:
+> > On Wed, 2012-06-20 at 08:14 +0200, Michal Kazior wrote:
+> >> We need to know which channel is used by a running
+> >> AP and mesh for channel context accounting and
+> >> finding matching/active interface combination.
+> >
+> > I think there's the AP channel change function now that full-MAC drivers
+> > can call -- need to update there?
+> 
+> I'm not aware of that. I thought it's impossible to change a channel 
+> while AP is running now. Am I missing something?
 
-It fixes the bug, wasn't been able to reproduce it since then.
+Yeah ... I think the ath6kl driver (only user?) disassociates all
+stations or something ... I don't really remember what they told me
+about how it worked, but it should be on the list somewhere in the
+discussion(s) about the patches that added the feature, see
+
+commit 5314526b1743e8e8614293db7d86e480b4fe9824
+Author: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Date:   Fri Apr 6 13:35:47 2012 -0700
+
+    cfg80211: add channel switch notify event
+
+
+johannes
+
