@@ -1,80 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:60654 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755071Ab2F2O6m (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:56146 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab2FTOkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 10:58:42 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, thomas@net.t-labs.tu-berlin.de,
-	nbd@openwrt.org
-Subject: [PATCH] mac80211: reduce IEEE80211_TX_MAX_RATES from 5 to 4 to enable upcoming TPC support
-Date: Fri, 29 Jun 2012 10:57:23 -0400
-Message-Id: <1340981843-81779-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120629_165846_247689_05DD2B23)
+	Wed, 20 Jun 2012 10:40:39 -0400
+Message-ID: <4FE1E0DA.8010406@opentechinstitute.org> (sfid-20120620_164044_043589_D12597B8)
+Date: Wed, 20 Jun 2012 10:40:26 -0400
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 1/3] mac80211: Track auth frame registrations on IBSS
+ ifaces
+References: <cover.1340142553.git.hawkinsw@opentechinstitute.org>  <88045ffa83c9b4defb7b5eca98bc389ed6c2c5c1.1340142553.git.hawkinsw@opentechinstitute.org> <1340170374.4655.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340170374.4655.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE80211_TX_MAX_RATES are reduced from 5 to 4, as there is no hardware out
-there supporting a rate chain with 5 stages, so 4 is enough. The space that
-is freed will be used for the upcoming Transmission Power Control (TPC).
 
-Suggested-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- include/net/mac80211.h |    8 ++++----
- net/mac80211/tx.c      |    3 +--
- 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 670a58b..8662b79 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -475,7 +475,7 @@ enum mac80211_rate_control_flags {
- #define IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE 24
- 
- /* maximum number of rate stages */
--#define IEEE80211_TX_MAX_RATES	5
-+#define IEEE80211_TX_MAX_RATES	4
- 
- /**
-  * struct ieee80211_tx_rate - rate selection/status
-@@ -563,11 +563,11 @@ struct ieee80211_tx_info {
- 		} control;
- 		struct {
- 			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
--			u8 ampdu_ack_len;
- 			int ack_signal;
-+			u8 ampdu_ack_len;
- 			u8 ampdu_len;
- 			u8 antenna;
--			/* 14 bytes free */
-+			/* 21 bytes free */
- 		} status;
- 		struct {
- 			struct ieee80211_tx_rate driver_rates[
-@@ -634,7 +634,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
- 		info->status.rates[i].count = 0;
- 
- 	BUILD_BUG_ON(
--	    offsetof(struct ieee80211_tx_info, status.ampdu_ack_len) != 23);
-+	    offsetof(struct ieee80211_tx_info, status.ack_signal) != 20);
- 	memset(&info->status.ampdu_ack_len, 0,
- 	       sizeof(struct ieee80211_tx_info) -
- 	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ec8f5346..3bdfac3 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -957,8 +957,7 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
- 			info->control.rates[1].idx = -1;
- 			info->control.rates[2].idx = -1;
- 			info->control.rates[3].idx = -1;
--			info->control.rates[4].idx = -1;
--			BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 5);
-+			BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 4);
- 			info->flags &= ~IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 		} else {
- 			hdr->frame_control &= ~morefrags;
--- 
-1.7.10.4
+On 06/20/2012 01:32 AM, Johannes Berg wrote:
+> On Tue, 2012-06-19 at 17:59 -0400, Will Hawkins wrote:
+>> Track userspace registrations for authentication
+>> frames received on an IBSS interface. This field
+>> will be used to decide whether or not to send
+>> "open system" authentication frames when a new
+>> station joins an adhoc network.
+>>
+>> Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+>> ---
+>>  net/mac80211/cfg.c         |   10 ++++++++++
+>>  net/mac80211/ieee80211_i.h |    1 +
+>>  2 files changed, 11 insertions(+)
+>>
+>> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+>> index 498c94e..e00a696 100644
+>> --- a/net/mac80211/cfg.c
+>> +++ b/net/mac80211/cfg.c
+>> @@ -2486,6 +2486,16 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
+>>  					  u16 frame_type, bool reg)
+>>  {
+>>  	struct ieee80211_local *local = wiphy_priv(wiphy);
+>> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>> +
+>> +	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && 
+>> +	    (frame_type == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH))) {
+>> +		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+>> +		if (reg)
+>> +			ifibss->auth_frame_registrations++;
+>> +		else if (reg > 0)
+>> +			ifibss->auth_frame_registrations--;
+> 
+> The "if (reg > 0)" here doesn't seem to make sense?
 
+Just trying to make sure that it doesn't go negative. I am protecting
+against unmatched unregisters.
+
+Will
+
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
