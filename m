@@ -1,98 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:38098 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752111Ab2FGHYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 03:24:12 -0400
-Message-ID: <1339053852.6009.13.camel@joe2Laptop> (sfid-20120607_092415_546950_7ABBFB35)
-Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
-From: Joe Perches <joe@perches.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 07 Jun 2012 00:24:12 -0700
-In-Reply-To: <4FD0540C.5060808@qca.qualcomm.com>
-References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>
-	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:42017 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751491Ab2FTNjk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 09:39:40 -0400
+Received: by lbbgm6 with SMTP id gm6so624427lbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 06:39:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1340194342.4655.59.camel@jlt3.sipsolutions.net>
+References: <1340177634-24568-1-git-send-email-victorg@ti.com>
+	<1340178370.4655.22.camel@jlt3.sipsolutions.net>
+	<CAK80WHYU+dOvMQG2aDTP7rO6b=MZXDVcX4a7KGpLizgutVcD8g@mail.gmail.com>
+	<1340180991.4655.30.camel@jlt3.sipsolutions.net>
+	<CAK80WHbMVr0GVrKRGL9OD8CUHi8FBVRL0tDGewf9doLm2etb0g@mail.gmail.com>
+	<1340194342.4655.59.camel@jlt3.sipsolutions.net>
+Date: Wed, 20 Jun 2012 16:39:37 +0300
+Message-ID: <CAK80WHbbPHSnbqbirQA5QT_Dbc+fT4xY7iu43VAQo0c-2KuHYg@mail.gmail.com> (sfid-20120620_153943_268587_0FC1C8B6)
+Subject: Re: [PATCH v3 1/2] nl80211/cfg80211: add scan channel times to scan command
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, eliad@wizery.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-07 at 12:41 +0530, Mohammed Shafi Shajakhan wrote:
-> Hi Joe,
+On Wed, Jun 20, 2012 at 3:12 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 
-Hello Mohammed.
-
-> On Thursday 07 June 2012 11:55 AM, Joe Perches wrote:
-> > On Thu, 2012-06-07 at 11:32 +0530, Mohammed Shafi Shajakhan wrote:
-> >> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
-> >>
-> >> ratelimit few aggregation related messages, these messages
-> >> floods the log when aggregation is disabled in the AP(for some
-> >> wifi testcases) and we run traffic between STA and AP.
-> >
-> > I looked at all of the #ifdef CONFIG_MAC80211_HT_DEBUG uses.
-> >
-> > I think it's better simply to define a mac80211_ht_dbg
-> > macro for each of the !CONFIG and CONFIG cases and convert
-> > all of the other #ifdef CONFIG_MAC80211_HT_DEBUG logging
-> > messages.
-> 
-> oh, ok.
-> 
-> >
-> > #ifdef CONFIG_MAC80211_HT_DEBUG
-> > #define mac80211_ht_dbg(fmt, ...)				\
-> > 	net_dbg_ratelimited(fmt, ##__VA_ARGS__)
-> > #else
-> > #define mac80211_ht_dbg(fmt, ...)				\
-> > do {								\
-> > 	if (0)							\
-> > 		net_dbg_ratelimited(fmt, ##__VA_ARGS__);	\
-> > } while (0)
-> >
-> > etc...
-> >
-> > I think there's one use of wiphy_dbg that could be a
-> > mac80211_ht_dbg without much loss.
-> >
-> > Maybe add "%s", wiphy_name() to the args there.
-> >
-> 
-> sorry, i could not understand with wiphy_debug, with mac80211_ht_debug. 
-> the later is for HT and aggregation related messages.
-
-It was an automatic conversion.
-
-Might as well unconvert it back too.
-
-$ git grep -E -A4 -n "ifdef CONFIG_MAC80211_HT_DEBUG" net/mac80211/rx.c
-net/mac80211/rx.c:635:#ifdef CONFIG_MAC80211_HT_DEBUG
-net/mac80211/rx.c-636-                  if (net_ratelimit())
-net/mac80211/rx.c-637-                          wiphy_debug(hw->wiphy,
-net/mac80211/rx.c-638-                                      "release an RX reorder frame due to timeout on earlier frames\n");
-net/mac80211/rx.c-639-#endif
-
-$ git blame -L635,+4 net/mac80211/rx.c
-aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 635) #ifdef CONFIG_MAC80211_HT_DEBUG
-aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 636)                    if (net_ratelimit())
-0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 637)                            wiphy_debug(hw->wiphy,
-0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 638)                                        "release an RX reorder fram
-
-$ git log -1 0fb9a9ec
-commit 0fb9a9ec27718fbf7fa3153bc94becefb716ceeb
-Author: Joe Perches <joe@perches.com>
-Date:   Fri Aug 20 16:25:38 2010 -0700
-
-    net/mac80211: Use wiphy_<level>
-    
-    Standardize logging messages from
-        printk(KERN_<level> "%s: " fmt , wiphy_name(foo), args);
-    to
-        wiphy_<level>(foo, fmt, args);
-    
-    Signed-off-by: Joe Perches <joe@perches.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> It makes a lot more sense than your way which can result in invalid
+> configurations being passed to the driver ...
+>
 
 
+I will respin.
+
+
+-- 
+Thanks,
+Victor.
