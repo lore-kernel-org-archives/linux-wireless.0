@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:42550 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751702Ab2FTNi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 09:38:56 -0400
-Message-ID: <4FE1D26D.8060702@neratec.com> (sfid-20120620_153859_838869_6F9743C4)
-Date: Wed, 20 Jun 2012 15:38:53 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-yw0-f51.google.com ([209.85.213.51]:54846 "EHLO
+	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759865Ab2FUQtE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 12:49:04 -0400
+Received: by yhnn12 with SMTP id n12so801218yhn.10
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 09:49:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on
- op-channel
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>    <1340111463-4554-3-git-send-email-victorg@ti.com>    <1340181856.4655.37.camel@jlt3.sipsolutions.net>    (sfid-20120620_104434_561430_DB0A480E) <1340181992.4655.39.camel@jlt3.sipsolutions.net>   <4FE1B9CB.2090206@neratec.com>  <1340193471.4655.57.camel@jlt3.sipsolutions.net>  <4FE1C8EC.4040902@neratec.com> <1340197920.4655.62.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340197920.4655.62.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340292308-6993-1-git-send-email-ozancag@gmail.com>
+References: <1340292308-6993-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 21 Jun 2012 09:48:43 -0700
+Message-ID: <CAB=NE6Uh90nV00TKSk+Rh9AG0yffKkYBZ7DiAe0Hvds-wMXQcg@mail.gmail.com> (sfid-20120621_184909_581862_4CD6AF6E)
+Subject: Re: [PATCH v2] compat: Define include guard for vga_switcheroo.h
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/20/2012 03:12 PM, Johannes Berg wrote:
-> On Wed, 2012-06-20 at 14:58 +0200, Zefir Kurtisi wrote:
-> 
->>>> No, if you bring it back up on the same DFS channel,
->>>> radar_detection_timeout will be set back to +60s by
->>>> start_radar_detection(). Looks safe to me.
->>>
->>> You need to think a bit more outside the regular code flows ... What if
->>> I'm not calling start_radar_detection()?
-> 
->> If you are not calling start_radar_detection() you are not using
->> hostapd. With the design approach we agreed on (when we initially
->> discussed DFS years ago) to have all the logic located in hostapd, it is
->> inevitable that those who intentionally want to bypass DFS regulatory
->> restrictions actually can. You can always replace hostapd by some
->> component that handles DFS control without caring the wait times.
-> 
-> But this kernel patch is attempting to enforce the wait time. Are you
-> saying it shouldn't even pretend to enforce it?
-> 
-> johannes
-> 
-No, it serves its purpose to ensure hostapd is not going mad and tries
-to enable TX before the CAC is over via redundant checks.
+On Thu, Jun 21, 2012 at 8:25 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> The check is missing in upstream. Patch sent but until this gets
+> merged, define it in compat tree for fixing compat-drm builds.
+>
+> Also add a temporary header with the same name which will be used
+> to check whether the header should be included or not.
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+> ---
+>  include/linux/compat-3.5.h     |    6 ++++++
+>  include/linux/vga_switcheroo.h |    6 ++++++
+>  2 files changed, 12 insertions(+)
+>  create mode 100644 include/linux/vga_switcheroo.h
+>
+> diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
+> index 74c8176..e999aee 100644
+> --- a/include/linux/compat-3.5.h
+> +++ b/include/linux/compat-3.5.h
+> @@ -78,6 +78,12 @@ static inline int fault_in_multipages_readable(const char __user *uaddr,
+>  /* switcheroo is available on >= 2.6.34 */
+>  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+>  #include <linux/vga_switcheroo.h>
+> +
+> +/* FIXME: The include guard is sent upstream, drop this
+> + * once the guard is merged. */
+> +#ifndef LINUX_VGA_SWITCHEROO_H
+> +#define LINUX_VGA_SWITCHEROO_H
+> +#endif
 
-What I'm saying is this: we defined that DFS regulatory compliance is
-provided by and distributed over driver, mac80211, and hostapd. We
-always must ensure that a working combination of those operates in
-compliance. But we have no control over it when a component is exchanged
-or modified.
+Don't you want this under the ifdef above?
 
-The regulatory statement we all signed does not even ask for that, it
-states that 'average users should not accidentally fail to comply...'
-which can be denied to be accidental for someone running master mode
-without hostapd.
+>  /*
+>  * This backports:
+>  *
+> diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
+> new file mode 100644
+> index 0000000..26ac71d
+> --- /dev/null
+> +++ b/include/linux/vga_switcheroo.h
+> @@ -0,0 +1,6 @@
+> +/* Hack for fixing the missing include guard in upstream
+> + * header. We will drop this when the patch is merged upstream. */
+> +
 
+How about just adding this file but with something like this:
 
-Back to topic: as stated above, radar_detection_timeout should be per
-wiphy. That would also resolve your concern, right?
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+/*
+ * XXX: The include guard was sent upstream, drop this
+ * once the guard is merged.
+ */
+#ifndef LINUX_VGA_SWITCHEROO_H /* in case this gets upstream */
+#include_next <linux/vga_switcheroo.h>
+#ifndef LINUX_VGA_SWITCHEROO_H /* do not redefine once this gets upstream */
+#define LINUX_VGA_SWITCHEROO_H
+#endif /* case 1 LINUX_VGA_SWITCHEROO_H
+#endif /* case 2 LINUX_VGA_SWITCHEROO_H
+#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
 
+  Luis
