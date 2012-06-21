@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:44001 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247Ab2FTMmj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 08:42:39 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ShKF3-0003nn-DR
-	for linux-wireless@vger.kernel.org; Wed, 20 Jun 2012 14:42:37 +0200
-Received: from frodo.informatik.rwth-aachen.de ([137.226.12.87])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 14:42:37 +0200
-Received: from flottetotte by frodo.informatik.rwth-aachen.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 14:42:37 +0200
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:52455 "HELO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757899Ab2FUC7R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 22:59:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-From: Torsten Zimmermann <flottetotte@googlemail.com>
-Subject: Keep association context while switching channel with =?utf-8?b?Y2ZnODAyMTFfbWdkX3dleHRfc2l3ZnJlcQ==?=
-Date: Wed, 20 Jun 2012 12:42:27 +0000 (UTC)
-Message-ID: <loom.20120620T143831-633@post.gmane.org> (sfid-20120620_144243_289387_27B88EE5)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: wake up main thread to handle Tx traffic if scan is delayed/aborted
+Date: Wed, 20 Jun 2012 19:58:36 -0700
+Message-Id: <1340247517-4593-5-git-send-email-bzhao@marvell.com> (sfid-20120621_045920_245899_4EBEF468)
+In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,i try to modify cfg80211_mgd_wext_siwfreq to 
-allow for the following situation 
-(just a test scenario) :
-- client is associated with an ap on channel x
-- client switches to channel y but keeps association context
-- client switches back to channel x and communicates with ap again
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-by now, i just modified cfg80211_mgd_wext_siwfreq in order 
-to switch the channel regardless of the state of the wdev. 
-however, wext tools receive the EBUSY from the driver.
-up to now, i could not figure out which part of the 
-driver is responsible for this behaviour.
+This is a flaw in recently implemented logic to handle Tx traffic
+and scan operation simultaneously. We missed to wakeup main thread
+to handle Tx traffic if scan is delayed/aborted.
 
-anyone has a hint or an idea what could be done to allow
-the driver to accept the above situation ?
-(at the moment, current tx or rx management, i.e. stopping 
-queues or dropping packets is not yet considered).
+For some cards (SD8797, for example), firmware will send SLEEP event
+if there is no activity for 50msec. While handling the SLEEP event,
+main thread will be woken up and Tx packet gets sent hence. In worst
+case Tx traffic will be delayed for 50msec.
 
-regards,
-torsten
+For other cards, such as USB8797, firmware won't send SLEEP event.
+So, Tx traffic gets stuck if no other event triggers the wakeup of
+main thread.
+
+This patch fixes above issues.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c |    1 +
+ drivers/net/wireless/mwifiex/main.c |    3 ++-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 0f18ef6..b543a4d 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -103,6 +103,7 @@ static void scan_delay_timer_fn(unsigned long data)
+ 				  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
+ 			adapter->scan_delay_cnt++;
+ 		}
++		queue_work(priv->adapter->workqueue, &priv->adapter->main_work);
+ 	} else {
+ 		/*
+ 		 * Tx data queue is empty. Get scan command from scan_pending_q
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 0f06f07..f0219ef 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -190,7 +190,8 @@ process_start:
+ 			    adapter->tx_lock_flag)
+ 				break;
+ 
+-			if (adapter->scan_processing || adapter->data_sent ||
++			if ((adapter->scan_processing &&
++			     !adapter->scan_delay_cnt) || adapter->data_sent ||
+ 			    mwifiex_wmm_lists_empty(adapter)) {
+ 				if (adapter->cmd_sent || adapter->curr_cmd ||
+ 				    (!is_command_pending(adapter)))
+-- 
+1.7.0.2
 
