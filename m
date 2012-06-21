@@ -1,82 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55639 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751890Ab2FBOVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 10:21:14 -0400
-Message-ID: <4FCA2151.50409@hauke-m.de> (sfid-20120602_162149_822608_CE1D4AF6)
-Date: Sat, 02 Jun 2012 16:21:05 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51450 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759026Ab2FUSae (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 14:30:34 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/3] ath9k_hw: fix smatch warnings in spur_mitigate
+Date: Fri, 22 Jun 2012 00:01:31 +0530
+Message-ID: <1340303492-30947-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120621_203038_097762_08DE6F9B)
+In-Reply-To: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de> <4F9CF839.1040401@broadcom.com> <4F9D4073.200@hauke-m.de> <4F9D7032.40507@broadcom.com> <4F9DC495.7060103@hauke-m.de> <4F9FAE48.10102@broadcom.com> <4FA02998.4000506@hauke-m.de>
-In-Reply-To: <4FA02998.4000506@hauke-m.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/01/2012 08:21 PM, Hauke Mehrtens wrote:
-> On 05/01/2012 11:35 AM, Arend van Spriel wrote:
->> On 04/30/2012 12:45 AM, Hauke Mehrtens wrote:
->>> On 04/29/2012 06:45 PM, Arend van Spriel wrote:
->>>> What firmware are you using?
->>>
->>> On b43 I am using firmware version 666.2 from wl 5.100.138, but also
->>> older versions are working. On brcmsmac I am using bcm43xx-0.fw and
->>> bcm43xx_hdr-0.fw from the linux-firmware git repo.
->>>
->>> Does the ucode you provide in bcm43xx-0.fw and bcm43xx_hdr-0.fw support
->>> rev 17 ieee80211 cores? For b43 it is the same file for all n-phy based
->>> cores rev>= 16, so for wl it should be the same, but have you added
->>> some special handling into this firmware for brcmsmac?
->>>
->>> Hauke
->>>
->>
->> Yes, the firmware for brcmsmac is specifically for 43224, 43225, and
->> 4313. I have to check with the firmware guys here what is needed for 4718.
-> I tried to load the firmware b43 uses (extracted from wl) in version
-> 666.2 and my bcm43224 device is working with that firmware like with the
-> firmware supposed for brcmsmac (bcm43xx-0.fw). after loading the b43
-> firmware my bcm4718 does not show the "wl1: wlc_coreinit: ucode did not
-> self-suspend!" line any more, but still "wlc_coreinit: txfifo mismatch:
-> ucode size 111 driver size 28518 index 5" and crashes the device after
-> that with a Data bus error.
-> 
-> I am able to connect to a 5GHz AP in client mode with my bcm43224
-> connected to the bcm4718 via PCIe with both firmware versions, but I am
-> just getting 30.3 Mbits/sec as the maximum speed.
-> 
-> Hauke
+This patch fixes below smatch warnings
 
-Hi Arend,
+drivers/net/wireless/ath/ath9k/ar9002_phy.c:275
+ar9002_hw_spur_mitigate() Error invalid range 576717 to 471859
+drivers/net/wireless/ath/ath9k/ar5008_phy.c:323
+ar5008_hw_spur_mitigate() Error invalid range 555746 to 492830
+drivers/net/wireless/ath/ath9k/ar5008_phy.c:326
+ar5008_hw_spur_mitigate() Error invalid range 587 to 481
+drivers/net/wireless/ath/ath9k/ar9003_calib.c:272
+ar9003_hw_iqcalibrate() Error invalid range 65 to 63
 
-I added some more stuff for bcm4718 into brcmsmac and now it is working
-in client mode with brcmsmac and the firmware from b43. There was some
-code removed which is needed for this chip between the initial commit to
-staging and now, I searched for it and added it again.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c   | 7 ++++---
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c   | 9 +++------
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 2 +-
+ 3 files changed, 8 insertions(+), 10 deletions(-)
 
-The BCM4718 only works when using the firmware b43 uses and not when
-using the firmware brcmsmac is supposed to use, so there is a limitation
-in the firmware to some devices not including bcm4718.
-For now I am using a hacked code to load the firmware b43 uses, but I
-will write a tool converting it to the format brcmsmac uses, or are you
-planing to release a new firmware with support for bcm4718 in the next
-few weeks?
-With the firmware supposed for brcmsmac I get this message:
-ieee80211 phy1: wl1: wlc_coreinit: ucode did not self-suspend!
-and some more follow up errors.
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 874186b..4130035 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -319,11 +319,12 @@ static void ar5008_hw_spur_mitigate(struct ath_hw *ah,
+ 	       SM(SPUR_RSSI_THRESH, AR_PHY_SPUR_REG_SPUR_RSSI_THRESH));
+ 	REG_WRITE(ah, AR_PHY_SPUR_REG, new);
+ 
+-	spur_delta_phase = ((bb_spur * 524288) / 100) &
+-		AR_PHY_TIMING11_SPUR_DELTA_PHASE;
++	spur_delta_phase = (bb_spur * 524288) / 100;
++	spur_delta_phase &= AR_PHY_TIMING11_SPUR_DELTA_PHASE;
+ 
+ 	denominator = IS_CHAN_2GHZ(chan) ? 440 : 400;
+-	spur_freq_sd = ((bb_spur * 2048) / denominator) & 0x3ff;
++	spur_freq_sd = (bb_spur * 2048) / denominator;
++	spur_freq_sd &= 0x3ff;
+ 
+ 	new = (AR_PHY_TIMING11_USE_SPUR_IN_AGC |
+ 	       SM(spur_freq_sd, AR_PHY_TIMING11_SPUR_FREQ_SD) |
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index 846dd79..58b9ca0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -270,13 +270,10 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
+ 	}
+ 
+ 	if (IS_CHAN_HT40(chan))
+-		spur_delta_phase =
+-			((bb_spur * 262144) /
+-			 10) & AR_PHY_TIMING11_SPUR_DELTA_PHASE;
++		spur_delta_phase = (bb_spur * 262144) / 10;
+ 	else
+-		spur_delta_phase =
+-			((bb_spur * 524288) /
+-			 10) & AR_PHY_TIMING11_SPUR_DELTA_PHASE;
++		spur_delta_phase = (bb_spur * 524288) / 10;
++	spur_delta_phase &= AR_PHY_TIMING11_SPUR_DELTA_PHASE;
+ 
+ 	denominator = IS_CHAN_2GHZ(chan) ? 44 : 40;
+ 	spur_freq_sd = ((bb_spur_off * 2048) / denominator) & 0x3ff;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index d7deb8c..8bee934 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -269,7 +269,7 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+ 				qCoff = -63;
+ 
+ 			iCoff = iCoff & 0x7f;
+-			qCoff = qCoff & 0x7f;
++			qCoff &= 0x7f;
+ 
+ 			ath_dbg(common, CALIBRATE,
+ 				"Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
+-- 
+1.7.11
 
-The wireless speed is quite poor, I just get 12MBit/s in both
-directions, less then with b43, but it uses ieee80211n rates, sirq is at
-~70% when doing these transfers. I tested the wireless of the bcm4718
-with iperf running on the device and on my PC, the access point was
-using ath9k.
-
-I will clean up my patches and will send them to the mailing list in the
-next days.
-
-The BCM5357 is not yet working and probably needs a updated nphy code.
-
-Hauke
