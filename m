@@ -1,129 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:51594 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755113Ab2FUOYa (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51610 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752442Ab2FUEdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 10:24:30 -0400
-Received: by lbgc1 with SMTP id c1so1749981lbg.15
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 07:24:27 -0700 (PDT)
-Message-ID: <1340288665.1631.275.camel@cumari.coelho.fi> (sfid-20120621_162433_244620_F1EBAF03)
-Subject: Re: [PATCH 08/12] wlcore: read FW logs from FW memory on watchdog
- recovery
-From: Luciano Coelho <coelho@ti.com>
-To: igalc@ti.com
-Cc: arik@wizery.com, linux-wireless@vger.kernel.org
-Date: Thu, 21 Jun 2012 17:24:25 +0300
-In-Reply-To: <1340287991-15241-9-git-send-email-coelho@ti.com>
-References: <1340287991-15241-1-git-send-email-coelho@ti.com>
-	 <1340287991-15241-9-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 21 Jun 2012 00:33:09 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20450.41898.681964.746059@gargle.gargle.HOWL> (sfid-20120621_063313_522573_D5C26370)
+Date: Thu, 21 Jun 2012 10:01:38 +0530
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: <drwho@infidigm.net>, <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k support ar9374?
+In-Reply-To: <CAD2nsn0C5xC5_VjxpuiwPTYunY21JhHF7pu6z+mDYRupMieGdQ@mail.gmail.com>
+References: <0a2a155916bf9ddc1974347ae6b0999b.squirrel@www.infidigm.net>
+	<CAD2nsn0C5xC5_VjxpuiwPTYunY21JhHF7pu6z+mDYRupMieGdQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And Igal on this one...
+Mohammed Shafi wrote:
+> i think no, ath9k_htc(USB)
+> http://linuxwireless.org/en/users/Drivers/ath9k_htc
 
-On Thu, 2012-06-21 at 17:13 +0300, Luciano Coelho wrote:
-> From: Igal Chernobelsky <igalc@ti.com>
-> 
-> FW uses a few memory blocks as a buffer to accumulate FW logs before
-> transmitting them to the host over SDIO. When FW WatchDog recovery
-> occurs, the last FW traces are still pending in the buffer. Driver is
-> to read these FW traces whether log mode is continuous or on demand.
-> 
-> FW memory blocks allocated for the log buffer are handled as a link list:
-> the first 4 bytes in each memory block contain FW address to the next block.
-> The end of list condition depends on FW log mode:
-> - on demand: the list is cyclic, the next address is equal to the first address
-> - continuous: the address is  equal to 0x2000000
-> 
-> Log data resides inside FW memory block with offset depending on
-> logger mode:
-> - on demand:  4 bytes (address of the next memory block)
-> - continuous: 4 bytes and Rx Descriptor structure size
-> 
-> Described FW logger API is backward compatible with previous FW versions.
-> 
-> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  drivers/net/wireless/ti/wlcore/main.c |   34 +++++++++++++++++++++------------
->  1 file changed, 22 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index a7c5e32..78edc58 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -770,14 +770,16 @@ size_t wl12xx_copy_fwlog(struct wl1271 *wl, u8 *memblock, size_t maxlen)
->  	return len;
->  }
->  
-> +#define WLCORE_FW_LOG_END 0x2000000
-> +
->  static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
->  {
->  	u32 addr;
-> -	u32 first_addr;
-> +	u32 offset;
-> +	u32 end_of_log;
->  	u8 *block;
->  
->  	if ((wl->quirks & WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED) ||
-> -	    (wl->conf.fwlog.mode != WL12XX_FWLOG_ON_DEMAND) ||
->  	    (wl->conf.fwlog.mem_blocks == 0))
->  		return;
->  
-> @@ -791,19 +793,26 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
->  	 * Make sure the chip is awake and the logger isn't active.
->  	 * Do not send a stop fwlog command if the fw is hanged.
->  	 */
-> -	if (!wl1271_ps_elp_wakeup(wl) && !wl->watchdog_recovery)
-> -		wl12xx_cmd_stop_fwlog(wl);
-> -	else
-> +	if (wl1271_ps_elp_wakeup(wl))
->  		goto out;
-> +	if (!wl->watchdog_recovery)
-> +		wl12xx_cmd_stop_fwlog(wl);
->  
->  	/* Read the first memory block address */
->  	wl12xx_fw_status(wl, wl->fw_status_1, wl->fw_status_2);
-> -	first_addr = le32_to_cpu(wl->fw_status_2->log_start_addr);
-> -	if (!first_addr)
-> +	addr = le32_to_cpu(wl->fw_status_2->log_start_addr);
-> +	if (!addr)
->  		goto out;
->  
-> +	if (wl->conf.fwlog.mode == WL12XX_FWLOG_CONTINUOUS) {
-> +		offset = sizeof(addr) + sizeof(struct wl1271_rx_descriptor);
-> +		end_of_log = WLCORE_FW_LOG_END;
-> +	} else {
-> +		offset = sizeof(addr);
-> +		end_of_log = addr;
-> +	}
-> +
->  	/* Traverse the memory blocks linked list */
-> -	addr = first_addr;
->  	do {
->  		memset(block, 0, WL12XX_HW_BLOCK_SIZE);
->  		wl1271_read_hwaddr(wl, addr, block, WL12XX_HW_BLOCK_SIZE,
-> @@ -812,13 +821,14 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
->  		/*
->  		 * Memory blocks are linked to one another. The first 4 bytes
->  		 * of each memory block hold the hardware address of the next
-> -		 * one. The last memory block points to the first one.
-> +		 * one. The last memory block points to the first one in
-> +		 * on demand mode and is equal to 0x2000000 in continuous mode.
->  		 */
->  		addr = le32_to_cpup((__le32 *)block);
-> -		if (!wl12xx_copy_fwlog(wl, block + sizeof(addr),
-> -				       WL12XX_HW_BLOCK_SIZE - sizeof(addr)))
-> +		if (!wl12xx_copy_fwlog(wl, block + offset,
-> +				       WL12XX_HW_BLOCK_SIZE - offset))
->  			break;
-> -	} while (addr && (addr != first_addr));
-> +	} while (addr && (addr != end_of_log));
->  
->  	wake_up_interruptible(&wl->fwlog_waitq);
->  
+No, it doesn't.
 
-
+Sujith
