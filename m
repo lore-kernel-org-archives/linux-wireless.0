@@ -1,49 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4667 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753012Ab2FMJqt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 05:46:49 -0400
-Message-ID: <4FD85FE3.3090604@broadcom.com> (sfid-20120613_114652_433799_1888C972)
-Date: Wed, 13 Jun 2012 11:39:47 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 7/9] brcm80211: smac: use mac80211 channel data
- for tx power limits
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
- <1338906849-26135-8-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1338906849-26135-8-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:50098 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758223Ab2FUDVh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 23:21:37 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.5 3/4] mwifiex: fix bugs in event handling code
+Date: Wed, 20 Jun 2012 20:21:12 -0700
+Message-Id: <1340248873-5455-4-git-send-email-bzhao@marvell.com> (sfid-20120621_052139_586865_D5ACFD30)
+In-Reply-To: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
+References: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2012 04:34 PM, Seth Forshee wrote:
-> Currently the limits from the internal X2 domain are used, regardless
-> of what regulatory rules are in effect. Instead use the power limits set
-> by the higher-level regulatory support.
-> 
-> The rules for the MIMO power limits are still always derived from the
-> world domain. Guidance from Broadcom is needed on how these limits
-> should be determined for other regulatory domains.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Have not got definite answer yet. Luis indicated that Qualcomm/Atheros
-had similar construct, but that is was not really needed and could be
-derived. I will have to follow up on it in a separate patch.
+This patch ensures uniformity in event skb sent by interface code
+(USB/PCIe/SDIO) which automatically fixes following bugs.
 
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/channel.c |   73 ++++-----------------
->  1 file changed, 14 insertions(+), 59 deletions(-)
+1) For USB interface, same buffer is reused for receiving cmd and
+events from firmware. While handling events, we perform
+skb_pull(skb, 4) to remove event header. Corresponding skb_push()
+call is missing while submitting the buffer.
+2) For PCIe interface, event skb is passed with event header.
+Recently added uAP events EVENT_UAP_STA_ASSOC, EVENT_UAP_STA_DEAUTH
+will not work for PCIe, as they assume event skb points to event body.
 
-Gr. AvS
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c      |    6 +++---
+ drivers/net/wireless/mwifiex/sta_event.c |    9 ++++-----
+ drivers/net/wireless/mwifiex/usb.c       |    6 +++---
+ 3 files changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index e037747..fc8a9bf 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -978,10 +978,10 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 		dev_dbg(adapter->dev, "info: --- Rx: Event ---\n");
+ 		adapter->event_cause = *(u32 *) skb->data;
+ 
+-		skb_pull(skb, MWIFIEX_EVENT_HEADER_LEN);
+-
+ 		if ((skb->len > 0) && (skb->len  < MAX_EVENT_SIZE))
+-			memcpy(adapter->event_body, skb->data, skb->len);
++			memcpy(adapter->event_body,
++			       skb->data + MWIFIEX_EVENT_HEADER_LEN,
++			       skb->len);
+ 
+ 		/* event cause has been saved to adapter->event_cause */
+ 		adapter->event_received = true;
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 4ace5a3..11e731f 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -406,9 +406,9 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 		break;
+ 
+ 	case EVENT_UAP_STA_ASSOC:
+-		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
+ 		memset(&sinfo, 0, sizeof(sinfo));
+-		event = (struct mwifiex_assoc_event *)adapter->event_skb->data;
++		event = (struct mwifiex_assoc_event *)
++			(adapter->event_body + MWIFIEX_UAP_EVENT_EXTRA_HEADER);
+ 		if (le16_to_cpu(event->type) == TLV_TYPE_UAP_MGMT_FRAME) {
+ 			len = -1;
+ 
+@@ -433,9 +433,8 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 				 GFP_KERNEL);
+ 		break;
+ 	case EVENT_UAP_STA_DEAUTH:
+-		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
+-		cfg80211_del_sta(priv->netdev, adapter->event_skb->data,
+-				 GFP_KERNEL);
++		cfg80211_del_sta(priv->netdev, adapter->event_body +
++				 MWIFIEX_UAP_EVENT_EXTRA_HEADER, GFP_KERNEL);
+ 		break;
+ 	case EVENT_UAP_BSS_IDLE:
+ 		priv->media_connected = false;
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 49ebf20..e6d796f 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -91,7 +91,6 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 			}
+ 			skb_copy_from_linear_data(skb, &tmp, sizeof(u32));
+ 			adapter->event_cause = le32_to_cpu(tmp);
+-			skb_pull(skb, sizeof(u32));
+ 			dev_dbg(dev, "event_cause %#x\n", adapter->event_cause);
+ 
+ 			if (skb->len > MAX_EVENT_SIZE) {
+@@ -99,8 +98,9 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 				return -1;
+ 			}
+ 
+-			skb_copy_from_linear_data(skb, adapter->event_body,
+-						  skb->len);
++			memcpy(adapter->event_body, skb->data +
++			       MWIFIEX_EVENT_HEADER_LEN, skb->len);
++
+ 			adapter->event_received = true;
+ 			adapter->event_skb = skb;
+ 			break;
+-- 
+1.7.0.2
 
