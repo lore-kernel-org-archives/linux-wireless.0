@@ -1,85 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52363 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752292Ab2FSOvD (ORCPT
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:42510 "EHLO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753627Ab2FUONY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 21 Jun 2012 10:13:24 -0400
+Received: by eeke49 with SMTP id e49so229231eek.41
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 07:13:21 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 04/17] nl80211: change __cfg80211_rdev_from_info
-Date: Tue, 19 Jun 2012 16:50:43 +0200
-Message-Id: <1340117456-10154-5-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165116_942707_DBA6D131)
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 01/12] wlcore: suppress error message on Rx BA session removal
+Date: Thu, 21 Jun 2012 17:13:00 +0300
+Message-Id: <1340287991-15241-2-git-send-email-coelho@ti.com> (sfid-20120621_161401_533575_C6C681B9)
+In-Reply-To: <1340287991-15241-1-git-send-email-coelho@ti.com>
+References: <1340287991-15241-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-Change the function to __cfg80211_rdev_from_attrs
-to take attributes instead of the info struct to
-make it usable from dump callbacks for testmode.
+The ampdu_action() function is called on the reconfig() path to remove
+existing Rx BA sessions. Since these don't exist for the low level
+driver, we output an error message. Turn the message into a debug
+message for now, until the mac80211 reconfig flow is changed.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- net/wireless/nl80211.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index af23291..7e94d4d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -71,23 +71,23 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
- }
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 8eefcd7..22b342f 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4366,9 +4366,14 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
  
- static struct cfg80211_registered_device *
--__cfg80211_rdev_from_info(struct net *netns, struct genl_info *info)
-+__cfg80211_rdev_from_attrs(struct net *netns, struct nlattr **attrs)
- {
- 	struct cfg80211_registered_device *rdev = NULL, *tmp;
- 	struct net_device *netdev;
+ 	case IEEE80211_AMPDU_RX_STOP:
+ 		if (!(*ba_bitmap & BIT(tid))) {
+-			ret = -EINVAL;
+-			wl1271_error("no active RX BA session on tid: %d",
++			/*
++			 * this happens on reconfig - so only output a debug
++			 * message for now, and don't fail the function.
++			 */
++			wl1271_debug(DEBUG_MAC80211,
++				     "no active RX BA session on tid: %d",
+ 				     tid);
++			ret = 0;
+ 			break;
+ 		}
  
- 	assert_cfg80211_lock();
- 
--	if (!info->attrs[NL80211_ATTR_WIPHY] &&
--	    !info->attrs[NL80211_ATTR_IFINDEX])
-+	if (!attrs[NL80211_ATTR_WIPHY] &&
-+	    !attrs[NL80211_ATTR_IFINDEX])
- 		return ERR_PTR(-EINVAL);
- 
--	if (info->attrs[NL80211_ATTR_WIPHY])
-+	if (attrs[NL80211_ATTR_WIPHY])
- 		rdev = cfg80211_rdev_by_wiphy_idx(
--				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
-+				nla_get_u32(attrs[NL80211_ATTR_WIPHY]));
- 
--	if (info->attrs[NL80211_ATTR_IFINDEX]) {
--		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
-+	if (attrs[NL80211_ATTR_IFINDEX]) {
-+		int ifindex = nla_get_u32(attrs[NL80211_ATTR_IFINDEX]);
- 		netdev = dev_get_by_index(netns, ifindex);
- 		if (netdev) {
- 			if (netdev->ieee80211_ptr)
-@@ -145,7 +145,7 @@ cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev;
- 
- 	mutex_lock(&cfg80211_mutex);
--	rdev = __cfg80211_rdev_from_info(netns, info);
-+	rdev = __cfg80211_rdev_from_attrs(netns, info->attrs);
- 
- 	/* if it is not an error we grab the lock on
- 	 * it to assure it won't be going away while
-@@ -1422,7 +1422,8 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	if (!netdev) {
--		rdev = __cfg80211_rdev_from_info(genl_info_net(info), info);
-+		rdev = __cfg80211_rdev_from_attrs(genl_info_net(info),
-+						  info->attrs);
- 		if (IS_ERR(rdev)) {
- 			mutex_unlock(&cfg80211_mutex);
- 			return PTR_ERR(rdev);
 -- 
 1.7.10
 
