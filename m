@@ -1,66 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:47704 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937Ab2FIPpX (ORCPT
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:53341 "HELO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757982Ab2FUC7B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 11:45:23 -0400
-Subject: [PATCH] rndis_wlan: fix matching bssid check in
- rndis_check_bssid_list()
-To: "John W. Linville" <linville@tuxdriver.com>
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Sat, 09 Jun 2012 18:45:20 +0300
-Message-ID: <20120609154520.24357.35871.stgit@localhost6.localdomain6> (sfid-20120609_174604_066220_9EEADF84)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 20 Jun 2012 22:59:01 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.5] mwifiex: fix bugs in event handling code
+Date: Wed, 20 Jun 2012 19:58:34 -0700
+Message-Id: <1340247517-4593-3-git-send-email-bzhao@marvell.com> (sfid-20120621_045905_797589_A48BC89C)
+In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rndis_check_bssid_list() originally tried to check if bssid->mac and
-match_bssid are equal using compare_ether_addr() when it should use
-!compare_ether_addr(). This check was added by commit
-b5257c952dda24df7078c74b7b811b44c6e49206 as part of workaround for
-hardware issue.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Commit 2e42e4747ea72943c21551d8a206b51a9893b1e0 that replaced
-compare_ether_addr with ether_addr_equal relieved that this compare
-to be inverse of what it should be.
+This patch ensures uniformity in event skb sent by interface code
+(USB/PCIe/SDIO) which automatically fixes following bugs.
 
-Compare was added as response to hardware bug, where bssid-list does
-not contain BSSID and other information of currently connected AP
-(spec insists that device must provide this information in the list
-when connected). Lack bssid-data on current connection then causes
-WARN_ON somewhere in cfg80211. Workaround was to check if bssid-list
-returns current bssid and if it does not, manually construct bssid
-information in other ways. And this workaround worked, with inverse
-check. Which must mean that when hardware is experiencing the problem,
-it's actually returning empty bssid-list and this check didn't make
-any difference for workaround.
+1) For USB interface, same buffer is reused for receiving cmd and
+events from firmware. While handling events, we perform
+skb_pull(skb, 4) to remove event header. Corresponding skb_push()
+call is missing while submitting the buffer.
+2) For PCIe interface, event skb is passed with event header.
+Recently added uAP events EVENT_UAP_STA_ASSOC, EVENT_UAP_STA_DEAUTH
+will not work for PCIe, as they assume event skb points to event body.
 
-However inverse check causes workaround be activated when bssid-list
-returns only entry, currently connected BSSID. That does not cause
-problems in itself, just slightly more inaccurate information in
-scan-list.
-
-Cc: Joe Perches <joe@perches.com>
-Cc: David S. Miller <davem@davemloft.net>
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/rndis_wlan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/sdio.c      |    6 +++---
+ drivers/net/wireless/mwifiex/sta_event.c |    9 ++++-----
+ drivers/net/wireless/mwifiex/usb.c       |    6 +++---
+ 3 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 2e9e6af..dfcd02a 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2110,7 +2110,7 @@ resize_buf:
- 	while (check_bssid_list_item(bssid, bssid_len, buf, len)) {
- 		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
- 		    matched) {
--			if (!ether_addr_equal(bssid->mac, match_bssid))
-+			if (ether_addr_equal(bssid->mac, match_bssid))
- 				*matched = true;
- 		}
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index e037747..fc8a9bf 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -978,10 +978,10 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 		dev_dbg(adapter->dev, "info: --- Rx: Event ---\n");
+ 		adapter->event_cause = *(u32 *) skb->data;
  
+-		skb_pull(skb, MWIFIEX_EVENT_HEADER_LEN);
+-
+ 		if ((skb->len > 0) && (skb->len  < MAX_EVENT_SIZE))
+-			memcpy(adapter->event_body, skb->data, skb->len);
++			memcpy(adapter->event_body,
++			       skb->data + MWIFIEX_EVENT_HEADER_LEN,
++			       skb->len);
+ 
+ 		/* event cause has been saved to adapter->event_cause */
+ 		adapter->event_received = true;
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 4ace5a3..11e731f 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -406,9 +406,9 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 		break;
+ 
+ 	case EVENT_UAP_STA_ASSOC:
+-		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
+ 		memset(&sinfo, 0, sizeof(sinfo));
+-		event = (struct mwifiex_assoc_event *)adapter->event_skb->data;
++		event = (struct mwifiex_assoc_event *)
++			(adapter->event_body + MWIFIEX_UAP_EVENT_EXTRA_HEADER);
+ 		if (le16_to_cpu(event->type) == TLV_TYPE_UAP_MGMT_FRAME) {
+ 			len = -1;
+ 
+@@ -433,9 +433,8 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 				 GFP_KERNEL);
+ 		break;
+ 	case EVENT_UAP_STA_DEAUTH:
+-		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
+-		cfg80211_del_sta(priv->netdev, adapter->event_skb->data,
+-				 GFP_KERNEL);
++		cfg80211_del_sta(priv->netdev, adapter->event_body +
++				 MWIFIEX_UAP_EVENT_EXTRA_HEADER, GFP_KERNEL);
+ 		break;
+ 	case EVENT_UAP_BSS_IDLE:
+ 		priv->media_connected = false;
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 49ebf20..e6d796f 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -91,7 +91,6 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 			}
+ 			skb_copy_from_linear_data(skb, &tmp, sizeof(u32));
+ 			adapter->event_cause = le32_to_cpu(tmp);
+-			skb_pull(skb, sizeof(u32));
+ 			dev_dbg(dev, "event_cause %#x\n", adapter->event_cause);
+ 
+ 			if (skb->len > MAX_EVENT_SIZE) {
+@@ -99,8 +98,9 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 				return -1;
+ 			}
+ 
+-			skb_copy_from_linear_data(skb, adapter->event_body,
+-						  skb->len);
++			memcpy(adapter->event_body, skb->data +
++			       MWIFIEX_EVENT_HEADER_LEN, skb->len);
++
+ 			adapter->event_received = true;
+ 			adapter->event_skb = skb;
+ 			break;
+-- 
+1.7.0.2
 
