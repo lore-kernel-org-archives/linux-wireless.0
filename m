@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44921 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029Ab2FLLBy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12451 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759026Ab2FUSaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 07:01:54 -0400
-Message-ID: <1339498908.4531.0.camel@jlt3.sipsolutions.net> (sfid-20120612_130158_609842_3FCA5FCE)
-Subject: Re: [RFC/RFT] mac80211: stop connection monitor on dissassoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "Spinadel, David" <david.spinadel@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 12 Jun 2012 13:01:48 +0200
-In-Reply-To: <20120612102023.GB2612@redhat.com>
-References: <20120612095850.GA2612@redhat.com>
-	 <F781B6216F70FE49AB7B89F25E2F80C0187B2A@HASMSX103.ger.corp.intel.com>
-	 <20120612102023.GB2612@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 21 Jun 2012 14:30:25 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/3] ath9k_hw: fix buffer overflow smatch warning
+Date: Fri, 22 Jun 2012 00:01:30 +0530
+Message-ID: <1340303492-30947-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120621_203028_861179_C8708E09)
+In-Reply-To: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-12 at 12:20 +0200, Stanislaw Gruszka wrote:
-> Hi.
-> 
-> On Tue, Jun 12, 2012 at 10:05:52AM +0000, Spinadel, David wrote:
-> > This problem is not easy to reproduce.
-> > Attached my patch I just sent to Johannes, it seems to work here. 
-> > It basically the same change as yours, but I also removed stop_poll from ieee80211_sta_connection_lost().
-> 
-> Make sense. Johannes plese process with David patch.
+drivers/net/wireless/ath/ath9k/btcoex.c:93
+  ath9k_hw_init_btcoex_hw() error: buffer overflow
+  'ah->hw_gen_timers.gen_timer_index' 32 <= 2009813776
 
-Ok, will do. David, can you please submit it internally, I'll take it
-from there.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index acd4373..f06477a 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -89,7 +89,7 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
+ 		AR_BT_DISABLE_BT_ANT;
+ 
+ 	for (i = 0; i < 32; i++) {
+-		idx = (debruijn32 << i) >> 27;
++		idx = ((debruijn32 << i) >> 27) % 32;
+ 		ah->hw_gen_timers.gen_timer_index[idx] = i;
+ 	}
+ }
+-- 
+1.7.11
 
