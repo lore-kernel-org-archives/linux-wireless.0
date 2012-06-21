@@ -1,110 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9656 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937Ab2FLEmk (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:41042 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752763Ab2FUG1h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 00:42:40 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v3 1/2] ath9k: defer btcoex scheme update
-Date: Tue, 12 Jun 2012 10:13:53 +0530
-Message-ID: <1339476234-7364-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120612_064310_763639_16AFD7F5)
+	Thu, 21 Jun 2012 02:27:37 -0400
+Received: by eeit10 with SMTP id t10so53974eei.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 23:27:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20450.41898.681964.746059@gargle.gargle.HOWL>
+References: <0a2a155916bf9ddc1974347ae6b0999b.squirrel@www.infidigm.net>
+ <CAD2nsn0C5xC5_VjxpuiwPTYunY21JhHF7pu6z+mDYRupMieGdQ@mail.gmail.com> <20450.41898.681964.746059@gargle.gargle.HOWL>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 21 Jun 2012 16:27:14 +1000
+Message-ID: <CAGRGNgUH_zFLHWkpsN+XU=EMJ+h3or28d+ZBHJc-sUtBCy6ooA@mail.gmail.com> (sfid-20120621_082740_914757_F439E290)
+Subject: Re: ath9k support ar9374?
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>, drwho@infidigm.net,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As btcoex scheme updation might sleep, remove the function call
-from tasklet context and queue it up as a separate work.
+Hi,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    3 +++
- drivers/net/wireless/ath/ath9k/mci.c   |   14 +++++++++++---
- 3 files changed, 15 insertions(+), 3 deletions(-)
+On Thu, Jun 21, 2012 at 2:31 PM, Sujith Manoharan
+<c_manoha@qca.qualcomm.com> wrote:
+> Mohammed Shafi wrote:
+>> i think no, ath9k_htc(USB)
+>> http://linuxwireless.org/en/users/Drivers/ath9k_htc
+>
+> No, it doesn't.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 02fc1c1..a8c0500 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -698,6 +698,7 @@ struct ath_softc {
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	struct ath_btcoex btcoex;
- 	struct ath_mci_coex mci_coex;
-+	struct work_struct mci_work;
- #endif
- 
- 	struct ath_descdma txsdma;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6cf7b80..52561b3 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -150,6 +150,9 @@ static void __ath_cancel_work(struct ath_softc *sc)
- 	cancel_work_sync(&sc->hw_check_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+	cancel_work_sync(&sc->mci_work);
-+#endif
- }
- 
- static void ath_cancel_work(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 92d61cc..e53df86 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -52,7 +52,7 @@ static bool ath_mci_add_profile(struct ath_common *common,
- 	    (info->type != MCI_GPM_COEX_PROFILE_VOICE))
- 		return false;
- 
--	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-+	entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
- 	if (!entry)
- 		return false;
- 
-@@ -219,6 +219,13 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- 	}
- }
- 
-+static void ath9k_mci_work(struct work_struct *work)
-+{
-+	struct ath_softc *sc = container_of(work, struct ath_softc, mci_work);
-+
-+	ath_mci_update_scheme(sc);
-+}
-+
- static void ath_mci_process_profile(struct ath_softc *sc,
- 				    struct ath_mci_profile_info *info)
- {
-@@ -249,7 +256,7 @@ static void ath_mci_process_profile(struct ath_softc *sc,
- 		btcoex->duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
- 	}
- 
--	ath_mci_update_scheme(sc);
-+	ieee80211_queue_work(sc->hw, &sc->mci_work);
- }
- 
- static void ath_mci_process_status(struct ath_softc *sc,
-@@ -283,7 +290,7 @@ static void ath_mci_process_status(struct ath_softc *sc,
- 	} while (++i < ATH_MCI_MAX_PROFILE);
- 
- 	if (old_num_mgmt != mci->num_mgmt)
--		ath_mci_update_scheme(sc);
-+		ieee80211_queue_work(sc->hw, &sc->mci_work);
- }
- 
- static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
-@@ -377,6 +384,7 @@ int ath_mci_setup(struct ath_softc *sc)
- 			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
- 			 mci->sched_buf.bf_paddr);
- 
-+	INIT_WORK(&sc->mci_work, ath9k_mci_work);
- 	ath_dbg(common, MCI, "MCI Initialized\n");
- 
- 	return 0;
+A quick google search implies that it's an ath6k device.
+
+http://cateee.net/lkddb/web-lkddb/ATH6KL.html
+http://lxr.linux.no/#linux+v3.4.3/drivers/net/wireless/ath/ath6kl/usb.c#L395
+
+Thanks,
+
 -- 
-1.7.10.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
