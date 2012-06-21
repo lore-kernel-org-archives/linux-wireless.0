@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:35507 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753048Ab2FSG5L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 02:57:11 -0400
-Received: by lbon10 with SMTP id n10so6517194lbo.13
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 23:57:08 -0700 (PDT)
-Message-ID: <1340089024.1631.143.camel@cumari.coelho.fi> (sfid-20120619_085719_159251_D4000C71)
-Subject: Re: [PATCH 7/7] mac80211: add DFS support to monitor interface
-From: Luciano Coelho <coelho@ti.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
-	assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Date: Tue, 19 Jun 2012 09:57:04 +0300
-In-Reply-To: <4FE01FDD.4080004@adurom.com>
-References: <1340030798-28992-1-git-send-email-victorg@ti.com>
-	 <1340030798-28992-8-git-send-email-victorg@ti.com>
-	 <4FE01FDD.4080004@adurom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:3534 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758959Ab2FUSew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 14:34:52 -0400
+Message-ID: <4FE36942.1090801@broadcom.com> (sfid-20120621_203456_415633_824247E0)
+Date: Thu, 21 Jun 2012 20:34:42 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Mahesh Palivela" <maheshp@posedge.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3] cfg80211/mac80211: 802.11ac changes
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3CE8@mbx022-e1-nj-10.exch022.domain.local>
+ <1340302471.4489.43.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340302471.4489.43.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-19 at 09:44 +0300, Kalle Valo wrote:
-> On 06/18/2012 05:46 PM, Victor Goldenshtein wrote:
-> > Stop dropping packets if we are on 'radar channel'
-> > and the DFS is enabled/supported.
-> > 
-> > Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+On 06/21/2012 08:14 PM, Johannes Berg wrote:
+> On Thu, 2012-06-21 at 16:51 +0000, Mahesh Palivela wrote:
 > 
-> Why? I'm not very familiar with DFS so this change is not clear to me.
+>> +/* 802.11ac VHT Capabilities */
+>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
+>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454               0x00000002
+> 
+> I have a feeling there should be a value for 3895, since this isn't
+> really a bitfield only (it doesn't make sense to set both of these, in
+> fact 3 is reserved)
 
-That's not a good excuse. :P
+These are matching the values specified for the VHP Capability Info IE.
+3895 is specified as 0. Value 3 is reserved because it is not to be
+regarded as a bit field.
 
-> You could write more about the reasoning in the commit log.
-
-But I totally agree that the "why" is missing here. ;)
-
---
-Luca.
+Gr. AvS
 
