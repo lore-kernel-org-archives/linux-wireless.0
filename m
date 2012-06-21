@@ -1,111 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45297 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066Ab2FKSC7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 14:02:59 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:56507 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756825Ab2FUMDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 08:03:42 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 1/2] ath9k: defer btcoex scheme update
-Date: Mon, 11 Jun 2012 23:34:04 +0530
-Message-ID: <1339437845-4055-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_200302_630144_D4ECC4E8)
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v2 4/7] mac80211: add chanctx tracing
+Date: Thu, 21 Jun 2012 14:03:33 +0200
+Message-ID: <1340280216-18807-5-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140356_253977_5FF402C0)
+In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As btcoex scheme updation might sleep, remove the function call
-from tasklet context and queue it up as a separate work.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-v2: moved cancel_work inside ath_cancel_work
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    3 +++
- drivers/net/wireless/ath/ath9k/mci.c   |   14 +++++++++++---
- 3 files changed, 15 insertions(+), 3 deletions(-)
+ net/mac80211/driver-ops.h   |   10 +++++
+ net/mac80211/driver-trace.h |   88 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 98 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 02fc1c1..a8c0500 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -698,6 +698,7 @@ struct ath_softc {
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	struct ath_btcoex btcoex;
- 	struct ath_mci_coex mci_coex;
-+	struct work_struct mci_work;
- #endif
- 
- 	struct ath_descdma txsdma;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e655f2a..a6f83b6 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -150,6 +150,9 @@ static void __ath_cancel_work(struct ath_softc *sc)
- 	cancel_work_sync(&sc->hw_check_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+	cancel_work_sync(&sc->mci_work);
-+#endif
- }
- 
- static void ath_cancel_work(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 92d61cc..e53df86 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -52,7 +52,7 @@ static bool ath_mci_add_profile(struct ath_common *common,
- 	    (info->type != MCI_GPM_COEX_PROFILE_VOICE))
- 		return false;
- 
--	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-+	entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
- 	if (!entry)
- 		return false;
- 
-@@ -219,6 +219,13 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- 	}
- }
- 
-+static void ath9k_mci_work(struct work_struct *work)
-+{
-+	struct ath_softc *sc = container_of(work, struct ath_softc, mci_work);
-+
-+	ath_mci_update_scheme(sc);
-+}
-+
- static void ath_mci_process_profile(struct ath_softc *sc,
- 				    struct ath_mci_profile_info *info)
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index e79f06d..dde9f33 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -850,24 +850,30 @@ static inline void
+ drv_add_chanctx(struct ieee80211_local *local,
+ 		struct ieee80211_chanctx *ctx)
  {
-@@ -249,7 +256,7 @@ static void ath_mci_process_profile(struct ath_softc *sc,
- 		btcoex->duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
- 	}
- 
--	ath_mci_update_scheme(sc);
-+	ieee80211_queue_work(sc->hw, &sc->mci_work);
++	trace_drv_add_chanctx(local, ctx);
+ 	if (local->ops->add_chanctx)
+ 		local->ops->add_chanctx(&local->hw, &ctx->conf);
++	trace_drv_return_void(local);
  }
  
- static void ath_mci_process_status(struct ath_softc *sc,
-@@ -283,7 +290,7 @@ static void ath_mci_process_status(struct ath_softc *sc,
- 	} while (++i < ATH_MCI_MAX_PROFILE);
- 
- 	if (old_num_mgmt != mci->num_mgmt)
--		ath_mci_update_scheme(sc);
-+		ieee80211_queue_work(sc->hw, &sc->mci_work);
+ static inline void
+ drv_remove_chanctx(struct ieee80211_local *local,
+ 		   struct ieee80211_chanctx *ctx)
+ {
++	trace_drv_remove_chanctx(local, ctx);
+ 	if (local->ops->remove_chanctx)
+ 		local->ops->remove_chanctx(&local->hw, &ctx->conf);
++	trace_drv_return_void(local);
  }
  
- static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
-@@ -377,6 +384,7 @@ int ath_mci_setup(struct ath_softc *sc)
- 			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
- 			 mci->sched_buf.bf_paddr);
+ static inline void
+ drv_change_chantype(struct ieee80211_local *local,
+ 		    struct ieee80211_chanctx *ctx)
+ {
++	trace_drv_change_chantype(local, ctx);
+ 	if (local->ops->change_chantype)
+ 		local->ops->change_chantype(&local->hw, &ctx->conf);
++	trace_drv_return_void(local);
+ }
  
-+	INIT_WORK(&sc->mci_work, ath9k_mci_work);
- 	ath_dbg(common, MCI, "MCI Initialized\n");
+ static inline void
+@@ -877,10 +883,12 @@ drv_assign_vif_chanctx(struct ieee80211_local *local,
+ {
+ 	check_sdata_in_driver(sdata);
  
- 	return 0;
++	trace_drv_assign_vif_chanctx(local, sdata, ctx);
+ 	if (local->ops->assign_vif_chanctx)
+ 		local->ops->assign_vif_chanctx(&local->hw,
+ 					       &sdata->vif,
+ 					       &ctx->conf);
++	trace_drv_return_void(local);
+ }
+ 
+ static inline void
+@@ -890,10 +898,12 @@ drv_unassign_vif_chanctx(struct ieee80211_local *local,
+ {
+ 	check_sdata_in_driver(sdata);
+ 
++	trace_drv_unassign_vif_chanctx(local, sdata, ctx);
+ 	if (local->ops->unassign_vif_chanctx)
+ 		local->ops->unassign_vif_chanctx(&local->hw,
+ 						 &sdata->vif,
+ 						 &ctx->conf);
++	trace_drv_return_void(local);
+ }
+ 
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6de00b2..16b0e43 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -1606,6 +1606,94 @@ TRACE_EVENT(stop_queue,
+ 		LOCAL_PR_ARG, __entry->queue, __entry->reason
+ 	)
+ );
++
++DECLARE_EVENT_CLASS(local_chanctx,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_chanctx *ctx),
++
++	TP_ARGS(local, ctx),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(void *, ctx)
++		__field(int, freq)
++		__field(int, chantype)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->ctx = ctx;
++		__entry->freq = ctx->conf.channel->center_freq;
++		__entry->chantype = ctx->conf.channel_type;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " ctx:%p freq:%dMhz chantype:%d",
++		LOCAL_PR_ARG, __entry->ctx, __entry->freq, __entry->chantype
++	)
++);
++
++DEFINE_EVENT(local_chanctx, drv_add_chanctx,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_chanctx *ctx),
++	TP_ARGS(local, ctx)
++);
++
++DEFINE_EVENT(local_chanctx, drv_remove_chanctx,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_chanctx *ctx),
++	TP_ARGS(local, ctx)
++);
++
++DEFINE_EVENT(local_chanctx, drv_change_chantype,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_chanctx *ctx),
++	TP_ARGS(local, ctx)
++);
++
++DECLARE_EVENT_CLASS(local_sdata_chanctx,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_chanctx *ctx),
++
++	TP_ARGS(local, sdata, ctx),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(void *, ctx)
++		__field(int, freq)
++		__field(int, chantype)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->ctx = ctx;
++		__entry->freq = ctx->conf.channel->center_freq;
++		__entry->chantype = ctx->conf.channel_type;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT VIF_PR_FMT " ctx:%p freq:%dMhz chantype:%d",
++		LOCAL_PR_ARG, VIF_PR_ARG,
++		__entry->ctx, __entry->freq, __entry->chantype
++	)
++);
++
++DEFINE_EVENT(local_sdata_chanctx, drv_assign_vif_chanctx,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_chanctx *ctx),
++	TP_ARGS(local, sdata, ctx)
++);
++
++DEFINE_EVENT(local_sdata_chanctx, drv_unassign_vif_chanctx,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_chanctx *ctx),
++	TP_ARGS(local, sdata, ctx)
++);
+ #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
 -- 
-1.7.10.4
+1.7.0.4
 
