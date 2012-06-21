@@ -1,90 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:42011 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756974Ab2FZNzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 09:55:37 -0400
-Message-ID: <4FE9BF57.6080100@tieto.com> (sfid-20120626_155541_321593_446D76C0)
-Date: Tue, 26 Jun 2012 15:55:35 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46481 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758844Ab2FUPCr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 11:02:47 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath9k_hw: rename mrcCCKOff to fix smatch warning
+Date: Thu, 21 Jun 2012 20:33:59 +0530
+Message-ID: <1340291040-20349-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120621_170251_246836_7DFA93D6)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v3 7/7] mac80211: reuse channels for channel contexts
-References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>  <1340714242-20032-8-git-send-email-michal.kazior@tieto.com> <1340718113.14634.45.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340718113.14634.45.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2012-06-26 at 14:37 +0200, Michal Kazior wrote:
->
->> +static enum nl80211_channel_type
->> +ieee80211_calc_chantype(struct ieee80211_local *local,
->> +			struct ieee80211_chanctx *ctx)
->> +{
->> +	struct ieee80211_chanctx_conf *conf = &ctx->conf;
->> +	struct ieee80211_sub_if_data *sdata;
->> +	enum nl80211_channel_type chantype = NL80211_CHAN_NO_HT;
->> +	enum nl80211_channel_type compat;
->> +
->> +	lockdep_assert_held(&local->chanctx_mtx);
->> +
->> +	rcu_read_lock();
->> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
->> +		if (!ieee80211_sdata_running(sdata))
->> +			continue;
->> +		if (sdata->vif.chanctx_conf != conf)
->> +			continue;
->> +
->> +		BUG_ON(!ieee80211_channel_types_are_compatible(
->> +				conf->channel_type, chantype, &compat));
->
-> Please no BUG_ON, maybe only WARN_ON_ONCE even?
+Rename mrcCCKOff for better code readability and also fixes
+the smatch warning.
 
-Okay. I guess returning NL80211_CHAN_NO_HT in such case is okay.
+drivers/net/wireless/ath/ath9k/ar9003_phy.c:982
+	ar9003_hw_ani_control() Error invalid range 1 to 0.
 
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c        |  8 ++------
+ drivers/net/wireless/ath/ath9k/ani.h        |  4 +---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |  4 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 10 +++++-----
+ 4 files changed, 10 insertions(+), 16 deletions(-)
 
->> +		chantype = compat;
->> +	}
->> +	rcu_read_unlock();
->> +
->> +	return chantype;
->> +}
->
-> I don't think I understand this, wouldn't it need some per-vif requested
-> channel type to work correctly? I don't see any chantype values coming
-> from the sdata here, so I don't think this could work?
->
-> If say vif1 needs ht40+ and vif2 ht20, the channel context will be set
-> to ht40+, but then if vif1 goes away and you don't know anything about
-> vif2 at all, then how can this work? The way I see it, your code here
-> doesn't really do anything, except recalculate that ht40+ is compatible
-> with ht40+, or something like that? I guess I'm a bit confused, it seems
-> to me that this cannot work even in theory unless you have per-vif data.
-
-It seems I must've had a mind-derp. I was planning on using 
-sdata->vif.bss_conf.channel_type which should be ok, right?
-
-
->>   static void
->>   ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
->>   			       struct ieee80211_chanctx *ctx)
->> @@ -248,6 +302,8 @@ ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
->>
->>   	drv_unassign_vif_chanctx(sdata->local, sdata, ctx);
->>
->> +	ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
->> +
->>   	ctx->refcount--;
->>   	sdata->vif.chanctx_conf = NULL;
->
-> And then shouldn't you recalc *after* setting chanctx_conf = NULL so you
-> skip this vif?
-
-You're absolutely right.
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index a90aa0b..7ebc346 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -238,7 +238,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
+ 	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah))
+ 		return;
+ 
+-	if (aniState->mrcCCKOff == entry_cck->mrc_cck_on)
++	if (aniState->mrcCCK != entry_cck->mrc_cck_on)
+ 		ath9k_hw_ani_control(ah,
+ 				     ATH9K_ANI_MRC_CCK,
+ 				     entry_cck->mrc_cck_on);
+@@ -525,11 +525,7 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 
+ 		ani->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
+ 
+-		if (AR_SREV_9300_20_OR_LATER(ah))
+-			ani->mrcCCKOff =
+-				!ATH9K_ANI_ENABLE_MRC_CCK;
+-		else
+-			ani->mrcCCKOff = true;
++		ani->mrcCCK = AR_SREV_9300_20_OR_LATER(ah) ? true : false;
+ 
+ 		ani->ofdmsTurn = true;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 79c85fc..e9d841b 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -62,8 +62,6 @@
+ #define ATH9K_SIG_SPUR_IMM_SETTING_MIN    0
+ #define ATH9K_SIG_SPUR_IMM_SETTING_MAX    22
+ 
+-#define ATH9K_ANI_ENABLE_MRC_CCK          true
+-
+ /* values here are relative to the INI */
+ 
+ enum ath9k_ani_cmd {
+@@ -111,7 +109,7 @@ struct ar5416AniState {
+ 	u8 ofdmNoiseImmunityLevel;
+ 	u8 cckNoiseImmunityLevel;
+ 	bool ofdmsTurn;
+-	u8 mrcCCKOff;
++	u8 mrcCCK;
+ 	u8 spurImmunityLevel;
+ 	u8 firstepLevel;
+ 	u8 ofdmWeakSigDetect;
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index b6efcd9..874186b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1234,7 +1234,7 @@ static bool ar5008_hw_ani_control_new(struct ath_hw *ah,
+ 		aniState->spurImmunityLevel,
+ 		aniState->ofdmWeakSigDetect ? "on" : "off",
+ 		aniState->firstepLevel,
+-		!aniState->mrcCCKOff ? "on" : "off",
++		aniState->mrcCCK ? "on" : "off",
+ 		aniState->listenTime,
+ 		aniState->ofdmPhyErrCount,
+ 		aniState->cckPhyErrCount);
+@@ -1322,7 +1322,7 @@ static void ar5008_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ 	aniState->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
+ 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
+ 	aniState->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
+-	aniState->mrcCCKOff = true; /* not available on pre AR9003 */
++	aniState->mrcCCK = false; /* not available on pre AR9003 */
+ }
+ 
+ static void ar5008_hw_set_nf_limits(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index ec8a8d5..f1975b9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -979,16 +979,16 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
+ 			      AR_PHY_MRC_CCK_ENABLE, is_on);
+ 		REG_RMW_FIELD(ah, AR_PHY_MRC_CCK_CTRL,
+ 			      AR_PHY_MRC_CCK_MUX_REG, is_on);
+-		if (!is_on != aniState->mrcCCKOff) {
++		if (is_on != aniState->mrcCCK) {
+ 			ath_dbg(common, ANI, "** ch %d: MRC CCK: %s=>%s\n",
+ 				chan->channel,
+-				!aniState->mrcCCKOff ? "on" : "off",
++				aniState->mrcCCK ? "on" : "off",
+ 				is_on ? "on" : "off");
+ 		if (is_on)
+ 			ah->stats.ast_ani_ccklow++;
+ 		else
+ 			ah->stats.ast_ani_cckhigh++;
+-		aniState->mrcCCKOff = !is_on;
++		aniState->mrcCCK = is_on;
+ 		}
+ 	break;
+ 	}
+@@ -1004,7 +1004,7 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
+ 		aniState->spurImmunityLevel,
+ 		aniState->ofdmWeakSigDetect ? "on" : "off",
+ 		aniState->firstepLevel,
+-		!aniState->mrcCCKOff ? "on" : "off",
++		aniState->mrcCCK ? "on" : "off",
+ 		aniState->listenTime,
+ 		aniState->ofdmPhyErrCount,
+ 		aniState->cckPhyErrCount);
+@@ -1114,7 +1114,7 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ 	aniState->spurImmunityLevel = ATH9K_ANI_SPUR_IMMUNE_LVL;
+ 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL;
+ 	aniState->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
+-	aniState->mrcCCKOff = !ATH9K_ANI_ENABLE_MRC_CCK;
++	aniState->mrcCCK = true;
+ }
+ 
+ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
 -- 
-Pozdrawiam / Best regards, Michal Kazior.
+1.7.11
 
