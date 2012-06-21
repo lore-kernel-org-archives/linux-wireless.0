@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:56155 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429Ab2FZKJx convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:38092 "HELO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757899Ab2FUC7B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 06:09:53 -0400
-Received: by obbuo13 with SMTP id uo13so7813708obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 03:09:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
-References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
-Date: Tue, 26 Jun 2012 13:09:53 +0300
-Message-ID: <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com> (sfid-20120626_120957_002713_4AE7C6BB)
-Subject: Re: mac80211 auth/assoc in multi-channel scenarios
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 20 Jun 2012 22:59:01 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, "3.4.y" <stable@vger.kernel.org>
+Subject: [PATCH 3.5] mwifiex: fix WPS eapol handshake failure
+Date: Wed, 20 Jun 2012 19:58:33 -0700
+Message-Id: <1340247517-4593-2-git-send-email-bzhao@marvell.com> (sfid-20120621_045908_028486_2920E48E)
+In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 7:05 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi all,
->
-> Some of us have discussed this before, but I wanted to get some wider
-> dissemination ...
->
-> With multi-channel, one problem that we get is managing the channel
-> timing for authentication/association. We'll have bound the channel
-> context (once we have that) before we even send a frame of course, but
-> setting up the timing as to when to use the channel is very hard, in
-> particular for connections to P2P GOs that might potentially be asleep.
->
-the other scenario we should have in mind here is the AP side - making
-sure we'll be able to auth/assoc a new station.
+From: Stone Piao <piaoyun@marvell.com>
 
-> 5) do remain-on-channel from mac80211, but this doesn't address P2P GO
->   synchronisation requirements
->
-what are the unfulfilled requirements here?
+After association, STA will go through eapol handshake with WPS
+enabled AP. It's observed that WPS handshake fails with some 11n
+AP. The reason for the failure is that the eapol packet is sent
+via 11n frame aggregation.
 
-> I haven't been able to come up with any other ways, and here we really
-> don't have much of a choice -- #1 is the only thing that seems sane to
-> me. Thoughts?
+The eapol packet should be sent directly without 11n aggregation.
 
-our current approach is making the kernel part as simple as possible,
-and let userspace handle the channel management.
-before authentication (or after getting auth request in the ap case)
-the supplicant requests the kernel to "give priority" to a specific
-vif. it's up to the low-level driver to decide on the right way to do
-it (internally we implement it with ROC on the specified vif).
+This patch fixes the problem by adding WPS session control while
+dequeuing Tx packets for transmission.
 
-the con here is that this might result in the channel being reserved
-for a pretty long time (retransmits, etc.), but that's why we refer it
-as setting "priority" rather than actual channel reservation. if the
-fw has to do other things (e.g. beacon on each beacon interval) it
-will do it, even though we asked it to ROC on a different channel.
+Cc: "3.4.y" <stable@vger.kernel.org>
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/wmm.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-i think the "tx sync" (method 1) is good for sta mode, but it's less
-suitable for ap mode.
-also, when waiting for EAPOLs after association you might have to
-reserve the channel for a pretty long time anyway (since you still
-can't enter ps, and some APs don't send the first EAPOL immediately).
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index f3fc655..4f09992 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1221,6 +1221,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+ 
+ 	if (!ptr->is_11n_enabled ||
+ 	    mwifiex_is_ba_stream_setup(priv, ptr, tid) ||
++	    priv->wps.session_enable ||
+ 	    ((priv->sec_info.wpa_enabled ||
+ 	      priv->sec_info.wpa2_enabled) &&
+ 	     !priv->wpa_is_gtk_set)) {
+-- 
+1.7.0.2
 
-Eliad.
