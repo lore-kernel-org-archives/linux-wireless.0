@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:37245 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932383Ab2F1Ihz (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13132 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932375Ab2FUJgo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 04:37:55 -0400
-Received: by dady13 with SMTP id y13so2568281dad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 01:37:54 -0700 (PDT)
+	Thu, 21 Jun 2012 05:36:44 -0400
+Message-ID: <4FE2EB27.2010202@qca.qualcomm.com> (sfid-20120621_113648_416073_62954D4B)
+Date: Thu, 21 Jun 2012 12:36:39 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1340871433.4491.20.camel@jlt3.sipsolutions.net>
-References: <1340821557-27009-1-git-send-email-arik@wizery.com> <1340871433.4491.20.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 28 Jun 2012 11:37:38 +0300
-Message-ID: <CA+XVXfdKLeaHpLmqsXROH9VojHkB4EP-BpcFDLb8ZCtjb_XCbQ@mail.gmail.com> (sfid-20120628_103800_689018_D30770F9)
-Subject: Re: [PATCH] mac80211: allow Rx in reconfig only after removing BA sessions
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	<drwho@infidigm.net>, <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k support ar9374?
+References: <0a2a155916bf9ddc1974347ae6b0999b.squirrel@www.infidigm.net> <CAD2nsn0C5xC5_VjxpuiwPTYunY21JhHF7pu6z+mDYRupMieGdQ@mail.gmail.com> <20450.41898.681964.746059@gargle.gargle.HOWL> <CAGRGNgUH_zFLHWkpsN+XU=EMJ+h3or28d+ZBHJc-sUtBCy6ooA@mail.gmail.com>
+In-Reply-To: <CAGRGNgUH_zFLHWkpsN+XU=EMJ+h3or28d+ZBHJc-sUtBCy6ooA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 28, 2012 at 11:17 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-06-27 at 21:25 +0300, Arik Nemtsov wrote:
->> Previously, a connected STA/AP could send us some AMPDUs right after
->> recovery, without the driver knowing anything about it.
->
-> Huh, that description doesn't make a lot of sense? The STA/AP can send
-> us AMPDUs anyway without the driver knowing anything about it since it
-> has no idea we're restarting ...
+Hi,
 
-Well the point is to drop them early in the Rx path. Should I change
-the description or you don't like the patch in general?
+On 06/21/2012 09:27 AM, Julian Calaby wrote:
+> On Thu, Jun 21, 2012 at 2:31 PM, Sujith Manoharan
+> <c_manoha@qca.qualcomm.com> wrote:
+>> Mohammed Shafi wrote:
+>>> i think no, ath9k_htc(USB)
+>>> http://linuxwireless.org/en/users/Drivers/ath9k_htc
+>>
+>> No, it doesn't.
+> 
+> A quick google search implies that it's an ath6k device.
+> 
+> http://cateee.net/lkddb/web-lkddb/ATH6KL.html
+> http://lxr.linux.no/#linux+v3.4.3/drivers/net/wireless/ath/ath6kl/usb.c#L395
+
+That's right, AR9374 is basically AR6004 with USB. Don't ask me why :)
+
+Latest ath6kl should support is. I can't remember what kernel version
+has the full support, but I'm pretty sure 3.3 didn't support it yet.
+
+But I should update ath6kl documentation to mention this, thanks for
+pointing this out.
+
+Kalle
