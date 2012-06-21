@@ -1,319 +1,323 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:46961 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752464Ab2FROtu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 10:49:50 -0400
-Received: by ghbz13 with SMTP id z13so3835541ghb.12
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:49:48 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH 1/7] nl80211/cfg80211: add radar detection command/event
-Date: Mon, 18 Jun 2012 17:46:32 +0300
-Message-Id: <1340030798-28992-2-git-send-email-victorg@ti.com> (sfid-20120618_164953_937820_0593DCCE)
-In-Reply-To: <1340030798-28992-1-git-send-email-victorg@ti.com>
-References: <1340030798-28992-1-git-send-email-victorg@ti.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:46454 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756796Ab2FUMDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 08:03:41 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Kazior Michal <Michal.Kazior@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v2 1/7] mac80211: introduce channel contexts skeleton code
+Date: Thu, 21 Jun 2012 14:03:30 +0200
+Message-ID: <1340280216-18807-2-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140352_366367_9D5DA1CD)
+In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new NL80211_CMD_RADAR_DETECT, which triggers radar
-detection in the driver/FW, this command will also notify
-usermode with 'radar detected' event.
-Once radar detection has started it should continuously
-monitor for radars as long as the channel is active.
+From: Kazior Michal <Michal.Kazior@tieto.com>
 
-Add new NL80211_FEATURE_DFS attribute which indicates
-that driver/HW supports radar detection.
+Channel context are the foundation for
+multi-channel operation.
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Channel contexts are immutable and are re-created
+(or re-used if other interfaces are bound to a
+certain channel) on channel switching.
+
+This is a initial implementation and more features
+will come in separate patches for easier review.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/linux/nl80211.h |    7 +++++
- include/net/cfg80211.h  |   20 +++++++++++++
- net/wireless/core.h     |    6 ++++
- net/wireless/mlme.c     |   36 ++++++++++++++++++++++++
- net/wireless/nl80211.c  |   69 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    5 +++
- 6 files changed, 143 insertions(+), 0 deletions(-)
+ include/net/mac80211.h     |   41 +++++++++++++++
+ net/mac80211/chan.c        |  123 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |   23 ++++++++
+ net/mac80211/main.c        |    3 +
+ 4 files changed, 190 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index a6959f7..ea6ce93 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -553,6 +553,9 @@
-  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
-  *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
-  *
-+ * @NL80211_CMD_RADAR_DETECT: Start radar detection in the driver/HW. Once
-+ *	radar detected usermode notified with this event.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -696,6 +699,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CH_SWITCH_NOTIFY,
- 
-+	NL80211_CMD_RADAR_DETECT,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2867,11 +2872,13 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_HT_IBSS: This driver supports IBSS with HT datarates.
-  * @NL80211_FEATURE_INACTIVITY_TIMER: This driver takes care of freeing up
-  *	the connected inactive stations in AP mode.
-+ * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
- 	NL80211_FEATURE_HT_IBSS		= 1 << 1,
- 	NL80211_FEATURE_INACTIVITY_TIMER = 1 << 2,
-+	NL80211_FEATURE_DFS		= 1 << 3,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 6914f99..0089798 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -143,6 +143,41 @@ struct ieee80211_low_level_stats {
+ 	unsigned int dot11RTSSuccessCount;
  };
  
- /**
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0289d4c..32dfc1f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -127,6 +127,9 @@ enum ieee80211_channel_flags {
-  *	to enable this, this is useful only on 5 GHz band.
-  * @orig_mag: internal use
-  * @orig_mpwr: internal use
-+ * @radar_detect_timeout: this timeout indicates the end of the channel
-+ *	availability check for radar channels, only after this period the
-+ *	user may initiate the tx on the channel.
-  */
- struct ieee80211_channel {
- 	enum ieee80211_band band;
-@@ -139,6 +142,7 @@ struct ieee80211_channel {
- 	bool beacon_found;
- 	u32 orig_flags;
- 	int orig_mag, orig_mpwr;
-+	unsigned long radar_detect_timeout;
- };
- 
- /**
-@@ -1525,6 +1529,8 @@ struct cfg80211_gtk_rekey_data {
-  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
-  *	and perhaps other supported types of ethtool data-sets.
-  *	See @ethtool_ops.get_strings
-+ *
-+ * @start_radar_detection: Start radar detection in the driver.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1730,6 +1736,10 @@ struct cfg80211_ops {
- 				struct ethtool_stats *stats, u64 *data);
- 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
- 				  u32 sset, u8 *data);
-+
-+	int    (*start_radar_detection)(struct wiphy *wiphy,
-+					struct net_device *dev,
-+					struct ieee80211_channel *chan);
- };
- 
- /*
-@@ -3268,6 +3278,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 			      gfp_t gfp);
- 
- /**
-+ * cfg80211_radar_detected - radar detection event
-+ * @dev: network device
-+ * @freq: radar detected on this channel frequency (in MHz)
-+ * @gfp: context flags
-+ *
-+ * This function is called when a radar is detected on the current channel.
-+ */
-+void cfg80211_radar_detected(struct net_device *dev, u16 freq, gfp_t gfp);
 +
 +/**
-  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
-  * @dev: network device
-  * @peer: peer's MAC address
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 8523f38..03e9744 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -445,6 +445,12 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, int freq,
- 		      enum nl80211_channel_type channel_type);
++ * enum ieee80211_chanctx_mode - channel context configuration mode
++ *
++ * @IEEE80211_CHANCTX_SHARED: channel context may be used by
++ *	multiple interfaces
++ * @IEEE80211_CHANCTX_EXCLUSIVE: channel context can be used
++ *	only by a single interface. This can be used for example for
++ *	non-fixed channel IBSS.
++ */
++enum ieee80211_chanctx_mode {
++	IEEE80211_CHANCTX_SHARED,
++	IEEE80211_CHANCTX_EXCLUSIVE
++};
++
++/**
++ * struct ieee80211_chanctx_conf - channel context that vifs may be tuned to
++ *
++ * This is the driver-visible part. The ieee80211_chanctx
++ * that contains it is visible in mac80211 only.
++ *
++ * @channel: the channel to tune to
++ * @channel_type: the channel (HT) type
++ * @mode: the channel context mode
++ * @drv_priv: data area for driver use, will always be aligned to
++ *	sizeof(void *), size is determined in hw information.
++ */
++struct ieee80211_chanctx_conf {
++	struct ieee80211_channel *channel;
++	enum nl80211_channel_type channel_type;
++	enum ieee80211_chanctx_mode mode;
++
++	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
++};
++
+ /**
+  * enum ieee80211_bss_change - BSS change notification flags
+  *
+@@ -897,6 +932,7 @@ enum ieee80211_vif_flags {
+  *	at runtime, mac80211 will never touch this field
+  * @hw_queue: hardware queue for each AC
+  * @cab_queue: content-after-beacon (DTIM beacon really) queue, AP mode only
++ * @chanctx_conf: channel context vif is bound to, may be NULL
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void *).
+  */
+@@ -909,6 +945,8 @@ struct ieee80211_vif {
+ 	u8 cab_queue;
+ 	u8 hw_queue[IEEE80211_NUM_ACS];
  
-+int cfg80211_start_radar_detection(struct cfg80211_registered_device *rdev,
-+				   struct net_device *dev,
-+				   struct ieee80211_channel *chan);
++	struct ieee80211_chanctx_conf *chanctx_conf;
 +
-+u16 cfg80211_calculate_bitrate(struct rate_info *rate);
-+
- int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
- 			   const u8 *rates, unsigned int n_rates,
- 			   u32 *mask);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index eb90988..a641db6 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -16,6 +16,8 @@
- #include "core.h"
- #include "nl80211.h"
+ 	u32 driver_flags;
  
-+#define IEEE80211_DFS_MIN_CAC_TIME_MS	60000
-+
- void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-@@ -982,3 +984,37 @@ bool cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
- 	return nl80211_unexpected_4addr_frame(dev, addr, gfp);
+ 	/* must be last */
+@@ -1268,6 +1306,8 @@ enum ieee80211_hw_flags {
+  *	within &struct ieee80211_vif.
+  * @sta_data_size: size (in bytes) of the drv_priv data area
+  *	within &struct ieee80211_sta.
++ * @chanctx_data_size: size (in bytes) of the drv_priv data area
++ *	within &struct ieee80211_chanctx_conf.
+  *
+  * @max_rates: maximum number of alternate rate retry stages the hw
+  *	can handle.
+@@ -1312,6 +1352,7 @@ struct ieee80211_hw {
+ 	int channel_change_time;
+ 	int vif_data_size;
+ 	int sta_data_size;
++	int chanctx_data_size;
+ 	int napi_weight;
+ 	u16 queues;
+ 	u16 max_listen_interval;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index f0f87e5..f5b4a77 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -139,3 +139,126 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 
+ 	return result;
  }
- EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
 +
-+int cfg80211_start_radar_detection(struct cfg80211_registered_device *rdev,
-+				   struct net_device *dev,
-+				   struct ieee80211_channel *chan)
++static struct ieee80211_chanctx *
++ieee80211_find_chanctx(struct ieee80211_local *local,
++		       struct ieee80211_channel *channel,
++		       enum nl80211_channel_type channel_type,
++		       enum ieee80211_chanctx_mode mode)
 +{
-+	int err;
++	struct ieee80211_chanctx *ctx;
 +
-+	if (!rdev->ops->start_radar_detection)
-+		return -EOPNOTSUPP;
++	if (mode == IEEE80211_CHANCTX_EXCLUSIVE)
++		return NULL;
++	if (WARN_ON(!channel))
++		return NULL;
 +
-+	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, chan);
-+	if (!err)
-+		chan->radar_detect_timeout = jiffies +
-+			msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
-+	else
-+		chan->radar_detect_timeout = 0;
++	list_for_each_entry(ctx, &local->chanctx_list, list) {
++		if (ctx->conf.mode == IEEE80211_CHANCTX_EXCLUSIVE)
++			continue;
++		if (ctx->conf.channel != channel)
++			continue;
++		if (ctx->conf.channel_type != channel_type)
++			continue;
 +
-+	return err;
++		return ctx;
++	}
++
++	return NULL;
 +}
 +
-+void cfg80211_radar_detected(struct net_device *dev, u16 freq, gfp_t gfp)
++static struct ieee80211_chanctx *
++ieee80211_new_chanctx(struct ieee80211_local *local,
++		      struct ieee80211_channel *channel,
++		      enum nl80211_channel_type channel_type,
++		      enum ieee80211_chanctx_mode mode)
 +{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+	struct ieee80211_channel *chan;
++	struct ieee80211_chanctx *ctx;
 +
-+	chan = ieee80211_get_channel(&rdev->wiphy, freq);
-+	if (chan)
-+		chan->radar_detect_timeout = 0;
++	ctx = kzalloc(sizeof(*ctx) + local->hw.chanctx_data_size, GFP_KERNEL);
++	if (!ctx)
++		return NULL;
 +
-+	nl80211_radar_detected_notify(rdev, freq, dev, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_radar_detected);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 206465d..573c966 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4248,6 +4248,31 @@ static int nl80211_stop_sched_scan(struct sk_buff *skb,
- 	return err;
- }
- 
-+static int nl80211_start_radar_detection(struct sk_buff *skb,
-+					 struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	bool dfs_supported = !!(rdev->wiphy.features & NL80211_FEATURE_DFS);
-+	int freq;
-+	struct ieee80211_channel *chan;
++	ctx->conf.channel = channel;
++	ctx->conf.channel_type = channel_type;
++	ctx->conf.mode = mode;
++	ctx->local = local;
 +
-+	if (!dfs_supported)
-+		return -EOPNOTSUPP;
++	list_add(&ctx->list, &local->chanctx_list);
++	INIT_LIST_HEAD(&ctx->interfaces);
 +
-+	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
-+		return -EINVAL;
-+
-+	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+
-+	chan = ieee80211_get_channel(&rdev->wiphy, freq);
-+
-+	if (!chan || !(chan->flags & IEEE80211_CHAN_RADAR))
-+		return -EINVAL;
-+
-+	return cfg80211_start_radar_detection(rdev, dev, chan);
++	return ctx;
 +}
 +
- static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 			    u32 seq, int flags,
- 			    struct cfg80211_registered_device *rdev,
-@@ -6997,6 +7022,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_RADAR_DETECT,
-+		.doit = nl80211_start_radar_detection,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- 
++static void
++ieee80211_free_chanctx(struct ieee80211_chanctx *ctx)
++{
++	BUG_ON(!list_empty(&ctx->interfaces));
++
++	list_del(&ctx->list);
++	kfree(ctx);
++}
++
++static void
++ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_chanctx *ctx)
++{
++	list_add(&sdata->chanctx_listitem, &ctx->interfaces);
++	sdata->vif.chanctx_conf = &ctx->conf;
++}
++
++static void
++ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
++			       struct ieee80211_chanctx *ctx)
++{
++	sdata->vif.chanctx_conf = NULL;
++	list_del(&sdata->chanctx_listitem);
++}
++
++static void
++__ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_chanctx_conf *conf = sdata->vif.chanctx_conf;
++	struct ieee80211_chanctx *ctx =
++			container_of(conf, struct ieee80211_chanctx, conf);
++
++	if (!conf)
++		return;
++
++	ieee80211_unassign_vif_chanctx(sdata, ctx);
++	if (list_empty(&ctx->interfaces))
++		ieee80211_free_chanctx(ctx);
++}
++
++bool
++ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
++			  struct ieee80211_channel *channel,
++			  enum nl80211_channel_type channel_type,
++			  enum ieee80211_chanctx_mode mode)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx *ctx;
++
++	mutex_lock(&local->chanctx_mtx);
++	__ieee80211_vif_release_channel(sdata);
++
++	ctx = ieee80211_find_chanctx(local, channel, channel_type, mode);
++	if (!ctx)
++		ctx = ieee80211_new_chanctx(local, channel, channel_type, mode);
++	if (!ctx) {
++		mutex_unlock(&local->chanctx_mtx);
++		return false;
++	}
++
++	ieee80211_assign_vif_chanctx(sdata, ctx);
++	mutex_unlock(&local->chanctx_mtx);
++	return true;
++}
++
++void
++ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
++{
++	mutex_lock(&sdata->local->chanctx_mtx);
++	__ieee80211_vif_release_channel(sdata);
++	mutex_unlock(&sdata->local->chanctx_mtx);
++}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e6cbf5b..eefb932 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -645,6 +645,15 @@ enum ieee80211_sdata_state_bits {
+ 	SDATA_STATE_OFFCHANNEL,
  };
  
-@@ -8101,6 +8134,42 @@ void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
- }
++struct ieee80211_chanctx {
++	struct list_head list;
++
++	struct ieee80211_local *local;
++	struct list_head interfaces;
++
++	struct ieee80211_chanctx_conf conf;
++};
++
+ struct ieee80211_sub_if_data {
+ 	struct list_head list;
  
- void
-+nl80211_radar_detected_notify(struct cfg80211_registered_device *rdev,
-+			      u16 freq, struct net_device *netdev, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
+@@ -693,6 +702,8 @@ struct ieee80211_sub_if_data {
+ 
+ 	bool arp_filter_state;
+ 
++	struct list_head chanctx_listitem;
 +
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
+ 	/*
+ 	 * AP this belongs to: self in AP mode and
+ 	 * corresponding AP in VLAN mode, NULL for
+@@ -969,6 +980,10 @@ struct ieee80211_local {
+ 	struct ieee80211_channel *tmp_channel;
+ 	enum nl80211_channel_type tmp_channel_type;
+ 
++	/* channel contexts */
++	struct list_head chanctx_list;
++	struct mutex chanctx_mtx;
 +
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_RADAR_DETECT);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
-+	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, freq))
-+		goto nla_put_failure;
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
+ 	/* SNMP counters */
+ 	/* dot11CountersTable */
+ 	u32 dot11TransmittedFragmentCount;
+@@ -1488,6 +1503,14 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ enum nl80211_channel_type
+ ieee80211_ht_oper_to_channel_type(struct ieee80211_ht_operation *ht_oper);
+ 
++bool
++ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
++			  struct ieee80211_channel *channel,
++			  enum nl80211_channel_type channel_type,
++			  enum ieee80211_chanctx_mode mode);
 +void
- nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
- 				struct net_device *netdev, const u8 *peer,
- 				u32 num_packets, gfp_t gfp)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 01a1122..a333261 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -105,6 +105,11 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
- 			     struct net_device *netdev,
- 			     enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			     gfp_t gfp);
++ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
 +
-+void
-+nl80211_radar_detected_notify(struct cfg80211_registered_device *rdev,
-+			      u16 freq, struct net_device *netdev, gfp_t gfp);
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+ #else
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d81c178..735edd5 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -613,6 +613,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	spin_lock_init(&local->filter_lock);
+ 	spin_lock_init(&local->queue_stop_reason_lock);
+ 
++	INIT_LIST_HEAD(&local->chanctx_list);
++	mutex_init(&local->chanctx_mtx);
 +
- void
- nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
- 				struct net_device *netdev, const u8 *peer,
+ 	/*
+ 	 * The rx_skb_queue is only accessed from tasklets,
+ 	 * but other SKB queues are used from within IRQ
 -- 
-1.7.5.4
+1.7.0.4
 
