@@ -1,65 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2390 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753737Ab2F2A7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 20:59:13 -0400
-Message-ID: <4FECFDD8.5060105@broadcom.com> (sfid-20120629_025919_759944_5B3E68E6)
-Date: Thu, 28 Jun 2012 17:59:04 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Jon Hunter" <jon-hunter@ti.com>
-cc: "Kevin Hilman" <khilman@ti.com>, b-cousson@ti.com,
-	tony@atomide.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	grant.likely@secretlab.ca, santosh.shilimkar@ti.com,
-	linux-omap@vger.kernel.org, tarun.kanti@ti.com,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com>
- <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com>
- <4FECCB91.7090609@broadcom.com> <4FECD2E5.1060603@ti.com>
- <4FECE067.7000809@broadcom.com> <4FECE1BD.80906@ti.com>
- <4FECE45E.6040506@broadcom.com> <4FECEE9A.5070300@ti.com>
-In-Reply-To: <4FECEE9A.5070300@ti.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:60038 "HELO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757899Ab2FUC7F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 22:59:05 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.5] mwifiex: improve error path handling in usb.c
+Date: Wed, 20 Jun 2012 19:58:35 -0700
+Message-Id: <1340247517-4593-4-git-send-email-bzhao@marvell.com> (sfid-20120621_045910_771119_76433C88)
+In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2012 04:54 PM, Jon Hunter wrote:
-> I am wondering if this could be the bug ... on start-up I see that we do
-> a context restore on bank1 during the probe which is before we have done
-> the first suspend! In other words, we could restore a bad/uninitialised
-> context for bank1. In the case of bank1, the loss count starts at 1 and
-> not 0 and so we falsely think we need to perform a restore :-(
->
-> [    0.176269] omap_gpio_runtime_resume: bank @ 0xfc310000
-> [    0.177276] omap_gpio_runtime_resume: count 0, now 1
-> [    0.177276] gpiochip_add: registered GPIOs 0 to 31 on device: gpio
-> [    0.177642] omap_gpio_runtime_suspend: bank @ 0xfc310000
->
-> Can you try ...
->
-> diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
-> index c4ed172..9623408 100644
-> --- a/drivers/gpio/gpio-omap.c
-> +++ b/drivers/gpio/gpio-omap.c
-> @@ -1086,6 +1086,9 @@ static int __devinit omap_gpio_probe(struct
-> platform_device *pdev)
->   #ifdef CONFIG_OF_GPIO
->          bank->chip.of_node = of_node_get(node);
->   #endif
-> +       if (bank->get_context_loss_count)
-> +               bank->context_loss_count =
-> +                               bank->get_context_loss_count(bank->dev);
->
->          bank->irq_base = irq_alloc_descs(-1, 0, bank->width, 0);
->          if (bank->irq_base < 0) {
->
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Looks like you found the culprit. :) It does fix the problem.
+skb allocated during initialisation is reused for receiving
+commands/events by USB interface. We miss to reset skb->data in
+failure cases. This patch takes care of it.
 
-Franky
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/usb.c |   22 +++++++++++++++++-----
+ 1 files changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index e6d796f..22a5916 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -49,6 +49,7 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 	struct device *dev = adapter->dev;
+ 	u32 recv_type;
+ 	__le32 tmp;
++	int ret;
+ 
+ 	if (adapter->hs_activated)
+ 		mwifiex_process_hs_config(adapter);
+@@ -69,16 +70,19 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 		case MWIFIEX_USB_TYPE_CMD:
+ 			if (skb->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
+ 				dev_err(dev, "CMD: skb->len too large\n");
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			} else if (!adapter->curr_cmd) {
+ 				dev_dbg(dev, "CMD: no curr_cmd\n");
+ 				if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
+ 					mwifiex_process_sleep_confirm_resp(
+ 							adapter, skb->data,
+ 							skb->len);
+-					return 0;
++					ret = 0;
++					goto exit_restore_skb;
+ 				}
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			}
+ 
+ 			adapter->curr_cmd->resp_skb = skb;
+@@ -87,7 +91,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 		case MWIFIEX_USB_TYPE_EVENT:
+ 			if (skb->len < sizeof(u32)) {
+ 				dev_err(dev, "EVENT: skb->len too small\n");
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			}
+ 			skb_copy_from_linear_data(skb, &tmp, sizeof(u32));
+ 			adapter->event_cause = le32_to_cpu(tmp);
+@@ -95,7 +100,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 
+ 			if (skb->len > MAX_EVENT_SIZE) {
+ 				dev_err(dev, "EVENT: event body too large\n");
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			}
+ 
+ 			memcpy(adapter->event_body, skb->data +
+@@ -124,6 +130,12 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 	}
+ 
+ 	return -EINPROGRESS;
++
++exit_restore_skb:
++	/* The buffer will be reused for further cmds/events */
++	skb_push(skb, INTF_HEADER_LEN);
++
++	return ret;
+ }
+ 
+ static void mwifiex_usb_rx_complete(struct urb *urb)
+-- 
+1.7.0.2
 
