@@ -1,360 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8062 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753166Ab2FLOrV (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:34765 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758223Ab2FUDVc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 10:47:21 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/8] ath9k_hw: cleanup MCI gpm offset state
-Date: Tue, 12 Jun 2012 20:18:16 +0530
-Message-ID: <1339512503-26670-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120612_164727_256359_2FE30B4E)
-In-Reply-To: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339512503-26670-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 20 Jun 2012 23:21:32 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, "3.4.y" <stable@vger.kernel.org>
+Subject: [PATCH 3.5 2/4] mwifiex: fix WPS eapol handshake failure
+Date: Wed, 20 Jun 2012 20:21:11 -0700
+Message-Id: <1340248873-5455-3-git-send-email-bzhao@marvell.com> (sfid-20120621_052135_832766_8DD6BD39)
+In-Reply-To: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
+References: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add utility functions to get and test GPM offset and
-remove MCI_STATE*_GPM_OFFSET states.
+From: Stone Piao <piaoyun@marvell.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+After association, STA will go through eapol handshake with WPS
+enabled AP. It's observed that WPS handshake fails with some 11n
+AP. The reason for the failure is that the eapol packet is sent
+via 11n frame aggregation.
+
+The eapol packet should be sent directly without 11n aggregation.
+
+This patch fixes the problem by adding WPS session control while
+dequeuing Tx packets for transmission.
+
+Cc: "3.4.y" <stable@vger.kernel.org>
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |  198 ++++++++++++++-------------
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    9 +-
- drivers/net/wireless/ath/ath9k/hw.c         |    2 +-
- drivers/net/wireless/ath/ath9k/mci.c        |    6 +-
- 4 files changed, 110 insertions(+), 105 deletions(-)
+ drivers/net/wireless/mwifiex/wmm.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index c11dbaa..0433f2b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -593,8 +593,7 @@ static u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
- 		if (!time_out)
- 			break;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 8c2b5c0..3fa4d41 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1223,6 +1223,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
  
--		offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
--					  &more_data);
-+		offset = ar9003_mci_get_next_gpm_offset(ah, false, &more_data);
- 
- 		if (offset == MCI_GPM_INVALID)
- 			continue;
-@@ -658,8 +657,7 @@ static u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
- 		time_out = 0;
- 
- 	while (more_data == MCI_GPM_MORE) {
--		offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
--					  &more_data);
-+		offset = ar9003_mci_get_next_gpm_offset(ah, false, &more_data);
- 		if (offset == MCI_GPM_INVALID)
- 			break;
- 
-@@ -894,7 +892,7 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 	}
- 
- 	/* Check pending GPM msg before MCI Reset Rx */
--	ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
-+	ar9003_mci_check_gpm_offset(ah);
- 
- 	regval |= SM(1, AR_MCI_COMMAND2_RESET_RX);
- 	REG_WRITE(ah, AR_MCI_COMMAND2, regval);
-@@ -902,7 +900,7 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 	regval &= ~SM(1, AR_MCI_COMMAND2_RESET_RX);
- 	REG_WRITE(ah, AR_MCI_COMMAND2, regval);
- 
--	ar9003_mci_state(ah, MCI_STATE_INIT_GPM_OFFSET, NULL);
-+	ar9003_mci_get_next_gpm_offset(ah, true, NULL);
- 
- 	REG_WRITE(ah, AR_MCI_MSG_ATTRIBUTES_TABLE,
- 		  (SM(0xe801, AR_MCI_MSG_ATTRIBUTES_TABLE_INVALID_HDR) |
-@@ -1170,7 +1168,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
--	u32 value = 0, more_gpm = 0, gpm_ptr;
-+	u32 value = 0;
- 	u8 query_type;
- 
- 	switch (state_type) {
-@@ -1183,96 +1181,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 		}
- 		value &= AR_BTCOEX_CTRL_MCI_MODE_EN;
- 		break;
--	case MCI_STATE_INIT_GPM_OFFSET:
--		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
--		mci->gpm_idx = value;
--		break;
--	case MCI_STATE_CHECK_GPM_OFFSET:
--		/*
--		 * This should only be called before "MAC Warm Reset" or
--		 * "MCI Reset Rx".
--		 */
--		value = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
--		if (mci->gpm_idx == value)
--			break;
--		ath_dbg(common, MCI,
--			"GPM cached write pointer mismatch %d %d\n",
--			mci->gpm_idx, value);
--		mci->query_bt = true;
--		mci->need_flush_btinfo = true;
--		mci->gpm_idx = 0;
--		break;
--	case MCI_STATE_NEXT_GPM_OFFSET:
--	case MCI_STATE_LAST_GPM_OFFSET:
--		/*
--		* This could be useful to avoid new GPM message interrupt which
--		* may lead to spurious interrupt after power sleep, or multiple
--		* entry of ath_mci_intr().
--		* Adding empty GPM check by returning HAL_MCI_GPM_INVALID can
--		* alleviate this effect, but clearing GPM RX interrupt bit is
--		* safe, because whether this is called from hw or driver code
--		* there must be an interrupt bit set/triggered initially
--		*/
--		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
--			  AR_MCI_INTERRUPT_RX_MSG_GPM);
--
--		gpm_ptr = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
--		value = gpm_ptr;
--
--		if (value == 0)
--			value = mci->gpm_len - 1;
--		else if (value >= mci->gpm_len) {
--			if (value != 0xFFFF)
--				value = 0;
--		} else {
--			value--;
--		}
--
--		if (value == 0xFFFF) {
--			value = MCI_GPM_INVALID;
--			more_gpm = MCI_GPM_NOMORE;
--		} else if (state_type == MCI_STATE_NEXT_GPM_OFFSET) {
--			if (gpm_ptr == mci->gpm_idx) {
--				value = MCI_GPM_INVALID;
--				more_gpm = MCI_GPM_NOMORE;
--			} else {
--				for (;;) {
--					u32 temp_index;
--
--					/* skip reserved GPM if any */
--
--					if (value != mci->gpm_idx)
--						more_gpm = MCI_GPM_MORE;
--					else
--						more_gpm = MCI_GPM_NOMORE;
--
--					temp_index = mci->gpm_idx;
--					mci->gpm_idx++;
--
--					if (mci->gpm_idx >=
--					    mci->gpm_len)
--						mci->gpm_idx = 0;
--
--					if (ar9003_mci_is_gpm_valid(ah,
--								    temp_index)) {
--						value = temp_index;
--						break;
--					}
--
--					if (more_gpm == MCI_GPM_NOMORE) {
--						value = MCI_GPM_INVALID;
--						break;
--					}
--				}
--			}
--			if (p_data)
--				*p_data = more_gpm;
--		}
--
--		if (value != MCI_GPM_INVALID)
--			value <<= 4;
--
--		break;
- 	case MCI_STATE_LAST_SCHD_MSG_OFFSET:
- 		value = MS(REG_READ(ah, AR_MCI_RX_STATUS),
- 				    AR_MCI_RX_LAST_SCHD_MSG_INDEX);
-@@ -1450,3 +1358,99 @@ void ar9003_mci_set_power_awake(struct ath_hw *ah)
- 		udelay(50);
- 	}
- }
-+
-+void ar9003_mci_check_gpm_offset(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+	u32 offset;
-+
-+	/*
-+	 * This should only be called before "MAC Warm Reset" or "MCI Reset Rx".
-+	 */
-+	offset = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
-+	if (mci->gpm_idx == offset)
-+		return;
-+	ath_dbg(common, MCI, "GPM cached write pointer mismatch %d %d\n",
-+		mci->gpm_idx, offset);
-+	mci->query_bt = true;
-+	mci->need_flush_btinfo = true;
-+	mci->gpm_idx = 0;
-+}
-+
-+u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more)
-+{
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+	u32 offset, more_gpm = 0, gpm_ptr;
-+
-+	if (first) {
-+		gpm_ptr = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
-+		mci->gpm_idx = gpm_ptr;
-+		return gpm_ptr;
-+	}
-+
-+	/*
-+	 * This could be useful to avoid new GPM message interrupt which
-+	 * may lead to spurious interrupt after power sleep, or multiple
-+	 * entry of ath_mci_intr().
-+	 * Adding empty GPM check by returning HAL_MCI_GPM_INVALID can
-+	 * alleviate this effect, but clearing GPM RX interrupt bit is
-+	 * safe, because whether this is called from hw or driver code
-+	 * there must be an interrupt bit set/triggered initially
-+	 */
-+	REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
-+			AR_MCI_INTERRUPT_RX_MSG_GPM);
-+
-+	gpm_ptr = MS(REG_READ(ah, AR_MCI_GPM_1), AR_MCI_GPM_WRITE_PTR);
-+	offset = gpm_ptr;
-+
-+	if (!offset)
-+		offset = mci->gpm_len - 1;
-+	else if (offset >= mci->gpm_len) {
-+		if (offset != 0xFFFF)
-+			offset = 0;
-+	} else {
-+		offset--;
-+	}
-+
-+	if ((offset == 0xFFFF) || (gpm_ptr == mci->gpm_idx)) {
-+		offset = MCI_GPM_INVALID;
-+		more_gpm = MCI_GPM_NOMORE;
-+		goto out;
-+	}
-+	for (;;) {
-+		u32 temp_index;
-+
-+		/* skip reserved GPM if any */
-+
-+		if (offset != mci->gpm_idx)
-+			more_gpm = MCI_GPM_MORE;
-+		else
-+			more_gpm = MCI_GPM_NOMORE;
-+
-+		temp_index = mci->gpm_idx;
-+		mci->gpm_idx++;
-+
-+		if (mci->gpm_idx >= mci->gpm_len)
-+			mci->gpm_idx = 0;
-+
-+		if (ar9003_mci_is_gpm_valid(ah, temp_index)) {
-+			offset = temp_index;
-+			break;
-+		}
-+
-+		if (more_gpm == MCI_GPM_NOMORE) {
-+			offset = MCI_GPM_INVALID;
-+			break;
-+		}
-+	}
-+
-+	if (offset != MCI_GPM_INVALID)
-+		offset <<= 4;
-+out:
-+	if (more)
-+		*more = more_gpm;
-+
-+	return offset;
-+}
-+EXPORT_SYMBOL(ar9003_mci_get_next_gpm_offset);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 8cb3307..163d156 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -189,10 +189,6 @@ enum mci_bt_state {
- /* Type of state query */
- enum mci_state_type {
- 	MCI_STATE_ENABLE,
--	MCI_STATE_INIT_GPM_OFFSET,
--	MCI_STATE_CHECK_GPM_OFFSET,
--	MCI_STATE_NEXT_GPM_OFFSET,
--	MCI_STATE_LAST_GPM_OFFSET,
- 	MCI_STATE_BT,
- 	MCI_STATE_SET_BT_SLEEP,
- 	MCI_STATE_SET_BT_AWAKE,
-@@ -266,6 +262,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
- void ar9003_mci_cleanup(struct ath_hw *ah);
- void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 			      u32 *rx_msg_intr);
-+u32 ar9003_mci_get_next_gpm_offset(struct ath_hw *ah, bool first, u32 *more);
- /*
-  * These functions are used by ath9k_hw.
-  */
-@@ -286,6 +283,7 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
- void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
- void ar9003_mci_set_power_awake(struct ath_hw *ah);
-+void ar9003_mci_check_gpm_offset(struct ath_hw *ah);
- 
- #else
- 
-@@ -329,6 +327,9 @@ static inline void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah)
- static inline void ar9003_mci_set_power_awake(struct ath_hw *ah)
- {
- }
-+static inline void ar9003_mci_check_gpm_offset(struct ath_hw *ah)
-+{
-+}
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- 
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4ec496d..784baee 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1349,7 +1349,7 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
- 	}
- 
- 	if (ath9k_hw_mci_is_enabled(ah))
--		ar9003_mci_state(ah, MCI_STATE_CHECK_GPM_OFFSET, NULL);
-+		ar9003_mci_check_gpm_offset(ah);
- 
- 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index f0c8fa4..9e15231 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -421,7 +421,7 @@ void ath_mci_intr(struct ath_softc *sc)
- 	ar9003_mci_get_interrupt(sc->sc_ah, &mci_int, &mci_int_rxmsg);
- 
- 	if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) == 0) {
--		ar9003_mci_state(ah, MCI_STATE_INIT_GPM_OFFSET, NULL);
-+		ar9003_mci_get_next_gpm_offset(ah, true, NULL);
- 		return;
- 	}
- 
-@@ -488,8 +488,8 @@ void ath_mci_intr(struct ath_softc *sc)
- 		while (more_data == MCI_GPM_MORE) {
- 
- 			pgpm = mci->gpm_buf.bf_addr;
--			offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
--						  &more_data);
-+			offset = ar9003_mci_get_next_gpm_offset(ah, false,
-+								&more_data);
- 
- 			if (offset == MCI_GPM_INVALID)
- 				break;
+ 	if (!ptr->is_11n_enabled ||
+ 	    mwifiex_is_ba_stream_setup(priv, ptr, tid) ||
++	    priv->wps.session_enable ||
+ 	    ((priv->sec_info.wpa_enabled ||
+ 	      priv->sec_info.wpa2_enabled) &&
+ 	     !priv->wpa_is_gtk_set)) {
 -- 
-1.7.10.4
+1.7.0.2
 
