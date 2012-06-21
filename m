@@ -1,71 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:48618 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755379Ab2FKPAI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 11:00:08 -0400
-Received: by weyu7 with SMTP id u7so2135606wey.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2012 08:00:07 -0700 (PDT)
-From: Eyal Shapira <eyal@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wlcore: avoid using NET_IP_ALIGN for RX alignment
-Date: Mon, 11 Jun 2012 17:59:55 +0300
-Message-Id: <1339426795-6526-1-git-send-email-eyal@wizery.com> (sfid-20120611_170012_989774_AE827EAF)
+Received: from ebb06.tieto.com ([131.207.168.38]:56507 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756849Ab2FUMDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 08:03:41 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Kazior Michal <Michal.Kazior@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v2 2/7] mac80211: introduce new ieee80211_ops
+Date: Thu, 21 Jun 2012 14:03:31 +0200
+Message-ID: <1340280216-18807-3-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140345_074456_166E8587)
+In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NET_IP_ALIGN can be overriden on different architectures
-and therefore cannot be used in the RX path to account
-for the 2 bytes added for alignment (either by the FW
-in the case of 18xx or by the host for 12xx).
-Instead use an internal define.
+From: Kazior Michal <Michal.Kazior@tieto.com>
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Introduces channel context callbacks. Channel on a
+context channel is immutable. Channel type will be
+changable later though, thus change_channel_type is
+adveristed.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ti/wlcore/rx.c |    4 ++--
- drivers/net/wireless/ti/wlcore/rx.h |    6 ++++++
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ include/net/mac80211.h |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index 78200dc..a1db4e0 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -127,7 +127,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 	}
- 
- 	if (rx_align == WLCORE_RX_BUF_UNALIGNED)
--		reserved = NET_IP_ALIGN;
-+		reserved = RX_BUF_ALIGN;
- 
- 	/* the data read starts with the descriptor */
- 	desc = (struct wl1271_rx_descriptor *) data;
-@@ -175,7 +175,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 	 */
- 	memcpy(buf, data + sizeof(*desc), pkt_data_len);
- 	if (rx_align == WLCORE_RX_BUF_PADDED)
--		skb_pull(skb, NET_IP_ALIGN);
-+		skb_pull(skb, RX_BUF_ALIGN);
- 
- 	*hlid = desc->hlid;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/rx.h b/drivers/net/wireless/ti/wlcore/rx.h
-index 9be7801..4324a42 100644
---- a/drivers/net/wireless/ti/wlcore/rx.h
-+++ b/drivers/net/wireless/ti/wlcore/rx.h
-@@ -103,6 +103,12 @@
- /* If set, the buffer was padded by the FW to be 4 bytes aligned */
- #define RX_BUF_PADDED_PAYLOAD        BIT(30)
- 
-+/*
-+ * Account for the padding inserted by the FW in case of RX_ALIGNMENT
-+ * or for fixing alignment in case the packet wasn't aligned.
-+ */
-+#define RX_BUF_ALIGN                 2
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0089798..5040d6d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2295,6 +2295,15 @@ enum ieee80211_rate_control_changed {
+  * @get_et_strings:  Ethtool API to get a set of strings to describe stats
+  *	and perhaps other supported types of ethtool data-sets.
+  *
++ * @add_chanctx: Notifies device driver about new channel context creation.
++ * @remove_chanctx: Notifies device driver about channel context destruction.
++ * @change_chantype: Notifies device driver about channel context channel_type
++ *	change which may happen when combining different vifs on a same channel
++ *	with different HTs.
++ * @assign_vif_chanctx: Notifies device driver about channel context being bound
++ *	to vif. Possible use is for hw queue remapping.
++ * @unassign_vif_chanctx: Notifies device driver about channel context being
++ *	unbound from vif.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2434,6 +2443,19 @@ struct ieee80211_ops {
+ 	void	(*get_et_strings)(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  u32 sset, u8 *data);
 +
- /* Describes the alignment state of a Rx buffer */
- enum wl_rx_buf_align {
- 	WLCORE_RX_BUF_ALIGNED,
++	void (*add_chanctx)(struct ieee80211_hw *hw,
++			    struct ieee80211_chanctx_conf *ctx);
++	void (*remove_chanctx)(struct ieee80211_hw *hw,
++			       struct ieee80211_chanctx_conf *ctx);
++	void (*change_chantype)(struct ieee80211_hw *hw,
++				struct ieee80211_chanctx_conf *ctx);
++	void (*assign_vif_chanctx)(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   struct ieee80211_chanctx_conf *ctx);
++	void (*unassign_vif_chanctx)(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_chanctx_conf *ctx);
+ };
+ 
+ /**
 -- 
-1.7.4.1
+1.7.0.4
 
