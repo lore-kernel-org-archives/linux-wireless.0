@@ -1,96 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57165 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750764Ab2F2EQA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48637 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759917Ab2FUROi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 00:16:00 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de,
-	brcm80211-dev-list@broadcom.com, pieterpg@broadcom.com,
-	gregkh@suse.de, frankyl@broadcom.com, arend@broadcom.com,
-	rvossen@broadcom.com, brudley@broadcom.com, linville@tuxdriver.com
-Subject: [PATCH] brcmsmac: restructure info->control.sta handling as it is goning to be removed soon.
-Date: Thu, 28 Jun 2012 21:15:04 -0700
-Message-Id: <1340943304-70933-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120629_061650_559847_B79CE9A9)
+	Thu, 21 Jun 2012 13:14:38 -0400
+Date: Thu, 21 Jun 2012 10:14:34 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] nl80211: specify RSSI threshold in scheduled scan
+Message-ID: <20120621171434.GA2822@pista> (sfid-20120621_191442_763279_6415E332)
+References: <1340127208-3266-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1340180819.4655.27.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1340180819.4655.27.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmsmac uses info->control.sta while doing ampdu aggregation. This patch
-changes the usage of the structure info->control.sta, as it is going to be
-removed soon from struct ieee80211_tx_info. This patch is a pre-requisit in
-order to add transmission power control (TPC) to the mac80211 subsystem.
+On Wed, Jun 20, 2012 at 10:26:59AM +0200, Johannes Berg wrote:
+> On Tue, 2012-06-19 at 10:33 -0700, Thomas Pedersen wrote:
+> > Support configuring an RSSI threshold in dBm (s32) when requesting
+> > scheduled scan, below which a BSS won't be reported by the cfg80211
+> > driver.
+> 
+> > @@ -4241,7 +4242,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+> >  		nla_for_each_nested(attr,
+> >  				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
+> >  				    tmp) {
+> > -			struct nlattr *ssid;
+> > +			struct nlattr *ssid, *rssi;
+> >  
+> >  			nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
+> >  				  nla_data(attr), nla_len(attr),
+> > @@ -4257,6 +4258,9 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+> >  				request->match_sets[i].ssid.ssid_len =
+> >  					nla_len(ssid);
+> >  			}
+> > +			rssi = tb[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI];
+> > +			if (rssi)
+> > +				request->rssi_thold = nla_get_u32(rssi);
+> 
+> I was going to apply this, but then I realized ... if userspace doesn't
+> set the value then the default is 0 which is a bit useless, better set
+> to a very small negative value or something, right?
 
-Suggested-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c       |   10 +++++-----
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    2 ++
- drivers/net/wireless/brcm80211/brcmsmac/main.c        |    2 +-
- 3 files changed, 8 insertions(+), 6 deletions(-)
+OK. I was still treating the '0' threshold as "off" in the driver, but
+this is more consistent. Will submit a v4 shortly.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index 01b190a..d341c91 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -665,7 +665,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
- 			u8 plcp0, plcp3, is40, sgi;
- 			struct ieee80211_sta *sta;
- 
--			sta = tx_info->control.sta;
-+			sta = tx_info->rate_driver_data[0];
- 
- 			if (rr) {
- 				plcp0 = plcp[0];
-@@ -1195,8 +1195,8 @@ static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, void *arg_a)
- 	bool rc;
- 
- 	rc = tx_info->flags & IEEE80211_TX_CTL_AMPDU ? true : false;
--	rc = rc && (tx_info->control.sta == NULL || ampdu_pars->sta == NULL ||
--		    tx_info->control.sta == ampdu_pars->sta);
-+	rc = rc && (tx_info->rate_driver_data[0] == NULL || ampdu_pars->sta == NULL ||
-+		    tx_info->rate_driver_data[0] == ampdu_pars->sta);
- 	rc = rc && ((u8)(mpdu->priority) == ampdu_pars->tid);
- 	return rc;
- }
-@@ -1210,8 +1210,8 @@ static void dma_cb_fn_ampdu(void *txi, void *arg_a)
- 	struct ieee80211_tx_info *tx_info = (struct ieee80211_tx_info *)txi;
- 
- 	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
--	    (tx_info->control.sta == sta || sta == NULL))
--		tx_info->control.sta = NULL;
-+	    (tx_info->rate_driver_data[0] == sta || sta == NULL))
-+		tx_info->rate_driver_data[0] = NULL;
- }
- 
- /*
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 2d5a404..946779f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -267,7 +267,9 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
- static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct brcms_info *wl = hw->priv;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 
-+	tx_info->rate_driver_data[0] = tx_info->control.sta;
- 	spin_lock_bh(&wl->lock);
- 	if (!wl->pub->up) {
- 		wiphy_err(wl->wiphy, "ops->tx called while down\n");
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 8776fbc..28dd37e3 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -879,7 +879,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
- 	tx_info = IEEE80211_SKB_CB(p);
- 	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
- 
--	if (tx_info->control.sta)
-+	if (tx_info->rate_driver_data[0])
- 		scb = &wlc->pri_scb;
- 
- 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
--- 
-1.7.10.4
-
+Thanks,
+Thomas
