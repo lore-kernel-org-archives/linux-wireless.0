@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44318 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363Ab2FIIK6 (ORCPT
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:39262 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857Ab2FULwb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 04:10:58 -0400
-Message-ID: <1339229456.4539.9.camel@jlt3.sipsolutions.net> (sfid-20120609_101104_929135_D2F3E71F)
-Subject: Re: [PATCH v2] minstrel_ht: enable frame aggregation for fixed rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org
-Date: Sat, 09 Jun 2012 10:10:56 +0200
-In-Reply-To: <1339141443-10135-1-git-send-email-sylvain.roger.rieunier@gmail.com>
-References: <1339141443-10135-1-git-send-email-sylvain.roger.rieunier@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 21 Jun 2012 07:52:31 -0400
+Received: by qabj40 with SMTP id j40so1374506qab.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 04:52:30 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@kernel.org,
+	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH] compat: Suck in ckmake from compat.git
+Date: Thu, 21 Jun 2012 14:52:22 +0300
+Message-Id: <1340279542-31817-1-git-send-email-ozancag@gmail.com> (sfid-20120621_135234_417606_51D34726)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 09:44 +0200, Sylvain Roger Rieunier wrote:
-> when i was trying fixed rate in minstrel_ht, frame aggregation
-> was not working. so i fix it.
+ckmake can be used directly to test compat-foo trees against the
+installed kernel trees. So it is good to have it copied under
+this tree.
 
-Please explain in the commit log why it was broken and how the fix
-works, rather than just saying "I fix[ed] it"
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+---
+ scripts/admin-update.sh |    1 +
+ 1 file changed, 1 insertion(+)
 
-> Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
-> ---
->  net/mac80211/rc80211_minstrel_ht.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 2d1acc6..342ec71 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -626,8 +626,11 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
->  
->  #ifdef CONFIG_MAC80211_DEBUGFS
->  	/* use fixed index if set */
-> -	if (mp->fixed_rate_idx != -1)
-> -		sample_idx = mp->fixed_rate_idx;
-> +	if (mp->fixed_rate_idx != -1) {
-> +		mi->max_tp_rate = mp->fixed_rate_idx;
-> +		mi->max_tp_rate2 = mp->fixed_rate_idx;
-> +		sample_idx = -1;
-> +	}
->  #endif
->  
->  	if (sample_idx >= 0) {
-
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 7daec31..ec87f98 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -435,6 +435,7 @@ cp $GIT_COMPAT_TREE/compat/*.[ch] $COMPAT/
+ cp $GIT_COMPAT_TREE/compat/Makefile $COMPAT/
+ cp -a $GIT_COMPAT_TREE/udev .
+ cp -a $GIT_COMPAT_TREE/scripts $COMPAT/
++cp $GIT_COMPAT_TREE/bin/ckmake $COMPAT/
+ cp -a $GIT_COMPAT_TREE/include/linux/* include/linux/
+ cp -a $GIT_COMPAT_TREE/include/net/* include/net/
+ cp -a $GIT_COMPAT_TREE/include/trace/* include/trace/
+-- 
+1.7.10.2
 
