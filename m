@@ -1,74 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61468 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754870Ab2FGHhT (ORCPT
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:46173 "HELO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757899Ab2FUC6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 03:37:19 -0400
-Message-ID: <4FD05A27.80102@qca.qualcomm.com> (sfid-20120607_093723_811304_CA07EF34)
-Date: Thu, 7 Jun 2012 13:07:11 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
-References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com>	 <1339050308.6009.9.camel@joe2Laptop> <4FD0540C.5060808@qca.qualcomm.com> <1339053852.6009.13.camel@joe2Laptop>
-In-Reply-To: <1339053852.6009.13.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Wed, 20 Jun 2012 22:58:53 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	"3.0.y, 3.1.y, 3.2.y, 3.3.y, 3.4.y" <stable@vger.kernel.org>
+Subject: [PATCH 3.5] mwifiex: fix 11n rx packet drop issue
+Date: Wed, 20 Jun 2012 19:58:32 -0700
+Message-Id: <1340247517-4593-1-git-send-email-bzhao@marvell.com> (sfid-20120621_045857_774745_02BCA44B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+From: Stone Piao <piaoyun@marvell.com>
 
->>>
->>> I think there's one use of wiphy_dbg that could be a
->>> mac80211_ht_dbg without much loss.
->>>
->>> Maybe add "%s", wiphy_name() to the args there.
->>>
->>
->> sorry, i could not understand with wiphy_debug, with mac80211_ht_debug.
->> the later is for HT and aggregation related messages.
->
-> It was an automatic conversion.
->
-> Might as well unconvert it back too.
->
-> $ git grep -E -A4 -n "ifdef CONFIG_MAC80211_HT_DEBUG" net/mac80211/rx.c
-> net/mac80211/rx.c:635:#ifdef CONFIG_MAC80211_HT_DEBUG
-> net/mac80211/rx.c-636-                  if (net_ratelimit())
-> net/mac80211/rx.c-637-                          wiphy_debug(hw->wiphy,
-> net/mac80211/rx.c-638-                                      "release an RX reorder frame due to timeout on earlier frames\n");
-> net/mac80211/rx.c-639-#endif
->
-> $ git blame -L635,+4 net/mac80211/rx.c
-> aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 635) #ifdef CONFIG_MAC80211_HT_DEBUG
-> aa0c8636 (Christian Lamparter 2010-08-05 01:36:04 +0200 636)                    if (net_ratelimit())
-> 0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 637)                            wiphy_debug(hw->wiphy,
-> 0fb9a9ec (Joe Perches         2010-08-20 16:25:38 -0700 638)                                        "release an RX reorder fram
->
-> $ git log -1 0fb9a9ec
-> commit 0fb9a9ec27718fbf7fa3153bc94becefb716ceeb
-> Author: Joe Perches<joe@perches.com>
-> Date:   Fri Aug 20 16:25:38 2010 -0700
->
->      net/mac80211: Use wiphy_<level>
->
->      Standardize logging messages from
->          printk(KERN_<level>  "%s: " fmt , wiphy_name(foo), args);
->      to
->          wiphy_<level>(foo, fmt, args);
->
->      Signed-off-by: Joe Perches<joe@perches.com>
->      Signed-off-by: John W. Linville<linville@tuxdriver.com>
->
->
+Currently we check the sequence number of last packet received
+against start_win. If a sequence hole is detected, start_win is
+updated to next sequence number.
 
-thanks(and brilliant!), in that rx.c we can convert it to 
-mac80211_ht_debug. what about the other wiphy_debug messages, we would 
-still retain them know
+Since the rx sequence number is initialized to 0, a corner case
+exists when BA setup happens immediately after association. As
+0 is a valid sequence number, start_win gets increased to 1
+incorrectly. This causes the first packet with sequence number 0
+being dropped.
 
+Initialize rx sequence number as 0xffff and skip adjusting
+start_win if the sequence number remains 0xffff. The sequence
+number will be updated once the first packet is received.
+
+Cc: "3.0.y, 3.1.y, 3.2.y, 3.3.y, 3.4.y" <stable@vger.kernel.org>
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |    5 +++--
+ drivers/net/wireless/mwifiex/11n_rxreorder.h |    7 +++++++
+ drivers/net/wireless/mwifiex/wmm.c           |    2 ++
+ 3 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 9c44088..900ee12 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -256,7 +256,8 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+ 	else
+ 		last_seq = priv->rx_seq[tid];
+ 
+-	if (last_seq >= new_node->start_win)
++	if (last_seq != MWIFIEX_DEF_11N_RX_SEQ_NUM &&
++	    last_seq >= new_node->start_win)
+ 		new_node->start_win = last_seq + 1;
+ 
+ 	new_node->win_size = win_size;
+@@ -596,5 +597,5 @@ void mwifiex_11n_cleanup_reorder_tbl(struct mwifiex_private *priv)
+ 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 	INIT_LIST_HEAD(&priv->rx_reorder_tbl_ptr);
+-	memset(priv->rx_seq, 0, sizeof(priv->rx_seq));
++	mwifiex_reset_11n_rx_seq_num(priv);
+ }
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+index f1bffeb..6c9815a 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+@@ -37,6 +37,13 @@
+ 
+ #define ADDBA_RSP_STATUS_ACCEPT 0
+ 
++#define MWIFIEX_DEF_11N_RX_SEQ_NUM	0xffff
++
++static inline void mwifiex_reset_11n_rx_seq_num(struct mwifiex_private *priv)
++{
++	memset(priv->rx_seq, 0xff, sizeof(priv->rx_seq));
++}
++
+ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *,
+ 			       u16 seqNum,
+ 			       u16 tid, u8 *ta,
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 4f09992..3fa4d41 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -404,6 +404,8 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 		priv->add_ba_param.tx_win_size = MWIFIEX_AMPDU_DEF_TXWINSIZE;
+ 		priv->add_ba_param.rx_win_size = MWIFIEX_AMPDU_DEF_RXWINSIZE;
+ 
++		mwifiex_reset_11n_rx_seq_num(priv);
++
+ 		atomic_set(&priv->wmm.tx_pkts_queued, 0);
+ 		atomic_set(&priv->wmm.highest_queued_prio, HIGH_PRIO_TID);
+ 	}
 -- 
-thanks,
-shafi
+1.7.0.2
+
