@@ -1,61 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2957 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752221Ab2FMJ3D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 05:29:03 -0400
-Message-ID: <4FD85D47.8070609@broadcom.com> (sfid-20120613_112908_853159_8F00E125)
-Date: Wed, 13 Jun 2012 11:28:39 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 6/9] brcm80211: smac: enable/disable radio on
- regulatory updates
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
- <1338906849-26135-7-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1338906849-26135-7-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:48186 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758223Ab2FUDV1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jun 2012 23:21:27 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	"3.0.y, 3.1.y, 3.2.y, 3.3.y, 3.4.y" <stable@vger.kernel.org>
+Subject: [PATCH 3.5 1/4] mwifiex: fix 11n rx packet drop issue
+Date: Wed, 20 Jun 2012 20:21:10 -0700
+Message-Id: <1340248873-5455-2-git-send-email-bzhao@marvell.com> (sfid-20120621_052130_968004_FF282A19)
+In-Reply-To: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
+References: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2012 04:34 PM, Seth Forshee wrote:
-> Currently the radio disable state is only updated during initialization,
-> and it's only checked against the internal world domain. This is
-> unnecessary, as there are always valid channels against this domain.
-> Instead, check whether any channels are enabled in the regulatory
-> notifier and update the radio state accordingly.
-> 
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/channel.c |   67 ++++++++-------------
->  1 file changed, 26 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> index 65ef60b..7182b58 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> @@ -1235,12 +1194,38 @@ static int brcms_reg_notifier(struct wiphy *wiphy,
-> +
-> +	if (likely(ch_found)) {
-> +		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> +	} else {
-> +		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> +		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\"\n",
-> +			  wlc->pub->unit, __func__, request->alpha2);
-> +	}
-> +
+From: Stone Piao <piaoyun@marvell.com>
 
-When we were having fun in staging GregKH indicated that use of likely()
-should be justified with profiling data. Probably not really needed here.
+Currently we check the sequence number of last packet received
+against start_win. If a sequence hole is detected, start_win is
+updated to next sequence number.
 
-Gr. AvS
+Since the rx sequence number is initialized to 0, a corner case
+exists when BA setup happens immediately after association. As
+0 is a valid sequence number, start_win gets increased to 1
+incorrectly. This causes the first packet with sequence number 0
+being dropped.
+
+Initialize rx sequence number as 0xffff and skip adjusting
+start_win if the sequence number remains 0xffff. The sequence
+number will be updated once the first packet is received.
+
+Cc: "3.0.y, 3.1.y, 3.2.y, 3.3.y, 3.4.y" <stable@vger.kernel.org>
+Signed-off-by: Stone Piao <piaoyun@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |    5 +++--
+ drivers/net/wireless/mwifiex/11n_rxreorder.h |    7 +++++++
+ drivers/net/wireless/mwifiex/wmm.c           |    2 ++
+ 3 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 9c44088..900ee12 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -256,7 +256,8 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+ 	else
+ 		last_seq = priv->rx_seq[tid];
+ 
+-	if (last_seq >= new_node->start_win)
++	if (last_seq != MWIFIEX_DEF_11N_RX_SEQ_NUM &&
++	    last_seq >= new_node->start_win)
+ 		new_node->start_win = last_seq + 1;
+ 
+ 	new_node->win_size = win_size;
+@@ -596,5 +597,5 @@ void mwifiex_11n_cleanup_reorder_tbl(struct mwifiex_private *priv)
+ 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 	INIT_LIST_HEAD(&priv->rx_reorder_tbl_ptr);
+-	memset(priv->rx_seq, 0, sizeof(priv->rx_seq));
++	mwifiex_reset_11n_rx_seq_num(priv);
+ }
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+index f1bffeb..6c9815a 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+@@ -37,6 +37,13 @@
+ 
+ #define ADDBA_RSP_STATUS_ACCEPT 0
+ 
++#define MWIFIEX_DEF_11N_RX_SEQ_NUM	0xffff
++
++static inline void mwifiex_reset_11n_rx_seq_num(struct mwifiex_private *priv)
++{
++	memset(priv->rx_seq, 0xff, sizeof(priv->rx_seq));
++}
++
+ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *,
+ 			       u16 seqNum,
+ 			       u16 tid, u8 *ta,
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index f3fc655..8c2b5c0 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -404,6 +404,8 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 		priv->add_ba_param.tx_win_size = MWIFIEX_AMPDU_DEF_TXWINSIZE;
+ 		priv->add_ba_param.rx_win_size = MWIFIEX_AMPDU_DEF_RXWINSIZE;
+ 
++		mwifiex_reset_11n_rx_seq_num(priv);
++
+ 		atomic_set(&priv->wmm.tx_pkts_queued, 0);
+ 		atomic_set(&priv->wmm.highest_queued_prio, HIGH_PRIO_TID);
+ 	}
+-- 
+1.7.0.2
 
