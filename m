@@ -1,46 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43345 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751336Ab2F2QII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 12:08:08 -0400
-Message-ID: <1340986086.6562.36.camel@joe2Laptop> (sfid-20120629_180827_501755_A6BD562B)
-Subject: Re: [RFC][PATCH 1/2] lib: printf: append support of '%*p[Mm][FR]'
-From: Joe Perches <joe@perches.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: proski@gnu.org, Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 29 Jun 2012 09:08:06 -0700
-In-Reply-To: <1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <20110930115306.3bc105cb@mj>
-	 <1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:35413 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755266Ab2FUTXC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 15:23:02 -0400
+Received: by bkcjk13 with SMTP id jk13so1076204bkc.26
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 12:22:59 -0700 (PDT)
+Message-ID: <1340306563.1631.280.camel@cumari.coelho.fi> (sfid-20120621_212324_918753_635261F0)
+Subject: pull request: TI wireless drivers 2012-06-21 (for 3.6)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	arik@wizery.com, assaf@ti.com
+Date: Thu, 21 Jun 2012 22:22:43 +0300
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-IU9bs+2JbZK1eyvnkjVe"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-29 at 18:58 +0300, Andy Shevchenko wrote:
-> There are many places in the kernel where the drivers print small buffers as a
-> hex string. This patch adds a support of the variable width buffer to print it
-> as a hex string with a delimiter. The idea came from Pavel Roskin here:
-> http://www.digipedia.pl/usenet/thread/18835/17449/
 
-Seems sensible, but one stack caveat below
+--=-IU9bs+2JbZK1eyvnkjVe
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-[]
-> @@ -655,11 +655,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
->  }
->  
->  static noinline_for_stack
-> -char *mac_address_string(char *buf, char *end, u8 *addr,
-> -			 struct printf_spec spec, const char *fmt)
-> +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
-> +		 const char *fmt)
->  {
-> -	char mac_addr[sizeof("xx:xx:xx:xx:xx:xx")];
-> -	char *p = mac_addr;
-> +	char hex_str[64*3];	/* support up to 64 bytes to print */
+Hi John,
 
-Might be too much stack though.
+This is another pull request intended for 3.6.  A few new small
+features, some cleaning up and bugfixes.  Nothing major really.
 
+Please pull or let me know if there's any problem.
+
+
+The following changes since commit f761b6947dde42890beea59b020e1be87491809e=
+:
+
+  rtlwifi: rtl8192se: Fix gcc 4.7.x warning (2012-06-20 15:14:57 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linvill=
+e
+
+for you to fetch changes up to da0b1baa94a9c11448e010a150280d0834b11c32:
+
+  Merge branch 'wl12xx-next' into for-linville (2012-06-21 17:31:46 +0300)
+
+----------------------------------------------------------------
+
+Arik Nemtsov (8):
+      wlcore: suppress error message on Rx BA session removal
+      wlcore: allow setting sleep_auth before interface init
+      wlcore: reconfigure sleep_auth when removing interfaces
+      wl18xx: increase Rx descriptors for PG2
+      wl18xx: set Tx align quirk for PG2
+      wl18xx: explicitly remove the 5Ghz MIMO HT cap
+      wl18xx: sane defaults for HT capabilities
+      wl18xx: split siso40 HT cap between 2Ghz and 5Ghz
+
+Eliad Peller (2):
+      wlcore: update basic rates on channel switch
+      wlcore: declare interface combinations
+
+Eyal Shapira (2):
+      wlcore: avoid using NET_IP_ALIGN for RX alignment
+      wlcore: send EAPOLs with basic rate policy
+
+Igal Chernobelsky (1):
+      wlcore: read FW logs from FW memory on watchdog recovery
+
+Luciano Coelho (3):
+      wlcore: add a debugfs entry to allow changing the sleep mode by hand
+      wl18xx: use %zu for size_t arguments in printk calls
+      Merge branch 'wl12xx-next' into for-linville
+
+Yair Shapira (2):
+      wlcore/wl12xx: add support for HP and SKW FEM radio manufacturers
+      wlcore: add print logs of radio_status in case of BIP calibration
+
+Yoni Divinsky (1):
+      wlcore: do not report noise level in get survey op
+
+ drivers/net/wireless/ti/wl12xx/cmd.c      |   16 +++++----
+ drivers/net/wireless/ti/wl12xx/main.c     |    7 ++--
+ drivers/net/wireless/ti/wl18xx/main.c     |  105 +++++++++++++++++++++++++=
++++++++++--------------------------
+ drivers/net/wireless/ti/wlcore/acx.c      |    8 ++++-
+ drivers/net/wireless/ti/wlcore/acx.h      |    5 +++
+ drivers/net/wireless/ti/wlcore/cmd.h      |   21 ++++++++++++
+ drivers/net/wireless/ti/wlcore/conf.h     |    8 ++++-
+ drivers/net/wireless/ti/wlcore/debugfs.c  |   63 +++++++++++++++++++++++++=
++++++++++++
+ drivers/net/wireless/ti/wlcore/ini.h      |   22 ++++++++++---
+ drivers/net/wireless/ti/wlcore/init.c     |   43 ++++++++++++-------------
+ drivers/net/wireless/ti/wlcore/main.c     |   97 +++++++++++++++++++++++++=
++++++++++++++++++++-----------
+ drivers/net/wireless/ti/wlcore/ps.c       |    2 +-
+ drivers/net/wireless/ti/wlcore/rx.c       |    4 +--
+ drivers/net/wireless/ti/wlcore/rx.h       |    6 ++++
+ drivers/net/wireless/ti/wlcore/testmode.c |   14 ++++++++
+ drivers/net/wireless/ti/wlcore/tx.c       |   10 ++++--
+ drivers/net/wireless/ti/wlcore/wlcore.h   |   10 ++++++
+ 17 files changed, 332 insertions(+), 109 deletions(-)
+
+--=20
+Cheers,
+Luca.
+
+--=-IU9bs+2JbZK1eyvnkjVe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABAgAGBQJP43SDAAoJEKFHnKIaPMX6E1wP/2Sk+szJ+5j5Ffg5mf361sKm
+ZRQrNrevQNnZL0bVF7i87Y9v3nxWafwuggxnJXAjs77CzAs3tu5teY52rBH+FaR6
+IqaEYULqWQi2yXOksO1GDPbaK4A+AhGaAD97uE50CX98WyTSpnpDtkLEYjFGm2au
+OGrDXF41B9N3U2afmUfMEyObt5RWOGEmsBjMmCvqkGY9eXFkg6NXgCra4GnINqVI
+Cnb9/WQo+V/1F7O20P6R0//fQPjS0RycsV8WHb3z3m+e35CPCuUUr414dnbkQd/G
+mNeoLKE2usEwz+n+BlP3dtGEnbsHTaXOEDQ4K7xvNFOdX7beiDW21vaGmegJHXI5
+/jbMs0zuZuPKQ+1PNZpzOqODfRi82bo6kPhaN94WTSFQbuBQT6YY7wE1S9S9StvL
+ufmR0HLwJy/ihJGYoCRu5NM/Krfuj73TKxVTGt/OTf2E/ZW2vXpZxB44fKplvRkX
+QXoM9Qc542oZ4QTOvrR3nUQC+PP0Bmub+vdy+KhIAbHsPxIFLW1O2Z7bbj50JWbn
+d+S1arrSGwarFlxip+0JQUKXOizuC8KaWzrbf8Yl/DSdu1ZLmtdXdCQpvH9zmU1v
+K5WXn9Ii1JEhD/YZ/C9lsICa2ln+3ukhi1YJyurrlpOw5yEj1sOcRePXLRSTDQmw
+ns1ZqNHy0guxin+D0EEI
+=ma+O
+-----END PGP SIGNATURE-----
+
+--=-IU9bs+2JbZK1eyvnkjVe--
 
