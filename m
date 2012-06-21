@@ -1,446 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2470 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752570Ab2FIVZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 17:25:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 5/5] brcmfmac: introduce checkdied debugfs functionality
-Date: Sat, 9 Jun 2012 22:51:45 +0200
-Message-ID: <1339275105-3593-6-git-send-email-arend@broadcom.com> (sfid-20120609_232530_824667_33FCED4D)
-In-Reply-To: <1339275105-3593-1-git-send-email-arend@broadcom.com>
-References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:58857 "EHLO
+	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759176Ab2FUJgP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 05:36:15 -0400
+Received: by obbwd20 with SMTP id wd20so723484obb.9
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 02:36:14 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>, <eliad@wizery.com>
+Subject: [PATCH v4 1/2] nl80211/cfg80211: add scan channel times to scan command
+Date: Thu, 21 Jun 2012 12:33:04 +0300
+Message-Id: <1340271185-7070-1-git-send-email-victorg@ti.com> (sfid-20120621_113619_610864_2B3A8BFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The checkdied functionality provides useful information for analyzing
-firmware crashes. By exposing this information to a debugfs file users
-can easily provide its content in bug reports. The functionality is
-available only when CONFIG_BRCMDBG is selected.
+In order to give the usermode an ability to configure
+scan channel times, and as it required for the beacon
+reports in the 802.11k standard.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Add to the scan command min/max channel times. Add
+min/max passive channel times, since a single scan
+can contain both passive and active channels due to
+regulatory constraints.
+
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  332 +++++++++++++++++++-
- 1 file changed, 331 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index a07fb01..5a33b42 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -31,6 +31,7 @@
- #include <linux/firmware.h>
- #include <linux/module.h>
- #include <linux/bcma/bcma.h>
-+#include <linux/debugfs.h>
- #include <asm/unaligned.h>
- #include <defs.h>
- #include <brcmu_wifi.h>
-@@ -48,6 +49,9 @@
- 
- #define CBUF_LEN	(128)
- 
-+/* Device console log buffer state */
-+#define CONSOLE_BUFFER_MAX	2024
-+
- struct rte_log_le {
- 	__le32 buf;		/* Can't be pointer on (64-bit) hosts */
- 	__le32 buf_size;
-@@ -281,7 +285,7 @@ struct rte_console {
-  * Shared structure between dongle and the host.
-  * The structure contains pointers to trap or assert information.
-  */
--#define SDPCM_SHARED_VERSION       0x0002
-+#define SDPCM_SHARED_VERSION       0x0003
- #define SDPCM_SHARED_VERSION_MASK  0x00FF
- #define SDPCM_SHARED_ASSERT_BUILT  0x0100
- #define SDPCM_SHARED_ASSERT        0x0200
-@@ -428,6 +432,29 @@ struct brcmf_console {
- 	u8 *buf;		/* Log buffer (host copy) */
- 	uint last;		/* Last buffer read index */
- };
-+
-+struct brcmf_trap_info {
-+	__le32		type;
-+	__le32		epc;
-+	__le32		cpsr;
-+	__le32		spsr;
-+	__le32		r0;	/* a1 */
-+	__le32		r1;	/* a2 */
-+	__le32		r2;	/* a3 */
-+	__le32		r3;	/* a4 */
-+	__le32		r4;	/* v1 */
-+	__le32		r5;	/* v2 */
-+	__le32		r6;	/* v3 */
-+	__le32		r7;	/* v4 */
-+	__le32		r8;	/* v5 */
-+	__le32		r9;	/* sb/v6 */
-+	__le32		r10;	/* sl/v7 */
-+	__le32		r11;	/* fp/v8 */
-+	__le32		r12;	/* ip */
-+	__le32		r13;	/* sp */
-+	__le32		r14;	/* lr */
-+	__le32		pc;	/* r15 */
-+};
- #endif				/* DEBUG */
- 
- struct sdpcm_shared {
-@@ -439,6 +466,7 @@ struct sdpcm_shared {
- 	u32 console_addr;	/* Address of struct rte_console */
- 	u32 msgtrace_addr;
- 	u8 tag[32];
-+	u32 brpt_addr;
- };
- 
- struct sdpcm_shared_le {
-@@ -450,6 +478,7 @@ struct sdpcm_shared_le {
- 	__le32 console_addr;	/* Address of struct rte_console */
- 	__le32 msgtrace_addr;
- 	u8 tag[32];
-+	__le32 brpt_addr;
- };
- 
- 
-@@ -2953,13 +2982,311 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
+v4:
+	1. Use the scan time attributes only if NL80211_FEATURE_SCAN_TIMES is set.
+	2. Use only a pair of both min and max scan times, otherwise return -EINVAL.
+	3. Updated documentation for the scan time attributes. 
+
+
+ include/linux/ieee80211.h |    9 +++++++++
+ include/linux/nl80211.h   |   27 +++++++++++++++++++++++++++
+ include/net/cfg80211.h    |   11 +++++++++++
+ net/wireless/core.h       |    1 +
+ net/wireless/nl80211.c    |   32 +++++++++++++++++++++++++++++++-
+ net/wireless/scan.c       |   38 ++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 117 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index ce9af89..9522b7e 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1856,6 +1856,15 @@ static inline unsigned long ieee80211_tu_to_usec(unsigned long tu)
  }
  
- #ifdef DEBUG
-+static inline bool brcmf_sdio_valid_shared_address(u32 addr)
+ /**
++ * ieee80211_msec_to_tu - convert milliseconds to time units (TU)
++ * @msec: the milliseconds
++ */
++static inline unsigned long ieee80211_msec_to_tu(unsigned long msec)
 +{
-+	return !(addr == 0 || ((~addr >> 16) & 0xffff) == (addr & 0xffff));
++	return msec * 1000 / 1024;
 +}
 +
-+static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
-+				 struct sdpcm_shared *sh)
-+{
-+	u32 addr;
-+	int rv;
-+	u32 shaddr = 0;
-+	struct sdpcm_shared_le sh_le;
-+	__le32 addr_le;
++/**
+  * ieee80211_check_tim - check if AID bit is set in TIM
+  * @tim: the TIM IE
+  * @tim_len: length of the TIM IE
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 970afdf..bee74ba 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1224,6 +1224,25 @@ enum nl80211_commands {
+  * @NL80211_ATTR_BG_SCAN_PERIOD: Background scan period in seconds
+  *      or 0 to disable background scan.
+  *
++ * @NL80211_ATTR_SCAN_MIN_CH_TIME: Minimum active scan time (in msec),
++ *	u32 attribute to setup minimum time to wait on each channel, if received
++ *	at least one probe_resp/beacon during this period will continue waiting
++ *	@NL80211_ATTR_SCAN_MAX_CH_TIME, otherwise will move to next channel.
++ * @NL80211_ATTR_SCAN_MAX_CH_TIME: Maximum active scan time (in msec),
++ *	u32 attribute to setup maximum time to wait on the channel.
++ * @NL80211_ATTR_SCAN_PSV_MIN_CH_TIME: Minimum passive scan time (in msec),
++ *	u32 attribute (similar to @NL80211_ATTR_SCAN_MIN_CH_TIME).
++ * @NL80211_ATTR_SCAN_PSV_MAX_CH_TIME: Maximum passive scan time (in msec),
++ *	u32 attribute (similar to @NL80211_ATTR_SCAN_MAX_CH_TIME).
++ *	Note:
++ *	 The above channel time attributes are for the %NL80211_CMD_TRIGGER_SCAN
++ *	 command. The attributes are optional, the driver will use default
++ *	 channel time values if the attributes are not in use. When using the
++ *	 attributes, the driver must support @NL80211_FEATURE_SCAN_TIMES and a
++ *	 pair of both min and max scan times must be set, moreover if one of the
++ *	 min times will be greater than max or set to zero, -EINVAL will be
++ *	 returned.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1475,6 +1494,11 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_BG_SCAN_PERIOD,
+ 
++	NL80211_ATTR_SCAN_MIN_CH_TIME,
++	NL80211_ATTR_SCAN_MAX_CH_TIME,
++	NL80211_ATTR_SCAN_PSV_MIN_CH_TIME,
++	NL80211_ATTR_SCAN_PSV_MAX_CH_TIME,
 +
-+	shaddr = bus->ramsize - 4;
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2875,11 +2899,14 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_HT_IBSS: This driver supports IBSS with HT datarates.
+  * @NL80211_FEATURE_INACTIVITY_TIMER: This driver takes care of freeing up
+  *	the connected inactive stations in AP mode.
++ * @NL80211_FEATURE_SCAN_TIMES: This driver supports min/max scan times
++ *	configuration for the %NL80211_CMD_TRIGGER_SCAN command.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
+ 	NL80211_FEATURE_HT_IBSS		= 1 << 1,
+ 	NL80211_FEATURE_INACTIVITY_TIMER = 1 << 2,
++	NL80211_FEATURE_SCAN_TIMES	= 1 << 3,
+ };
+ 
+ /**
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7319f25..4cc3a69 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -929,6 +929,12 @@ struct cfg80211_ssid {
+  * @dev: the interface
+  * @aborted: (internal) scan request was notified as aborted
+  * @no_cck: used to send probe requests at non CCK rate in 2GHz band
++ * @min_ch_time: minimum time to wait on each channel for active scans
++ * @max_ch_time: maximum time to wait on each channel for active scans
++ * @min_passive_ch_time: minimum time to wait on each channel for passive scans
++ * @max_passive_ch_time: maximum time to wait on each channel for passive scans
++ *  Note: If the above channel times are not set, the default channel times
++ *  will be used. The channel times are in TUs.
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -945,6 +951,11 @@ struct cfg80211_scan_request {
+ 	bool aborted;
+ 	bool no_cck;
+ 
++	u32 min_ch_time;
++	u32 max_ch_time;
++	u32 min_passive_ch_time;
++	u32 max_passive_ch_time;
 +
-+	/*
-+	 * Read last word in socram to determine
-+	 * address of sdpcm_shared structure
-+	 */
-+	rv = brcmf_sdbrcm_membytes(bus, false, shaddr,
-+				   (u8 *)&addr_le, 4);
-+	if (rv < 0)
-+		return rv;
-+
-+	addr = le32_to_cpu(addr_le);
-+
-+	brcmf_dbg(INFO, "sdpcm_shared address 0x%08X\n", addr);
-+
-+	/*
-+	 * Check if addr is valid.
-+	 * NVRAM length at the end of memory should have been overwritten.
-+	 */
-+	if (!brcmf_sdio_valid_shared_address(addr)) {
-+			brcmf_dbg(ERROR, "invalid sdpcm_shared address 0x%08X\n",
-+				  addr);
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+ };
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9348a47..95e2107 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -419,6 +419,7 @@ void cfg80211_sme_scan_done(struct net_device *dev);
+ void cfg80211_sme_rx_auth(struct net_device *dev, const u8 *buf, size_t len);
+ void cfg80211_sme_disassoc(struct net_device *dev,
+ 			   struct cfg80211_internal_bss *bss);
++int cfg80211_trigger_scan(struct cfg80211_registered_device *rdev);
+ void __cfg80211_scan_done(struct work_struct *wk);
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak);
+ void __cfg80211_sched_scan_results(struct work_struct *wk);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7ae54b8..8dd8979 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -206,6 +206,10 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_INACTIVITY_TIMEOUT] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
++	[NL80211_ATTR_SCAN_MIN_CH_TIME] = { .type = NLA_U32 },
++	[NL80211_ATTR_SCAN_MAX_CH_TIME] = { .type = NLA_U32 },
++	[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME] = { .type = NLA_U32 },
++	[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4020,6 +4024,32 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		       request->ie_len);
+ 	}
+ 
++	if ((wiphy->features & NL80211_FEATURE_SCAN_TIMES) &&
++	    info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME] &&
++	    info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME]) {
++		request->min_ch_time =
++			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME]);
++		request->max_ch_time =
++			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME]);
++		if (!request->min_ch_time || !request->max_ch_time ||
++		    (request->min_ch_time > request->max_ch_time))
 +			return -EINVAL;
 +	}
 +
-+	/* Read hndrte_shared structure */
-+	rv = brcmf_sdbrcm_membytes(bus, false, addr, (u8 *)&sh_le,
-+				   sizeof(struct sdpcm_shared_le));
-+	if (rv < 0)
-+		return rv;
-+
-+	/* Endianness */
-+	sh->flags = le32_to_cpu(sh_le.flags);
-+	sh->trap_addr = le32_to_cpu(sh_le.trap_addr);
-+	sh->assert_exp_addr = le32_to_cpu(sh_le.assert_exp_addr);
-+	sh->assert_file_addr = le32_to_cpu(sh_le.assert_file_addr);
-+	sh->assert_line = le32_to_cpu(sh_le.assert_line);
-+	sh->console_addr = le32_to_cpu(sh_le.console_addr);
-+	sh->msgtrace_addr = le32_to_cpu(sh_le.msgtrace_addr);
-+
-+	if ((sh->flags & SDPCM_SHARED_VERSION_MASK) != SDPCM_SHARED_VERSION) {
-+		brcmf_dbg(ERROR,
-+			  "sdpcm_shared version mismatch: dhd %d dongle %d\n",
-+			  SDPCM_SHARED_VERSION,
-+			  sh->flags & SDPCM_SHARED_VERSION_MASK);
-+		return -EPROTO;
++	if ((wiphy->features & NL80211_FEATURE_SCAN_TIMES) &&
++	    info->attrs[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME] &&
++	    info->attrs[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME]) {
++		request->min_passive_ch_time =
++		    nla_get_u32(info->attrs[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME]);
++		request->max_passive_ch_time =
++		    nla_get_u32(info->attrs[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME]);
++		if (!request->min_passive_ch_time ||
++		    !request->max_passive_ch_time ||
++		    (request->min_passive_ch_time >
++		     request->max_passive_ch_time))
++			return -EINVAL;
 +	}
 +
-+	return 0;
-+}
-+
-+static int brcmf_sdio_dump_console(struct brcmf_sdio *bus,
-+				   struct sdpcm_shared *sh, char __user *data,
-+				   size_t count)
-+{
-+	u32 addr, console_ptr, console_size, console_index;
-+	char *conbuf = NULL;
-+	__le32 sh_val;
-+	int rv;
-+	loff_t pos = 0;
-+	int nbytes = 0;
-+
-+	/* obtain console information from device memory */
-+	addr = sh->console_addr + offsetof(struct rte_console, log_le);
-+	rv = brcmf_sdbrcm_membytes(bus, false, addr,
-+			(u8 *)&sh_val, sizeof(u32));
-+	if (rv < 0)
-+		return rv;
-+	console_ptr = le32_to_cpu(sh_val);
-+
-+	addr = sh->console_addr + offsetof(struct rte_console, log_le.buf_size);
-+	rv = brcmf_sdbrcm_membytes(bus, false, addr,
-+			(u8 *)&sh_val, sizeof(u32));
-+	if (rv < 0)
-+		return rv;
-+	console_size = le32_to_cpu(sh_val);
-+
-+	addr = sh->console_addr + offsetof(struct rte_console, log_le.idx);
-+	rv = brcmf_sdbrcm_membytes(bus, false, addr,
-+			(u8 *)&sh_val, sizeof(u32));
-+	if (rv < 0)
-+		return rv;
-+	console_index = le32_to_cpu(sh_val);
-+
-+	/* allocate buffer for console data */
-+	if (console_size <= CONSOLE_BUFFER_MAX)
-+		conbuf = kzalloc(console_size+1, GFP_ATOMIC);
-+
-+	if (!conbuf)
-+		return -ENOMEM;
-+
-+	/* obtain the console data from device */
-+	conbuf[console_size] = '\0';
-+	rv = brcmf_sdbrcm_membytes(bus, false, console_ptr, (u8 *)conbuf,
-+				   console_size);
-+	if (rv < 0)
-+		goto done;
-+
-+	rv = simple_read_from_buffer(data, count, &pos,
-+				     conbuf + console_index,
-+				     console_size - console_index);
-+	if (rv < 0)
-+		goto done;
-+
-+	nbytes = rv;
-+	if (console_index > 0) {
-+		pos = 0;
-+		rv = simple_read_from_buffer(data+nbytes, count, &pos,
-+					     conbuf, console_index - 1);
-+		if (rv < 0)
-+			goto done;
-+		rv += nbytes;
-+	}
-+done:
-+	kfree(conbuf);
-+	return rv;
-+}
-+
-+static int brcmf_sdio_trap_info(struct brcmf_sdio *bus, struct sdpcm_shared *sh,
-+				char __user *data, size_t count)
-+{
-+	int error, res;
-+	char buf[350];
-+	struct brcmf_trap_info tr;
-+	int nbytes;
-+	loff_t pos = 0;
-+
-+	if ((sh->flags & SDPCM_SHARED_TRAP) == 0)
-+		return 0;
-+
-+	error = brcmf_sdbrcm_membytes(bus, false, sh->trap_addr, (u8 *)&tr,
-+				      sizeof(struct brcmf_trap_info));
-+	if (error < 0)
-+		return error;
-+
-+	nbytes = brcmf_sdio_dump_console(bus, sh, data, count);
-+	if (nbytes < 0)
-+		return nbytes;
-+
-+	res = scnprintf(buf, sizeof(buf),
-+			"dongle trap info: type 0x%x @ epc 0x%08x\n"
-+			"  cpsr 0x%08x spsr 0x%08x sp 0x%08x\n"
-+			"  lr   0x%08x pc   0x%08x offset 0x%x\n"
-+			"  r0   0x%08x r1   0x%08x r2 0x%08x r3 0x%08x\n"
-+			"  r4   0x%08x r5   0x%08x r6 0x%08x r7 0x%08x\n",
-+			le32_to_cpu(tr.type), le32_to_cpu(tr.epc),
-+			le32_to_cpu(tr.cpsr), le32_to_cpu(tr.spsr),
-+			le32_to_cpu(tr.r13), le32_to_cpu(tr.r14),
-+			le32_to_cpu(tr.pc), le32_to_cpu(sh->trap_addr),
-+			le32_to_cpu(tr.r0), le32_to_cpu(tr.r1),
-+			le32_to_cpu(tr.r2), le32_to_cpu(tr.r3),
-+			le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
-+			le32_to_cpu(tr.r6), le32_to_cpu(tr.r7));
-+
-+	error = simple_read_from_buffer(data+nbytes, count, &pos, buf, res);
-+	if (error < 0)
-+		return error;
-+
-+	nbytes += error;
-+	return nbytes;
-+}
-+
-+static int brcmf_sdio_assert_info(struct brcmf_sdio *bus,
-+				  struct sdpcm_shared *sh, char __user *data,
-+				  size_t count)
-+{
-+	int error = 0;
-+	char buf[200];
-+	char file[80] = "?";
-+	char expr[80] = "<???>";
-+	int res;
-+	loff_t pos = 0;
-+
-+	if ((sh->flags & SDPCM_SHARED_ASSERT_BUILT) == 0) {
-+		brcmf_dbg(INFO, "firmware not built with -assert\n");
-+		return 0;
-+	} else if ((sh->flags & SDPCM_SHARED_ASSERT) == 0) {
-+		brcmf_dbg(INFO, "no assert in dongle\n");
-+		return 0;
-+	}
-+
-+	if (sh->assert_file_addr != 0) {
-+		error = brcmf_sdbrcm_membytes(bus, false, sh->assert_file_addr,
-+					      (u8 *)file, 80);
-+		if (error < 0)
-+			return error;
-+	}
-+	if (sh->assert_exp_addr != 0) {
-+		error = brcmf_sdbrcm_membytes(bus, false, sh->assert_exp_addr,
-+					      (u8 *)expr, 80);
-+		if (error < 0)
-+			return error;
-+	}
-+
-+	res = scnprintf(buf, sizeof(buf),
-+			"dongle assert: %s:%d: assert(%s)\n",
-+			file, sh->assert_line, expr);
-+	return simple_read_from_buffer(data, count, &pos, buf, res);
-+}
-+
-+static int brcmf_sdbrcm_checkdied(struct brcmf_sdio *bus)
-+{
-+	int error;
-+	struct sdpcm_shared sh;
-+
-+	down(&bus->sdsem);
-+	error = brcmf_sdio_readshared(bus, &sh);
-+	up(&bus->sdsem);
-+
-+	if (error < 0)
-+		return error;
-+
-+	if ((sh.flags & SDPCM_SHARED_ASSERT_BUILT) == 0)
-+		brcmf_dbg(INFO, "firmware not built with -assert\n");
-+	else if (sh.flags & SDPCM_SHARED_ASSERT)
-+		brcmf_dbg(ERROR, "assertion in dongle\n");
-+
-+	if (sh.flags & SDPCM_SHARED_TRAP)
-+		brcmf_dbg(ERROR, "firmware trap in dongle\n");
-+
-+	return 0;
-+}
-+
-+static int brcmf_sdbrcm_died_dump(struct brcmf_sdio *bus, char __user *data,
-+				  size_t count, loff_t *ppos)
-+{
-+	int error = 0;
-+	struct sdpcm_shared sh;
-+	int nbytes = 0;
-+	loff_t pos = *ppos;
-+
-+	if (pos != 0)
-+		return 0;
-+
-+	down(&bus->sdsem);
-+	error = brcmf_sdio_readshared(bus, &sh);
-+	if (error < 0)
-+		goto done;
-+
-+	error = brcmf_sdio_assert_info(bus, &sh, data, count);
-+	if (error < 0)
-+		goto done;
-+
-+	nbytes = error;
-+	error = brcmf_sdio_trap_info(bus, &sh, data, count);
-+	if (error < 0)
-+		goto done;
-+
-+	error += nbytes;
-+	*ppos += error;
-+done:
-+	up(&bus->sdsem);
-+	return error;
-+}
-+
-+static ssize_t brcmf_sdio_forensic_read(struct file *f, char __user *data,
-+					size_t count, loff_t *ppos)
-+{
-+	struct brcmf_sdio *bus = f->private_data;
-+	int res;
-+
-+	res = brcmf_sdbrcm_died_dump(bus, data, count, ppos);
-+	if (res > 0)
-+		*ppos += res;
-+	return (ssize_t)res;
-+}
-+
-+static const struct file_operations brcmf_sdio_forensic_ops = {
-+	.owner = THIS_MODULE,
-+	.open = simple_open,
-+	.read = brcmf_sdio_forensic_read
-+};
-+
- static void brcmf_sdio_debugfs_create(struct brcmf_sdio *bus)
- {
- 	struct brcmf_pub *drvr = bus->sdiodev->bus_if->drvr;
-+	struct dentry *dentry = brcmf_debugfs_get_devdir(drvr);
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+ 		if (wiphy->bands[i])
+ 			request->rates[i] =
+@@ -4051,7 +4081,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	request->wiphy = &rdev->wiphy;
  
-+	if (IS_ERR_OR_NULL(dentry))
-+		return;
+ 	rdev->scan_req = request;
+-	err = rdev->ops->scan(&rdev->wiphy, dev, request);
++	err = cfg80211_trigger_scan(rdev);
+ 
+ 	if (!err) {
+ 		nl80211_send_scan_start(rdev, dev);
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index af2b1ca..4229efb 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -20,6 +20,30 @@
+ 
+ #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+ 
++#define IEEE80211_CH_TIME_MSEC		30
++#define IEEE80211_PSV_CH_TIME_MSEC	125
 +
-+	debugfs_create_file("forensics", S_IRUGO, dentry, bus,
-+			    &brcmf_sdio_forensic_ops);
- 	brcmf_debugfs_create_sdio_count(drvr, &bus->sdcnt);
- }
- #else
-+static int brcmf_sdbrcm_checkdied(struct brcmf_sdio *bus)
++int cfg80211_trigger_scan(struct cfg80211_registered_device *rdev)
 +{
-+	return 0;
++	struct cfg80211_scan_request *request;
++
++	ASSERT_RDEV_LOCK(rdev);
++
++	request = rdev->scan_req;
++
++	if (!request)
++		return -EINVAL;
++
++	if (!request->min_passive_ch_time)
++		request->min_passive_ch_time =
++			ieee80211_msec_to_tu(IEEE80211_PSV_CH_TIME_MSEC);
++	if (!request->min_ch_time)
++		request->min_ch_time =
++			ieee80211_msec_to_tu(IEEE80211_CH_TIME_MSEC);
++
++	return rdev->ops->scan(&rdev->wiphy, request->dev, request);
 +}
 +
- static void brcmf_sdio_debugfs_create(struct brcmf_sdio *bus)
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
  {
- }
-@@ -2991,11 +3318,13 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- 			  rxlen, msglen);
- 	} else if (timeleft == 0) {
- 		brcmf_dbg(ERROR, "resumed on timeout\n");
-+		brcmf_sdbrcm_checkdied(bus);
- 	} else if (pending) {
- 		brcmf_dbg(CTL, "cancelled\n");
- 		return -ERESTARTSYS;
- 	} else {
- 		brcmf_dbg(CTL, "resumed for unknown reason?\n");
-+		brcmf_sdbrcm_checkdied(bus);
- 	}
+ 	struct cfg80211_scan_request *request;
+@@ -1023,6 +1047,20 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 		if (wiphy->bands[i])
+ 			creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
  
- 	if (rxlen)
-@@ -3817,6 +4146,7 @@ static void brcmf_sdbrcm_release_dongle(struct brcmf_sdio *bus)
- static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
++	if (wreq->min_channel_time) {
++		creq->min_ch_time = wreq->min_channel_time;
++		if (wreq->scan_type == IW_SCAN_TYPE_ACTIVE)
++			creq->min_passive_ch_time =
++			       ieee80211_msec_to_tu(IEEE80211_PSV_CH_TIME_MSEC);
++		else
++			creq->min_passive_ch_time = wreq->min_channel_time;
++	} else {
++		creq->min_ch_time =
++			ieee80211_msec_to_tu(IEEE80211_CH_TIME_MSEC);
++		creq->min_passive_ch_time =
++			ieee80211_msec_to_tu(IEEE80211_PSV_CH_TIME_MSEC);
++	}
 +
- 	if (bus) {
- 		/* De-register interrupt handler */
- 		brcmf_sdio_intr_unregister(bus->sdiodev);
+ 	rdev->scan_req = creq;
+ 	err = rdev->ops->scan(wiphy, dev, creq);
+ 	if (err) {
 -- 
-1.7.9.5
-
+1.7.5.4
 
