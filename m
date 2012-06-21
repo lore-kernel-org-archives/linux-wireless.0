@@ -1,85 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57705 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756345Ab2FUQEf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 12:04:35 -0400
-Message-ID: <4FE3460F.7030001@candelatech.com> (sfid-20120621_180440_879346_09938412)
-Date: Thu, 21 Jun 2012 09:04:31 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:62993
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754456Ab2FUFN4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 01:13:56 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: [RFC v2] cfg80211/mac80211: 802.11ac changes
+Date: Thu, 21 Jun 2012 05:13:55 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3B74@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120621_071436_213498_E5AD05A1)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: netdev@vger.kernel.org, Daniel Baluta <dbaluta@ixiacom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] TCP:  Support configurable delayed-ack parameters.
-References: <1340067163-29329-1-git-send-email-greearb@candelatech.com> <1340082688.7491.2299.camel@edumazet-glaptop>
-In-Reply-To: <1340082688.7491.2299.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2012 10:11 PM, Eric Dumazet wrote:
-> On Mon, 2012-06-18 at 17:52 -0700, greearb@candelatech.com wrote:
+Added 2 new NL commands to push VHT capabilities to user space as part of 11ac changes.
+Added new VHT structs and defines.
+Appended VHT cap IE in probe req.
 
->> In order to keep a multiply out of the hot path, the segs * mss
->> computation is recalculated and cached whenever segs or mss changes.
->>
->
-> I know David was worried about this multiply, but current cpus do a
-> multiply in at most 3 cycles.
->
-> Addding an u32 field in socket structure adds 1/16 of a cache line, and
-> adds more penalty.
->
-> Avoiding to build/send an ACK packet can save us so many cpu cycles that
-> the multiply is pure noise.
+Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/ieee80211.h  |   65 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/nl80211.h    |    6 ++++
+ include/net/cfg80211.h     |   17 +++++++++++
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/main.c        |    7 ++++-
+ net/mac80211/util.c        |   25 +++++++++++++++++
+ net/wireless/nl80211.c     |    9 ++++++
+ 7 files changed, 130 insertions(+), 1 deletions(-)
 
-I modified the patch as you suggested to remove the cached multiply
-and just do the multiply in the hot path (and fixed a few other bugs in
-the implementation).  And yes, I know Dave doesn't like the patch, so
-it's unlikely to ever go upstream...
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index ce9af89..c7e62ad 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1072,6 +1072,68 @@ struct ieee80211_ht_operation {
+ #define WLAN_HT_SMPS_CONTROL_STATIC	1
+ #define WLAN_HT_SMPS_CONTROL_DYNAMIC	3
+ 
++#define VHT_MCS_SUPPORTED_SET_SIZE      8
++
++struct ieee80211_vht_capabilities {
++	__le32 vht_capabilities_info;
++	u8 vht_supported_mcs_set[VHT_MCS_SUPPORTED_SET_SIZE];
++} __packed;
++
++struct ieee80211_vht_operation {
++	u8 vht_op_info_chwidth;
++	u8 vht_op_info_chan_center_freq_seg1_idx;
++	u8 vht_op_info_chan_center_freq_seg2_idx;
++	__le16 vht_basic_mcs_set;
++} __packed;
++
++/**
++ * struct ieee80211_vht_mcs_info - VHT MCS information
++ * @rx_mask: RX mask
++ * @rx_highest: highest supported RX rate. If set represents
++ *	the highest supported RX data rate in units of 1 Mbps.
++ *	If this field is 0 this value should not be used to
++ *	consider the highest RX data rate supported.
++ * @tx_params: TX parameters
++ */
++struct ieee80211_vht_mcs_info {
++	__le16 rx_mcs_map;
++	__le16 rx_highest;
++	__le16 tx_mcs_map;
++	__le16 tx_highest;
++} __packed;
++
++#define IEEE80211_VHT_MCS_ZERO_TO_SEVEN_SUPPORT 0
++#define IEEE80211_VHT_MCS_ZERO_TO_EIGHT_SUPPORT 1
++#define IEEE80211_VHT_MCS_ZERO_TO_NINE_SUPPORT  2
++#define IEEE80211_VHT_MCS_NOT_SUPPORTED 3
++
++/* 802.11ac VHT Capabilities */
++#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
++#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454               0x00000002
++#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ              0x00000004
++#define IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ     0x00000008
++#define IEEE80211_VHT_CAP_RXLDPC                              0x00000010
++#define IEEE80211_VHT_CAP_SHORT_GI_80                         0x00000020
++#define IEEE80211_VHT_CAP_SHORT_GI_160                        0x00000040
++#define IEEE80211_VHT_CAP_TXSTBC                              0x00000080
++#define IEEE80211_VHT_CAP_RXSTBC_1                            0x00000100
++#define IEEE80211_VHT_CAP_RXSTBC_2                            0x00000200
++#define IEEE80211_VHT_CAP_RXSTBC_3                            0x00000300
++#define IEEE80211_VHT_CAP_RXSTBC_4                            0x00000400
++#define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE               0x00000800
++#define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE               0x00001000
++#define IEEE80211_VHT_CAP_BEAMFORMER_ANTENNAS_MAX             0x00006000
++#define IEEE80211_VHT_CAP_SOUNDING_DIMENTION_MAX              0x00030000
++#define IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE               0x00080000
++#define IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE               0x00100000
++#define IEEE80211_VHT_CAP_VHT_TXOP_PS                         0x00200000
++#define IEEE80211_VHT_CAP_HTC_VHT                             0x00400000
++#define IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT          0x00800000
++#define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_UNSOL_MFB   0x08000000
++#define IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB     0x0c000000
++#define IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN                  0x10000000
++#define IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN                  0x20000000
++
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+ #define WLAN_AUTH_SHARED_KEY 1
+@@ -1332,6 +1394,9 @@ enum ieee80211_eid {
+ 	WLAN_EID_DSE_REGISTERED_LOCATION = 58,
+ 	WLAN_EID_SUPPORTED_REGULATORY_CLASSES = 59,
+ 	WLAN_EID_EXT_CHANSWITCH_ANN = 60,
++
++	WLAN_EID_VHT_CAPABILITY = 191,
++	WLAN_EID_VHT_OPERATION = 192,
+ };
+ 
+ /* Action category code */
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 970afdf..16ea46e 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1792,6 +1792,9 @@ enum nl80211_mpath_info {
+  * @NL80211_BAND_ATTR_HT_CAPA: HT capabilities, as in the HT information IE
+  * @NL80211_BAND_ATTR_HT_AMPDU_FACTOR: A-MPDU factor, as in 11n
+  * @NL80211_BAND_ATTR_HT_AMPDU_DENSITY: A-MPDU density, as in 11n
++ * @NL80211_BAND_ATTR_VHT_MCS_SET: 32-byte attribute containing the MCS set as
++ *	defined in 802.11ac
++ * @NL80211_BAND_ATTR_VHT_CAPA: VHT capabilities, as in the HT information IE
+  * @NL80211_BAND_ATTR_MAX: highest band attribute currently defined
+  * @__NL80211_BAND_ATTR_AFTER_LAST: internal use
+  */
+@@ -1805,6 +1808,9 @@ enum nl80211_band_attr {
+ 	NL80211_BAND_ATTR_HT_AMPDU_FACTOR,
+ 	NL80211_BAND_ATTR_HT_AMPDU_DENSITY,
+ 
++	NL80211_BAND_ATTR_VHT_MCS_SET,
++	NL80211_BAND_ATTR_VHT_CAPA,
++
+ 	/* keep last */
+ 	__NL80211_BAND_ATTR_AFTER_LAST,
+ 	NL80211_BAND_ATTR_MAX = __NL80211_BAND_ATTR_AFTER_LAST - 1
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7319f25..5a4e5b3 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -211,6 +211,22 @@ struct ieee80211_sta_ht_cap {
+ };
+ 
+ /**
++ * struct ieee80211_sta_vht_cap - STA's VHT capabilities
++ *
++ * This structure describes most essential parameters needed
++ * to describe 802.11ac VHT capabilities for an STA.
++ *
++ * @vht_supported: is VHT supported by the STA
++ * @cap: VHT capabilities map as described in 802.11ac spec
++ * @vht_mcs: Supported VHT MCS rates
++ */
++struct ieee80211_sta_vht_cap {
++	bool vht_supported;
++	u32 cap; /* use IEEE80211_VHT_CAP_ */
++	struct ieee80211_vht_mcs_info vht_mcs;
++};
++
++/**
+  * struct ieee80211_supported_band - frequency band definition
+  *
+  * This structure describes a frequency band a wiphy
+@@ -233,6 +249,7 @@ struct ieee80211_supported_band {
+ 	int n_channels;
+ 	int n_bitrates;
+ 	struct ieee80211_sta_ht_cap ht_cap;
++	struct ieee80211_sta_vht_cap vht_cap;
+ };
+ 
+ /*
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e6cbf5b..bd37ed7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1471,6 +1471,8 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+ 			       enum nl80211_channel_type channel_type,
+ 			       u16 prot_mode);
++u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++					u32 cap);
+ 
+ /* channel management */
+ enum ieee80211_chan_mode {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d81c178..be36a0a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -679,7 +679,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	int result, i;
+ 	enum ieee80211_band band;
+ 	int channels, max_bitrates;
+-	bool supp_ht;
++	bool supp_ht, supp_vht;
+ 	netdev_features_t feature_whitelist;
+ 	static const u32 cipher_suites[] = {
+ 		/* keep WEP first, it may be removed below */
+@@ -724,6 +724,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	channels = 0;
+ 	max_bitrates = 0;
+ 	supp_ht = false;
++	supp_vht = false;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		struct ieee80211_supported_band *sband;
+ 
+@@ -741,6 +742,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		if (max_bitrates < sband->n_bitrates)
+ 			max_bitrates = sband->n_bitrates;
+ 		supp_ht = supp_ht || sband->ht_cap.ht_supported;
++		supp_vht = supp_vht || sband->vht_cap.vht_supported;
+ 	}
+ 
+ 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
+@@ -816,6 +818,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (supp_ht)
+ 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
+ 
++	if (supp_vht)
++		local->scan_ies_len += 2 + sizeof(struct ieee80211_vht_capabilities);
++
+ 	if (!local->ops->hw_scan) {
+ 		/* For hw_scan, driver needs to set these up. */
+ 		local->hw.wiphy->max_scan_ssids = 4;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 1df4019..cccf82e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1072,6 +1072,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 		pos += noffset - offset;
+ 	}
+ 
++	if (sband->vht_cap.vht_supported)
++		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
++						sband->vht_cap.cap);
++
+ 	return pos - buffer;
+ }
+ 
+@@ -1696,6 +1700,27 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	return pos;
+ }
+ 
++u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++			      u32 cap)
++{
++	__le32 tmp;
++
++	*pos++ = WLAN_EID_VHT_CAPABILITY;
++	*pos++ = sizeof(struct ieee80211_vht_capabilities);
++	memset(pos, 0, sizeof(struct ieee80211_vht_capabilities));
++
++	/* capability flags */
++	tmp = cpu_to_le16(cap);
++	memcpy(pos, &tmp, sizeof(u32));
++	pos += sizeof(u32);
++
++	/* VHT MCS set */
++	memcpy(pos, &vht_cap->vht_mcs, sizeof(vht_cap->vht_mcs));
++	pos += sizeof(vht_cap->vht_mcs);
++
++	return pos;
++}
++
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+ 			       enum nl80211_channel_type channel_type,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7ae54b8..bd41a5f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -832,6 +832,15 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 				dev->wiphy.bands[band]->ht_cap.ampdu_density)))
+ 			goto nla_put_failure;
+ 
++		/* add VHT info */
++		if (dev->wiphy.bands[band]->vht_cap.vht_supported &&
++		    (nla_put(msg, NL80211_BAND_ATTR_VHT_MCS_SET,
++			     sizeof(dev->wiphy.bands[band]->vht_cap.vht_mcs),
++			     &dev->wiphy.bands[band]->vht_cap.vht_mcs) ||
++		     nla_put_u32(msg, NL80211_BAND_ATTR_VHT_CAPA,
++				 dev->wiphy.bands[band]->vht_cap.cap)))
++			goto nla_put_failure;
++
+ 		/* add frequencies */
+ 		nl_freqs = nla_nest_start(msg, NL80211_BAND_ATTR_FREQS);
+ 		if (!nl_freqs)
 
-Test system is i5 processor laptop, 3.3.7+ kernel, Fedora 17, running wifi
-traffic and wired NIC through an AP (sending-to-self, with proper
-routing rules to make this function as desired).  AP is 3x3 mimo,
-laptop is 2x2, max nominal rate of 300Mbps.  Channel is 149.
-Both nics are Atheros (ath9k).
-Laptop and AP is about 3 feet apart, and AP antenna & laptop rotation
-have been tweaked for maximum throughput.
 
-Traffic generator is our in-house tool, but it generally matches
-iperf when used with the same configuration.  Send-buffer size
-is configured at 1MB (with system defaults performance is much worse).
-
-This is wifi upload, with station sending to wired Ethernet port.
-
-I only changed the max-segs values for this test, leaving the min/max
-delay-ack timers at defaults.
-
-Rate is calculated over TCP data throughput, ie not counting headers.
-The rates bounce around a bit, but I tried to report the average.
-
-segs == 1:  196Mbps TCP throughput, 17,000 pps tx, 4,000 pps rx on wlan interface.
-
-segs == 20: 203Mbps, 17,300 pps tx, 1400 pps rx
-
-segs == 64: 217Mbps, 18300 pps tx, 311 pps rx
-
-segs == 1024: 231Mbps, 19200 pps tx, 118 pps rx.
-
-Note that with pure UDP throughput, I see right at 230-240Mbps when
-everything is running smoothly, so setting delack-segs to a high value
-allows TCP to approach UDP throughput.
-
-I'll repost the patch (against 3.5-rcX) that I'm using later today
-after some more testing in case someone else wants to try it out.
-
-Thanks,
-Ben
-
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
