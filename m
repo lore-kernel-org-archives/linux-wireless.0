@@ -1,76 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753294Ab2FFNXd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 09:23:33 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 22/29] iwlwifi: add iwl_set_bits_mask
-Date: Wed,  6 Jun 2012 15:22:03 +0200
-Message-Id: <1338988930-11561-22-git-send-email-johannes@sipsolutions.net> (sfid-20120606_152336_240767_F14FDC4D)
-In-Reply-To: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
-References: <1338988930-11561-1-git-send-email-johannes@sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:3412 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759686Ab2FUTCl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 15:02:41 -0400
+Message-ID: <4FE36FC1.2020702@broadcom.com> (sfid-20120621_210245_185292_428B59F1)
+Date: Thu, 21 Jun 2012 21:02:25 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Mahesh Palivela" <maheshp@posedge.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3] cfg80211/mac80211: 802.11ac changes
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3CE8@mbx022-e1-nj-10.exch022.domain.local>
+ <1340302471.4489.43.camel@jlt3.sipsolutions.net>
+ <4FE36942.1090801@broadcom.com>
+ <1340303967.4489.44.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340303967.4489.44.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/21/2012 08:39 PM, Johannes Berg wrote:
+> On Thu, 2012-06-21 at 20:34 +0200, Arend van Spriel wrote:
+>> On 06/21/2012 08:14 PM, Johannes Berg wrote:
+>>> On Thu, 2012-06-21 at 16:51 +0000, Mahesh Palivela wrote:
+>>>
+>>>> +/* 802.11ac VHT Capabilities */
+>>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
+>>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454               0x00000002
+>>>
+>>> I have a feeling there should be a value for 3895, since this isn't
+>>> really a bitfield only (it doesn't make sense to set both of these, in
+>>> fact 3 is reserved)
+>>
+>> These are matching the values specified for the VHP Capability Info IE.
+>> 3895 is specified as 0. Value 3 is reserved because it is not to be
+>> regarded as a bit field.
+> 
+> Right, but I think it'd make more sense to actually have the 3895 value
+> as a constant here so you're not tempted to think that you could set
 
-In a few cases we need to set a value in
-a certain mask inside a register, add the
-function iwl_set_bits_mask() to make such
-code easy.
+Understood. I though you were suggesting
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-io.c |   18 ++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-io.h |    2 ++
- 2 files changed, 20 insertions(+)
++/* 802.11ac VHT Capabilities */
++#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895   1
++#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991   2
++#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454  3
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-index ee93274..5f2df70 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-@@ -65,6 +65,24 @@ void iwl_clear_bit(struct iwl_trans *trans, u32 reg, u32 mask)
- }
- EXPORT_SYMBOL_GPL(iwl_clear_bit);
- 
-+void iwl_set_bits_mask(struct iwl_trans *trans, u32 reg, u32 mask, u32 value)
-+{
-+	unsigned long flags;
-+	u32 v;
-+
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	WARN_ON_ONCE(value & ~mask);
-+#endif
-+
-+	spin_lock_irqsave(&trans->reg_lock, flags);
-+	v = iwl_read32(trans, reg);
-+	v &= ~mask;
-+	v |= value;
-+	iwl_write32(trans, reg, v);
-+	spin_unlock_irqrestore(&trans->reg_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(iwl_set_bits_mask);
-+
- int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
- 		 u32 bits, u32 mask, int timeout)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index abb3250..4a9a45f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -54,6 +54,8 @@ static inline u32 iwl_read32(struct iwl_trans *trans, u32 ofs)
- void iwl_set_bit(struct iwl_trans *trans, u32 reg, u32 mask);
- void iwl_clear_bit(struct iwl_trans *trans, u32 reg, u32 mask);
- 
-+void iwl_set_bits_mask(struct iwl_trans *trans, u32 reg, u32 mask, u32 value);
-+
- int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
- 		 u32 bits, u32 mask, int timeout);
- int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
--- 
-1.7.10
+for internal use. I agree adding 0 value for 3895 clarifies that it is
+not a bitfield.
+
+> both bits? anyway ... I hope whoever adds VHT to their driver knows what
+> they're doing so it doesn't matter much :)
+
+I hope so too :-p
+
+> johannes
+> 
+> 
+
+
+Gr. AvS
 
