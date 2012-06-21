@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14960 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799Ab2F0Oav (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59761 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756266Ab2FUSnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 10:30:51 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath9k_hw: make use of the wrapper to check for MCI init
-Date: Wed, 27 Jun 2012 20:00:26 +0530
-Message-ID: <1340807427-5774-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120627_163055_434082_494A8A85)
+	Thu, 21 Jun 2012 14:43:00 -0400
+Message-ID: <4FE36B2D.4000407@candelatech.com> (sfid-20120621_204304_637791_19984CDB)
+Date: Thu, 21 Jun 2012 11:42:53 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com> <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 06/21/2012 11:31 AM, Rajkumar Manoharan wrote:
+> ath9k_get_et_stats() warn: side effect in macro
+> 'AWDATA' doing 'i++'
+>
+> Cc: Ben Greear<greearb@candelatech.com>
+> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/main.c | 9 +++++----
+>   1 file changed, 5 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 85f9ab4..32474b0 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -2003,10 +2003,11 @@ static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
+>   #define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
+>   #define AWDATA(elem)							\
+>   	do {								\
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+> +		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+> +		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+> +		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+> +		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+> +		i += 4; \
+>   	} while (0)
 
-ath9k_hw_mci_is_enabled wrapper also takes care of
-ATH9K_HW_CAP_MCI being set for the AR9462 under test.
+The macro is still changing i.  So, whatever smatch is, seems it
+should still warn, or it's broken :P
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 26032cb..9ae6a4d 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -416,7 +416,7 @@ int ath9k_init_btcoex(struct ath_softc *sc)
- 		txq = sc->tx.txq_map[WME_AC_BE];
- 		ath9k_hw_init_btcoex_hw(sc->sc_ah, txq->axq_qnum);
- 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
--		if (AR_SREV_9462(ah)) {
-+		if (ath9k_hw_mci_is_enabled(ah)) {
- 			sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
- 			INIT_LIST_HEAD(&sc->btcoex.mci.info);
- 
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
