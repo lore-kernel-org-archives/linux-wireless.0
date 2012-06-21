@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:61356 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753538Ab2F0Kkc (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:41787 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759367Ab2FUPZQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 06:40:32 -0400
-Received: by obbuo13 with SMTP id uo13so1292903obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 03:40:31 -0700 (PDT)
+	Thu, 21 Jun 2012 11:25:16 -0400
+Received: by qcro28 with SMTP id o28so389135qcr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 08:25:15 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@kernel.org,
+	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH v2] compat: Define include guard for vga_switcheroo.h
+Date: Thu, 21 Jun 2012 18:25:08 +0300
+Message-Id: <1340292308-6993-1-git-send-email-ozancag@gmail.com> (sfid-20120621_172520_767423_D8E6422A)
 MIME-Version: 1.0
-In-Reply-To: <1340788995.11012.4.camel@jlt3.sipsolutions.net>
-References: <1340621899-15002-1-git-send-email-eliad@wizery.com>
-	<1340788995.11012.4.camel@jlt3.sipsolutions.net>
-Date: Wed, 27 Jun 2012 13:40:31 +0300
-Message-ID: <CAB3XZEeXBROkOKqipgPmb0dxOvhd2AsPbiYv+eYQDp_LCcXxmQ@mail.gmail.com> (sfid-20120627_124036_148991_6C8F1BC9)
-Subject: Re: [PATCH] mac80211: flush queues before deauth/disassoc
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 27, 2012 at 12:23 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-06-25 at 13:58 +0300, Eliad Peller wrote:
->> On deauth/disassoc we tear down all BA sessions. These
->> DELBA packets are sent on the appropriate TID, while
->> deauth/disassoc is always sent on VO. This sometimes
->> ends with the DELBA being sent after the deauth was
->> already sent.
->>
->> Fix it by flushing all the pending frames before
->> sending deauth/disassoc (in ieee80211_send_deauth_disassoc).
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->> i think flushing in ieee80211_send_deauth_disassoc is the
->> easiest thing to do here, as it handles all the (future) cases.
->> however, i don't care moving the flush to a higher function
->> if someone prefers it.
->
-> I thought about this a bit ... Currently we have two calls to this
-> function, one from the actual set_disassoc() and one from
-> ieee80211_mgd_deauth(). In the latter case, we don't actually need the
-> flush I think, and in set_disassoc() we already have a flush call, so I
-> think it makes more sense there?
->
-sure. i'll change it.
+The check is missing in upstream. Patch sent but until this gets
+merged, define it in compat tree for fixing compat-drm builds.
 
-Eliad.
+Also add a temporary header with the same name which will be used
+to check whether the header should be included or not.
+
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+---
+ include/linux/compat-3.5.h     |    6 ++++++
+ include/linux/vga_switcheroo.h |    6 ++++++
+ 2 files changed, 12 insertions(+)
+ create mode 100644 include/linux/vga_switcheroo.h
+
+diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
+index 74c8176..e999aee 100644
+--- a/include/linux/compat-3.5.h
++++ b/include/linux/compat-3.5.h
+@@ -78,6 +78,12 @@ static inline int fault_in_multipages_readable(const char __user *uaddr,
+ /* switcheroo is available on >= 2.6.34 */
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+ #include <linux/vga_switcheroo.h>
++
++/* FIXME: The include guard is sent upstream, drop this
++ * once the guard is merged. */
++#ifndef LINUX_VGA_SWITCHEROO_H
++#define LINUX_VGA_SWITCHEROO_H
++#endif
+ /*
+  * This backports:
+  *
+diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
+new file mode 100644
+index 0000000..26ac71d
+--- /dev/null
++++ b/include/linux/vga_switcheroo.h
+@@ -0,0 +1,6 @@
++/* Hack for fixing the missing include guard in upstream
++ * header. We will drop this when the patch is merged upstream. */
++
++#ifndef LINUX_VGA_SWITCHEROO_H
++#include_next <linux/vga_switcheroo.h>
++#endif
+-- 
+1.7.10.2
+
