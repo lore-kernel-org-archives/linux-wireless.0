@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:56017 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140Ab2F1MVW (ORCPT
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:46762 "HELO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758084Ab2FUC7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 08:21:22 -0400
-Received: by wgbdr13 with SMTP id dr13so2141296wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 05:21:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20459.64903.329882.547190@gargle.gargle.HOWL>
-References: <CAHD-aq+nNs4L0iZNxYSABX-1Wk+B=s-Avqc1TFYfO-8JOOZ5kA@mail.gmail.com>
-	<20455.47109.203396.141311@gargle.gargle.HOWL>
-	<CAHD-aqL9tW_rF3V0-_FX4erdyZE8vNYr+d=dShptRbePaXN_JQ@mail.gmail.com>
-	<20459.64903.329882.547190@gargle.gargle.HOWL>
-Date: Thu, 28 Jun 2012 09:21:21 -0300
-Message-ID: <CAHD-aqJwbmmgL_RaoYerXwOh6Tyedrk+jKeoex0Xb5GCFxPnKQ@mail.gmail.com> (sfid-20120628_142125_599130_915D58DE)
-Subject: Re: Regression on ath9k_htc managed mode
-From: Guido Iribarren <guidoiribarren@buenosaireslibre.org>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 Jun 2012 22:59:19 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: enhance power save for USB and PCIe chipsets
+Date: Wed, 20 Jun 2012 19:58:37 -0700
+Message-Id: <1340247517-4593-6-git-send-email-bzhao@marvell.com> (sfid-20120621_045922_560265_DAC79FE7)
+In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, i'm doing the tests using the dongle connected to a tplink mr3220
-running openwrt trunk for ar71xx.
-The mr3220 has a usb port where i connect a tplink wn722n usb dongle.
-The internal wifi of the router uses ath9k driver and works just fine.
-The dongle uses ath9k_htc and presents the problem described, from the
-moment openwrt devs upgraded trunk to use compat-wireless 2012-04-13
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-On 6/28/12, Sujith Manoharan <c_manoha@qca.qualcomm.com> wrote:
-> Guido Iribarren wrote:
->> thanks for the patch, i found it strange because it seems related to
->> IBSS, but i just tried it anyway
->> unfortunately it didn't solve the problem :(
->>
->> Please note the bug I described happens when in client (managed) mode,
->> and it is in fact a regression because it was working fine on 2012-02-27
->>
->> something along the development up to 2012-04-13 caused the bug
->
-> You had mentioned earlier that you were recompiling OpenWRT for bisecting,
-> are you using an AP running OpenWRT ? On what platform is the dongle being
-> used ?
->
-> Sujith
->
+FW will not explicitly notify about host sleep activation to the
+host for USB and PCIe chipsets. Hence host should generate Host
+Sleep Activated event as soon as Host Sleep parameters are
+configured to FW successfully.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 51e023e..ea37b88 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1102,7 +1102,8 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
+ 		&resp->params.opt_hs_cfg;
+ 	uint32_t conditions = le32_to_cpu(phs_cfg->params.hs_config.conditions);
+ 
+-	if (phs_cfg->action == cpu_to_le16(HS_ACTIVATE)) {
++	if (phs_cfg->action == cpu_to_le16(HS_ACTIVATE) &&
++	    adapter->iface_type == MWIFIEX_SDIO) {
+ 		mwifiex_hs_activated_event(priv, true);
+ 		return 0;
+ 	} else {
+@@ -1114,6 +1115,9 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
+ 	}
+ 	if (conditions != HOST_SLEEP_CFG_CANCEL) {
+ 		adapter->is_hs_configured = true;
++		if (adapter->iface_type == MWIFIEX_USB ||
++		    adapter->iface_type == MWIFIEX_PCIE)
++			mwifiex_hs_activated_event(priv, true);
+ 	} else {
+ 		adapter->is_hs_configured = false;
+ 		if (adapter->hs_activated)
+-- 
+1.7.0.2
+
