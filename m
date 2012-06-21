@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3666 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933623Ab2FASic convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:38016 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755113Ab2FUONa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 14:38:32 -0400
-From: "Brett Rudley" <brudley@broadcom.com>
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Arend Van Spriel" <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: RE: [PATCH 05/10] brcm80211: smac: remove DFS channels from
- 5GHz band
-Date: Fri, 1 Jun 2012 18:38:20 +0000
-Message-ID: <2D7FF7D769509245B7AD0DB511D0FD3A17AD15@SJEXCHMB09.corp.ad.broadcom.com> (sfid-20120601_203836_349030_2728D7AD)
-References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
- <1338567336-12076-6-git-send-email-seth.forshee@canonical.com>
- <2D7FF7D769509245B7AD0DB511D0FD3A17AB30@SJEXCHMB09.corp.ad.broadcom.com>
- <20120601181625.GA31517@thinkpad-t410>
-In-Reply-To: <20120601181625.GA31517@thinkpad-t410>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+	Thu, 21 Jun 2012 10:13:30 -0400
+Received: by lbbgo11 with SMTP id go11so2103595lbb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 07:13:27 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 06/12] wl18xx: set Tx align quirk for PG2
+Date: Thu, 21 Jun 2012 17:13:05 +0300
+Message-Id: <1340287991-15241-7-git-send-email-coelho@ti.com> (sfid-20120621_161543_348557_A8CBA6F2)
+In-Reply-To: <1340287991-15241-1-git-send-email-coelho@ti.com>
+References: <1340287991-15241-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Fri, Jun 01, 2012 at 05:52:55PM +0000, Brett Rudley wrote:
-> >
-> > Not quite understanding this. Why does a STA need radar detection when
-> the NO_IBSS flag is set?
-> 
-> Arend specifically suggested removing these channels due to lack of DFS
-> support [1]. I replied asking whether it was at least possible to detect
-> radar presence and stop transmitting in order to be able to use these
-> channels. The last response from Arend was that he was going to check on
-> the firmware capabilities.
+From: Arik Nemtsov <arik@wizery.com>
 
-Our ucode refrains from transmitting in the absence of all other 802.11 traffic on 5 Ghz channels.
+Before patch b5d6d9b (wlcore/wl12xx/wl18xx: don't use TX align quirk
+for wl127x), this was automatically set for all platforms. As this
+should now be set explicitly, set it for PG2 as well.
 
-> I'm more than happy to drop this patch if there's not regulatory impedement to operating on the DFS channels.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Please.
-
-Thanks
-Brett
-
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 18cf19c..066e8e5 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -608,8 +608,8 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
+ 		wl->plt_fw_name = WL18XX_FW_NAME;
+ 		wl->quirks |= WLCORE_QUIRK_NO_ELP |
+ 			      WLCORE_QUIRK_RX_BLOCKSIZE_ALIGN |
++			      WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN |
+ 			      WLCORE_QUIRK_TX_PAD_LAST_FRAME;
+-
+ 		break;
+ 	case CHIP_ID_185x_PG10:
+ 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (185x PG10)",
+-- 
+1.7.10
 
