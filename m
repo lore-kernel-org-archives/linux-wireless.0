@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46544 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751709Ab2FMUpl (ORCPT
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:41452 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757156Ab2FUS6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 16:45:41 -0400
-Date: Wed, 13 Jun 2012 13:45:37 -0700
-From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-To: Holger Schurig <holgerschurig@googlemail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-Message-ID: <20120613204537.GA3043@pista> (sfid-20120613_224544_608851_345E0B86)
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <1339566003.4519.1.camel@jlt3.sipsolutions.net>
- <CAOpc7mEZ3Wd2JajqTpj+tZXVyE_QC1=xS3gXF9eFjmCdTu8Xug@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAOpc7mEZ3Wd2JajqTpj+tZXVyE_QC1=xS3gXF9eFjmCdTu8Xug@mail.gmail.com>
+	Thu, 21 Jun 2012 14:58:24 -0400
+Received: by bkvi18 with SMTP id i18so1476410bkv.27
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 11:58:19 -0700 (PDT)
+Message-ID: <1340305097.1631.276.camel@cumari.coelho.fi> (sfid-20120621_205828_631462_C6DB9B65)
+Subject: Re: [PATCH 00/12] wlcore/wl18xx: patches for 3.6
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com
+Date: Thu, 21 Jun 2012 21:58:17 +0300
+In-Reply-To: <1340287991-15241-1-git-send-email-coelho@ti.com>
+References: <1340287991-15241-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2012 at 07:53:51AM +0200, Holger Schurig wrote:
-> @NL80211_ATTR_SCHED_SCAN_MATCH_RSSI
+On Thu, 2012-06-21 at 17:12 +0300, Luciano Coelho wrote:
+> Hi,
 > 
-> I'd also move around "SCHED" and "ATTR". Look at the attribute names
-> above or below it, then it's more obvious:
+> Here are some patches for 3.6.  Just a few bugfixes and improvements
+> here and there, nothing really major.
 > 
-> NL80211_SCHED_SCAN_MATCH_ATTR_SSID
-> NL80211_ATTR_SCHED_SCAN_MATCH_RSSI
-> NL80211_SCHED_SCAN_MATCH_ATTR_MAX
+> I'll push this into my tree soon, unless I get some comments pretty
+> soon. :)
 
-Makes sense. In wireless-testing HEAD the SSID match attr is actually
-"NL80211_ATTR_SCHED_SCAN_MATCH_SSID".
+Pushed.
 
-Thomas
+--
+Luca.
+
