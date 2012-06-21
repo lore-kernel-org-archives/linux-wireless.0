@@ -1,50 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:44364 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757329Ab2FQCxu (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:33829 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758301Ab2FUDVl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2012 22:53:50 -0400
-Message-ID: <1339901627.7998.15.camel@hp-dhlii> (sfid-20120617_045431_274233_ED1AC06C)
-Subject: CARL9170 driver/firmware questions
-From: "David Lynch Jr." <ml@dlasys.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 16 Jun 2012 22:53:47 -0400
-In-Reply-To: <201204252201.50803.chunkeey@googlemail.com>
-References: <CADdUxCwt35GQU2j-a4AvvJVS=h93sgBqg09CZNxTivRfbYsqzg@mail.gmail.com>
-	 <201204252201.50803.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 20 Jun 2012 23:21:41 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.5 4/4] mwifiex: improve error path handling in usb.c
+Date: Wed, 20 Jun 2012 20:21:13 -0700
+Message-Id: <1340248873-5455-5-git-send-email-bzhao@marvell.com> (sfid-20120621_052144_287690_4256ED6F)
+In-Reply-To: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
+References: <1340248873-5455-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am working on another AR9170 project. 
-This essentially requires injecting broadcast packets of specific size,
-frequency, ... at extremely precise intervals.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-I am trying to understand the data flow in the firmware. 
+skb allocated during initialisation is reused for receiving
+commands/events by USB interface. We miss to reset skb->data in
+failure cases. This patch takes care of it.
 
-Initially I was looking to generate the frames in the firmware. 
-The payload is simple. Though I am pondering the wisdom of that right
-now. Regardless, I will have to control my frames in firmware, so I need
-to separate them from normal traffic and then feed them into the Radio
-Queues at the appropriate times. 
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/usb.c |   22 +++++++++++++++++-----
+ 1 files changed, 17 insertions(+), 5 deletions(-)
 
-Am I correct that the same struct dma_desc is being used by both USB and
-the Radio ?
-
-Each dma_desc points to a payload, for tx packets this is a  struct
-carl9170_tx_superframe, which must also be what the skb pointed to by 
-void carl9170_usb_tx(struct ar9170 *ar, struct sk_buff *skb) is
-sending ?
-
-Can I construct a carl9170_tx_superframe on the host side, with
-something to allow me to identify it in handle_download in the firmware,
-perform minor mangling of the contents, and repeatedly transmit it at
-fixed intervals using wlan_tx() ?
-
-
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index e6d796f..22a5916 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -49,6 +49,7 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 	struct device *dev = adapter->dev;
+ 	u32 recv_type;
+ 	__le32 tmp;
++	int ret;
  
-
+ 	if (adapter->hs_activated)
+ 		mwifiex_process_hs_config(adapter);
+@@ -69,16 +70,19 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 		case MWIFIEX_USB_TYPE_CMD:
+ 			if (skb->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
+ 				dev_err(dev, "CMD: skb->len too large\n");
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			} else if (!adapter->curr_cmd) {
+ 				dev_dbg(dev, "CMD: no curr_cmd\n");
+ 				if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
+ 					mwifiex_process_sleep_confirm_resp(
+ 							adapter, skb->data,
+ 							skb->len);
+-					return 0;
++					ret = 0;
++					goto exit_restore_skb;
+ 				}
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			}
  
+ 			adapter->curr_cmd->resp_skb = skb;
+@@ -87,7 +91,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 		case MWIFIEX_USB_TYPE_EVENT:
+ 			if (skb->len < sizeof(u32)) {
+ 				dev_err(dev, "EVENT: skb->len too small\n");
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			}
+ 			skb_copy_from_linear_data(skb, &tmp, sizeof(u32));
+ 			adapter->event_cause = le32_to_cpu(tmp);
+@@ -95,7 +100,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 
+ 			if (skb->len > MAX_EVENT_SIZE) {
+ 				dev_err(dev, "EVENT: event body too large\n");
+-				return -1;
++				ret = -1;
++				goto exit_restore_skb;
+ 			}
+ 
+ 			memcpy(adapter->event_body, skb->data +
+@@ -124,6 +130,12 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 	}
+ 
+ 	return -EINPROGRESS;
++
++exit_restore_skb:
++	/* The buffer will be reused for further cmds/events */
++	skb_push(skb, INTF_HEADER_LEN);
++
++	return ret;
+ }
+ 
+ static void mwifiex_usb_rx_complete(struct urb *urb)
+-- 
+1.7.0.2
 
