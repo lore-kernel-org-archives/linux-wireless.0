@@ -1,111 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59359 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762244Ab2FVRSt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 13:18:49 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/6] mac80211: rename driver-trace file
-Date: Fri, 22 Jun 2012 19:18:44 +0200
-Message-Id: <1340385525-14487-6-git-send-email-johannes@sipsolutions.net> (sfid-20120622_191901_603300_86489A1D)
-In-Reply-To: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
-References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+Received: from ebb06.tieto.com ([131.207.168.38]:56507 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756849Ab2FUMDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jun 2012 08:03:43 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Kazior Michal <Michal.Kazior@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v2 6/7] mac80211: refactor set_channel_type
+Date: Thu, 21 Jun 2012 14:03:35 +0200
+Message-ID: <1340280216-18807-7-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140348_260692_294518A4)
+In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Kazior Michal <Michal.Kazior@tieto.com>
 
-This file will contain more soon, so
-rename it to just trace.
+Split functionality for further reuse.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Will prevent code duplication when channel context
+channel_type merging is introduced.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/mac80211/Makefile                    |    4 ++--
- net/mac80211/driver-ops.h                |    2 +-
- net/mac80211/offchannel.c                |    1 -
- net/mac80211/{driver-trace.c => trace.c} |    2 +-
- net/mac80211/{driver-trace.h => trace.h} |    2 +-
- 5 files changed, 5 insertions(+), 6 deletions(-)
- rename net/mac80211/{driver-trace.c => trace.c} (88%)
- rename net/mac80211/{driver-trace.h => trace.h} (99%)
+ net/mac80211/chan.c |   57 ++++++++++++++++++++++++++++++++++-----------------
+ 1 files changed, 38 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index 2b1470b..0c140f2 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -24,7 +24,7 @@ mac80211-y := \
- 	wme.o \
- 	event.o \
- 	chan.o \
--	driver-trace.o mlme.o
-+	trace.o mlme.o
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 20483a0..63b7cb7 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -69,16 +69,14 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
+ 	return mode;
+ }
  
- mac80211-$(CONFIG_MAC80211_LEDS) += led.o
- mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
-@@ -42,7 +42,7 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
- 
- mac80211-$(CONFIG_PM) += pm.o
- 
--CFLAGS_driver-trace.o := -I$(src)
-+CFLAGS_trace.o := -I$(src)
- 
- # objects for PID algorithm
- rc80211_pid-y := rc80211_pid_algo.o
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 9330269..44e8c12 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -3,7 +3,7 @@
- 
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
--#include "driver-trace.h"
-+#include "trace.h"
- 
- static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
+-bool ieee80211_set_channel_type(struct ieee80211_local *local,
+-				struct ieee80211_sub_if_data *sdata,
+-				enum nl80211_channel_type chantype)
++static enum nl80211_channel_type
++ieee80211_get_superchan(struct ieee80211_local *local,
++			struct ieee80211_sub_if_data *sdata)
  {
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 7f93626..b0fb6a2 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -15,7 +15,6 @@
- #include <linux/export.h>
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
--#include "driver-trace.h"
- #include "driver-ops.h"
+-	struct ieee80211_sub_if_data *tmp;
+ 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
+-	bool result;
++	struct ieee80211_sub_if_data *tmp;
  
- /*
-diff --git a/net/mac80211/driver-trace.c b/net/mac80211/trace.c
-similarity index 88%
-rename from net/mac80211/driver-trace.c
-rename to net/mac80211/trace.c
-index 8ed8711..943da6e 100644
---- a/net/mac80211/driver-trace.c
-+++ b/net/mac80211/trace.c
-@@ -5,5 +5,5 @@
- #ifndef __CHECKER__
- #include "driver-ops.h"
- #define CREATE_TRACE_POINTS
--#include "driver-trace.h"
-+#include "trace.h"
- #endif
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/trace.h
-similarity index 99%
-rename from net/mac80211/driver-trace.h
-rename to net/mac80211/trace.h
-index a0f7d35..392bcc9 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/trace.h
-@@ -1637,5 +1637,5 @@ TRACE_EVENT(stop_queue,
- #undef TRACE_INCLUDE_PATH
- #define TRACE_INCLUDE_PATH .
- #undef TRACE_INCLUDE_FILE
--#define TRACE_INCLUDE_FILE driver-trace
-+#define TRACE_INCLUDE_FILE trace
- #include <trace/define_trace.h>
+ 	mutex_lock(&local->iflist_mtx);
+-
+ 	list_for_each_entry(tmp, &local->interfaces, list) {
+ 		if (tmp == sdata)
+ 			continue;
+@@ -104,41 +102,62 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 			break;
+ 		}
+ 	}
++	mutex_unlock(&local->iflist_mtx);
++
++	return superchan;
++}
+ 
+-	switch (superchan) {
++static bool
++ieee80211_channel_types_are_compatible(enum nl80211_channel_type chantype1,
++				       enum nl80211_channel_type chantype2,
++				       enum nl80211_channel_type *compat)
++{
++	switch (chantype1) {
+ 	case NL80211_CHAN_NO_HT:
+ 	case NL80211_CHAN_HT20:
+ 		/*
+ 		 * allow any change that doesn't go to no-HT
+ 		 * (if it already is no-HT no change is needed)
+ 		 */
+-		if (chantype == NL80211_CHAN_NO_HT)
++		if (chantype2 == NL80211_CHAN_NO_HT)
+ 			break;
+-		superchan = chantype;
++		*compat = chantype2;
+ 		break;
+ 	case NL80211_CHAN_HT40PLUS:
+ 	case NL80211_CHAN_HT40MINUS:
++		*compat = chantype1;
+ 		/* allow smaller bandwidth and same */
+-		if (chantype == NL80211_CHAN_NO_HT)
++		if (chantype2 == NL80211_CHAN_NO_HT)
+ 			break;
+-		if (chantype == NL80211_CHAN_HT20)
++		if (chantype2 == NL80211_CHAN_HT20)
+ 			break;
+-		if (superchan == chantype)
++		if (chantype2 == chantype1)
+ 			break;
+-		result = false;
+-		goto out;
++		return false;
+ 	}
+ 
+-	local->_oper_channel_type = superchan;
++	return true;
++}
++
++bool ieee80211_set_channel_type(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata,
++				enum nl80211_channel_type chantype)
++{
++	enum nl80211_channel_type superchan;
++	enum nl80211_channel_type compatchan = NL80211_CHAN_NO_HT;
++
++	superchan = ieee80211_get_superchan(local, sdata);
++	if (!ieee80211_channel_types_are_compatible(superchan, chantype,
++						    &compatchan))
++		return false;
++
++	local->_oper_channel_type = compatchan;
+ 
+ 	if (sdata)
+ 		sdata->vif.bss_conf.channel_type = chantype;
+ 
+-	result = true;
+- out:
+-	mutex_unlock(&local->iflist_mtx);
++	return true;
+ 
+-	return result;
+ }
+ 
+ static struct ieee80211_chanctx *
 -- 
-1.7.10
+1.7.0.4
 
