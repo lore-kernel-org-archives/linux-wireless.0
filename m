@@ -1,111 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:33288 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab2FNG6m (ORCPT
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:55092 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756866Ab2FUONf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 02:58:42 -0400
-From: Woody Hung <Woody.Hung@mediatek.com>
-To: dwmw2@infradead.org
-Cc: linux-kernel@vger.kernel.org, xose.vazquez@gmail.com,
-	ben@decadent.org.uk, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	Woody Hung <Woody.Hung@mediatek.com>
-Subject: [PATCH] rt2800pci:Firmware update v1
-Date: Thu, 14 Jun 2012 14:57:41 +0800
-Message-Id: <1339657061-19482-1-git-send-email-Woody.Hung@mediatek.com> (sfid-20120614_085849_684624_2AF77D4E)
+	Thu, 21 Jun 2012 10:13:35 -0400
+Received: by lbbgo11 with SMTP id go11so2939234lbb.17
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 07:13:31 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 10/12] wl18xx: sane defaults for HT capabilities
+Date: Thu, 21 Jun 2012 17:13:09 +0300
+Message-Id: <1340287991-15241-11-git-send-email-coelho@ti.com> (sfid-20120621_161543_578673_C63B804E)
+In-Reply-To: <1340287991-15241-1-git-send-email-coelho@ti.com>
+References: <1340287991-15241-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update firmwrae that support the rt3290 chip.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Woody Hung <Woody.Hung@mediatek.com>
+Introduce a default set of HT capabilities that are set according to the
+number of antennas on the board. Move the HT setting code down to allow
+the number of antennas to be set (and optionally overridden) before it.
+
+Remove the "mimo" HT option, since the default mode now enables MIMO is
+possible.
+
+Use this opportunity to add a helper function for setting HT
+capabilities and reduce the volume of the code a bit.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- WHENCE     |    4 +++-
- rt3290.bin |  Bin 0 -> 4096 bytes
- 2 files changed, 3 insertions(+), 1 deletions(-)
- create mode 100644 rt3290.bin
+ drivers/net/wireless/ti/wl12xx/main.c   |    6 +--
+ drivers/net/wireless/ti/wl18xx/main.c   |   63 ++++++++++++++++---------------
+ drivers/net/wireless/ti/wlcore/wlcore.h |    7 ++++
+ 3 files changed, 42 insertions(+), 34 deletions(-)
 
-diff --git a/WHENCE b/WHENCE
-index 5512440..7ce80ad 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1182,13 +1182,15 @@ Downloaded from http://www.ralinktech.com/ralink/Home/Support/Linux.html
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 7974ed5..0d2fdca 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1449,10 +1449,8 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
+ 	wl->hw_min_ht_rate = WL12XX_CONF_HW_RXTX_RATE_MCS0;
+ 	wl->fw_status_priv_len = 0;
+ 	wl->stats.fw_stats_len = sizeof(struct wl12xx_acx_statistics);
+-	memcpy(&wl->ht_cap[IEEE80211_BAND_2GHZ], &wl12xx_ht_cap,
+-	       sizeof(wl12xx_ht_cap));
+-	memcpy(&wl->ht_cap[IEEE80211_BAND_5GHZ], &wl12xx_ht_cap,
+-	       sizeof(wl12xx_ht_cap));
++	wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ, &wl12xx_ht_cap);
++	wlcore_set_ht_cap(wl, IEEE80211_BAND_5GHZ, &wl12xx_ht_cap);
+ 	wl12xx_conf_init(wl);
  
- --------------------------------------------------------------------------
+ 	if (!fref_param) {
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 365063b..485aeae 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -43,7 +43,7 @@
  
--Driver: rt2800pci - Ralink RT2860, RT2890, RT3090, RT5390 wireless MACs
-+Driver: rt2800pci - Ralink RT2860, RT2890, RT3090, RT3290, RT5390 wireless MACs
+ #define WL18XX_RX_CHECKSUM_MASK      0x40
  
- File: rt2860.bin
-+File: rt3290.bin
+-static char *ht_mode_param = "wide";
++static char *ht_mode_param = "default";
+ static char *board_type_param = "hdk";
+ static bool checksum_param = false;
+ static bool enable_11a_param = true;
+@@ -1286,34 +1286,6 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	if (num_rx_desc_param != -1)
+ 		wl->num_rx_desc = num_rx_desc_param;
  
- Licence: Redistributable. See LICENCE.ralink-firmware.txt for details
+-	if (!strcmp(ht_mode_param, "wide")) {
+-		memcpy(&wl->ht_cap[IEEE80211_BAND_2GHZ],
+-		       &wl18xx_siso40_ht_cap,
+-		       sizeof(wl18xx_siso40_ht_cap));
+-		memcpy(&wl->ht_cap[IEEE80211_BAND_5GHZ],
+-		       &wl18xx_siso40_ht_cap,
+-		       sizeof(wl18xx_siso40_ht_cap));
+-	} else if (!strcmp(ht_mode_param, "mimo")) {
+-		memcpy(&wl->ht_cap[IEEE80211_BAND_2GHZ],
+-		       &wl18xx_mimo_ht_cap_2ghz,
+-		       sizeof(wl18xx_mimo_ht_cap_2ghz));
+-		/* we don't support MIMO in 5Ghz */
+-		memcpy(&wl->ht_cap[IEEE80211_BAND_5GHZ],
+-		       &wl18xx_siso20_ht_cap,
+-		       sizeof(wl18xx_siso20_ht_cap));
+-	} else if (!strcmp(ht_mode_param, "siso20")) {
+-		memcpy(&wl->ht_cap[IEEE80211_BAND_2GHZ],
+-		       &wl18xx_siso20_ht_cap,
+-		       sizeof(wl18xx_siso20_ht_cap));
+-		memcpy(&wl->ht_cap[IEEE80211_BAND_5GHZ],
+-		       &wl18xx_siso20_ht_cap,
+-		       sizeof(wl18xx_siso20_ht_cap));
+-	} else {
+-		wl1271_error("invalid ht_mode '%s'", ht_mode_param);
+-		ret = -EINVAL;
+-		goto out_free;
+-	}
+-
+ 	ret = wl18xx_conf_init(wl, &pdev->dev);
+ 	if (ret < 0)
+ 		goto out_free;
+@@ -1359,6 +1331,37 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	if (dc2dc_param != -1)
+ 		priv->conf.phy.external_pa_dc2dc = dc2dc_param;
  
- Binary file supplied by Shiang Tu <shiang_tu@ralinktech.com>. Firmware Version 34
-+rt3290.bin is a specific firmware support the RT3290 chip. Firmware Version 37
++	if (!strcmp(ht_mode_param, "default")) {
++		/*
++		 * Only support mimo with multiple antennas. Fall back to
++		 * siso20.
++		 */
++		if (priv->conf.phy.number_of_assembled_ant2_4 >= 2)
++			wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ,
++					  &wl18xx_mimo_ht_cap_2ghz);
++		else
++			wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ,
++					  &wl18xx_siso20_ht_cap);
++
++		/* 5Ghz is always wide */
++		wlcore_set_ht_cap(wl, IEEE80211_BAND_5GHZ,
++				  &wl18xx_siso40_ht_cap);
++	} else if (!strcmp(ht_mode_param, "wide")) {
++		wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ,
++				  &wl18xx_siso40_ht_cap);
++		wlcore_set_ht_cap(wl, IEEE80211_BAND_5GHZ,
++				  &wl18xx_siso40_ht_cap);
++	} else if (!strcmp(ht_mode_param, "siso20")) {
++		wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ,
++				  &wl18xx_siso20_ht_cap);
++		wlcore_set_ht_cap(wl, IEEE80211_BAND_5GHZ,
++				  &wl18xx_siso20_ht_cap);
++	} else {
++		wl1271_error("invalid ht_mode '%s'", ht_mode_param);
++		ret = -EINVAL;
++		goto out_free;
++	}
++
+ 	if (!checksum_param) {
+ 		wl18xx_ops.set_rx_csum = NULL;
+ 		wl18xx_ops.init_vif = NULL;
+@@ -1403,7 +1406,7 @@ static void __exit wl18xx_exit(void)
+ module_exit(wl18xx_exit);
  
- --------------------------------------------------------------------------
+ module_param_named(ht_mode, ht_mode_param, charp, S_IRUSR);
+-MODULE_PARM_DESC(ht_mode, "Force HT mode: wide (default), mimo or siso20");
++MODULE_PARM_DESC(ht_mode, "Force HT mode: wide or siso20");
  
-diff --git a/rt3290.bin b/rt3290.bin
-new file mode 100644
-index 0000000000000000000000000000000000000000..6ca33a59950e80ba27d29ab8df7acd7c12915ac8
-GIT binary patch
-literal 4096
-zcmd5<U2q%K71rKe$+BeqcqL;wBw@42apL@KLMVwRrNWl1{L7A4wgXMP9ZVY_nJ$SI
-zcnMx?JkU0j#pXR7yASOHqnV5!`jlukz;xOURX3BFzV*h@r9eo$Q?i{vu+?){Hnu6y
-z*Lp_xo_p^(XTS4v&pk$wwJ02UtH(MnqK2Js$=0BVf)Atc&Z{ub8eAL;|6~#OwxROa
-z={GnI^P%@Wf0R5IcY0oZ)bsKWJl9j6&z@k|9%g?p(|e5R?PGdn=FL3wX+Qd*ik^M}
-zT{z1=c8-0jz<G5}8{@XV?eS23jo8_TxL=X{42qCJ3HuBtRPfv986BNR#eP0?3r+>Z
-zN^D?xO<J$L!=xGvrU9psJ&n_xJ>LI>g+!`v=1JDfiB?W@xq4jKD;U4AEzg6zeBZ8Z
-zr|L*vsTmr@@<{bcAmpm_`?RBsmV3=mYukvY+rxf^!!rV$v06^3IBo9tlhujrDs5~h
-zbyzD-o^S@Jf@&e#I&klUxeut0YGHqEQJG(|wq{)o3EN4s!*$9!82w5!jP*(*i~%JG
-zV^Hyu>`a57>X9Q(2Q2FSq+^C<D^52o0(8O9#iDYHa}nOHQW!%pHsX9+&QKFJB@MO3
-zUSyP-SSt>^3GB2PXfp=Z7Q8Tb5@=h>a>X{CBW<7tZJJx{Ij|K}FHm*!x9@%A419-G
-zE4ZA|UytDxj7HQ0%ZfAT95<pYp4sHp1{r;yOG`i_U2^G1fadh1OF!CRL=m1j3tN7@
-zv9=X(w<cL_Fbauvqs8$0ahkE`4X>959CGHiya1ba#X0Kaw2rFNYIuKJXtbvbRrs;C
-zm4jTw>6ESQtG+wnM#oTh7k0woM%!$rS?lIu5OSvOJX`EXp<C20NPx-ZXi{^G=vLc^
-z?kJ>OKRW|h)(v$REFc-EtFB#4J!+_rkb$MGNAT5)sR4Sp3+D{42R=!0F*d-e^5J{H
-zjN`Wcw{HktyVxUszYs@-Rv;Q#iul*ogut45Y7JaH{p_MW2QBZS2lOEd7))%YN6v{Q
-z$8hn2ZcELv70R(}I|G>$cEwO*HtD~sv>R$G4S|8Sf{Vq9(+VyIEq4_bJFTlUiDr>j
-z9XYIURzmlaqnR9hGhw;AQ<aI9!g`wwLDFv{?P^R)c*&4Jf>KKhY)aKDQX_18we|)b
-zHMLu(tuuOr3`rmPOiFUrY4Z$RA6DHU9ja|5fSr{NH=2iQa&=2`^h(7^TDTb`9m5Fj
-z8{96AYN6LFMz2>*0o*jz)hj$(M@|YDT{<N^PpKQ|(sRNYO3k86r?u@V;aP6#l)h0q
-z<s;owv-&#9&5c008}X2C*<QG8bFaYa70;cYgT?12&I-?SQ_q3GbISrZzFR<>C<te`
-zsnhyKS|(IcI!(oH>dh`zm)uRdg$gSX_L|OI1;s8$4aw|xD}G@@U5+h_uf8LtTJZ2L
-zB|i1S#7k4^#EWEmEGGZR*>1jMy(l$@`nKC-d*%eBy{-FTB(Tm7`_wEH4J>8Zs*dhf
-z-*T&qykL{A_vA=iX-F=>k5yyl9zA01(SxL0nssqb?2)qGVjHUam=+#7(YhFc(XZ6Q
-zSPx~puK!zfe`S-7xFW`t*0{1Q`IT}Y`GpcshSeU@P4Q|r`x>#6RlUR73m<)a@q_EG
-z>T4(&lJ|h6J-$~w5F!pn&mEeGd(6FhY#AGs<V@IHQ5$Oz8(eTf3hwr|fSY&032|jZ
-zT-gHPG60STa0gd{(>Ggt^^O%^)3<#Ow7rn(UpsBDj#h!H73_*5nMKkYSF&;CnIr;m
-z^#`ouTAneGA44#(aN}Wv+l^<?+G!Y?>A;T&ya(dQVfk}g>t#TM^r${fqQVC6!7{5Z
-z@=zuBfd|!ifFVs4OE-Z^8Qf!dSfrm!89Y}A*if5qt~EReOSq|0D|P;*Qa8fz;ZKa%
-zCU~0G*hXwK%n!o61!fWEO;BOz>utMx@?TtC&7@V0k$rcKSi1s+{&OAP#{0G&U)%z0
-z|H|yMb+F@0+u#_Sj@sG<9YY@gcxWfF)P-OtS*!2O0*VW4qm&EN_W+d9z61C*iP7??
-z;`HkE;0iCe!s#WF(quBQXC8l7DyH~QCy{1YWU*EeN}9xk-6NBMUdBB<7FYH|YPvxP
-zJXQN%<I28fBmgeZjv+12E&(G+7b*auF$rtO00xUdS_ZcUo^p)}+gP51m+b->loQH&
-z@E-<$!SnJU%$vc#UZ6#wx7hGrf+y1v+DEwq96@AQ*PH8Vk$C_DQ<w#@Z-fTIng({r
-zigW{f?U<97P`!!HGsP#sbjS_UHT)3N)iiXB0o@Y}bHRW=@M$#gju4np0`LFE;|WH`
-z_jipS>>NLQl9mXtA{f;lB>SNxI9=o*ojS>3I=ScSPx`td`j5vCbd4YC96wUqI|2d+
-zY66F90!NkwB+?~E(ov_&t%{u6HhFzrCpoPXYR8N(>Yht*?z0Z*$U0nc+DYeovR$PI
-zIcLaH#1byqrLodzsjQU~5Xub8M+OY;0h-s~mZcs!ScZ4dZIgG<t}pplMT#q($ys{W
-z^2rUVLh?}K>f(w&iBvzdxtq=-XkzGF+B3c*Wie2K^24mck-W;mQT_N1Xl(V(@8*j;
-z=!-14tXcX9J83?$A8IR=%|OFJ&n*rf+X?`H!77%^<<at3*)HQ<%kV!g;ZI8V(-OW_
-z!k?A!?GnCI!gD3OXp;hBxLU>wWjtTTUzPFwGXAoRzbNB-->Ob4M;9fZlm-KkgItpg
-zRcBB-9w0ri=z+!Y>wR?+(A^g2`t5}I<|=T8+K#0gUGV0saMz=20YBXJ=sK9&VO|dz
-zwiY`QP*9parwd?&&2=zuhIu{A?Y8NKOU8#UxS!~i7@trNF*+n6pAZ1zsKok&pi6K*
-zp@HQ+4+yb(q0vXSWVR}`N9Ol@__}^Yic7TL&9_1SmB6|G-2$6&aqh0Nt+G&vZ+Av3
-zyH#fl&s1BMS95k@?b69@TMS?3u8WX(!6<F6<y$sslW%1*@DD^~sl(1dhn-pKu+1(j
-zQ*i`mgVX19J6oKsW~b9jZ=1m-Xu5H0AOl5+^yt0Hq{<hVNi{S*J$VlZXY`G+%DDoX
-zJf+M{PfzRr0H6<57Wl{}K*+=N-_UNZ%60!@bmdhMvzkaY=_tYEpOv~~O7)pdA|ER7
-z+=SU=7EKNULHg7+l2U)^h;)SWcAFf@WsWL-l55JTsOhK(LA-5G&p}BE)S^4M7+oln
-ze7MSoF7n~a6-RWk2Im1AK_kSQ@&{M*7Y9Y{7f^*SIKOn>aQ@(YtQiUGg7!PF=;p!G
-zL{M2F%1VuF*XxY<;oOIJ6#oeAq1Wq<IH#}=>0gRsX=5P*H)OOlrfm$YS|!AnM=JmR
-z`@Ht*5Ni0-azw>BBeHMOh<MHg5|Y;^gjl{|L_~p;sO}D`e+ES!N0FZ)&w3O&g~EL(
-T@+=C4#oC|e|Lm_d_S63W=k%O=
-
-literal 0
-HcmV?d00001
-
+ module_param_named(board_type, board_type_param, charp, S_IRUSR);
+ MODULE_PARM_DESC(board_type, "Board type: fpga, hdk (default), evb, com8 or "
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index eae8edc..205d8ad 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -401,6 +401,13 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+ 		   struct ieee80211_sta *sta,
+ 		   struct ieee80211_key_conf *key_conf);
+ 
++static inline void
++wlcore_set_ht_cap(struct wl1271 *wl, enum ieee80211_band band,
++		  struct ieee80211_sta_ht_cap *ht_cap)
++{
++	memcpy(&wl->ht_cap[band], ht_cap, sizeof(*ht_cap));
++}
++
+ /* Firmware image load chunk size */
+ #define CHUNK_SIZE	16384
+ 
 -- 
-1.7.5.4
+1.7.10
 
