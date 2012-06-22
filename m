@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:34157 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038Ab2FGDOV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 23:14:21 -0400
-Received: by pbbrp8 with SMTP id rp8so420120pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 20:14:20 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:3446 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761526Ab2FVHgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 03:36:00 -0400
+Message-ID: <4FE42052.9090909@broadcom.com> (sfid-20120622_093629_355882_C67AFB69)
+Date: Fri, 22 Jun 2012 09:35:46 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Date: Wed, 6 Jun 2012 23:14:20 -0400
-Message-ID: <CA+7oygd1dfn=Vj7V1h_vVvXPNym_Ake7UNWf1UuVWfxzm5g+NQ@mail.gmail.com> (sfid-20120607_051424_849337_6ED6B46E)
-Subject: anyone know any dual-band USB devices with monitoring mode in Linux?
-From: George Nychis <gnychis@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Mahesh Palivela" <maheshp@posedge.com>
+cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211/mac80211: 802.11ac changes
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local>
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On 06/22/2012 09:27 AM, Mahesh Palivela wrote:
+> 11ac changes to push VHT cap through NL layer.
+> ieee structs, constants for 11ac.
+> VHT cap IE in ProbeReq.
+> 
+> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+> Cc: Johannes Berg <johannes@sipsolutions.com>
 
-I've been using the Sony UWA-BR100 (AR9280) with ath9k_htc, and there
-is clearly a bug with reporting signal strengths which I need to be
-correct.  I've reported the bug, but this might not be fixed in time
-for a deadline I have coming up, and the bug is in the firmware out of
-my reach.
+Not looked at the patch, but I assumed mac80211/cfg80211 patches should
+be submitted to Johannes or is the mac80211 repository not in use yet.
 
-So I was wondering if anyone knows of any alternative USB dual-band
-wireless cards that support monitoring mode in Linux.  I'd _greatly_
-appreciate it... doesn't need to be Atheros based.
+Gr. AvS
 
-- George
