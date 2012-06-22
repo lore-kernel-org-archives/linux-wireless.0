@@ -1,72 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61482 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757643Ab2FQU6h (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:47965 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755386Ab2FVL4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jun 2012 16:58:37 -0400
-Received: by eaak11 with SMTP id k11so1356351eaa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2012 13:58:36 -0700 (PDT)
-From: Lekensteyn <lekensteyn@gmail.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlwifi: fix Oops on reading debugfs log_event
-Date: Sun, 17 Jun 2012 22:58:30 +0200
-Message-ID: <7841457.8s9HYuaGXa@penguin> (sfid-20120617_225841_623189_7D659120)
+	Fri, 22 Jun 2012 07:56:36 -0400
+Date: Fri, 22 Jun 2012 14:55:59 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
+Message-ID: <20120622115559.GD5390@mwanda> (sfid-20120622_135639_607991_DE24F820)
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
+ <87ipej4xz0.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ipej4xz0.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before this patch, reading log_event would print the event log to syslog and
-crash if CONFIG_IWLWIFI_DEBUG was disabled (while CONFIG_IWLWIFI_DEBUGFS was
-enabled of course). The crash was caused by (1) iwl_dbgfs_log_event_read failing
-to initialize variable buf, thereby causing the following kfree(buf) to be
-executed. (2) iwl_dump_nic_event_log does not initialize buf if
-CONFIG_IWLWIFI_DEBUG was disabled.
+On Fri, Jun 22, 2012 at 10:17:23AM +0300, Kalle Valo wrote:
+> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
+> 
+> > ath9k_get_et_stats() warn: side effect in macro
+> > 'AWDATA' doing 'i++'
+> >
+> > Cc: Ben Greear <greearb@candelatech.com>
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> 
+> [...]
+> 
+> >  	do {								\
+> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+> > -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+> > +		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+> > +		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+> > +		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+> > +		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+> > +		i += 4; \
+> >  	} while (0)
+> 
+> I agree with Ben, this is a useless change as the end result is still
+> the same (the side effect is that i is increased with four). You are
+> just hiding that from smatch and once smatch is fixed it will warn again
+> about the same thing.
+> 
+> I recommend fixing this properly so that the macro doesn't have any side
+> effects.
 
-Tested-by: Lekensteyn <lekensteyn@gmail.com>
-Signed-off-by: Lekensteyn <lekensteyn@gmail.com>
----
- drivers/net/wireless/iwlwifi/dvm/debugfs.c |    2 +-
- drivers/net/wireless/iwlwifi/dvm/main.c    |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Uh.  Sorry, also I thought I had pushed a fix to add this to the
+ignored macro list, but I forgot.  I've pushed it now.
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-index 8a2d9e6..e315dc7 100644
---- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-@@ -2233,7 +2233,7 @@ static ssize_t iwl_dbgfs_log_event_read(struct file *file,
- 					 size_t count, loff_t *ppos)
- {
- 	struct iwl_priv *priv = file->private_data;
--	char *buf;
-+	char *buf = NULL;
- 	int pos = 0;
- 	ssize_t ret = -ENOMEM;
- 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index e620af3..b28ab67 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -1915,7 +1915,6 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 	IWL_ERR(priv, "Start IWL Event Log Dump: display last %u entries\n",
- 		size);
- 
--#ifdef CONFIG_IWLWIFI_DEBUG
- 	if (display) {
- 		if (full_log)
- 			bufsz = capacity * 48;
-@@ -1925,6 +1924,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 		if (!*buf)
- 			return -ENOMEM;
- 	}
-+#ifdef CONFIG_IWLWIFI_DEBUG
- 	if (iwl_have_debug_level(IWL_DL_FW_ERRORS) || full_log) {
- 		/*
- 		 * if uCode has wrapped back to top of log,
--- 
-1.7.9.5
+I don't think this check has ever found a bug.  These bugs are very
+rare and we are careful about macro side effects in the kernel.  I
+have disabled the check by default and it's only enabled when you
+pass --spammy.  I told the Ruby people I was going to do this
+earlier in the week but I've been out of the office and delayed.
 
+regards,
+dan carpenter
 
