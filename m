@@ -1,224 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:24629 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755150Ab2FFKGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:06:44 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 03/29] NFC: Move LLCP receiver window value to socket structure
-Date: Wed,  6 Jun 2012 12:16:20 +0200
-Message-Id: <1338977806-30279-4-git-send-email-sameo@linux.intel.com> (sfid-20120606_120646_770467_373BAB3D)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-yw0-f51.google.com ([209.85.213.51]:55350 "EHLO
+	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754258Ab2FVWBK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 18:01:10 -0400
+Received: by yhnn12 with SMTP id n12so2301757yhn.10
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 15:01:09 -0700 (PDT)
+Message-ID: <4FE4EB22.8090709@lwfinger.net> (sfid-20120623_000114_512509_6172A239)
+Date: Fri, 22 Jun 2012 17:01:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xun Ouyang <ilhebe999@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: please help me, fedora make modules error
+References: <loom.20120622T225528-225@post.gmane.org>
+In-Reply-To: <loom.20120622T225528-225@post.gmane.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RW can only be fetched from a CONNECT or a CC frame thus making it an
-end points specific value, not a link one.
+On 06/22/2012 04:04 PM, Xun Ouyang wrote:
+> After I install ncurses-devel, I used the command menuconfig, but I did not
+> change anything, just the default value, and then , "make modules'
+>
+>
+> [root@linux123 wireless-testing]# make modules
+> make[1]: Nothing to be done for `all'.
+>    CHK     include/linux/version.h
+>    CHK     include/generated/utsrelease.h
+>    CALL    scripts/checksyscalls.sh
+>    CC [M]  drivers/net/wireless/at76c50x-usb.o
+> In file included from drivers/net/wireless/at76c50x-usb.c:46:0:
+> include/net/mac80211.h: In function ‘ieee80211_tx_info_clear_status’:
+> include/net/mac80211.h:639:2: error: size of unnamed array is negative
+> include/net/mac80211.h:644:2: error: size of unnamed array is negative
+> make[3]: *** [drivers/net/wireless/at76c50x-usb.o] Error 1
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make: *** [drivers] Error 2
+>
+> The content in line 639 and 644 are all:like
+> BUILD_BUG_ON(offsetof(struct XXXXXXX) !=XXX);
+>
+> If I comment this line out, it "seems" this problem fixed.
+> And I tried to make modules again, the same error(BUILD_BUG_ON
+> (offsetof(struct XXXXXXX) !=XXX);)  came out but different
+> file, different lines.And repeatedly.
+> I do not think there are so many error that need to be fixed since I
+> just change a few lines of codes which seems unrelated to theses errors.
+>
+>
+> I really do not know what to do.Anyone can help me? Thank you so much.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/commands.c |   45 ++++++++++++++++++++++++++++++++++++++-------
- net/nfc/llcp/llcp.c     |   21 ++++++++++-----------
- net/nfc/llcp/llcp.h     |    9 ++++++---
- net/nfc/llcp/sock.c     |    1 +
- 4 files changed, 55 insertions(+), 21 deletions(-)
+What kernel are you using?
 
-diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
-index bf8ae4f..eb51864 100644
---- a/net/nfc/llcp/commands.c
-+++ b/net/nfc/llcp/commands.c
-@@ -117,8 +117,8 @@ u8 *nfc_llcp_build_tlv(u8 type, u8 *value, u8 value_length, u8 *tlv_length)
- 	return tlv;
- }
- 
--int nfc_llcp_parse_tlv(struct nfc_llcp_local *local,
--		       u8 *tlv_array, u16 tlv_array_len)
-+int nfc_llcp_parse_gb_tlv(struct nfc_llcp_local *local,
-+			  u8 *tlv_array, u16 tlv_array_len)
- {
- 	u8 *tlv = tlv_array, type, length, offset = 0;
- 
-@@ -149,8 +149,42 @@ int nfc_llcp_parse_tlv(struct nfc_llcp_local *local,
- 		case LLCP_TLV_OPT:
- 			local->remote_opt = llcp_tlv_opt(tlv);
- 			break;
-+		default:
-+			pr_err("Invalid gt tlv value 0x%x\n", type);
-+			break;
-+		}
-+
-+		offset += length + 2;
-+		tlv += length + 2;
-+	}
-+
-+	pr_debug("version 0x%x miu %d lto %d opt 0x%x wks 0x%x\n",
-+		 local->remote_version, local->remote_miu,
-+		 local->remote_lto, local->remote_opt,
-+		 local->remote_wks);
-+
-+	return 0;
-+}
-+
-+int nfc_llcp_parse_connection_tlv(struct nfc_llcp_sock *sock,
-+				  u8 *tlv_array, u16 tlv_array_len)
-+{
-+	u8 *tlv = tlv_array, type, length, offset = 0;
-+
-+	pr_debug("TLV array length %d\n", tlv_array_len);
-+
-+	if (sock == NULL)
-+		return -ENOTCONN;
-+
-+	while (offset < tlv_array_len) {
-+		type = tlv[0];
-+		length = tlv[1];
-+
-+		pr_debug("type 0x%x length %d\n", type, length);
-+
-+		switch (type) {
- 		case LLCP_TLV_RW:
--			local->remote_rw = llcp_tlv_rw(tlv);
-+			sock->rw = llcp_tlv_rw(tlv);
- 			break;
- 		case LLCP_TLV_SN:
- 			break;
-@@ -163,10 +197,7 @@ int nfc_llcp_parse_tlv(struct nfc_llcp_local *local,
- 		tlv += length + 2;
- 	}
- 
--	pr_debug("version 0x%x miu %d lto %d opt 0x%x wks 0x%x rw %d\n",
--		 local->remote_version, local->remote_miu,
--		 local->remote_lto, local->remote_opt,
--		 local->remote_wks, local->remote_rw);
-+	pr_debug("sock %p rw %d\n", sock, sock->rw);
- 
- 	return 0;
- }
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index 262aa82..d3efc5b 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -406,9 +406,9 @@ int nfc_llcp_set_remote_gb(struct nfc_dev *dev, u8 *gb, u8 gb_len)
- 		return -EINVAL;
- 	}
- 
--	return nfc_llcp_parse_tlv(local,
--				  &local->remote_gb[3],
--				  local->remote_gb_len - 3);
-+	return nfc_llcp_parse_gb_tlv(local,
-+				     &local->remote_gb[3],
-+				     local->remote_gb_len - 3);
- }
- 
- static void nfc_llcp_tx_work(struct work_struct *work)
-@@ -608,9 +608,6 @@ static void nfc_llcp_recv_connect(struct nfc_llcp_local *local,
- 
- 	pr_debug("%d %d\n", dsap, ssap);
- 
--	nfc_llcp_parse_tlv(local, &skb->data[LLCP_HEADER_SIZE],
--			   skb->len - LLCP_HEADER_SIZE);
--
- 	if (dsap != LLCP_SAP_SDP) {
- 		sock = nfc_llcp_sock_get(local, dsap, LLCP_SAP_SDP);
- 		if (sock == NULL || sock->sk.sk_state != LLCP_LISTEN) {
-@@ -663,6 +660,9 @@ static void nfc_llcp_recv_connect(struct nfc_llcp_local *local,
- 	new_sock->dsap = ssap;
- 	new_sock->parent = parent;
- 
-+	nfc_llcp_parse_connection_tlv(new_sock, &skb->data[LLCP_HEADER_SIZE],
-+				      skb->len - LLCP_HEADER_SIZE);
-+
- 	pr_debug("new sock %p sk %p\n", new_sock, &new_sock->sk);
- 
- 	nfc_llcp_sock_link(&local->sockets, new_sk);
-@@ -699,11 +699,11 @@ int nfc_llcp_queue_i_frames(struct nfc_llcp_sock *sock)
- 
- 	pr_debug("Remote ready %d tx queue len %d remote rw %d",
- 		 sock->remote_ready, skb_queue_len(&sock->tx_pending_queue),
--		 local->remote_rw);
-+		 sock->rw);
- 
- 	/* Try to queue some I frames for transmission */
- 	while (sock->remote_ready &&
--	       skb_queue_len(&sock->tx_pending_queue) < local->remote_rw) {
-+	       skb_queue_len(&sock->tx_pending_queue) < sock->rw) {
- 		struct sk_buff *pdu, *pending_pdu;
- 
- 		pdu = skb_dequeue(&sock->tx_queue);
-@@ -851,8 +851,8 @@ static void nfc_llcp_recv_cc(struct nfc_llcp_local *local, struct sk_buff *skb)
- 	nfc_llcp_sock_link(&local->sockets, sk);
- 	llcp_sock->dsap = ssap;
- 
--	nfc_llcp_parse_tlv(local, &skb->data[LLCP_HEADER_SIZE],
--			   skb->len - LLCP_HEADER_SIZE);
-+	nfc_llcp_parse_connection_tlv(llcp_sock, &skb->data[LLCP_HEADER_SIZE],
-+				      skb->len - LLCP_HEADER_SIZE);
- 
- 	sk->sk_state = LLCP_CONNECTED;
- 	sk->sk_state_change(sk);
-@@ -1036,7 +1036,6 @@ int nfc_llcp_register_device(struct nfc_dev *ndev)
- 
- 	local->remote_miu = LLCP_DEFAULT_MIU;
- 	local->remote_lto = LLCP_DEFAULT_LTO;
--	local->remote_rw = LLCP_DEFAULT_RW;
- 
- 	list_add(&llcp_devices, &local->list);
- 
-diff --git a/net/nfc/llcp/llcp.h b/net/nfc/llcp/llcp.h
-index 7053304..add03e7 100644
---- a/net/nfc/llcp/llcp.h
-+++ b/net/nfc/llcp/llcp.h
-@@ -83,7 +83,6 @@ struct nfc_llcp_local {
- 	u16 remote_lto;
- 	u8  remote_opt;
- 	u16 remote_wks;
--	u8  remote_rw;
- 
- 	/* sockets array */
- 	struct llcp_sock_list sockets;
-@@ -97,10 +96,12 @@ struct nfc_llcp_sock {
- 	u32 target_idx;
- 	u32 nfc_protocol;
- 
-+	/* Link parameters */
- 	u8 ssap;
- 	u8 dsap;
- 	char *service_name;
- 	size_t service_name_len;
-+	u8 rw;
- 
- 	/* Link variables */
- 	u8 send_n;
-@@ -189,8 +190,10 @@ void nfc_llcp_accept_enqueue(struct sock *parent, struct sock *sk);
- struct sock *nfc_llcp_accept_dequeue(struct sock *sk, struct socket *newsock);
- 
- /* TLV API */
--int nfc_llcp_parse_tlv(struct nfc_llcp_local *local,
--		       u8 *tlv_array, u16 tlv_array_len);
-+int nfc_llcp_parse_gb_tlv(struct nfc_llcp_local *local,
-+			  u8 *tlv_array, u16 tlv_array_len);
-+int nfc_llcp_parse_connection_tlv(struct nfc_llcp_sock *sock,
-+				  u8 *tlv_array, u16 tlv_array_len);
- 
- /* Commands API */
- void nfc_llcp_recv(void *data, struct sk_buff *skb, int err);
-diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
-index 8a60b53..aab077e 100644
---- a/net/nfc/llcp/sock.c
-+++ b/net/nfc/llcp/sock.c
-@@ -678,6 +678,7 @@ struct sock *nfc_llcp_sock_alloc(struct socket *sock, int type, gfp_t gfp)
- 
- 	llcp_sock->ssap = 0;
- 	llcp_sock->dsap = LLCP_SAP_SDP;
-+	llcp_sock->rw = LLCP_DEFAULT_RW;
- 	llcp_sock->send_n = llcp_sock->send_ack_n = 0;
- 	llcp_sock->recv_n = llcp_sock->recv_ack_n = 0;
- 	llcp_sock->remote_ready = 1;
--- 
-1.7.9.1
+This problem is fixed in the latest version from wireless-testing.
+
+Larry
 
