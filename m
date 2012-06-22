@@ -1,45 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:48923 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751375Ab2FNILn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 04:11:43 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: set only VO as a U-APSD enabled AC
-References: <1339660146-21030-1-git-send-email-arik@wizery.com>
-Date: Thu, 14 Jun 2012 11:11:42 +0300
-In-Reply-To: <1339660146-21030-1-git-send-email-arik@wizery.com> (Arik
-	Nemtsov's message of "Thu, 14 Jun 2012 10:49:06 +0300")
-Message-ID: <87ehpi5n41.fsf@purkki.adurom.net> (sfid-20120614_101215_305743_0F1DF465)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:59350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756093Ab2FVRSr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 13:18:47 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Si7VO-000665-C6
+	for linux-wireless@vger.kernel.org; Fri, 22 Jun 2012 19:18:46 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 0/6] mac80211 debugging
+Date: Fri, 22 Jun 2012 19:18:39 +0200
+Message-Id: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net> (sfid-20120622_191850_502990_C5B7686A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arik Nemtsov <arik@wizery.com> writes:
+Here's a respin. I don't really care about the trailing
+newlines so I've included them (and cleaned up all cases
+where it was missing), and I've used #define DEBUG to
+keep using pr_debug in the actual debug cases.
 
-> Some APs experience problems when working with U-APSD. Decrease the
-> probability of that happening by using legacy mode for all ACs but VO.
->
-> The AP that caused us troubles was a Cisco 4410N. It ignores our
-> setting, and always treats non-VO ACs as legacy.
->
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> Let's have another go at this :)
+johannes
 
-Looks good to me :)
-
->  #define IEEE80211_DEFAULT_UAPSD_QUEUES \
-> -	(IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |	\
-> -	 IEEE80211_WMM_IE_STA_QOSINFO_AC_BE |	\
-> -	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VI |	\
-> -	 IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
-> +	IEEE80211_WMM_IE_STA_QOSINFO_AC_VO
-
-A comment why we only enable VO would be nice.
-
--- 
-Kalle Valo
