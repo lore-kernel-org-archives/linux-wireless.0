@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:50783 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756608Ab2FTOez convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 10:34:55 -0400
-Received: by lbgc1 with SMTP id c1so751653lbg.29
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 07:34:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1340181856.4655.37.camel@jlt3.sipsolutions.net>
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
-	<1340111463-4554-3-git-send-email-victorg@ti.com>
-	<1340181856.4655.37.camel@jlt3.sipsolutions.net>
-Date: Wed, 20 Jun 2012 17:34:47 +0300
-Message-ID: <CAK80WHbpCKu2VYQu+k05wYsWuJdMQwD2O8BxvQMCep0OKrushA@mail.gmail.com> (sfid-20120620_163458_719543_01D61E4B)
-Subject: Re: [PATCH v2 3/7] nl80211/cfg80211: add ability to enable TX on op-channel
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:59353 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756138Ab2FVRSs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 13:18:48 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/6] mac80211: two small verbose debug cleanups
+Date: Fri, 22 Jun 2012 19:18:41 +0200
+Message-Id: <1340385525-14487-3-git-send-email-johannes@sipsolutions.net> (sfid-20120622_191855_591436_CFFAFDD7)
+In-Reply-To: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 11:44 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> +     if ((!chan->radar_detect_timeout ||
->> +          time_is_after_jiffies(chan->radar_detect_timeout)) &&
->> +         (chan->flags & IEEE80211_CHAN_RADAR))
->> +             return -EPERM;
->
-> Ok so you reject it if it's 0, but the jiffies calculation could return
-> 0 too.. in fact, since jiffies start at -5 minutes on boot, you might
-> even hit it if you start radar detection 4 minutes after boot.
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-good point, I will add additional flag to cover this corner case.
+Two instances of CONFIG_MAC80211_VERBOSE_DEBUG
+should be different, fix them.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ibss.c   |    2 +-
+ net/mac80211/status.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index ff46ff4..8931110 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -261,7 +261,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
+ 
+ 	memcpy(addr, sta->sta.addr, ETH_ALEN);
+ 
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 	wiphy_debug(sdata->local->hw.wiphy,
+ 		    "Adding new IBSS station %pM (dev=%s)\n",
+ 		    addr, sdata->name);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 6b4f425..51a6d1e 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -155,7 +155,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 		return;
+ 	}
+ 
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	if (net_ratelimit())
+ 		wiphy_debug(local->hw.wiphy,
+ 			    "dropped TX filtered frame, queue_len=%d PS=%d @%lu\n",
 -- 
-Thanks,
-Victor.
+1.7.10
+
