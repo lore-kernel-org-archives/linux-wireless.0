@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11600 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762774Ab2FVXga (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 19:36:30 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from victor.provo.novell.com ([137.65.250.26]:35456 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761841Ab2FVJPn convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Fri, 22 Jun 2012 05:15:43 -0400
+Received: by bkcji2 with SMTP id ji2so1345735bkc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 02:15:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20453.302.671438.533390@gargle.gargle.HOWL> (sfid-20120623_013648_924329_C0BDBE71)
-Date: Sat, 23 Jun 2012 05:05:10 +0530
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: pull request: wireless 2012-06-22
-In-Reply-To: <20452.64701.760819.559191@gargle.gargle.HOWL>
-References: <20120622201716.GB13918@tuxdriver.com>
-	<20452.64701.760819.559191@gargle.gargle.HOWL>
+In-Reply-To: <CAD2nsn2KrgLh-Oth-npUjY59bh2ycpEv7UocfXH0uE27TD19fQ@mail.gmail.com>
+References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
+	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
+	<CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com>
+	<CAD2nsn35gDLLP3Wkn9qpG5UhxUGPOcn1q_kpP2WexjQ1+LvXFg@mail.gmail.com>
+	<CALx5=V-+aCcOMXHPrxmqVHwaiosNurT17gHBTi0mTdYJ6bZRMA@mail.gmail.com>
+	<CAD2nsn2KrgLh-Oth-npUjY59bh2ycpEv7UocfXH0uE27TD19fQ@mail.gmail.com>
+Date: Fri, 22 Jun 2012 17:15:35 +0800
+Message-ID: <CALx5=V8s54ytfRVT2hscXCYRCj1MTdvKjM1jFa-OwxAyUMKFLw@mail.gmail.com> (sfid-20120622_111545_889962_6F7C1C75)
+Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
+From: Matt Chen <machen@suse.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> John W. Linville wrote:
-> > Mohammed Shafi Shajakhan (1):
-> >       ath9k_hw: avoid possible infinite loop in ar9003_get_pll_sqsum_dvc
-> 
-> Um, this commit doesn't really fix anything - the timeout is also
-> arbitrary. Can you remove this from the 3.5 queue ? Thanks.
+Hi Mohammed,
 
-A review of the patch later, I think it's good. At least there's a
-WARN_ON_ONCE() to indicate the situation in which the measurement fails.
-It might come in handy as a debugging aid.
+2012/6/20 Mohammed Shafi <shafi.wireless@gmail.com>:
+> Hi Matt,
+>
+>> Both 0x2f and 0x2d can work fine to me of enabling
+>> wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll().
+>>
+>> 1) with 0x2f
+>>   0x404c address would change when press wifi button
+>>   rfkill block : yes -> 0x00000455
+>>   rfkill block : no   -> 0x00000c55
+>> 2) with 0x2d
+>>   0x404c address would change when press wifi button
+>>   rfkill block : yes -> 0x00000455
+>>   rfkill block : no   -> 0x00000c55
+>>
+>>
+>> But I don't see the LED is changing, it is staying OFF (Amber).
+>
+> not sure about that, but i think rfkill is working for both of us
+> i told 0xeed changes to 0x6ed for me
+>
+> you got 0x455 changes to 0xc55
+>
+> BIT 12(GPIO pin 11 seems to toggle  4 ->C), you can confirm by rfkill list
+Would it be the patch to fix it ? or it is just a workaround to prove
+the rfkill_poll can be enabled ?
+> --
+> thanks,
+> shafi
+>
 
-Sujith
+
+
+-- 
+Thank you.
