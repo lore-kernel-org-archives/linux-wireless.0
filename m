@@ -1,136 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:56507 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756849Ab2FUMDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 08:03:43 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Kazior Michal <Michal.Kazior@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v2 6/7] mac80211: refactor set_channel_type
-Date: Thu, 21 Jun 2012 14:03:35 +0200
-Message-ID: <1340280216-18807-7-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140348_260692_294518A4)
-In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
-References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:34075 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756145Ab2FVRO5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 13:14:57 -0400
+Message-ID: <1340385295.4491.38.camel@jlt3.sipsolutions.net> (sfid-20120622_191500_355766_3DC25C2C)
+Subject: [PATCH] compat-wireless: add patch to fix iwlwifi tracing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Jun 2012 19:14:55 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kazior Michal <Michal.Kazior@tieto.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Split functionality for further reuse.
+See the description in the file -- the current code
+is safe only on recent upstream kernels, with 3.1
+for example it can crash. The new code is safe on
+all kernels that even support %pV, others just get
+a pointer unfortunately.
 
-Will prevent code duplication when channel context
-channel_type merging is introduced.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/chan.c |   57 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 38 insertions(+), 19 deletions(-)
+ patches/55-iwlwifi-msg-trace-fix.patch |   70 ++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+ create mode 100644 patches/55-iwlwifi-msg-trace-fix.patch
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 20483a0..63b7cb7 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -69,16 +69,14 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
- 	return mode;
- }
- 
--bool ieee80211_set_channel_type(struct ieee80211_local *local,
--				struct ieee80211_sub_if_data *sdata,
--				enum nl80211_channel_type chantype)
-+static enum nl80211_channel_type
-+ieee80211_get_superchan(struct ieee80211_local *local,
-+			struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_sub_if_data *tmp;
- 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
--	bool result;
-+	struct ieee80211_sub_if_data *tmp;
- 
- 	mutex_lock(&local->iflist_mtx);
--
- 	list_for_each_entry(tmp, &local->interfaces, list) {
- 		if (tmp == sdata)
- 			continue;
-@@ -104,41 +102,62 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 			break;
- 		}
- 	}
-+	mutex_unlock(&local->iflist_mtx);
+diff --git a/patches/55-iwlwifi-msg-trace-fix.patch b/patches/55-iwlwifi-msg-trace-fix.patch
+new file mode 100644
+index 0000000..1e8803f
+--- /dev/null
++++ b/patches/55-iwlwifi-msg-trace-fix.patch
+@@ -0,0 +1,70 @@
++In recent kernels, %pV will copy the va_list before using it.
++This isn't true for all kernels, so copy the va_list for use
++by the dev_*() functions, otherwise the kernel will crash if
++the message is printed and traced.
 +
-+	return superchan;
-+}
- 
--	switch (superchan) {
-+static bool
-+ieee80211_channel_types_are_compatible(enum nl80211_channel_type chantype1,
-+				       enum nl80211_channel_type chantype2,
-+				       enum nl80211_channel_type *compat)
-+{
-+	switch (chantype1) {
- 	case NL80211_CHAN_NO_HT:
- 	case NL80211_CHAN_HT20:
- 		/*
- 		 * allow any change that doesn't go to no-HT
- 		 * (if it already is no-HT no change is needed)
- 		 */
--		if (chantype == NL80211_CHAN_NO_HT)
-+		if (chantype2 == NL80211_CHAN_NO_HT)
- 			break;
--		superchan = chantype;
-+		*compat = chantype2;
- 		break;
- 	case NL80211_CHAN_HT40PLUS:
- 	case NL80211_CHAN_HT40MINUS:
-+		*compat = chantype1;
- 		/* allow smaller bandwidth and same */
--		if (chantype == NL80211_CHAN_NO_HT)
-+		if (chantype2 == NL80211_CHAN_NO_HT)
- 			break;
--		if (chantype == NL80211_CHAN_HT20)
-+		if (chantype2 == NL80211_CHAN_HT20)
- 			break;
--		if (superchan == chantype)
-+		if (chantype2 == chantype1)
- 			break;
--		result = false;
--		goto out;
-+		return false;
- 	}
- 
--	local->_oper_channel_type = superchan;
-+	return true;
-+}
-+
-+bool ieee80211_set_channel_type(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				enum nl80211_channel_type chantype)
-+{
-+	enum nl80211_channel_type superchan;
-+	enum nl80211_channel_type compatchan = NL80211_CHAN_NO_HT;
-+
-+	superchan = ieee80211_get_superchan(local, sdata);
-+	if (!ieee80211_channel_types_are_compatible(superchan, chantype,
-+						    &compatchan))
-+		return false;
-+
-+	local->_oper_channel_type = compatchan;
- 
- 	if (sdata)
- 		sdata->vif.bss_conf.channel_type = chantype;
- 
--	result = true;
-- out:
--	mutex_unlock(&local->iflist_mtx);
-+	return true;
- 
--	return result;
- }
- 
- static struct ieee80211_chanctx *
++--- a/drivers/net/wireless/iwlwifi/iwl-debug.c
+++++ b/drivers/net/wireless/iwlwifi/iwl-debug.c
++@@ -72,13 +72,16 @@ void __iwl_ ##fn(struct device *dev, const char *fmt, ...)	\
++ 	struct va_format vaf = {				\
++ 		.fmt = fmt,					\
++ 	};							\
++-	va_list args;						\
+++	va_list args1, args2;					\
++ 								\
++-	va_start(args, fmt);					\
++-	vaf.va = &args;						\
+++	va_start(args1, fmt);					\
+++	va_copy(args2, args1);					\
+++	vaf.va = &args2;					\
++ 	dev_ ##fn(dev, "%pV", &vaf);				\
+++	va_end(args2);						\
+++	vaf.va = &args1;					\
++ 	trace_iwlwifi_ ##fn(&vaf);				\
++-	va_end(args);						\
+++	va_end(args1);						\
++ }
++ 
++ __iwl_fn(warn)
++@@ -97,13 +100,18 @@ void __iwl_err(struct device *dev, bool rfkill_prefix, bool trace_only,
++ 	va_list args;
++ 
++ 	va_start(args, fmt);
++-	vaf.va = &args;
++ 	if (!trace_only) {
+++		va_list args2;
+++
+++		va_copy(args2, args);
+++		vaf.va = &args2;
++ 		if (rfkill_prefix)
++ 			dev_err(dev, "(RFKILL) %pV", &vaf);
++ 		else
++ 			dev_err(dev, "%pV", &vaf);
+++		va_end(args2);
++ 	}
+++	vaf.va = &args;
++ 	trace_iwlwifi_err(&vaf);
++ 	va_end(args);
++ }
++@@ -120,13 +128,19 @@ void __iwl_dbg(struct device *dev,
++ 	va_list args;
++ 
++ 	va_start(args, fmt);
++-	vaf.va = &args;
++ #ifdef CONFIG_IWLWIFI_DEBUG
++ 	if (iwl_have_debug_level(level) &&
++-	    (!limit || net_ratelimit()))
+++	    (!limit || net_ratelimit())) {
+++		va_list args2;
+++
+++		va_copy(args2, args);
+++		vaf.va = &args2;
++ 		dev_err(dev, "%c %s %pV", in_interrupt() ? 'I' : 'U',
++ 			function, &vaf);
+++		va_end(args2);
+++	}
++ #endif
+++	vaf.va = &args;
++ 	trace_iwlwifi_dbg(level, in_interrupt(), function, &vaf);
++ 	va_end(args);
++ }
 -- 
-1.7.0.4
+1.7.10
+
+
 
