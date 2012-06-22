@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:64817 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252Ab2F1OSu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36688 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754015Ab2FVOZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 10:18:50 -0400
-Received: by bkcji2 with SMTP id ji2so2048788bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 07:18:49 -0700 (PDT)
+	Fri, 22 Jun 2012 10:25:05 -0400
+Message-ID: <4FE48036.1020708@candelatech.com> (sfid-20120622_162528_296205_B4E1925D)
+Date: Fri, 22 Jun 2012 07:24:54 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1340876555.4491.33.camel@jlt3.sipsolutions.net>
-References: <1340821557-27009-1-git-send-email-arik@wizery.com>
- <1340871433.4491.20.camel@jlt3.sipsolutions.net> <CA+XVXfdKLeaHpLmqsXROH9VojHkB4EP-BpcFDLb8ZCtjb_XCbQ@mail.gmail.com>
- <1340875844.4491.26.camel@jlt3.sipsolutions.net> <CA+XVXfcDNcy+RjdxraqJ6LnYWt3XdtF-X-Ah9FdP=ZibnYp15g@mail.gmail.com>
- <1340876555.4491.33.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 28 Jun 2012 17:18:33 +0300
-Message-ID: <CA+XVXfcSQsYn3Pu8=SYtmMD6b1CeUF_qMhp=DFw8j4+HSqdhTw@mail.gmail.com> (sfid-20120628_161854_122868_4F771840)
-Subject: Re: [PATCH] mac80211: allow Rx in reconfig only after removing BA sessions
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Kalle Valo <kvalo@adurom.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com> <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com> <87ipej4xz0.fsf@purkki.adurom.net> <20120622115559.GD5390@mwanda>
+In-Reply-To: <20120622115559.GD5390@mwanda>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 28, 2012 at 12:42 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-06-28 at 12:38 +0300, Arik Nemtsov wrote:
->> On Thu, Jun 28, 2012 at 12:30 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2012-06-28 at 11:37 +0300, Arik Nemtsov wrote:
->> >> On Thu, Jun 28, 2012 at 11:17 AM, Johannes Berg
->> >> <johannes@sipsolutions.net> wrote:
->> >> > On Wed, 2012-06-27 at 21:25 +0300, Arik Nemtsov wrote:
->> >> >> Previously, a connected STA/AP could send us some AMPDUs right after
->> >> >> recovery, without the driver knowing anything about it.
->> >> >
->> >> > Huh, that description doesn't make a lot of sense? The STA/AP can send
->> >> > us AMPDUs anyway without the driver knowing anything about it since it
->> >> > has no idea we're restarting ...
->> >>
->> >> Well the point is to drop them early in the Rx path. Should I change
->> >> the description or you don't like the patch in general?
->> >
->> > I don't mind the patch, I just don't quite understand it still.
->> >
->> > The driver is receiving the AMPDUs anyway, and if it's passing them up
->> > why do we need to drop them?
+On 06/22/2012 04:55 AM, Dan Carpenter wrote:
+> On Fri, Jun 22, 2012 at 10:17:23AM +0300, Kalle Valo wrote:
+>> Rajkumar Manoharan<rmanohar@qca.qualcomm.com>  writes:
 >>
->> Well if the de-aggregration is in HW, they won't make it as far as
->> mac80211. So this patch is for SW de-aggregators.
+>>> ath9k_get_et_stats() warn: side effect in macro
+>>> 'AWDATA' doing 'i++'
+>>>
+>>> Cc: Ben Greear<greearb@candelatech.com>
+>>> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+>>
+>> [...]
+>>
+>>>   	do {								\
+>>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+>>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+>>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+>>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+>>> +		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+>>> +		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+>>> +		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+>>> +		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+>>> +		i += 4; \
+>>>   	} while (0)
+>>
+>> I agree with Ben, this is a useless change as the end result is still
+>> the same (the side effect is that i is increased with four). You are
+>> just hiding that from smatch and once smatch is fixed it will warn again
+>> about the same thing.
+>>
+>> I recommend fixing this properly so that the macro doesn't have any side
+>> effects.
 >
-> I don't think there's anyone doing AMPDU SW deaggregation? There
-> definitely isn't any code in mac80211 to do it ;-)
->
->> But come to think of it, if the de-aggregation is done in SW, I guess
->> there's no real issue with accepting them, since mac80211 didn't
->> really reboot.
->
-> Or are you thinking of the reorder buffer?
->
->> I guess we can drop the patch? It just seemed more correct to put the
->> in_reconfig to false there.
->
-> I don't see how it's more correct? We're done reconfiguring and then
-> decide to drop all BA sessions ;-)
->
-> In a way, heck, it seems more correct to leave as-is. If we send a BA
-> action frame and receive a response to it maybe (is there a response to
-> delBA?) we don't want to drop it. Or if we send delBA and the peer wants
-> to start right away again, ...?
+> Uh.  Sorry, also I thought I had pushed a fix to add this to the
+> ignored macro list, but I forgot.  I've pushed it now.
 
-Yea it's a good point. Let's drop this.
+The whole point of the macro is to have an affect.  This is not a general
+purpose macro..it's very specific to this local logic.
 
-Arik
+I don't think folks should be so dogmatic about these sorts of things.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
