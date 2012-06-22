@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62341 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754285Ab2FSOcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:32:25 -0400
-Message-ID: <4FE08D6F.30105@tieto.com> (sfid-20120619_163229_434563_4E35D538)
-Date: Tue, 19 Jun 2012 16:32:15 +0200
-From: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 0/5] bind filters and multicast list to subif
-References: <1340017035-7657-1-git-send-email-lukasz.kucharczyk@tieto.com> <1340019946.4615.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340019946.4615.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:52019 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761418Ab2FVHCv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 03:02:51 -0400
+Message-ID: <1340348566.4491.3.camel@jlt3.sipsolutions.net> (sfid-20120622_090254_918920_2B72246B)
+Subject: pull-request: mac80211 2012-06-22
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Jun 2012 09:02:46 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2012 01:45 PM, Johannes Berg wrote:
-> On Mon, 2012-06-18 at 12:57 +0200, Lukasz Kucharczyk wrote:
->> Hi,
->>
->> Following patches enables configuring filters and multicast list for
->> specific interface. That probably might be useful in implementation
->> of multi-channel operation.
->
-> "Might be useful"?
->
-> I guess I can see that, but we need
->   a) driver updates
->   b) to keep a global filter setting for drivers that don't have
->      per-interface settings
->
+John,
 
-Ok, so I will need indication from driver what it supports.
-Do you think adding single flag to ieee80211_hw_flags (like 
-IEEE80211_HW_SUPPORTS_IFCE_FILTERS) would be sufficient for that purpose?
+Here's one patch from the TI driver folks that fixes sending out 
+bad frames (with all-zeroes BSSID) that we'd like to get into 3.5
+still.
 
-Lukasz
+johannes
+
+
+The following changes since commit 79543d8eecc0957ac6fe3ec1e2486ad31d4b67a3:
+
+  mac80211: stop polling in disassociation (2012-06-13 10:17:55 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 88a9e31c506c00c8b7a2f1611406d0e38dcb33b3:
+
+  mac80211: clear ifmgd->bssid only after building DELBA (2012-06-21 21:44:25 +0200)
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      mac80211: clear ifmgd->bssid only after building DELBA
+
+ net/mac80211/mlme.c |   13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
 
