@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42225 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758095Ab2FGNdR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 09:33:17 -0400
-Message-ID: <4FD0AD96.1050500@hauke-m.de> (sfid-20120607_153320_319833_9267A37F)
-Date: Thu, 07 Jun 2012 15:33:10 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:45196 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755562Ab2FVLZa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 07:25:30 -0400
+Received: by ghrr11 with SMTP id r11so1408395ghr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 04:25:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-15-git-send-email-hauke@hauke-m.de> <4FCF2FD4.6010103@broadcom.com>
-In-Reply-To: <4FCF2FD4.6010103@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAB=NE6Uh90nV00TKSk+Rh9AG0yffKkYBZ7DiAe0Hvds-wMXQcg@mail.gmail.com>
+References: <1340292308-6993-1-git-send-email-ozancag@gmail.com>
+	<CAB=NE6Uh90nV00TKSk+Rh9AG0yffKkYBZ7DiAe0Hvds-wMXQcg@mail.gmail.com>
+Date: Fri, 22 Jun 2012 14:25:29 +0300
+Message-ID: <CAFub=KRMPxbKw=izGHEP4BPLreuHdTTq8SyD7asj0Xq5r-h8aQ@mail.gmail.com> (sfid-20120622_132533_977129_F0B48256)
+Subject: Re: [PATCH v2] compat: Define include guard for vga_switcheroo.h
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 12:24 PM, Arend van Spriel wrote:
-> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->> The xmtfifo_sz array contains the queue sizes for the different chip
->> revs. This array missed the sizes for the core rev 17 and 28. This
-> 
-> Should probably use core revs instead of chip revs and I think we are
-> talking about the 80211 core rev here.
-Yes I will change this comment.
+> How about just adding this file but with something like this:
+>
+> #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+> /*
+>  * XXX: The include guard was sent upstream, drop this
+>  * once the guard is merged.
+>  */
+> #ifndef LINUX_VGA_SWITCHEROO_H /* in case this gets upstream */
+> #include_next <linux/vga_switcheroo.h>
+> #ifndef LINUX_VGA_SWITCHEROO_H /* do not redefine once this gets upstream */
+> #define LINUX_VGA_SWITCHEROO_H
+> #endif /* case 1 LINUX_VGA_SWITCHEROO_H
+> #endif /* case 2 LINUX_VGA_SWITCHEROO_H
+> #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
 
-Are there any devices with the same phy type using different fifo sizes?
-If this is not the case I think it is better to do this based on the phy
-type.
-> 
->> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> @@ -268,7 +268,7 @@ struct brcms_c_bit_desc {
->>   */
->>  
->>  /* Starting corerev for the fifo size table */
->> -#define XMTFIFOTBL_STARTREV	20
->> +#define XMTFIFOTBL_STARTREV	10
-> 
-> Why not start the table at rev 17? I do not expect any lower revs to get
-> brcmsmac support.
-The 10 is a random number <=17. ;-)
-I will change this to 17 then, makes sense.
-> 
-> Gr. AvS
-> 
+Ah, that is much clever, thanks.
 
+I've tested in and it works correctly, will send a v3. But just to
+make clear: I'm just adding a vga_switcheroo.h with the above content
+and I don't touch compat-3.5.h right?
+
+-- 
+Ozan Çağlayan
