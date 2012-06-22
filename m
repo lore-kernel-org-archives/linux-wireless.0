@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49044 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53201 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab2F2Gsx (ORCPT
+	with ESMTP id S1761357Ab2FVGdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 02:48:53 -0400
-Message-ID: <1340952528.4488.1.camel@jlt3.sipsolutions.net> (sfid-20120629_084856_523622_8462D7F6)
-Subject: Re: [PATCH] brcmsmac: restructure info->control.sta handling as it
- is goning to be removed soon.
+	Fri, 22 Jun 2012 02:33:36 -0400
+Message-ID: <1340346809.4491.0.camel@jlt3.sipsolutions.net> (sfid-20120622_083340_685346_B39E5D28)
+Subject: RE: [RFC v3] cfg80211/mac80211: 802.11ac changes
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	brcm80211-dev-list@broadcom.com, pieterpg@broadcom.com,
-	gregkh@suse.de, frankyl@broadcom.com, arend@broadcom.com,
-	rvossen@broadcom.com, brudley@broadcom.com, linville@tuxdriver.com
-Date: Fri, 29 Jun 2012 08:48:48 +0200
-In-Reply-To: <1340943304-70933-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120629_061650_559847_B79CE9A9)
-References: <1340943304-70933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120629_061650_559847_B79CE9A9)
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Jun 2012 08:33:29 +0200
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3D6F@mbx022-e1-nj-10.exch022.domain.local>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3CE8@mbx022-e1-nj-10.exch022.domain.local>
+	 <1340302471.4489.43.camel@jlt3.sipsolutions.net>
+	 <4FE36942.1090801@broadcom.com>
+	 <1340303967.4489.44.camel@jlt3.sipsolutions.net>
+	,<4FE36FC1.2020702@broadcom.com>
+	 <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3D6F@mbx022-e1-nj-10.exch022.domain.local>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-28 at 21:15 -0700, Thomas Huehn wrote:
-> @@ -267,7 +267,9 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
->  static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  {
->  	struct brcms_info *wl = hw->priv;
-> +	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
->  
-> +	tx_info->rate_driver_data[0] = tx_info->control.sta;
+On Fri, 2012-06-22 at 03:06 +0000, Mahesh Palivela wrote:
+> ________________________________________
+> From: Arend van Spriel [arend@broadcom.com]
+> Sent: Friday, June 22, 2012 12:32 AM
+> To: Johannes Berg
+> Cc: Mahesh Palivela; linville@tuxdriver.com; linux-wireless@vger.kernel.org
+> Subject: Re: [RFC v3] cfg80211/mac80211: 802.11ac changes
+> 
+> On 06/21/2012 08:39 PM, Johannes Berg wrote:
+> > On Thu, 2012-06-21 at 20:34 +0200, Arend van Spriel wrote:
+> >> On 06/21/2012 08:14 PM, Johannes Berg wrote:
+> >>> On Thu, 2012-06-21 at 16:51 +0000, Mahesh Palivela wrote:
+> >>>
+> >>>> +/* 802.11ac VHT Capabilities */
+> >>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
+> >>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454               0x00000002
+> >>>
+> >>> I have a feeling there should be a value for 3895, since this isn't
+> >>> really a bitfield only (it doesn't make sense to set both of these, in
+> >>> fact 3 is reserved)
+> >>
+> >> These are matching the values specified for the VHP Capability Info IE.
+> >> 3895 is specified as 0. Value 3 is reserved because it is not to be
+> >> regarded as a bit field.
+> >
+> > Right, but I think it'd make more sense to actually have the 3895 value
+> > as a constant here so you're not tempted to think that you could set
+> 
+> [MP] Should I declare another constant for this?
+> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895   0
 
-It seems that brcmsmac doesn't care about anything but the
-tx_info->flags, but it would still seem safer to overwrite the data
-before the function returns, rather than as the first thing?
+Yes I think that would be good
 
 johannes
 
