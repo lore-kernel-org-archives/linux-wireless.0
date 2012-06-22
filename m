@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39982 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752621Ab2FUAsd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 20:48:33 -0400
-Received: by lbbgm6 with SMTP id gm6so1378461lbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 17:48:31 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:36063 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761472Ab2FVHRb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 03:17:31 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>, dan.carpenter@oracle.com
+Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
+Date: Fri, 22 Jun 2012 10:17:23 +0300
+In-Reply-To: <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
+	(Rajkumar Manoharan's message of "Fri, 22 Jun 2012 00:01:32 +0530")
+Message-ID: <87ipej4xz0.fsf@purkki.adurom.net> (sfid-20120622_091739_535072_332E718F)
 MIME-Version: 1.0
-In-Reply-To: <45566970CF58C74CB52107862E0541CD1D172F55@POCITMSEXMB02.LntUniverse.com>
-References: <45566970CF58C74CB52107862E0541CD1D172F55@POCITMSEXMB02.LntUniverse.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 21 Jun 2012 10:48:11 +1000
-Message-ID: <CAGRGNgUmKCJkk-LqRgehnF7TxmTBsOVQzrsusM+8BW3MAHVt2w@mail.gmail.com> (sfid-20120621_024837_245368_D83F4172)
-Subject: Re: Compat Wireless Version - WL1271
-To: Girish Bn <Girish.BN@lnties.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
 
-On Thu, Jun 21, 2012 at 12:47 AM, Girish Bn <Girish.BN@lnties.com> wrote:
-> Hi,
-> We are using TI WL1271 to support Wi-FI/Wi-Fi Direct for Printer products
-> The system configuration is as follows
-> Processor: NXP LPC313X
-> Kernel: Linux 2.6.28.2
+> ath9k_get_et_stats() warn: side effect in macro
+> 'AWDATA' doing 'i++'
+>
+> Cc: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Are you able use a newer kernel?
+[...]
 
-> RAM:32MB
-> FLASH:16MB
-> We have ported the Compat Wireless 3.4 RC3(http://wireless.kernel.org/en/users/Download/stable#Patches) package successfully for prototyping.
-> However we have disabled Power Management related references in drivers/net/wl12xx/sdio.c as ours is a older kernel which doesn't support run-time PM.
-> We will be using the following Wi-Fi related features
-> 1.  Wi-Fi Direct( As a Group Owner Negotiation or Autonomous GO), Legacy STA Client (Infrastructure Mode)
-> 2. Wireless Personal and Enterprise Security (EAP-FAST, EAP_PEAPv1)
-> Let us know which version of Compat wireless package, Wl1271 Firmware version, WPA Supplicant and IW tools can be used in our system?
+>  	do {								\
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+> +		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
+> +		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
+> +		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
+> +		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
+> +		i += 4; \
+>  	} while (0)
 
-I'm not sure when support for Wi-Fi Direct landed, but you will need
-to use a kernel that's newer than that. I'm also not sure whether
-wl1271 supports those features at the moment.
+I agree with Ben, this is a useless change as the end result is still
+the same (the side effect is that i is increased with four). You are
+just hiding that from smatch and once smatch is fixed it will warn again
+about the same thing.
 
-In terms of versions, you'll have to figure that out yourself.
-
-You will need to find which version of WPA Supplicant, IW and
-compat-wireless supports the features you want. You will then need to
-determine which version of the firmware that the wl1271 driver in that
-compat-wireless release needs and use that.
-
-> Let us know how to enable Power Management in the WL1271 driver and also kernel patches to enable the Power Management as this very critical
-
-If your kernel doesn't have the necessary support for runtime power
-management, then you're on your own and will have to back-port it
-yourself. Compat-wireless tries to produce the best functionality for
-older kernels, but sometimes it's simply not practical to back-port
-large chunks of infrastructure to older kernels. That said, if you do
-manage to back-port it, patches for compat or compat-wireless would be
-most welcome.
-
-Thanks,
+I recommend fixing this properly so that the macro doesn't have any side
+effects.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Kalle Valo
