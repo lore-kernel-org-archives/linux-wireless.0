@@ -1,53 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:35686 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751827Ab2FOFzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 01:55:24 -0400
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 02/20] airo_cs: Use pr_<level>
-Date: Thu, 14 Jun 2012 22:53:42 -0700
-Message-Id: <2166780c7f792e05c57d84f3b9ddf63b14ffb37c.1339739416.git.joe@perches.com> (sfid-20120615_080244_697944_6204E101)
-In-Reply-To: <cover.1339739415.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:59359 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762244Ab2FVRSt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 13:18:49 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5/6] mac80211: rename driver-trace file
+Date: Fri, 22 Jun 2012 19:18:44 +0200
+Message-Id: <1340385525-14487-6-git-send-email-johannes@sipsolutions.net> (sfid-20120622_191901_603300_86489A1D)
+In-Reply-To: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a more current logging style.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Convert printks to pr_<level>.
-Convert printk(KERN_DEBUG to pr_debug(.
-Coalesce formats, align arguments.
+This file will contain more soon, so
+rename it to just trace.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/airo_cs.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ net/mac80211/Makefile                    |    4 ++--
+ net/mac80211/driver-ops.h                |    2 +-
+ net/mac80211/offchannel.c                |    1 -
+ net/mac80211/{driver-trace.c => trace.c} |    2 +-
+ net/mac80211/{driver-trace.h => trace.h} |    2 +-
+ 5 files changed, 5 insertions(+), 6 deletions(-)
+ rename net/mac80211/{driver-trace.c => trace.c} (88%)
+ rename net/mac80211/{driver-trace.h => trace.h} (99%)
 
-diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
-index 630577d..1a723be 100644
---- a/drivers/net/wireless/airo_cs.c
-+++ b/drivers/net/wireless/airo_cs.c
-@@ -20,6 +20,8 @@
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 2b1470b..0c140f2 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -24,7 +24,7 @@ mac80211-y := \
+ 	wme.o \
+ 	event.o \
+ 	chan.o \
+-	driver-trace.o mlme.o
++	trace.o mlme.o
  
- ======================================================================*/
+ mac80211-$(CONFIG_MAC80211_LEDS) += led.o
+ mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
+@@ -42,7 +42,7 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
  
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #ifdef __IN_PCMCIA_PACKAGE__
- #include <pcmcia/k_compat.h>
+ mac80211-$(CONFIG_PM) += pm.o
+ 
+-CFLAGS_driver-trace.o := -I$(src)
++CFLAGS_trace.o := -I$(src)
+ 
+ # objects for PID algorithm
+ rc80211_pid-y := rc80211_pid_algo.o
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 9330269..44e8c12 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -3,7 +3,7 @@
+ 
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+-#include "driver-trace.h"
++#include "trace.h"
+ 
+ static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 7f93626..b0fb6a2 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -15,7 +15,6 @@
+ #include <linux/export.h>
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+-#include "driver-trace.h"
+ #include "driver-ops.h"
+ 
+ /*
+diff --git a/net/mac80211/driver-trace.c b/net/mac80211/trace.c
+similarity index 88%
+rename from net/mac80211/driver-trace.c
+rename to net/mac80211/trace.c
+index 8ed8711..943da6e 100644
+--- a/net/mac80211/driver-trace.c
++++ b/net/mac80211/trace.c
+@@ -5,5 +5,5 @@
+ #ifndef __CHECKER__
+ #include "driver-ops.h"
+ #define CREATE_TRACE_POINTS
+-#include "driver-trace.h"
++#include "trace.h"
  #endif
-@@ -70,7 +72,7 @@ static int airo_probe(struct pcmcia_device *p_dev)
- 	/* Allocate space for private device-specific data */
- 	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
- 	if (!local) {
--		printk(KERN_ERR "airo_cs: no memory for new device\n");
-+		pr_err("no memory for new device\n");
- 		return -ENOMEM;
- 	}
- 	p_dev->priv = local;
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/trace.h
+similarity index 99%
+rename from net/mac80211/driver-trace.h
+rename to net/mac80211/trace.h
+index a0f7d35..392bcc9 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/trace.h
+@@ -1637,5 +1637,5 @@ TRACE_EVENT(stop_queue,
+ #undef TRACE_INCLUDE_PATH
+ #define TRACE_INCLUDE_PATH .
+ #undef TRACE_INCLUDE_FILE
+-#define TRACE_INCLUDE_FILE driver-trace
++#define TRACE_INCLUDE_FILE trace
+ #include <trace/define_trace.h>
 -- 
-1.7.8.111.gad25c.dirty
+1.7.10
 
