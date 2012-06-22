@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:55504 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752546Ab2FCQjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 12:39:41 -0400
-Received: from [195.4.92.141] (helo=mjail1.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1SbDq7-0004C1-Rz
-	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:39:39 +0200
-Received: from localhost ([::1]:49312 helo=mjail1.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SbDq7-0000Ai-L4
-	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:39:39 +0200
-Received: from [195.4.92.18] (port=57545 helo=8.mx.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SbDnU-0007w5-TA
-	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:36:56 +0200
-Received: from [2002:4fde:120e:2:5054:ff:feb8:40bd] (port=54823 helo=mail.maya.org)
-	by 8.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1SbDnU-00063A-I0
-	for linux-wireless@vger.kernel.org; Sun, 03 Jun 2012 18:36:56 +0200
-Message-ID: <4FCB929B.7000802@01019freenet.de> (sfid-20120603_183945_508115_56AE1DB7)
-Date: Sun, 03 Jun 2012 18:36:43 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Vilius Palme <palme3000@gmail.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	helmut.schaa@googlemail.com, IvDoorn@gmail.com, gwingerde@gmail.com
-Subject: Re: RT2800USB driver problem. txpower stuck at 0
-References: <CAOUATobNS0XNp6e+-W6VrShXpm2JVVeGUBSKxe9v05M3e00S4g@mail.gmail.com>
-In-Reply-To: <CAOUATobNS0XNp6e+-W6VrShXpm2JVVeGUBSKxe9v05M3e00S4g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from shards.monkeyblade.net ([149.20.54.216]:38666 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751553Ab2FVXJY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 19:09:24 -0400
+Date: Fri, 22 Jun 2012 16:09:18 -0700 (PDT)
+Message-Id: <20120622.160918.90088993233016911.davem@davemloft.net> (sfid-20120623_010944_590669_EE85D0FE)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-06-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120622201716.GB13918@tuxdriver.com>
+References: <20120622201716.GB13918@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vilius,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 22 Jun 2012 16:17:16 -0400
 
-Vilius Palme wrote:
-> Hello.
+> Another quick round of fixes intended for 3.5...
 > 
-> I'm having some sort of a problem with RT3070 usb dongle. It works
-> perfectly fine under 3.3.5 and 3.3.7 kernels, but somewhy refuses to
-> set txpower under 3.4.0. kernel .config is the same across all three.
+> Some of them are Bluetooth -- quoth Gustavo:
 > 
-> Here's some output:
+> 	Five fixed to 3.5. There 2 new usb devices id commits, one
+> 	driver fix and two other fixes for the core, one for L2CAP
+> 	and other in MGMT interface.
 > 
-> [root@R1 iw]# ifconfig wlan0 up
-> [root@R1 iw]# iwconfig wlan0
-> wlan0     IEEE 802.11bgn  ESSID:off/any
->          Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm
->          Retry  long limit:7   RTS thr:off   Fragment thr:off
->          Encryption key:off
->          Power Management:off
+> The Bluetooth fixes look reasonable to me.
 > 
-> [root@R1 iw]# iwconfig wlan0 txpower 20
-> Error for wireless request "Set Tx Power" (8B26) :
->    SET failed on device wlan0 ; Invalid argument.
-> [root@R1 iw]# iwconfig wlan0 txpower 1
-> Error for wireless request "Set Tx Power" (8B26) :
->    SET failed on device wlan0 ; Invalid argument.
-> [root@R1 iw]# iwconfig wlan0 txpower 0
-> [root@R1 iw]#
+> The mwifiex drivers gets a fix from Avinash Patil for a potential
+> stuck tx queue in AP mode, and a fix from Bing Zhao for a crash from
+> a bad return type.
+> 
+> Bob Copeland gives us a two-liner for ath5k to avoid a bottom half
+> double lock.
+> 
+> Dan Carpenter gives us an airo fix to correct some incorrect pointer
+> usage in a memcpy.
+> 
+> The wl1251 driver gets three fixes that Grazvydas Ignotas rescued from
+> the Maemo repos.  One corrects a TSF calculation, another ensures
+> that beacon losses are always reported up the stack, and the third
+> corrects some memory leaks.
+> 
+> Johannes Berg gives us an iwlwifi fix to avoid a debugfs-releated
+> crash.
+> 
+> Finally, the ath9k folks were busy!  Felix Fietkau fixes a tx rate
+> duration calculation and an invalid pointer access, Mohammed Shafi
+> Shajakhan avoids a potential infinite loop, and Rajkumar Manoharan
+> ensures that the bssid is configured for ath9k_htc when association
+> or ibss information changes.
+> 
+> Please let me know if there are problems!
 
-Please take a look at this thread:
-http://thread.gmane.org/gmane.comp.embedded.openwrt.devel/14224/focus=91183
-
-Does this answer your question?
-
-
-Kind regards,
-Andreas
+Pulled, thanks John.
