@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45270 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932163Ab2F1J1x (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61060 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755543Ab2FVMle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 05:27:53 -0400
-Message-ID: <1340875671.4491.25.camel@jlt3.sipsolutions.net> (sfid-20120628_112756_486731_31BF33A0)
-Subject: Re: [RFC v3] initial channel context implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 28 Jun 2012 11:27:51 +0200
-In-Reply-To: <4FEC1BDF.8080607@tieto.com>
-References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
-	     <1340718188.14634.47.camel@jlt3.sipsolutions.net>
-	     <4FEAB698.5070309@tieto.com>
-	    <1340784614.8305.8.camel@jlt3.sipsolutions.net>
-	    <4FEADCAE.5080508@tieto.com>
-	   <1340795424.11012.11.camel@jlt3.sipsolutions.net>
-	   <4FEAFFF1.7080706@tieto.com>
-	  <1340805730.11012.33.camel@jlt3.sipsolutions.net>
-	  <4FEC015B.4020603@tieto.com>
-	 <1340871351.4491.19.camel@jlt3.sipsolutions.net>
-	 <4FEC1BDF.8080607@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 22 Jun 2012 08:41:34 -0400
+Date: Fri, 22 Jun 2012 18:12:40 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Kalle Valo <kvalo@adurom.com>, <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] ath9k_hw: fix smatch warnings in spur_mitigate
+Message-ID: <20120622124238.GA10718@vmraj-lnx.users.atheros.com> (sfid-20120622_144138_572966_3DDD43C6)
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1340303492-30947-3-git-send-email-rmanohar@qca.qualcomm.com>
+ <87bokb4xof.fsf@purkki.adurom.net>
+ <20120622092226.GA7934@vmraj-lnx.users.atheros.com>
+ <877guz4lm9.fsf@purkki.adurom.net>
+ <20120622115747.GE5390@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120622115747.GE5390@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-28 at 10:54 +0200, Michal Kazior wrote:
-
-> >>> Today mac80211 just updates it, yeah.
-> >>
-> >> Should I send the ,,respect channels in iface combinations'' as a
-> >> [PATCH] now, or should the CSA issue (in cfg80211) be addressed first?
-> >
-> > Good question. Even if we don't do CSA first, I guess we don't really
-> > break anything right now, do we? And if the driver/mac80211 just changes
-> > the channel, that means it could seem to go over the limit of 1 channel
-> > but things just break down like they do today?
+On Fri, Jun 22, 2012 at 02:57:47PM +0300, Dan Carpenter wrote:
+> On Fri, Jun 22, 2012 at 02:44:14PM +0300, Kalle Valo wrote:
+> > Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
+> > 
+> > >> > -			qCoff = qCoff & 0x7f;
+> > >> > +			qCoff &= 0x7f;
+> > >> 
+> > >> I'm curious, how does a change like this fix anything? To me it just
+> > >> looks same functionality, just a different operator is used. Am I
+> > >> missing something?
+> > >
+> > > Though it doesn't make a difference, somehow it fixes smatch warning.
+> > > I agree it is not the right fix.
+> > 
+> > Ok, maybe it's just that smatch isn't clever enough with the &= operator.
+> > Dan?
 > 
-> Yeah, probably. We might end up in a funny state (e.g. rejecting some 
-> actions which would otherwise be possible) after doing CSA until we 
-> disconnect.
+> Ugh...  I think it's debugging code that leaked into the wild.  I
+> will remove that.
+>
+Thanks Dan. I'll rerun smatch once you pushed the changes.
 
-I'm not all that worried about that.
-
-> > I guess I'd like to have the CSA stuff addressed, but it seems we
-> > haven't really closed on the best way yet, and I don't want to hold off
-> > your work for it for too long?
-> 
-> If you're okay with that then I'll just send out the [PATCH].
-
-Sounds fine, thanks.
-
-johannes
-
+-Rajkumar
