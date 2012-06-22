@@ -1,450 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21170 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487Ab2FDOzO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59361 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762430Ab2FVRSu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 10:55:14 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.52227.436727.259474@gargle.gargle.HOWL> (sfid-20120604_165523_781338_DEE70CBC)
-Date: Mon, 4 Jun 2012 20:23:55 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/7] ath9k: Use atomic operations
+	Fri, 22 Jun 2012 13:18:50 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 6/6] mac80211: trace debug messages
+Date: Fri, 22 Jun 2012 19:18:45 +0200
+Message-Id: <1340385525-14487-7-git-send-email-johannes@sipsolutions.net> (sfid-20120622_191859_405362_1FAA8C29)
+In-Reply-To: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'sc_flags' variable is being used in a number of places
-with no locking whatsoever. This patch converts the usage
-of sc_flags to atomic ops.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+It can be very useful to have all debug messages
+available when debugging, but hard to correlate
+between different sources, so add a trace event
+for all mac80211 debug messages.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c    |    2 +-
- drivers/net/wireless/ath/ath9k/ath9k.h  |   16 ++++++------
- drivers/net/wireless/ath/ath9k/beacon.c |   18 ++++++-------
- drivers/net/wireless/ath/ath9k/debug.c  |    6 ++---
- drivers/net/wireless/ath/ath9k/link.c   |    4 +--
- drivers/net/wireless/ath/ath9k/main.c   |   42 +++++++++++++++----------------
- drivers/net/wireless/ath/ath9k/pci.c    |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c   |   10 ++++----
- drivers/net/wireless/ath/ath9k/xmit.c   |    2 +-
- 9 files changed, 52 insertions(+), 50 deletions(-)
+ net/mac80211/Kconfig |   13 ++++++++++
+ net/mac80211/debug.h |   18 ++++++++++++++
+ net/mac80211/trace.c |   66 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/trace.h |   39 +++++++++++++++++++++++++++++
+ 4 files changed, 136 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 5e47ca6..4a4e8a2 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -126,7 +126,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	sc->irq = irq;
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 7475e26..63af254 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -107,6 +107,19 @@ config MAC80211_DEBUGFS
  
- 	/* Will be cleared in ath9k_start() */
--	sc->sc_flags |= SC_OP_INVALID;
-+	set_bit(SC_OP_INVALID, &sc->sc_flags);
+ 	  Say N unless you know you need this.
  
- 	ret = request_irq(irq, ath_isr, IRQF_SHARED, "ath9k", sc);
- 	if (ret) {
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 4c2ce45..ae43de1 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -604,12 +604,14 @@ void ath_ant_comb_update(struct ath_softc *sc);
- #define ATH_TXPOWER_MAX         100     /* .5 dBm units */
- #define ATH_RATE_DUMMY_MARKER   0
++config MAC80211_MESSAGE_TRACING
++	bool "Trace all mac80211 debug messages"
++	depends on MAC80211
++	---help---
++	  Select this option to have mac80211 register the
++	  mac80211_msg trace subsystem with tracepoints to
++	  collect all debugging messages, independent of
++	  printing them into the kernel log.
++
++	  The overhead in this option is that all the messages
++	  need to be present in the binary and formatted at
++	  runtime for tracing.
++
+ menuconfig MAC80211_DEBUG_MENU
+ 	bool "Select mac80211 debugging features"
+ 	depends on MAC80211
+diff --git a/net/mac80211/debug.h b/net/mac80211/debug.h
+index dd5b5d0..ea799c3 100644
+--- a/net/mac80211/debug.h
++++ b/net/mac80211/debug.h
+@@ -1,5 +1,6 @@
+ #ifndef __MAC80211_DEBUG_H
+ #define __MAC80211_DEBUG_H
++#include <net/cfg80211.h>
  
--#define SC_OP_INVALID                BIT(0)
--#define SC_OP_BEACONS                BIT(1)
--#define SC_OP_RXFLUSH                BIT(2)
--#define SC_OP_TSF_RESET              BIT(3)
--#define SC_OP_ANI_RUN                BIT(4)
--#define SC_OP_PRIM_STA_VIF           BIT(5)
-+enum sc_op_flags {
-+	SC_OP_INVALID,
-+	SC_OP_BEACONS,
-+	SC_OP_RXFLUSH,
-+	SC_OP_TSF_RESET,
-+	SC_OP_ANI_RUN,
-+	SC_OP_PRIM_STA_VIF,
-+};
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ #define MAC80211_IBSS_DEBUG 1
+@@ -63,7 +64,23 @@
  
- /* Powersave flags */
- #define PS_WAIT_FOR_BEACON        BIT(0)
-@@ -655,9 +657,9 @@ struct ath_softc {
- 	struct completion paprd_complete;
+ #define DEBUG
  
- 	unsigned int hw_busy_count;
-+	unsigned long sc_flags;
++#ifdef CONFIG_MAC80211_MESSAGE_TRACING
++void __sdata_info(const char *fmt, ...) __printf(1, 2);
++void __sdata_dbg(bool print, const char *fmt, ...) __printf(2, 3);
++void __sdata_err(const char *fmt, ...) __printf(1, 2);
++void __wiphy_dbg(struct wiphy *wiphy, bool print, const char *fmt, ...)
++	__printf(3, 4);
++
+ #define _sdata_info(sdata, fmt, ...)					\
++	__sdata_info("%s: " fmt, (sdata)->name, ##__VA_ARGS__)
++#define _sdata_dbg(print, sdata, fmt, ...)				\
++	__sdata_dbg(print, "%s: " fmt, (sdata)->name, ##__VA_ARGS__)
++#define _sdata_err(sdata, fmt, ...)					\
++	__sdata_err("%s: " fmt, (sdata)->name, ##__VA_ARGS__)
++#define _wiphy_dbg(print, wiphy, fmt, ...)				\
++	__wiphy_dbg(wiphy, print, fmt, ##__VA_ARGS__)
++#else
++#define _sdata_info(print, sdata, fmt, ...)				\
+ do {									\
+ 	pr_info("%s: " fmt,						\
+ 		(sdata)->name, ##__VA_ARGS__);				\
+@@ -87,6 +104,7 @@ do {									\
+ 	if (print)							\
+ 		wiphy_dbg((wiphy), fmt, ##__VA_ARGS__);			\
+ } while (0)
++#endif
  
- 	u32 intrstatus;
--	u32 sc_flags; /* SC_OP_* */
- 	u16 ps_flags; /* PS_* */
- 	u16 curtxpow;
- 	bool ps_enabled;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 11bc55e..6afb470 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -387,7 +387,7 @@ void ath_beacon_tasklet(unsigned long data)
- 		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
- 			ath_dbg(common, BSTUCK, "beacon is officially stuck\n");
- 			sc->beacon.bmisscnt = 0;
--			sc->sc_flags |= SC_OP_TSF_RESET;
-+			set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 		}
+ #define sdata_info(sdata, fmt, ...)					\
+ 	_sdata_info(sdata, fmt, ##__VA_ARGS__)
+diff --git a/net/mac80211/trace.c b/net/mac80211/trace.c
+index 943da6e..386e45d 100644
+--- a/net/mac80211/trace.c
++++ b/net/mac80211/trace.c
+@@ -3,7 +3,73 @@
  
-@@ -477,16 +477,16 @@ static void ath9k_beacon_init(struct ath_softc *sc,
- 			      u32 next_beacon,
- 			      u32 beacon_period)
- {
--	if (sc->sc_flags & SC_OP_TSF_RESET) {
-+	if (test_bit(SC_OP_TSF_RESET, &sc->sc_flags)) {
- 		ath9k_ps_wakeup(sc);
- 		ath9k_hw_reset_tsf(sc->sc_ah);
- 	}
+ /* sparse isn't too happy with all macros... */
+ #ifndef __CHECKER__
++#include <net/cfg80211.h>
+ #include "driver-ops.h"
++#include "debug.h"
+ #define CREATE_TRACE_POINTS
+ #include "trace.h"
++
++#ifdef CONFIG_MAC80211_MESSAGE_TRACING
++void __sdata_info(const char *fmt, ...)
++{
++	struct va_format vaf = {
++		.fmt = fmt,
++	};
++	va_list args;
++
++	va_start(args, fmt);
++	vaf.va = &args;
++
++	pr_info("%pV", &vaf);
++	trace_mac80211_info(&vaf);
++	va_end(args);
++}
++
++void __sdata_dbg(bool print, const char *fmt, ...)
++{
++	struct va_format vaf = {
++		.fmt = fmt,
++	};
++	va_list args;
++
++	va_start(args, fmt);
++	vaf.va = &args;
++
++	if (print)
++		pr_debug("%pV", &vaf);
++	trace_mac80211_dbg(&vaf);
++	va_end(args);
++}
++
++void __sdata_err(const char *fmt, ...)
++{
++	struct va_format vaf = {
++		.fmt = fmt,
++	};
++	va_list args;
++
++	va_start(args, fmt);
++	vaf.va = &args;
++
++	pr_err("%pV", &vaf);
++	trace_mac80211_err(&vaf);
++	va_end(args);
++}
++
++void __wiphy_dbg(struct wiphy *wiphy, bool print, const char *fmt, ...)
++{
++	struct va_format vaf = {
++		.fmt = fmt,
++	};
++	va_list args;
++
++	va_start(args, fmt);
++	vaf.va = &args;
++
++	if (print)
++		wiphy_dbg(wiphy, "%pV", &vaf);
++	trace_mac80211_dbg(&vaf);
++	va_end(args);
++}
++#endif
+ #endif
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 392bcc9..2e60f4a 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1632,6 +1632,45 @@ TRACE_EVENT(stop_queue,
+ 		LOCAL_PR_ARG, __entry->queue, __entry->reason
+ 	)
+ );
++
++#ifdef CONFIG_MAC80211_MESSAGE_TRACING
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM mac80211_msg
++
++#define MAX_MSG_LEN	100
++
++DECLARE_EVENT_CLASS(mac80211_msg_event,
++	TP_PROTO(struct va_format *vaf),
++
++	TP_ARGS(vaf),
++
++	TP_STRUCT__entry(
++		__dynamic_array(char, msg, MAX_MSG_LEN)
++	),
++
++	TP_fast_assign(
++		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
++				       MAX_MSG_LEN, vaf->fmt,
++				       *vaf->va) >= MAX_MSG_LEN);
++	),
++
++	TP_printk("%s", __get_str(msg))
++);
++
++DEFINE_EVENT(mac80211_msg_event, mac80211_info,
++	TP_PROTO(struct va_format *vaf),
++	TP_ARGS(vaf)
++);
++DEFINE_EVENT(mac80211_msg_event, mac80211_dbg,
++	TP_PROTO(struct va_format *vaf),
++	TP_ARGS(vaf)
++);
++DEFINE_EVENT(mac80211_msg_event, mac80211_err,
++	TP_PROTO(struct va_format *vaf),
++	TP_ARGS(vaf)
++);
++#endif
++
+ #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
  
- 	ath9k_hw_beaconinit(sc->sc_ah, next_beacon, beacon_period);
- 
--	if (sc->sc_flags & SC_OP_TSF_RESET) {
-+	if (test_bit(SC_OP_TSF_RESET, &sc->sc_flags)) {
- 		ath9k_ps_restore(sc);
--		sc->sc_flags &= ~SC_OP_TSF_RESET;
-+		clear_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 	}
- }
- 
-@@ -516,7 +516,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
- 	/* Set the computed AP beacon timers */
- 
- 	ath9k_hw_disable_interrupts(ah);
--	sc->sc_flags |= SC_OP_TSF_RESET;
-+	set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
- 	ath9k_hw_set_interrupts(ah);
-@@ -659,7 +659,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 	u32 tsf, intval, nexttbtt;
- 
- 	ath9k_reset_beacon_status(sc);
--	if (!(sc->sc_flags & SC_OP_BEACONS))
-+	if (!test_bit(SC_OP_BEACONS, &sc->sc_flags))
- 		ath9k_hw_settsf64(ah, sc->beacon.bc_tstamp);
- 
- 	intval = TU_TO_USEC(conf->beacon_interval);
-@@ -724,7 +724,7 @@ static bool ath9k_allow_beacon_config(struct ath_softc *sc,
- 	 */
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
- 	    (vif->type == NL80211_IFTYPE_STATION) &&
--	    (sc->sc_flags & SC_OP_BEACONS) &&
-+	    test_bit(SC_OP_BEACONS, &sc->sc_flags) &&
- 	    !avp->primary_sta_vif) {
- 		ath_dbg(common, CONFIG,
- 			"Beacon already configured for a station interface\n");
-@@ -810,7 +810,7 @@ void ath_set_beacon(struct ath_softc *sc)
- 		return;
- 	}
- 
--	sc->sc_flags |= SC_OP_BEACONS;
-+	set_bit(SC_OP_BEACONS, &sc->sc_flags);
- }
- 
- void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
-@@ -818,7 +818,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
- 	struct ath_hw *ah = sc->sc_ah;
- 
- 	if (!ath_has_valid_bslot(sc)) {
--		sc->sc_flags &= ~SC_OP_BEACONS;
-+		clear_bit(SC_OP_BEACONS, &sc->sc_flags);
- 		return;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index c134dda..2831258 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -205,10 +205,10 @@ static ssize_t write_file_disable_ani(struct file *file,
- 	common->disable_ani = !!disable_ani;
- 
- 	if (disable_ani) {
--		sc->sc_flags &= ~SC_OP_ANI_RUN;
-+		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 		del_timer_sync(&common->ani.timer);
- 	} else {
--		sc->sc_flags |= SC_OP_ANI_RUN;
-+		set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 		ath_start_ani(common);
- 	}
- 
-@@ -1321,7 +1321,7 @@ static int open_file_bb_mac_samps(struct inode *inode, struct file *file)
- 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
- 	u8 nread;
- 
--	if (sc->sc_flags & SC_OP_INVALID)
-+	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
- 		return -EAGAIN;
- 
- 	buf = vmalloc(size);
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 89b38a9..0cc4c70 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -155,7 +155,7 @@ void ath_start_rx_poll(struct ath_softc *sc, u8 nbeacon)
- 	if (!AR_SREV_9300(sc->sc_ah))
- 		return;
- 
--	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF))
-+	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
- 		return;
- 
- 	mod_timer(&sc->rx_poll_timer, jiffies + msecs_to_jiffies
-@@ -430,7 +430,7 @@ void ath_start_ani(struct ath_common *common)
- 	unsigned long timestamp = jiffies_to_msecs(jiffies);
- 	struct ath_softc *sc = (struct ath_softc *) common->priv;
- 
--	if (!(sc->sc_flags & SC_OP_ANI_RUN))
-+	if (!test_bit(SC_OP_ANI_RUN, &sc->sc_flags))
- 		return;
- 
- 	if (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0471c4b..86bfea9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -222,7 +222,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	ath9k_hw_enable_interrupts(ah);
- 
- 	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) && start) {
--		if (sc->sc_flags & SC_OP_BEACONS)
-+		if (test_bit(SC_OP_BEACONS, &sc->sc_flags))
- 			ath_set_beacon(sc);
- 
- 		ath_restart_work(sc);
-@@ -293,7 +293,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- {
- 	int r;
- 
--	if (sc->sc_flags & SC_OP_INVALID)
-+	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
- 		return -EIO;
- 
- 	r = ath_reset_internal(sc, hchan, false);
-@@ -435,7 +435,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	 * touch anything. Note this can happen early
- 	 * on if the IRQ is shared.
- 	 */
--	if (sc->sc_flags & SC_OP_INVALID)
-+	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
- 		return IRQ_NONE;
- 
- 
-@@ -635,7 +635,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	ath_mci_enable(sc);
- 
--	sc->sc_flags &= ~SC_OP_INVALID;
-+	clear_bit(SC_OP_INVALID, &sc->sc_flags);
- 	sc->sc_ah->is_monitoring = false;
- 
- 	if (!ath_complete_reset(sc, false)) {
-@@ -754,7 +754,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	ath_cancel_work(sc);
- 	del_timer_sync(&sc->rx_poll_timer);
- 
--	if (sc->sc_flags & SC_OP_INVALID) {
-+	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
- 		ath_dbg(common, ANY, "Device not present\n");
- 		mutex_unlock(&sc->mutex);
- 		return;
-@@ -811,7 +811,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	ath9k_ps_restore(sc);
- 
--	sc->sc_flags |= SC_OP_INVALID;
-+	set_bit(SC_OP_INVALID, &sc->sc_flags);
- 	sc->ps_idle = prev_idle;
- 
- 	mutex_unlock(&sc->mutex);
-@@ -915,11 +915,11 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 	/* Set op-mode & TSF */
- 	if (iter_data.naps > 0) {
- 		ath9k_hw_set_tsfadjust(ah, 1);
--		sc->sc_flags |= SC_OP_TSF_RESET;
-+		set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 		ah->opmode = NL80211_IFTYPE_AP;
- 	} else {
- 		ath9k_hw_set_tsfadjust(ah, 0);
--		sc->sc_flags &= ~SC_OP_TSF_RESET;
-+		clear_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 
- 		if (iter_data.nmeshes)
- 			ah->opmode = NL80211_IFTYPE_MESH_POINT;
-@@ -950,12 +950,12 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
- 
- 		if (!common->disable_ani) {
--			sc->sc_flags |= SC_OP_ANI_RUN;
-+			set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 			ath_start_ani(common);
- 		}
- 
- 	} else {
--		sc->sc_flags &= ~SC_OP_ANI_RUN;
-+		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 		del_timer_sync(&common->ani.timer);
- 	}
- }
-@@ -1479,11 +1479,11 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	 * Skip iteration if primary station vif's bss info
- 	 * was not changed
- 	 */
--	if (sc->sc_flags & SC_OP_PRIM_STA_VIF)
-+	if (test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
- 		return;
- 
- 	if (bss_conf->assoc) {
--		sc->sc_flags |= SC_OP_PRIM_STA_VIF;
-+		set_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
- 		avp->primary_sta_vif = true;
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
- 		common->curaid = bss_conf->aid;
-@@ -1504,7 +1504,7 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 		ath_start_rx_poll(sc, 3);
- 
- 		if (!common->disable_ani) {
--			sc->sc_flags |= SC_OP_ANI_RUN;
-+			set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 			ath_start_ani(common);
- 		}
- 
-@@ -1524,7 +1524,8 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	if (avp->primary_sta_vif && !bss_conf->assoc) {
- 		ath_dbg(common, CONFIG, "Bss Info DISASSOC %d, bssid %pM\n",
- 			common->curaid, common->curbssid);
--		sc->sc_flags &= ~(SC_OP_PRIM_STA_VIF | SC_OP_BEACONS);
-+		clear_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
-+		clear_bit(SC_OP_BEACONS, &sc->sc_flags);
- 		avp->primary_sta_vif = false;
- 		memset(common->curbssid, 0, ETH_ALEN);
- 		common->curaid = 0;
-@@ -1537,10 +1538,9 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	 * None of station vifs are associated.
- 	 * Clear bssid & aid
- 	 */
--	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF)) {
-+	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
- 		ath9k_hw_write_associd(sc->sc_ah);
--		/* Stop ANI */
--		sc->sc_flags &= ~SC_OP_ANI_RUN;
-+		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 		del_timer_sync(&common->ani.timer);
- 		del_timer_sync(&sc->rx_poll_timer);
- 		memset(&sc->caldata, 0, sizeof(sc->caldata));
-@@ -1578,12 +1578,12 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
- 
- 			if (!common->disable_ani) {
--				sc->sc_flags |= SC_OP_ANI_RUN;
-+				set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 				ath_start_ani(common);
- 			}
- 
- 		} else {
--			sc->sc_flags &= ~SC_OP_ANI_RUN;
-+			clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 			del_timer_sync(&common->ani.timer);
- 			del_timer_sync(&sc->rx_poll_timer);
- 		}
-@@ -1595,7 +1595,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	 */
- 	if ((changed & BSS_CHANGED_BEACON_INT) &&
- 	    (vif->type == NL80211_IFTYPE_AP))
--		sc->sc_flags |= SC_OP_TSF_RESET;
-+		set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 
- 	/* Configure beaconing (AP, IBSS, MESH) */
- 	if (ath9k_uses_beacons(vif->type) &&
-@@ -1787,7 +1787,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
- 		return;
- 	}
- 
--	if (sc->sc_flags & SC_OP_INVALID) {
-+	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
- 		ath_dbg(common, ANY, "Device not present\n");
- 		mutex_unlock(&sc->mutex);
- 		return;
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 6ec9f88..aa0e83a 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -251,7 +251,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->mem = mem;
- 
- 	/* Will be cleared in ath9k_start() */
--	sc->sc_flags |= SC_OP_INVALID;
-+	set_bit(SC_OP_INVALID, &sc->sc_flags);
- 
- 	ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
- 	if (ret) {
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b45256e..3ac52c5 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -285,8 +285,8 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	int error = 0;
- 
- 	spin_lock_init(&sc->sc_pcu_lock);
--	sc->sc_flags &= ~SC_OP_RXFLUSH;
- 	spin_lock_init(&sc->rx.rxbuflock);
-+	clear_bit(SC_OP_RXFLUSH, &sc->sc_flags);
- 
- 	common->rx_bufsize = IEEE80211_MAX_MPDU_LEN / 2 +
- 			     sc->sc_ah->caps.rx_status_len;
-@@ -498,11 +498,11 @@ bool ath_stoprecv(struct ath_softc *sc)
- 
- void ath_flushrecv(struct ath_softc *sc)
- {
--	sc->sc_flags |= SC_OP_RXFLUSH;
-+	set_bit(SC_OP_RXFLUSH, &sc->sc_flags);
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		ath_rx_tasklet(sc, 1, true);
- 	ath_rx_tasklet(sc, 1, false);
--	sc->sc_flags &= ~SC_OP_RXFLUSH;
-+	clear_bit(SC_OP_RXFLUSH, &sc->sc_flags);
- }
- 
- static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
-@@ -1063,7 +1063,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 
- 	do {
- 		/* If handling rx interrupt and flush is in progress => exit */
--		if ((sc->sc_flags & SC_OP_RXFLUSH) && (flush == 0))
-+		if (test_bit(SC_OP_RXFLUSH, &sc->sc_flags) && (flush == 0))
- 			break;
- 
- 		memset(&rs, 0, sizeof(rs));
-@@ -1108,7 +1108,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		 * If we're asked to flush receive queue, directly
- 		 * chain it back at the queue without processing it.
- 		 */
--		if (sc->sc_flags & SC_OP_RXFLUSH) {
-+		if (test_bit(SC_OP_RXFLUSH, &sc->sc_flags)) {
- 			RX_STAT_INC(rx_drop_rxflush);
- 			goto requeue_drop_frag;
- 		}
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 6619a39..bb74780 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1536,7 +1536,7 @@ bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 	int i;
- 	u32 npend = 0;
- 
--	if (sc->sc_flags & SC_OP_INVALID)
-+	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
- 		return true;
- 
- 	ath9k_hw_abort_tx_dma(ah);
+ #undef TRACE_INCLUDE_PATH
 -- 
-1.7.10.3
+1.7.10
 
