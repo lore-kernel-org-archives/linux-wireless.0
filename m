@@ -1,157 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41310 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 09:25:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:48650 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932866Ab2FVNOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 09:14:48 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com
-Subject: [PATCH 7/9] ath9k: remove MIB interrupt support
-Date: Fri, 15 Jun 2012 15:25:25 +0200
-Message-Id: <1339766727-61926-7-git-send-email-nbd@openwrt.org> (sfid-20120615_152541_991251_64665C3F)
-In-Reply-To: <1339766727-61926-6-git-send-email-nbd@openwrt.org>
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
- <1339766727-61926-2-git-send-email-nbd@openwrt.org>
- <1339766727-61926-3-git-send-email-nbd@openwrt.org>
- <1339766727-61926-4-git-send-email-nbd@openwrt.org>
- <1339766727-61926-5-git-send-email-nbd@openwrt.org>
- <1339766727-61926-6-git-send-email-nbd@openwrt.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/6] mac80211: pass sdata to some RX functions
+Date: Fri, 22 Jun 2012 15:14:39 +0200
+Message-Id: <1340370882-9258-4-git-send-email-johannes@sipsolutions.net> (sfid-20120622_151452_567059_A93D0478)
+In-Reply-To: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
+References: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new ANI implementation does not need it
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+For better debugging, we would like to have
+the sdata pointer available later, so pass
+it into these functions.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c   |   40 --------------------------------
- drivers/net/wireless/ath/ath9k/debug.c |    2 -
- drivers/net/wireless/ath/ath9k/hw.h    |    1 -
- drivers/net/wireless/ath/ath9k/main.c  |   26 +-------------------
- 4 files changed, 2 insertions(+), 67 deletions(-)
+ net/mac80211/rx.c |   33 ++++++++++++++++-----------------
+ 1 file changed, 16 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 7d53676..da73fa2 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -490,46 +490,6 @@ void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 446a327..9f1bd69 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -554,11 +554,11 @@ static inline u16 seq_sub(u16 sq1, u16 sq2)
  }
- EXPORT_SYMBOL(ath9k_hw_disable_mib_counters);
  
--/*
-- * Process a MIB interrupt.  We may potentially be invoked because
-- * any of the MIB counters overflow/trigger so don't assume we're
-- * here because a PHY error counter triggered.
-- */
--void ath9k_hw_proc_mib_event(struct ath_hw *ah)
--{
--	u32 phyCnt1, phyCnt2;
--
--	/* Reset these counters regardless */
--	REG_WRITE(ah, AR_FILT_OFDM, 0);
--	REG_WRITE(ah, AR_FILT_CCK, 0);
--	if (!(REG_READ(ah, AR_SLP_MIB_CTRL) & AR_SLP_MIB_PENDING))
--		REG_WRITE(ah, AR_SLP_MIB_CTRL, AR_SLP_MIB_CLEAR);
--
--	/* Clear the mib counters and save them in the stats */
--	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
--
--	if (!DO_ANI(ah)) {
--		/*
--		 * We must always clear the interrupt cause by
--		 * resetting the phy error regs.
--		 */
--		REG_WRITE(ah, AR_PHY_ERR_1, 0);
--		REG_WRITE(ah, AR_PHY_ERR_2, 0);
--		return;
--	}
--
--	/* NB: these are not reset-on-read */
--	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
--	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
--	if (((phyCnt1 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK) ||
--	    ((phyCnt2 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK)) {
--
--		/* NB: always restart to insure the h/w counters are reset */
--		ath9k_ani_restart(ah);
--	}
--}
--EXPORT_SYMBOL(ath9k_hw_proc_mib_event);
--
- void ath9k_hw_ani_setup(struct ath_hw *ah)
+ 
+-static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
++static void ieee80211_release_reorder_frame(struct ieee80211_sub_if_data *sdata,
+ 					    struct tid_ampdu_rx *tid_agg_rx,
+ 					    int index)
  {
- 	int i;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 2831258..5c3192f 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -348,8 +348,6 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
- 		sc->debug.stats.istats.txok++;
- 	if (status & ATH9K_INT_TXURN)
- 		sc->debug.stats.istats.txurn++;
--	if (status & ATH9K_INT_MIB)
--		sc->debug.stats.istats.mib++;
- 	if (status & ATH9K_INT_RXPHY)
- 		sc->debug.stats.istats.rxphyerr++;
- 	if (status & ATH9K_INT_RXKCM)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 111a046..b49e4b4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1021,7 +1021,6 @@ void ar9003_hw_attach_ops(struct ath_hw *ah);
- void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
+-	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
+ 	struct ieee80211_rx_status *status;
  
- void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
--void ath9k_hw_proc_mib_event(struct ath_hw *ah);
- void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+@@ -578,7 +578,7 @@ no_frame:
+ 	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
+ }
  
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a113489..80a2f16 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -513,24 +513,6 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		ath9k_hw_set_interrupts(ah);
+-static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
++static void ieee80211_release_reorder_frames(struct ieee80211_sub_if_data *sdata,
+ 					     struct tid_ampdu_rx *tid_agg_rx,
+ 					     u16 head_seq_num)
+ {
+@@ -589,7 +589,7 @@ static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
+ 	while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
+ 		index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+ 							tid_agg_rx->buf_size;
+-		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
++		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index);
+ 	}
+ }
+ 
+@@ -604,7 +604,7 @@ static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
+  */
+ #define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
+ 
+-static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
++static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
+ 					  struct tid_ampdu_rx *tid_agg_rx)
+ {
+ 	int index, j;
+@@ -634,10 +634,10 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
+ 
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 			if (net_ratelimit())
+-				wiphy_debug(hw->wiphy,
++				wiphy_debug(sdata->local->hw.wiphy,
+ 					    "release an RX reorder frame due to timeout on earlier frames\n");
+ #endif
+-			ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
++			ieee80211_release_reorder_frame(sdata, tid_agg_rx, j);
+ 
+ 			/*
+ 			 * Increment the head seq# also for the skipped slots.
+@@ -647,7 +647,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
+ 			skipped = 0;
+ 		}
+ 	} else while (tid_agg_rx->reorder_buf[index]) {
+-		ieee80211_release_reorder_frame(hw, tid_agg_rx, index);
++		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index);
+ 		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+ 							tid_agg_rx->buf_size;
+ 	}
+@@ -677,7 +677,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
+  * rcu_read_lock protection. It returns false if the frame
+  * can be processed immediately, true if it was consumed.
+  */
+-static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
++static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata,
+ 					     struct tid_ampdu_rx *tid_agg_rx,
+ 					     struct sk_buff *skb)
+ {
+@@ -706,7 +706,8 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 	if (!seq_less(mpdu_seq_num, head_seq_num + buf_size)) {
+ 		head_seq_num = seq_inc(seq_sub(mpdu_seq_num, buf_size));
+ 		/* release stored frames up to new head to stack */
+-		ieee80211_release_reorder_frames(hw, tid_agg_rx, head_seq_num);
++		ieee80211_release_reorder_frames(sdata, tid_agg_rx,
++						 head_seq_num);
  	}
  
--	if (status & ATH9K_INT_MIB) {
--		/*
--		 * Disable interrupts until we service the MIB
--		 * interrupt; otherwise it will continue to
--		 * fire.
--		 */
--		ath9k_hw_disable_interrupts(ah);
--		/*
--		 * Let the hal handle the event. We assume
--		 * it will clear whatever condition caused
--		 * the interrupt.
--		 */
--		spin_lock(&common->cc_lock);
--		ath9k_hw_proc_mib_event(ah);
--		spin_unlock(&common->cc_lock);
--		ath9k_hw_enable_interrupts(ah);
--	}
--
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
- 		if (status & ATH9K_INT_TIM_TIMER) {
- 			if (ATH_DBG_WARN_ON_ONCE(sc->ps_idle))
-@@ -956,14 +938,10 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 	/*
- 	 * Enable MIB interrupts when there are hardware phy counters.
+ 	/* Now the new frame is always in the range of the reordering buffer */
+@@ -736,7 +737,7 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 	tid_agg_rx->reorder_buf[index] = skb;
+ 	tid_agg_rx->reorder_time[index] = jiffies;
+ 	tid_agg_rx->stored_mpdu_num++;
+-	ieee80211_sta_reorder_release(hw, tid_agg_rx);
++	ieee80211_sta_reorder_release(sdata, tid_agg_rx);
+ 
+  out:
+ 	spin_unlock(&tid_agg_rx->reorder_lock);
+@@ -751,7 +752,6 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ {
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_local *local = rx->local;
+-	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct sta_info *sta = rx->sta;
+@@ -813,7 +813,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 	 * sure that we cannot get to it any more before doing
+ 	 * anything with it.
  	 */
--	if ((iter_data.nstations + iter_data.nadhocs + iter_data.nmeshes) > 0) {
--		if (ah->config.enable_ani)
--			ah->imask |= ATH9K_INT_MIB;
-+	if ((iter_data.nstations + iter_data.nadhocs + iter_data.nmeshes) > 0)
- 		ah->imask |= ATH9K_INT_TSFOOR;
--	} else {
--		ah->imask &= ~ATH9K_INT_MIB;
-+	else
- 		ah->imask &= ~ATH9K_INT_TSFOOR;
--	}
+-	if (ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb))
++	if (ieee80211_sta_manage_reorder_buf(rx->sdata, tid_agg_rx, skb))
+ 		return;
  
- 	ath9k_hw_set_interrupts(ah);
+  dont_reorder:
+@@ -2058,8 +2058,6 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
+ {
+-	struct ieee80211_local *local = rx->local;
+-	struct ieee80211_hw *hw = &local->hw;
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_bar *bar = (struct ieee80211_bar *)skb->data;
+ 	struct tid_ampdu_rx *tid_agg_rx;
+@@ -2096,7 +2094,8 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
  
+ 		spin_lock(&tid_agg_rx->reorder_lock);
+ 		/* release stored frames up to start of BAR */
+-		ieee80211_release_reorder_frames(hw, tid_agg_rx, start_seq_num);
++		ieee80211_release_reorder_frames(rx->sdata, tid_agg_rx,
++						 start_seq_num);
+ 		spin_unlock(&tid_agg_rx->reorder_lock);
+ 
+ 		kfree_skb(skb);
+@@ -2747,7 +2746,7 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ 		return;
+ 
+ 	spin_lock(&tid_agg_rx->reorder_lock);
+-	ieee80211_sta_reorder_release(&sta->local->hw, tid_agg_rx);
++	ieee80211_sta_reorder_release(sta->sdata, tid_agg_rx);
+ 	spin_unlock(&tid_agg_rx->reorder_lock);
+ 
+ 	ieee80211_rx_handlers(&rx);
 -- 
-1.7.3.2
+1.7.10
 
