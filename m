@@ -1,77 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:53998 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463Ab2FEQm6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 12:42:58 -0400
-Received: by obbtb18 with SMTP id tb18so8972464obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 09:42:57 -0700 (PDT)
+Received: from narfation.org ([79.140.41.39]:54940 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758199Ab2FVLK1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 07:10:27 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [RFC] ath9k: raise aggregation limit to 64k for HT IBSS
+Date: Fri, 22 Jun 2012 13:10:24 +0200
+Message-ID: <20010825.m5IpWLuaVf@bentobox> (sfid-20120622_131031_021054_B6F55155)
+In-Reply-To: <20120622105214.GC7934@vmraj-lnx.users.atheros.com>
+References: <1340355904-861-1-git-send-email-sven@narfation.org> <20120622105214.GC7934@vmraj-lnx.users.atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPjQAd_BcCDQiGNMa3uP+dgTwLhBmFRERSR6uqp227JWAOZc0g@mail.gmail.com>
-References: <1338877544-12827-1-git-send-email-qasimj@gmail.com> <CAPjQAd_BcCDQiGNMa3uP+dgTwLhBmFRERSR6uqp227JWAOZc0g@mail.gmail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 5 Jun 2012 09:42:37 -0700
-Message-ID: <CAPjQAd9MDk3noOH0ivH3=4Y6X_Mk4oMmttJEm40Rn2KDDQA2pw@mail.gmail.com> (sfid-20120605_184301_728203_F7504A69)
-Subject: Re: [PATCH] mac80211_hwsim: Set IEEE80211_STAT_ACK flag when
- userspace indicates that the frame has been acknowledged.
-To: Qasim Javed <qasimj@gmail.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Javier Lopez <jlopex@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; boundary="nextPart1906625.lHI2Y6nIbH"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Qasim,
 
-While reviewing your patch I also noticed that the flags
-HWSIM_TX_CTL_NO_ACK and HWSIM_TX_CTL_REQ_TX_STATUS are not converted
-back to IEEE80211_TX_CTL_NO_ACK and IEEE80211_TX_CTL_REQ_TX_STATUS on
-frames received from userspace.  Do you think that might affect rate
-adaptation or the failed average?
+--nextPart1906625.lHI2Y6nIbH
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Cheers,
+On Friday 22 June 2012 16:22:16 Rajkumar Manoharan wrote:
+> > +	/* update ampdu factor/density, they may have changed. This may happen
+> > +	 * in HT IBSS when a beacon with HT-info is received after the station
+> > +	 * has already been added.
+> > +	 */
+> > +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+> > +		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
+> > +				     sta->ht_cap.ampdu_factor);
+> > +		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
+> > +		an->mpdudensity = density;
+> > +	}
+> > +
+> 
+> No need to declare local variable. ins't it?
 
-Javier
+You want more than 80 chars per line or ugly/complex code...?
 
+Kind regards,
+	Sven
+--nextPart1906625.lHI2Y6nIbH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-On Tue, Jun 5, 2012 at 9:39 AM, Javier Cardona <javier@cozybit.com> wrote:
-> On Mon, Jun 4, 2012 at 11:25 PM, Qasim Javed <qasimj@gmail.com> wrote:
->> The station fail average is not updated correctly since the IEEE80211_STAT_ACK flag is not set when using wmediumd with mac80211_hwsim. Set this flag when wmediumd indicates that the frame was successfully transmitted (eventually).
->>
->> Signed-off-by: Qasim Javed <qasimj@gmail.com>
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
->
->> ---
->>  drivers/net/wireless/mac80211_hwsim.c |    1 +
->>  1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
->> index 4c9336c..a0b7cfd 100644
->> --- a/drivers/net/wireless/mac80211_hwsim.c
->> +++ b/drivers/net/wireless/mac80211_hwsim.c
->> @@ -1555,6 +1555,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
->>                        hdr = (struct ieee80211_hdr *) skb->data;
->>                        mac80211_hwsim_monitor_ack(data2->hw, hdr->addr2);
->>                }
->> +               txi->flags |= IEEE80211_TX_STAT_ACK;
->>        }
->>        ieee80211_tx_status_irqsafe(data2->hw, skb);
->>        return 0;
->> --
->> 1.7.1
->>
->
->
->
-> --
-> Javier Cardona
-> cozybit Inc.
-> http://www.cozybit.com
+iQIcBAABCgAGBQJP5FKgAAoJEF2HCgfBJntGgSwP/iOecfEF2tVwd+SM0F0LBvMS
+T1TIwT6hiZ02Nnc8lksglpqD95z23sOqpebFWiBFeruuCycBQLDwc49lb74hEFba
+0q8S3Ahij5x92cNvhG/3eIug/4OcJy5pOBV2tLlbu6Ju98YIP71rxJ0KWdKvjhLq
+H8tSfGnmVGhjYyvdEwrNOZD1V2SReC1tyFMLhuFSro3TrjcKX/DF8CzRF/WQYktY
+VR/hTMZn8vPK7iI/1gckFHx03MN1Kj+tPsNrGKiXNcNeFAfJmfjU22WZumvSBJaf
+XuCSdtZytxrFicmy9WMY/L3QjdIM4q51c3xlqU1n4Y5B2ODfj9oXj2XY6tfdHiM6
+UJoLMaroAtQDJ0WgXe8lU/qiyJUmQPdUtQb6zqOWLU+ofQlYIdCPBx8yLIXiXhw9
+8nlM42AvUtH7jxowKJIBI2qCRp0wgjDCHH7oSzhffx51GPeDs6YBIpO9hasSQLBF
+u0Lv/Hzda9lijrSMFvfhF+pcgNICkZKc4Wv0gP8iALx6iEE1H3fEp25fr79+8rNW
+G2z69pORX4IaYhs07hoMzQJR85jrdLqMC0uJR94zu4HowgJNhErflvFfKLePkKq9
+tHTI4IEdvsKzFFpFLYTMxzcoMTBRNe05jYgQ4/iCVYx5aSE4rTifMEJ21L6qSmYi
+sf9LuLSxcbQf/H4ff3Ga
+=gRW0
+-----END PGP SIGNATURE-----
 
+--nextPart1906625.lHI2Y6nIbH--
 
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
