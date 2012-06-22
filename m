@@ -1,149 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:57715 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756787Ab2FGUjw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 16:39:52 -0400
-Received: by lahg1 with SMTP id g1so1633395lah.16
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 13:39:49 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+Received: from narfation.org ([79.140.41.39]:59307 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761841Ab2FVJPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 05:15:36 -0400
+From: Sven Eckelmann <sven@narfation.org>
 To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Subject: [PATCH 8/9] wlcore/wl18xx: export conf struct in a debugfs file
-Date: Thu,  7 Jun 2012 23:39:27 +0300
-Message-Id: <1339101568-25346-9-git-send-email-coelho@ti.com> (sfid-20120607_224004_296788_43553B0E)
-In-Reply-To: <1339101568-25346-1-git-send-email-coelho@ti.com>
-References: <1339101568-25346-1-git-send-email-coelho@ti.com>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	Sven Eckelmann <sven@narfation.org>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [RFC] ath9k: raise aggregation limit to 64k for HT IBSS
+Date: Fri, 22 Jun 2012 11:05:04 +0200
+Message-Id: <1340355904-861-1-git-send-email-sven@narfation.org> (sfid-20120622_111540_582306_C9366A41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add conf file header structure, magic and version values and export
-the entire conf struct in debugfs.
+mac80211 adds stations in HT IBSS as soon as a frame comes by,
+even if the HT capabilities are not known yet (they are often
+received later, e.g. in beacons). So far, ampdu factor/density
+are only calculated when the station is initially added.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+This patch changes this to update ampdu factor/density settings
+when starting a blockack session.
+
+Using this patch, we had performance boosts from 60 to 150 MBit/s
+between two 2x2 Atheros devices in 5 GHz HT IBSS mode.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 ---
- drivers/net/wireless/ti/wl18xx/conf.h    |    6 ++++
- drivers/net/wireless/ti/wl18xx/debugfs.c |   44 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/conf.h    |   22 +++++++++++++++
- 3 files changed, 72 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/main.c  |    6 ++++--
+ drivers/net/wireless/ath/ath9k/xmit.c  |   12 ++++++++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/conf.h b/drivers/net/wireless/ti/wl18xx/conf.h
-index b75a6d3..130546a 100644
---- a/drivers/net/wireless/ti/wl18xx/conf.h
-+++ b/drivers/net/wireless/ti/wl18xx/conf.h
-@@ -22,6 +22,12 @@
- #ifndef __WL18XX_CONF_H__
- #define __WL18XX_CONF_H__
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f72c4a3..fe39eb4 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -722,6 +722,7 @@ extern int ath9k_modparam_nohwcrypt;
+ extern int led_blink;
+ extern bool is_ath9k_unloaded;
  
-+#define WL18XX_CONF_MAGIC	0x10e100ca
-+#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0001)
-+#define WL18XX_CONF_MASK	0x0000ffff
-+#define WL18XX_CONF_SIZE	(WLCORE_CONF_SIZE + \
-+				 sizeof(struct wl18xx_priv_conf))
-+
- struct wl18xx_conf_phy {
- 	u8 phy_standalone;
- 	u8 rdl;
-diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
-index 468651c..96b1496 100644
---- a/drivers/net/wireless/ti/wl18xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
-@@ -158,6 +158,48 @@ WL18XX_DEBUGFS_FWSTATS_FILE(mem, tx_free_mem_blks, "%u");
- WL18XX_DEBUGFS_FWSTATS_FILE(mem, fwlog_free_mem_blks, "%u");
- WL18XX_DEBUGFS_FWSTATS_FILE(mem, fw_gen_free_mem_blks, "%u");
++u8 ath9k_parse_mpdudensity(u8 mpdudensity);
+ irqreturn_t ath_isr(int irq, void *dev);
+ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		    const struct ath_bus_ops *bus_ops);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 85f9ab4..e2e6958 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -19,7 +19,7 @@
+ #include "ath9k.h"
+ #include "btcoex.h"
  
-+static ssize_t conf_read(struct file *file, char __user *user_buf,
-+			 size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	struct wl18xx_priv *priv = wl->priv;
-+	struct wlcore_conf_header header;
-+	char *buf, *pos;
-+	size_t len;
-+	int ret;
-+
-+	len = WL18XX_CONF_SIZE;
-+	buf = kmalloc(len, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	header.magic	= cpu_to_le32(WL18XX_CONF_MAGIC);
-+	header.version	= cpu_to_le32(WL18XX_CONF_VERSION);
-+	header.checksum	= 0;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	pos = buf;
-+	memcpy(pos, &header, sizeof(header));
-+	pos += sizeof(header);
-+	memcpy(pos, &wl->conf, sizeof(wl->conf));
-+	pos += sizeof(wl->conf);
-+	memcpy(pos, &priv->conf, sizeof(priv->conf));
-+
-+	mutex_unlock(&wl->mutex);
-+
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+
-+	kfree(buf);
-+	return ret;
-+}
-+
-+static const struct file_operations conf_ops = {
-+	.read = conf_read,
-+	.open = simple_open,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t clear_fw_stats_write(struct file *file,
- 			      const char __user *user_buf,
- 			      size_t count, loff_t *ppos)
-@@ -327,6 +369,8 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_FWSTATS_ADD(mem, fwlog_free_mem_blks);
- 	DEBUGFS_FWSTATS_ADD(mem, fw_gen_free_mem_blks);
+-static u8 parse_mpdudensity(u8 mpdudensity)
++u8 ath9k_parse_mpdudensity(u8 mpdudensity)
+ {
+ 	/*
+ 	 * 802.11n D2.0 defined values for "Minimum MPDU Start Spacing":
+@@ -320,6 +320,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 			    struct ieee80211_vif *vif)
+ {
+ 	struct ath_node *an;
++	u8 density;
+ 	an = (struct ath_node *)sta->drv_priv;
  
-+	DEBUGFS_ADD(conf, moddir);
-+
- 	return 0;
+ #ifdef CONFIG_ATH9K_DEBUGFS
+@@ -334,7 +335,8 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 		ath_tx_node_init(sc, an);
+ 		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
+ 				     sta->ht_cap.ampdu_factor);
+-		an->mpdudensity = parse_mpdudensity(sta->ht_cap.ampdu_density);
++		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
++		an->mpdudensity = density;
+ 	}
+ }
  
- err:
-diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-index 27d919f..03c6358 100644
---- a/drivers/net/wireless/ti/wlcore/conf.h
-+++ b/drivers/net/wireless/ti/wlcore/conf.h
-@@ -1271,6 +1271,22 @@ struct conf_hangover_settings {
- 	u8 window_size;
- } __packed;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 8d83060..cafb4a0 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1165,6 +1165,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ {
+ 	struct ath_atx_tid *txtid;
+ 	struct ath_node *an;
++	u8 density;
  
-+/*
-+ * The conf version consists of 4 bytes.  The two MSB are the wlcore
-+ * version, the two LSB are the lower driver's private conf
-+ * version.
-+ */
-+#define WLCORE_CONF_VERSION	(0x0001 << 16)
-+#define WLCORE_CONF_MASK	0xffff0000
-+#define WLCORE_CONF_SIZE	(sizeof(struct wlcore_conf_header) +	\
-+				 sizeof(struct wlcore_conf))
-+
-+struct wlcore_conf_header {
-+	__le32 magic;
-+	__le32 version;
-+	__le32 checksum;
-+} __packed;
-+
- struct wlcore_conf {
- 	struct conf_sg_settings sg;
- 	struct conf_rx_settings rx;
-@@ -1290,4 +1306,10 @@ struct wlcore_conf {
- 	struct conf_hangover_settings hangover;
- } __packed;
+ 	an = (struct ath_node *)sta->drv_priv;
+ 	txtid = ATH_AN_2_TID(an, tid);
+@@ -1172,6 +1173,17 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
+ 		return -EAGAIN;
  
-+struct wlcore_conf_file {
-+	struct wlcore_conf_header header;
-+	struct wlcore_conf core;
-+	u8 priv[0];
-+} __packed;
++	/* update ampdu factor/density, they may have changed. This may happen
++	 * in HT IBSS when a beacon with HT-info is received after the station
++	 * has already been added.
++	 */
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
++		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
++				     sta->ht_cap.ampdu_factor);
++		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
++		an->mpdudensity = density;
++	}
 +
- #endif
+ 	txtid->state |= AGGR_ADDBA_PROGRESS;
+ 	txtid->paused = true;
+ 	*ssn = txtid->seq_start = txtid->seq_next;
 -- 
 1.7.10
 
