@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:46726 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754947Ab2FFITs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:19:48 -0400
-Received: by laai10 with SMTP id i10so5624360laa.13
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:19:45 -0700 (PDT)
-Message-ID: <1338970783.7078.5.camel@cumari.coelho.fi> (sfid-20120606_101954_705558_F55B04EC)
-Subject: Re: [PATCH] wl18xx: fix fm_coex parameters configuration
-From: Luciano Coelho <coelho@ti.com>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com
-Date: Wed, 06 Jun 2012 11:19:43 +0300
-In-Reply-To: <1337091340-24800-1-git-send-email-victorg@ti.com>
-References: <1337091340-24800-1-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:38285
+	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761695Ab2FVKLd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 06:11:33 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] cfg80211/mac80211: 802.11ac changes
+Date: Fri, 22 Jun 2012 10:11:31 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E80@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120622_121745_149314_CE99E1FB)
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local>,<1340353030.4491.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340353030.4491.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-15 at 17:15 +0300, Victor Goldenshtein wrote:
-> Wrong fm_coex parameters were set during wl18xx
-> init phase, fix it.
-> 
-> Signed-off-by: Ziv Riesel <zivriesel@ti.com>
-> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-> ---
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Friday, June 22, 2012 1:47 PM
+To: Mahesh Palivela
+Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211/mac80211: 802.11ac changes
 
-Applied and pushed.
+On Fri, 2012-06-22 at 07:27 +0000, Mahesh Palivela wrote:
+> 11ac changes to push VHT cap through NL layer.
+> ieee structs, constants for 11ac.
+> VHT cap IE in ProbeReq.
 
---
-Luca.
+Thanks. I will probably rewrite this commit log though ...
 
+Since this is clearly not everything that's needed, what are your plans
+for doing the other needed things?
+
+ * assoc handling
+ * VHT BSS selector
+ * VHT station capability handling
+
+etc?
+
+johannes
+
+I am working on them Johannes. Assoc is the next item....
+
+Thanks,
+Mahesh
