@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:56394 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754313Ab2FNLmz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57168 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758634Ab2FVJVM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 07:42:55 -0400
-Received: by obbtb18 with SMTP id tb18so2304972obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 04:42:55 -0700 (PDT)
+	Fri, 22 Jun 2012 05:21:12 -0400
+Date: Fri, 22 Jun 2012 14:52:28 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@adurom.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<dan.carpenter@oracle.com>
+Subject: Re: [PATCH 2/3] ath9k_hw: fix smatch warnings in spur_mitigate
+Message-ID: <20120622092226.GA7934@vmraj-lnx.users.atheros.com> (sfid-20120622_112118_681469_AD92A0B6)
+References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1340303492-30947-3-git-send-email-rmanohar@qca.qualcomm.com>
+ <87bokb4xof.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <CAMJBoFN48EZ0Bh6wSwtHz950PMS-bUR30aHq0v2hXg3spKbHFA@mail.gmail.com>
-References: <CAMJBoFN48EZ0Bh6wSwtHz950PMS-bUR30aHq0v2hXg3spKbHFA@mail.gmail.com>
-Date: Thu, 14 Jun 2012 14:42:55 +0300
-Message-ID: <CAB3XZEfBzLBP48f930tcGbSZ=jqEkuNd9RDUJYEWQUDodczqeg@mail.gmail.com> (sfid-20120614_134259_005197_55D83BE5)
-Subject: Re: bug in __ieee80211_suspend?
-From: Eliad Peller <eliad@wizery.com>
-To: Vitaly Wool <vitalywool@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87bokb4xof.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Vitaly,
+On Fri, Jun 22, 2012 at 10:23:44AM +0300, Kalle Valo wrote:
+> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
+> 
+> > This patch fixes below smatch warnings
+> >
+> > drivers/net/wireless/ath/ath9k/ar9003_calib.c:272
+> > ar9003_hw_iqcalibrate() Error invalid range 65 to 63
+> >
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> 
+> [...]
+> 
+> > -			qCoff = qCoff & 0x7f;
+> > +			qCoff &= 0x7f;
+> 
+> I'm curious, how does a change like this fix anything? To me it just
+> looks same functionality, just a different operator is used. Am I
+> missing something?
 
-On Thu, Jun 14, 2012 at 1:48 PM, Vitaly Wool <vitalywool@gmail.com> wrote:
-> I have some doubts about the following patch: "mac80211: quiesce vif
-> before suspending". In fact, I think it introduces a hard-to-track
-> bug: when a driver signals disconnection from the AP and the device
-> goes to sleep shortly thereafter, beacon_connection_loss_work will get
-> cancelled and the actual disconnection will never happen. Shouldn't we
-> fix that or is there something I'm missing?
->
+Though it doesn't make a difference, somehow it fixes smatch warning.
+I agree it is not the right fix.
 
-i think that flush_workqueue(local->workqueue) should handle the
-normal disconnect-before-suspend case.
-however, there's probably still some race condition when the work is
-scheduled between the flush_workqueue() and the drv_suspend() call.
-i'm not sure what is the right solution regarding it. maybe add
-another flush_workqueue() after drv_suspend?
+I just found the actual issue here that the min and max limitation
+are checked before masking out the value.
 
-additionally, i don't think that the patch itself is the issue here,
-as without it beacon_connection_loss_work might run after mac80211 was
-already suspended, which might result in unexpected outcome as well...
+   if (qCoff >= 63)
+           qCoff = 63;
+   else if (qCoff <= -63)
+           qCoff = -63;
 
-Eliad.
+Later it is masked out with 0x7f.
+
+-63 & 0x7f = 65 which is greater than the max limit 63.
+
+Thats why smatch is throwing warning "Error invalid range 65 to 63".
+
+-Rajkumar 
