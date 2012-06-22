@@ -1,101 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:45705 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068Ab2F2LEv convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:39767 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756167Ab2FVQ6o convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 07:04:51 -0400
-Received: by wibhq12 with SMTP id hq12so776370wib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2012 04:04:50 -0700 (PDT)
+	Fri, 22 Jun 2012 12:58:44 -0400
+Received: by obbuo13 with SMTP id uo13so2181036obb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 09:58:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1340966352.6562.17.camel@joe2Laptop>
-References: <1340964011-17528-1-git-send-email-zajec5@gmail.com>
-	<1340966352.6562.17.camel@joe2Laptop>
-Date: Fri, 29 Jun 2012 13:04:50 +0200
-Message-ID: <CACna6rwf-uBGYRrNRWTvvSdO-EB7pykd-XOs9AE4UTLoKCHxPw@mail.gmail.com> (sfid-20120629_130455_497915_DA72F898)
-Subject: Re: [PATCH] bcma: use custom printing functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
+In-Reply-To: <CAFub=KRMPxbKw=izGHEP4BPLreuHdTTq8SyD7asj0Xq5r-h8aQ@mail.gmail.com>
+References: <1340292308-6993-1-git-send-email-ozancag@gmail.com>
+ <CAB=NE6Uh90nV00TKSk+Rh9AG0yffKkYBZ7DiAe0Hvds-wMXQcg@mail.gmail.com> <CAFub=KRMPxbKw=izGHEP4BPLreuHdTTq8SyD7asj0Xq5r-h8aQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Fri, 22 Jun 2012 09:58:22 -0700
+Message-ID: <CAB=NE6X6o_jYbiLthGVL23Ow5KEPfnfL1m=TZEDPG3HGORbKcQ@mail.gmail.com> (sfid-20120622_185847_422634_0F9BDDC2)
+Subject: Re: [PATCH v2] compat: Define include guard for vga_switcheroo.h
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/6/29 Joe Perches <joe@perches.com>:
-> On Fri, 2012-06-29 at 12:00 +0200, Rafał Miłecki wrote:
->> Having bus number printed makes it much easier to anaylze logs on
->> systems with more buses. For example Netgear WNDR4500 has 3 AMBA buses
->> in total, which makes standard log really messy.
->
-> Hi again Rafał
->
->> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-> []
->> @@ -10,6 +10,14 @@
+On Fri, Jun 22, 2012 at 4:25 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+>> How about just adding this file but with something like this:
 >>
->>  #define BCMA_CORE_SIZE               0x1000
->>
->> +/* We use pr_fmt, so call printk directly */
->> +#define bcma_err(bus, fmt, ...) \
->> +     printk(KERN_ERR KBUILD_MODNAME " bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
->> +#define bcma_warn(bus, fmt, ...) \
->> +     printk(KERN_WARNING KBUILD_MODNAME " bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
->> +#define bcma_info(bus, fmt, ...) \
->> +     printk(KERN_INFO KBUILD_MODNAME " bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
+>> #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+>> /*
+>>  * XXX: The include guard was sent upstream, drop this
+>>  * once the guard is merged.
+>>  */
+>> #ifndef LINUX_VGA_SWITCHEROO_H /* in case this gets upstream */
+>> #include_next <linux/vga_switcheroo.h>
+>> #ifndef LINUX_VGA_SWITCHEROO_H /* do not redefine once this gets upstream */
+>> #define LINUX_VGA_SWITCHEROO_H
+>> #endif /* case 1 LINUX_VGA_SWITCHEROO_H
+>> #endif /* case 2 LINUX_VGA_SWITCHEROO_H
+>> #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
 >
-> seems fine.
->
->> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-> []
->> @@ -56,6 +56,7 @@ EXPORT_SYMBOL_GPL(bcma_core_enable);
->>  void bcma_core_set_clockmode(struct bcma_device *core,
->>                            enum bcma_clkmode clkmode)
->>  {
->> +     struct bcma_bus *bus = core->bus;
->
-> It seems unnecessary to me to do this assignment here
-> and in lots of other places when it's only used once.
->
-> It could cause unnecessary stack pressure.
->
->> @@ -75,7 +76,7 @@ void bcma_core_set_clockmode(struct bcma_device *core,
->>                       udelay(10);
->>               }
->>               if (i)
->> -                     pr_err("HT force timeout\n");
->> +                     bcma_err(bus, "HT force timeout\n");
->
-> These individual style uses could become
->
->                        bcma_err(core->bus, "HT force timeout\n");
->
-> []
->
->> @@ -137,8 +138,8 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
->>                                      | BCMA_CC_CORECTL_UARTCLKEN);
->>               }
->>       } else {
->> -             pr_err("serial not supported on this device ccrev: 0x%x\n",
->> -                    ccrev);
->> +             bcma_err(bus, "serial not supported on this device "
->> +                      "ccrev: 0x%x\n", ccrev);
->
->                bcma_err(cc->core->bus, "serial not supported on this device ccrev: 0x%x\n",
->                         ccrev);
->
-> Please don't split format strings.  Ignore 80 column lengths for
-> the formats only.
->
-> From Documentatation/CodingStyle chapter 2:
->
-> The limit on the length of lines is 80 columns and this is a strongly
-> preferred limit.
-> []
-> However, never break user-visible strings such as
-> printk messages, because that breaks the ability to grep for them.
+> Ah, that is much clever, thanks.
 
-Thanks for your comments, I'll fix that.
+No problem!
 
--- 
-Rafał
+> I've tested in and it works correctly, will send a v3. But just to
+> make clear: I'm just adding a vga_switcheroo.h with the above content
+> and I don't touch compat-3.5.h right?
+
+Yeap.
+
+  Luis
