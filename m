@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48524 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37792 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610Ab2FKJxd (ORCPT
+	with ESMTP id S933181Ab2FVPgl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 05:53:33 -0400
+	Fri, 22 Jun 2012 11:36:41 -0400
+Message-ID: <1340379394.4491.37.camel@jlt3.sipsolutions.net> (sfid-20120622_173653_537886_168825EA)
+Subject: Re: dynamic debug
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/13] iwlwifi: s/iwl_read_targ_mem_words/iwl_read_targ_mem_bytes
-Date: Mon, 11 Jun 2012 11:53:03 +0200
-Message-Id: <1339408392-19425-5-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115338_659477_DBC6CA96)
-In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
-References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: David Miller <davem@davemloft.net>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Jason Baron <jbaron@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Jun 2012 17:36:34 +0200
+In-Reply-To: <1340379153.31821.21.camel@joe2Laptop>
+References: <1340367797.4491.21.camel@jlt3.sipsolutions.net>
+	 <1340375177.31821.7.camel@joe2Laptop>
+	 <1340375643.4491.26.camel@jlt3.sipsolutions.net>
+	 <1340376114.31821.15.camel@joe2Laptop>
+	 <1340378474.4491.36.camel@jlt3.sipsolutions.net>
+	 <1340379153.31821.21.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, 2012-06-22 at 08:32 -0700, Joe Perches wrote:
 
-This macro gets the bufsize in bytes.
+> > Are you sure? It doesn't really seem to work ...
+> > 
+> > #if defined(CONFIG_DYNAMIC_DEBUG)
+> > /* dynamic_pr_debug() uses pr_fmt() internally so we don't need it here */
+> > #define pr_debug(fmt, ...) \
+> >         dynamic_pr_debug(fmt, ##__VA_ARGS__)
+> > #elif defined(DEBUG)
+> > #define pr_debug(fmt, ...) \
+> >         printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+> > 
+> > 
+> > 
+> > So basically, if you have CONFIG_DYNAMIC_DEBUG, you *still* need to
+> > enable it with the dynamic debug framework, right?
+> 
+> No.
+> 
+> In dynamic_debug.h, there's a mechanism to enable all
+> dynamic_pr_debug lines when DEBUG is #defined
+> 
+> #if defined DEBUG
+> #define _DPRINTK_FLAGS_DEFAULT _DPRINTK_FLAGS_PRINT
+> #else
+> #define _DPRINTK_FLAGS_DEFAULT 0
+> #endif
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/main.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-io.h   |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Hah. Too much indirection I guess.
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index 656ed31..e620af3 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -406,7 +406,7 @@ static void iwl_continuous_event_trace(struct iwl_priv *priv)
- 
- 	base = priv->device_pointers.log_event_table;
- 	if (iwlagn_hw_valid_rtc_data_addr(base)) {
--		iwl_read_targ_mem_words(priv->trans, base, &read, sizeof(read));
-+		iwl_read_targ_mem_bytes(priv->trans, base, &read, sizeof(read));
- 		capacity = read.capacity;
- 		mode = read.mode;
- 		num_wraps = read.wrap_counter;
-@@ -1671,7 +1671,7 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 	}
- 
- 	/*TODO: Update dbgfs with ISR error stats obtained below */
--	iwl_read_targ_mem_words(trans, base, &table, sizeof(table));
-+	iwl_read_targ_mem_bytes(trans, base, &table, sizeof(table));
- 
- 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
- 		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index 4a9a45f..45a59c9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -79,7 +79,7 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask);
- void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
- 			      void *buf, int words);
- 
--#define iwl_read_targ_mem_words(trans, addr, buf, bufsize)	\
-+#define iwl_read_targ_mem_bytes(trans, addr, buf, bufsize)	\
- 	do {							\
- 		BUILD_BUG_ON((bufsize) % sizeof(u32));		\
- 		_iwl_read_targ_mem_words(trans, addr, buf,	\
--- 
-1.7.10
+Thanks.
+
+I'll respin my patches.
+
+johannes
 
