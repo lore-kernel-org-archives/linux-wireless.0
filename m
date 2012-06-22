@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:43122 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754605Ab2FCUci (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:37335 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761089Ab2FVDbL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 16:32:38 -0400
-Received: by wgbdr13 with SMTP id dr13so3445213wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2012 13:32:37 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>, stable@vger.kernel.org
-Subject: [PATCH] mac80211: fix non RCU-safe sta_list manipulation
-Date: Sun,  3 Jun 2012 23:32:32 +0300
-Message-Id: <1338755552-13349-1-git-send-email-arik@wizery.com> (sfid-20120603_223240_776709_74DBF9DD)
+	Thu, 21 Jun 2012 23:31:11 -0400
+Received: by lbbgm6 with SMTP id gm6so3015839lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 20:31:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120529092154.GA2441@redhat.com>
+References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+ <20120313081235.GC15333@redhat.com> <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
+ <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
+ <20120528140448.GA22783@redhat.com> <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
+ <20120529092154.GA2441@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 21 Jun 2012 21:30:49 -0600
+Message-ID: <CAErSpo6Xxq_kcEYACKUsuNDOJDhEDnxWgBUateOJEBcfqufhSg@mail.gmail.com> (sfid-20120622_053132_901039_47170A07)
+Subject: Re: Initializing iwl3945 error
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sta_info_cleanup locks the sta_list using rcu_read_lock however
-the delete operation isn't rcu safe. A race between sta_info_cleanup
-timer being called and a STA being removed can occur which leads
-to a panic while traversing sta_list. Fix this by switching to the
-RCU-safe versions.
+On Tue, May 29, 2012 at 3:21 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Mon, May 28, 2012 at 12:21:34PM -0600, Bjorn Helgaas wrote:
+>> linked in vs. loaded as a module after boot?  What if you add a long
+>> delay in the driver probe routine?
+>
+> I'm attaching patch which add 200 ms delay after pci_enable_device() in
+> ->probe routine.
+>
+> Stanislaw
 
-Cc: stable@vger.kernel.org
-Reported-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/sta_info.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f5c2b7e..a37c905 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -378,7 +378,7 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
- 	/* make the station visible */
- 	sta_info_hash_add(local, sta);
- 
--	list_add(&sta->list, &local->sta_list);
-+	list_add_rcu(&sta->list, &local->sta_list);
- 
- 	set_sta_flag(sta, WLAN_STA_INSERTED);
- 
-@@ -688,7 +688,7 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	if (ret)
- 		return ret;
- 
--	list_del(&sta->list);
-+	list_del_rcu(&sta->list);
- 
- 	mutex_lock(&local->key_mtx);
- 	for (i = 0; i < NUM_DEFAULT_KEYS; i++)
--- 
-1.7.9.5
-
+Kamil, any news on this issue?
