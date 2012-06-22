@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rousseau.luceor.com ([91.121.31.107]:45165 "EHLO sro-lap"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1760696Ab2FGKzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 06:55:41 -0400
-From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
-Subject: [PATCH] minstrel_ht: enable frame aggregation for fixed rate
-Date: Thu,  7 Jun 2012 12:44:30 +0200
-Message-Id: <1339065870-11507-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20120607_125551_739578_C8D8EB17)
+Received: from he.sipsolutions.net ([78.46.109.217]:48648 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932856Ab2FVNOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 09:14:48 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/6] mac80211: two small verbose debug cleanups
+Date: Fri, 22 Jun 2012 15:14:38 +0200
+Message-Id: <1340370882-9258-3-git-send-email-johannes@sipsolutions.net> (sfid-20120622_151454_942188_7CC9AAB8)
+In-Reply-To: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
+References: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-when i was trying fixed rate in minstrel_ht, frame aggregation
-was not working. so i fix it
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+Two instances of CONFIG_MAC80211_VERBOSE_DEBUG
+should be different, fix them.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ net/mac80211/ibss.c   |    2 +-
+ net/mac80211/status.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 2d1acc6..0e502d7 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -626,8 +626,13 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index ff46ff4..8931110 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -261,7 +261,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
  
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/* use fixed index if set */
--	if (mp->fixed_rate_idx != -1)
--		sample_idx = mp->fixed_rate_idx;
-+	if (mp->fixed_rate_idx != -1) {
-+		if(sample_idx >= 0) {
-+			sample_idx = mp->fixed_rate_idx;
-+		} else {
-+			mi->max_tp_rate =  mp->fixed_rate_idx;	
-+		}
-+	}
- #endif
+ 	memcpy(addr, sta->sta.addr, ETH_ALEN);
  
- 	if (sample_idx >= 0) {
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 	wiphy_debug(sdata->local->hw.wiphy,
+ 		    "Adding new IBSS station %pM (dev=%s)\n",
+ 		    addr, sdata->name);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 6b4f425..51a6d1e 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -155,7 +155,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 		return;
+ 	}
+ 
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	if (net_ratelimit())
+ 		wiphy_debug(local->hw.wiphy,
+ 			    "dropped TX filtered frame, queue_len=%d PS=%d @%lu\n",
 -- 
-1.7.9.5
+1.7.10
 
