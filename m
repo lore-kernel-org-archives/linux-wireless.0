@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42995 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755002Ab2FYG53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 02:57:29 -0400
-Message-ID: <4FE80BD8.4090904@tieto.com> (sfid-20120625_085732_766325_2EF4CBA1)
-Date: Mon, 25 Jun 2012 08:57:28 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:62624 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753620Ab2FVR1X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 13:27:23 -0400
+Received: by obbuo13 with SMTP id uo13so2212243obb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 10:27:23 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1340385295.4491.38.camel@jlt3.sipsolutions.net>
+References: <1340385295.4491.38.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 22 Jun 2012 10:27:02 -0700
+Message-ID: <CAB=NE6X99pFYfOfAS4exozVtJ=sjujamUanPR_A2aGzX+KziFA@mail.gmail.com> (sfid-20120622_192727_245609_7CF60F73)
+Subject: Re: [PATCH] compat-wireless: add patch to fix iwlwifi tracing
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFCv2 10/13] cfg80211: set initial monitor channel
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>  <1340172859-18146-11-git-send-email-michal.kazior@tieto.com> <1340290665.4489.33.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340290665.4489.33.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2012-06-20 at 08:14 +0200, Michal Kazior wrote:
->> Implements behaviour seen in mac80211. A running
->> monitor always has a channel - even before
->> .set_channel. This way we won't break current
->> behaviour.
+On Fri, Jun 22, 2012 at 10:14 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> I'm a little doubtful about this. Currently, mac80211 will keep the
-> channel if you set it on say wlan0, your monitor iface gets the same
-> channel. Then if you remove wlan0, you still have the same channel, but
-> it seems here this is different now? I'm not sure it matters much, but
-> it's worth thinking about? Or am I totally misunderstanding this now?
+> See the description in the file -- the current code
+> is safe only on recent upstream kernels, with 3.1
+> for example it can crash. The new code is safe on
+> all kernels that even support %pV, others just get
+> a pointer unfortunately.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Right. It's not the exact same behaviour. It only guarantees a channel 
-is always set in monitor mode. We could maybe set the last 
-monitor-mode-channel seen when starting up monitor-mode again. Would 
-that be okay?
+Applied and pushed!
 
-
--- 
-Pozdrawiam / Best regards, Michal Kazior.
+  Luis
