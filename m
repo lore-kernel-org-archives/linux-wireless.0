@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43299 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714Ab2F2Hoa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 03:44:30 -0400
-Received: by eaak11 with SMTP id k11so1242644eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2012 00:44:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
-References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
-Date: Fri, 29 Jun 2012 09:44:29 +0200
-Message-ID: <CACna6rxL8xya8eOfBUvT43y0ZhHWKJyEef1G2pe5THi4DfOmkQ@mail.gmail.com> (sfid-20120629_094434_245642_357C9BA1)
-Subject: Re: [PATCH 0/8] bcma misc updates
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linville@tuxdriver.com, Hauke Mehrtens <hauke@hauke-m.de>
-Cc: b43-dev@lists.infradead.org, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from perches-mx.perches.com ([206.117.179.246]:36669 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1762246Ab2FVOlz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jun 2012 10:41:55 -0400
+Message-ID: <1340376114.31821.15.camel@joe2Laptop> (sfid-20120622_164202_031785_08031C57)
+Subject: Re: dynamic debug
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Jason Baron <jbaron@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Jun 2012 07:41:54 -0700
+In-Reply-To: <1340375643.4491.26.camel@jlt3.sipsolutions.net>
+References: <1340367797.4491.21.camel@jlt3.sipsolutions.net>
+	 <1340375177.31821.7.camel@joe2Laptop>
+	 <1340375643.4491.26.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/6/5 Hauke Mehrtens <hauke@hauke-m.de>:
-> These are some updates for bcma. Some are extending or completing some
-> workarounds for PCIe based wireless cards. A patch adds
-> bcma_pmu_spuravoid_pllupdate, used by brcmsmac and an other patch adds
-> constants for the chip ids. This code is mostly based on code from
-> brcmsmac and the Broadcom SDK for BCM47XX SoCs.
->
-> This was tested on a BCM4718 SoC with a BCM43224 PCIe and a BCM5357.
-> The Wifi part of the BCM4718 and BCM43224 is more or less working with
-> brcmsmac, which need some more patches for that, but it has low speed
-> and some times or with some access points I still get errors. The wifi
-> of the BCM5357 does not work.
->
-> Hauke Mehrtens (8):
->  bcma: extend workaround for bcm4331
->  bcma: add constants for chip ids
->  bcma: Fix for 4329b0 bad LPOM is detection
->  bcma: add PCI ID for BCM43224
->  bcma: complete workaround for BCMA43224 and BCM4313
->  bcma: handle SoCs in pmu initialization
->  bcma: add bcma_pmu_spuravoid_pllupdate()
->  bcma: add mdelay bcma_pmu_resources_init()
+On Fri, 2012-06-22 at 16:34 +0200, Johannes Berg wrote:
+> On Fri, 2012-06-22 at 07:26 -0700, Joe Perches wrote:
+> > On Fri, 2012-06-22 at 14:23 +0200, Johannes Berg wrote:
+> > > Joe, Jim, Jason,
+> > > 
+> > > Joe's conversion of mac80211 to pr_debug() was pretty much a disaster,
+> > 
+> > First I've heard of it.
+> 
+> Well I guess you didn't have the pleasure of having to work with bug
+> reporters whose mac80211 messages suddenly completely disappeared ...
 
-John: can you take the following patches from this patchset?
-1/8
-2/8
-4/8
-5/8
-7/8
+Nor it seems the pleasure of interaction with a maintainer
+that forwards notices like this.
 
-Following patches should be dropped:
-3/8 - BCM4329 fix should be dropped, not improved
-6/8 - functions touched by patch should be dropper, not improved
-8/8 - patch is fine, but doesn't apply cleanly
+> > > now people have to first select what they want in Kconfig, and then
+> > > still enable dynamic debug in debugfs...
+> > 
+> > This doesn't parse for me.
+> > Please illustrate further.
+> 
+> mac80211 has Kconfig selectors for a bunch of verbose debug options. Now
+> you turn them on, but the messages still don't occur, you have to also
+> enable dynamic debug. This extra step not make any sense to most people
+> and I agree -- having fine-grained compile-time options only to have to
+> enable a coarse-grained runtime option seems odd.
+> 
+> I'd much rather have a coarse-grained Kconfig option (for those people
+> who want to save the binary size) and then allow enabling pieces at
+> runtime -- see below.
+> 
+> > >  That doesn't make any sense at
+> > > all, and requires teaching everybody new tricks, so I'm basically
+> > > reverting it for now in favour of pr_info() instead of pr_debug().
+> > 
+> > Why not just add #define DEBUG?
+> 
+> I guess that works?
 
--- 
-Rafał
+That works.
+
+>  Doesn't really make a difference though. In reality,
+> most messages should be KERN_INFO anyway, so for those that aren't
+> hidden behind extra Kconfig options, we should use pr_info().
+
+Why?  Aren't these then possibly some mixture of errors or
+notices or info level messages?
+
+
