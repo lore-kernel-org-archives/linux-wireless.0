@@ -1,95 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:14816 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560Ab2FSE0I convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59230 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932788Ab2FVMXX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 00:26:08 -0400
-From: Wei Ni <wni@nvidia.com>
-To: 'Philip Rakity' <prakity@marvell.com>,
-	'Stephen Warren' <swarren@wwwdotorg.org>,
-	Rakesh Kumar <krakesh@nvidia.com>
-CC: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Tue, 19 Jun 2012 12:25:58 +0800
-Subject: RE: Where to power on the wifi device before loading the driver.
-Message-ID: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com> (sfid-20120619_062614_353745_44B4E36C)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
- <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
- <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
- <4FDB5976.20809@wwwdotorg.org>,<6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
- <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com>
-In-Reply-To: <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
+	Fri, 22 Jun 2012 08:23:23 -0400
+Message-ID: <1340367797.4491.21.camel@jlt3.sipsolutions.net> (sfid-20120622_142326_982388_3162DE64)
+Subject: dynamic debug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>, Jim Cromie <jim.cromie@gmail.com>,
+	Jason Baron <jbaron@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Jun 2012 14:23:17 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 09:23:35, Philip Rakity wrote:
->Why can't you use the regulator notify to get called back on power or 
->voltage change options to plumb in the manipulation of the gpio. I can 
->imagine you might need to add a notify call in core.c if you need to 
->assert the gpio before power is applied
+Joe, Jim, Jason,
 
-Yes, we can use the regulator notify, but the Tegra30 support is via device tree, I think there have no special board file to run the call back.
+Joe's conversion of mac80211 to pr_debug() was pretty much a disaster,
+now people have to first select what they want in Kconfig, and then
+still enable dynamic debug in debugfs... That doesn't make any sense at
+all, and requires teaching everybody new tricks, so I'm basically
+reverting it for now in favour of pr_info() instead of pr_debug().
 
->
->
->________________________________________
->From: linux-mmc-owner@vger.kernel.org [linux-mmc-owner@vger.kernel.org] 
->On Behalf Of Wei Ni [wni@nvidia.com]
->Sent: Sunday, June 17, 2012 11:20 PM
->To: 'Stephen Warren'; Rakesh Kumar
->Cc: Mark Brown; 'frankyl@broadcom.com'; Thierry Reding; Mursalin Akon; 
->'linux-mmc@vger.kernel.org'; devicetree-discuss@lists.ozlabs.org; 
->'linux-wireless@vger.kernel.org'; linux-tegra@vger.kernel.org; 
->linux-arm-kernel@lists.infradead.org
->Subject: RE: Where to power on the wifi device before loading the driver.
->
->On Fri, Jun 15, 2012 at 23:49:10, Stephen Warren wrote:
->>> I talked with Franky, this power sequence is generally for 4329, so 
->>> it mean this sequence can be put into the wifi driver.
->>> We can use the virtual platform device both for OOB and non OOB.
->>> I will send out patches later.
->>
->>Can you please expand on what a "virtual platform device" is; device 
->>tree typically represents real
->hardware rather than anything "virtual".
->
->The "virtual platform device" is created before the real wifi device, 
->so that it can pass the gpios to the driver, and power up the device before calling sdio_register_driver.
->But as Franky said, this power sequence is only generally for 4329, not 
->for the USB dongle chips. So it's not a good idea to add this "power up" in brcmfmac.
->
->>
->>Now if this means adding a child node under the SDIO controller to 
->>represent the attached device, and
->storing any settings required by that device in that child node, that's 
->probably a reasonable basic approach.
->>
->>BTW, which GPIO is the power GPIO; is it WF_EN on the schematic? That 
->>seems reasonable to represent
->as a GPIO rather than a regulator since it connects directly into the 
->WiFi device as a GPIO, and its use within the WiFi device can indeed be 
->governed purely internally to the WiFi driver/HW. However, if this is some GPIO that controls the power to e.g.
->>VBAT3V3_IN_WF, VDDIO_WF, or other power supply to the WiFi card, then 
->>it'd be better represented as a
->regulator, since the control point is outside the WiFi device.
->
->I think Rakesh may can answer this.
->
->Wei.
->---
->nvpublic
+I'd actually not mind using pr_debug() if it meant we could get rid of
+all the Kconfig symbols, but that's not possible.
+
+The biggest problem here really is that the dynamic debug infrastructure
+lets us enable messages at runtime, which is great, but the granularity
+is useless since you only have these possibilities:
+ * module name
+ * file name
+ * function name
+ * line number
+ * format string match
+
+The module is obviously way too broad for most modules, and the others
+are way too fine-grained.
+
+To actually make it useful, there needs to be a "key" that you can use,
+e.g. in mac80211 I could do
+
+DECLARE_DYNDBG_KEY(ps);
+
+and in some C file, I'd have to do the matching DEFINE_DYNDBG_KEY(ps),
+similar to how tracing works.
+
+Then, I would get
+
+ * an inline function ps_dbg()
+ * a macro "is_ps_debug" or so, so that you can use the enable/disable
+   bit of this key, say to create wrappers like netdev_ps_dbg
+   (probably needs to be a macro if it uses jump labels which it should
+   I think)
+
+and probably some other magic. The DEFINE_ macro would create some
+structure, and that would go into some special module section, so that
+then the dyn debug core can collect all these keys and allow us to do
+something like
+
+ echo mac80211:ps > dynamic_debug/control
+
+That would actually allow us to get rid of all our own Kconfig symbols
+and would allow a lot of drivers to get rid of their own infrastructure
+for enabling/disabling certain "log levels" etc...
+
+johannes
 
