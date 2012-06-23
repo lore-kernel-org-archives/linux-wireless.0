@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57395 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273Ab2F2X0v (ORCPT
+Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:56431 "EHLO
+	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754845Ab2FWGmO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 19:26:51 -0400
-Date: Fri, 29 Jun 2012 16:26:49 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	proski@gnu.org, Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC][PATCH 1/2] lib: printf: append support of '%*p[Mm][FR]'
-Message-Id: <20120629162649.f277177f.akpm@linux-foundation.org> (sfid-20120630_012709_850081_4127ACF5)
-In-Reply-To: <1340986086.6562.36.camel@joe2Laptop>
-References: <20110930115306.3bc105cb@mj>
-	<1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1340986086.6562.36.camel@joe2Laptop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 23 Jun 2012 02:42:14 -0400
+Received: by lbbgk8 with SMTP id gk8so4885110lbb.12
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:11 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
+Subject: [PATCH 13/18] wlcore: cancel suspend when recovery is pending
+Date: Sat, 23 Jun 2012 09:41:24 +0300
+Message-Id: <1340433689-24320-14-git-send-email-coelho@ti.com> (sfid-20120623_085130_557270_F29CC22D)
+In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
+References: <1340433689-24320-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 29 Jun 2012 09:08:06 -0700
-Joe Perches <joe@perches.com> wrote:
+From: Arik Nemtsov <arik@wizery.com>
 
-> > diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-> []
-> > @@ -655,11 +655,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
-> >  }
-> >  
-> >  static noinline_for_stack
-> > -char *mac_address_string(char *buf, char *end, u8 *addr,
-> > -			 struct printf_spec spec, const char *fmt)
-> > +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
-> > +		 const char *fmt)
-> >  {
-> > -	char mac_addr[sizeof("xx:xx:xx:xx:xx:xx")];
-> > -	char *p = mac_addr;
-> > +	char hex_str[64*3];	/* support up to 64 bytes to print */
-> 
-> Might be too much stack though.
+We wish to postpone suspend if recovery is pending. This will make sure
+the FW is in a good state and perform wowlan wakeup.
 
-Yes, it's a bit marginal, as this new capability might be used in debug
-or crash situations where we're deep into the stack.  The average case
-could be improved by using alloca()-style allocation.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Documentation/printk-formats.txt would need to be updated please.  Also
-the big comment over vsnprintf().
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index b0795aa..0df28d5 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1661,6 +1661,12 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
+ 	WARN_ON(!wow);
+ 
++	/* we want to perform the recovery before suspending */
++	if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
++		wl1271_warning("postponing suspend to perform recovery");
++		return -EBUSY;
++	}
++
+ 	wl1271_tx_flush(wl);
+ 
+ 	mutex_lock(&wl->mutex);
+-- 
+1.7.10
+
