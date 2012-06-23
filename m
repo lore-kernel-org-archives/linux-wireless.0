@@ -1,344 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11658 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755733Ab2FYTYL (ORCPT
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:42283 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753289Ab2FWGl4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 15:24:11 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	"Rajkumar Manoharan" <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20456.45480.605936.5196@gargle.gargle.HOWL> (sfid-20120625_212420_187864_E60FDC7F)
-Date: Tue, 26 Jun 2012 00:14:56 +0530
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH v3 07/10] ath9k_hw: Add hardware code for WoW
-In-Reply-To: <1340633579-7514-8-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
-	<1340633579-7514-8-git-send-email-mohammed@qca.qualcomm.com>
+	Sat, 23 Jun 2012 02:41:56 -0400
+Received: by lbbgm6 with SMTP id gm6so4535866lbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:41:53 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
+Subject: [PATCH 00/18] wlcore: improvements in SDIO error handling
+Date: Sat, 23 Jun 2012 09:41:11 +0300
+Message-Id: <1340433689-24320-1-git-send-email-coelho@ti.com> (sfid-20120623_084200_788861_709F926E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan wrote:
-> +static void ath9k_hw_set_powermode_wow_sleep(struct ath_hw *ah)
-> +{
-> +	struct ath_common *common = ath9k_hw_common(ah);
-> +
-> +	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
-> +
-> +	/* set rx disable bit */
-> +	REG_WRITE(ah, AR_CR, AR_CR_RXD);
-> +
-> +	if (!ath9k_hw_wait(ah, AR_CR, AR_CR_RXE, 0, AH_WAIT_TIMEOUT)) {
-> +		ath_err(common, "Failed to stop Rx DMA in 10ms AR_CR=0x%08x AR_DIAG_SW=0x%08x\n",
-> +			REG_READ(ah, AR_CR), REG_READ(ah, AR_DIAG_SW));
-> +		return;
-> +	} else {
-> +		if (!AR_SREV_9300_20_OR_LATER(ah))
-> +			REG_WRITE(ah, AR_RXDP, 0x0);
-> +	}
-> +
-> +	/* AR9280 WoW has sleep issue, do not set it to sleep */
-> +	if (AR_SREV_9280_20(ah))
-> +		return;
-> +
-> +	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_ON_INT);
-> +}
+Hi,
 
-This function needs proper error handling.
+This series with patches from Ido and Arik improve the driver's
+handling of SDIO errors.  Ido's series propagates the errors up for
+better handling and Arik's series ensures that suspend/resume don't
+get messed up when such errors occur.
 
-> +#define KAL_FRAME_LEN		28
-> +#define KAL_FRAME_TYPE		0x2 /* data frame */
-> +#define KAL_FRAME_SUB_TYPE	0x4 /* null data frame */
-> +#define KAL_DURATION_ID		0x3d
-> +#define KAL_NUM_DATA_WORDS	6
-> +#define KAL_NUM_DESC_WORDS	12
+There is also one patch by Arkady (welcome!) that allows the userspace
+to read/write to the chip's memory directly for firmware debugging
+purposes.
 
-Move these to a header file ?
+Please review.
 
-> +static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
-> +{
-> +	struct ath_common *common = ath9k_hw_common(ah);
-> +	u32 frame_len = KAL_FRAME_LEN;
-> +	u32 tpc = MAX_RATE_POWER;
-> +	u32 antenna_mode = 1;
-> +	u32 transmit_rate;
-> +	u32 frame_type = KAL_FRAME_TYPE; /* frame type -> data */
-> +	u32 sub_type = KAL_FRAME_SUB_TYPE; /* subtype -> NULL data */
-> +	u32 to_ds = 1;
-> +	u32 duration_id = KAL_DURATION_ID;
-> +	u8 sta_mac_addr[ETH_ALEN], ap_mac_addr[ETH_ALEN];
-> +	u32 ctl[13] = {0};
-> +	u32 data_word[KAL_NUM_DATA_WORDS];
-> +	u8 i;
-> +	u32 wow_ka_data_word0;
+Cheers,
+Luca.
 
-Most of the variables can be replaced by direct usage of the macros.
 
-> +	memcpy(sta_mac_addr, common->macaddr, ETH_ALEN);
-> +	memcpy(ap_mac_addr, common->curbssid, ETH_ALEN);
+Arik Nemtsov (6):
+  wlcore: cancel suspend when recovery is pending
+  wlcore: don't allow SDIO read/writes after failure
+  wlcore: force recovery on resume if suspended without recovering
+  wlcore: check Rx-filter functions in the suspend path
+  wlcore: refactor threaded IRQ routine
+  wlcore: prevent recovery in the middle of resume
 
-These too, the variables from 'common' can be used directly.
+Arkady Miasnikov (1):
+  wlcore: access the firmware memory via debugfs
 
-> +	if (ah->curchan->channelFlags & CHANNEL_CCK)
-> +		transmit_rate = 0x1b; /* CCK_1M hardware value for this rate */
-> +	else
-> +		transmit_rate = 0xb; /* OFDM_6M hardware value for this rate */
+Ido Yariv (11):
+  wlcore: Fix sdio out-of-sync power state
+  wlcore: Disable interrupts while recovering
+  wlcore: Change read/write ops to return errors
+  wlcore: Change raw io functions to return errors
+  wlcore: Propagate errors from wlcore_raw_*_data functions
+  wlcore: Propagate errors from wl1271_read
+  wlcore: Propagate errors from wl1271_write
+  wlcore: Propagate errors from wl1271_raw_read32
+  wlcore: Propagate errors from wl1271_raw_write32
+  wlcore: Propagate errors from wl1271_read_hwaddr
+  wlcore: Force checking of io functions' return values
 
-We don't use CHANNEL_CCK, so this can be trimmed and 'transmit_rate' removed.
+ drivers/net/wireless/ti/wl12xx/main.c     |  343 +++++++++++++++++++++--------
+ drivers/net/wireless/ti/wl18xx/io.c       |   39 +++-
+ drivers/net/wireless/ti/wl18xx/io.h       |    4 +-
+ drivers/net/wireless/ti/wl18xx/main.c     |  219 ++++++++++++------
+ drivers/net/wireless/ti/wlcore/boot.c     |   84 +++++--
+ drivers/net/wireless/ti/wlcore/cmd.c      |   47 +++-
+ drivers/net/wireless/ti/wlcore/debugfs.c  |  192 ++++++++++++++++
+ drivers/net/wireless/ti/wlcore/event.c    |   15 +-
+ drivers/net/wireless/ti/wlcore/hw_ops.h   |   12 +-
+ drivers/net/wireless/ti/wlcore/io.c       |   55 +++--
+ drivers/net/wireless/ti/wlcore/io.h       |  144 +++++++-----
+ drivers/net/wireless/ti/wlcore/main.c     |  240 +++++++++++++++-----
+ drivers/net/wireless/ti/wlcore/ps.c       |   14 +-
+ drivers/net/wireless/ti/wlcore/rx.c       |   37 +++-
+ drivers/net/wireless/ti/wlcore/rx.h       |    4 +-
+ drivers/net/wireless/ti/wlcore/sdio.c     |   50 +++--
+ drivers/net/wireless/ti/wlcore/spi.c      |   14 +-
+ drivers/net/wireless/ti/wlcore/tx.c       |   61 +++--
+ drivers/net/wireless/ti/wlcore/tx.h       |    4 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h   |   14 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    9 +-
+ 21 files changed, 1196 insertions(+), 405 deletions(-)
 
-> +void ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
-> +				u8 *user_mask, int pattern_count,
-> +				int pattern_len)
-> +{
-> +	int i;
-> +	u32 pattern_val, mask_val;
-> +	u32 set, clr;
-> +
-> +	/* FIXME: should check count by querying the hardware capability */
-> +	if (pattern_count >= MAX_NUM_PATTERN)
-> +		return;
-> +
-> +	REG_SET_BIT(ah, AR_WOW_PATTERN, BIT(pattern_count));
-> +
-> +	/* set the registers for pattern */
-> +	for (i = 0; i < MAX_PATTERN_SIZE; i += 4) {
-> +		memcpy(&pattern_val, user_pattern, 4);
-> +		REG_WRITE(ah, (AR_WOW_TB_PATTERN(pattern_count) + i),
-> +			  pattern_val);
-> +		user_pattern += 4;
-> +	}
-> +
-> +	/* set the registers for mask */
-> +	for (i = 0; i < MAX_PATTERN_SIZE; i += 4) {
-> +		memcpy(&mask_val, user_mask, 4);
-> +		REG_WRITE(ah, (AR_WOW_TB_MASK(pattern_count) + i), mask_val);
-> +		user_mask += 4;
-> +	}
+-- 
+1.7.10
 
-Shouldn't this use MAX_PATTERN_MASK_SIZE ? Also, better error checking for this
-function.
-
-> +	set = AR_PMCTRL_WOW_PME_CLR;
-> +	clr = AR_PMCTRL_PWR_STATE_D1D3;
-> +	/* do we need to check the bit value 0x01000000 (7-10) ?? */
-> +	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
-> +
-> +	/*
-> +	 * clear all events
-> +	 */
-> +	REG_WRITE(ah, AR_WOW_PATTERN,
-> +		  AR_WOW_CLEAR_EVENTS(REG_READ(ah, AR_WOW_PATTERN)));
-> +
-> +	/*
-> +	 * tie reset register for AR9002 family of chipsets
-> +	 * NB: not tieing it back might have some repurcussions.
-> +	 */
-> +
-> +	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-> +		set = AR_WA_UNTIE_RESET_EN |
-> +		      AR_WA_POR_SHORT |
-> +		      AR_WA_RESET_EN;
-> +		REG_SET_BIT(ah, AR_WA, set);
-> +	}
-
-What's the point in the set/clr variables ?
-
-> +	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
-
-This doesn't seem right, you are overwriting the value that is set when a
-station is associated.
-
-> +void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
-> +{
-> +	/*
-> +	 * set the power states appropriately and enable PME
-> +	 */
-> +	set = AR_PMCTRL_HOST_PME_EN | AR_PMCTRL_PWR_PM_CTRL_ENA |
-> +	      AR_PMCTRL_AUX_PWR_DET | AR_PMCTRL_WOW_PME_CLR;
-> +
-> +	/*
-> +	 * set and clear WOW_PME_CLEAR registers for the chip
-> +	 * to generate next wow signal.
-> +	 */
-> +	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
-> +	clr = AR_PMCTRL_WOW_PME_CLR;
-> +	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
-> +
-> +	/*
-> +	 * Setup for:
-> +	 *	- beacon misses
-> +	 *	- magic pattern
-> +	 *	- keep alive timeout
-> +	 *	- pattern matching
-> +	 */
-> +
-> +	/*
-> +	 * Program default values for pattern backoff, aifs/slot/KAL count,
-> +	 * beacon miss timeout, KAL timeout, etc.
-> +	 */
-> +
-> +	set = AR_WOW_BACK_OFF_SHIFT(AR_WOW_PAT_BACKOFF);
-> +	REG_SET_BIT(ah, AR_WOW_PATTERN, set);
-> +
-> +	set = AR_WOW_AIFS_CNT(AR_WOW_CNT_AIFS_CNT) |
-> +	      AR_WOW_SLOT_CNT(AR_WOW_CNT_SLOT_CNT) |
-> +	      AR_WOW_KEEP_ALIVE_CNT(AR_WOW_CNT_KA_CNT);
-> +	REG_SET_BIT(ah, AR_WOW_COUNT, set);
-> +
-> +	if (pattern_enable & AH_WOW_BEACON_MISS)
-> +		set = AR_WOW_BEACON_TIMO;
-> +	/* We are not using beacon miss, program a large value */
-> +	else
-> +		set = AR_WOW_BEACON_TIMO_MAX;
-> +
-> +	REG_WRITE(ah, AR_WOW_BCN_TIMO, set);
-> +
-> +	/*
-> +	 * Keep alive timo in ms except AR9280
-> +	 */
-> +	if (!pattern_enable || AR_SREV_9280(ah))
-> +		set = AR_WOW_KEEP_ALIVE_NEVER;
-> +	else
-> +		set = KAL_TIMEOUT * 32;
-> +
-> +	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_TIMO, set);
-> +
-> +	/*
-> +	 * Keep alive delay in us. based on 'power on clock',
-> +	 * therefore in usec
-> +	 */
-> +	set = KA_DELAY * 1000;
-> +	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_DELAY, set);
-> +
-> +	/*
-> +	 * Create keep alive pattern to respond to beacons
-> +	 */
-> +	ath9k_wow_create_keep_alive_pattern(ah);
-> +
-> +	/*
-> +	 * Configure MAC WoW Registers
-> +	 */
-> +
-> +	set = 0;
-> +	/* Send keep alive timeouts anyway */
-> +	clr = AR_WOW_KEEP_ALIVE_AUTO_DIS;
-> +
-> +	if (pattern_enable & AH_WOW_LINK_CHANGE)
-> +		wow_event_mask |= AR_WOW_KEEP_ALIVE_FAIL;
-> +	else
-> +		set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
-> +
-> +	/*
-> +	 * FIXME: For now disable keep alive frame
-> +	 * failure. This seems to sometimes trigger
-> +	 * unnecessary wake up with AR9485 chipsets.
-> +	 */
-> +	set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
-> +
-> +	REG_RMW(ah, AR_WOW_KEEP_ALIVE, set, clr);
-> +
-> +
-> +	/*
-> +	 * we are relying on a bmiss failure. ensure we have
-> +	 * enough threshold to prevent false positives
-> +	 */
-> +	REG_RMW_FIELD(ah, AR_RSSI_THR, AR_RSSI_THR_BM_THR,
-> +		      AR_WOW_BMISSTHRESHOLD);
-> +
-> +	set = 0;
-> +	clr = 0;
-> +
-> +	if (pattern_enable & AH_WOW_BEACON_MISS) {
-> +		set = AR_WOW_BEACON_FAIL_EN;
-> +		wow_event_mask |= AR_WOW_BEACON_FAIL;
-> +	} else {
-> +		clr = AR_WOW_BEACON_FAIL_EN;
-> +	}
-> +
-> +	REG_RMW(ah, AR_WOW_BCN_EN, set, clr);
-> +
-> +	set = 0;
-> +	clr = 0;
-> +	/*
-> +	 * Enable the magic packet registers
-> +	 */
-> +	if (pattern_enable & AH_WOW_MAGIC_PATTERN_EN) {
-> +		set = AR_WOW_MAGIC_EN;
-> +		wow_event_mask |= AR_WOW_MAGIC_PAT_FOUND;
-> +	} else {
-> +		clr = AR_WOW_MAGIC_EN;
-> +	}
-> +	set |= AR_WOW_MAC_INTR_EN;
-> +	REG_RMW(ah, AR_WOW_PATTERN, set, clr);
-> +
-> +	/*
-> +	 * For AR9285 and later version of chipsets
-> +	 * enable WoW pattern match for packets less
-> +	 * than 256 bytes for all patterns
-> +	 */
-> +	if (AR_SREV_9285_12_OR_LATER(ah))
-> +		REG_WRITE(ah, AR_WOW_PATTERN_MATCH_LT_256B,
-> +			  AR_WOW_PATTERN_SUPPORTED);
-> +
-> +	/*
-> +	 * Set the power states appropriately and enable PME
-> +	 */
-> +	clr = 0;
-> +	set = AR_PMCTRL_PWR_STATE_D1D3 | AR_PMCTRL_HOST_PME_EN |
-> +	      AR_PMCTRL_PWR_PM_CTRL_ENA;
-> +	/*
-> +	 * This is needed for AR9300 chipsets to wake-up
-> +	 * the host.
-> +	 */
-> +	if (AR_SREV_9300_20_OR_LATER(ah))
-> +		clr = AR_PCIE_PM_CTRL_ENA;
-> +
-> +	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
-> +
-> +	if (AR_SREV_9462(ah)) {
-> +		/*
-> +		 * this is needed to prevent the chip waking up
-> +		 * the host within 3-4 seconds with certain
-> +		 * platform/BIOS. the fix it to enable
-> +		 * D1 & D3 to match original definition and
-> +		 * also match the OTP value. Anyway this
-> +		 * is more related to SW WOW.
-> +		 */
-> +		clr = AR_PMCTRL_PWR_STATE_D1D3;
-> +		REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
-> +
-> +		set = AR_PMCTRL_PWR_STATE_D1D3_REAL;
-> +		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
-> +	}
-> +
-> +
-> +
-> +	REG_CLR_BIT(ah, AR_STA_ID1, AR_STA_ID1_PRESERVE_SEQNUM);
-> +
-> +	if (AR_SREV_9300_20_OR_LATER(ah)) {
-> +		/* to bring down WOW power low margin */
-> +		set = BIT(13);
-> +		REG_SET_BIT(ah, AR_PCIE_PHY_REG3, set);
-> +		/* HW WoW */
-> +		clr = BIT(5);
-> +		REG_CLR_BIT(ah, AR_PCU_MISC_MODE3, clr);
-> +	}
-> +
-> +	ath9k_hw_set_powermode_wow_sleep(ah);
-> +	ah->wow_event_mask = wow_event_mask;
-> +}
-> +EXPORT_SYMBOL(ath9k_hw_wow_enable);
-
-This function badly needs a cleanup. The set/clr variables are kinda ugly and
-the routine would become quite simpler if the various registers are programmed
-directly.
-
-Sujith
