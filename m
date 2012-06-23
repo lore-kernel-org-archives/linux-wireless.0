@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37471 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754996Ab2FFImM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:42:12 -0400
-Message-ID: <4FCF17DA.4010100@hauke-m.de> (sfid-20120606_104219_772192_FCA6B135)
-Date: Wed, 06 Jun 2012 10:42:02 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Florian Fainelli <florian@openwrt.org>
-CC: linville@tuxdriver.com, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/8] bcma: Fix for 4329b0 bad LPOM is detection
-References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de> <1338933307-13446-4-git-send-email-hauke@hauke-m.de> <2043822.26J1ek8FFi@flexo>
-In-Reply-To: <2043822.26J1ek8FFi@flexo>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:47173 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754157Ab2FWPkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jun 2012 11:40:45 -0400
+Message-ID: <1340466044.7758.4.camel@joe2Laptop> (sfid-20120623_174056_235437_702307D8)
+Subject: Re: [PATCH 4/6] mac80211: clean up debugging
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>,
+	Jason Baron <jbaron@redhat.com>
+Date: Sat, 23 Jun 2012 08:40:44 -0700
+In-Reply-To: <1340456697.4636.1.camel@jlt3.sipsolutions.net>
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+	 <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
+	 <1340438536.2274.9.camel@joe2Laptop>
+	 <1340456697.4636.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 10:08 AM, Florian Fainelli wrote:
-> Hi Hauke,
+On Sat, 2012-06-23 at 15:04 +0200, Johannes Berg wrote:
+> On Sat, 2012-06-23 at 01:02 -0700, Joe Perches wrote:
 > 
-> On Tuesday 05 June 2012 23:55:02 Hauke Mehrtens wrote:
->> This workaround should be triggered based on the chipid and rev and not
->> the core id and rev. This is based on code in the Broadcom SDK.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  drivers/bcma/driver_chipcommon_pmu.c |    3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/bcma/driver_chipcommon_pmu.c 
-> b/drivers/bcma/driver_chipcommon_pmu.c
->> index da8769e..dd2b55d 100644
->> --- a/drivers/bcma/driver_chipcommon_pmu.c
->> +++ b/drivers/bcma/driver_chipcommon_pmu.c
->> @@ -166,6 +166,7 @@ static void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
->>  void bcma_pmu_init(struct bcma_drv_cc *cc)
->>  {
->>  	u32 pmucap;
->> +	struct bcma_bus *bus = cc->core->bus;
->>  
->>  	pmucap = bcma_cc_read32(cc, BCMA_CC_PMU_CAP);
->>  	cc->pmu.rev = (pmucap & BCMA_CC_PMU_CAP_REVISION);
->> @@ -180,7 +181,7 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
->>  		bcma_cc_set32(cc, BCMA_CC_PMU_CTL,
->>  			     BCMA_CC_PMU_CTL_NOILPONW);
->>  
->> -	if (cc->core->id.id == 0x4329 && cc->core->id.rev == 2)
->> +	if (bus->chipinfo.id == 0x4329 && bus->chipinfo.rev == 2)
->>  		pr_err("Fix for 4329b0 bad LPOM state not implemented!\n");
+> > I think all the Kconfig debugging options aren't
+> > particularly useful.
+> > 
+> > I think you should use a level/mask module debug
+> > variable to enable these instead of appearing to try
+> > to minimize the size of the objects via individual
+> > Kconfig options.
+> > 
+> > I think it'd be better to enable them all the time
+> > (or not at all when !DEBUG) and select them for output
+> > via the debug level.
 > 
-> Does not that deserve a new define to be in line with your previous patch?
-> --
-> Florian
+> I agree, but I don't want to switch twice. Once pr_debug() has dynamic
+> sub-selector capabilities, I'll use it here.
+> 
+> FWIW, I would definitely prefer named rather than bitmap selectors :-)
 
-Probably we can remove this completely. The BCM4329 is a fullmac chip
-mostly used in phones and this part is done in the firmware.
+(Added Jason and Jim)
 
-Hauke
+Given it's a debug-only facility, I think bitmap
+selectors sufficient, Maybe adding an external
+utility to map names to bits would be enough to
+not need that feature in the kernel.
+
