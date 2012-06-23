@@ -1,92 +1,260 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4465 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755273Ab2FGI7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 04:59:14 -0400
-Message-ID: <4FD06D56.5020506@broadcom.com> (sfid-20120607_105924_254147_E4ED4D5D)
-Date: Thu, 7 Jun 2012 10:59:02 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [ANN] new wireless stack trees
-References: <1338898271.4514.38.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338898271.4514.38.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:48615 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755747Ab2FWGmO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jun 2012 02:42:14 -0400
+Received: by lboj14 with SMTP id j14so6133339lbo.21
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:10 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com,
+	Arkady Miasnikov <a-miasnikov@ti.com>
+Subject: [PATCH 12/18] wlcore: access the firmware memory via debugfs
+Date: Sat, 23 Jun 2012 09:41:23 +0300
+Message-Id: <1340433689-24320-13-git-send-email-coelho@ti.com> (sfid-20120623_084222_856022_CDC77A7C)
+In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
+References: <1340433689-24320-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2012 02:11 PM, Johannes Berg wrote:
-> Hi,
-> 
-> Given the amount of work going on in the various wireless stack
-> components, I've decided that I'll reflect my maintainer role also in
-> git trees. I've created new trees and will pick patches for
->  * mac80211
->  * cfg80211
->  * rfkill (if needed)
-> 
-> into the new trees
->  * http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211.git;a=summary
->  * http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git;a=summary
-> 
-> Yes, I've called them "mac80211", but I will also pick up the other
-> components into them. Calling them "wireless" would have been too
-> confusing.
-> 
-> These trees feed John's wireless and wireless-next trees respectively.
+From: Arkady Miasnikov <a-miasnikov@ti.com>
 
-Hi Johannes,
+Applications running in the user space needs access to the
+memory of the chip. Examples of such access
+- read/write global variables
+- access to firmware log
+- dump memory after firmware panic event
 
-Although I can see the reason for maintaining the wireless stack
-separately from the wireless drivers, I would like to give my concerns
-about this idea.
+Arbitrary 4-bytes aligned location can be accessed by
+read/write file wlcore/mem
 
-While separating maintenance makes sense, moving to a separate
-repository impairs development in the wireless arena given the close
-relation between mac80211 stack and drivers and it will surely add
-latency. Integration between mac80211 and drivers will occur somewhat
-later and when issues are found in that area the fixes (at least
-mac80211 fixes) will add additional delay.
+[Check return value of wlcore_raw_read/write and wlcore_set_partition
+calls as required by the recent IO changes. -- Luca]
 
-> I won't maintain an integration tree like John's wireless-testing,
-> please continue to use his. If merge conflicts make it necessary, I'll
-> resolve them in separate branches etc. and work it out with John.
+Signed-off-by: Arkady Miasnikov <a-miasnikov@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/debugfs.c |  192 ++++++++++++++++++++++++++++++
+ 1 file changed, 192 insertions(+)
 
-So mac80211-next repo will stay on last stable release and not be
-following the -rc releases?
-
-> As a result, I ask you to not submit patch series that touch both your
-> driver and the stack, please submit them independently. John will have
-> to wait applying the patches to the driver until has has pulled in any
-> dependencies via my trees.
-
-This can become a hornets nest as it means more maintenance work for
-John as the order of patches can change, eg. stack-dependent driver
-patch is overtaken by patch for bugfix.
-
-> If you maintain your own driver trees you're free to merge these trees
-> if you need their contents, but please don't send my contents to John
-> yourself, wait with your merge requests and nag me if you need me to
-> push to John :-)
-
-Although it may appeal to merge the trees, nagging for a upstream push
-makes more sense.
-
-> A word of caution though: I've not done this before, so while I think I
-> know what I'm signing up for I'm sure I'll make mistakes. If you pull my
-> tree in and I have to rebase due to those mistakes then would have to
-> rebase as well, so maybe don't pull it tomorrow but give me some time to
-> adjust to the workflow.
-
-As stated I have some concerns, but let us see how it goes.
-
-> Of course I'll continue to post my own patches to the mailing list well
-> before I applying them.
-
-Great plan ;-)
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 1768f37..80dbc53 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -38,6 +38,8 @@
+ /* ms */
+ #define WL1271_DEBUGFS_STATS_LIFETIME 1000
+ 
++#define WLCORE_MAX_BLOCK_SIZE ((size_t)(4*PAGE_SIZE))
++
+ /* debugfs macros idea from mac80211 */
+ int wl1271_format_buffer(char __user *userbuf, size_t count,
+ 			 loff_t *ppos, char *fmt, ...)
+@@ -1025,6 +1027,195 @@ static const struct file_operations sleep_auth_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t dev_mem_read(struct file *file,
++	     char __user *user_buf, size_t count,
++	     loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	struct wlcore_partition_set part, old_part;
++	size_t bytes = count;
++	int ret;
++	char *buf;
++
++	/* only requests of dword-aligned size and offset are supported */
++	if (bytes % 4)
++		return -EINVAL;
++
++	if (*ppos % 4)
++		return -EINVAL;
++
++	/* function should return in reasonable time */
++	bytes = min(bytes, WLCORE_MAX_BLOCK_SIZE);
++
++	if (bytes == 0)
++		return -EINVAL;
++
++	memset(&part, 0, sizeof(part));
++	part.mem.start = file->f_pos;
++	part.mem.size = bytes;
++
++	buf = kmalloc(bytes, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	mutex_lock(&wl->mutex);
++
++	if (wl->state == WL1271_STATE_OFF) {
++		ret = -EFAULT;
++		goto skip_read;
++	}
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto skip_read;
++
++	/* store current partition and switch partition */
++	memcpy(&old_part, &wl->curr_part, sizeof(old_part));
++	ret = wlcore_set_partition(wl, &part);
++	if (ret < 0)
++		goto part_err;
++
++	ret = wlcore_raw_read(wl, 0, buf, bytes, false);
++	if (ret < 0)
++		goto read_err;
++
++read_err:
++	/* recover partition */
++	ret = wlcore_set_partition(wl, &old_part);
++	if (ret < 0)
++		goto part_err;
++
++part_err:
++	wl1271_ps_elp_sleep(wl);
++
++skip_read:
++	mutex_unlock(&wl->mutex);
++
++	if (ret == 0) {
++		ret = copy_to_user(user_buf, buf, bytes);
++		if (ret < bytes) {
++			bytes -= ret;
++			*ppos += bytes;
++			ret = 0;
++		} else {
++			ret = -EFAULT;
++		}
++	}
++
++	kfree(buf);
++
++	return ((ret == 0) ? bytes : ret);
++}
++
++static ssize_t dev_mem_write(struct file *file, const char __user *user_buf,
++		size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	struct wlcore_partition_set part, old_part;
++	size_t bytes = count;
++	int ret;
++	char *buf;
++
++	/* only requests of dword-aligned size and offset are supported */
++	if (bytes % 4)
++		return -EINVAL;
++
++	if (*ppos % 4)
++		return -EINVAL;
++
++	/* function should return in reasonable time */
++	bytes = min(bytes, WLCORE_MAX_BLOCK_SIZE);
++
++	if (bytes == 0)
++		return -EINVAL;
++
++	memset(&part, 0, sizeof(part));
++	part.mem.start = file->f_pos;
++	part.mem.size = bytes;
++
++	buf = kmalloc(bytes, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	ret = copy_from_user(buf, user_buf, bytes);
++	if (ret) {
++		ret = -EFAULT;
++		goto err_out;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	if (wl->state == WL1271_STATE_OFF) {
++		ret = -EFAULT;
++		goto skip_write;
++	}
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto skip_write;
++
++	/* store current partition and switch partition */
++	memcpy(&old_part, &wl->curr_part, sizeof(old_part));
++	ret = wlcore_set_partition(wl, &part);
++	if (ret < 0)
++		goto part_err;
++
++	ret = wlcore_raw_write(wl, 0, buf, bytes, false);
++	if (ret < 0)
++		goto write_err;
++
++write_err:
++	/* recover partition */
++	ret = wlcore_set_partition(wl, &old_part);
++	if (ret < 0)
++		goto part_err;
++
++part_err:
++	wl1271_ps_elp_sleep(wl);
++
++skip_write:
++	mutex_unlock(&wl->mutex);
++
++	if (ret == 0)
++		*ppos += bytes;
++
++err_out:
++	kfree(buf);
++
++	return ((ret == 0) ? bytes : ret);
++}
++
++static loff_t dev_mem_seek(struct file *file, loff_t offset, int orig)
++{
++	loff_t ret;
++
++	/* only requests of dword-aligned size and offset are supported */
++	if (offset % 4)
++		return -EINVAL;
++
++	switch (orig) {
++	case SEEK_SET:
++		file->f_pos = offset;
++		ret = file->f_pos;
++		break;
++	case SEEK_CUR:
++		file->f_pos += offset;
++		ret = file->f_pos;
++		break;
++	default:
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++static const struct file_operations dev_mem_ops = {
++	.open = simple_open,
++	.read = dev_mem_read,
++	.write = dev_mem_write,
++	.llseek = dev_mem_seek,
++};
++
+ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 				    struct dentry *rootdir)
+ {
+@@ -1059,6 +1250,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD_PREFIX(rx_streaming, interval, streaming);
+ 	DEBUGFS_ADD_PREFIX(rx_streaming, always, streaming);
+ 
++	DEBUGFS_ADD_PREFIX(dev, mem, rootdir);
+ 
+ 	return 0;
+ 
+-- 
+1.7.10
 
