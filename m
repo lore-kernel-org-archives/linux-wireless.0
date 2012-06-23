@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:19631 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755126Ab2FYXBO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55807 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755159Ab2FWQCC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 19:01:14 -0400
-Date: Mon, 25 Jun 2012 18:01:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: xose.vazquez@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192cu: New USB IDs
-Message-ID: <4fe8edb8.nIHkD/+vuVsWEUTA%Larry.Finger@lwfinger.net> (sfid-20120626_010118_338194_9585157C)
+	Sat, 23 Jun 2012 12:02:02 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: [PATCH v2 08/10] ath: Add Wake-on-Wireless debug mask
+Date: Sat, 23 Jun 2012 21:29:52 +0530
+Message-ID: <1340467194-16930-9-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120623_180208_838400_EFC093DA)
+In-Reply-To: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The latest Realtek driver for the RTL8188CU and RTL8192CU chips adds three
-new USB IDs.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Reported-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+to help the developers and users to debug/know
+whats happening with WoW
+
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -301,9 +301,11 @@ static struct usb_device_id rtl8192c_usb
- 	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
- 	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
-+	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
- 	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
- 	{RTL_USB_DEVICE(0x0df6, 0x005c, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
- 	{RTL_USB_DEVICE(0x0eb0, 0x9071, rtl92cu_hal_cfg)}, /*NO Brand - Etop*/
-+	{RTL_USB_DEVICE(0x4856, 0x0091, rtl92cu_hal_cfg)}, /*NetweeN - Feixun*/
- 	/* HP - Lite-On ,8188CUS Slim Combo */
- 	{RTL_USB_DEVICE(0x103c, 0x1629, rtl92cu_hal_cfg)},
- 	{RTL_USB_DEVICE(0x13d3, 0x3357, rtl92cu_hal_cfg)}, /* AzureWave */
-@@ -346,6 +348,7 @@ static struct usb_device_id rtl8192c_usb
- 	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
- 	{RTL_USB_DEVICE(0x0846, 0x9021, rtl92cu_hal_cfg)}, /*Netgear-Sercomm*/
- 	{RTL_USB_DEVICE(0x0b05, 0x17ab, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
-+	{RTL_USB_DEVICE(0x0bda, 0x8186, rtl92cu_hal_cfg)}, /*Realtek 92CE-VAU*/
- 	{RTL_USB_DEVICE(0x0df6, 0x0061, rtl92cu_hal_cfg)}, /*Sitecom-Edimax*/
- 	{RTL_USB_DEVICE(0x0e66, 0x0019, rtl92cu_hal_cfg)}, /*Hawking-Edimax*/
- 	{RTL_USB_DEVICE(0x2001, 0x3307, rtl92cu_hal_cfg)}, /*D-Link-Cameo*/
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index c54b7d3..9bd0248 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -215,6 +215,7 @@ void ath_printk(const char *level, const struct ath_common *common,
+  *	used exclusively for WLAN-BT coexistence starting from
+  *	AR9462.
+  * @ATH_DBG_DFS: radar datection
++ * @ATH_DBG_WOW: Wake on Wireless
+  * @ATH_DBG_ANY: enable all debugging
+  *
+  * The debug level is used to control the amount and type of debugging output
+@@ -242,6 +243,7 @@ enum ATH_DEBUG {
+ 	ATH_DBG_BSTUCK		= 0x00008000,
+ 	ATH_DBG_MCI		= 0x00010000,
+ 	ATH_DBG_DFS		= 0x00020000,
++	ATH_DBG_WOW		= 0x00040000,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
+-- 
+1.7.0.4
+
