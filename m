@@ -1,119 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:45563 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755592Ab2FFKHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:19 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 12/29] NFC: Introduce target mode rx data callback
-Date: Wed,  6 Jun 2012 12:16:29 +0200
-Message-Id: <1338977806-30279-13-git-send-email-sameo@linux.intel.com> (sfid-20120606_120726_518082_6758221D)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:42462 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755822Ab2FWGmV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jun 2012 02:42:21 -0400
+Received: by lbok6 with SMTP id k6so5974987lbo.18
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:42:17 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
+Subject: [PATCH 17/18] wlcore: refactor threaded IRQ routine
+Date: Sat, 23 Jun 2012 09:41:28 +0300
+Message-Id: <1340433689-24320-18-git-send-email-coelho@ti.com> (sfid-20120623_084227_326261_CA4EA9BD)
+In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
+References: <1340433689-24320-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This routine will be called by drivers whenever they receive data in target
-mode. This should be unexpected events and as such should be handled by a
-standalone API (i.e. not as a callback pointer from an existing API).
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Separate the threaded IRQ handling routine into two functions.
+The outer function takes the mutex and calls recovery on errors. It also
+performs a Tx-path optimization to avoid redundant works.
+
+The inner function is simplified - all calls to recovery are removed and
+it assumes the lock is taken. The locked variant will be reused elsewhere.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- include/net/nfc/nfc.h |    1 +
- net/nfc/core.c        |   12 ++++++++++++
- net/nfc/llcp/llcp.c   |   15 +++++++++++++++
- net/nfc/nfc.h         |    7 +++++++
- 4 files changed, 35 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c |   62 ++++++++++++++++-----------------
+ 1 file changed, 31 insertions(+), 31 deletions(-)
 
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 45c4c97..180964b 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -202,5 +202,6 @@ int nfc_dep_link_is_up(struct nfc_dev *dev, u32 target_idx,
- int nfc_tm_activated(struct nfc_dev *dev, u32 protocol, u8 comm_mode,
- 		     u8 *gb, size_t gb_len);
- int nfc_tm_deactivated(struct nfc_dev *dev);
-+int nfc_tm_data_received(struct nfc_dev *dev, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index e6e6654..0c1e075 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -494,20 +494,15 @@ static void wl1271_netstack_work(struct work_struct *work)
  
- #endif /* __NET_NFC_H */
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 76c1e20..6a3799e 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -462,6 +462,18 @@ u8 *nfc_get_local_general_bytes(struct nfc_dev *dev, size_t *gb_len)
- }
- EXPORT_SYMBOL(nfc_get_local_general_bytes);
+ #define WL1271_IRQ_MAX_LOOPS 256
  
-+int nfc_tm_data_received(struct nfc_dev *dev, struct sk_buff *skb)
-+{
-+	/* Only LLCP target mode for now */
-+	if (dev->dep_link_up == false) {
-+		kfree_skb(skb);
-+		return -ENOLINK;
-+	}
-+
-+	return nfc_llcp_data_received(dev, skb);
-+}
-+EXPORT_SYMBOL(nfc_tm_data_received);
-+
- int nfc_tm_activated(struct nfc_dev *dev, u32 protocol, u8 comm_mode,
- 		     u8 *gb, size_t gb_len)
+-static irqreturn_t wl1271_irq(int irq, void *cookie)
++static int wlcore_irq_locked(struct wl1271 *wl)
  {
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index 5f7aa3f..5705e6d 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -937,6 +937,21 @@ void nfc_llcp_recv(void *data, struct sk_buff *skb, int err)
- 	return;
- }
+-	int ret;
++	int ret = 0;
+ 	u32 intr;
+ 	int loopcount = WL1271_IRQ_MAX_LOOPS;
+-	struct wl1271 *wl = (struct wl1271 *)cookie;
+ 	bool done = false;
+ 	unsigned int defer_count;
+ 	unsigned long flags;
  
-+int nfc_llcp_data_received(struct nfc_dev *dev, struct sk_buff *skb)
-+{
-+	struct nfc_llcp_local *local;
-+
-+	local = nfc_llcp_find_local(dev);
-+	if (local == NULL)
-+		return -ENODEV;
-+
-+	local->rx_pending = skb_get(skb);
-+	del_timer(&local->link_timer);
-+	queue_work(local->rx_wq, &local->rx_work);
-+
-+	return 0;
+-	/* TX might be handled here, avoid redundant work */
+-	set_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
+-	cancel_work_sync(&wl->tx_work);
+-
+ 	/*
+ 	 * In case edge triggered interrupt must be used, we cannot iterate
+ 	 * more than once without introducing race conditions with the hardirq.
+@@ -515,8 +510,6 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+ 		loopcount = 1;
+ 
+-	mutex_lock(&wl->mutex);
+-
+ 	wl1271_debug(DEBUG_IRQ, "IRQ work");
+ 
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+@@ -536,10 +529,8 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		smp_mb__after_clear_bit();
+ 
+ 		ret = wlcore_fw_status(wl, wl->fw_status_1, wl->fw_status_2);
+-		if (ret < 0) {
+-			wl12xx_queue_recovery_work(wl);
++		if (ret < 0)
+ 			goto out;
+-		}
+ 
+ 		wlcore_hw_tx_immediate_compl(wl);
+ 
+@@ -553,7 +544,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
+ 			wl1271_error("HW watchdog interrupt received! starting recovery.");
+ 			wl->watchdog_recovery = true;
+-			wl12xx_queue_recovery_work(wl);
++			ret = -EIO;
+ 
+ 			/* restarting the chip. ignore any other interrupt. */
+ 			goto out;
+@@ -563,7 +554,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 			wl1271_error("SW watchdog interrupt received! "
+ 				     "starting recovery.");
+ 			wl->watchdog_recovery = true;
+-			wl12xx_queue_recovery_work(wl);
++			ret = -EIO;
+ 
+ 			/* restarting the chip. ignore any other interrupt. */
+ 			goto out;
+@@ -573,10 +564,8 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
+ 
+ 			ret = wlcore_rx(wl, wl->fw_status_1);
+-			if (ret < 0) {
+-				wl12xx_queue_recovery_work(wl);
++			if (ret < 0)
+ 				goto out;
+-			}
+ 
+ 			/* Check if any tx blocks were freed */
+ 			spin_lock_irqsave(&wl->wl_lock, flags);
+@@ -588,20 +577,16 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 				 * call the work function directly.
+ 				 */
+ 				ret = wlcore_tx_work_locked(wl);
+-				if (ret < 0) {
+-					wl12xx_queue_recovery_work(wl);
++				if (ret < 0)
+ 					goto out;
+-				}
+ 			} else {
+ 				spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 			}
+ 
+ 			/* check for tx results */
+ 			ret = wlcore_hw_tx_delayed_compl(wl);
+-			if (ret < 0) {
+-				wl12xx_queue_recovery_work(wl);
++			if (ret < 0)
+ 				goto out;
+-			}
+ 
+ 			/* Make sure the deferred queues don't get too long */
+ 			defer_count = skb_queue_len(&wl->deferred_tx_queue) +
+@@ -613,19 +598,15 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		if (intr & WL1271_ACX_INTR_EVENT_A) {
+ 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_A");
+ 			ret = wl1271_event_handle(wl, 0);
+-			if (ret < 0) {
+-				wl12xx_queue_recovery_work(wl);
++			if (ret < 0)
+ 				goto out;
+-			}
+ 		}
+ 
+ 		if (intr & WL1271_ACX_INTR_EVENT_B) {
+ 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_B");
+ 			ret = wl1271_event_handle(wl, 1);
+-			if (ret < 0) {
+-				wl12xx_queue_recovery_work(wl);
++			if (ret < 0)
+ 				goto out;
+-			}
+ 		}
+ 
+ 		if (intr & WL1271_ACX_INTR_INIT_COMPLETE)
+@@ -639,6 +620,25 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 	wl1271_ps_elp_sleep(wl);
+ 
+ out:
++	return ret;
 +}
 +
- void nfc_llcp_mac_is_down(struct nfc_dev *dev)
- {
- 	struct nfc_llcp_local *local;
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index cd9fcbe..c5e42b7 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -55,6 +55,7 @@ int nfc_llcp_register_device(struct nfc_dev *dev);
- void nfc_llcp_unregister_device(struct nfc_dev *dev);
- int nfc_llcp_set_remote_gb(struct nfc_dev *dev, u8 *gb, u8 gb_len);
- u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, size_t *general_bytes_len);
-+int nfc_llcp_data_received(struct nfc_dev *dev, struct sk_buff *skb);
- int __init nfc_llcp_init(void);
- void nfc_llcp_exit(void);
- 
-@@ -90,6 +91,12 @@ static inline u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, size_t *gb_len)
- 	return NULL;
- }
- 
-+static inline int nfc_llcp_data_received(struct nfc_dev *dev,
-+					 struct sk_buff *skb)
++static irqreturn_t wlcore_irq(int irq, void *cookie)
 +{
-+	return 0;
-+}
++	int ret;
++	unsigned long flags;
++	struct wl1271 *wl = cookie;
 +
- static inline int nfc_llcp_init(void)
- {
- 	return 0;
++	/* TX might be handled here, avoid redundant work */
++	set_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
++	cancel_work_sync(&wl->tx_work);
++
++	mutex_lock(&wl->mutex);
++
++	ret = wlcore_irq_locked(wl);
++	if (ret)
++		wl12xx_queue_recovery_work(wl);
++
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+ 	/* In case TX was not handled here, queue TX work */
+ 	clear_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
+@@ -1748,7 +1748,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ 
+ 		/* don't talk to the HW if recovery is pending */
+ 		if (!pending_recovery)
+-			wl1271_irq(0, wl);
++			wlcore_irq(0, wl);
+ 
+ 		wlcore_enable_interrupts(wl);
+ 	}
+@@ -5489,7 +5489,7 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+ 	else
+ 		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+ 
+-	ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wl1271_irq,
++	ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wlcore_irq,
+ 				   irqflags,
+ 				   pdev->name, wl);
+ 	if (ret < 0) {
 -- 
-1.7.9.1
+1.7.10
 
