@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:38594 "EHLO
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:47797 "EHLO
 	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640Ab2F1SwB convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752000Ab2FWKpv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 14:52:01 -0400
-Received: by obbuo13 with SMTP id uo13so3386080obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 11:52:00 -0700 (PDT)
+	Sat, 23 Jun 2012 06:45:51 -0400
 MIME-Version: 1.0
-In-Reply-To: <1340618912-6845-1-git-send-email-ozancag@gmail.com>
-References: <1340618912-6845-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 28 Jun 2012 11:51:39 -0700
-Message-ID: <CAB=NE6W4HQmbMOissrmydQ11q_hw=XCR-g_SsVtc9BNRuS41ig@mail.gmail.com> (sfid-20120628_205204_614839_AB52F52E)
-Subject: Re: [PATCH v3] compat: Define include guard for vga_switcheroo.h
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20120622.165611.2220193371527786713.davem@davemloft.net>
+References: <20120622201716.GB13918@tuxdriver.com>
+	<20452.64701.760819.559191@gargle.gargle.HOWL>
+	<20453.302.671438.533390@gargle.gargle.HOWL>
+	<20120622.165611.2220193371527786713.davem@davemloft.net>
+Date: Sat, 23 Jun 2012 16:15:51 +0530
+Message-ID: <CAD2nsn1wRUv3+585X0iaTdq4gfaHLk99GifmSktUSHEyrM4Erw@mail.gmail.com> (sfid-20120623_124614_500226_94C0CE2B)
+Subject: Re: pull request: wireless 2012-06-22
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: c_manoha@qca.qualcomm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 3:08 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> The check is missing in upstream. Patch sent but until this gets
-> merged, define it in compat tree for fixing compat-drm builds.
+On Sat, Jun 23, 2012 at 5:26 AM, David Miller <davem@davemloft.net> wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> Date: Sat, 23 Jun 2012 05:05:10 +0530
 >
-> Trying kernel  3.4.0-030400-generic [OK]
-> Trying kernel  3.3.7-030307-generic [OK]
-> Trying kernel  3.2.2-030202-generic [OK]
-> Trying kernel  3.1.10-030110-generic [OK]
-> Trying kernel  3.0.18-030018-generic [OK]
-> Trying kernel  2.6.39-02063904-generic [OK]
-> Trying kernel  2.6.38-02063808-generic [OK]
-> Trying kernel  2.6.37-02063706-generic [OK]
-> Trying kernel  2.6.36-02063604-generic [OK]
-> Trying kernel  2.6.35-02063512-generic [OK]
-> Trying kernel  2.6.34-02063410-generic [OK]
-> Trying kernel  2.6.33-02063305-generic [OK]
-> Trying kernel  2.6.32-02063255-generic [OK]
-> Trying kernel  2.6.31-02063113-generic [OK]
-> Trying kernel  2.6.30-02063010-generic [OK]
-> Trying kernel  2.6.29-02062906-generic [OK]
-> Trying kernel  2.6.28-02062810-generic [OK]
-> Trying kernel  2.6.27-020627-generic [OK]
-> Trying kernel  2.6.26-020626-generic [OK]
-> Trying kernel  2.6.25-020625-generic [OK]
-> Trying kernel  2.6.24-020624-generic [OK]
+>> Sujith Manoharan wrote:
+>>> John W. Linville wrote:
+>>> > Mohammed Shafi Shajakhan (1):
+>>> > � � � ath9k_hw: avoid possible infinite loop in ar9003_get_pll_sqsum_dvc
+>>>
+>>> Um, this commit doesn't really fix anything - the timeout is also
+>>> arbitrary. Can you remove this from the 3.5 queue ? Thanks.
+>>
+>> A review of the patch later, I think it's good. At least there's a
+>> WARN_ON_ONCE() to indicate the situation in which the measurement fails.
+>> It might come in handy as a debugging aid.
 >
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+> Thanks for wasting our time.
+>
+> Make these determinations when changes to into John's tree, not
+> later when he asks me to pull them into mine.
 
-Applied and pushed, thanks!
+apologies for the confusion, i haven't got a better timeout from very
+few of the folks
+queried, I should have updated that. As the patch is being already
+pushed in, if we get
+a proper timeout, we would fix it later with a proper timeout.
 
-  Luis
+
+-- 
+thanks,
+shafi
