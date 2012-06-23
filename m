@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:57041 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752113Ab2F0PtM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 11:49:12 -0400
-Received: by lboj14 with SMTP id j14so2494317lbo.21
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 08:49:09 -0700 (PDT)
-Message-ID: <1340812144.1631.628.camel@cumari.coelho.fi> (sfid-20120627_174921_472054_2919BA47)
-Subject: Re: [PATCH] cfg80211: don't allow WoWLAN support without CONFIG_PM
-From: Luciano Coelho <coelho@ti.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:52043 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752696Ab2FWICR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jun 2012 04:02:17 -0400
+Message-ID: <1340438536.2274.9.camel@joe2Laptop> (sfid-20120623_100226_733307_ED2AAD2D)
+Subject: Re: [PATCH 4/6] mac80211: clean up debugging
+From: Joe Perches <joe@perches.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Wed, 27 Jun 2012 18:49:04 +0300
-In-Reply-To: <1340789200.11012.6.camel@jlt3.sipsolutions.net>
-References: <1340789200.11012.6.camel@jlt3.sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Sat, 23 Jun 2012 01:02:16 -0700
+In-Reply-To: <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+	 <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-27 at 11:26 +0200, Johannes Berg wrote:
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c
-> b/drivers/net/wireless/ti/wlcore/main.c
-> index 1156e3f..747a997 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -5321,6 +5321,7 @@ int __devinit wlcore_probe(struct wl1271 *wl,
-> struct platform_device *pdev)
->                 goto out_free_hw;
->         }
->  
-> +#ifdef CONFIG_PM
->         ret = enable_irq_wake(wl->irq);
->         if (!ret) {
->                 wl->irq_wake_enabled = true;
-> @@ -5334,6 +5335,7 @@ int __devinit wlcore_probe(struct wl1271 *wl,
-> struct platform_device *pdev)
->                                 WL1271_RX_FILTER_MAX_PATTERN_SIZE;
->                 }
->         }
-> +#endif
->         disable_irq(wl->irq);
+On Fri, 2012-06-22 at 19:18 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> There are a few things that make the logging and
+> debugging in mac80211 less useful than it should
+> be right now:
+>  * a lot of messages should be pr_info, not pr_debug
+>  * wholesale use of pr_debug makes it require *both*
+>    Kconfig and dynamic configuration
+>  * there are still a lot of ifdefs
+>  * the style is very inconsistent, sometimes the
+>    sdata->name is printed in front
 
-I'm not the biggest fan of #ifdef's in the middle of functions, but I
-guess it's clean enough here.  Maybe we split this out to a separate
-function that can be #ifdef'ed entirely.
+> Clean up everything, introducing new macros and
+> separating out the station MLME debugging into
+> a new Kconfig symbol.
 
-In any case, for the wlcore part:
+I think all the Kconfig debugging options aren't
+particularly useful.
 
-Acked-by: Luciano Coelho <coelho@ti.com>
+I think you should use a level/mask module debug
+variable to enable these instead of appearing to try
+to minimize the size of the objects via individual
+Kconfig options.
 
---
-Cheers,
-Luca.
+I think it'd be better to enable them all the time
+(or not at all when !DEBUG) and select them for output
+via the debug level.
+
+
 
