@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21778 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562Ab2FNWEz convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34657 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754834Ab2FWNFA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 18:04:55 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Message-ID: <20442.24505.509266.393452@gargle.gargle.HOWL> (sfid-20120615_000459_190355_45A29452)
-Date: Fri, 15 Jun 2012 03:33:37 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>, <c_manoha@qca.qualcomm.com>,
-	<thomas@net.t-labs.tu-berlin.de>
-Subject: [PATCH 3.5] ath9k: fix invalid pointer access in the tx path
-In-Reply-To: <1339709262-59805-1-git-send-email-nbd@openwrt.org>
-References: <1339709262-59805-1-git-send-email-nbd@openwrt.org>
+	Sat, 23 Jun 2012 09:05:00 -0400
+Message-ID: <1340456697.4636.1.camel@jlt3.sipsolutions.net> (sfid-20120623_150512_928475_D23FF360)
+Subject: Re: [PATCH 4/6] mac80211: clean up debugging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 23 Jun 2012 15:04:57 +0200
+In-Reply-To: <1340438536.2274.9.camel@joe2Laptop>
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+	 <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
+	 <1340438536.2274.9.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> After setup_frame_info has been called, only info->control.rates is still
-> valid, other control fields have been overwritten by the ath_frame_info
-> data. Move the access to info->control.vif for checking short preamble
-> to setup_frame_info before it gets overwritten.
-> 
-> This regression was introduced in commit d47a61aa
-> "ath9k: Fix multi-VIF BSS handling"
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Reported-by: Thomas Hühn <thomas@net.t-labs.tu-berlin.de>
-> Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> Cc: stable@vger.kernel.org [3.4]
+On Sat, 2012-06-23 at 01:02 -0700, Joe Perches wrote:
 
-Acked-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> I think all the Kconfig debugging options aren't
+> particularly useful.
+> 
+> I think you should use a level/mask module debug
+> variable to enable these instead of appearing to try
+> to minimize the size of the objects via individual
+> Kconfig options.
+> 
+> I think it'd be better to enable them all the time
+> (or not at all when !DEBUG) and select them for output
+> via the debug level.
 
-Sujith
+I agree, but I don't want to switch twice. Once pr_debug() has dynamic
+sub-selector capabilities, I'll use it here.
+
+FWIW, I would definitely prefer named rather than bitmap selectors :-)
+
+johannes
+
