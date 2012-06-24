@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53089 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459Ab2FFIyL (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:38700 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776Ab2FXENR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:54:11 -0400
-Message-ID: <1338972850.4513.26.camel@jlt3.sipsolutions.net> (sfid-20120606_105415_083983_31E707E7)
-Subject: Re: [RFC 03/14] cfg80211: introduce cfg80211_stop_ap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Jun 2012 10:54:10 +0200
-In-Reply-To: <1338203942-5667-4-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-	 <1338203942-5667-4-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 24 Jun 2012 00:13:17 -0400
+Received: by dady13 with SMTP id y13so3937096dad.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jun 2012 21:13:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <48EC4E8D43A28947B1AB2639FA97CDB901524A5F@nasanexd02a.na.qualcomm.com>
+References: <1330343526-5335-1-git-send-email-zefir.kurtisi@neratec.com>
+	<48EC4E8D43A28947B1AB2639FA97CDB901524852@nasanexd02a.na.qualcomm.com>
+	<4F4CC111.7040909@neratec.com>
+	<48EC4E8D43A28947B1AB2639FA97CDB901524A5F@nasanexd02a.na.qualcomm.com>
+Date: Sat, 23 Jun 2012 21:13:17 -0700
+Message-ID: <CAJ-Vmok2dnt8n0L7ouEzYX7479p8_-MMoXU4p4ce0PYc7ggrxg@mail.gmail.com> (sfid-20120624_061354_589114_499CD8F0)
+Subject: Re: [PATCH] ath9k: decouple RX error checking for DFS
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Chadd, Adrian" <achadd@qca.qualcomm.com>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
-> This functionality will be reused when interface
-> is going down. Avoids code duplication. Also adds
-> missing wdev locking.
-> 
-> Change-Id: I358660cdac652b56eacdd0adae76cc16aa4e4800
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+On 28 February 2012 07:59, Chadd, Adrian <achadd@qca.qualcomm.com> wrote:
+> Hi,
+>
+> That's interesting. I have found the AR9280 to do the same. I hadn't gone digging into it though, I've been busy with other things but it was on my todo list. So thankyou for finding it. :-)
 
-Looks good.
+Well, now I've looked at it. :-)
 
-johannes
+>
+> Specifically (and this is all under BSD):
+>
+> * I'd start rx'ing radar errors;
+> * then they'd become crc errors;
+> * after some indeterminate amount of time, they'd drift back to being radar errors.
 
+I see this exact behaviour on the AR5416. I'll test on the AR9130,
+AR9160 and AR9280 next week.
+
+I'll chat with you next week about extending it to generate the chirp
+pulses and random interval PRI pulses. (And fixes to make it compile
+on FreeBSD rather than Linux; I have it running on FreeBSD, but it
+required some "fixes" to the source and Makefile.)
+
+Thanks for doing the legwork on the USRP radar pulse generation stuff!
+
+
+
+Adrian
