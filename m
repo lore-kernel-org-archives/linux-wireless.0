@@ -1,90 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41945 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752459Ab2FSAvD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 20:51:03 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] cfg80211: fix regression in multi-vif AP start
-Date: Tue, 19 Jun 2012 02:50:57 +0200
-Message-Id: <1340067057-56601-1-git-send-email-nbd@openwrt.org> (sfid-20120619_025107_599430_882A16FC)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:37375 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537Ab2FXTLv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jun 2012 15:11:51 -0400
+Received: by weyu7 with SMTP id u7so2328415wey.19
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2012 12:11:50 -0700 (PDT)
+MIME-Version: 1.0
+From: Guido Iribarren <guidoiribarren@buenosaireslibre.org>
+Date: Sun, 24 Jun 2012 16:11:27 -0300
+Message-ID: <CAHD-aq+nNs4L0iZNxYSABX-1Wk+B=s-Avqc1TFYfO-8JOOZ5kA@mail.gmail.com> (sfid-20120624_211155_217283_DE3783DC)
+Subject: Regression on ath9k_htc managed mode
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit "cfg80211: provide channel to start_ap function" assumes that the
-channel is always passed to the NL80211_CMD_START_AP command, however
-in case of multi-BSSID, hostapd only passes the channel for the first vif.
-This makes starting beaconing on secondary vifs fail with -EINVAL.
+Hello nice people,
+we've recently found a bug when using infrastructure mode with tplink
+wn722n usb dongles (ath9k_htc driver)
 
-Fix this by storing the channel provided to .start_ap in wdev->preset_chan
-and picking the first AP vif's channel for secondary vifs if not provided.
+on the latest compat mac80211 we could find (2012-06-14) compiled
+against a 3.3.8 kernel, it has a problem with receiving broadcast
+while in client mode.
+That is, if the card is in Managed mode, it associates correctly,
+sends and receives unicast packets perfectly, and can send broadcast
+packets too. But no packets sent to broadcast from the AP will be
+understood.
+This has been observed with a simple arping
+[x.x.x.x being the ap, and y.y.y.y being the dongle in client mode.]
+sta# arping -b -I wlan1 x.x.x.x
+ARPING to x.x.x.x from y.y.y.y via wlan1
+Unicast reply from x.x.x.x [f8:d1:11:c0:ef:72] 108.579ms
+Unicast reply from x.x.x.x [f8:d1:11:c0:ef:72] 108.157ms
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/wireless/nl80211.c |   34 ++++++++++++++++++++++++++++++++--
- 1 files changed, 32 insertions(+), 2 deletions(-)
+ap# arping -b -I wlan1 y.y.y.y
+ARPING to y.y.y.y from x.x.x.x via wlan1
+[no replies]
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ae54b8..6f7d645 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2246,6 +2246,33 @@ static int nl80211_parse_beacon(struct genl_info *info,
- 	return 0;
- }
- 
-+static bool nl80211_get_ap_channel(struct cfg80211_registered_device *rdev,
-+				   struct cfg80211_ap_settings *params)
-+{
-+	struct wireless_dev *wdev;
-+	bool ret = false;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+
-+	list_for_each_entry(wdev, &rdev->netdev_list, list) {
-+		if (wdev->iftype != NL80211_IFTYPE_AP &&
-+		    wdev->iftype != NL80211_IFTYPE_P2P_GO)
-+			continue;
-+
-+		if (!wdev->preset_chan)
-+			continue;
-+
-+		params->channel = wdev->preset_chan;
-+		params->channel_type = wdev->preset_chantype;
-+		ret = true;
-+		break;
-+	}
-+
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	return ret;
-+}
-+
- static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -2348,7 +2375,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	} else if (wdev->preset_chan) {
- 		params.channel = wdev->preset_chan;
- 		params.channel_type = wdev->preset_chantype;
--	} else
-+	} else if (!nl80211_get_ap_channel(rdev, &params))
- 		return -EINVAL;
- 
- 	if (!cfg80211_can_beacon_sec_chan(&rdev->wiphy, params.channel,
-@@ -2356,8 +2383,11 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
--	if (!err)
-+	if (!err) {
-+		wdev->preset_chan = params.channel;
-+		wdev->preset_chantype = params.channel_type;
- 		wdev->beacon_interval = params.beacon_interval;
-+	}
- 	return err;
- }
- 
--- 
-1.7.3.2
+wireshark running on a separate laptop confirmed that the ap is indeed
+transmitting the broadcast, but a tcpdump running on client station
+shows no trace of the packet.
+unicasts, on the other hand, are received perfectly (both seen by
+wireshark on the air, and tcpdump in the station)
 
+This behaviour does not happen with mac80211 2012-02-27 compiled against 3.2.14
+I've recompiled many different versions of openwrt in a "bisecting"
+manner and managed to narrow it down to commit r31322 of openwrt,
+"mac80211: update to wireless-testing 2012-04-13"
+so the regression has been introduced somewhere between 2012-02-27
+(ok) and 2012-04-13 (bug)
+
+I *could* try to narrow it further, by cherrypicking revisions of
+wireless-testing between those dates, and try to compile a custom
+openwrt (i'm not sure how would that work) but I have already spent a
+lot more time than i was expecting to get to this point :(
+
+So maybe some developer, or someone more familiar with the changelog,
+might have an idea when /where (commit) could this bug have crept in,
+and have a kind soul as to find a fix, or revert it?
+
+We would be most grateful, we are building wifi community networks in
+Argentina, with very low cost mesh nodes, based on tplink mr3220 and
+these wn722n dongles, and the model we are using is being adopted by
+many local WCN, so a fix would be of great help!
+
+Guido
+
+ps. I'm crossposting to compat-wireless since i don't entirely
+understand where the problem lies. Sorry for the noise!
