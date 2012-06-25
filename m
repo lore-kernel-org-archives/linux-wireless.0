@@ -1,15 +1,19 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46186 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60987 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754642Ab2FTSRi (ORCPT
+	with ESMTP id S1756563Ab2FYMuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 14:17:38 -0400
-Message-ID: <1340216254.19321.2.camel@jlt3.sipsolutions.net> (sfid-20120620_201742_007771_5AD03DC8)
-Subject: [PATCH] mac80211: fix double-start of remain-on-channel
+	Mon, 25 Jun 2012 08:50:54 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Sj8km-0002mm-UI
+	for linux-wireless@vger.kernel.org; Mon, 25 Jun 2012 14:50:53 +0200
+Message-ID: <1340628649.4485.0.camel@jlt3.sipsolutions.net> (sfid-20120625_145135_903697_1A290E60)
+Subject: [PATCH] mac80211_hwsim: fix smatch/sparse complaints
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: eliad <eliad@wizery.com>
-Date: Wed, 20 Jun 2012 20:17:34 +0200
+Date: Mon, 25 Jun 2012 14:50:49 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
@@ -17,60 +21,64 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When a remain-on-channel item is deleted, we remove it
-from the list and then start the next item. However,
-if it wasn't actually the first item then calling
-ieee80211_start_next_roc() is wrong as it will start
-the first item -- even if that was already started.
+The code is fine in both cases as-is, but we can
+write it slightly differently to fix smatch/sparse
+complaints:
+ * compare the skb pointer (which we use as a cookie)
+   by casting the skb to unsigned long rather than the
+   cookie to a pointer (fixes "different address spaces")
+ * when transmitting, data->channel must be assigned,
+   don't check it (fixes "dereferenced before check")
 
-Fix the two places that do this and add a warning to
-prevent the problem from reoccurring.
-
-Reported-by: Eliad Peller <eliad@wizery.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c        |    3 ++-
- net/mac80211/offchannel.c |    6 +++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+(will commit to mac80211-next unless somebody objects?)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a6abcd4..03aff23 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2362,7 +2362,8 @@ static int ieee80211_cancel_roc(struct ieee80211_local *local,
+ drivers/net/wireless/mac80211_hwsim.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index bd63501..ab106d6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -678,8 +678,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+ 			continue;
  
- 		list_del(&found->list);
+ 		if (data2->idle || !data2->started ||
+-		    !hwsim_ps_rx_ok(data2, skb) ||
+-		    !data->channel || !data2->channel ||
++		    !hwsim_ps_rx_ok(data2, skb) || !data2->channel ||
+ 		    data->channel->center_freq != data2->channel->center_freq ||
+ 		    !(data->group & data2->group))
+ 			continue;
+@@ -1486,7 +1485,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	struct mac80211_hwsim_data *data2;
+ 	struct ieee80211_tx_info *txi;
+ 	struct hwsim_tx_rate *tx_attempts;
+-	struct sk_buff __user *ret_skb;
++	unsigned long ret_skb_ptr;
+ 	struct sk_buff *skb, *tmp;
+ 	struct mac_address *src;
+ 	unsigned int hwsim_flags;
+@@ -1504,8 +1503,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 				   info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
+ 	hwsim_flags = nla_get_u32(info->attrs[HWSIM_ATTR_FLAGS]);
  
--		ieee80211_start_next_roc(local);
-+		if (found->started)
-+			ieee80211_start_next_roc(local);
- 		mutex_unlock(&local->mtx);
+-	ret_skb = (struct sk_buff __user *)
+-		  (unsigned long) nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
++	ret_skb_ptr = nla_get_u64(info->attrs[HWSIM_ATTR_COOKIE]);
  
- 		ieee80211_roc_notify_destroy(found);
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index febce7f..7f93626 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -262,6 +262,9 @@ void ieee80211_start_next_roc(struct ieee80211_local *local)
- 	roc = list_first_entry(&local->roc_list, struct ieee80211_roc_work,
- 			       list);
+ 	data2 = get_hwsim_data_ref_from_addr(src);
  
-+	if (WARN_ON_ONCE(roc->started))
-+		return;
-+
- 	if (local->ops->remain_on_channel) {
- 		int ret, duration = roc->duration;
+@@ -1514,7 +1512,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
  
-@@ -377,7 +380,8 @@ void ieee80211_sw_roc_work(struct work_struct *work)
- 
- 		ieee80211_recalc_idle(local);
- 
--		ieee80211_start_next_roc(local);
-+		if (roc->started)
-+			ieee80211_start_next_roc(local);
- 	}
- 
-  out_unlock:
+ 	/* look for the skb matching the cookie passed back from user */
+ 	skb_queue_walk_safe(&data2->pending, skb, tmp) {
+-		if (skb == ret_skb) {
++		if ((unsigned long)skb == ret_skb_ptr) {
+ 			skb_unlink(skb, &data2->pending);
+ 			found = true;
+ 			break;
 -- 
 1.7.10
 
