@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:42127 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933212Ab2FGWYm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 18:24:42 -0400
-Received: by lahd3 with SMTP id d3so815348lah.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 15:24:41 -0700 (PDT)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8879 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757102Ab2FYOPE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 10:15:04 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: [PATCH v3 08/10] ath: Add Wake-on-Wireless debug mask
+Date: Mon, 25 Jun 2012 19:42:57 +0530
+Message-ID: <1340633579-7514-9-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120625_161509_721248_188BE5D9)
+In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+7oygd1dfn=Vj7V1h_vVvXPNym_Ake7UNWf1UuVWfxzm5g+NQ@mail.gmail.com>
-References: <CA+7oygd1dfn=Vj7V1h_vVvXPNym_Ake7UNWf1UuVWfxzm5g+NQ@mail.gmail.com>
-Date: Thu, 7 Jun 2012 18:24:40 -0400
-Message-ID: <CAOreOvXM9MPRz67+WCoCwODrz0_FG4GTR5v9imQJyZt5DTDWQw@mail.gmail.com> (sfid-20120608_002451_855065_FDF66E77)
-Subject: Re: anyone know any dual-band USB devices with monitoring mode in Linux?
-From: Mark Davis <marked86@gmail.com>
-To: George Nychis <gnychis@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 6, 2012 at 11:14 PM, George Nychis <gnychis@gmail.com> wrote:
-> Hi all,
->
-> I've been using the Sony UWA-BR100 (AR9280) with ath9k_htc, and there
-> is clearly a bug with reporting signal strengths which I need to be
-> correct.  I've reported the bug, but this might not be fixed in time
-> for a deadline I have coming up, and the bug is in the firmware out of
-> my reach.
->
-> So I was wondering if anyone knows of any alternative USB dual-band
-> wireless cards that support monitoring mode in Linux.  I'd _greatly_
-> appreciate it... doesn't need to be Atheros based.
->
-> - George
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-http://bit.ly/LzgJiA
+to help the developers and users to debug/know
+whats happening with WoW
 
-I primarily use AWUS050NH / AWUS051NHs. Dell Wireless 1450 adapters
-are also decent (though they probably perform better in 2.4GHz than
-5GHz). I'm not really a fan of AR9170 hardware.
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
--mark
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index c54b7d3..9bd0248 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -215,6 +215,7 @@ void ath_printk(const char *level, const struct ath_common *common,
+  *	used exclusively for WLAN-BT coexistence starting from
+  *	AR9462.
+  * @ATH_DBG_DFS: radar datection
++ * @ATH_DBG_WOW: Wake on Wireless
+  * @ATH_DBG_ANY: enable all debugging
+  *
+  * The debug level is used to control the amount and type of debugging output
+@@ -242,6 +243,7 @@ enum ATH_DEBUG {
+ 	ATH_DBG_BSTUCK		= 0x00008000,
+ 	ATH_DBG_MCI		= 0x00010000,
+ 	ATH_DBG_DFS		= 0x00020000,
++	ATH_DBG_WOW		= 0x00040000,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
+-- 
+1.7.0.4
+
