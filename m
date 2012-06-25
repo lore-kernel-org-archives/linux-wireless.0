@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756037Ab2FNSvK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41528 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755642Ab2FYTX6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 14:51:10 -0400
-Message-ID: <1339699864.9786.10.camel@jlt3.sipsolutions.net> (sfid-20120614_205114_216219_31F1CF6B)
-Subject: Re: [PATCH] mac80211: add support for userspace to handle auth
- frames on adhoc ifaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Will Hawkins <hawkinsw@opentechinstitute.org>
-Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 14 Jun 2012 20:51:04 +0200
-In-Reply-To: <4FDA2CED.8090303@opentechinstitute.org>
-References: <4FD8B5D4.8060305@opentechinstitute.org>
-	    <4FD99A24.3020907@lri.fr>
-	 <1339673095.4461.2.camel@jlt3.sipsolutions.net>   <4FD9DD35.4070709@lri.fr>
-	 <1339692819.9786.4.camel@jlt3.sipsolutions.net>
-	  <4FDA179F.1020501@opentechinstitute.org>
-	 <1339693721.9786.5.camel@jlt3.sipsolutions.net>
-	 <4FDA2CED.8090303@opentechinstitute.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 25 Jun 2012 15:23:58 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	"Rajkumar Manoharan" <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20456.40631.937743.311973@gargle.gargle.HOWL> (sfid-20120625_212402_560499_2F9DF3CF)
+Date: Mon, 25 Jun 2012 22:54:07 +0530
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v3 04/10] ath9k_hw: advertise WoW support for capable chipsets
+In-Reply-To: <1340633579-7514-5-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+	<1340633579-7514-5-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> >>> Oops, sorry, yes. I forgot all about that code!
-> >>>
-> >>> I suppose we'd have to check whether userspace is handling
-> >>> authentication?
-> >>
-> >> Could use the control_port flag to check for that condition?
-> > 
-> > Not really, that's not necessarily the same thing -- I think we might
-> > want to also allow to offload open auth to userspace.
-> > 
-> > I think it wouldn't be difficult to notify mac80211 about frame
-> > registrations so it can keep track for this purpose?
-> > 
-> > johannes
+Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 > 
-> I am happy to code something like this up. I've already taken a look at
-> it and don't think it will be too big of a problem. I am going to be AFK
-> until Monday so I won't get to it until then. I hope that's not a problem.
+> support WoW for all chipsets starting from AR9280, AR9285, AR9287,
+> AR9380, AR9382, AR9485, AR9462. Really all hardware may not support
+> WoW even though the flag is set and the WoW working depends on
+> your laptop, BIOS apart from the hardware.
+> 
+> Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Cc: vadivel@qca.qualcomm.com
+> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++++
+>  1 files changed, 8 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index a42c26f..041d797 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -2572,6 +2572,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+>  	}
+>  
+>  
+> +	if (AR_SREV_9280_20_OR_LATER(ah)) {
+> +		pCap->hw_caps |= ATH9K_HW_WOW_DEVICE_CAPABLE |
+> +				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
+> +
+> +		if (AR_SREV_9280(ah))
+> +			pCap->hw_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
+> +	}
+> +
 
-No problem, take your time! I'm not in any hurry with this feature :-)
+I don't think this is a good idea - please enable WoW only for cards that
+we have actually tested.
 
-johannes
-
+Sujith
