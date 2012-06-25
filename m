@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:60181
-	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753505Ab2FVGr1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 02:47:27 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC v3] cfg80211/mac80211: 802.11ac changes
-Date: Fri, 22 Jun 2012 06:47:25 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E0F@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120622_084730_456395_22393323)
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3CE8@mbx022-e1-nj-10.exch022.domain.local>
-	 <1340302471.4489.43.camel@jlt3.sipsolutions.net>
-	 <4FE36942.1090801@broadcom.com>
-	 <1340303967.4489.44.camel@jlt3.sipsolutions.net>
-	,<4FE36FC1.2020702@broadcom.com>
-	 <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3D6F@mbx022-e1-nj-10.exch022.domain.local>,<1340346809.4491.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340346809.4491.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:33319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756506Ab2FYPsU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 11:48:20 -0400
+Message-ID: <1340639295.27437.7.camel@jlt3.sipsolutions.net> (sfid-20120625_174823_715597_EB6EEC82)
+Subject: Re: [RFC 15/17] cfg80211: add P2P Device abstraction
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 25 Jun 2012 17:48:15 +0200
+In-Reply-To: <CAB3XZEcWE46OHiigB24ezaDA3rRUYoKGtYcmvVxVgMizVK+d8w@mail.gmail.com> (sfid-20120625_172048_566221_C9431BD2)
+References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+	 <1340117456-10154-16-git-send-email-johannes@sipsolutions.net>
+	 <CAB3XZEcWE46OHiigB24ezaDA3rRUYoKGtYcmvVxVgMizVK+d8w@mail.gmail.com>
+	 (sfid-20120625_172048_566221_C9431BD2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-________________________________________
-From: Johannes Berg [johannes@sipsolutions.net]
-Sent: Friday, June 22, 2012 12:03 PM
-To: Mahesh Palivela
-Cc: Arend van Spriel; linville@tuxdriver.com; linux-wireless@vger.kernel.org
-Subject: RE: [RFC v3] cfg80211/mac80211: 802.11ac changes
+On Mon, 2012-06-25 at 18:20 +0300, Eliad Peller wrote:
 
-On Fri, 2012-06-22 at 03:06 +0000, Mahesh Palivela wrote:
-> ________________________________________
-> From: Arend van Spriel [arend@broadcom.com]
-> Sent: Friday, June 22, 2012 12:32 AM
-> To: Johannes Berg
-> Cc: Mahesh Palivela; linville@tuxdriver.com; linux-wireless@vger.kernel.org
-> Subject: Re: [RFC v3] cfg80211/mac80211: 802.11ac changes
->
-> On 06/21/2012 08:39 PM, Johannes Berg wrote:
-> > On Thu, 2012-06-21 at 20:34 +0200, Arend van Spriel wrote:
-> >> On 06/21/2012 08:14 PM, Johannes Berg wrote:
-> >>> On Thu, 2012-06-21 at 16:51 +0000, Mahesh Palivela wrote:
-> >>>
-> >>>> +/* 802.11ac VHT Capabilities */
-> >>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991                0x00000001
-> >>>> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454               0x00000002
-> >>>
-> >>> I have a feeling there should be a value for 3895, since this isn't
-> >>> really a bitfield only (it doesn't make sense to set both of these, in
-> >>> fact 3 is reserved)
-> >>
-> >> These are matching the values specified for the VHP Capability Info IE.
-> >> 3895 is specified as 0. Value 3 is reserved because it is not to be
-> >> regarded as a bit field.
-> >
-> > Right, but I think it'd make more sense to actually have the 3895 value
-> > as a constant here so you're not tempted to think that you could set
->
-> [MP] Should I declare another constant for this?
-> +#define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895   0
+> > +void cfg80211_unregister_wdev(struct wireless_dev *wdev)
 
-Yes I think that would be good
+> > +       case NL80211_IFTYPE_P2P_DEVICE:
+> > +               if (wdev->p2p_started) {
+> > +                       wdev->p2p_started = false;
+> > +                       rdev->opencount--;
+> > +               }
+> any reason not calling stop_p2p_device() here as well?
+
+That would be circular? You're supposed to call this when
+stop_p2p_device() gets called, or when you need to delete it for some
+other reason, usually device unplug or such.
+
+
+> > +static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
+> > +{
+> > +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> > +       struct wireless_dev *wdev = info->user_ptr[1];
+> > +       int err;
+> > +
+> > +       if (!rdev->ops->start_p2p_device)
+> > +               return -EOPNOTSUPP;
+> > +
+> > +       if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
+> > +               return -EOPNOTSUPP;
+> > +
+> > +       if (!(rdev->wiphy.interface_modes & BIT(NL80211_IFTYPE_P2P_DEVICE)))
+> > +               return -EOPNOTSUPP;
+> > +
+> nl80211_new_interface() should already check it.
+
+Good point. I'll remove this check.
 
 johannes
 
-But every VHT capability bitfields value zero has a meaning.
-Max_MPDU_len field is 2 bits. 0 - 3895, 1 - 7991, 2 - 11454, 3 - reserved
-Supp_ch_width field is 2 bits. 0 - 160 MHz not supp, 1 - 160 MHz supp, 2 - 160/80+80 supp.
-My point is should we have constant defines for all of those?
-
-Thanks,
-Mahesh
