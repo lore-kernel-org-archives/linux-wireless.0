@@ -1,88 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50234 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36674 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932330Ab2FBP2L (ORCPT
+	with ESMTP id S1752832Ab2FYIZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 11:28:11 -0400
-Message-ID: <4FCA30DE.4080805@qca.qualcomm.com> (sfid-20120602_172847_470702_F3C986C3)
-Date: Sat, 2 Jun 2012 20:57:26 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Mon, 25 Jun 2012 04:25:42 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>, <stable@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
-References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>		 (sfid-20120601_083956_399882_A3D65832) <1338533070.4884.4.camel@jlt3.sipsolutions.net>	 <4FC86AB4.9020602@qca.qualcomm.com> <1338534832.4884.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338534832.4884.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20456.8246.840686.122930@gargle.gargle.HOWL> (sfid-20120625_102547_166789_C09F5DE1)
+Date: Mon, 25 Jun 2012 13:54:22 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Fix lockdep splat
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 01 June 2012 12:43 PM, Johannes Berg wrote:
-> On Fri, 2012-06-01 at 12:39 +0530, Mohammed Shafi Shajakhan wrote:
->> Hi Johannes,
->>
->> On Friday 01 June 2012 12:14 PM, Johannes Berg wrote:
->>> On Fri, 2012-06-01 at 12:09 +0530, Mohammed Shafi Shajakhan wrote:
->>>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>>>
->>>> In ath9k we make sure the following two things
->>>> *if the first interface is ADHOC we cannot have any other interface.
->>>> *we cannot add an ADHOC interface if there is already an interface
->>>> is present.
->>>
->>>> -	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
->>>> -	    ((vif->type == NL80211_IFTYPE_ADHOC)&&
->>>> -	     sc->nvifs>   0)) {
->>>> -		ath_err(common, "Cannot create ADHOC interface when other"
->>>> -			" interfaces already exist.\n");
->>>> +	if ((ah->opmode == NL80211_IFTYPE_ADHOC)&&   (sc->nvifs>   0)) {
->>>> +		ath_err(common, "Cannot create any other interface when an ADHOC interface already exists.\n");
->>>> +		ret = -EINVAL;
->>>> +		goto out;
->>>> +	}
->>>> +
->>>> +	if ((vif->type == NL80211_IFTYPE_ADHOC)&&   (sc->nvifs>   0)) {
->>>> +		ath_err(common, "Cannot create ADHOC interface when other interfaces already exist.\n");
->>>
->>> You could just remove the entire check since the interface combinations
->>> you advertise don't allow it, I think? Or just fix those
->>> combinations :-)
->>
->> i did not check this before, thanks a lot for your inputs. will send a
->> proper v2 after checking this out.
->
-> If this is needed for stable, you might want to keep this patch&  send
-> another one to remove it.
+Cancel the MCI work only when MCI is actually enabled.
+Fixes this:
 
-thanks Johannes.
-i was looking at how to fix this properly in iface combination 
-advertised to mac80211.  got few doubts regarding this
+[96833.124051] Call Trace:
+[96833.124060]  [<ffffffff810afaf8>] __lock_acquire+0x1518/0x1e40
+[96833.124065]  [<ffffffff810ad126>] ? mark_held_locks+0x86/0x110
+[96833.124069]  [<ffffffff810ad3ad>] ? trace_hardirqs_on+0xd/0x10
+[96833.124073]  [<ffffffff814464f0>] ? _raw_spin_unlock_irq+0x30/0x70
+[96833.124078]  [<ffffffff81072968>] ? wait_on_cpu_work+0x98/0xc0
+[96833.124082]  [<ffffffff810b0a11>] lock_acquire+0xa1/0x150
+[96833.124085]  [<ffffffff81072990>] ? wait_on_cpu_work+0xc0/0xc0
+[96833.124088]  [<ffffffff81072990>] ? wait_on_cpu_work+0xc0/0xc0
+[96833.124092]  [<ffffffff810729e2>] wait_on_work+0x52/0x120
+[96833.124095]  [<ffffffff81072990>] ? wait_on_cpu_work+0xc0/0xc0
+[96833.124099]  [<ffffffff81063b3f>] ? del_timer+0x7f/0x110
+[96833.124102]  [<ffffffff81072c13>] __cancel_work_timer+0x83/0x130
+[96833.124106]  [<ffffffff81072cf0>] cancel_work_sync+0x10/0x20
+[96833.124113]  [<ffffffffa065b5cd>] __ath_cancel_work+0x4d/0x60 [ath9k]
+[96833.124119]  [<ffffffffa065cf28>] ath9k_config+0x458/0x680 [ath9k]
+[96833.124125]  [<ffffffffa065dd1e>] ? ath9k_flush+0x6e/0x1d0 [ath9k]
+[96833.124129]  [<ffffffff8144394d>] ? __mutex_unlock_slowpath+0x10d/0x190
+[96833.124146]  [<ffffffffa056c7b5>] ieee80211_hw_config+0x135/0x2a0 [mac80211]
+[96833.124163]  [<ffffffffa057ebbb>] ieee80211_do_open+0x67b/0xc50 [mac80211]
+[96833.124178]  [<ffffffffa057f1fd>] ieee80211_open+0x6d/0x80 [mac80211]
+[96833.124183]  [<ffffffff8137a44f>] __dev_open+0x9f/0xf0
+[96833.124187]  [<ffffffff8137a701>] __dev_change_flags+0xa1/0x180
+[96833.124190]  [<ffffffff8137a898>] dev_change_flags+0x28/0x70
+[96833.124195]  [<ffffffff813e1179>] devinet_ioctl+0x659/0x780
+[96833.124199]  [<ffffffff8137aea0>] ? dev_ioctl+0x210/0x6d0
+[96833.124203]  [<ffffffff813e1db5>] inet_ioctl+0x75/0x90
+[96833.124208]  [<ffffffff8135e0e0>] sock_do_ioctl+0x30/0x70
+[96833.124211]  [<ffffffff8135e3dd>] sock_ioctl+0x7d/0x2c0
+[96833.124218]  [<ffffffff81193c39>] do_vfs_ioctl+0x99/0x580
+[96833.124222]  [<ffffffff81447415>] ? sysret_check+0x22/0x5d
+[96833.124226]  [<ffffffff811941b9>] sys_ioctl+0x99/0xa0
+[96833.124230]  [<ffffffff814473e9>] system_call_fastpath+0x16/0x1b
 
-*if an interface type is not all advertised in the 
-ieee80211_iface_combination then it cannot it be co-existing with any 
-other interfaces ?
-please let me know is there some other way do that.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-if we advertise something like this
-
-static const struct ieee80211_iface_limit if_limits[] = {
-	{set1
-     	.... },
-	{set 2
-	.... },
-};
-
-then interface types in set1 and set2 co-exist as per the logic in 
-cfg80211_can_change_interface. is there already a way we can make
-set1 and set2 interface types mutually exclusive ? thanks!
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 85f9ab4..ea4ec25 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -150,9 +150,9 @@ static void __ath_cancel_work(struct ath_softc *sc)
+ 	cancel_work_sync(&sc->hw_check_work);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->hw_pll_work);
+-#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+-	cancel_work_sync(&sc->mci_work);
+-#endif
++
++	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
++		cancel_work_sync(&sc->mci_work);
+ }
+ 
+ static void ath_cancel_work(struct ath_softc *sc)
 -- 
-thanks,
-shafi
+1.7.11
+
