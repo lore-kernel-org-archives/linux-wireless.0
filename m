@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:38674 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751656Ab2FTDYN convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Tue, 19 Jun 2012 23:24:13 -0400
-Received: by bkcji2 with SMTP id ji2so5767984bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 20:24:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
-References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
-	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
-Date: Wed, 20 Jun 2012 11:24:03 +0800
-Message-ID: <CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com> (sfid-20120620_052416_705364_BBED8D88)
-Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
-From: Matt Chen <machen@suse.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:49638 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757253Ab2FYRPJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 13:15:09 -0400
+Message-ID: <1340644546.31710.6.camel@lappy> (sfid-20120625_191538_736706_8A18382A)
+Subject: Re: [PATCH] NFC: only put local on destruction if it was created
+ before
+From: Sasha Levin <levinsasha928@gmail.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	linville@tuxdriver.com, davej@redhat.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Mon, 25 Jun 2012 19:15:46 +0200
+In-Reply-To: <20120625171738.GC16275@sortiz-mobl>
+References: <1339531699-7377-1-git-send-email-levinsasha928@gmail.com>
+	 <20120625171738.GC16275@sortiz-mobl>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+On Mon, 2012-06-25 at 19:17 +0200, Samuel Ortiz wrote:
+> Hi Sasha,
+> 
+> On Tue, Jun 12, 2012 at 10:08:19PM +0200, Sasha Levin wrote:
+> > Not having 'local' is a valid case when a socket was created but never
+> > bound or connected to anything, so avoid putting 'local' if it was
+> > never created.
+> > 
+> > Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+> > ---
+> >  net/nfc/llcp/sock.c |    3 ++-
+> >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+> > index 2c0b317..54daa10 100644
+> > --- a/net/nfc/llcp/sock.c
+> > +++ b/net/nfc/llcp/sock.c
+> > @@ -710,7 +710,8 @@ void nfc_llcp_sock_free(struct nfc_llcp_sock *sock)
+> >  
+> >  	sock->parent = NULL;
+> >  
+> > -	nfc_llcp_local_put(sock->local);
+> > +	if (sock->local)
+> > +		nfc_llcp_local_put(sock->local);
+> nfc_llcp_local_put() already checks for its argument being NULL or not.
 
-2012/6/19 Mohammed Shafi <shafi.wireless@gmail.com>:
-> Hi Matt,
->
->> I tested the latest kernel v3.5-rc3 ath9k for the Atheros [168c 0034],
->> code name is Miami. I found no matter how I press the wifi button to
->> enable/disable the wifi, it doesn't work to me.
->> Even I found the rfkill status for this interface is not changing.
->
-> its a AR9462please poke at the register  #define AR_GPIO_IN  -> 0x402c : 0x404c)
-I do
-1) echo 0x402c > regidx
-     watch -n 1 regval
-2) echo 0x404c > regidx
-    watch -n1 regval
-> i remember testing it in a acer laptop, it was working.
-Both 1) and 2) shows no different in their value no matter how I press
-the wifi button. :(
+nfc_llcp_local_put() triggers a warning in this case as well, which
+means that this code path shouldn't be happening.
 
->>
->> --
->> Thank you.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> thanks,
-> shafi
->
+Should we remove the WARN_ON from nfc_llcp_local_put() instead?
 
-
-
--- 
-Thank you.
