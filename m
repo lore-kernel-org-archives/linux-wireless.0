@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:33695 "EHLO
-	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932082Ab2FGUkI (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:47720 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757184Ab2FYQxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 16:40:08 -0400
-Received: by lbbgg6 with SMTP id gg6so975304lbb.36
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 13:39:43 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH 2/9] wlcore: add debugfs control over rx interrupt pacing
-Date: Thu,  7 Jun 2012 23:39:21 +0300
-Message-Id: <1339101568-25346-3-git-send-email-coelho@ti.com> (sfid-20120607_224017_262330_8F06018F)
-In-Reply-To: <1339101568-25346-1-git-send-email-coelho@ti.com>
-References: <1339101568-25346-1-git-send-email-coelho@ti.com>
+	Mon, 25 Jun 2012 12:53:53 -0400
+Date: Mon, 25 Jun 2012 11:53:45 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] brcmsmac: fix NULL pointer crash in brcms_c_regd_init()
+Message-ID: <20120625165345.GB4495@thinkpad-t410> (sfid-20120625_185356_826786_8E724523)
+References: <1340286553-12053-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1340286553-12053-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi Arend,
 
-Add control over several conf fields which combined
-control the rx interrupt pacing mechanism, that is avoiding
-getting an interrupt following a single frame rx but instead
-have the FW trigger the interrupt only after a certain
-amount of frames received or a timeout.
+Sorry for my slow response. I was on vacation last week.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/debugfs.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+On Thu, Jun 21, 2012 at 03:49:13PM +0200, Arend van Spriel wrote:
+> In the function brcms_c_regd_init() the channels are validated
+> against the device capabilities. This is done for both 2.4G and
+> 5G band, but there are devices that are 2.4G only, ie. BCM4313.
+> For that device this leads to a NULL dereference. This patch adds
+> a check in brcms_c_regd_init() to fix this.
+> 
+> Issue introduced in wireless-next tree by following commit:
+> cf03c5d brcm80211: smac: inform mac80211 of the X2 regulatory domain
+> 
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Noticed that one of smoketest machines actually was not sending results
+> ever since I staged regulatory fixes for it. This particular system has
+> a 2.4G card fitted so the root cause was quickly found.
+> 
+> Gr. AvS
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/channel.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+> index d3c7260..2d365d3 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+> @@ -768,6 +768,11 @@ void brcms_c_regd_init(struct brcms_c_info *wlc)
+>  			band = wlc->bandstate[BAND_2G_INDEX];
+>  		else
+>  			band = wlc->bandstate[BAND_5G_INDEX];
+> +
+> +		/* skip if band not initialized */
+> +		if (band->pi == NULL)
+> +			continue;
+> +
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index 50300ff..827a728 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -177,6 +177,14 @@ static inline void no_write_handler(struct wl1271 *wl,
- 		.open = simple_open,					\
- 		.llseek = default_llseek,				\
- 	};
-+
-+WL12XX_CONF_DEBUGFS(irq_pkt_threshold, rx, 0, 65535,
-+		    chip_op_handler, wl1271_acx_init_rx_interrupt)
-+WL12XX_CONF_DEBUGFS(irq_blk_threshold, rx, 0, 65535,
-+		    chip_op_handler, wl1271_acx_init_rx_interrupt)
-+WL12XX_CONF_DEBUGFS(irq_timeout, rx, 0, 100,
-+		    chip_op_handler, wl1271_acx_init_rx_interrupt)
-+
- static ssize_t gpio_power_read(struct file *file, char __user *user_buf,
- 			  size_t count, loff_t *ppos)
- {
-@@ -957,6 +965,9 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
- 	DEBUGFS_ADD(forced_ps, rootdir);
- 	DEBUGFS_ADD(split_scan_timeout, rootdir);
-+	DEBUGFS_ADD(irq_pkt_threshold, rootdir);
-+	DEBUGFS_ADD(irq_blk_threshold, rootdir);
-+	DEBUGFS_ADD(irq_timeout, rootdir);
- 
- 	streaming = debugfs_create_dir("rx_streaming", rootdir);
- 	if (!streaming || IS_ERR(streaming))
--- 
-1.7.10
+Yeah, I definitely messed that up.
+
+This looks fine, but it strikes me that it might simplify things a bit
+to change the loop to iterate over over wlc->pub->_nbands instead. The
+difference is pretty minor though, and since John has already applied
+this patch there's probably no reason to change it.
+
+Thanks,
+Seth
 
