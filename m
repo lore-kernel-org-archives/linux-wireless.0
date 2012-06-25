@@ -1,26 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41013 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32917 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145Ab2FGHZq (ORCPT
+	with ESMTP id S1752951Ab2FYBA6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 03:25:46 -0400
-Message-ID: <4FD05774.6010103@qca.qualcomm.com> (sfid-20120607_092548_568868_B157DC6D)
-Date: Thu, 7 Jun 2012 10:25:40 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sun, 24 Jun 2012 21:00:58 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<ath6kl-devel@qualcomm.com>
-Subject: Re: [RFC 2/2] mac80211: support rssi threshold scan
-References: <1339036996-6199-1-git-send-email-c_tpeder@qca.qualcomm.com> <1339036996-6199-2-git-send-email-c_tpeder@qca.qualcomm.com>
-In-Reply-To: <1339036996-6199-2-git-send-email-c_tpeder@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20455.47109.203396.141311@gargle.gargle.HOWL> (sfid-20120625_030110_856298_39693A50)
+Date: Mon, 25 Jun 2012 06:29:49 +0530
+To: Guido Iribarren <guidoiribarren@buenosaireslibre.org>
+CC: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Regression on ath9k_htc managed mode
+In-Reply-To: <CAHD-aq+nNs4L0iZNxYSABX-1Wk+B=s-Avqc1TFYfO-8JOOZ5kA@mail.gmail.com>
+References: <CAHD-aq+nNs4L0iZNxYSABX-1Wk+B=s-Avqc1TFYfO-8JOOZ5kA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 05:43 AM, Thomas Pedersen wrote:
-> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Guido Iribarren wrote:
+> Hello nice people,
+> we've recently found a bug when using infrastructure mode with tplink
+> wn722n usb dongles (ath9k_htc driver)
 
-A small description would be nice even when the patch is obvious.
+Can you try this patch : http://tinyurl.com/7ywqzoz ?
 
-Kalle
+Sujith
