@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39180 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756578Ab2FNSij (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 14:38:39 -0400
-Message-ID: <1339699110.9786.9.camel@jlt3.sipsolutions.net> (sfid-20120614_203846_395420_1F3EE948)
-Subject: Re: [patch -next] iwlwifi: unlock on error path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Date: Thu, 14 Jun 2012 20:38:30 +0200
-In-Reply-To: <20120614183526.GD6383@elgon.mountain> (sfid-20120614_203557_447921_E8796EB4)
-References: <20120614183526.GD6383@elgon.mountain>
-	 (sfid-20120614_203557_447921_E8796EB4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:44087 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756365Ab2FYNcO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 09:32:14 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: sylvain_gmail <sylvain.roger.rieunier@gmail.com>
+Cc: Victor Goldenshtein <victorg@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add command to get current rssi
+References: <1337669130-4229-1-git-send-email-victorg@ti.com>
+	<4FE85430.3030007@gmail.com>
+Date: Mon, 25 Jun 2012 16:32:13 +0300
+In-Reply-To: <4FE85430.3030007@gmail.com> (sylvain gmail's message of "Mon, 25
+	Jun 2012 14:06:08 +0200")
+Message-ID: <87y5nb34bm.fsf@purkki.adurom.net> (sfid-20120625_153222_189764_93DE43F6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-14 at 21:35 +0300, Dan Carpenter wrote:
-> We introduced a lock here in ff1ffb850b ("iwlwifi: fix dynamic
-> loading").  But we missed an error path which needs an unlock.
+sylvain_gmail <sylvain.roger.rieunier@gmail.com> writes:
 
-Thanks Dan. John, this is the other merge issue I was talking about :-)
+> But do not you think it would be interesting to have a function that
+> returns the RSSI signal by antennas?
 
-johannes
+Just out of interest, how would user space use that information? Do you
+have any ideas?
 
+-- 
+Kalle Valo
