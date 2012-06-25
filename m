@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:60610 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473Ab2F1MMA (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:48012 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755621Ab2FYKIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 08:12:00 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120625171532.GB16275@sortiz-mobl>
-References: <1339423241.4999.53.camel@lappy> <20120611144134.GX22557@sortiz-mobl>
- <1339425693.6001.2268.camel@edumazet-glaptop> <20120611145700.GY22557@sortiz-mobl>
- <1339426778.6001.2312.camel@edumazet-glaptop> <20120611152007.GZ22557@sortiz-mobl>
- <1339433810.4999.65.camel@lappy> <20120611172545.GA1776@redhat.com>
- <CA+1xoqcwr-5dzHvqkt9x0-xj9EFAywVfva=asbHXvX-LSBWqdA@mail.gmail.com>
- <1340639612.10893.84.camel@edumazet-glaptop> <20120625171532.GB16275@sortiz-mobl>
-From: Sasha Levin <levinsasha928@gmail.com>
-Date: Thu, 28 Jun 2012 14:11:38 +0200
-Message-ID: <CA+1xoqfy21wOh2myV0D6iBDqoZ3YmkwNZwKBVXLU75zePOGi4w@mail.gmail.com> (sfid-20120628_141225_033827_3A0FAFD8)
-Subject: Re: [PATCH] net: nfc: fix panic in accept()
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	Dave Jones <davej@redhat.com>,
-	David Miller <davem@davemloft.net>,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 25 Jun 2012 06:08:41 -0400
+Received: by lbok6 with SMTP id k6so7210222lbo.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 03:08:39 -0700 (PDT)
+Message-ID: <1340618917.1631.467.camel@cumari.coelho.fi> (sfid-20120625_120847_201914_1EFC18C1)
+Subject: Re: pull request: TI wireless drivers 2012-06-24 (for 3.6)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, arik@wizery.com, assaf@ti.com
+Date: Mon, 25 Jun 2012 13:08:37 +0300
+In-Reply-To: <1340527191.1631.423.camel@cumari.coelho.fi>
+References: <1340527191.1631.423.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
+Hi John,
 
-On Mon, Jun 25, 2012 at 7:15 PM, Samuel Ortiz <sameo@linux.intel.com> wrote:
-> Hi Eric,
->
-> On Mon, Jun 25, 2012 at 05:53:32PM +0200, Eric Dumazet wrote:
->> From: Eric Dumazet <edumazet@google.com>
->>
->> Sasha Levin reported following panic :
-> I applied a similar patch, more consistent with the rest of the NFC socket
-> code, still with you as the author. See here:
->
-> http://git.kernel.org/?p=linux/kernel/git/sameo/nfc-3.0.git;a=commit;h=631c301f20558525a641fadffc0126affd3dc4a4
+On Sun, 2012-06-24 at 11:39 +0300, Luciano Coelho wrote:
+> Hi John,
+> 
+> One more pull request intended for 3.6.  Mostly about SDIO error
+> handling (by Ido) and correct handling and recovery during
+> suspend/resume.  Plus one new debugfs entry that allows easier FW
+> debugging, by Arkady.
+> 
+> Please pull or let me know if there's any problem.
 
-Could this tree be included in -next please?
+Please hold on with this pull request.  We have found a serious bug and
+will fix it.  I'll send a v2 later today.
+
+Thanks!
+
+--
+Luca.
+
