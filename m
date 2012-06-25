@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41315 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756514Ab2FONZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 09:25:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com
-Subject: [PATCH 2/9] ath9k_hw: fix OFDM weak signal detection handling
-Date: Fri, 15 Jun 2012 15:25:20 +0200
-Message-Id: <1339766727-61926-2-git-send-email-nbd@openwrt.org> (sfid-20120615_152552_964511_2D60A641)
-In-Reply-To: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
-References: <1339766727-61926-1-git-send-email-nbd@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37345 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756996Ab2FYQNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 12:13:22 -0400
+Message-ID: <4FE88E1A.9050202@hauke-m.de> (sfid-20120625_181326_743363_A8910A57)
+Date: Mon, 25 Jun 2012 18:13:14 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: Question about BCM43228 and outdated description in MAINTAINERS
+References: <4FE886B3.7020202@lwfinger.net>
+In-Reply-To: <4FE886B3.7020202@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit "ath9k_hw: improve ANI processing and rx desensitizing parameters"
-was unifying some code related to overriding OFDM weak signal detection,
-but seems to have gotten some of the original intent wrong, probably
-because of a misnamed variable.
+On 06/25/2012 05:41 PM, Larry Finger wrote:
+> Hi,
+> 
+> I recently received a donated BCM43228 (14e4:4359) mini-PCIe card. At
+> the moment, neither b43 nor brcmsmac support it. Although, grepping the
+> proprietary driver wl shows that it would recognize that PCI ID, that
+> driver does not load as it requires routine lockdep_init_map(), which is
+> exported only for GPL modules. As a result, owners of this device can
+> only use it with Linux if they can find a suitable Windows driver for
+> use with ndiswrapper. In my experience, that means that 64-bit users are
+> out of luck.
+> 
+> Reverse engineering this device to be able to drive it with b43 would
+> involve a lot of effort. If your group is planning on adding it to
+> brcmsmac, then I would not undertake this project. To the fullest extent
+> that you can, please advise me regarding this matter.
 
-The beacon RSSI is only valid in station mode, and the main reason to check
-it in ath9k_hw_set_ofdm_nil is to make sure that OFDM weak signal detection
-stays enabled if the RSSI is low, even when the OFDM noise immunity entry
-is supposed to disable it.
+The TODO list for brcmsmac at
+http://linuxwireless.org/en/users/Drivers/brcm80211 contains the
+following point since May 2011:
 
-The above commit removed the mode checks and changed the code so that
-OFDM weak signal detection would only be changed if the rssi is high, which
-is wrong for everything but client mode.
+Add support for more chips, including (near term) BCM43227, BCM43228,
+and BCM4331. Support for additional new chips to follow.
 
-This patch restores the old behavior in a simplified form.
+@Broadcom Are there any concrete, current plans for adding support for
+these chips? Or would it be possible that you at least release the phy
+code needed for these devices as is so that someone could integrate it
+into brcmsmac or b43?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ani.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 18ce69d..cf31050 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -265,6 +265,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	const struct ani_ofdm_level_entry *entry_ofdm;
- 	const struct ani_cck_level_entry *entry_cck;
-+	bool weak_sig;
- 
- 	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
- 		aniState->ofdmNoiseImmunityLevel,
-@@ -290,13 +291,15 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
- 				     ATH9K_ANI_FIRSTEP_LEVEL,
- 				     entry_ofdm->fir_step_level);
- 
--	if (BEACON_RSSI(ah) >= aniState->rssiThrHigh &&
--	    (!aniState->ofdmWeakSigDetectOff !=
--	     entry_ofdm->ofdm_weak_signal_on)) {
-+	weak_sig = entry_ofdm->ofdm_weak_signal_on;
-+	if (ah->opmode == NL80211_IFTYPE_STATION &&
-+	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
-+		weak_sig = true;
-+
-+	if (!aniState->ofdmWeakSigDetectOff != weak_sig)
- 			ath9k_hw_ani_control(ah,
- 				ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
- 				entry_ofdm->ofdm_weak_signal_on);
--	}
- }
- 
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
--- 
-1.7.3.2
-
+Hauke
