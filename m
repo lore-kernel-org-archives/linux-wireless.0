@@ -1,215 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:49614 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932874Ab2F1KH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 06:07:29 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 12/13] cfg80211: add channel checking for iface combinations
-Date: Thu, 28 Jun 2012 12:07:04 +0200
-Message-ID: <1340878025-2695-13-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120740_727143_82464C2F)
-In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
-References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15421 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755159Ab2FYON7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 10:13:59 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3 03/10] ath9k_hw: Add WoW hardware capability flags
+Date: Mon, 25 Jun 2012 19:42:52 +0530
+Message-ID: <1340633579-7514-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120625_161409_916121_F63B8D36)
+In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.connect cannot be handled since the driver scans
-and connects on its own. It is up to the driver
-then to refuse a connection (with -EBUSY for
-example).
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Non-fixed channel IBSSes always take a single
-channel resource. For example two non-fixed
-channel IBSSes always take up 2
-num_different_channels, even if they operate on
-the same channel at a given point of time.
+have seperate wow capability flags for
+*basic wow support
+*device capable of matching exact user defined pattern
+or de-authentication/disassoc pattern
+*device such AR9280 requires first four bytes for
+all sort of patterns
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- net/wireless/core.c |    8 +++++++
- net/wireless/core.h |   29 ++++++++++++++++++++++--
- net/wireless/util.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++----
- 3 files changed, 88 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.h |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5b3f74e..2fed61b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -436,6 +436,14 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 		if (WARN_ON(!c->num_different_channels))
- 			return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 2d5ae5e..c8b800d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -228,8 +228,22 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_RTT			= BIT(14),
+ 	ATH9K_HW_CAP_MCI			= BIT(15),
+ 	ATH9K_HW_CAP_DFS			= BIT(16),
++	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
++	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(18),
++	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(19),
+ };
  
-+		/*
-+		 * Put a sane limit on maximum number of different
-+		 * channels to simplify channel accounting code.
-+		 */
-+		if (WARN_ON(c->num_different_channels >
-+				CFG80211_MAX_NUM_DIFFERENT_CHANNELS))
-+			return -EINVAL;
++/*
++ * WoW device capabilities
++ * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
++ * an exact user defined pattern or de-authentication/disassoc pattern.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
++ * bytes of the pattern for user defined pattern, de-authentication and
++ * disassociation patterns for all types of possible frames recieved
++ * of those types.
++ */
 +
- 		if (WARN_ON(!c->n_limits))
- 			return -EINVAL;
- 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9d9441d..63e04f6 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -454,9 +454,20 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 			  u32 *flags, struct vif_params *params);
- void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev);
- 
--int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
--				  struct wireless_dev *wdev,
--				  enum nl80211_iftype iftype);
-+int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
-+				 struct wireless_dev *wdev,
-+				 enum nl80211_iftype iftype,
-+				 struct ieee80211_channel *chan,
-+				 enum cfg80211_chan_mode chanmode);
-+
-+static inline int
-+cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
-+			      struct wireless_dev *wdev,
-+			      enum nl80211_iftype iftype)
-+{
-+	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
-+					    CHAN_MODE_UNDEFINED);
-+}
- 
- static inline int
- cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
-@@ -465,6 +476,16 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
- 	return cfg80211_can_change_interface(rdev, NULL, iftype);
- }
- 
-+static inline int
-+cfg80211_can_use_chan(struct cfg80211_registered_device *rdev,
-+		      struct wireless_dev *wdev,
-+		      struct ieee80211_channel *chan,
-+		      enum cfg80211_chan_mode chanmode)
-+{
-+	return cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-+					    chan, chanmode);
-+}
-+
- void
- cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
- 		        struct wireless_dev *wdev,
-@@ -487,6 +508,8 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 			       enum nl80211_iftype iftype, int num);
- 
-+#define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10
-+
- #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
- #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
- #else
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 9b92ec5..4713cea 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -938,13 +938,20 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
- }
- 
--int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
--				  struct wireless_dev *wdev,
--				  enum nl80211_iftype iftype)
-+int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
-+				 struct wireless_dev *wdev,
-+				 enum nl80211_iftype iftype,
-+				 struct ieee80211_channel *chan,
-+				 enum cfg80211_chan_mode chanmode)
- {
- 	struct wireless_dev *wdev_iter;
- 	u32 used_iftypes = BIT(iftype);
- 	int num[NUM_NL80211_IFTYPES];
-+	struct ieee80211_channel
-+			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
-+	struct ieee80211_channel *ch;
-+	enum cfg80211_chan_mode chmode;
-+	int num_different_channels = 0;
- 	int total = 1;
- 	int i, j;
- 
-@@ -955,9 +962,23 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 		return 0;
- 
- 	memset(num, 0, sizeof(num));
-+	memset(used_channels, 0, sizeof(used_channels));
- 
- 	num[iftype] = 1;
- 
-+	switch (chanmode) {
-+	case CHAN_MODE_UNDEFINED:
-+		break;
-+	case CHAN_MODE_SHARED:
-+		WARN_ON(!chan);
-+		used_channels[0] = chan;
-+		num_different_channels++;
-+		break;
-+	case CHAN_MODE_EXCLUSIVE:
-+		num_different_channels++;
-+		break;
-+	}
-+
- 	mutex_lock(&rdev->devlist_mtx);
- 	list_for_each_entry(wdev_iter, &rdev->netdev_list, list) {
- 		if (wdev_iter == wdev)
-@@ -968,6 +989,31 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 		if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
- 			continue;
- 
-+		cfg80211_get_chan_state(rdev, wdev_iter, &ch, &chmode);
-+
-+		switch (chmode) {
-+		case CHAN_MODE_UNDEFINED:
-+			break;
-+		case CHAN_MODE_SHARED:
-+			for (i = 0; i < CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
-+				if (!used_channels[i] || used_channels[i] == ch)
-+					break;
-+
-+			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS) {
-+				mutex_unlock(&rdev->devlist_mtx);
-+				return -EBUSY;
-+			}
-+
-+			if (used_channels[i] == NULL) {
-+				used_channels[i] = ch;
-+				num_different_channels++;
-+			}
-+			break;
-+		case CHAN_MODE_EXCLUSIVE:
-+			num_different_channels++;
-+			break;
-+		}
-+
- 		num[wdev_iter->iftype]++;
- 		total++;
- 		used_iftypes |= BIT(wdev_iter->iftype);
-@@ -984,12 +1030,15 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 
- 		c = &rdev->wiphy.iface_combinations[i];
- 
-+		if (total > c->max_interfaces)
-+			continue;
-+		if (num_different_channels > c->num_different_channels)
-+			continue;
-+
- 		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
- 				 GFP_KERNEL);
- 		if (!limits)
- 			return -ENOMEM;
--		if (total > c->max_interfaces)
--			goto cont;
- 
- 		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
- 			if (rdev->wiphy.software_iftypes & BIT(iftype))
+ struct ath9k_hw_capabilities {
+ 	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
+ 	u16 rts_aggr_limit;
 -- 
 1.7.0.4
 
