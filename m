@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51776 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59880 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753251Ab2FEGhq (ORCPT
+	with ESMTP id S1755261Ab2FYH2C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 02:37:46 -0400
-Message-ID: <1338878259.4514.9.camel@jlt3.sipsolutions.net> (sfid-20120605_083749_109063_CBF0E159)
-Subject: Re: iwlwifi: bad error case cleanup for startup failure
+	Mon, 25 Jun 2012 03:28:02 -0400
+Message-ID: <1340609280.4589.2.camel@jlt3.sipsolutions.net> (sfid-20120625_092806_913849_B671FEB0)
+Subject: Re: [RFCv2 10/13] cfg80211: set initial monitor channel
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <linus971@gmail.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 05 Jun 2012 08:37:39 +0200
-In-Reply-To: <CA+55aFxcC2mG8OUQ_cgM-vZGfnRZ09573b311G+81616Hgie9g@mail.gmail.com> (sfid-20120605_063338_789673_2F90D2E5)
-References: <CA+55aFxcC2mG8OUQ_cgM-vZGfnRZ09573b311G+81616Hgie9g@mail.gmail.com>
-	 (sfid-20120605_063338_789673_2F90D2E5)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 25 Jun 2012 09:28:00 +0200
+In-Reply-To: <4FE80BD8.4090904@tieto.com>
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+	  <1340172859-18146-11-git-send-email-michal.kazior@tieto.com>
+	 <1340290665.4489.33.camel@jlt3.sipsolutions.net>
+	 <4FE80BD8.4090904@tieto.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-06-04 at 21:33 -0700, Linus Torvalds wrote:
-> If the iwlwifi firmware loading calling iwl_ucode_callback() fails to
-> start up the wireless driver - which will happen if CONFIG_PM is not
-> enabled due to a mac80211 bug - iwlwifi will incorrectly try to
-> release the firmware twice.
+On Mon, 2012-06-25 at 08:57 +0200, Michal Kazior wrote:
+> Johannes Berg wrote:
+> > On Wed, 2012-06-20 at 08:14 +0200, Michal Kazior wrote:
+> >> Implements behaviour seen in mac80211. A running
+> >> monitor always has a channel - even before
+> >> .set_channel. This way we won't break current
+> >> behaviour.
+> >
+> > I'm a little doubtful about this. Currently, mac80211 will keep the
+> > channel if you set it on say wlan0, your monitor iface gets the same
+> > channel. Then if you remove wlan0, you still have the same channel, but
+> > it seems here this is different now? I'm not sure it matters much, but
+> > it's worth thinking about? Or am I totally misunderstanding this now?
 > 
-> It already released the firmware and completed the firmware loading
-> event after copying it to the internal driver buffers, if the driver
-> startup fails it should not try to release it again.
-> 
-> The double release causes very nasty vmalloc() corruption, and results
-> in some rather non-obvious page faults. To make matters worse, this
-> happens within the context of the firmware loader callback, usually a
-> kworker thread - and the killing of that thread then causes further
-> problems, making the original issue very hard to discern.
-> 
-> The attached patch seems to fix it.
+> Right. It's not the exact same behaviour. It only guarantees a channel 
+> is always set in monitor mode. We could maybe set the last 
+> monitor-mode-channel seen when starting up monitor-mode again. Would 
+> that be okay?
 
-Yes, this seems correct, but there appears to be a related race
-condition bug: due to the complete happening before iwl_dvm_ops.start()
-we could go into iwl_dvm_ops.stop() while start() is running which
-seems ... strange. I'll also move the complete() after the start() call.
+Yeah I think that's probably fine. Come to think of it, without that
+change you always have a channel pointer, but it's not guaranteed to be
+programmed into the device? Maybe I'm confused.
 
 johannes
 
