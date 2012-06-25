@@ -1,40 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35533 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757609Ab2FAIVy (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8673 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757097Ab2FYOOg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 04:21:54 -0400
-Message-ID: <1338538911.4884.10.camel@jlt3.sipsolutions.net> (sfid-20120601_102240_732074_43371C49)
-Subject: Re: [PATCH] mac80211: clear ifmgd->bssid only after building DELBA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 01 Jun 2012 10:21:51 +0200
-In-Reply-To: <1338538443-23172-1-git-send-email-eliad@wizery.com> (sfid-20120601_101428_305649_924D8D82)
-References: <1338538443-23172-1-git-send-email-eliad@wizery.com>
-	 (sfid-20120601_101428_305649_924D8D82)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 25 Jun 2012 10:14:36 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3 06/10] ath9k_hw: INI changes for WoW for AR9002 chipsets
+Date: Mon, 25 Jun 2012 19:42:55 +0530
+Message-ID: <1340633579-7514-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120625_161441_131759_3CCF6393)
+In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-01 at 11:14 +0300, Eliad Peller wrote:
-> ieee80211_set_disassoc() clears ifmgd->bssid before
-> building DELBA frames, resulting in frames with invalid
-> bssid ("00:00:00:00:00:00").
-> 
-> Fix it by clearing ifmgd->bssid only after building
-> all the needed frames.
-> 
-> After this change, we no longer need to save the
-> bssid (before clearing it), so remove the local array.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-I'm not convinced clearing the BSSID this late is correct, there's a lot
-of code using it, for example comparing it on RX, that we may not want
-to have it at this point any more.
+for AR9002 family of chipsets and for WoW sleep, we reprogram
+the SerDes so that the PLL and CHK REQ are both enabled. this
+uses more power but in certain cases this is required as otherwise
+WoW sleep is unstable and chip may disappear.
 
-It may well be that this is no longer a concern, but I wouldn't dismiss
-it right away.
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +++++
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 ++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h              |    3 +++
+ 3 files changed, 22 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index edf21ea..0e6ee60 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -43,6 +43,11 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdes,
+ 			   ar9280PciePhy_clkreq_always_on_L1_9280,
+ 			   ARRAY_SIZE(ar9280PciePhy_clkreq_always_on_L1_9280), 2);
++#ifdef CONFIG_PM_SLEEP
++		INIT_INI_ARRAY(&ah->iniPcieSerdesWow,
++			       ar9280PciePhy_awow,
++			       ARRAY_SIZE(ar9280PciePhy_awow), 2);
++#endif
+ 
+ 	if (AR_SREV_9287_11_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModes, ar9287Modes_9287_1_1,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+index 4d18c66..beb6162 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+@@ -925,6 +925,20 @@ static const u32 ar9280PciePhy_clkreq_always_on_L1_9280[][2] = {
+ 	{0x00004044, 0x00000000},
+ };
+ 
++static const u32 ar9280PciePhy_awow[][2] = {
++	/* Addr      allmodes  */
++	{0x00004040, 0x9248fd00},
++	{0x00004040, 0x24924924},
++	{0x00004040, 0xa8000019},
++	{0x00004040, 0x13160820},
++	{0x00004040, 0xe5980560},
++	{0x00004040, 0xc01dcffd},
++	{0x00004040, 0x1aaabe41},
++	{0x00004040, 0xbe105554},
++	{0x00004040, 0x00043007},
++	{0x00004044, 0x00000000},
++};
++
+ static const u32 ar9285Modes_9285_1_2[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index c8b800d..f3ee7b9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -845,6 +845,9 @@ struct ath_hw {
+ 	struct ar5416IniArray iniBank7;
+ 	struct ar5416IniArray iniAddac;
+ 	struct ar5416IniArray iniPcieSerdes;
++#ifdef CONFIG_PM_SLEEP
++	struct ar5416IniArray iniPcieSerdesWow;
++#endif
+ 	struct ar5416IniArray iniPcieSerdesLowPower;
+ 	struct ar5416IniArray iniModesFastClock;
+ 	struct ar5416IniArray iniAdditional;
+-- 
+1.7.0.4
 
