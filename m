@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:58815 "HELO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932236Ab2F1C7X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 22:59:23 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/4] mwifiex: do not advertise custom regulatory domain capability
-Date: Wed, 27 Jun 2012 19:57:58 -0700
-Message-Id: <1340852279-24964-4-git-send-email-bzhao@marvell.com> (sfid-20120628_045929_678245_26AF2005)
-In-Reply-To: <1340852279-24964-1-git-send-email-bzhao@marvell.com>
-References: <1340852279-24964-1-git-send-email-bzhao@marvell.com>
+Received: from mail.neratec.com ([80.75.119.105]:36684 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755600Ab2FYKqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 06:46:35 -0400
+Message-ID: <4FE84184.4090601@neratec.com> (sfid-20120625_124639_222171_0063A988)
+Date: Mon, 25 Jun 2012 12:46:28 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"Chadd, Adrian" <achadd@qca.qualcomm.com>,
+	Benoit Papillault <benoit.papillault@free.fr>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: [ANN] DFS testing: use USRP-Radar-Relay for SDR radar pattern generation
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hello DFS folks,
 
-Since we don't support custom regulatory domains,
-WIPHY_FLAG_CUSTOM_REGULATORY should not be enabled during wiphy
-registration.
+now that DFS support is emerging in linux-wireless, we have quite some
+testing ahead.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Testing DFS towards certification at physical layer requires laboratory
+equipment that is very expensive (often going into the 6-digit US$
+range) and makes it non-affordable for independent developers or smaller
+companies.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 8f64b33..78fb959 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1743,7 +1743,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 
- 	memcpy(wiphy->perm_addr, priv->curr_addr, ETH_ALEN);
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
--	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME | WIPHY_FLAG_CUSTOM_REGULATORY;
-+	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME;
- 
- 	/* Reserve space for mwifiex specific private data for BSS */
- 	wiphy->bss_priv_size = sizeof(struct mwifiex_bss_priv);
--- 
-1.7.0.2
+We evaluated a SDR (software defined radio) approach and found it to be
+a very well usable alternative for exorbitant dedicated radar generating
+equipment. Our approach uses an Ettus research USRP N200 device to
+continuously stream radar patterns as waveforms in the time domain to be
+radiated to the attached wiphy.
 
+The SW that abstracts the SDR and the generation of samples for a given
+radar pattern is open sourced and available at [1]. With the
+'USRP-Radar-Relay' SW and SDR you can have a highly customizable and
+flexible radar generating device for less than 2k$ - a definitely lower
+barrier to decentralize DFS testing.
+
+
+Cheers,
+Zefir
+
+
+[1] https://github.com/zefir-kurtisi/USRP-Radar-Relay
