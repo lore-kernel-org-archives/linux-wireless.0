@@ -1,138 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:47920 "EHLO ebb05.tieto.com"
+Received: from plane.gmane.org ([80.91.229.3]:35476 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753848Ab2FTGO1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:14:27 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFCv2 07/13] mac80211: refactor virtual monitor code
-Date: Wed, 20 Jun 2012 08:14:13 +0200
-Message-ID: <1340172859-18146-8-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081455_515435_ACFDD614)
-In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752537Ab2FYB7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jun 2012 21:59:25 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SiyaI-0002DC-D9
+	for linux-wireless@vger.kernel.org; Mon, 25 Jun 2012 03:59:22 +0200
+Received: from c-69-245-126-173.hsd1.mi.comcast.net ([69.245.126.173])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 03:59:22 +0200
+Received: from ilhebe999 by c-69-245-126-173.hsd1.mi.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 03:59:22 +0200
+To: linux-wireless@vger.kernel.org
+From: Ouyang <ilhebe999@gmail.com>
+Subject: make module error
+Date: Mon, 25 Jun 2012 01:59:09 +0000 (UTC)
+Message-ID: <loom.20120625T030454-300@post.gmane.org> (sfid-20120625_035929_686925_C9CBB124)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use cfg80211 the new .set_monitor_enabled instead
-of tracking it inside mac80211.
+kernel version:3.4.3-1.fc17.x86_64
+I had already posted this problem several times and some specialist gave me some 
+suggestions, thanks to them. the problems is still not solved even though I 
+change my fedora 16 to fedora 17.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/cfg.c         |   11 +++++++++++
- net/mac80211/ieee80211_i.h |    4 ++++
- net/mac80211/iface.c       |   16 ++--------------
- 3 files changed, 17 insertions(+), 14 deletions(-)
+After I install ncurses-devel,copy a working kernel configuration of your linux 
+distro to the top level of the wireless-testing tree ,I used the command 
+menuconfig, but I did not change any setting of the menuconfig, just the default 
+value, and then , "make modules': and it comes with:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 85ac364..df7332e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2943,6 +2943,16 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy,
- 	return local->oper_channel;
- }
- 
-+static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	if (enabled)
-+		WARN_ON(ieee80211_add_virtual_monitor(local));
-+	else
-+		ieee80211_del_virtual_monitor(local);
-+}
-+
- #ifdef CONFIG_PM
- static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
- {
-@@ -3018,6 +3028,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.probe_client = ieee80211_probe_client,
- 	.get_channel = ieee80211_wiphy_get_channel,
- 	.set_noack_map = ieee80211_set_noack_map,
-+	.set_monitor_enabled = ieee80211_set_monitor_enabled,
- #ifdef CONFIG_PM
- 	.set_wakeup = ieee80211_set_wakeup,
- #endif
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e6cbf5b..9eb3b8b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1472,6 +1472,10 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       enum nl80211_channel_type channel_type,
- 			       u16 prot_mode);
- 
-+/* virtual monitor */
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
-+
- /* channel management */
- enum ieee80211_chan_mode {
- 	CHAN_MODE_UNDEFINED,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 87aeb4f..47f46fd 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -214,7 +214,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
- }
- 
--static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int ret;
-@@ -255,7 +255,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	return 0;
- }
- 
--static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-@@ -371,12 +371,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 			break;
- 		}
- 
--		if (local->monitors == 0 && local->open_count == 0) {
--			res = ieee80211_add_virtual_monitor(local);
--			if (res)
--				goto err_stop;
--		}
--
- 		/* must be before the call to ieee80211_configure_filter */
- 		local->monitors++;
- 		if (local->monitors == 1) {
-@@ -391,8 +385,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 		break;
- 	default:
- 		if (coming_up) {
--			ieee80211_del_virtual_monitor(local);
--
- 			res = drv_add_interface(local, sdata);
- 			if (res)
- 				goto err_stop;
-@@ -627,7 +619,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		if (local->monitors == 0) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
- 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
--			ieee80211_del_virtual_monitor(local);
- 		}
- 
- 		ieee80211_adjust_monitor_flags(sdata, -1);
-@@ -701,9 +692,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--
--	if (local->monitors == local->open_count && local->monitors > 0)
--		ieee80211_add_virtual_monitor(local);
- }
- 
- static int ieee80211_stop(struct net_device *dev)
--- 
-1.7.0.4
+
+In file included from drivers/net/wireless/at76c50x-usb.c:46:0:
+include/net/mac80211.h: In function ‘ieee80211_tx_info_clear_status’:
+include/net/mac80211.h:638:2: error: size of unnamed array is negative
+include/net/mac80211.h:643:2: error: size of unnamed array is negative
+make[3]: *** [drivers/net/wireless/at76c50x-usb.o] Error 1
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
+
+The content in line 639 and 644 are all:like
+BUILD_BUG_ON(offsetof(struct XXXXXXX) !=XXX);
+
+If I comment this line out, it "seems" this problem fixed.
+And I tried to make modules again, the same error(BUILD_BUG_ON
+(offsetof(struct XXXXXXX) !=XXX);)  came out but different
+file, different lines.And repeatedly.
+I do not think there are so many error that need to be fixed since I
+just change a few lines of codes which seems unrelated to theses errors.
+
+
+I really do not know what to do.Anyone can help me? Thank you so much.
 
