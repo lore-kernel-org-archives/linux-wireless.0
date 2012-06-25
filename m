@@ -1,90 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from opensource.wolfsonmicro.com ([80.75.67.52]:42322 "EHLO
-	opensource.wolfsonmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751002Ab2FSJRW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34134 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539Ab2FYIZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 05:17:22 -0400
-Date: Tue, 19 Jun 2012 10:17:19 +0100
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-To: Wei Ni <wni@nvidia.com>
-Cc: 'Philip Rakity' <prakity@marvell.com>,
-	'Stephen Warren' <swarren@wwwdotorg.org>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Where to power on the wifi device before loading the driver.
-Message-ID: <20120619091719.GZ3974@opensource.wolfsonmicro.com> (sfid-20120619_111726_145626_C9069FB8)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
- <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
- <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
- <4FDB5976.20809@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
- <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com>
- <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com>
+	Mon, 25 Jun 2012 04:25:51 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6ysXqiu0yoUmUNJB"
-In-Reply-To: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20456.8273.928519.179413@gargle.gargle.HOWL> (sfid-20120625_102553_961209_34628380)
+Date: Mon, 25 Jun 2012 13:54:49 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath9k_htc: Fix IDLE power save
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove the radio enable/disable stuff and fix the
+transition to FULL_SLEEP mode when the device is idle.
 
---6ysXqiu0yoUmUNJB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |  2 -
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 92 ---------------------------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 50 ++++++---------
+ 3 files changed, 20 insertions(+), 124 deletions(-)
 
-On Tue, Jun 19, 2012 at 12:25:58PM +0800, Wei Ni wrote:
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 1ee6548..936e920 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -572,8 +572,6 @@ bool ath9k_htc_setpower(struct ath9k_htc_priv *priv,
+ 
+ void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv);
+ void ath9k_htc_rfkill_poll_state(struct ieee80211_hw *hw);
+-void ath9k_htc_radio_enable(struct ieee80211_hw *hw);
+-void ath9k_htc_radio_disable(struct ieee80211_hw *hw);
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+ void ath9k_init_leds(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 3688bba..07df279 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -310,95 +310,3 @@ void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv)
+ 	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+ 		wiphy_rfkill_start_polling(priv->hw->wiphy);
+ }
+-
+-void ath9k_htc_radio_enable(struct ieee80211_hw *hw)
+-{
+-	struct ath9k_htc_priv *priv = hw->priv;
+-	struct ath_hw *ah = priv->ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int ret;
+-	u8 cmd_rsp;
+-
+-	if (!ah->curchan)
+-		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+-
+-	/* Reset the HW */
+-	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+-	if (ret) {
+-		ath_err(common,
+-			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
+-			ret, ah->curchan->channel);
+-	}
+-
+-	ath9k_cmn_update_txpow(ah, priv->curtxpow, priv->txpowlimit,
+-			       &priv->curtxpow);
+-
+-	/* Start RX */
+-	WMI_CMD(WMI_START_RECV_CMDID);
+-	ath9k_host_rx_init(priv);
+-
+-	/* Start TX */
+-	htc_start(priv->htc);
+-	spin_lock_bh(&priv->tx.tx_lock);
+-	priv->tx.flags &= ~ATH9K_HTC_OP_TX_QUEUES_STOP;
+-	spin_unlock_bh(&priv->tx.tx_lock);
+-	ieee80211_wake_queues(hw);
+-
+-	WMI_CMD(WMI_ENABLE_INTR_CMDID);
+-
+-	/* Enable LED */
+-	ath9k_hw_cfg_output(ah, ah->led_pin,
+-			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+-}
+-
+-void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
+-{
+-	struct ath9k_htc_priv *priv = hw->priv;
+-	struct ath_hw *ah = priv->ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int ret;
+-	u8 cmd_rsp;
+-
+-	ath9k_htc_ps_wakeup(priv);
+-
+-	/* Disable LED */
+-	ath9k_hw_set_gpio(ah, ah->led_pin, 1);
+-	ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+-
+-	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+-
+-	/* Stop TX */
+-	ieee80211_stop_queues(hw);
+-	ath9k_htc_tx_drain(priv);
+-	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+-
+-	/* Stop RX */
+-	WMI_CMD(WMI_STOP_RECV_CMDID);
+-
+-	/* Clear the WMI event queue */
+-	ath9k_wmi_event_drain(priv);
+-
+-	/*
+-	 * The MIB counters have to be disabled here,
+-	 * since the target doesn't do it.
+-	 */
+-	ath9k_hw_disable_mib_counters(ah);
+-
+-	if (!ah->curchan)
+-		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+-
+-	/* Reset the HW */
+-	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+-	if (ret) {
+-		ath_err(common,
+-			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
+-			ret, ah->curchan->channel);
+-	}
+-
+-	/* Disable the PHY */
+-	ath9k_hw_phy_disable(ah);
+-
+-	ath9k_htc_ps_restore(priv);
+-	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
+-}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index e7182b6..374c32e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -75,14 +75,19 @@ unlock:
+ 
+ void ath9k_htc_ps_restore(struct ath9k_htc_priv *priv)
+ {
++	bool reset;
++
+ 	mutex_lock(&priv->htc_pm_lock);
+ 	if (--priv->ps_usecount != 0)
+ 		goto unlock;
+ 
+-	if (priv->ps_idle)
++	if (priv->ps_idle) {
++		ath9k_hw_setrxabort(priv->ah, true);
++		ath9k_hw_stopdmarecv(priv->ah, &reset);
+ 		ath9k_hw_setpower(priv->ah, ATH9K_PM_FULL_SLEEP);
+-	else if (priv->ps_enabled)
++	} else if (priv->ps_enabled) {
+ 		ath9k_hw_setpower(priv->ah, ATH9K_PM_NETWORK_SLEEP);
++	}
+ 
+ unlock:
+ 	mutex_unlock(&priv->htc_pm_lock);
+@@ -1178,24 +1183,20 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ath9k_htc_priv *priv = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ieee80211_conf *conf = &hw->conf;
++	bool chip_reset = false;
++	int ret = 0;
+ 
+ 	mutex_lock(&priv->mutex);
++	ath9k_htc_ps_wakeup(priv);
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+-		bool enable_radio = false;
+-		bool idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+-
+ 		mutex_lock(&priv->htc_pm_lock);
+-		if (!idle && priv->ps_idle)
+-			enable_radio = true;
+-		priv->ps_idle = idle;
+-		mutex_unlock(&priv->htc_pm_lock);
+ 
+-		if (enable_radio) {
+-			ath_dbg(common, CONFIG, "not-idle: enabling radio\n");
+-			ath9k_htc_setpower(priv, ATH9K_PM_AWAKE);
+-			ath9k_htc_radio_enable(hw);
+-		}
++		priv->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
++		if (priv->ps_idle)
++			chip_reset = true;
++
++		mutex_unlock(&priv->htc_pm_lock);
+ 	}
+ 
+ 	/*
+@@ -1210,7 +1211,7 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 			ath9k_htc_remove_monitor_interface(priv);
+ 	}
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || chip_reset) {
+ 		struct ieee80211_channel *curchan = hw->conf.channel;
+ 		int pos = curchan->hw_value;
+ 
+@@ -1223,8 +1224,8 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 		if (ath9k_htc_set_channel(priv, hw, &priv->ah->channels[pos]) < 0) {
+ 			ath_err(common, "Unable to set channel\n");
+-			mutex_unlock(&priv->mutex);
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto out;
+ 		}
+ 
+ 	}
+@@ -1246,21 +1247,10 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 				       priv->txpowlimit, &priv->curtxpow);
+ 	}
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+-		mutex_lock(&priv->htc_pm_lock);
+-		if (!priv->ps_idle) {
+-			mutex_unlock(&priv->htc_pm_lock);
+-			goto out;
+-		}
+-		mutex_unlock(&priv->htc_pm_lock);
+-
+-		ath_dbg(common, CONFIG, "idle: disabling radio\n");
+-		ath9k_htc_radio_disable(hw);
+-	}
+-
+ out:
++	ath9k_htc_ps_restore(priv);
+ 	mutex_unlock(&priv->mutex);
+-	return 0;
++	return ret;
+ }
+ 
+ #define SUPPORTED_FILTERS			\
+-- 
+1.7.11
 
-As Stephen previously said please fix your mail formatting - word
-wrapping within paragraphs is important!
-
-> On Tue, Jun 19, 2012 at 09:23:35, Philip Rakity wrote:
-> >Why can't you use the regulator notify to get called back on power or=20
-> >voltage change options to plumb in the manipulation of the gpio. I can=
-=20
-> >imagine you might need to add a notify call in core.c if you need to=20
-> >assert the gpio before power is applied
->=20
-> Yes, we can use the regulator notify, but the Tegra30 support is via
-> device tree, I think there have no special board file to run the call
-> back.
-
-You can mix board files with device tree for cases where device tree is
-not yet up to the job, though the goal should be to come up with a way
-of expressing things in device tree.
-
---6ysXqiu0yoUmUNJB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJP4ENIAAoJEBus8iNuMP3dV3AQAJZ5EfiY0JeT/Y42cpJBJwGG
-qzabJ1J3K7ky0rIFa+F/vrDJcISCtADNqyd+Qs2igokZjAz5BsTdSqMUa+tS2APn
-DxWpYg0vxmmXp6QfJcVaqzQlDqawZ7ZwEKV4nwq0Ux6IvHLnkuHZMPKJs90GiXiV
-IVjCbe/m1stYARcxvkbc23Y5RVQR6PJ9tubdyXxW+F1qV99ofTALWuXH29e8h8fg
-/aRLNAKzktoyxxnNaNSlqxXINPggkIzr/BLVIdAwGCdF0oiDgg44wN8EQvY0DZtX
-P5xvdeC12UG0SsBli1zft/buuOWdzYas+pdC4C7v84+baiQs1MxtAbefixaIZLH3
-kH59UtwFSxLuXvF/MJZPrZw2/8wYh1eleBp86Ye0Ipzn//mImhUZ8/4h0xGU95lr
-BB1OQG9HfUZoftnsES8Ri6+fAIEBdmn2dStwuiBO/n7hqdEh1r+NNhN5do1x8VJ/
-nLfqNyE9uOVBVHI+0BE1G5+veO/agc+XYZNY+rCP7PZYgBpnMoz2bJFUU7WP16MQ
-b9CFxjPXfY9hlBv3mrg82oXQLnAaSaTjyzrA5/hW9kRJgl4S1g4ZE8efLA3BVqnS
-PClOE7VrMiynW/RUK+w1SfsLKDaJipTXGE/FvKQzAduhlbmzMHimpKEvg7z3BFwD
-VZUTtD1P0zK1YZqadjDl
-=D/TS
------END PGP SIGNATURE-----
-
---6ysXqiu0yoUmUNJB--
