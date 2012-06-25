@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:33065 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933601Ab2FBSPB convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:53519 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755572Ab2FYK6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 14:15:01 -0400
-Received: by wibhm6 with SMTP id hm6so1385511wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2012 11:14:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338659135.12823.3.camel@jlt3.sipsolutions.net>
-References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>
- <1338533070.4884.4.camel@jlt3.sipsolutions.net> <4FC86AB4.9020602@qca.qualcomm.com>
- <1338534832.4884.7.camel@jlt3.sipsolutions.net> <4FCA30DE.4080805@qca.qualcomm.com>
- <1338659135.12823.3.camel@jlt3.sipsolutions.net>
-From: Guido Iribarren <guidoiribarren@buenosaireslibre.org>
-Date: Sat, 2 Jun 2012 15:14:39 -0300
-Message-ID: <CAHD-aq+wyT2Rm-uYaA34Wspm1+J79=eyCbpiD=T4ti3Bv-MP9g@mail.gmail.com> (sfid-20120602_201535_765815_95E30E50)
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
+	Mon, 25 Jun 2012 06:58:11 -0400
+Received: by wibhr14 with SMTP id hr14so965819wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 03:58:09 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	stable@vger.kernel.org, Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: flush queues before deauth/disassoc
+Date: Mon, 25 Jun 2012 13:58:19 +0300
+Message-Id: <1340621899-15002-1-git-send-email-eliad@wizery.com> (sfid-20120625_125815_405547_D62E871F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 2, 2012 at 2:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> The sets are mutually exclusive, and there are implied sets of each
-> interface with a max number of 1. So for example, in iwlwifi we don't
-> advertise IBSS in the combinations at all, because it's not compatible
-> with anything. In your case, I think the same applies, since you said
->
->        if the first interface is ADHOC we cannot have any other
->        interface. we cannot add an ADHOC interface if there is already
->        an interface is present
+On deauth/disassoc we tear down all BA sessions. These
+DELBA packets are sent on the appropriate TID, while
+deauth/disassoc is always sent on VO. This sometimes
+ends with the DELBA being sent after the deauth was
+already sent.
 
-I've been following the thread and still can't get this confusion out
-of my head:
-i'm currently using kernel 3.3.2 (openwrt trunk r31439), with Atheros
-AR9285 and i can succesfully combine IBSS interface with AP or STA
-modes...
+Fix it by flushing all the pending frames before
+sending deauth/disassoc (in ieee80211_send_deauth_disassoc).
 
-# iw dev
-phy#0
-	Interface wlan0-1
-		ifindex 11
-		type AP
-	Interface wlan0-2
-		ifindex 10
-		type IBSS
-	Interface wlan0
-		ifindex 9
-		type AP
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+i think flushing in ieee80211_send_deauth_disassoc is the
+easiest thing to do here, as it handles all the (future) cases.
+however, i don't care moving the flush to a higher function
+if someone prefers it.
 
-So, does this patch mean this functionality will be lost in future
-versions of ath9k?
-or maybe it is officially unsupported and openwrt has patches applied?
-or, even worse, I completely misunderstood what you're talking about?
-(in that case i'm sorry for the noise)
+ net/mac80211/mlme.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Thanks a lot,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 426877d..6a73c65 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -580,6 +580,9 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ 		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
+ 			IEEE80211_SKB_CB(skb)->flags |=
+ 				IEEE80211_TX_INTFL_DONT_ENCRYPT;
++
++		/* flush out any pending frame */
++		drv_flush(local, false);
+ 		ieee80211_tx_skb(sdata, skb);
+ 	}
+ }
+-- 
+1.7.6.401.g6a319
 
-Guido
