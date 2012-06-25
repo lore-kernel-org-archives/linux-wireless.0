@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40498 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755860Ab2F0VW3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 17:22:29 -0400
-Message-ID: <4FEB7989.80708@openwrt.org> (sfid-20120627_232233_032538_0D20547B)
-Date: Wed, 27 Jun 2012 23:22:17 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:34082 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754224Ab2FYPdx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 11:33:53 -0400
 MIME-Version: 1.0
-To: Tom Hughes <tom@compton.nu>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k: fix panic caused by returning a descriptor we
- have queued for reuse
-References: <1340817675-26911-1-git-send-email-tom@compton.nu>
-In-Reply-To: <1340817675-26911-1-git-send-email-tom@compton.nu>
+In-Reply-To: <CAD2nsn08gkYJnyYfqyZT8VX-bFPgDVZPgVSHE_QBEuXj5aEWMw@mail.gmail.com>
+References: <1340637550-12669-1-git-send-email-aletes.xgr@gmail.com>
+	<CAD2nsn08gkYJnyYfqyZT8VX-bFPgDVZPgVSHE_QBEuXj5aEWMw@mail.gmail.com>
+Date: Mon, 25 Jun 2012 12:33:51 -0300
+Message-ID: <CAAAP30EaW67e_w0k0W5qasaFfccfn0pDtqdHQB+-hesEbJwOLQ@mail.gmail.com> (sfid-20120625_173412_830284_2046D7EC)
+Subject: Re: [PATCH] mac80211: fix build warning
+From: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-06-27 7:21 PM, Tom Hughes wrote:
-> Commit 3a2923e83c introduced a bug when a corrupt descriptor
-> is encountered - although the following descriptor is discarded
-> and returned to the queue for reuse the associated frame is
-> also returned for processing. This leads to a panic:
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 000000000000003a
-> IP: [<ffffffffa02599a5>] ath_rx_tasklet+0x165/0x1b00 [ath9k]
-> Call Trace:
-> <IRQ>
-> [<ffffffff812d7fa0>] ? map_single+0x60/0x60
-> [<ffffffffa028f044>] ? ath9k_ioread32+0x34/0x90 [ath9k]
-> [<ffffffffa0292eec>] athk9k_tasklet+0xdc/0x160 [ath9k]
-> [<ffffffff8105e133>] tasklet_action+0x63/0xd0
-> [<ffffffff8105dbc0>] __do_softirq+0xc0/0x1e0
-> [<ffffffff8101a873>] ? native_sched_clock+0x13/0x80
-> [<ffffffff815f9d5c>] call_softirq+0x1c/0x30
-> [<ffffffff810151f5>] do_softirq+0x75/0xb0
-> [<ffffffff8105df95>] irq_exit+0xb5/0xc0
-> [<ffffffff815fa5b3>] do_IRQ+0x63/0xe0
-> [<ffffffff815f0cea>] common_interrupt+0x6a/0x6a
-> <EOI>
-> [<ffffffff8131840a>] ? intel_idle+0xea/0x150
-> [<ffffffff813183eb>] ? intel_idle+0xcb/0x150
-> [<ffffffff814a1db9>] cpuidle_enter+0x19/0x20
-> [<ffffffff814a23d9>] cpuidle_idle_call+0xa9/0x240
-> [<ffffffff8101c4bf>] cpu_idle+0xaf/0x120
-> [<ffffffff815cda8e>] rest_init+0x72/0x74
-> [<ffffffff81cf4c1a>] start_kernel+0x3b7/0x3c4
-> [<ffffffff81cf4662>] ? repair_env_string+0x5e/0x5e
-> [<ffffffff81cf4346>] x86_64_start_reservations+0x131/0x135
-> [<ffffffff81cf444a>] x86_64_start_kernel+0x100/0x10f
-> 
-> Making sure bf is cleared to NULL in this case restores the
-> old behaviour.
-> 
-> Signed-off-by: Tom Hughes <tom@compton.nu>
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+On Mon, Jun 25, 2012 at 12:31 PM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> Hi,
+>
+> On Mon, Jun 25, 2012 at 8:49 PM, Alexandre Pereira da Silva
+> <aletes.xgr@gmail.com> wrote:
+>> Fix:
+>> net/mac80211/mlme.c: In function 'ieee80211_prep_connection':
+>> net/mac80211/mlme.c:3035:19: warning: 'sta' may be used uninitialized in
+>> this function
+>>
+>> Initialize sta to NULL
+>
+> i think already fixed by and there in wireless-testing
+> http://www.spinics.net/lists/linux-wireless/msg92385.html
+
+Ok, thanks for pointing that out.
