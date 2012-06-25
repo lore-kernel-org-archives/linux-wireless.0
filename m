@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:59432 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505Ab2FLKkj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 06:40:39 -0400
-Received: by wgbdr13 with SMTP id dr13so4291762wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 03:40:38 -0700 (PDT)
-From: Eyal Shapira <eyal@wizery.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:58344 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410Ab2FYHkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 03:40:46 -0400
+Message-ID: <4FE815FC.8040702@tieto.com> (sfid-20120625_094049_698871_8FD959F6)
+Date: Mon, 25 Jun 2012 09:40:44 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: handle auth failure returned with unmatching auth algo
-Date: Tue, 12 Jun 2012 13:40:30 +0300
-Message-Id: <1339497630-31589-1-git-send-email-eyal@wizery.com> (sfid-20120612_124043_440735_AA5069CE)
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFCv2 10/13] cfg80211: set initial monitor channel
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>   <1340172859-18146-11-git-send-email-michal.kazior@tieto.com>  <1340290665.4489.33.camel@jlt3.sipsolutions.net>  <4FE80BD8.4090904@tieto.com> <1340609280.4589.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340609280.4589.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some Netgear APs like WNAP210 have a quirk behavior when
-configured for WEP Shared. They send an auth response with algo
-SHARED and status code NOT_SUPPORTED_AUTH_ALG (13) when being
-sent a request made with auth algo OPEN. Enable such response to
-propagate to userspace instead of discarding it so wpa_s can
-reattempt to auth with SHARED.
+Johannes Berg wrote:
+> On Mon, 2012-06-25 at 08:57 +0200, Michal Kazior wrote:
+>> Johannes Berg wrote:
+>>> On Wed, 2012-06-20 at 08:14 +0200, Michal Kazior wrote:
+>>>> Implements behaviour seen in mac80211. A running
+>>>> monitor always has a channel - even before
+>>>> .set_channel. This way we won't break current
+>>>> behaviour.
+>>>
+>>> I'm a little doubtful about this. Currently, mac80211 will keep the
+>>> channel if you set it on say wlan0, your monitor iface gets the same
+>>> channel. Then if you remove wlan0, you still have the same channel, but
+>>> it seems here this is different now? I'm not sure it matters much, but
+>>> it's worth thinking about? Or am I totally misunderstanding this now?
+>>
+>> Right. It's not the exact same behaviour. It only guarantees a channel
+>> is always set in monitor mode. We could maybe set the last
+>> monitor-mode-channel seen when starting up monitor-mode again. Would
+>> that be okay?
+>
+> Yeah I think that's probably fine. Come to think of it, without that
+> change you always have a channel pointer, but it's not guaranteed to be
+> programmed into the device? Maybe I'm confused.
 
-Reported-by: Noam Shaked <noams@ti.com>
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
----
- net/mac80211/mlme.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+The rdev->monitor_channel is set to NULL when monitor mode is disabled 
+(see `cfg80211: track monitor channel`).
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0f45d02..3ad4366 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1783,7 +1783,8 @@ ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
- 	status_code = le16_to_cpu(mgmt->u.auth.status_code);
- 
--	if (auth_alg != ifmgd->auth_data->algorithm ||
-+	if ((auth_alg != ifmgd->auth_data->algorithm &&
-+	     status_code != WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG) ||
- 	    auth_transaction != ifmgd->auth_data->expected_transaction)
- 		return RX_MGMT_NONE;
- 
+When monitor mode is started the hardware is programmed (and pointer 
+set) to the first channel found in supported bands (see `cfg80211: set 
+initial monitor channel`).
+
+
 -- 
-1.7.4.1
-
+Pozdrawiam / Best regards, Michal Kazior.
