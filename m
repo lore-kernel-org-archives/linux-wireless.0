@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2420 "EHLO mms2.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:3246 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431Ab2FIVZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 17:25:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 2/5] brcmsmac: fix smatch warning found in ampdu.c
-Date: Sat, 9 Jun 2012 22:51:42 +0200
-Message-ID: <1339275105-3593-3-git-send-email-arend@broadcom.com> (sfid-20120609_232528_729771_0BD8CCED)
-In-Reply-To: <1339275105-3593-1-git-send-email-arend@broadcom.com>
-References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
+	id S1754080Ab2FYRGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 13:06:39 -0400
+Date: Mon, 25 Jun 2012 19:17:38 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Sasha Levin <levinsasha928@gmail.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	linville@tuxdriver.com, davej@redhat.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] NFC: only put local on destruction if it was created
+ before
+Message-ID: <20120625171738.GC16275@sortiz-mobl> (sfid-20120625_190657_889857_DCE694B4)
+References: <1339531699-7377-1-git-send-email-levinsasha928@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1339531699-7377-1-git-send-email-levinsasha928@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes potential NULL pointer dereference in ampdu. This
-was found running smatch static code checker. Smatch warning says:
+Hi Sasha,
 
-drivers/net/wireless/brcm80211/brcmsmac/ampdu.c:741 brcms_c_sendampdu()
-	 warn: variable dereferenced before check 'p'
+On Tue, Jun 12, 2012 at 10:08:19PM +0200, Sasha Levin wrote:
+> Not having 'local' is a valid case when a socket was created but never
+> bound or connected to anything, so avoid putting 'local' if it was
+> never created.
+> 
+> Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+> ---
+>  net/nfc/llcp/sock.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+> index 2c0b317..54daa10 100644
+> --- a/net/nfc/llcp/sock.c
+> +++ b/net/nfc/llcp/sock.c
+> @@ -710,7 +710,8 @@ void nfc_llcp_sock_free(struct nfc_llcp_sock *sock)
+>  
+>  	sock->parent = NULL;
+>  
+> -	nfc_llcp_local_put(sock->local);
+> +	if (sock->local)
+> +		nfc_llcp_local_put(sock->local);
+nfc_llcp_local_put() already checks for its argument being NULL or not.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index 95b5902..01b190a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -735,10 +735,8 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
- 		 * a candidate for aggregation
- 		 */
- 		p = pktq_ppeek(&qi->q, prec);
--		/* tx_info must be checked with current p */
--		tx_info = IEEE80211_SKB_CB(p);
--
- 		if (p) {
-+			tx_info = IEEE80211_SKB_CB(p);
- 			if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
- 			    ((u8) (p->priority) == tid)) {
- 				plen = p->len + AMPDU_MAX_MPDU_OVERHEAD;
-@@ -759,6 +757,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
- 					p = NULL;
- 					continue;
- 				}
-+				/* next packet fit for aggregation so dequeue */
- 				p = brcmu_pktq_pdeq(&qi->q, prec);
- 			} else {
- 				p = NULL;
 -- 
-1.7.9.5
-
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
