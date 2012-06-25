@@ -1,166 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:59449 "HELO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753158Ab2FLBOl (ORCPT
+Received: from mail-yw0-f51.google.com ([209.85.213.51]:39951 "EHLO
+	mail-yw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904Ab2FYPlo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 21:14:41 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/4] mwifiex: parse WPA IE and support WPA/WPA2 mixed mode for uAP
-Date: Mon, 11 Jun 2012 18:14:17 -0700
-Message-Id: <1339463659-10736-2-git-send-email-bzhao@marvell.com> (sfid-20120612_031447_380591_5EFEE2F4)
-In-Reply-To: <1339463659-10736-1-git-send-email-bzhao@marvell.com>
-References: <1339463659-10736-1-git-send-email-bzhao@marvell.com>
+	Mon, 25 Jun 2012 11:41:44 -0400
+Received: by yhnn12 with SMTP id n12so3472394yhn.10
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 08:41:44 -0700 (PDT)
+Message-ID: <4FE886B3.7020202@lwfinger.net> (sfid-20120625_174150_593774_CCF36035)
+Date: Mon, 25 Jun 2012 10:41:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: Question about BCM43228 and outdated description in MAINTAINERS
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Hi,
 
-Add support for parsing WPA IE from beacon parameter of
-cfg80211_ap_settings and set it to FW.
+I recently received a donated BCM43228 (14e4:4359) mini-PCIe card. At the 
+moment, neither b43 nor brcmsmac support it. Although, grepping the proprietary 
+driver wl shows that it would recognize that PCI ID, that driver does not load 
+as it requires routine lockdep_init_map(), which is exported only for GPL 
+modules. As a result, owners of this device can only use it with Linux if they 
+can find a suitable Windows driver for use with ndiswrapper. In my experience, 
+that means that 64-bit users are out of luck.
 
-WPA/WPA2 mixed mode is supported with this patch.
+Reverse engineering this device to be able to drive it with b43 would involve a 
+lot of effort. If your group is planning on adding it to brcmsmac, then I would 
+not undertake this project. To the fullest extent that you can, please advise me 
+regarding this matter.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-This patch depends on:
-[PATCH] ieee80211: definitions for Microsoft Vendor OUI and WPA OUI type
+When getting your addresses from file MAINTAINERS, I noticed that it was not 
+updated for the name change from brcm80211 to brcmsmac. The current info is as 
+follows:
 
- drivers/net/wireless/mwifiex/ie.c      |   55 +++++++++++++++++++++-----------
- drivers/net/wireless/mwifiex/uap_cmd.c |   17 +++++++--
- 2 files changed, 49 insertions(+), 23 deletions(-)
+BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+M:
+M:      Roland Vossen <rvossen@broadcom.com>
+M:      Arend van Spriel <arend@broadcom.com>
+M:      Franky (Zhenhui) Lin <frankyl@broadcom.com>
+M:      Kan Yan <kanyan@broadcom.com>
+L:      linux-wireless@vger.kernel.org
+L:      brcm80211-dev-list@broadcom.com
+S:      Supported
+F:      drivers/net/wireless/brcm80211/
 
-diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
-index ceb82cd..328fb14 100644
---- a/drivers/net/wireless/mwifiex/ie.c
-+++ b/drivers/net/wireless/mwifiex/ie.c
-@@ -224,29 +224,46 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 			 struct cfg80211_ap_settings *params)
- {
- 	struct mwifiex_ie *beacon_ie = NULL, *pr_ie = NULL;
--	struct mwifiex_ie *ar_ie = NULL, *rsn_ie = NULL;
--	struct ieee_types_header *ie = NULL;
-+	struct mwifiex_ie *ar_ie = NULL, *gen_ie = NULL;
-+	struct ieee_types_header *rsn_ie = NULL, *wpa_ie = NULL;
- 	u16 beacon_idx = MWIFIEX_AUTO_IDX_MASK, pr_idx = MWIFIEX_AUTO_IDX_MASK;
- 	u16 ar_idx = MWIFIEX_AUTO_IDX_MASK, rsn_idx = MWIFIEX_AUTO_IDX_MASK;
--	u16 mask;
-+	u16 mask, ie_len = 0;
-+	const u8 *vendor_ie;
- 	int ret = 0;
- 
- 	if (params->beacon.tail && params->beacon.tail_len) {
--		ie = (void *)cfg80211_find_ie(WLAN_EID_RSN, params->beacon.tail,
--					      params->beacon.tail_len);
--		if (ie) {
--			rsn_ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
--			if (!rsn_ie)
--				return -ENOMEM;
--
--			rsn_ie->ie_index = cpu_to_le16(rsn_idx);
--			mask = MGMT_MASK_BEACON | MGMT_MASK_PROBE_RESP |
--			       MGMT_MASK_ASSOC_RESP;
--			rsn_ie->mgmt_subtype_mask = cpu_to_le16(mask);
--			rsn_ie->ie_length = cpu_to_le16(ie->len + 2);
--			memcpy(rsn_ie->ie_buffer, ie, ie->len + 2);
--
--			if (mwifiex_update_uap_custom_ie(priv, rsn_ie, &rsn_idx,
-+		gen_ie = kzalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
-+		if (!gen_ie)
-+			return -ENOMEM;
-+		gen_ie->ie_index = cpu_to_le16(rsn_idx);
-+		mask = MGMT_MASK_BEACON | MGMT_MASK_PROBE_RESP |
-+		       MGMT_MASK_ASSOC_RESP;
-+		gen_ie->mgmt_subtype_mask = cpu_to_le16(mask);
-+
-+		rsn_ie = (void *)cfg80211_find_ie(WLAN_EID_RSN,
-+						  params->beacon.tail,
-+						  params->beacon.tail_len);
-+		if (rsn_ie) {
-+			memcpy(gen_ie->ie_buffer, rsn_ie, rsn_ie->len + 2);
-+			ie_len = rsn_ie->len + 2;
-+			gen_ie->ie_length = cpu_to_le16(ie_len);
-+		}
-+
-+		vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
-+						    WLAN_OUI_TYPE_MICROSOFT_WPA,
-+						    params->beacon.tail,
-+						    params->beacon.tail_len);
-+		if (vendor_ie) {
-+			wpa_ie = (struct ieee_types_header *)vendor_ie;
-+			memcpy(gen_ie->ie_buffer + ie_len,
-+			       wpa_ie, wpa_ie->len + 2);
-+			ie_len += wpa_ie->len + 2;
-+			gen_ie->ie_length = cpu_to_le16(ie_len);
-+		}
-+
-+		if (rsn_ie || wpa_ie) {
-+			if (mwifiex_update_uap_custom_ie(priv, gen_ie, &rsn_idx,
- 							 NULL, NULL,
- 							 NULL, NULL)) {
- 				ret = -1;
-@@ -319,7 +336,7 @@ done:
- 	kfree(beacon_ie);
- 	kfree(pr_ie);
- 	kfree(ar_ie);
--	kfree(rsn_ie);
-+	kfree(gen_ie);
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index fb0c6cb..38a49a1 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -65,7 +65,7 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 			}
- 			if (params->crypto.wpa_versions &
- 			    NL80211_WPA_VERSION_2) {
--				bss_config->protocol = PROTOCOL_WPA2;
-+				bss_config->protocol |= PROTOCOL_WPA2;
- 				bss_config->key_mgmt = KEY_MGMT_EAP;
- 			}
- 			break;
-@@ -77,7 +77,7 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 			}
- 			if (params->crypto.wpa_versions &
- 			    NL80211_WPA_VERSION_2) {
--				bss_config->protocol = PROTOCOL_WPA2;
-+				bss_config->protocol |= PROTOCOL_WPA2;
- 				bss_config->key_mgmt = KEY_MGMT_PSK;
- 			}
- 			break;
-@@ -91,10 +91,19 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 		case WLAN_CIPHER_SUITE_WEP104:
- 			break;
- 		case WLAN_CIPHER_SUITE_TKIP:
--			bss_config->wpa_cfg.pairwise_cipher_wpa = CIPHER_TKIP;
-+			if (params->crypto.wpa_versions & NL80211_WPA_VERSION_1)
-+				bss_config->wpa_cfg.pairwise_cipher_wpa |=
-+								CIPHER_TKIP;
-+			if (params->crypto.wpa_versions & NL80211_WPA_VERSION_2)
-+				bss_config->wpa_cfg.pairwise_cipher_wpa2 |=
-+								CIPHER_TKIP;
- 			break;
- 		case WLAN_CIPHER_SUITE_CCMP:
--			bss_config->wpa_cfg.pairwise_cipher_wpa2 =
-+			if (params->crypto.wpa_versions & NL80211_WPA_VERSION_1)
-+				bss_config->wpa_cfg.pairwise_cipher_wpa |=
-+								CIPHER_AES_CCMP;
-+			if (params->crypto.wpa_versions & NL80211_WPA_VERSION_2)
-+				bss_config->wpa_cfg.pairwise_cipher_wpa2 |=
- 								CIPHER_AES_CCMP;
- 		default:
- 			break;
--- 
-1.7.0.2
+Thanks,
 
+Larry
