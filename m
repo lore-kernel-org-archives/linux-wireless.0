@@ -1,101 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36277 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753563Ab2FEXIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 19:08:39 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
-Date: Wed,  6 Jun 2012 01:07:17 +0200
-Message-Id: <1338937641-8519-15-git-send-email-hauke@hauke-m.de> (sfid-20120606_012943_423211_D983DD4B)
-In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8635 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756898Ab2FYOOM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 10:14:12 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3 04/10] ath9k_hw: advertise WoW support for capable chipsets
+Date: Mon, 25 Jun 2012 19:42:53 +0530
+Message-ID: <1340633579-7514-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120625_161419_418683_4BF5667D)
+In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The xmtfifo_sz array contains the queue sizes for the different chip
-revs. This array missed the sizes for the core rev 17 and 28. This
-patch extends the array to also include these sizes and adds a warning
-if no queue size is stored in the array for the given core rev.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+support WoW for all chipsets starting from AR9280, AR9285, AR9287,
+AR9380, AR9382, AR9485, AR9462. Really all hardware may not support
+WoW even though the flag is set and the WoW working depends on
+your laptop, BIOS apart from the hardware.
+
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   38 +++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 9aa14e2..35a3db9 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -268,7 +268,7 @@ struct brcms_c_bit_desc {
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a42c26f..041d797 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2572,6 +2572,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
  
- /* Starting corerev for the fifo size table */
--#define XMTFIFOTBL_STARTREV	20
-+#define XMTFIFOTBL_STARTREV	10
  
- struct d11init {
- 	__le16 addr;
-@@ -332,6 +332,26 @@ const u8 wlc_prio2prec_map[] = {
- };
++	if (AR_SREV_9280_20_OR_LATER(ah)) {
++		pCap->hw_caps |= ATH9K_HW_WOW_DEVICE_CAPABLE |
++				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
++
++		if (AR_SREV_9280(ah))
++			pCap->hw_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
++	}
++
+ 	return 0;
+ }
  
- static const u16 xmtfifo_sz[][NFIFO] = {
-+	/* corerev 10: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 11: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 12: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 13: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 14: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 15: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 16: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 17: 5120, 49152, 49152, 5376, 4352, 1280 */
-+	{20, 192, 192, 21, 17, 5},
-+	/* corerev 18: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 19: */
-+	{0, 0, 0, 0, 0, 0},
- 	/* corerev 20: 5120, 49152, 49152, 5376, 4352, 1280 */
- 	{20, 192, 192, 21, 17, 5},
- 	/* corerev 21: 2304, 14848, 5632, 3584, 3584, 1280 */
-@@ -342,6 +362,18 @@ static const u16 xmtfifo_sz[][NFIFO] = {
- 	{20, 192, 192, 21, 17, 5},
- 	/* corerev 24: 2304, 14848, 5632, 3584, 3584, 1280 */
- 	{9, 58, 22, 14, 14, 5},
-+	/* corerev 25: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 26: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 27: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 28: 5120, 49152, 49152, 5376, 4352, 1280 */
-+	{20, 192, 192, 21, 17, 5},
-+	/* corerev 29: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 30: */
-+	{0, 0, 0, 0, 0, 0},
- };
- 
- #ifdef DEBUG
-@@ -4609,8 +4641,12 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 		wlc_hw->machwcap_backup = wlc_hw->machwcap;
- 
- 		/* init tx fifo size */
-+		WARN_ON((wlc_hw->corerev - XMTFIFOTBL_STARTREV) < 0 ||
-+			(wlc_hw->corerev - XMTFIFOTBL_STARTREV) >
-+				ARRAY_SIZE(xmtfifo_sz));
- 		wlc_hw->xmtfifo_sz =
- 		    xmtfifo_sz[(wlc_hw->corerev - XMTFIFOTBL_STARTREV)];
-+		WARN_ON(!wlc_hw->xmtfifo_sz[0]);
- 
- 		/* Get a phy for this band */
- 		wlc_hw->band->pi =
 -- 
-1.7.9.5
+1.7.0.4
 
