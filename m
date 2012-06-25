@@ -1,77 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45337 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab2F3J4L (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:48691 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756402Ab2FYMGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 05:56:11 -0400
-From: Sasha Levin <levinsasha928@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Sasha Levin <levinsasha928@gmail.com>
-Subject: [PATCH] NFC: Prevent NULL deref when getting socket name
-Date: Sat, 30 Jun 2012 11:56:47 +0200
-Message-Id: <1341050207-13145-1-git-send-email-levinsasha928@gmail.com> (sfid-20120630_115707_707265_3A58827F)
+	Mon, 25 Jun 2012 08:06:13 -0400
+Received: by eaak11 with SMTP id k11so1160609eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 05:06:11 -0700 (PDT)
+Message-ID: <4FE85430.3030007@gmail.com> (sfid-20120625_140640_689190_2C86B583)
+Date: Mon, 25 Jun 2012 14:06:08 +0200
+From: sylvain_gmail <sylvain.roger.rieunier@gmail.com>
+MIME-Version: 1.0
+To: Victor Goldenshtein <victorg@ti.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add command to get current rssi
+References: <1337669130-4229-1-git-send-email-victorg@ti.com>
+In-Reply-To: <1337669130-4229-1-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-llcp_sock_getname can be called without a device attached to the nfc_llcp_sock.
+Hello Victor,
 
-This would lead to the following BUG:
+I am very pleased with your patch ;). I will be very useful. ;)
 
-[  362.341807] BUG: unable to handle kernel NULL pointer dereference at           (null)
-[  362.341815] IP: [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-[  362.341818] PGD 31b35067 PUD 30631067 PMD 0
-[  362.341821] Oops: 0000 [#627] PREEMPT SMP DEBUG_PAGEALLOC
-[  362.341826] CPU 3
-[  362.341827] Pid: 7816, comm: trinity-child55 Tainted: G      D W    3.5.0-rc4-next-20120628-sasha-00005-g9f23eb7 #479
-[  362.341831] RIP: 0010:[<ffffffff836258e5>]  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-[  362.341832] RSP: 0018:ffff8800304fde88  EFLAGS: 00010286
-[  362.341834] RAX: 0000000000000000 RBX: ffff880033cb8000 RCX: 0000000000000001
-[  362.341835] RDX: ffff8800304fdec4 RSI: ffff8800304fdec8 RDI: ffff8800304fdeda
-[  362.341836] RBP: ffff8800304fdea8 R08: 7ebcebcb772b7ffb R09: 5fbfcb9c35bdfd53
-[  362.341838] R10: 4220020c54326244 R11: 0000000000000246 R12: ffff8800304fdec8
-[  362.341839] R13: ffff8800304fdec4 R14: ffff8800304fdec8 R15: 0000000000000044
-[  362.341841] FS:  00007effa376e700(0000) GS:ffff880035a00000(0000) knlGS:0000000000000000
-[  362.341843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  362.341844] CR2: 0000000000000000 CR3: 0000000030438000 CR4: 00000000000406e0
-[  362.341851] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  362.341856] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  362.341858] Process trinity-child55 (pid: 7816, threadinfo ffff8800304fc000, task ffff880031270000)
-[  362.341858] Stack:
-[  362.341862]  ffff8800304fdea8 ffff880035156780 0000000000000000 0000000000001000
-[  362.341865]  ffff8800304fdf78 ffffffff83183b40 00000000304fdec8 0000006000000000
-[  362.341868]  ffff8800304f0027 ffffffff83729649 ffff8800304fdee8 ffff8800304fdf48
-[  362.341869] Call Trace:
-[  362.341874]  [<ffffffff83183b40>] sys_getpeername+0xa0/0x110
-[  362.341877]  [<ffffffff83729649>] ? _raw_spin_unlock_irq+0x59/0x80
-[  362.341882]  [<ffffffff810f342b>] ? do_setitimer+0x23b/0x290
-[  362.341886]  [<ffffffff81985ede>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[  362.341889]  [<ffffffff8372a539>] system_call_fastpath+0x16/0x1b
-[  362.341921] Code: 84 00 00 00 00 00 b8 b3 ff ff ff 48 85 db 74 54 66 41 c7 04 24 27 00 49 8d 7c 24 12 41 c7 45 00 60 00 00 00 48 8b 83 28 05 00 00 <8b> 00 41 89 44 24 04 0f b6 83 41 05 00 00 41 88 44 24 10 0f b6
-[  362.341924] RIP  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-[  362.341925]  RSP <ffff8800304fde88>
-[  362.341926] CR2: 0000000000000000
-[  362.341928] ---[ end trace 6d450e935ee18bf3 ]---
+But do not you think it would be interesting to have a function that 
+returns the RSSI signal by antennas?
 
-Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
----
- net/nfc/llcp/sock.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Regards,
+Sylvain
 
-diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
-index 2c0b317..05ca5a6 100644
---- a/net/nfc/llcp/sock.c
-+++ b/net/nfc/llcp/sock.c
-@@ -292,7 +292,7 @@ static int llcp_sock_getname(struct socket *sock, struct sockaddr *addr,
- 
- 	pr_debug("%p\n", sk);
- 
--	if (llcp_sock == NULL)
-+	if (llcp_sock == NULL || llcp_sock->dev == NULL)
- 		return -EBADFD;
- 
- 	addr->sa_family = AF_NFC;
--- 
-1.7.8.6
+
+Le 22/05/2012 08:45, Victor Goldenshtein a écrit :
+> Get current rssi (in dBm) from the driver/FW.
+>
+> Instead of reporting the signal received in the last
+> rx packet, which might be inaccurate if rx traffic is
+> low and beacon filtering is enabled, get the singal
+> from the driver/FW.
+>
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> ---
+>   include/net/mac80211.h      |    4 ++++
+>   net/mac80211/cfg.c          |   22 ++++++++++++++--------
+>   net/mac80211/driver-ops.h   |   11 +++++++++++
+>   net/mac80211/driver-trace.h |    6 ++++++
+>   4 files changed, 35 insertions(+), 8 deletions(-)
+>
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 4d6e6c6..279126a 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -2231,6 +2231,8 @@ enum ieee80211_rate_control_changed {
+>    * @get_et_strings:  Ethtool API to get a set of strings to describe stats
+>    *	and perhaps other supported types of ethtool data-sets.
+>    *
+> + * @get_rssi: Get current signal strength in dBm.
+> + *
+>    */
+>   struct ieee80211_ops {
+>   	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+> @@ -2370,6 +2372,8 @@ struct ieee80211_ops {
+>   	void	(*get_et_strings)(struct ieee80211_hw *hw,
+>   				  struct ieee80211_vif *vif,
+>   				  u32 sset, u8 *data);
+> +	void (*get_rssi)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+> +			 s8 *rssi_dbm);
+>   };
+>   
+>   /**
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 0221270..41bdf02 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -353,6 +353,7 @@ void sta_set_rate_info_tx(struct sta_info *sta,
+>   static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+>   {
+>   	struct ieee80211_sub_if_data *sdata = sta->sdata;
+> +	struct ieee80211_local *local = sdata->local;
+>   	struct timespec uptime;
+>   
+>   	sinfo->generation = sdata->local->sta_generation;
+> @@ -388,7 +389,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+>   	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+>   	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+>   		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
+> -		sinfo->signal = (s8)sta->last_signal;
+> +		if (local->ops->get_rssi)
+> +			drv_get_rssi(local, sdata, &sinfo->signal);
+> +		else
+> +			sinfo->signal = (s8)sta->last_signal;
+>   		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+>   	}
+>   
+> @@ -517,7 +521,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+>   	 * network device.
+>   	 */
+>   
+> -	rcu_read_lock();
+> +	mutex_lock(&local->sta_mtx);
+>   
+>   	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+>   		sta = sta_info_get_bss(sdata, sdata->u.mgd.bssid);
+> @@ -546,7 +550,7 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+>   			data[i] = (u8)sinfo.signal_avg;
+>   		i++;
+>   	} else {
+> -		list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> +		list_for_each_entry(sta, &local->sta_list, list) {
+>   			/* Make sure this station belongs to the proper dev */
+>   			if (sta->sdata->dev != dev)
+>   				continue;
+> @@ -603,7 +607,7 @@ do_survey:
+>   	else
+>   		data[i++] = -1LL;
+>   
+> -	rcu_read_unlock();
+> +	mutex_unlock(&local->sta_mtx);
+>   
+>   	if (WARN_ON(i != STA_STATS_LEN))
+>   		return;
+> @@ -629,10 +633,11 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+>   				 int idx, u8 *mac, struct station_info *sinfo)
+>   {
+>   	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	struct ieee80211_local *local = sdata->local;
+>   	struct sta_info *sta;
+>   	int ret = -ENOENT;
+>   
+> -	rcu_read_lock();
+> +	mutex_lock(&local->sta_mtx);
+>   
+>   	sta = sta_info_get_by_idx(sdata, idx);
+>   	if (sta) {
+> @@ -641,7 +646,7 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+>   		sta_set_sinfo(sta, sinfo);
+>   	}
+>   
+> -	rcu_read_unlock();
+> +	mutex_unlock(&local->sta_mtx);
+>   
+>   	return ret;
+>   }
+> @@ -658,10 +663,11 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+>   				 u8 *mac, struct station_info *sinfo)
+>   {
+>   	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	struct ieee80211_local *local = sdata->local;
+>   	struct sta_info *sta;
+>   	int ret = -ENOENT;
+>   
+> -	rcu_read_lock();
+> +	mutex_lock(&local->sta_mtx);
+>   
+>   	sta = sta_info_get_bss(sdata, mac);
+>   	if (sta) {
+> @@ -669,7 +675,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+>   		sta_set_sinfo(sta, sinfo);
+>   	}
+>   
+> -	rcu_read_unlock();
+> +	mutex_unlock(&local->sta_mtx);
+>   
+>   	return ret;
+>   }
+> diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+> index 6d33a0c..cbfaf72 100644
+> --- a/net/mac80211/driver-ops.h
+> +++ b/net/mac80211/driver-ops.h
+> @@ -845,4 +845,15 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
+>   						  more_data);
+>   	trace_drv_return_void(local);
+>   }
+> +
+> +static inline void drv_get_rssi(struct ieee80211_local *local,
+> +				struct ieee80211_sub_if_data *sdata,
+> +				s8 *rssi_dbm)
+> +{
+> +	might_sleep();
+> +
+> +	trace_drv_get_rssi(local, sdata);
+> +	local->ops->get_rssi(&local->hw, &sdata->vif, rssi_dbm);
+> +	trace_drv_return_void(local);
+> +}
+>   #endif /* __MAC80211_DRIVER_OPS */
+> diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+> index 6de00b2..fc91ac4 100644
+> --- a/net/mac80211/driver-trace.h
+> +++ b/net/mac80211/driver-trace.h
+> @@ -1218,6 +1218,12 @@ DEFINE_EVENT(release_evt, drv_allow_buffered_frames,
+>   	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
+>   );
+>   
+> +DEFINE_EVENT(local_sdata_evt, drv_get_rssi,
+> +	TP_PROTO(struct ieee80211_local *local,
+> +		 struct ieee80211_sub_if_data *sdata),
+> +	TP_ARGS(local, sdata)
+> +);
+> +
+>   /*
+>    * Tracing for API calls that drivers call.
+>    */
+
 
