@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48541 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab2FKJyP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 05:54:15 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Brandon Misemer <brandon.misemer@intel.com>
-Subject: [PATCH 10/13] iwlwifi: Fix Makefile build order for built-in driver
-Date: Mon, 11 Jun 2012 11:53:09 +0200
-Message-Id: <1339408392-19425-11-git-send-email-johannes@sipsolutions.net> (sfid-20120611_115424_398673_ABA4D870)
-In-Reply-To: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
-References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755965Ab2FYV3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 17:29:10 -0400
+Date: Mon, 25 Jun 2012 17:29:04 -0400
+From: Jason Baron <jbaron@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	Jim Cromie <jim.cromie@gmail.com>
+Subject: Re: [PATCH 4/6] mac80211: clean up debugging
+Message-ID: <20120625212904.GA9245@redhat.com> (sfid-20120625_232913_928970_2ADBE5C1)
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+ <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
+ <1340438536.2274.9.camel@joe2Laptop>
+ <1340456697.4636.1.camel@jlt3.sipsolutions.net>
+ <1340466044.7758.4.camel@joe2Laptop>
+ <1340530258.4577.4.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1340530258.4577.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brandon Misemer <brandon.misemer@intel.com>
+On Sun, Jun 24, 2012 at 11:30:58AM +0200, Johannes Berg wrote:
+> On Sat, 2012-06-23 at 08:40 -0700, Joe Perches wrote:
+> 
+> > > FWIW, I would definitely prefer named rather than bitmap selectors :-)
+> > 
+> > (Added Jason and Jim)
+> > 
+> > Given it's a debug-only facility, I think bitmap
+> > selectors sufficient, Maybe adding an external
+> > utility to map names to bits would be enough to
+> > not need that feature in the kernel.
+> 
 
-When the driver is built into the kernel instead of a module
-when the system boots it results in a panic. The order things are built in
-results in their initialization order when built into the kernel. Wifi
-has to be initialized before mvm or dvm.
+I've been thinking about that too - given that we can control each
+individual statement from userspace, perhaps most of the implementation
+for level/bitmap support could and should be done in userspace.
 
-Reviewed-by: Donald H Fry <donald.h.fry@intel.com>
-Tested-by: Donald H Fry <donald.h.fry@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Brandon Misemer <brandon.misemer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/Makefile |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+For levels, we add 1 additional field to the pr_debug() statement, and
+its easy enough to construct a command-line to turn on the correct
+statements.
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index afa9758..170ec33 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -1,7 +1,3 @@
--obj-$(CONFIG_IWLDVM)	+= dvm/
--
--CFLAGS_iwl-devtrace.o := -I$(src)
--
- # common
- obj-$(CONFIG_IWLWIFI)	+= iwlwifi.o
- iwlwifi-objs		+= iwl-io.o
-@@ -16,3 +12,8 @@ iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
- iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TESTMODE) += iwl-test.o
- 
- ccflags-y += -D__CHECK_ENDIAN__ -I$(src)
-+
-+
-+obj-$(CONFIG_IWLDVM)	+= dvm/
-+
-+CFLAGS_iwl-devtrace.o := -I$(src)
--- 
-1.7.10
+For flags it should be just as easy but we probably want to export a
+table mapping kernel strings to to bitmask fields as well.
 
+So some simple wrapper scripts would probably make this pretty easy. 
+
+> I guess the real question isn't whether it should be a bitmap or a name
+> or whatever, it's how it's implemented. To allay fears about runtime
+> overhead, I think it would be good to use the jump_label mechanism to
+> implement it -- I do realise that still has runtime overhead for the
+> argument preparation, but still.
+> 
+> Looking at the history, it seems that jump labels were at one point used
+> by reverted to fix gcc 3.3, I'm sure that could be resolved?
+
+Yes, there were some circular header dependencies issues - but they can
+be resolved. I will re-post this work.
+
+> 
+> Anyway, the point is that if it uses jump labels then we need some sort
+> of house-keeping structures anyway to be able to enable/disable the
+> right jump labels. And that could easily have a string attached, which
+> would make it easier when working with bug reporters etc. since you
+> don't have to worry about the exact bitmap, you can give them a string
+> (and if it's wrong, there will be a failure rather than silently getting
+> the wrong data)
+> 
+> johannes
+> 
