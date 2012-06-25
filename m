@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35116 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752404Ab2FMFyw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 01:54:52 -0400
-Message-ID: <1339566888.4519.2.camel@jlt3.sipsolutions.net> (sfid-20120613_075457_994116_59A7B122)
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
-	kvalo@qca.qualcomm.com, ath6kl-devel@qualcomm.com,
-	linux-wireless@vger.kernel.org
-Date: Wed, 13 Jun 2012 07:54:48 +0200
-In-Reply-To: <CAOpc7mEZ3Wd2JajqTpj+tZXVyE_QC1=xS3gXF9eFjmCdTu8Xug@mail.gmail.com> (sfid-20120613_075354_333561_6DE4154B)
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
-	 <1339566003.4519.1.camel@jlt3.sipsolutions.net>
-	 <CAOpc7mEZ3Wd2JajqTpj+tZXVyE_QC1=xS3gXF9eFjmCdTu8Xug@mail.gmail.com>
-	 (sfid-20120613_075354_333561_6DE4154B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:47726 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756184Ab2FYRSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 13:18:05 -0400
+Date: Mon, 25 Jun 2012 19:29:06 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Sasha Levin <levinsasha928@gmail.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	linville@tuxdriver.com, davej@redhat.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] NFC: only put local on destruction if it was created
+ before
+Message-ID: <20120625172906.GD16275@sortiz-mobl> (sfid-20120625_191828_027947_2598AF58)
+References: <1339531699-7377-1-git-send-email-levinsasha928@gmail.com>
+ <20120625171738.GC16275@sortiz-mobl>
+ <1340644546.31710.6.camel@lappy>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1340644546.31710.6.camel@lappy>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-13 at 07:53 +0200, Holger Schurig wrote:
-> @NL80211_ATTR_SCHED_SCAN_MATCH_RSSI
+On Mon, Jun 25, 2012 at 07:15:46PM +0200, Sasha Levin wrote:
+> On Mon, 2012-06-25 at 19:17 +0200, Samuel Ortiz wrote:
+> > Hi Sasha,
+> > 
+> > On Tue, Jun 12, 2012 at 10:08:19PM +0200, Sasha Levin wrote:
+> > > Not having 'local' is a valid case when a socket was created but never
+> > > bound or connected to anything, so avoid putting 'local' if it was
+> > > never created.
+> > > 
+> > > Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+> > > ---
+> > >  net/nfc/llcp/sock.c |    3 ++-
+> > >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > > 
+> > > diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+> > > index 2c0b317..54daa10 100644
+> > > --- a/net/nfc/llcp/sock.c
+> > > +++ b/net/nfc/llcp/sock.c
+> > > @@ -710,7 +710,8 @@ void nfc_llcp_sock_free(struct nfc_llcp_sock *sock)
+> > >  
+> > >  	sock->parent = NULL;
+> > >  
+> > > -	nfc_llcp_local_put(sock->local);
+> > > +	if (sock->local)
+> > > +		nfc_llcp_local_put(sock->local);
+> > nfc_llcp_local_put() already checks for its argument being NULL or not.
 > 
-> I'd also move around "SCHED" and "ATTR". Look at the attribute names
-> above or below it, then it's more obvious:
+> nfc_llcp_local_put() triggers a warning in this case as well, which
+> means that this code path shouldn't be happening.
 > 
-> NL80211_SCHED_SCAN_MATCH_ATTR_SSID
-> NL80211_ATTR_SCHED_SCAN_MATCH_RSSI
-> NL80211_SCHED_SCAN_MATCH_ATTR_MAX
+> Should we remove the WARN_ON from nfc_llcp_local_put() instead?
+Yes, that would be better.
 
-Indeed, NL80211_ATTR_* is usually the namespace for the top-level
-attributes.
+Cheers,
+Samuel.
 
-johannes
-
-
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
