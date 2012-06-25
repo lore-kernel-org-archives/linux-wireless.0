@@ -1,118 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:50036 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754258Ab2FWGmB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 02:42:01 -0400
-Received: by lbbgm6 with SMTP id gm6so4535913lbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2012 23:41:58 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, ido@wizery.com
-Subject: [PATCH 04/18] wlcore: Change raw io functions to return errors
-Date: Sat, 23 Jun 2012 09:41:15 +0300
-Message-Id: <1340433689-24320-5-git-send-email-coelho@ti.com> (sfid-20120623_084208_422593_A2999A8B)
-In-Reply-To: <1340433689-24320-1-git-send-email-coelho@ti.com>
-References: <1340433689-24320-1-git-send-email-coelho@ti.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:42995 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755002Ab2FYG53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 02:57:29 -0400
+Message-ID: <4FE80BD8.4090904@tieto.com> (sfid-20120625_085732_766325_2EF4CBA1)
+Date: Mon, 25 Jun 2012 08:57:28 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFCv2 10/13] cfg80211: set initial monitor channel
+References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>  <1340172859-18146-11-git-send-email-michal.kazior@tieto.com> <1340290665.4489.33.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340290665.4489.33.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+Johannes Berg wrote:
+> On Wed, 2012-06-20 at 08:14 +0200, Michal Kazior wrote:
+>> Implements behaviour seen in mac80211. A running
+>> monitor always has a channel - even before
+>> .set_channel. This way we won't break current
+>> behaviour.
+>
+> I'm a little doubtful about this. Currently, mac80211 will keep the
+> channel if you set it on say wlan0, your monitor iface gets the same
+> channel. Then if you remove wlan0, you still have the same channel, but
+> it seems here this is different now? I'm not sure it matters much, but
+> it's worth thinking about? Or am I totally misunderstanding this now?
 
-Make wl1271_raw_write and wl1271_raw_read return errors so the driver
-could handle these appropriately.
-Since the prototype has changed, also rename the prefix of these
-functions to wlcore.
+Right. It's not the exact same behaviour. It only guarantees a channel 
+is always set in monitor mode. We could maybe set the last 
+monitor-mode-channel seen when starting up monitor-mode again. Would 
+that be okay?
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/io.h |   26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-index bbaf711..60b9503 100644
---- a/drivers/net/wireless/ti/wlcore/io.h
-+++ b/drivers/net/wireless/ti/wlcore/io.h
-@@ -53,33 +53,33 @@ void wl1271_io_init(struct wl1271 *wl);
- int wlcore_translate_addr(struct wl1271 *wl, int addr);
- 
- /* Raw target IO, address is not translated */
--static inline void wl1271_raw_write(struct wl1271 *wl, int addr, void *buf,
--				    size_t len, bool fixed)
-+static inline int wlcore_raw_write(struct wl1271 *wl, int addr, void *buf,
-+				   size_t len, bool fixed)
- {
--	wl->if_ops->write(wl->dev, addr, buf, len, fixed);
-+	return wl->if_ops->write(wl->dev, addr, buf, len, fixed);
- }
- 
--static inline void wl1271_raw_read(struct wl1271 *wl, int addr, void *buf,
--				   size_t len, bool fixed)
-+static inline int wlcore_raw_read(struct wl1271 *wl, int addr, void *buf,
-+				  size_t len, bool fixed)
- {
--	wl->if_ops->read(wl->dev, addr, buf, len, fixed);
-+	return wl->if_ops->read(wl->dev, addr, buf, len, fixed);
- }
- 
- static inline void wlcore_raw_read_data(struct wl1271 *wl, int reg, void *buf,
- 					size_t len, bool fixed)
- {
--	wl1271_raw_read(wl, wl->rtable[reg], buf, len, fixed);
-+	wlcore_raw_read(wl, wl->rtable[reg], buf, len, fixed);
- }
- 
- static inline void wlcore_raw_write_data(struct wl1271 *wl, int reg, void *buf,
- 					 size_t len, bool fixed)
- {
--	wl1271_raw_write(wl, wl->rtable[reg], buf, len, fixed);
-+	wlcore_raw_write(wl, wl->rtable[reg], buf, len, fixed);
- }
- 
- static inline u32 wl1271_raw_read32(struct wl1271 *wl, int addr)
- {
--	wl1271_raw_read(wl, addr, &wl->buffer_32,
-+	wlcore_raw_read(wl, addr, &wl->buffer_32,
- 			    sizeof(wl->buffer_32), false);
- 
- 	return le32_to_cpu(wl->buffer_32);
-@@ -88,7 +88,7 @@ static inline u32 wl1271_raw_read32(struct wl1271 *wl, int addr)
- static inline void wl1271_raw_write32(struct wl1271 *wl, int addr, u32 val)
- {
- 	wl->buffer_32 = cpu_to_le32(val);
--	wl1271_raw_write(wl, addr, &wl->buffer_32,
-+	wlcore_raw_write(wl, addr, &wl->buffer_32,
- 			     sizeof(wl->buffer_32), false);
- }
- 
-@@ -99,7 +99,7 @@ static inline void wl1271_read(struct wl1271 *wl, int addr, void *buf,
- 
- 	physical = wlcore_translate_addr(wl, addr);
- 
--	wl1271_raw_read(wl, physical, buf, len, fixed);
-+	wlcore_raw_read(wl, physical, buf, len, fixed);
- }
- 
- static inline void wl1271_write(struct wl1271 *wl, int addr, void *buf,
-@@ -109,7 +109,7 @@ static inline void wl1271_write(struct wl1271 *wl, int addr, void *buf,
- 
- 	physical = wlcore_translate_addr(wl, addr);
- 
--	wl1271_raw_write(wl, physical, buf, len, fixed);
-+	wlcore_raw_write(wl, physical, buf, len, fixed);
- }
- 
- static inline void wlcore_write_data(struct wl1271 *wl, int reg, void *buf,
-@@ -135,7 +135,7 @@ static inline void wl1271_read_hwaddr(struct wl1271 *wl, int hwaddr,
- 
- 	physical = wlcore_translate_addr(wl, addr);
- 
--	wl1271_raw_read(wl, physical, buf, len, fixed);
-+	wlcore_raw_read(wl, physical, buf, len, fixed);
- }
- 
- static inline u32 wl1271_read32(struct wl1271 *wl, int addr)
 -- 
-1.7.10
-
+Pozdrawiam / Best regards, Michal Kazior.
