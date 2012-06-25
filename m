@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38533 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750795Ab2FKHch (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41412 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760Ab2FYTXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 03:32:37 -0400
-Message-ID: <1339399952.4520.13.camel@jlt3.sipsolutions.net> (sfid-20120611_093240_807352_9C330F1F)
-Subject: Re: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, me@bobcopeland.com,
-	mickflemm@gmail.com, kvalo@qca.qualcomm.com
-Date: Mon, 11 Jun 2012 09:32:32 +0200
-In-Reply-To: <4FD3A936.8070600@broadcom.com>
-References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>
-	 <1339228530.4539.0.camel@jlt3.sipsolutions.net>
-	 <4FD3A936.8070600@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 25 Jun 2012 15:23:47 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	"Rajkumar Manoharan" <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20456.40340.61005.543469@gargle.gargle.HOWL> (sfid-20120625_212351_716528_9439966A)
+Date: Mon, 25 Jun 2012 22:49:16 +0530
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v3 01/10] ath9k_hw: Add register definitions for WoW support
+In-Reply-To: <1340633579-7514-2-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+	<1340633579-7514-2-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-06-09 at 21:51 +0200, Arend van Spriel wrote:
-> On 06/09/2012 09:55 AM, Johannes Berg wrote:
-> > On Fri, 2012-06-08 at 17:51 -0700, Luis R. Rodriguez wrote:
-> >> From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-> >>
-> >> Turns out that standard Linux distributions leave CONFIG_EXPERT
-> >> enabled. This makes this option useless for wireless testing / research
-> >> purposes as we don't want certain features enabled on all kernel
-> >> builds. This adds a new CONFIG_CFG80211_EXPERT and makes a few
-> >> features depend on them.
-> > 
-> > I'm not sure I see the point in CFG80211_EXPERT. All the features you're
-> > putting in there have nothing to do with cfg80211 at all anyway.
+Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 > 
-> My understanding of this is that CFG80211_EXPERT was chosen because
-> cfg80211 provides the kernel side of the regulatory framework.
+> *MAC WoW registers
+> 
+> back-off shift, MAC interrupt enable, magic packet enable,
+> pattern match enable, aifs, slot wait period, keep alive
+> frame failure count, beacon fail enable, beacon timeout,
+> keep alive timeout, auto keep alive disable,
+> keep alive fail disable and their corresponding
+> status registers. keep alive frame delay,
+> pattern end/byte offsets, transmit buffers for
+> keep alive frames and storing the user patterns
+> 
+> *Power Management Control registers
+> 
+> pme_d3cold_vaux, host_pme_enable, aux_pwr_detect,
+> power_state_mask, wow_pme_clear
 
-It just happens though that the two options are related to regulatory --
-maybe then this should have a different name? I still don't see the
-need. What would you put under it in brcm[sf]mac? I certainly wouldn't
-see any reason to put anything under it in our driver since it's much
-simpler to .
+The commit log could be trimmed to just say "various WoW registers".
 
-Also, the argument about distros doesn't really work that way, if there
-are users interested in something then the distros will certainly enable
-this (CFG80211_EXPERT) option to get something hidden behind it.
+> +/* AR_WOW_PATTERN register values */
+> +#define AR_WOW_BACK_OFF_SHIFT(x)	((x & 0xf) << 28) /* in usecs */
+> +#define AR_WOW_MAC_INTR_EN		0x00040000
+> +#define AR_WOW_MAGIC_EN			0x00010000
+> +#define AR_WOW_PATTERN_EN(x)		(x & 0xff)
+> +#define AR_WOW_PAT_FOUND_SHIFT	8
+> +#define AR_WOW_PATTERN_FOUND(x)		(x & (0xff << AR_WOW_PAT_FOUND_SHIFT))
+> +#define AR_WOW_PATTERN_FOUND_MASK	((0xff) << AR_WOW_PAT_FOUND_SHIFT)
+> +#define AR_WOW_MAGIC_PAT_FOUND		0x00020000
+> +#define AR_WOW_MAC_INTR			0x00080000
+> +#define AR_WOW_KEEP_ALIVE_FAIL		0x00100000
+> +#define AR_WOW_BEACON_FAIL		0x00200000
+> +
+> +#define AR_WOW_STATUS(x)		(x & (AR_WOW_PATTERN_FOUND_MASK | \
+> +					      AR_WOW_MAGIC_PAT_FOUND	| \
+> +					      AR_WOW_KEEP_ALIVE_FAIL	| \
+> +					      AR_WOW_BEACON_FAIL))
+> +#define AR_WOW_CLEAR_EVENTS(x)		(x & ~(AR_WOW_PATTERN_EN(0xff) | \
+> +					       AR_WOW_MAGIC_EN | \
+> +					       AR_WOW_MAC_INTR_EN | \
+> +					       AR_WOW_BEACON_FAIL | \
+> +					       AR_WOW_KEEP_ALIVE_FAIL))
+> +
 
-johannes
+Indentation is off in many places, please fix it.
 
+Sujith
