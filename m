@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx01.sz.bfs.de ([194.94.69.103]:33517 "EHLO mx01.sz.bfs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752489Ab2FJPZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2012 11:25:08 -0400
-Message-ID: <4FD4BC51.80407@bfs.de> (sfid-20120610_172553_284827_240C46DE)
-Date: Sun, 10 Jun 2012 17:25:05 +0200
-From: walter harms <wharms@bfs.de>
-Reply-To: wharms@bfs.de
-MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch v2] iwlwifi: turn on a lockdep assertion
-References: <20120610112521.GA20676@elgon.mountain>
-In-Reply-To: <20120610112521.GA20676@elgon.mountain>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:33350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757306Ab2FYQFQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jun 2012 12:05:16 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SjBms-0006ij-N5
+	for linux-wireless@vger.kernel.org; Mon, 25 Jun 2012 18:05:14 +0200
+Message-ID: <1340640308.27437.16.camel@jlt3.sipsolutions.net> (sfid-20120625_180529_870030_D475B2AD)
+Subject: mac80211 auth/assoc in multi-channel scenarios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 25 Jun 2012 18:05:08 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
+Some of us have discussed this before, but I wanted to get some wider
+dissemination ...
 
-Am 10.06.2012 13:25, schrieb Dan Carpenter:
-> CMD_SYNC is zero so the if (cmd->flags & CMD_SYNC) is never true and we
-> never check the assertion.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> v2: enables the assertion even more than v1 (based on feedback from
-> Johannes Berg).
+With multi-channel, one problem that we get is managing the channel
+timing for authentication/association. We'll have bound the channel
+context (once we have that) before we even send a frame of course, but
+setting up the timing as to when to use the channel is very hard, in
+particular for connections to P2P GOs that might potentially be asleep.
 
-The important part is CMD_SYNC -> CMD_ASYNC
+I see a few obvious choices, open for other suggestions.
 
-re,
- wh
+1) bring back something like the TX sync API, where the driver sleeps
+   until the frame can be transmitted; this is done before every
+   transmit
+1a) do the same, but asynchronously (somewhat ugly)
 
+2) sleep in sta_state in the driver; this is problematic because while
+   we know that the auth frame will be sent right after the AP station
+   is created, we don't see the retransmits properly
 
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> index e55ec6c..5c04895 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> @@ -1259,7 +1259,7 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
->  	 * the mutex, this ensures we don't try to send two
->  	 * (or more) synchronous commands at a time.
->  	 */
-> -	if (cmd->flags & CMD_SYNC)
-> +	if (!(cmd->flags & CMD_ASYNC))
->  		lockdep_assert_held(&priv->mutex);
->  
->  	if (priv->ucode_owner == IWL_OWNERSHIP_TM &&
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+3) do it in the driver in tx(); this is problematic because it may mean
+   delaying the frames quite a bit, and mac80211 might then try to
+   retransmit too early etc
+
+4) introduce a sleeping mgmt-tx driver call to send such frames; this is
+   ugly in mac80211 code flows with the TX functions
+
+5) do remain-on-channel from mac80211, but this doesn't address P2P GO
+   synchronisation requirements
+
+I haven't been able to come up with any other ways, and here we really
+don't have much of a choice -- #1 is the only thing that seems sane to
+me. Thoughts?
+
+johannes
+
