@@ -1,101 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:63510 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab2FFKVI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:21:08 -0400
-Received: by mail-pz0-f46.google.com with SMTP id y13so8594095dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 03:21:08 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH 3/4] mac80211: implement the proactive PREP generation
-Date: Wed,  6 Jun 2012 18:20:38 +0800
-Message-Id: <1338978039-4269-4-git-send-email-yeohchunyeow@gmail.com> (sfid-20120606_122112_803347_6F758DB2)
-In-Reply-To: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com>
+Received: from victor.provo.novell.com ([137.65.250.26]:42324 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752537Ab2FYCFS convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Sun, 24 Jun 2012 22:05:18 -0400
+Received: by bkcji2 with SMTP id ji2so2744945bkc.19
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2012 19:05:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn0qmRtwQGqG3GizxuPbPX_xh7Fwvgd9DchQuwA1T66XQA@mail.gmail.com>
+References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
+	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
+	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
+	<CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com>
+	<CAD2nsn35gDLLP3Wkn9qpG5UhxUGPOcn1q_kpP2WexjQ1+LvXFg@mail.gmail.com>
+	<CALx5=V-+aCcOMXHPrxmqVHwaiosNurT17gHBTi0mTdYJ6bZRMA@mail.gmail.com>
+	<CAD2nsn2KrgLh-Oth-npUjY59bh2ycpEv7UocfXH0uE27TD19fQ@mail.gmail.com>
+	<CALx5=V8s54ytfRVT2hscXCYRCj1MTdvKjM1jFa-OwxAyUMKFLw@mail.gmail.com>
+	<CAD2nsn0qmRtwQGqG3GizxuPbPX_xh7Fwvgd9DchQuwA1T66XQA@mail.gmail.com>
+Date: Mon, 25 Jun 2012 10:05:04 +0800
+Message-ID: <CALx5=V-AnKKMSwqyrJCV889fJ9K-XBB_Yp_hPejK8_rgFpq=pA@mail.gmail.com> (sfid-20120625_040556_549132_777FCF85)
+Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
+From: Matt Chen <machen@suse.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generate the proactive PREP element in Proactive PREQ mode as defined in
-Sec. 13.10.10.3 (Case D) of IEEE Std. 802.11-2012
+Hi Mohammed,
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- net/mac80211/mesh_hwmp.c |   34 ++++++++++++++++++++++++++++------
- 1 files changed, 28 insertions(+), 6 deletions(-)
+2012/6/23 Mohammed Shafi <shafi.wireless@gmail.com>:
+> On Fri, Jun 22, 2012 at 2:45 PM, Matt Chen <machen@suse.com> wrote:
+>> Hi Mohammed,
+>>
+>> 2012/6/20 Mohammed Shafi <shafi.wireless@gmail.com>:
+>>> Hi Matt,
+>>>
+>>>> Both 0x2f and 0x2d can work fine to me of enabling
+>>>> wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll().
+>>>>
+>>>> 1) with 0x2f
+>>>>   0x404c address would change when press wifi button
+>>>>   rfkill block : yes -> 0x00000455
+>>>>   rfkill block : no   -> 0x00000c55
+>>>> 2) with 0x2d
+>>>>   0x404c address would change when press wifi button
+>>>>   rfkill block : yes -> 0x00000455
+>>>>   rfkill block : no   -> 0x00000c55
+>>>>
+>>>>
+>>>> But I don't see the LED is changing, it is staying OFF (Amber).
+>>>
+>>> not sure about that, but i think rfkill is working for both of us
+>>> i told 0xeed changes to 0x6ed for me
+>>>
+>>> you got 0x455 changes to 0xc55
+>>>
+>>> BIT 12(GPIO pin 11 seems to toggle  4 ->C), you can confirm by rfkill list
+>> Would it be the patch to fix it ? or it is just a workaround to prove
+>> the rfkill_poll can be enabled ?
+>
+> ideally, this should have been properly hard coded in the EEPROM stuff itself.
+> i think you got a very brand new AR9462 just when it came to the market :)
+> its a kind of workaround only.
+Is there anything I can do help to enable this?  ;)  Not a workaround.
+> --
+> thanks,
+> shafi
+>
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index b1e4399..d038767 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -529,10 +529,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 	struct mesh_path *mpath = NULL;
- 	u8 *target_addr, *orig_addr;
- 	const u8 *da;
--	u8 target_flags, ttl;
-+	u8 target_flags, ttl, flags;
- 	u32 orig_sn, target_sn, lifetime;
- 	bool reply = false;
- 	bool forward = true;
-+	bool root_is_gate;
- 
- 	/* Update target SN, if present */
- 	target_addr = PREQ_IE_TARGET_ADDR(preq_elem);
-@@ -540,6 +541,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 	target_sn = PREQ_IE_TARGET_SN(preq_elem);
- 	orig_sn = PREQ_IE_ORIG_SN(preq_elem);
- 	target_flags = PREQ_IE_TARGET_F(preq_elem);
-+	/* Proactive PREQ gate announcements */
-+	flags = PREQ_IE_FLAGS(preq_elem);
-+	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
- 
- 	mhwmp_dbg("received PREQ from %pM", orig_addr);
- 
-@@ -554,6 +558,15 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 			target_sn = ++ifmsh->sn;
- 			ifmsh->last_sn_update = jiffies;
- 		}
-+	} else if (is_broadcast_ether_addr(target_addr) &&
-+			(target_flags & MP_F_DO)) {
-+		mpath = mesh_path_lookup(orig_addr, sdata);
-+		if (mpath) {
-+			if (flags & PREQ_F_PREP)
-+				reply = true;
-+			if (root_is_gate)
-+				mesh_path_add_gate(mpath);
-+		}
- 	} else {
- 		rcu_read_lock();
- 		mpath = mesh_path_lookup(target_addr, sdata);
-@@ -581,11 +594,20 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 		ttl = ifmsh->mshcfg.element_ttl;
- 		if (ttl != 0) {
- 			mhwmp_dbg("replying to the PREQ");
--			mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
--				cpu_to_le32(orig_sn), 0, target_addr,
--				cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
--				cpu_to_le32(lifetime), cpu_to_le32(metric),
--				0, sdata);
-+			if (!is_broadcast_ether_addr(target_addr))
-+				mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
-+				    cpu_to_le32(orig_sn), 0, target_addr,
-+				    cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
-+				    cpu_to_le32(lifetime), cpu_to_le32(metric),
-+				    0, sdata);
-+			else {
-+				mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
-+				    cpu_to_le32(orig_sn), 0, sdata->vif.addr,
-+				    cpu_to_le32(++ifmsh->sn), mgmt->sa, 0, ttl,
-+				    cpu_to_le32(lifetime), 0,
-+				    0, sdata);
-+				ifmsh->last_sn_update = jiffies;
-+			}
- 		} else
- 			ifmsh->mshstats.dropped_frames_ttl++;
- 	}
+
+
 -- 
-1.7.0.4
-
+Thank you.
