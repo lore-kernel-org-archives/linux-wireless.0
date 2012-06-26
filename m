@@ -1,50 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:1714 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911Ab2FRGAi convert rfc822-to-8bit (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:39245 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932209Ab2FZSz0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 02:00:38 -0400
-From: Wei Ni <wni@nvidia.com>
-To: 'Franky Lin' <frankyl@broadcom.com>
-CC: 'Stephen Warren' <swarren@wwwdotorg.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Mursalin Akon <makon@nvidia.com>,
-	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Mon, 18 Jun 2012 14:00:33 +0800
-Subject: RE: Where to power on the wifi device before loading the driver.
-Message-ID: <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61E@HKMAIL01.nvidia.com> (sfid-20120618_080043_702916_86917CBB)
-References: <6B4D417B830BC44B8026029FD256F7F1C377BFFE88@HKMAIL01.nvidia.com>
- <4FD90352.9090606@wwwdotorg.org>
- <20120614063120.GA20167@avionic-0098.mockup.avionic-design.de>
- <20120614121234.GC3913@opensource.wolfsonmicro.com>
- <4FDA092E.10301@wwwdotorg.org>
- <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
- <4FDB61C9.9020505@broadcom.com>
-In-Reply-To: <4FDB61C9.9020505@broadcom.com>
+	Tue, 26 Jun 2012 14:55:26 -0400
+Date: Tue, 26 Jun 2012 20:55:34 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Will Hawkins <hawkinsw@opentechinstitute.org>,
+	Will Hawkins <hawkinsw@opentechinitiative.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Help tracing NL80211_CMD_AUTHENTICATE as event in IBSS mode
+Message-ID: <20120626185533.GA7932@ritirata.org> (sfid-20120626_205533_636587_B535033A)
+References: <24f-4fe93400-17-239c5900@2266046>
+ <1340693584.4662.3.camel@jlt3.sipsolutions.net>
+ <4FE9E201.1010903@opentechinstitute.org>
+ <1340728873.4484.6.camel@jlt3.sipsolutions.net>
+ <4FE9E6F0.2070909@opentechinstitute.org>
+ <1340730210.4484.11.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="SLDf9lqlvOQaIe6s"
+In-Reply-To: <1340730210.4484.11.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 16, 2012 at 00:24:41, Franky Lin wrote:
->On 06/14/2012 11:09 PM, Wei Ni wrote:
->> I talked with Franky, this power sequence is generally for 4329, so it mean this sequence can be put into the wifi driver.
->
->Hold on. It's generally for 4329. But fullmac supports 4329/4330 along 
->with USB dongle chips. Also more chips are incoming. I dont think it's a good idea to add *this* power sequence into brcmfmac.
 
-Ok we need find other ways for it. Thanks for your comments.
+--SLDf9lqlvOQaIe6s
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Wei
----
-nvpublic
+On Tue, Jun 26, 2012 at 07:03:30PM +0200, Johannes Berg wrote:
+> On Tue, 2012-06-26 at 12:44 -0400, Will Hawkins wrote:
+>=20
+> > > Huh, now I'm confused, why would it need the authenticate frames for
+> > > IBSS? As far as I can tell, it looks at CMD_NEW_STA, which calls
+> > > nl80211_new_station_event(),=20
+> >=20
+> > This is what I understand as well.
+> >=20
+> > which in IBSS sends EVENT_IBSS_RSN_START to
+> > > the supplicant core -- that will trigger the 4-way-handshake. No? Hen=
+ce
+> > > it doesn't need to register for auth frames, it never needs them, sin=
+ce
+> > > RSN uses open auth, if any is even used in IBSS at all.
+> >=20
+> > This is where I am still trying to figure out exactly how it works.
+>=20
+> I believe that when the new station is added (NEW_STA event), it will
+> simply send out a 1/4 EAPOL frame. Since both do that, I guess it does
+> some kind of de-duplication? Whoever sends it first wins or something,
+> but I don't really know. Maybe we should take the discussion to the
+> hostap list at this point :-)
+
+Yeah, Johannes is right when saying that NEW_STA simply makes wpa_s trigger=
+ a
+EVENT_IBSS_RSN_START that will start a 4-way handshake.
+
+Auth frames are not used at all in wpa_s for IBSS/RSN. Auth frames are only=
+ used
+in the kernel to remove and then add again a station from the neighbour lis=
+t. In
+this way wpa_s will first purge that station and then will add it again tha=
+nks
+to another NEW_STA event.
+
+@johannes: de-duplication? IBSS/RSN assumes that each node runs an authenti=
+cator
+and a supplicant. Does this mean that we need exactly two 4-way handshakes?=
+ Why
+should we have a "winner"?
+
+Cheers,
 
 
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--SLDf9lqlvOQaIe6s
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/qBaUACgkQpGgxIkP9cwcsZgCaA3+OOEn3EjKyl8wO7wAB9nrD
+zV0AnAk1b2E3iIG//sW7FtNzfYXA4vPs
+=jC+S
+-----END PGP SIGNATURE-----
+
+--SLDf9lqlvOQaIe6s--
