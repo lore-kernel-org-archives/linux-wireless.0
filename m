@@ -1,142 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5426 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753542Ab2FKGtZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 02:49:25 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 8/9] ath9k: simplify btcoex profile management
-Date: Mon, 11 Jun 2012 12:19:36 +0530
-Message-ID: <1339397377-3374-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_084928_370528_4CBD23AC)
-In-Reply-To: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1339397377-3374-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4026 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751493Ab2FZT1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 15:27:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 5/7] brcmfmac: reduce allocations needed during nvram
+ data download
+Date: Tue, 26 Jun 2012 21:26:38 +0200
+Message-ID: <1340738800-14087-6-git-send-email-arend@broadcom.com> (sfid-20120626_212721_484251_39A0AC29)
+In-Reply-To: <1340738800-14087-1-git-send-email-arend@broadcom.com>
+References: <1340738800-14087-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch simplifies profile management utility functions.
+The nvram data is preprocessed before being sent to the device
+and just before sending an additional allocation was done that
+assured word alignment of the data. This has moved to the
+preprocessing step to reduce allocations and subsequent copying
+of the nvram data.
 
-* Separate find_profile from add/del functions
-* Return correct values when the profile list is empty or
-  profile is ot found
-* flush the profiles when there are entries in the list
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/mci.c |   48 +++++++++++++++++-----------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   48 +++++++-------------
+ 1 file changed, 17 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 49137f4..2ea5e93 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -28,11 +28,14 @@ ath_mci_find_profile(struct ath_mci_profile *mci,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index a50796c..2ee19c1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3339,9 +3339,7 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
+ static int brcmf_sdbrcm_write_vars(struct brcmf_sdio *bus)
  {
- 	struct ath_mci_profile_info *entry;
+ 	int bcmerror = 0;
+-	u32 varsize;
+ 	u32 varaddr;
+-	u8 *vbuffer;
+ 	u32 varsizew;
+ 	__le32 varsizew_le;
+ #ifdef DEBUG
+@@ -3350,56 +3348,44 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_sdio *bus)
  
-+	if (list_empty(&mci->info))
-+		return NULL;
-+
- 	list_for_each_entry(entry, &mci->info, list) {
- 		if (entry->conn_handle == info->conn_handle)
--			break;
-+			return entry;
+ 	/* Even if there are no vars are to be written, we still
+ 		 need to set the ramsize. */
+-	varsize = bus->varsz ? roundup(bus->varsz, 4) : 0;
+-	varaddr = (bus->ramsize - 4) - varsize;
++	varaddr = (bus->ramsize - 4) - bus->varsz;
+ 
+ 	if (bus->vars) {
+-		vbuffer = kzalloc(varsize, GFP_ATOMIC);
+-		if (!vbuffer)
+-			return -ENOMEM;
+-
+-		memcpy(vbuffer, bus->vars, bus->varsz);
+-
+ 		/* Write the vars list */
+-		bcmerror =
+-		    brcmf_sdbrcm_membytes(bus, true, varaddr, vbuffer, varsize);
++		bcmerror = brcmf_sdbrcm_membytes(bus, true, varaddr,
++						 bus->vars, bus->varsz);
+ #ifdef DEBUG
+ 		/* Verify NVRAM bytes */
+-		brcmf_dbg(INFO, "Compare NVRAM dl & ul; varsize=%d\n", varsize);
+-		nvram_ularray = kmalloc(varsize, GFP_ATOMIC);
+-		if (!nvram_ularray) {
+-			kfree(vbuffer);
++		brcmf_dbg(INFO, "Compare NVRAM dl & ul; varsize=%d\n",
++			  bus->varsz);
++		nvram_ularray = kmalloc(bus->varsz, GFP_ATOMIC);
++		if (!nvram_ularray)
+ 			return -ENOMEM;
+-		}
+ 
+ 		/* Upload image to verify downloaded contents. */
+-		memset(nvram_ularray, 0xaa, varsize);
++		memset(nvram_ularray, 0xaa, bus->varsz);
+ 
+ 		/* Read the vars list to temp buffer for comparison */
+-		bcmerror =
+-		    brcmf_sdbrcm_membytes(bus, false, varaddr, nvram_ularray,
+-				     varsize);
++		bcmerror = brcmf_sdbrcm_membytes(bus, false, varaddr,
++						 nvram_ularray, bus->varsz);
+ 		if (bcmerror) {
+ 			brcmf_dbg(ERROR, "error %d on reading %d nvram bytes at 0x%08x\n",
+-				  bcmerror, varsize, varaddr);
++				  bcmerror, bus->varsz, varaddr);
+ 		}
+ 		/* Compare the org NVRAM with the one read from RAM */
+-		if (memcmp(vbuffer, nvram_ularray, varsize))
++		if (memcmp(bus->vars, nvram_ularray, bus->varsz))
+ 			brcmf_dbg(ERROR, "Downloaded NVRAM image is corrupted\n");
+ 		else
+ 			brcmf_dbg(ERROR, "Download/Upload/Compare of NVRAM ok\n");
+ 
+ 		kfree(nvram_ularray);
+ #endif				/* DEBUG */
+-
+-		kfree(vbuffer);
  	}
--	return entry;
-+	return NULL;
- }
  
- static bool ath_mci_add_profile(struct ath_common *common,
-@@ -49,31 +52,21 @@ static bool ath_mci_add_profile(struct ath_common *common,
- 	    (info->type != MCI_GPM_COEX_PROFILE_VOICE))
- 		return false;
+ 	/* adjust to the user specified RAM */
+ 	brcmf_dbg(INFO, "Physical memory size: %d\n", bus->ramsize);
+ 	brcmf_dbg(INFO, "Vars are at %d, orig varsize is %d\n",
+-		  varaddr, varsize);
+-	varsize = ((bus->ramsize - 4) - varaddr);
++		  varaddr, bus->varsz);
  
--	entry = ath_mci_find_profile(mci, info);
--
--	if (entry) {
--		memcpy(entry, info, 10);
--	} else {
--		entry = kzalloc(sizeof(*entry), GFP_KERNEL);
--		if (!entry)
--			return false;
-+	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-+	if (!entry)
-+		return false;
- 
--		memcpy(entry, info, 10);
--		INC_PROF(mci, info);
--		list_add_tail(&info->list, &mci->info);
--	}
-+	memcpy(entry, info, 10);
-+	INC_PROF(mci, info);
-+	list_add_tail(&entry->list, &mci->info);
- 
- 	return true;
- }
- 
- static void ath_mci_del_profile(struct ath_common *common,
- 				struct ath_mci_profile *mci,
--				struct ath_mci_profile_info *info)
-+				struct ath_mci_profile_info *entry)
- {
--	struct ath_mci_profile_info *entry;
--
--	entry = ath_mci_find_profile(mci, info);
--
- 	if (!entry)
- 		return;
- 
-@@ -86,12 +79,16 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci)
- {
- 	struct ath_mci_profile_info *info, *tinfo;
- 
-+	mci->aggr_limit = 0;
-+
-+	if (list_empty(&mci->info))
-+		return;
-+
- 	list_for_each_entry_safe(info, tinfo, &mci->info, list) {
- 		list_del(&info->list);
- 		DEC_PROF(mci, info);
- 		kfree(info);
+ 	/*
+ 	 * Determine the length token:
+@@ -3410,13 +3396,13 @@ static int brcmf_sdbrcm_write_vars(struct brcmf_sdio *bus)
+ 		varsizew = 0;
+ 		varsizew_le = cpu_to_le32(0);
+ 	} else {
+-		varsizew = varsize / 4;
++		varsizew = bus->varsz / 4;
+ 		varsizew = (~varsizew << 16) | (varsizew & 0x0000FFFF);
+ 		varsizew_le = cpu_to_le32(varsizew);
  	}
--	mci->aggr_limit = 0;
- }
  
- static void ath_mci_adjust_aggr_limit(struct ath_btcoex *btcoex)
-@@ -229,12 +226,17 @@ static void ath_mci_process_profile(struct ath_softc *sc,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_mci_profile *mci = &btcoex->mci;
-+	struct ath_mci_profile_info *entry = NULL;
-+
-+	entry = ath_mci_find_profile(mci, info);
-+	if (entry)
-+		memcpy(entry, info, 10);
+ 	brcmf_dbg(INFO, "New varsize is %d, length token=0x%08x\n",
+-		  varsize, varsizew);
++		  bus->varsz, varsizew);
  
- 	if (info->start) {
--		if (!ath_mci_add_profile(common, mci, info))
-+		if (!entry && !ath_mci_add_profile(common, mci, info))
- 			return;
- 	} else
--		ath_mci_del_profile(common, mci, info);
-+		ath_mci_del_profile(common, mci, entry);
+ 	/* Write the length token to the last word */
+ 	bcmerror = brcmf_sdbrcm_membytes(bus, true, (bus->ramsize - 4),
+@@ -3587,8 +3573,8 @@ static int brcmf_process_nvram_vars(struct brcmf_sdio *bus)
+ 		*dp++ = 0;
  
- 	btcoex->btcoex_period = ATH_MCI_DEF_BT_PERIOD;
- 	mci->aggr_limit = mci->num_sco ? 6 : 0;
-@@ -263,8 +265,6 @@ static void ath_mci_process_status(struct ath_softc *sc,
- 	if (status->is_link)
- 		return;
- 
--	memset(&info, 0, sizeof(struct ath_mci_profile_info));
+ 	kfree(bus->vars);
 -
- 	info.conn_handle = status->conn_handle;
- 	if (ath_mci_find_profile(mci, &info))
- 		return;
+-	bus->varsz = buf_len + 1;
++	/* roundup needed for download to device */
++	bus->varsz = roundup(buf_len + 1, 4);
+ 	bus->vars = kmalloc(bus->varsz, GFP_KERNEL);
+ 	if (bus->vars == NULL) {
+ 		bus->varsz = 0;
 -- 
-1.7.10.4
+1.7.9.5
+
 
