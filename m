@@ -1,130 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:38753 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756260Ab2FFWtO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 18:49:14 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so168376pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:13 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/6] mac80211: Use signal strength as a proxy for expected datarate.
-Date: Wed,  6 Jun 2012 15:48:51 -0700
-Message-Id: <1339022932-14240-6-git-send-email-jason@cozybit.com> (sfid-20120607_004920_913952_9D005E35)
-In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
-References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755417Ab2FZMaj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:39 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 07/13] mac80211: refactor virtual monitor code
+Date: Tue, 26 Jun 2012 14:30:12 +0200
+Message-ID: <1340713818-28549-8-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143054_479778_F49AA15E)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thomas Pedersen <thomas@cozybit.com>
+Use cfg80211 the new .set_monitor_enabled instead
+of tracking it inside mac80211.
 
-When establishing mesh paths with new stations, there is no historic
-datarate information to compute the airtime link metric.  Up until now
-we were just using a poor initial metric.  A better approach is to
-use the signal strength as an indicator of how good the new link will
-be.  Once traffic is exchanged with the station, the average datarate is
-computed and the signal strength is not used anymore.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-Reviewed-by: Jason Abele <jason@cozybit.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/mac80211/mesh_hwmp.c |   72 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 70 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c         |   11 +++++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/iface.c       |   16 ++--------------
+ 3 files changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 22b327a..bb32203 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -330,6 +330,71 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	return;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 85ac364..df7332e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2943,6 +2943,16 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy,
+ 	return local->oper_channel;
  }
  
-+/* estimate link rate as a function of last rssi for sta */
-+static unsigned int rssi_get_rate(struct sta_info *sta)
++static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
 +{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	/* XXX: oper_channel is moving to sdata upstream */
-+	enum ieee80211_band band = sta->local->oper_channel->band;
-+	struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.ht_cap;
-+	struct rate_info rinfo;
-+	int i, ridx, ci = 0;
-+	int rssi, rate;
-+	u32 cidx[IEEE80211_MAX_SUPP_RATES];
++	struct ieee80211_local *local = wiphy_priv(wiphy);
 +
-+	if (sta->last_signal >= 0)
-+		return 0;
-+
-+	memset(&rinfo, sizeof(rinfo), 0);
-+
-+	/* make rates contiguous */
-+	for (i = 0; i < IEEE80211_MAX_SUPP_RATES; i++) {
-+		if (ht_cap->ht_supported &&
-+		    !(ht_cap->mcs.rx_mask[i / 8] & (i % 8)))
-+			continue;
-+
-+		if (!(sta->sta.supp_rates[band] & BIT(i)))
-+			continue;
-+
-+		cidx[ci++] = i;
-+	}
-+
-+	/* map rssi in range 20 - 70 to rates 32 - 0 */
-+#define RSSI_OFF 20
-+#define RSSI_MAX 50
-+	rssi = abs(sta->last_signal) - RSSI_OFF;
-+	rssi = max(rssi, 0);
-+	rssi = min(rssi, RSSI_MAX);
-+	/* invert rssi against ci and get the supported nth rate */
-+	/* TODO: make this non-linear */
-+	ridx = cidx[min((int)(ci * (1 - ((float) rssi / RSSI_MAX))), ci)];
-+
-+	if (ht_cap->ht_supported) {
-+		rinfo.flags |= RATE_INFO_FLAGS_MCS;
-+		rinfo.flags |= (sta->sta.ht_cap.cap &
-+				IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
-+					RATE_INFO_FLAGS_40_MHZ_WIDTH :
-+					0;
-+		rinfo.flags |= (sta->sta.ht_cap.cap &
-+				(IEEE80211_HT_CAP_SGI_20 |
-+				 IEEE80211_HT_CAP_SGI_40)) ?
-+						RATE_INFO_FLAGS_SHORT_GI :
-+						0;
-+		rinfo.mcs = ridx;
-+	} else {
-+		struct ieee80211_supported_band *sband;
-+		sband = sta->local->hw.wiphy->bands[band];
-+		rinfo.legacy = sband->bitrates[ridx].bitrate;
-+	}
-+
-+	rate = cfg80211_calculate_bitrate(&rinfo);
-+	if (WARN_ON(!rate))
-+		rate = 10;
-+	mhwmp_dbg("est. %d Mbps for %pM with rssi %d\n",
-+		  rate/10, sta->sta.addr, sta->last_signal);
-+	return rate;
++	if (enabled)
++		WARN_ON(ieee80211_add_virtual_monitor(local));
++	else
++		ieee80211_del_virtual_monitor(local);
 +}
 +
- static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 				   struct sta_info *sta)
+ #ifdef CONFIG_PM
+ static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
  {
-@@ -345,8 +410,11 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	if (sta->fail_avg >= 100)
- 		return MAX_METRIC;
+@@ -3018,6 +3028,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.set_monitor_enabled = ieee80211_set_monitor_enabled,
+ #ifdef CONFIG_PM
+ 	.set_wakeup = ieee80211_set_wakeup,
+ #endif
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e6cbf5b..9eb3b8b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1472,6 +1472,10 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       enum nl80211_channel_type channel_type,
+ 			       u16 prot_mode);
  
--	/* If not enough values accumulated in rate average, assume 1 Mbps */
--	rate = max(ewma_read(&sta->avg_rate), 10UL);
-+	if (sta->tx_packets > 100)
-+		rate = max(ewma_read(&sta->avg_rate), 10UL);
-+	else
-+		/* Not enough traffic sent, use rx signal strengh as proxy */
-+		rate = rssi_get_rate(sta);
++/* virtual monitor */
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
++
+ /* channel management */
+ enum ieee80211_chan_mode {
+ 	CHAN_MODE_UNDEFINED,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 87aeb4f..47f46fd 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -214,7 +214,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
+ }
  
- 	/* bitrate is in units of 100 Kbps, while we need rate in units of
- 	 * 1Mbps. This will be corrected on tx_time computation.
+-static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret;
+@@ -255,7 +255,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
+-static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -371,12 +371,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 			break;
+ 		}
+ 
+-		if (local->monitors == 0 && local->open_count == 0) {
+-			res = ieee80211_add_virtual_monitor(local);
+-			if (res)
+-				goto err_stop;
+-		}
+-
+ 		/* must be before the call to ieee80211_configure_filter */
+ 		local->monitors++;
+ 		if (local->monitors == 1) {
+@@ -391,8 +385,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		break;
+ 	default:
+ 		if (coming_up) {
+-			ieee80211_del_virtual_monitor(local);
+-
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+@@ -627,7 +619,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		if (local->monitors == 0) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+-			ieee80211_del_virtual_monitor(local);
+ 		}
+ 
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+@@ -701,9 +692,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+-
+-	if (local->monitors == local->open_count && local->monitors > 0)
+-		ieee80211_add_virtual_monitor(local);
+ }
+ 
+ static int ieee80211_stop(struct net_device *dev)
 -- 
-1.7.9.5
+1.7.0.4
 
