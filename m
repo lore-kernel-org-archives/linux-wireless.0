@@ -1,82 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39292 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755719Ab2FFKHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:55 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 21/29] NFC: Add type A and type F parameters for pn533 target mode
-Date: Wed,  6 Jun 2012 12:16:38 +0200
-Message-Id: <1338977806-30279-22-git-send-email-sameo@linux.intel.com> (sfid-20120606_120759_353127_FE188C44)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:37318 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756866Ab2FZNl4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 09:41:56 -0400
+Message-ID: <1340718113.14634.45.camel@jlt3.sipsolutions.net> (sfid-20120626_154159_460083_554282DD)
+Subject: Re: [RFC v3 7/7] mac80211: reuse channels for channel contexts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 26 Jun 2012 15:41:53 +0200
+In-Reply-To: <1340714242-20032-8-git-send-email-michal.kazior@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+	 <1340714242-20032-8-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without those settings several devices will not activate pn533 as a target.
+On Tue, 2012-06-26 at 14:37 +0200, Michal Kazior wrote:
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |   25 ++++++++++++++++++++++++-
- 1 files changed, 24 insertions(+), 1 deletions(-)
+> +static enum nl80211_channel_type
+> +ieee80211_calc_chantype(struct ieee80211_local *local,
+> +			struct ieee80211_chanctx *ctx)
+> +{
+> +	struct ieee80211_chanctx_conf *conf = &ctx->conf;
+> +	struct ieee80211_sub_if_data *sdata;
+> +	enum nl80211_channel_type chantype = NL80211_CHAN_NO_HT;
+> +	enum nl80211_channel_type compat;
+> +
+> +	lockdep_assert_held(&local->chanctx_mtx);
+> +
+> +	rcu_read_lock();
+> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+> +		if (!ieee80211_sdata_running(sdata))
+> +			continue;
+> +		if (sdata->vif.chanctx_conf != conf)
+> +			continue;
+> +
+> +		BUG_ON(!ieee80211_channel_types_are_compatible(
+> +				conf->channel_type, chantype, &compat));
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index 806ab3d..6e4b228 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -1126,6 +1126,13 @@ static int pn533_init_target_frame(struct pn533_frame *frame,
- {
- 	struct pn533_cmd_init_target *cmd;
- 	size_t cmd_len;
-+	u8 felica_params[18] = {0x1, 0xfe, /* DEP */
-+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, /* random */
-+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-+				0xff, 0xff}; /* System code */
-+	u8 mifare_params[6] = {0x1, 0x1, /* SENS_RES */
-+			       0x0, 0x0, 0x0,
-+			       0x40}; /* SEL_RES for DEP */
- 
- 	cmd_len = sizeof(struct pn533_cmd_init_target) + gb_len + 1;
- 	cmd = kzalloc(cmd_len, GFP_KERNEL);
-@@ -1136,17 +1143,33 @@ static int pn533_init_target_frame(struct pn533_frame *frame,
- 
- 	/* DEP support only */
- 	cmd->mode |= PN533_INIT_TARGET_DEP;
--	get_random_bytes(cmd->nfcid3, 10);
-+
-+	/* Felica params */
-+	memcpy(cmd->felica, felica_params, 18);
-+	get_random_bytes(cmd->felica + 2, 6);
-+
-+	/* NFCID3 */
-+	memset(cmd->nfcid3, 0, 10);
-+	memcpy(cmd->nfcid3, cmd->felica, 8);
-+
-+	/* MIFARE params */
-+	memcpy(cmd->mifare, mifare_params, 6);
-+
-+	/* General bytes */
- 	cmd->gb_len = gb_len;
- 	memcpy(cmd->gb, gb, gb_len);
-+
- 	/* Len Tk */
- 	cmd->gb[gb_len] = 0;
- 
- 	memcpy(PN533_FRAME_CMD_PARAMS_PTR(frame), cmd, cmd_len);
-+
- 	frame->datalen += cmd_len;
- 
- 	pn533_tx_frame_finish(frame);
- 
-+	kfree(cmd);
-+
- 	return 0;
- }
- 
--- 
-1.7.9.1
+Please no BUG_ON, maybe only WARN_ON_ONCE even?
+
+> +		chantype = compat;
+> +	}
+> +	rcu_read_unlock();
+> +
+> +	return chantype;
+> +}
+
+I don't think I understand this, wouldn't it need some per-vif requested
+channel type to work correctly? I don't see any chantype values coming
+from the sdata here, so I don't think this could work?
+
+If say vif1 needs ht40+ and vif2 ht20, the channel context will be set
+to ht40+, but then if vif1 goes away and you don't know anything about
+vif2 at all, then how can this work? The way I see it, your code here
+doesn't really do anything, except recalculate that ht40+ is compatible
+with ht40+, or something like that? I guess I'm a bit confused, it seems
+to me that this cannot work even in theory unless you have per-vif data.
+
+
+>  static void
+>  ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+>  			       struct ieee80211_chanctx *ctx)
+> @@ -248,6 +302,8 @@ ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+>  
+>  	drv_unassign_vif_chanctx(sdata->local, sdata, ctx);
+>  
+> +	ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
+> +
+>  	ctx->refcount--;
+>  	sdata->vif.chanctx_conf = NULL;
+
+And then shouldn't you recalc *after* setting chanctx_conf = NULL so you
+skip this vif?
+
+johannes
 
