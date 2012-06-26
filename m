@@ -1,86 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53815 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695Ab2F3NRa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:30 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 02/18] brcmsmac: remove PCI_FORCEHT() macro
-Date: Sat, 30 Jun 2012 15:16:05 +0200
-Message-Id: <1341062181-28071-3-git-send-email-hauke@hauke-m.de> (sfid-20120630_151733_572102_7E36EC60)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from ebb05.tieto.com ([131.207.168.36]:50402 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756572Ab2FZMak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:40 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 10/13] cfg80211: set initial monitor channel
+Date: Tue, 26 Jun 2012 14:30:15 +0200
+Message-ID: <1340713818-28549-11-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143050_950037_A78DA192)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The BCM4716 is a SoC and does not have a PCI client interface, so this
-condition is never true.
+Implements behaviour seen in mac80211. A running
+monitor always has a channel - even before
+.set_channel. This way we won't break current
+behaviour.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   19 -------------------
- 1 file changed, 19 deletions(-)
+ net/wireless/core.c |   31 +++++++++++++++++++++++++++++++
+ 1 files changed, 31 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index c942a88..c7ec9b7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -318,9 +318,6 @@
- #define	IS_SIM(chippkg)	\
- 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 8315c2a..5b3f74e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -776,6 +776,35 @@ static struct device_type wiphy_type = {
+ 	.name	= "wlan",
+ };
  
--#define PCI_FORCEHT(sih) ((ai_get_buscoretype(sih) == PCIE_CORE_ID) && \
--			  (ai_get_chip_id(sih) == BCM4716_CHIP_ID))
--
- #ifdef DEBUG
- #define	SI_MSG(fmt, ...)	pr_debug(fmt, ##__VA_ARGS__)
- #else
-@@ -753,9 +750,6 @@ bool ai_clkctl_cc(struct si_pub *sih, enum bcma_clkmode mode)
- 
- 	sii = (struct si_info *)sih;
- 
--	if (PCI_FORCEHT(sih))
--		return mode == BCMA_CLKMODE_FAST;
--
- 	cc = ai_findcore(&sii->pub, BCMA_CORE_CHIPCOMMON, 0);
- 	bcma_core_set_clockmode(cc, mode);
- 	return mode == BCMA_CLKMODE_FAST;
-@@ -764,15 +758,9 @@ bool ai_clkctl_cc(struct si_pub *sih, enum bcma_clkmode mode)
- void ai_pci_up(struct si_pub *sih)
++static struct ieee80211_channel *
++cfg80211_get_any_chan(struct cfg80211_registered_device *rdev)
++{
++	struct ieee80211_supported_band *sband;
++	int i;
++
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		sband = rdev->wiphy.bands[i];
++		if (sband && sband->n_channels > 0)
++			return &sband->channels[0];
++	}
++
++	return NULL;
++}
++
++static void cfg80211_init_mon_chan(struct cfg80211_registered_device *rdev)
++{
++	struct ieee80211_channel *chan;
++
++	chan = cfg80211_get_any_chan(rdev);
++	if (WARN_ON(!chan))
++		return;
++
++	mutex_lock(&rdev->devlist_mtx);
++	WARN_ON(cfg80211_set_monitor_channel(rdev, chan->center_freq,
++					     NL80211_CHAN_NO_HT));
++	mutex_unlock(&rdev->devlist_mtx);
++}
++
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 			       enum nl80211_iftype iftype, int num)
  {
- 	struct si_info *sii;
--	struct bcma_device *cc;
- 
- 	sii = (struct si_info *)sih;
- 
--	if (PCI_FORCEHT(sih)) {
--		cc = ai_findcore(&sii->pub, BCMA_CORE_CHIPCOMMON, 0);
--		bcma_core_set_clockmode(cc, BCMA_CLKMODE_FAST);
--	}
--
- 	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
- 		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci, true);
- }
-@@ -781,16 +769,9 @@ void ai_pci_up(struct si_pub *sih)
- void ai_pci_down(struct si_pub *sih)
- {
- 	struct si_info *sii;
--	struct bcma_device *cc;
- 
- 	sii = (struct si_info *)sih;
- 
--	/* release FORCEHT since chip is going to "down" state */
--	if (PCI_FORCEHT(sih)) {
--		cc = ai_findcore(&sii->pub, BCMA_CORE_CHIPCOMMON, 0);
--		bcma_core_set_clockmode(cc, BCMA_CLKMODE_DYNAMIC);
--	}
--
- 	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
- 		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci, false);
+@@ -796,6 +825,8 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		if (!has_monitors_only_new) {
+ 			rdev->monitor_channel = NULL;
+ 			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		} else {
++			cfg80211_init_mon_chan(rdev);
+ 		}
+ 	}
  }
 -- 
-1.7.9.5
+1.7.0.4
 
