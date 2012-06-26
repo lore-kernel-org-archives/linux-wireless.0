@@ -1,53 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:49280 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756021Ab2FPT05 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2012 15:26:57 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so4227687wgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2012 12:26:57 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2305 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751163Ab2FZT1U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 15:27:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 2/3] wl1251: always report beacon loss to the stack
-Date: Sat, 16 Jun 2012 22:26:47 +0300
-Message-Id: <1339874808-9991-3-git-send-email-notasas@gmail.com> (sfid-20120616_212739_253254_4BE55FC9)
-In-Reply-To: <1339874808-9991-1-git-send-email-notasas@gmail.com>
-References: <1339874808-9991-1-git-send-email-notasas@gmail.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>
+Subject: [PATCH 2/7] brcmfmac: restrict dongle txglom disable to old
+ SDIO core
+Date: Tue, 26 Jun 2012 21:26:35 +0200
+Message-ID: <1340738800-14087-3-git-send-email-arend@broadcom.com> (sfid-20120626_212724_015851_A660D6B0)
+In-Reply-To: <1340738800-14087-1-git-send-email-arend@broadcom.com>
+References: <1340738800-14087-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Always report beacon loss to the stack, not only when in powersave
-state. This is because there's possibility that the driver disables
-PSM before it handles old BSS_LOSE_EVENT, so beacon loss has to be
-reported.
+From: Franky Lin <frankyl@broadcom.com>
 
-Patch based on old maemo patch by:
-Janne Ylalehto <janne.ylalehto@nokia.com>
-Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Luciano Coelho <luciano.coelho@nokia.com>
-Yuri Ershov <ext-yuri.ershov@nokia.com>
+txglomming is a firmware feature for sdio bus interface. For SDIO
+device cores newer than revision 11, the default setting of
+firmware should be used instead of disabling it from the host side.
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ti/wl1251/event.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    6 ------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index 9f15cca..5ec50a4 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -76,8 +76,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 		}
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 1c9eb18..40fa472 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -801,7 +801,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 				 "event_msgs" + '\0' + bitvec  */
+ 	char buf[128], *ptr;
+ 	u32 dongle_align = drvr->bus_if->align;
+-	u32 glom = 0;
+ 	u32 roaming = 1;
+ 	uint bcn_timeout = 3;
+ 	int scan_assoc_time = 40;
+@@ -835,11 +834,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
+ 				  sizeof(iovbuf));
  
--	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID &&
--	    wl->station_mode != STATION_ACTIVE_MODE) {
-+	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
- 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
+-	/* disable glom option per default */
+-	brcmf_c_mkiovar("bus:txglom", (char *)&glom, 4, iovbuf, sizeof(iovbuf));
+-	brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR, iovbuf,
+-				  sizeof(iovbuf));
+-
+ 	/* Setup timeout if Beacons are lost and roam is off to report
+ 		 link down */
+ 	brcmf_c_mkiovar("bcn_timeout", (char *)&bcn_timeout, 4, iovbuf,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 076b772..1616c14 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -4169,6 +4169,9 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret;
+ 	struct brcmf_sdio *bus;
++	struct brcmf_bus_dcmd *dlst;
++	u32 dngl_txglom;
++	u8 idx;
  
- 		/* indicate to the stack, that beacons have been lost */
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -4254,6 +4257,18 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	brcmf_sdio_debugfs_create(bus);
+ 	brcmf_dbg(INFO, "completed!!\n");
+ 
++	/* sdio bus core specific dcmd */
++	idx = brcmf_sdio_chip_getinfidx(bus->ci, BCMA_CORE_SDIO_DEV);
++	dlst = kzalloc(sizeof(struct brcmf_bus_dcmd), GFP_KERNEL);
++	if (bus->ci->c_inf[idx].rev < 12 && dlst) {
++		/* for sdio core rev < 12, disable txgloming */
++		dngl_txglom = 0;
++		dlst->name = "bus:txglom";
++		dlst->param = (char *)&dngl_txglom;
++		dlst->param_len = sizeof(u32);
++		list_add(&dlst->list, &bus->sdiodev->bus_if->dcmd_list);
++	}
++
+ 	/* if firmware path present try to download and bring up bus */
+ 	ret = brcmf_bus_start(bus->sdiodev->dev);
+ 	if (ret != 0) {
 -- 
-1.7.0.4
+1.7.9.5
+
 
