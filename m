@@ -1,145 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20586 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408Ab2FTFQn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 01:16:43 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	<aeolus@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Message-ID: <4FE15CAE.501@qca.qualcomm.com> (sfid-20120620_071647_622013_70D1AC0C)
-Date: Wed, 20 Jun 2012 10:46:30 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [PATCH 07/10] ath9k_hw: Add hardware code for WoW
-References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com> <1340120850-9155-8-git-send-email-mohammed@qca.qualcomm.com> <20120619175018.GB7191@vmraj-lnx.qca.qualcomm.com>
-In-Reply-To: <20120619175018.GB7191@vmraj-lnx.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:18410 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755761Ab2FZL1D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 07:27:03 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Eric Dumazet <edumazet@google.com>,
+	stable@kernel.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 2/2] NFC: Return from rawsock_release when sk is NULL
+Date: Tue, 26 Jun 2012 13:37:38 +0200
+Message-Id: <1340710659-15555-3-git-send-email-sameo@linux.intel.com> (sfid-20120626_132707_679722_7745BCDA)
+In-Reply-To: <1340710659-15555-1-git-send-email-sameo@linux.intel.com>
+References: <1340710659-15555-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Raj,
+From: Eric Dumazet <edumazet@google.com>
 
-On Tuesday 19 June 2012 11:20 PM, Rajkumar Manoharan wrote:
-> On Tue, Jun 19, 2012 at 09:17:27PM +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> add a new file wow.c which takes care of the hardware code
->> for WoW.
-> [...]
->> ---
->>   3 files changed, 591 insertions(+), 0 deletions(-)
->>   create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
->> index 9c41232..2ad8f94 100644
->> --- a/drivers/net/wireless/ath/ath9k/Makefile
->> +++ b/drivers/net/wireless/ath/ath9k/Makefile
->> @@ -17,6 +17,7 @@ ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += \
->>   		dfs.o \
->>   		dfs_pattern_detector.o \
->>   		dfs_pri_detector.o
->> +ath9k-$(CONFIG_PM_SLEEP) += wow.o
->>
->>   obj-$(CONFIG_ATH9K) += ath9k.o
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
->> index 2a20216..8e417c1 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.h
->> +++ b/drivers/net/wireless/ath/ath9k/hw.h
->> @@ -1110,6 +1110,37 @@ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
->>   }
->>   #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
->>
->> +
->> +#ifdef CONFIG_PM_SLEEP
->> +const char *ath9k_hw_wow_event_to_string(u32 wow_event);
->> +void ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
->> +				u8 *user_mask, int pattern_count,
->> +				int pattern_len);
->> +u32 ath9k_hw_wow_wakeup(struct ath_hw *ah);
->> +void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable);
->> +#else
->> +static inline const char *ath9k_hw_wow_event_to_string(u32 wow_event)
->> +{
->> +	return NULL;
->> +}
->> +static inline void ath9k_hw_wow_apply_pattern(struct ath_hw *ah,
->> +					      u8 *user_pattern, u8 *user_mask,
->> +					      int pattern_count,
->> +					      int pattern_len)
->> +{
->> +	return;
->> +}
-> No need to return void function and also fix indent for arguments
+Sasha Levin reported following panic :
 
-sorry, will address this.
+[ 2136.383310] BUG: unable to handle kernel NULL pointer dereference at
+00000000000003b0
+[ 2136.384022] IP: [<ffffffff8114e400>] __lock_acquire+0xc0/0x4b0
+[ 2136.384022] PGD 131c4067 PUD 11c0c067 PMD 0
+[ 2136.388106] Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+[ 2136.388106] CPU 1
+[ 2136.388106] Pid: 24855, comm: trinity-child1 Tainted: G        W
+3.5.0-rc2-sasha-00015-g7b268f7 #374
+[ 2136.388106] RIP: 0010:[<ffffffff8114e400>]  [<ffffffff8114e400>]
+__lock_acquire+0xc0/0x4b0
+[ 2136.388106] RSP: 0018:ffff8800130b3ca8  EFLAGS: 00010046
+[ 2136.388106] RAX: 0000000000000086 RBX: ffff88001186b000 RCX:
+0000000000000000
+[ 2136.388106] RDX: 0000000000000000 RSI: 0000000000000000 RDI:
+0000000000000000
+[ 2136.388106] RBP: ffff8800130b3d08 R08: 0000000000000001 R09:
+0000000000000000
+[ 2136.388106] R10: 0000000000000000 R11: 0000000000000001 R12:
+0000000000000002
+[ 2136.388106] R13: 00000000000003b0 R14: 0000000000000000 R15:
+0000000000000000
+[ 2136.388106] FS:  00007fa5b1bd4700(0000) GS:ffff88001b800000(0000)
+knlGS:0000000000000000
+[ 2136.388106] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2136.388106] CR2: 00000000000003b0 CR3: 0000000011d1f000 CR4:
+00000000000406e0
+[ 2136.388106] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+0000000000000000
+[ 2136.388106] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+0000000000000400
+[ 2136.388106] Process trinity-child1 (pid: 24855, threadinfo
+ffff8800130b2000, task ffff88001186b000)
+[ 2136.388106] Stack:
+[ 2136.388106]  ffff8800130b3cd8 ffffffff81121785 ffffffff81236774
+000080d000000001
+[ 2136.388106]  ffff88001b9d6c00 00000000001d6c00 ffffffff130b3d08
+ffff88001186b000
+[ 2136.388106]  0000000000000000 0000000000000002 0000000000000000
+0000000000000000
+[ 2136.388106] Call Trace:
+[ 2136.388106]  [<ffffffff81121785>] ? sched_clock_local+0x25/0x90
+[ 2136.388106]  [<ffffffff81236774>] ? get_empty_filp+0x74/0x220
+[ 2136.388106]  [<ffffffff8114e97a>] lock_acquire+0x18a/0x1e0
+[ 2136.388106]  [<ffffffff836b37df>] ? rawsock_release+0x4f/0xa0
+[ 2136.388106]  [<ffffffff837c0ef0>] _raw_write_lock_bh+0x40/0x80
+[ 2136.388106]  [<ffffffff836b37df>] ? rawsock_release+0x4f/0xa0
+[ 2136.388106]  [<ffffffff836b37df>] rawsock_release+0x4f/0xa0
+[ 2136.388106]  [<ffffffff8321cfe8>] sock_release+0x18/0x70
+[ 2136.388106]  [<ffffffff8321d069>] sock_close+0x29/0x30
+[ 2136.388106]  [<ffffffff81236bca>] __fput+0x11a/0x2c0
+[ 2136.388106]  [<ffffffff81236d85>] fput+0x15/0x20
+[ 2136.388106]  [<ffffffff8321de34>] sys_accept4+0x1b4/0x200
+[ 2136.388106]  [<ffffffff837c165c>] ? _raw_spin_unlock_irq+0x4c/0x80
+[ 2136.388106]  [<ffffffff837c1669>] ? _raw_spin_unlock_irq+0x59/0x80
+[ 2136.388106]  [<ffffffff837c2565>] ? sysret_check+0x22/0x5d
+[ 2136.388106]  [<ffffffff8321de8b>] sys_accept+0xb/0x10
+[ 2136.388106]  [<ffffffff837c2539>] system_call_fastpath+0x16/0x1b
+[ 2136.388106] Code: ec 04 00 0f 85 ea 03 00 00 be d5 0b 00 00 48 c7 c7
+8a c1 40 84 e8 b1 a5 f8 ff 31 c0 e9 d4 03 00 00 66 2e 0f 1f 84 00 00 00
+00 00 <49> 81 7d 00 60 73 5e 85 b8 01 00 00 00 44 0f 44 e0 83 fe 01 77
+[ 2136.388106] RIP  [<ffffffff8114e400>] __lock_acquire+0xc0/0x4b0
+[ 2136.388106]  RSP <ffff8800130b3ca8>
+[ 2136.388106] CR2: 00000000000003b0
+[ 2136.388106] ---[ end trace 6d450e935ee18982 ]---
+[ 2136.388106] Kernel panic - not syncing: Fatal exception in interrupt
 
->> +static inline u32 ath9k_hw_wow_wakeup(struct ath_hw *ah)
->> +{
->> +	return 0;
->> +}
->> +static inline void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
->> +{
->> +}
->> +#endif
->> +
->> +
->> +
->>   #define ATH9K_CLOCK_RATE_CCK		22
->>   #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
->>   #define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
->> diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
->> new file mode 100644
->> index 0000000..66a7a74
->> --- /dev/null
->> +++ b/drivers/net/wireless/ath/ath9k/wow.c
->> @@ -0,0 +1,559 @@
->> +
->> +/*
->> + * Copyright (c) 2008-2011 Atheros Communications Inc.
->> + *
-> Please update the Copyright.
+rawsock_release() should test if sock->sk is NULL before calling
+sock_orphan()/sock_put()
 
-sure, thanks!
+Reported-by: Sasha Levin <levinsasha928@gmail.com>
+Tested-by: Sasha Levin <levinsasha928@gmail.com>
+Cc: stable@kernel.org
+Signed-off-by: Eric Dumazet <edumazet@google.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/rawsock.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
->
->> +
->> +#include<linux/export.h>
->> +#include "ath9k.h"
->> +#include "reg.h"
->> +#include "hw-ops.h"
->> +
-> [...]
->> +			if (AR_SREV_9285(ah) || AR_SREV_9287(ah))
->> +				set = AR9285_WA_DEFAULT;
->> +			else
->> +				set = AR9280_WA_DEFAULT;
->> +
->> +			/*
->> +			 * In AR9280 and AR9285, bit 14 in WA register
->> +			 * (disable L1) should only be set when device
->> +			 * enters D3 state and be cleared when device
->> +			 * comes back to D0
->> +			 */
->> +
->> +			if (ah->config.pcie_waen&  AR_WA_D3_L1_DISABLE)
->> +				set = set | AR_WA_D3_L1_DISABLE;
->> +
->> +			clr = AR_WA_UNTIE_RESET_EN;
->> +			set = set | AR_WA_RESET_EN | AR_WA_POR_SHORT;
-> simplify it as |=
->
-oh ok ,sorry i missed it. thanks.
-
-
+diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+index ec1134c..8b8a6a2 100644
+--- a/net/nfc/rawsock.c
++++ b/net/nfc/rawsock.c
+@@ -54,7 +54,10 @@ static int rawsock_release(struct socket *sock)
+ {
+ 	struct sock *sk = sock->sk;
+ 
+-	pr_debug("sock=%p\n", sock);
++	pr_debug("sock=%p sk=%p\n", sock, sk);
++
++	if (!sk)
++		return 0;
+ 
+ 	sock_orphan(sk);
+ 	sock_put(sk);
 -- 
-thanks,
-shafi
+1.7.10
+
