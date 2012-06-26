@@ -1,70 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:52728 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756580Ab2FNRXB (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:37558 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755268Ab2FZLf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 13:23:01 -0400
-Received: by obbtb18 with SMTP id tb18so2679093obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jun 2012 10:23:01 -0700 (PDT)
+	Tue, 26 Jun 2012 07:35:28 -0400
+Received: by dady13 with SMTP id y13so6687393dad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 04:35:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1339694227.9786.7.camel@jlt3.sipsolutions.net>
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	<4FD21C6B.5000402@lwfinger.net>
-	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	<4FD22727.7000500@lwfinger.net>
-	<1339180580.5748.32.camel@jlt3.sipsolutions.net>
-	<1339180948.5748.35.camel@jlt3.sipsolutions.net>
-	<1339182289.5748.36.camel@jlt3.sipsolutions.net>
-	<1339576294.4519.17.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
-	<1339602402.4519.48.camel@jlt3.sipsolutions.net>
-	<20120613204230.474d1b6c@milhouse>
-	<CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com>
-	<1339691877.9786.0.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9XNO5roFZNETAgs8_5OLymCaKNcTU1XUsc2fXBu+4kpg@mail.gmail.com>
-	<1339693777.9786.6.camel@jlt3.sipsolutions.net>
-	<1339694227.9786.7.camel@jlt3.sipsolutions.net>
-Date: Thu, 14 Jun 2012 19:23:00 +0200
-Message-ID: <CAHsu+b85rvSsGBfJQFFjdMhrF=Ycw0+pxxjf=U=xA2Or2q9jXQ@mail.gmail.com> (sfid-20120614_192306_387636_8F9F1BAF)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
-From: Andre Heider <a.heider@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+In-Reply-To: <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
+References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+ <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
+ <1340707305.14634.9.camel@jlt3.sipsolutions.net> <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 26 Jun 2012 14:35:12 +0300
+Message-ID: <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com> (sfid-20120626_133606_648686_46642033)
+Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 14, 2012 at 7:17 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-06-14 at 19:09 +0200, Johannes Berg wrote:
->> On Thu, 2012-06-14 at 19:00 +0200, Andre Heider wrote:
+On Tue, Jun 26, 2012 at 2:18 PM, Eliad Peller <eliad@wizery.com> wrote:
+> On Tue, Jun 26, 2012 at 1:41 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2012-06-26 at 13:09 +0300, Eliad Peller wrote:
 >>
->> > > http://p.sipsolutions.net/9c830800d14f3ff8.txt
->> >
->> > This still oopses: if (!modparam_qos || wldev->fw.opensource)
->> >
->> > I do get a working wlan0 if I force "hw->queues = 1;" without that
->> > offending line, but just a `dmesg` over wlan+ssh yields another one
->> > (prolly the same one I already described on an older patch):
->> > http://i.imgur.com/epdRF.jpg
+>>> > With multi-channel, one problem that we get is managing the channel
+>>> > timing for authentication/association. We'll have bound the channel
+>>> > context (once we have that) before we even send a frame of course, but
+>>> > setting up the timing as to when to use the channel is very hard, in
+>>> > particular for connections to P2P GOs that might potentially be asleep.
+>>> >
+>>> the other scenario we should have in mind here is the AP side - making
+>>> sure we'll be able to auth/assoc a new station.
 >>
->> Doh, of course, I still have wldev ... I'm in a meeting now, will check
->> again later.
->
-> Let's just move the hw->queues setup ...
->
-> http://p.sipsolutions.net/e45e57bbc9509e69.txt
+>> Yes, we should keep that in mind, but I have a feeling that we should
+>> treat it separately. It's quite different as mac80211 is doing a lot
+>> less -- for example, mac80211 is managing retries, comeback timeouts,
+>> etc. in the managed case.
+>>
+> i guess it makes sense. i just don't like it being managed in multiple
+> places (userspace for ap, kernel for sta).
 
-No oops during loading the fw or bringing the device up, but same
-crash as in the picture above ;)
+I also think managing this in multiple places can get messy. I
+slightly prefer Eliad's approach with userspace giving the ROCs, since
+it sees the bigger picture.
+
+But all userspace changes are reflected in the STA flags in kernel, so
+we can do STA + AP from kernel mode as well.
+
+Can you give a bit more info on the Tx-sync approach, for the uninitiated?
+I'm also thinking that maybe we could somehow treat the sleeping-GO as
+a special case (maybe with some special code and a HW flag). Right now
+I'm not sure the wl12xx FW even supports it.
+
+Arik
