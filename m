@@ -1,135 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:34090 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753289Ab2FSNOg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 09:14:36 -0400
-Received: by ghbz22 with SMTP id z22so6707460ghb.27
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2012 06:14:35 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v2 4/7] mac80211: add ability to enable TX on op-channel
-Date: Tue, 19 Jun 2012 16:11:00 +0300
-Message-Id: <1340111463-4554-4-git-send-email-victorg@ti.com> (sfid-20120619_151450_246553_2F26C61A)
-In-Reply-To: <1340111463-4554-1-git-send-email-victorg@ti.com>
-References: <1340111463-4554-1-git-send-email-victorg@ti.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756478Ab2FZMag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:36 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 03/13] cfg80211: add channel tracking for AP and mesh
+Date: Tue, 26 Jun 2012 14:30:08 +0200
+Message-ID: <1340713818-28549-4-git-send-email-michal.kazior@tieto.com> (sfid-20120626_145130_113367_E0135A34)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior starting tx on DFS channels, the DFS master
-device shall perform a Channel Availability Check
-to ensure that there is no radar interference on
-those channels. Once CAC done, the tx can be
-enabled with ieee80211_dfs_en_tx().
+We need to know which channel is used by a running
+AP and mesh for channel context accounting and
+finding matching/active interface combination.
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+STA/IBSS have current_bss already which allows us
+to check which channel a vif is tuned to.
+Non-fixed channel IBSS can be handled with
+additional changes.
+
+Monitor mode is going to be handled differently.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/mac80211.h      |    4 ++++
- net/mac80211/cfg.c          |   15 +++++++++++++++
- net/mac80211/driver-ops.h   |   14 ++++++++++++++
- net/mac80211/driver-trace.h |    6 ++++++
- 4 files changed, 39 insertions(+), 0 deletions(-)
+ include/net/cfg80211.h |    3 +++
+ net/wireless/ap.c      |    4 +++-
+ net/wireless/mesh.c    |   18 ++++++++++++++----
+ net/wireless/mlme.c    |    1 +
+ net/wireless/nl80211.c |    5 ++++-
+ 5 files changed, 25 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a2222cf..82e5ee7 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2249,6 +2249,8 @@ enum ieee80211_rate_control_changed {
-  * @start_radar_detection: Start radar detection on current operational
-  *	channel, once started it will continuously monitor for radars as long
-  *	as the channel active.
-+ * @dfs_en_tx: Once channel pass the DFS initial channel availability check,
-+ *	initiate the tx on the channel with this command.
-  *
-  */
- struct ieee80211_ops {
-@@ -2392,6 +2394,8 @@ struct ieee80211_ops {
- 	int (*start_radar_detection)(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif,
- 				     struct ieee80211_channel *chan);
-+	int (*dfs_en_tx)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			 struct ieee80211_channel *chan);
- };
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7319f25..0f9d7b4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2335,6 +2335,9 @@ struct wireless_dev {
+ 	struct ieee80211_channel *preset_chan;
+ 	enum nl80211_channel_type preset_chantype;
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 541b274..a48d055 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2226,6 +2226,20 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	return ret;
++	/* for AP and mesh channel tracking */
++	struct ieee80211_channel *channel;
++
+ 	bool ps;
+ 	int ps_timeout;
+ 
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 45199cc..fcc60d8 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -24,8 +24,10 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		return -ENOENT;
+ 
+ 	err = rdev->ops->stop_ap(&rdev->wiphy, dev);
+-	if (!err)
++	if (!err) {
+ 		wdev->beacon_interval = 0;
++		wdev->channel = NULL;
++	}
+ 
+ 	return err;
  }
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index b44c736..4f218c1 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -153,6 +153,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!err) {
+ 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
+ 		wdev->mesh_id_len = setup->mesh_id_len;
++		wdev->channel = setup->channel;
+ 	}
  
-+static int ieee80211_dfs_en_tx(struct wiphy *wiphy, struct net_device *dev,
-+			       struct ieee80211_channel *chan)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	int ret = -ENOENT;
-+
-+	if (!local->ops->dfs_en_tx)
-+		return -EOPNOTSUPP;
-+
-+	ret = drv_dfs_en_tx(local, sdata, chan);
-+	return ret;
-+}
-+
- static enum work_done_result
- ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
+ 	return err;
+@@ -178,6 +179,7 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
+ 			   enum nl80211_channel_type channel_type)
  {
-@@ -2995,4 +3009,5 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.get_et_stats = ieee80211_get_et_stats,
- 	.get_et_strings = ieee80211_get_et_strings,
- 	.start_radar_detection = ieee80211_start_radar_detection,
-+	.dfs_en_tx = ieee80211_dfs_en_tx,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 57185df..f49b76b 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -343,6 +343,20 @@ static inline int drv_start_radar_detection(struct ieee80211_local *local,
- 	return ret;
+ 	struct ieee80211_channel *channel;
++	int err;
+ 
+ 	channel = rdev_freq_to_chan(rdev, freq, channel_type);
+ 	if (!channel || !cfg80211_can_beacon_sec_chan(&rdev->wiphy,
+@@ -199,9 +201,14 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
+ 
+ 		if (!netif_running(wdev->netdev))
+ 			return -ENETDOWN;
+-		return rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
+-							    wdev->netdev,
+-							    channel);
++
++		err = rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
++							   wdev->netdev,
++							   channel);
++		if (!err)
++			wdev->channel = channel;
++
++		return err;
+ 	}
+ 
+ 	if (wdev->mesh_id_len)
+@@ -243,8 +250,11 @@ static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+ 		return -ENOTCONN;
+ 
+ 	err = rdev->ops->leave_mesh(&rdev->wiphy, dev);
+-	if (!err)
++	if (!err) {
+ 		wdev->mesh_id_len = 0;
++		wdev->channel = NULL;
++	}
++
+ 	return err;
  }
  
-+static inline int drv_dfs_en_tx(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				struct ieee80211_channel *chan)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	trace_drv_dfs_en_tx(local, sdata);
-+	ret = local->ops->dfs_en_tx(&local->hw, &sdata->vif, chan);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- static inline int
- drv_sched_scan_start(struct ieee80211_local *local,
- 		     struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 4112aa3..6df02c4 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -490,6 +490,12 @@ DEFINE_EVENT(local_sdata_evt, drv_start_radar_detection,
- 	TP_ARGS(local, sdata)
- );
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index da4406f..a7882eb 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -947,6 +947,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
+ 	if (WARN_ON(!chan))
+ 		goto out;
  
-+DEFINE_EVENT(local_sdata_evt, drv_dfs_en_tx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
-+);
++	wdev->channel = chan;
+ 	nl80211_ch_switch_notify(rdev, dev, freq, type, GFP_KERNEL);
+ out:
+ 	wdev_unlock(wdev);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c17b57b..5d36124 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2356,8 +2356,11 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
+-	if (!err)
++	if (!err) {
+ 		wdev->beacon_interval = params.beacon_interval;
++		wdev->channel = params.channel;
++	}
 +
- DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata),
+ 	return err;
+ }
+ 
 -- 
-1.7.5.4
+1.7.0.4
 
