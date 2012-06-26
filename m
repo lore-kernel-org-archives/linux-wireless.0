@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45097 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755159Ab2FWQBW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37287 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756626Ab2FZN3a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 12:01:22 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 05/10] ath9k: advertise supported WoW flags to upper layer
-Date: Sat, 23 Jun 2012 21:29:49 +0530
-Message-ID: <1340467194-16930-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120623_180125_365545_9413CEA2)
-In-Reply-To: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340467194-16930-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 26 Jun 2012 09:29:30 -0400
+Message-ID: <1340717368.14634.36.camel@jlt3.sipsolutions.net> (sfid-20120626_152933_994346_02326C6A)
+Subject: Re: [RFC v3 12/13] cfg80211: add channel checking for iface
+ combinations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 26 Jun 2012 15:29:28 +0200
+In-Reply-To: <1340713818-28549-13-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+	 <1340713818-28549-13-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, 2012-06-26 at 14:30 +0200, Michal Kazior wrote:
 
-currently the code supports WoW triggers due to
-*magic packet
-*user defined patterns
-*deauth and disassoc patterns
-*disconnect - beacon miss, last beacon received timeout,
-no ack for keeep alive frames.
+> +#define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10
 
-we need to support other WoW offload features in the
-near future. also a minor cleanup.
+Might make sense to put this into cfg80211.h, since e.g. hwsim could
+support this many channels?
 
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+> +		cfg80211_get_chan_state(rdev, wdev_iter, &ch, &chmode);
+> +
+> +		switch (chmode) {
+> +		case CHAN_MODE_UNDEFINED:
+> +			break;
+> +		case CHAN_MODE_SHARED:
+> +			for (i = 0; i < CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
+> +				if (!used_channels[i] || used_channels[i] == ch)
+> +					break;
+> +
+> +			BUG_ON(i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS);
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9dfce1a..576f808 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -713,6 +713,22 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 
-+#ifdef CONFIG_PM_SLEEP
-+
-+	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
-+	    device_can_wakeup(sc->dev)) {
-+
-+		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
-+					  WIPHY_WOWLAN_DISCONNECT;
-+		hw->wiphy->wowlan.n_patterns = MAX_NUM_USER_PATTERN;
-+		hw->wiphy->wowlan.pattern_min_len = 1;
-+		hw->wiphy->wowlan.pattern_max_len = MAX_PATTERN_SIZE;
-+		INIT_LIST_HEAD(&sc->wow_info.wow_patterns);
-+
-+	}
-+
-+#endif
-+
- 	hw->queues = 4;
- 	hw->max_rates = 4;
- 	hw->channel_change_time = 5000;
--- 
-1.7.0.4
+I'd prefer not to use BUG_ON(), maybe WARN_ON() and return some error?
+It seems it could actually happen with buggy drivers that suddenly go
+above their num_different_channels by switching around themselves or
+something?
+
+johannes
 
