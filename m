@@ -1,200 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42660 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121Ab2FPMsc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2012 08:48:32 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3 7/9] brcm80211: smac: use mac80211 channel data for tx power limits
-Date: Sat, 16 Jun 2012 07:47:54 -0500
-Message-Id: <1339850876-8020-8-git-send-email-seth.forshee@canonical.com> (sfid-20120616_144835_383005_F323B60C)
-In-Reply-To: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
-References: <1339850876-8020-1-git-send-email-seth.forshee@canonical.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:50444 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756432Ab2FZMha (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:37:30 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Kazior Michal <Michal.Kazior@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 7/7] mac80211: reuse channels for channel contexts
+Date: Tue, 26 Jun 2012 14:37:22 +0200
+Message-ID: <1340714242-20032-8-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143736_111153_DC65E506)
+In-Reply-To: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the limits from the internal X2 domain are used, regardless
-of what regulatory rules are in effect. Instead use the power limits set
-by the higher-level regulatory support.
+From: Kazior Michal <Michal.Kazior@tieto.com>
 
-The rules for the MIMO power limits are still always derived from the
-world domain, pending guidance from Broadcom as to how these need to be
-handled. This will be fixed later, but using the limits from the world
-domain works for now.
+Reuse channels with compatible channel types. Some
+channel types are compatible and can be used
+concurrently.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   73 ++++-----------------
- 1 file changed, 14 insertions(+), 59 deletions(-)
+ net/mac80211/chan.c |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 56 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 3951ccf..bdb11ff 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -74,15 +74,6 @@
- /* max of BAND_5G_PWR_LVLS and 14 for 2.4 GHz */
- #define BRCMS_MAXPWR_MIMO_TBL_SIZE	14
- 
--/* power level in group of 2.4GHz band channels:
-- * maxpwr[0] - CCK  channels [1]
-- * maxpwr[1] - CCK  channels [2-10]
-- * maxpwr[2] - CCK  channels [11-14]
-- * maxpwr[3] - OFDM channels [1]
-- * maxpwr[4] - OFDM channels [2-10]
-- * maxpwr[5] - OFDM channels [11-14]
-- */
--
- /* maxpwr mapping to 5GHz band channels:
-  * maxpwr[0] - channels [34-48]
-  * maxpwr[1] - channels [52-60]
-@@ -101,10 +92,6 @@
- #define LOCALES(band2, band5, mimo2, mimo5) \
- 		{LC_2G(band2), LC_5G(band5), LC(mimo2), LC(mimo5)}
- 
--/* macro to get 2.4 GHz channel group index for tx power */
--#define CHANNEL_POWER_IDX_2G_CCK(c) (((c) < 2) ? 0 : (((c) < 11) ? 1 : 2))
--#define CHANNEL_POWER_IDX_2G_OFDM(c) (((c) < 2) ? 3 : (((c) < 11) ? 4 : 5))
--
- /* macro to get 5 GHz channel group index for tx power */
- #define CHANNEL_POWER_IDX_5G(c) (((c) < 52) ? 0 : \
- 				 (((c) < 62) ? 1 : \
-@@ -194,8 +181,6 @@ struct locale_info {
- 	u32 valid_channels;
- 	/* List of channels used only if APs are detected */
- 	u8 restricted_channels;
--	/* Max tx pwr in qdBm for each sub-band */
--	s8 maxpwr[BRCMS_MAXPWR_TBL_SIZE];
- 	u8 flags;
- };
- 
-@@ -391,8 +376,6 @@ static void brcms_c_locale_get_channels(const struct locale_info *locale,
- static const struct locale_info locale_i = {	/* locale i. channel 1 - 13 */
- 	LOCALE_CHAN_01_11 | LOCALE_CHAN_12_13,
- 	LOCALE_RESTRICTED_SET_2G_SHORT,
--	{QDB(19), QDB(19), QDB(19),
--	 QDB(19), QDB(19), QDB(19)},
- 	BRCMS_EIRP
- };
- 
-@@ -403,7 +386,6 @@ static const struct locale_info locale_11 = {
- 	/* locale 11. channel 36 - 48, 52 - 64, 100 - 140, 149 - 165 */
- 	LOCALE_CHAN_36_64 | LOCALE_CHAN_100_140 | LOCALE_CHAN_149_165,
- 	LOCALE_RESTRICTED_NONE,
--	{QDB(21), QDB(21), QDB(21), QDB(21), QDB(21)},
- 	BRCMS_EIRP | BRCMS_DFS_EU
- };
- 
-@@ -847,6 +829,7 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 		       struct txpwr_limits *txpwr)
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index fe1ea01..1a445da 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -167,6 +167,7 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 		       enum ieee80211_chanctx_mode mode)
  {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
-+	struct ieee80211_channel *ch = wlc->pub->ieee_hw->conf.channel;
- 	uint i;
- 	uint chan;
- 	int maxpwr;
-@@ -855,7 +838,6 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 	struct brcms_band *band;
- 	const struct locale_info *li;
- 	int conducted_max = BRCMS_TXPWR_MAX;
--	int conducted_ofdm_max = BRCMS_TXPWR_MAX;
- 	const struct locale_mimo_info *li_mimo;
- 	int maxpwr20, maxpwr40;
- 	int maxpwr_idx;
-@@ -863,6 +845,9 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
+ 	struct ieee80211_chanctx *ctx;
++	enum nl80211_channel_type compat_type;
  
- 	memset(txpwr, 0, sizeof(struct txpwr_limits));
+ 	lockdep_assert_held(&local->chanctx_mtx);
  
-+	if (WARN_ON(!ch))
-+		return;
+@@ -176,12 +177,22 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 		return NULL;
+ 
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
++		compat_type = ctx->conf.channel_type;
 +
- 	country = &wlc_cm->world_regd->country;
+ 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
+ 			continue;
+ 		if (ctx->conf.channel != channel)
+ 			continue;
+ 		if (ctx->conf.channel_type != channel_type)
+ 			continue;
++		if (!ieee80211_channel_types_are_compatible(ctx->conf.channel_type,
++							    channel_type,
++							    &compat_type))
++			continue;
++		if (ctx->conf.channel_type != compat_type) {
++			ctx->conf.channel_type = compat_type;
++			drv_change_chantype(local, ctx);
++		}
  
- 	chan = CHSPEC_CHANNEL(chanspec);
-@@ -875,49 +860,24 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 	    brcms_c_get_mimo_5g(country->locale_mimo_5G) :
- 	    brcms_c_get_mimo_2g(country->locale_mimo_2G);
+ 		return ctx;
+ 	}
+@@ -240,6 +251,49 @@ ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	drv_assign_vif_chanctx(sdata->local, sdata, ctx);
+ }
  
--	if (li->flags & BRCMS_EIRP) {
--		delta = band->antgain;
--	} else {
--		delta = 0;
--		if (band->antgain > QDB(6))
--			delta = band->antgain - QDB(6);	/* Excess over 6 dB */
--	}
-+	delta = band->antgain;
- 
--	if (li == &locale_i) {
-+	if (li == &locale_i)
- 		conducted_max = QDB(22);
--		conducted_ofdm_max = QDB(22);
--	}
++static enum nl80211_channel_type
++ieee80211_calc_chantype(struct ieee80211_local *local,
++			struct ieee80211_chanctx *ctx)
++{
++	struct ieee80211_chanctx_conf *conf = &ctx->conf;
++	struct ieee80211_sub_if_data *sdata;
++	enum nl80211_channel_type chantype = NL80211_CHAN_NO_HT;
++	enum nl80211_channel_type compat;
 +
-+	maxpwr = QDB(ch->max_power) - delta;
-+	maxpwr = max(maxpwr, 0);
-+	maxpwr = min(maxpwr, conducted_max);
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++		if (sdata->vif.chanctx_conf != conf)
++			continue;
++
++		BUG_ON(!ieee80211_channel_types_are_compatible(
++				conf->channel_type, chantype, &compat));
++
++		chantype = compat;
++	}
++	rcu_read_unlock();
++
++	return chantype;
++}
++
++static void
++ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
++				  struct ieee80211_chanctx *ctx)
++{
++	enum nl80211_channel_type chantype;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++
++	chantype = ieee80211_calc_chantype(local, ctx);
++	if (chantype != ctx->conf.channel_type) {
++		ctx->conf.channel_type = chantype;
++		drv_change_chantype(local, ctx);
++	}
++}
++
+ static void
+ ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 			       struct ieee80211_chanctx *ctx)
+@@ -248,6 +302,8 @@ ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
  
- 	/* CCK txpwr limits for 2.4G band */
- 	if (band->bandtype == BRCM_BAND_2G) {
--		maxpwr = li->maxpwr[CHANNEL_POWER_IDX_2G_CCK(chan)];
--
--		maxpwr = maxpwr - delta;
--		maxpwr = max(maxpwr, 0);
--		maxpwr = min(maxpwr, conducted_max);
--
- 		for (i = 0; i < BRCMS_NUM_RATES_CCK; i++)
- 			txpwr->cck[i] = (u8) maxpwr;
- 	}
+ 	drv_unassign_vif_chanctx(sdata->local, sdata, ctx);
  
--	/* OFDM txpwr limits for 2.4G or 5G bands */
--	if (band->bandtype == BRCM_BAND_2G)
--		maxpwr = li->maxpwr[CHANNEL_POWER_IDX_2G_OFDM(chan)];
--	else
--		maxpwr = li->maxpwr[CHANNEL_POWER_IDX_5G(chan)];
--
--	maxpwr = maxpwr - delta;
--	maxpwr = max(maxpwr, 0);
--	maxpwr = min(maxpwr, conducted_ofdm_max);
--
--	/* Keep OFDM lmit below CCK limit */
--	if (band->bandtype == BRCM_BAND_2G)
--		maxpwr = min_t(int, maxpwr, txpwr->cck[0]);
--
--	for (i = 0; i < BRCMS_NUM_RATES_OFDM; i++)
-+	for (i = 0; i < BRCMS_NUM_RATES_OFDM; i++) {
- 		txpwr->ofdm[i] = (u8) maxpwr;
- 
--	for (i = 0; i < BRCMS_NUM_RATES_OFDM; i++) {
- 		/*
- 		 * OFDM 40 MHz SISO has the same power as the corresponding
- 		 * MCS0-7 rate unless overriden by the locale specific code.
-@@ -932,14 +892,9 @@ brcms_c_channel_reg_limits(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 		txpwr->ofdm_40_cdd[i] = 0;
- 	}
- 
--	/* MIMO/HT specific limits */
--	if (li_mimo->flags & BRCMS_EIRP) {
--		delta = band->antgain;
--	} else {
--		delta = 0;
--		if (band->antgain > QDB(6))
--			delta = band->antgain - QDB(6);	/* Excess over 6 dB */
--	}
-+	delta = 0;
-+	if (band->antgain > QDB(6))
-+		delta = band->antgain - QDB(6);	/* Excess over 6 dB */
- 
- 	if (band->bandtype == BRCM_BAND_2G)
- 		maxpwr_idx = (chan - 1);
++	ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
++
+ 	ctx->refcount--;
+ 	sdata->vif.chanctx_conf = NULL;
+ }
 -- 
-1.7.9.5
+1.7.0.4
 
