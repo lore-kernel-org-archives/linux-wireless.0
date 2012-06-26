@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:45720 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753455Ab2FDUbO (ORCPT
+Received: from mta-blr1.sasken.com ([203.200.200.72]:62044 "EHLO
+	mta-blr1.sasken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758476Ab2FZIco convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 16:31:14 -0400
-Date: Mon, 4 Jun 2012 22:31:24 +0200
-From: Sebastian Kemper <sebastian_ml@gmx.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: IWLWIFI should depend on SUSPEND
-Message-ID: <20120604203124.GA2030@wolfgang> (sfid-20120604_223118_096766_F37A4FDD)
-References: <20120519201958.GA2313@wolfgang>
- <1337540836.4585.1.camel@jlt3.sipsolutions.net>
- <1338384543.4511.18.camel@jlt3.sipsolutions.net>
- <20120603091643.GA2191@wolfgang>
- <1338735736.4972.0.camel@jlt3.sipsolutions.net>
- <20120603164905.GA2056@wolfgang>
- <1338748437.15431.0.camel@jlt3.sipsolutions.net>
+	Tue, 26 Jun 2012 04:32:44 -0400
+From: DINO MYCLE <dino.mycle@sasken.com>
+To: sylvain_gmail <sylvain.roger.rieunier@gmail.com>,
+	Kalle Valo <kvalo@adurom.com>
+CC: Victor Goldenshtein <victorg@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 26 Jun 2012 13:50:20 +0530
+Subject: RE: [PATCH] mac80211: add command to get current rssi
+Message-ID: <28DA1CA8CF17234FB030B1ECF787E6B7B93374A1C9@EXGMBX01.sasken.com> (sfid-20120626_103250_538454_AE37806C)
+References: <1337669130-4229-1-git-send-email-victorg@ti.com>
+ <4FE85430.3030007@gmail.com> <87y5nb34bm.fsf@purkki.adurom.net>
+ <4FE96D48.9080901@gmail.com>
+In-Reply-To: <4FE96D48.9080901@gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="OXfL5xGRrasGEqWY"
-In-Reply-To: <1338748437.15431.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
+ Adding the RSSI for each antenna will be useful. We can verify if the antenna connectors are proper or not by checking the RSSI value of each antenna, Also this will be helpful for outdoor installation where they use dual polarized antennas for PtP and PMP systems
 
---OXfL5xGRrasGEqWY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--
+Thanks and Regards,
+Dino Joseph Mycle, Ext: 3299, +91 9916888337
+Sasken Communication Technologies Ltd.
 
-On Sun, Jun 03, 2012 at 08:33:57PM +0200, Johannes Berg wrote:
-> You're right, it should be CONFIG_PM_SLEEP or something ... I'll have to
-> sort it out. It looks like in iwlwifi, the suspend/resume methods are
-> under CONFIG_PM_SLEEP, while in mac80211 they're under CONFIG_PM.
 
-Hello Johannes,
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of sylvain_gmail
+Sent: Tuesday, June 26, 2012 1:35 PM
+To: Kalle Valo
+Cc: Victor Goldenshtein; Johannes Berg; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add command to get current rssi
 
-I changed the file iwl-agn.c according to your instructions (with #ifdef
-CONFIG_PM_SLEEP) for kernel 3.2.18 (patch attached). It works, the error
-is gone and wireless is available.
+it can be very useful when you installed multiple polarization antennas.
+For each polarization picks up the signal on a different axis. For example for a dual polarization antenna, you have a horizontal polarization and vertical polarization.
 
-Thank you for your work!
+Regards,
+Sylvain
 
-Kind regards,
-Sebastian
+Le 25/06/2012 15:32, Kalle Valo a écrit :
+> sylvain_gmail <sylvain.roger.rieunier@gmail.com> writes:
+>
+>> But do not you think it would be interesting to have a function that
+>> returns the RSSI signal by antennas?
+> Just out of interest, how would user space use that information? Do
+> you have any ideas?
+>
 
---OXfL5xGRrasGEqWY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="iwl-agn.c.2.6.18.suspend.diff"
 
---- drivers/net/wireless/iwlwifi/iwl-agn.c.orig	2012-06-04 18:02:32.996662801 +0200
-+++ drivers/net/wireless/iwlwifi/iwl-agn.c	2012-06-04 18:03:10.539993094 +0200
-@@ -1696,6 +1696,7 @@
- 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
- 			    WIPHY_FLAG_IBSS_RSN;
- 
-+#ifdef CONFIG_PM_SLEEP
- 	if (priv->ucode_wowlan.code.len && device_can_wakeup(bus(priv)->dev)) {
- 		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
- 					  WIPHY_WOWLAN_DISCONNECT |
-@@ -1712,6 +1713,7 @@
- 		hw->wiphy->wowlan.pattern_max_len =
- 					IWLAGN_WOWLAN_MAX_PATTERN_LEN;
- 	}
-+#endif
- 
- 	if (iwlagn_mod_params.power_save)
- 		hw->wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---OXfL5xGRrasGEqWY--
+SASKEN BUSINESS DISCLAIMER: This message may contain confidential, proprietary or legally privileged information. In case you are not the original intended Recipient of the message, you must not, directly or indirectly, use, disclose, distribute, print, or copy any part of this message and you are requested to delete it and inform the sender. Any views expressed in this message are those of the individual sender unless otherwise stated. Nothing contained in this message shall be construed as an offer or acceptance of any offer by Sasken Communication Technologies Limited ("Sasken") unless sent with that express intent and with due authority of Sasken. Sasken has taken enough precautions to prevent the spread of viruses. However the company accepts no liability for any damage caused by any virus transmitted by this email.
+Read Disclaimer at http://www.sasken.com/extras/mail_disclaimer.html
