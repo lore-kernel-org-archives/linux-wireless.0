@@ -1,61 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39338 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754256Ab2FNRJl (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:57776 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758207Ab2FZQXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 13:09:41 -0400
-Message-ID: <1339693777.9786.6.camel@jlt3.sipsolutions.net> (sfid-20120614_190943_928674_FB4FDBB2)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andre Heider <a.heider@gmail.com>
-Cc: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Thu, 14 Jun 2012 19:09:37 +0200
-In-Reply-To: <CAHsu+b9XNO5roFZNETAgs8_5OLymCaKNcTU1XUsc2fXBu+4kpg@mail.gmail.com> (sfid-20120614_190008_118343_0FC0739E)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 <4FD22727.7000500@lwfinger.net>
-	 <1339180580.5748.32.camel@jlt3.sipsolutions.net>
-	 <1339180948.5748.35.camel@jlt3.sipsolutions.net>
-	 <1339182289.5748.36.camel@jlt3.sipsolutions.net>
-	 <1339576294.4519.17.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9soGKgZmqWLU=-v0zOG0v_Arf8DFoCn1EQ7-86Mg_CdQ@mail.gmail.com>
-	 <1339602402.4519.48.camel@jlt3.sipsolutions.net>
-	 <20120613204230.474d1b6c@milhouse>
-	 <CAHsu+b_ue7LknbwMCdYsK6pQ8XxwjCL8Ham3xLucaaXZab69-g@mail.gmail.com>
-	 <1339691877.9786.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9XNO5roFZNETAgs8_5OLymCaKNcTU1XUsc2fXBu+4kpg@mail.gmail.com>
-	 (sfid-20120614_190008_118343_0FC0739E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 26 Jun 2012 12:23:33 -0400
+Message-ID: <4FE9E201.1010903@opentechinstitute.org> (sfid-20120626_182337_227242_2D9BB481)
+Date: Tue, 26 Jun 2012 12:23:29 -0400
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Will Hawkins <hawkinsw@opentechinitiative.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Help tracing NL80211_CMD_AUTHENTICATE as event in IBSS mode
+References: <24f-4fe93400-17-239c5900@2266046>  (sfid-20120626_061218_757773_249E152D) <1340693584.4662.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340693584.4662.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-06-14 at 19:00 +0200, Andre Heider wrote:
 
-> > http://p.sipsolutions.net/9c830800d14f3ff8.txt
+
+On 06/26/2012 02:53 AM, Johannes Berg wrote:
+> Hi,
 > 
-> This still oopses: if (!modparam_qos || wldev->fw.opensource)
+>> The documentation for nl80211 says the following about the
+>> NL80211_CMD_AUTHENTICATE command:
+>> "When used as an event, this reports reception of an Authentication
+>> frame in station and IBSS modes when the local MLME processed the
+>> frame, i.e., it was for the local STA and was received in correct
+>> state."
+>>
+>> I very much want this to be true for IBSS modes. However, I cannot
+>> seem to trace through the source code to confirm that this actually
+>> happens. I can easily follow the code for the case when the interface
+>> is in station mode but lose the trail for IBSS. 
 > 
-> I do get a working wlan0 if I force "hw->queues = 1;" without that
-> offending line, but just a `dmesg` over wlan+ssh yields another one
-> (prolly the same one I already described on an older patch):
-> http://i.imgur.com/epdRF.jpg
+> I'm afraid that isn't actually true for IBSS. The event you get there
+> will be NL80211_CMD_NEW_STATION.
 
-Doh, of course, I still have wldev ... I'm in a meeting now, will check
-again later.
+Thank you for the sanity check! Do you think it's worthwhile to patch
+the nl80211.h file to address this?
 
-johannes
+> 
+>> As far as I can tell, the only path to nl80211_send_rx_auth (the only
+>> place a NL80211_CMD_AUTHENTICATE command is sent to userspace) looks
+>> like this:
+>> ieee80211_iface_work invokes ieee80211_sta_rx_queued_mgmt to handle
+>> queued management packets received on a station interface.
+>> ieee80211_sta_rx_queued_mgmt (eventually) invokes
+>> cfg80211_send_rx_auth, after the proper handling. Finally,
+>> cfg80211_send_rx_auth invokes nl80211_send_rx_auth.
+> 
+> Yes.
+> 
+> 
+> I think in your case though, what you really want is a NL80211_CMD_FRAME
+> event? You register for auth frames, also to prevent mac80211 from
+> handling them itself, and then they get diverted to cfg80211_rx_mgmt()
+> and on to nl80211_send_mgmt().
+
+Thanks for this, as well. As far as the patch that I submitted, you are
+exactly correct. I was only investigating this other method since it
+appears that's how wpa_supplicant claims to support IBSS RSN.
+wpa_supplicant never actually registers for AUTH frames (through
+NL80211_CMD_REGISTER) and relies solely on the NL80211_CMD_AUTHENTICATE
+to actually receive copies of those frames.
+
+Thanks again. My forehead was getting sore from all the banging!
+Will
+
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
