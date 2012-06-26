@@ -1,93 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58915 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206Ab2FTFKs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 01:10:48 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	<aeolus@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Message-ID: <4FE15B4C.1000304@qca.qualcomm.com> (sfid-20120620_071053_968023_823D6C84)
-Date: Wed, 20 Jun 2012 10:40:36 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Received: from smtp2.u-psud.fr ([129.175.33.42]:17394 "EHLO smtp2.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750760Ab2FZTmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 15:42:25 -0400
+Message-ID: <4FEA108E.7020804@lri.fr> (sfid-20120626_214229_475409_D9E94203)
+Date: Tue, 26 Jun 2012 21:42:06 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [PATCH 03/10] ath9k_hw: Add WoW hardware capability flags
-References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com> <1340120850-9155-4-git-send-email-mohammed@qca.qualcomm.com> <20120619172047.GA7105@vmraj-lnx.qca.qualcomm.com>
-In-Reply-To: <20120619172047.GA7105@vmraj-lnx.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Antonio Quartulli <ordex@autistici.org>,
+	Will Hawkins <hawkinsw@opentechinstitute.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Help tracing NL80211_CMD_AUTHENTICATE as event in IBSS mode
+References: <24f-4fe93400-17-239c5900@2266046>  <1340693584.4662.3.camel@jlt3.sipsolutions.net>  <4FE9E201.1010903@opentechinstitute.org>  <1340728873.4484.6.camel@jlt3.sipsolutions.net>  <4FE9E6F0.2070909@opentechinstitute.org>  <1340730210.4484.11.camel@jlt3.sipsolutions.net>  <20120626185533.GA7932@ritirata.org> <1340736988.4484.19.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340736988.4484.19.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 19 June 2012 10:50 PM, Rajkumar Manoharan wrote:
-> On Tue, Jun 19, 2012 at 09:17:23PM +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> have seperate wow capability flags for
->> *basic wow support
->> *device capable of matching exact user defined pattern
->> or de-authentication/disassoc pattern
->> *device such AR9280 requires first four bytes for
->> all sort of patterns
->>
->> Cc: Senthil Balasubramanian<senthilb@qca.qualcomm.com>
->> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
->> Cc: vadivel@qca.qualcomm.com
->> Tested-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> Signed-off-by: Luis R. Rodriguez<mcgrof@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/hw.h |   20 ++++++++++++++++++++
->>   1 files changed, 20 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
->> index d0e14a3..73a1238 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.h
->> +++ b/drivers/net/wireless/ath/ath9k/hw.h
->> @@ -231,6 +231,23 @@ enum ath9k_hw_caps {
->>   	ATH9K_HW_CAP_DFS			= BIT(16),
->>   };
->>
->> +/*
->> + * enum ath9k_hw_wow_caps - WoW device capabilities
->> + * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
->> + * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
->> + * an exact user defined pattern or de-authentication/disassoc pattern.
->> + * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
->> + * bytes of the pattern for user defined pattern, de-authentication and
->> + * disassociation patterns for all types of possible frames recieved
->> + * of those types.
->> + */
->> +
->> +enum ath9k_hw_wow_caps {
->> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(0),
->> +	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(1),
->> +	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(2),
->> +};
->> +
->>   struct ath9k_hw_capabilities {
->>   	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
->>   	u16 rts_aggr_limit;
->> @@ -246,6 +263,9 @@ struct ath9k_hw_capabilities {
->>   	u8 txs_len;
->>   	u16 pcie_lcr_offset;
->>   	bool pcie_lcr_extsync_en;
->> +#ifdef	CONFIG_PM_SLEEP
->> +	enum ath9k_hw_wow_caps wow_caps;
->> +#endif
-> Why can't you align with existing HW_CAP_* flags? why do you need a separate
-> place holder?
+On 26/06/2012 20:56, Johannes Berg wrote:
+> On Tue, 2012-06-26 at 20:55 +0200, Antonio Quartulli wrote:
 >
-i just thought as there are three flags specific, it would be nice to 
-have it as a seperate enumeration. Just found a bug that if 
-CONFIG_PM_SLEEP it would be a problem. will address this in v2.
+>> @johannes: de-duplication? IBSS/RSN assumes that each node runs an authenticator
+>> and a supplicant. Does this mean that we need exactly two 4-way handshakes? Why
+>> should we have a "winner"?
+> I may misremember, I thought we didn't need two handshakes. But maybe we
+> do, and just throw away one of the PTKs?
+You need two handshake because you need two GTK. And if multicast
+doesn't work, then ARP/ND fails, and no unicast traffic will take place.
 
--- 
-thanks,
-shafi
+The PTK from the authenticator with the highest MAC address wins, but
+the other handshake is still needed so the highest MAC address STA can
+get the lowest MAC's GTK.
+
