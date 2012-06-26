@@ -1,45 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20487 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755732Ab2FOHGU (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:41843 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752354Ab2FZUDQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 03:06:20 -0400
-Message-ID: <4FDADEE6.7070202@qca.qualcomm.com> (sfid-20120615_090628_884011_A1EB1E7B)
-Date: Fri, 15 Jun 2012 10:06:14 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Peter Tam <peterctam@yahoo.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: Atheros 6K WiFi USB adaptors
-References: <1339452813.67695.YahooMailNeo@web81603.mail.mud.yahoo.com> <1339454087.28071.YahooMailNeo@web81608.mail.mud.yahoo.com> <4FD9C1E7.7020409@qca.qualcomm.com> <1339687255.51353.YahooMailNeo@web81602.mail.mud.yahoo.com>
-In-Reply-To: <1339687255.51353.YahooMailNeo@web81602.mail.mud.yahoo.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 26 Jun 2012 16:03:16 -0400
+Received: by bkcjk13 with SMTP id jk13so357837bkc.40
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 13:03:13 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com, Eyal Shapira <eyal@wizery.com>
+Subject: [PATCH 4/5] wlcore: queue recovery in case of bus errors during cmd_remove_peer
+Date: Tue, 26 Jun 2012 23:02:59 +0300
+Message-Id: <1340740980-22284-5-git-send-email-coelho@ti.com> (sfid-20120626_220324_781153_84412CCB)
+In-Reply-To: <1340740980-22284-1-git-send-email-coelho@ti.com>
+References: <1340740980-22284-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Peter,
+From: Eyal Shapira <eyal@wizery.com>
 
-please always CC linux-wireless and ath6kl-devel. I do not have the time
-to give private support.
+Following the addition of propagating errors from the bus ops
+there's a need to distinguish between bus errors (including timeout)
+and a legitimate timeout occuring in cmd_wait_for_event_or_timeout.
+In case of real bus errors we need to queue recovery even in cases
+where a timeout on a response from the FW to a command is acceptable.
 
-On 06/14/2012 06:20 PM, Peter Tam wrote:
->     Where is the htc_mbox.c & htc_pipe.c? Attached is my copy of Atheros code from the wireless community (dir.txt).
+Reported-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/cmd.c |   29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
 
-Like you mentioned in your other email you need to look at latest Linux
-releases. The latest and greatest ath6kl is always available from
-ath6kl.git:
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 84dd808..ef13938 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -133,24 +133,27 @@ fail:
+  * Poll the mailbox event field until any of the bits in the mask is set or a
+  * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
+  */
+-static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
++static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl,
++						u32 mask, bool *timeout)
+ {
+ 	u32 *events_vector;
+ 	u32 event;
+-	unsigned long timeout;
++	unsigned long timeout_time;
+ 	int ret = 0;
+ 
++	*timeout = false;
++
+ 	events_vector = kmalloc(sizeof(*events_vector), GFP_KERNEL | GFP_DMA);
+ 	if (!events_vector)
+ 		return -ENOMEM;
+ 
+-	timeout = jiffies + msecs_to_jiffies(WL1271_EVENT_TIMEOUT);
++	timeout_time = jiffies + msecs_to_jiffies(WL1271_EVENT_TIMEOUT);
+ 
+ 	do {
+-		if (time_after(jiffies, timeout)) {
++		if (time_after(jiffies, timeout_time)) {
+ 			wl1271_debug(DEBUG_CMD, "timeout waiting for event %d",
+ 				     (int)mask);
+-			ret = -ETIMEDOUT;
++			*timeout = true;
+ 			goto out;
+ 		}
+ 
+@@ -180,9 +183,10 @@ out:
+ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
+ {
+ 	int ret;
++	bool timeout = false;
+ 
+-	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask);
+-	if (ret != 0) {
++	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask, &timeout);
++	if (ret != 0 || timeout) {
+ 		wl12xx_queue_recovery_work(wl);
+ 		return ret;
+ 	}
+@@ -1435,6 +1439,7 @@ int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid)
+ {
+ 	struct wl12xx_cmd_remove_peer *cmd;
+ 	int ret;
++	bool timeout = false;
+ 
+ 	wl1271_debug(DEBUG_CMD, "cmd remove peer %d", (int)hlid);
+ 
+@@ -1455,12 +1460,16 @@ int wl12xx_cmd_remove_peer(struct wl1271 *wl, u8 hlid)
+ 		goto out_free;
+ 	}
+ 
++	ret = wl1271_cmd_wait_for_event_or_timeout(wl,
++					   PEER_REMOVE_COMPLETE_EVENT_ID,
++					   &timeout);
+ 	/*
+ 	 * We are ok with a timeout here. The event is sometimes not sent
+-	 * due to a firmware bug.
++	 * due to a firmware bug. In case of another error (like SDIO timeout)
++	 * queue a recovery.
+ 	 */
+-	wl1271_cmd_wait_for_event_or_timeout(wl,
+-					     PEER_REMOVE_COMPLETE_EVENT_ID);
++	if (ret)
++		wl12xx_queue_recovery_work(wl);
+ 
+ out_free:
+ 	kfree(cmd);
+-- 
+1.7.10
 
-http://wireless.kernel.org/en/users/Drivers/ath6kl
-
->     Is HTC means the smartphone making company HTC?
-
-Heh, I have never realised that. A funny conflict :)
-
-I was talking about Host/Target Communication, which is a protocol used
-in our firmware. You can have different channels (or endpoints) and
-encapsulate various payload, both control and data packets.
-
-http://wireless.kernel.org/en/users/Drivers/ath6kl/architecture
-
-Kalle
