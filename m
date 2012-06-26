@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44634 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755250Ab2FUTGB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37705 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757929Ab2FZPeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 15:06:01 -0400
-Date: Fri, 22 Jun 2012 00:37:18 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
-Message-ID: <20120621190716.GA30896@vmraj-lnx.users.atheros.com> (sfid-20120621_210604_918386_D026635D)
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
- <4FE36B2D.4000407@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4FE36B2D.4000407@candelatech.com>
+	Tue, 26 Jun 2012 11:34:23 -0400
+Message-ID: <1340724861.4484.1.camel@jlt3.sipsolutions.net> (sfid-20120626_173427_038467_75C8D61B)
+Subject: Re: [RFC v3 7/7] mac80211: reuse channels for channel contexts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 26 Jun 2012 17:34:21 +0200
+In-Reply-To: <4FE9BF57.6080100@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+	  <1340714242-20032-8-git-send-email-michal.kazior@tieto.com>
+	 <1340718113.14634.45.camel@jlt3.sipsolutions.net>
+	 <4FE9BF57.6080100@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 11:42:53AM -0700, Ben Greear wrote:
-> On 06/21/2012 11:31 AM, Rajkumar Manoharan wrote:
-> >ath9k_get_et_stats() warn: side effect in macro
-> >'AWDATA' doing 'i++'
-> >
-> >Cc: Ben Greear<greearb@candelatech.com>
-> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> >---
-> >  drivers/net/wireless/ath/ath9k/main.c | 9 +++++----
-> >  1 file changed, 5 insertions(+), 4 deletions(-)
-> >
-> >diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> >index 85f9ab4..32474b0 100644
-> >--- a/drivers/net/wireless/ath/ath9k/main.c
-> >+++ b/drivers/net/wireless/ath/ath9k/main.c
-> >@@ -2003,10 +2003,11 @@ static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
-> >  #define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
-> >  #define AWDATA(elem)							\
-> >  	do {								\
-> >-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> >-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> >-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> >-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> >+		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> >+		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> >+		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> >+		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> >+		i += 4; \
-> >  	} while (0)
-> 
-> The macro is still changing i.  So, whatever smatch is, seems it
-> should still warn, or it's broken :P
->
-No it is not. The warning message is a hint. The smatch assumes that replacing
-the macro 'i++' might cause unexpected behaviour like 5++ in each statement.
+On Tue, 2012-06-26 at 15:55 +0200, Michal Kazior wrote:
 
--Rajkumar
+
+> > I don't think I understand this, wouldn't it need some per-vif requested
+> > channel type to work correctly? I don't see any chantype values coming
+> > from the sdata here, so I don't think this could work?
+> >
+> > If say vif1 needs ht40+ and vif2 ht20, the channel context will be set
+> > to ht40+, but then if vif1 goes away and you don't know anything about
+> > vif2 at all, then how can this work? The way I see it, your code here
+> > doesn't really do anything, except recalculate that ht40+ is compatible
+> > with ht40+, or something like that? I guess I'm a bit confused, it seems
+> > to me that this cannot work even in theory unless you have per-vif data.
+> 
+> It seems I must've had a mind-derp. I was planning on using 
+> sdata->vif.bss_conf.channel_type which should be ok, right?
+
+Yeah, unless you were planning to not go through
+ieee80211_set_channel_type() any more in the future?
+
+johannes
+
