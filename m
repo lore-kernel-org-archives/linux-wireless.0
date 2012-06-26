@@ -1,97 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:41591 "EHLO bues.ch"
+Received: from ebb05.tieto.com ([131.207.168.36]:50402 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933124Ab2FHSbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 14:31:41 -0400
-Date: Fri, 8 Jun 2012 20:31:31 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Andre Heider <a.heider@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-Message-ID: <20120608203131.01dce8e3@milhouse> (sfid-20120608_203150_358304_AEE9C0FC)
-In-Reply-To: <4FD24332.3010202@lwfinger.net>
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	<CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	<1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	<1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	<CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	<4FD21C6B.5000402@lwfinger.net>
-	<1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	<1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	<1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	<1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	<CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	<1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	<CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	<4FD22727.7000500@lwfinger.net>
-	<1339172904.5748.18.camel@jlt3.sipsolutions.net>
-	<20120608183339.78a7fcbd@milhouse>
-	<4FD239AA.9090708@lwfinger.net>
-	<20120608201053.48548a11@milhouse>
-	<4FD24332.3010202@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/4Ae_gD3iPOpWmrUayqsW0GU"; protocol="application/pgp-signature"
+	id S1756645Ab2FZMam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:42 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 13/13] cfg80211: respect iface combinations when starting operation
+Date: Tue, 26 Jun 2012 14:30:18 +0200
+Message-ID: <1340713818-28549-14-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143048_305774_58E28647)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/4Ae_gD3iPOpWmrUayqsW0GU
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+devlist_mtx locking is changed to accomodate changes.
 
-On Fri, 08 Jun 2012 13:23:46 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/core.c    |    2 ++
+ net/wireless/ibss.c    |   10 ++++++++++
+ net/wireless/mesh.c    |   12 ++++++++++++
+ net/wireless/mlme.c    |   16 ++++++++++++++++
+ net/wireless/nl80211.c |    8 ++++++++
+ net/wireless/util.c    |    5 +++--
+ 6 files changed, 51 insertions(+), 2 deletions(-)
 
-> On 06/08/2012 01:10 PM, Michael B=C3=BCsch wrote:
-> > On Fri, 08 Jun 2012 12:43:06 -0500
-> > Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> >
-> >> On 06/08/2012 11:33 AM, Michael B=C3=BCsch wrote:
-> >>>
-> >>> Larry, did you check with PIO?
-> >>
-> >> No, I only used DMA. With the latest patch, compilation is Ok, and DMA=
- works for
-> >> both kinds of firmware, while PIO fails for both.
-> >
-> > Does PIO even work without that patch and with prop-firmware?
->=20
-> No. That seems to be a different bug.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 2fed61b..5752067 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1049,7 +1049,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			return notifier_from_errno(-EOPNOTSUPP);
+ 		if (rfkill_blocked(rdev->rfkill))
+ 			return notifier_from_errno(-ERFKILL);
++		mutex_lock(&rdev->devlist_mtx);
+ 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
++		mutex_unlock(&rdev->devlist_mtx);
+ 		if (ret)
+ 			return notifier_from_errno(ret);
+ 		cfg80211_lock_rdev(rdev);
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index b90fd86..ca5672f 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -118,6 +118,16 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 	wdev->wext.ibss.channel = params->channel;
+ #endif
+ 	wdev->sme_state = CFG80211_SME_CONNECTING;
++
++	err = cfg80211_can_use_chan(rdev, wdev, params->channel,
++				    params->channel_fixed
++				    ? CHAN_MODE_SHARED
++				    : CHAN_MODE_EXCLUSIVE);
++	if (err) {
++		wdev->connect_keys = NULL;
++		return err;
++	}
++
+ 	err = rdev->ops->join_ibss(&rdev->wiphy, dev, params);
+ 	if (err) {
+ 		wdev->connect_keys = NULL;
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 4f218c1..97f6c41 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -149,6 +149,11 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 					  setup->channel_type))
+ 		return -EINVAL;
+ 
++	err = cfg80211_can_use_chan(rdev, wdev, setup->channel,
++				    CHAN_MODE_SHARED);
++	if (err)
++		return err;
++
+ 	err = rdev->ops->join_mesh(&rdev->wiphy, dev, conf, setup);
+ 	if (!err) {
+ 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
+@@ -167,9 +172,11 @@ int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
++	mutex_lock(&rdev->devlist_mtx);
+ 	wdev_lock(wdev);
+ 	err = __cfg80211_join_mesh(rdev, dev, setup, conf);
+ 	wdev_unlock(wdev);
++	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	return err;
+ }
+@@ -202,6 +209,11 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
+ 		if (!netif_running(wdev->netdev))
+ 			return -ENETDOWN;
+ 
++		err = cfg80211_can_use_chan(rdev, wdev, channel,
++					    CHAN_MODE_SHARED);
++		if (err)
++			return err;
++
+ 		err = rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
+ 							   wdev->netdev,
+ 							   channel);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index a7882eb..d4fece3 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -302,8 +302,14 @@ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	if (!req.bss)
+ 		return -ENOENT;
+ 
++	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
++				    CHAN_MODE_SHARED);
++	if (err)
++		goto out;
++
+ 	err = rdev->ops->auth(&rdev->wiphy, dev, &req);
+ 
++out:
+ 	cfg80211_put_bss(req.bss);
+ 	return err;
+ }
+@@ -317,11 +323,13 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ {
+ 	int err;
+ 
++	mutex_lock(&rdev->devlist_mtx);
+ 	wdev_lock(dev->ieee80211_ptr);
+ 	err = __cfg80211_mlme_auth(rdev, dev, chan, auth_type, bssid,
+ 				   ssid, ssid_len, ie, ie_len,
+ 				   key, key_len, key_idx);
+ 	wdev_unlock(dev->ieee80211_ptr);
++	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	return err;
+ }
+@@ -397,8 +405,14 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 		return -ENOENT;
+ 	}
+ 
++	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
++				    CHAN_MODE_SHARED);
++	if (err)
++		goto out;
++
+ 	err = rdev->ops->assoc(&rdev->wiphy, dev, &req);
+ 
++out:
+ 	if (err) {
+ 		if (was_connected)
+ 			wdev->sme_state = CFG80211_SME_CONNECTED;
+@@ -421,11 +435,13 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
++	mutex_lock(&rdev->devlist_mtx);
+ 	wdev_lock(wdev);
+ 	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+ 				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
+ 				    assoc_flags, ht_capa, ht_capa_mask);
+ 	wdev_unlock(wdev);
++	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	return err;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 819ebc0..85ddb3e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2349,6 +2349,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 					  params.channel_type))
+ 		return -EINVAL;
+ 
++	mutex_lock(&rdev->devlist_mtx);
++	err = cfg80211_can_use_chan(rdev, wdev, params.channel,
++				    CHAN_MODE_SHARED);
++	mutex_unlock(&rdev->devlist_mtx);
++
++	if (err)
++		return err;
++
+ 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
+ 	if (!err) {
+ 		wdev->beacon_interval = params.beacon_interval;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b8e3f70..748ad2e 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -805,8 +805,10 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		return -EBUSY;
+ 
+ 	if (ntype != otype && netif_running(dev)) {
++		mutex_lock(&rdev->devlist_mtx);
+ 		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
+ 						    ntype);
++		mutex_unlock(&rdev->devlist_mtx);
+ 		if (err)
+ 			return err;
+ 
+@@ -956,6 +958,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	int i, j;
+ 
+ 	ASSERT_RTNL();
++	lockdep_assert_held(&rdev->devlist_mtx);
+ 
+ 	/* Always allow software iftypes */
+ 	if (rdev->wiphy.software_iftypes & BIT(iftype))
+@@ -979,7 +982,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	}
+ 
+-	mutex_lock(&rdev->devlist_mtx);
+ 	list_for_each_entry(wdev_iter, &rdev->netdev_list, list) {
+ 		if (wdev_iter == wdev)
+ 			continue;
+@@ -1015,7 +1017,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 		total++;
+ 		used_iftypes |= BIT(wdev_iter->iftype);
+ 	}
+-	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	if (total == 1)
+ 		return 0;
+-- 
+1.7.0.4
 
-That's nice. Could you probably bisect it? It used to work at some point.
-
-PS:
-I'm sorry that I'm not of much help these days, because I currently
-don't have a working b43 device around :)
-
---=20
-Greetings, Michael.
-
-PGP encryption is encouraged / 908D8B0E
-
---Sig_/4Ae_gD3iPOpWmrUayqsW0GU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJP0kUDAAoJEPUyvh2QjYsO99wQANdCz5Y3Z08IDNqvxPKa5cJ+
-92eOGw7PrQW84+smTszyjEUgn6mKu871h0b05XFVKL+N4LqOJiMFBE/c5f7AbxWo
-g/HzkC3vh4fB+Af6LzdJvjNGXHC6TTEcFaDK9g1V8az2+ap9fvwEdmK+3aVxRFoJ
-4L6COSijRcFiXa99UsbvTRYkX28zajxVn4JL1bhxDHdxauTlCAmAoYGpJTA7HRRi
-t1ZtoEZqfG8/vEfJECje22noIL+bdlyN9qde2C5jZOJ8TagQW8TGVeBxbJTAIShr
-KSS4/9gv+9rwNUjUtWkU4EXFD5Agg9YwlRz9QVXhTxBCrMtjrhBiXKJCjYY0iRKL
-tXXnSqu0QoBZWfWg0P8ugjqgEegZ2BSdZU7woNnucwpRmR7qTtUBpfZNpNbpl3Af
-NlrgCDCKqNWfiWQvFRxSTpMeMcSlTCsK4VTjbzoFm5BIfw+vRPe/n7+bRPSgdazy
-iN3GqNaOSLeJ/Ptr31YIIqDeqlnYiuTYU5Cc+NfrBCHXH2kbfDVHQPBFKErbT13h
-h9z7UN38WfFZhPjPbP0Y3asKiZ6YQuounpU1xoRyUOld9QtgCLBCixrrW4V39DxD
-JLhYHwFzlaADRhDNgydC8/9dzVW+Mo2dhFHRsX5EidKNjJlvdnQuurMF4a5qzuwV
-wsPjg5/Koqm8uC/jCEvn
-=jDFC
------END PGP SIGNATURE-----
-
---Sig_/4Ae_gD3iPOpWmrUayqsW0GU--
