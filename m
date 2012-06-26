@@ -1,92 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58851 "EHLO nbd.name"
+Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212Ab2FNV14 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 17:27:56 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 3.5] ath9k: fix invalid pointer access in the tx path
-Date: Thu, 14 Jun 2012 23:27:42 +0200
-Message-Id: <1339709262-59805-1-git-send-email-nbd@openwrt.org> (sfid-20120614_232800_078515_095ADB91)
+	id S1756517Ab2FZMai (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:38 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 05/13] cfg80211: introduce cfg80211_get_chan_state
+Date: Tue, 26 Jun 2012 14:30:10 +0200
+Message-ID: <1340713818-28549-6-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143046_229686_7D1840A8)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After setup_frame_info has been called, only info->control.rates is still
-valid, other control fields have been overwritten by the ath_frame_info
-data. Move the access to info->control.vif for checking short preamble
-to setup_frame_info before it gets overwritten.
+Helper function for finding out which channel is
+used by a given interface.
 
-This regression was introduced in commit d47a61aa
-"ath9k: Fix multi-VIF BSS handling"
+An exclusive channel can be used only by a single
+interface. This is mainly for non-fixed channel
+IBSS handling.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Thomas Hühn <thomas@net.t-labs.tu-berlin.de>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: stable@vger.kernel.org [3.4]
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/xmit.c  |   10 ++++++++--
- 2 files changed, 9 insertions(+), 2 deletions(-)
+ net/wireless/chan.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/core.h |   12 ++++++++++++
+ 2 files changed, 63 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a277cf6..b5136a1 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -214,6 +214,7 @@ struct ath_frame_info {
- 	enum ath9k_key_type keytype;
- 	u8 keyix;
- 	u8 retries;
-+	bool short_preamble;
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index c1999e4..167e7cb 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -92,3 +92,54 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 
+ 	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
+ }
++
++void
++cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
++		        struct wireless_dev *wdev,
++		        struct ieee80211_channel **chan,
++		        enum cfg80211_chan_mode *chanmode)
++{
++	*chan = NULL;
++	*chanmode = CHAN_MODE_UNDEFINED;
++
++	ASSERT_RDEV_LOCK(rdev);
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (!netif_running(wdev->netdev))
++		return;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_ADHOC:
++		if (wdev->current_bss) {
++			*chan = wdev->current_bss->pub.channel;
++			*chanmode = wdev->ibss_fixed
++				  ? CHAN_MODE_SHARED
++				  : CHAN_MODE_EXCLUSIVE;
++			return;
++		}
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++		if (wdev->current_bss) {
++			*chan = wdev->current_bss->pub.channel;
++			*chanmode = CHAN_MODE_SHARED;
++			return;
++		}
++		break;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++	case NL80211_IFTYPE_MESH_POINT:
++		*chan = wdev->channel;
++		*chanmode = CHAN_MODE_SHARED;
++		return;
++	case NL80211_IFTYPE_MONITOR:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_WDS:
++		/* these interface types don't really have a channel */
++		return;
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NUM_NL80211_IFTYPES:
++		WARN_ON(1);
++	}
++
++	return;
++}
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index a366ffd..bbf2f75 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -267,6 +267,12 @@ struct cfg80211_cached_keys {
+ 	int def, defmgmt;
  };
  
- struct ath_buf_state {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index d59dd01..59fbe5b 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -938,6 +938,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	struct ieee80211_tx_rate *rates;
- 	const struct ieee80211_rate *rate;
- 	struct ieee80211_hdr *hdr;
-+	struct ath_frame_info *fi = get_frame_info(bf->bf_mpdu);
- 	int i;
- 	u8 rix = 0;
- 
-@@ -957,8 +958,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	rate = ieee80211_get_rts_cts_rate(sc->hw, tx_info);
- 	info->rtscts_rate = rate->hw_value;
- 
--	if (tx_info->control.vif &&
--	    tx_info->control.vif->bss_conf.use_short_preamble)
-+	if (fi->short_preamble)
- 		info->rtscts_rate |= rate->hw_value_short;
- 
- 	for (i = 0; i < 4; i++) {
-@@ -1779,6 +1779,11 @@ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ath_frame_info *fi = get_frame_info(skb);
- 	struct ath_node *an = NULL;
- 	enum ath9k_key_type keytype;
-+	bool short_preamble = false;
++enum cfg80211_chan_mode {
++	CHAN_MODE_UNDEFINED,
++	CHAN_MODE_SHARED,
++	CHAN_MODE_EXCLUSIVE,
++};
 +
-+	if (tx_info->control.vif &&
-+	    tx_info->control.vif->bss_conf.use_short_preamble)
-+		short_preamble = true;
  
- 	keytype = ath9k_cmn_get_hw_crypto_keytype(skb);
- 
-@@ -1794,6 +1799,7 @@ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		fi->keyix = ATH9K_TXKEYIX_INVALID;
- 	fi->keytype = keytype;
- 	fi->framelen = framelen;
-+	fi->short_preamble = short_preamble;
+ /* free object */
+ extern void cfg80211_dev_free(struct cfg80211_registered_device *rdev);
+@@ -445,6 +451,12 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+ 	return cfg80211_can_change_interface(rdev, NULL, iftype);
  }
  
- u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
++void
++cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
++		        struct wireless_dev *wdev,
++		        struct ieee80211_channel **chan,
++		        enum cfg80211_chan_mode *chanmode);
++
+ struct ieee80211_channel *
+ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 		  int freq, enum nl80211_channel_type channel_type);
 -- 
-1.7.3.2
+1.7.0.4
 
