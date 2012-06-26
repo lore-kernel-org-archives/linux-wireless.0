@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:50556 "HELO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753178Ab2F2Da4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 23:30:56 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/6] mwifiex: improvements for AP mode
-Date: Thu, 28 Jun 2012 20:30:24 -0700
-Message-Id: <1340940630-27172-1-git-send-email-bzhao@marvell.com> (sfid-20120629_053101_039387_8EA14489)
+Received: from ebb05.tieto.com ([131.207.168.36]:55917 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757004Ab2FZOFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 10:05:53 -0400
+Message-ID: <4FE9C1BF.8060209@tieto.com> (sfid-20120626_160556_330842_B625509D)
+Date: Tue, 26 Jun 2012 16:05:51 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3] respect channels in iface combinations
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com> <1340717512.14634.38.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340717512.14634.38.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches improve/cleanup IE parsing code, add change_beacon
-handler, and add support for WPS IE handling.
+Johannes Berg wrote:
+> On Tue, 2012-06-26 at 14:30 +0200, Michal Kazior wrote:
+>> Hi,
+>>
+>> Here's a respin of my patches.
+>>
+>> Changes:
+>>
+>>   - add libertas set_channel tracking
+>>   - add channel switch notify support (ap channel tracking)
+>>   - introduce CFG80211_MAX_NUM_DIFFERENT_CHANNELS
+>>     (changes channel accounting a bit)
+>>   - add channel accounting for assoc
+>>
+>> Left unchanged:
+>>
+>>   - set_monitor_enabled callback name
+>>   - initial monitor channel is set to first one found
+>
+> Dziękujemy! (and thanks google too :-D)
+>
+> I just saw a few tiny issues, can you repost as [PATCH] and then, unless
+> I see other objections, I'll pick this up.
 
----
-Avinash Patil (6):
-  mwifiex: pass cfg80211_beacon_data to mwifiex_set_mgmt_ie()
-  mwifiex: separate IE parsing for Head/Tail IEs and beacon_ies etc
-  mwifiex: overwrite earlier IE buffers for new set IE request
-  mwifiex: add change_beacon cfg80211 handler
-  mwifiex: advertise WPS probe response offload support to cfg80211
-  mwifiex: parse WPS IEs from beacon_data
+Sure. I'll resend it as a PATCH tomorrow after fixing.
 
- drivers/net/wireless/mwifiex/cfg80211.c |   36 ++++++-
- drivers/net/wireless/mwifiex/ie.c       |  185 ++++++++++++++++---------------
- drivers/net/wireless/mwifiex/main.h     |    2 +-
- 3 files changed, 131 insertions(+), 92 deletions(-)
+
+
+-- 
+Pozdrawiam / Best regards, Michal Kazior.
 
