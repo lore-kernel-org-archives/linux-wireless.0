@@ -1,119 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:11264 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490Ab2FXQGc (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:56155 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429Ab2FZKJx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jun 2012 12:06:32 -0400
-Date: Sun, 24 Jun 2012 11:06:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: iivanich@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix IRQ disabled warning
-Message-ID: <4fe73b05.hCQftM+/T3aH73rp%Larry.Finger@lwfinger.net> (sfid-20120624_180636_377673_A1856EF0)
+	Tue, 26 Jun 2012 06:09:53 -0400
+Received: by obbuo13 with SMTP id uo13so7813708obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 03:09:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+Date: Tue, 26 Jun 2012 13:09:53 +0300
+Message-ID: <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com> (sfid-20120626_120957_002713_4AE7C6BB)
+Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCI-based drivers can generate the following warning:
+On Mon, Jun 25, 2012 at 7:05 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Hi all,
+>
+> Some of us have discussed this before, but I wanted to get some wider
+> dissemination ...
+>
+> With multi-channel, one problem that we get is managing the channel
+> timing for authentication/association. We'll have bound the channel
+> context (once we have that) before we even send a frame of course, but
+> setting up the timing as to when to use the channel is very hard, in
+> particular for connections to P2P GOs that might potentially be asleep.
+>
+the other scenario we should have in mind here is the AP side - making
+sure we'll be able to auth/assoc a new station.
 
-[ 9497.776350] ------------[ cut here ]------------
-[ 9497.776366] WARNING: at kernel/softirq.c:159 local_bh_enable_ip+0x7a/0xa0()
-[ 9497.776370] Hardware name: 05794NC
-[ 9497.776597] Pid: 6413, comm: hostapd Not tainted 3.3.0-4.fc16.x86_64 #1
-[ 9497.776601] Call Trace:
-[ 9497.776612]  [<ffffffff81057b1f>] warn_slowpath_common+0x7f/0xc0
-[ 9497.776633]  [<ffffffffa034a099>] ? rtl_pci_reset_trx_ring+0x199/0x230
-[rtlwifi]
-[ 9497.776640]  [<ffffffff81057b7a>] warn_slowpath_null+0x1a/0x20
-[ 9497.776646]  [<ffffffff8105f06a>] local_bh_enable_ip+0x7a/0xa0
-[ 9497.776654]  [<ffffffff815f3ef6>] _raw_spin_unlock_bh+0x16/0x20
-[ 9497.776671]  [<ffffffffa03e50de>] destroy_conntrack+0x9e/0x120
-[nf_conntrack]
-[ 9497.776681]  [<ffffffff81511847>] nf_conntrack_destroy+0x17/0x20
-[ 9497.776689]  [<ffffffff814d9c85>] skb_release_head_state+0xe5/0x120
-[ 9497.776695]  [<ffffffff814d98b6>] __kfree_skb+0x16/0xa0
-[ 9497.776700]  [<ffffffff814d9a35>] kfree_skb+0x45/0xc0
-[ 9497.776717]  [<ffffffffa034a099>] rtl_pci_reset_trx_ring+0x199/0x230
-[rtlwifi]
-[ 9497.776734]  [<ffffffffa034a155>] rtl_pci_start+0x25/0x1d0 [rtlwifi]
-[ 9497.776750]  [<ffffffffa03440b5>] rtl_op_start+0x55/0x90 [rtlwifi]
-[ 9497.776785]  [<ffffffffa02c4956>] ieee80211_do_open+0x296/0xa10 [mac80211]
-[ 9497.776794]  [<ffffffff815f7ddd>] ? notifier_call_chain+0x4d/0x70
-[ 9497.776828]  [<ffffffffa02c513d>] ieee80211_open+0x6d/0x80 [mac80211]
-[ 9497.776836]  [<ffffffff814e8b3f>] __dev_open+0x8f/0xe0
-[ 9497.776842]  [<ffffffff814e8de1>] __dev_change_flags+0xa1/0x180
-[ 9497.776847]  [<ffffffff814e8f78>] dev_change_flags+0x28/0x70
-[ 9497.776856]  [<ffffffff8154e99d>] devinet_ioctl+0x61d/0x7b0
-[ 9497.776863]  [<ffffffff8154ef55>] inet_ioctl+0x75/0x90
-[ 9497.776870]  [<ffffffff814cdd50>] sock_do_ioctl+0x30/0x70
-[ 9497.776876]  [<ffffffff814cee09>] sock_ioctl+0x79/0x2f0
-[ 9497.776885]  [<ffffffff81193498>] do_vfs_ioctl+0x98/0x550
-[ 9497.776891]  [<ffffffff811939e1>] sys_ioctl+0x91/0xa0
-[ 9497.776897]  [<ffffffff815fc029>] system_call_fastpath+0x16/0x1b
-[ 9497.776902] ---[ end trace 22886c442489082d ]---
+> 5) do remain-on-channel from mac80211, but this doesn't address P2P GO
+>   synchronisation requirements
+>
+what are the unfulfilled requirements here?
 
-The cause is due to calling kfree_skb() with interrupts disabled.
+> I haven't been able to come up with any other ways, and here we really
+> don't have much of a choice -- #1 is the only thing that seems sane to
+> me. Thoughts?
 
-This bug is discussed in https://bugzilla.redhat.com/show_bug.cgi?id=797709.
+our current approach is making the kernel part as simple as possible,
+and let userspace handle the channel management.
+before authentication (or after getting auth request in the ap case)
+the supplicant requests the kernel to "give priority" to a specific
+vif. it's up to the low-level driver to decide on the right way to do
+it (internally we implement it with ROC on the specified vif).
 
-Reported-and-Tested by: Ivan Ivanovich <iivanich@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+the con here is that this might result in the channel being reserved
+for a pretty long time (retransmits, etc.), but that's why we refer it
+as setting "priority" rather than actual channel reservation. if the
+fw has to do other things (e.g. beacon on each beacon interval) it
+will do it, even though we asked it to ROC on a different channel.
 
-John,
+i think the "tx sync" (method 1) is good for sta mode, but it's less
+suitable for ap mode.
+also, when waiting for EAPOLs after association you might have to
+reserve the channel for a pretty long time anyway (since you still
+can't enter ps, and some APs don't send the first EAPOL immediately).
 
-Although this bug has been in rtlwifi from the beginning, it only seems to
-be active when the device is used as an AP. I thought about adding Stable
-to the Cc list, but changed my mind. Please push this for 3.6.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-@@ -1273,17 +1273,18 @@ int rtl_pci_reset_trx_ring(struct ieee80
- 	 *after reset, release previous pending packet,
- 	 *and force the  tx idx to the first one
- 	 */
--	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
- 	for (i = 0; i < RTL_PCI_MAX_TX_QUEUE_COUNT; i++) {
- 		if (rtlpci->tx_ring[i].desc) {
- 			struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[i];
- 
- 			while (skb_queue_len(&ring->queue)) {
--				struct rtl_tx_desc *entry =
--				    &ring->desc[ring->idx];
--				struct sk_buff *skb =
--				    __skb_dequeue(&ring->queue);
-+				struct rtl_tx_desc *entry;
-+				struct sk_buff *skb;
- 
-+				spin_lock_irqsave(&rtlpriv->locks.irq_th_lock,
-+						  flags);
-+				entry = &ring->desc[ring->idx];
-+				skb = __skb_dequeue(&ring->queue);
- 				pci_unmap_single(rtlpci->pdev,
- 						 rtlpriv->cfg->ops->
- 							 get_desc((u8 *)
-@@ -1291,15 +1292,15 @@ int rtl_pci_reset_trx_ring(struct ieee80
- 							 true,
- 							 HW_DESC_TXBUFF_ADDR),
- 						 skb->len, PCI_DMA_TODEVICE);
--				kfree_skb(skb);
- 				ring->idx = (ring->idx + 1) % ring->entries;
-+				spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock,
-+						  flags);
-+				kfree_skb(skb);
- 			}
- 			ring->idx = 0;
- 		}
- 	}
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock, flags);
--
- 	return 0;
- }
- 
+Eliad.
