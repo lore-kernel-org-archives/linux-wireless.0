@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:51893 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859Ab2FTK3c convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 06:29:32 -0400
-Received: by vcbf11 with SMTP id f11so3724930vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 03:29:31 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:50402 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756554Ab2FZMaj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:39 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 08/13] cfg80211: refuse to .set_monitor_channel when non-monitors are present
+Date: Tue, 26 Jun 2012 14:30:13 +0200
+Message-ID: <1340713818-28549-9-git-send-email-michal.kazior@tieto.com> (sfid-20120626_145129_531010_9C27D333)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <CALx5=V-+aCcOMXHPrxmqVHwaiosNurT17gHBTi0mTdYJ6bZRMA@mail.gmail.com>
-References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
-	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
-	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
-	<CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com>
-	<CAD2nsn35gDLLP3Wkn9qpG5UhxUGPOcn1q_kpP2WexjQ1+LvXFg@mail.gmail.com>
-	<CALx5=V-+aCcOMXHPrxmqVHwaiosNurT17gHBTi0mTdYJ6bZRMA@mail.gmail.com>
-Date: Wed, 20 Jun 2012 15:59:31 +0530
-Message-ID: <CAD2nsn2KrgLh-Oth-npUjY59bh2ycpEv7UocfXH0uE27TD19fQ@mail.gmail.com> (sfid-20120620_122935_668993_AB54FD63)
-Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Matt Chen <machen@suse.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Matt,
+Having .set_monitor_channel work with non-monitor
+interfaces running would make interface
+combinations accounting ambiguous.
 
-> Both 0x2f and 0x2d can work fine to me of enabling
-> wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll().
->
-> 1) with 0x2f
->   0x404c address would change when press wifi button
->   rfkill block : yes -> 0x00000455
->   rfkill block : no   -> 0x00000c55
-> 2) with 0x2d
->   0x404c address would change when press wifi button
->   rfkill block : yes -> 0x00000455
->   rfkill block : no   -> 0x00000c55
->
->
-> But I don't see the LED is changing, it is staying OFF (Amber).
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/chan.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-not sure about that, but i think rfkill is working for both of us
-i told 0xeed changes to 0x6ed for me
-
-you got 0x455 changes to 0xc55
-
-BIT 12(GPIO pin 11 seems to toggle  4 ->C), you can confirm by rfkill list
-
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 167e7cb..019401b 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -85,6 +85,8 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 
+ 	if (!rdev->ops->set_monitor_channel)
+ 		return -EOPNOTSUPP;
++	if (!cfg80211_has_monitors_only(rdev))
++		return -EBUSY;
+ 
+ 	chan = rdev_freq_to_chan(rdev, freq, chantype);
+ 	if (!chan)
 -- 
-thanks,
-shafi
+1.7.0.4
+
