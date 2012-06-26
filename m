@@ -1,40 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:62197 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809Ab2FZEML (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 00:12:11 -0400
-Received: from mail0.frost.chambana.net (mail0.frost.chambana.net [209.66.96.68])
-	by www19.servergod.com (Postfix) with ESMTP id 3F95211FCB1
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 21:01:39 -0700 (PDT)
-Received: by mail0.frost.chambana.net (Postfix) with SMTP id D17385C37B7
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 04:01:38 +0000
-Received: by mail0.frost.chambana.net (Postfix) with ESMTP id 22AE35C37B5
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 04:01:38 +0000
+Received: from ebb05.tieto.com ([131.207.168.36]:50402 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756425Ab2FZMah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:37 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 06/13] cfg80211: track monitor interfaces count
+Date: Tue, 26 Jun 2012 14:30:11 +0200
+Message-ID: <1340713818-28549-7-git-send-email-michal.kazior@tieto.com> (sfid-20120626_145130_338969_AD1B34EB)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-from: "Will Hawkins" <hawkinsw@opentechinitiative.org>
-subject: =?utf-8?q?Help_tracing_NL80211=5FCMD=5FAUTHENTICATE_as_event_in_IBSS_mode?=
-message-id: <24f-4fe93400-17-239c5900@2266046> (sfid-20120626_061218_757773_249E152D)
-to: <linux-wireless@vger.kernel.org>
-content-type: text/plain; charset="utf-8"
-date: Tue, 26 Jun 2012 00:01:38 -0400
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone!
+Implements .set_monitor_enabled(wiphy, enabled).
 
-I've been banging my head against a particular problem for a few days without any success. I thought I'd turn to those much smarter for some help and hopefully a breakthrough.
+Notifies driver upon change of interface layout.
 
-The documentation for nl80211 says the following about the NL80211_CMD_AUTHENTICATE command:
-"When used as an event, this reports reception of an Authentication frame in station and IBSS modes when the local MLME processed the frame, i.e., it was for the local STA and was received in correct state."
+If only monitor interfaces become present it is
+called with 2nd argument being true. If
+non-monitor interface appears then 2nd argument
+is false. Driver is notified only upon change.
 
-I very much want this to be true for IBSS modes. However, I cannot seem to trace through the source code to confirm that this actually happens. I can easily follow the code for the case when the interface is in station mode but lose the trail for IBSS. 
+This makes it more obvious about the fact that
+cfg80211 supports single monitor channel. Once we
+implement multi-channel we don't want to allow
+setting monitor channel while other interface
+types are running. Otherwise it would be ambiguous
+once we start considering num_different_channels.
 
-As far as I can tell, the only path to nl80211_send_rx_auth (the only place a NL80211_CMD_AUTHENTICATE command is sent to userspace) looks like this:
-ieee80211_iface_work invokes ieee80211_sta_rx_queued_mgmt to handle queued management packets received on a station interface. ieee80211_sta_rx_queued_mgmt (eventually) invokes cfg80211_send_rx_auth, after the proper handling. Finally, cfg80211_send_rx_auth invokes nl80211_send_rx_auth.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h |    4 ++++
+ net/wireless/core.c    |   24 ++++++++++++++++++++++++
+ net/wireless/core.h    |   14 ++++++++++++++
+ net/wireless/util.c    |    5 +++++
+ 4 files changed, 47 insertions(+), 0 deletions(-)
 
-If anyone can provide any help, I would sincerely appreciate it. I am not looking for hand-holding -- I know everyone is very busy doing their own work. But, I am at my wits' end here so I thought I'd ask for help!
-
-Thanks everyone,
-Will
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 92fdd02..120eae0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1428,6 +1428,8 @@ struct cfg80211_gtk_rekey_data {
+  *	interfaces are active this callback should reject the configuration.
+  *	If no interfaces are active or the device is down, the channel should
+  *	be stored for when a monitor interface becomes active.
++ * @set_monitor_enabled: Notify driver that there are only monitor
++ *	interfaces running.
+  * @get_channel: Get the current operating channel, should return %NULL if
+  *	there's no single defined operating channel if for example the
+  *	device implements channel hopping for multi-channel virtual interfaces.
+@@ -1746,6 +1748,8 @@ struct cfg80211_ops {
+ 				struct ethtool_stats *stats, u64 *data);
+ 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
+ 				  u32 sset, u8 *data);
++
++	void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
+ };
+ 
+ /*
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 46a33ea..9097d6c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -776,6 +776,24 @@ static struct device_type wiphy_type = {
+ 	.name	= "wlan",
+ };
+ 
++void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
++			       enum nl80211_iftype iftype, int num)
++{
++	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
++	bool has_monitors_only_new;
++
++	ASSERT_RDEV_LOCK(rdev);
++
++	rdev->num_running_ifaces += num;
++	if (iftype == NL80211_IFTYPE_MONITOR)
++		rdev->num_running_monitor_ifaces += num;
++
++	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
++	if (has_monitors_only_new != has_monitors_only_old)
++		rdev->ops->set_monitor_enabled(&rdev->wiphy,
++					       has_monitors_only_new);
++}
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *ndev)
+@@ -879,6 +897,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		break;
+ 	case NETDEV_DOWN:
+ 		dev_hold(dev);
++		cfg80211_lock_rdev(rdev);
++		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
++		cfg80211_unlock_rdev(rdev);
+ 		queue_work(cfg80211_wq, &wdev->cleanup_work);
+ 		break;
+ 	case NETDEV_UP:
+@@ -986,6 +1007,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
+ 		if (ret)
+ 			return notifier_from_errno(ret);
++		cfg80211_lock_rdev(rdev);
++		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
++		cfg80211_unlock_rdev(rdev);
+ 		break;
+ 	}
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index bbf2f75..b27fa3b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -56,6 +56,9 @@ struct cfg80211_registered_device {
+ 
+ 	u32 ap_beacons_nlpid;
+ 
++	int num_running_ifaces;
++	int num_running_monitor_ifaces;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
+@@ -223,6 +226,14 @@ static inline void wdev_unlock(struct wireless_dev *wdev)
+ #define ASSERT_RDEV_LOCK(rdev) lockdep_assert_held(&(rdev)->mtx)
+ #define ASSERT_WDEV_LOCK(wdev) lockdep_assert_held(&(wdev)->mtx)
+ 
++static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
++{
++	ASSERT_RDEV_LOCK(rdev);
++
++	return rdev->num_running_ifaces == rdev->num_running_monitor_ifaces &&
++	       rdev->num_running_ifaces > 0;
++}
++
+ enum cfg80211_event_type {
+ 	EVENT_CONNECT_RESULT,
+ 	EVENT_ROAMED,
+@@ -470,6 +481,9 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int);
+ 
++void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
++			       enum nl80211_iftype iftype, int num);
++
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+ #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
+ #else
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index fc948d0..9b92ec5 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -871,6 +871,11 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		}
+ 	}
+ 
++	if (!err && ntype != otype && netif_running(dev)) {
++		cfg80211_update_iface_num(rdev, ntype, 1);
++		cfg80211_update_iface_num(rdev, otype, -1);
++	}
++
+ 	return err;
+ }
+ 
+-- 
+1.7.0.4
 
