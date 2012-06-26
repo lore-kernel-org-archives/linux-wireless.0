@@ -1,120 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:49154 "EHLO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761245Ab2FHGbP (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:52349 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757147Ab2FZIFd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 02:31:15 -0400
-Received: by lban1 with SMTP id n1so1018090lba.10
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2012 23:31:10 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 5/5] wlcore/wl12xx/wl18xx: make NVS file optional for wl18xx
-Date: Fri,  8 Jun 2012 09:30:55 +0300
-Message-Id: <1339137055-30095-6-git-send-email-coelho@ti.com> (sfid-20120608_083119_875646_C4AF05A2)
-In-Reply-To: <1339137055-30095-1-git-send-email-coelho@ti.com>
-References: <1339137055-30095-1-git-send-email-coelho@ti.com>
+	Tue, 26 Jun 2012 04:05:33 -0400
+Received: by eeit10 with SMTP id t10so1497210eei.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 01:05:32 -0700 (PDT)
+Message-ID: <4FE96D48.9080901@gmail.com> (sfid-20120626_100540_194649_6E54065D)
+Date: Tue, 26 Jun 2012 10:05:28 +0200
+From: sylvain_gmail <sylvain.roger.rieunier@gmail.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: Victor Goldenshtein <victorg@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add command to get current rssi
+References: <1337669130-4229-1-git-send-email-victorg@ti.com> <4FE85430.3030007@gmail.com> <87y5nb34bm.fsf@purkki.adurom.net>
+In-Reply-To: <87y5nb34bm.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+it can be very useful when you installed multiple polarization antennas. 
+For each polarization picks up the signal on a different axis. For 
+example for a dual polarization antenna, you have a horizontal 
+polarization and vertical polarization.
 
-Don't spew errors when we can't find the NVS file in wlcore. Instead
-fail the wl12xx boot HW op if the NVS isn't found.
+Regards,
+Sylvain
 
-Take this opportunity to remove some dead code from register_hw()
-which looks for the NVS again needlessly.
+Le 25/06/2012 15:32, Kalle Valo a écrit :
+> sylvain_gmail <sylvain.roger.rieunier@gmail.com> writes:
+>
+>> But do not you think it would be interesting to have a function that
+>> returns the RSSI signal by antennas?
+> Just out of interest, how would user space use that information? Do you
+> have any ideas?
+>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/boot.c |    4 +++-
- drivers/net/wireless/ti/wlcore/main.c |   22 ++++++----------------
- 2 files changed, 9 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
-index ed718f7..7b8e61e 100644
---- a/drivers/net/wireless/ti/wlcore/boot.c
-+++ b/drivers/net/wireless/ti/wlcore/boot.c
-@@ -211,8 +211,10 @@ int wlcore_boot_upload_nvs(struct wl1271 *wl)
- 	u32 dest_addr, val;
- 	u8 *nvs_ptr, *nvs_aligned;
- 
--	if (wl->nvs == NULL)
-+	if (wl->nvs == NULL) {
-+		wl1271_error("NVS file is need during boot");
- 		return -ENODEV;
-+	}
- 
- 	if (wl->quirks & WLCORE_QUIRK_LEGACY_NVS) {
- 		struct wl1271_nvs_file *nvs =
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 176a311..1156e3f 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -715,7 +715,7 @@ out:
- 	return ret;
- }
- 
--static int wl1271_fetch_nvs(struct wl1271 *wl)
-+static void wl1271_fetch_nvs(struct wl1271 *wl)
- {
- 	const struct firmware *fw;
- 	int ret;
-@@ -723,16 +723,15 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
- 	ret = request_firmware(&fw, WL12XX_NVS_NAME, wl->dev);
- 
- 	if (ret < 0) {
--		wl1271_error("could not get nvs file %s: %d", WL12XX_NVS_NAME,
--			     ret);
--		return ret;
-+		wl1271_debug(DEBUG_BOOT, "could not get nvs file %s: %d",
-+			     WL12XX_NVS_NAME, ret);
-+		return;
- 	}
- 
- 	wl->nvs = kmemdup(fw->data, fw->size, GFP_KERNEL);
- 
- 	if (!wl->nvs) {
- 		wl1271_error("could not allocate memory for the nvs file");
--		ret = -ENOMEM;
- 		goto out;
- 	}
- 
-@@ -740,8 +739,6 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
- 
- out:
- 	release_firmware(fw);
--
--	return ret;
- }
- 
- void wl12xx_queue_recovery_work(struct wl1271 *wl)
-@@ -989,13 +986,6 @@ static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
- 	if (ret < 0)
- 		goto out;
- 
--	/* No NVS from netlink, try to get it from the filesystem */
--	if (wl->nvs == NULL) {
--		ret = wl1271_fetch_nvs(wl);
--		if (ret < 0)
--			goto out;
--	}
--
- out:
- 	return ret;
- }
-@@ -4937,8 +4927,8 @@ static int wl1271_register_hw(struct wl1271 *wl)
- 	if (wl->mac80211_registered)
- 		return 0;
- 
--	ret = wl1271_fetch_nvs(wl);
--	if (ret == 0) {
-+	wl1271_fetch_nvs(wl);
-+	if (wl->nvs != NULL) {
- 		/* NOTE: The wl->nvs->nvs element must be first, in
- 		 * order to simplify the casting, we assume it is at
- 		 * the beginning of the wl->nvs structure.
--- 
-1.7.10
 
