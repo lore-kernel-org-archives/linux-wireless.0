@@ -1,89 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:54748 "EHLO mga14.intel.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755700Ab2FFKHq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:07:46 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 19/29] NFC: Configure pn533 RF timings
-Date: Wed,  6 Jun 2012 12:16:36 +0200
-Message-Id: <1338977806-30279-20-git-send-email-sameo@linux.intel.com> (sfid-20120606_120749_487556_C2B9832D)
-In-Reply-To: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
-References: <1338977806-30279-1-git-send-email-sameo@linux.intel.com>
+	id S1756566Ab2FZMak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:30:40 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC v3 09/13] cfg80211: track monitor channel
+Date: Tue, 26 Jun 2012 14:30:14 +0200
+Message-ID: <1340713818-28549-10-git-send-email-michal.kazior@tieto.com> (sfid-20120626_143046_902793_EB1BAE4F)
+In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Those define the ATR_RES response timeout after which the pn533 considers the
-target to be mute.
+Make it even more obvious we support single
+monitor channel. This will allow us to remove
+.get_channel.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/nfc/pn533.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+ net/wireless/chan.c |    9 ++++++++-
+ net/wireless/core.c |    8 +++++++-
+ net/wireless/core.h |    3 +++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index 2a7e4e8..d976344 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -104,8 +104,14 @@ struct pn533_fw_version {
- };
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 019401b..434c56b 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -82,6 +82,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 				 int freq, enum nl80211_channel_type chantype)
+ {
+ 	struct ieee80211_channel *chan;
++	int err;
  
- /* PN533_CMD_RF_CONFIGURATION */
-+#define PN533_CFGITEM_TIMING 0x02
- #define PN533_CFGITEM_MAX_RETRIES 0x05
+ 	if (!rdev->ops->set_monitor_channel)
+ 		return -EOPNOTSUPP;
+@@ -92,7 +93,13 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 	if (!chan)
+ 		return -EINVAL;
  
-+#define PN533_CONFIG_TIMING_102 0xb
-+#define PN533_CONFIG_TIMING_204 0xc
-+#define PN533_CONFIG_TIMING_409 0xd
-+#define PN533_CONFIG_TIMING_819 0xe
-+
- #define PN533_CONFIG_MAX_RETRIES_NO_RETRY 0x00
- #define PN533_CONFIG_MAX_RETRIES_ENDLESS 0xFF
- 
-@@ -115,6 +121,12 @@ struct pn533_config_max_retries {
- 	u8 mx_rty_passive_act;
- } __packed;
- 
-+struct pn533_config_timing {
-+	u8 rfu;
-+	u8 atr_res_timeout;
-+	u8 dep_timeout;
-+} __packed;
-+
- /* PN533_CMD_IN_LIST_PASSIVE_TARGET */
- 
- /* felica commands opcode */
-@@ -2004,6 +2016,7 @@ static int pn533_probe(struct usb_interface *interface,
- 	struct usb_host_interface *iface_desc;
- 	struct usb_endpoint_descriptor *endpoint;
- 	struct pn533_config_max_retries max_retries;
-+	struct pn533_config_timing timing;
- 	int in_endpoint = 0;
- 	int out_endpoint = 0;
- 	int rc = -ENOMEM;
-@@ -2115,6 +2128,18 @@ static int pn533_probe(struct usb_interface *interface,
- 		goto unregister_nfc_dev;
- 	}
- 
-+	timing.rfu = PN533_CONFIG_TIMING_102;
-+	timing.atr_res_timeout = PN533_CONFIG_TIMING_204;
-+	timing.dep_timeout = PN533_CONFIG_TIMING_409;
-+
-+	rc = pn533_set_configuration(dev, PN533_CFGITEM_TIMING,
-+				(u8 *) &timing, sizeof(timing));
-+	if (rc) {
-+		nfc_dev_err(&dev->interface->dev,
-+			    "Error on setting RF timings");
-+		goto unregister_nfc_dev;
+-	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	err = rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	if (!err) {
++		rdev->monitor_channel = chan;
++		rdev->monitor_channel_type = chantype;
 +	}
 +
- 	return 0;
++	return err;
+ }
  
- unregister_nfc_dev:
+ void
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 9097d6c..8315c2a 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -789,9 +789,15 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		rdev->num_running_monitor_ifaces += num;
+ 
+ 	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
+-	if (has_monitors_only_new != has_monitors_only_old)
++	if (has_monitors_only_new != has_monitors_only_old) {
+ 		rdev->ops->set_monitor_enabled(&rdev->wiphy,
+ 					       has_monitors_only_new);
++
++		if (!has_monitors_only_new) {
++			rdev->monitor_channel = NULL;
++			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		}
++	}
+ }
+ 
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index b27fa3b..9d9441d 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -59,6 +59,9 @@ struct cfg80211_registered_device {
+ 	int num_running_ifaces;
+ 	int num_running_monitor_ifaces;
+ 
++	struct ieee80211_channel *monitor_channel;
++	enum nl80211_channel_type monitor_channel_type;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
 -- 
-1.7.9.1
+1.7.0.4
 
