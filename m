@@ -1,110 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4062 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752219Ab2FZT1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 15:27:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>
-Subject: [PATCH 1/7] brcmfmac: add support for bus specific data command
-Date: Tue, 26 Jun 2012 21:26:34 +0200
-Message-ID: <1340738800-14087-2-git-send-email-arend@broadcom.com> (sfid-20120626_212738_252708_37B84E15)
-In-Reply-To: <1340738800-14087-1-git-send-email-arend@broadcom.com>
-References: <1340738800-14087-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:55711 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750799Ab2FZFYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 01:24:00 -0400
+Message-ID: <1340688238.3359.31.camel@joe2Laptop> (sfid-20120626_072416_980169_1105BB59)
+Subject: Re: [PATCH 4/6] mac80211: clean up debugging
+From: Joe Perches <joe@perches.com>
+To: Jason Baron <jbaron@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Jim Cromie <jim.cromie@gmail.com>
+Date: Mon, 25 Jun 2012 22:23:58 -0700
+In-Reply-To: <20120625212904.GA9245@redhat.com>
+References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
+	 <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
+	 <1340438536.2274.9.camel@joe2Laptop>
+	 <1340456697.4636.1.camel@jlt3.sipsolutions.net>
+	 <1340466044.7758.4.camel@joe2Laptop>
+	 <1340530258.4577.4.camel@jlt3.sipsolutions.net>
+	 <20120625212904.GA9245@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Mon, 2012-06-25 at 17:29 -0400, Jason Baron wrote:
+> On Sun, Jun 24, 2012 at 11:30:58AM +0200, Johannes Berg wrote:
+> > On Sat, 2012-06-23 at 08:40 -0700, Joe Perches wrote:
+> > 
+> > > > FWIW, I would definitely prefer named rather than bitmap selectors :-)
+> > > 
+> > > (Added Jason and Jim)
+> > > 
+> > > Given it's a debug-only facility, I think bitmap
+> > > selectors sufficient, Maybe adding an external
+> > > utility to map names to bits would be enough to
+> > > not need that feature in the kernel.
+> > 
+> I've been thinking about that too - given that we can control each
+> individual statement from userspace, perhaps most of the implementation
+> for level/bitmap support could and should be done in userspace.
 
-brcmfmac need to support data command setting for dongle's bus
-core. A list must be placed at brcmf_bus structure before calling
-brcmf_bus_start in order to be sent by brcmf_c_preinit_dcmds.
+Maybe, but I think not.  There are configs where DEBUG
+is defined, dyn_debug is not used and debugging levels
+are checked against a constant that allows various debug
+tests to be compiled away completely.
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    8 ++++++++
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   16 ++++++++++++++++
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 ++
- 3 files changed, 26 insertions(+)
+I'd prefer to keep the control mechanism the same for
+pr_debug uses with and without dynamic_debug.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index 3669164..537f499 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -36,6 +36,13 @@ struct dngl_stats {
- 	unsigned long multicast;	/* multicast packets received */
- };
- 
-+struct brcmf_bus_dcmd {
-+	char *name;
-+	char *param;
-+	int param_len;
-+	struct list_head list;
-+};
-+
- /* interface structure between common and bus layer */
- struct brcmf_bus {
- 	u8 type;		/* bus type */
-@@ -50,6 +57,7 @@ struct brcmf_bus {
- 	unsigned long tx_realloc;	/* Tx packets realloced for headroom */
- 	struct dngl_stats dstats;	/* Stats for dongle-based data */
- 	u8 align;		/* bus alignment requirement */
-+	struct list_head dcmd_list;
- 
- 	/* interface functions pointers */
- 	/* Stop bus module: clear pending frames, disable data flow */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index 236cb9f..1c9eb18 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -807,6 +807,8 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
- 	int scan_assoc_time = 40;
- 	int scan_unassoc_time = 40;
- 	int i;
-+	struct brcmf_bus_dcmd *cmdlst;
-+	struct list_head *cur, *q;
- 
- 	mutex_lock(&drvr->proto_block);
- 
-@@ -874,6 +876,20 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
- 						 0, true);
- 	}
- 
-+	/* set bus specific command if there is any */
-+	list_for_each_safe(cur, q, &drvr->bus_if->dcmd_list) {
-+		cmdlst = list_entry(cur, struct brcmf_bus_dcmd, list);
-+		if (cmdlst->name && cmdlst->param && cmdlst->param_len) {
-+			brcmf_c_mkiovar(cmdlst->name, cmdlst->param,
-+					cmdlst->param_len, iovbuf,
-+					sizeof(iovbuf));
-+			brcmf_proto_cdc_set_dcmd(drvr, 0, BRCMF_C_SET_VAR,
-+						 iovbuf, sizeof(iovbuf));
-+		}
-+		list_del(cur);
-+		kfree(cmdlst);
-+	}
-+
- 	mutex_unlock(&drvr->proto_block);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 01cf6c0..57bf1d7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -1020,6 +1020,8 @@ int brcmf_attach(uint bus_hdrlen, struct device *dev)
- 	INIT_WORK(&drvr->setmacaddr_work, _brcmf_set_mac_address);
- 	INIT_WORK(&drvr->multicast_work, _brcmf_set_multicast_list);
- 
-+	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
-+
- 	return ret;
- 
- fail:
--- 
-1.7.9.5
+Doing "echo foo > bar" is pretty simple and might be best
+if was kept the same.
 
+There does need to be a u32 for the mask/level and a bit
+or 2 for determining if mask or level is used or nothing.
+
+> > I think it would be good to use the jump_label mechanism to
+> > implement it -- I do realise that still has runtime overhead for the
+> > argument preparation, but still.
+> > 
+> > Looking at the history, it seems that jump labels were at one point used
+> > by reverted to fix gcc 3.3, I'm sure that could be resolved?
+> 
+> Yes, there were some circular header dependencies issues - but they can
+> be resolved. I will re-post this work.
+
+I just did that here.  What I've done is kind of messy
+as I've moved a lot of kernel.h content around.
+
+Hope yours is cleaner.
 
