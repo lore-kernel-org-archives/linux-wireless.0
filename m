@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47228 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126Ab2F1MAS (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:47571 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757918Ab2FZQ1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 08:00:18 -0400
-Received: by pbbrp8 with SMTP id rp8so2921664pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 05:00:17 -0700 (PDT)
+	Tue, 26 Jun 2012 12:27:14 -0400
+Received: by eaak11 with SMTP id k11so58208eaa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 09:27:13 -0700 (PDT)
+From: Mariusz Fik <fisiu82@jabster.pl>
+To: linux-wireless@vger.kernel.org
+Subject: Intel N 1030 desn't connect to AP with WPA2 | Linux 3.4.2
+Date: Tue, 26 Jun 2012 18:27:09 +0200
+Message-ID: <2073595.T30nNVXCf4@pendrak> (sfid-20120626_182719_237485_C45FA59E)
 MIME-Version: 1.0
-In-Reply-To: <1340878254.4491.36.camel@jlt3.sipsolutions.net>
-References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
- <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
- <1340707305.14634.9.camel@jlt3.sipsolutions.net> <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
- <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com>
- <1340795869.11012.12.camel@jlt3.sipsolutions.net> <CA+XVXfcNpj_UqCOXUG7sr2MQH8qZNHYr7MfBz5J3vwC3f+KU6Q@mail.gmail.com>
- <1340807890.11012.43.camel@jlt3.sipsolutions.net> <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com>
- <1340810735.11012.44.camel@jlt3.sipsolutions.net> <CA+XVXffKSEL6ZQPQ98x-zO-NL2=TNF1uN==mprRyUmAaRn254g@mail.gmail.com>
- <1340875996.4491.29.camel@jlt3.sipsolutions.net> <CA+XVXfc9F9-FMZyBytDT-5D4KxSFfTSwbhFd2g3oxdLPNFWWxg@mail.gmail.com>
- <1340878254.4491.36.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 28 Jun 2012 15:00:01 +0300
-Message-ID: <CA+XVXfdWKHKoWEfOFDWuGqx4Ld87u0=VjtqG4MSxHR2dv99E+Q@mail.gmail.com> (sfid-20120628_140023_114938_0CC92883)
-Subject: Re: mac80211 auth/assoc in multi-channel scenarios
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; boundary="nextPart20631156.jZn3OH1Oub"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 28, 2012 at 1:10 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-06-28 at 13:01 +0300, Arik Nemtsov wrote:
->
->> >> How about somehow requiring a multi channel driver to give always
->> >> Tx-ack? That will mean we can abandon the retry timers, and rely on
->> >> the driver to give an answer within a reasonable time.
->> >
->> > That doesn't mean we can abandon the retry timers though? Then again,
->> > maybe it does, we could start the timer only when we get the status
->> > information I guess?
->>
->> I'm not really sure why the assoc timers are there now. If it's
->> because we want to be sure we gave the peer a chance to respond, well
->> the Tx-ack already gives us that. Waiting any longer won't help.
->> Or does waiting in general before the next Tx help with something?
->> (clear temporary congestion etc).
->
-> Well the only timer there is is retrying the frame. Arguably that isn't
-> needed as the frame has been retried on the air already multiple times
-> by the hardware, but sometimes temporary channel conditions exist so
-> waiting 100ms until the next retry can make sense.
->
-> If we actually receive a response, we cancel all timers right away.
->
->> > I'm not sure I'd want to *require* this, but it sounds like a good thing
->> > we could do to address this possible race for drivers that do support
->> > reliable status reports?
->>
->> Yea. And then, if all current multi-channel drivers support Tx-ack, we
->> can skip implemeting tx_sync.
->
-> We could, but I'm not sure I'd go there? It would mean that the driver
-> has to buffer the frame, schedule a work to do whatever it needs to sync
-> up, and then at the end of the work TX the frame. Since this only comes
-> in from contexts in mac80211 that can sleep, from a whole system
-> complexity POV it seems much simpler to give the driver a chance to do
-> whatever it needs to do before the TX even happens?
 
-Yea I guess the callbacks don't hurt anyone.
+--nextPart20631156.jZn3OH1Oub
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+Hi,
+
+I installed openSUSE 12.2 Beta 2 with linux 3.4.2 recently and my wifi card 
+has problems with connecting to AP with WPA2. Hardware I have:
+| 02:00.0 Network controller [0280]: Intel Corporation Centrino Wireless-N 
+1030 [8086:008a] (rev 34)
+
+After boot I connected to my AP and wifi worked fine. After few seconds 
+connection was disconnected and nm asked me again for password. Every try of 
+connection was unsuccessful since now. `dmesg`, in the time of trying to 
+connect, gives me:
+| [  434.134710] wlan0: authenticate with 00:22:15:0b:55:a3
+| [  434.143822] wlan0: direct probe to 00:22:15:0b:55:a3 (try 1/3)
+| [  434.344492] wlan0: direct probe to 00:22:15:0b:55:a3 (try 2/3)
+| [  434.545185] wlan0: send auth to 00:22:15:0b:55:a3 (try 3/3)
+| [  434.745882] wlan0: authentication with 00:22:15:0b:55:a3 timed out
+| [  434.747111] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 
+0 addr 00:22:15:0b:55:a3
+
+Full dmesg is available here: http://wklej.org/hash/1dc3164fa7/
+
+Any hints about solving it?
+-- 
+Pozdrawiam / Best regards,
+Mariusz Fik
+openSUSE Community Member
+GPG: 5FCE 7241 B3B9 32FD 455B C30E 42D6 6C88 9E83 7C3D
+--nextPart20631156.jZn3OH1Oub
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAk/p4t0ACgkQQtZsiJ6DfD1NDQCg3EYkgVlze7DVAvA230UDvzeZ
+9sAAnjBS2/hBMhm5PI0fpplnmSgtx7lR
+=5Vel
+-----END PGP SIGNATURE-----
+
+--nextPart20631156.jZn3OH1Oub--
+
