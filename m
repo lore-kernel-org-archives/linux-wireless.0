@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2534 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755545Ab2F1SoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 14:44:25 -0400
-Message-ID: <4FECA5FB.30902@broadcom.com> (sfid-20120628_204429_916701_C37F3CC7)
-Date: Thu, 28 Jun 2012 20:44:11 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Arik Nemtsov" <arik@wizery.com>
-cc: "Eliad Peller" <eliad@wizery.com>,
-	"Luciano Coelho" <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] wlcore: implement .flush callback
-References: <1340813387-18407-1-git-send-email-coelho@ti.com>
- <4FEC3B0E.3040001@broadcom.com>
- <CAB3XZEeJrX4AoFqMtSOF3BFEV-s5WOhAXHnVwb6_5O5bNXWkUQ@mail.gmail.com>
- <CA+XVXfeqQFd+raZeBEB+ct5mHLJfEPst1Bop0RUui6gN9=9jow@mail.gmail.com>
-In-Reply-To: <CA+XVXfeqQFd+raZeBEB+ct5mHLJfEPst1Bop0RUui6gN9=9jow@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:43033 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079Ab2FZUir (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 16:38:47 -0400
+Received: by wgbdr13 with SMTP id dr13so299451wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 13:38:46 -0700 (PDT)
+From: Panayiotis Karabassis <panayk@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, shafi.wireless@gmail.com,
+	fynivx@gmail.com, gilleshabran@gmail.com,
+	Panayiotis Karabassis <panayk@gmail.com>
+Subject: [PATCH v2] ath9k: enable serialize_regmode for non-PCIE AR9287
+Date: Tue, 26 Jun 2012 23:37:17 +0300
+Message-Id: <1340743037-16133-1-git-send-email-panayk@gmail.com> (sfid-20120626_223851_240023_3DC1BAB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2012 01:31 PM, Arik Nemtsov wrote:
-> On Thu, Jun 28, 2012 at 2:25 PM, Eliad Peller <eliad@wizery.com> wrote:
->> On Thu, Jun 28, 2012 at 2:07 PM, Arend van Spriel <arend@broadcom.com> wrote:
->>> On 06/27/2012 06:09 PM, Luciano Coelho wrote:
->>>> From: Eliad Peller <eliad@wizery.com>
->>>>
->>>> implement the .flush() callback by simply calling wl1271_tx_flush().
->>>>
->>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
->>>> Signed-off-by: Luciano Coelho <coelho@ti.com>
->>>> ---
->>>>  drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
->>>>  1 file changed, 8 insertions(+)
->>>>
->>>> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
->>>> +static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
->>>> +{
->>>> +     struct wl1271 *wl = hw->priv;
->>>> +
->>>> +     wl1271_tx_flush(wl);
->>>> +}
->>>> +
->>>
->>> So not taking the drop flag into account? Any plan to change that?
->>>
->> yeah, good point...
->> i guess we'll want to add support for the drop flag as well.
->>
->> Luca - you can either drop this patch, or apply it for now and i'll
->> send another patch later on.
-> 
-> Currently we drop all the packets if we can't flush them within a
-> reasonable time. We always do this right now. I think that's good
-> enough?
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=42903
 
-Hard to say as I am working mostly on your side of this API. However,
-the drop flag is part of the API so there is probably a reason for
-having it. Johannes?
+Based on the work of <fynivx@gmail.com>
 
-Gr. AvS
+Signed-off-by: Panayiotis Karabassis <panayk@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a42c26f..ebfb2a3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -614,7 +614,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 
+ 	if (NR_CPUS > 1 && ah->config.serialize_regmode == SER_REG_MODE_AUTO) {
+ 		if (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCI ||
+-		    ((AR_SREV_9160(ah) || AR_SREV_9280(ah)) &&
++		    ((AR_SREV_9160(ah) || AR_SREV_9280(ah) || AR_SREV_9287(ah)) &&
+ 		     !ah->is_pciexpress)) {
+ 			ah->config.serialize_regmode =
+ 				SER_REG_MODE_ON;
+-- 
+1.7.10
 
