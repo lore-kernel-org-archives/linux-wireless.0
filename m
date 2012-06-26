@@ -1,93 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:41344 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755414Ab2FZL05 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 07:26:57 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Dan Rosenberg <dan.j.rosenberg@gmail.com>,
-	stable@kernel.org, security@kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [PATCH 1/2] NFC: Prevent multiple buffer overflows in NCI
-Date: Tue, 26 Jun 2012 13:37:37 +0200
-Message-Id: <1340710659-15555-2-git-send-email-sameo@linux.intel.com> (sfid-20120626_132700_101928_0D413AA8)
-In-Reply-To: <1340710659-15555-1-git-send-email-sameo@linux.intel.com>
-References: <1340710659-15555-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:37180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754634Ab2FZM4E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 08:56:04 -0400
+Message-ID: <1340715352.14634.17.camel@jlt3.sipsolutions.net> (sfid-20120626_145621_645934_6540E7F9)
+Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 26 Jun 2012 14:55:52 +0200
+In-Reply-To: <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com> (sfid-20120626_131846_817319_4144240C)
+References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
+	 <1340707305.14634.9.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
+	 (sfid-20120626_131846_817319_4144240C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Rosenberg <dan.j.rosenberg@gmail.com>
+On Tue, 2012-06-26 at 14:18 +0300, Eliad Peller wrote:
 
-Fix multiple remotely-exploitable stack-based buffer overflows due to
-the NCI code pulling length fields directly from incoming frames and
-copying too much data into statically-sized arrays.
+> > Yes, we should keep that in mind, but I have a feeling that we should
+> > treat it separately. It's quite different as mac80211 is doing a lot
+> > less -- for example, mac80211 is managing retries, comeback timeouts,
+> > etc. in the managed case.
+> >
+> i guess it makes sense. i just don't like it being managed in multiple
+> places (userspace for ap, kernel for sta).
 
-Signed-off-by: Dan Rosenberg <dan.j.rosenberg@gmail.com>
-Cc: stable@kernel.org
-Cc: security@kernel.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Acked-by: Ilan Elias <ilane@ti.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/nci/ntf.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+I don't really understand why? We already manage managed/AP *very*
+differently, this just extends that. We'll never unify them, and trying
+to unify small bits of it seems bad to me.
 
-diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
-index cb26461..2ab196a 100644
---- a/net/nfc/nci/ntf.c
-+++ b/net/nfc/nci/ntf.c
-@@ -106,7 +106,7 @@ static __u8 *nci_extract_rf_params_nfca_passive_poll(struct nci_dev *ndev,
- 	nfca_poll->sens_res = __le16_to_cpu(*((__u16 *)data));
- 	data += 2;
- 
--	nfca_poll->nfcid1_len = *data++;
-+	nfca_poll->nfcid1_len = min_t(__u8, *data++, NFC_NFCID1_MAXSIZE);
- 
- 	pr_debug("sens_res 0x%x, nfcid1_len %d\n",
- 		 nfca_poll->sens_res, nfca_poll->nfcid1_len);
-@@ -130,7 +130,7 @@ static __u8 *nci_extract_rf_params_nfcb_passive_poll(struct nci_dev *ndev,
- 			struct rf_tech_specific_params_nfcb_poll *nfcb_poll,
- 						     __u8 *data)
- {
--	nfcb_poll->sensb_res_len = *data++;
-+	nfcb_poll->sensb_res_len = min_t(__u8, *data++, NFC_SENSB_RES_MAXSIZE);
- 
- 	pr_debug("sensb_res_len %d\n", nfcb_poll->sensb_res_len);
- 
-@@ -145,7 +145,7 @@ static __u8 *nci_extract_rf_params_nfcf_passive_poll(struct nci_dev *ndev,
- 						     __u8 *data)
- {
- 	nfcf_poll->bit_rate = *data++;
--	nfcf_poll->sensf_res_len = *data++;
-+	nfcf_poll->sensf_res_len = min_t(__u8, *data++, NFC_SENSF_RES_MAXSIZE);
- 
- 	pr_debug("bit_rate %d, sensf_res_len %d\n",
- 		 nfcf_poll->bit_rate, nfcf_poll->sensf_res_len);
-@@ -331,7 +331,7 @@ static int nci_extract_activation_params_iso_dep(struct nci_dev *ndev,
- 	switch (ntf->activation_rf_tech_and_mode) {
- 	case NCI_NFC_A_PASSIVE_POLL_MODE:
- 		nfca_poll = &ntf->activation_params.nfca_poll_iso_dep;
--		nfca_poll->rats_res_len = *data++;
-+		nfca_poll->rats_res_len = min_t(__u8, *data++, 20);
- 		pr_debug("rats_res_len %d\n", nfca_poll->rats_res_len);
- 		if (nfca_poll->rats_res_len > 0) {
- 			memcpy(nfca_poll->rats_res,
-@@ -341,7 +341,7 @@ static int nci_extract_activation_params_iso_dep(struct nci_dev *ndev,
- 
- 	case NCI_NFC_B_PASSIVE_POLL_MODE:
- 		nfcb_poll = &ntf->activation_params.nfcb_poll_iso_dep;
--		nfcb_poll->attrib_res_len = *data++;
-+		nfcb_poll->attrib_res_len = min_t(__u8, *data++, 50);
- 		pr_debug("attrib_res_len %d\n", nfcb_poll->attrib_res_len);
- 		if (nfcb_poll->attrib_res_len > 0) {
- 			memcpy(nfcb_poll->attrib_res,
--- 
-1.7.10
+> > I'm pretty much happy with that for the AP case, but given how much
+> > mac80211 really manages for auth/assoc I don't think it makes sense in
+> > the managed case.
+> >
+> i think that's true for open networks, but for encrypted ones the
+> EAPOLs are not handled by mac80211, which pretty much complicates the
+> flow.
+
+Yeah, but I think the only thing you could possibly do in the EAPOL case
+is reserve some time right after association, before you go into PS.
+Either it completes quickly (including DHCP maybe even!) or you have
+quite a bit of latency anyway and will need to go into PS again before
+it all completes.
+
+
+> >> also, when waiting for EAPOLs after association you might have to
+> >> reserve the channel for a pretty long time anyway (since you still
+> >> can't enter ps, and some APs don't send the first EAPOL immediately).
+> >
+> > Yeah, but you might only want to wait a little bit and then stop doing
+> > ROC and actually enter PS mode if the AP is really slow, etc. That can
+> > pretty much be managed from the STA state though since once you're
+> > associated you're past the bit where mac80211 is doing a lot?
+> >
+> you can't enter ps while you are not authorized (it's probably not
+> forbidden by the spec, but i'm pretty sure some APs won't like it).
+
+You'll have to enter PS after you associate but before you're authorized
+if the AP is slow enough. If the AP is fast, then you don't want to
+because it'll increase the connection latency significantly.
+
+> managing it from the STA state doesn't make much sense to me (why add
+> another management point?), and if you're going to handle it from
+> userspace, well... just do it from the beginning :)
+
+That's what I'm saying though -- I don't think you can manage this from
+userspace, not authentication/association anyway. And if you really want
+to delay going into PS (keep in mind multi-vif/multi-channel!) until
+after authorization, you already can since you're told when
+authorization finishes.
+
+johannes
 
