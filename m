@@ -1,215 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:33586 "HELO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757441Ab2FOTcS (ORCPT
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:59166 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753925Ab2FZJBT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 15:32:18 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v3 4/5] mwifiex: separate uAP WPA/WPA2 parsing from other BSS parameters
-Date: Fri, 15 Jun 2012 12:21:54 -0700
-Message-Id: <1339788115-20596-5-git-send-email-bzhao@marvell.com> (sfid-20120615_213221_202180_A177C23E)
-In-Reply-To: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
-References: <1339788115-20596-1-git-send-email-bzhao@marvell.com>
+	Tue, 26 Jun 2012 05:01:19 -0400
+Date: Tue, 26 Jun 2012 16:56:07 +0800
+From: Dong Aisheng <aisheng.dong@freescale.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+CC: Wei Ni <wni@nvidia.com>, Mursalin Akon <makon@nvidia.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	'Mark Brown' <broonie@opensource.wolfsonmicro.com>,
+	"'linux-mmc@vger.kernel.org'" <linux-mmc@vger.kernel.org>,
+	"'frankyl@broadcom.com'" <frankyl@broadcom.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	'Philip Rakity' <prakity@marvell.com>,
+	Rakesh Kumar <krakesh@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, <r64343@freescale.com>,
+	<b29397@freescale.com>, <b20223@freescale.com>,
+	<r65037@freescale.com>
+Subject: Re: Where to power on the wifi device before loading the driver.
+Message-ID: <20120626085605.GA6047@shlinux2.ap.freescale.net> (sfid-20120626_110130_478362_A29DA53F)
+References: <20120614121234.GC3913@opensource.wolfsonmicro.com>
+ <4FDA092E.10301@wwwdotorg.org>
+ <6B4D417B830BC44B8026029FD256F7F1C377BFFE8D@HKMAIL01.nvidia.com>
+ <4FDB5976.20809@wwwdotorg.org>
+ <6B4D417B830BC44B8026029FD256F7F1C6EE2DD61F@HKMAIL01.nvidia.com>
+ <43E4817426ED174AA81263BCECB4351D138E8ACD6B@sc-vexch3.marvell.com>
+ <6B4D417B830BC44B8026029FD256F7F1C6EE2DD622@HKMAIL01.nvidia.com>
+ <20120619091719.GZ3974@opensource.wolfsonmicro.com>
+ <6B4D417B830BC44B8026029FD256F7F1C6EE2DD626@HKMAIL01.nvidia.com>
+ <4FE112F2.7000506@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4FE112F2.7000506@wwwdotorg.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Tue, Jun 19, 2012 at 06:01:54PM -0600, Stephen Warren wrote:
+> On 06/19/2012 03:44 AM, Wei Ni wrote:
+> > On Tue, Jun 19, 2012 at 17:17:19, Mark Brown wrote:
+> >> * PGP Signed by an unknown key
+> >>
+> >> On Tue, Jun 19, 2012 at 12:25:58PM +0800, Wei Ni wrote:
+> >>
+> >> As Stephen previously said please fix your mail formatting - word 
+> >> wrapping within paragraphs is important!
+> >>
+> >>> On Tue, Jun 19, 2012 at 09:23:35, Philip Rakity wrote:
+> >>>> Why can't you use the regulator notify to get called back on power 
+> >>>> or voltage change options to plumb in the manipulation of the gpio. 
+> >>>> I can imagine you might need to add a notify call in core.c if you 
+> >>>> need to assert the gpio before power is applied
+> >>>
+> >>> Yes, we can use the regulator notify, but the Tegra30 support is via 
+> >>> device tree, I think there have no special board file to run the call 
+> >>> back.
+> >>
+> >> You can mix board files with device tree for cases where device tree is 
+> >> not yet up to the job, though the goal should be to come up with a way of expressing things in device tree.
+> > 
+> > I think we wish to use the device tree to handle these gpios, pass them to the related driver to assert them.
+> > If we mix the board files, we even can set these gpio directly, not use the notify. But I think this is not a goog way.
+> 
+> Yes, I would definitely not want to add this to a board file; there is
+> no board file for Cardhu, and we're getting close to deleting all the
+> board files that are left for other boards.
+> 
+> I think what we need is some way of matching a DT node to a device even
+> when that device was instantiated through some probing mechanism such as
+> SDIO or USB (and I've heard hints that one can already do this for PCI;
+> I should investigate).
+> 
+> So, we start off with the plain SDHCI controller node:
+> 
+> sdhci@78000000 {
+> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+> 	reg = <0x78000000 0x200>;
+> 	interrupts = <0 14 0x04>;
+> };
+> 
+> Then, we add a child node to represent the device that's attached:
+> 
+> sdhci@78000000 {
+> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+> 	reg = <0x78000000 0x200>;
+> 	interrupts = <0 14 0x04>;
+> 
+> 	sdio-device {
+> 		reset-gpios = <...>;
+> 		enable-gpios = <...>;
+> 	};
+> };
+> 
+> When the SDHCI controller/core instantiates the child device it finds on
+> the HW bus, it initializes that struct device's of_node with a pointer
+> to the sdio-device node above. From there, the child device can get DT
+> properties such as GPIOs in the usual way.
+> 
+> However, there are still some issues that need thought here; what if (as
+> is I believe the case on Cardhu) we can in fact plug in multiple
+> different types of device into the socket? Might we end up with
+> something like:
+> 
+> sdhci@78000000 {
+> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+> 	reg = <0x78000000 0x200>;
+> 	interrupts = <0 14 0x04>;
+> 
+> 	sdio-device-option@0 {
+> 		compatible = "broadcom,bcm4239";
+> 		reset-gpios = <...>;
+> 		enable-gpios = <...>;
+> 	};
+> 
+> 	sdio-device-option@1 {
+> 		compatible = "broadcom,bcm4330";
+> 		reset-gpios = <...>;
+> 		enable-gpios = <...>;
+> 	};
+> };
+> 
+> and match on compatible value?
+> 
+I like this idea.
+We may extend the sdio_device_id to contain a compatible string,
+then sdio core is responsible to pass the corresponding device node to the
+sdio function driver once a match device found, this is sdio function independent.
+The sdio function driver then are responsible to parse the device node to
+fetch the needed information like reset-gpios and enable-gpios to do correct
+initialization sequence.
 
-To enhance readability, create a separate function for parsing
-WPA/WPA2 related parameters from cfg80211_ap_settings.
-There is no functional change in this patch.
+However, one known question for this model is that some WiFi may need reset the chip
+via gpio first before being able to be enumerated.
+Then this model may not work for such devices since it can not enumerate this device
+before completing the sdio function specific initialization, neither passing node to its
+driver.
+(i'm not sure this is a correct behavior since per my understanding, the sdio io function
+(function 1-7) specific initialization should not affect the normal sdio common function
+(function 0) enumeration, but i did not find a clear definition in sdio spec.
+Anyone see such real devices?)
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v3: resending as 4/5, no change since v1
-v2: resending as 4/4, no change since v1
+Then for such devices, that is definitely a problem.
+If the sdio function specific initialization affects the normal enumeration,
+then it definitely need to be put into sdio core as an interface like sdio_prepare before the
+enumeration.
+But it seems not reasonable since we did not know prepare for which sdio device
+before the sdio device enumeration completes.
+Maybe the possible solution is still do it in platform specific code via
+of_machine_is_compatible(....).
 
- drivers/net/wireless/mwifiex/uap_cmd.c |  145 +++++++++++++++++---------------
- 1 files changed, 78 insertions(+), 67 deletions(-)
+For your question that user may plug multi types of sdio device with difference
+gpio using,
+did we see such a real device that the pluggable sdio devices need
+some extra gpio to work? I did not meet it before.
+If it real exists, can we rather consider it an integrated sdio devices on board?
+Then we can only define the integrated sdio device node on board under sdio controller.
 
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index f13982d..4b39551 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -171,6 +171,82 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
- }
- 
- /* This function parses BSS related parameters from structure
-+ * and prepares TLVs specific to WPA/WPA2 security.
-+ * These TLVs are appended to command buffer.
-+ */
-+static void
-+mwifiex_uap_bss_wpa(u8 **tlv_buf, void *cmd_buf, u16 *param_size)
-+{
-+	struct host_cmd_tlv_pwk_cipher *pwk_cipher;
-+	struct host_cmd_tlv_gwk_cipher *gwk_cipher;
-+	struct host_cmd_tlv_passphrase *passphrase;
-+	struct host_cmd_tlv_akmp *tlv_akmp;
-+	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
-+	u16 cmd_size = *param_size;
-+	u8 *tlv = *tlv_buf;
-+
-+	tlv_akmp = (struct host_cmd_tlv_akmp *)tlv;
-+	tlv_akmp->tlv.type = cpu_to_le16(TLV_TYPE_UAP_AKMP);
-+	tlv_akmp->tlv.len = cpu_to_le16(sizeof(struct host_cmd_tlv_akmp) -
-+					sizeof(struct host_cmd_tlv));
-+	tlv_akmp->key_mgmt_operation = cpu_to_le16(bss_cfg->key_mgmt_operation);
-+	tlv_akmp->key_mgmt = cpu_to_le16(bss_cfg->key_mgmt);
-+	cmd_size += sizeof(struct host_cmd_tlv_akmp);
-+	tlv += sizeof(struct host_cmd_tlv_akmp);
-+
-+	if (bss_cfg->wpa_cfg.pairwise_cipher_wpa & VALID_CIPHER_BITMAP) {
-+		pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
-+		pwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_PWK_CIPHER);
-+		pwk_cipher->tlv.len =
-+			cpu_to_le16(sizeof(struct host_cmd_tlv_pwk_cipher) -
-+				    sizeof(struct host_cmd_tlv));
-+		pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA);
-+		pwk_cipher->cipher = bss_cfg->wpa_cfg.pairwise_cipher_wpa;
-+		cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
-+		tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
-+	}
-+
-+	if (bss_cfg->wpa_cfg.pairwise_cipher_wpa2 & VALID_CIPHER_BITMAP) {
-+		pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
-+		pwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_PWK_CIPHER);
-+		pwk_cipher->tlv.len =
-+			cpu_to_le16(sizeof(struct host_cmd_tlv_pwk_cipher) -
-+				    sizeof(struct host_cmd_tlv));
-+		pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA2);
-+		pwk_cipher->cipher = bss_cfg->wpa_cfg.pairwise_cipher_wpa2;
-+		cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
-+		tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
-+	}
-+
-+	if (bss_cfg->wpa_cfg.group_cipher & VALID_CIPHER_BITMAP) {
-+		gwk_cipher = (struct host_cmd_tlv_gwk_cipher *)tlv;
-+		gwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_GWK_CIPHER);
-+		gwk_cipher->tlv.len =
-+			cpu_to_le16(sizeof(struct host_cmd_tlv_gwk_cipher) -
-+				    sizeof(struct host_cmd_tlv));
-+		gwk_cipher->cipher = bss_cfg->wpa_cfg.group_cipher;
-+		cmd_size += sizeof(struct host_cmd_tlv_gwk_cipher);
-+		tlv += sizeof(struct host_cmd_tlv_gwk_cipher);
-+	}
-+
-+	if (bss_cfg->wpa_cfg.length) {
-+		passphrase = (struct host_cmd_tlv_passphrase *)tlv;
-+		passphrase->tlv.type = cpu_to_le16(TLV_TYPE_UAP_WPA_PASSPHRASE);
-+		passphrase->tlv.len = cpu_to_le16(bss_cfg->wpa_cfg.length);
-+		memcpy(passphrase->passphrase, bss_cfg->wpa_cfg.passphrase,
-+		       bss_cfg->wpa_cfg.length);
-+		cmd_size += sizeof(struct host_cmd_tlv) +
-+			    bss_cfg->wpa_cfg.length;
-+		tlv += sizeof(struct host_cmd_tlv) + bss_cfg->wpa_cfg.length;
-+	}
-+
-+	*param_size = cmd_size;
-+	*tlv_buf = tlv;
-+
-+	return;
-+}
-+
-+/* This function parses BSS related parameters from structure
-  * and prepares TLVs. These TLVs are appended to command buffer.
- */
- static int
-@@ -184,12 +260,8 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 	struct host_cmd_tlv_frag_threshold *frag_threshold;
- 	struct host_cmd_tlv_rts_threshold *rts_threshold;
- 	struct host_cmd_tlv_retry_limit *retry_limit;
--	struct host_cmd_tlv_pwk_cipher *pwk_cipher;
--	struct host_cmd_tlv_gwk_cipher *gwk_cipher;
- 	struct host_cmd_tlv_encrypt_protocol *encrypt_protocol;
- 	struct host_cmd_tlv_auth_type *auth_type;
--	struct host_cmd_tlv_passphrase *passphrase;
--	struct host_cmd_tlv_akmp *tlv_akmp;
- 	struct mwifiex_ie_types_htcap *htcap;
- 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
- 	u16 cmd_size = *param_size;
-@@ -280,70 +352,9 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- 	}
- 	if ((bss_cfg->protocol & PROTOCOL_WPA) ||
- 	    (bss_cfg->protocol & PROTOCOL_WPA2) ||
--	    (bss_cfg->protocol & PROTOCOL_EAP)) {
--		tlv_akmp = (struct host_cmd_tlv_akmp *)tlv;
--		tlv_akmp->tlv.type = cpu_to_le16(TLV_TYPE_UAP_AKMP);
--		tlv_akmp->tlv.len =
--		    cpu_to_le16(sizeof(struct host_cmd_tlv_akmp) -
--				sizeof(struct host_cmd_tlv));
--		tlv_akmp->key_mgmt_operation =
--			cpu_to_le16(bss_cfg->key_mgmt_operation);
--		tlv_akmp->key_mgmt = cpu_to_le16(bss_cfg->key_mgmt);
--		cmd_size += sizeof(struct host_cmd_tlv_akmp);
--		tlv += sizeof(struct host_cmd_tlv_akmp);
--
--		if (bss_cfg->wpa_cfg.pairwise_cipher_wpa &
--				VALID_CIPHER_BITMAP) {
--			pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
--			pwk_cipher->tlv.type =
--				cpu_to_le16(TLV_TYPE_PWK_CIPHER);
--			pwk_cipher->tlv.len = cpu_to_le16(
--				sizeof(struct host_cmd_tlv_pwk_cipher) -
--				sizeof(struct host_cmd_tlv));
--			pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA);
--			pwk_cipher->cipher =
--				bss_cfg->wpa_cfg.pairwise_cipher_wpa;
--			cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
--			tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
--		}
--		if (bss_cfg->wpa_cfg.pairwise_cipher_wpa2 &
--				VALID_CIPHER_BITMAP) {
--			pwk_cipher = (struct host_cmd_tlv_pwk_cipher *)tlv;
--			pwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_PWK_CIPHER);
--			pwk_cipher->tlv.len = cpu_to_le16(
--				sizeof(struct host_cmd_tlv_pwk_cipher) -
--				sizeof(struct host_cmd_tlv));
--			pwk_cipher->proto = cpu_to_le16(PROTOCOL_WPA2);
--			pwk_cipher->cipher =
--				bss_cfg->wpa_cfg.pairwise_cipher_wpa2;
--			cmd_size += sizeof(struct host_cmd_tlv_pwk_cipher);
--			tlv += sizeof(struct host_cmd_tlv_pwk_cipher);
--		}
--		if (bss_cfg->wpa_cfg.group_cipher & VALID_CIPHER_BITMAP) {
--			gwk_cipher = (struct host_cmd_tlv_gwk_cipher *)tlv;
--			gwk_cipher->tlv.type = cpu_to_le16(TLV_TYPE_GWK_CIPHER);
--			gwk_cipher->tlv.len = cpu_to_le16(
--				sizeof(struct host_cmd_tlv_gwk_cipher) -
--				sizeof(struct host_cmd_tlv));
--			gwk_cipher->cipher = bss_cfg->wpa_cfg.group_cipher;
--			cmd_size += sizeof(struct host_cmd_tlv_gwk_cipher);
--			tlv += sizeof(struct host_cmd_tlv_gwk_cipher);
--		}
--		if (bss_cfg->wpa_cfg.length) {
--			passphrase = (struct host_cmd_tlv_passphrase *)tlv;
--			passphrase->tlv.type =
--				cpu_to_le16(TLV_TYPE_UAP_WPA_PASSPHRASE);
--			passphrase->tlv.len =
--				cpu_to_le16(bss_cfg->wpa_cfg.length);
--			memcpy(passphrase->passphrase,
--			       bss_cfg->wpa_cfg.passphrase,
--			       bss_cfg->wpa_cfg.length);
--			cmd_size += sizeof(struct host_cmd_tlv) +
--				    bss_cfg->wpa_cfg.length;
--			tlv += sizeof(struct host_cmd_tlv) +
--			       bss_cfg->wpa_cfg.length;
--		}
--	}
-+	    (bss_cfg->protocol & PROTOCOL_EAP))
-+		mwifiex_uap_bss_wpa(&tlv, cmd_buf, &cmd_size);
-+
- 	if ((bss_cfg->auth_mode <= WLAN_AUTH_SHARED_KEY) ||
- 	    (bss_cfg->auth_mode == MWIFIEX_AUTH_MODE_AUTO)) {
- 		auth_type = (struct host_cmd_tlv_auth_type *)tlv;
--- 
-1.7.0.2
+> But in this case, at least some of the data those two drivers want from
+> that node is the same; the 2 GPIOs that control the reset and enable
+> signals. Do we just make the bindings for those two devices happen to
+> share the same properties so that we can get away with just one node
+> irrespective of what device type has been found? What we're really
+Maybe no.
+These things are board specific and should be put in board dts file.
+If really using the same gpios by chance, then add them for each board may
+be reasonable.
+
+> modeling is the card slot, and the services it provides, so perhaps we
+> should really end up with:
+> 
+> sdhci@78000000 {
+> 	compatible = "nvidia,tegra30-sdhci", "nvidia,tegra20-sdhci";
+> 	reg = <0x78000000 0x200>;
+> 	interrupts = <0 14 0x04>;
+> 
+> 	socket {
+> 		reset-gpios = <...>;
+> 		enable-gpios = <...>;
+> 
+> 		sdio-device-option@0 {
+> 			compatible = "broadcom,bcm4239";
+> 		};
+> 
+> 		sdio-device-option@1 {
+> 			compatible = "broadcom,bcm4330";
+> 		};
+> 	};
+> };
+> 
+> Where somehow the WiFi drivers can obtain the reset/enable service from
+> the socket that hosts them, but still have nodes for the attached device
+> itself in case any additional driver-specific configuration is needed.
+> 
+> That sounds somewhat similar to the virtual platform device that was
+> mentioned earlier in this thread by Broadcom, although I'm not sure
+> whether explicitly modeling it as a platform device makes sense, rather
+> than the socket providing services to the WiFi module, not necessarily
+> through a device.
+> 
+> Unfortunately, it should be noted that the WiFi device socket on Cardhu
+> apparently isn't some standardized thing (like PCIe) but something
+> rather more custom, although there are apparently devices available to
+> plug into it from multiple module vendors which contain WiFi chips from
+> multiple chip vendors.
+That seems should be cared by the corresponding WiFi function driver
+rather than the binding itself no matter which is plugged in.
+The binding just pass the node to driver, then everything else is driver
+specific. Is that reasonable?
+
+Regards
+Dong Aisheng
+> 
+> Anyway, these are just some quick thoughts on the topic - obviously more
+> flesh is needed.
+> _______________________________________________
+> devicetree-discuss mailing list
+> devicetree-discuss@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/devicetree-discuss
+> 
 
