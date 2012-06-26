@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:36463 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753734Ab2FMLhd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 07:37:33 -0400
-Received: by lahi5 with SMTP id i5so415246lah.0
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 04:37:29 -0700 (PDT)
-Message-ID: <1339587447.3840.272.camel@cumari.coelho.fi> (sfid-20120613_133753_379544_1C9B8729)
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-From: Luciano Coelho <coelho@ti.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:59387 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754213Ab2FZOBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 10:01:25 -0400
+Message-ID: <4FE9C0B3.5090201@tieto.com> (sfid-20120626_160140_253373_157CA241)
+Date: Tue, 26 Jun 2012 16:01:23 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
-	kvalo@qca.qualcomm.com, ath6kl-devel@qualcomm.com,
-	linux-wireless@vger.kernel.org, victorg@ti.com
-Date: Wed, 13 Jun 2012 14:37:27 +0300
-In-Reply-To: <1339566003.4519.1.camel@jlt3.sipsolutions.net>
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
-	 <1339566003.4519.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3 5/7] mac80211: use channel context notifications
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>  <1340714242-20032-6-git-send-email-michal.kazior@tieto.com> <1340717747.14634.39.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340717747.14634.39.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-13 at 07:40 +0200, Johannes Berg wrote:
-> On Tue, 2012-06-12 at 13:43 -0700, Thomas Pedersen wrote:
-> > Support configuring an RSSI threshold in dBm (s32) when requesting
-> > scheduled scan, below which a BSS won't be reported by the cfg80211
-> > driver.
-> 
-> I'm confused -- were you going to do scheduled scan only? Makes sense,
-> but if you could maybe change the subject a bit to "specify ... in
-> scheduled scan"?
+Johannes Berg wrote:
+> On Tue, 2012-06-26 at 14:37 +0200, Michal Kazior wrote:
+>> From: Kazior Michal <Michal.Kazior@tieto.com>
+>
+> In this and a few other patches the From: seems to be wrong?
 
-It makes more sense with scheduled scans, but maybe it is also desirable
-with normal scans to reduce the amount of scan results traffic?
+The mail server does tricks on me. I'll have to check msmtp config.
 
-At least if we consider the intermediate scan results that Victor has
-been working on... We may want to report all scan results at the end,
-but only send intermediate events if all the matches are satisfied, for
-example.
 
-Just thinking out loud a bit.
+>> Channel context pointer will be accessiable on
+>
+> typo: accessible
 
---
-Luca.
+Oh, thanks!
+
+
+-- 
+Pozdrawiam / Best regards, Michal Kazior.
 
