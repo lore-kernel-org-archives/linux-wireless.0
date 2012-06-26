@@ -1,39 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:1699 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761411Ab2FVLS2 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52893 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760Ab2FZEe1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 07:18:28 -0400
-Message-ID: <4FE4547C.1020609@gmail.com> (sfid-20120622_131831_506156_AFA994AB)
-Date: Fri, 22 Jun 2012 13:18:20 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Tue, 26 Jun 2012 00:34:27 -0400
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Message-ID: <4FE93BCB.2080400@qca.qualcomm.com> (sfid-20120626_063431_636676_D103F128)
+Date: Tue, 26 Jun 2012 10:04:19 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Woody Hung <Woody.Hung@mediatek.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2x00 : RT3290 chip support v4
-References: <1339570876-2367-1-git-send-email-Woody.Hung@mediatek.com> <CAGXE3d9_y0M0YaibK4+Kq8Gcf_dHawivwC2wT5iV7+u9bT-C3g@mail.gmail.com>
-In-Reply-To: <CAGXE3d9_y0M0YaibK4+Kq8Gcf_dHawivwC2wT5iV7+u9bT-C3g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Subject: Re: [PATCH v3 04/10] ath9k_hw: advertise WoW support for capable
+ chipsets
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>	<1340633579-7514-5-git-send-email-mohammed@qca.qualcomm.com> <20456.40631.937743.311973@gargle.gargle.HOWL>
+In-Reply-To: <20456.40631.937743.311973@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/22/12 09:45, Helmut Schaa wrote:
-> Hi Woody,
-> 
-> sorry for reviweing this so late but haven't found time before :/
-> Please find my comments inlined in the patch.
-> 
-> Helmut
+Hi Sujith,
 
-Hi Helmut, Woody,
+On Monday 25 June 2012 10:54 PM, Sujith Manoharan wrote:
+> Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> support WoW for all chipsets starting from AR9280, AR9285, AR9287,
+>> AR9380, AR9382, AR9485, AR9462. Really all hardware may not support
+>> WoW even though the flag is set and the WoW working depends on
+>> your laptop, BIOS apart from the hardware.
+>>
+>> Cc: Senthil Balasubramanian<senthilb@qca.qualcomm.com>
+>> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+>> Cc: vadivel@qca.qualcomm.com
+>> Signed-off-by: Luis R. Rodriguez<mcgrof@qca.qualcomm.com>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++++
+>>   1 files changed, 8 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+>> index a42c26f..041d797 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>> @@ -2572,6 +2572,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+>>   	}
+>>
+>>
+>> +	if (AR_SREV_9280_20_OR_LATER(ah)) {
+>> +		pCap->hw_caps |= ATH9K_HW_WOW_DEVICE_CAPABLE |
+>> +				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
+>> +
+>> +		if (AR_SREV_9280(ah))
+>> +			pCap->hw_caps |= ATH9K_HW_WOW_PATTERN_MATCH_DWORD;
+>> +	}
+>> +
+>
+> I don't think this is a good idea - please enable WoW only for cards that
+> we have actually tested.
+>
 
-I noticed that John has already applied this v4 of the patch to his
-tree, probably due to us (the maintainers) being very slow on reviewing it.
+I had tested it in quite a few of cards like AR9280, AR9285,AR9485 with 
+wow enabled. Further the hardware was generic, with only quite a few 
+changes needed between AR9002 and AR9003. thank you.
 
-Therefore I suggest that any changes that are the result of Helmut's
-comments are submitted as incremental patches on top of John's latest tree.
-
----
-Gertjan
-
+-- 
+thanks,
+shafi
