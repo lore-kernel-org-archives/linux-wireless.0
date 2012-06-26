@@ -1,31 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9894 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750875Ab2FLKUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 06:20:30 -0400
-Date: Tue, 12 Jun 2012 12:20:24 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Spinadel, David" <david.spinadel@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC/RFT] mac80211: stop connection monitor on dissassoc
-Message-ID: <20120612102023.GB2612@redhat.com> (sfid-20120612_122032_613579_06F123D8)
-References: <20120612095850.GA2612@redhat.com>
- <F781B6216F70FE49AB7B89F25E2F80C0187B2A@HASMSX103.ger.corp.intel.com>
+Received: from dd27218.kasserver.com ([85.13.142.250]:51440 "EHLO
+	dd27218.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757902Ab2FZQLm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 12:11:42 -0400
+Received: from proton.localnet (p4FD79DFA.dip.t-dialin.net [79.215.157.250])
+	by dd27218.kasserver.com (Postfix) with ESMTPSA id D9AB12EA188C
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 18:04:01 +0200 (CEST)
+From: Andreas Messer <andi@bastelmap.de>
+To: linux-wireless@vger.kernel.org
+Subject: rt73usb not working since linux 3.4
+Date: Tue, 26 Jun 2012 18:03:56 +0200
+Message-ID: <1364831.ftJE0YjeaD@proton> (sfid-20120626_181146_731057_B582BF78)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <F781B6216F70FE49AB7B89F25E2F80C0187B2A@HASMSX103.ger.corp.intel.com>
+Content-Type: multipart/signed; boundary="nextPart3020572.pXkr0TspJv"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
 
-On Tue, Jun 12, 2012 at 10:05:52AM +0000, Spinadel, David wrote:
-> This problem is not easy to reproduce.
-> Attached my patch I just sent to Johannes, it seems to work here. 
-> It basically the same change as yours, but I also removed stop_poll from ieee80211_sta_connection_lost().
+--nextPart3020572.pXkr0TspJv
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Make sense. Johannes plese process with David patch.
+Dear all,
 
-Thanks
-Stanislaw
+updating my pc from linux kernel 3.3 to linux kernel 3.4 broke my wlan. I'm 
+using rt2571 based wlan module from qcom: LR802UKG, which is wired to an 
+internal usb port of my media center pc. The rfkill switch is hardwired to 
+make wlan active all the time. This setup is (almost) properly working since 
+about three years now. (If i ignore the occasional vendor_request_error 
+things)
+When I use kernel 3.4., i get a lot of additional devices reported by the 
+kernel - three leds and a rfkill switch which have not been there before. (or 
+at least I did not notice them) The wlan device now refuses to go online, 
+saying that the kill switch is active, which of course can not be as it is 
+working with linux kernel 3.3. Furthermore, the driver reports three leds, but 
+my wlan device has only one, so probably a bad eeprom? i dont know...
+Anyway, I noticed, that when I set the radio led to brightness 255, which 
+takes a lot of time and gives me some vendor_request_errors, the rfkill switch 
+gets turned off (sys/class/rfkill/../hard = 0). Unfortunately, this doesn't 
+help to bring the interface online: After doing that I get frequent 
+vendor_request_failed messages, even the PC becomes stuck on shutdown. 
+(Probably NetworkManager waiting for something...)
+So, what can I do to track down the problem?
+
+Cheers,
+Andreas
+--nextPart3020572.pXkr0TspJv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEABECAAYFAk/p3XAACgkQkLO6qowrr1E9XQCfffimhVTIYV8OAO+GSMt8hW20
+nTIAn2ixuVuFTaauQp9d3s8S7VjM7+q4
+=gHGg
+-----END PGP SIGNATURE-----
+
+--nextPart3020572.pXkr0TspJv--
+
