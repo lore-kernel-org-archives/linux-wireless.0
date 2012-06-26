@@ -1,73 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54954 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759843Ab2FUTPb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36739 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756214Ab2FZKlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 15:15:31 -0400
-Message-ID: <4FE372CE.3020105@candelatech.com> (sfid-20120621_211555_282435_F5A652C3)
-Date: Thu, 21 Jun 2012 12:15:26 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com> <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com> <4FE36B2D.4000407@candelatech.com> <20120621190716.GA30896@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20120621190716.GA30896@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 26 Jun 2012 06:41:49 -0400
+Message-ID: <1340707305.14634.9.camel@jlt3.sipsolutions.net> (sfid-20120626_124154_319847_B98F11DA)
+Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 26 Jun 2012 12:41:45 +0200
+In-Reply-To: <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com> (sfid-20120626_120955_428711_576C264F)
+References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
+	 (sfid-20120626_120955_428711_576C264F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2012 12:07 PM, Rajkumar Manoharan wrote:
-> On Thu, Jun 21, 2012 at 11:42:53AM -0700, Ben Greear wrote:
->> On 06/21/2012 11:31 AM, Rajkumar Manoharan wrote:
->>> ath9k_get_et_stats() warn: side effect in macro
->>> 'AWDATA' doing 'i++'
->>>
->>> Cc: Ben Greear<greearb@candelatech.com>
->>> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
->>> ---
->>>   drivers/net/wireless/ath/ath9k/main.c | 9 +++++----
->>>   1 file changed, 5 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>> index 85f9ab4..32474b0 100644
->>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>> @@ -2003,10 +2003,11 @@ static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
->>>   #define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
->>>   #define AWDATA(elem)							\
->>>   	do {								\
->>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
->>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
->>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
->>> -		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
->>> +		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
->>> +		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
->>> +		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
->>> +		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
->>> +		i += 4; \
->>>   	} while (0)
->>
->> The macro is still changing i.  So, whatever smatch is, seems it
->> should still warn, or it's broken :P
->>
-> No it is not. The warning message is a hint. The smatch assumes that replacing
-> the macro 'i++' might cause unexpected behaviour like 5++ in each statement.
+On Tue, 2012-06-26 at 13:09 +0300, Eliad Peller wrote:
 
-Well, my opinion is that your patch only adds un-needed code and that
-smatch is either currently giving false-positives, or that it is
-missing a warning when you add your patch.
+> > With multi-channel, one problem that we get is managing the channel
+> > timing for authentication/association. We'll have bound the channel
+> > context (once we have that) before we even send a frame of course, but
+> > setting up the timing as to when to use the channel is very hard, in
+> > particular for connections to P2P GOs that might potentially be asleep.
+> >
+> the other scenario we should have in mind here is the AP side - making
+> sure we'll be able to auth/assoc a new station.
 
-But, not a big deal either way.
+Yes, we should keep that in mind, but I have a feeling that we should
+treat it separately. It's quite different as mac80211 is doing a lot
+less -- for example, mac80211 is managing retries, comeback timeouts,
+etc. in the managed case.
 
-Thanks,
-Ben
+> > 5) do remain-on-channel from mac80211, but this doesn't address P2P GO
+> >   synchronisation requirements
+> >
+> what are the unfulfilled requirements here?
 
->
-> -Rajkumar
+It would be a more special ROC because the driver would be expected to
+only start it when the P2P GO is available. This isn't the case for any
+other ROC, and my gut feeling is that requiring that in this special ROC
+would "pollute" the ROC API and a lot of people would forget about it
+etc.
 
+> > I haven't been able to come up with any other ways, and here we really
+> > don't have much of a choice -- #1 is the only thing that seems sane to
+> > me. Thoughts?
+> 
+> our current approach is making the kernel part as simple as possible,
+> and let userspace handle the channel management.
+> before authentication (or after getting auth request in the ap case)
+> the supplicant requests the kernel to "give priority" to a specific
+> vif. it's up to the low-level driver to decide on the right way to do
+> it (internally we implement it with ROC on the specified vif).
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+I'm pretty much happy with that for the AP case, but given how much
+mac80211 really manages for auth/assoc I don't think it makes sense in
+the managed case.
+
+> the con here is that this might result in the channel being reserved
+> for a pretty long time (retransmits, etc.), but that's why we refer it
+> as setting "priority" rather than actual channel reservation. if the
+> fw has to do other things (e.g. beacon on each beacon interval) it
+> will do it, even though we asked it to ROC on a different channel.
+
+That seems highly implementation-dependent :-)
+The point with that though is that I think it shouldn't be necessary to
+have a firmware implementation that does this.
+
+> i think the "tx sync" (method 1) is good for sta mode, but it's less
+> suitable for ap mode.
+
+Totally agree.
+
+> also, when waiting for EAPOLs after association you might have to
+> reserve the channel for a pretty long time anyway (since you still
+> can't enter ps, and some APs don't send the first EAPOL immediately).
+
+Yeah, but you might only want to wait a little bit and then stop doing
+ROC and actually enter PS mode if the AP is really slow, etc. That can
+pretty much be managed from the STA state though since once you're
+associated you're past the bit where mac80211 is doing a lot?
+
+johannes
 
