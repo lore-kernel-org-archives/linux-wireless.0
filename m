@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3824 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761380Ab2FGTGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 15:06:44 -0400
-Message-ID: <4FD0FBB5.6040008@broadcom.com> (sfid-20120607_210649_866758_E04303CF)
-Date: Thu, 7 Jun 2012 21:06:29 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51748 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753768Ab2F0IrN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 04:47:13 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 16/18] brcmsmac: do not call brcms_c_chipmatch() for
- non PCI
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-17-git-send-email-hauke@hauke-m.de>
- <4FCF3DA7.1080508@broadcom.com> <4FD0AA77.4000108@hauke-m.de>
-In-Reply-To: <4FD0AA77.4000108@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20458.51271.62704.231171@gargle.gargle.HOWL> (sfid-20120627_104717_288542_3FFEB1CD)
+Date: Wed, 27 Jun 2012 14:15:59 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Emmanuel Benisty <benisty.e@gmail.com>
+Subject: [PATCH] ath9k: Fix compilation breakage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 03:19 PM, Hauke Mehrtens wrote:
-> Hi Arend,
-> 
-> On 06/06/2012 01:23 PM, Arend van Spriel wrote:
->> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->>> brcms_c_chipmatch() just works for PCIe devices and returns false for
->>> non PCIe devices. This stops brcms_ops_stop() from calling it when the
->>> devices is not a PCIe device.
->>
->> Although this is true you may want to consider what this function
->> provides. The intent is to have a more accurate filter to determine
->> support the device by the driver, ie. more accurate than what is in the
->> driver device table.
->>
->> So in brcms_c_chipmatch() we may want a host-type independent filtering
->> and validate bcma_device_id, bcma_chipinfo, and possibly bcma_boardinfo.
-> I do not like this function at all. ;-)
-> 
-> Are these restrictions in this function really needed? I would more like
-> to restrict it to something like core revs, which is done in the device
-> table and the phy types and versions. A restriction by chipid would also
-> be reasonable as some chips are needing some special workarounds, these
-> checks could also be done for SoCs.
+Wrap the MCI-work canceling with CONFIG_ATH9K_BTCOEX_SUPPORT.
 
-I look where the function came from and it is called in several places
-in our proprietary driver, which has a pretty coarse filter in the
-device table.
+Reported-by: Emmanuel Benisty <benisty.e@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-The BCMA device table in brcmsmac is more finegrained and currently has
-entries for the different 80211 core revisions. However, the brcmsmac
-may have additional revision requirement for chipcommon and other cores
-inside the chip so this function may have it merits for checking that.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c14cf5a..e4e73f0 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -151,8 +151,10 @@ static void __ath_cancel_work(struct ath_softc *sc)
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->hw_pll_work);
+ 
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
+ 		cancel_work_sync(&sc->mci_work);
++#endif
+ }
+ 
+ static void ath_cancel_work(struct ath_softc *sc)
+-- 
+1.7.11
 
