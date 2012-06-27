@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:39019 "EHLO
-	mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751510Ab2FRQ1i (ORCPT
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1094 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752345Ab2F0Iga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 12:27:38 -0400
-From: =?utf-8?B?V29vZHkgSHVuZyAo5rSq56eL56u5KQ==?=
-	<woody.hung@mediatek.com>
-To: Matt Chen <machen@suse.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Date: Tue, 19 Jun 2012 00:22:30 +0800
-Subject: RE: [rt2x00-users] [PATCH] rt2x00 : RT3290 chip support v4
-Message-ID: <599E416D1C5C994980C45977191D726906AC82C5C2@MTKMBS03.mediatek.inc> (sfid-20120618_182742_840857_E536323F)
-References: <4FD867DB.9070806@gmail.com>
- <CALx5=V97QacZXoZ6XfwMc+scD05ixFAo7LBDYp0SjurAMzjsEA@mail.gmail.com>
-In-Reply-To: <CALx5=V97QacZXoZ6XfwMc+scD05ixFAo7LBDYp0SjurAMzjsEA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 27 Jun 2012 04:36:30 -0400
+Message-ID: <1340786187.1911.24.camel@x61.thuisdomein> (sfid-20120627_103759_789163_131BF86C)
+Subject: [PATCH] iwlegacy: print how long queue was actually stuck
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 27 Jun 2012 10:36:27 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RGVhciBBbGw6DQoNCglJIGhhdmUgc2VuZCBpdCB0byB0aGUgaHR0cDovL2dpdC5rZXJuZWwub3Jn
-Lz9wPWxpbnV4L2tlcm5lbC9naXQvZmlybXdhcmUvbGludXgtZmlybXdhcmUuZ2l0Lg0KCUFuZCBp
-dCBoYXZlIGJlZW4gYXBwbGllZCAzIGRheXMgYWdvLg0KCVBsZWFzZSBzZWUgdGhlIHNob3J0IGxv
-ZyAicnQyODAwcGNpOkZpcm13YXJlIHVwZGF0ZSB2MSIuDQoJRG8gSSBtaXNzIHNvbWV0aGluZyBv
-ciBzb21lIHJ1bGUgSSBuZWVkIHRvIGZvbGxvdz8/Pw0KDQpCUiwNCldvb2R5IEh1bmcNCi0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBNYXR0IENoZW4gW21haWx0bzptYWNoZW5Ac3Vz
-ZS5jb21dIA0KU2VudDogTW9uZGF5LCBKdW5lIDE4LCAyMDEyIDU6MTcgUE0NClRvOiBYb3NlIFZh
-enF1ZXogUGVyZXoNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IHVzZXJzQHJ0
-MngwMC5zZXJpYWxtb25rZXkuY29tOyBXb29keSBIdW5nICjmtKrnp4vnq7kpDQpTdWJqZWN0OiBS
-ZTogW3J0MngwMC11c2Vyc10gW1BBVENIXSBydDJ4MDAgOiBSVDMyOTAgY2hpcCBzdXBwb3J0IHY0
-DQoNCjIwMTIvNi8xMyBYb3NlIFZhenF1ZXogUGVyZXogPHhvc2UudmF6cXVlekBnbWFpbC5jb20+
-Og0KPiBXb29keSBIdW5nIHdyb3RlOg0KPg0KPj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-cnQyeDAwL3J0MjgwMHBjaS5oDQo+PiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAv
-cnQyODAwcGNpLmgNCj4+IEBAIC00Nyw2ICs0Nyw3IEBADQo+PiDCoCogODA1MSBmaXJtd2FyZSBp
-bWFnZS4NCj4+IMKgKi8NCj4+IMKgI2RlZmluZSBGSVJNV0FSRV9SVDI4NjAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAicnQyODYwLmJpbiINCj4+ICsjZGVmaW5lIEZJUk1XQVJF
-X1JUMzI5MCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCJydDMyOTAuYmluIg0K
-Pg0KPg0KPiBUaGVyZSBpcyBubyBydDMyOTAgZncgaW4gbGludXgtZmlybXdhcmUgWzFdIFBsZWFz
-ZSwgc2VuZCBpdCBBU0FQLg0KSW5kZWVkLCBJIGZvdW5kIHRoZSBmaXJtd2FyZSBpcyBvbmx5IGlu
-DQpodHRwOi8vd3d3LnJhbGluay5jb20udHcvZW4vMDRfc3VwcG9ydC9zdXBwb3J0LnBocD9zbj01
-MDEsIFJUMzI5MCBQQ0llIGRyaXZlciB0YXIgYmFsbC4NCg0KSGkgV29vZHksDQpQbGVhc2Ugc2Vu
-ZCB0aGUgZmlybXdhcmUgdG8gdGhlIGxpbnV4LWZpcm13YXJlIEFTQVAuIDopDQoNCj4gWzFdIA0K
-PiBodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgva2VybmVsL2dpdC9maXJtd2FyZS9saW51
-eC1maXJtd2FyZS5naXQNCj4NCj4NCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18NCj4gdXNlcnMgbWFpbGluZyBsaXN0DQo+IHVzZXJzQHJ0MngwMC5zZXJp
-YWxtb25rZXkuY29tDQo+IGh0dHA6Ly9ydDJ4MDAuc2VyaWFsbW9ua2V5LmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3VzZXJzX3J0MngwMC5zZXJpYWxtb24NCj4ga2V5LmNvbQ0KPg0KDQoNCg0KLS0NClRo
-YW5rIHlvdS4NCgoqKioqKioqKioqKioqIEVtYWlsIENvbmZpZGVudGlhbGl0eSBOb3RpY2UgKioq
-KioqKioqKioqKioqKioqKioNClRoZSBpbmZvcm1hdGlvbiBjb250YWluZWQgaW4gdGhpcyBlLW1h
-aWwgbWVzc2FnZSAoaW5jbHVkaW5nIGFueSANCmF0dGFjaG1lbnRzKSBtYXkgYmUgY29uZmlkZW50
-aWFsLCBwcm9wcmlldGFyeSwgcHJpdmlsZWdlZCwgb3Igb3RoZXJ3aXNlDQpleGVtcHQgZnJvbSBk
-aXNjbG9zdXJlIHVuZGVyIGFwcGxpY2FibGUgbGF3cy4gSXQgaXMgaW50ZW5kZWQgdG8gYmUgDQpj
-b252ZXllZCBvbmx5IHRvIHRoZSBkZXNpZ25hdGVkIHJlY2lwaWVudChzKS4gQW55IHVzZSwgZGlz
-c2VtaW5hdGlvbiwgDQpkaXN0cmlidXRpb24sIHByaW50aW5nLCByZXRhaW5pbmcgb3IgY29weWlu
-ZyBvZiB0aGlzIGUtbWFpbCAoaW5jbHVkaW5nIGl0cyANCmF0dGFjaG1lbnRzKSBieSB1bmludGVu
-ZGVkIHJlY2lwaWVudChzKSBpcyBzdHJpY3RseSBwcm9oaWJpdGVkIGFuZCBtYXkgDQpiZSB1bmxh
-d2Z1bC4gSWYgeW91IGFyZSBub3QgYW4gaW50ZW5kZWQgcmVjaXBpZW50IG9mIHRoaXMgZS1tYWls
-LCBvciBiZWxpZXZlIA0KdGhhdCB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBlcnJv
-ciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIA0KaW1tZWRpYXRlbHkgKGJ5IHJlcGx5aW5nIHRv
-IHRoaXMgZS1tYWlsKSwgZGVsZXRlIGFueSBhbmQgYWxsIGNvcGllcyBvZiANCnRoaXMgZS1tYWls
-IChpbmNsdWRpbmcgYW55IGF0dGFjaG1lbnRzKSBmcm9tIHlvdXIgc3lzdGVtLCBhbmQgZG8gbm90
-DQpkaXNjbG9zZSB0aGUgY29udGVudCBvZiB0aGlzIGUtbWFpbCB0byBhbnkgb3RoZXIgcGVyc29u
-LiBUaGFuayB5b3Uh
+Every now and then, after resuming from suspend, the iwlegacy driver
+prints
+    iwl4965 0000:03:00.0: Queue 2 stuck for 2000 ms.
+    iwl4965 0000:03:00.0: On demand firmware reload
+
+I have no idea what causes these errors. But the code currently uses
+wd_timeout in the first error. wd_timeout will generally be set at
+IL_DEF_WD_TIMEOUT (ie, 2000). Perhaps printing for how long the queue
+was actually stuck can clarify the cause of these errors.
+
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+0) Compile tested on v3.5-rc4. Tested on Fedora 's current v3.4.2 based
+kernel (ie, on F16). That required an edit to this commit because of
+trivial context changes.
+
+1) Please note that testing here involved waiting until I again
+triggered this error (which now of course printed how long the queue was
+actually stuck).
+
+ drivers/net/wireless/iwlegacy/common.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index cbf2dc1..763c752 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4717,10 +4717,11 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
+ 	struct il_tx_queue *txq = &il->txq[cnt];
+ 	struct il_queue *q = &txq->q;
+ 	unsigned long timeout;
++	unsigned long now = jiffies;
+ 	int ret;
+ 
+ 	if (q->read_ptr == q->write_ptr) {
+-		txq->time_stamp = jiffies;
++		txq->time_stamp = now;
+ 		return 0;
+ 	}
+ 
+@@ -4728,9 +4729,9 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
+ 	    txq->time_stamp +
+ 	    msecs_to_jiffies(il->cfg->wd_timeout);
+ 
+-	if (time_after(jiffies, timeout)) {
++	if (time_after(now, timeout)) {
+ 		IL_ERR("Queue %d stuck for %u ms.\n", q->id,
+-		       il->cfg->wd_timeout);
++		       jiffies_to_msecs(now - txq->time_stamp));
+ 		ret = il_force_reset(il, false);
+ 		return (ret == -EAGAIN) ? 0 : 1;
+ 	}
+-- 
+1.7.7.6
 
