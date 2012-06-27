@@ -1,75 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39501 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975Ab2FDXtJ convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:40445 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756014Ab2F0RV7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 19:49:09 -0400
-Received: by obbtb18 with SMTP id tb18so7898287obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2012 16:49:09 -0700 (PDT)
-MIME-Version: 1.0
-From: Javier Cardona <javier@cozybit.com>
-Date: Mon, 4 Jun 2012 16:48:49 -0700
-Message-ID: <CAPjQAd-rwDM=JzuZ=EaQEPc7MQKRinXXa4r0en_fNV0j6MH6_Q@mail.gmail.com> (sfid-20120605_014913_234528_9DA75A12)
-Subject: Re: [PATCH] mac80211: The station fail average is not updated
- correctly since the IEEE80211_STAT_ACK flag is not set when using wmediumd
- with mac80211_hwsim. Set this flag when wmediumd indicates that the frame was
- successfully transmitted (eventuall
-To: Qasim Javed <qasimj@gmail.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 27 Jun 2012 13:21:59 -0400
+Received: by bkwj4 with SMTP id j4so1293438bkw.36
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 10:21:54 -0700 (PDT)
+Message-ID: <1340817712.1631.633.camel@cumari.coelho.fi> (sfid-20120627_192216_134507_745B2A0B)
+Subject: linux-firmware: pull-request wl12xx 2012-06-27
+From: Luciano Coelho <coelho@ti.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org, arik@wizery.com
+Date: Wed, 27 Jun 2012 20:21:52 +0300
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-KwqAg6Bd1jrG0Y/C70Lw"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quasim,
 
-On Mon, Jun 4, 2012 at 8:03 PM, Qasim Javed <qasimj@gmail.com> wrote:
-> Signed-off-by: Qasim Javed <qasimj@gmail.com>
+--=-KwqAg6Bd1jrG0Y/C70Lw
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The fix looks correct but you will have to reformat the patch: it
-looks like the commit log made it into the Subject line of your patch:
+Hi Ben,
 
-Subject: [PATCH] mac80211: The station fail average is not updated
-correctly since the IEEE80211_STAT_ACK flag is not set when using
-wmediumd with mac80211_hwsim. Set this flag when wmediumd indicates
-that the frame was successfully transmitted (eventually).
+Here are some new versions of TI's WLAN firmwares.  Also a new one for a
+new chip we started supporting recently.
 
-You probably want:
+Please let me know if there are any problems.
 
-```
-Subject: [PATCH] mac80211_hwsim: Set IEEE80211_STAT_ACK when userspace
-indicates the frame has been acknowledged.
 
-The station fail average is not updated correctly since the
-IEEE80211_STAT_ACK flag is not set when using wmediumd with
-mac80211_hwsim. Set this flag when wmediumd indicates that the frame
-was successfully transmitted (eventually).
-```
+The following changes since commit 5f9710a5770ad1f741caa67f7e97b824fb51ef2c=
+:
 
+  Merge branch 'for-upstream' of git://git.chelsio.net/pub/git/linux-firmwa=
+re (2012-06-15 03:10:25 +0100)
+
+are available in the git repository at:
+
+
+  git://github.com/TI-OpenLink/firmwares.git linux-firmware
+
+for you to fetch changes up to 1a13941d63aae221fa7ab86b30a3b8fde7443364:
+
+  wl18xx: add firmware for WiLink8 WLAN chips (2012-06-27 15:55:03 +0300)
+
+----------------------------------------------------------------
+Luciano Coelho (2):
+      wl127x/wl128x: add new firmware series as version 5
+      wl18xx: add firmware for WiLink8 WLAN chips
+
+ WHENCE                              |   15 +++++++++++++++
+ ti-connectivity/wl127x-fw-5-mr.bin  |  Bin 0 -> 348724 bytes
+ ti-connectivity/wl127x-fw-5-plt.bin |  Bin 0 -> 347920 bytes
+ ti-connectivity/wl127x-fw-5-sr.bin  |  Bin 0 -> 366968 bytes
+ ti-connectivity/wl128x-fw-5-mr.bin  |  Bin 0 -> 353248 bytes
+ ti-connectivity/wl128x-fw-5-plt.bin |  Bin 0 -> 358008 bytes
+ ti-connectivity/wl128x-fw-5-sr.bin  |  Bin 0 -> 375884 bytes
+ ti-connectivity/wl18xx-fw.bin       |  Bin 0 -> 413860 bytes
+ 8 files changed, 15 insertions(+)
+ create mode 100644 ti-connectivity/wl127x-fw-5-mr.bin
+ create mode 100644 ti-connectivity/wl127x-fw-5-plt.bin
+ create mode 100644 ti-connectivity/wl127x-fw-5-sr.bin
+ create mode 100644 ti-connectivity/wl128x-fw-5-mr.bin
+diff --git a/WHENCE b/WHENCE
+index c149576..9754ff5 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1631,6 +1631,12 @@ File: ti-connectivity/wl127x-fw-4-mr.bin
+ Version: 6.5.2.0.15 (Multi-role)
+ File: ti-connectivity/wl127x-fw-4-plt.bin
+ Version: 6.3.5.0.98 (PLT-only)
++File: ti-connectivity/wl127x-fw-5-sr.bin
++Version: 6.3.10.2.115 (Single-role)
++File: ti-connectivity/wl127x-fw-5-mr.bin
++Version: 6.5.7.0.27 (Multi-role)
++File: ti-connectivity/wl127x-fw-5-plt.bin
++Version: 6.3.10.2.115 (PLT-only)
+=20
+ File: ti-connectivity/wl128x-fw.bin
+ Version: 7.1.5.50.74 (STA-only)
+@@ -1646,6 +1652,15 @@ File: ti-connectivity/wl128x-fw-4-mr.bin
+ Version: 7.5.2.0.15 (Multi-role)
+ File: ti-connectivity/wl128x-fw-4-plt.bin
+ Version: 7.3.5.0.98 (PLT)
++File: ti-connectivity/wl128x-fw-5-sr.bin
++Version: 7.3.10.2.115 (Single-role)
++File: ti-connectivity/wl128x-fw-5-mr.bin
++Version: 7.5.7.0.27 (Multi-role)
++File: ti-connectivity/wl128x-fw-5-plt.bin
++Version: 7.3.10.2.115 (PLT-only)
++
++File: ti-connectivity/wl18xx-fw.bin
++Version: 8.2.0.0.100
+=20
+ File: ti-connectivity/wl127x-nvs.bin
+ File: ti-connectivity/wl128x-nvs.bin
+diff --git a/ti-connectivity/wl127x-fw-5-mr.bin b/ti-connectivity/wl127x-fw=
+-5-mr.bin
+new file mode 100644
+index 0000000..a19fb1e
+Binary files /dev/null and b/ti-connectivity/wl127x-fw-5-mr.bin differ
+diff --git a/ti-connectivity/wl127x-fw-5-plt.bin b/ti-connectivity/wl127x-f=
+w-5-plt.bin
+new file mode 100644
+index 0000000..cd1cf33
+Binary files /dev/null and b/ti-connectivity/wl127x-fw-5-plt.bin differ
+diff --git a/ti-connectivity/wl127x-fw-5-sr.bin b/ti-connectivity/wl127x-fw=
+-5-sr.bin
+new file mode 100644
+index 0000000..829088a
+Binary files /dev/null and b/ti-connectivity/wl127x-fw-5-sr.bin differ
+diff --git a/ti-connectivity/wl128x-fw-5-mr.bin b/ti-connectivity/wl128x-fw=
+-5-mr.bin
+new file mode 100644
+index 0000000..0a062a8
+Binary files /dev/null and b/ti-connectivity/wl128x-fw-5-mr.bin differ
+diff --git a/ti-connectivity/wl128x-fw-5-plt.bin b/ti-connectivity/wl128x-f=
+w-5-plt.bin
+new file mode 100644
+index 0000000..d8ac6fa
+Binary files /dev/null and b/ti-connectivity/wl128x-fw-5-plt.bin differ
+diff --git a/ti-connectivity/wl128x-fw-5-sr.bin b/ti-connectivity/wl128x-fw=
+-5-sr.bin
+new file mode 100644
+index 0000000..75d5a4f
+Binary files /dev/null and b/ti-connectivity/wl128x-fw-5-sr.bin differ
+diff --git a/ti-connectivity/wl18xx-fw.bin b/ti-connectivity/wl18xx-fw.bin
+new file mode 100644
+index 0000000..ac1e24e
+Binary files /dev/null and b/ti-connectivity/wl18xx-fw.bin differ
+
+
+--=20
 Cheers,
-
-> ---
->  drivers/net/wireless/mac80211_hwsim.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> index 4c9336c..a0b7cfd 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -1555,6 +1555,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
->                        hdr = (struct ieee80211_hdr *) skb->data;
->                        mac80211_hwsim_monitor_ack(data2->hw, hdr->addr2);
->                }
-> +               txi->flags |= IEEE80211_TX_STAT_ACK;
->        }
->        ieee80211_tx_status_irqsafe(data2->hw, skb);
->        return 0;
-> --
-> 1.7.8.2
->
+Luca.
 
 
+--=-KwqAg6Bd1jrG0Y/C70Lw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABAgAGBQJP60EwAAoJEKFHnKIaPMX6xBAQAIJNaolD2N56gNGak5Hp7jJT
+xGP5WmEkTIXfPjGCptE5NXvauAVP2VTEvSfixSGRW34dL8KQw1alE/sQaesY5VNG
+ujEeTawsFR580z00JXIK63pVrlj+4Tk8RmgMmgqx5tQ87CGizDT3qZhGLhs5xeIK
+P5t8YpVbkBbCpaH0KlmxCqP+NW2Cs1bglkWCFvyr2tR146Djrfby5LfmMyaE5TRQ
+9VVzpuzQ9uLSNOUdRsXszmLaAIyOLaJ61MdCRP4zLyL5CIWjv+XpW3z6o+OlnUv7
+BCOqV+h49oZkLFSljbptmkniTK0UC+D1PfmICELmCLUrn8T4a/tseD4JlUm8D21X
+fMmqCuxCwJfop5ceOHsDaOpQoWITDSMkFpLiOibLB9HosU+bc4TyM31ZM808hraI
+A/7KuUk8AmC/xeIc8Pio1qRvOT/kFyS0lpCj+udCsBmgDveip8KFmKALhAHdScLe
+rfx/HdSy89MI+ftDyM/rASzHyn8AV1uuXqVxwBPNmSa4lqNMxOINbnBVRlvnRt+i
+sil7mTTK4/eHCOdtuYCOjxdSbmeA9e1QTPV0rX0xffs6Cpkts6PI23NhfEv6HjTf
+2RC8ThRjS7mg4OPnukhUfRShLHADFxMsr4XB31nBMG0AyTYTZdQAtP0LeWGGxvMI
+9hjKmeXMiv7gRFtQHYQq
+=r7xo
+-----END PGP SIGNATURE-----
+
+--=-KwqAg6Bd1jrG0Y/C70Lw--
+
