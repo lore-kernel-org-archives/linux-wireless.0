@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52356 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752017Ab2FSOvB (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:59312 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753529Ab2F0HrY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:01 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Sgzlj-00015A-Pp
-	for linux-wireless@vger.kernel.org; Tue, 19 Jun 2012 16:50:59 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/17] add P2P Device support
-Date: Tue, 19 Jun 2012 16:50:39 +0200
-Message-Id: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165120_048461_9B077046)
+	Wed, 27 Jun 2012 03:47:24 -0400
+Received: by yenl2 with SMTP id l2so663809yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 00:47:23 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 27 Jun 2012 14:47:23 +0700
+Message-ID: <CA+i8gKLOirMGrNRPiCGb4yfSAG2Jeh33SFRpUJ=5VX9-P3C+4Q@mail.gmail.com> (sfid-20120627_094759_223471_0857E44D)
+Subject: wireless-testing: commit fad29cd leads to kernel build failure
+From: Emmanuel Benisty <benisty.e@gmail.com>
+To: linux-wireless@vger.kernel.org, c_manoha@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to support different P2P Device addresses, I've
-been working on patches to support a P2P Device abstraction.
+Hi,
 
-A big part of it is changing nl80211 to be able to identify
-wireless_dev structs by their new wdev_id rather than only
-by interface index.
+The following commit breaks wireless-testing kernel build:
 
-Then there's code to actually make some APIs netdev independent
-and finally to actually create a P2P Device abstraction in both
-cfg80211 and mac80211.
+commit fad29cd2f59949581050a937786c2c9bc78b2f04
+Author: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Date:   Mon Jun 25 13:54:22 2012 +0530
 
-I also threw in a small netns fix.
+    ath9k: Fix lockdep splat
 
-Please review :-)
+    Cancel the MCI work only when MCI is actually enabled.
 
-johannes
+It fails with:
 
+  CC [M]  drivers/net/wireless/ath/ath9k/main.o
+drivers/net/wireless/ath/ath9k/main.c: In function '__ath_cancel_work':
+drivers/net/wireless/ath/ath9k/main.c:155:23: error: 'struct
+ath_softc' has no member named 'mci_work'
+make[5]: *** [drivers/net/wireless/ath/ath9k/main.o] Error 1
+
+Thanks+regards.
