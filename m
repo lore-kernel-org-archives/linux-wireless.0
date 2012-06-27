@@ -1,89 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:33997 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752872Ab2F0Dg7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 23:36:59 -0400
-Received: by yhfq46 with SMTP id q46so87788yhf.35
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 20:36:57 -0700 (PDT)
-From: Kevin Hilman <khilman@ti.com>
-To: "Franky Lin" <frankyl@broadcom.com>
-Cc: tarun.kanti@ti.com, tony@atomide.com, santosh.shilimkar@ti.com,
-	b-cousson@ti.com, grant.likely@secretlab.ca,
-	linux-omap@vger.kernel.org,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com>
-Date: Tue, 26 Jun 2012 22:37:05 -0500
-In-Reply-To: <4FE8CF77.5080400@broadcom.com> (Franky Lin's message of "Mon, 25
-	Jun 2012 13:52:07 -0700")
-Message-ID: <87txxxs9we.fsf@ti.com> (sfid-20120627_053706_619104_1F0A15D7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:35801 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750772Ab2F0M6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 08:58:32 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: fix ANI operation in AP mode
+Date: Wed, 27 Jun 2012 14:58:19 +0200
+Message-Id: <1340801899-45263-1-git-send-email-nbd@openwrt.org> (sfid-20120627_145836_688395_9723A5AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+ath9k_ani_reset (which is called at reset time) uses a state variable
+ani->update_ani to prevent the ANI noise immunity state on the operating
+channel from being overwritten by background scans. Unfortunately this
+is also being set for AP mode, since it's mixed with code that is only
+supposed to change the default settings after a reset.
 
-"Franky Lin" <frankyl@broadcom.com> writes:
+In AP mode this has the side effect of having ANI run, but being unable to
+change its runtime noise immunity level, making it effectively useless.
 
-> Hi Kevin, Tarun,
->
-> We are using the expansion connector A on Panda board to mount a SDIO
-> WiFi dongle on MMC2 with a level triggered interrupt signal connected
-> to GPIO 138. It's been working fine until 3.5 rc1. The board hang
-> randomly within 5 mins during a network traffic test. After bisecting
-> we found the culprit is "[PATCH 8/8] gpio/omap: fix missing check in
-> *_runtime_suspend()" [1].
+Fix this by getting rid of ani->update_ani and passing a parameter to
+ath9k_hw_set_ofdm_nil and ath9k_hw_set_cck_nil instead.
 
-<grumble>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |   29 +++++++++++++++--------------
+ drivers/net/wireless/ath/ath9k/ani.h |    1 -
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-As you might guess.  That patch has caused me enough headaches that
-reverting it sounds like a good idea now.  But, I'd still like to better
-understand exactly what's going on.
-
-> I noticed Kevin raised some similar cases on other platforms and also
-> provided two patches in the patch mail thread. But unfortunately those
-> two patches doesn't help in our case. I tested the driver with 3.5-rc3
-> mainline kernel and the issue is still there. I can only "fix" the
-> hang by either reverting the commit or disabling
-> CONFIG_PM_RUNTIME. Also, the hang only happens on Panda ES board. Old
-> Panda with 4430 works good.
->
-> Any thoughts and suggestions?
-
-If reverting the patch fixes your problem, can you isolate down to which
-part of that patch causes the problem?  IOW, can you fix your problem if
-you undo just the hunk added in runtime_suspend or undo just the moved
-hunk runtime_resume?  Or is reverting both required?
-
-I suspect the added runtime_suspend hunk is causing the problems, so can
-you see if just undoing that part works[1].  If that works, I will give
-a bit more of a thinking on it tomorrow.
-
-Thanks for reporting the problem!   Bug reports like this that have
-clearly been thoroughly researched and bisected are greatly appreciated!
-
-Kevin
-
-[1] patch against v3.5-rc4
-
-diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c                
-index c4ed172..2a6067f 100644                                                   
---- a/drivers/gpio/gpio-omap.c                                                  
-+++ b/drivers/gpio/gpio-omap.c                                                  
-@@ -1177,9 +1177,6 @@ static int omap_gpio_runtime_suspend(struct device *dev)
-                __raw_writel(wake_hi | bank->context.risingdetect,              
-                             bank->base + bank->regs->risingdetect);            
-                                                                                
--       if (!bank->enabled_non_wakeup_gpios)                                    
--               goto update_gpio_context_count;                                 
--                                                                               
-        if (bank->power_mode != OFF_MODE) {                                     
-                bank->power_mode = 0;                                           
-                goto update_gpio_context_count;                                 
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 7ebc346..ff007f5 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -140,7 +140,8 @@ static void ath9k_ani_restart(struct ath_hw *ah)
+ }
+ 
+ /* Adjust the OFDM Noise Immunity Level */
+-static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
++static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
++				  bool scan)
+ {
+ 	struct ar5416AniState *aniState = &ah->curchan->ani;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -153,7 +154,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+ 		immunityLevel, BEACON_RSSI(ah),
+ 		aniState->rssiThrLow, aniState->rssiThrHigh);
+ 
+-	if (aniState->update_ani)
++	if (!scan)
+ 		aniState->ofdmNoiseImmunityLevel = immunityLevel;
+ 
+ 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
+@@ -199,13 +200,14 @@ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
+ 	aniState = &ah->curchan->ani;
+ 
+ 	if (aniState->ofdmNoiseImmunityLevel < ATH9K_ANI_OFDM_MAX_LEVEL)
+-		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1);
++		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1, false);
+ }
+ 
+ /*
+  * Set the ANI settings to match an CCK level.
+  */
+-static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
++static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
++				 bool scan)
+ {
+ 	struct ar5416AniState *aniState = &ah->curchan->ani;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -222,7 +224,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
+ 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
+ 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
+ 
+-	if (aniState->update_ani)
++	if (!scan)
+ 		aniState->cckNoiseImmunityLevel = immunityLevel;
+ 
+ 	entry_ofdm = &ofdm_level_table[aniState->ofdmNoiseImmunityLevel];
+@@ -254,7 +256,8 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+ 	aniState = &ah->curchan->ani;
+ 
+ 	if (aniState->cckNoiseImmunityLevel < ATH9K_ANI_CCK_MAX_LEVEL)
+-		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1);
++		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1,
++				     false);
+ }
+ 
+ /*
+@@ -270,13 +273,15 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ 	/* lower OFDM noise immunity */
+ 	if (aniState->ofdmNoiseImmunityLevel > 0 &&
+ 	    (aniState->ofdmsTurn || aniState->cckNoiseImmunityLevel == 0)) {
+-		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel - 1);
++		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel - 1,
++				      false);
+ 		return;
+ 	}
+ 
+ 	/* lower CCK noise immunity */
+ 	if (aniState->cckNoiseImmunityLevel > 0)
+-		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel - 1);
++		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel - 1,
++				     false);
+ }
+ 
+ /*
+@@ -338,7 +343,6 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 				aniState->ofdmNoiseImmunityLevel,
+ 				aniState->cckNoiseImmunityLevel);
+ 
+-			aniState->update_ani = false;
+ 			ofdm_nil = ATH9K_ANI_OFDM_DEF_LEVEL;
+ 			cck_nil = ATH9K_ANI_CCK_DEF_LEVEL;
+ 		}
+@@ -354,11 +358,9 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 			is_scanning,
+ 			aniState->ofdmNoiseImmunityLevel,
+ 			aniState->cckNoiseImmunityLevel);
+-
+-			aniState->update_ani = true;
+ 	}
+-	ath9k_hw_set_ofdm_nil(ah, ofdm_nil);
+-	ath9k_hw_set_cck_nil(ah, cck_nil);
++	ath9k_hw_set_ofdm_nil(ah, ofdm_nil, is_scanning);
++	ath9k_hw_set_cck_nil(ah, cck_nil, is_scanning);
+ 
+ 	/*
+ 	 * enable phy counters if hw supports or if not, enable phy
+@@ -534,7 +536,6 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 		ani->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
+ 		ani->cckNoiseImmunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
+ 		ani->ofdmNoiseImmunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
+-		ani->update_ani = false;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index e9d841b..1485bf5 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -114,7 +114,6 @@ struct ar5416AniState {
+ 	u8 firstepLevel;
+ 	u8 ofdmWeakSigDetect;
+ 	u8 cckWeakSigThreshold;
+-	bool update_ani;
+ 	u32 listenTime;
+ 	int32_t rssiThrLow;
+ 	int32_t rssiThrHigh;
+-- 
+1.7.3.2
 
