@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35971 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755761Ab2FZMDm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:03:42 -0400
-Received: by weyu7 with SMTP id u7so3513634wey.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 05:03:41 -0700 (PDT)
-From: Eyal Shapira <eyal@wizery.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:60105 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756155Ab2F0Haf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 03:30:35 -0400
+Message-ID: <4FEAB698.5070309@tieto.com> (sfid-20120627_093039_380917_09F85E8A)
+Date: Wed, 27 Jun 2012 09:30:32 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: use legacy mode for all ACs
-Date: Tue, 26 Jun 2012 15:03:33 +0300
-Message-Id: <1340712213-10193-1-git-send-email-eyal@wizery.com> (sfid-20120626_140346_230062_438A3973)
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3] initial channel context implementation
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com> <1340718188.14634.47.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340718188.14634.47.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AVM FritzBox 7390 has a weird behaviour where once we enable
-U-APSD only on the VO AC it limits the rate of the packets
-it sends to 39Mbps and doesn't do AMPDU aggregation.
-This causes a big degradation in throughput obviously.
-It's important to note that this isn't related to PS and happens
-also when ACTIVE is forced. The traffic affected is sent in BE AC.
-Once legacy mode for all ACs is used the AP begins using higher rates
-as well as AMPDU aggregation which improves throughput significantly.
+Johannes Berg wrote:
+> On Tue, 2012-06-26 at 14:37 +0200, Michal Kazior wrote:
+>> Hi,
+>>
+>> Here's another respin of channel context patches.
+>>
+>> Changes:
+>>
+>>   - moved ieee80211_chan_mode
+>>   - updated chanctx_conf comment
+>>   - replaced vif_list with refcount
+>>   - added lockdeps
+>>   - channel type downgrading support
+>>     (when a channel context is unassigned from a vif
+>>      channel type is recalculated for the remaining vifs
+>>      sharing the same channel context)
+>
+> Except for that last point which seems to have implementation issues,
+> this looks really good too!
+>
+> How are you planning to proceed from here? I'm happy to pick these up
+> even if you're not going to work on using it right away since I think in
+> that case I would probably be working on using it pretty soon, but if
+> you are planning to work on it that's even better :-)
 
-In order to deal with this AP and potentially others switch to
-using legacy mode for all ACs by default.
+The next step is to start using channel contexts in mac80211. I was 
+thinking of using chanctx->channel instead of hw.conf.channel if 
+.assign_vif_chanctx is defined. I expect some issues like using channel 
+before it is set.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
----
-In case you're wondering what happens with U-APSD on all ACs
-it breaks down as well and even worse, not only a TP issue but
-broken PS functionality.
+Hwsim requires .hw_scan and ROC to be implemented to test channel 
+contexts. hw_scan should be simple (if we skip a few things..) but 
+haven't looked into the ROC case yet. It also requires some changes to 
+move channel logic per-vif.
 
- net/mac80211/ieee80211_i.h |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+Depending on how things turn out I may start to tackle on mac80211 a bit 
+more and hw_scan for hwsim. I may send a few patches on monday.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 341d77d..370a646 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -57,13 +57,18 @@ struct ieee80211_local;
- #define TU_TO_EXP_TIME(x)	(jiffies + TU_TO_JIFFIES(x))
- 
- /*
-- * Some APs experience problems when working with U-APSD. Decrease the
-- * probability of that happening by using legacy mode for all ACs but VO.
-- * The AP that caused us trouble was a Cisco 4410N. It ignores our
-- * setting, and always treats non-VO ACs as legacy.
-+ * Some APs experience problems when working with U-APSD:
-+ * Cisco 4410N - It ignores our setting, and always treats non-VO ACs as legacy.
-+ *
-+ * AVM FritzBox 7930 - Setting U-APSD on VO AC only (which solves the
-+ * Cisco 4410N problem) causes the FritzBox to limit the rates of packets
-+ * sent by it to 39Mbps and disables AMPDU aggregation. This causes a major
-+ * througput degradation with this AP.
-+ *
-+ * Avoid these issues by using legacy mode for all ACs by default.
-+ * U-APSD can still be configured from userspace.
-  */
--#define IEEE80211_DEFAULT_UAPSD_QUEUES \
--	IEEE80211_WMM_IE_STA_QOSINFO_AC_VO
-+#define IEEE80211_DEFAULT_UAPSD_QUEUES 0
- 
- #define IEEE80211_DEFAULT_MAX_SP_LEN		\
- 	IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+I'll of course resend this patchset today once I fix the pointed out issues.
+
+
 -- 
-1.7.4.1
+Pozdrawiam / Best regards, Michal Kazior.
 
