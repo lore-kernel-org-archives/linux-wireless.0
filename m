@@ -1,108 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52359 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212Ab2FSOvB (ORCPT
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:32830 "EHLO
+	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756554Ab2F0Pgd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 10:51:01 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 27 Jun 2012 11:36:33 -0400
+Received: by lbon10 with SMTP id n10so3179013lbo.27
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 08:36:24 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 03/17] nl80211: fix netns separation
-Date: Tue, 19 Jun 2012 16:50:42 +0200
-Message-Id: <1340117456-10154-4-git-send-email-johannes@sipsolutions.net> (sfid-20120619_165122_966773_881B0FBB)
-In-Reply-To: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
-References: <1340117456-10154-1-git-send-email-johannes@sipsolutions.net>
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 5/8] wlcore: avoid debug prints during intended FW recovery
+Date: Wed, 27 Jun 2012 18:35:59 +0300
+Message-Id: <1340811362-30441-6-git-send-email-coelho@ti.com> (sfid-20120627_173637_183117_88DA4B76)
+In-Reply-To: <1340811362-30441-1-git-send-email-coelho@ti.com>
+References: <1340811362-30441-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-There are currently a few ways to "escape"
-the network namespace and access a wiphy
-that belongs to another namespace. Add a
-netns argument to the relevant functions
-to fix this.
+Don't read the FW panic log or print other debug data when recovery is
+intended (i.e. FW type switch). This takes valuable time and can be
+confusing to the user.
 
-One remaining issue with testmode will be
-fixed in a follow-up patch.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- net/wireless/nl80211.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0ec9779..af23291 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -71,7 +71,7 @@ static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
- }
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 1d404fa..49990b1 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -916,9 +916,10 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	if (wl->state != WL1271_STATE_ON || wl->plt)
+ 		goto out_unlock;
  
- static struct cfg80211_registered_device *
--__cfg80211_rdev_from_info(struct genl_info *info)
-+__cfg80211_rdev_from_info(struct net *netns, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = NULL, *tmp;
- 	struct net_device *netdev;
-@@ -88,7 +88,7 @@ __cfg80211_rdev_from_info(struct genl_info *info)
+-	wl12xx_read_fwlog_panic(wl);
+-
+-	wlcore_print_recovery(wl);
++	if (!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags)) {
++		wl12xx_read_fwlog_panic(wl);
++		wlcore_print_recovery(wl);
++	}
  
- 	if (info->attrs[NL80211_ATTR_IFINDEX]) {
- 		int ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
--		netdev = dev_get_by_index(genl_info_net(info), ifindex);
-+		netdev = dev_get_by_index(netns, ifindex);
- 		if (netdev) {
- 			if (netdev->ieee80211_ptr)
- 				tmp = wiphy_to_dev(
-@@ -110,10 +110,13 @@ __cfg80211_rdev_from_info(struct genl_info *info)
- 		}
- 	}
- 
--	if (rdev)
--		return rdev;
-+	if (!rdev)
-+		return ERR_PTR(-ENODEV);
- 
--	return ERR_PTR(-ENODEV);
-+	if (netns != wiphy_net(&rdev->wiphy))
-+		return ERR_PTR(-ENODEV);
-+
-+	return rdev;
- }
- 
- /*
-@@ -137,12 +140,12 @@ __cfg80211_rdev_from_info(struct genl_info *info)
-  * be checked with IS_ERR() for errors.
-  */
- static struct cfg80211_registered_device *
--cfg80211_get_dev_from_info(struct genl_info *info)
-+cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev;
- 
- 	mutex_lock(&cfg80211_mutex);
--	rdev = __cfg80211_rdev_from_info(info);
-+	rdev = __cfg80211_rdev_from_info(netns, info);
- 
- 	/* if it is not an error we grab the lock on
- 	 * it to assure it won't be going away while
-@@ -1419,7 +1422,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	if (!netdev) {
--		rdev = __cfg80211_rdev_from_info(info);
-+		rdev = __cfg80211_rdev_from_info(genl_info_net(info), info);
- 		if (IS_ERR(rdev)) {
- 			mutex_unlock(&cfg80211_mutex);
- 			return PTR_ERR(rdev);
-@@ -6623,7 +6626,7 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
- 		rtnl_lock();
- 
- 	if (ops->internal_flags & NL80211_FLAG_NEED_WIPHY) {
--		rdev = cfg80211_get_dev_from_info(info);
-+		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
- 		if (IS_ERR(rdev)) {
- 			if (rtnl)
- 				rtnl_unlock();
+ 	BUG_ON(bug_on_recovery &&
+ 	       !test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags));
 -- 
 1.7.10
 
