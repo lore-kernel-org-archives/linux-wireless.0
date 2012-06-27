@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45738 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752030Ab2FFLxD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31972 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757564Ab2F0PA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 07:53:03 -0400
-Message-ID: <1338983581.26346.2.camel@jlt3.sipsolutions.net> (sfid-20120606_135307_006832_6B1DF605)
-Subject: Re: [RFC 07/14] cfg80211: track monitor interfaces count
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bing Zhao <bzhao@marvell.com>, Kalle Valo <kvalo@adurom.com>
-Date: Wed, 06 Jun 2012 13:53:01 +0200
-In-Reply-To: <4FCF41AA.9070400@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-	  <1338203942-5667-8-git-send-email-michal.kazior@tieto.com>
-	 <1338973824.4513.42.camel@jlt3.sipsolutions.net>
-	 <4FCF41AA.9070400@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Jun 2012 11:00:56 -0400
+Message-ID: <4FEB201D.1020009@qca.qualcomm.com> (sfid-20120627_170108_598755_3E4FA5E2)
+Date: Wed, 27 Jun 2012 20:30:45 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: Fix signedness in a MCI debug message
+References: <1340807427-5774-1-git-send-email-mohammed@qca.qualcomm.com> <1340807427-5774-2-git-send-email-mohammed@qca.qualcomm.com> <4FEB1D43.7080706@openwrt.org>
+In-Reply-To: <4FEB1D43.7080706@openwrt.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-06 at 13:40 +0200, Michal Kazior wrote:
-> Johannes Berg wrote:
-> > The other thing we might then want to is make this more general and not
-> > just inform the driver about the monitor/no-monitor layout change, but
-> > also tell it which interface combination we're in right now? Might look
-> > a bit more like
-> >
-> > set_iface_combination(wiphy, dev, combination);
-> >
-> > or even
-> > set_iface_combination(wiphy, dev, combination, have_monitor);
-> >
-> >
-> > Then pure monitor would be "combination == NULL, have_monitor=True",
-> > etc. The only downside is that we don't have combinations advertised for
-> > when there's a single interface only, so we'd have to point to some
-> > internal single-interface combinations then (static in cfg80211).
-> > Thoughts?
-> 
-> I'm afraid we can't simply tell which combination we're in. I imagine 
-> there may be two or three combinations matching at the same time. Take 
-> this for example:
-> 
->    comb1: 1xSTA + 1xAP (max channels = 1)
->    comb2: 2xSTA (max channels = 2)
-> 
->    wlan0 is running as STA @ chan=1
-> 
-> Which combination are we in? Which one should we report to the driver?
+Hi Felix,
 
-Doesn't matter, right? Pick the one with most channels or something? :-)
+On Wednesday 27 June 2012 08:18 PM, Felix Fietkau wrote:
+> On 2012-06-27 4:30 PM, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> seems i got a message like this
+>> ath: phy0: BT_Status_Update: is_link=0, linkId=2,
+>> state=1, SEQ=-2085766476 initially.
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/mci.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+>> index c40e568..64cc782 100644
+>> --- a/drivers/net/wireless/ath/ath9k/mci.c
+>> +++ b/drivers/net/wireless/ath/ath9k/mci.c
+>> @@ -348,7 +348,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+>>
+>>   		seq_num = *((u32 *)(rx_payload + 12));
+>>   		ath_dbg(common, MCI,
+>> -			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%d\n",
+>> +			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%u\n",
+>>   			profile_status.is_link, profile_status.conn_handle,
+>>   			profile_status.is_critical, seq_num);
+> What about endian here? Also, wouldn't it be better to have a struct for
+> the rx payload data with proper endian annotation instead of using the
+> weird way of dereferencing the rx_payload pointer?
+>
 
-> I don't see what passing current interface combination would be useful 
-> for. Do you have something particular in mind?
+ok, we shall fix it soon.
 
-I'm thinking about # of channels in the combination mostly, in
-particular in combination with IBSS. OTOH, if we always reserve one
-channel for IBSS in cfg80211 (unless it's fixed & driver supports that)
-then it won't matter.
 
-But then again, what about say 2xSTA being active and drivers with
-connect() API?
-
-johannes
-
+-- 
+thanks,
+shafi
