@@ -1,202 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
+Received: from nbd.name ([46.4.11.11]:40498 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754405Ab2FTGOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:14:31 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFCv2 12/13] cfg80211: add channel checking for iface combinations
-Date: Wed, 20 Jun 2012 08:14:18 +0200
-Message-ID: <1340172859-18146-13-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081436_410643_3CA3DDB4)
-In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+	id S1755860Ab2F0VW3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 17:22:29 -0400
+Message-ID: <4FEB7989.80708@openwrt.org> (sfid-20120627_232233_032538_0D20547B)
+Date: Wed, 27 Jun 2012 23:22:17 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Tom Hughes <tom@compton.nu>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k: fix panic caused by returning a descriptor we
+ have queued for reuse
+References: <1340817675-26911-1-git-send-email-tom@compton.nu>
+In-Reply-To: <1340817675-26911-1-git-send-email-tom@compton.nu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.connect cannot be handled since the driver scans
-and connects on its own. It is up to the driver
-then to refuse a connection (with -EBUSY for
-example).
-
-Non-fixed channel IBSSes always take a single
-channel resource. For example two non-fixed
-channel IBSSes always take up 2
-num_different_channels, even if they operate on
-the same channel at a given point of time.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/wireless/core.h |   27 ++++++++++++++++--
- net/wireless/util.c |   73 +++++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 92 insertions(+), 8 deletions(-)
-
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9d9441d..17da8f0 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -454,9 +454,20 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 			  u32 *flags, struct vif_params *params);
- void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev);
- 
--int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
--				  struct wireless_dev *wdev,
--				  enum nl80211_iftype iftype);
-+int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
-+				 struct wireless_dev *wdev,
-+				 enum nl80211_iftype iftype,
-+				 struct ieee80211_channel *chan,
-+				 enum cfg80211_chan_mode chanmode);
-+
-+static inline int
-+cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
-+			      struct wireless_dev *wdev,
-+			      enum nl80211_iftype iftype)
-+{
-+	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
-+					    CHAN_MODE_UNDEFINED);
-+}
- 
- static inline int
- cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
-@@ -465,6 +476,16 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
- 	return cfg80211_can_change_interface(rdev, NULL, iftype);
- }
- 
-+static inline int
-+cfg80211_can_use_chan(struct cfg80211_registered_device *rdev,
-+		      struct wireless_dev *wdev,
-+		      struct ieee80211_channel *chan,
-+		      enum cfg80211_chan_mode chanmode)
-+{
-+	return cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-+					    chan, chanmode);
-+}
-+
- void
- cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
- 		        struct wireless_dev *wdev,
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 9b92ec5..d40f324 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -938,13 +938,20 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	return res;
- }
- 
--int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
--				  struct wireless_dev *wdev,
--				  enum nl80211_iftype iftype)
-+int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
-+				 struct wireless_dev *wdev,
-+				 enum nl80211_iftype iftype,
-+				 struct ieee80211_channel *chan,
-+				 enum cfg80211_chan_mode chanmode)
- {
- 	struct wireless_dev *wdev_iter;
- 	u32 used_iftypes = BIT(iftype);
- 	int num[NUM_NL80211_IFTYPES];
-+	struct ieee80211_channel **used_channels;
-+	struct ieee80211_channel *ch;
-+	enum cfg80211_chan_mode chmode;
-+	int num_different_channels = 0;
-+	int num_max_channels = 0;
- 	int total = 1;
- 	int i, j;
- 
-@@ -954,6 +961,33 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 	if (rdev->wiphy.software_iftypes & BIT(iftype))
- 		return 0;
- 
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		if (!rdev->wiphy.bands[i])
-+			continue;
-+
-+		num_max_channels += rdev->wiphy.bands[i]->n_channels;
-+	}
-+	if (!num_max_channels)
-+		return -EINVAL;
-+
-+	used_channels = kzalloc(num_max_channels * sizeof(*used_channels),
-+				GFP_KERNEL);
-+	if (!used_channels)
-+		return -ENOMEM;
-+
-+	switch (chanmode) {
-+	case CHAN_MODE_UNDEFINED:
-+		break;
-+	case CHAN_MODE_SHARED:
-+		WARN_ON(!chan);
-+		used_channels[0] = chan;
-+		num_different_channels++;
-+		break;
-+	case CHAN_MODE_EXCLUSIVE:
-+		num_different_channels++;
-+		break;
-+	}
-+
- 	memset(num, 0, sizeof(num));
- 
- 	num[iftype] = 1;
-@@ -968,11 +1002,37 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 		if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
- 			continue;
- 
-+		cfg80211_get_chan_state(rdev, wdev_iter, &ch, &chmode);
-+
-+		switch (chmode) {
-+		case CHAN_MODE_UNDEFINED:
-+			break;
-+		case CHAN_MODE_SHARED:
-+			for (i = 0; i < num_max_channels; i++)
-+				if (!used_channels[i] || used_channels[i] == ch)
-+					break;
-+
-+			if (i == num_max_channels) {
-+				kfree(used_channels);
-+				return -ENOMEM;
-+			}
-+
-+			if (used_channels[i] == NULL) {
-+				used_channels[i] = ch;
-+				num_different_channels++;
-+			}
-+			break;
-+		case CHAN_MODE_EXCLUSIVE:
-+			num_different_channels++;
-+			break;
-+		}
-+
- 		num[wdev_iter->iftype]++;
- 		total++;
- 		used_iftypes |= BIT(wdev_iter->iftype);
- 	}
- 	mutex_unlock(&rdev->devlist_mtx);
-+	kfree(used_channels);
- 
- 	if (total == 1)
- 		return 0;
-@@ -984,12 +1044,15 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 
- 		c = &rdev->wiphy.iface_combinations[i];
- 
-+		if (total > c->max_interfaces)
-+			continue;
-+		if (num_different_channels > c->num_different_channels)
-+			continue;
-+
- 		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
- 				 GFP_KERNEL);
- 		if (!limits)
- 			return -ENOMEM;
--		if (total > c->max_interfaces)
--			goto cont;
- 
- 		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
- 			if (rdev->wiphy.software_iftypes & BIT(iftype))
--- 
-1.7.0.4
-
+On 2012-06-27 7:21 PM, Tom Hughes wrote:
+> Commit 3a2923e83c introduced a bug when a corrupt descriptor
+> is encountered - although the following descriptor is discarded
+> and returned to the queue for reuse the associated frame is
+> also returned for processing. This leads to a panic:
+> 
+> BUG: unable to handle kernel NULL pointer dereference at 000000000000003a
+> IP: [<ffffffffa02599a5>] ath_rx_tasklet+0x165/0x1b00 [ath9k]
+> Call Trace:
+> <IRQ>
+> [<ffffffff812d7fa0>] ? map_single+0x60/0x60
+> [<ffffffffa028f044>] ? ath9k_ioread32+0x34/0x90 [ath9k]
+> [<ffffffffa0292eec>] athk9k_tasklet+0xdc/0x160 [ath9k]
+> [<ffffffff8105e133>] tasklet_action+0x63/0xd0
+> [<ffffffff8105dbc0>] __do_softirq+0xc0/0x1e0
+> [<ffffffff8101a873>] ? native_sched_clock+0x13/0x80
+> [<ffffffff815f9d5c>] call_softirq+0x1c/0x30
+> [<ffffffff810151f5>] do_softirq+0x75/0xb0
+> [<ffffffff8105df95>] irq_exit+0xb5/0xc0
+> [<ffffffff815fa5b3>] do_IRQ+0x63/0xe0
+> [<ffffffff815f0cea>] common_interrupt+0x6a/0x6a
+> <EOI>
+> [<ffffffff8131840a>] ? intel_idle+0xea/0x150
+> [<ffffffff813183eb>] ? intel_idle+0xcb/0x150
+> [<ffffffff814a1db9>] cpuidle_enter+0x19/0x20
+> [<ffffffff814a23d9>] cpuidle_idle_call+0xa9/0x240
+> [<ffffffff8101c4bf>] cpu_idle+0xaf/0x120
+> [<ffffffff815cda8e>] rest_init+0x72/0x74
+> [<ffffffff81cf4c1a>] start_kernel+0x3b7/0x3c4
+> [<ffffffff81cf4662>] ? repair_env_string+0x5e/0x5e
+> [<ffffffff81cf4346>] x86_64_start_reservations+0x131/0x135
+> [<ffffffff81cf444a>] x86_64_start_kernel+0x100/0x10f
+> 
+> Making sure bf is cleared to NULL in this case restores the
+> old behaviour.
+> 
+> Signed-off-by: Tom Hughes <tom@compton.nu>
+Acked-by: Felix Fietkau <nbd@openwrt.org>
