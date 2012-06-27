@@ -1,82 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:55685 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175Ab2FLXAY (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:42141 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756230Ab2F0RXj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 19:00:24 -0400
-Received: by wibhn6 with SMTP id hn6so4656941wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 16:00:23 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: mcgrof@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH] compat: Add SIZE_MAX
-Date: Wed, 13 Jun 2012 02:00:16 +0300
-Message-Id: <1339542016-22501-1-git-send-email-ozancag@gmail.com> (sfid-20120613_010028_491072_50AA70B6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 27 Jun 2012 13:23:39 -0400
+From: Arvydas Sidorenko <asido4@gmail.com>
+To: mcgrof@qca.qualcomm.com
+Cc: jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	asido4@gmail.com
+Subject: [PATCH] Build fix in drivers/net/wireless/ath/ath9k/main.c
+Date: Wed, 27 Jun 2012 21:19:39 +0200
+Message-Id: <1340824779-5157-1-git-send-email-asido4@gmail.com> (sfid-20120627_192357_974330_4EB359F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This backports:
+Commit fad29cd2f59949581050a937786c2c9bc78b2f04 broke the build if
+no CONFIG_ATH9K_BTCOEX_SUPPORT is enabled.
 
-  From a3860c1c5dd1137db23d7786d284939c5761d517 Mon Sep 17 00:00:00
-  From: Xi Wang <xi.wang@gmail.com>
-  Date: Thu, 31 May 2012 16:26:04 -0700
-  Subject: [PATCH] introduce SIZE_MAX
-
-This is needed by include/drm/drm_mem_util.h
-
-Trying kernel                     3.4.0-030400-generic  [OK]
-Trying kernel                     3.3.7-030307-generic  [OK]
-Trying kernel                     3.2.2-030202-generic  [OK]
-Trying kernel                    3.1.10-030110-generic  [OK]
-Trying kernel                    3.0.18-030018-generic  [OK]
-Trying kernel                  2.6.39-02063904-generic  [OK]
-Trying kernel                  2.6.38-02063808-generic  [OK]
-Trying kernel                  2.6.37-02063706-generic  [OK]
-Trying kernel                  2.6.36-02063604-generic  [OK]
-Trying kernel                  2.6.35-02063512-generic  [OK]
-Trying kernel                  2.6.34-02063410-generic  [OK]
-Trying kernel                  2.6.33-02063305-generic  [OK]
-Trying kernel                  2.6.32-02063255-generic  [OK]
-Trying kernel                  2.6.31-02063113-generic  [OK]
-Trying kernel                  2.6.30-02063010-generic  [OK]
-Trying kernel                  2.6.29-02062906-generic  [OK]
-Trying kernel                  2.6.28-02062810-generic  [OK]
-Trying kernel                    2.6.27-020627-generic  [OK]
-Trying kernel                    2.6.26-020626-generic  [OK]
-Trying kernel                    2.6.25-020625-generic  [OK]
-Trying kernel                    2.6.24-020624-generic  [OK]
-
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+Signed-off-by: Arvydas Sidorenko <asido4@gmail.com>
 ---
- include/linux/compat-3.5.h |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
-index c9ba6af..3f97a3d 100644
---- a/include/linux/compat-3.5.h
-+++ b/include/linux/compat-3.5.h
-@@ -8,6 +8,18 @@
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c14cf5a..e4e73f0 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -151,8 +151,10 @@ static void __ath_cancel_work(struct ath_softc *sc)
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->hw_pll_work);
  
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0))
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
+ 		cancel_work_sync(&sc->mci_work);
++#endif
+ }
  
-+/*
-+ * This backports:
-+ *
-+ *   From a3860c1c5dd1137db23d7786d284939c5761d517 Mon Sep 17 00:00:00 2001
-+ *   From: Xi Wang <xi.wang@gmail.com>
-+ *   Date: Thu, 31 May 2012 16:26:04 -0700
-+ *   Subject: [PATCH] introduce SIZE_MAX
-+ */
-+
-+#define SIZE_MAX    (~(size_t)0)
-+
-+
- #include <linux/pkt_sched.h>
- 
- /*
+ static void ath_cancel_work(struct ath_softc *sc)
 -- 
-1.7.10.2
+1.7.8.6
 
