@@ -1,56 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43995 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753254Ab2FTN2q (ORCPT
+Received: from mx1.smith-nephew.com ([216.222.219.102]:59922 "EHLO
+	mx1.smith-nephew.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757209Ab2F0WOD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 09:28:46 -0400
-Message-ID: <1340198923.4655.64.camel@jlt3.sipsolutions.net> (sfid-20120620_152849_306411_D1EC7FFC)
-Subject: Re: [PATCH v4] mac80211: add command to get current rssi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Goldenshtein, Victor" <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 20 Jun 2012 15:28:43 +0200
-In-Reply-To: <CAK80WHYa566m+K8TtRo6nvDQHd4J-1A5MD5y_N6_OJMVVnVMgA@mail.gmail.com>
-References: <1340173975-13609-1-git-send-email-victorg@ti.com>
-	 <1340180149.4655.23.camel@jlt3.sipsolutions.net>
-	 <CAK80WHYa566m+K8TtRo6nvDQHd4J-1A5MD5y_N6_OJMVVnVMgA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Jun 2012 18:14:03 -0400
+Received: from USMANSMEXPWV41.sncorp.smith-nephew.com ([172.18.32.11])
+	by USMANSMFMP01.sncorp.smith-nephew.com  with ESMTP id q5RLpfv3015844-q5RLpfv5015844
+	(version=TLSv1 cipher=AES128-SHA bits=128 verify=CAFAIL)
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 17:51:41 -0400
+From: "Morrison, Tom" <Tom.Morrison@smith-nephew.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Compat-Wireless with CROSS_COMPILE OPTION
+Date: Wed, 27 Jun 2012 21:51:39 +0000
+Message-ID: <7D8DC74DEB12384E8E4F5EE4879A8497FD4F@USMANSMEXPW01> (sfid-20120628_001408_595127_00B4D87D)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-20 at 16:22 +0300, Goldenshtein, Victor wrote:
-> On Wed, Jun 20, 2012 at 11:15 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2012-06-20 at 09:32 +0300, Victor Goldenshtein wrote:
-> >
-> >> +     trace_drv_get_rssi(local, sdata);
-> >> +     ret = local->ops->get_rssi(&local->hw, &sdata->vif, sta, rssi_dbm);
-> >> +     trace_drv_return_int(local, ret);
-> >
-> > Where are you tracing the sta?
-> >
-> 
-> We talked about print sta address with "local_sdata_addr_evt" event
-> macro, the output looks like this:
-> 
-> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
-> #              | |       |                     ||||       |         |
->               iw-1394  [000]        ...1  1083.713867: drv_get_rssi:
-> phy0 vif:wlan0(2) addr:08:00:28:cc:65:43
->               iw-1394  [000]        ...1  1083.729736: drv_return_int: phy0 - 0
+Hi,
 
-That's not the STA address, that's the VIF address.
+I have an embedded Cross Compiling environment on Fedora 9 - cross compiling an embedded
+kernel for a TI DM355 Evaluation Board (running a TI Specific 2.6.32 kernel (for working with DSP)). 
+
+I have successfully built the kernel and associated modules, and run all current demos. 
+I decided I wanted to try a Wireless USB Dongle. There are NO drivers for this specific
+USB Dongle (ath9k_htc). 
+
+So, today, I got a stable version of compat-wireless-2.6 and tried to build the compatible driver,
+It seems to build OK, but it is NOT installing correctly????
+
+	Note:  compat-wireless tarball  un-tarred into compat-wireless-2012-05-10
+      
+Here are the steps I take to build / install 
+
+1) Do a few exports - just to make sure there we get these in there
+
+	EXPORT ARCH=arm
+	EXPORT CROSS_COMPILE=/opt/armCodeSourcery/bin/arm-xxxx-
+
+2) Perform Driver Select
+
+	./scripts/driver-select ath9k_htc
+
+3) Perform make
+
+	(note: my 2.6.32 kernel directory is located <../git>)
+
+	make ARCH=arm CROSS_COMPILE=/opt/armCodeSourcery/bin/arm-xxx- KLIB=../git  KLIB_BUILD ../git 
 
 
-> > And why not trace the value returned in *rssi_dbm?
-> >
-> 
-> Is it really required ? there are various driver-ops which are "get
-> stuff" without printing them in the tracer.
+4) Perform install 
 
-It'd be nice to fix all the ones, but I can't make you do that :-)
+	make INSTALL_MOD_PATH=/home/morrisont/workdir/filesys2 ARCH=arm CROSS_COMPILE=/opt/armCodeSourcery/bin/arm-xxx- KLIB=../git  KLIB_BUILD ../git
 
-johannes
+	(note: I am assuming it will install in /home/morrisont/workdir/filesys2 ==> the NFS Root Directory)
 
+
+The error is the following:
+
+	FATAL: Could not open /lib/modules/2.6.25-14.fc9.i686/modules.dep.temp for writing: Permission denied
+	make: *** [uninstall] Error 1
+
+The directory it is attempting to modify(uninstall is on my host system root directory -NOTHING to doo with INSTALL_MOD_PATH
+
+Inspecting the Makefile is quite confusing - can someone succinctly tell me what I am doing wrong?
+
+Thanks in advance!
+
+Tom Morrison
+Tom.Morrison@smith-nephew.com
 
