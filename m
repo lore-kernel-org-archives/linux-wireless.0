@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h1355771.stratoserver.net ([85.214.105.140]:37564 "EHLO
-	h1355771.stratoserver.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965Ab2FOGTC (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:42818 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752976Ab2F0PHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 02:19:02 -0400
-Date: Fri, 15 Jun 2012 08:18:50 +0200
-From: Andreas Kemnade <andreas@kemnade.info>
-To: hong zhang <henryzhang62@yahoo.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	dsd@laptop.org, libertas-dev@lists.infradead.org
-Subject: Re: poor performance with W2CBW003 (Marvell 8686)
-Message-ID: <20120615081850.77454e10@kemnade.info> (sfid-20120615_081907_013150_94E4E9FF)
-In-Reply-To: <1339690266.19412.YahooMailClassic@web161704.mail.bf1.yahoo.com>
-References: <20120614074545.105a459d@kemnade.info>
-	<1339690266.19412.YahooMailClassic@web161704.mail.bf1.yahoo.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/nobSRgKBGyJ+7vNG8U70Xkb";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
+	Wed, 27 Jun 2012 11:07:09 -0400
+Received: by yenl2 with SMTP id l2so973588yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 08:07:09 -0700 (PDT)
+Message-ID: <4FEB2198.7050802@lwfinger.net> (sfid-20120627_170714_726441_C2D5E1C4)
+Date: Wed, 27 Jun 2012 10:07:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: Question about BCM43228 and outdated description in MAINTAINERS
+References: <4FE886B3.7020202@lwfinger.net> <4FEAC62F.4000400@broadcom.com>
+In-Reply-To: <4FEAC62F.4000400@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/nobSRgKBGyJ+7vNG8U70Xkb
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 06/27/2012 03:37 AM, Arend van Spriel wrote:
+> On 06/25/2012 05:41 PM, Larry Finger wrote:
+>
+> I noticed your email on the lockdep_init_map() function. Maybe the
+> hybrid driver will be modified, but I leave that to Brett.
 
-Hi,
+Obviously, the kernel will not be changed to make that routine available.
 
-On Thu, 14 Jun 2012 09:11:06 -0700 (PDT)
-hong zhang <henryzhang62@yahoo.com> wrote:
+> My personal experience with ndiswrapper on 64-bit kernels is different,
+> but I tend to consider ndiswrapper as a last resort. Most issues I had
+> were between ndiswrapper and wpa_supplicant (when using dbus ipc).
+>
+>> Reverse engineering this device to be able to drive it with b43 would
+>> involve a lot of effort. If your group is planning on adding it to
+>> brcmsmac, then I would not undertake this project. To the fullest extent
+>> that you can, please advise me regarding this matter.
+>
+> Our focus is currently on extending brcmfmac. We had requests for 43228
+> support before, but did not start that task. Will inform internally what
+> the plan is here and let you know to the fullest extent ;-)
 
-> bit mode and interrupt or PIO are configured in SDIO hoster side.
-> Not in driver side.
->=20
-yes, I wrote the last email just to say that I have found something to look=
- at.
-That is of course in the host driver. So the thing I did was reading
-commit logs of the 2.6.32 kernel working well.
+Any help you can give will be appreciated.
 
-The only thing which puzzles me is the 5.5Mb/s data rate iwconfig shows.
-After playing with the host side driver, it also shows higher rates. But
-why does host driver affects *that* data rate of link qualitiy is good?
+>
+> Under the folder drivers/net/wireless/brcm80211/ are both brcmfmac and
+> brcmsmac (and shared module brcmutil). So maybe patch it like this:
+>
+> - BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+> + BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVERS
 
-Thanks for all your ideas where to look at.
+That will help, but perhaps you might make it
 
-Greetings
-Andreas Kemnade
++ BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVERS (brcmsmac, brcmfmac)
 
---Sig_/nobSRgKBGyJ+7vNG8U70Xkb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+This way, a search for brcmsmac or brcmfmac will succeed.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAk/a08oACgkQvUy8S31NDea/9QCghMvn8MXk71psi+KKWzFQUkc8
-K+IAoLtCWTfZomTKa3PTPvVjnrKJXE3i
-=rYLV
------END PGP SIGNATURE-----
-
---Sig_/nobSRgKBGyJ+7vNG8U70Xkb--
+Larry
