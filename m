@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45302 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754689Ab2F1TIf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40771 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756462Ab2F0IKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 15:08:35 -0400
-Date: Wed, 27 Jun 2012 14:27:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arvydas Sidorenko <asido4@gmail.com>
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Build fix in drivers/net/wireless/ath/ath9k/main.c
-Message-ID: <20120627182713.GB1862@tuxdriver.com> (sfid-20120628_210916_519069_AF3F39BD)
-References: <1340824779-5157-1-git-send-email-asido4@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1340824779-5157-1-git-send-email-asido4@gmail.com>
+	Wed, 27 Jun 2012 04:10:19 -0400
+Message-ID: <1340784614.8305.8.camel@jlt3.sipsolutions.net> (sfid-20120627_101028_913661_FB5776CB)
+Subject: Re: [RFC v3] initial channel context implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 27 Jun 2012 10:10:14 +0200
+In-Reply-To: <4FEAB698.5070309@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+	 <1340718188.14634.47.camel@jlt3.sipsolutions.net>
+	 <4FEAB698.5070309@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, but Sujith beat you to the same fix.
+On Wed, 2012-06-27 at 09:30 +0200, Michal Kazior wrote:
 
-John
+> > How are you planning to proceed from here? I'm happy to pick these up
+> > even if you're not going to work on using it right away since I think in
+> > that case I would probably be working on using it pretty soon, but if
+> > you are planning to work on it that's even better :-)
+> 
+> The next step is to start using channel contexts in mac80211. I was 
+> thinking of using chanctx->channel instead of hw.conf.channel if 
+> .assign_vif_chanctx is defined. I expect some issues like using channel 
+> before it is set.
 
-On Wed, Jun 27, 2012 at 09:19:39PM +0200, Arvydas Sidorenko wrote:
-> Commit fad29cd2f59949581050a937786c2c9bc78b2f04 broke the build if
-> no CONFIG_ATH9K_BTCOEX_SUPPORT is enabled.
-> 
-> Signed-off-by: Arvydas Sidorenko <asido4@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/main.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index c14cf5a..e4e73f0 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -151,8 +151,10 @@ static void __ath_cancel_work(struct ath_softc *sc)
->  	cancel_delayed_work_sync(&sc->tx_complete_work);
->  	cancel_delayed_work_sync(&sc->hw_pll_work);
->  
-> +#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
->  	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
->  		cancel_work_sync(&sc->mci_work);
-> +#endif
->  }
->  
->  static void ath_cancel_work(struct ath_softc *sc)
-> -- 
-> 1.7.8.6
-> 
-> 
+Ok. Thinking about this a bit I get a feeling that we should internally
+fully convert mac80211 over to channel contexts and not make things
+conditional. Then, whenever a new channel context is allocated it will
+be the only one and we can set hw.conf.channel/type to its channel(type)
+and call hw_config() instead of ... add/change chanctx?
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+That way, we really only need to make a distinction in the low-level
+code that actually calls into the driver, and on a higher level we can
+just use the channel contexts everywhere.
+
+The biggest issue here will be CSA handling. I have no idea yet how this
+will work in multi-channel, maybe we need to disconnect all other
+interfaces on the same channel, or so?
+
+> Hwsim requires .hw_scan and ROC to be implemented to test channel 
+> contexts. hw_scan should be simple (if we skip a few things..) but 
+> haven't looked into the ROC case yet. It also requires some changes to 
+> move channel logic per-vif.
+
+Good points.
+
+johannes
+
