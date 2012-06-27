@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:32814 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752399Ab2FUOYF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 10:24:05 -0400
-Received: by lbbgo11 with SMTP id go11so2114384lbb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2012 07:24:02 -0700 (PDT)
-Message-ID: <1340288640.1631.274.camel@cumari.coelho.fi> (sfid-20120621_162409_959903_EF9AA774)
-Subject: Re: [PATCH 07/12] wlcore: do not report noise level in get survey op
-From: Luciano Coelho <coelho@ti.com>
-To: yoni.divinsky@ti.com
-Cc: arik@wizery.com, linux-wireless@vger.kernel.org
-Date: Thu, 21 Jun 2012 17:24:00 +0300
-In-Reply-To: <1340287991-15241-8-git-send-email-coelho@ti.com>
-References: <1340287991-15241-1-git-send-email-coelho@ti.com>
-	 <1340287991-15241-8-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:55821 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755778Ab2F0Ohi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 10:37:38 -0400
+Date: Wed, 27 Jun 2012 16:48:43 +0200
+From: Samuel Ortiz <samuel.ortiz@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwmc3200wifi: remove driver for unavailable hardware
+Message-ID: <20120627144843.GD12642@sortiz-mobl> (sfid-20120627_163742_440857_04C80CCA)
+References: <1340740191-7946-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+In-Reply-To: <1340740191-7946-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, forgot to include Yoni as CC on this one.
+Hi John,
 
-On Thu, 2012-06-21 at 17:13 +0300, Luciano Coelho wrote:
-> From: Yoni Divinsky <yoni.divinsky@ti.com>
+On Tue, Jun 26, 2012 at 03:49:51PM -0400, John W. Linville wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
 > 
-> The get survey op expects the low level driver to report
-> the noise level for a a given channel.
+> This hardware never became available to normal humans.  Leaving this
+> driver imposes unwelcome maintenance costs for no clear benefit.
 > 
-> The noise calculated in wlcore is (rssi-snr/2), but since
-> the snr reported by the FW is a derivative from the rssi
-> this calculation is useless, and should not be reported
-> to the user space.
-> 
-> Reporting incorrect noise, results in the wpa_supplicant
-> miscalculating the roaming candidate priority, thus causing
-> a situation where an AP with a lower rssi level would be
-> chosen over a better AP.
-> 
-> Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  drivers/net/wireless/ti/wlcore/main.c |    5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index 3279a94..a7c5e32 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -4108,16 +4108,13 @@ out:
->  static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
->  				struct survey_info *survey)
->  {
-> -	struct wl1271 *wl = hw->priv;
->  	struct ieee80211_conf *conf = &hw->conf;
->  
->  	if (idx != 0)
->  		return -ENOENT;
->  
->  	survey->channel = conf->channel;
-> -	survey->filled = SURVEY_INFO_NOISE_DBM;
-> -	survey->noise = wl->noise;
-> -
-> +	survey->filled = 0;
->  	return 0;
->  }
->  
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
+Cheers,
+Samuel.
+
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
