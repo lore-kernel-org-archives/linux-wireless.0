@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36296 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753586Ab2FEXIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 19:08:47 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com, brudley@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 17/18] brcmsmac: fix read in write_phy_reg
-Date: Wed,  6 Jun 2012 01:07:20 +0200
-Message-Id: <1338937641-8519-18-git-send-email-hauke@hauke-m.de> (sfid-20120606_012943_768101_76008F22)
-In-Reply-To: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:53773 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756046Ab2F0Tsv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 15:48:51 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: stone Piao <piaoyun@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>
+Date: Wed, 27 Jun 2012 12:46:24 -0700
+Subject: RE: [PATCH 3.5] mwifiex: fix memory leak associated with IE
+ manamgement
+Message-ID: <477F20668A386D41ADCC57781B1F7043083A97CAC2@SC-VEXCH1.marvell.com> (sfid-20120627_214859_523594_971C28C8)
+References: <1340409394-11082-1-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1340409394-11082-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts a unintended change mad in commit.
-commit 4b006b11ca18995677c5f1cd03cc9c42fbe80693
-Author: Arend van Spriel <arend@broadcom.com>
-Date:   Thu Dec 8 15:06:54 2011 -0800
+Hi John,
 
-    brcm80211: smac: use bcma functions for register access in phy code
+> From: Avinash Patil <patila@marvell.com>
+> 
+> Free ap_custom_ie before return from function.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Could you apply this patch for 3.5 please?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-index 5cfbe5c..25a17eb 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -292,7 +292,7 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
- 	bcma_wflush16(pi->d11core, D11REGOFFS(phyregaddr), addr);
- 	bcma_write16(pi->d11core, D11REGOFFS(phyregdata), val);
- 	if (addr == 0x72)
--		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
-+		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
- #else
- 	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
- 	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
--- 
-1.7.9.5
+Thanks,
+Bing
+
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/ie.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
+> index 328fb14..8374e33 100644
+> --- a/drivers/net/wireless/mwifiex/ie.c
+> +++ b/drivers/net/wireless/mwifiex/ie.c
+> @@ -213,6 +213,7 @@ mwifiex_update_uap_custom_ie(struct mwifiex_private *priv,
+>  		/* save assoc resp ie index after auto-indexing */
+>  		*assoc_idx = *((u16 *)pos);
+> 
+> +	kfree(ap_custom_ie);
+>  	return ret;
+>  }
+> 
+> --
+> 1.7.0.2
 
