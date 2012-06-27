@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37079 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45302 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431Ab2FETR6 (ORCPT
+	with ESMTP id S1754689Ab2F1TIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 15:17:58 -0400
-Date: Tue, 5 Jun 2012 15:00:58 -0400
+	Thu, 28 Jun 2012 15:08:35 -0400
+Date: Wed, 27 Jun 2012 14:27:14 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Soumik DAS <soumik.das@stericsson.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Increment probe_send_count earlier
-Message-ID: <20120605190058.GC1937@tuxdriver.com> (sfid-20120605_211802_646222_4B2CC8E4)
-References: <2E48302EED53D048A7BA72B0A307FB511FB9009098@EXDCVYMBSTM005.EQ1STM.local>
- <87vck48q92.fsf@purkki.adurom.net>
- <2E48302EED53D048A7BA72B0A307FB511FB9009215@EXDCVYMBSTM005.EQ1STM.local>
- <87mx5g8j31.fsf@purkki.adurom.net>
+To: Arvydas Sidorenko <asido4@gmail.com>
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Build fix in drivers/net/wireless/ath/ath9k/main.c
+Message-ID: <20120627182713.GB1862@tuxdriver.com> (sfid-20120628_210916_519069_AF3F39BD)
+References: <1340824779-5157-1-git-send-email-asido4@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87mx5g8j31.fsf@purkki.adurom.net>
+In-Reply-To: <1340824779-5157-1-git-send-email-asido4@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 10, 2012 at 12:46:10PM +0300, Kalle Valo wrote:
-> Hi Soumik,
-> 
-> Soumik DAS <soumik.das@stericsson.com> writes:
-> 
-> > In some cases the sequence of events gets changed -
-> > 	a. call ieee80211_send_nullfunc()
-> > 		(current thread gets scheduled out/pre-empted at this point)
-> > 	b. null frame gets transmitted and acked
-> > 	c. probe_send_count is incremented
-> > 	d. mac80211 waits for some specified timeout and checks that probe_send_count is still > 0. It concludes that AP did not acknowledge the null frame and disassociates from the current AP.
-> > 	e. After a scan STA again re-associate with the same AP.
-> 
-> Ok, so there's a race in mac80211? You should describe the race in the
-> commit log so that a random developer understands what's happening. It
-> doesn't need to be anything fancy, usually just few sentences is enough
-> to give sufficient background for the patch. Where the race is, how
-> often it happens and how to fix it properly, that sort of things.
-> 
-> I repeat this a lot (sorry!) but the most important question the commit
-> log should answer is "Why?". The question "What?" isn't actually that
-> important as anyone can read the patch themselves.
-> 
-> -- 
-> Kalle Valo
-
-Soumik,
-
-Are you going to repost with a proper changelog?
+Thanks, but Sujith beat you to the same fix.
 
 John
+
+On Wed, Jun 27, 2012 at 09:19:39PM +0200, Arvydas Sidorenko wrote:
+> Commit fad29cd2f59949581050a937786c2c9bc78b2f04 broke the build if
+> no CONFIG_ATH9K_BTCOEX_SUPPORT is enabled.
+> 
+> Signed-off-by: Arvydas Sidorenko <asido4@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index c14cf5a..e4e73f0 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -151,8 +151,10 @@ static void __ath_cancel_work(struct ath_softc *sc)
+>  	cancel_delayed_work_sync(&sc->tx_complete_work);
+>  	cancel_delayed_work_sync(&sc->hw_pll_work);
+>  
+> +#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+>  	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
+>  		cancel_work_sync(&sc->mci_work);
+> +#endif
+>  }
+>  
+>  static void ath_cancel_work(struct ath_softc *sc)
+> -- 
+> 1.7.8.6
+> 
+> 
+
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
