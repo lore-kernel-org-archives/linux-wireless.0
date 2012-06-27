@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33750 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752933Ab2FOIUU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14960 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799Ab2F0Oav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 04:20:20 -0400
-Message-ID: <1339748416.4512.9.camel@jlt3.sipsolutions.net> (sfid-20120615_102026_647029_2275B4BE)
-Subject: Re: [PATCH] mac80211: fix the assignment of mesh element TTL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Date: Fri, 15 Jun 2012 10:20:16 +0200
-In-Reply-To: <CAEFj985xi0LNsLqHn1cgAw0oMVsfWrh_ioPuzUva8ZLbUTn=ZQ@mail.gmail.com> (sfid-20120615_023221_846663_D2EB7189)
-References: <1339691033-13316-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1339700228.9786.11.camel@jlt3.sipsolutions.net>
-	 <CAEFj985xi0LNsLqHn1cgAw0oMVsfWrh_ioPuzUva8ZLbUTn=ZQ@mail.gmail.com>
-	 (sfid-20120615_023221_846663_D2EB7189)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Jun 2012 10:30:51 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath9k_hw: make use of the wrapper to check for MCI init
+Date: Wed, 27 Jun 2012 20:00:26 +0530
+Message-ID: <1340807427-5774-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120627_163055_434082_494A8A85)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-15 at 08:32 +0800, Yeoh Chun-Yeow wrote:
-> Yes.
-> 
-> On Fri, Jun 15, 2012 at 2:57 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Fri, 2012-06-15 at 00:23 +0800, Chun-Yeow Yeoh wrote:
-> >> This patch fixes the wrong assignment of mesh element TTL.
-> >
-> > Since I haven't pushed to John yet, should I rebase and merge this with
-> > one of the previous patches?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Umm, I actually shouldn't ... The patch this fixes has been merged by
-John way back:
+ath9k_hw_mci_is_enabled wrapper also takes care of
+ATH9K_HW_CAP_MCI being set for the AR9462 under test.
 
-commit 45904f21655cf4f0ae7d0fab5906fe51bf56ecf4
-Author:     Javier Cardona <javier@cozybit.com>
-AuthorDate: Fri Dec 3 09:20:40 2010 +0100
-Commit:     John W. Linville <linville@tuxdriver.com>
-CommitDate: Mon Dec 6 16:01:28 2010 -0500
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-    nl80211/mac80211: define and allow configuring mesh element TTL
-
-
-WAY WAY back. Maybe this patch should go into 3.5 and even stable?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 26032cb..9ae6a4d 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -416,7 +416,7 @@ int ath9k_init_btcoex(struct ath_softc *sc)
+ 		txq = sc->tx.txq_map[WME_AC_BE];
+ 		ath9k_hw_init_btcoex_hw(sc->sc_ah, txq->axq_qnum);
+ 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+-		if (AR_SREV_9462(ah)) {
++		if (ath9k_hw_mci_is_enabled(ah)) {
+ 			sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
+ 			INIT_LIST_HEAD(&sc->btcoex.mci.info);
+ 
+-- 
+1.7.0.4
 
