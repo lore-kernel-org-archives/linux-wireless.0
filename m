@@ -1,134 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:50182 "HELO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751853Ab2FLWIR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42155 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757033Ab2F0PZi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 18:08:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/4 RESEND] mwifiex: set channel via start_ap handler for AP interface
-Date: Tue, 12 Jun 2012 15:02:24 -0700
-Message-Id: <1339538547-14558-1-git-send-email-bzhao@marvell.com> (sfid-20120613_000837_387004_3092AF65)
+	Wed, 27 Jun 2012 11:25:38 -0400
+Message-ID: <1340810735.11012.44.camel@jlt3.sipsolutions.net> (sfid-20120627_172717_899467_DB02BF0A)
+Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 27 Jun 2012 17:25:35 +0200
+In-Reply-To: <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com> (sfid-20120627_172101_975306_3DA213AA)
+References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
+	 <1340707305.14634.9.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
+	 <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com>
+	 <1340795869.11012.12.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfcNpj_UqCOXUG7sr2MQH8qZNHYr7MfBz5J3vwC3f+KU6Q@mail.gmail.com>
+	 <1340807890.11012.43.camel@jlt3.sipsolutions.net>
+	 <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com>
+	 (sfid-20120627_172101_975306_3DA213AA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Wed, 2012-06-27 at 18:20 +0300, Arik Nemtsov wrote:
 
-This patch adds functionality to set channel info received from
-cfg80211_ap_settings in start_ap handler.
+> > It'll depend on the driver I guess? If you're going to set a flag "give
+> > this vif priority now" on the first invocation, then you probably
+> > wouldn't care about the timing. It looks like our implementation would
+> > actually start some "give me the channel" operation and when the
+> > firmware says "ok you have the channel now" we'd return and rely on
+> > getting the TX right after.
+> >
+> > Wrt. the race, this isn't going to be something that happens within less
+> > than a millisecond or so, it's going to give us maybe 50ms at least of
+> > channel time (WFA mandates replying within 30ms), so that doesn't seem
+> > like a problem?
+> 
+> It's probably not an issue. Just seems simpler to just give the skb to
+> the driver so it can do whatever it wants before/during/after. Bypass
+> op_tx completely for these.
 
-Since set_channel cfg80211 handler has been removed and we need
-not explicitely call mwifiex_uap_set_channel(); hence this
-function definition is also removed.
+Yeah, that was one of the other options I considered in my original
+email ... but this call must be able to sleep, and the TX processing in
+mac80211 cannot sleep, so unless we bypass all processing (which seems
+wrong) that would be rather difficult to implement.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   23 +++++++++++++++++------
- drivers/net/wireless/mwifiex/main.h     |    1 -
- drivers/net/wireless/mwifiex/uap_cmd.c  |   30 ------------------------------
- 3 files changed, 17 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 015fec3..7b4eaf4 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -384,13 +384,13 @@ mwifiex_set_rf_channel(struct mwifiex_private *priv,
- 	cfp.freq = chan->center_freq;
- 	cfp.channel = ieee80211_frequency_to_channel(chan->center_freq);
- 
--	if (mwifiex_bss_set_channel(priv, &cfp))
--		return -EFAULT;
--
--	if (priv->bss_type == MWIFIEX_BSS_TYPE_STA)
-+	if (priv->bss_type == MWIFIEX_BSS_TYPE_STA) {
-+		if (mwifiex_bss_set_channel(priv, &cfp))
-+			return -EFAULT;
- 		return mwifiex_drv_change_adhoc_chan(priv, cfp.channel);
--	else
--		return mwifiex_uap_set_channel(priv, cfp.channel);
-+	}
-+
-+	return 0;
- }
- 
- /*
-@@ -961,6 +961,17 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
-+	bss_cfg->channel =
-+	    (u8)ieee80211_frequency_to_channel(params->channel->center_freq);
-+	bss_cfg->band_cfg = BAND_CONFIG_MANUAL;
-+
-+	if (mwifiex_set_rf_channel(priv, params->channel,
-+				   params->channel_type)) {
-+		kfree(bss_cfg);
-+		wiphy_err(wiphy, "Failed to set band config information!\n");
-+		return -1;
-+	}
-+
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
- 		kfree(bss_cfg);
- 		wiphy_err(wiphy, "Failed to parse secuirty parameters!\n");
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5b32221..512481e 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -990,7 +990,6 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 
- int mwifiex_main_process(struct mwifiex_adapter *);
- 
--int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel);
- int mwifiex_bss_set_channel(struct mwifiex_private *,
- 			    struct mwifiex_chan_freq_power *cfp);
- int mwifiex_get_bss_info(struct mwifiex_private *,
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 89f9a2a..fb0c6cb 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -421,33 +421,3 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 
- 	return 0;
- }
--
--/* This function sets the RF channel for AP.
-- *
-- * This function populates channel information in AP config structure
-- * and sends command to configure channel information in AP.
-- */
--int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel)
--{
--	struct mwifiex_uap_bss_param *bss_cfg;
--	struct wiphy *wiphy = priv->wdev->wiphy;
--
--	bss_cfg = kzalloc(sizeof(struct mwifiex_uap_bss_param), GFP_KERNEL);
--	if (!bss_cfg)
--		return -ENOMEM;
--
--	mwifiex_set_sys_config_invalid_data(bss_cfg);
--	bss_cfg->band_cfg = BAND_CONFIG_MANUAL;
--	bss_cfg->channel = channel;
--
--	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
--				   HostCmd_ACT_GEN_SET,
--				   UAP_BSS_PARAMS_I, bss_cfg)) {
--		wiphy_err(wiphy, "Failed to set the uAP channel\n");
--		kfree(bss_cfg);
--		return -1;
--	}
--
--	kfree(bss_cfg);
--	return 0;
--}
--- 
-1.7.0.2
+johannes
 
