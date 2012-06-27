@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:46869 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755760Ab2F0N3m (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41806 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528Ab2F0NjF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 09:29:42 -0400
-Received: by qafl39 with SMTP id l39so918829qaf.16
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 06:29:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FE9FD77.7050807@broadcom.com>
-References: <4FE8CF77.5080400@broadcom.com>
-	<CAC83ZvL2ozQD1DYmtKeFa1PB1pZ1JmBUKFWmDWnbJOCDL3sKNg@mail.gmail.com>
-	<4FE9FD77.7050807@broadcom.com>
-Date: Wed, 27 Jun 2012 18:59:40 +0530
-Message-ID: <CAC83ZvK_ve-d8jZo9mOQ5aidYxFV5r1FUbTqEC3LxvkikOoFHg@mail.gmail.com> (sfid-20120627_152948_589983_3E17553C)
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-From: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: khilman@ti.com, tony@atomide.com, santosh.shilimkar@ti.com,
-	b-cousson@ti.com, grant.likely@secretlab.ca,
-	linux-omap@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 27 Jun 2012 09:39:05 -0400
+Message-ID: <1340804336.11012.15.camel@jlt3.sipsolutions.net> (sfid-20120627_153909_072954_03C7880F)
+Subject: [PATCH 3.5 v2] mac80211: correct behaviour on unrecognised action
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 27 Jun 2012 15:38:56 +0200
+In-Reply-To: <1340799198.11012.14.camel@jlt3.sipsolutions.net> (sfid-20120627_141326_508742_B55D32C3)
+References: <1340799198.11012.14.camel@jlt3.sipsolutions.net>
+	 (sfid-20120627_141326_508742_B55D32C3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 26, 2012 at 11:50 PM, Franky Lin <frankyl@broadcom.com> wrote:
-> On 06/26/2012 12:21 AM, DebBarma, Tarun Kanti wrote:
->>
->> On Tue, Jun 26, 2012 at 2:22 AM, Franky Lin <frankyl@broadcom.com> wrote:
->>>
->>> Hi Kevin, Tarun,
->>>
->>> We are using the expansion connector A on Panda board to mount a SDIO
->>> WiFi
->>> dongle on MMC2 with a level triggered interrupt signal connected to GPIO
->>> 138. It's been working fine until 3.5 rc1. The board hang randomly within
->>> 5
->>> mins during a network traffic test. After bisecting we found the culprit
->>> is
->>> "[PATCH 8/8] gpio/omap: fix missing check in *_runtime_suspend()" [1].
->>>
->>> I noticed Kevin raised some similar cases on other platforms and also
->>> provided two patches in the patch mail thread. But unfortunately those
->>> two
->>> patches doesn't help in our case. I tested the driver with 3.5-rc3
->>> mainline
->>> kernel and the issue is still there. I can only "fix" the hang by either
->>> reverting the commit or disabling CONFIG_PM_RUNTIME. Also, the hang only
->>> happens on Panda ES board. Old Panda with 4430 works good.
->>>
->>> Any thoughts and suggestions?
->>
->> I just had a quick look at the code. Can you please check if the
->> attached patch solves
->> the issue? I just boot tested on Panda and Blaze.
->> --
->> Tarun
->>
->
-> Thanks for the prompt reply.
->
-> Booting is fine even without the patch and revert. The wifi dongle generates
-> interrupt whenever there is data packet available for host to read. So
-> during a traffic test a significant numbers of interrupt will be triggered
-> through the GPIO. So I assume it has something to do with the interrupt
-> GPIO.
->
-> With the patch, the kernel still crashes. But the symptom is slightly
-> different. Now it has a panic log every time. See attachment.
-I tried comparing the present code with older version with regard
-to enabled_non_wakeup_gpios check. The obvious difference I
-observed is that this check is performed after off-mode check,
-unlike the present case where the check is done just prior to
-off-mode check. But then, as Kevin pointed out, we need to understand
-the exact problem. I am trying to have a setup to reproduce the
-problem. BTW, you can ignore my patch because I realized that
-saved_datain is part of the workaround.
----
-Tarun
+From: Johannes Berg <johannes.berg@intel.com>
 
->
-> Regards,
-> Franky
+When receiving an "individually addressed" action frame, the
+receiver is required to return it to the sender. mac80211
+gets this wrong as it also returns group addressed (mcast)
+frames to the sender. Fix this and update the reference to
+the new 802.11 standards version since things were shuffled
+around significantly.
+
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+Fix logic, d'oh. Thanks nbd.
+
+ net/mac80211/rx.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 7bcecf7..965e6ec 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2455,7 +2455,7 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
+ 	 * frames that we didn't handle, including returning unknown
+ 	 * ones. For all other modes we will return them to the sender,
+ 	 * setting the 0x80 bit in the action category, as required by
+-	 * 802.11-2007 7.3.1.11.
++	 * 802.11-2012 9.24.4.
+ 	 * Newer versions of hostapd shall also use the management frame
+ 	 * registration mechanisms, but older ones still use cooked
+ 	 * monitor interfaces so push all frames there.
+@@ -2465,6 +2465,9 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
+ 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
+ 		return RX_DROP_MONITOR;
+ 
++	if (is_multicast_ether_addr(mgmt->da))
++		return RX_DROP_MONITOR;
++
+ 	/* do not return rejected action frames */
+ 	if (mgmt->u.action.category & 0x80)
+ 		return RX_DROP_UNUSABLE;
+-- 
+1.7.10
+
+
