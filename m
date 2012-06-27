@@ -1,116 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39055 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752926Ab2FUNw5 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:43236 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753386Ab2F0S0D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 09:52:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] iwlwifi: limit mac_change_interface to BSS context
-Date: Thu, 21 Jun 2012 15:52:53 +0200
-Message-Id: <1340286773-2381-4-git-send-email-johannes@sipsolutions.net> (sfid-20120621_155304_857718_FCD1B345)
-In-Reply-To: <1340286773-2381-1-git-send-email-johannes@sipsolutions.net>
-References: <1340286773-2381-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 27 Jun 2012 14:26:03 -0400
+Received: by werb10 with SMTP id b10so480737wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 11:26:02 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: allow Rx in reconfig only after removing BA sessions
+Date: Wed, 27 Jun 2012 21:25:57 +0300
+Message-Id: <1340821557-27009-1-git-send-email-arik@wizery.com> (sfid-20120627_202607_487422_04B1F433)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Previously, a connected STA/AP could send us some AMPDUs right after
+recovery, without the driver knowing anything about it.
 
-Currently when mac80211 asks to change the interface
-type, we will accept it for both the BSS and PAN
-contexts. This is not terribly complicated today,
-but with the addition of the P2P Device abstraction
-the PAN context handling will get more complex, so
-restrict mac_change_interface to the BSS context.
-
-Also fix a small locking issue and use is_active
-instead of the vif pointer to check if the other
-context is activated, guarding exclusive interface
-types on the BSS context (IBSS) against the PAN
-context being used for something else.
-
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/mac80211.c |   37 ++++++++++++---------------
- 1 file changed, 17 insertions(+), 20 deletions(-)
+ net/mac80211/util.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index b581f03..b83ca35 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -1411,13 +1411,11 @@ static void iwlagn_mac_remove_interface(struct ieee80211_hw *hw,
- }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 242ecde..a041f20 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1411,9 +1411,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		if (ieee80211_sdata_running(sdata))
+ 			ieee80211_enable_keys(sdata);
  
- static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
--				struct ieee80211_vif *vif,
--				enum nl80211_iftype newtype, bool newp2p)
-+				       struct ieee80211_vif *vif,
-+				       enum nl80211_iftype newtype, bool newp2p)
- {
- 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
--	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
--	struct iwl_rxon_context *bss_ctx = &priv->contexts[IWL_RXON_CTX_BSS];
--	struct iwl_rxon_context *tmp;
-+	struct iwl_rxon_context *ctx, *tmp;
- 	enum nl80211_iftype newviftype = newtype;
- 	u32 interface_modes;
- 	int err;
-@@ -1428,6 +1426,18 @@ static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&priv->mutex);
- 
-+	ctx = iwl_rxon_ctx_from_vif(vif);
-+
-+	/*
-+	 * To simplify this code, only support changes on the
-+	 * BSS context. The PAN context is usually reassigned
-+	 * by creating/removing P2P interfaces anyway.
-+	 */
-+	if (ctx->ctxid != IWL_RXON_CTX_BSS) {
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
- 	if (!ctx->vif || !iwl_is_ready_rf(priv)) {
- 		/*
- 		 * Huh? But wait ... this can maybe happen when
-@@ -1437,32 +1447,19 @@ static int iwlagn_mac_change_interface(struct ieee80211_hw *hw,
- 		goto out;
+-	local->in_reconfig = false;
+-	barrier();
+-
+  wake_up:
+ 	/*
+ 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
+@@ -1436,6 +1433,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		mutex_unlock(&local->sta_mtx);
  	}
  
-+	/* Check if the switch is supported in the same context */
- 	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
--
- 	if (!(interface_modes & BIT(newtype))) {
- 		err = -EBUSY;
- 		goto out;
- 	}
++	local->in_reconfig = false;
++
+ 	ieee80211_wake_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
  
--	/*
--	 * Refuse a change that should be done by moving from the PAN
--	 * context to the BSS context instead, if the BSS context is
--	 * available and can support the new interface type.
--	 */
--	if (ctx->ctxid == IWL_RXON_CTX_PAN && !bss_ctx->vif &&
--	    (bss_ctx->interface_modes & BIT(newtype) ||
--	     bss_ctx->exclusive_interface_modes & BIT(newtype))) {
--		BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
--		err = -EBUSY;
--		goto out;
--	}
--
- 	if (ctx->exclusive_interface_modes & BIT(newtype)) {
- 		for_each_context(priv, tmp) {
- 			if (ctx == tmp)
- 				continue;
- 
--			if (!tmp->vif)
-+			if (!tmp->is_active)
- 				continue;
- 
- 			/*
 -- 
-1.7.10
+1.7.9.5
 
