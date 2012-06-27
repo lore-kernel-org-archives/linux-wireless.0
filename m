@@ -1,65 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:45632 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1762563Ab2FVPce (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 11:32:34 -0400
-Message-ID: <1340379153.31821.21.camel@joe2Laptop> (sfid-20120622_173242_785938_39023724)
-Subject: Re: dynamic debug
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Jason Baron <jbaron@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Jun 2012 08:32:33 -0700
-In-Reply-To: <1340378474.4491.36.camel@jlt3.sipsolutions.net>
-References: <1340367797.4491.21.camel@jlt3.sipsolutions.net>
-	 <1340375177.31821.7.camel@joe2Laptop>
-	 <1340375643.4491.26.camel@jlt3.sipsolutions.net>
-	 <1340376114.31821.15.camel@joe2Laptop>
-	 <1340378474.4491.36.camel@jlt3.sipsolutions.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:41336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab2F0LK2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 07:10:28 -0400
+Message-ID: <1340795424.11012.11.camel@jlt3.sipsolutions.net> (sfid-20120627_131041_907305_617C8E05)
+Subject: Re: [RFC v3] initial channel context implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 27 Jun 2012 13:10:24 +0200
+In-Reply-To: <4FEADCAE.5080508@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+	  <1340718188.14634.47.camel@jlt3.sipsolutions.net>
+	  <4FEAB698.5070309@tieto.com>
+	 <1340784614.8305.8.camel@jlt3.sipsolutions.net>
+	 <4FEADCAE.5080508@tieto.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-22 at 17:21 +0200, Johannes Berg wrote:
-> On Fri, 2012-06-22 at 07:41 -0700, Joe Perches wrote:
-> 
-> > > > >  That doesn't make any sense at
-> > > > > all, and requires teaching everybody new tricks, so I'm basically
-> > > > > reverting it for now in favour of pr_info() instead of pr_debug().
-> > > > 
-> > > > Why not just add #define DEBUG?
-> > > 
-> > > I guess that works?
-> > 
-> > That works.
-> 
-> Are you sure? It doesn't really seem to work ...
-> 
-> #if defined(CONFIG_DYNAMIC_DEBUG)
-> /* dynamic_pr_debug() uses pr_fmt() internally so we don't need it here */
-> #define pr_debug(fmt, ...) \
->         dynamic_pr_debug(fmt, ##__VA_ARGS__)
-> #elif defined(DEBUG)
-> #define pr_debug(fmt, ...) \
->         printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-> 
-> 
-> 
-> So basically, if you have CONFIG_DYNAMIC_DEBUG, you *still* need to
-> enable it with the dynamic debug framework, right?
+On Wed, 2012-06-27 at 12:13 +0200, Michal Kazior wrote:
 
-No.
+> > Ok. Thinking about this a bit I get a feeling that we should internally
+> > fully convert mac80211 over to channel contexts and not make things
+> > conditional. Then, whenever a new channel context is allocated it will
+> > be the only one and we can set hw.conf.channel/type to its channel(type)
+> > and call hw_config() instead of ... add/change chanctx?
+> >
+> > That way, we really only need to make a distinction in the low-level
+> > code that actually calls into the driver, and on a higher level we can
+> > just use the channel contexts everywhere.
+> 
+> But wouldn't that make hw.conf.channel have a different value then the 
+> channel context after running hw_config() (in case of sw scan for 
+> example)? You want to copy the value back from hw.conf.channel back to 
+> (an immutable) context channel in such a case? Could you elaborate more 
+> on this, please?
 
-In dynamic_debug.h, there's a mechanism to enable all
-dynamic_pr_debug lines when DEBUG is #defined
+Good questions :-)
 
-#if defined DEBUG
-#define _DPRINTK_FLAGS_DEFAULT _DPRINTK_FLAGS_PRINT
-#else
-#define _DPRINTK_FLAGS_DEFAULT 0
-#endif
+I was thinking that today we have tmp_channel & oper_channel (in local),
+and oper_channel would follow the (single) channel context (if there
+even is one, otherwise any random channel is fine), and hw.conf.channel
+would still be tmp_channel when that is in used for scanning/roc?
 
+
+> > The biggest issue here will be CSA handling. I have no idea yet how this
+> > will work in multi-channel, maybe we need to disconnect all other
+> > interfaces on the same channel, or so?
+> 
+> We don't care about CSA in cfg80211 right now, do we? We probably should 
+> as it can break interface combinations right now too. 
+
+Good point.
+
+> We could maybe use the cfg80211_ch_switch_notify. 
+
+That was intended for AP mode, I'm not sure it's good for station mode,
+in station mode we need to have current_bss->channel updated as well in
+that case.
+
+> This would probably require some more 
+> additional changes too (maybe with regard to channel tracking too).
+> 
+> Worst-case we disconnect other interfaces. We might be able to create a 
+> new channel context (provided num_different_channels hasn't been reached 
+> yet) or reuse an existing channel context (provided CSA happens to 
+> target a channel we have a channel context for already).
+
+Yeah ... we need to think about it more. I thought we could put it off a
+bit longer, but I guess with the channel tracking we already need it?
+
+johannes
 
