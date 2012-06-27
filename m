@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49690 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753191Ab2FJNDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jun 2012 09:03:22 -0400
-Message-ID: <4FD49B12.9030705@hauke-m.de> (sfid-20120610_150326_677264_2121BE3E)
-Date: Sun, 10 Jun 2012 15:03:14 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:52122 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754221Ab2F0AIL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jun 2012 20:08:11 -0400
+Received: by wgbdr13 with SMTP id dr13so431997wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 17:08:09 -0700 (PDT)
+Message-ID: <4FEA4EE6.2070401@gmail.com> (sfid-20120627_020815_064756_65E358A6)
+Date: Wed, 27 Jun 2012 02:08:06 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 16/18] brcmsmac: do not call brcms_c_chipmatch() for non
- PCI
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-17-git-send-email-hauke@hauke-m.de> <4FCF3DA7.1080508@broadcom.com> <4FD0AA77.4000108@hauke-m.de> <4FD0FBB5.6040008@broadcom.com>
-In-Reply-To: <4FD0FBB5.6040008@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: dsd@gentoo.org, kune@deine-taler.de,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	dwmw2@infradead.org, ben@decadent.org.uk
+Subject: ZyDAS zd1211/zd1211b fw
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2012 09:06 PM, Arend van Spriel wrote:
-> On 06/07/2012 03:19 PM, Hauke Mehrtens wrote:
->> Hi Arend,
->>
->> On 06/06/2012 01:23 PM, Arend van Spriel wrote:
->>> On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
->>>> brcms_c_chipmatch() just works for PCIe devices and returns false for
->>>> non PCIe devices. This stops brcms_ops_stop() from calling it when the
->>>> devices is not a PCIe device.
->>>
->>> Although this is true you may want to consider what this function
->>> provides. The intent is to have a more accurate filter to determine
->>> support the device by the driver, ie. more accurate than what is in the
->>> driver device table.
->>>
->>> So in brcms_c_chipmatch() we may want a host-type independent filtering
->>> and validate bcma_device_id, bcma_chipinfo, and possibly bcma_boardinfo.
->> I do not like this function at all. ;-)
->>
->> Are these restrictions in this function really needed? I would more like
->> to restrict it to something like core revs, which is done in the device
->> table and the phy types and versions. A restriction by chipid would also
->> be reasonable as some chips are needing some special workarounds, these
->> checks could also be done for SoCs.
-> 
-> I look where the function came from and it is called in several places
-> in our proprietary driver, which has a pretty coarse filter in the
-> device table.
-> 
-> The BCMA device table in brcmsmac is more finegrained and currently has
-> entries for the different 80211 core revisions. However, the brcmsmac
-> may have additional revision requirement for chipcommon and other cores
-> inside the chip so this function may have it merits for checking that.
-> 
-> Gr. AvS
-> 
-Hi Arend,
+hi,
 
-ok, then I will extend it somehow to also handle the SoCs based on the
-chip id and rev in that function.
+ZyDAS zd1211/zd1211b firmware are missing in linux-firmware.git,
+readme says:
 
-Hauke
+--cut--
+README
+
+This distribution contains the firmware files for the
+ZD1211 chip, which is used in WLAN USB sticks. Copy the zd1211_* files to
+/lib/firmware/zd1211, where they can be loaded by the rewritten
+zd1211 driver.
+
+The files are generated from C header files distributed in the
+original ZyDAS ZD1211 driver under the GNU Public License.
+
+The full source of the original ZYDAS driver is available from
+http://zd1211.wiki.sourceforge.net/VendorDriver
+
+The GPL-licensed header files used to produce the firmware blobs are also
+present in this distribution. See the COPYING file for the full license terms.
+
+HISTORY
+
+VERSION 1.4 (2007-10-04)
+Sync to vendor driver v2.21.0.0
+According to Atheros, this firmware fixes a USB disconnect issue which most
+commonly appeared when running "lsusb" or "cat /proc/usb/devices" while using
+the device.
+
+VERSION 1.3 (2006-12-30)
+Sync to vendor driver v2.16.0.0
+Large packet support is now disabled. The zd1211 firmware is now the same as
+v1.1 but the zd1211b firmware is new: It is the same which is shipped in the
+2.10.0.0 release which supposedly fixes a "reboot issue"
+
+VERSION 1.2 (2006-07-22)
+Sync to vendor driver v2.13.0.0
+Release notes mention that this firmware includes largepacket support
+
+VERSION 1.1 (2006-04-30)
+Added ZD1211B firmware files
+
+VERSION 1.0 (2006-04-16)
+This firmware has been generated from fersion 2_5_0_0 of the Zydas
+driver, 2006-04-16.
+--end--
+
+So zero troubles to be at linux-firmware.git, can anyone submit a patch ?
+
+latest fw at: http://netcologne.dl.sourceforge.net/project/zd1211/zd1211-firmware/1.4/
+
+-thanks-
