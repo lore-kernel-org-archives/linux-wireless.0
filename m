@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44424 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837Ab2FER4H (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39809 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012Ab2F0Oat (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 13:56:07 -0400
-Message-ID: <1338918966.4514.49.camel@jlt3.sipsolutions.net> (sfid-20120605_195626_179221_28C6B5D5)
-Subject: [PATCH 3.5 v3] iwlwifi: fix double free/complete in firmware loading
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 05 Jun 2012 19:56:06 +0200
-In-Reply-To: <1338881890.4514.13.camel@jlt3.sipsolutions.net> (sfid-20120605_093822_652064_2187C728)
-References: <1338881890.4514.13.camel@jlt3.sipsolutions.net>
-	 (sfid-20120605_093822_652064_2187C728)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Jun 2012 10:30:49 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath9k: Fix signedness in a MCI debug message
+Date: Wed, 27 Jun 2012 20:00:27 +0530
+Message-ID: <1340807427-5774-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120627_163053_155270_DA848720)
+In-Reply-To: <1340807427-5774-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1340807427-5774-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Linus reported that due to mac80211 failing to register
-the device (due to WoWLAN) his machine crashed etc. as
-we double-freed the vmalloc() firmware area. His patch
-to fix it was very similar to this one but I noticed
-that there's another bug in the area: we complete the
-completion before starting, so since we're running in
-a work struct context stop() could be called while in
-the middle of start() which will almost certainly lead
-to issues.
+seems i got a message like this
+ath: phy0: BT_Status_Update: is_link=0, linkId=2,
+state=1, SEQ=-2085766476 initially.
 
-Make a modification similar to his to avoid the double-
-free but also move the completion to another spot so it
-is only done after start() either finished or failed so
-that stop() can have a consistent state.
-
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-Wow, clearly I'm not paying enough attention today, sorry.
-Remove the stray label.
+ drivers/net/wireless/ath/ath9k/mci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-drv.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index d742900..fac67a5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -861,13 +861,18 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index c40e568..64cc782 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -348,7 +348,7 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
  
- 	/* We have our copies now, allow OS release its copies */
- 	release_firmware(ucode_raw);
--	complete(&drv->request_firmware_complete);
+ 		seq_num = *((u32 *)(rx_payload + 12));
+ 		ath_dbg(common, MCI,
+-			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%d\n",
++			"BT_Status_Update: is_link=%d, linkId=%d, state=%d, SEQ=%u\n",
+ 			profile_status.is_link, profile_status.conn_handle,
+ 			profile_status.is_critical, seq_num);
  
- 	drv->op_mode = iwl_dvm_ops.start(drv->trans, drv->cfg, &drv->fw);
- 
- 	if (!drv->op_mode)
--		goto out_free_fw;
-+		goto out_unbind;
- 
-+	/*
-+	 * Complete the firmware request last so that
-+	 * a driver unbind (stop) doesn't run while we
-+	 * are doing the start() above.
-+	 */
-+	complete(&drv->request_firmware_complete);
- 	return;
- 
-  try_again:
 -- 
-1.7.10
-
-
+1.7.0.4
 
