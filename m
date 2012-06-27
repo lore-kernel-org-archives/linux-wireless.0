@@ -1,73 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755965Ab2FYV3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 17:29:10 -0400
-Date: Mon, 25 Jun 2012 17:29:04 -0400
-From: Jason Baron <jbaron@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	Jim Cromie <jim.cromie@gmail.com>
-Subject: Re: [PATCH 4/6] mac80211: clean up debugging
-Message-ID: <20120625212904.GA9245@redhat.com> (sfid-20120625_232913_928970_2ADBE5C1)
-References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
- <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
- <1340438536.2274.9.camel@joe2Laptop>
- <1340456697.4636.1.camel@jlt3.sipsolutions.net>
- <1340466044.7758.4.camel@joe2Laptop>
- <1340530258.4577.4.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1340530258.4577.4.camel@jlt3.sipsolutions.net>
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:47654 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756709Ab2F0QKF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 12:10:05 -0400
+Received: by lbok6 with SMTP id k6so365140lbo.4
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 09:09:56 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH] wlcore: implement .flush callback
+Date: Wed, 27 Jun 2012 19:09:47 +0300
+Message-Id: <1340813387-18407-1-git-send-email-coelho@ti.com> (sfid-20120627_181017_400526_4AB5896E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 24, 2012 at 11:30:58AM +0200, Johannes Berg wrote:
-> On Sat, 2012-06-23 at 08:40 -0700, Joe Perches wrote:
-> 
-> > > FWIW, I would definitely prefer named rather than bitmap selectors :-)
-> > 
-> > (Added Jason and Jim)
-> > 
-> > Given it's a debug-only facility, I think bitmap
-> > selectors sufficient, Maybe adding an external
-> > utility to map names to bits would be enough to
-> > not need that feature in the kernel.
-> 
+From: Eliad Peller <eliad@wizery.com>
 
-I've been thinking about that too - given that we can control each
-individual statement from userspace, perhaps most of the implementation
-for level/bitmap support could and should be done in userspace.
+implement the .flush() callback by simply calling wl1271_tx_flush().
 
-For levels, we add 1 additional field to the pr_debug() statement, and
-its easy enough to construct a command-line to turn on the correct
-statements.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-For flags it should be just as easy but we probably want to export a
-table mapping kernel strings to to bitmask fields as well.
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 709f6dd..6ac3323 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4637,6 +4637,13 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
++static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
++{
++	struct wl1271 *wl = hw->priv;
++
++	wl1271_tx_flush(wl);
++}
++
+ static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
+ {
+ 	struct wl1271 *wl = hw->priv;
+@@ -4827,6 +4834,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.tx_frames_pending = wl1271_tx_frames_pending,
+ 	.set_bitrate_mask = wl12xx_set_bitrate_mask,
+ 	.channel_switch = wl12xx_op_channel_switch,
++	.flush = wlcore_op_flush,
+ 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+ };
+ 
+-- 
+1.7.10
 
-So some simple wrapper scripts would probably make this pretty easy. 
-
-> I guess the real question isn't whether it should be a bitmap or a name
-> or whatever, it's how it's implemented. To allay fears about runtime
-> overhead, I think it would be good to use the jump_label mechanism to
-> implement it -- I do realise that still has runtime overhead for the
-> argument preparation, but still.
-> 
-> Looking at the history, it seems that jump labels were at one point used
-> by reverted to fix gcc 3.3, I'm sure that could be resolved?
-
-Yes, there were some circular header dependencies issues - but they can
-be resolved. I will re-post this work.
-
-> 
-> Anyway, the point is that if it uses jump labels then we need some sort
-> of house-keeping structures anyway to be able to enable/disable the
-> right jump labels. And that could easily have a string attached, which
-> would make it easier when working with bug reporters etc. since you
-> don't have to worry about the exact bitmap, you can give them a string
-> (and if it's wrong, there will be a failure rather than silently getting
-> the wrong data)
-> 
-> johannes
-> 
