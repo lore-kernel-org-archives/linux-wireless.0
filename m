@@ -1,87 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58040 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958Ab2FSRTg (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:33279 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757373Ab2F0VD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 13:19:36 -0400
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	<aeolus@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Tue, 19 Jun 2012 22:50:49 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: Re: [PATCH 03/10] ath9k_hw: Add WoW hardware capability flags
-Message-ID: <20120619172047.GA7105@vmraj-lnx.qca.qualcomm.com> (sfid-20120619_191940_304162_DAB68F78)
-References: <1340120850-9155-1-git-send-email-mohammed@qca.qualcomm.com>
- <1340120850-9155-4-git-send-email-mohammed@qca.qualcomm.com>
+	Wed, 27 Jun 2012 17:03:59 -0400
+Received: by yenl2 with SMTP id l2so1317603yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 14:03:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1340120850-9155-4-git-send-email-mohammed@qca.qualcomm.com>
+Date: Wed, 27 Jun 2012 23:03:58 +0200
+Message-ID: <CAGh0HCBU-Udztv-CTTGGRfFHTJNSpAwmzbTJXsr5=pRQ0=c8fw@mail.gmail.com> (sfid-20120627_230403_720465_7167B567)
+Subject: Poor signal strength on BCM4313
+From: Guillaume Bouchard <guillaume.bouchard@liris.cnrs.fr>
+To: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 09:17:23PM +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> 
-> have seperate wow capability flags for
-> *basic wow support
-> *device capable of matching exact user defined pattern
-> or de-authentication/disassoc pattern
-> *device such AR9280 requires first four bytes for
-> all sort of patterns
-> 
-> Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> Cc: vadivel@qca.qualcomm.com
-> Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hw.h |   20 ++++++++++++++++++++
->  1 files changed, 20 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> index d0e14a3..73a1238 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -231,6 +231,23 @@ enum ath9k_hw_caps {
->  	ATH9K_HW_CAP_DFS			= BIT(16),
->  };
->  
-> +/*
-> + * enum ath9k_hw_wow_caps - WoW device capabilities
-> + * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
-> + * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
-> + * an exact user defined pattern or de-authentication/disassoc pattern.
-> + * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
-> + * bytes of the pattern for user defined pattern, de-authentication and
-> + * disassociation patterns for all types of possible frames recieved
-> + * of those types.
-> + */
-> +
-> +enum ath9k_hw_wow_caps {
-> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(0),
-> +	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(1),
-> +	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(2),
-> +};
-> +
->  struct ath9k_hw_capabilities {
->  	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
->  	u16 rts_aggr_limit;
-> @@ -246,6 +263,9 @@ struct ath9k_hw_capabilities {
->  	u8 txs_len;
->  	u16 pcie_lcr_offset;
->  	bool pcie_lcr_extsync_en;
-> +#ifdef	CONFIG_PM_SLEEP
-> +	enum ath9k_hw_wow_caps wow_caps;
-> +#endif
-Why can't you align with existing HW_CAP_* flags? why do you need a separate
-place holder?
+Hi.
 
--Rajkumar
+I have a laptop (hp dm1 4131 ef) which is using a broadcom BCM4313
+chip on archlinux with a kernel 3.4.4. (detailed system information at
+the end of the mail)
+
+I'm able to connect to wifi network with this card, but only within a
+really limited range (ie, acces point should be at no more than 3
+meters from the laptop, else signal strength is quickly falling to 0).
+
+I found one or two references to the same problem on forums, but
+usually people have the same laptop too, so I'm wondering if it can
+come from the hardware.
+
+So what is the status of this chip? Is this issue known ? Is there a solution ?
+
+Thank you for your time and please ask if you need more information
+about my configuration or some test done.
+
+Configuration details:
+
+$ lspci -vvv
+
+03:00.0 Network controller: Broadcom Corporation BCM4313 802.11b/g/n
+Wireless LAN Controller (rev 01)
+        Subsystem: Hewlett-Packard Company Device 1795
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 16
+        Region 0: Memory at 90200000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=2 PME-
+        Capabilities: [58] Vendor Specific Information: Len=78 <?>
+        Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [d0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
+<4us, L1 unlimited
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+
+AuxPwr+ TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L1,
+Latency L0 <4us, L1 <64us
+                        ClockPM+ Surprise- LLActRep+ BwNot-
+                LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled-
+Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
+SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [13c v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Capabilities: [160 v1] Device Serial Number 00-00-3d-ff-ff-68-e4-d5
+        Capabilities: [16c v1] Power Budgeting <?>
+        Kernel driver in use: bcma-pci-bridge
+
+
+
+
+$ uname -a
+
+Linux hpdm1 3.4.4-2-ARCH #1 SMP PREEMPT Sun Jun 24 18:59:47 CEST 2012
+x86_64 GNU/Linux
+
+
+$ lsmod
+
+Module                  Size  Used by
+aes_x86_64              7508  1
+cryptd                  8741  0
+aes_generic            26138  1 aes_x86_64
+arc4                    1410  2
+brcmsmac              528035  0
+cordic                  1105  1 brcmsmac
+crc8                    1186  1 brcmsmac
+brcmutil                3152  1 brcmsmac
+bcma                   22757  1 brcmsmac
+mac80211              395680  1 brcmsmac
+cfg80211              170074  2 brcmsmac,mac80211
+rfkill                 15604  2 cfg80211
+snd_hda_codec_idt      55508  1
+snd_hda_codec_hdmi     23672  1
+snd_hda_intel          24053  7
+snd_hda_codec          94273  3
+snd_hda_codec_hdmi,snd_hda_codec_idt,snd_hda_intel
+uvcvideo               69437  0
+videobuf2_vmalloc       2468  1 uvcvideo
+videobuf2_memops        2246  1 videobuf2_vmalloc
+videobuf2_core         20415  1 uvcvideo
+fglrx                2619025  102
+videodev               93086  1 uvcvideo
+snd_hwdep               6300  1 snd_hda_codec
+snd_pcm                74958  3 snd_hda_codec_hdmi,snd_hda_codec,snd_hda_intel
+snd_page_alloc          7217  2 snd_pcm,snd_hda_intel
+snd_timer              18966  1 snd_pcm
+snd                    58997  21
+snd_hwdep,snd_timer,snd_hda_codec_hdmi,snd_hda_codec_idt,snd_pcm,snd_hda_codec,snd_hda_intel
+soundcore               5410  1 snd
+r8169                  49354  0
+evdev                   9754  7
+serio_raw               4653  0
+uas                     9285  0
+i2c_piix4               8224  0
+ums_realtek             7391  0
+i2c_core               20369  2 i2c_piix4,videodev
+k10temp                 2915  0
+amd_iommu_v2            7359  1 fglrx
+mii                     4123  1 r8169
+usb_storage            44792  1 ums_realtek
+psmouse                70792  0
+media                  10213  2 uvcvideo,videodev
+wmi                     8475  0
+processor              26567  2
+microcode              12185  0
+button                  4502  1 fglrx
+thermal                 7959  0
+battery                 6517  0
+video                  11307  0
+ac                      2376  0
+ext4                  424175  3
+crc16                   1359  1 ext4
+jbd2                   73919  1 ext4
+mbcache                 5977  1 ext4
+sd_mod                 29239  5
+ohci_hcd               21720  0
+ahci                   20549  4
+libahci                20023  1 ahci
+libata                167611  2 ahci,libahci
+ehci_hcd               41026  0
+scsi_mod              132942  4 uas,usb_storage,libata,sd_mod
+usbcore               147565  7
+uas,uvcvideo,ums_realtek,usb_storage,ohci_hcd,ehci_hcd
+usb_common               954  1 usbcore
+
+-- 
+Guillaume
