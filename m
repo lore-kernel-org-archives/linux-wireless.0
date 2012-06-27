@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41943 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752462Ab2F1A0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 20:26:43 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@qca.qualcomm.com
-Subject: [PATCH 08/11] qca-swiss-army-knife: de-duplicate ar9485 initvals
-Date: Thu, 28 Jun 2012 02:26:36 +0200
-Message-Id: <1340843199-49821-8-git-send-email-nbd@openwrt.org> (sfid-20120628_022656_871398_33E2D071)
-In-Reply-To: <1340843199-49821-7-git-send-email-nbd@openwrt.org>
-References: <1340843199-49821-1-git-send-email-nbd@openwrt.org>
- <1340843199-49821-2-git-send-email-nbd@openwrt.org>
- <1340843199-49821-3-git-send-email-nbd@openwrt.org>
- <1340843199-49821-4-git-send-email-nbd@openwrt.org>
- <1340843199-49821-5-git-send-email-nbd@openwrt.org>
- <1340843199-49821-6-git-send-email-nbd@openwrt.org>
- <1340843199-49821-7-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:41529 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756554Ab2F0MNX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 08:13:23 -0400
+Message-ID: <1340799198.11012.14.camel@jlt3.sipsolutions.net> (sfid-20120627_141326_508742_B55D32C3)
+Subject: [PATCH 3.5] mac80211: correct behaviour on unrecognised action
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 27 Jun 2012 14:13:18 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- tools/initvals/initvals.c |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index 81669ff..9766c28 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -650,22 +650,28 @@ static void ar9340_hw_print_initvals(bool check)
- 
- static void ar9485_hw_print_initvals(bool check)
- {
--	INI_PRINT(ar9485_1_1_mac_postamble);
-+	INI_PRINT_DUP(ar9485_1_1_mac_postamble,
-+		      ar9300_2p2_mac_postamble);
- 	INI_PRINT(ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1);
- 	INI_PRINT(ar9485Common_wo_xlna_rx_gain_1_1);
-+
- 	INI_PRINT(ar9485Modes_high_power_tx_gain_1_1);
-+	INI_PRINT_DUP(ar9485Modes_high_ob_db_tx_gain_1_1,
-+		      ar9485Modes_high_power_tx_gain_1_1);
-+	INI_PRINT_DUP(ar9485Modes_low_ob_db_tx_gain_1_1,
-+		      ar9485Modes_high_ob_db_tx_gain_1_1);
-+	INI_PRINT_DUP(ar9485_modes_lowest_ob_db_tx_gain_1_1,
-+		      ar9485Modes_low_ob_db_tx_gain_1_1);
-+
- 	INI_PRINT(ar9485_1_1);
- 	INI_PRINT(ar9485_1_1_radio_core);
--	INI_PRINT(ar9485_modes_lowest_ob_db_tx_gain_1_1);
- 	INI_PRINT(ar9485_1_1_baseband_core);
--	INI_PRINT(ar9485Modes_high_ob_db_tx_gain_1_1);
- 	INI_PRINT(ar9485_common_rx_gain_1_1);
- 	INI_PRINT(ar9485_1_1_pcie_phy_pll_on_clkreq_enable_L1);
- 	INI_PRINT(ar9485_1_1_pcie_phy_clkreq_enable_L1);
- 	INI_PRINT(ar9485_1_1_soc_preamble);
- 	INI_PRINT(ar9485_fast_clock_1_1_baseband_postamble);
- 	INI_PRINT(ar9485_1_1_baseband_postamble);
--	INI_PRINT(ar9485Modes_low_ob_db_tx_gain_1_1);
- 	INI_PRINT(ar9485_1_1_pcie_phy_clkreq_disable_L1);
- 	INI_PRINT(ar9485_1_1_radio_postamble);
- 	INI_PRINT(ar9485_1_1_mac_core);
+When receiving an "individually addressed" action frame, the
+receiver is required to return it to the sender. mac80211
+gets this wrong as it also returns group addressed (mcast)
+frames to the sender. Fix this and update the reference to
+the new 802.11 standards version since things were shuffled
+around significantly.
+
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+John, can you apply this? Thanks! :-)
+
+ net/mac80211/rx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index d4d82c7..03b9ba8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2434,12 +2434,13 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
+ 	 * frames that we didn't handle, including returning unknown
+ 	 * ones. For all other modes we will return them to the sender,
+ 	 * setting the 0x80 bit in the action category, as required by
+-	 * 802.11-2007 7.3.1.11.
++	 * 802.11-2012 9.24.4.
+ 	 * Newer versions of hostapd shall also use the management frame
+ 	 * registration mechanisms, but older ones still use cooked
+ 	 * monitor interfaces so push all frames there.
+ 	 */
+ 	if (!(status->rx_flags & IEEE80211_RX_MALFORMED_ACTION_FRM) &&
++	    !is_multicast_ether_addr(mgmt->da) &&
+ 	    (sdata->vif.type == NL80211_IFTYPE_AP ||
+ 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
+ 		return RX_DROP_MONITOR;
 -- 
-1.7.3.2
+1.7.10
+
+
 
