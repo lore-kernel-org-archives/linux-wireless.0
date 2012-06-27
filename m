@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46454 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756930Ab2FUMDo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 08:03:44 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Kazior Michal <Michal.Kazior@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v2 7/7] mac80211: reuse channels for channel context
-Date: Thu, 21 Jun 2012 14:03:36 +0200
-Message-ID: <1340280216-18807-8-git-send-email-michal.kazior@tieto.com> (sfid-20120621_140350_607892_44CD1453)
-In-Reply-To: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
-References: <1340280216-18807-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:52178 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754433Ab2F0PgP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 11:36:15 -0400
+Received: by lbol5 with SMTP id l5so1951755lbo.34
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 08:36:12 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 0/8] wlcore/wl12xx/wl18xx: patches of the day
+Date: Wed, 27 Jun 2012 18:35:54 +0300
+Message-Id: <1340811362-30441-1-git-send-email-coelho@ti.com> (sfid-20120627_173618_950425_0EE4D806)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kazior Michal <Michal.Kazior@tieto.com>
+Hi,
 
-Reuse channels with compatible channel types. Some
-channel types are compatible and can be used
-concurrently.
+A few more patches for wlcore and friends.  Some improvements and bug
+fixes.  The most significant improvement is that now in wl12xx we
+allow sched scan while connected and allow normal scans while sched
+scanning.  The wl18xx firmware doesn't support this yet.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+After this series, a newer firmware version is required.  We call it
+fw-5 for wl127x and wl128x now.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 63b7cb7..97be454 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -167,6 +167,7 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 		       enum ieee80211_chanctx_mode mode)
- {
- 	struct ieee80211_chanctx *ctx;
-+	enum nl80211_channel_type compat_type;
- 
- 	if (mode == IEEE80211_CHANCTX_EXCLUSIVE)
- 		return NULL;
-@@ -174,12 +175,22 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 		return NULL;
- 
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
-+		compat_type = ctx->conf.channel_type;
-+
- 		if (ctx->conf.mode == IEEE80211_CHANCTX_EXCLUSIVE)
- 			continue;
- 		if (ctx->conf.channel != channel)
- 			continue;
- 		if (ctx->conf.channel_type != channel_type)
- 			continue;
-+		if (!ieee80211_channel_types_are_compatible(ctx->conf.channel_type,
-+							    channel_type,
-+							    &compat_type))
-+			continue;
-+		if (ctx->conf.channel_type != compat_type) {
-+			ctx->conf.channel_type = compat_type;
-+			drv_change_chantype(local, ctx);
-+		}
- 
- 		return ctx;
- 	}
+Cheers,
+Luca.
+
+
+Arik Nemtsov (5):
+  wlcore/wl12xx/wl18xx: check min FW version
+  wlcore: don't stop tx queue via watermark if already stopped
+  wlcore: remove recover cmd from testmode
+  wlcore: avoid debug prints during intended FW recovery
+  wlcore: always clear recovery flag during recovery_work
+
+Luciano Coelho (1):
+  wl12xx/wlcore: increase FW filename version
+
+Victor Goldenshtein (1):
+  wlcore: enable sched scan while connected
+
+Yoni Divinsky (1):
+  wlcore: add probe request templates for sched and one-shot scans
+
+ drivers/net/wireless/ti/wl12xx/main.c     |   24 ++++++++++----
+ drivers/net/wireless/ti/wl12xx/wl12xx.h   |   14 ++++++++
+ drivers/net/wireless/ti/wl18xx/main.c     |    5 +++
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   |    7 ++++
+ drivers/net/wireless/ti/wlcore/boot.c     |   51 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wlcore/cmd.c      |   14 ++++++--
+ drivers/net/wireless/ti/wlcore/cmd.h      |    6 ++--
+ drivers/net/wireless/ti/wlcore/init.c     |   16 +++++++++
+ drivers/net/wireless/ti/wlcore/main.c     |   15 +++++----
+ drivers/net/wireless/ti/wlcore/scan.c     |    9 ++---
+ drivers/net/wireless/ti/wlcore/sdio.c     |    6 ----
+ drivers/net/wireless/ti/wlcore/spi.c      |    6 ----
+ drivers/net/wireless/ti/wlcore/testmode.c |   13 +-------
+ drivers/net/wireless/ti/wlcore/wlcore.h   |   21 ++++++++++++
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    9 -----
+ 15 files changed, 161 insertions(+), 55 deletions(-)
+
 -- 
-1.7.0.4
+1.7.10
 
