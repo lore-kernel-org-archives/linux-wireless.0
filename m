@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24327 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764Ab2FFFDu (ORCPT
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:55687 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756160Ab2F0PgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 01:03:50 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k: remove incompatible IBSS interface check in change_iface
-Date: Wed, 6 Jun 2012 10:33:42 +0530
-Message-ID: <1338959022-2786-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120606_070353_106789_36117324)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 27 Jun 2012 11:36:24 -0400
+Received: by lbbgk8 with SMTP id gk8so1804300lbb.26
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 08:36:22 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 4/8] wlcore: remove recover cmd from testmode
+Date: Wed, 27 Jun 2012 18:35:58 +0300
+Message-Id: <1340811362-30441-5-git-send-email-coelho@ti.com> (sfid-20120627_173628_308272_F354C3EF)
+In-Reply-To: <1340811362-30441-1-git-send-email-coelho@ti.com>
+References: <1340811362-30441-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-'cfg80211: fix interface combinations' ensures that if an interface
-type is not advertised by the driver in any of the interface combinations
-(via ieee80211_iface_combination) then it shall be treated as a single
-incompatible interface. if there are more than one interfaces present
-and changing them to incompatible interface type is not possible.
-These checks will be properly handled by cfg80211_change_iface ->
-cfg80211_can_change_interface.
+This command is buggy (doesn't take the mutex) and unused. Instead, the
+"start_recovery" file is used for the same purpose. Remove the code but
+keep the command constant to avoid breaking the testmode ABI.
 
-this patch is dependent on 'cfg80211: fix interface combinations'
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ti/wlcore/testmode.c |   13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9ae76bd..00c0996 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1467,15 +1467,6 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
+diff --git a/drivers/net/wireless/ti/wlcore/testmode.c b/drivers/net/wireless/ti/wlcore/testmode.c
+index eeb339d..d6f57e2 100644
+--- a/drivers/net/wireless/ti/wlcore/testmode.c
++++ b/drivers/net/wireless/ti/wlcore/testmode.c
+@@ -40,7 +40,7 @@ enum wl1271_tm_commands {
+ 	WL1271_TM_CMD_CONFIGURE,
+ 	WL1271_TM_CMD_NVS_PUSH,		/* Not in use. Keep to not break ABI */
+ 	WL1271_TM_CMD_SET_PLT_MODE,
+-	WL1271_TM_CMD_RECOVER,
++	WL1271_TM_CMD_RECOVER,		/* Not in use. Keep to not break ABI */
+ 	WL1271_TM_CMD_GET_MAC,
  
--	/* See if new interface type is valid. */
--	if ((new_type == NL80211_IFTYPE_ADHOC) &&
--	    (sc->nvifs > 1)) {
--		ath_err(common, "When using ADHOC, it must be the only"
--			" interface.\n");
--		ret = -EINVAL;
--		goto out;
--	}
+ 	__WL1271_TM_CMD_AFTER_LAST
+@@ -272,15 +272,6 @@ static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
+ 	return ret;
+ }
+ 
+-static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
+-{
+-	wl1271_debug(DEBUG_TESTMODE, "testmode cmd recover");
 -
- 	if (ath9k_uses_beacons(new_type) &&
- 	    !ath9k_uses_beacons(vif->type)) {
- 		if (sc->nbcnvifs >= ATH_BCBUF) {
+-	wl12xx_queue_recovery_work(wl);
+-
+-	return 0;
+-}
+-
+ static int wl12xx_tm_cmd_get_mac(struct wl1271 *wl, struct nlattr *tb[])
+ {
+ 	struct sk_buff *skb;
+@@ -350,8 +341,6 @@ int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 		return wl1271_tm_cmd_configure(wl, tb);
+ 	case WL1271_TM_CMD_SET_PLT_MODE:
+ 		return wl1271_tm_cmd_set_plt_mode(wl, tb);
+-	case WL1271_TM_CMD_RECOVER:
+-		return wl1271_tm_cmd_recover(wl, tb);
+ 	case WL1271_TM_CMD_GET_MAC:
+ 		return wl12xx_tm_cmd_get_mac(wl, tb);
+ 	default:
 -- 
-1.7.0.4
+1.7.10
 
