@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv04.lahn.de ([213.239.197.57]:46137 "EHLO serv04.lahn.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751610Ab2FSWdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jun 2012 18:33:44 -0400
-Date: Wed, 20 Jun 2012 00:33:15 +0200
-From: Michael Leun <lkml20120218@newton.leun.net>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ath9k_htc: Every 2nd packet 1000ms delayed in recent kernels
-Message-ID: <20120620003315.2eaf6460@xenia.leun.net> (sfid-20120620_003359_842379_A5A21772)
-In-Reply-To: <CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com>
-References: <20120619085137.337838c0@xenia.leun.net>
-	<CAD2nsn1b6in_yA1b+o=SoXD3iJPddoF4PeCQ3qhFNWqfZxq8pQ@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45431 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932778Ab2F1KLA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:11:00 -0400
+Message-ID: <1340878254.4491.36.camel@jlt3.sipsolutions.net> (sfid-20120628_121112_064161_ADAF7CE3)
+Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Jun 2012 12:10:54 +0200
+In-Reply-To: <CA+XVXfc9F9-FMZyBytDT-5D4KxSFfTSwbhFd2g3oxdLPNFWWxg@mail.gmail.com> (sfid-20120628_120208_348993_6A166C7D)
+References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
+	 <1340707305.14634.9.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
+	 <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com>
+	 <1340795869.11012.12.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfcNpj_UqCOXUG7sr2MQH8qZNHYr7MfBz5J3vwC3f+KU6Q@mail.gmail.com>
+	 <1340807890.11012.43.camel@jlt3.sipsolutions.net>
+	 <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com>
+	 <1340810735.11012.44.camel@jlt3.sipsolutions.net>
+	 <CA+XVXffKSEL6ZQPQ98x-zO-NL2=TNF1uN==mprRyUmAaRn254g@mail.gmail.com>
+	 <1340875996.4491.29.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfc9F9-FMZyBytDT-5D4KxSFfTSwbhFd2g3oxdLPNFWWxg@mail.gmail.com>
+	 (sfid-20120628_120208_348993_6A166C7D)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 19 Jun 2012 15:11:38 +0530
-Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+On Thu, 2012-06-28 at 13:01 +0300, Arik Nemtsov wrote:
 
-> Hi,
+> >> How about somehow requiring a multi channel driver to give always
+> >> Tx-ack? That will mean we can abandon the retry timers, and rely on
+> >> the driver to give an answer within a reasonable time.
+> >
+> > That doesn't mean we can abandon the retry timers though? Then again,
+> > maybe it does, we could start the timer only when we get the status
+> > information I guess?
 > 
-> On Tue, Jun 19, 2012 at 12:21 PM, Michael Leun
-> <lkml20120218@newton.leun.net> wrote:
-> > Hi,
-> >
-> > ne-wlan1@elektra:/home/ml4> ping 192.168.2.1
-> > PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
-> > 64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=2010 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=1011 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=11.5 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=1.12 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=5 ttl=64 time=1002 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=6 ttl=64 time=3.83 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=7 ttl=64 time=1003 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=8 ttl=64 time=4.10 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=9 ttl=64 time=1003 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=10 ttl=64 time=3.95 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=11 ttl=64 time=1003 ms
-> > 64 bytes from 192.168.2.1: icmp_seq=12 ttl=64 time=3.78 ms
-> >
-> >
-> > Please note the additional delay of ~1000ms every 2nd packet. This
-> > is Kernel 3.4.3, have seen it in 3.4.2 also. Does NOT happen in
-> > 3.3.1.
-> >
-> > Is this Issue already known? If so, I can save the work bisecting...
+> I'm not really sure why the assoc timers are there now. If it's
+> because we want to be sure we gave the peer a chance to respond, well
+> the Tx-ack already gives us that. Waiting any longer won't help.
+> Or does waiting in general before the next Tx help with something?
+> (clear temporary congestion etc).
+
+Well the only timer there is is retrying the frame. Arguably that isn't
+needed as the frame has been retried on the air already multiple times
+by the hardware, but sometimes temporary channel conditions exist so
+waiting 100ms until the next retry can make sense.
+
+If we actually receive a response, we cancel all timers right away.
+
+> > I'm not sure I'd want to *require* this, but it sounds like a good thing
+> > we could do to address this possible race for drivers that do support
+> > reliable status reports?
 > 
-> looks like some one reported this bug in kernel bugzilla. would be
-> saving us lot of time
-> if you can bisect it!
-> 
+> Yea. And then, if all current multi-channel drivers support Tx-ack, we
+> can skip implemeting tx_sync.
 
-0775f9f90cdaf40fbf69b3192b3dddb2b3436f45 is the first bad commit
-commit 0775f9f90cdaf40fbf69b3192b3dddb2b3436f45
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Thu Mar 8 15:02:06 2012 +0100
+We could, but I'm not sure I'd go there? It would mean that the driver
+has to buffer the frame, schedule a work to do whatever it needs to sync
+up, and then at the end of the work TX the frame. Since this only comes
+in from contexts in mac80211 that can sleep, from a whole system
+complexity POV it seems much simpler to give the driver a chance to do
+whatever it needs to do before the TX even happens?
 
-    mac80211: remove spurious BSSID change flag
-
-    The BSSID has been set a lot earlier already and
-    didn't change again in ieee80211_set_associated().
-
-    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-:040000 040000 67a19a39e4b04c16921a3758ddd2362e02e81dd3 4a7cbd327b59345b83fa613f893770fbf44220bb M      net
-
-Reverting 0775f9f90cdaf40fbf69b3192b3dddb2b3436f45 from 3.4.3 fixes the issue.
-
-
--- 
-MfG,
-
-Michael Leun
+johannes
 
