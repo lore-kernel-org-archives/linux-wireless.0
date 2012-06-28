@@ -1,185 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16627 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054Ab2FDK6j (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45592 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754035Ab2F1LBM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:58:39 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38042.697958.593576@gargle.gargle.HOWL> (sfid-20120604_125841_598867_7D2AA353)
-Date: Mon, 4 Jun 2012 16:27:30 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 05/20] ath9k_hw: Fix MCI usage
+	Thu, 28 Jun 2012 07:01:12 -0400
+Message-ID: <1340881265.4491.39.camel@jlt3.sipsolutions.net> (sfid-20120628_130155_000224_9CF7442D)
+Subject: RE: [PATCH] cfg80211/mac80211: 802.11ac changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Jun 2012 13:01:05 +0200
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D608D@mbx022-e1-nj-10.exch022.domain.local>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local>
+	,<1340353030.4491.6.camel@jlt3.sipsolutions.net>
+	 <952C5D5D0470AE4FB7D8A75C6ADC71CA0D608D@mbx022-e1-nj-10.exch022.domain.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MCI has to be handled only when BTCOEX is actually enabled.
-Check for this condition before calling MCI related functions
-from various reset/calibration call-sites.
+On Thu, 2012-06-28 at 10:52 +0000, Mahesh Palivela wrote:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    5 ++---
- drivers/net/wireless/ath/ath9k/ar9003_mci.h   |    8 --------
- drivers/net/wireless/ath/ath9k/hw.c           |   15 +++++++--------
- drivers/net/wireless/ath/ath9k/hw.h           |    9 +++++++++
- 4 files changed, 18 insertions(+), 19 deletions(-)
+> Johannes, Is this patch commited? mac80211-next? wireless-testing-next?
+> Let me know.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 9fdd70f..f83a4a2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -901,7 +901,6 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	bool is_reusable = true, status = true;
- 	bool run_rtt_cal = false, run_agc_cal;
- 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
--	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
- 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
- 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
- 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
-@@ -970,7 +969,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	} else if (caldata && !caldata->done_txiqcal_once)
- 		run_agc_cal = true;
- 
--	if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
-+	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
- 		ar9003_mci_init_cal_req(ah, &is_reusable);
- 
- 	if (!(IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))) {
-@@ -993,7 +992,7 @@ skip_tx_iqcal:
- 				       0, AH_WAIT_TIMEOUT);
- 	}
- 
--	if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
-+	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
- 		ar9003_mci_init_cal_done(ah);
- 
- 	if (rtt && !run_rtt_cal) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 4842f6c..652ab8c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -273,10 +273,6 @@ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 
--static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
--{
--	return ah->btcoex_hw.mci.ready;
--}
- void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep);
- void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
- void ar9003_mci_init_cal_done(struct ath_hw *ah);
-@@ -292,10 +288,6 @@ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
- 
- #else
- 
--static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
--{
--	return false;
--}
- static inline void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
- {
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 42cf3c8..a7231ca 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1707,7 +1707,7 @@ static int ath9k_hw_do_fastcc(struct ath_hw *ah, struct ath9k_channel *chan)
- 	ath9k_hw_loadnf(ah, ah->curchan);
- 	ath9k_hw_start_nfcal(ah, true);
- 
--	if ((ah->caps.hw_caps & ATH9K_HW_CAP_MCI) && ar9003_mci_is_ready(ah))
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_2g5g_switch(ah, true);
- 
- 	if (AR_SREV_9271(ah))
-@@ -1728,10 +1728,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u64 tsf = 0;
- 	int i, r;
- 	bool start_mci_reset = false;
--	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
- 	bool save_fullsleep = ah->chip_fullsleep;
- 
--	if (mci) {
-+	if (ath9k_hw_mci_is_enabled(ah)) {
- 		start_mci_reset = ar9003_mci_start_reset(ah, chan);
- 		if (start_mci_reset)
- 			return 0;
-@@ -1760,7 +1759,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 			return r;
- 	}
- 
--	if (mci)
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_stop_bt(ah, save_fullsleep);
- 
- 	saveDefAntenna = REG_READ(ah, AR_DEF_ANTENNA);
-@@ -1818,7 +1817,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (r)
- 		return r;
- 
--	if (mci)
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_reset(ah, false, IS_CHAN_2GHZ(chan), save_fullsleep);
- 
- 	/*
-@@ -1937,7 +1936,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_loadnf(ah, chan);
- 	ath9k_hw_start_nfcal(ah, true);
- 
--	if (mci && ar9003_mci_end_reset(ah, chan, caldata))
-+	if (ath9k_hw_mci_is_enabled(ah) && ar9003_mci_end_reset(ah, chan, caldata))
- 		return -EIO;
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
-@@ -1982,7 +1981,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (ath9k_hw_btcoex_is_enabled(ah))
- 		ath9k_hw_btcoex_enable(ah);
- 
--	if (mci)
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_check_bt(ah);
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
-@@ -2166,7 +2165,7 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 		status = ath9k_hw_set_power_awake(ah, setChip);
- 		break;
- 	case ATH9K_PM_FULL_SLEEP:
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		if (ath9k_hw_mci_is_enabled(ah))
- 			ar9003_mci_set_full_sleep(ah);
- 
- 		ath9k_set_power_sleep(ah, setChip);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b620c55..3740aab 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1037,6 +1037,11 @@ static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
- {
- 	return ah->btcoex_hw.enabled;
- }
-+static inline bool ath9k_hw_mci_is_enabled(struct ath_hw *ah)
-+{
-+	return ah->btcoex_hw.enabled && (ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
-+
-+}
- void ath9k_hw_btcoex_enable(struct ath_hw *ah);
- static inline enum ath_btcoex_scheme
- ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
-@@ -1048,6 +1053,10 @@ static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
- {
- 	return false;
- }
-+static inline bool ath9k_hw_mci_is_enabled(struct ath_hw *ah)
-+{
-+	return false;
-+}
- static inline void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- {
- }
--- 
-1.7.10.3
+Ah, I lost it when I was trying to double-check all the definitions.
+I'll apply it now.
+
+johannes
 
