@@ -1,109 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:60200 "EHLO arroyo.ext.ti.com"
+Received: from ebb05.tieto.com ([131.207.168.36]:62407 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751825Ab2F1Xx6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 19:53:58 -0400
-Message-ID: <4FECEE9A.5070300@ti.com> (sfid-20120629_015407_649997_3637E238)
-Date: Thu, 28 Jun 2012 18:54:02 -0500
-From: Jon Hunter <jon-hunter@ti.com>
+	id S1751985Ab2F1HyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 03:54:10 -0400
+Message-ID: <4FEC0D9F.9030000@tieto.com> (sfid-20120628_095414_452539_6829CBD7)
+Date: Thu, 28 Jun 2012 09:54:07 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: Franky Lin <frankyl@broadcom.com>
-CC: Kevin Hilman <khilman@ti.com>, <b-cousson@ti.com>,
-	<tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<grant.likely@secretlab.ca>, <santosh.shilimkar@ti.com>,
-	<linux-omap@vger.kernel.org>, <tarun.kanti@ti.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: Panda ES board hang when using GPIO as interrupt
-References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com> <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com> <4FECCB91.7090609@broadcom.com> <4FECD2E5.1060603@ti.com> <4FECE067.7000809@broadcom.com> <4FECE1BD.80906@ti.com> <4FECE45E.6040506@broadcom.com>
-In-Reply-To: <4FECE45E.6040506@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3] initial channel context implementation
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>     <1340718188.14634.47.camel@jlt3.sipsolutions.net>     <4FEAB698.5070309@tieto.com>    <1340784614.8305.8.camel@jlt3.sipsolutions.net>    <4FEADCAE.5080508@tieto.com>   <1340795424.11012.11.camel@jlt3.sipsolutions.net>   <4FEAFFF1.7080706@tieto.com>  <1340805730.11012.33.camel@jlt3.sipsolutions.net>  <4FEBF3D4.3030705@tieto.com> <1340868682.4491.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340868682.4491.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On 06/28/2012 06:10 PM, Franky Lin wrote:
-> On 06/28/2012 03:59 PM, Jon Hunter wrote:
+Johannes Berg wrote:
+> On Thu, 2012-06-28 at 08:04 +0200, Michal Kazior wrote:
+>
+>>> In any case, I think you're turning it upside down. I think we should
+>>> get rid of local->oper_channel(_type) completely, and instead use the
+>>> channel contexts in mac80211 everywhere. If the driver doesn't implement
+>>> channel contexts it can only support a single channel. Thus, we can have
+>>> at most one channel context, so whenever a new context is added (there
+>>> could be zero) or any context is modified (the only one) we can set
+>>> hw.conf.channel and call hw_config() with the CHANNEL_CHANGE flag.
+>>>
+>>> IOW, nothing in mac80211 would ever call hw_config() for the channel or
+>>> channel type change, it would all do channel contexts, but the channel
+>>> context code would see that if the driver doesn't support channel
+>>> contexts
+>>>    1) there will be at most one context in mac80211
+>>>    2) this context is programmed into the device by using hw_config()
+>>>       instead of the context callbacks
 >>
->> On 06/28/2012 05:53 PM, Franky Lin wrote:
->>> I found one interesting thing. When I added the print info to see when
->>> runtime_suspend/resume get called, it seems like the suspend/resume is
->>> unbalance during boot. Resume got called more than suspend. So I hack
->>> the code to make sure suspend and resume are called in pair. A resume
->>> without suspend will do nothing and return immediately. This also makes
->>> the hang vanish.
+>> Yes, this is more or less what I also had in mind. I was just thinking
+>> about solving the issue of channel context and hw.conf.channel
+>> consistency. If we switch a channel we either modify channel in channel
+>> context directly (violating the immutability of channel contexts) or we
+>> iterate and re-set the new channel on each interface (because
+>> single-channel drivers may still have multiple interfaces and we
+>> probably want to use sdata->vif.chanctx_conf->channel instead of
+>> hw.conf.channel inside mac80211).
 >>
->> I am not 100% sure I follow. On boot I would expect to see a
->> resume/suspend due to the probe on the irq bank and then I would expect
->> to see another resume from the acquisition of the gpio, however, I would
->> not expect a suspend until the gpio is freed, which I don't believe you
->> are doing.
->>
->> Can you share your hack? Just paste the diff? This may help me
->> understand more.
->>
-> 
-> OK.
-> This is what I saw in the log:
-> [    0.171844] dummy:
-> [    0.172912] NET: Registered protocol family 16
-> [    0.173431] GPMC revision 6.0
-> [    0.173492] gpmc: irq-52 could not claim: err -22
-> [    0.177551] ??????omap_gpio_runtime_resume
-> [    0.178619] OMAP GPIO hardware version 0.1
-> [    0.178649] !!!!!omap_gpio_runtime_suspend
-> [    0.178771] ??????omap_gpio_runtime_resume
-> [    0.179351] !!!!!omap_gpio_runtime_suspend
-> [    0.179504] ??????omap_gpio_runtime_resume
-> [    0.180023] !!!!!omap_gpio_runtime_suspend
-> [    0.180145] ??????omap_gpio_runtime_resume
-> [    0.180694] !!!!!omap_gpio_runtime_suspend
-> [    0.180847] ??????omap_gpio_runtime_resume
-> [    0.181365] !!!!!omap_gpio_runtime_suspend
-> [    0.181518] ??????omap_gpio_runtime_resume
-> [    0.182037] !!!!!omap_gpio_runtime_suspend
-> [    0.185089] omap_mux_init: Add partition: #1: core, flags: 2
-> [    0.186462] omap_mux_init: Add partition: #2: wkup, flags: 2
-> [    0.186584] error setting wl12xx data: -38
-> [    0.189788] _omap_mux_get_by_name: Could not find signal
-> uart1_rx.uart1_rx
-> [    0.189788] _omap_mux_get_by_name: Could not find signal
-> uart1_rx.uart1_rx
-> [    0.239501] ??????omap_gpio_runtime_resume
-> [    0.239532] ??????omap_gpio_runtime_resume
-> [    0.241058]  usbhs_omap: alias fck already exists
-> [    0.244781] ??????omap_gpio_runtime_resume
+>> Now that I think about it I guess violating the immutability for the
+>> single-channel case is okay. It would greatly simplify the code and we'd
+>> just put a comment down in hw_config where the only violation would occur.
+>
+> I'm not sure why we would violate it? The way I see it, you'd never
+> change the channel context channel since internally in mac80211 you'd
+> never want to see a different channel, just like today we use
+> local->oper_channel everywhere we'd then use sdata->vif.chanctx->channel
+> throughout, right?
+>
+> I think the only thing we need to do is put something like this into
+> hw_config:
+>
+>   if (local->tmp_channel) {
+>      local->hw.conf.channel = local->tmp_channel;
+>      ...
+>   } else {
+>      local->hw.conf.channel = chanctx->channel;
+>   }
+>
+> No?
 
-I am wondering if this could be the bug ... on start-up I see that we do
-a context restore on bank1 during the probe which is before we have done
-the first suspend! In other words, we could restore a bad/uninitialised
-context for bank1. In the case of bank1, the loss count starts at 1 and
-not 0 and so we falsely think we need to perform a restore :-(
+Using sdata->vif.chanctx_conf->channel instead of local->oper_channel 
+doesn't make any sense to me.
 
-[    0.176269] omap_gpio_runtime_resume: bank @ 0xfc310000
-[    0.177276] omap_gpio_runtime_resume: count 0, now 1
-[    0.177276] gpiochip_add: registered GPIOs 0 to 31 on device: gpio
-[    0.177642] omap_gpio_runtime_suspend: bank @ 0xfc310000
+Take ieee80211_tx() for example. It does:
 
-Can you try ...
+	tx.channel = local->hw.conf.channel;
 
-diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
-index c4ed172..9623408 100644
---- a/drivers/gpio/gpio-omap.c
-+++ b/drivers/gpio/gpio-omap.c
-@@ -1086,6 +1086,9 @@ static int __devinit omap_gpio_probe(struct
-platform_device *pdev)
- #ifdef CONFIG_OF_GPIO
-        bank->chip.of_node = of_node_get(node);
- #endif
-+       if (bank->get_context_loss_count)
-+               bank->context_loss_count =
-+                               bank->get_context_loss_count(bank->dev);
+We don't use oper_channel here, but hw.conf.channel. TX can happen on 
+different interfaces so for multi-channel operation it should be saying:
 
-        bank->irq_base = irq_alloc_descs(-1, 0, bank->width, 0);
-        if (bank->irq_base < 0) {
+	tx.channel = sdata->vif.chanctx_conf->channel;
 
-Thanks
-Jon
+In this case if we want to support the swscan/tmpchan through 
+hw_config() we need update the channel context's channel somehow.
+
+I'm more thinking of hw.conf.channel becoming more of a backup value for 
+single-channel drivers while we internally focus on channel contexts.
+
+
+-- 
+Pozdrawiam / Best regards, Michal Kazior.
 
