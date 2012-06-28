@@ -1,127 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17760 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756191Ab2FYONo (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:33224 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753054Ab2F1Hsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 10:13:44 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>, <rhu@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v3 02/10] ath9k: Add definitions and structures to support WoW
-Date: Mon, 25 Jun 2012 19:42:51 +0530
-Message-ID: <1340633579-7514-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120625_161347_128643_CCCC46B5)
-In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
+	Thu, 28 Jun 2012 03:48:55 -0400
+Date: Thu, 28 Jun 2012 16:25:12 +0900
+From: Norbert Preining <preining@logic.at>
+To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"Lin, Hsien KuoX" <hsien.kuox.lin@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: 3.4-rc2, ilwagn still most of the time completely unusable
+Message-ID: <20120628072512.GF31944@gamma.logic.tuwien.ac.at> (sfid-20120628_094906_518472_F2BB9933)
+References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at> <20120411023747.GA10126@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com> <20120412000202.GA15286@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com> <20120413014047.GB25681@gamma.logic.tuwien.ac.at> <20120330011734.GH6277@gamma.logic.tuwien.ac.at> <20120411023747.GA10126@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com> <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <59083F8344AE164EB150C0518405C0680E0F285C@FMSMSX107.amr.corp.intel.com> <20120413014047.GB25681@gamma.logic.tuwien.ac.at> <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi everyone,
 
-*add structures, macros and variables for WoW, so that the driver
-can make use of it.
-*maintain a list for user enabled patterns and masks
-*track pattern slots for the hardware limitation on the
-maximum number of patterns that can be stored.
-*track interrupts enabled before WoW suspend, so
-that can be reconfigured after resume
-*have macros to parse user defined wow configurations to
-hardware code
+I am coming back to this old thread, not because it has been solved, 
+but because today I got a funny new message while checking why 
+everything got stuck again:
+	[69588.972126] iwlwifi 0000:06:00.0: fail to flush all tx fifo queues
+and after doing
+	rfkill block wifi
+	sleep 20
+	rfkill unblock wifi
+I got a kernel warning:
+[76477.289251] WARNING: at net/mac80211/driver-ops.h:12 ieee80211_bss_info_change_notify+0x14e/0x1ca [mac80211]()
+[76477.289256] Hardware name: VGN-Z11VN_B
+[76477.289260] wlan0:  Failed check-sdata-in-driver check, flags: 0x0
+[76477.289350] Modules linked in: dm_mod btusb iptable_filter bnep rfcomm bluetooth snd_hrtimer vboxpci(O) vboxnetadp(O) vboxnetflt(O) vboxdrv(O) binfmt_misc isofs btrfs zlib_deflate libcrc32c vfat fat fuse loop uinput snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc hso arc4 snd_seq_dummy snd_seq_oss snd_seq_midi snd_rawmidi iwlwifi mac80211 snd_seq_midi_event cfg80211 snd_seq lpc_ich snd_seq_device snd_timer mxm_wmi mfd_core snd firewire_ohci firewire_core sony_laptop joydev crc_itu_t tpm_infineon rfkill soundcore
+[76477.289361] Pid: 4278, comm: NetworkManager Tainted: P        W  O 3.5.0-rc4+ #78
+[76477.289365] Call Trace:
+[76477.289380]  [<ffffffff8102ba46>] warn_slowpath_common+0x83/0x9c
+[76477.289389]  [<ffffffff8102bb02>] warn_slowpath_fmt+0x46/0x48
+[76477.289402]  [<ffffffff813f21da>] ? neigh_ifdown+0xc5/0xd6
+[76477.289424]  [<ffffffffa00b252e>] ieee80211_bss_info_change_notify+0x14e/0x1ca [mac80211]
+[76477.289448]  [<ffffffffa00b267d>] ieee80211_ifa_changed+0xd3/0xe6 [mac80211]
+[76477.289458]  [<ffffffff8104b7e3>] notifier_call_chain+0x37/0x61
+[76477.289467]  [<ffffffff8104b919>] __blocking_notifier_call_chain+0x46/0x5f
+[76477.289475]  [<ffffffff8104b946>] blocking_notifier_call_chain+0x14/0x16
+[76477.289485]  [<ffffffff81432cc0>] __inet_del_ifa+0x176/0x22c
+[76477.289494]  [<ffffffff81432f96>] inet_rtm_deladdr+0xe7/0x128
+[76477.289504]  [<ffffffff813f61e0>] rtnetlink_rcv_msg+0x226/0x235
+[76477.289513]  [<ffffffff8140460c>] ? netlink_sendmsg+0x124/0x20e
+[76477.289520]  [<ffffffff813f5fba>] ? __rtnl_unlock+0x17/0x17
+[76477.289528]  [<ffffffff814048b8>] netlink_rcv_skb+0x43/0x91
+[76477.289536]  [<ffffffff813f415f>] rtnetlink_rcv+0x26/0x2d
+[76477.289543]  [<ffffffff81404466>] netlink_unicast+0xe0/0x162
+[76477.289551]  [<ffffffff814046d1>] netlink_sendmsg+0x1e9/0x20e
+[76477.289562]  [<ffffffff813d7360>] __sock_sendmsg_nosec+0x61/0x6c
+[76477.289570]  [<ffffffff813d774e>] sock_sendmsg+0xa1/0xb6
+[76477.289582]  [<ffffffff813d96fb>] ? move_addr_to_kernel+0x49/0x67
+[76477.289591]  [<ffffffff813e2605>] ? copy_from_user+0x9/0xb
+[76477.289599]  [<ffffffff813e29e2>] ? verify_iovec+0x52/0xa4
+[76477.289607]  [<ffffffff813d7a11>] __sys_sendmsg+0x206/0x293
+[76477.289617]  [<ffffffff8108d48b>] ? __rcu_read_unlock+0xc/0x55
+[76477.289627]  [<ffffffff810e69f5>] ? fput+0x16/0x1c7
+[76477.289635]  [<ffffffff810e6888>] ? fget_light+0x92/0x9e
+[76477.289643]  [<ffffffff813d77b3>] ? fput_light+0xd/0xf
+[76477.289651]  [<ffffffff8108d48b>] ? __rcu_read_unlock+0xc/0x55
+[76477.289659]  [<ffffffff810e6888>] ? fget_light+0x92/0x9e
+[76477.289668]  [<ffffffff813da1ce>] sys_sendmsg+0x42/0x60
+[76477.289678]  [<ffffffff81474b72>] system_call_fastpath+0x16/0x1b
 
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |   19 +++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h    |   20 ++++++++++++++++++++
- 2 files changed, 39 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f72c4a3..4c530e5 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -506,6 +506,18 @@ static inline u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc,
- }
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- 
-+struct ath9k_wow_pattern {
-+	u8 pattern_bytes[MAX_PATTERN_SIZE];
-+	u8 mask_bytes[MAX_PATTERN_SIZE];
-+	u32 pattern_len;
-+	struct list_head list;
-+};
-+
-+struct ath9k_wow_info {
-+	u32 num_of_patterns;
-+	struct list_head wow_patterns;
-+};
-+
- /********************/
- /*   LED Control    */
- /********************/
-@@ -707,6 +719,13 @@ struct ath_softc {
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
- 	struct dfs_pattern_detector *dfs_detector;
-+
-+#ifdef CONFIG_PM_SLEEP
-+	bool wow_got_bmiss_intr;
-+	bool wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
-+	u32 wow_intr_before_sleep;
-+	struct ath9k_wow_info wow_info;
-+#endif
- };
- 
- void ath9k_tasklet(unsigned long data);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9409660..2d5ae5e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -179,6 +179,23 @@
- #define PAPRD_TABLE_SZ			24
- #define PAPRD_IDEAL_AGC2_PWR_RANGE	0xe0
- 
-+/* Wake on Wireless */
-+
-+#define MAX_PATTERN_SIZE		256
-+#define MAX_PATTERN_MASK_SIZE		32
-+#define MAX_NUM_PATTERN			8
-+#define MAX_NUM_USER_PATTERN		6 /*  deducting the disassociate and
-+					      deauthenticate packets */
-+
-+/*
-+ * WoW trigger mapping to hardware code
-+ */
-+
-+#define AH_WOW_USER_PATTERN_EN		BIT(0)
-+#define AH_WOW_MAGIC_PATTERN_EN		BIT(1)
-+#define AH_WOW_LINK_CHANGE		BIT(2)
-+#define AH_WOW_BEACON_MISS		BIT(3)
-+
- enum ath_hw_txq_subtype {
- 	ATH_TXQ_AC_BE = 0,
- 	ATH_TXQ_AC_BK = 1,
-@@ -861,6 +878,9 @@ struct ath_hw {
- 	/* Enterprise mode cap */
- 	u32 ent_mode;
- 
-+#ifdef CONFIG_PM_SLEEP
-+	u32 wow_event_mask;
-+#endif
- 	bool is_clk_25mhz;
- 	int (*get_mac_revision)(void);
- 	int (*external_reset)(void);
--- 
-1.7.0.4
+Maybe this tells you something.
 
+> > >	[ 9457.176828] iwlwifi 0000:06:00.0: ACTIVATE a non DRIVER active
+> > >station id 0 addr 00:24:c4:ab:bd:e0
+
+These messages now appear only now and then.
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+The fronting for the eighty-yard long marble-topped bar
+had been made by stitching together nearly twenty thousand
+Antarean Mosaic Lizard skins, despite the fact that the
+twenty thousand lizards concerned had needed them to keep
+their insides in.
+                 --- The Book decribing Milliways' politically incorrect
+                 --- decor.
+                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
