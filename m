@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44445 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934578Ab2FIAvz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 20:51:55 -0400
-Cc: <linux-wireless@vger.kernel.org>, <me@bobcopeland.com>,
-	<mickflemm@gmail.com>, <kvalo@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-Subject: [RFC 0/3] wireless: add CONFIG_CFG80211_EXPERT
-Date: Fri, 8 Jun 2012 17:51:07 -0700
-Message-ID: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120609_025355_763900_93A6479D)
+Received: from mms3.broadcom.com ([216.31.210.19]:3466 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753375Ab2F1LIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 07:08:15 -0400
+Message-ID: <4FEC3B0E.3040001@broadcom.com> (sfid-20120628_130817_932480_C3340B96)
+Date: Thu, 28 Jun 2012 13:07:58 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luciano Coelho" <coelho@ti.com>
+cc: linux-wireless@vger.kernel.org, arik@wizery.com,
+	"Eliad Peller" <eliad@wizery.com>
+Subject: Re: [PATCH] wlcore: implement .flush callback
+References: <1340813387-18407-1-git-send-email-coelho@ti.com>
+In-Reply-To: <1340813387-18407-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+On 06/27/2012 06:09 PM, Luciano Coelho wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> implement the .flush() callback by simply calling wl1271_tx_flush().
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> +static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
+> +{
+> +	struct wl1271 *wl = hw->priv;
+> +
+> +	wl1271_tx_flush(wl);
+> +}
+> +
 
-Turns out that standard Linux distributions leave CONFIG_EXPERT
-enabled. This makes this option useless for wireless testing / research
-purposes as we don't want certain features enabled on all kernel
-builds. This adds a new CONFIG_CFG80211_EXPERT and makes a few
-features depend on them.
+So not taking the drop flag into account? Any plan to change that?
 
-Luis R. Rodriguez (3):
-  cfg80211: add CONFIG_CFG80211_EXPERT
-  ath5k: replace modparam_all_channels with CONFIG_ATH5K_TEST_CHANNELS
-  ath9k: make CONFIG_ATH9K_DFS_CERTIFIED depend on
-    CONFIG_CFG80211_EXPERT
-
- drivers/net/wireless/ath/ath5k/Kconfig |    8 ++++++++
- drivers/net/wireless/ath/ath5k/base.c  |   17 ++++++++++-------
- drivers/net/wireless/ath/ath9k/Kconfig |    2 +-
- net/wireless/Kconfig                   |    9 +++++++++
- 4 files changed, 28 insertions(+), 8 deletions(-)
-
--- 
-1.7.10.rc1.22.gf5241
+Gr. AvS
 
