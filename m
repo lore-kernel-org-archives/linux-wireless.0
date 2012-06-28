@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31919 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759819Ab2FUTTF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 15:19:05 -0400
-Date: Fri, 22 Jun 2012 00:50:22 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath9k: fix 'side effect in macro' smatch warning
-Message-ID: <20120621192020.GB30896@vmraj-lnx.users.atheros.com> (sfid-20120621_211909_247196_91A18630)
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1340303492-30947-4-git-send-email-rmanohar@qca.qualcomm.com>
- <4FE36B2D.4000407@candelatech.com>
- <20120621190716.GA30896@vmraj-lnx.users.atheros.com>
- <4FE372CE.3020105@candelatech.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48546 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751275Ab2F1SOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 14:14:14 -0400
+Message-ID: <4FEC9EEF.20505@hauke-m.de> (sfid-20120628_201418_493766_BDAD0D92)
+Date: Thu, 28 Jun 2012 20:14:07 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4FE372CE.3020105@candelatech.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Florian Fainelli <florian@openwrt.org>, linville@tuxdriver.com,
+	b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/8] bcma: handle SoCs in pmu initialization
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de> <1338933307-13446-7-git-send-email-hauke@hauke-m.de> <2716026.rMfCBzMpF9@flexo> <CACna6rw_5dcR9tu_Nnq_0Z3u+KJ--Lmx7yi+uHJm-kJPepqrng@mail.gmail.com> <4FD4F793.2030507@hauke-m.de> <CACna6rwYawBawu_KP4rADKjGTspKdvRrvJbhzA18ApBP1tvAiQ@mail.gmail.com>
+In-Reply-To: <CACna6rwYawBawu_KP4rADKjGTspKdvRrvJbhzA18ApBP1tvAiQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 21, 2012 at 12:15:26PM -0700, Ben Greear wrote:
-> On 06/21/2012 12:07 PM, Rajkumar Manoharan wrote:
-> >On Thu, Jun 21, 2012 at 11:42:53AM -0700, Ben Greear wrote:
-> >>On 06/21/2012 11:31 AM, Rajkumar Manoharan wrote:
-> >>>ath9k_get_et_stats() warn: side effect in macro
-> >>>'AWDATA' doing 'i++'
-> >>>
-> >>>Cc: Ben Greear<greearb@candelatech.com>
-> >>>Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> >>>---
-> >>>  drivers/net/wireless/ath/ath9k/main.c | 9 +++++----
-> >>>  1 file changed, 5 insertions(+), 4 deletions(-)
-> >>>
-> >>>diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> >>>index 85f9ab4..32474b0 100644
-> >>>--- a/drivers/net/wireless/ath/ath9k/main.c
-> >>>+++ b/drivers/net/wireless/ath/ath9k/main.c
-> >>>@@ -2003,10 +2003,11 @@ static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
-> >>>  #define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
-> >>>  #define AWDATA(elem)							\
-> >>>  	do {								\
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> >>>-		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> >>>+		data[i+0] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-> >>>+		data[i+1] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-> >>>+		data[i+2] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-> >>>+		data[i+3] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-> >>>+		i += 4; \
-> >>>  	} while (0)
-> >>
-> >>The macro is still changing i.  So, whatever smatch is, seems it
-> >>should still warn, or it's broken :P
-> >>
-> >No it is not. The warning message is a hint. The smatch assumes that replacing
-> >the macro 'i++' might cause unexpected behaviour like 5++ in each statement.
+On 06/28/2012 05:52 PM, Rafał Miłecki wrote:
+> 2012/6/10 Hauke Mehrtens <hauke@hauke-m.de>:
+>> On 06/10/2012 06:54 PM, Rafał Miłecki wrote:
+>>> 2012/6/6 Florian Fainelli <florian@openwrt.org>:
+>>>> Hi Hauke,
+>>>>
+>>>> On Tuesday 05 June 2012 23:55:05 Hauke Mehrtens wrote:
+>>>>> The SoCs do not need any special handling in bcma_pmu_pll_init(),
+>>>>> bcma_pmu_resources_init(), bcma_pmu_swreg_init() and
+>>>>> bcma_pmu_workarounds. This patches suppresses some warnings in the log.
+>>>>
+>>>> This does not look like it scales very good, how about you turn the pr_err()
+>>>> into a pr_debug() so that developpers porting bcma on a new chip need to turn
+>>>> on the appropriate debug knobs to get the message?
+>>>
+>>> debug sounds fine for me
+>>>
+>> Hi Rafał,
+>>
+>> bcma_pmu_swreg_init() and bcma_pmu_pll_init() are doing nothing should
+>> they get removed? In the current version of the patch I also removed the
+>> chip ids of the PCIe based cards from the switch case statement if they
+>> just ended in a break, is that ok with you?
 > 
-> Well, my opinion is that your patch only adds un-needed code and that
-> smatch is either currently giving false-positives, or that it is
-> missing a warning when you add your patch.
+> Original si_pmu_pll_init had some meaning for BCM4329, BCM4319,
+> BCM4336 and BCM4330. I guess all of them are fullmac devices, right?
 > 
-> But, not a big deal either way.
+> Original si_pmu_swreg_init got meaning for BCM4336 and BCM4336.
 > 
-Thanks. Most of my smatch fixes could address false-positives. Anyway i prefer
-warning free code :)
+> Seems both can be dropped?
+> 
+I also check it with the BSD licensed code I have here and these
+functions are only containing code for fullmac chips as I see.
 
--Rajkumar
+I am for dropping them.
+
+Hauke
