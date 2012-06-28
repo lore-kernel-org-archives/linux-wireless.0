@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39107 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123Ab2F1FJm convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58570 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932425Ab2F1JiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 01:09:42 -0400
+	Thu, 28 Jun 2012 05:38:25 -0400
+Received: by pbbrp8 with SMTP id rp8so2771519pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 02:38:25 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1340824779-5157-1-git-send-email-asido4@gmail.com>
-References: <1340824779-5157-1-git-send-email-asido4@gmail.com>
-Date: Thu, 28 Jun 2012 10:39:41 +0530
-Message-ID: <CAD2nsn3Kt49mkkE99+8u5AzN+pSw8ktr7ABx3-B74qvQ9VSpWg@mail.gmail.com> (sfid-20120628_070947_079101_800D38E9)
-Subject: Re: [PATCH] Build fix in drivers/net/wireless/ath/ath9k/main.c
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Arvydas Sidorenko <asido4@gmail.com>
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <1340875844.4491.26.camel@jlt3.sipsolutions.net>
+References: <1340821557-27009-1-git-send-email-arik@wizery.com>
+ <1340871433.4491.20.camel@jlt3.sipsolutions.net> <CA+XVXfdKLeaHpLmqsXROH9VojHkB4EP-BpcFDLb8ZCtjb_XCbQ@mail.gmail.com>
+ <1340875844.4491.26.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 28 Jun 2012 12:38:09 +0300
+Message-ID: <CA+XVXfcDNcy+RjdxraqJ6LnYWt3XdtF-X-Ah9FdP=ZibnYp15g@mail.gmail.com> (sfid-20120628_113829_177011_18FA7402)
+Subject: Re: [PATCH] mac80211: allow Rx in reconfig only after removing BA sessions
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Thu, Jun 28, 2012 at 12:49 AM, Arvydas Sidorenko <asido4@gmail.com> wrote:
-> Commit fad29cd2f59949581050a937786c2c9bc78b2f04 broke the build if
-> no CONFIG_ATH9K_BTCOEX_SUPPORT is enabled.
+On Thu, Jun 28, 2012 at 12:30 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-06-28 at 11:37 +0300, Arik Nemtsov wrote:
+>> On Thu, Jun 28, 2012 at 11:17 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Wed, 2012-06-27 at 21:25 +0300, Arik Nemtsov wrote:
+>> >> Previously, a connected STA/AP could send us some AMPDUs right after
+>> >> recovery, without the driver knowing anything about it.
+>> >
+>> > Huh, that description doesn't make a lot of sense? The STA/AP can send
+>> > us AMPDUs anyway without the driver knowing anything about it since it
+>> > has no idea we're restarting ...
+>>
+>> Well the point is to drop them early in the Rx path. Should I change
+>> the description or you don't like the patch in general?
 >
-> Signed-off-by: Arvydas Sidorenko <asido4@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/main.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+> I don't mind the patch, I just don't quite understand it still.
 >
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index c14cf5a..e4e73f0 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -151,8 +151,10 @@ static void __ath_cancel_work(struct ath_softc *sc)
->        cancel_delayed_work_sync(&sc->tx_complete_work);
->        cancel_delayed_work_sync(&sc->hw_pll_work);
->
-> +#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
->        if (ath9k_hw_mci_is_enabled(sc->sc_ah))
->                cancel_work_sync(&sc->mci_work);
-> +#endif
->  }
->
->  static void ath_cancel_work(struct ath_softc *sc)
-> --
-> 1.7.8.6
+> The driver is receiving the AMPDUs anyway, and if it's passing them up
+> why do we need to drop them?
 
-thanks for the patch, but it was just sent some time back
-http://www.spinics.net/lists/linux-wireless/msg93078.html
+Well if the de-aggregration is in HW, they won't make it as far as
+mac80211. So this patch is for SW de-aggregators.
 
+But come to think of it, if the de-aggregation is done in SW, I guess
+there's no real issue with accepting them, since mac80211 didn't
+really reboot.
 
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-thanks,
-shafi
+I guess we can drop the patch? It just seemed more correct to put the
+in_reconfig to false there.
