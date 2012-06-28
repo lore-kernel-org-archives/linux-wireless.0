@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h1355771.stratoserver.net ([85.214.105.140]:55431 "EHLO
-	h1355771.stratoserver.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602Ab2FINnA (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60397 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473Ab2F1LZW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 09:43:00 -0400
-Subject: poor performance with W2CBW003 (Marvell 8686)
-From: Andreas Kemnade <andreas@kemnade.info>
-To: dsd@laptop.org, dcbw@redhat.com, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="ISO-8859-15"
-Date: Sat, 09 Jun 2012 15:03:27 +0200
-Message-ID: <1339247007.5895.373.camel@localhost> (sfid-20120609_154336_516104_954CE8F1)
-Mime-Version: 1.0
+	Thu, 28 Jun 2012 07:25:22 -0400
+Received: by pbbrp8 with SMTP id rp8so2884202pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 04:25:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FEC3B0E.3040001@broadcom.com>
+References: <1340813387-18407-1-git-send-email-coelho@ti.com>
+	<4FEC3B0E.3040001@broadcom.com>
+Date: Thu, 28 Jun 2012 14:25:22 +0300
+Message-ID: <CAB3XZEeJrX4AoFqMtSOF3BFEV-s5WOhAXHnVwb6_5O5bNXWkUQ@mail.gmail.com> (sfid-20120628_132526_174517_9FDCF5D1)
+Subject: Re: [PATCH] wlcore: implement .flush callback
+From: Eliad Peller <eliad@wizery.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	arik@wizery.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Jun 28, 2012 at 2:07 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 06/27/2012 06:09 PM, Luciano Coelho wrote:
+>> From: Eliad Peller <eliad@wizery.com>
+>>
+>> implement the .flush() callback by simply calling wl1271_tx_flush().
+>>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> Signed-off-by: Luciano Coelho <coelho@ti.com>
+>> ---
+>>  drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
+>>  1 file changed, 8 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+>> +static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
+>> +{
+>> +     struct wl1271 *wl = hw->priv;
+>> +
+>> +     wl1271_tx_flush(wl);
+>> +}
+>> +
+>
+> So not taking the drop flag into account? Any plan to change that?
+>
+yeah, good point...
+i guess we'll want to add support for the drop flag as well.
 
-on the GTA04 (www.gta04.org) 
-which has a W2CBW003 chip for wifi connected to a DM3730CBP CPU. data
-rates are quite low using the libertas driver from kernel 3.2-3.4 
-(https://github.com/neilbrown/gta04/branches)
-even near an accesspoint. That seems not depend on the encryption
-settings. Rates are around 100KByte/s. iwconfig shows 5.5Mb/s if it is
-not connected to an accesspoint with specially configured rates (but
-still the throughput is low).
+Luca - you can either drop this patch, or apply it for now and i'll
+send another patch later on.
 
-In contrary data rates are high (>1MByte/s) with a kernel based on
-the 2.6.32  BeagleBoard XM hw-validation kernel
-https://github.com/goldelico/gta04-kernel
-That behaviour was reported by several people.
-
-I tried also the libertas-tf driver with kernel 3.2 using the
-instructions here:
-http://corysohrakoff.wordpress.com/2011/09/13/enabling-wifi-ap-mode-on-a-gumstix-overo/
-That was also slow.
-
-Any hints?
-
-Greetings
-Andreas Kemnade
-
+thanks,
+Eliad.
