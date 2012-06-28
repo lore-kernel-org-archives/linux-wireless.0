@@ -1,44 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.ltindia.com ([125.18.18.171]:23842 "EHLO
-	mailout2.ltindia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487Ab2FTO55 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 10:57:57 -0400
-From: Girish Bn <Girish.BN@lnties.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Compat Wireless Version - WL1271
-Date: Wed, 20 Jun 2012 14:47:40 +0000
-Message-ID: <45566970CF58C74CB52107862E0541CD1D172F55@POCITMSEXMB02.LntUniverse.com> (sfid-20120620_165800_760503_5070CEB8)
-Content-Type: text/plain; charset=US-ASCII
+Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932801Ab2F1KHX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:23 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 03/13] cfg80211: add channel tracking for AP and mesh
+Date: Thu, 28 Jun 2012 12:06:55 +0200
+Message-ID: <1340878025-2695-4-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120747_328006_EC1F66C0)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-We are using TI WL1271 to support Wi-FI/Wi-Fi Direct for Printer products
-The system configuration is as follows
-Processor: NXP LPC313X
-Kernel: Linux 2.6.28.2
-RAM:32MB
-FLASH:16MB
-We have ported the Compat Wireless 3.4 RC3(http://wireless.kernel.org/en/users/Download/stable#Patches) package successfully for prototyping.
-However we have disabled Power Management related references in drivers/net/wl12xx/sdio.c as ours is a older kernel which doesn't support run-time PM.
-We will be using the following Wi-Fi related features
-1.  Wi-Fi Direct( As a Group Owner Negotiation or Autonomous GO), Legacy STA Client (Infrastructure Mode)
-2. Wireless Personal and Enterprise Security (EAP-FAST, EAP_PEAPv1)
-Let us know which version of Compat wireless package, Wl1271 Firmware version, WPA Supplicant and IW tools can be used in our system?
-Let us know whether we can use following packages
-1 .Compat Wireless 3.5 RC2
-2. WPA Supplicant ver 1.0
-3. IW Tools - ver 3.4
-4. WL1271 Firmware version - ?
+We need to know which channel is used by a running
+AP and mesh for channel context accounting and
+finding matching/active interface combination.
 
-Let us know how to enable Power Management in the WL1271 driver and also kernel patches to enable the Power Management as this very critical
+STA/IBSS have current_bss already which allows us
+to check which channel a vif is tuned to.
+Non-fixed channel IBSS can be handled with
+additional changes.
 
-Thanks and Regards
-Girish
-Larsen & Toubro Limited
+Monitor mode is going to be handled differently.
 
-www.larsentoubro.com
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h |    3 +++
+ net/wireless/ap.c      |    4 +++-
+ net/wireless/mesh.c    |   18 ++++++++++++++----
+ net/wireless/mlme.c    |    1 +
+ net/wireless/nl80211.c |    5 ++++-
+ 5 files changed, 25 insertions(+), 6 deletions(-)
 
-This Email may contain confidential or privileged information for the intended recipient (s). If you are not the intended recipient, please do not use or disseminate the information, notify the sender and delete it from your system.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7319f25..0f9d7b4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2335,6 +2335,9 @@ struct wireless_dev {
+ 	struct ieee80211_channel *preset_chan;
+ 	enum nl80211_channel_type preset_chantype;
+ 
++	/* for AP and mesh channel tracking */
++	struct ieee80211_channel *channel;
++
+ 	bool ps;
+ 	int ps_timeout;
+ 
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 45199cc..fcc60d8 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -24,8 +24,10 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		return -ENOENT;
+ 
+ 	err = rdev->ops->stop_ap(&rdev->wiphy, dev);
+-	if (!err)
++	if (!err) {
+ 		wdev->beacon_interval = 0;
++		wdev->channel = NULL;
++	}
+ 
+ 	return err;
+ }
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index b44c736..4f218c1 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -153,6 +153,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!err) {
+ 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
+ 		wdev->mesh_id_len = setup->mesh_id_len;
++		wdev->channel = setup->channel;
+ 	}
+ 
+ 	return err;
+@@ -178,6 +179,7 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
+ 			   enum nl80211_channel_type channel_type)
+ {
+ 	struct ieee80211_channel *channel;
++	int err;
+ 
+ 	channel = rdev_freq_to_chan(rdev, freq, channel_type);
+ 	if (!channel || !cfg80211_can_beacon_sec_chan(&rdev->wiphy,
+@@ -199,9 +201,14 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
+ 
+ 		if (!netif_running(wdev->netdev))
+ 			return -ENETDOWN;
+-		return rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
+-							    wdev->netdev,
+-							    channel);
++
++		err = rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
++							   wdev->netdev,
++							   channel);
++		if (!err)
++			wdev->channel = channel;
++
++		return err;
+ 	}
+ 
+ 	if (wdev->mesh_id_len)
+@@ -243,8 +250,11 @@ static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+ 		return -ENOTCONN;
+ 
+ 	err = rdev->ops->leave_mesh(&rdev->wiphy, dev);
+-	if (!err)
++	if (!err) {
+ 		wdev->mesh_id_len = 0;
++		wdev->channel = NULL;
++	}
++
+ 	return err;
+ }
+ 
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index da4406f..a7882eb 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -947,6 +947,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
+ 	if (WARN_ON(!chan))
+ 		goto out;
+ 
++	wdev->channel = chan;
+ 	nl80211_ch_switch_notify(rdev, dev, freq, type, GFP_KERNEL);
+ out:
+ 	wdev_unlock(wdev);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c17b57b..5d36124 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2356,8 +2356,11 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
+-	if (!err)
++	if (!err) {
+ 		wdev->beacon_interval = params.beacon_interval;
++		wdev->channel = params.channel;
++	}
++
+ 	return err;
+ }
+ 
+-- 
+1.7.0.4
+
