@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:59943 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753011Ab2FBODK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46940 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289Ab2F1SGy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jun 2012 10:03:10 -0400
-Received: by gglu4 with SMTP id u4so2363303ggl.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2012 07:03:09 -0700 (PDT)
-Message-ID: <4FCA1D1B.9070807@lwfinger.net> (sfid-20120602_160346_008475_BD8D08FA)
-Date: Sat, 02 Jun 2012 09:03:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jacopo Runchi <jacoporunchi@hotmail.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: I: RTL8187 driver in linux 3.4
-References: <!&!AAAAAAAAAAAuAAAAAAAAAH2SKMTPZA1PmAOs8RWvl9YBANlTnCJhprtFudq2LHCBs8EBACQA//8AABAAAACIF7qVX5kVSJrDEtYsG/e+AQAAAAA=@hotmail.it> <DUB107-ds5BA2D5341A3C373209B17A0080@phx.gbl>,<4FC8E733.6030905@lwfinger.net> <DUB107-W18A171E5A851D8D798C403A0080@phx.gbl>,<4FC947BD.50701@lwfinger.net> <DUB107-W21F668D2D3DDFCB2222060A0090@phx.gbl>
-In-Reply-To: <DUB107-W21F668D2D3DDFCB2222060A0090@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 28 Jun 2012 14:06:54 -0400
+Message-ID: <1340906800.4491.48.camel@jlt3.sipsolutions.net> (sfid-20120628_200658_287687_3F5AC7E9)
+Subject: Re: [RFC 60g 4/5] wireless: 60g protocol constants
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 28 Jun 2012 20:06:40 +0200
+In-Reply-To: <1340882220-31768-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131807_042627_0D3E4ADF)
+References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1340882220-31768-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 (sfid-20120628_131807_042627_0D3E4ADF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/02/2012 03:14 AM, Jacopo Runchi wrote:
-> So the problem is the same as you reported.
->
-> So is there either a bug related to the algorithm who manages the rate, or
-> should I change something related to the algorithm?
-> I searched for the CONFIG_EXPERT=y setting and for the pid rate algorithm
-> setting, but I've not found anything at all.
+On Thu, 2012-06-28 at 14:16 +0300, Vladimir Kondratiev wrote:
 
-The parameter is in the kernel configuration file ".config". You need to change 
-it with "make menuconfig ARCH=xxxx". Once you set EXPERT to "y", then the PID 
-setting will be available in the Network => Wireless settings.
+> @@ -1133,7 +1163,6 @@ struct ieee80211_ht_operation {
+>  #define IEEE80211_SPCT_MSR_RPRT_TYPE_CCA	1
+>  #define IEEE80211_SPCT_MSR_RPRT_TYPE_RPI	2
+>  
+> -
+>  /* 802.11g ERP information element */
+>  #define WLAN_ERP_NON_ERP_PRESENT (1<<0)
+>  #define WLAN_ERP_USE_PROTECTION (1<<1)
 
-> For it can be ok. Have you planned to do something to correct this at
-> driver-kernel level, to work with default "auto" rate?
+spurious change?
 
-It is a driver problem, but I do not know how soon it will be fixed. At the 
-moment, I have more pressing concerns. Now that I can reproduce it, the fix will 
-be easier to find.
+> @@ -1196,6 +1235,17 @@ enum ieee80211_statuscode {
+>  	WLAN_STATUS_ANTI_CLOG_REQUIRED = 76,
+>  	WLAN_STATUS_FCG_NOT_SUPP = 78,
+>  	WLAN_STATUS_STA_NO_TBTT = 78,
+> +	/* 802.11ad */
+> +	WLAN_STATUS_REJECTED_WITH_SUGGESTED_CHANGES		= 39,
+> +	WLAN_STATUS_REJECTED_FOR_DELAY_PERIOD			= 47,
 
-Larry
+I think you should match the surrounding style ...
+
+> @@ -1352,6 +1402,39 @@ enum ieee80211_eid {
+>  	WLAN_EID_DSE_REGISTERED_LOCATION = 58,
+>  	WLAN_EID_SUPPORTED_REGULATORY_CLASSES = 59,
+>  	WLAN_EID_EXT_CHANSWITCH_ANN = 60,
+> +	/* 802.11ad */
+> +	WLAN_EID_NON_TX_BSSID_CAP		=  83,
+
+ditto
+
+johannes
 
