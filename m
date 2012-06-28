@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47115 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab2FIH7b (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10357 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753814Ab2F1LR7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 03:59:31 -0400
-Message-ID: <1339228767.4539.3.camel@jlt3.sipsolutions.net> (sfid-20120609_095934_001921_2A6986E0)
-Subject: Re: [RFC] mac80211: follow 802.11-2007 11.5.3 Error recovery upon
- HT BA failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Sean Patrick Santos <quantheory@gmail.com>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	helmut.schaa@googlemail.com, mar.kolya@gmail.com,
-	Per-Erik Westerberg <per-erik.westerberg@bredband.net>,
-	=?UTF-8?Q?Miko=C5=82aj?= Kuligowski <mikolaj.q@wp.pl>
-Date: Sat, 09 Jun 2012 09:59:27 +0200
-In-Reply-To: <201206090311.21153.chunkeey@googlemail.com> (sfid-20120609_031203_315241_7A41DF31)
-References: <CAFR4AqbeMC23w5j5vdN+hx2pH7M0Aw2epJiBmi29ARPAFeDDQg@mail.gmail.com>
-	 <CAFR4AqahHPR9s4vn+1HFMFk+-oi2ROxLGrqa79ufLJ=Gmzb5rQ@mail.gmail.com>
-	 <201206090218.27603.chunkeey@googlemail.com>
-	 <201206090311.21153.chunkeey@googlemail.com>
-	 (sfid-20120609_031203_315241_7A41DF31)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 Jun 2012 07:17:59 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [RFC 60g 3/5] wireless: regulatory for 60g
+Date: Thu, 28 Jun 2012 14:16:58 +0300
+Message-ID: <1340882220-31768-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131803_349409_0FAC827D)
+In-Reply-To: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add regulatory rule for the 60g band
 
-> introduced a TX BA session timeout timer. However the
-> timer was reset for each outgoing transmission instead
-> what 802.11-2007 11.5.3 specifies: 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ net/wireless/reg.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-You should probably reference 802.11-2012 now since some things were
-renumbered.
-
-> "The inactivity timer at the originator is reset when a
-> BlockAck frame corresponding to the TID for which the
-> Block Ack policy is set is received."
-
-> This patch was only compile-tested and the design has 
-> some rather big problems: 
-
-Maybe then we should just revert Nikolay's patch?
-
->  - The spec says we should test for BlockAcks, however
->    that is not feasible because it is a control frame
->    (so FIF_CONTROL might filter it on some hardware).
-
-In some way, all devices are going to have to report these frames. Maybe
-not as the frame itself, but as some other notification, to allow
-cleaning up the TX queues accordingly, I think? There's a BA
-notification in iwlwifi for example.
-
-> +++ b/net/mac80211/status.c
-> @@ -439,6 +439,29 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
->  			}
->  		}
->  
-> +		if (ieee80211_is_data_qos(fc) && acked &&
-> +		    info->flags & IEEE80211_TX_CTL_AMPDU &&
-> +		    local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) {
-
-I'm confused -- what does this have to do with HW_HAS_RATE_CONTROL?
-
-johannes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index baf5704..b2b3222 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -129,7 +129,7 @@ static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
+ 
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+-	.n_reg_rules = 5,
++	.n_reg_rules = 6,
+ 	.alpha2 =  "00",
+ 	.reg_rules = {
+ 		/* IEEE 802.11b/g, channels 1..11 */
+@@ -156,6 +156,9 @@ static const struct ieee80211_regdomain world_regdom = {
+ 		REG_RULE(5745-10, 5825+10, 40, 6, 20,
+ 			NL80211_RRF_PASSIVE_SCAN |
+ 			NL80211_RRF_NO_IBSS),
++
++		/* IEEE 802.11ad (60gHz), channels 1..3 */
++		REG_RULE(56160+2160*1-1080, 56160+2160*3+1080, 2160, 0, 0, 0),
+ 	}
+ };
+ 
+-- 
+1.7.9.5
 
