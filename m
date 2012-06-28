@@ -1,138 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932760Ab2F1KHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 06:07:25 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 07/13] mac80211: refactor virtual monitor code
-Date: Thu, 28 Jun 2012 12:06:59 +0200
-Message-ID: <1340878025-2695-8-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120750_543653_DD4CA22E)
-In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
-References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:46035 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168Ab2F1NPW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 09:15:22 -0400
+Message-ID: <1340889318.4491.45.camel@jlt3.sipsolutions.net> (sfid-20120628_151526_307209_AC0F223E)
+Subject: [PATCH] compat-wireless: add patch to fix message tracing in
+ mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Jun 2012 15:15:18 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use cfg80211 the new .set_monitor_enabled instead
-of tracking it inside mac80211.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Just like in iwlwifi, the tracing in mac80211 needs to
+copy va_args as some old kernels don't do it for %pV.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c         |   11 +++++++++++
- net/mac80211/ieee80211_i.h |    4 ++++
- net/mac80211/iface.c       |   16 ++--------------
- 3 files changed, 17 insertions(+), 14 deletions(-)
+ patches/56-mac80211-trace-fix.patch |   79 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 79 insertions(+)
+ create mode 100644 patches/56-mac80211-trace-fix.patch
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 85ac364..df7332e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2943,6 +2943,16 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy,
- 	return local->oper_channel;
- }
- 
-+static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	if (enabled)
-+		WARN_ON(ieee80211_add_virtual_monitor(local));
-+	else
-+		ieee80211_del_virtual_monitor(local);
-+}
-+
- #ifdef CONFIG_PM
- static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
- {
-@@ -3018,6 +3028,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.probe_client = ieee80211_probe_client,
- 	.get_channel = ieee80211_wiphy_get_channel,
- 	.set_noack_map = ieee80211_set_noack_map,
-+	.set_monitor_enabled = ieee80211_set_monitor_enabled,
- #ifdef CONFIG_PM
- 	.set_wakeup = ieee80211_set_wakeup,
- #endif
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index e6cbf5b..9eb3b8b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1472,6 +1472,10 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       enum nl80211_channel_type channel_type,
- 			       u16 prot_mode);
- 
-+/* virtual monitor */
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
-+
- /* channel management */
- enum ieee80211_chan_mode {
- 	CHAN_MODE_UNDEFINED,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 87aeb4f..47f46fd 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -214,7 +214,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
- }
- 
--static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int ret;
-@@ -255,7 +255,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	return 0;
- }
- 
--static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-@@ -371,12 +371,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 			break;
- 		}
- 
--		if (local->monitors == 0 && local->open_count == 0) {
--			res = ieee80211_add_virtual_monitor(local);
--			if (res)
--				goto err_stop;
--		}
--
- 		/* must be before the call to ieee80211_configure_filter */
- 		local->monitors++;
- 		if (local->monitors == 1) {
-@@ -391,8 +385,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 		break;
- 	default:
- 		if (coming_up) {
--			ieee80211_del_virtual_monitor(local);
--
- 			res = drv_add_interface(local, sdata);
- 			if (res)
- 				goto err_stop;
-@@ -627,7 +619,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		if (local->monitors == 0) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
- 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
--			ieee80211_del_virtual_monitor(local);
- 		}
- 
- 		ieee80211_adjust_monitor_flags(sdata, -1);
-@@ -701,9 +692,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--
--	if (local->monitors == local->open_count && local->monitors > 0)
--		ieee80211_add_virtual_monitor(local);
- }
- 
- static int ieee80211_stop(struct net_device *dev)
+diff --git a/patches/56-mac80211-trace-fix.patch b/patches/56-mac80211-trace-fix.patch
+new file mode 100644
+index 0000000..1e82fb6
+--- /dev/null
++++ b/patches/56-mac80211-trace-fix.patch
+@@ -0,0 +1,79 @@
++--- a/net/mac80211/trace.c
+++++ b/net/mac80211/trace.c
++@@ -15,12 +15,16 @@ void __sdata_info(const char *fmt, ...)
++ 	struct va_format vaf = {
++ 		.fmt = fmt,
++ 	};
++-	va_list args;
+++	va_list args, args2;
++ 
++ 	va_start(args, fmt);
++-	vaf.va = &args;
++ 
+++	va_copy(args2, args);
+++	vaf.va = &args2;
++ 	pr_info("%pV", &vaf);
+++	va_end(args2);
+++
+++	vaf.va = &args;
++ 	trace_mac80211_info(&vaf);
++ 	va_end(args);
++ }
++@@ -33,10 +37,16 @@ void __sdata_dbg(bool print, const char *fmt, ...)
++ 	va_list args;
++ 
++ 	va_start(args, fmt);
++-	vaf.va = &args;
++ 
++-	if (print)
+++	if (print) {
+++		va_list args2;
+++
+++		va_copy(args2, args);
+++		vaf.va = &args2;
++ 		pr_debug("%pV", &vaf);
+++		va_end(args2);
+++	}
+++	vaf.va = &args;
++ 	trace_mac80211_dbg(&vaf);
++ 	va_end(args);
++ }
++@@ -46,12 +56,16 @@ void __sdata_err(const char *fmt, ...)
++ 	struct va_format vaf = {
++ 		.fmt = fmt,
++ 	};
++-	va_list args;
+++	va_list args, args2;
++ 
++ 	va_start(args, fmt);
++-	vaf.va = &args;
++ 
+++	va_copy(args2, args);
+++	vaf.va = &args2;
++ 	pr_err("%pV", &vaf);
+++	va_end(args2);
+++
+++	vaf.va = &args;
++ 	trace_mac80211_err(&vaf);
++ 	va_end(args);
++ }
++@@ -64,10 +78,16 @@ void __wiphy_dbg(struct wiphy *wiphy, bool print, const char *fmt, ...)
++ 	va_list args;
++ 
++ 	va_start(args, fmt);
++-	vaf.va = &args;
++ 
++-	if (print)
++-		wiphy_dbg(wiphy, "%pV", &vaf);
+++	if (print) {
+++		va_list args2;
+++
+++		va_copy(args2, args);
+++		vaf.va = &args2;
+++		pr_debug("%pV", &vaf);
+++		va_end(args2);
+++	}
+++	vaf.va = &args;
++ 	trace_mac80211_dbg(&vaf);
++ 	va_end(args);
++ }
 -- 
-1.7.0.4
+1.7.10
+
+
 
