@@ -1,66 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:59924 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756260Ab2FFWtM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 18:49:12 -0400
-Received: by mail-pz0-f46.google.com with SMTP id y13so9416638dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 15:49:11 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/6] mac80211: Rename stainfo variable for the more common sta
-Date: Wed,  6 Jun 2012 15:48:50 -0700
-Message-Id: <1339022932-14240-5-git-send-email-jason@cozybit.com> (sfid-20120607_004917_939413_B6C233B9)
-In-Reply-To: <1339022932-14240-1-git-send-email-jason@cozybit.com>
-References: <1339022932-14240-1-git-send-email-jason@cozybit.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49007 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751995Ab2F1U3x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 16:29:53 -0400
+Message-ID: <4FECBEBA.8090401@hauke-m.de> (sfid-20120628_222957_024307_92514F72)
+Date: Thu, 28 Jun 2012 22:29:46 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Joe Perches <joe@perches.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH option A] bcma: use custom printing functions
+References: <1340912688-3089-1-git-send-email-zajec5@gmail.com> <1340912894.5257.0.camel@jlt3.sipsolutions.net> <CACna6rwXrspQ_PDfwZbL7jk=hZ6EmhCnebLcp82LaC4T-Khscw@mail.gmail.com> <1340913949.2602.27.camel@joe2Laptop> <CACna6rwV3Cffm0nG_kHmE8ZO9oHOqSpfSysd9H1pgAHK71iLFQ@mail.gmail.com>
+In-Reply-To: <CACna6rwV3Cffm0nG_kHmE8ZO9oHOqSpfSysd9H1pgAHK71iLFQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On 06/28/2012 10:18 PM, Rafał Miłecki wrote:
+> 2012/6/28 Joe Perches <joe@perches.com>:
+>> On Thu, 2012-06-28 at 21:56 +0200, Rafał Miłecki wrote:
+>>> 2012/6/28 Johannes Berg <johannes@sipsolutions.net>:
+>>>> On Thu, 2012-06-28 at 21:44 +0200, Rafał Miłecki wrote:
+>>>>
+>>>>> +#define bcma_err(fmt, ...) \
+>>>>> +     pr_err(KBUILD_MODNAME "-%d: " fmt, bus->num, ##__VA_ARGS__)
+>>>>
+>>>> both of your options seem to rely on "bus" being a variable in the
+>>>> context, is that really a good idea?
+>>>
+>>> Yeah, I made that assumption to make calls nicer & shorter. We may
+>>> need to get reference to "bus" in function or two.
+>>>
+>>> I saw such a solution in "radeon" gpu driver, example:
+>>> value = RREG32(R600_AUDIO_STATUS_BITS);
+>>> (they assume "rdev" is available in every function calling RREG32).
+>>
+>> I think that radeon use is ugly myself.
+>>
+>>> If you believe it's ugly, I can change that. I also wonder what Joe
+>>> will respond.
+>>>
+>>> P.S.
+>>> Both patches are not signed yet and they are supposed to be RFC. Sorry
+>>> for missing that in subject line.
+>>
+>> I think it'd be better to add and use:
+>>
+>> #define bcma_bus_err(bus, fmt, ...)                             \
+>>        pr_err("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+>>
+>> #define bcma_bus_info(bus, fmt, ...)                            \
+>>        pr_info("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+>>
+>> or some other equivalent use if you're wedded
+>> to wanting "bcma-%d:" prefixed output.
+>>
+>> I'd rather have the prefix be something like "bcma: <bus#>: ",
+>> so a dmesg grep pattern can be "^bcma:" but hey, it ain't my code.
+> 
+> OK, thanks for your opinion. Just to be sure, did you mean:
+> bcma: bus0: FOO BAR
+> or
+> bcma: <bus0>: FOO BAR
+> ?
+> 
+> Personally I don't really care, but maybe there is already similar
+> case in some other driver you know about? It could be nice to be
+> consistent across the kernel.
+> 
+In b43 it looks like this if you have multiple devices logging, but if
+there is some common way of doing it bcma should use that.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+b43-phy0 debug: Found PHY: Analog 8, Type 4, Revision 6
+b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2056, Revision 11
+b43-phy1: Broadcom 4716 WLAN found (core revision 17)
+b43-phy1 debug: Found PHY: Analog 8, Type 4, Revision 5
+b43-phy1 debug: Found Radio: Manuf 0x17F, Version 0x2056, Revision 7
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 8fb3e59..22b327a 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -303,7 +303,7 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- }
- 
- void ieee80211s_update_metric(struct ieee80211_local *local,
--		struct sta_info *stainfo, struct sk_buff *skb)
-+		struct sta_info *sta, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -317,16 +317,16 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
- 
- 	/* moving average, scaled to 100 */
--	stainfo->fail_avg = ((80 * stainfo->fail_avg + 5) / 100 + 20 * failed);
--	if (stainfo->fail_avg > 95)
--		mesh_plink_broken(stainfo);
-+	sta->fail_avg = ((80 * sta->fail_avg + 5) / 100 + 20 * failed);
-+	if (sta->fail_avg > 95)
-+		mesh_plink_broken(sta);
- 
--	sta_set_rate_info_tx(stainfo, &stainfo->last_tx_rate, &rinfo);
-+	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
- 	rate = cfg80211_calculate_bitrate(&rinfo);
- 	if (WARN_ON(!rate))
- 		return;
- 
--	ewma_add(&stainfo->avg_rate, rate);
-+	ewma_add(&sta->avg_rate, rate);
- 	return;
- }
- 
--- 
-1.7.9.5
-
+Hauke
