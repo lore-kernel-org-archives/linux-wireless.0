@@ -1,148 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:60127 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752464Ab2FROuE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47087 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753961Ab2F1SsS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 10:50:04 -0400
-Received: by ggnp4 with SMTP id p4so3774484ggn.20
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:49:59 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH 3/7] nl80211/cfg80211: add ability to enable TX on op-channel
-Date: Mon, 18 Jun 2012 17:46:34 +0300
-Message-Id: <1340030798-28992-4-git-send-email-victorg@ti.com> (sfid-20120618_165008_507607_247EE19C)
-In-Reply-To: <1340030798-28992-1-git-send-email-victorg@ti.com>
-References: <1340030798-28992-1-git-send-email-victorg@ti.com>
+	Thu, 28 Jun 2012 14:48:18 -0400
+Message-ID: <1340909292.4491.51.camel@jlt3.sipsolutions.net> (sfid-20120628_204821_504972_70EB75DF)
+Subject: Re: [PATCH] wlcore: implement .flush callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Arik Nemtsov <arik@wizery.com>, Eliad Peller <eliad@wizery.com>,
+	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Date: Thu, 28 Jun 2012 20:48:12 +0200
+In-Reply-To: <4FECA5FB.30902@broadcom.com>
+References: <1340813387-18407-1-git-send-email-coelho@ti.com>
+	 <4FEC3B0E.3040001@broadcom.com>
+	 <CAB3XZEeJrX4AoFqMtSOF3BFEV-s5WOhAXHnVwb6_5O5bNXWkUQ@mail.gmail.com>
+	 <CA+XVXfeqQFd+raZeBEB+ct5mHLJfEPst1Bop0RUui6gN9=9jow@mail.gmail.com>
+	 <4FECA5FB.30902@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The dfs master device should monitor radar channels
-for potential radar interference for a minimum of
-CAC (channel availability check) time, during this
-period no tx can occur. If no radar interference
-is detected the dfs master may initiate the tx with
-new NL80211_CMD_DFS_ENABLE_TX command.
+On Thu, 2012-06-28 at 20:44 +0200, Arend van Spriel wrote:
 
-If this command is invoked prior performing a CAC or
-the time passed sines the beginning of the CAC is
-less than min CAC time (60 sec), -EPERM is returned.
+> >>> So not taking the drop flag into account? Any plan to change that?
+> >>>
+> >> yeah, good point...
+> >> i guess we'll want to add support for the drop flag as well.
+> >>
+> >> Luca - you can either drop this patch, or apply it for now and i'll
+> >> send another patch later on.
+> > 
+> > Currently we drop all the packets if we can't flush them within a
+> > reasonable time. We always do this right now. I think that's good
+> > enough?
+> > 
+> 
+> Hard to say as I am working mostly on your side of this API. However,
+> the drop flag is part of the API so there is probably a reason for
+> having it. Johannes?
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
- include/linux/nl80211.h |   11 +++++++++++
- include/net/cfg80211.h  |    3 +++
- net/wireless/nl80211.c  |   36 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 50 insertions(+), 0 deletions(-)
+The drop never actually used today... but we had plans to use it in some
+cases I think.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index ea6ce93..2f869a4 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -556,6 +556,15 @@
-  * @NL80211_CMD_RADAR_DETECT: Start radar detection in the driver/HW. Once
-  *	radar detected usermode notified with this event.
-  *
-+ * @NL80211_CMD_DFS_ENABLE_TX: Initiate tx after verifying radar clearness on
-+ *	dfs channel. The dfs master device should monitor radar channels
-+ *	for potential radar interference for a minimum of CAC (channel
-+ *	availability check) time, during this period no tx can occur. If no
-+ *	radar interference is detected during this period the dfs master may
-+ *	initiate the tx. If this command is invoked prior performing a CAC or
-+ *	the time passed sines the beginning of the CAC is less than
-+ *	NL80211_DFS_MIN_CAC_TIME_MS, -EPERM is returned.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -701,6 +710,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_RADAR_DETECT,
- 
-+	NL80211_CMD_DFS_ENABLE_TX,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 32dfc1f..030ed2f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1531,6 +1531,7 @@ struct cfg80211_gtk_rekey_data {
-  *	See @ethtool_ops.get_strings
-  *
-  * @start_radar_detection: Start radar detection in the driver.
-+ * @dfs_en_tx: Enable tx after radar interference check.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1740,6 +1741,8 @@ struct cfg80211_ops {
- 	int    (*start_radar_detection)(struct wiphy *wiphy,
- 					struct net_device *dev,
- 					struct ieee80211_channel *chan);
-+	int    (*dfs_en_tx)(struct wiphy *wiphy, struct net_device *dev,
-+			    struct ieee80211_channel *chan);
- };
- 
- /*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 573c966..eabe819 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4273,6 +4273,34 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	return cfg80211_start_radar_detection(rdev, dev, chan);
- }
- 
-+static int nl80211_dfs_en_tx(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	bool dfs_supported = !!(rdev->wiphy.features & NL80211_FEATURE_DFS);
-+	struct ieee80211_channel *chan;
-+	int freq;
-+
-+	if (!rdev->ops->dfs_en_tx || !dfs_supported)
-+		return -EOPNOTSUPP;
-+
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ])
-+		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	else
-+		return -EINVAL;
-+
-+	chan = ieee80211_get_channel(&rdev->wiphy, freq);
-+	if (!chan)
-+		return -EINVAL;
-+
-+	if ((!chan->radar_detect_timeout ||
-+		time_is_after_jiffies(chan->radar_detect_timeout)) &&
-+		(chan->flags & IEEE80211_CHAN_RADAR))
-+		return -EPERM;
-+
-+	return rdev->ops->dfs_en_tx(&rdev->wiphy, dev, chan);
-+}
-+
- static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 			    u32 seq, int flags,
- 			    struct cfg80211_registered_device *rdev,
-@@ -7030,6 +7058,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_DFS_ENABLE_TX,
-+		.doit = nl80211_dfs_en_tx,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- 
- };
- 
--- 
-1.7.5.4
+johannes
 
