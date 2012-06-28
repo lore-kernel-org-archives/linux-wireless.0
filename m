@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60397 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473Ab2F1LZW convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45304 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754696Ab2F1TIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 07:25:22 -0400
-Received: by pbbrp8 with SMTP id rp8so2884202pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 04:25:22 -0700 (PDT)
+	Thu, 28 Jun 2012 15:08:35 -0400
+Date: Thu, 28 Jun 2012 09:42:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Sasha Levin <levinsasha928@gmail.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Dave Jones <davej@redhat.com>,
+	David Miller <davem@davemloft.net>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] net: nfc: fix panic in accept()
+Message-ID: <20120628134254.GB2115@tuxdriver.com> (sfid-20120628_210841_394831_34E6AB3B)
+References: <20120611145700.GY22557@sortiz-mobl>
+ <1339426778.6001.2312.camel@edumazet-glaptop>
+ <20120611152007.GZ22557@sortiz-mobl>
+ <1339433810.4999.65.camel@lappy>
+ <20120611172545.GA1776@redhat.com>
+ <CA+1xoqcwr-5dzHvqkt9x0-xj9EFAywVfva=asbHXvX-LSBWqdA@mail.gmail.com>
+ <1340639612.10893.84.camel@edumazet-glaptop>
+ <20120625171532.GB16275@sortiz-mobl>
+ <CA+1xoqfy21wOh2myV0D6iBDqoZ3YmkwNZwKBVXLU75zePOGi4w@mail.gmail.com>
+ <20120628125612.GG4846@sortiz-mobl>
 MIME-Version: 1.0
-In-Reply-To: <4FEC3B0E.3040001@broadcom.com>
-References: <1340813387-18407-1-git-send-email-coelho@ti.com>
-	<4FEC3B0E.3040001@broadcom.com>
-Date: Thu, 28 Jun 2012 14:25:22 +0300
-Message-ID: <CAB3XZEeJrX4AoFqMtSOF3BFEV-s5WOhAXHnVwb6_5O5bNXWkUQ@mail.gmail.com> (sfid-20120628_132526_174517_9FDCF5D1)
-Subject: Re: [PATCH] wlcore: implement .flush callback
-From: Eliad Peller <eliad@wizery.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	arik@wizery.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120628125612.GG4846@sortiz-mobl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 28, 2012 at 2:07 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 06/27/2012 06:09 PM, Luciano Coelho wrote:
->> From: Eliad Peller <eliad@wizery.com>
->>
->> implement the .flush() callback by simply calling wl1271_tx_flush().
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> Signed-off-by: Luciano Coelho <coelho@ti.com>
->> ---
->>  drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
->>  1 file changed, 8 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
->> +static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
->> +{
->> +     struct wl1271 *wl = hw->priv;
->> +
->> +     wl1271_tx_flush(wl);
->> +}
->> +
->
-> So not taking the drop flag into account? Any plan to change that?
->
-yeah, good point...
-i guess we'll want to add support for the drop flag as well.
+On Thu, Jun 28, 2012 at 02:56:12PM +0200, Samuel Ortiz wrote:
+> Hi Sasha,
+> 
+> On Thu, Jun 28, 2012 at 02:11:38PM +0200, Sasha Levin wrote:
+> > Hi Samuel,
+> > 
+> > On Mon, Jun 25, 2012 at 7:15 PM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+> > > Hi Eric,
+> > >
+> > > On Mon, Jun 25, 2012 at 05:53:32PM +0200, Eric Dumazet wrote:
+> > >> From: Eric Dumazet <edumazet@google.com>
+> > >>
+> > >> Sasha Levin reported following panic :
+> > > I applied a similar patch, more consistent with the rest of the NFC socket
+> > > code, still with you as the author. See here:
+> > >
+> > > http://git.kernel.org/?p=linux/kernel/git/sameo/nfc-3.0.git;a=commit;h=631c301f20558525a641fadffc0126affd3dc4a4
+> > 
+> > Could this tree be included in -next please?
+> No, wireless-next is already included in -next. The above patch is making its
+> way upstream, it's in the wireless.git tree and should hit davem's net tree
+> soon.
 
-Luca - you can either drop this patch, or apply it for now and i'll
-send another patch later on.
+FWIW, lots (or most?) of the bug fix trees get pulled into -next
+as well.  Having the nfc tree go there makes sense to me.
 
-thanks,
-Eliad.
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
