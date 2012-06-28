@@ -1,124 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932738Ab2F1KHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 06:07:24 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 05/13] cfg80211: introduce cfg80211_get_chan_state
-Date: Thu, 28 Jun 2012 12:06:57 +0200
-Message-ID: <1340878025-2695-6-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120730_550201_E638C359)
-In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
-References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:38594 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754640Ab2F1SwB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 14:52:01 -0400
+Received: by obbuo13 with SMTP id uo13so3386080obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 11:52:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1340618912-6845-1-git-send-email-ozancag@gmail.com>
+References: <1340618912-6845-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 28 Jun 2012 11:51:39 -0700
+Message-ID: <CAB=NE6W4HQmbMOissrmydQ11q_hw=XCR-g_SsVtc9BNRuS41ig@mail.gmail.com> (sfid-20120628_205204_614839_AB52F52E)
+Subject: Re: [PATCH v3] compat: Define include guard for vga_switcheroo.h
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helper function for finding out which channel is
-used by a given interface.
+On Mon, Jun 25, 2012 at 3:08 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> The check is missing in upstream. Patch sent but until this gets
+> merged, define it in compat tree for fixing compat-drm builds.
+>
+> Trying kernel  3.4.0-030400-generic [OK]
+> Trying kernel  3.3.7-030307-generic [OK]
+> Trying kernel  3.2.2-030202-generic [OK]
+> Trying kernel  3.1.10-030110-generic [OK]
+> Trying kernel  3.0.18-030018-generic [OK]
+> Trying kernel  2.6.39-02063904-generic [OK]
+> Trying kernel  2.6.38-02063808-generic [OK]
+> Trying kernel  2.6.37-02063706-generic [OK]
+> Trying kernel  2.6.36-02063604-generic [OK]
+> Trying kernel  2.6.35-02063512-generic [OK]
+> Trying kernel  2.6.34-02063410-generic [OK]
+> Trying kernel  2.6.33-02063305-generic [OK]
+> Trying kernel  2.6.32-02063255-generic [OK]
+> Trying kernel  2.6.31-02063113-generic [OK]
+> Trying kernel  2.6.30-02063010-generic [OK]
+> Trying kernel  2.6.29-02062906-generic [OK]
+> Trying kernel  2.6.28-02062810-generic [OK]
+> Trying kernel  2.6.27-020627-generic [OK]
+> Trying kernel  2.6.26-020626-generic [OK]
+> Trying kernel  2.6.25-020625-generic [OK]
+> Trying kernel  2.6.24-020624-generic [OK]
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-An exclusive channel can be used only by a single
-interface. This is mainly for non-fixed channel
-IBSS handling.
+Applied and pushed, thanks!
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/wireless/chan.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h |   12 ++++++++++++
- 2 files changed, 63 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index c1999e4..167e7cb 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -92,3 +92,54 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 
- 	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
- }
-+
-+void
-+cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
-+		        struct wireless_dev *wdev,
-+		        struct ieee80211_channel **chan,
-+		        enum cfg80211_chan_mode *chanmode)
-+{
-+	*chan = NULL;
-+	*chanmode = CHAN_MODE_UNDEFINED;
-+
-+	ASSERT_RDEV_LOCK(rdev);
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	if (!netif_running(wdev->netdev))
-+		return;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_ADHOC:
-+		if (wdev->current_bss) {
-+			*chan = wdev->current_bss->pub.channel;
-+			*chanmode = wdev->ibss_fixed
-+				  ? CHAN_MODE_SHARED
-+				  : CHAN_MODE_EXCLUSIVE;
-+			return;
-+		}
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		if (wdev->current_bss) {
-+			*chan = wdev->current_bss->pub.channel;
-+			*chanmode = CHAN_MODE_SHARED;
-+			return;
-+		}
-+		break;
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_MESH_POINT:
-+		*chan = wdev->channel;
-+		*chanmode = CHAN_MODE_SHARED;
-+		return;
-+	case NL80211_IFTYPE_MONITOR:
-+	case NL80211_IFTYPE_AP_VLAN:
-+	case NL80211_IFTYPE_WDS:
-+		/* these interface types don't really have a channel */
-+		return;
-+	case NL80211_IFTYPE_UNSPECIFIED:
-+	case NUM_NL80211_IFTYPES:
-+		WARN_ON(1);
-+	}
-+
-+	return;
-+}
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index a366ffd..bbf2f75 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -267,6 +267,12 @@ struct cfg80211_cached_keys {
- 	int def, defmgmt;
- };
- 
-+enum cfg80211_chan_mode {
-+	CHAN_MODE_UNDEFINED,
-+	CHAN_MODE_SHARED,
-+	CHAN_MODE_EXCLUSIVE,
-+};
-+
- 
- /* free object */
- extern void cfg80211_dev_free(struct cfg80211_registered_device *rdev);
-@@ -445,6 +451,12 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
- 	return cfg80211_can_change_interface(rdev, NULL, iftype);
- }
- 
-+void
-+cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
-+		        struct wireless_dev *wdev,
-+		        struct ieee80211_channel **chan,
-+		        enum cfg80211_chan_mode *chanmode);
-+
- struct ieee80211_channel *
- rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
- 		  int freq, enum nl80211_channel_type channel_type);
--- 
-1.7.0.4
-
+  Luis
