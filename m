@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56851 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753999Ab2FMNnf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45028 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab2F1IPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 09:43:35 -0400
-Date: Wed, 13 Jun 2012 08:43:30 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 6/9] brcm80211: smac: enable/disable radio on
- regulatory updates
-Message-ID: <20120613134330.GA3490@thinkpad-t410> (sfid-20120613_154346_157447_29A26E75)
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
- <1338906849-26135-7-git-send-email-seth.forshee@canonical.com>
- <4FD85D47.8070609@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FD85D47.8070609@broadcom.com>
+	Thu, 28 Jun 2012 04:15:53 -0400
+Message-ID: <1340871351.4491.19.camel@jlt3.sipsolutions.net> (sfid-20120628_101558_681417_E9602F90)
+Subject: Re: [RFC v3] initial channel context implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Jun 2012 10:15:51 +0200
+In-Reply-To: <4FEC015B.4020603@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+	    <1340718188.14634.47.camel@jlt3.sipsolutions.net>
+	    <4FEAB698.5070309@tieto.com>
+	   <1340784614.8305.8.camel@jlt3.sipsolutions.net>
+	   <4FEADCAE.5080508@tieto.com>
+	  <1340795424.11012.11.camel@jlt3.sipsolutions.net>
+	  <4FEAFFF1.7080706@tieto.com>
+	 <1340805730.11012.33.camel@jlt3.sipsolutions.net>
+	 <4FEC015B.4020603@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2012 at 11:28:39AM +0200, Arend van Spriel wrote:
-> On 06/05/2012 04:34 PM, Seth Forshee wrote:
-> > Currently the radio disable state is only updated during initialization,
-> > and it's only checked against the internal world domain. This is
-> > unnecessary, as there are always valid channels against this domain.
-> > Instead, check whether any channels are enabled in the regulatory
-> > notifier and update the radio state accordingly.
-> > 
-> > Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> > Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> > Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> > ---
-> >  drivers/net/wireless/brcm80211/brcmsmac/channel.c |   67 ++++++++-------------
-> >  1 file changed, 26 insertions(+), 41 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> > index 65ef60b..7182b58 100644
-> > --- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> > +++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> > @@ -1235,12 +1194,38 @@ static int brcms_reg_notifier(struct wiphy *wiphy,
-> > +
-> > +	if (likely(ch_found)) {
-> > +		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> > +	} else {
-> > +		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> > +		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\"\n",
-> > +			  wlc->pub->unit, __func__, request->alpha2);
-> > +	}
-> > +
-> 
-> When we were having fun in staging GregKH indicated that use of likely()
-> should be justified with profiling data. Probably not really needed here.
+On Thu, 2012-06-28 at 09:01 +0200, Michal Kazior wrote:
 
-Okay, I'll remove it. This isn't performance critical code anyhow.
+> >> Hmm.. Yeah we need to now, sort of. FullMAC drivers could suffer, but we
+> >> could drop connections upon CSA in mac80211 for the time being.
+> >>
+> >> cfg80211 could provide:
+> >>    * cfg80211_sta_can_switch_chan
+> >>    * cfg80211_sta_ch_switch_notify
+> >>
+> >> mac80211 could then be able to know whether num_different_channels has
+> >> been reached (cfg80211_sta_can_switch_chan) and eventually notify upon
+> >> channel switch (cfg80211_sta_ch_switch_notify).
+> >>
+> >> Channel switch would happen if either:
+> >>    * cfg80211_sta_can_switch_chan is true
+> >>    * channel context for target CSA channel already exists
+> >>
+> >> I'm just unsure about the current_bss thing - whether we should e.g.
+> >> initiate a scan to update it, or can we shamelessly update the channel
+> >> in the structure directly?
+> >
+> > Today mac80211 just updates it, yeah.
+> 
+> Should I send the ,,respect channels in iface combinations'' as a 
+> [PATCH] now, or should the CSA issue (in cfg80211) be addressed first?
+
+Good question. Even if we don't do CSA first, I guess we don't really
+break anything right now, do we? And if the driver/mac80211 just changes
+the channel, that means it could seem to go over the limit of 1 channel
+but things just break down like they do today?
+
+I guess I'd like to have the CSA stuff addressed, but it seems we
+haven't really closed on the best way yet, and I don't want to hold off
+your work for it for too long?
+
+johannes
 
