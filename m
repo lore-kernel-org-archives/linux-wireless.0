@@ -1,66 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35743 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751394Ab2FHSL1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 14:11:27 -0400
-Message-ID: <1339179084.5748.29.camel@jlt3.sipsolutions.net> (sfid-20120608_201130_600091_512B0D52)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	Andre Heider <a.heider@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Date: Fri, 08 Jun 2012 20:11:24 +0200
-In-Reply-To: <1339178163.5748.27.camel@jlt3.sipsolutions.net> (sfid-20120608_195614_138814_5C64BE11)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 <4FD22727.7000500@lwfinger.net>
-	 <1339172904.5748.18.camel@jlt3.sipsolutions.net>
-	 <20120608183339.78a7fcbd@milhouse> <4FD239AA.9090708@lwfinger.net>
-	 (sfid-20120608_194312_026371_EC8C6BE2) <1339178163.5748.27.camel@jlt3.sipsolutions.net>
-	 (sfid-20120608_195614_138814_5C64BE11)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb06.tieto.com ([131.207.168.38]:49614 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932874Ab2F1KH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:29 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 12/13] cfg80211: add channel checking for iface combinations
+Date: Thu, 28 Jun 2012 12:07:04 +0200
+Message-ID: <1340878025-2695-13-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120740_727143_82464C2F)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 19:56 +0200, Johannes Berg wrote:
-> On Fri, 2012-06-08 at 12:43 -0500, Larry Finger wrote:
-> > On 06/08/2012 11:33 AM, Michael Büsch wrote:
-> > >
-> > > Larry, did you check with PIO?
-> > 
-> > No, I only used DMA. With the latest patch, compilation is Ok, and DMA works for 
-> > both kinds of firmware, while PIO fails for both.
-> 
-> Hmm, both with QoS enabled and disabled?. I don't really see what could
-> be causing this, sorry.
-> 
-> One more thing that I just realised though is that mac80211 uses the #
-> of queues to determine whether to advertise QoS or not, so the whole
-> thing won't actually work anyway without more work :-(
+.connect cannot be handled since the driver scans
+and connects on its own. It is up to the driver
+then to refuse a connection (with -EBUSY for
+example).
 
-Maybe these two patches work:
+Non-fixed channel IBSSes always take a single
+channel resource. For example two non-fixed
+channel IBSSes always take up 2
+num_different_channels, even if they operate on
+the same channel at a given point of time.
 
-http://p.sipsolutions.net/b8912f8cad4cb3b2.txt
-http://p.sipsolutions.net/ad2677233e6917e8.txt
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/core.c |    8 +++++++
+ net/wireless/core.h |   29 ++++++++++++++++++++++--
+ net/wireless/util.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 88 insertions(+), 8 deletions(-)
 
-still kinda hack like it always was, but ...
-
-johannes
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 5b3f74e..2fed61b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -436,6 +436,14 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 		if (WARN_ON(!c->num_different_channels))
+ 			return -EINVAL;
+ 
++		/*
++		 * Put a sane limit on maximum number of different
++		 * channels to simplify channel accounting code.
++		 */
++		if (WARN_ON(c->num_different_channels >
++				CFG80211_MAX_NUM_DIFFERENT_CHANNELS))
++			return -EINVAL;
++
+ 		if (WARN_ON(!c->n_limits))
+ 			return -EINVAL;
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 9d9441d..63e04f6 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -454,9 +454,20 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 			  u32 *flags, struct vif_params *params);
+ void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev);
+ 
+-int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+-				  struct wireless_dev *wdev,
+-				  enum nl80211_iftype iftype);
++int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
++				 struct wireless_dev *wdev,
++				 enum nl80211_iftype iftype,
++				 struct ieee80211_channel *chan,
++				 enum cfg80211_chan_mode chanmode);
++
++static inline int
++cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
++			      struct wireless_dev *wdev,
++			      enum nl80211_iftype iftype)
++{
++	return cfg80211_can_use_iftype_chan(rdev, wdev, iftype, NULL,
++					    CHAN_MODE_UNDEFINED);
++}
+ 
+ static inline int
+ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+@@ -465,6 +476,16 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+ 	return cfg80211_can_change_interface(rdev, NULL, iftype);
+ }
+ 
++static inline int
++cfg80211_can_use_chan(struct cfg80211_registered_device *rdev,
++		      struct wireless_dev *wdev,
++		      struct ieee80211_channel *chan,
++		      enum cfg80211_chan_mode chanmode)
++{
++	return cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
++					    chan, chanmode);
++}
++
+ void
+ cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
+ 		        struct wireless_dev *wdev,
+@@ -487,6 +508,8 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 			       enum nl80211_iftype iftype, int num);
+ 
++#define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10
++
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+ #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
+ #else
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 9b92ec5..4713cea 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -938,13 +938,20 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 	return res;
+ }
+ 
+-int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+-				  struct wireless_dev *wdev,
+-				  enum nl80211_iftype iftype)
++int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
++				 struct wireless_dev *wdev,
++				 enum nl80211_iftype iftype,
++				 struct ieee80211_channel *chan,
++				 enum cfg80211_chan_mode chanmode)
+ {
+ 	struct wireless_dev *wdev_iter;
+ 	u32 used_iftypes = BIT(iftype);
+ 	int num[NUM_NL80211_IFTYPES];
++	struct ieee80211_channel
++			*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
++	struct ieee80211_channel *ch;
++	enum cfg80211_chan_mode chmode;
++	int num_different_channels = 0;
+ 	int total = 1;
+ 	int i, j;
+ 
+@@ -955,9 +962,23 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+ 		return 0;
+ 
+ 	memset(num, 0, sizeof(num));
++	memset(used_channels, 0, sizeof(used_channels));
+ 
+ 	num[iftype] = 1;
+ 
++	switch (chanmode) {
++	case CHAN_MODE_UNDEFINED:
++		break;
++	case CHAN_MODE_SHARED:
++		WARN_ON(!chan);
++		used_channels[0] = chan;
++		num_different_channels++;
++		break;
++	case CHAN_MODE_EXCLUSIVE:
++		num_different_channels++;
++		break;
++	}
++
+ 	mutex_lock(&rdev->devlist_mtx);
+ 	list_for_each_entry(wdev_iter, &rdev->netdev_list, list) {
+ 		if (wdev_iter == wdev)
+@@ -968,6 +989,31 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+ 		if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
+ 			continue;
+ 
++		cfg80211_get_chan_state(rdev, wdev_iter, &ch, &chmode);
++
++		switch (chmode) {
++		case CHAN_MODE_UNDEFINED:
++			break;
++		case CHAN_MODE_SHARED:
++			for (i = 0; i < CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
++				if (!used_channels[i] || used_channels[i] == ch)
++					break;
++
++			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS) {
++				mutex_unlock(&rdev->devlist_mtx);
++				return -EBUSY;
++			}
++
++			if (used_channels[i] == NULL) {
++				used_channels[i] = ch;
++				num_different_channels++;
++			}
++			break;
++		case CHAN_MODE_EXCLUSIVE:
++			num_different_channels++;
++			break;
++		}
++
+ 		num[wdev_iter->iftype]++;
+ 		total++;
+ 		used_iftypes |= BIT(wdev_iter->iftype);
+@@ -984,12 +1030,15 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+ 
+ 		c = &rdev->wiphy.iface_combinations[i];
+ 
++		if (total > c->max_interfaces)
++			continue;
++		if (num_different_channels > c->num_different_channels)
++			continue;
++
+ 		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
+ 				 GFP_KERNEL);
+ 		if (!limits)
+ 			return -ENOMEM;
+-		if (total > c->max_interfaces)
+-			goto cont;
+ 
+ 		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+ 			if (rdev->wiphy.software_iftypes & BIT(iftype))
+-- 
+1.7.0.4
 
