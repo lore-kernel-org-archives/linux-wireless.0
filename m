@@ -1,55 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:17185 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760082Ab2FUSII (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jun 2012 14:08:08 -0400
-Date: Thu, 21 Jun 2012 13:08:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Change debug level for deletion of an entry in
- CAM
-Message-ID: <4fe36304.lMYlG4cX+pzWriXy%Larry.Finger@lwfinger.net> (sfid-20120621_200812_532541_879455AF)
+Received: from mms2.broadcom.com ([216.31.210.18]:3395 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751825Ab2F1XKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 19:10:34 -0400
+Message-ID: <4FECE45E.6040506@broadcom.com> (sfid-20120629_011116_132042_F52FD8C8)
+Date: Thu, 28 Jun 2012 16:10:22 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Jon Hunter" <jon-hunter@ti.com>
+cc: "Kevin Hilman" <khilman@ti.com>, b-cousson@ti.com,
+	tony@atomide.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	grant.likely@secretlab.ca, santosh.shilimkar@ti.com,
+	linux-omap@vger.kernel.org, tarun.kanti@ti.com,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: Panda ES board hang when using GPIO as interrupt
+References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com>
+ <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com>
+ <4FECCB91.7090609@broadcom.com> <4FECD2E5.1060603@ti.com>
+ <4FECE067.7000809@broadcom.com> <4FECE1BD.80906@ti.com>
+In-Reply-To: <4FECE1BD.80906@ti.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running in AP mode, the driver reports all deletions from CAM in
-a cryptic manner that makes users think it is an error. change so that
-the condition is only reported at higher-levels of debugging.
+On 06/28/2012 03:59 PM, Jon Hunter wrote:
+>
+> On 06/28/2012 05:53 PM, Franky Lin wrote:
+>> I found one interesting thing. When I added the print info to see when
+>> runtime_suspend/resume get called, it seems like the suspend/resume is
+>> unbalance during boot. Resume got called more than suspend. So I hack
+>> the code to make sure suspend and resume are called in pair. A resume
+>> without suspend will do nothing and return immediately. This also makes
+>> the hang vanish.
+>
+> I am not 100% sure I follow. On boot I would expect to see a
+> resume/suspend due to the probe on the irq bank and then I would expect
+> to see another resume from the acquisition of the gpio, however, I would
+> not expect a suspend until the gpio is freed, which I don't believe you
+> are doing.
+>
+> Can you share your hack? Just paste the diff? This may help me
+> understand more.
+>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+OK.
+This is what I saw in the log:
+[    0.171844] dummy:
+[    0.172912] NET: Registered protocol family 16
+[    0.173431] GPMC revision 6.0
+[    0.173492] gpmc: irq-52 could not claim: err -22
+[    0.177551] ??????omap_gpio_runtime_resume
+[    0.178619] OMAP GPIO hardware version 0.1
+[    0.178649] !!!!!omap_gpio_runtime_suspend
+[    0.178771] ??????omap_gpio_runtime_resume
+[    0.179351] !!!!!omap_gpio_runtime_suspend
+[    0.179504] ??????omap_gpio_runtime_resume
+[    0.180023] !!!!!omap_gpio_runtime_suspend
+[    0.180145] ??????omap_gpio_runtime_resume
+[    0.180694] !!!!!omap_gpio_runtime_suspend
+[    0.180847] ??????omap_gpio_runtime_resume
+[    0.181365] !!!!!omap_gpio_runtime_suspend
+[    0.181518] ??????omap_gpio_runtime_resume
+[    0.182037] !!!!!omap_gpio_runtime_suspend
+[    0.185089] omap_mux_init: Add partition: #1: core, flags: 2
+[    0.186462] omap_mux_init: Add partition: #2: wkup, flags: 2
+[    0.186584] error setting wl12xx data: -38
+[    0.189788] _omap_mux_get_by_name: Could not find signal 
+uart1_rx.uart1_rx
+[    0.189788] _omap_mux_get_by_name: Could not find signal 
+uart1_rx.uart1_rx
+[    0.239501] ??????omap_gpio_runtime_resume
+[    0.239532] ??????omap_gpio_runtime_resume
+[    0.241058]  usbhs_omap: alias fck already exists
+[    0.244781] ??????omap_gpio_runtime_resume
 
-John,
+diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
+index c4ed172..bca3985 100644
+--- a/drivers/gpio/gpio-omap.c
++++ b/drivers/gpio/gpio-omap.c
+@@ -1146,7 +1146,7 @@ static int __devinit omap_gpio_probe(struct 
+platform_device *pdev)
 
-This is 3.6 material.
+  #if defined(CONFIG_PM_RUNTIME)
+  static void omap_gpio_restore_context(struct gpio_bank *bank);
+-
++static int flag = 0;
+  static int omap_gpio_runtime_suspend(struct device *dev)
+  {
+         struct platform_device *pdev = to_platform_device(dev);
+@@ -1155,6 +1155,8 @@ static int omap_gpio_runtime_suspend(struct device 
+*dev)
+         unsigned long flags;
+         u32 wake_low, wake_hi;
 
-Larry
----
++       flag ++;
++
+         spin_lock_irqsave(&bank->lock, flags);
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/cam.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/cam.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/cam.c
-@@ -128,7 +128,7 @@ u8 rtl_cam_add_one_entry(struct ieee8021
- 	u32 us_config;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
-+	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
- 		 "EntryNo:%x, ulKeyId=%x, ulEncAlg=%x, ulUseDK=%x MacAddr %pM\n",
- 		 ul_entry_idx, ul_key_id, ul_enc_alg,
- 		 ul_default_key, mac_addr);
-@@ -342,7 +342,8 @@ void rtl_cam_del_entry(struct ieee80211_
- 			/* Remove from HW Security CAM */
- 			memset(rtlpriv->sec.hwsec_cam_sta_addr[i], 0, ETH_ALEN);
- 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
--			pr_info("&&&&&&&&&del entry %d\n", i);
-+			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
-+				 "del CAM entry %d\n", i);
- 		}
- 	}
- 	return;
+         /*
+@@ -1221,6 +1223,11 @@ static int omap_gpio_runtime_resume(struct device 
+*dev)
+         u32 l = 0, gen, gen0, gen1;
+         unsigned long flags;
+
++       if (flag)
++               flag--;
++       else
++               return 0;
++
+         spin_lock_irqsave(&bank->lock, flags);
+         _gpio_dbck_enable(bank);
+
+Regards,
+Franky
+
