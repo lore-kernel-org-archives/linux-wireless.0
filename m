@@ -1,41 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:35818 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237Ab2FRHsh (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:58034 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642Ab2F1OW2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 03:48:37 -0400
-Date: Mon, 18 Jun 2012 10:48:14 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Frank Seidel <frank@f-seidel.de>
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] airo: copying wrong data in airo_get_aplist()
-Message-ID: <20120618074814.GA26251@elgon.mountain> (sfid-20120618_094842_128557_764ECDFB)
+	Thu, 28 Jun 2012 10:22:28 -0400
+Received: by obbuo13 with SMTP id uo13so3082809obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 07:22:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FEC6447.7010007@cern.ch>
+References: <4FE03291.5030202@cern.ch>
+	<CAD2nsn1U0UHjrDp7vh7rfvTP=BLB3FA+zLV9sgt1_T7gVvAYgg@mail.gmail.com>
+	<4FE0CA6C.3080002@cern.ch>
+	<4FEC6447.7010007@cern.ch>
+Date: Thu, 28 Jun 2012 19:52:27 +0530
+Message-ID: <CAD2nsn3L6K6obTzpvnjetrWuGk+e+nKV=RsdQfYk3iVCsej66Q@mail.gmail.com> (sfid-20120628_162231_286663_E5F60F26)
+Subject: Re: Mysterious hangs - cfg80211 - ath9k
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Jon Wikne <Jon.Wikne@cern.ch>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"qual" used to be declared on the stack, but then in 998a5a7d6a ("airo:
-reduce stack memory footprint") we made it dynamically allocated.
-Unfortunately the memcpy() here was missed and it's still copying stack
-memory instead of the data that we want.  In other words, "&qual" should
-be "qual".
+Hi,
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On Thu, Jun 28, 2012 at 7:33 PM, Jon Wikne <Jon.Wikne@cern.ch> wrote:
+> On 06/19/2012 08:52 PM, Jon Wikne wrote:
+>>
+>> On 06/19/2012 11:39 AM, Mohammed Shafi wrote:
+>>>
+>>> On Tue, Jun 19, 2012 at 1:34 PM, Jon Wikne<Jon.Wikne@cern.ch> wrote:
+>>>>
+>>>> Hi List,
+>>>>
+>>>> I am experiencing a puzzling problem with WLAN on a Toshiba Qosmio
+>>>> F750 laptop, running CERN SLC 5.8 (mostly identical to RHEL 5.8),
+>>>> but with kernel 2.6.39.4. (The kernel that came with the distro did
+>>>> not work properly with WLAN on this machine at all.)
+>>>
+>>>
+>>> please quickly try
+>>>
+>>> http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
+>>
+>>
+>> I tried to install compat-wireless-2012-05-10. It worked for 4½ hours,
+>> then same problem.
+>>
+>> Maybe there is something wrong with my understanding here, but I do not
+>> see why the "cfg80211: Calling CRDA to update world regulatory domain"
+>> should occur hours after the connection has been established, and what
+>> triggers it, apparently at random....
+>>
+>>> or the latest wireless testing tree
+>>>
+>>> http://linuxwireless.org/en/developers/Documentation/git-guide#Cloning_latest_wireless-testing
+>>
+>>
+>> Is there a reason to believe it could make a difference if I try
+>> this too?
+>
+>
+> Now I downloaded this (more than 1GB), just to realize that it is a
+> complete kernel tree for kernel 3.5.0-rc3. I don't really feel ready
+> for an experimental upgrade from 2.6.39.4 to that right now....
+>
+> With basis in compat-wireless-2012-05-10 I tried to comment out the
+> call to call_crda in net/wireless/reg.c and return -EALREADY in line
+> 1483, just to see if that circumvented the problem. It did not. The
+> damage (whatever that might be) already seems to be done _before_ the
+> call_crda is made in reg.c.
+>
+> I am a bit at a loss as to how to proceed. There are several things
+> i do not understand.
+>
+> 1) The call to update CRDA (even with my crude, experimental, dummy
+> return) seems to cause no trouble when it is done the first time
+> the line comes up. Could someone please explain to me what causes
+> the subsequent calls at highly irregular intervals, and why that
+> seems to be necessary or desirable?
+>
+> 2) Is this a known problem that is being worked on (in which case I
+> will just shut up and wait), or am I the first to report it?
+>
+> Thanks in advance for any further info or suggestions.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 252c2c2..f9f15bb 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -7233,8 +7233,8 @@ static int airo_get_aplist(struct net_device *dev,
- 		}
- 	} else {
- 		dwrq->flags = 1; /* Should be define'd */
--		memcpy(extra + sizeof(struct sockaddr)*i,
--		       &qual,  sizeof(struct iw_quality)*i);
-+		memcpy(extra + sizeof(struct sockaddr) * i, qual,
-+		       sizeof(struct iw_quality) * i);
- 	}
- 	dwrq->length = i;
- 
+please provide the complete log. you can also enable ath9k debugging.
+sudo modprobe -v ath9k debug=0x601
+http://linuxwireless.org/en/users/Drivers/ath9k/debug
+so you need to bring the interface up/down to make it working right ?
+a recent fix, but not relevant to this i think
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/92657
+
+>
+> Regards,
+> -- Jon Wikne
+>
+>
+
+
+
+-- 
+thanks,
+shafi
