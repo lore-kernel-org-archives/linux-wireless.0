@@ -1,98 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41875 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602Ab2F0Nvm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 09:51:42 -0400
-Message-ID: <1340805097.11012.24.camel@jlt3.sipsolutions.net> (sfid-20120627_155146_490557_390B90C9)
-Subject: 3.4.x bug with channel type changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	manschwetus@googlemail.com
-Date: Wed, 27 Jun 2012 15:51:37 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932874Ab2F1KH0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:26 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 09/13] cfg80211: track monitor channel
+Date: Thu, 28 Jun 2012 12:07:01 +0200
+Message-ID: <1340878025-2695-10-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120732_325154_311A3B17)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
+Make it even more obvious we support single
+monitor channel. This will allow us to remove
+.get_channel.
 
-I'm debugging a problem for a user (Florian)
-(http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2363) that turns
-out to be a mac80211 bug in 3.4, apparently introduced by an interaction
-between your commit
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/chan.c |    9 ++++++++-
+ net/wireless/core.c |    8 +++++++-
+ net/wireless/core.h |    3 +++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-commit 3117bbdb7899d43927c8ce4fe885ab7c1231c121
-Author: Paul Stewart <pstew@chromium.org>
-Date:   Tue Mar 13 07:46:18 2012 -0700
-
-    mac80211: Don't let regulatory make us deaf
-
-
-and Rajkumar's commit
-
-commit 7cc44ed48d0ec0937c1f098642540b6c9ca38de5
-Author: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Date:   Fri Sep 16 15:32:34 2011 +0530
-
-    mac80211: Fix regression on queue stop during 2040 bss change
-
-
-The problem is that the code looks like this in 3.4, after both commits:
-
-        if (beacon_htcap_ie && (prev_chantype != rx_channel_type)) {
-                /*
-                 * Whenever the AP announces the HT mode change that can be
-                 * 40MHz intolerant or etc., it would be safer to stop tx
-                 * queues before doing hw config to avoid buffer overflow.
-                 */
-                ieee80211_stop_queues_by_reason(&sdata->local->hw,
-                                IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-
-                /* flush out all packets */
-                synchronize_net();
-
-                drv_flush(local, false);  
-        }
-
-        /* channel_type change automatically detected */
-        ieee80211_hw_config(local, 0);
-
-        if (prev_chantype != tx_channel_type) {
-                rcu_read_lock();
-                sta = sta_info_get(sdata, bssid);
-                if (sta)
-                        rate_control_rate_update(local, sband, sta,
-                                                 IEEE80211_RC_HT_CHANGED,
-                                                 tx_channel_type);
-                rcu_read_unlock();
-  
-                if (beacon_htcap_ie)
-                        ieee80211_wake_queues_by_reason(&sdata->local->hw,
-                                IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-        }
-
-
-In the tracing I got from Florian, I see that the AP is constantly
-switching between HT20 and HT40-. At some point, all this switching
-leads to all queues remaining stopped -- forever. The module has to be
-unloaded & reloaded for this to get fixed because the CHTYPE_CHANGE stop
-reason is never cleared and thus we never transmit any packets again.
-
-Clearly, the problem is that in the first if, we check beacon_htcap_ie
-as well as "prev_chantype != rx_channel_type", and in the second if that
-would wake the queues, it's "prev_chantype != tx_channel_type". Since RX
-and TX channel type can differ (which was the point of your commit),
-this can lead to queues being woken that weren't stopped (which is not a
-problem) or queues being stopped and never woken again (major issue).
-
-Now, the reason I'm writing all this in an email and not a commit log is
-that I don't know what the TX/RX channel type usage should be, or if
-maybe it should be "if (queues_stopped) wake_queues()" or something like
-that... Can you tell me what it should be?
-
-Thanks,
-johannes
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 019401b..434c56b 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -82,6 +82,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 				 int freq, enum nl80211_channel_type chantype)
+ {
+ 	struct ieee80211_channel *chan;
++	int err;
+ 
+ 	if (!rdev->ops->set_monitor_channel)
+ 		return -EOPNOTSUPP;
+@@ -92,7 +93,13 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 	if (!chan)
+ 		return -EINVAL;
+ 
+-	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	err = rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	if (!err) {
++		rdev->monitor_channel = chan;
++		rdev->monitor_channel_type = chantype;
++	}
++
++	return err;
+ }
+ 
+ void
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 9097d6c..8315c2a 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -789,9 +789,15 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		rdev->num_running_monitor_ifaces += num;
+ 
+ 	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
+-	if (has_monitors_only_new != has_monitors_only_old)
++	if (has_monitors_only_new != has_monitors_only_old) {
+ 		rdev->ops->set_monitor_enabled(&rdev->wiphy,
+ 					       has_monitors_only_new);
++
++		if (!has_monitors_only_new) {
++			rdev->monitor_channel = NULL;
++			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		}
++	}
+ }
+ 
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index b27fa3b..9d9441d 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -59,6 +59,9 @@ struct cfg80211_registered_device {
+ 	int num_running_ifaces;
+ 	int num_running_monitor_ifaces;
+ 
++	struct ieee80211_channel *monitor_channel;
++	enum nl80211_channel_type monitor_channel_type;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
+-- 
+1.7.0.4
 
