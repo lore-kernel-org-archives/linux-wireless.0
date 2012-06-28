@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:38285
-	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761695Ab2FVKLd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 06:11:33 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] cfg80211/mac80211: 802.11ac changes
-Date: Fri, 22 Jun 2012 10:11:31 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E80@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120622_121745_149314_CE99E1FB)
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local>,<1340353030.4491.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340353030.4491.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:30684 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473Ab2F1MTX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 08:19:23 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Subject: [RFC] ath9k: Fix clearing of BTCOEX flags
+Date: Thu, 28 Jun 2012 17:49:12 +0530
+Message-ID: <1340885952-5317-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120628_141927_462275_7FE8DA00)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-________________________________________
-From: Johannes Berg [johannes@sipsolutions.net]
-Sent: Friday, June 22, 2012 1:47 PM
-To: Mahesh Palivela
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211/mac80211: 802.11ac changes
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-On Fri, 2012-06-22 at 07:27 +0000, Mahesh Palivela wrote:
-> 11ac changes to push VHT cap through NL layer.
-> ieee structs, constants for 11ac.
-> VHT cap IE in ProbeReq.
+BTCOEX flags are set/cleared by atomic operations.
+We got to do the same in ath9k_btcoex_timer_resume,
+while clearing those BTCOEX flags.
 
-Thanks. I will probably rewrite this commit log though ...
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Since this is clearly not everything that's needed, what are your plans
-for doing the other needed things?
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 26032cb..bd342cd 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -305,7 +305,8 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
+ 
+ 	btcoex->bt_priority_cnt = 0;
+ 	btcoex->bt_priority_time = jiffies;
+-	btcoex->op_flags &= ~(BT_OP_PRIORITY_DETECTED | BT_OP_SCAN);
++	clear_bit(BT_OP_PRIORITY_DETECTED, &btcoex->op_flags);
++	clear_bit(BT_OP_SCAN, &btcoex->op_flags);
+ 
+ 	mod_timer(&btcoex->period_timer, jiffies);
+ }
+-- 
+1.7.0.4
 
- * assoc handling
- * VHT BSS selector
- * VHT station capability handling
-
-etc?
-
-johannes
-
-I am working on them Johannes. Assoc is the next item....
-
-Thanks,
-Mahesh
