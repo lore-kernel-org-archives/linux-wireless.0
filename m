@@ -1,71 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:54679 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753500Ab2FDGaP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 02:30:15 -0400
-Received: by bkcji2 with SMTP id ji2so3267780bkc.19
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2012 23:30:14 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2730 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754709Ab2F1Wxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 18:53:40 -0400
+Message-ID: <4FECE067.7000809@broadcom.com> (sfid-20120629_005345_777921_F9B9EE4B)
+Date: Thu, 28 Jun 2012 15:53:27 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1338790597.4512.3.camel@jlt3.sipsolutions.net>
-References: <1338755422-13220-1-git-send-email-arik@wizery.com> <1338790597.4512.3.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 4 Jun 2012 09:29:59 +0300
-Message-ID: <CA+XVXfeRvmT3Yp-sNVj6YU7AQ3cofY+TLiyUqp1GLP+5Zr4SZw@mail.gmail.com> (sfid-20120604_083020_249902_97A994DF)
-Subject: Re: [PATCH] mac80211: stop Rx during HW reconfig
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Jon Hunter" <jon-hunter@ti.com>
+cc: "Kevin Hilman" <khilman@ti.com>, b-cousson@ti.com,
+	tony@atomide.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	grant.likely@secretlab.ca, santosh.shilimkar@ti.com,
+	linux-omap@vger.kernel.org, tarun.kanti@ti.com,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: Panda ES board hang when using GPIO as interrupt
+References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com>
+ <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com>
+ <4FECCB91.7090609@broadcom.com> <4FECD2E5.1060603@ti.com>
+In-Reply-To: <4FECD2E5.1060603@ti.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 4, 2012 at 9:16 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sun, 2012-06-03 at 23:30 +0300, Arik Nemtsov wrote:
+On 06/28/2012 02:55 PM, Jon Hunter wrote:
+> Ok. Any way to manually reset the wlan module to deactivate the gpio
+> when it is hung? I am wondering if the gpio is deactivated if the board
+> comes back to life, indicating it is stuck in the interrupt somewhere.
+
+The only way I can think of is removing the module manually. But it 
+didn't bring the board back to live.
+
+> Well, at least that is consistent with what I see, but also perplexing
+> that it takes sometime to fail. Can you try the following as a debug
+> patch to see if it is in the context restore that is the problem. From
+> your testing and bisect, the only possible difference in the current
+> kernel is that it could perform the context restore when acquiring the gpio.
 >
->> +++ b/net/mac80211/rx.c
->> @@ -3023,6 +3023,9 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
->>       if (WARN_ON(!sband))
->>               goto drop;
->>
->> +     /* make sure we get the latest values for the next variable checks */
->> +     smp_rmb();
->> +
+> diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
+> index c4ed172..a2401bd 100644
+> --- a/drivers/gpio/gpio-omap.c
+> +++ b/drivers/gpio/gpio-omap.c
+> @@ -1341,6 +1341,8 @@ void omap2_gpio_resume_after_idle(void)
+>   #if defined(CONFIG_PM_RUNTIME)
+>   static void omap_gpio_restore_context(struct gpio_bank *bank)
+>   {
+> +       return;
+> +
+>          __raw_writel(bank->context.wake_en,
+>                                  bank->base + bank->regs->wkup_en);
+>          __raw_writel(bank->context.ctrl, bank->base + bank->regs->ctrl);
 >
-> That doesn't make a lot of sense I think? This entire thing is
-> inherently racy, you could be processing RX already even while just
-> setting the variable in the other code. I'm not really sure what the
-> effect of this here is, but it's certainly a hot-path.
 
-Yea I wondered about that myself, but I saw spinlocks are being used
-later inside ieee80211_rx_handlers(), so there's a memory barrier
-anyway IIUC.
+This one works! It can run more than 20 mins.
 
-You're right that we still can get very old RX from before the
-reconfig, but this is not the one I was worried about (and it doesn't
-happen in practice).
-This one worries me (we actually had something similar)
+I found one interesting thing. When I added the print info to see when 
+runtime_suspend/resume get called, it seems like the suspend/resume is 
+unbalance during boot. Resume got called more than suspend. So I hack 
+the code to make sure suspend and resume are called in pair. A resume 
+without suspend will do nothing and return immediately. This also makes 
+the hang vanish.
 
-1. reconfig starts
-2. AP starts beaconing
-3. remote sta sends ADDBA
-4. remote sta is added by mac80211
+Regards,
+Franky
 
-Since in_reconfig is set before the start of the AP, in this sense we
-won't get state changes during the reconfig.
 
->
->> +       /*
->> +        * Stop all Rx during the reconfig. We don't want state changes
->> +        * or driver callbacks while this is in progress.
->> +        */
->> +       local->in_reconfig = true;
->> +       smp_wmb();
->
->
-> If anything, you should probably put this right into
-> ieee80211_restart_hw() rather than the reconfig function? It's not
-> needed for suspend/resume anyway since we check that separately.
-
-Sure, even earlier is better I guess.
-
-Arik
