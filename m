@@ -1,33 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:57938 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683Ab2FFEBo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 00:01:44 -0400
-Received: by ghrr11 with SMTP id r11so4953063ghr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2012 21:01:43 -0700 (PDT)
-Message-ID: <4FCED623.6050600@lwfinger.net> (sfid-20120606_060152_761893_E6C4DF7F)
-Date: Tue, 05 Jun 2012 23:01:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:2534 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755545Ab2F1SoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 14:44:25 -0400
+Message-ID: <4FECA5FB.30902@broadcom.com> (sfid-20120628_204429_916701_C37F3CC7)
+Date: Thu, 28 Jun 2012 20:44:11 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Ouyang <ilhebe999@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: usb.c
-References: <loom.20120605T215520-645@post.gmane.org> <4FCE67CA.2020502@lwfinger.net> <loom.20120605T221743-446@post.gmane.org>
-In-Reply-To: <loom.20120605T221743-446@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Arik Nemtsov" <arik@wizery.com>
+cc: "Eliad Peller" <eliad@wizery.com>,
+	"Luciano Coelho" <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] wlcore: implement .flush callback
+References: <1340813387-18407-1-git-send-email-coelho@ti.com>
+ <4FEC3B0E.3040001@broadcom.com>
+ <CAB3XZEeJrX4AoFqMtSOF3BFEV-s5WOhAXHnVwb6_5O5bNXWkUQ@mail.gmail.com>
+ <CA+XVXfeqQFd+raZeBEB+ct5mHLJfEPst1Bop0RUui6gN9=9jow@mail.gmail.com>
+In-Reply-To: <CA+XVXfeqQFd+raZeBEB+ct5mHLJfEPst1Bop0RUui6gN9=9jow@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2012 03:23 PM, Ouyang wrote:
+On 06/28/2012 01:31 PM, Arik Nemtsov wrote:
+> On Thu, Jun 28, 2012 at 2:25 PM, Eliad Peller <eliad@wizery.com> wrote:
+>> On Thu, Jun 28, 2012 at 2:07 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> On 06/27/2012 06:09 PM, Luciano Coelho wrote:
+>>>> From: Eliad Peller <eliad@wizery.com>
+>>>>
+>>>> implement the .flush() callback by simply calling wl1271_tx_flush().
+>>>>
+>>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>>>> Signed-off-by: Luciano Coelho <coelho@ti.com>
+>>>> ---
+>>>>  drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
+>>>>  1 file changed, 8 insertions(+)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+>>>> +static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
+>>>> +{
+>>>> +     struct wl1271 *wl = hw->priv;
+>>>> +
+>>>> +     wl1271_tx_flush(wl);
+>>>> +}
+>>>> +
+>>>
+>>> So not taking the drop flag into account? Any plan to change that?
+>>>
+>> yeah, good point...
+>> i guess we'll want to add support for the drop flag as well.
+>>
+>> Luca - you can either drop this patch, or apply it for now and i'll
+>> send another patch later on.
+> 
+> Currently we drop all the packets if we can't flush them within a
+> reasonable time. We always do this right now. I think that's good
+> enough?
+> 
 
-> Thank you so much for the reply. I am so appreciated.
->
-> I am still a little confused. Would you please set an example for
-> drivers/net/wireless/rtlwifi/usb.c ?
+Hard to say as I am working mostly on your side of this API. However,
+the drop flag is part of the API so there is probably a reason for
+having it. Johannes?
 
-That file contains the USB-specific low-level routines for the driver used by 
-the RTL8188CU devices built by Realtek. If you want to know what that file does, 
-read the comments.
+Gr. AvS
 
-Larry
