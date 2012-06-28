@@ -1,59 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41529 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756554Ab2F0MNX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 08:13:23 -0400
-Message-ID: <1340799198.11012.14.camel@jlt3.sipsolutions.net> (sfid-20120627_141326_508742_B55D32C3)
-Subject: [PATCH 3.5] mac80211: correct behaviour on unrecognised action
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 27 Jun 2012 14:13:18 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932760Ab2F1KHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:25 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 07/13] mac80211: refactor virtual monitor code
+Date: Thu, 28 Jun 2012 12:06:59 +0200
+Message-ID: <1340878025-2695-8-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120750_543653_DD4CA22E)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Use cfg80211 the new .set_monitor_enabled instead
+of tracking it inside mac80211.
 
-When receiving an "individually addressed" action frame, the
-receiver is required to return it to the sender. mac80211
-gets this wrong as it also returns group addressed (mcast)
-frames to the sender. Fix this and update the reference to
-the new 802.11 standards version since things were shuffled
-around significantly.
-
-Cc: stable@kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-John, can you apply this? Thanks! :-)
+ net/mac80211/cfg.c         |   11 +++++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/iface.c       |   16 ++--------------
+ 3 files changed, 17 insertions(+), 14 deletions(-)
 
- net/mac80211/rx.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d4d82c7..03b9ba8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2434,12 +2434,13 @@ ieee80211_rx_h_action_return(struct ieee80211_rx_data *rx)
- 	 * frames that we didn't handle, including returning unknown
- 	 * ones. For all other modes we will return them to the sender,
- 	 * setting the 0x80 bit in the action category, as required by
--	 * 802.11-2007 7.3.1.11.
-+	 * 802.11-2012 9.24.4.
- 	 * Newer versions of hostapd shall also use the management frame
- 	 * registration mechanisms, but older ones still use cooked
- 	 * monitor interfaces so push all frames there.
- 	 */
- 	if (!(status->rx_flags & IEEE80211_RX_MALFORMED_ACTION_FRM) &&
-+	    !is_multicast_ether_addr(mgmt->da) &&
- 	    (sdata->vif.type == NL80211_IFTYPE_AP ||
- 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
- 		return RX_DROP_MONITOR;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 85ac364..df7332e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2943,6 +2943,16 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy,
+ 	return local->oper_channel;
+ }
+ 
++static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	if (enabled)
++		WARN_ON(ieee80211_add_virtual_monitor(local));
++	else
++		ieee80211_del_virtual_monitor(local);
++}
++
+ #ifdef CONFIG_PM
+ static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
+ {
+@@ -3018,6 +3028,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.set_monitor_enabled = ieee80211_set_monitor_enabled,
+ #ifdef CONFIG_PM
+ 	.set_wakeup = ieee80211_set_wakeup,
+ #endif
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index e6cbf5b..9eb3b8b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1472,6 +1472,10 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       enum nl80211_channel_type channel_type,
+ 			       u16 prot_mode);
+ 
++/* virtual monitor */
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
++
+ /* channel management */
+ enum ieee80211_chan_mode {
+ 	CHAN_MODE_UNDEFINED,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 87aeb4f..47f46fd 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -214,7 +214,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
+ }
+ 
+-static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret;
+@@ -255,7 +255,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
+-static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -371,12 +371,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 			break;
+ 		}
+ 
+-		if (local->monitors == 0 && local->open_count == 0) {
+-			res = ieee80211_add_virtual_monitor(local);
+-			if (res)
+-				goto err_stop;
+-		}
+-
+ 		/* must be before the call to ieee80211_configure_filter */
+ 		local->monitors++;
+ 		if (local->monitors == 1) {
+@@ -391,8 +385,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		break;
+ 	default:
+ 		if (coming_up) {
+-			ieee80211_del_virtual_monitor(local);
+-
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+@@ -627,7 +619,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		if (local->monitors == 0) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+-			ieee80211_del_virtual_monitor(local);
+ 		}
+ 
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+@@ -701,9 +692,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+-
+-	if (local->monitors == local->open_count && local->monitors > 0)
+-		ieee80211_add_virtual_monitor(local);
+ }
+ 
+ static int ieee80211_stop(struct net_device *dev)
 -- 
-1.7.10
-
-
+1.7.0.4
 
