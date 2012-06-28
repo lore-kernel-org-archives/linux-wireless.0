@@ -1,183 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:28005 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754439Ab2FPRIO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756805Ab2F1J1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jun 2012 13:08:14 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: Marek Lindner <lindner_marek@yahoo.de>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Antonio Quartulli <ordex@autistici.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: in IBSS use the Auth frame to trigger STA reinsertion
-Date: Sat, 16 Jun 2012 18:50:04 +0200
-Message-Id: <1339865405-10787-4-git-send-email-ordex@autistici.org> (sfid-20120616_190854_336293_B4A8C17E)
-In-Reply-To: <1339865405-10787-1-git-send-email-ordex@autistici.org>
-References: <1339865405-10787-1-git-send-email-ordex@autistici.org>
+	Thu, 28 Jun 2012 05:27:31 -0400
+Message-ID: <1340875646.4491.24.camel@jlt3.sipsolutions.net> (sfid-20120628_112735_069706_EE1E1990)
+Subject: Re: [RFC v3] initial channel context implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Jun 2012 11:27:26 +0200
+In-Reply-To: <4FEC21DA.9040901@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+	      <1340718188.14634.47.camel@jlt3.sipsolutions.net>
+	      <4FEAB698.5070309@tieto.com>
+	     <1340784614.8305.8.camel@jlt3.sipsolutions.net>
+	     <4FEADCAE.5080508@tieto.com>
+	    <1340795424.11012.11.camel@jlt3.sipsolutions.net>
+	    <4FEAFFF1.7080706@tieto.com>
+	   <1340805730.11012.33.camel@jlt3.sipsolutions.net>
+	   <4FEBF3D4.3030705@tieto.com>
+	  <1340868682.4491.1.camel@jlt3.sipsolutions.net>
+	  <4FEC0D9F.9030000@tieto.com>
+	 <1340871180.4491.16.camel@jlt3.sipsolutions.net>
+	 <4FEC21DA.9040901@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of a node re-joining the cell the sta_info structure belonging to it is
-first destroyed and then reinserted. In this way its internal state is reset.
+On Thu, 2012-06-28 at 11:20 +0200, Michal Kazior wrote:
 
-The joining operation is recognised thank the Auth frame being received.
+> > Yes, makes sense. I forgot all about the TX code. I'm a little wary of
+> > making the contexts mutable, even in this case, because a lot of code
+> > uses local->oper_channel as well, and that is expected to really be the
+> > operating channel all of the time, even if we're scanning at some point
+> > in time.
+> 
+> Yeah. The other option (maintaining the immutability) is to iterate 
+> through all interfaces and call ieee80211_vif_use_channel when switching 
+> channel for single-channel operation. Or do you have something else in 
+> mind maybe?
 
-This operation is helpful in case of a node being rebooted that is joining the
-ad-hoc cell again, before its purge timeout on other nodes expires.
+I don't think we should do that, we want to maintain chanctx.channel,
+what today is oper_channel. But I guess I was just expressing myself
+badly, seems below you understood it better :)
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ibss.c |   85 +++++++++++++++++++++++++++++----------------------
- 1 file changed, 49 insertions(+), 36 deletions(-)
+> > Luckily, tx.channel isn't actually used much, only for the band. So if
+> > we tag the SKBs with the band earlier (info->band), maybe we don't need
+> > to use hw.conf.channel as much there for tx.channel?
+> >
+> > Other uses where we do need the current channel are
+> >   * ieee80211_build_probe_req
+> >   * ieee80211_add_srates_ie/ieee80211_add_ext_srates_ie
+> >   * __ieee80211_start_scan uses it but need not, could use oper_channel
+> >     instead and the code never executes for multi-channel
+> >   * ieee80211_set_tx_power() is interesting, may need to make it all
+> >     per-sdata now through nl80211 etc.
+> 
+> What will drivers that don't support per-sdata tx_power do? Do all 
+> multi-vif (not multi-channel) drivers support per-interface tx power?
+> 
+> I guess we'd have to manage:
+>   a) common tx power value in ieee80211_local
+>   b) provide a function that calculates the common value
+>      so drivers may use it (and avoid code duplication)
+>   c) ..or else drivers would need to implement the calculation on
+>      their own
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index a497c03..d38baa4 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -36,31 +36,6 @@
- #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
- 
- 
--static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
--					struct ieee80211_mgmt *mgmt,
--					size_t len)
--{
--	u16 auth_alg, auth_transaction;
--
--	lockdep_assert_held(&sdata->u.ibss.mtx);
--
--	if (len < 24 + 6)
--		return;
--
--	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
--	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
--
--	/*
--	 * IEEE 802.11 standard does not require authentication in IBSS
--	 * networks and most implementations do not seem to use it.
--	 * However, try to reply to authentication attempts if someone
--	 * has actually implemented this.
--	 */
--	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1)
--		ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0, mgmt->sa,
--				    sdata->u.ibss.bssid, NULL, 0, 0);
--}
--
- static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				      const u8 *bssid, const int beacon_int,
- 				      struct ieee80211_channel *chan,
-@@ -275,7 +250,8 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				  cbss->tsf);
- }
- 
--static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
-+static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
-+						  bool auth)
- 	__acquires(RCU)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -298,20 +274,22 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
- 	/* If it fails, maybe we raced another insertion? */
- 	if (sta_info_insert_rcu(sta))
- 		return sta_info_get(sdata, addr);
-+	if (auth) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
--	printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
--	       "(auth_transaction=1)\n", sdata->vif.addr,
--	       sdata->u.ibss.bssid, addr);
-+		printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
-+		       "(auth_transaction=1)\n", sdata->vif.addr,
-+		       sdata->u.ibss.bssid, addr);
- #endif
--	ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
--			    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-+		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
-+				    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-+	}
- 	return sta;
- }
- 
- static struct sta_info *
- ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 		       const u8 *bssid, const u8 *addr,
--		       u32 supp_rates)
-+		       u32 supp_rates, bool auth)
- 	__acquires(RCU)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-@@ -353,7 +331,42 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	sta->sta.supp_rates[band] = supp_rates |
- 			ieee80211_mandatory_rates(local, band);
- 
--	return ieee80211_ibss_finish_sta(sta);
-+	return ieee80211_ibss_finish_sta(sta, auth);
-+}
-+
-+static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
-+					struct ieee80211_mgmt *mgmt,
-+					size_t len)
-+{
-+	u16 auth_alg, auth_transaction;
-+
-+	lockdep_assert_held(&sdata->u.ibss.mtx);
-+
-+	if (len < 24 + 6)
-+		return;
-+
-+	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
-+	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
-+
-+	if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1)
-+		return;
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+	printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
-+	       "(auth_transaction=%d)\n",
-+	       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
-+#endif
-+	sta_info_destroy_addr(sdata, mgmt->sa);
-+	ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
-+	rcu_read_unlock();
-+
-+	/*
-+	 * IEEE 802.11 standard does not require authentication in IBSS
-+	 * networks and most implementations do not seem to use it.
-+	 * However, try to reply to authentication attempts if someone
-+	 * has actually implemented this.
-+	 */
-+	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0,
-+			    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
- }
- 
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
-@@ -418,7 +431,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			} else {
- 				rcu_read_unlock();
- 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
--						mgmt->sa, supp_rates);
-+						mgmt->sa, supp_rates, true);
- 			}
- 		}
- 
-@@ -546,7 +559,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_sta_join_ibss(sdata, bss);
- 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
- 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
--				       supp_rates);
-+				       supp_rates, true);
- 		rcu_read_unlock();
- 	}
- 
-@@ -947,7 +960,7 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
- 		list_del(&sta->list);
- 		spin_unlock_bh(&ifibss->incomplete_lock);
- 
--		ieee80211_ibss_finish_sta(sta);
-+		ieee80211_ibss_finish_sta(sta, true);
- 		rcu_read_unlock();
- 		spin_lock_bh(&ifibss->incomplete_lock);
- 	}
--- 
-1.7.9.4
+Yeah, good question. I'm not too worried about TX power though TBH, I
+think it's fair to assume that if a driver supports multi-channel, it
+supports per-channel TX power as well, if it even supports TX power
+adjustment at all.
+
+
+> >   * rate_idx_to_bitrate can use the sta's sdata's channel
+> >   * ieee80211_change_bss can use the sdata's channel
+> >   * debugfs stuff probably just moves to per-sdata files
+> >   * ibss code all uses sdata channel
+> >   * ieee80211_if_change_type ... probably just set basic_rates = 0
+> >   * mesh can use sdata channel
+> >   * mlme.c should use sdata channel, but there's the channel switch stuff
+> >   * rate.h should use sta->sdata channel
+> >
+> > Much of this is actually means we have bugs today! Whenever we use
+> > hw.conf.channel and should be using sdata channel soon, we should be
+> > using local->oper_channel today!
+> 
+> Oh! Now I understand why you wanted to use channel contexts in place of 
+> oper_channel. This makes sense.
+
+:-)
+
+
+> > Maybe it's worth fixing that first, and getting rid of *most* instances
+> > of hw.conf.channel, so we have a clearer idea of which changes in what
+> > ways?
+> 
+> Sounds like a good idea.
+
+Do you want to take that up? I think it would be worth doing it in front
+of all the other mac80211 patches (those are incomplete anyway in that
+the new code doesn't get used), and then we can shake out any bugs here
+before we switch over to multi-channel?
+
+Or I can work on it too if you prefer.
+
+johannes
 
