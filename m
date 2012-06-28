@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39605 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944Ab2FTHiV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 03:38:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:41940 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750922Ab2F1A0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jun 2012 20:26:43 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/12] iwlwifi: print the scratch of all the buffers stuck in a queue
-Date: Wed, 20 Jun 2012 09:38:04 +0200
-Message-Id: <1340177894-12992-3-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093841_566684_1DD9F94F)
-In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
-References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+Cc: mcgrof@qca.qualcomm.com
+Subject: [PATCH 09/11] qca-swiss-army-knife: de-duplicate ar9580 initvals
+Date: Thu, 28 Jun 2012 02:26:37 +0200
+Message-Id: <1340843199-49821-9-git-send-email-nbd@openwrt.org> (sfid-20120628_022656_137598_B354B44E)
+In-Reply-To: <1340843199-49821-8-git-send-email-nbd@openwrt.org>
+References: <1340843199-49821-1-git-send-email-nbd@openwrt.org>
+ <1340843199-49821-2-git-send-email-nbd@openwrt.org>
+ <1340843199-49821-3-git-send-email-nbd@openwrt.org>
+ <1340843199-49821-4-git-send-email-nbd@openwrt.org>
+ <1340843199-49821-5-git-send-email-nbd@openwrt.org>
+ <1340843199-49821-6-git-send-email-nbd@openwrt.org>
+ <1340843199-49821-7-git-send-email-nbd@openwrt.org>
+ <1340843199-49821-8-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/pcie/trans.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ tools/initvals/initvals.c |   27 ++++++++++++++++++---------
+ 1 files changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index cc93516..c6f53af 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -296,6 +296,7 @@ static void iwlagn_free_dma_ptr(struct iwl_trans *trans,
- static void iwl_trans_pcie_queue_stuck_timer(unsigned long data)
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index 9766c28..abf7b36 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -679,21 +679,30 @@ static void ar9485_hw_print_initvals(bool check)
+ 
+ static void ar9580_1p0_hw_print_initvals(bool check)
  {
- 	struct iwl_tx_queue *txq = (void *)data;
-+	struct iwl_queue *q = &txq->q;
- 	struct iwl_trans_pcie *trans_pcie = txq->trans_pcie;
- 	struct iwl_trans *trans = iwl_trans_pcie_get_trans(trans_pcie);
- 	u32 scd_sram_addr = trans_pcie->scd_base_addr +
-@@ -346,6 +347,14 @@ static void iwl_trans_pcie_queue_stuck_timer(unsigned long data)
- 			iwl_read_prph(trans, SCD_QUEUE_WRPTR(i)));
- 	}
- 
-+	for (i = q->read_ptr; i != q->write_ptr;
-+	     i = iwl_queue_inc_wrap(i, q->n_bd)) {
-+		struct iwl_tx_cmd *tx_cmd =
-+			(struct iwl_tx_cmd *)txq->entries[i].cmd->payload;
-+		IWL_ERR(trans, "scratch %d = 0x%08x\n", i,
-+			get_unaligned_le32(&tx_cmd->scratch));
-+	}
-+
- 	iwl_op_mode_nic_error(trans->op_mode);
- }
- 
+-	INI_PRINT(ar9580_1p0_modes_fast_clock);
++	INI_PRINT_DUP(ar9580_1p0_modes_fast_clock,
++		      ar9300Modes_fast_clock_2p2);
+ 	INI_PRINT(ar9580_1p0_radio_postamble);
+ 	INI_PRINT(ar9580_1p0_baseband_core);
+-	INI_PRINT(ar9580_1p0_mac_postamble);
++	INI_PRINT_DUP(ar9580_1p0_mac_postamble,
++		      ar9300_2p2_mac_postamble);
+ 	INI_PRINT(ar9580_1p0_low_ob_db_tx_gain_table);
+-	INI_PRINT(ar9580_1p0_high_power_tx_gain_table);
++	INI_PRINT_DUP(ar9580_1p0_high_power_tx_gain_table,
++		      ar9580_1p0_low_ob_db_tx_gain_table);
+ 	INI_PRINT(ar9580_1p0_lowest_ob_db_tx_gain_table);
+-	INI_PRINT(ar9580_1p0_baseband_core_txfir_coeff_japan_2484);
++	INI_PRINT_DUP(ar9580_1p0_baseband_core_txfir_coeff_japan_2484,
++		      ar9462_2p0_baseband_core_txfir_coeff_japan_2484);
+ 	INI_PRINT(ar9580_1p0_mac_core);
+ 	INI_PRINT(ar9580_1p0_mixed_ob_db_tx_gain_table);
+-	INI_PRINT(ar9580_1p0_wo_xlna_rx_gain_table);
+-	INI_PRINT(ar9580_1p0_soc_postamble);
+-	INI_PRINT(ar9580_1p0_high_ob_db_tx_gain_table);
+-	INI_PRINT(ar9580_1p0_soc_preamble);
+-	INI_PRINT(ar9580_1p0_rx_gain_table);
++	INI_PRINT_DUP(ar9580_1p0_wo_xlna_rx_gain_table,
++		      ar9300Common_wo_xlna_rx_gain_table_2p2);
++	INI_PRINT_DUP(ar9580_1p0_soc_postamble,
++		      ar9300_2p2_soc_postamble);
++	INI_PRINT_DUP(ar9580_1p0_high_ob_db_tx_gain_table,
++		      ar9300Modes_high_ob_db_tx_gain_table_2p2);
++	INI_PRINT_DUP(ar9580_1p0_soc_preamble,
++		      ar9300_2p2_soc_postamble);
++	INI_PRINT_DUP(ar9580_1p0_rx_gain_table,
++		      ar9462_common_rx_gain_table_2p0);
+ 	INI_PRINT(ar9580_1p0_radio_core);
+ 	INI_PRINT(ar9580_1p0_baseband_postamble);
+ 	INI_PRINT(ar9580_1p0_pcie_phy_clkreq_enable_L1);
 -- 
-1.7.10
+1.7.3.2
 
