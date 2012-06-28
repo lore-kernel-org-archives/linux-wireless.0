@@ -1,60 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37728 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225Ab2FFHNj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55327 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589Ab2F1LRg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 03:13:39 -0400
-Message-ID: <1338966816.4513.5.camel@jlt3.sipsolutions.net> (sfid-20120606_091343_356241_7DA58328)
-Subject: [PATCH 3.5] iwlwifi: don't mess up the SCD when removing a key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 06 Jun 2012 09:13:36 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 Jun 2012 07:17:36 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [RFC 60g 1/5] wireless: add 802.11ad (60gHz band)
+Date: Thu, 28 Jun 2012 14:16:56 +0300
+Message-ID: <1340882220-31768-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131740_615363_14B4E645)
+In-Reply-To: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Add enumerations for both cfg80211 and nl80211.
+This expands wiphy.bands etc. arrays.
 
-When we remove a key, we put a key index which was supposed
-to tell the fw that we are actually removing the key. But
-instead the fw took that index as a valid index and messed
-up the SRAM of the device.
+Extend channel <-> frequency translation to cover 60g band
 
-This memory corruption on the device mangled the data of
-the SCD. The impact on the user is that SCD queue 2 got
-stuck after having removed keys.
-The message is the log that was printed is:
+Small fix for mac80211/tx.c required to fix compiler warning
 
-Queue 2 stuck for 10000ms
-
-This doesn't seem to fix the higher queues that get stuck
-from time to time.
-
-Cc: stable@vger.kernel.org [2.6.27+]
-Reviewed-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/nl80211.h |    2 ++
+ include/net/cfg80211.h  |    2 ++
+ net/mac80211/tx.c       |    2 ++
+ net/wireless/util.c     |   30 ++++++++++++++++++++++--------
+ 4 files changed, 28 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index aea07aa..eb6a8ea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -1267,7 +1267,7 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 		key_flags |= STA_KEY_MULTICAST_MSK;
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index c0fc5d2..679831e 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2539,10 +2539,12 @@ enum nl80211_tx_rate_attributes {
+  * enum nl80211_band - Frequency band
+  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
+  * @NL80211_BAND_5GHZ: around 5 GHz band (4.9 - 5.7 GHz)
++ * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
+  */
+ enum nl80211_band {
+ 	NL80211_BAND_2GHZ,
+ 	NL80211_BAND_5GHZ,
++	NL80211_BAND_60GHZ,
+ };
  
- 	sta_cmd.key.key_flags = key_flags;
--	sta_cmd.key.key_offset = WEP_INVALID_OFFSET;
-+	sta_cmd.key.key_offset = keyconf->hw_key_idx;
- 	sta_cmd.sta.modify_mask = STA_MODIFY_KEY_MASK;
- 	sta_cmd.mode = STA_CONTROL_MODIFY_MSK;
+ /**
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 061c019..56e840d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -70,11 +70,13 @@
+  *
+  * @IEEE80211_BAND_2GHZ: 2.4GHz ISM band
+  * @IEEE80211_BAND_5GHZ: around 5GHz band (4.9-5.7)
++ * @IEEE80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
+  * @IEEE80211_NUM_BANDS: number of defined bands
+  */
+ enum ieee80211_band {
+ 	IEEE80211_BAND_2GHZ = NL80211_BAND_2GHZ,
+ 	IEEE80211_BAND_5GHZ = NL80211_BAND_5GHZ,
++	IEEE80211_BAND_60GHZ = NL80211_BAND_60GHZ,
+ 
+ 	/* keep last */
+ 	IEEE80211_NUM_BANDS
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ec8f5346..eebd33a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -140,6 +140,8 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 			if (r->flags & IEEE80211_RATE_MANDATORY_A)
+ 				mrate = r->bitrate;
+ 			break;
++		case IEEE80211_BAND_60GHZ:
++			/* TODO, for now fall through */
+ 		case IEEE80211_NUM_BANDS:
+ 			WARN_ON(1);
+ 			break;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 316cfd0..5c7195e 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -35,19 +35,29 @@ int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
+ {
+ 	/* see 802.11 17.3.8.3.2 and Annex J
+ 	 * there are overlapping channel numbers in 5GHz and 2GHz bands */
+-	if (band == IEEE80211_BAND_5GHZ) {
+-		if (chan >= 182 && chan <= 196)
+-			return 4000 + chan * 5;
+-		else
+-			return 5000 + chan * 5;
+-	} else { /* IEEE80211_BAND_2GHZ */
++	if (chan <= 0)
++		return 0; /* not supported */
++	switch (band) {
++	case IEEE80211_BAND_2GHZ:
+ 		if (chan == 14)
+ 			return 2484;
+ 		else if (chan < 14)
+ 			return 2407 + chan * 5;
++		break;
++	case IEEE80211_BAND_5GHZ:
++		if (chan >= 182 && chan <= 196)
++			return 4000 + chan * 5;
+ 		else
+-			return 0; /* not supported */
++			return 5000 + chan * 5;
++		break;
++	case IEEE80211_BAND_60GHZ:
++		if (chan < 5)
++			return 56160 + chan * 2160;
++		break;
++	default:
++		;
+ 	}
++	return 0; /* not supported */
+ }
+ EXPORT_SYMBOL(ieee80211_channel_to_frequency);
+ 
+@@ -60,8 +70,12 @@ int ieee80211_frequency_to_channel(int freq)
+ 		return (freq - 2407) / 5;
+ 	else if (freq >= 4910 && freq <= 4980)
+ 		return (freq - 4000) / 5;
+-	else
++	else if (freq <= 6000) /* TODO: check band 5.2 upper limit */
+ 		return (freq - 5000) / 5;
++	else if (freq >= 58320 && freq <= 64800)
++		return (freq - 56160) / 2160;
++	else
++		return 0;
+ }
+ EXPORT_SYMBOL(ieee80211_frequency_to_channel);
  
 -- 
-1.7.10
-
-
+1.7.9.5
 
