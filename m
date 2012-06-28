@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3093 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752265Ab2FMO02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 10:26:28 -0400
-Message-ID: <4FD8A307.8060705@broadcom.com> (sfid-20120613_162631_924763_5472AEDC)
-Date: Wed, 13 Jun 2012 16:26:15 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 6/9] brcm80211: smac: enable/disable radio on
- regulatory updates
-References: <1338906849-26135-1-git-send-email-seth.forshee@canonical.com>
- <1338906849-26135-7-git-send-email-seth.forshee@canonical.com>
- <4FD85D47.8070609@broadcom.com> <20120613134330.GA3490@thinkpad-t410>
-In-Reply-To: <20120613134330.GA3490@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:46928 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289Ab2F1SEY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 14:04:24 -0400
+Message-ID: <1340906664.4491.47.camel@jlt3.sipsolutions.net> (sfid-20120628_200427_675054_DAFD537B)
+Subject: Re: [RFC 60g 2/5] wireless: rate check logic for 60g
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 28 Jun 2012 20:04:24 +0200
+In-Reply-To: <1340882220-31768-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131759_318555_7C6D3DF7)
+References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1340882220-31768-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 (sfid-20120628_131759_318555_7C6D3DF7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/13/2012 03:43 PM, Seth Forshee wrote:
-> On Wed, Jun 13, 2012 at 11:28:39AM +0200, Arend van Spriel wrote:
->> When we were having fun in staging GregKH indicated that use of likely()
->> should be justified with profiling data. Probably not really needed here.
-> 
-> Okay, I'll remove it. This isn't performance critical code anyhow.
-> 
+On Thu, 2012-06-28 at 14:16 +0300, Vladimir Kondratiev wrote:
 
-That was my (un)educated guess as well. Thanks.
+> +		/*
+> +		 * on 60gHz band, there are no legacy rates, so
+> +		 * n_bitrates is 0
+> +		 */
+> +		if (WARN_ON((band != IEEE80211_BAND_60GHZ) &&
+> +		    !sband->n_bitrates))
+>  			return -EINVAL;
 
-Gr. AvS
+Please fix indentation.
 
+johannes
 
