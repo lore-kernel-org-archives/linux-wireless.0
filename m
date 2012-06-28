@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:55917 "EHLO ebb05.tieto.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:49614 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757004Ab2FZOFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 10:05:53 -0400
-Message-ID: <4FE9C1BF.8060209@tieto.com> (sfid-20120626_160556_330842_B625509D)
-Date: Tue, 26 Jun 2012 16:05:51 +0200
+	id S932738Ab2F1KHW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:22 -0400
 From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 02/13] cfg80211: .stop_ap when interface is going down
+Date: Thu, 28 Jun 2012 12:06:54 +0200
+Message-ID: <1340878025-2695-3-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120727_701528_8389B9B4)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v3] respect channels in iface combinations
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com> <1340717512.14634.38.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1340717512.14634.38.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2012-06-26 at 14:30 +0200, Michal Kazior wrote:
->> Hi,
->>
->> Here's a respin of my patches.
->>
->> Changes:
->>
->>   - add libertas set_channel tracking
->>   - add channel switch notify support (ap channel tracking)
->>   - introduce CFG80211_MAX_NUM_DIFFERENT_CHANNELS
->>     (changes channel accounting a bit)
->>   - add channel accounting for assoc
->>
->> Left unchanged:
->>
->>   - set_monitor_enabled callback name
->>   - initial monitor channel is set to first one found
->
-> Dziękujemy! (and thanks google too :-D)
->
-> I just saw a few tiny issues, can you repost as [PATCH] and then, unless
-> I see other objections, I'll pick this up.
+We'll need this for proper channel tracking (which
+is going to be needed for channel context
+accounting and finding matching/active interface
+combination).
 
-Sure. I'll resend it as a PATCH tomorrow after fixing.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/core.c |    3 +++
+ net/wireless/util.c |    3 +++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a87d435..46a33ea 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -869,6 +869,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 			cfg80211_leave_mesh(rdev, dev);
+ 			break;
++		case NL80211_IFTYPE_AP:
++			cfg80211_stop_ap(rdev, dev);
++			break;
+ 		default:
+ 			break;
+ 		}
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 316cfd0..fc948d0 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -814,6 +814,9 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		dev->ieee80211_ptr->mesh_id_up_len = 0;
+ 
+ 		switch (otype) {
++		case NL80211_IFTYPE_AP:
++			cfg80211_stop_ap(rdev, dev);
++			break;
+ 		case NL80211_IFTYPE_ADHOC:
+ 			cfg80211_leave_ibss(rdev, dev, false);
+ 			break;
 -- 
-Pozdrawiam / Best regards, Michal Kazior.
+1.7.0.4
 
