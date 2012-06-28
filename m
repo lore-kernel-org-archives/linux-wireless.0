@@ -1,60 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19033 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934523Ab2FIAvS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 20:51:18 -0400
-Cc: <linux-wireless@vger.kernel.org>, <me@bobcopeland.com>,
-	<mickflemm@gmail.com>, <kvalo@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:49614 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932836Ab2F1KHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:24 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
 To: <johannes@sipsolutions.net>
-Subject: [RFC 1/3] cfg80211: add CONFIG_CFG80211_EXPERT
-Date: Fri, 8 Jun 2012 17:51:08 -0700
-Message-ID: <1339203070-17979-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120609_025353_610629_3DA43BAA)
-In-Reply-To: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1339203070-17979-1-git-send-email-rodrigue@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 06/13] cfg80211: track monitor interfaces count
+Date: Thu, 28 Jun 2012 12:06:58 +0200
+Message-ID: <1340878025-2695-7-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120744_427196_610BBD1B)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Implements .set_monitor_enabled(wiphy, enabled).
 
-This adds CONFIG_CFG80211_EXPERT which can be used for
-non-standard settings that are typically used for device
-certification testing or research purposes. We'd use
-CONFIG_EXPERT alone but it seems that most standard Linux
-distributions are enabling CONFIG_EXPERT already. This
-allows us to define wireless specific kernel features
-under a flag that is intended by design to be disabled by
-standard Linux distributions.
+Notifies driver upon change of interface layout.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+If only monitor interfaces become present it is
+called with 2nd argument being true. If
+non-monitor interface appears then 2nd argument
+is false. Driver is notified only upon change.
+
+This makes it more obvious about the fact that
+cfg80211 supports single monitor channel. Once we
+implement multi-channel we don't want to allow
+setting monitor channel while other interface
+types are running. Otherwise it would be ambiguous
+once we start considering num_different_channels.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/wireless/Kconfig |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ include/net/cfg80211.h |    4 ++++
+ net/wireless/core.c    |   24 ++++++++++++++++++++++++
+ net/wireless/core.h    |   14 ++++++++++++++
+ net/wireless/util.c    |    5 +++++
+ 4 files changed, 47 insertions(+), 0 deletions(-)
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 4d2b1ec..3cc5293 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -74,6 +74,15 @@ config CFG80211_REG_DEBUG
- 
- 	  If unsure, say N.
- 
-+config CFG80211_EXPERT
-+	bool "cfg80211 expert mode"
-+	depends on CFG80211 && EXPERT
-+	default n
-+	---help---
-+	  You should disable this unless you are doing some wireless
-+	  certification testing in a controlled environment or working with
-+	  wireless research in a controlled environment.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 92fdd02..120eae0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1428,6 +1428,8 @@ struct cfg80211_gtk_rekey_data {
+  *	interfaces are active this callback should reject the configuration.
+  *	If no interfaces are active or the device is down, the channel should
+  *	be stored for when a monitor interface becomes active.
++ * @set_monitor_enabled: Notify driver that there are only monitor
++ *	interfaces running.
+  * @get_channel: Get the current operating channel, should return %NULL if
+  *	there's no single defined operating channel if for example the
+  *	device implements channel hopping for multi-channel virtual interfaces.
+@@ -1746,6 +1748,8 @@ struct cfg80211_ops {
+ 				struct ethtool_stats *stats, u64 *data);
+ 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
+ 				  u32 sset, u8 *data);
 +
- config CFG80211_DEFAULT_PS
- 	bool "enable powersave by default"
- 	depends on CFG80211
++	void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
+ };
+ 
+ /*
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 46a33ea..9097d6c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -776,6 +776,24 @@ static struct device_type wiphy_type = {
+ 	.name	= "wlan",
+ };
+ 
++void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
++			       enum nl80211_iftype iftype, int num)
++{
++	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
++	bool has_monitors_only_new;
++
++	ASSERT_RDEV_LOCK(rdev);
++
++	rdev->num_running_ifaces += num;
++	if (iftype == NL80211_IFTYPE_MONITOR)
++		rdev->num_running_monitor_ifaces += num;
++
++	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
++	if (has_monitors_only_new != has_monitors_only_old)
++		rdev->ops->set_monitor_enabled(&rdev->wiphy,
++					       has_monitors_only_new);
++}
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *ndev)
+@@ -879,6 +897,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		break;
+ 	case NETDEV_DOWN:
+ 		dev_hold(dev);
++		cfg80211_lock_rdev(rdev);
++		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
++		cfg80211_unlock_rdev(rdev);
+ 		queue_work(cfg80211_wq, &wdev->cleanup_work);
+ 		break;
+ 	case NETDEV_UP:
+@@ -986,6 +1007,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
+ 		if (ret)
+ 			return notifier_from_errno(ret);
++		cfg80211_lock_rdev(rdev);
++		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
++		cfg80211_unlock_rdev(rdev);
+ 		break;
+ 	}
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index bbf2f75..b27fa3b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -56,6 +56,9 @@ struct cfg80211_registered_device {
+ 
+ 	u32 ap_beacons_nlpid;
+ 
++	int num_running_ifaces;
++	int num_running_monitor_ifaces;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
+@@ -223,6 +226,14 @@ static inline void wdev_unlock(struct wireless_dev *wdev)
+ #define ASSERT_RDEV_LOCK(rdev) lockdep_assert_held(&(rdev)->mtx)
+ #define ASSERT_WDEV_LOCK(wdev) lockdep_assert_held(&(wdev)->mtx)
+ 
++static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
++{
++	ASSERT_RDEV_LOCK(rdev);
++
++	return rdev->num_running_ifaces == rdev->num_running_monitor_ifaces &&
++	       rdev->num_running_ifaces > 0;
++}
++
+ enum cfg80211_event_type {
+ 	EVENT_CONNECT_RESULT,
+ 	EVENT_ROAMED,
+@@ -470,6 +481,9 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int);
+ 
++void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
++			       enum nl80211_iftype iftype, int num);
++
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+ #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
+ #else
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index fc948d0..9b92ec5 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -871,6 +871,11 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		}
+ 	}
+ 
++	if (!err && ntype != otype && netif_running(dev)) {
++		cfg80211_update_iface_num(rdev, ntype, 1);
++		cfg80211_update_iface_num(rdev, otype, -1);
++	}
++
+ 	return err;
+ }
+ 
 -- 
-1.7.10.rc1.22.gf5241
+1.7.0.4
 
