@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2973 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755531Ab2FNMym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 08:54:42 -0400
-Message-ID: <4FD9DF08.4020304@broadcom.com> (sfid-20120614_145446_236922_5E53026F)
-Date: Thu, 14 Jun 2012 14:54:32 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Arend van Spriel" <arend@broadcom.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 5/5] brcmfmac: introduce checkdied debugfs
- functionality
-References: <1339669017-13388-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1339669017-13388-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:45321 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932436Ab2F1Jmj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 05:42:39 -0400
+Message-ID: <1340876555.4491.33.camel@jlt3.sipsolutions.net> (sfid-20120628_114242_564854_51879C03)
+Subject: Re: [PATCH] mac80211: allow Rx in reconfig only after removing BA
+ sessions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 28 Jun 2012 11:42:35 +0200
+In-Reply-To: <CA+XVXfcDNcy+RjdxraqJ6LnYWt3XdtF-X-Ah9FdP=ZibnYp15g@mail.gmail.com> (sfid-20120628_113828_388340_925DDFF5)
+References: <1340821557-27009-1-git-send-email-arik@wizery.com>
+	 <1340871433.4491.20.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfdKLeaHpLmqsXROH9VojHkB4EP-BpcFDLb8ZCtjb_XCbQ@mail.gmail.com>
+	 <1340875844.4491.26.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfcDNcy+RjdxraqJ6LnYWt3XdtF-X-Ah9FdP=ZibnYp15g@mail.gmail.com>
+	 (sfid-20120628_113828_388340_925DDFF5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/14/2012 12:16 PM, Arend van Spriel wrote:
-> The checkdied functionality provides useful information for analyzing
-> firmware crashes. By exposing this information to a debugfs file users
-> can easily provide its content in bug reports. The functionality is
-> available only when CONFIG_BRCMDBG is selected.
+On Thu, 2012-06-28 at 12:38 +0300, Arik Nemtsov wrote:
+> On Thu, Jun 28, 2012 at 12:30 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2012-06-28 at 11:37 +0300, Arik Nemtsov wrote:
+> >> On Thu, Jun 28, 2012 at 11:17 AM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >> > On Wed, 2012-06-27 at 21:25 +0300, Arik Nemtsov wrote:
+> >> >> Previously, a connected STA/AP could send us some AMPDUs right after
+> >> >> recovery, without the driver knowing anything about it.
+> >> >
+> >> > Huh, that description doesn't make a lot of sense? The STA/AP can send
+> >> > us AMPDUs anyway without the driver knowing anything about it since it
+> >> > has no idea we're restarting ...
+> >>
+> >> Well the point is to drop them early in the Rx path. Should I change
+> >> the description or you don't like the patch in general?
+> >
+> > I don't mind the patch, I just don't quite understand it still.
+> >
+> > The driver is receiving the AMPDUs anyway, and if it's passing them up
+> > why do we need to drop them?
 > 
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> This patch changes kzalloc() to vzalloc(). This replaces patch with
-> message-id <1339275105-3593-6-git-send-email-arend@broadcom.com>.
-> 
-> All 5 patches apply to latest wireless-next/master branch.
+> Well if the de-aggregration is in HW, they won't make it as far as
+> mac80211. So this patch is for SW de-aggregators.
 
-Hi John,
+I don't think there's anyone doing AMPDU SW deaggregation? There
+definitely isn't any code in mac80211 to do it ;-)
 
-Just fetched wireless-next and noticed you already applied the first 4
-patches. I tried and this fifth patch does apply to wireless-next/master.
+> But come to think of it, if the de-aggregation is done in SW, I guess
+> there's no real issue with accepting them, since mac80211 didn't
+> really reboot.
 
-Gr. AvS
+Or are you thinking of the reorder buffer?
+
+> I guess we can drop the patch? It just seemed more correct to put the
+> in_reconfig to false there.
+
+I don't see how it's more correct? We're done reconfiguring and then
+decide to drop all BA sessions ;-)
+
+In a way, heck, it seems more correct to leave as-is. If we send a BA
+action frame and receive a response to it maybe (is there a response to
+delBA?) we don't want to drop it. Or if we send delBA and the peer wants
+to start right away again, ...?
+
+johannes
 
