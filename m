@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:39284 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479Ab2FITH1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 15:07:27 -0400
-Date: Sat, 9 Jun 2012 22:07:02 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] iwlwifi: turn on a lockdep assertion
-Message-ID: <20120609190702.GE13539@mwanda> (sfid-20120609_210734_234210_7FBFB78D)
-References: <20120609155718.GB6488@elgon.mountain>
- <1339265576.5029.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1339265576.5029.1.camel@jlt3.sipsolutions.net>
+Received: from perches-mx.perches.com ([206.117.179.246]:48104 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750769Ab2F1UFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 16:05:50 -0400
+Message-ID: <1340913949.2602.27.camel@joe2Laptop> (sfid-20120628_220626_871535_BF9A4673)
+Subject: Re: [PATCH option A] bcma: use custom printing functions
+From: Joe Perches <joe@perches.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Date: Thu, 28 Jun 2012 13:05:49 -0700
+In-Reply-To: <CACna6rwXrspQ_PDfwZbL7jk=hZ6EmhCnebLcp82LaC4T-Khscw@mail.gmail.com>
+References: <1340912688-3089-1-git-send-email-zajec5@gmail.com>
+	 <1340912894.5257.0.camel@jlt3.sipsolutions.net>
+	 <CACna6rwXrspQ_PDfwZbL7jk=hZ6EmhCnebLcp82LaC4T-Khscw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 09, 2012 at 08:12:56PM +0200, Johannes Berg wrote:
-> On Sat, 2012-06-09 at 18:57 +0300, Dan Carpenter wrote:
-> > CMD_SYNC is zero so the if (cmd->flags & CMD_SYNC) is never true.  I
-> > think it should be if (cmd->flags == CMD_SYNC).  This enables a lockdep
-> > assertion.
+On Thu, 2012-06-28 at 21:56 +0200, Rafał Miłecki wrote:
+> 2012/6/28 Johannes Berg <johannes@sipsolutions.net>:
+> > On Thu, 2012-06-28 at 21:44 +0200, Rafał Miłecki wrote:
+> >
+> >> +#define bcma_err(fmt, ...) \
+> >> +     pr_err(KBUILD_MODNAME "-%d: " fmt, bus->num, ##__VA_ARGS__)
+> >
+> > both of your options seem to rely on "bus" being a variable in the
+> > context, is that really a good idea?
 > 
-> Good catch, thanks. It should really be if (!(cmd->flags & CMD_ASYNC))
-> though I think as there could be other flags set which don't make it
-> non-sync.
+> Yeah, I made that assumption to make calls nicer & shorter. We may
+> need to get reference to "bus" in function or two.
 > 
-> I'll commit a fix on Monday unless you want to send a separate patch
-> (which I'll then pick up on Monday :-) )
+> I saw such a solution in "radeon" gpu driver, example:
+> value = RREG32(R600_AUDIO_STATUS_BITS);
+> (they assume "rdev" is available in every function calling RREG32).
 
+I think that radeon use is ugly myself.
 
-Sure.  I'll resend it.
+> If you believe it's ugly, I can change that. I also wonder what Joe
+> will respond.
+> 
+> P.S.
+> Both patches are not signed yet and they are supposed to be RFC. Sorry
+> for missing that in subject line.
 
-regards,
-dan carpenter
+I think it'd be better to add and use:
+
+#define bcma_bus_err(bus, fmt, ...)				\
+	pr_err("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+
+#define bcma_bus_info(bus, fmt, ...)				\
+	pr_info("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+
+or some other equivalent use if you're wedded
+to wanting "bcma-%d:" prefixed output.
+
+I'd rather have the prefix be something like "bcma: <bus#>: ",
+so a dmesg grep pattern can be "^bcma:" but hey, it ain't my code.
+
+Do what you think best.
+
+cheers, Joe
 
