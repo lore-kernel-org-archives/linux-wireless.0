@@ -1,96 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54367 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750854Ab2FKWPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 18:15:06 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, ozancag@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2] compat-wireless: update some urls to git trees in docs
-Date: Tue, 12 Jun 2012 00:13:49 +0200
-Message-Id: <1339452829-10194-1-git-send-email-hauke@hauke-m.de> (sfid-20120612_001511_131121_C8284B87)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10357 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753997Ab2F1LSE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 07:18:04 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [RFC 60g 5/5] wireless: bitrate calculation for 60g
+Date: Thu, 28 Jun 2012 14:17:00 +0300
+Message-ID: <1340882220-31768-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120628_131808_978759_C50A6118)
+In-Reply-To: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes some references to compat and compat-wireless git tree hosted
-at git.kernel.org to github and changed some references from wireless-
-testing to linux-next and linux-2.6-allstable to linux-stable.
+60g band uses different from .11n MCS scheme, so bitrate should be calculated
+differently
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- README                        |    4 ++--
- scripts/admin-update.sh       |   16 ++++++++--------
- scripts/gen-stable-release.sh |    4 ++--
- 3 files changed, 12 insertions(+), 12 deletions(-)
+ include/net/cfg80211.h |    2 ++
+ net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
-v2: fix linux-nex.git typo
-
-diff --git a/README b/README
-index 09d8612..2cbef56 100644
---- a/README
-+++ b/README
-@@ -302,8 +302,8 @@ compatibility. You will then need to checkout three trees to start hacking on
- compat-wireless:
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 56e840d..f760520 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -563,11 +563,13 @@ enum station_info_flags {
+  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
+  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
+  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ * @RATE_INFO_FLAGS_60G: 60gHz MCS
+  */
+ enum rate_info_flags {
+ 	RATE_INFO_FLAGS_MCS		= 1<<0,
+ 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
+ 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
++	RATE_INFO_FLAGS_60G		= 1<<3,
+ };
  
- git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
--git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
--git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
-+git://github.com/mcgrof/compat.git
-+git://github.com/mcgrof/compat-wireless.git
+ /**
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 98b2a8d..77319a6 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -890,12 +890,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
  
- Linux next
- ----------
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index c4f5e39..be564cc 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -2,21 +2,21 @@
- # 
- # Copyright 2007, 2008, 2010	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
- #
--# Use this to update compat-wireless-2.6 to the latest
--# wireless-testing.git tree you have.
-+# Use this to update compat-wireless to the latest
-+# linux-next.git tree you have.
- #
--# Usage: you should have the latest pull of wireless-2.6.git
--# git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
--# We assume you have it on your ~/devel/wireless-testing/ directory. If you do,
--# just run this script from the compat-wireless-2.6 directory.
-+# Usage: you should have the latest pull of linux-next.git
-+# git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-+# We assume you have it on your ~/linux-next/ directory. If you do,
-+# just run this script from the compat-wireless directory.
- # You can specify where your GIT_TREE is by doing:
- #
--# export GIT_TREE=/home/mcgrof/wireless-testing/
-+# export GIT_TREE=/home/mcgrof/linux-next/
- # 
- # for example
- #
- GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
--GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
-+GIT_COMPAT_URL="git://github.com/mcgrof/compat.git"
++static u16 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
++{
++	static const u16 __mcs2bitrate[] = {
++		/* control PHY */
++		[0] =   275,
++		/* SC PHY */
++		[1] =  3850,
++		[2] =  7700,
++		[3] =  9625,
++		[4] = 11550,
++		[5] = 12512, /* 1251.25 mbps */
++		[6] = 15400,
++		[7] = 19250,
++		[8] = 23100,
++		[9] = 25025,
++		[10] = 30800,
++		[11] = 38500,
++		[12] = 46200,
++		/* OFDM PHY */
++		[13] =  6930,
++		[14] =  8662, /* 866.25 mbps */
++		[15] = 13860,
++		[16] = 17325,
++		[17] = 20790,
++		[18] = 27720,
++		[19] = 34650,
++		[20] = 41580,
++		[21] = 45045,
++		[22] = 51975,
++		[23] = 62370,
++		[24] = 67568, /* 6756.75 mbps */
++		/* LP-SC PHY */
++		[25] =  6260,
++		[26] =  8340,
++		[27] = 11120,
++		[28] = 12510,
++		[29] = 16680,
++		[30] = 22240,
++		[31] = 25030,
++	};
++
++	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
++		return 0;
++
++	return __mcs2bitrate[rate->mcs];
++}
++
+ u16 cfg80211_calculate_bitrate(struct rate_info *rate)
+ {
+ 	int modulation, streams, bitrate;
  
- INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h hci_mon.h mgmt.h sco.h smp.h a2mp.h"
- NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
-diff --git a/scripts/gen-stable-release.sh b/scripts/gen-stable-release.sh
-index 9764730..98f4af0 100755
---- a/scripts/gen-stable-release.sh
-+++ b/scripts/gen-stable-release.sh
-@@ -3,8 +3,8 @@
- #
- # You can use this to make stable compat-wireless releases
- #
--# The assumption is you have the linux-2.6-allstable git tree on your $HOME
--# git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
-+# The assumption is you have the linux-stable git tree on your $HOME
-+# git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
- #
- # Local branches will be created based on the remote linux-2.6.X.y branches.
- # If your branch already exists we will nuke it for you to avoid rebasing.
+ 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
+ 		return rate->legacy;
++	if (rate->flags & RATE_INFO_FLAGS_60G)
++		return cfg80211_calculate_bitrate_60g(rate);
+ 
+ 	/* the formula below does only work for MCS values smaller than 32 */
+ 	if (WARN_ON_ONCE(rate->mcs >= 32))
 -- 
 1.7.9.5
 
