@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62631 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754085Ab2FTGO0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 02:14:26 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFCv2 04/13] cfg80211: track ibss fixed channel
-Date: Wed, 20 Jun 2012 08:14:10 +0200
-Message-ID: <1340172859-18146-5-git-send-email-michal.kazior@tieto.com> (sfid-20120620_081509_226063_E8194977)
-In-Reply-To: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
-References: <1340172859-18146-1-git-send-email-michal.kazior@tieto.com>
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:41260 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab2F1IQN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 04:16:13 -0400
+Date: Thu, 28 Jun 2012 17:16:07 +0900
+From: Norbert Preining <preining@logic.at>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"Lin, Hsien KuoX" <hsien.kuox.lin@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Subject: Re: [Ilw]  Re: 3.4-rc2, ilwagn still most of the time completely
+	unusable
+Message-ID: <20120628081607.GG31944@gamma.logic.tuwien.ac.at> (sfid-20120628_101640_553976_AE9C3780)
+References: <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com> <20120412000202.GA15286@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com> <20120413014047.GB25681@gamma.logic.tuwien.ac.at> <20120330011734.GH6277@gamma.logic.tuwien.ac.at> <20120411023747.GA10126@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com> <20120412000202.GA15286@gamma.logic.tuwien.ac.at> <20120628072512.GF31944@gamma.logic.tuwien.ac.at> <1340869868.4491.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1340869868.4491.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IBSS may hop between channels. It is necessary to
-account this special case when considering
-interface combinations.
+On Do, 28 Jun 2012, Johannes Berg wrote:
+> Somehow your mail didn't make it to the lists, not sure why.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- include/net/cfg80211.h |    2 ++
- net/wireless/ibss.c    |    1 +
- 2 files changed, 3 insertions(+), 0 deletions(-)
+Hmm, yeah, some of the emails were privte exchange with 
+Venkataraman and Lin.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0f9d7b4..92fdd02 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2338,6 +2338,8 @@ struct wireless_dev {
- 	/* for AP and mesh channel tracking */
- 	struct ieee80211_channel *channel;
- 
-+	bool ibss_fixed;
-+
- 	bool ps;
- 	int ps_timeout;
- 
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 89baa33..b90fd86 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -113,6 +113,7 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 		kfree(wdev->connect_keys);
- 	wdev->connect_keys = connkeys;
- 
-+	wdev->ibss_fixed = params->channel_fixed;
- #ifdef CONFIG_CFG80211_WEXT
- 	wdev->wext.ibss.channel = params->channel;
- #endif
--- 
-1.7.0.4
+> Fun. I don't actually see how this can possibly happen though?!
 
+Hmm, actually I think I have seen similar things quite regularly,
+and reported them also.
+
+> > > > >   [ 9457.176828] iwlwifi 0000:06:00.0: ACTIVATE a non DRIVER active
+> > > > >station id 0 addr 00:24:c4:ab:bd:e0
+> > 
+> > These messages now appear only now and then.
+> 
+> I fixed those recently.
+
+Good.
+
+> You seem to be on 3.5.0-rc now, is that really no different from 3.4?
+
+The feeling is that it is definitely better.
+
+I can actually work now wirelessly, and in case of hangs an rfkill block
+rfkill unblock practically always, and mostly is not needed.
+
+So yes, it is better, definitely.
+
+I think till 3.4 I had to use the cable quite regularly.
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+JAWCRAIG (n. medical)
+A massive facial spasm which is brought on by being told a really
+astounding piece of news. A mysterious attack of jawcraig affected
+40,000 sheep in Whales in 1952.
+			--- Douglas Adams, The Meaning of Liff
