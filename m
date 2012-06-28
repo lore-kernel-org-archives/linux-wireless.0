@@ -1,62 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50647 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755811Ab2FHTEz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jun 2012 15:04:55 -0400
-Message-ID: <1339182289.5748.36.camel@jlt3.sipsolutions.net> (sfid-20120608_210507_564049_E7275D9F)
-Subject: Re: chip id 4318 regression: WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
- n_queues))
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andre Heider <a.heider@gmail.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Date: Fri, 08 Jun 2012 21:04:49 +0200
-In-Reply-To: <1339180948.5748.35.camel@jlt3.sipsolutions.net> (sfid-20120608_204234_267803_1F940956)
-References: <CAHsu+b_wQOuhbBkx25CZ2cai5VVos7zK3s=EiPBy_+OnXWiWaA@mail.gmail.com>
-	 <1339136879.5832.1.camel@jlt3.sipsolutions.net>
-	 <1339137689.5832.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9uyohfFG46R7QHht6tD3MVUzk4_LJeXp+CC2bRv=NihA@mail.gmail.com>
-	 <1339167160.4901.0.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b-p1aTUG8L=5SCNB8Gqzwsm7_VA53Qf-ENPHmM5Z5C8hg@mail.gmail.com>
-	 <1339168452.5748.0.camel@jlt3.sipsolutions.net>
-	 <1339168600.5748.2.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b_Dp-A_kC-MSofJko3hr4dYxreYQ7rrq7wzsJXVoY_5yw@mail.gmail.com>
-	 <4FD21C6B.5000402@lwfinger.net>
-	 <1339170182.5748.7.camel@jlt3.sipsolutions.net>
-	 <1339170287.5748.8.camel@jlt3.sipsolutions.net>
-	 <1339170510.5748.9.camel@jlt3.sipsolutions.net>
-	 <1339170742.5748.10.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b8ZGPN3iQNGH1mdzMO6kH+F1n+qZ5cT4KMcx8bh_BP1qg@mail.gmail.com>
-	 <1339171159.5748.11.camel@jlt3.sipsolutions.net>
-	 <CAHsu+b9EgAfq6_G8xqRzf0qHkmyQnvs7j=g4wWcSVJXstAz4mw@mail.gmail.com>
-	 <4FD22727.7000500@lwfinger.net>
-	 (sfid-20120608_182415_948584_8403B5AF) <1339180580.5748.32.camel@jlt3.sipsolutions.net>
-	 (sfid-20120608_203626_490471_92895C0D) <1339180948.5748.35.camel@jlt3.sipsolutions.net>
-	 (sfid-20120608_204234_267803_1F940956)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932872Ab2F1KH2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:28 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 11/13] cfg80211/mac80211: remove .get_channel
+Date: Thu, 28 Jun 2012 12:07:03 +0200
+Message-ID: <1340878025-2695-12-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120733_973834_068FC742)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-08 at 20:42 +0200, Johannes Berg wrote:
-> On Fri, 2012-06-08 at 20:36 +0200, Johannes Berg wrote:
-> > Let's go back to the root of this problem ...
-> > 
-> > Is there *any* open firmware that enables QoS today? If not, this is
-> > probably a much better choice for a patch for now, even though my other
-> > patch contained code improvements for b43 in various areas.
-> > 
-> > http://p.sipsolutions.net/d486b77caacf3dbb.txt
-> 
-> Nope, this leaves qos_enabled wrong ...
-> 
-> http://p.sipsolutions.net/64cce044448bd819.txt
+We do not need it anymore since cfg80211 tracks
+monitor channel and monitor channel type.
 
-Ahrg, b43 only sets fw.opensource too late ... this moves it:
-http://p.sipsolutions.net/00c0056dc206e247.txt
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h     |    6 ------
+ net/mac80211/cfg.c         |   11 -----------
+ net/wireless/nl80211.c     |   15 +++++----------
+ net/wireless/wext-compat.c |    9 ++-------
+ 4 files changed, 7 insertions(+), 34 deletions(-)
 
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 120eae0..7672552 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1430,9 +1430,6 @@ struct cfg80211_gtk_rekey_data {
+  *	be stored for when a monitor interface becomes active.
+  * @set_monitor_enabled: Notify driver that there are only monitor
+  *	interfaces running.
+- * @get_channel: Get the current operating channel, should return %NULL if
+- *	there's no single defined operating channel if for example the
+- *	device implements channel hopping for multi-channel virtual interfaces.
+  *
+  * @scan: Request to do a scan. If returning zero, the scan request is given
+  *	the driver, and will be valid until passed to cfg80211_scan_done().
+@@ -1739,9 +1736,6 @@ struct cfg80211_ops {
+ 				  struct net_device *dev,
+ 				  u16 noack_map);
+ 
+-	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
+-					       enum nl80211_channel_type *type);
+-
+ 	int	(*get_et_sset_count)(struct wiphy *wiphy,
+ 				     struct net_device *dev, int sset);
+ 	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index df7332e..4efc1ff 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2933,16 +2933,6 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
+-static struct ieee80211_channel *
+-ieee80211_wiphy_get_channel(struct wiphy *wiphy,
+-			    enum nl80211_channel_type *type)
+-{
+-	struct ieee80211_local *local = wiphy_priv(wiphy);
+-
+-	*type = local->_oper_channel_type;
+-	return local->oper_channel;
+-}
+-
+ static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -3026,7 +3016,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.tdls_oper = ieee80211_tdls_oper,
+ 	.tdls_mgmt = ieee80211_tdls_mgmt,
+ 	.probe_client = ieee80211_probe_client,
+-	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
+ 	.set_monitor_enabled = ieee80211_set_monitor_enabled,
+ #ifdef CONFIG_PM
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5d36124..6773488 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1588,16 +1588,11 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 			(cfg80211_rdev_list_generation << 2)))
+ 		goto nla_put_failure;
+ 
+-	if (rdev->ops->get_channel) {
+-		struct ieee80211_channel *chan;
+-		enum nl80211_channel_type channel_type;
+-
+-		chan = rdev->ops->get_channel(&rdev->wiphy, &channel_type);
+-		if (chan &&
+-		    (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
+-				    chan->center_freq) ||
+-		     nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+-				    channel_type)))
++	if (rdev->monitor_channel) {
++		if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
++				rdev->monitor_channel->center_freq) ||
++		    nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++				rdev->monitor_channel_type))
+ 			goto nla_put_failure;
+ 	}
+ 
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index bc87983..7df42f5 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -827,8 +827,6 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+-	struct ieee80211_channel *chan;
+-	enum nl80211_channel_type channel_type;
+ 
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -836,13 +834,10 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (!rdev->ops->get_channel)
++		if (!rdev->monitor_channel)
+ 			return -EINVAL;
+ 
+-		chan = rdev->ops->get_channel(wdev->wiphy, &channel_type);
+-		if (!chan)
+-			return -EINVAL;
+-		freq->m = chan->center_freq;
++		freq->m = rdev->monitor_channel->center_freq;
+ 		freq->e = 6;
+ 		return 0;
+ 	default:
+-- 
+1.7.0.4
 
