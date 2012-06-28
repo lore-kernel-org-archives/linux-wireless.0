@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47367 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756538Ab2FTOdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 10:33:32 -0400
-Date: Wed, 20 Jun 2012 16:33:31 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:45499 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932780Ab2F1K2o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:28:44 -0400
+Message-ID: <1340879319.4491.38.camel@jlt3.sipsolutions.net> (sfid-20120628_122847_717329_4A0EC211)
+Subject: Re: [PATCH] respect channels in iface combinations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: WEP-LEAP regression
-Message-ID: <20120620143330.GA8505@redhat.com> (sfid-20120620_163336_087749_7A317AF8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Thu, 28 Jun 2012 12:28:39 +0200
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Our QA reported regression on ath9k connecting to legacy WEP-LEAP AP,
-with the following supplicant parameters:
+On Thu, 2012-06-28 at 12:06 +0200, Michal Kazior wrote:
+> Hi,
+> 
+> The patchset introduces channel tracking per interface which is needed
+> to start enforcing num_different_channels in interface combinations.
+> Changes to monitor mode behaviour is also required for sane channel
+> accounting (considering how mac80211 handles monitor interfaces).
+> 
+> This prepares cfg80211 for multi-channel operation.
 
-fast_reauth=1
-ap_scan=1
+This didn't apply cleanly on mac80211-next due to preset_chan in
+net/wireless/cfg80211.h. I think it's just context, but if you developed
+this without the start_ap series I wonder how stop_ap makes much sense?
 
-eapol_version=1
+I'm a bit confused now?
 
-network={
-        ssid="qe-wep-enterprise-cisco"
-        key_mgmt=IEEE8021X
-        auth_alg=LEAP
-        eap=LEAP
-        identity="AAA"
-        password="BBB"
-}
+johannes
 
-Device associate but DHCP fails (we do no recive any frame).
-
-Reverting both related commits:
-
-commit f88373fa47f3ce6590fdfaa742d0ddacc2ae017f
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Sun Feb 5 21:15:17 2012 +0100
-
-    ath9k: fix a WEP crypto related regression
-
-and
- 
-commit 7a532fe7131216a02c81a6c1b1f8632da1195a58
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Sat Jan 14 15:08:34 2012 +0100
-
-    ath9k_hw: fix interpretation of the rx KeyMiss flag
-
-fixes the problem.
-
-Felix could you look at this?
-
-Stanislaw
