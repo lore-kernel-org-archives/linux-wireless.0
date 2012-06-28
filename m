@@ -1,99 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:35400 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754861Ab2FESjo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 14:39:44 -0400
-From: Oleksij Rempel <bug-track@fisher-privat.net>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Oleksij Rempel <bug-track@fisher-privat.net>
-Subject: [PATCH 1/1] b43: do not call ieee80211_unregister_hw if we are not registred
-Date: Tue,  5 Jun 2012 20:39:32 +0200
-Message-Id: <1338921572-22315-2-git-send-email-bug-track@fisher-privat.net> (sfid-20120605_203948_826533_CF886290)
-In-Reply-To: <1338921572-22315-1-git-send-email-bug-track@fisher-privat.net>
-References: <1338921572-22315-1-git-send-email-bug-track@fisher-privat.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:4780 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751995Ab2F1VYp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 17:24:45 -0400
+Message-ID: <4FECCB91.7090609@broadcom.com> (sfid-20120628_232451_783762_4EBE8D5C)
+Date: Thu, 28 Jun 2012 14:24:33 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Jon Hunter" <jon-hunter@ti.com>
+cc: "Kevin Hilman" <khilman@ti.com>, b-cousson@ti.com,
+	tony@atomide.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	grant.likely@secretlab.ca, santosh.shilimkar@ti.com,
+	linux-omap@vger.kernel.org, tarun.kanti@ti.com,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: Panda ES board hang when using GPIO as interrupt
+References: <4FE8CF77.5080400@broadcom.com> <87txxxs9we.fsf@ti.com>
+ <4FEBA854.5010508@broadcom.com> <4FEC7B48.8040402@ti.com>
+In-Reply-To: <4FEC7B48.8040402@ti.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this patch fixes kernel Oops on "rmmod b43" if firmware was not loaded:
+On 06/28/2012 08:42 AM, Jon Hunter wrote:
+>
+> On 06/27/2012 07:41 PM, Franky Lin wrote:
+>> On 06/26/2012 08:37 PM, Kevin Hilman wrote:
+>>> "Franky Lin" <frankyl@broadcom.com> writes:
+>>>> I noticed Kevin raised some similar cases on other platforms and also
+>>>> provided two patches in the patch mail thread. But unfortunately those
+>>>> two patches doesn't help in our case. I tested the driver with 3.5-rc3
+>>>> mainline kernel and the issue is still there. I can only "fix" the
+>>>> hang by either reverting the commit or disabling
+>>>> CONFIG_PM_RUNTIME. Also, the hang only happens on Panda ES board. Old
+>>>> Panda with 4430 works good.
+>>>>
+>>>> Any thoughts and suggestions?
+>>>
+>>> If reverting the patch fixes your problem, can you isolate down to which
+>>> part of that patch causes the problem?  IOW, can you fix your problem if
+>>> you undo just the hunk added in runtime_suspend or undo just the moved
+>>> hunk runtime_resume?  Or is reverting both required?
+>>>
+>>> I suspect the added runtime_suspend hunk is causing the problems, so can
+>>> you see if just undoing that part works[1].  If that works, I will give
+>>> a bit more of a thinking on it tomorrow.
+>>
+>> runtime_suspend hunk is fine. The hang still exist after reverting it.
+>> The culprit is the moved hunk in runtime_resume. Reverting it makes the
+>> hang disappear.
+>
+> Thanks. From reviewing the code the only thing that appears suspect based
+> upon your findings is the return if we find the context has not been lost.
+> We are not checking if "workaround_enabled" is set before we return.
+>
+> Could you try the following change on top of v3.5-rc3?
+>
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000088
-IP: [<ffffffff8104e988>] drain_workqueue+0x25/0x142
-PGD 153ac6067 PUD 153b82067 PMD 0
-Oops: 0000 [#1] SMP
+The patch doesn't help. And I also managed to probe the signal. It's 
+active when it hung.
 
-Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
----
- drivers/net/wireless/b43/b43.h  |    4 ++++
- drivers/net/wireless/b43/main.c |   19 ++++++++++++-------
- 2 files changed, 16 insertions(+), 7 deletions(-)
+> Also, could you add a print in the runtime_suspend/resume() functions so
+> we can see how often these are being called. In my case, I really don't see
+> these being exercised and I am wondering how often you see suspend/resume
+> being called in your setup.
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 67c13af..c06b6cb 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -877,6 +877,10 @@ struct b43_wl {
- 	 * from the mac80211 subsystem. */
- 	u16 mac80211_initially_registered_queues;
- 
-+	/* Set this if we call ieee80211_register_hw() and check if we call
-+	 * ieee80211_unregister_hw(). */
-+	bool hw_registred;
-+
- 	/* We can only have one operating interface (802.11 core)
- 	 * at a time. General information about this interface follows.
- 	 */
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index e4d6dc2..747079b 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2437,6 +2437,7 @@ start_ieee80211:
- 	err = ieee80211_register_hw(wl->hw);
- 	if (err)
- 		goto err_one_core_detach;
-+	wl->hw_registred = true;
- 	b43_leds_register(wl->current_dev);
- 	goto out;
- 
-@@ -5283,6 +5284,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
- 
- 	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
- 	wl->mac80211_initially_registered_queues = hw->queues;
-+	wl->hw_registred = false;
- 	hw->max_rates = 2;
- 	SET_IEEE80211_DEV(hw, dev->dev);
- 	if (is_valid_ether_addr(sprom->et1mac))
-@@ -5354,12 +5356,15 @@ static void b43_bcma_remove(struct bcma_device *core)
- 	 * as the ieee80211 unreg will destroy the workqueue. */
- 	cancel_work_sync(&wldev->restart_work);
- 
--	/* Restore the queues count before unregistering, because firmware detect
--	 * might have modified it. Restoring is important, so the networking
--	 * stack can properly free resources. */
--	wl->hw->queues = wl->mac80211_initially_registered_queues;
--	b43_leds_stop(wldev);
--	ieee80211_unregister_hw(wl->hw);
-+	B43_WARN_ON(!wl);
-+	if (wl->current_dev == wldev && wl->hw_registred) {
-+		/* Restore the queues count before unregistering, because firmware detect
-+		 * might have modified it. Restoring is important, so the networking
-+		 * stack can properly free resources. */
-+		wl->hw->queues = wl->mac80211_initially_registered_queues;
-+		b43_leds_stop(wldev);
-+		ieee80211_unregister_hw(wl->hw);
-+	}
- 
- 	b43_one_core_detach(wldev->dev);
- 
-@@ -5430,7 +5435,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 	cancel_work_sync(&wldev->restart_work);
- 
- 	B43_WARN_ON(!wl);
--	if (wl->current_dev == wldev) {
-+	if (wl->current_dev == wldev && wl->hw_registred) {
- 		/* Restore the queues count before unregistering, because firmware detect
- 		 * might have modified it. Restoring is important, so the networking
- 		 * stack can properly free resources. */
--- 
-1.7.9.5
+Well, the runtime_suspend/resume never get called during the test.
+
+Thanks,
+Franky
 
