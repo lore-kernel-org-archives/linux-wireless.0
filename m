@@ -1,159 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:38794 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756029Ab2FNOwW (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58193 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751334Ab2F1Pwi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jun 2012 10:52:22 -0400
-Message-ID: <1339685540.2603.1.camel@lorien2> (sfid-20120614_165253_809151_6D795F5E)
-Subject: Re: [PATCH] leds: Rename led_brightness_set() to
- led_set_brightness()
-From: Shuah Khan <shuahkhan@gmail.com>
-Reply-To: shuahkhan@gmail.com
-To: bryan.wu@canonical.com
-Cc: shuahkhan@gmail.com, rpurdie@rpsys.net, johannes@sipsolutions.net,
-	linville@tuxdriver.com, davem@davemloft.net,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-leds@vger.kernel.org
-Date: Thu, 14 Jun 2012 08:52:20 -0600
-In-Reply-To: <1339619670.13326.22.camel@lorien2>
-References: <1339619670.13326.22.camel@lorien2>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 Jun 2012 11:52:38 -0400
+Received: by wgbdr13 with SMTP id dr13so2348083wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 08:52:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FD4F793.2030507@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+	<1338933307-13446-7-git-send-email-hauke@hauke-m.de>
+	<2716026.rMfCBzMpF9@flexo>
+	<CACna6rw_5dcR9tu_Nnq_0Z3u+KJ--Lmx7yi+uHJm-kJPepqrng@mail.gmail.com>
+	<4FD4F793.2030507@hauke-m.de>
+Date: Thu, 28 Jun 2012 17:52:36 +0200
+Message-ID: <CACna6rwYawBawu_KP4rADKjGTspKdvRrvJbhzA18ApBP1tvAiQ@mail.gmail.com> (sfid-20120628_175241_862981_95E98F19)
+Subject: Re: [PATCH 6/8] bcma: handle SoCs in pmu initialization
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Florian Fainelli <florian@openwrt.org>, linville@tuxdriver.com,
+	b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-06-13 at 14:34 -0600, Shuah Khan wrote:
-> Rename leds external interface led_brightness_set() to led_set_brightness().
-> This is the second phase of the change to reduce confusion between the
-> leds internal and external interfaces that set brightness. With this change,
-> now the external interface is led_set_brightness(). The first phase renamed
-> the internal interface led_set_brightness() to __led_set_brightness().
-> There are no changes to the interface implementations.
-> 
-> Signed-off-by: Shuah Khan <shuahkhan@gmail.com>
+2012/6/10 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 06/10/2012 06:54 PM, Rafał Miłecki wrote:
+>> 2012/6/6 Florian Fainelli <florian@openwrt.org>:
+>>> Hi Hauke,
+>>>
+>>> On Tuesday 05 June 2012 23:55:05 Hauke Mehrtens wrote:
+>>>> The SoCs do not need any special handling in bcma_pmu_pll_init(),
+>>>> bcma_pmu_resources_init(), bcma_pmu_swreg_init() and
+>>>> bcma_pmu_workarounds. This patches suppresses some warnings in the log.
+>>>
+>>> This does not look like it scales very good, how about you turn the pr_err()
+>>> into a pr_debug() so that developpers porting bcma on a new chip need to turn
+>>> on the appropriate debug knobs to get the message?
+>>
+>> debug sounds fine for me
+>>
+> Hi Rafał,
+>
+> bcma_pmu_swreg_init() and bcma_pmu_pll_init() are doing nothing should
+> they get removed? In the current version of the patch I also removed the
+> chip ids of the PCIe based cards from the switch case statement if they
+> just ended in a break, is that ok with you?
 
-Bryan,
+Original si_pmu_pll_init had some meaning for BCM4329, BCM4319,
+BCM4336 and BCM4330. I guess all of them are fullmac devices, right?
 
-Just in case you didn't see this patch. cc'ing linux-leds
+Original si_pmu_swreg_init got meaning for BCM4336 and BCM4336.
 
--- Shuah
+Seems both can be dropped?
 
-> ---
->  drivers/leds/led-class.c       |    2 +-
->  drivers/leds/led-core.c        |    4 ++--
->  drivers/leds/led-triggers.c    |    2 +-
->  drivers/leds/ledtrig-oneshot.c |    2 +-
->  drivers/leds/ledtrig-timer.c   |    2 +-
->  include/linux/leds.h           |    4 ++--
->  net/mac80211/led.c             |    2 +-
->  7 files changed, 9 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/leds/led-class.c b/drivers/leds/led-class.c
-> index cb0a6eb..c599095 100644
-> --- a/drivers/leds/led-class.c
-> +++ b/drivers/leds/led-class.c
-> @@ -222,7 +222,7 @@ void led_classdev_unregister(struct led_classdev *led_cdev)
->  #endif
->  
->  	/* Stop blinking */
-> -	led_brightness_set(led_cdev, LED_OFF);
-> +	led_set_brightness(led_cdev, LED_OFF);
->  
->  	device_unregister(led_cdev->dev);
->  
-> diff --git a/drivers/leds/led-core.c b/drivers/leds/led-core.c
-> index 176961b..8a09c5f 100644
-> --- a/drivers/leds/led-core.c
-> +++ b/drivers/leds/led-core.c
-> @@ -103,7 +103,7 @@ void led_blink_set_oneshot(struct led_classdev *led_cdev,
->  }
->  EXPORT_SYMBOL(led_blink_set_oneshot);
->  
-> -void led_brightness_set(struct led_classdev *led_cdev,
-> +void led_set_brightness(struct led_classdev *led_cdev,
->  			enum led_brightness brightness)
->  {
->  	/* stop and clear soft-blink timer */
-> @@ -113,4 +113,4 @@ void led_brightness_set(struct led_classdev *led_cdev,
->  
->  	__led_set_brightness(led_cdev, brightness);
->  }
-> -EXPORT_SYMBOL(led_brightness_set);
-> +EXPORT_SYMBOL(led_set_brightness);
-> diff --git a/drivers/leds/led-triggers.c b/drivers/leds/led-triggers.c
-> index f8b14dd..57721f2 100644
-> --- a/drivers/leds/led-triggers.c
-> +++ b/drivers/leds/led-triggers.c
-> @@ -112,7 +112,7 @@ void led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trig)
->  		if (led_cdev->trigger->deactivate)
->  			led_cdev->trigger->deactivate(led_cdev);
->  		led_cdev->trigger = NULL;
-> -		led_brightness_set(led_cdev, LED_OFF);
-> +		led_set_brightness(led_cdev, LED_OFF);
->  	}
->  	if (trig) {
->  		write_lock_irqsave(&trig->leddev_list_lock, flags);
-> diff --git a/drivers/leds/ledtrig-oneshot.c b/drivers/leds/ledtrig-oneshot.c
-> index 5cbab41..2c029aa 100644
-> --- a/drivers/leds/ledtrig-oneshot.c
-> +++ b/drivers/leds/ledtrig-oneshot.c
-> @@ -177,7 +177,7 @@ static void oneshot_trig_deactivate(struct led_classdev *led_cdev)
->  	}
->  
->  	/* Stop blinking */
-> -	led_brightness_set(led_cdev, LED_OFF);
-> +	led_set_brightness(led_cdev, LED_OFF);
->  }
->  
->  static struct led_trigger oneshot_led_trigger = {
-> diff --git a/drivers/leds/ledtrig-timer.c b/drivers/leds/ledtrig-timer.c
-> index 9010f7a..f774d05 100644
-> --- a/drivers/leds/ledtrig-timer.c
-> +++ b/drivers/leds/ledtrig-timer.c
-> @@ -104,7 +104,7 @@ static void timer_trig_deactivate(struct led_classdev *led_cdev)
->  	}
->  
->  	/* Stop blinking */
-> -	led_brightness_set(led_cdev, LED_OFF);
-> +	led_set_brightness(led_cdev, LED_OFF);
->  }
->  
->  static struct led_trigger timer_led_trigger = {
-> diff --git a/include/linux/leds.h b/include/linux/leds.h
-> index dd93a22..3aade1d 100644
-> --- a/include/linux/leds.h
-> +++ b/include/linux/leds.h
-> @@ -124,7 +124,7 @@ extern void led_blink_set_oneshot(struct led_classdev *led_cdev,
->  				  unsigned long *delay_off,
->  				  int invert);
->  /**
-> - * led_brightness_set - set LED brightness
-> + * led_set_brightness - set LED brightness
->   * @led_cdev: the LED to set
->   * @brightness: the brightness to set it to
->   *
-> @@ -132,7 +132,7 @@ extern void led_blink_set_oneshot(struct led_classdev *led_cdev,
->   * software blink timer that implements blinking when the
->   * hardware doesn't.
->   */
-> -extern void led_brightness_set(struct led_classdev *led_cdev,
-> +extern void led_set_brightness(struct led_classdev *led_cdev,
->  			       enum led_brightness brightness);
->  
->  /*
-> diff --git a/net/mac80211/led.c b/net/mac80211/led.c
-> index 1bf7903..bcffa69 100644
-> --- a/net/mac80211/led.c
-> +++ b/net/mac80211/led.c
-> @@ -276,7 +276,7 @@ static void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local)
->  
->  	read_lock(&tpt_trig->trig.leddev_list_lock);
->  	list_for_each_entry(led_cdev, &tpt_trig->trig.led_cdevs, trig_list)
-> -		led_brightness_set(led_cdev, LED_OFF);
-> +		led_set_brightness(led_cdev, LED_OFF);
->  	read_unlock(&tpt_trig->trig.leddev_list_lock);
->  }
->  
-
-
+-- 
+Rafał
