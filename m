@@ -1,29 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56064 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab2FFJL1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 05:11:27 -0400
-Message-ID: <1338973886.4513.43.camel@jlt3.sipsolutions.net> (sfid-20120606_111129_614705_9DA3FF22)
-Subject: Re: [RFC 08/14] mac80211: refactor virtual monitor code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Jun 2012 11:11:26 +0200
-In-Reply-To: <1338203942-5667-9-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-	 <1338203942-5667-9-git-send-email-michal.kazior@tieto.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:34528 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751292Ab2F1VJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 17:09:38 -0400
+Message-ID: <1340917777.4581.2.camel@joe2Laptop> (sfid-20120628_231004_005490_CBF1CF50)
+Subject: Re: [PATCH option A] bcma: use custom printing functions
+From: Joe Perches <joe@perches.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Date: Thu, 28 Jun 2012 14:09:37 -0700
+In-Reply-To: <CACna6rwV3Cffm0nG_kHmE8ZO9oHOqSpfSysd9H1pgAHK71iLFQ@mail.gmail.com>
+References: <1340912688-3089-1-git-send-email-zajec5@gmail.com>
+	 <1340912894.5257.0.camel@jlt3.sipsolutions.net>
+	 <CACna6rwXrspQ_PDfwZbL7jk=hZ6EmhCnebLcp82LaC4T-Khscw@mail.gmail.com>
+	 <1340913949.2602.27.camel@joe2Laptop>
+	 <CACna6rwV3Cffm0nG_kHmE8ZO9oHOqSpfSysd9H1pgAHK71iLFQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
-> Use cfg80211 the new .set_monitor_enabled instead
-> of tracking it inside mac80211.
+On Thu, 2012-06-28 at 22:18 +0200, Rafał Miłecki wrote:
+> 2012/6/28 Joe Perches <joe@perches.com>:
+> > On Thu, 2012-06-28 at 21:56 +0200, Rafał Miłecki wrote:
+> >> 2012/6/28 Johannes Berg <johannes@sipsolutions.net>:
+> >> > On Thu, 2012-06-28 at 21:44 +0200, Rafał Miłecki wrote:
+> >> >
+> >> >> +#define bcma_err(fmt, ...) \
+> >> >> +     pr_err(KBUILD_MODNAME "-%d: " fmt, bus->num, ##__VA_ARGS__)
+> >> >
+> >> > both of your options seem to rely on "bus" being a variable in the
+> >> > context, is that really a good idea?
+> >>
+> >> Yeah, I made that assumption to make calls nicer & shorter. We may
+> >> need to get reference to "bus" in function or two.
+> >>
+> >> I saw such a solution in "radeon" gpu driver, example:
+> >> value = RREG32(R600_AUDIO_STATUS_BITS);
+> >> (they assume "rdev" is available in every function calling RREG32).
+> >
+> > I think that radeon use is ugly myself.
+> >
+> >> If you believe it's ugly, I can change that. I also wonder what Joe
+> >> will respond.
+> >>
+> >> P.S.
+> >> Both patches are not signed yet and they are supposed to be RFC. Sorry
+> >> for missing that in subject line.
+> >
+> > I think it'd be better to add and use:
+> >
+> > #define bcma_bus_err(bus, fmt, ...)                             \
+> >        pr_err("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+> >
+> > #define bcma_bus_info(bus, fmt, ...)                            \
+> >        pr_info("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+> >
+> > or some other equivalent use if you're wedded
+> > to wanting "bcma-%d:" prefixed output.
+> >
+> > I'd rather have the prefix be something like "bcma: <bus#>: ",
+> > so a dmesg grep pattern can be "^bcma:" but hey, it ain't my code.
+> 
+> OK, thanks for your opinion. Just to be sure, did you mean:
+> bcma: bus0: FOO BAR
+> or
+> bcma: <bus0>: FOO BAR
+> ?
+> 
+> Personally I don't really care, but maybe there is already similar
+> case in some other driver you know about? It could be nice to be
+> consistent across the kernel.
 
-Makes sense with the previous patch as is, but changes there obviously
-affect this.
+There's no real consistency in prefixes.
 
-johannes
+Most of the cases I've seen have used either something like
+"prefix: (#): " or "prefix-#:"
+
+cheers, Joe
 
