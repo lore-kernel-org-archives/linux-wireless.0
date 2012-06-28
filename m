@@ -1,167 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:57465 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752622Ab2FROxH (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:53432 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995Ab2F1Usn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 10:53:07 -0400
-Received: by ggnk3 with SMTP id k3so3276545ggn.10
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 07:53:06 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
-	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH 3/7] hostapd: add dfs events
-Date: Mon, 18 Jun 2012 17:49:42 +0300
-Message-Id: <1340030986-29118-4-git-send-email-victorg@ti.com> (sfid-20120618_165330_443268_B3A04E65)
-In-Reply-To: <1340030986-29118-1-git-send-email-victorg@ti.com>
-References: <1340030986-29118-1-git-send-email-victorg@ti.com>
+	Thu, 28 Jun 2012 16:48:43 -0400
+Received: by werb14 with SMTP id b14so701411wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 13:48:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1340913949.2602.27.camel@joe2Laptop>
+References: <1340912688-3089-1-git-send-email-zajec5@gmail.com>
+	<1340912894.5257.0.camel@jlt3.sipsolutions.net>
+	<CACna6rwXrspQ_PDfwZbL7jk=hZ6EmhCnebLcp82LaC4T-Khscw@mail.gmail.com>
+	<1340913949.2602.27.camel@joe2Laptop>
+Date: Thu, 28 Jun 2012 22:48:38 +0200
+Message-ID: <CACna6ryT5x5GtDpxb=ukQMhhSTt4CB9AnbYvsFyX566KUjBKEw@mail.gmail.com> (sfid-20120628_224921_237409_F73C1E83)
+Subject: Re: [PATCH option A] bcma: use custom printing functions
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add EVENT_RADAR_DETECTED and EVENT_CHANNEL_SWITCH_COMPLETE
-events.
+2012/6/28 Joe Perches <joe@perches.com>:
+> I think it'd be better to add and use:
+>
+> #define bcma_bus_err(bus, fmt, ...)                             \
+>        pr_err("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+>
+> #define bcma_bus_info(bus, fmt, ...)                            \
+>        pr_info("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
+>
+> or some other equivalent use if you're wedded
+> to wanting "bcma-%d:" prefixed output.
+>
+> I'd rather have the prefix be something like "bcma: <bus#>: ",
+> so a dmesg grep pattern can be "^bcma:" but hey, it ain't my code.
 
-EVENT_RADAR_DETECTED indicates that radar was detected on
-operational channel. EVENT_CHANNEL_SWITCH_COMPLETE indicates
-that device has finished the channel switch process.
+It doesn't seem to be sth common to have grep-pable "bcma:". Some examples:
+pci_root PNP0A08:00: host bridge window [mem 0x000d8000-0x000dbfff]
+pci 0000:00:01.0: [8086:2a41] type 1 class 0x000604
+pnp 00:00: [bus 00-ff]
+system 00:03: [mem 0xfed00000-0xfed003ff] has been reserved
+pci_bus 0000:0a: resource 5 [io  0x0d00-0xffff]
+ahci 0000:00:1f.2: version 3.0
+scsi0 : ahci
+scsi1 : ahci
+usb 2-6: New USB device found, idVendor=054c, idProduct=0377
+sky2 0000:08:00.0: Yukon-2 EC Ultra chip revision 3
+iwlagn 0000:06:00.0: HW Revision ID = 0x0
 
-Signed-hostap: Boris Presman <boris.presman@ti.com>
-Signed-hostap: Victor Goldenshtein <victorg@ti.com>
----
- src/ap/drv_callbacks.c      |   47 +++++++++++++++++++++++++++++++++++++++++++
- src/drivers/driver.h        |   22 +++++++++++++++++++-
- src/drivers/driver_common.c |    2 +
- 3 files changed, 70 insertions(+), 1 deletions(-)
+My decision will be to use
+bcma 0:
+bcma 1:
+bcma 2:
+etc. That will be the most compatible solution with the rest of the kernel.
 
-diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
-index 4c0d0ab..603820f 100644
---- a/src/ap/drv_callbacks.c
-+++ b/src/ap/drv_callbacks.c
-@@ -469,6 +469,37 @@ static void hostapd_event_eapol_rx(struct hostapd_data *hapd, const u8 *src,
- 	ieee802_1x_receive(hapd, src, data, data_len);
- }
- 
-+static void hostapd_event_radar_detected(struct hostapd_data *hapd,
-+		struct radar_detected *radar)
-+{
-+	if (!hapd->iconf->ieee80211h)
-+		return;
-+
-+	if ((!(hapd->iface->dfs_state & DFS_INIT_PHASE_CAC)) &&
-+	    (hapd->iface->freq != radar->freq)) {
-+		wpa_printf(MSG_WARNING, "False radar detection, op_freq(%d) != "
-+			   "radar_freq(%d)", hapd->iface->freq, radar->freq);
-+		return;
-+	}
-+
-+	if (ieee802_11_radar_detected(hapd))
-+		ieee802_11_start_channel_switch(hapd, TRUE);
-+	else
-+		wpa_printf(MSG_DEBUG, "False radar detection");
-+}
-+
-+static void hostapd_event_complete_channel_switch(struct hostapd_data *hapd,
-+		struct channel_switch_complete *channel_switch)
-+{
-+	if (hapd->next_channel->freq != channel_switch->freq) {
-+		wpa_printf(MSG_WARNING, "Switched to wrong freq, next_freq(%d) "
-+			   "!= ch_switch_freq(%d)", hapd->next_channel->freq,
-+			   channel_switch->freq);
-+	}
-+
-+	if (channel_switch->status)
-+		ieee802_11_complete_channel_switch(hapd);
-+}
- 
- void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 			  union wpa_event_data *data)
-@@ -492,6 +523,13 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 		event_to_string(event), event);
- #endif /* CONFIG_NO_STDOUT_DEBUG */
- 
-+	if ((hapd->iface->dfs_state & DFS_INIT_PHASE_CAC) &&
-+	    (event != EVENT_RADAR_DETECTED)) {
-+		wpa_dbg(hapd->msg_ctx, level, "Irrelevant event "
-+			"during DFS init phase");
-+		return;
-+	}
-+
- 	switch (event) {
- 	case EVENT_MICHAEL_MIC_FAILURE:
- 		michael_mic_failure(hapd, data->michael_mic_failure.src, 1);
-@@ -582,6 +620,15 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 			break;
- 		hostapd_event_sta_low_ack(hapd, data->low_ack.addr);
- 		break;
-+	case EVENT_RADAR_DETECTED:
-+		if (data)
-+			hostapd_event_radar_detected(hapd, &data->radar_detected);
-+		break;
-+	case EVENT_CHANNEL_SWITCH_COMPLETE:
-+		if (data)
-+			hostapd_event_complete_channel_switch(hapd,
-+				&data->channel_switch_complete);
-+		break;
- #ifdef NEED_AP_MLME
- 	case EVENT_RX_ACTION:
- 		if (data->rx_action.da == NULL || data->rx_action.sa == NULL ||
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 780fac8..44f6af0 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -3042,7 +3042,17 @@ enum wpa_event_type {
- 	/**
- 	 * EVENT_EAPOL_TX_STATUS - notify of EAPOL TX status
- 	 */
--	EVENT_EAPOL_TX_STATUS
-+	EVENT_EAPOL_TX_STATUS,
-+
-+	/**
-+	 * EVENT_RADAR_DETECTED - notify of radar detection
-+	 */
-+	EVENT_RADAR_DETECTED,
-+
-+	/**
-+	 * EVENT_CHANNEL_SWITCH_COMPLETE - notify of channel switch complete
-+	 */
-+	EVENT_CHANNEL_SWITCH_COMPLETE
- };
- 
- 
-@@ -3637,6 +3647,16 @@ union wpa_event_data {
- 		int data_len;
- 		int ack;
- 	} eapol_tx_status;
-+
-+	struct radar_detected {
-+		int status;
-+		int freq;
-+	} radar_detected;
-+
-+	struct channel_switch_complete {
-+		int status;
-+		int freq;
-+	} channel_switch_complete;
- };
- 
- /**
-diff --git a/src/drivers/driver_common.c b/src/drivers/driver_common.c
-index 345e851..321b057 100644
---- a/src/drivers/driver_common.c
-+++ b/src/drivers/driver_common.c
-@@ -77,6 +77,8 @@ const char * event_to_string(enum wpa_event_type event)
- 	E2S(SCHED_SCAN_STOPPED);
- 	E2S(DRIVER_CLIENT_POLL_OK);
- 	E2S(EAPOL_TX_STATUS);
-+	E2S(RADAR_DETECTED);
-+	E2S(CHANNEL_SWITCH_COMPLETE);
- 	}
- 
- 	return "UNKNOWN";
 -- 
-1.7.5.4
-
+Rafał
