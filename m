@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37345 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756996Ab2FYQNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 12:13:22 -0400
-Message-ID: <4FE88E1A.9050202@hauke-m.de> (sfid-20120625_181326_743363_A8910A57)
-Date: Mon, 25 Jun 2012 18:13:14 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mga14.intel.com ([143.182.124.37]:5586 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752046Ab2F1MpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 08:45:07 -0400
+Date: Thu, 28 Jun 2012 14:56:12 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Sasha Levin <levinsasha928@gmail.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Dave Jones <davej@redhat.com>,
+	David Miller <davem@davemloft.net>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] net: nfc: fix panic in accept()
+Message-ID: <20120628125612.GG4846@sortiz-mobl> (sfid-20120628_144534_176088_BA5B8441)
+References: <1339425693.6001.2268.camel@edumazet-glaptop>
+ <20120611145700.GY22557@sortiz-mobl>
+ <1339426778.6001.2312.camel@edumazet-glaptop>
+ <20120611152007.GZ22557@sortiz-mobl>
+ <1339433810.4999.65.camel@lappy>
+ <20120611172545.GA1776@redhat.com>
+ <CA+1xoqcwr-5dzHvqkt9x0-xj9EFAywVfva=asbHXvX-LSBWqdA@mail.gmail.com>
+ <1340639612.10893.84.camel@edumazet-glaptop>
+ <20120625171532.GB16275@sortiz-mobl>
+ <CA+1xoqfy21wOh2myV0D6iBDqoZ3YmkwNZwKBVXLU75zePOGi4w@mail.gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: Question about BCM43228 and outdated description in MAINTAINERS
-References: <4FE886B3.7020202@lwfinger.net>
-In-Reply-To: <4FE886B3.7020202@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+1xoqfy21wOh2myV0D6iBDqoZ3YmkwNZwKBVXLU75zePOGi4w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/25/2012 05:41 PM, Larry Finger wrote:
-> Hi,
+Hi Sasha,
+
+On Thu, Jun 28, 2012 at 02:11:38PM +0200, Sasha Levin wrote:
+> Hi Samuel,
 > 
-> I recently received a donated BCM43228 (14e4:4359) mini-PCIe card. At
-> the moment, neither b43 nor brcmsmac support it. Although, grepping the
-> proprietary driver wl shows that it would recognize that PCI ID, that
-> driver does not load as it requires routine lockdep_init_map(), which is
-> exported only for GPL modules. As a result, owners of this device can
-> only use it with Linux if they can find a suitable Windows driver for
-> use with ndiswrapper. In my experience, that means that 64-bit users are
-> out of luck.
+> On Mon, Jun 25, 2012 at 7:15 PM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+> > Hi Eric,
+> >
+> > On Mon, Jun 25, 2012 at 05:53:32PM +0200, Eric Dumazet wrote:
+> >> From: Eric Dumazet <edumazet@google.com>
+> >>
+> >> Sasha Levin reported following panic :
+> > I applied a similar patch, more consistent with the rest of the NFC socket
+> > code, still with you as the author. See here:
+> >
+> > http://git.kernel.org/?p=linux/kernel/git/sameo/nfc-3.0.git;a=commit;h=631c301f20558525a641fadffc0126affd3dc4a4
 > 
-> Reverse engineering this device to be able to drive it with b43 would
-> involve a lot of effort. If your group is planning on adding it to
-> brcmsmac, then I would not undertake this project. To the fullest extent
-> that you can, please advise me regarding this matter.
+> Could this tree be included in -next please?
+No, wireless-next is already included in -next. The above patch is making its
+way upstream, it's in the wireless.git tree and should hit davem's net tree
+soon.
 
-The TODO list for brcmsmac at
-http://linuxwireless.org/en/users/Drivers/brcm80211 contains the
-following point since May 2011:
+Cheers,
+Samuel.
 
-Add support for more chips, including (near term) BCM43227, BCM43228,
-and BCM4331. Support for additional new chips to follow.
-
-@Broadcom Are there any concrete, current plans for adding support for
-these chips? Or would it be possible that you at least release the phy
-code needed for these devices as is so that someone could integrate it
-into brcmsmac or b43?
-
-Hauke
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
