@@ -1,53 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45475 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753621Ab2FLT66 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jun 2012 15:58:58 -0400
-Message-ID: <1339531131.4531.22.camel@jlt3.sipsolutions.net> (sfid-20120612_215902_061392_F20E91FB)
-Subject: Re: Why "iwlwifi: read multiple MAC addresses"?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lekensteyn <lekensteyn@gmail.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 12 Jun 2012 21:58:51 +0200
-In-Reply-To: <3586963.qbQ3i1FPTG@penguin> (sfid-20120612_151131_759795_10C84786)
-References: <3586963.qbQ3i1FPTG@penguin>
-	 (sfid-20120612_151131_759795_10C84786)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb06.tieto.com ([131.207.168.38]:49614 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932738Ab2F1KH1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:27 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 10/13] cfg80211: set initial monitor channel
+Date: Thu, 28 Jun 2012 12:07:02 +0200
+Message-ID: <1340878025-2695-11-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120739_722618_3916E78F)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-06-12 at 15:11 +0200, Lekensteyn wrote:
+Implements behaviour seen in mac80211. A running
+monitor always has a channel - even before
+.set_channel. This way we won't break current
+behaviour.
 
-> I wonder what the following commit is used for:
-> commit c6fa17ed3fadaf056173c409c0877df428a152ec
-> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> Date:   Thu Jul 15 05:58:30 2010 -0700
-> 
->     iwlwifi: read multiple MAC addresses
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/core.c |   31 +++++++++++++++++++++++++++++++
+ 1 files changed, 31 insertions(+), 0 deletions(-)
 
-That commit is so that you see this:
-
-> I was trying to debug wireless issues, and noticed that I had two MAC 
-> addresses with only the last bit being different:
-> 
->     $ cat /sys/class/ieee80211/phy0/addresses
->     00:23:14:xx:xx:x8
->     00:23:14:xx:xx:x9
-> 
-> Looking at a dump provided by /sys/kernel/debug/cfg80211/phy0/iwlwifi/data/nvm, 
-> I see that the 16-bit word at 0x98 contains the value 4. What does this mean? 
-
-The 4 actually means that there are 4 addresses assigned to this device,
-for use in P2P scenarios etc. We only support 2 virtual interfaces in
-Linux today, so we don't expose 4 (though we probably could.)
-
-> Can this break something?
-
-No.
-
-johannes
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 8315c2a..5b3f74e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -776,6 +776,35 @@ static struct device_type wiphy_type = {
+ 	.name	= "wlan",
+ };
+ 
++static struct ieee80211_channel *
++cfg80211_get_any_chan(struct cfg80211_registered_device *rdev)
++{
++	struct ieee80211_supported_band *sband;
++	int i;
++
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		sband = rdev->wiphy.bands[i];
++		if (sband && sband->n_channels > 0)
++			return &sband->channels[0];
++	}
++
++	return NULL;
++}
++
++static void cfg80211_init_mon_chan(struct cfg80211_registered_device *rdev)
++{
++	struct ieee80211_channel *chan;
++
++	chan = cfg80211_get_any_chan(rdev);
++	if (WARN_ON(!chan))
++		return;
++
++	mutex_lock(&rdev->devlist_mtx);
++	WARN_ON(cfg80211_set_monitor_channel(rdev, chan->center_freq,
++					     NL80211_CHAN_NO_HT));
++	mutex_unlock(&rdev->devlist_mtx);
++}
++
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 			       enum nl80211_iftype iftype, int num)
+ {
+@@ -796,6 +825,8 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		if (!has_monitors_only_new) {
+ 			rdev->monitor_channel = NULL;
+ 			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		} else {
++			cfg80211_init_mon_chan(rdev);
+ 		}
+ 	}
+ }
+-- 
+1.7.0.4
 
