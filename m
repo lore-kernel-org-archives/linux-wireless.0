@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29127 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507Ab2FDK7W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 06:59:22 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:50874 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932732Ab2F1Iy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 04:54:57 -0400
+Message-ID: <4FEC1BDF.8080607@tieto.com> (sfid-20120628_105514_528253_80E3F9EB)
+Date: Thu, 28 Jun 2012 10:54:55 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20428.38086.656727.801072@gargle.gargle.HOWL> (sfid-20120604_132058_905912_E542C45B)
-Date: Mon, 4 Jun 2012 16:28:14 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 13/20] ath9k_hw: fix IQ calibration chain index
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3] initial channel context implementation
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>     <1340718188.14634.47.camel@jlt3.sipsolutions.net>     <4FEAB698.5070309@tieto.com>    <1340784614.8305.8.camel@jlt3.sipsolutions.net>    <4FEADCAE.5080508@tieto.com>   <1340795424.11012.11.camel@jlt3.sipsolutions.net>   <4FEAFFF1.7080706@tieto.com>  <1340805730.11012.33.camel@jlt3.sipsolutions.net>  <4FEC015B.4020603@tieto.com> <1340871351.4491.19.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340871351.4491.19.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Johannes Berg wrote:
+> On Thu, 2012-06-28 at 09:01 +0200, Michal Kazior wrote:
+>
+>>>> Hmm.. Yeah we need to now, sort of. FullMAC drivers could suffer, but we
+>>>> could drop connections upon CSA in mac80211 for the time being.
+>>>>
+>>>> cfg80211 could provide:
+>>>>     * cfg80211_sta_can_switch_chan
+>>>>     * cfg80211_sta_ch_switch_notify
+>>>>
+>>>> mac80211 could then be able to know whether num_different_channels has
+>>>> been reached (cfg80211_sta_can_switch_chan) and eventually notify upon
+>>>> channel switch (cfg80211_sta_ch_switch_notify).
+>>>>
+>>>> Channel switch would happen if either:
+>>>>     * cfg80211_sta_can_switch_chan is true
+>>>>     * channel context for target CSA channel already exists
+>>>>
+>>>> I'm just unsure about the current_bss thing - whether we should e.g.
+>>>> initiate a scan to update it, or can we shamelessly update the channel
+>>>> in the structure directly?
+>>>
+>>> Today mac80211 just updates it, yeah.
+>>
+>> Should I send the ,,respect channels in iface combinations'' as a
+>> [PATCH] now, or should the CSA issue (in cfg80211) be addressed first?
+>
+> Good question. Even if we don't do CSA first, I guess we don't really
+> break anything right now, do we? And if the driver/mac80211 just changes
+> the channel, that means it could seem to go over the limit of 1 channel
+> but things just break down like they do today?
 
-The chain index to perform IQ calibration is counted to number of valid
-tx chains and then used for indexing chain specific registers. If the
-chainmask is set to 0x2 (i.e chain 1 only), still it accesses chain 0
-registers for chain 1. So use real chain index instead sequential one.
+Yeah, probably. We might end up in a funny state (e.g. rejecting some 
+actions which would otherwise be possible) after doing CSA until we 
+disconnect.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index f83a4a2..d7deb8c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -653,7 +653,6 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
- }
- 
- static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
--						 u8 num_chains,
- 						 struct coeff *coeff,
- 						 bool is_reusable)
- {
-@@ -677,7 +676,9 @@ static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
- 	}
- 
- 	/* Load the average of 2 passes */
--	for (i = 0; i < num_chains; i++) {
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+		if (!(ah->txchainmask & (1 << i)))
-+			continue;
- 		nmeasurement = REG_READ_FIELD(ah,
- 				AR_PHY_TX_IQCAL_STATUS_B0,
- 				AR_PHY_CALIBRATED_GAINS_0);
-@@ -767,16 +768,13 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
- 	};
- 	struct coeff coeff;
- 	s32 iq_res[6];
--	u8 num_chains = 0;
- 	int i, im, j;
- 	int nmeasurement;
- 
- 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
--		if (ah->txchainmask & (1 << i))
--			num_chains++;
--	}
-+		if (!(ah->txchainmask & (1 << i)))
-+			continue;
- 
--	for (i = 0; i < num_chains; i++) {
- 		nmeasurement = REG_READ_FIELD(ah,
- 				AR_PHY_TX_IQCAL_STATUS_B0,
- 				AR_PHY_CALIBRATED_GAINS_0);
-@@ -839,8 +837,7 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
- 				coeff.phs_coeff[i][im] -= 128;
- 		}
- 	}
--	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, num_chains,
--					     &coeff, is_reusable);
-+	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, &coeff, is_reusable);
- 
- 	return;
- 
+> I guess I'd like to have the CSA stuff addressed, but it seems we
+> haven't really closed on the best way yet, and I don't want to hold off
+> your work for it for too long?
+
+If you're okay with that then I'll just send out the [PATCH].
+
+
 -- 
-1.7.10.3
+Pozdrawiam / Best regards, Michal Kazior.
 
