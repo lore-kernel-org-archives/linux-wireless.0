@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm18-vm1.bullet.mail.bf1.yahoo.com ([98.139.213.145]:20978 "HELO
-	nm18-vm1.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756969Ab2FOO4s (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45671 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753997Ab2F1LSH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 10:56:48 -0400
-Message-ID: <1339772206.64850.YahooMailClassic@web161701.mail.bf1.yahoo.com> (sfid-20120615_165651_575291_AFEA82D8)
-Date: Fri, 15 Jun 2012 07:56:46 -0700 (PDT)
-From: hong zhang <henryzhang62@yahoo.com>
-Subject: Re: poor performance with W2CBW003 (Marvell 8686)
-To: Andreas Kemnade <andreas@kemnade.info>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	dsd@laptop.org, libertas-dev@lists.infradead.org
-In-Reply-To: <20120615081850.77454e10@kemnade.info>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 28 Jun 2012 07:18:07 -0400
+Message-ID: <1340882283.4491.42.camel@jlt3.sipsolutions.net> (sfid-20120628_131811_900333_947AB64C)
+Subject: Re: [PATCH] respect channels in iface combinations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Jun 2012 13:18:03 +0200
+In-Reply-To: <4FEC3BEC.2070906@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+	 <1340879319.4491.38.camel@jlt3.sipsolutions.net>
+	 <4FEC3BEC.2070906@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To measure throughput, should not check iwconfig that is not accurate.
-
-1. use wpa_supplicant to associate with AP
-2. use iperf to measure throughput using UDP for Rx and Tx.
-
-for SDIO host, command 52 doing register configuration. For rate, command 53 handles data rate. as sdio spec says clock rate is 0 to 100kHz means low speed mode. clock 0 to 25MHz means high speed mode.
-
-Max throughput = clock-rate*num-of-data-line
-for 4-bit, high clock,
-max-throughput=25M*4=100Mbits/sec.
-for 1-bit,low rate
-max-throughput=100K*1=100Kbits/sec.
-
-
-
---- On Fri, 6/15/12, Andreas Kemnade <andreas@kemnade.info> wrote:
-
-> From: Andreas Kemnade <andreas@kemnade.info>
-> Subject: Re: poor performance with W2CBW003 (Marvell 8686)
-> To: "hong zhang" <henryzhang62@yahoo.com>
-> Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org, dsd@laptop.org, libertas-dev@lists.infradead.org
-> Date: Friday, June 15, 2012, 1:18 AM
-> Hi,
+On Thu, 2012-06-28 at 13:11 +0200, Michal Kazior wrote:
+> Johannes Berg wrote:
+> > On Thu, 2012-06-28 at 12:06 +0200, Michal Kazior wrote:
+> >> Hi,
+> >>
+> >> The patchset introduces channel tracking per interface which is needed
+> >> to start enforcing num_different_channels in interface combinations.
+> >> Changes to monitor mode behaviour is also required for sane channel
+> >> accounting (considering how mac80211 handles monitor interfaces).
+> >>
+> >> This prepares cfg80211 for multi-channel operation.
+> >
+> > This didn't apply cleanly on mac80211-next due to preset_chan in
+> > net/wireless/cfg80211.h. I think it's just context, but if you developed
+> > this without the start_ap series I wonder how stop_ap makes much sense?
+> >
+> > I'm a bit confused now?
 > 
-> On Thu, 14 Jun 2012 09:11:06 -0700 (PDT)
-> hong zhang <henryzhang62@yahoo.com>
-> wrote:
-> 
-> > bit mode and interrupt or PIO are configured in SDIO
-> hoster side.
-> > Not in driver side.
-> > 
-> yes, I wrote the last email just to say that I have found
-> something to look at.
-> That is of course in the host driver. So the thing I did was
-> reading
-> commit logs of the 2.6.32 kernel working well.
-> 
-> The only thing which puzzles me is the 5.5Mb/s data rate
-> iwconfig shows.
-> After playing with the host side driver, it also shows
-> higher rates. But
-> why does host driver affects *that* data rate of link
-> qualitiy is good?
-> 
-> Thanks for all your ideas where to look at.
-> 
-> Greetings
-> Andreas Kemnade
-> 
+> This is strange. I did develop it with the start_ap patches (my base is 
+> master-2012-06-14 on wireless-next). I may be missing a few from your 
+> mac80211 repo though.
+
+Yeah I thought you had. I know what happened - you don't have the "pass
+channel" patches. Could you check & rebase?
+
+johannes
+
