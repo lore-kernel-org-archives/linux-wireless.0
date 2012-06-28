@@ -1,215 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:36960 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751600Ab2FOF4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 01:56:07 -0400
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 06/20] b43legacy: Use pr_<level>
-Date: Thu, 14 Jun 2012 22:53:46 -0700
-Message-Id: <2440160df6fe1e91d7bcb074290d0a18a9d84147.1339739416.git.joe@perches.com> (sfid-20120615_075632_079438_BBC54826)
-In-Reply-To: <cover.1339739415.git.joe@perches.com>
-References: <cover.1339739415.git.joe@perches.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63388 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932738Ab2F1KCB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:02:01 -0400
+Received: by dady13 with SMTP id y13so2661889dad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 03:02:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1340875996.4491.29.camel@jlt3.sipsolutions.net>
+References: <1340640308.27437.16.camel@jlt3.sipsolutions.net>
+ <CAB3XZEe7t3MYVv6Bja9X315CuhWa=aaEyB82pGp_9hMp8grbMg@mail.gmail.com>
+ <1340707305.14634.9.camel@jlt3.sipsolutions.net> <CAB3XZEfEB2TaeN4EYGyBmcuh823EfmdLhSWE55u5OwPE+Ff7oQ@mail.gmail.com>
+ <CA+XVXffLy5mSqXTtEh7STC_xtSKOJTdtVF9jGPj5UEQ88wD+LQ@mail.gmail.com>
+ <1340795869.11012.12.camel@jlt3.sipsolutions.net> <CA+XVXfcNpj_UqCOXUG7sr2MQH8qZNHYr7MfBz5J3vwC3f+KU6Q@mail.gmail.com>
+ <1340807890.11012.43.camel@jlt3.sipsolutions.net> <CA+XVXffqiwJ1+2mjrutQHbAKrF6FPChHW2+gVPMYsbX1pkd52Q@mail.gmail.com>
+ <1340810735.11012.44.camel@jlt3.sipsolutions.net> <CA+XVXffKSEL6ZQPQ98x-zO-NL2=TNF1uN==mprRyUmAaRn254g@mail.gmail.com>
+ <1340875996.4491.29.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 28 Jun 2012 13:01:45 +0300
+Message-ID: <CA+XVXfc9F9-FMZyBytDT-5D4KxSFfTSwbhFd2g3oxdLPNFWWxg@mail.gmail.com> (sfid-20120628_120209_201034_5B199F3C)
+Subject: Re: mac80211 auth/assoc in multi-channel scenarios
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eliad Peller <eliad@wizery.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a more current logging style.
+On Thu, Jun 28, 2012 at 12:33 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2012-06-27 at 20:05 +0300, Arik Nemtsov wrote:
+>
+>> > Yeah, that was one of the other options I considered in my original
+>> > email ... but this call must be able to sleep, and the TX processing in
+>> > mac80211 cannot sleep, so unless we bypass all processing (which seems
+>> > wrong) that would be rather difficult to implement.
+>>
+>> Good point. But another race to consider the the
+>> multi-channel/multi-vif scenario, where the driver already has a lot
+>> of packets queued up, so the time will expire before we get a chance
+>> to Tx. Again this is not a problem in practice (since it's the VO ac).
+>
+> If the vif is on a different channel, the driver really should assign it
+> different queues and then there shouldn't be much queued up, right?
+> Also, if you really have >100ms latency on your queues, you have a major
+> problem anyway I'd think?
 
-Convert printks to pr_<level>.
-Coalesce formats, align arguments.
+Yea. It's all only theoretical :)
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/b43legacy/b43legacy.h |   14 ++++++--------
- drivers/net/wireless/b43legacy/debugfs.c   |    4 +++-
- drivers/net/wireless/b43legacy/dma.c       |    2 ++
- drivers/net/wireless/b43legacy/main.c      |   16 +++++++++-------
- drivers/net/wireless/b43legacy/phy.c       |    2 ++
- drivers/net/wireless/b43legacy/radio.c     |    5 +++--
- drivers/net/wireless/b43legacy/xmit.c      |    2 ++
- 7 files changed, 27 insertions(+), 18 deletions(-)
+>
+>> How about somehow requiring a multi channel driver to give always
+>> Tx-ack? That will mean we can abandon the retry timers, and rely on
+>> the driver to give an answer within a reasonable time.
+>
+> That doesn't mean we can abandon the retry timers though? Then again,
+> maybe it does, we could start the timer only when we get the status
+> information I guess?
 
-diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/b43legacy/b43legacy.h
-index a29da67..e77083e 100644
---- a/drivers/net/wireless/b43legacy/b43legacy.h
-+++ b/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -325,20 +325,18 @@ enum {
- #define B43legacy_SBIMSTATE_IB_ERROR		0x20000
- #define B43legacy_SBIMSTATE_TIMEOUT		0x40000
- 
--#define PFX		KBUILD_MODNAME ": "
- #ifdef assert
- # undef assert
- #endif
- #ifdef CONFIG_B43LEGACY_DEBUG
- # define B43legacy_WARN_ON(x)	WARN_ON(x)
- # define B43legacy_BUG_ON(expr)						\
--	do {								\
--		if (unlikely((expr))) {					\
--			printk(KERN_INFO PFX "Test (%s) failed\n",	\
--					      #expr);			\
--			BUG_ON(expr);					\
--		}							\
--	} while (0)
-+do {									\
-+	if (unlikely((expr))) {						\
-+		pr_info("Test (%s) failed\n", #expr);			\
-+		BUG_ON(expr);						\
-+	}								\
-+} while (0)
- # define B43legacy_DEBUG	1
- #else
- /* This will evaluate the argument even if debugging is disabled. */
-diff --git a/drivers/net/wireless/b43legacy/debugfs.c b/drivers/net/wireless/b43legacy/debugfs.c
-index 1965edb..7678005 100644
---- a/drivers/net/wireless/b43legacy/debugfs.c
-+++ b/drivers/net/wireless/b43legacy/debugfs.c
-@@ -23,6 +23,8 @@
- 
- */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/fs.h>
- #include <linux/debugfs.h>
- #include <linux/slab.h>
-@@ -71,7 +73,7 @@ struct b43legacy_dfs_file * fops_to_dfs_file(struct b43legacy_wldev *dev,
- 					  bufsize - count,	\
- 					  fmt , ##x);		\
- 		else						\
--			printk(KERN_ERR "b43legacy: fappend overflow\n"); \
-+			pr_err("fappend overflow\n");		\
- 	} while (0)
- 
- 
-diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-index f1f8bd0..6b42488 100644
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -27,6 +27,8 @@
- 
- */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include "b43legacy.h"
- #include "dma.h"
- #include "main.h"
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 8b06ca5..b0536a5 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -29,6 +29,8 @@
-  *
-  */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/delay.h>
- #include <linux/init.h>
- #include <linux/module.h>
-@@ -190,8 +192,8 @@ void b43legacyinfo(struct b43legacy_wl *wl, const char *fmt, ...)
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	printk(KERN_INFO "b43legacy-%s: %pV",
--	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
-+	pr_info("%s: %pV",
-+		(wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
- 
- 	va_end(args);
- }
-@@ -209,7 +211,7 @@ void b43legacyerr(struct b43legacy_wl *wl, const char *fmt, ...)
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	printk(KERN_ERR "b43legacy-%s ERROR: %pV",
-+	pr_err("%s ERROR: %pV",
- 	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
- 
- 	va_end(args);
-@@ -228,8 +230,8 @@ void b43legacywarn(struct b43legacy_wl *wl, const char *fmt, ...)
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	printk(KERN_WARNING "b43legacy-%s warning: %pV",
--	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
-+	pr_warn("%s warning: %pV",
-+		(wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
- 
- 	va_end(args);
- }
-@@ -245,7 +247,7 @@ void b43legacydbg(struct b43legacy_wl *wl, const char *fmt, ...)
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	printk(KERN_DEBUG "b43legacy-%s debug: %pV",
-+	printk(KERN_DEBUG pr_fmt("%s debug: %pV"),
- 	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
- 
- 	va_end(args);
-@@ -4001,7 +4003,7 @@ static void b43legacy_print_driverinfo(void)
- #ifdef CONFIG_B43LEGACY_DMA
- 	feat_dma = "D";
- #endif
--	printk(KERN_INFO "Broadcom 43xx-legacy driver loaded "
-+	pr_info("Broadcom 43xx-legacy driver loaded "
- 	       "[ Features: %s%s%s%s ]\n",
- 	       feat_pci, feat_leds, feat_pio, feat_dma);
- }
-diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/b43legacy/phy.c
-index 995c7d0..e03851d 100644
---- a/drivers/net/wireless/b43legacy/phy.c
-+++ b/drivers/net/wireless/b43legacy/phy.c
-@@ -29,6 +29,8 @@
- 
- */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/delay.h>
- #include <linux/pci.h>
- #include <linux/sched.h>
-diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
-index 8961776..ff3f996 100644
---- a/drivers/net/wireless/b43legacy/radio.c
-+++ b/drivers/net/wireless/b43legacy/radio.c
-@@ -29,6 +29,8 @@
- 
- */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/delay.h>
- 
- #include "b43legacy.h"
-@@ -78,8 +80,7 @@ u16 channel2freq_bg(u8 channel)
- 	};
- 
- 	if (unlikely(channel < 1 || channel > 14)) {
--		printk(KERN_INFO "b43legacy: Channel %d is out of range\n",
--				  channel);
-+		pr_info("Channel %d is out of range\n", channel);
- 		dump_stack();
- 		return 2412;
- 	}
-diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
-index a8012f2..385eb72 100644
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -28,6 +28,8 @@
- 
- */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <net/dst.h>
- 
- #include "xmit.h"
--- 
-1.7.8.111.gad25c.dirty
+I'm not really sure why the assoc timers are there now. If it's
+because we want to be sure we gave the peer a chance to respond, well
+the Tx-ack already gives us that. Waiting any longer won't help.
+Or does waiting in general before the next Tx help with something?
+(clear temporary congestion etc).
 
+>
+> I'm not sure I'd want to *require* this, but it sounds like a good thing
+> we could do to address this possible race for drivers that do support
+> reliable status reports?
+
+Yea. And then, if all current multi-channel drivers support Tx-ack, we
+can skip implemeting tx_sync.
