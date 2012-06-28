@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48648 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44857 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932856Ab2FVNOs (ORCPT
+	with ESMTP id S1753223Ab2F1Hbe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 09:14:48 -0400
+	Thu, 28 Jun 2012 03:31:34 -0400
+Message-ID: <1340868682.4491.1.camel@jlt3.sipsolutions.net> (sfid-20120628_093140_263118_E4020FAD)
+Subject: Re: [RFC v3] initial channel context implementation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/6] mac80211: two small verbose debug cleanups
-Date: Fri, 22 Jun 2012 15:14:38 +0200
-Message-Id: <1340370882-9258-3-git-send-email-johannes@sipsolutions.net> (sfid-20120622_151454_942188_7CC9AAB8)
-In-Reply-To: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
-References: <1340370882-9258-1-git-send-email-johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Jun 2012 09:31:22 +0200
+In-Reply-To: <4FEBF3D4.3030705@tieto.com>
+References: <1340714242-20032-1-git-send-email-michal.kazior@tieto.com>
+	    <1340718188.14634.47.camel@jlt3.sipsolutions.net>
+	    <4FEAB698.5070309@tieto.com>
+	   <1340784614.8305.8.camel@jlt3.sipsolutions.net>
+	   <4FEADCAE.5080508@tieto.com>
+	  <1340795424.11012.11.camel@jlt3.sipsolutions.net>
+	  <4FEAFFF1.7080706@tieto.com>
+	 <1340805730.11012.33.camel@jlt3.sipsolutions.net>
+	 <4FEBF3D4.3030705@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2012-06-28 at 08:04 +0200, Michal Kazior wrote:
 
-Two instances of CONFIG_MAC80211_VERBOSE_DEBUG
-should be different, fix them.
+> > In any case, I think you're turning it upside down. I think we should
+> > get rid of local->oper_channel(_type) completely, and instead use the
+> > channel contexts in mac80211 everywhere. If the driver doesn't implement
+> > channel contexts it can only support a single channel. Thus, we can have
+> > at most one channel context, so whenever a new context is added (there
+> > could be zero) or any context is modified (the only one) we can set
+> > hw.conf.channel and call hw_config() with the CHANNEL_CHANGE flag.
+> >
+> > IOW, nothing in mac80211 would ever call hw_config() for the channel or
+> > channel type change, it would all do channel contexts, but the channel
+> > context code would see that if the driver doesn't support channel
+> > contexts
+> >   1) there will be at most one context in mac80211
+> >   2) this context is programmed into the device by using hw_config()
+> >      instead of the context callbacks
+> 
+> Yes, this is more or less what I also had in mind. I was just thinking 
+> about solving the issue of channel context and hw.conf.channel 
+> consistency. If we switch a channel we either modify channel in channel 
+> context directly (violating the immutability of channel contexts) or we 
+> iterate and re-set the new channel on each interface (because 
+> single-channel drivers may still have multiple interfaces and we 
+> probably want to use sdata->vif.chanctx_conf->channel instead of 
+> hw.conf.channel inside mac80211).
+> 
+> Now that I think about it I guess violating the immutability for the 
+> single-channel case is okay. It would greatly simplify the code and we'd 
+> just put a comment down in hw_config where the only violation would occur.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c   |    2 +-
- net/mac80211/status.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+I'm not sure why we would violate it? The way I see it, you'd never
+change the channel context channel since internally in mac80211 you'd
+never want to see a different channel, just like today we use
+local->oper_channel everywhere we'd then use sdata->vif.chanctx->channel
+throughout, right?
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index ff46ff4..8931110 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -261,7 +261,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
- 
- 	memcpy(addr, sta->sta.addr, ETH_ALEN);
- 
--#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
- 	wiphy_debug(sdata->local->hw.wiphy,
- 		    "Adding new IBSS station %pM (dev=%s)\n",
- 		    addr, sdata->name);
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 6b4f425..51a6d1e 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -155,7 +155,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
- 		return;
- 	}
- 
--#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	if (net_ratelimit())
- 		wiphy_debug(local->hw.wiphy,
- 			    "dropped TX filtered frame, queue_len=%d PS=%d @%lu\n",
--- 
-1.7.10
+I think the only thing we need to do is put something like this into
+hw_config:
+
+ if (local->tmp_channel) {
+    local->hw.conf.channel = local->tmp_channel;
+    ...
+ } else {
+    local->hw.conf.channel = chanctx->channel;
+ }
+
+No?
+
+johannes
 
