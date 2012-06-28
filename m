@@ -1,100 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756895Ab2FENyi (ORCPT
+Received: from mail-forward2.uio.no ([129.240.10.71]:41928 "EHLO
+	mail-forward2.uio.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754214Ab2F1Pmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 09:54:38 -0400
-Message-ID: <1338904477.4514.46.camel@jlt3.sipsolutions.net> (sfid-20120605_155441_808766_F14DC0C8)
-Subject: [PATCH 3.5] iwlwifi: use correct supported firmware for 6035 and
- 6000g2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 05 Jun 2012 15:54:37 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 Jun 2012 11:42:35 -0400
+Received: from exim by mail-out2.uio.no with local-bsmtp (Exim 4.75)
+	(envelope-from <Jon.Wikne@cern.ch>)
+	id 1SkGra-0000pt-5s
+	for linux-wireless@vger.kernel.org; Thu, 28 Jun 2012 17:42:34 +0200
+Message-ID: <4FEC7B66.5060409@cern.ch> (sfid-20120628_174238_703886_D8BCB6B0)
+Date: Thu, 28 Jun 2012 17:42:30 +0200
+From: Jon Wikne <Jon.Wikne@cern.ch>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Mysterious hangs - cfg80211 - ath9k
+References: <4FE03291.5030202@cern.ch> <CAD2nsn1U0UHjrDp7vh7rfvTP=BLB3FA+zLV9sgt1_T7gVvAYgg@mail.gmail.com> <4FE0CA6C.3080002@cern.ch> <4FEC6447.7010007@cern.ch> <CAD2nsn3L6K6obTzpvnjetrWuGk+e+nKV=RsdQfYk3iVCsej66Q@mail.gmail.com>
+In-Reply-To: <CAD2nsn3L6K6obTzpvnjetrWuGk+e+nKV=RsdQfYk3iVCsej66Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+On 06/28/2012 04:22 PM, Mohammed Shafi wrote:
+> Hi,
+>
+> On Thu, Jun 28, 2012 at 7:33 PM, Jon Wikne<Jon.Wikne@cern.ch>  wrote:
+>> On 06/19/2012 08:52 PM, Jon Wikne wrote:
+>>>
+>>> On 06/19/2012 11:39 AM, Mohammed Shafi wrote:
+>>>>
+>>>> On Tue, Jun 19, 2012 at 1:34 PM, Jon Wikne<Jon.Wikne@cern.ch>  wrote:
+>>>>>
+>>>>> Hi List,
+>>>>>
+>>>>> I am experiencing a puzzling problem with WLAN on a Toshiba Qosmio
+>>>>> F750 laptop, running CERN SLC 5.8 (mostly identical to RHEL 5.8),
+>>>>> but with kernel 2.6.39.4. (The kernel that came with the distro did
+>>>>> not work properly with WLAN on this machine at all.)
+>>>>
+>>>>
+>>>> please quickly try
+>>>>
+>>>> http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
+>>>
+>>>
+>>> I tried to install compat-wireless-2012-05-10. It worked for 4½ hours,
+>>> then same problem.
+>>>
+>>> Maybe there is something wrong with my understanding here, but I do not
+>>> see why the "cfg80211: Calling CRDA to update world regulatory domain"
+>>> should occur hours after the connection has been established, and what
+>>> triggers it, apparently at random....
+>>>
+>>>> or the latest wireless testing tree
+>>>>
+>>>> http://linuxwireless.org/en/developers/Documentation/git-guide#Cloning_latest_wireless-testing
+>>>
+>>>
+>>> Is there a reason to believe it could make a difference if I try
+>>> this too?
+>>
+>>
+>> Now I downloaded this (more than 1GB), just to realize that it is a
+>> complete kernel tree for kernel 3.5.0-rc3. I don't really feel ready
+>> for an experimental upgrade from 2.6.39.4 to that right now....
+>>
+>> With basis in compat-wireless-2012-05-10 I tried to comment out the
+>> call to call_crda in net/wireless/reg.c and return -EALREADY in line
+>> 1483, just to see if that circumvented the problem. It did not. The
+>> damage (whatever that might be) already seems to be done _before_ the
+>> call_crda is made in reg.c.
+>>
+>> I am a bit at a loss as to how to proceed. There are several things
+>> i do not understand.
+>>
+>> 1) The call to update CRDA (even with my crude, experimental, dummy
+>> return) seems to cause no trouble when it is done the first time
+>> the line comes up. Could someone please explain to me what causes
+>> the subsequent calls at highly irregular intervals, and why that
+>> seems to be necessary or desirable?
+>>
+>> 2) Is this a known problem that is being worked on (in which case I
+>> will just shut up and wait), or am I the first to report it?
+>>
+>> Thanks in advance for any further info or suggestions.
+>
+> please provide the complete log.
 
-My patch
+There is nothing relevant in the regular logs apart from lines like
+these:
 
-   iwlwifi: use correct released ucode version
+Jun 20 17:11:09 redcat kernel: cfg80211: Calling CRDA to update world 
+regulatory domain
+Jun 20 17:11:09 redcat kernel: ath9k 0000:03:00.0: PCI INT A -> GSI 18 
+(level, low) -> IRQ 18
 
-did not correctly report supported firmware
-for the 6035 device. This patch fixes it. The
-minimum supported firmware version for 6035
-is v6.
+when the WLAN comes up normally, and and an additional line like this:
 
-Also correct the minimum supported firmware
-version for the 6000g2 series of devices.
+Jun 20 17:42:32 redcat kernel: cfg80211: Calling CRDA to update world 
+regulatory domain
 
-Cc: stable@kernel.org
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c |   25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+when it fails / hangs at some unpredictable point in time later.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 19f7ee8..055a96d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -35,17 +35,20 @@
- #define IWL6000_UCODE_API_MAX 6
- #define IWL6050_UCODE_API_MAX 5
- #define IWL6000G2_UCODE_API_MAX 6
-+#define IWL6035_UCODE_API_MAX 6
- 
- /* Oldest version we won't warn about */
- #define IWL6000_UCODE_API_OK 4
- #define IWL6000G2_UCODE_API_OK 5
- #define IWL6050_UCODE_API_OK 5
- #define IWL6000G2B_UCODE_API_OK 6
-+#define IWL6035_UCODE_API_OK 6
- 
- /* Lowest firmware API version supported */
- #define IWL6000_UCODE_API_MIN 4
- #define IWL6050_UCODE_API_MIN 4
--#define IWL6000G2_UCODE_API_MIN 4
-+#define IWL6000G2_UCODE_API_MIN 5
-+#define IWL6035_UCODE_API_MIN 6
- 
- /* EEPROM versions */
- #define EEPROM_6000_TX_POWER_VERSION	(4)
-@@ -227,9 +230,27 @@ const struct iwl_cfg iwl6030_2bg_cfg = {
- 	IWL_DEVICE_6030,
- };
- 
-+#define IWL_DEVICE_6035						\
-+	.fw_name_pre = IWL6030_FW_PRE,				\
-+	.ucode_api_max = IWL6035_UCODE_API_MAX,			\
-+	.ucode_api_ok = IWL6035_UCODE_API_OK,			\
-+	.ucode_api_min = IWL6035_UCODE_API_MIN,			\
-+	.device_family = IWL_DEVICE_FAMILY_6030,		\
-+	.max_inst_size = IWL60_RTC_INST_SIZE,			\
-+	.max_data_size = IWL60_RTC_DATA_SIZE,			\
-+	.eeprom_ver = EEPROM_6030_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
-+	.base_params = &iwl6000_g2_base_params,			\
-+	.bt_params = &iwl6000_bt_params,			\
-+	.eeprom_params = &iwl6000_eeprom_params,		\
-+	.need_temp_offset_calib = true,				\
-+	.led_mode = IWL_LED_RF_STATE,				\
-+	.adv_pm = true						\
-+
-+
- const struct iwl_cfg iwl6035_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6235 AGN",
--	IWL_DEVICE_6030,
-+	IWL_DEVICE_6035,
- 	.ht_params = &iwl6000_ht_params,
- };
- 
--- 
-1.7.10
+> you can also enable ath9k debugging.
+> sudo modprobe -v ath9k debug=0x601
+> http://linuxwireless.org/en/users/Drivers/ath9k/debug
+> so you need to bring the interface up/down to make it working right ?
 
+OK, done. I don't know when the error might reappear, but I will copy
+the /sys/kernel/debug/ieee80211/phy0/ tree and put on some server for
+forensics when it does. There is a lot of info there which I do not
+know how to interpret.
 
+Regards,
+-- Jon
 
