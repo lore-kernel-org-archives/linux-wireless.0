@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54212 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000Ab2FKVo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 17:44:56 -0400
-Message-ID: <4FD666D0.5020306@hauke-m.de> (sfid-20120611_234459_491593_265E7E05)
-Date: Mon, 11 Jun 2012 23:44:48 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
+Received: from hub022-nj-1.exch022.serverdata.net ([206.225.164.184]:31936
+	"EHLO HUB022-nj-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752863Ab2F1M4S convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 08:56:18 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
 To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] brcmsmac: extend xmtfifo_sz array
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de> <1338937641-8519-15-git-send-email-hauke@hauke-m.de> <4FCF2FD4.6010103@broadcom.com> <4FD0AD96.1050500@hauke-m.de> <4FD0FF3D.2060805@broadcom.com> <4FD49CC1.6030704@hauke-m.de> <4FD5A54C.9060403@broadcom.com>
-In-Reply-To: <4FD5A54C.9060403@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] cfg80211/mac80211: 802.11ac changes
+Date: Thu, 28 Jun 2012 12:56:17 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D616F@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120628_145621_594161_86A83E7A)
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local>,<1340881646.4491.41.camel@jlt3.sipsolutions.net>
+ <952C5D5D0470AE4FB7D8A75C6ADC71CA0D612F@mbx022-e1-nj-10.exch022.domain.local>,<4FEC53DE.70602@broadcom.com>
+In-Reply-To: <4FEC53DE.70602@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/11/2012 09:59 AM, Arend van Spriel wrote:
-> On 06/10/2012 03:10 PM, Hauke Mehrtens wrote:
->> On 06/07/2012 09:21 PM, Arend van Spriel wrote:
->>> I dived into this and basically there is no correlation to the phy type.
->>> There are chips with same 80211 core rev and different phy type as there
->>> are chips with different 80211 core rev and the same phy type.
->>>
->>> Gr. AvS
->>
->> Hi Arend,
->>
->> Ok, then I will leave it based on the core rev like it is now. Are the
->> values I added there for core rev 17 and 28 correct? They are just
->> copied from the other phy-n device which has the same values set after
->> powering up and before they are explicitly set. The core rev 17 device
->> is working for me, but the core rev 28 is not, but I do not know why. I
->> was unable to find these values in b43 or the spec b43 is based on.
->>
->> Hauke
->>
-> 
-> Dug up the values and for corerev 17 they are fine, but corerev 28 has
-> different values:
-> 
-> { 9, 58, 22, 14, 14, 5 },       /* corerev 28 */
-> 
-> Gr. AvS
-> 
-Thanks for the values, I will change them.
+________________________________________
+From: Arend van Spriel [arend@broadcom.com]
+Sent: Thursday, June 28, 2012 6:23 PM
+To: Mahesh Palivela
+Cc: Johannes Berg; linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211/mac80211: 802.11ac changes
 
-Hauke
+On 06/28/2012 02:39 PM, Mahesh Palivela wrote:
+> ________________________________________
+> From: Johannes Berg [johannes@sipsolutions.net]
+> Sent: Thursday, June 28, 2012 4:37 PM
+> To: Mahesh Palivela
+> Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] cfg80211/mac80211: 802.11ac changes
+>
+>>
+>> +     if (sband->vht_cap.vht_supported)
+>> +             pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
+>> +                                             sband->vht_cap.cap);
+>
+> indentation
+>
+> [MP] sorry. I didn't get. Is it sband-> line to be moved left? But previous build_ht_cap() has similar indentation
+>
+
+'sband->' should start at same column as 'pos' in the above line. Must
+be tabs followed by right amount of spaces (being less than 8).
+
+>>       return pos - buffer;
+>>  }
+>>
+>> @@ -1696,6 +1700,27 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+>>       return pos;
+>>  }
+>>
+>> +u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+>> +                           u32 cap)
+>
+> indentation here & in ieee80211_i.h
+>
+> [MP] ditto. please explain
+>
+
+'u32' should start at same column as 'u8 *pos' in the above line.
+
+Gr. AvS
+
+Thank you Arend. I will make those changes.
+
+Mahesh
