@@ -1,50 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59284 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516Ab2FYRdQ (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:39107 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123Ab2F1FJm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 13:33:16 -0400
-Received: by bkcji2 with SMTP id ji2so3410123bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2012 10:33:15 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Michal Kudelski" <michal@idsia.ch>
-Subject: Re: carl9170 driver - reducing the output power
-Date: Mon, 25 Jun 2012 19:33:10 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <web-69364863@ti-edu.ch>
-In-Reply-To: <web-69364863@ti-edu.ch>
+	Thu, 28 Jun 2012 01:09:42 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201206251933.10999.chunkeey@googlemail.com> (sfid-20120625_193319_861957_768E964E)
+In-Reply-To: <1340824779-5157-1-git-send-email-asido4@gmail.com>
+References: <1340824779-5157-1-git-send-email-asido4@gmail.com>
+Date: Thu, 28 Jun 2012 10:39:41 +0530
+Message-ID: <CAD2nsn3Kt49mkkE99+8u5AzN+pSw8ktr7ABx3-B74qvQ9VSpWg@mail.gmail.com> (sfid-20120628_070947_079101_800D38E9)
+Subject: Re: [PATCH] Build fix in drivers/net/wireless/ath/ath9k/main.c
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Arvydas Sidorenko <asido4@gmail.com>
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, June 25, 2012 12:38:50 PM Michal Kudelski wrote:
-> Thus, my question is: is the function of changing the 
-> txpower really supported? If it is, what steps should I 
-> take to make it work? I tried with ifconfig up/down when I 
-> change the txpower, but it does not change anything. Maybe 
-> I do something wrong? Do I use the correct versions of the 
-> firmware and the driver?
-No special firmware or driver is required. Just as long
-as the driver supports the feature.  
+Hi,
 
-> I've noticed a patch related to this issue, published on 
-> 2012-01-27 by Christian Lamparter. It seems that it is 
-> included in my driver version, but maybe I'm wrong and I 
-> should apply some additional patch?
-> 
-> We use NetGear WNDA3100(v1) hardware [Atheros 
-> AR9001U-(2)NG] and carl9170 driver 
-> (driverversion=3.0.0-21-generic firmware=1.9.2).
-That's probably too old. The patch you are talking about
-is not a -stable patch so it's not backported to 3.3.x
-(or older) kernels.
+On Thu, Jun 28, 2012 at 12:49 AM, Arvydas Sidorenko <asido4@gmail.com> wrote:
+> Commit fad29cd2f59949581050a937786c2c9bc78b2f04 broke the build if
+> no CONFIG_ATH9K_BTCOEX_SUPPORT is enabled.
+>
+> Signed-off-by: Arvydas Sidorenko <asido4@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index c14cf5a..e4e73f0 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -151,8 +151,10 @@ static void __ath_cancel_work(struct ath_softc *sc)
+>        cancel_delayed_work_sync(&sc->tx_complete_work);
+>        cancel_delayed_work_sync(&sc->hw_pll_work);
+>
+> +#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+>        if (ath9k_hw_mci_is_enabled(sc->sc_ah))
+>                cancel_work_sync(&sc->mci_work);
+> +#endif
+>  }
+>
+>  static void ath_cancel_work(struct ath_softc *sc)
+> --
+> 1.7.8.6
 
-So, either you can upgrade to 3.4, use compat-wireless
-<http://linuxwireless.org/en/users/Download/#Getting_compat-wireless_on_Ubuntu>
-or backport the patch yourself (however, this could be diffcult).
+thanks for the patch, but it was just sent some time back
+http://www.spinics.net/lists/linux-wireless/msg93078.html
 
-Regards,
-	Christian
+
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+thanks,
+shafi
