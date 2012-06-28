@@ -1,61 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:53432 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995Ab2F1Usn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 16:48:43 -0400
-Received: by werb14 with SMTP id b14so701411wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 13:48:42 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932875Ab2F1KHa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:30 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 13/13] cfg80211: respect iface combinations when starting operation
+Date: Thu, 28 Jun 2012 12:07:05 +0200
+Message-ID: <1340878025-2695-14-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120734_731781_A78DA75D)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <1340913949.2602.27.camel@joe2Laptop>
-References: <1340912688-3089-1-git-send-email-zajec5@gmail.com>
-	<1340912894.5257.0.camel@jlt3.sipsolutions.net>
-	<CACna6rwXrspQ_PDfwZbL7jk=hZ6EmhCnebLcp82LaC4T-Khscw@mail.gmail.com>
-	<1340913949.2602.27.camel@joe2Laptop>
-Date: Thu, 28 Jun 2012 22:48:38 +0200
-Message-ID: <CACna6ryT5x5GtDpxb=ukQMhhSTt4CB9AnbYvsFyX566KUjBKEw@mail.gmail.com> (sfid-20120628_224921_237409_F73C1E83)
-Subject: Re: [PATCH option A] bcma: use custom printing functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/6/28 Joe Perches <joe@perches.com>:
-> I think it'd be better to add and use:
->
-> #define bcma_bus_err(bus, fmt, ...)                             \
->        pr_err("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
->
-> #define bcma_bus_info(bus, fmt, ...)                            \
->        pr_info("bus %d: " fmt, (bus)->num, ##__VA_ARGS__)
->
-> or some other equivalent use if you're wedded
-> to wanting "bcma-%d:" prefixed output.
->
-> I'd rather have the prefix be something like "bcma: <bus#>: ",
-> so a dmesg grep pattern can be "^bcma:" but hey, it ain't my code.
+devlist_mtx locking is changed to accomodate changes.
 
-It doesn't seem to be sth common to have grep-pable "bcma:". Some examples:
-pci_root PNP0A08:00: host bridge window [mem 0x000d8000-0x000dbfff]
-pci 0000:00:01.0: [8086:2a41] type 1 class 0x000604
-pnp 00:00: [bus 00-ff]
-system 00:03: [mem 0xfed00000-0xfed003ff] has been reserved
-pci_bus 0000:0a: resource 5 [io  0x0d00-0xffff]
-ahci 0000:00:1f.2: version 3.0
-scsi0 : ahci
-scsi1 : ahci
-usb 2-6: New USB device found, idVendor=054c, idProduct=0377
-sky2 0000:08:00.0: Yukon-2 EC Ultra chip revision 3
-iwlagn 0000:06:00.0: HW Revision ID = 0x0
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/core.c    |    2 ++
+ net/wireless/ibss.c    |   10 ++++++++++
+ net/wireless/mesh.c    |   12 ++++++++++++
+ net/wireless/mlme.c    |   16 ++++++++++++++++
+ net/wireless/nl80211.c |    8 ++++++++
+ net/wireless/util.c    |    9 ++++-----
+ 6 files changed, 52 insertions(+), 5 deletions(-)
 
-My decision will be to use
-bcma 0:
-bcma 1:
-bcma 2:
-etc. That will be the most compatible solution with the rest of the kernel.
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 2fed61b..5752067 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1049,7 +1049,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			return notifier_from_errno(-EOPNOTSUPP);
+ 		if (rfkill_blocked(rdev->rfkill))
+ 			return notifier_from_errno(-ERFKILL);
++		mutex_lock(&rdev->devlist_mtx);
+ 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
++		mutex_unlock(&rdev->devlist_mtx);
+ 		if (ret)
+ 			return notifier_from_errno(ret);
+ 		cfg80211_lock_rdev(rdev);
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index b90fd86..ca5672f 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -118,6 +118,16 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 	wdev->wext.ibss.channel = params->channel;
+ #endif
+ 	wdev->sme_state = CFG80211_SME_CONNECTING;
++
++	err = cfg80211_can_use_chan(rdev, wdev, params->channel,
++				    params->channel_fixed
++				    ? CHAN_MODE_SHARED
++				    : CHAN_MODE_EXCLUSIVE);
++	if (err) {
++		wdev->connect_keys = NULL;
++		return err;
++	}
++
+ 	err = rdev->ops->join_ibss(&rdev->wiphy, dev, params);
+ 	if (err) {
+ 		wdev->connect_keys = NULL;
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 4f218c1..97f6c41 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -149,6 +149,11 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 					  setup->channel_type))
+ 		return -EINVAL;
+ 
++	err = cfg80211_can_use_chan(rdev, wdev, setup->channel,
++				    CHAN_MODE_SHARED);
++	if (err)
++		return err;
++
+ 	err = rdev->ops->join_mesh(&rdev->wiphy, dev, conf, setup);
+ 	if (!err) {
+ 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
+@@ -167,9 +172,11 @@ int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
++	mutex_lock(&rdev->devlist_mtx);
+ 	wdev_lock(wdev);
+ 	err = __cfg80211_join_mesh(rdev, dev, setup, conf);
+ 	wdev_unlock(wdev);
++	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	return err;
+ }
+@@ -202,6 +209,11 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
+ 		if (!netif_running(wdev->netdev))
+ 			return -ENETDOWN;
+ 
++		err = cfg80211_can_use_chan(rdev, wdev, channel,
++					    CHAN_MODE_SHARED);
++		if (err)
++			return err;
++
+ 		err = rdev->ops->libertas_set_mesh_channel(&rdev->wiphy,
+ 							   wdev->netdev,
+ 							   channel);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index a7882eb..d4fece3 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -302,8 +302,14 @@ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	if (!req.bss)
+ 		return -ENOENT;
+ 
++	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
++				    CHAN_MODE_SHARED);
++	if (err)
++		goto out;
++
+ 	err = rdev->ops->auth(&rdev->wiphy, dev, &req);
+ 
++out:
+ 	cfg80211_put_bss(req.bss);
+ 	return err;
+ }
+@@ -317,11 +323,13 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ {
+ 	int err;
+ 
++	mutex_lock(&rdev->devlist_mtx);
+ 	wdev_lock(dev->ieee80211_ptr);
+ 	err = __cfg80211_mlme_auth(rdev, dev, chan, auth_type, bssid,
+ 				   ssid, ssid_len, ie, ie_len,
+ 				   key, key_len, key_idx);
+ 	wdev_unlock(dev->ieee80211_ptr);
++	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	return err;
+ }
+@@ -397,8 +405,14 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 		return -ENOENT;
+ 	}
+ 
++	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
++				    CHAN_MODE_SHARED);
++	if (err)
++		goto out;
++
+ 	err = rdev->ops->assoc(&rdev->wiphy, dev, &req);
+ 
++out:
+ 	if (err) {
+ 		if (was_connected)
+ 			wdev->sme_state = CFG80211_SME_CONNECTED;
+@@ -421,11 +435,13 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
++	mutex_lock(&rdev->devlist_mtx);
+ 	wdev_lock(wdev);
+ 	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+ 				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
+ 				    assoc_flags, ht_capa, ht_capa_mask);
+ 	wdev_unlock(wdev);
++	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	return err;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6773488..f316c22 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2350,6 +2350,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 					  params.channel_type))
+ 		return -EINVAL;
+ 
++	mutex_lock(&rdev->devlist_mtx);
++	err = cfg80211_can_use_chan(rdev, wdev, params.channel,
++				    CHAN_MODE_SHARED);
++	mutex_unlock(&rdev->devlist_mtx);
++
++	if (err)
++		return err;
++
+ 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
+ 	if (!err) {
+ 		wdev->beacon_interval = params.beacon_interval;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 4713cea..a9260ac 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -805,8 +805,10 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 		return -EBUSY;
+ 
+ 	if (ntype != otype && netif_running(dev)) {
++		mutex_lock(&rdev->devlist_mtx);
+ 		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
+ 						    ntype);
++		mutex_unlock(&rdev->devlist_mtx);
+ 		if (err)
+ 			return err;
+ 
+@@ -956,6 +958,7 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	int i, j;
+ 
+ 	ASSERT_RTNL();
++	lockdep_assert_held(&rdev->devlist_mtx);
+ 
+ 	/* Always allow software iftypes */
+ 	if (rdev->wiphy.software_iftypes & BIT(iftype))
+@@ -979,7 +982,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	}
+ 
+-	mutex_lock(&rdev->devlist_mtx);
+ 	list_for_each_entry(wdev_iter, &rdev->netdev_list, list) {
+ 		if (wdev_iter == wdev)
+ 			continue;
+@@ -999,10 +1001,8 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				if (!used_channels[i] || used_channels[i] == ch)
+ 					break;
+ 
+-			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS) {
+-				mutex_unlock(&rdev->devlist_mtx);
++			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS)
+ 				return -EBUSY;
+-			}
+ 
+ 			if (used_channels[i] == NULL) {
+ 				used_channels[i] = ch;
+@@ -1018,7 +1018,6 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 		total++;
+ 		used_iftypes |= BIT(wdev_iter->iftype);
+ 	}
+-	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	if (total == 1)
+ 		return 0;
 -- 
-Rafał
+1.7.0.4
+
