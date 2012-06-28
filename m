@@ -1,46 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:54613 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757061Ab2FTQvu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 12:51:50 -0400
-Received: by lbol5 with SMTP id l5so928090lbo.34
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2012 09:51:47 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:57919 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932738Ab2F1KHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 06:07:24 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 05/13] cfg80211: introduce cfg80211_get_chan_state
+Date: Thu, 28 Jun 2012 12:06:57 +0200
+Message-ID: <1340878025-2695-6-git-send-email-michal.kazior@tieto.com> (sfid-20120628_120730_550201_E638C359)
+In-Reply-To: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
+References: <1340878025-2695-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <1340194066.1631.229.camel@cumari.coelho.fi>
-References: <1340030798-28992-1-git-send-email-victorg@ti.com>
-	<4FE1A734.4090100@neratec.com>
-	<CAK80WHbJZMsoV625hT_sQaEvVx3A5XC8M7PH6KfjdCx=MhdtEw@mail.gmail.com>
-	<1340189345.4655.56.camel@jlt3.sipsolutions.net>
-	<CAK80WHbX795ewfKTqFe8D19w3g1mkvni-fX+Et98guC54kD8RQ@mail.gmail.com>
-	<1340193834.1631.227.camel@cumari.coelho.fi>
-	<1340194066.1631.229.camel@cumari.coelho.fi>
-Date: Wed, 20 Jun 2012 19:44:16 +0300
-Message-ID: <CAK80WHZFawN8g7BLKsk0TH1-JMGdoNwy0w9-awPYLUGig-rJBw@mail.gmail.com> (sfid-20120620_185154_908093_33307C7B)
-Subject: Re: [PATCH 0/7] nl/cfg/mac80211: add DFS master ability
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
-	assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 20, 2012 at 3:07 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Wed, 2012-06-20 at 15:03 +0300, Luciano Coelho wrote:
->> I guess the best thing to do is to keep basing mac80211 patches on top
->> of linux-wireless.
->
-> I meant wireless-testing, of course.  (thanks Johannes for pointing
-> out ;)
->
+Helper function for finding out which channel is
+used by a given interface.
 
-I will rebase to that one, thanks Luca.
+An exclusive channel can be used only by a single
+interface. This is mainly for non-fixed channel
+IBSS handling.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/chan.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/core.h |   12 ++++++++++++
+ 2 files changed, 63 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index c1999e4..167e7cb 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -92,3 +92,54 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 
+ 	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
+ }
++
++void
++cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
++		        struct wireless_dev *wdev,
++		        struct ieee80211_channel **chan,
++		        enum cfg80211_chan_mode *chanmode)
++{
++	*chan = NULL;
++	*chanmode = CHAN_MODE_UNDEFINED;
++
++	ASSERT_RDEV_LOCK(rdev);
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (!netif_running(wdev->netdev))
++		return;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_ADHOC:
++		if (wdev->current_bss) {
++			*chan = wdev->current_bss->pub.channel;
++			*chanmode = wdev->ibss_fixed
++				  ? CHAN_MODE_SHARED
++				  : CHAN_MODE_EXCLUSIVE;
++			return;
++		}
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++		if (wdev->current_bss) {
++			*chan = wdev->current_bss->pub.channel;
++			*chanmode = CHAN_MODE_SHARED;
++			return;
++		}
++		break;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++	case NL80211_IFTYPE_MESH_POINT:
++		*chan = wdev->channel;
++		*chanmode = CHAN_MODE_SHARED;
++		return;
++	case NL80211_IFTYPE_MONITOR:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_WDS:
++		/* these interface types don't really have a channel */
++		return;
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NUM_NL80211_IFTYPES:
++		WARN_ON(1);
++	}
++
++	return;
++}
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index a366ffd..bbf2f75 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -267,6 +267,12 @@ struct cfg80211_cached_keys {
+ 	int def, defmgmt;
+ };
+ 
++enum cfg80211_chan_mode {
++	CHAN_MODE_UNDEFINED,
++	CHAN_MODE_SHARED,
++	CHAN_MODE_EXCLUSIVE,
++};
++
+ 
+ /* free object */
+ extern void cfg80211_dev_free(struct cfg80211_registered_device *rdev);
+@@ -445,6 +451,12 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+ 	return cfg80211_can_change_interface(rdev, NULL, iftype);
+ }
+ 
++void
++cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
++		        struct wireless_dev *wdev,
++		        struct ieee80211_channel **chan,
++		        enum cfg80211_chan_mode *chanmode);
++
+ struct ieee80211_channel *
+ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 		  int freq, enum nl80211_channel_type channel_type);
 -- 
-Victor.
+1.7.0.4
+
