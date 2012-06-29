@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:55245 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750886Ab2FMFxw (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:45795 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753788Ab2F2BFU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 01:53:52 -0400
-Received: by obbtb18 with SMTP id tb18so379380obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2012 22:53:52 -0700 (PDT)
+	Thu, 28 Jun 2012 21:05:20 -0400
+Received: by lbbgm6 with SMTP id gm6so3891136lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 18:05:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1339566003.4519.1.camel@jlt3.sipsolutions.net>
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
-	<1339566003.4519.1.camel@jlt3.sipsolutions.net>
-Date: Wed, 13 Jun 2012 07:53:51 +0200
-Message-ID: <CAOpc7mEZ3Wd2JajqTpj+tZXVyE_QC1=xS3gXF9eFjmCdTu8Xug@mail.gmail.com> (sfid-20120613_075355_808318_C4E4BED0)
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
-	kvalo@qca.qualcomm.com, ath6kl-devel@qualcomm.com,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1340926085-54416-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1340926085-54416-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 29 Jun 2012 11:04:59 +1000
+Message-ID: <CAGRGNgXCoQNYbs7MVtEsDdoPUgvV+JDP28tCbKWG2cBHcJ60kQ@mail.gmail.com> (sfid-20120629_030524_096117_BFA2E1E4)
+Subject: Re: [PATCH] mac80211: correct size the argument to kzalloc in minstrel_ht
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-@NL80211_ATTR_SCHED_SCAN_MATCH_RSSI
+Hi Thomas,
 
-I'd also move around "SCHED" and "ATTR". Look at the attribute names
-above or below it, then it's more obvious:
+On Fri, Jun 29, 2012 at 9:28 AM, Thomas Huehn
+<thomas@net.t-labs.tu-berlin.de> wrote:
+> msp has type struct minstrel_ht_sta_priv not struct minstrel_ht_sta.
+>
+> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+> ---
+>  net/mac80211/rc80211_minstrel_ht.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 2d1acc6..dc2b801 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -809,7 +809,7 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+>                        max_rates = sband->n_bitrates;
+>        }
+>
+> -       msp = kzalloc(sizeof(struct minstrel_ht_sta), gfp);
+> +       msp = kzalloc(sizeof(struct minstrel_ht_sta_priv), gfp);
 
-NL80211_SCHED_SCAN_MATCH_ATTR_SSID
-NL80211_ATTR_SCHED_SCAN_MATCH_RSSI
-NL80211_SCHED_SCAN_MATCH_ATTR_MAX
+Why not use sizeof(*msp)?
+
+Thanks,
 
 -- 
-http://www.holgerschurig.de
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
