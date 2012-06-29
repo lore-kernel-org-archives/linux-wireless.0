@@ -1,110 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2160 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754110Ab2FKMiU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 08:38:20 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath9k: defer btcoex scheme update
-Date: Mon, 11 Jun 2012 18:09:13 +0530
-Message-ID: <1339418354-1843-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120611_143825_007906_1672ACD9)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:44567 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755710Ab2F2PYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 11:24:44 -0400
+Message-ID: <1340983483.6562.31.camel@joe2Laptop> (sfid-20120629_172448_598398_672DDCE8)
+Subject: Re: [PATCH v2] mac80211: correct size the argument to kzalloc in
+ minstrel_ht
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>, franzschrober@yahoo.de,
+	julian.calaby@gmail.com, nbd@openwrt.org
+Date: Fri, 29 Jun 2012 08:24:43 -0700
+In-Reply-To: <1340978200.4472.2.camel@jlt3.sipsolutions.net>
+References: <1340976387-80206-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1340978200.4472.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As btcoex scheme updation might sleep, remove the function call
-from tasklet context and queue it up as a separate work.
+On Fri, 2012-06-29 at 15:56 +0200, Johannes Berg wrote:
+> On Fri, 2012-06-29 at 06:26 -0700, Thomas Huehn wrote:
+[]
+> > diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+[]
+> > @@ -809,11 +809,11 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+> >  			max_rates = sband->n_bitrates;
+> >  	}
+> >  
+> > -	msp = kzalloc(sizeof(struct minstrel_ht_sta), gfp);
+> > +	msp = kzalloc(sizeof(*msp), gfp);
+> >  	if (!msp)
+> >  		return NULL;
+> >  
+> > -	msp->ratelist = kzalloc(sizeof(struct minstrel_rate) * max_rates, gfp);
+> > +	msp->ratelist = kzalloc(sizeof(*msp->ratelist) * max_rates, gfp);
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |    3 +++
- drivers/net/wireless/ath/ath9k/mci.c   |   14 +++++++++++---
- 3 files changed, 15 insertions(+), 3 deletions(-)
+trivia: this might be better as kcalloc
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 02fc1c1..a8c0500 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -698,6 +698,7 @@ struct ath_softc {
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	struct ath_btcoex btcoex;
- 	struct ath_mci_coex mci_coex;
-+	struct work_struct mci_work;
- #endif
- 
- 	struct ath_descdma txsdma;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e655f2a..c618414 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -188,6 +188,9 @@ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
- 
- 	ath9k_debug_samp_bb_mac(sc);
- 	ath9k_hw_disable_interrupts(ah);
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+	cancel_work_sync(&sc->mci_work);
-+#endif
- 
- 	if (!ath_stoprecv(sc))
- 		ret = false;
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 92d61cc..e53df86 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -52,7 +52,7 @@ static bool ath_mci_add_profile(struct ath_common *common,
- 	    (info->type != MCI_GPM_COEX_PROFILE_VOICE))
- 		return false;
- 
--	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
-+	entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
- 	if (!entry)
- 		return false;
- 
-@@ -219,6 +219,13 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- 	}
- }
- 
-+static void ath9k_mci_work(struct work_struct *work)
-+{
-+	struct ath_softc *sc = container_of(work, struct ath_softc, mci_work);
-+
-+	ath_mci_update_scheme(sc);
-+}
-+
- static void ath_mci_process_profile(struct ath_softc *sc,
- 				    struct ath_mci_profile_info *info)
- {
-@@ -249,7 +256,7 @@ static void ath_mci_process_profile(struct ath_softc *sc,
- 		btcoex->duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
- 	}
- 
--	ath_mci_update_scheme(sc);
-+	ieee80211_queue_work(sc->hw, &sc->mci_work);
- }
- 
- static void ath_mci_process_status(struct ath_softc *sc,
-@@ -283,7 +290,7 @@ static void ath_mci_process_status(struct ath_softc *sc,
- 	} while (++i < ATH_MCI_MAX_PROFILE);
- 
- 	if (old_num_mgmt != mci->num_mgmt)
--		ath_mci_update_scheme(sc);
-+		ieee80211_queue_work(sc->hw, &sc->mci_work);
- }
- 
- static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
-@@ -377,6 +384,7 @@ int ath_mci_setup(struct ath_softc *sc)
- 			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
- 			 mci->sched_buf.bf_paddr);
- 
-+	INIT_WORK(&sc->mci_work, ath9k_mci_work);
- 	ath_dbg(common, MCI, "MCI Initialized\n");
- 
- 	return 0;
--- 
-1.7.10.4
 
