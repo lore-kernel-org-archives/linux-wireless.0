@@ -1,108 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:60038 "HELO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757899Ab2FUC7F (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:35722 "HELO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754360Ab2F2DbG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 22:59:05 -0400
+	Thu, 28 Jun 2012 23:31:06 -0400
 From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
 	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
 	Kiran Divekar <dkiran@marvell.com>,
 	Yogesh Powar <yogeshp@marvell.com>,
-	Ying Luo <luoy@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.5] mwifiex: improve error path handling in usb.c
-Date: Wed, 20 Jun 2012 19:58:35 -0700
-Message-Id: <1340247517-4593-4-git-send-email-bzhao@marvell.com> (sfid-20120621_045910_771119_76433C88)
-In-Reply-To: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
-References: <1340247517-4593-1-git-send-email-bzhao@marvell.com>
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/6] mwifiex: separate IE parsing for Head/Tail IEs and beacon_ies etc
+Date: Thu, 28 Jun 2012 20:30:26 -0700
+Message-Id: <1340940630-27172-3-git-send-email-bzhao@marvell.com> (sfid-20120629_053119_848728_E3DEE265)
+In-Reply-To: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
+References: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Avinash Patil <patila@marvell.com>
 
-skb allocated during initialisation is reused for receiving
-commands/events by USB interface. We miss to reset skb->data in
-failure cases. This patch takes care of it.
+While Head/Tail IEs may contain RSN/WPA IEs which needs to be set
+for all mgmt subtypes, beacon_ies, probe_resp_ies, assoc_resp_ies
+are for specific mgmt subtypes. Move them to separate function.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/mwifiex/usb.c |   22 +++++++++++++++++-----
- 1 files changed, 17 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/ie.c |  119 ++++++++++++++++++++-----------------
+ 1 files changed, 65 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index e6d796f..22a5916 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -49,6 +49,7 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 	struct device *dev = adapter->dev;
- 	u32 recv_type;
- 	__le32 tmp;
-+	int ret;
- 
- 	if (adapter->hs_activated)
- 		mwifiex_process_hs_config(adapter);
-@@ -69,16 +70,19 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 		case MWIFIEX_USB_TYPE_CMD:
- 			if (skb->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
- 				dev_err(dev, "CMD: skb->len too large\n");
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			} else if (!adapter->curr_cmd) {
- 				dev_dbg(dev, "CMD: no curr_cmd\n");
- 				if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
- 					mwifiex_process_sleep_confirm_resp(
- 							adapter, skb->data,
- 							skb->len);
--					return 0;
-+					ret = 0;
-+					goto exit_restore_skb;
- 				}
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			}
- 
- 			adapter->curr_cmd->resp_skb = skb;
-@@ -87,7 +91,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 		case MWIFIEX_USB_TYPE_EVENT:
- 			if (skb->len < sizeof(u32)) {
- 				dev_err(dev, "EVENT: skb->len too small\n");
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			}
- 			skb_copy_from_linear_data(skb, &tmp, sizeof(u32));
- 			adapter->event_cause = le32_to_cpu(tmp);
-@@ -95,7 +100,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 
- 			if (skb->len > MAX_EVENT_SIZE) {
- 				dev_err(dev, "EVENT: event body too large\n");
--				return -1;
-+				ret = -1;
-+				goto exit_restore_skb;
- 			}
- 
- 			memcpy(adapter->event_body, skb->data +
-@@ -124,6 +130,12 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 	}
- 
- 	return -EINPROGRESS;
-+
-+exit_restore_skb:
-+	/* The buffer will be reused for further cmds/events */
-+	skb_push(skb, INTF_HEADER_LEN);
-+
-+	return ret;
+diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
+index 4a38fd8..018ae4a 100644
+--- a/drivers/net/wireless/mwifiex/ie.c
++++ b/drivers/net/wireless/mwifiex/ie.c
+@@ -217,62 +217,17 @@ mwifiex_update_uap_custom_ie(struct mwifiex_private *priv,
+ 	return ret;
  }
  
- static void mwifiex_usb_rx_complete(struct urb *urb)
+-/* This function parses different IEs- Tail IEs, beacon IEs, probe response IEs,
+- * association response IEs from cfg80211_ap_settings function and sets these IE
+- * to FW.
++/* This function parses beacon IEs, probe response IEs, association response IEs
++ * from cfg80211_ap_settings->beacon and sets these IE to FW.
+  */
+-int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+-			 struct cfg80211_beacon_data *data)
++static int mwifiex_set_mgmt_beacon_data_ies(struct mwifiex_private *priv,
++					    struct cfg80211_beacon_data *data)
+ {
+-	struct mwifiex_ie *beacon_ie = NULL, *pr_ie = NULL;
+-	struct mwifiex_ie *ar_ie = NULL, *gen_ie = NULL;
+-	struct ieee_types_header *rsn_ie = NULL, *wpa_ie = NULL;
++	struct mwifiex_ie *beacon_ie = NULL, *pr_ie = NULL, *ar_ie = NULL;
+ 	u16 beacon_idx = MWIFIEX_AUTO_IDX_MASK, pr_idx = MWIFIEX_AUTO_IDX_MASK;
+-	u16 ar_idx = MWIFIEX_AUTO_IDX_MASK, rsn_idx = MWIFIEX_AUTO_IDX_MASK;
+-	u16 mask, ie_len = 0;
+-	const u8 *vendor_ie;
++	u16 ar_idx = MWIFIEX_AUTO_IDX_MASK;
+ 	int ret = 0;
+ 
+-	if (data->tail && data->tail_len) {
+-		gen_ie = kzalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
+-		if (!gen_ie)
+-			return -ENOMEM;
+-		gen_ie->ie_index = cpu_to_le16(rsn_idx);
+-		mask = MGMT_MASK_BEACON | MGMT_MASK_PROBE_RESP |
+-		       MGMT_MASK_ASSOC_RESP;
+-		gen_ie->mgmt_subtype_mask = cpu_to_le16(mask);
+-
+-		rsn_ie = (void *)cfg80211_find_ie(WLAN_EID_RSN,
+-						  data->tail, data->tail_len);
+-		if (rsn_ie) {
+-			memcpy(gen_ie->ie_buffer, rsn_ie, rsn_ie->len + 2);
+-			ie_len = rsn_ie->len + 2;
+-			gen_ie->ie_length = cpu_to_le16(ie_len);
+-		}
+-
+-		vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+-						    WLAN_OUI_TYPE_MICROSOFT_WPA,
+-						    data->tail, data->tail_len);
+-		if (vendor_ie) {
+-			wpa_ie = (struct ieee_types_header *)vendor_ie;
+-			memcpy(gen_ie->ie_buffer + ie_len,
+-			       wpa_ie, wpa_ie->len + 2);
+-			ie_len += wpa_ie->len + 2;
+-			gen_ie->ie_length = cpu_to_le16(ie_len);
+-		}
+-
+-		if (rsn_ie || wpa_ie) {
+-			if (mwifiex_update_uap_custom_ie(priv, gen_ie, &rsn_idx,
+-							 NULL, NULL,
+-							 NULL, NULL)) {
+-				ret = -1;
+-				goto done;
+-			}
+-
+-			priv->rsn_idx = rsn_idx;
+-		}
+-	}
+-
+ 	if (data->beacon_ies && data->beacon_ies_len) {
+ 		beacon_ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
+ 		if (!beacon_ie) {
+@@ -309,8 +264,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+ 		}
+ 
+ 		ar_ie->ie_index = cpu_to_le16(ar_idx);
+-		mask = MGMT_MASK_ASSOC_RESP | MGMT_MASK_REASSOC_RESP;
+-		ar_ie->mgmt_subtype_mask = cpu_to_le16(mask);
++		ar_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_ASSOC_RESP |
++						       MGMT_MASK_REASSOC_RESP);
+ 		ar_ie->ie_length = cpu_to_le16(data->assocresp_ies_len);
+ 		memcpy(ar_ie->ie_buffer, data->assocresp_ies,
+ 		       data->assocresp_ies_len);
+@@ -332,11 +287,67 @@ done:
+ 	kfree(beacon_ie);
+ 	kfree(pr_ie);
+ 	kfree(ar_ie);
+-	kfree(gen_ie);
+ 
+ 	return ret;
+ }
+ 
++/* This function parses different IEs-tail IEs, beacon IEs, probe response IEs,
++ * association response IEs from cfg80211_ap_settings function and sets these IE
++ * to FW.
++ */
++int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
++			 struct cfg80211_beacon_data *info)
++{
++	struct mwifiex_ie *gen_ie;
++	struct ieee_types_header *rsn_ie, *wpa_ie = NULL;
++	u16 rsn_idx = MWIFIEX_AUTO_IDX_MASK, ie_len = 0;
++	const u8 *vendor_ie;
++
++	if (info->tail && info->tail_len) {
++		gen_ie = kzalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
++		if (!gen_ie)
++			return -ENOMEM;
++		gen_ie->ie_index = cpu_to_le16(rsn_idx);
++		gen_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_BEACON |
++							MGMT_MASK_PROBE_RESP |
++							MGMT_MASK_ASSOC_RESP);
++
++		rsn_ie = (void *)cfg80211_find_ie(WLAN_EID_RSN,
++						  info->tail, info->tail_len);
++		if (rsn_ie) {
++			memcpy(gen_ie->ie_buffer, rsn_ie, rsn_ie->len + 2);
++			ie_len = rsn_ie->len + 2;
++			gen_ie->ie_length = cpu_to_le16(ie_len);
++		}
++
++		vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++						    WLAN_OUI_TYPE_MICROSOFT_WPA,
++						    info->tail,
++						    info->tail_len);
++		if (vendor_ie) {
++			wpa_ie = (struct ieee_types_header *)vendor_ie;
++			memcpy(gen_ie->ie_buffer + ie_len,
++			       wpa_ie, wpa_ie->len + 2);
++			ie_len += wpa_ie->len + 2;
++			gen_ie->ie_length = cpu_to_le16(ie_len);
++		}
++
++		if (rsn_ie || wpa_ie) {
++			if (mwifiex_update_uap_custom_ie(priv, gen_ie, &rsn_idx,
++							 NULL, NULL,
++							 NULL, NULL)) {
++				kfree(gen_ie);
++				return -1;
++			}
++			priv->rsn_idx = rsn_idx;
++		}
++
++		kfree(gen_ie);
++	}
++
++	return mwifiex_set_mgmt_beacon_data_ies(priv, info);
++}
++
+ /* This function removes management IE set */
+ int mwifiex_del_mgmt_ies(struct mwifiex_private *priv)
+ {
 -- 
 1.7.0.2
 
