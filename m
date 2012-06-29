@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46362 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:50339 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757922Ab2FAHOB (ORCPT
+	with ESMTP id S1751812Ab2F2N4n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 03:14:01 -0400
-Message-ID: <1338534832.4884.7.camel@jlt3.sipsolutions.net> (sfid-20120601_091405_631576_0B8A3481)
-Subject: Re: [PATCH] ath9k: Fix a WARNING in suspend/resume with IBSS
+	Fri, 29 Jun 2012 09:56:43 -0400
+Message-ID: <1340978200.4472.2.camel@jlt3.sipsolutions.net> (sfid-20120629_155647_011809_A2E60DE4)
+Subject: Re: [PATCH v2] mac80211: correct size the argument to kzalloc in
+ minstrel_ht
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, stable@vger.kernel.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Date: Fri, 01 Jun 2012 09:13:52 +0200
-In-Reply-To: <4FC86AB4.9020602@qca.qualcomm.com>
-References: <1338532779-4621-1-git-send-email-mohammed@qca.qualcomm.com>
-		 (sfid-20120601_083956_399882_A3D65832) <1338533070.4884.4.camel@jlt3.sipsolutions.net>
-	 <4FC86AB4.9020602@qca.qualcomm.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>, franzschrober@yahoo.de,
+	julian.calaby@gmail.com, nbd@openwrt.org
+Date: Fri, 29 Jun 2012 15:56:40 +0200
+In-Reply-To: <1340976387-80206-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1340976387-80206-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-01 at 12:39 +0530, Mohammed Shafi Shajakhan wrote:
-> Hi Johannes,
+On Fri, 2012-06-29 at 06:26 -0700, Thomas Huehn wrote:
+> msp has type struct minstrel_ht_sta_priv not struct minstrel_ht_sta.
 > 
-> On Friday 01 June 2012 12:14 PM, Johannes Berg wrote:
-> > On Fri, 2012-06-01 at 12:09 +0530, Mohammed Shafi Shajakhan wrote:
-> >> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
-> >>
-> >> In ath9k we make sure the following two things
-> >> *if the first interface is ADHOC we cannot have any other interface.
-> >> *we cannot add an ADHOC interface if there is already an interface
-> >> is present.
-> >
-> >> -	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
-> >> -	    ((vif->type == NL80211_IFTYPE_ADHOC)&&
-> >> -	     sc->nvifs>  0)) {
-> >> -		ath_err(common, "Cannot create ADHOC interface when other"
-> >> -			" interfaces already exist.\n");
-> >> +	if ((ah->opmode == NL80211_IFTYPE_ADHOC)&&  (sc->nvifs>  0)) {
-> >> +		ath_err(common, "Cannot create any other interface when an ADHOC interface already exists.\n");
-> >> +		ret = -EINVAL;
-> >> +		goto out;
-> >> +	}
-> >> +
-> >> +	if ((vif->type == NL80211_IFTYPE_ADHOC)&&  (sc->nvifs>  0)) {
-> >> +		ath_err(common, "Cannot create ADHOC interface when other interfaces already exist.\n");
-> >
-> > You could just remove the entire check since the interface combinations
-> > you advertise don't allow it, I think? Or just fix those
-> > combinations :-)
+> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+I guess it worked anyway because the allocations are usually rounded up.
+
+> ---
+> Use suggested coding style. Thx to Schrober.
+> ---
+>  net/mac80211/rc80211_minstrel_ht.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> i did not check this before, thanks a lot for your inputs. will send a 
-> proper v2 after checking this out.
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 2d1acc6..1ca8f2b 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -809,11 +809,11 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+>  			max_rates = sband->n_bitrates;
+>  	}
+>  
+> -	msp = kzalloc(sizeof(struct minstrel_ht_sta), gfp);
+> +	msp = kzalloc(sizeof(*msp), gfp);
+>  	if (!msp)
+>  		return NULL;
+>  
+> -	msp->ratelist = kzalloc(sizeof(struct minstrel_rate) * max_rates, gfp);
+> +	msp->ratelist = kzalloc(sizeof(*msp->ratelist) * max_rates, gfp);
+>  	if (!msp->ratelist)
+>  		goto error;
+>  
 
-If this is needed for stable, you might want to keep this patch & send
-another one to remove it.
-
-johannes
 
