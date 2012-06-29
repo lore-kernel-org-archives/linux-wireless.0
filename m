@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52478 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52532 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752445Ab2F2XqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jun 2012 19:46:11 -0400
+	id S1755548Ab2F2XqV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 19:46:21 -0400
 From: Hauke Mehrtens <hauke@hauke-m.de>
 To: linville@tuxdriver.com
 Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
 	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
 	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 1/9] bcma: extend workaround for bcm4331
-Date: Sat, 30 Jun 2012 01:44:37 +0200
-Message-Id: <1341013486-2520-2-git-send-email-hauke@hauke-m.de> (sfid-20120630_014613_970015_72E86943)
+Subject: [PATCH v2 7/9] bcma: remove chip ids doing nothing from PMU initialization.
+Date: Sat, 30 Jun 2012 01:44:43 +0200
+Message-Id: <1341013486-2520-8-git-send-email-hauke@hauke-m.de> (sfid-20120630_014626_423533_326347DC)
 In-Reply-To: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
 References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is based on a recent version of the Broadcom SDK.
+The list of devices where nothing has to be done in
+bcma_pmu_resources_init() and bcma_pmu_workarounds() is longer as all
+the SoCs are missing there and some new devices will be added in some
+time later. This patch changes the default case to just log on debug
+level and also let the other devices which do not need any special
+handling into the default case, instead of adding the missing 8 SoC
+chip ids.
 
 Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/bcma/driver_chipcommon_pmu.c        |    3 +++
- include/linux/bcma/bcma_driver_chipcommon.h |    1 +
- 2 files changed, 4 insertions(+)
+ drivers/bcma/driver_chipcommon_pmu.c |   14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 61ce405..f18df1f 100644
+index 069fca7..1a7a72f 100644
 --- a/drivers/bcma/driver_chipcommon_pmu.c
 +++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -123,8 +123,11 @@ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
- 		val |= BCMA_CHIPCTL_4331_EXTPA_EN;
- 		if (bus->chipinfo.pkg == 9 || bus->chipinfo.pkg == 11)
- 			val |= BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
-+		else if (bus->chipinfo.rev > 0)
-+			val |= BCMA_CHIPCTL_4331_EXTPA_EN2;
- 	} else {
- 		val &= ~BCMA_CHIPCTL_4331_EXTPA_EN;
-+		val &= ~BCMA_CHIPCTL_4331_EXTPA_EN2;
- 		val &= ~BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
+@@ -64,13 +64,9 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
+ 		min_msk = 0x200D;
+ 		max_msk = 0xFFFF;
+ 		break;
+-	case BCMA_CHIP_ID_BCM4331:
+-	case BCMA_CHIP_ID_BCM43224:
+-	case BCMA_CHIP_ID_BCM43225:
+-		break;
+ 	default:
+-		pr_err("PMU resource config unknown for device 0x%04X\n",
+-			bus->chipinfo.id);
++		pr_debug("PMU resource config unknown or not needed for device 0x%04X\n",
++			 bus->chipinfo.id);
  	}
- 	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 8bbfe31..1e523cc 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -321,6 +321,7 @@
- #define BCMA_CHIPCTL_4331_OVR_PIPEAUXPWRDOWN	BIT(9)	/* override core control on pipe_AuxPowerDown */
- #define BCMA_CHIPCTL_4331_PCIE_AUXCLKEN		BIT(10)	/* pcie_auxclkenable */
- #define BCMA_CHIPCTL_4331_PCIE_PIPE_PLLDOWN	BIT(11)	/* pcie_pipe_pllpowerdown */
-+#define BCMA_CHIPCTL_4331_EXTPA_EN2		BIT(12)	/* 0 ext pa disable, 1 ext pa enabled */
- #define BCMA_CHIPCTL_4331_BT_SHD0_ON_GPIO4	BIT(16)	/* enable bt_shd0 at gpio4 */
- #define BCMA_CHIPCTL_4331_BT_SHD1_ON_GPIO5	BIT(17)	/* enable bt_shd1 at gpio5 */
+ 
+ 	/* Set the resource masks. */
+@@ -135,11 +131,9 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 						    BCMA_CCTRL_43224B0_12MA_LED_DRIVE);
+ 		}
+ 		break;
+-	case BCMA_CHIP_ID_BCM43225:
+-		break;
+ 	default:
+-		pr_err("Workarounds unknown for device 0x%04X\n",
+-			bus->chipinfo.id);
++		pr_debug("Workarounds unknown or not needed for device 0x%04X\n",
++			 bus->chipinfo.id);
+ 	}
+ }
  
 -- 
 1.7.9.5
