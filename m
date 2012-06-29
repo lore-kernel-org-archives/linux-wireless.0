@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57168 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758634Ab2FVJVM (ORCPT
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:39207 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750788Ab2F2EH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 05:21:12 -0400
-Date: Fri, 22 Jun 2012 14:52:28 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@adurom.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<dan.carpenter@oracle.com>
-Subject: Re: [PATCH 2/3] ath9k_hw: fix smatch warnings in spur_mitigate
-Message-ID: <20120622092226.GA7934@vmraj-lnx.users.atheros.com> (sfid-20120622_112118_681469_AD92A0B6)
-References: <1340303492-30947-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1340303492-30947-3-git-send-email-rmanohar@qca.qualcomm.com>
- <87bokb4xof.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87bokb4xof.fsf@purkki.adurom.net>
+	Fri, 29 Jun 2012 00:07:58 -0400
+Received: by lbbgm6 with SMTP id gm6so4479208lbb.5
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2012 21:07:55 -0700 (PDT)
+Message-ID: <1340942872.1631.678.camel@cumari.coelho.fi> (sfid-20120629_060802_838927_D841D04C)
+Subject: Re: [PATCH] wlcore: implement .flush callback
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+Date: Fri, 29 Jun 2012 07:07:52 +0300
+In-Reply-To: <1340909292.4491.51.camel@jlt3.sipsolutions.net>
+References: <1340813387-18407-1-git-send-email-coelho@ti.com>
+	 <4FEC3B0E.3040001@broadcom.com>
+	 <CAB3XZEeJrX4AoFqMtSOF3BFEV-s5WOhAXHnVwb6_5O5bNXWkUQ@mail.gmail.com>
+	 <CA+XVXfeqQFd+raZeBEB+ct5mHLJfEPst1Bop0RUui6gN9=9jow@mail.gmail.com>
+	 <4FECA5FB.30902@broadcom.com>
+	 <1340909292.4491.51.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 22, 2012 at 10:23:44AM +0300, Kalle Valo wrote:
-> Rajkumar Manoharan <rmanohar@qca.qualcomm.com> writes:
+On Thu, 2012-06-28 at 20:48 +0200, Johannes Berg wrote:
+> On Thu, 2012-06-28 at 20:44 +0200, Arend van Spriel wrote:
 > 
-> > This patch fixes below smatch warnings
-> >
-> > drivers/net/wireless/ath/ath9k/ar9003_calib.c:272
-> > ar9003_hw_iqcalibrate() Error invalid range 65 to 63
-> >
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> > >>> So not taking the drop flag into account? Any plan to change that?
+> > >>>
+> > >> yeah, good point...
+> > >> i guess we'll want to add support for the drop flag as well.
+> > >>
+> > >> Luca - you can either drop this patch, or apply it for now and i'll
+> > >> send another patch later on.
+> > > 
+> > > Currently we drop all the packets if we can't flush them within a
+> > > reasonable time. We always do this right now. I think that's good
+> > > enough?
+> > > 
+> > 
+> > Hard to say as I am working mostly on your side of this API. However,
+> > the drop flag is part of the API so there is probably a reason for
+> > having it. Johannes?
 > 
-> [...]
-> 
-> > -			qCoff = qCoff & 0x7f;
-> > +			qCoff &= 0x7f;
-> 
-> I'm curious, how does a change like this fix anything? To me it just
-> looks same functionality, just a different operator is used. Am I
-> missing something?
+> The drop never actually used today... but we had plans to use it in some
+> cases I think.
 
-Though it doesn't make a difference, somehow it fixes smatch warning.
-I agree it is not the right fix.
+I have just grepped the code and I also see that drop is always false as
+it is.
 
-I just found the actual issue here that the min and max limitation
-are checked before masking out the value.
+Of course, the API specifies this drop parameter and how it should be
+handled, so we should treat it too, so nothing breaks if mac80211
+changes.
 
-   if (qCoff >= 63)
-           qCoff = 63;
-   else if (qCoff <= -63)
-           qCoff = -63;
+But, as defined in the API documentation:
 
-Later it is masked out with 0x7f.
+ * @flush: Flush all pending frames from the hardware queue, making sure
+ *	that the hardware queues are empty. If the parameter @drop is set
+ *	to %true, pending frames may be dropped. The callback can sleep.
 
--63 & 0x7f = 65 which is greater than the max limit 63.
+Frames *may* be dropped if drop is set to true.  We don't *have* to drop
+them, so it should be fine to ignore it and remain true to the API
+specification.
 
-Thats why smatch is throwing warning "Error invalid range 65 to 63".
+--
+Luca.
 
--Rajkumar 
