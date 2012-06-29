@@ -1,47 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5215 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760132Ab2FGG17 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29297 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319Ab2F2Gjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 02:27:59 -0400
-Message-ID: <4FD049E8.3090201@qca.qualcomm.com> (sfid-20120607_082809_352721_14E7C964)
-Date: Thu, 7 Jun 2012 11:57:52 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Fri, 29 Jun 2012 02:39:31 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 5/5] ath9k_hw: fix AR9462 2g5g switch on full reset
+Date: Fri, 29 Jun 2012 12:10:09 +0530
+Message-ID: <1340952009-12223-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120629_083934_449941_6936B7CB)
+In-Reply-To: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] mac80211: ratelimit few aggregated messages
-References: <1339048943-4643-1-git-send-email-mohammed@qca.qualcomm.com> <20432.18148.937220.807081@gargle.gargle.HOWL>
-In-Reply-To: <20432.18148.937220.807081@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sujith,
+On full reset, mci reset will put LNA update on 2G mode. And
+Whenever 2g5g_switch is forced at the end of full reset, lna
+update should not be skipped. Whenever 2g5g switch is enforced,
+WLAN need not to wait for the completion of MCI messages. Not
+doing so, is affecting WLAN rx and causing beacon loss when
+BTCOEX is enabled on AR9462.
 
-On Thursday 07 June 2012 11:45 AM, Sujith Manoharan wrote:
-> Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> ratelimit few aggregation related messages, these messages
->> floods the log when aggregation is disabled in the AP(for some
->> wifi testcases) and we run traffic between STA and AP.
->> mac80211 gives up after 15 addba requests, but
->> ieee80211_start_tx_ba_session will be repeatedly called
->> by drivers rate control tx_status callback. These net_dbg_ratelimited
->> messages will be visible only when dynamic debug is enabled for
->> mac80211 module.
->
-> I think the drivers need to be fixed. For ath9k, we probably need
-> an intermediate state to track whether an ADDBA request is pending.
->
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
 
-the timeout till the addba requests can be sent out is completely taken 
-care by mac80211 and we stop trying after a particular amount of time 
-which is also tracked by mac80211, these are just logs after sometime
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 6155837..2daa4c1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1010,17 +1010,15 @@ static void ar9003_mci_queue_unsent_gpm(struct ath_hw *ah, u8 header,
+ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	bool wait_done = (mci->update_2g5g || !force);
+ 
+ 	if (!mci->update_2g5g && !force)
+ 		return;
+ 
+ 	if (mci->is_2g) {
+-		if (!force) {
+-			ar9003_mci_send_2g5g_status(ah, true);
+-
+-			ar9003_mci_send_lna_transfer(ah, true);
+-			udelay(5);
+-		}
++		ar9003_mci_send_2g5g_status(ah, wait_done);
++		ar9003_mci_send_lna_transfer(ah, wait_done);
++		udelay(5);
+ 
+ 		REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
+ 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+@@ -1030,10 +1028,8 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
+ 			ar9003_mci_osla_setup(ah, true);
+ 	} else {
+-		if (!force) {
+-			ar9003_mci_send_lna_take(ah, true);
+-			udelay(5);
+-		}
++		ar9003_mci_send_lna_take(ah, wait_done);
++		udelay(5);
+ 
+ 		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
+ 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+@@ -1041,8 +1037,7 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 			    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
+ 
+ 		ar9003_mci_osla_setup(ah, false);
+-		if (!force)
+-			ar9003_mci_send_2g5g_status(ah, true);
++		ar9003_mci_send_2g5g_status(ah, wait_done);
+ 	}
+ }
+ 
 -- 
-thanks,
-shafi
+1.7.11.1
+
