@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3853 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753692Ab2F1MyL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jun 2012 08:54:11 -0400
-Message-ID: <4FEC53DE.70602@broadcom.com> (sfid-20120628_145415_109104_F52FAA47)
-Date: Thu, 28 Jun 2012 14:53:50 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Mahesh Palivela" <maheshp@posedge.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211/mac80211: 802.11ac changes
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0B3E4E@mbx022-e1-nj-10.exch022.domain.local>,<1340881646.4491.41.camel@jlt3.sipsolutions.net>
- <952C5D5D0470AE4FB7D8A75C6ADC71CA0D612F@mbx022-e1-nj-10.exch022.domain.local>
-In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D612F@mbx022-e1-nj-10.exch022.domain.local>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:60403 "HELO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754481Ab2F2DbG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 23:31:06 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/6] mwifiex: overwrite earlier IE buffers for new set IE request
+Date: Thu, 28 Jun 2012 20:30:27 -0700
+Message-Id: <1340940630-27172-4-git-send-email-bzhao@marvell.com> (sfid-20120629_053119_242427_B366F658)
+In-Reply-To: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
+References: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2012 02:39 PM, Mahesh Palivela wrote:
-> ________________________________________
-> From: Johannes Berg [johannes@sipsolutions.net]
-> Sent: Thursday, June 28, 2012 4:37 PM
-> To: Mahesh Palivela
-> Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] cfg80211/mac80211: 802.11ac changes
-> 
->>
->> +     if (sband->vht_cap.vht_supported)
->> +             pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
->> +                                             sband->vht_cap.cap);
-> 
-> indentation
-> 
-> [MP] sorry. I didn't get. Is it sband-> line to be moved left? But previous build_ht_cap() has similar indentation
-> 
+From: Avinash Patil <patila@marvell.com>
 
-'sband->' should start at same column as 'pos' in the above line. Must
-be tabs followed by right amount of spaces (being less than 8).
+All IE buffers are freshly supplied. In such case, there is no need
+to preserve earlier buffers with same management mask and index.
 
->>       return pos - buffer;
->>  }
->>
->> @@ -1696,6 +1700,27 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
->>       return pos;
->>  }
->>
->> +u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
->> +                           u32 cap)
-> 
-> indentation here & in ieee80211_i.h
-> 
-> [MP] ditto. please explain
-> 
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/ie.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-'u32' should start at same column as 'u8 *pos' in the above line.
-
-Gr. AvS
-
+diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
+index 018ae4a..1f2d4b9 100644
+--- a/drivers/net/wireless/mwifiex/ie.c
++++ b/drivers/net/wireless/mwifiex/ie.c
+@@ -51,8 +51,7 @@ mwifiex_ie_get_autoidx(struct mwifiex_private *priv, u16 subtype_mask,
+ 
+ 	for (i = 0; i < priv->adapter->max_mgmt_ie_index; i++) {
+ 		mask = le16_to_cpu(priv->mgmt_ie[i].mgmt_subtype_mask);
+-		len = le16_to_cpu(priv->mgmt_ie[i].ie_length) +
+-		      le16_to_cpu(ie->ie_length);
++		len = le16_to_cpu(ie->ie_length);
+ 
+ 		if (mask == MWIFIEX_AUTO_IDX_MASK)
+ 			continue;
+@@ -108,10 +107,8 @@ mwifiex_update_autoindex_ies(struct mwifiex_private *priv,
+ 				return -1;
+ 
+ 			tmp = (u8 *)&priv->mgmt_ie[index].ie_buffer;
+-			tmp += le16_to_cpu(priv->mgmt_ie[index].ie_length);
+ 			memcpy(tmp, &ie->ie_buffer, le16_to_cpu(ie->ie_length));
+-			le16_add_cpu(&priv->mgmt_ie[index].ie_length,
+-				     le16_to_cpu(ie->ie_length));
++			priv->mgmt_ie[index].ie_length = ie->ie_length;
+ 			priv->mgmt_ie[index].ie_index = cpu_to_le16(index);
+ 			priv->mgmt_ie[index].mgmt_subtype_mask =
+ 							cpu_to_le16(mask);
+-- 
+1.7.0.2
 
