@@ -1,87 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9502 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754215Ab2FMP6S (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43299 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714Ab2F2Hoa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 11:58:18 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 3.0+] ath9k: Fix softlockup in AR9485(backported)
-Date: Wed, 13 Jun 2012 21:28:09 +0530
-Message-ID: <1339603089-16090-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120613_175822_409145_CB99D380)
+	Fri, 29 Jun 2012 03:44:30 -0400
+Received: by eaak11 with SMTP id k11so1242644eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2012 00:44:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de>
+Date: Fri, 29 Jun 2012 09:44:29 +0200
+Message-ID: <CACna6rxL8xya8eOfBUvT43y0ZhHWKJyEef1G2pe5THi4DfOmkQ@mail.gmail.com> (sfid-20120629_094434_245642_357C9BA1)
+Subject: Re: [PATCH 0/8] bcma misc updates
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linville@tuxdriver.com, Hauke Mehrtens <hauke@hauke-m.de>
+Cc: b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+2012/6/5 Hauke Mehrtens <hauke@hauke-m.de>:
+> These are some updates for bcma. Some are extending or completing some
+> workarounds for PCIe based wireless cards. A patch adds
+> bcma_pmu_spuravoid_pllupdate, used by brcmsmac and an other patch adds
+> constants for the chip ids. This code is mostly based on code from
+> brcmsmac and the Broadcom SDK for BCM47XX SoCs.
+>
+> This was tested on a BCM4718 SoC with a BCM43224 PCIe and a BCM5357.
+> The Wifi part of the BCM4718 and BCM43224 is more or less working with
+> brcmsmac, which need some more patches for that, but it has low speed
+> and some times or with some access points I still get errors. The wifi
+> of the BCM5357 does not work.
+>
+> Hauke Mehrtens (8):
+>  bcma: extend workaround for bcm4331
+>  bcma: add constants for chip ids
+>  bcma: Fix for 4329b0 bad LPOM is detection
+>  bcma: add PCI ID for BCM43224
+>  bcma: complete workaround for BCMA43224 and BCM4313
+>  bcma: handle SoCs in pmu initialization
+>  bcma: add bcma_pmu_spuravoid_pllupdate()
+>  bcma: add mdelay bcma_pmu_resources_init()
 
-Please note this is the backported version for the linux
-stable tree, while the patch for wireless-testing tree
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/92608
+John: can you take the following patches from this patchset?
+1/8
+2/8
+4/8
+5/8
+7/8
 
-steps to recreate:
-load latest ath9k driver with AR9485
-stop the network-manager and wpa_supplicant
-bring the interface up
+Following patches should be dropped:
+3/8 - BCM4329 fix should be dropped, not improved
+6/8 - functions touched by patch should be dropper, not improved
+8/8 - patch is fine, but doesn't apply cleanly
 
-	Call Trace:
-	[<ffffffffa0517490>] ? ath_hw_check+0xe0/0xe0 [ath9k]
-	[<ffffffff812cd1e8>] __const_udelay+0x28/0x30
-	[<ffffffffa03bae7a>] ar9003_get_pll_sqsum_dvc+0x4a/0x80 [ath9k_hw]
-	[<ffffffffa05174eb>] ath_hw_pll_work+0x5b/0xe0 [ath9k]
-	[<ffffffff810744fe>] process_one_work+0x11e/0x470
-	[<ffffffff8107530f>] worker_thread+0x15f/0x360
-	[<ffffffff810751b0>] ? manage_workers+0x230/0x230
-	[<ffffffff81079af3>] kthread+0x93/0xa0
-	[<ffffffff815fd3a4>] kernel_thread_helper+0x4/0x10
-	[<ffffffff81079a60>] ? kthread_freezable_should_stop+0x70/0x70
-	[<ffffffff815fd3a0>] ? gs_change+0x13/0x13
-
-ensure that the PLL-WAR for AR9485/AR9340 is executed only if the STA is
-associated (or) IBSS/AP mode had started beaconing. Ideally this WAR
-is needed to recover from some rare beacon stuck during stress testing.
-Before the STA is associated/IBSS had started beaconing, PLL4(0x1618c)
-always seem to have zero even though we had configured PLL3(0x16188) to
-query about PLL's locking status. When we keep on polling infinitely PLL4's
-8th bit(ie check for PLL locking measurements is done), machine hangs
-due to softlockup.
-
-fixes https://bugzilla.redhat.com/show_bug.cgi?id=811142
-
-Reported-by: Rolf Offermanns <rolf.offermanns@gmx.net>
-Cc: stable@vger.kernel.org [3.0+]
-Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4de4473..41096f6 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -971,6 +971,15 @@ void ath_hw_pll_work(struct work_struct *work)
- 					    hw_pll_work.work);
- 	u32 pll_sqsum;
- 
-+	/*
-+	 * ensure that the PLL WAR is executed only
-+	 * after the STA is associated (or) if the
-+	 * beaconing had started in interfaces that
-+	 * uses beacons.
-+	 */
-+	if (!(sc->sc_flags & SC_OP_BEACONS))
-+		return;
-+
- 	if (AR_SREV_9485(sc->sc_ah)) {
- 
- 		ath9k_ps_wakeup(sc);
 -- 
-1.7.4.1
-
+Rafał
