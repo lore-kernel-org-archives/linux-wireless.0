@@ -1,722 +1,562 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:56929 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755066Ab2FEHto (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59213 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab2F2Vn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 03:49:44 -0400
-From: =?ks_c_5601-1987?B?wMy/7rHi?= <woonki84.lee@samsung.com>
-To: linux-wireless@vger.kernel.org, linux-samsung-soc@vger.kernel.org
-Cc: sameo@linux.intel.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, kgene.kim@samsung.com,
-	woonki84.lee@samsung.com
-Subject: [PATCH] NFC: Driver for SAMSUNG S3FHRN2 NFC Chip.
-Date: Tue, 05 Jun 2012 16:49:38 +0900
-Message-id: <001201cd42ef$c283d8d0$478b8a70$%lee@samsung.com> (sfid-20120605_094949_673318_6D9366DA)
-MIME-version: 1.0
-Content-type: text/plain; charset=ks_c_5601-1987
+	Fri, 29 Jun 2012 17:43:58 -0400
+Date: Fri, 29 Jun 2012 13:28:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next 2012-06-29
+Message-ID: <20120629172836.GB30528@tuxdriver.com> (sfid-20120629_234416_861395_0A2939F5)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="5vNYLRcllDrimb99"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a driver for the S3FHRN2 NFC device. the driver is just a
-proxy getting SHDLC/HCI frames from a userspace stack.
 
-Signed-off-by: WoonKi Lee <woonki84.lee@samsung.com>
+--5vNYLRcllDrimb99
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+commit 8732baafc3f19e69df683c3f0f36c13cec746fb9
+
+Dave,
+
+Here is another batch of updates intended for 3.6.  This includes a
+number of pulls, including ones from the mac80211, iwlwifi, ath6kl, and
+wl12xx trees.  I also pulled from the wireless tree to avoid potential
+build conflicts.  There are a number of other patches applied directly,
+including a number for the Broadcom drivers and the mwifiex driver.
+
+The updates cover the usual variety of new hardware support and feature
+enhancements.  It's all good work, but there aren't any big headliners.
+This does resolve a net-next/wireless-next merge conflict reported
+by Stephen.
+
+Please let me know if there are problems!
+
+John
+
 ---
- drivers/nfc/Kconfig         |    8 +
- drivers/nfc/Makefile        |    1 +
- drivers/nfc/s3fhrn2_i2c.c   |  594 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/nfc/s3fhrn2.h |   52 ++++
- 4 files changed, 655 insertions(+), 0 deletions(-)
- create mode 100644 drivers/nfc/s3fhrn2_i2c.c
- create mode 100644 include/linux/nfc/s3fhrn2.h
 
-diff --git a/drivers/nfc/Kconfig b/drivers/nfc/Kconfig
-index 3b20b73..08a90a9 100644
---- a/drivers/nfc/Kconfig
-+++ b/drivers/nfc/Kconfig
-@@ -51,4 +51,12 @@ config NFC_WILINK
- 	  Say Y here to compile support for Texas Instrument's NFC WiLink driver
- 	  into the kernel or say M to compile it as module.
- 
-+config S3FHRN2
-+	bool "Samsung NFC S3FHRN2 I2C driver"
-+	depends on I2C
-+	help
-+	  This driver provides support for NFC SAMSUNG S3FHRN2 devices.
-+	  Say Y if you want S3FHRN2 NFC driver.
-+
-+	  This is for I2C connected version. If unsure, say N here.
- endmenu
-diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
-index 473e44c..983ce4f 100644
---- a/drivers/nfc/Makefile
-+++ b/drivers/nfc/Makefile
-@@ -6,5 +6,6 @@ obj-$(CONFIG_PN544_NFC)		+= pn544.o
- obj-$(CONFIG_PN544_HCI_NFC)	+= pn544_hci.o
- obj-$(CONFIG_NFC_PN533)		+= pn533.o
- obj-$(CONFIG_NFC_WILINK)	+= nfcwilink.o
-+obj-$(CONFIG_S3FHRN2_I2C)	+= s3fhrn2_i2c.o
- 
- ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
-diff --git a/drivers/nfc/s3fhrn2_i2c.c b/drivers/nfc/s3fhrn2_i2c.c
-new file mode 100644
-index 0000000..7d72b0c
---- /dev/null
-+++ b/drivers/nfc/s3fhrn2_i2c.c
-@@ -0,0 +1,594 @@
-+/*
-+ * SAMSUNG NFC S3FHRN2 Controller for I2C I/F
-+ *
-+ * Copyright (C) 2012 Samsung Electronics Co.Ltd
-+ * Author: Woonki Lee <woonki84.lee@samsung.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under  the terms of  the GNU General  Public License as published by the
-+ * Free Software Foundation;  either version 2 of the License, or (at your
-+ * option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ */
-+
-+#include <linux/wait.h>
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/miscdevice.h>
-+#include <linux/module.h>
-+#include <linux/mutex.h>
-+#include <linux/poll.h>
-+#include <linux/gpio.h>
-+#include <linux/slab.h>
-+#include <linux/i2c.h>
-+#include <linux/nfc/s3fhrn2.h>
-+
-+#define S3FHRN2_IS_LENGTH(val)	(val == S3FHRN2_LLC_LENGTH)
-+
-+enum s3fhrn2_irq {
-+	S3FHRN2_NONE,
-+	S3FHRN2_INT,
-+};
-+
-+struct s3fhrn2_info {
-+	struct miscdevice miscdev;
-+	struct i2c_client *i2c_dev;
-+	struct mutex read_mutex;
-+	struct mutex mutex;
-+	enum s3fhrn2_state state;	/* off, normal, firm download mode */
-+	enum s3fhrn2_irq read_irq;
-+	wait_queue_head_t read_wait;
-+	size_t buflen;
-+	u8 *buf;
-+};
-+
-+static irqreturn_t s3fhrn2_irq_thread_fn(int irq, void *dev_id)
-+{
-+	struct s3fhrn2_info *info = dev_id;
-+	struct i2c_client *client = info->i2c_dev;
-+
-+	dev_dbg(&client->dev, "IRQ\n");
-+
-+	mutex_lock(&info->read_mutex);
-+	info->read_irq = S3FHRN2_INT;
-+	mutex_unlock(&info->read_mutex);
-+
-+	wake_up_interruptible(&info->read_wait);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int s3fhrn2_set_state(struct s3fhrn2_info *info,
-+					enum s3fhrn2_state state)
-+{
-+	struct i2c_client *client = info->i2c_dev;
-+	struct s3fhrn2_platform_data *pdata = client->dev.platform_data;
-+
-+	/* intfo lock is aleady getten before calling this function */
-+	info->read_irq = S3FHRN2_NONE;
-+	info->state = state;
-+
-+	gpio_set_value(pdata->ven, 0);
-+	gpio_set_value(pdata->firm, 0);
-+	msleep(S3FHRN2_VEN_WAIT_TIME);
-+
-+	if (state == S3FHRN2_ST_FIRM) {
-+		gpio_set_value(pdata->firm, 1);
-+		msleep(S3FHRN2_VEN_WAIT_TIME);
-+		gpio_set_value(pdata->ven, 0);
-+		msleep(S3FHRN2_VEN_WAIT_TIME);
-+	}
-+
-+	if (state != S3FHRN2_ST_OFF)
-+		gpio_set_value(pdata->ven, 1);
-+
-+	msleep(S3FHRN2_VEN_WAIT_TIME*3);
-+
-+	return 0;
-+}
-+
-+static int s3fhrn2_reset(struct s3fhrn2_info *info)
-+{
-+	struct i2c_client *client = info->i2c_dev;
-+
-+	dev_err(&client->dev, "i2c failed. return resatrt to M/W\n");
-+
-+	s3fhrn2_set_state(info, S3FHRN2_ST_NORM);
-+
-+	return -ERESTART;
-+}
-+
-+static ssize_t s3fhrn2_read(struct file *file, char __user *buf,
-+			  size_t count, loff_t *offset)
-+{
-+	struct s3fhrn2_info *info = container_of(file->private_data,
-+						struct s3fhrn2_info, miscdev);
-+	struct i2c_client *client = info->i2c_dev;
-+	enum s3fhrn2_irq irq;
-+	int min = S3FHRN2_MSG_MIN_SIZE;
-+	int max = S3FHRN2_MSG_MAX_SIZE;
-+	int ret = 0;
-+
-+	dev_dbg(&client->dev, "%s: info: %p, count: %zu\n", __func__,
-+		info, count);
-+
-+	mutex_lock(&info->mutex);
-+
-+	if (info->state == S3FHRN2_ST_OFF) {
-+		dev_err(&client->dev, "s3fhrn2 is not enabled\n");
-+		ret = -ENODEV;
-+		goto out;
-+	}
-+
-+	mutex_lock(&info->read_mutex);
-+	irq = info->read_irq;
-+	mutex_unlock(&info->read_mutex);
-+	if (irq == S3FHRN2_NONE) {
-+		if (file->f_flags & O_NONBLOCK) {
-+			dev_err(&client->dev, "it is nonblock\n");
-+			ret = -EAGAIN;
-+			goto out;
-+		}
-+
-+		if (wait_event_interruptible(info->read_wait,
-+					(info->read_irq == S3FHRN2_INT))) {
-+			ret = -ERESTARTSYS;
-+			goto out;
-+		}
-+	}
-+
-+	/* i2c recv */
-+	if (count > info->buflen)
-+		count = info->buflen;
-+
-+	min = (info->state == S3FHRN2_ST_FIRM) ?
-+				S3FHRN2_FIRM_MIN_SIZE : S3FHRN2_MSG_MIN_SIZE;
-+	max = (info->state == S3FHRN2_ST_FIRM) ?
-+				S3FHRN2_FIRM_MAX_SIZE : S3FHRN2_MSG_MAX_SIZE;
-+
-+	if (count < min || count > max) {
-+		dev_dbg(&client->dev, "user required wrong size\n");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	mutex_lock(&info->read_mutex);
-+	ret = i2c_master_recv(client, info->buf, count);
-+	dev_dbg(&client->dev, "recv size : %d\n", ret);
-+
-+	if (ret == -EREMOTEIO) {
-+		ret = s3fhrn2_reset(info);
-+		goto read_error;
-+	} else if (ret != count) {
-+		dev_err(&client->dev, "read failed: return: %d count: %d\n",
-+			ret, count);
-+		ret = -EREMOTEIO;
-+		goto read_error;
-+	}
-+
-+	/* Only reading data can clear read_irq state. */
-+	if (!S3FHRN2_IS_LENGTH(ret) || info->state == S3FHRN2_ST_FIRM)
-+		info->read_irq = S3FHRN2_NONE;
-+	/* check the length value,
-+		It may be doing when reading length of frame. */
-+	else if (info->buf[0] < min || info->buf[0] > max) {
-+		dev_err(&client->dev, "reciev invaild length : %x\n",
-+			info->buf[0]);
-+
-+		/* We need to check if i2c transmit is possible */
-+		ret = i2c_master_send(client, "test", 1);
-+		if (ret == -EREMOTEIO)
-+			ret = s3fhrn2_reset(info);
-+		else
-+			ret = -EINVAL;
-+
-+		goto read_error;
-+	}
-+	mutex_unlock(&info->read_mutex);
-+
-+	*offset += ret;
-+	if (copy_to_user(buf, info->buf, ret)) {
-+		dev_err(&client->dev, "copy failed to user\n");
-+		ret = -EFAULT;
-+	}
-+
-+	goto out;
-+
-+read_error:
-+	info->read_irq = S3FHRN2_NONE;
-+	mutex_unlock(&info->read_mutex);
-+out:
-+	mutex_unlock(&info->mutex);
-+
-+	return ret;
-+}
-+
-+static unsigned int s3fhrn2_poll(struct file *file, poll_table *wait)
-+{
-+	struct s3fhrn2_info *info = container_of(file->private_data,
-+						struct s3fhrn2_info, miscdev);
-+	struct i2c_client *client = info->i2c_dev;
-+	int ret = 0;
-+	enum s3fhrn2_irq irq;
-+
-+	dev_dbg(&client->dev, "%s: info: %p\n", __func__, info);
-+
-+	mutex_lock(&info->mutex);
-+
-+	if (info->state == S3FHRN2_ST_OFF) {
-+		dev_err(&client->dev, "s3fhrn2 is not enabled\n");
-+		ret = -ENODEV;
-+		goto out;
-+	}
-+
-+	poll_wait(file, &info->read_wait, wait);
-+
-+	mutex_lock(&info->read_mutex);
-+	irq = info->read_irq;
-+	mutex_unlock(&info->read_mutex);
-+	if (irq == S3FHRN2_INT)
-+		ret = (POLLIN | POLLRDNORM);
-+
-+out:
-+	mutex_unlock(&info->mutex);
-+
-+	return ret;
-+}
-+
-+static ssize_t s3fhrn2_write(struct file *file, const char __user *buf,
-+			   size_t count, loff_t *ppos)
-+{
-+	struct s3fhrn2_info *info = container_of(file->private_data,
-+						struct s3fhrn2_info, miscdev);
-+	struct i2c_client *client = info->i2c_dev;
-+	int min, max;
-+	int ret = 0;
-+
-+	dev_dbg(&client->dev, "%s: info: %p, count %zu\n", __func__,
-+		info, count);
-+
-+	mutex_lock(&info->mutex);
-+
-+	if (info->state == S3FHRN2_ST_OFF) {
-+		dev_err(&client->dev, "s3fhrn2 is not enabled\n");
-+		ret = -ENODEV;
-+		goto out;
-+	}
-+
-+	if (count > info->buflen)
-+		count = info->buflen;
-+
-+	min = (info->state == S3FHRN2_ST_FIRM) ?
-+				S3FHRN2_FIRM_MIN_SIZE : S3FHRN2_MSG_MIN_SIZE;
-+	max = (info->state == S3FHRN2_ST_FIRM) ?
-+				S3FHRN2_FIRM_MAX_SIZE : S3FHRN2_MSG_MAX_SIZE;
-+
-+	if (count < min || count > max) {
-+		dev_dbg(&client->dev, "user required wrong size\n");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (copy_from_user(info->buf, buf, count)) {
-+		dev_err(&client->dev, "copy failed from user\n");
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+
-+	usleep_range(6000, 10000);
-+	ret = i2c_master_send(client, info->buf, count);
-+	dev_dbg(&client->dev, "send: %d\n", ret);
-+
-+	if (ret == -EREMOTEIO) {
-+		ret = s3fhrn2_reset(info);
-+		goto out;
-+	}
-+
-+	if (ret != count) {
-+		dev_dbg(&client->dev, "send failed: return: %d count: %d\n",
-+		ret, count);
-+		ret = -EREMOTEIO;
-+	}
-+
-+out:
-+	mutex_unlock(&info->mutex);
-+
-+	return ret;
-+}
-+
-+static long s3fhrn2_ioctl(struct file *file, unsigned int cmd,
-+							unsigned long arg)
-+{
-+	struct s3fhrn2_info *info = container_of(file->private_data,
-+						struct s3fhrn2_info, miscdev);
-+	struct i2c_client *client = info->i2c_dev;
-+	unsigned int mode = (unsigned int)arg;
-+	int ret = 0;
-+
-+	dev_dbg(&client->dev, "%s: info: %p, cmd: 0x%x\n",
-+			__func__, info, cmd);
-+
-+	mutex_lock(&info->mutex);
-+
-+	switch (cmd) {
-+	case S3FHRN2_SET_MODE:
-+		dev_dbg(&client->dev, "%s: s3fhrn2_SET_MODE\n", __func__);
-+
-+		if (info->state == mode)
-+			break;
-+
-+		if (mode >= S3FHRN2_ST_COUNT) {
-+			dev_err(&client->dev, "wrong state (%d)\n", mode);
-+			ret = -EFAULT;
-+			break;
-+		}
-+
-+		ret = s3fhrn2_set_state(info, mode);
-+		if (ret < 0) {
-+			dev_err(&client->dev, "enable failed\n");
-+			break;
-+		}
-+
-+		break;
-+	default:
-+		dev_err(&client->dev, "Unknow ioctl 0x%x\n", cmd);
-+		ret = -ENOIOCTLCMD;
-+		break;
-+	}
-+
-+	mutex_unlock(&info->mutex);
-+
-+	return ret;
-+}
-+
-+static int s3fhrn2_open(struct inode *inode, struct file *file)
-+{
-+	struct s3fhrn2_info *info = container_of(file->private_data,
-+						struct s3fhrn2_info, miscdev);
-+	struct i2c_client *client = info->i2c_dev;
-+	int ret = 0;
-+
-+	dev_dbg(&client->dev, "%s: info : %p, client %p\n", __func__,
-+		info, info->i2c_dev);
-+
-+	mutex_lock(&info->mutex);
-+	if (info->state != S3FHRN2_ST_OFF) {
-+		dev_err(&client->dev, "s3fhrn2 is busy\n");
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	ret = s3fhrn2_set_state(info, S3FHRN2_ST_NORM);
-+out:
-+	mutex_unlock(&info->mutex);
-+	return ret;
-+}
-+
-+static int s3fhrn2_close(struct inode *inode, struct file *file)
-+{
-+	struct s3fhrn2_info *info = container_of(file->private_data,
-+						struct s3fhrn2_info, miscdev);
-+	struct i2c_client *client = info->i2c_dev;
-+
-+	dev_dbg(&client->dev, "%s: info: %p, client %p\n",
-+		__func__, info, info->i2c_dev);
-+
-+	mutex_lock(&info->mutex);
-+	s3fhrn2_set_state(info, S3FHRN2_ST_OFF);
-+	mutex_unlock(&info->mutex);
-+
-+	return 0;
-+}
-+
-+static const struct file_operations s3fhrn2_fops = {
-+	.owner		= THIS_MODULE,
-+	.read		= s3fhrn2_read,
-+	.write		= s3fhrn2_write,
-+	.poll		= s3fhrn2_poll,
-+	.open		= s3fhrn2_open,
-+	.release	= s3fhrn2_close,
-+	.unlocked_ioctl	= s3fhrn2_ioctl,
-+};
-+
-+#ifdef CONFIG_PM
-+static int s3fhrn2_suspend(struct device *dev)
-+{
-+	struct i2c_client *client = to_i2c_client(dev);
-+	struct s3fhrn2_info *info = i2c_get_clientdata(client);
-+	int ret = 0;
-+
-+	mutex_lock(&info->mutex);
-+
-+	if (info->state == S3FHRN2_ST_FIRM)
-+		ret = -EPERM;
-+
-+	/*
-+		suspend sequence.
-+	*/
-+	mutex_unlock(&info->mutex);
-+	return ret;
-+}
-+
-+static int s3fhrn2_resume(struct device *dev)
-+{
-+	struct i2c_client *client = to_i2c_client(dev);
-+	struct s3fhrn2_info *info = i2c_get_clientdata(client);
-+
-+	/*
-+	mutex_lock(&info->mutex);
-+
-+		resume sequence here
-+
-+	mutex_unlock(&info->mutex);
-+	*/
-+
-+	return 0;
-+}
-+
-+static SIMPLE_DEV_PM_OPS(s3fhrn2_pm_ops, s3fhrn2_suspend, s3fhrn2_resume);
-+#endif
-+
-+static int __devinit s3fhrn2_probe(struct i2c_client *client,
-+		const struct i2c_device_id *id)
-+{
-+	struct s3fhrn2_info *info;
-+	struct s3fhrn2_platform_data *pdata;
-+	int ret = 0;
-+
-+	info = kzalloc(sizeof(struct s3fhrn2_info), GFP_KERNEL);
-+	if (!info) {
-+		dev_err(&client->dev,
-+			"failed to allocate memory for s3fhrn2_info\n");
-+		ret = -ENOMEM;
-+		goto err_info_alloc;
-+	}
-+
-+
-+	info->buflen = S3FHRN2_MAX_BUFFER_SIZE;
-+	info->buf = kzalloc(S3FHRN2_MAX_BUFFER_SIZE, GFP_KERNEL);
-+	if (!info->buf) {
-+		dev_err(&client->dev,
-+			"failed to allocate memory for s3fhrn2_info->buf\n");
-+		ret = -ENOMEM;
-+		goto err_buf_alloc;
-+	}
-+
-+	info->i2c_dev = client;
-+	info->state = S3FHRN2_ST_OFF;
-+	info->read_irq = S3FHRN2_NONE;
-+	mutex_init(&info->read_mutex);
-+	mutex_init(&info->mutex);
-+	init_waitqueue_head(&info->read_wait);
-+	i2c_set_clientdata(client, info);
-+	pdata = client->dev.platform_data;
-+	if (!pdata) {
-+		dev_err(&client->dev, "No platform data\n");
-+		ret = -ENOMEM;
-+		goto err_buf_alloc;
-+	}
-+
-+	ret = request_threaded_irq(client->irq, NULL, s3fhrn2_irq_thread_fn,
-+				   IRQF_TRIGGER_RISING, S3FHRN2_DRIVER_NAME,
-+				   info);
-+	if (ret < 0) {
-+		dev_err(&client->dev, "failed to register IRQ handler\n");
-+		goto err_irq_req;
-+	}
-+
-+	info->miscdev.minor = MISC_DYNAMIC_MINOR;
-+	info->miscdev.name = S3FHRN2_DRIVER_NAME;
-+	info->miscdev.fops = &s3fhrn2_fops;
-+	info->miscdev.parent = &client->dev;
-+	ret = misc_register(&info->miscdev);
-+	if (ret < 0) {
-+		dev_err(&client->dev, "failed to register Device\n");
-+		goto err_dev_reg;
-+	}
-+
-+	ret = gpio_request(pdata->ven, "nfc_ven");
-+	if (ret) {
-+		dev_err(&client->dev, "failed to get gpio ven\n");
-+		goto err_gpio_ven;
-+	}
-+
-+	ret = gpio_request(pdata->firm, "nfc_firm");
-+	if (ret) {
-+		dev_err(&client->dev, "failed to get gpio firm\n");
-+		goto err_gpio_firm;
-+	}
-+
-+	gpio_direction_output(pdata->ven, 0);
-+	gpio_direction_output(pdata->firm, 0);
-+
-+	dev_dbg(&client->dev, "%s: info: %p, pdata %p, client %p\n",
-+		__func__, info, pdata, client);
-+
-+	return 0;
-+
-+err_gpio_firm:
-+	gpio_free(pdata->ven);
-+err_gpio_ven:
-+err_dev_reg:
-+err_irq_req:
-+	kfree(info->buf);
-+err_buf_alloc:
-+	kfree(info);
-+err_info_alloc:
-+	return ret;
-+}
-+
-+static int __devexit s3fhrn2_remove(struct i2c_client *client)
-+{
-+	struct s3fhrn2_info *info = i2c_get_clientdata(client);
-+	struct s3fhrn2_platform_data *pdata = client->dev.platform_data;
-+
-+	dev_dbg(&client->dev, "%s\n", __func__);
-+
-+	misc_deregister(&info->miscdev);
-+
-+	if (info->state != S3FHRN2_ST_OFF) {
-+		gpio_set_value(pdata->firm, 0);
-+		gpio_set_value(pdata->ven, 0);
-+		info->read_irq = S3FHRN2_NONE;
-+	}
-+
-+	gpio_free(pdata->firm);
-+	gpio_free(pdata->ven);
-+
-+	free_irq(client->irq, info);
-+
-+	kfree(info->buf);
-+	kfree(info);
-+
-+	return 0;
-+}
-+
-+static struct i2c_device_id s3fhrn2_id_table[] = {
-+	{ S3FHRN2_DRIVER_NAME, 0 },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(i2c, s3fhrn2_id_table);
-+
-+static struct i2c_driver s3fhrn2_driver = {
-+	.driver = {
-+		.name = S3FHRN2_DRIVER_NAME,
-+#ifdef CONFIG_PM
-+		.pm = &s3fhrn2_pm_ops,
-+#endif
-+	},
-+	.probe = s3fhrn2_probe,
-+	.id_table = s3fhrn2_id_table,
-+	.remove = s3fhrn2_remove,
-+};
-+
-+static int __init s3fhrn2_init(void)
-+{
-+	int ret;
-+
-+	ret = i2c_add_driver(&s3fhrn2_driver);
-+
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static void __exit s3fhrn2_exit(void)
-+{
-+	i2c_del_driver(&s3fhrn2_driver);
-+}
-+
-+module_init(s3fhrn2_init);
-+module_exit(s3fhrn2_exit);
-+
-+MODULE_DESCRIPTION("Samsung s3fhrn2 driver");
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/nfc/s3fhrn2.h b/include/linux/nfc/s3fhrn2.h
-new file mode 100644
-index 0000000..2f8a619
---- /dev/null
-+++ b/include/linux/nfc/s3fhrn2.h
-@@ -0,0 +1,52 @@
-+/*
-+ * SAMSUNG NFC N2 Controller
-+ *
-+ * Copyright (C) 2012 Samsung Electronics Co.Ltd
-+ * Author: Woonki Lee <woonki84.lee@samsung.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under  the terms of  the GNU General  Public License as published by the
-+ * Free Software Foundation;  either version 2 of the License, or (at your
-+ * option) any later version.
-+ *
-+ */
-+
-+#include <linux/platform_device.h>
-+
-+#define S3FHRN2_DRIVER_NAME		"snfc-n2"
-+
-+#define S3FHRN2_MAX_BUFFER_SIZE	512
-+
-+/* ioctl */
-+#define S3FHRN2_MAGIC	'S'
-+#define S3FHRN2_GET_MODE	_IOW(S3FHRN2_MAGIC, 0, unsigned int)
-+#define S3FHRN2_SET_MODE	_IOW(S3FHRN2_MAGIC, 1, unsigned int)
-+
-+/* size */
-+#define S3FHRN2_LLC_LENGTH		1
-+#define S3FHRN2_MSG_MIN_SIZE	1 /* LLC length header is 1*/
-+#define S3FHRN2_MSG_MAX_SIZE	0x21
-+#define S3FHRN2_FIRM_MIN_SIZE	1
-+#define S3FHRN2_FIRM_MAX_SIZE	129 /* length (1) + FW DATA (128) */
-+
-+/* check */
-+#define S3FHRN2_IS_LENGTH(val)	(val == S3FHRN2_LLC_LENGTH)
-+
-+/* wait for device stable */
-+#define S3FHRN2_VEN_WAIT_TIME	(200)
-+
-+/* gpio pin configuration */
-+struct s3fhrn2_platform_data {
-+	unsigned int irq;
-+	unsigned int ven;
-+	unsigned int firm;
-+	void	(*cfg_gpio)(struct platform_device *dev);
-+};
-+
-+enum s3fhrn2_state {
-+	S3FHRN2_ST_OFF = 0,
-+	S3FHRN2_ST_NORM,
-+	S3FHRN2_ST_FIRM,
-+	S3FHRN2_ST_COUNT,
-+};
-+
--- 
-1.7.1
+The following changes since commit 7a9bc9b81a5bc6e44ebc80ef781332e4385083f2:
 
+  ipv4: Elide fib_validate_source() completely when possible. (2012-06-29 0=
+1:36:36 -0700)
 
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
+for-davem
+
+for you to fetch changes up to 8732baafc3f19e69df683c3f0f36c13cec746fb9:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless-next into for-davem (2012-06-29 12:42:14 -0400)
+
+----------------------------------------------------------------
+
+Amitkumar Karwar (6):
+      mwifiex: wake up main thread to handle Tx traffic if scan is delayed/=
+aborted
+      mwifiex: enhance power save for USB and PCIe chipsets
+      mwifiex: wakeup main thread to handle command queued
+      mwifiex: use correct firmware command to get power limits
+      mwifiex: do not advertise custom regulatory domain capability
+      mwifiex: retrieve correct max_power information in reg_notifier handl=
+er
+
+Arend van Spriel (6):
+      brcmfmac: introduce checkdied debugfs functionality
+      brcm80211: add mailing list address for brcm80211 drivers
+      brcmfmac: make inclusion of vmalloc.h explicit fixing linux-next build
+      brcmsmac: fix NULL pointer crash in brcms_c_regd_init()
+      brcmfmac: reduce allocations needed during nvram data download
+      brcmfmac: fix sparse warning introduced with checkdied patch
+
+Arik Nemtsov (16):
+      mac80211: stop Rx during HW reconfig
+      mac80211: set only VO as a U-APSD enabled AC
+      wlcore: suppress error message on Rx BA session removal
+      wlcore: allow setting sleep_auth before interface init
+      wlcore: reconfigure sleep_auth when removing interfaces
+      wl18xx: increase Rx descriptors for PG2
+      wl18xx: set Tx align quirk for PG2
+      wl18xx: explicitly remove the 5Ghz MIMO HT cap
+      wl18xx: sane defaults for HT capabilities
+      wl18xx: split siso40 HT cap between 2Ghz and 5Ghz
+      wlcore: cancel suspend when recovery is pending
+      wlcore: don't allow SDIO read/writes after failure
+      wlcore: force recovery on resume if suspended without recovering
+      wlcore: check Rx-filter functions in the suspend path
+      wlcore: refactor threaded IRQ routine
+      wlcore: prevent recovery in the middle of resume
+
+Arkady Miasnikov (1):
+      wlcore: access the firmware memory via debugfs
+
+Avinash Patil (7):
+      ieee80211: definitions for Microsoft Vendor OUI and WPA OUI type
+      mwifiex: set channel via start_ap handler for AP interface
+      mwifiex: set HT capability based on cfg80211_ap_settings
+      mwifiex: separate uAP WPA/WPA2 parsing from other BSS parameters
+      mwifiex: support for WEP in AP mode
+      ieee80211: more OUI type definitions for WLAN_OUI_MICROSOFT
+      mwifiex: parse WPA IE and support WPA/WPA2 mixed mode for uAP
+
+Bala Shanmugam (2):
+      ath6kl: Add support for setting tx rateset.
+      ath9k: fix incorrect profile type manupulation
+
+Chun-Yeow Yeoh (9):
+      cfg80211: add missing kernel-doc for mesh configuration structure
+      {nl,cfg,mac}80211: fix the coding style related to mesh parameters
+      {nl,cfg,mac}80211: implement dot11MeshHWMProotInterval and dot11MeshH=
+WMPactivePathToRootTimeout
+      mac80211: implement the proactive PREQ generation
+      mac80211: implement the proactive PREP generation
+      mac80211: invoke the timer only with correct dot11MeshHWMPRootMode va=
+lue
+      {nl,cfg,mac}80211: implement dot11MeshHWMPconfirmationInterval
+      mac80211: fix the assignment of mesh element TTL
+      mac80211: fix and improve mesh RANN processing
+
+Eliad Peller (2):
+      wlcore: update basic rates on channel switch
+      wlcore: declare interface combinations
+
+Emmanuel Grumbach (8):
+      iwlwifi: check that we have enough bits to track the TX queues
+      iwlwifi: print the scratch of all the buffers stuck in a queue
+      iwlwifi: comment context requirements of the op_mode
+      iwlwifi: disable BH before the call to iwl_op_mode_nic_error
+      iwlwifi: don't disable interrupt in iwl_abort_notification_waits
+      iwlwifi: don't disable interrupt while starting tx
+      iwlwifi: protect use_ict with irq_lock
+      iwlwifi: disable early power Off reset for all NICs
+
+Etay Luz (1):
+      ath6kl: support changing dtim period on AP mode
+
+Eyal Shapira (6):
+      wlcore: avoid using NET_IP_ALIGN for RX alignment
+      wlcore: send EAPOLs with basic rate policy
+      mac80211: fix cleanup if driver suspend callback fails
+      wlcore: fix broken TX due to wrong queuing of recovery
+      wlcore: queue recovery in case of bus errors during cmd_remove_peer
+      wlcore: print stack trace in every recovery
+
+Felix Fietkau (13):
+      cfg80211: fix regression in multi-vif AP start
+      ath9k_hw: remove aniState->noiseFloor
+      ath9k_hw: fix OFDM weak signal detection handling
+      ath9k_hw: remove confusing logic inversion in an ANI variable
+      ath9k_hw: clean up / fix ANI mode checks related to beacon RSSI
+      ath9k_hw: remove the old ANI implementation
+      ath9k_hw: clean up defines and variables from the ANI implementation =
+split
+      ath9k: remove MIB interrupt support
+      ath9k_hw: fix setting lower noise immunity values
+      ath9k_hw: clean up ANI OFDM trigger handling
+      ath9k: fix ANI operation in AP mode
+      ath9k: update AR934x initvals to latest version
+      ath9k: de-duplicate initvals
+
+Franky Lin (5):
+      brcmfmac: add support for bus specific data command
+      brcmfmac: restrict dongle txglom disable to old SDIO core
+      brcmfmac: move glom alignment setting to SDIO bus layer
+      brcmfmac: use firmware data buffer directly for nvram
+      brcmfmac: add BCM4334 support
+
+Grazvydas Ignotas (3):
+      wl1251: remove unused filter_work
+      wl1251: fix filtering support
+      wl1251: send filters to firmware as they are set
+
+Ido Yariv (11):
+      wlcore: Fix sdio out-of-sync power state
+      wlcore: Disable interrupts while recovering
+      wlcore: Change read/write ops to return errors
+      wlcore: Change raw io functions to return errors
+      wlcore: Propagate errors from wlcore_raw_*_data functions
+      wlcore: Propagate errors from wl1271_read
+      wlcore: Propagate errors from wl1271_write
+      wlcore: Propagate errors from wl1271_raw_read32
+      wlcore: Propagate errors from wl1271_raw_write32
+      wlcore: Propagate errors from wl1271_read_hwaddr
+      wlcore: Force checking of io functions' return values
+
+Igal Chernobelsky (1):
+      wlcore: read FW logs from FW memory on watchdog recovery
+
+Javier Cardona (2):
+      mac80211: Remove unused variable
+      mac80211: Rename stainfo variable for the more common sta
+
+Jeongdo Son (1):
+      rt2x00: Add support for BUFFALO WLI-UC-GNM2 to rt2800usb.
+
+Joe Perches (1):
+      ath6kl: Add missing newline terminations
+
+Johannes Berg (26):
+      mac80211: remove unneeded ieee80211_run_deferred_scan()
+      mac80211: allow cancelling dependent ROCs
+      nl80211: fix sched scan match attribute name
+      cfg80211/nl80211: fix kernel-doc
+      iwlwifi: delay ROC if doing internal reset scan
+      iwlwifi: fix 11n_disable EEPROM refactoring regression
+      iwlwifi: use minimal time for radio reset scan
+      iwlwifi: remove sku field from hw_params
+      cfg80211: make some functions static
+      nl80211: refactor __cfg80211_rdev_from_info
+      nl80211: fix netns separation
+      nl80211: change __cfg80211_rdev_from_info
+      nl80211: use __cfg80211_rdev_from_attrs for testmode
+      mac80211: fix double-start of remain-on-channel
+      iwlwifi: fix radio reset scan dwell vs. quiet time
+      iwlwifi: increase scan timeout
+      iwlwifi: limit mac_change_interface to BSS context
+      mac80211: remove TKIP debug
+      mac80211: two small verbose debug cleanups
+      mac80211: pass sdata to some RX functions
+      mac80211: clean up debugging
+      mac80211: rename driver-trace file
+      mac80211: trace debug messages
+      mac80211_hwsim: fix smatch/sparse complaints
+      mac80211: remove unused function
+      mac80211: make ieee80211_check_concurrent_iface netdev-independent
+
+John W. Linville (8):
+      Merge branch 'for-linville' of git://github.com/kvalo/ath6kl
+      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-n=
+ext
+      Merge branch 'for-john' of git://git.sipsolutions.net/mac80211-next
+      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-n=
+ext
+      Merge branch 'for-linville' of git://git.kernel.org/.../luca/wl12xx
+      Merge branch 'for-john' of git://git.sipsolutions.net/mac80211-next
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
+ext into for-davem
+
+Jouni Malinen (1):
+      ath6kl: Use correct max-scan-SSIDs limit
+
+Kalle Valo (1):
+      Merge remote branch 'wireless-next/master' into ath6kl-next
+
+Kiran Reddy (1):
+      ath6kl: separate ht cap for each band
+
+Larry Finger (4):
+      rtlwifi: rtl8192se: Fix gcc 4.7.x warning
+      rtlwifi: Change debug level for deletion of an entry in CAM
+      rtlwifi: Fix IRQ disabled warning
+      rtlwifi: rtl8192se: Fix double inclusion of header pci.h
+
+Luciano Coelho (8):
+      mac80211: initialize sta pointer to avoid false-positive warning
+      mac80211: use the correct capability info in ieee80211_set_associated=
+()
+      wlcore: add a debugfs entry to allow changing the sleep mode by hand
+      wl18xx: use %zu for size_t arguments in printk calls
+      Merge branch 'wl12xx-next' into for-linville
+      wl18xx: deprecate PG1 support
+      wlcore: fix some failure cases in wlcore_probe()
+      Merge branch 'wl12xx-next' into for-linville
+
+Mohammed Shafi Shajakhan (2):
+      ath9k_hw: make use of the wrapper to check for MCI init
+      ath9k: Fix signedness in a MCI debug message
+
+Naveen Gangadharan (1):
+      ath6kl: Add wow multicast firmware capability support
+
+Naveen Singh (2):
+      ath6kl: Include match ssid list in scheduled scan
+      ath6kl: use firmware version from FW IE
+
+Paul Bolle (1):
+      iwlegacy: print how long queue was actually stuck
+
+Pontus Fuchs (1):
+      mac80211: Disallow changing chan type on monitor when CHAN_MODE_FIXED
+
+Rafa=C5=82 Mi=C5=82ecki (1):
+      bcma: define some additional cores IDs
+
+Raja Mani (2):
+      ath6kl: Remove unneeded memset in roam related config func
+      ath6kl: Fix typo in htc mbox debug print msg
+
+Rajkumar Manoharan (8):
+      mac80211: cleanup offchannel_ps_enable argument
+      ath9k_hw: fix BT mute at hw init
+      ath9k: fix mci_is_enabled utility
+      ath9k_hw: update ar9462 dac_async_fifo initval
+      ath9k_hw: fix LNA control on WLAN sleep
+      ath9k: do not sampling on ani timer when chip is in sleep
+      ath9k_hw: rename mrcCCKOff to fix smatch warning
+      ath9k_hw: fix smatch warning in ar9003_hw_spur_mitigate_mrc_cck
+
+Seth Forshee (9):
+      brcm80211: smac: don't set up tx power limits during initialization
+      brcm80211: smac: always set channel specified by mac80211
+      brcm80211: smac: remove unused code for 40MHz channels
+      brcm80211: smac: clean up channel.c
+      brcm80211: smac: inform mac80211 of the X2 regulatory domain
+      brcm80211: smac: enable/disable radio on regulatory updates
+      brcm80211: smac: use mac80211 channel data for tx power limits
+      brcm80211: smac: don't validate channels against internal regulatory =
+data
+      brcm80211: smac: use current regulatory domain when checking whether =
+OFDM is allowed
+
+Sujith Manoharan (5):
+      ath9k: Fix lockdep splat
+      ath9k_htc: Change default listen interval to 1
+      ath9k_htc: Use atomic operations for op_flags
+      ath9k_htc: Fix IDLE power save
+      ath9k: Fix compilation breakage
+
+Sven Eckelmann (1):
+      ath9k: raise aggregation limit to 64k for HT IBSS
+
+Thomas Pedersen (4):
+      ath6kl: enable enhanced bmiss detection
+      ath6kl: issue wmi disconnect after notifying cfg80211
+      ath6kl: fix fw capability parsing
+      nl80211: specify RSSI threshold in scheduled scan
+
+Vasanthakumar Thiagarajan (3):
+      ath6kl: Fix missing gpio pin 9 configuration
+      ath6kl: Fix race in aggregation reorder logic
+      ath6kl: Fix unstable downlink throughput
+
+Victor Goldenshtein (1):
+      mac80211: add command to get current rssi
+
+Will Hawkins (3):
+      mac80211: Track auth frame registrations on IBSS ifaces
+      mac80211: send auth in IBSS only if userspace isn't handling it
+      mac80211: Allow userspace to register for auth frames in IBSS
+
+Woody Hung (1):
+      rt2x00 : RT3290 chip support v4
+
+Xose Vazquez Perez (1):
+      wireless: rtl818x: rtl8180 add devices ids
+
+Yair Shapira (2):
+      wlcore/wl12xx: add support for HP and SKW FEM radio manufacturers
+      wlcore: add print logs of radio_status in case of BIP calibration
+
+Yoni Divinsky (2):
+      mac80211: save wmm_acm per sdata
+      wlcore: do not report noise level in get survey op
+
+ MAINTAINERS                                        |    1 +
+ drivers/bcma/scan.c                                |    6 +
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         |  208 ++-
+ drivers/net/wireless/ath/ath6kl/cfg80211.h         |    2 +
+ drivers/net/wireless/ath/ath6kl/core.h             |   38 +-
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c         |    2 +-
+ drivers/net/wireless/ath/ath6kl/init.c             |   28 +-
+ drivers/net/wireless/ath/ath6kl/main.c             |   27 +-
+ drivers/net/wireless/ath/ath6kl/target.h           |    1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c             |   48 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c              |  148 +-
+ drivers/net/wireless/ath/ath6kl/wmi.h              |   58 +-
+ drivers/net/wireless/ath/ath9k/ani.c               |  489 +------
+ drivers/net/wireless/ath/ath9k/ani.h               |   32 +-
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c        |  176 +--
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c         |    4 -
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c        |   21 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   44 +-
+ .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   |   53 +-
+ .../net/wireless/ath/ath9k/ar9330_1p2_initvals.h   |  882 +----------
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h   |  755 ++++------
+ .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |    7 +-
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h   | 1528 ++++++++--------=
+----
+ .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   |  772 +---------
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    1 +
+ drivers/net/wireless/ath/ath9k/debug.c             |    2 -
+ drivers/net/wireless/ath/ath9k/gpio.c              |    2 +-
+ drivers/net/wireless/ath/ath9k/htc.h               |    4 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c    |   10 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c      |  122 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c      |    4 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   78 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c      |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |   13 +-
+ drivers/net/wireless/ath/ath9k/link.c              |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   36 +-
+ drivers/net/wireless/ath/ath9k/mci.c               |   17 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |    4 -
+ drivers/net/wireless/ath/ath9k/xmit.c              |   12 +
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    8 +
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   29 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  500 +++++--
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   17 +
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  | 1226 ++++------------
+ drivers/net/wireless/brcm80211/brcmsmac/channel.h  |    4 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    2 +
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   36 +-
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
+ drivers/net/wireless/iwlegacy/common.c             |    7 +-
+ drivers/net/wireless/iwlwifi/dvm/agn.h             |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/dev.h             |    2 -
+ drivers/net/wireless/iwlwifi/dvm/devices.c         |   13 -
+ drivers/net/wireless/iwlwifi/dvm/lib.c             |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |   55 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c            |   29 +-
+ drivers/net/wireless/iwlwifi/dvm/scan.c            |   47 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c    |    3 +
+ drivers/net/wireless/iwlwifi/iwl-notif-wait.c      |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h         |   16 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c             |   30 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c          |   19 +-
+ drivers/net/wireless/mac80211_hwsim.c              |   10 +-
+ drivers/net/wireless/mwifiex/cfg80211.c            |   65 +-
+ drivers/net/wireless/mwifiex/cmdevt.c              |    7 +-
+ drivers/net/wireless/mwifiex/fw.h                  |   23 +
+ drivers/net/wireless/mwifiex/ie.c                  |   55 +-
+ drivers/net/wireless/mwifiex/init.c                |    1 +
+ drivers/net/wireless/mwifiex/ioctl.h               |   10 +
+ drivers/net/wireless/mwifiex/main.c                |    3 +-
+ drivers/net/wireless/mwifiex/main.h                |    8 +-
+ drivers/net/wireless/mwifiex/scan.c                |   25 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c             |   23 +-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c         |   27 +
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |    3 -
+ drivers/net/wireless/mwifiex/uap_cmd.c             |  303 ++--
+ drivers/net/wireless/rt2x00/Kconfig                |    8 +
+ drivers/net/wireless/rt2x00/rt2800.h               |  173 ++-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |  350 ++++-
+ drivers/net/wireless/rt2x00/rt2800pci.c            |   82 +-
+ drivers/net/wireless/rt2x00/rt2800pci.h            |    1 +
+ drivers/net/wireless/rt2x00/rt2800usb.c            |    1 +
+ drivers/net/wireless/rt2x00/rt2x00.h               |    1 +
+ drivers/net/wireless/rt2x00/rt2x00pci.c            |    9 +
+ drivers/net/wireless/rtl818x/rtl8180/dev.c         |    2 +
+ drivers/net/wireless/rtlwifi/cam.c                 |    5 +-
+ drivers/net/wireless/rtlwifi/pci.c                 |   17 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |    3 +
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |    1 -
+ drivers/net/wireless/ti/wl1251/cmd.c               |    9 -
+ drivers/net/wireless/ti/wl1251/main.c              |   67 +-
+ drivers/net/wireless/ti/wl1251/wl1251.h            |    1 -
+ drivers/net/wireless/ti/wl12xx/cmd.c               |   16 +-
+ drivers/net/wireless/ti/wl12xx/main.c              |  350 +++--
+ drivers/net/wireless/ti/wl18xx/acx.h               |   34 +-
+ drivers/net/wireless/ti/wl18xx/io.c                |   39 +-
+ drivers/net/wireless/ti/wl18xx/io.h                |    4 +-
+ drivers/net/wireless/ti/wl18xx/main.c              |  365 +++--
+ drivers/net/wireless/ti/wlcore/acx.c               |    8 +-
+ drivers/net/wireless/ti/wlcore/acx.h               |    5 +
+ drivers/net/wireless/ti/wlcore/boot.c              |   84 +-
+ drivers/net/wireless/ti/wlcore/cmd.c               |   77 +-
+ drivers/net/wireless/ti/wlcore/cmd.h               |   21 +
+ drivers/net/wireless/ti/wlcore/conf.h              |    8 +-
+ drivers/net/wireless/ti/wlcore/debugfs.c           |  255 ++++
+ drivers/net/wireless/ti/wlcore/event.c             |   15 +-
+ drivers/net/wireless/ti/wlcore/hw_ops.h            |   12 +-
+ drivers/net/wireless/ti/wlcore/ini.h               |   22 +-
+ drivers/net/wireless/ti/wlcore/init.c              |   43 +-
+ drivers/net/wireless/ti/wlcore/io.c                |   55 +-
+ drivers/net/wireless/ti/wlcore/io.h                |  144 +-
+ drivers/net/wireless/ti/wlcore/main.c              |  348 +++--
+ drivers/net/wireless/ti/wlcore/ps.c                |   16 +-
+ drivers/net/wireless/ti/wlcore/rx.c                |   41 +-
+ drivers/net/wireless/ti/wlcore/rx.h                |   10 +-
+ drivers/net/wireless/ti/wlcore/sdio.c              |   50 +-
+ drivers/net/wireless/ti/wlcore/spi.c               |   14 +-
+ drivers/net/wireless/ti/wlcore/testmode.c          |   14 +
+ drivers/net/wireless/ti/wlcore/tx.c                |   86 +-
+ drivers/net/wireless/ti/wlcore/tx.h                |    4 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h            |   24 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h          |    9 +-
+ include/linux/bcma/bcma.h                          |    7 +
+ include/linux/ieee80211.h                          |   52 +-
+ include/linux/nl80211.h                            |  156 +-
+ include/net/cfg80211.h                             |   94 +-
+ include/net/mac80211.h                             |   29 +-
+ net/mac80211/Kconfig                               |   56 +-
+ net/mac80211/Makefile                              |    6 +-
+ net/mac80211/agg-rx.c                              |   34 +-
+ net/mac80211/agg-tx.c                              |   72 +-
+ net/mac80211/cfg.c                                 |  105 +-
+ net/mac80211/debug.h                               |  170 +++
+ net/mac80211/debugfs_netdev.c                      |   48 +-
+ net/mac80211/driver-ops.h                          |   17 +-
+ net/mac80211/driver-trace.c                        |    9 -
+ net/mac80211/ht.c                                  |   10 +-
+ net/mac80211/ibss.c                                |   91 +-
+ net/mac80211/ieee80211_i.h                         |   20 +-
+ net/mac80211/iface.c                               |   23 +-
+ net/mac80211/key.c                                 |    4 +-
+ net/mac80211/main.c                                |   11 +-
+ net/mac80211/mesh.c                                |   16 +-
+ net/mac80211/mesh.h                                |    4 +-
+ net/mac80211/mesh_hwmp.c                           |  166 ++-
+ net/mac80211/mesh_pathtbl.c                        |   30 +-
+ net/mac80211/mesh_plink.c                          |   61 +-
+ net/mac80211/mesh_sync.c                           |   47 +-
+ net/mac80211/mlme.c                                |  219 ++-
+ net/mac80211/offchannel.c                          |   21 +-
+ net/mac80211/pm.c                                  |   10 +
+ net/mac80211/rx.c                                  |   77 +-
+ net/mac80211/sta_info.c                            |   44 +-
+ net/mac80211/status.c                              |   11 +-
+ net/mac80211/tkip.c                                |   43 +-
+ net/mac80211/trace.c                               |   75 +
+ net/mac80211/{driver-trace.h =3D> trace.h}           |   67 +-
+ net/mac80211/tx.c                                  |   49 +-
+ net/mac80211/util.c                                |    3 +
+ net/mac80211/wme.c                                 |   11 +-
+ net/mac80211/wme.h                                 |    2 +-
+ net/wireless/core.c                                |   63 -
+ net/wireless/core.h                                |   26 -
+ net/wireless/mesh.c                                |    6 +
+ net/wireless/nl80211.c                             |  282 +++-
+ 167 files changed, 6540 insertions(+), 6970 deletions(-)
+ create mode 100644 net/mac80211/debug.h
+ delete mode 100644 net/mac80211/driver-trace.c
+ create mode 100644 net/mac80211/trace.c
+ rename net/mac80211/{driver-trace.h =3D> trace.h} (96%)
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--5vNYLRcllDrimb99
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJP7eXEAAoJEJctW/TcYTgGZVkP/2SsSvVqptLKz/dNxhc/7BJ4
+VoGiZdLWd8cKp03PEILHeSXAhR+K/BaAnlV1kA28VRVCaKtYVImOV6AU26PvH4jZ
+0u6JOTczLNZMqswVLzhvTdEr2htBGo/Fbc9+nfLNPuxkEuaxkWGuaTOE+kt2Wmua
+NPepMvoXoNkrJFIRlW4U16NxOEa5NB/WIgTsu8zqfdAdOYPfQGX2IEmdbfCaJMeM
+tOtgus7DYljpm0Lit0iX7r2qycvuDA4I6E4o1rDE/WUztOENDJvmEgyGPKvWmptB
+4MFf+tOOvulJSi1eWHg1Esvm0ElWv44DIID1bb8pH1RUjx7xLh93ocy47yHtPk2O
+O4fQbmLJvktX0k9l7x9MxK6WovKit93LRb5FFIOTCS/uYbNrzkAMoZ4ziBvmO+LT
+/5V9yhsSHK57Dq3U+HrMoH4t3rG1EiQ8hfoFBR1ddjN15MSqSxMdjxJLwW1bNaKZ
+zuEFNWIGn9VeerXp3J32p+cqV6VWhIqbFDNglkhPvE80ZF0wzFeqlwMBq6Jhg1fY
+4XFuYAOvWFoaX7KOHQIC3pfN7FCYUlRdSE3RCvnYXf0OM3lPUjanFrkqAlWsX9bp
+9Z1Dj/D059no34LeHfIV5YHbjNFzZXtOMLmxoJlJrey09R48QpSfXcaAEZu0O9bo
+kHSG6OUWz4nq2tc8Rz1R
+=T6er
+-----END PGP SIGNATURE-----
+
+--5vNYLRcllDrimb99--
