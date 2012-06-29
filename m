@@ -1,50 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48838 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420Ab2FDGQk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jun 2012 02:16:40 -0400
-Message-ID: <1338790597.4512.3.camel@jlt3.sipsolutions.net> (sfid-20120604_081642_240148_42325632)
-Subject: Re: [PATCH] mac80211: stop Rx during HW reconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 04 Jun 2012 08:16:37 +0200
-In-Reply-To: <1338755422-13220-1-git-send-email-arik@wizery.com> (sfid-20120603_223057_537536_88947913)
-References: <1338755422-13220-1-git-send-email-arik@wizery.com>
-	 (sfid-20120603_223057_537536_88947913)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:45411 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754409Ab2F2Kr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 06:47:26 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 05/13] cfg80211: introduce cfg80211_get_chan_state
+Date: Fri, 29 Jun 2012 12:47:00 +0200
+Message-ID: <1340966828-22874-6-git-send-email-michal.kazior@tieto.com> (sfid-20120629_124753_595773_6FA9278F)
+In-Reply-To: <1340966828-22874-1-git-send-email-michal.kazior@tieto.com>
+References: <1340966828-22874-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-06-03 at 23:30 +0300, Arik Nemtsov wrote:
+Helper function for finding out which channel is
+used by a given interface.
 
-> +++ b/net/mac80211/rx.c
-> @@ -3023,6 +3023,9 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  	if (WARN_ON(!sband))
->  		goto drop;
->  
-> +	/* make sure we get the latest values for the next variable checks */
-> +	smp_rmb();
-> +
+An exclusive channel can be used only by a single
+interface. This is mainly for non-fixed channel
+IBSS handling.
 
-That doesn't make a lot of sense I think? This entire thing is
-inherently racy, you could be processing RX already even while just
-setting the variable in the other code. I'm not really sure what the
-effect of this here is, but it's certainly a hot-path.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/chan.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/core.h |   12 ++++++++++++
+ 2 files changed, 63 insertions(+), 0 deletions(-)
 
-> +       /*
-> +        * Stop all Rx during the reconfig. We don't want state changes
-> +        * or driver callbacks while this is in progress.
-> +        */
-> +       local->in_reconfig = true;
-> +       smp_wmb();
-
-
-If anything, you should probably put this right into
-ieee80211_restart_hw() rather than the reconfig function? It's not
-needed for suspend/resume anyway since we check that separately.
-
-johannes
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index c1999e4..167e7cb 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -92,3 +92,54 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 
+ 	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
+ }
++
++void
++cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
++		        struct wireless_dev *wdev,
++		        struct ieee80211_channel **chan,
++		        enum cfg80211_chan_mode *chanmode)
++{
++	*chan = NULL;
++	*chanmode = CHAN_MODE_UNDEFINED;
++
++	ASSERT_RDEV_LOCK(rdev);
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (!netif_running(wdev->netdev))
++		return;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_ADHOC:
++		if (wdev->current_bss) {
++			*chan = wdev->current_bss->pub.channel;
++			*chanmode = wdev->ibss_fixed
++				  ? CHAN_MODE_SHARED
++				  : CHAN_MODE_EXCLUSIVE;
++			return;
++		}
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++		if (wdev->current_bss) {
++			*chan = wdev->current_bss->pub.channel;
++			*chanmode = CHAN_MODE_SHARED;
++			return;
++		}
++		break;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++	case NL80211_IFTYPE_MESH_POINT:
++		*chan = wdev->channel;
++		*chanmode = CHAN_MODE_SHARED;
++		return;
++	case NL80211_IFTYPE_MONITOR:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_WDS:
++		/* these interface types don't really have a channel */
++		return;
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NUM_NL80211_IFTYPES:
++		WARN_ON(1);
++	}
++
++	return;
++}
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index fef476d..56f18c2 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -241,6 +241,12 @@ struct cfg80211_cached_keys {
+ 	int def, defmgmt;
+ };
+ 
++enum cfg80211_chan_mode {
++	CHAN_MODE_UNDEFINED,
++	CHAN_MODE_SHARED,
++	CHAN_MODE_EXCLUSIVE,
++};
++
+ 
+ /* free object */
+ extern void cfg80211_dev_free(struct cfg80211_registered_device *rdev);
+@@ -419,6 +425,12 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+ 	return cfg80211_can_change_interface(rdev, NULL, iftype);
+ }
+ 
++void
++cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
++		        struct wireless_dev *wdev,
++		        struct ieee80211_channel **chan,
++		        enum cfg80211_chan_mode *chanmode);
++
+ struct ieee80211_channel *
+ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 		  int freq, enum nl80211_channel_type channel_type);
+-- 
+1.7.0.4
 
