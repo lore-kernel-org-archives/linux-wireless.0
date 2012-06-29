@@ -1,132 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:58876 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751036Ab2FZUDT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29285 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319Ab2F2GjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 16:03:19 -0400
-Received: by lbon10 with SMTP id n10so670349lbo.13
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jun 2012 13:03:12 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH 3/5] wlcore: fix broken TX due to wrong queuing of recovery
-Date: Tue, 26 Jun 2012 23:02:58 +0300
-Message-Id: <1340740980-22284-4-git-send-email-coelho@ti.com> (sfid-20120626_220326_690978_0550EC12)
-In-Reply-To: <1340740980-22284-1-git-send-email-coelho@ti.com>
-References: <1340740980-22284-1-git-send-email-coelho@ti.com>
+	Fri, 29 Jun 2012 02:39:22 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 4/5] ath9k: fix power consumption on network sleep when BTCOEX is enabled
+Date: Fri, 29 Jun 2012 12:10:08 +0530
+Message-ID: <1340952009-12223-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120629_083925_278602_15DC54AB)
+In-Reply-To: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+The chip is waken up for every 45ms in btcoex timer cycle to
+for sharing the radio between BT and WLAN. Whenever the wlan
+interface is in network sleep mode, do not schedule hw timers.
+This could reduce power consumption on idle associated state.
 
-commit 14bba17b "wl12xx: Propagate errors from wl1271_raw_write32"
-breaks down TX in certain scenarios. wl1271_irq_locked() propagates
-errors from wl1271_tx_work_locked however it may return -EBUSY
-when the FW queues are full which is a legitimate case and not a
-a real error. In this case a recovery is triggered by wl1271_irq
-and this keeps repeating itself so TX is completely broken.
-Fix it by avoiding propagating return values as errors even if they
-aren't. Only bus (SDIO or SPI) ops failures would be progagated
-as only these should trigger recovery.
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/tx.c |   35 ++++++++++++++++++++++++-----------
- 1 file changed, 24 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/gpio.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index b5211be..6a28aee 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -352,8 +352,10 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	bool is_dummy;
- 	bool is_gem = false;
- 
--	if (!skb)
-+	if (!skb) {
-+		wl1271_error("discarding null skb");
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 9ae6a4d..c17168e 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -194,6 +194,16 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 	struct ath_mci_profile *mci = &btcoex->mci;
+ 	u32 timer_period;
+ 	bool is_btscan;
++	unsigned long flags;
++
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	if (sc->sc_ah->power_mode == ATH9K_PM_NETWORK_SLEEP) {
++		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++		if (btcoex->hw_timer_enabled)
++			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
++		goto skip_hw_wakeup;
 +	}
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  
- 	info = IEEE80211_SKB_CB(skb);
- 
-@@ -662,6 +664,16 @@ void wl12xx_rearm_rx_streaming(struct wl1271 *wl, unsigned long *active_hlids)
+ 	ath9k_ps_wakeup(sc);
+ 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
+@@ -232,6 +242,7 @@ static void ath_btcoex_period_timer(unsigned long data)
  	}
+ 
+ 	ath9k_ps_restore(sc);
++skip_hw_wakeup:
+ 	timer_period = btcoex->btcoex_period;
+ 	mod_timer(&btcoex->period_timer, jiffies + msecs_to_jiffies(timer_period));
  }
- 
-+/*
-+ * Returns failure values only in case of failed bus ops within this function.
-+ * wl1271_prepare_tx_frame retvals won't be returned in order to avoid
-+ * triggering recovery by higher layers when not necessary.
-+ * In case a FW command fails within wl1271_prepare_tx_frame fails a recovery
-+ * will be queued in wl1271_cmd_send. -EAGAIN/-EBUSY from prepare_tx_frame
-+ * can occur and are legitimate so don't propagate. -EINVAL will emit a WARNING
-+ * within prepare_tx_frame code but there's nothing we should do about those
-+ * as well.
-+ */
- int wlcore_tx_work_locked(struct wl1271 *wl)
- {
- 	struct wl12xx_vif *wlvif;
-@@ -671,9 +683,10 @@ int wlcore_tx_work_locked(struct wl1271 *wl)
- 	bool sent_packets = false;
- 	unsigned long active_hlids[BITS_TO_LONGS(WL12XX_MAX_LINKS)] = {0};
- 	int ret = 0;
-+	int bus_ret = 0;
- 
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
--		return -EIO;
-+		return 0;
- 
- 	while ((skb = wl1271_skb_dequeue(wl))) {
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -694,9 +707,9 @@ int wlcore_tx_work_locked(struct wl1271 *wl)
- 
- 			buf_offset = wlcore_hw_pre_pkt_send(wl, buf_offset,
- 							    last_len);
--			ret = wlcore_write_data(wl, REG_SLV_MEM_DATA,
--						wl->aggr_buf, buf_offset, true);
--			if (ret < 0)
-+			bus_ret = wlcore_write_data(wl, REG_SLV_MEM_DATA,
-+					     wl->aggr_buf, buf_offset, true);
-+			if (bus_ret < 0)
- 				goto out;
- 
- 			sent_packets = true;
-@@ -734,9 +747,9 @@ int wlcore_tx_work_locked(struct wl1271 *wl)
- out_ack:
- 	if (buf_offset) {
- 		buf_offset = wlcore_hw_pre_pkt_send(wl, buf_offset, last_len);
--		ret = wlcore_write_data(wl, REG_SLV_MEM_DATA, wl->aggr_buf,
--					buf_offset, true);
--		if (ret < 0)
-+		bus_ret = wlcore_write_data(wl, REG_SLV_MEM_DATA, wl->aggr_buf,
-+					     buf_offset, true);
-+		if (bus_ret < 0)
- 			goto out;
- 
- 		sent_packets = true;
-@@ -747,9 +760,9 @@ out_ack:
- 		 * required for older hardware revisions
- 		 */
- 		if (wl->quirks & WLCORE_QUIRK_END_OF_TRANSACTION) {
--			ret = wlcore_write32(wl, WL12XX_HOST_WR_ACCESS,
-+			bus_ret = wlcore_write32(wl, WL12XX_HOST_WR_ACCESS,
- 					     wl->tx_packets_count);
--			if (ret < 0)
-+			if (bus_ret < 0)
- 				goto out;
- 		}
- 
-@@ -758,7 +771,7 @@ out_ack:
- 	wl12xx_rearm_rx_streaming(wl, active_hlids);
- 
- out:
--	return ret;
-+	return bus_ret;
- }
- 
- void wl1271_tx_work(struct work_struct *work)
 -- 
-1.7.10
+1.7.11.1
 
