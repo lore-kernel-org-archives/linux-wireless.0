@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:47654 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756709Ab2F0QKF (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:59959 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753401Ab2F2M51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jun 2012 12:10:05 -0400
-Received: by lbok6 with SMTP id k6so365140lbo.4
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2012 09:09:56 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH] wlcore: implement .flush callback
-Date: Wed, 27 Jun 2012 19:09:47 +0300
-Message-Id: <1340813387-18407-1-git-send-email-coelho@ti.com> (sfid-20120627_181017_400526_4AB5896E)
+	Fri, 29 Jun 2012 08:57:27 -0400
+Message-ID: <4FEDA625.8060005@net.t-labs.tu-berlin.de> (sfid-20120629_145732_116778_514C37FE)
+Date: Fri, 29 Jun 2012 05:57:09 -0700
+From: thomas <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	brcm80211-dev-list@broadcom.com, pieterpg@broadcom.com,
+	gregkh@suse.de, frankyl@broadcom.com, arend@broadcom.com,
+	rvossen@broadcom.com, brudley@broadcom.com, linville@tuxdriver.com
+Subject: Re: [PATCH] brcmsmac: restructure info->control.sta handling as it
+ is goning to be removed soon.
+References: <1340943304-70933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>  (sfid-20120629_061650_559847_B79CE9A9) <1340952528.4488.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340952528.4488.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
 
-implement the .flush() callback by simply calling wl1271_tx_flush().
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+Johannes Berg schrieb:
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 709f6dd..6ac3323 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4637,6 +4637,13 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
-+{
-+	struct wl1271 *wl = hw->priv;
-+
-+	wl1271_tx_flush(wl);
-+}
-+
- static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
- {
- 	struct wl1271 *wl = hw->priv;
-@@ -4827,6 +4834,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.tx_frames_pending = wl1271_tx_frames_pending,
- 	.set_bitrate_mask = wl12xx_set_bitrate_mask,
- 	.channel_switch = wl12xx_op_channel_switch,
-+	.flush = wlcore_op_flush,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
- 
--- 
-1.7.10
+> On Thu, 2012-06-28 at 21:15 -0700, Thomas Huehn wrote:
+>> @@ -267,7 +267,9 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+>>  static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>>  {
+>>  	struct brcms_info *wl = hw->priv;
+>> +	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+>>  
+>> +	tx_info->rate_driver_data[0] = tx_info->control.sta;
+> 
+> It seems that brcmsmac doesn't care about anything but the
+> tx_info->flags, but it would still seem safer to overwrite the data
+> before the function returns, rather than as the first thing?
+> 
 
+I will send a version 2.
+Thx Johannes for the suggestion.
+
+Thomas
