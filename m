@@ -1,95 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57436 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52521 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752266Ab2FCOa2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 10:30:28 -0400
+	id S1755446Ab2F2XqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 19:46:19 -0400
 From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: update some urls to git trees in docs
-Date: Sun,  3 Jun 2012 16:30:14 +0200
-Message-Id: <1338733814-31438-2-git-send-email-hauke@hauke-m.de> (sfid-20120603_163105_407318_60836A74)
-In-Reply-To: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
-References: <1338733814-31438-1-git-send-email-hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 6/9] bcma: remove bcma_pmu_{pll,swreg}_init()
+Date: Sat, 30 Jun 2012 01:44:42 +0200
+Message-Id: <1341013486-2520-7-git-send-email-hauke@hauke-m.de> (sfid-20120630_014623_954144_7E1373AA)
+In-Reply-To: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
+References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes some references to compat and compat-wireless git tree hosted
-at git.kernel.org to github and changed some references from wireless-
-testing to linux-next and linux-2.6-allstable to linux-stable.
+These functions are doing nothing in the current code.
+
+I do not think we will need these function in the future as the
+corresponding functions in the Broadcom SDK are just doing something
+useful on chips supported by ssb or fullmac chips.
 
 Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- README                        |    4 ++--
- scripts/admin-update.sh       |   16 ++++++++--------
- scripts/gen-stable-release.sh |    4 ++--
- 3 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/bcma/driver_chipcommon_pmu.c |   34 ----------------------------------
+ 1 file changed, 34 deletions(-)
 
-diff --git a/README b/README
-index 09d8612..2cbef56 100644
---- a/README
-+++ b/README
-@@ -302,8 +302,8 @@ compatibility. You will then need to checkout three trees to start hacking on
- compat-wireless:
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index a8fcdf0..069fca7 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -54,22 +54,6 @@ void bcma_chipco_regctl_maskset(struct bcma_drv_cc *cc, u32 offset, u32 mask,
+ }
+ EXPORT_SYMBOL_GPL(bcma_chipco_regctl_maskset);
  
- git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
--git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
--git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6.git
-+git://github.com/mcgrof/compat.git
-+git://github.com/mcgrof/compat-wireless.git
+-static void bcma_pmu_pll_init(struct bcma_drv_cc *cc)
+-{
+-	struct bcma_bus *bus = cc->core->bus;
+-
+-	switch (bus->chipinfo.id) {
+-	case BCMA_CHIP_ID_BCM4313:
+-	case BCMA_CHIP_ID_BCM4331:
+-	case BCMA_CHIP_ID_BCM43224:
+-	case BCMA_CHIP_ID_BCM43225:
+-		break;
+-	default:
+-		pr_err("PLL init unknown for device 0x%04X\n",
+-			bus->chipinfo.id);
+-	}
+-}
+-
+ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
+ {
+ 	struct bcma_bus *bus = cc->core->bus;
+@@ -96,22 +80,6 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
+ 		bcma_cc_write32(cc, BCMA_CC_PMU_MAXRES_MSK, max_msk);
+ }
  
- Linux next
- ----------
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index c4f5e39..a9dc68c 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -2,21 +2,21 @@
- # 
- # Copyright 2007, 2008, 2010	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
- #
--# Use this to update compat-wireless-2.6 to the latest
--# wireless-testing.git tree you have.
-+# Use this to update compat-wireless to the latest
-+# linux-nex.git tree you have.
- #
--# Usage: you should have the latest pull of wireless-2.6.git
--# git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
--# We assume you have it on your ~/devel/wireless-testing/ directory. If you do,
--# just run this script from the compat-wireless-2.6 directory.
-+# Usage: you should have the latest pull of linux-nex.git
-+# git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-+# We assume you have it on your ~/linux-next/ directory. If you do,
-+# just run this script from the compat-wireless directory.
- # You can specify where your GIT_TREE is by doing:
- #
--# export GIT_TREE=/home/mcgrof/wireless-testing/
-+# export GIT_TREE=/home/mcgrof/linux-next/
- # 
- # for example
- #
- GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
--GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
-+GIT_COMPAT_URL="git://github.com/mcgrof/compat.git"
+-void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
+-{
+-	struct bcma_bus *bus = cc->core->bus;
+-
+-	switch (bus->chipinfo.id) {
+-	case BCMA_CHIP_ID_BCM4313:
+-	case BCMA_CHIP_ID_BCM4331:
+-	case BCMA_CHIP_ID_BCM43224:
+-	case BCMA_CHIP_ID_BCM43225:
+-		break;
+-	default:
+-		pr_err("PMU switch/regulators init unknown for device "
+-			"0x%04X\n", bus->chipinfo.id);
+-	}
+-}
+-
+ /* Disable to allow reading SPROM. Don't know the adventages of enabling it. */
+ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
+ {
+@@ -192,9 +160,7 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
+ 		bcma_cc_set32(cc, BCMA_CC_PMU_CTL,
+ 			     BCMA_CC_PMU_CTL_NOILPONW);
  
- INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h hci_mon.h mgmt.h sco.h smp.h a2mp.h"
- NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
-diff --git a/scripts/gen-stable-release.sh b/scripts/gen-stable-release.sh
-index 9764730..98f4af0 100755
---- a/scripts/gen-stable-release.sh
-+++ b/scripts/gen-stable-release.sh
-@@ -3,8 +3,8 @@
- #
- # You can use this to make stable compat-wireless releases
- #
--# The assumption is you have the linux-2.6-allstable git tree on your $HOME
--# git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
-+# The assumption is you have the linux-stable git tree on your $HOME
-+# git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
- #
- # Local branches will be created based on the remote linux-2.6.X.y branches.
- # If your branch already exists we will nuke it for you to avoid rebasing.
+-	bcma_pmu_pll_init(cc);
+ 	bcma_pmu_resources_init(cc);
+-	bcma_pmu_swreg_init(cc);
+ 	bcma_pmu_workarounds(cc);
+ }
+ 
 -- 
 1.7.9.5
 
