@@ -1,74 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55346 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552Ab2FRXq4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 19:46:56 -0400
-Received: by lbbgm6 with SMTP id gm6so4995234lbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2012 16:46:55 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:45411 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754726Ab2F2Kr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 06:47:28 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 09/13] cfg80211: track monitor channel
+Date: Fri, 29 Jun 2012 12:47:04 +0200
+Message-ID: <1340966828-22874-10-git-send-email-michal.kazior@tieto.com> (sfid-20120629_124747_091593_1FB8D17C)
+In-Reply-To: <1340966828-22874-1-git-send-email-michal.kazior@tieto.com>
+References: <1340966828-22874-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <4283314.5zPdis6seJ@sylvesterjr.cmi.ua.ac.be>
-References: <4FDE1EF5.9030805@gmail.com> <4283314.5zPdis6seJ@sylvesterjr.cmi.ua.ac.be>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 19 Jun 2012 09:46:35 +1000
-Message-ID: <CAGRGNgXaWHMi3xDygVAzDcm6qLnHPO2nXnidPW6K+e-v1=Hm3Q@mail.gmail.com> (sfid-20120619_014700_630299_8EFE5E1C)
-Subject: Re: ath9k bug in country domain handling
-To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Erwin,
+Make it even more obvious we support single
+monitor channel. This will allow us to remove
+.get_channel.
 
-On Mon, Jun 18, 2012 at 10:25 PM, Erwin Van de Velde
-<erwin.vandevelde@gmail.com> wrote:
->
-> The output I get is:
-> [ 8.931463] ath: EEPROM regdomain: 0x0
-> [ 8.931483] ath: EEPROM indicates default country code should be used
-> [ 8.931502] ath: doing EEPROM country->regdmn map search
-> [ 8.931526] ath: country maps to regdmn code: 0x3a
-> [ 8.931544] ath: Country alpha2 being used: US
-> [ 8.931561] ath: Regpair used: 0x3a
->
-> As I see it, the regdomain is 00 and not US, so why does the ath9k driver
-> decide to put me in the US? US should not be the default country code, but
-> world reg domain. The preferred solution in my opinion is that the driver
-> would require a regdomain to be given if it is not already set by the card.
-> Choosing US as a default seems purely random .
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/wireless/chan.c |    9 ++++++++-
+ net/wireless/core.c |    8 +++++++-
+ net/wireless/core.h |    3 +++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-No, US is the *default*. It's not just flipping a coin and choosing
-one, it's choosing the default. Choosing the US as the default is
-probably specified in the specification of the chipset by Atheros. (A
-US-based company)
-
-> It would make far more sense to
-> have no restricions by default if no regdomain is given and require it as a
-> parameter, so everyone can set it correctly to his correct domain. The current
-> method not only disallows valid channels to be used, but can also allow for
-> legally forbidden channels to be used, which could be even worse.
-
-As I explained previously, the cards are tuned and configured for a
-particular regulatory domain when they're manufactured. The driver
-cannot assume that the card will be capable of complying with another
-regulatory domain.
-
-The cfg80211 regulatory code is trying to produce the best result it
-can that both complies with the regulatory restrictions in force and
-allows you to use your card. Producing a set of rules that are the
-intersection of the US and Belgium restrictions is the best way to do
-this. The card says it's in the US, you say you're in Belgium - the
-intersection of the restrictions is the only way to satisfy both of
-those regulatory requirements and ensure that the card is working as
-required by whichever laws are in effect.
-
-Thanks,
-
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 019401b..434c56b 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -82,6 +82,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 				 int freq, enum nl80211_channel_type chantype)
+ {
+ 	struct ieee80211_channel *chan;
++	int err;
+ 
+ 	if (!rdev->ops->set_monitor_channel)
+ 		return -EOPNOTSUPP;
+@@ -92,7 +93,13 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 	if (!chan)
+ 		return -EINVAL;
+ 
+-	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	err = rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	if (!err) {
++		rdev->monitor_channel = chan;
++		rdev->monitor_channel_type = chantype;
++	}
++
++	return err;
+ }
+ 
+ void
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 8412da7..1b5daa7 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -730,9 +730,15 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		rdev->num_running_monitor_ifaces += num;
+ 
+ 	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
+-	if (has_monitors_only_new != has_monitors_only_old)
++	if (has_monitors_only_new != has_monitors_only_old) {
+ 		rdev->ops->set_monitor_enabled(&rdev->wiphy,
+ 					       has_monitors_only_new);
++
++		if (!has_monitors_only_new) {
++			rdev->monitor_channel = NULL;
++			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		}
++	}
+ }
+ 
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 99acd51..d5efe1b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -59,6 +59,9 @@ struct cfg80211_registered_device {
+ 	int num_running_ifaces;
+ 	int num_running_monitor_ifaces;
+ 
++	struct ieee80211_channel *monitor_channel;
++	enum nl80211_channel_type monitor_channel_type;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
 -- 
-Julian Calaby
+1.7.0.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
