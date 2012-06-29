@@ -1,90 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:49227 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752229Ab2FOKmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jun 2012 06:42:12 -0400
-Message-ID: <1339756931.24527.16.camel@joe2Laptop> (sfid-20120615_124231_978309_5FF1D94C)
-Subject: Re: [PATCH wireless-next 18/20] ti: Use pr_<level>
-From: Joe Perches <joe@perches.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Fri, 15 Jun 2012 03:42:11 -0700
-In-Reply-To: <1339749374.4502.80.camel@cumari.coelho.fi>
-References: <cover.1339739415.git.joe@perches.com>
-	 <a4533db379be3689e3b29ed9b0d170263d875f7d.1339739416.git.joe@perches.com>
-	 <1339749374.4502.80.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52516 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754116Ab2F2XqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 19:46:18 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 5/9] bcma: complete workaround for BCMA43224 and BCM4313
+Date: Sat, 30 Jun 2012 01:44:41 +0200
+Message-Id: <1341013486-2520-6-git-send-email-hauke@hauke-m.de> (sfid-20120630_014622_327813_BA04EE03)
+In-Reply-To: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
+References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-15 at 11:36 +0300, Luciano Coelho wrote:
-> Hi Joe,
+This code is based on the Broadcom SDK and brcmsmac.
 
-Hi Luciano.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_chipcommon_pmu.c        |   22 +++++++++++++++++-----
+ include/linux/bcma/bcma_driver_chipcommon.h |    8 ++++++++
+ 2 files changed, 25 insertions(+), 5 deletions(-)
 
-> As Johannes already mentioned, I have to also ask why do you need to do
-> this?
-
-To use a more consistent logging style.
-To minimize unnecessary changes when adding
-similar drivers based on this code.
-
->  I see the point, slightly, with the wl1251 code, because it is
-> still using printks, but with wlcore and friends, there's no functional
-> change.
-
-Using a consistent logging style minimizes defects.
-
-> As mentioned above, this change here is acceptable, but removing the \n
-> from the macro and adding it at the end of each and every call is
-> useless and will just skew git-blame and make it harder to do rebase or
-> apply patches because of conflicts.
-
-In practice, the merging won't be much of an issue.
-Neither will git blame.
-
-> > -#define wl1271_warning(fmt, arg...) \
-> > -	pr_warning(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
-> > +#define wl1271_warn(fmt, arg...)				\
-> > +	pr_warn(DRIVER_PREFIX "WARNING " fmt, ##arg)
-> 
-> Using pr_warn instead of pr_warning is pointless.  pr_warning is the
-> main definition, actually, and pr_warn is just a "mirror".
-
-I expect one day to reverse the definitions.
-
-The kernel is moving, albeit slowly to prefer
-pr_warn to mirror dev_warn, netdev_warn, etc.
-
-Most of these uses will eventually become netdev_warn.
-netdev_warn still uses a \n.
-
-> Again, moving the \n from the macro definition and changing all the
-> callers is an unnecessary, intrusive change.
-> 
-> We have wanted to change "wl1271" to "wl12xx" for a long time, but we
-> don't do it exactly because this means we need to change the calls
-> everywhere.
-
-Nothing in ever _needed_, no child will go
-hungry or fed here.  This is a consistency change.
-
-There are a couple of instances where \n is
-currently used unnecessarily that are fixed in
-the conversion.
-
-$ git grep -E  "\bwl12[0-9]+_[a-z]+\s*\(.*\\\\n\"" drivers/net/wireless/ti
-drivers/net/wireless/ti/wl12xx/cmd.c:   wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
-drivers/net/wireless/ti/wl12xx/cmd.c:   wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
-drivers/net/wireless/ti/wlcore/main.c:          wl1271_error("Incorrect ampdu action id=%x\n", action);
-
-People make these mistakes because the more
-common and adjacent dev_<level> code _use_
-a newline.  Using a consistent style minimzes
-these defects.
-
-cheers, Joe
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 2d9ac3e..a8fcdf0 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -139,7 +139,11 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 
+ 	switch (bus->chipinfo.id) {
+ 	case BCMA_CHIP_ID_BCM4313:
+-		bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
++		/* enable 12 mA drive strenth for 4313 and set chipControl
++		   register bit 1 */
++		bcma_chipco_chipctl_maskset(cc, 0,
++					    BCMA_CCTRL_4313_12MA_LED_DRIVE,
++					    BCMA_CCTRL_4313_12MA_LED_DRIVE);
+ 		break;
+ 	case BCMA_CHIP_ID_BCM4331:
+ 	case BCMA_CHIP_ID_BCM43431:
+@@ -147,12 +151,20 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 		bcma_chipco_bcm4331_ext_pa_lines_ctl(cc, true);
+ 		break;
+ 	case BCMA_CHIP_ID_BCM43224:
++	case BCMA_CHIP_ID_BCM43421:
++		/* enable 12 mA drive strenth for 43224 and set chipControl
++		   register bit 15 */
+ 		if (bus->chipinfo.rev == 0) {
+-			pr_err("Workarounds for 43224 rev 0 not fully "
+-				"implemented\n");
+-			bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x00F000F0);
++			bcma_cc_maskset32(cc, BCMA_CC_CHIPCTL,
++					  BCMA_CCTRL_43224_GPIO_TOGGLE,
++					  BCMA_CCTRL_43224_GPIO_TOGGLE);
++			bcma_chipco_chipctl_maskset(cc, 0,
++						    BCMA_CCTRL_43224A0_12MA_LED_DRIVE,
++						    BCMA_CCTRL_43224A0_12MA_LED_DRIVE);
+ 		} else {
+-			bcma_chipco_chipctl_maskset(cc, 0, ~0, 0xF0);
++			bcma_chipco_chipctl_maskset(cc, 0,
++						    BCMA_CCTRL_43224B0_12MA_LED_DRIVE,
++						    BCMA_CCTRL_43224B0_12MA_LED_DRIVE);
+ 		}
+ 		break;
+ 	case BCMA_CHIP_ID_BCM43225:
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 1e523cc..09f31ad 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -325,6 +325,14 @@
+ #define BCMA_CHIPCTL_4331_BT_SHD0_ON_GPIO4	BIT(16)	/* enable bt_shd0 at gpio4 */
+ #define BCMA_CHIPCTL_4331_BT_SHD1_ON_GPIO5	BIT(17)	/* enable bt_shd1 at gpio5 */
+ 
++/* 43224 chip-specific ChipControl register bits */
++#define BCMA_CCTRL_43224_GPIO_TOGGLE		0x8000		/* gpio[3:0] pins as btcoex or s/w gpio */
++#define BCMA_CCTRL_43224A0_12MA_LED_DRIVE	0x00F000F0	/* 12 mA drive strength */
++#define BCMA_CCTRL_43224B0_12MA_LED_DRIVE	0xF0		/* 12 mA drive strength for later 43224s */
++
++/* 4313 Chip specific ChipControl register bits */
++#define BCMA_CCTRL_4313_12MA_LED_DRIVE		0x00000007	/* 12 mA drive strengh for later 4313 */
++
+ /* Data for the PMU, if available.
+  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
+  */
+-- 
+1.7.9.5
 
