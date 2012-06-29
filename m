@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:57038 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab2FFKVL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 06:21:11 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so8745290pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 03:21:11 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH 4/4] mac80211: invoke the timer only with correct dot11MeshHWMPRootMode value
-Date: Wed,  6 Jun 2012 18:20:39 +0800
-Message-Id: <1338978039-4269-5-git-send-email-yeohchunyeow@gmail.com> (sfid-20120606_122114_951073_D5D8AB00)
-In-Reply-To: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1338978039-4269-1-git-send-email-yeohchunyeow@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52498 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752445Ab2F2XqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 19:46:14 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 3/9] bcma: remove fix for 4329b0 bad LPOM is detection
+Date: Sat, 30 Jun 2012 01:44:39 +0200
+Message-Id: <1341013486-2520-4-git-send-email-hauke@hauke-m.de> (sfid-20120630_014618_362489_3744CBD2)
+In-Reply-To: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
+References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mesh_path_root_timer is invoked once the dot11MeshHWMPRootMode is larger than 1. This patch
-also adds the backward compatible to the previous setting on dot11MeshHWMPRootMode. If the
-user configures as follow, it will still trigger the proactive RANN with Gate Announcement.
+There is not core id with 0x4329, but at the same place in the open
+source part of the Broadcom SDK is a check for some device with the
+chip id of 0x4329. The device with a chip id of 0x4329 is a full mac
+device, so it will never be supported by bcma, this part is running in
+the firmware of the device and not on the host CPU.
+This code is wrong and will never be used, so just remove it.
 
-iw mesh0 set mesh_param mesh_hwmp_rootmode 1
-iw mesh0 set mesh_param mesh_gate_announcements 1
-
-similar to the following setting:
-
-iw mesh0 set mesh_param mesh_hwmp_rootmode 4
-iw mesh0 set mesh_param mesh_gate_announcements 1
-
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/cfg.c  |    4 ++--
- net/mac80211/mesh.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/bcma/driver_chipcommon_pmu.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 626baa2..31ffab1 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1561,8 +1561,8 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		 * announcements, so require this ifmsh to also be a root node
- 		 * */
- 		if (nconf->dot11MeshGateAnnouncementProtocol &&
--		    !conf->dot11MeshHWMPRootMode) {
--			conf->dot11MeshHWMPRootMode = 1;
-+		    !(conf->dot11MeshHWMPRootMode > 1)) {
-+			conf->dot11MeshHWMPRootMode = 4;
- 			ieee80211_mesh_root_setup(ifmsh);
- 		}
- 		conf->dot11MeshGateAnnouncementProtocol =
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5e19e0d..5b42598 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -443,7 +443,7 @@ static void ieee80211_mesh_path_root_timer(unsigned long data)
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 89528cf..2d9ac3e 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -180,9 +180,6 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
+ 		bcma_cc_set32(cc, BCMA_CC_PMU_CTL,
+ 			     BCMA_CC_PMU_CTL_NOILPONW);
  
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh)
- {
--	if (ifmsh->mshcfg.dot11MeshHWMPRootMode)
-+	if (ifmsh->mshcfg.dot11MeshHWMPRootMode > 1)
- 		set_bit(MESH_WORK_ROOT, &ifmsh->wrkq_flags);
- 	else {
- 		clear_bit(MESH_WORK_ROOT, &ifmsh->wrkq_flags);
+-	if (cc->core->id.id == 0x4329 && cc->core->id.rev == 2)
+-		pr_err("Fix for 4329b0 bad LPOM state not implemented!\n");
+-
+ 	bcma_pmu_pll_init(cc);
+ 	bcma_pmu_resources_init(cc);
+ 	bcma_pmu_swreg_init(cc);
 -- 
-1.7.0.4
+1.7.9.5
 
