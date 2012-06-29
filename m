@@ -1,73 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39370 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754285Ab2FKN7c (ORCPT
+Received: from mail-yw0-f42.google.com ([209.85.213.42]:61959 "EHLO
+	mail-yw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126Ab2F2V1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jun 2012 09:59:32 -0400
-Message-ID: <1339423241.4999.53.camel@lappy> (sfid-20120611_155953_298506_93DA3032)
-Subject: net: nfc: BUG and panic in accept() on 3.5-rc2
-From: Sasha Levin <levinsasha928@gmail.com>
-To: David Miller <davem@davemloft.net>, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com
-Cc: Dave Jones <davej@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 11 Jun 2012 16:00:41 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 29 Jun 2012 17:27:14 -0400
+Message-ID: <4FEE1DAE.10509@lwfinger.net> (sfid-20120629_232730_025769_23EA94BE)
+Date: Fri, 29 Jun 2012 16:27:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: netdev <netdev@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Kernel oops in at76c50x-usb
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Johannes,
 
-I've stumbled on the following while fuzzing with trinity inside a KVM tools guest, running on 3.5-rc2:
+This particular oops is seen for at76c50x-usb on a PPC, but I have seen a 
+similar oops for b43legacy, and i thought there was one earlier in the wireless 
+ML, but I could not find it just now.
 
-[ 2136.383310] BUG: unable to handle kernel NULL pointer dereference at 00000000000003b0
-[ 2136.384022] IP: [<ffffffff8114e400>] __lock_acquire+0xc0/0x4b0
-[ 2136.384022] PGD 131c4067 PUD 11c0c067 PMD 0 
-[ 2136.388106] Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-[ 2136.388106] CPU 1 
-[ 2136.388106] Pid: 24855, comm: trinity-child1 Tainted: G        W    3.5.0-rc2-sasha-00015-g7b268f7 #374  
-[ 2136.388106] RIP: 0010:[<ffffffff8114e400>]  [<ffffffff8114e400>] __lock_acquire+0xc0/0x4b0
-[ 2136.388106] RSP: 0018:ffff8800130b3ca8  EFLAGS: 00010046
-[ 2136.388106] RAX: 0000000000000086 RBX: ffff88001186b000 RCX: 0000000000000000
-[ 2136.388106] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-[ 2136.388106] RBP: ffff8800130b3d08 R08: 0000000000000001 R09: 0000000000000000
-[ 2136.388106] R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000002
-[ 2136.388106] R13: 00000000000003b0 R14: 0000000000000000 R15: 0000000000000000
-[ 2136.388106] FS:  00007fa5b1bd4700(0000) GS:ffff88001b800000(0000) knlGS:0000000000000000
-[ 2136.388106] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 2136.388106] CR2: 00000000000003b0 CR3: 0000000011d1f000 CR4: 00000000000406e0
-[ 2136.388106] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 2136.388106] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[ 2136.388106] Process trinity-child1 (pid: 24855, threadinfo ffff8800130b2000, task ffff88001186b000)
-[ 2136.388106] Stack:
-[ 2136.388106]  ffff8800130b3cd8 ffffffff81121785 ffffffff81236774 000080d000000001
-[ 2136.388106]  ffff88001b9d6c00 00000000001d6c00 ffffffff130b3d08 ffff88001186b000
-[ 2136.388106]  0000000000000000 0000000000000002 0000000000000000 0000000000000000
-[ 2136.388106] Call Trace:
-[ 2136.388106]  [<ffffffff81121785>] ? sched_clock_local+0x25/0x90
-[ 2136.388106]  [<ffffffff81236774>] ? get_empty_filp+0x74/0x220
-[ 2136.388106]  [<ffffffff8114e97a>] lock_acquire+0x18a/0x1e0
-[ 2136.388106]  [<ffffffff836b37df>] ? rawsock_release+0x4f/0xa0
-[ 2136.388106]  [<ffffffff837c0ef0>] _raw_write_lock_bh+0x40/0x80
-[ 2136.388106]  [<ffffffff836b37df>] ? rawsock_release+0x4f/0xa0
-[ 2136.388106]  [<ffffffff836b37df>] rawsock_release+0x4f/0xa0
-[ 2136.388106]  [<ffffffff8321cfe8>] sock_release+0x18/0x70
-[ 2136.388106]  [<ffffffff8321d069>] sock_close+0x29/0x30
-[ 2136.388106]  [<ffffffff81236bca>] __fput+0x11a/0x2c0
-[ 2136.388106]  [<ffffffff81236d85>] fput+0x15/0x20
-[ 2136.388106]  [<ffffffff8321de34>] sys_accept4+0x1b4/0x200
-[ 2136.388106]  [<ffffffff837c165c>] ? _raw_spin_unlock_irq+0x4c/0x80
-[ 2136.388106]  [<ffffffff837c1669>] ? _raw_spin_unlock_irq+0x59/0x80
-[ 2136.388106]  [<ffffffff837c2565>] ? sysret_check+0x22/0x5d
-[ 2136.388106]  [<ffffffff8321de8b>] sys_accept+0xb/0x10
-[ 2136.388106]  [<ffffffff837c2539>] system_call_fastpath+0x16/0x1b
-[ 2136.388106] Code: ec 04 00 0f 85 ea 03 00 00 be d5 0b 00 00 48 c7 c7 8a c1 40 84 e8 b1 a5 f8 ff 31 c0 e9 d4 03 00 00 66 2e 0f 1f 84 00 00 00 00 00 <49> 81 7d 00 60 73 5e 85 b8 01 00 00 00 44 0f 44 e0 83 fe 01 77 
-[ 2136.388106] RIP  [<ffffffff8114e400>] __lock_acquire+0xc0/0x4b0
-[ 2136.388106]  RSP <ffff8800130b3ca8>
-[ 2136.388106] CR2: 00000000000003b0
-[ 2136.388106] ---[ end trace 6d450e935ee18982 ]---
-[ 2136.388106] Kernel panic - not syncing: Fatal exception in interrupt
+This particular oops does not always occur. Usually, the machine just freezes.
 
+The dmesg dump is:
+
+=============================================================
+
+[  156.231550] Unable to handle kernel paging request for data at address 0x0000004c
+[  156.231571] Faulting instruction address: 0xc0342e98
+[  156.231594] Oops: Kernel access of bad area, sig: 11 [#1]
+[  156.231599] PowerMac
+[  156.231692] Modules linked in: at76c50x_usb nfs lockd fscache auth_rpcgss 
+nfs_acl sunrpc uinput cpufreq_userspace cpufreq_conservative cpufreq_ondemand 
+cpufreq_stats cpufreq_powersave bluetooth fuse loop firewire_sbp2 arc4 b43 
+mac80211 cfg80211 rfkill rng_core ssb mmc_core pcmcia evdev yenta_socket 
+pcmcia_rsrc pcmcia_core ext4 mbcache jbd2 crc16 ohci_hcd ehci_hcd usbcore 
+firewire_ohci sungem firewire_core sungem_phy crc_itu_t sr_mod cdrom usb_common 
+nls_base [last unloaded: scsi_wait_scan]
+[  156.231703] NIP: c0342e98 LR: e25121ac CTR: c0342e80
+[  156.231715] REGS: df869e00 TRAP: 0300   Not tainted  (3.5.0-rc4-wl+)
+[  156.231732] MSR: 00001032 <ME,IR,DR,RI>  CR: 42000042  XER: 20000000
+[  156.231738] DAR: 0000004c, DSISR: 40000000
+[  156.231804] TASK = df859b00[5] 'kworker/u:0' THREAD: df868000
+[  156.231804] GPR00: e25121ac df869eb0 df859b00 00000000 df858db0 df858db0 
+1d0be361 00000000
+[  156.231804] GPR08: 00000000 00000001 73635f72 0000004c c0342e80 00000000 
+018bd137 0197dda0
+[  156.231804] GPR16: 018bd55a 0196ecb8 018ee7d4 018bd538 ffbc1280 018bcd5b 
+00000001 c05830d4
+[  156.231804] GPR24: c05e46d8 00000000 00000001 00000001 de8cd460 debde9c8 
+df869ec8 debde300
+[  156.231840] NIP [c0342e98] __netif_schedule+0x18/0x78
+[  156.231967] LR [e25121ac] ieee80211_propagate_queue_wake+0x100/0x14c [mac80211]
+[  156.231972] Call Trace:
+[  156.231986] [df869eb0] [c0342ee0] __netif_schedule+0x60/0x78 (unreliable)
+[  156.232025] [df869ec0] [e25121ac] ieee80211_propagate_queue_wake+0x100/0x14c 
+[mac80211]
+[  156.232065] [df869f00] [e25123bc] ieee80211_wake_queues_by_reason+0x3c/0x7c 
+[mac80211]
+[  156.232096] [df869f20] [e29a2178] at76_dwork_hw_scan+0x184/0x1a8 [at76c50x_usb]
+[  156.232123] [df869f50] [c0057d04] process_one_work+0x2a4/0x45c
+[  156.232136] [df869f80] [c0058358] worker_thread+0x244/0x3d4
+[  156.232153] [df869fb0] [c005d168] kthread+0x88/0x8c
+[  156.232174] [df869ff0] [c000fa58] kernel_thread+0x4c/0x68
+[  156.232180] Instruction dump:
+[  156.232200] 83810010 83a10014 83c10018 83e1001c 38210020 4e800020 9421fff0 
+7c0802a6
+[  156.232219] 3963004c 39200001 90010014 93e1000c <7c005828> 7c0a4b78 7d40592d 
+40a2fff4
+[  156.232232] ---[ end trace 11d3cd4cb4a4faf3 ]---
+[  156.232236]
+[  156.232401] Unable to handle kernel paging request for data at address 0xfffffffc
+[  156.232411] Faulting instruction address: 0xc005cb48
+
+=============================================================
+The objdump listing and the source for the routine in question follows:
+
+=============================================================
+
+00001600 <__netif_schedule>:
+__netif_schedule():
+     1600:       94 21 ff f0     stwu    r1,-16(r1)
+     1604:       7c 08 02 a6     mflr    r0
+     1608:       39 63 00 4c     addi    r11,r3,76
+     160c:       39 20 00 01     li      r9,1
+     1610:       90 01 00 14     stw     r0,20(r1)
+     1614:       93 e1 00 0c     stw     r31,12(r1)
+     1618:       7c 00 58 28     lwarx   r0,0,r11
+     161c:       7c 0a 4b 78     or      r10,r0,r9
+     1620:       7d 40 59 2d     stwcx.  r10,0,r11
+     1624:       40 a2 ff f4     bne-    1618 <__netif_schedule+0x18>
+     1628:       70 00 00 01     andi.   r0,r0,1
+     162c:       40 a2 00 38     bne+    1664 <__netif_schedule+0x64>
+     1630:       7f e0 00 a6     mfmsr   r31
+     1634:       57 e9 04 5e     rlwinm  r9,r31,0,17,15
+     1638:       7d 20 01 24     mtmsr   r9
+     163c:       90 03 00 44     stw     r0,68(r3)
+     1640:       3d 20 00 00     lis     r9,0
+     1644:       38 03 00 44     addi    r0,r3,68
+     1648:       39 29 00 00     addi    r9,r9,0
+     164c:       81 69 00 04     lwz     r11,4(r9)
+     1650:       90 6b 00 00     stw     r3,0(r11)
+     1654:       38 60 00 02     li      r3,2
+     1658:       90 09 00 04     stw     r0,4(r9)
+     165c:       48 00 00 01     bl      165c <__netif_schedule+0x5c>
+     1660:       7f e0 01 24     mtmsr   r31
+     1664:       80 01 00 14     lwz     r0,20(r1)
+     1668:       83 e1 00 0c     lwz     r31,12(r1)
+     166c:       38 21 00 10     addi    r1,r1,16
+     1670:       7c 08 03 a6     mtlr    r0
+     1674:       4e 80 00 20     blr
+
+static inline void __netif_reschedule(struct Qdisc *q)
+{
+         struct softnet_data *sd;
+         unsigned long flags;
+
+         local_irq_save(flags);
+         sd = &__get_cpu_var(softnet_data);
+         q->next_sched = NULL;
+         *sd->output_queue_tailp = q;
+         sd->output_queue_tailp = &q->next_sched;
+         raise_softirq_irqoff(NET_TX_SOFTIRQ);
+         local_irq_restore(flags);
+}
+
+void __netif_schedule(struct Qdisc *q)
+{
+         if (!test_and_set_bit(__QDISC_STATE_SCHED, &q->state))
+                 __netif_reschedule(q);
+}
+EXPORT_SYMBOL(__netif_schedule);
+
+===================================================
+
+
+My PPC instruction decoding skills are poor, but I think the crash is happening 
+at offset 1660. In addition, the routine is about to exit.
+
+Thanks,
+
+Larry
