@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38684 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761706Ab2FEKQw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jun 2012 06:16:52 -0400
-Message-ID: <1338891410.4514.27.camel@jlt3.sipsolutions.net> (sfid-20120605_121656_172146_31F2CAEE)
-Subject: [PATCH 3.5] cfg80211: fix interface combinations check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 05 Jun 2012 12:16:50 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51679 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755259Ab2F2Qk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 12:40:58 -0400
+Message-ID: <4FEDDA91.2050805@hauke-m.de> (sfid-20120629_184101_759762_275D5CD1)
+Date: Fri, 29 Jun 2012 18:40:49 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linville@tuxdriver.com, b43-dev@lists.infradead.org,
+	arend@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/8] bcma misc updates
+References: <1338933307-13446-1-git-send-email-hauke@hauke-m.de> <CACna6rxL8xya8eOfBUvT43y0ZhHWKJyEef1G2pe5THi4DfOmkQ@mail.gmail.com>
+In-Reply-To: <CACna6rxL8xya8eOfBUvT43y0ZhHWKJyEef1G2pe5THi4DfOmkQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/29/2012 09:44 AM, Rafał Miłecki wrote:
+> 2012/6/5 Hauke Mehrtens <hauke@hauke-m.de>:
+>> These are some updates for bcma. Some are extending or completing some
+>> workarounds for PCIe based wireless cards. A patch adds
+>> bcma_pmu_spuravoid_pllupdate, used by brcmsmac and an other patch adds
+>> constants for the chip ids. This code is mostly based on code from
+>> brcmsmac and the Broadcom SDK for BCM47XX SoCs.
+>>
+>> This was tested on a BCM4718 SoC with a BCM43224 PCIe and a BCM5357.
+>> The Wifi part of the BCM4718 and BCM43224 is more or less working with
+>> brcmsmac, which need some more patches for that, but it has low speed
+>> and some times or with some access points I still get errors. The wifi
+>> of the BCM5357 does not work.
+>>
+>> Hauke Mehrtens (8):
+>>  bcma: extend workaround for bcm4331
+>>  bcma: add constants for chip ids
+>>  bcma: Fix for 4329b0 bad LPOM is detection
+>>  bcma: add PCI ID for BCM43224
+>>  bcma: complete workaround for BCMA43224 and BCM4313
+>>  bcma: handle SoCs in pmu initialization
+>>  bcma: add bcma_pmu_spuravoid_pllupdate()
+>>  bcma: add mdelay bcma_pmu_resources_init()
+> 
+> John: can you take the following patches from this patchset?
+> 1/8
+> 2/8
+> 4/8
+> 5/8
+> 7/8
+> 
+> Following patches should be dropped:
+> 3/8 - BCM4329 fix should be dropped, not improved
+> 6/8 - functions touched by patch should be dropper, not improved
+> 8/8 - patch is fine, but doesn't apply cleanly
+> 
+I am ok with that, but I am also planing to send a v2 of these patch
+series and the one for brcmsmac today.
 
-If a given interface combination doesn't contain
-a required interface type then we missed checking
-that and erroneously allowed it even though iface
-type wasn't there at all. Add a check that makes
-sure that all interface types are accounted for.
-
-Cc: stable@kernel.org
-Reported-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/util.c |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
-
---- a/net/wireless/util.c	2012-06-05 11:35:57.000000000 +0200
-+++ b/net/wireless/util.c	2012-06-05 11:38:58.000000000 +0200
-@@ -935,6 +935,7 @@ int cfg80211_can_change_interface(struct
- 				  enum nl80211_iftype iftype)
- {
- 	struct wireless_dev *wdev_iter;
-+	u32 used_iftypes = BIT(iftype);
- 	int num[NUM_NL80211_IFTYPES];
- 	int total = 1;
- 	int i, j;
-@@ -961,6 +962,7 @@ int cfg80211_can_change_interface(struct
- 
- 		num[wdev_iter->iftype]++;
- 		total++;
-+		used_iftypes |= BIT(wdev_iter->iftype);
- 	}
- 	mutex_unlock(&rdev->devlist_mtx);
- 
-@@ -970,6 +972,7 @@ int cfg80211_can_change_interface(struct
- 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
- 		const struct ieee80211_iface_combination *c;
- 		struct ieee80211_iface_limit *limits;
-+		u32 all_iftypes = 0;
- 
- 		c = &rdev->wiphy.iface_combinations[i];
- 
-@@ -984,6 +987,7 @@ int cfg80211_can_change_interface(struct
- 			if (rdev->wiphy.software_iftypes & BIT(iftype))
- 				continue;
- 			for (j = 0; j < c->n_limits; j++) {
-+				all_iftypes |= limits[j].types;
- 				if (!(limits[j].types & BIT(iftype)))
- 					continue;
- 				if (limits[j].max < num[iftype])
-@@ -991,7 +995,20 @@ int cfg80211_can_change_interface(struct
- 				limits[j].max -= num[iftype];
- 			}
- 		}
--		/* yay, it fits */
-+
-+		/*
-+		 * Finally check that all iftypes that we're currently
-+		 * using are actually part of this combination. If they
-+		 * aren't then we can't use this combination and have
-+		 * to continue to the next.
-+		 */
-+		if ((all_iftypes & used_iftypes) != used_iftypes)
-+			goto cont;
-+
-+		/*
-+		 * This combination covered all interface types and
-+		 * supported the requested numbers, so we're good.
-+		 */
- 		kfree(limits);
- 		return 0;
-  cont:
-
+Hauke
 
