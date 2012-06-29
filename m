@@ -1,36 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3692 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517Ab2FGUM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jun 2012 16:12:29 -0400
-Message-ID: <4FD10B1C.4060702@broadcom.com> (sfid-20120607_221232_658445_679416A1)
-Date: Thu, 7 Jun 2012 22:12:12 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29270 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210Ab2F2GjM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 02:39:12 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 3/5] ath9k: fix fullsleep power consumption when BTCOEX is enabled
+Date: Fri, 29 Jun 2012 12:10:07 +0530
+Message-ID: <1340952009-12223-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120629_083915_972816_436C8394)
+In-Reply-To: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brudley@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 02/18] brcmsmac: remove PCI_FORCEHT() makro
-References: <1338937641-8519-1-git-send-email-hauke@hauke-m.de>
- <1338937641-8519-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1338937641-8519-3-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2012 01:07 AM, Hauke Mehrtens wrote:
-> The BCM4716 is a SoC and does not have a PCI client interface, so this
-> condition is never true.
+As soon as the interface brought up, btcoex timer starts running
+eventhough the interface is in idle state and WLAN chip is moved
+to full sleep mode. There is no point in running btcoex timer when
+the wlan interface is in sleep mode and also it might consumes
+more power on WLAN idle unassociated state. So lets stop the
+btcoex when wlan is idle state.
 
-This patch and the first one in the series use the word 'makro' instead
-of 'macro'. Probably your native language seeping through ;-)
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   19 -------------------
->  1 file changed, 19 deletions(-)
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e4e73f0..6ce0128 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -666,8 +666,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+-	ath9k_start_btcoex(sc);
+-
+ 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
+ 		common->bus_ops->extn_synch_en(common);
+ 
+@@ -774,8 +772,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	/* Ensure HW is awake when we try to shut it down. */
+ 	ath9k_ps_wakeup(sc);
+ 
+-	ath9k_stop_btcoex(sc);
+-
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	/* prevent tasklets to enable interrupts once we disable them */
+@@ -1139,14 +1135,17 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+ 		sc->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+-		if (sc->ps_idle)
++		if (sc->ps_idle) {
+ 			ath_cancel_work(sc);
+-		else
++			ath9k_stop_btcoex(sc);
++		} else {
++			ath9k_start_btcoex(sc);
+ 			/*
+ 			 * The chip needs a reset to properly wake up from
+ 			 * full sleep
+ 			 */
+ 			reset_channel = ah->chip_fullsleep;
++		}
+ 	}
+ 
+ 	/*
+-- 
+1.7.11.1
 
