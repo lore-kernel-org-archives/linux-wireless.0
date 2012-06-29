@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52019 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761418Ab2FVHCv (ORCPT
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:13501
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751321Ab2F2HlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jun 2012 03:02:51 -0400
-Message-ID: <1340348566.4491.3.camel@jlt3.sipsolutions.net> (sfid-20120622_090254_918920_2B72246B)
-Subject: pull-request: mac80211 2012-06-22
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Jun 2012 09:02:46 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 29 Jun 2012 03:41:07 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: VHT Cap IE
+Date: Fri, 29 Jun 2012 07:41:05 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D65AB@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120629_094111_085999_1C7886B7)
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D6345@mbx022-e1-nj-10.exch022.domain.local>
+ <1340953315.4488.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1340953315.4488.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
-
-Here's one patch from the TI driver folks that fixes sending out 
-bad frames (with all-zeroes BSSID) that we'd like to get into 3.5
-still.
-
-johannes
-
-
-The following changes since commit 79543d8eecc0957ac6fe3ec1e2486ad31d4b67a3:
-
-  mac80211: stop polling in disassociation (2012-06-13 10:17:55 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 88a9e31c506c00c8b7a2f1611406d0e38dcb33b3:
-
-  mac80211: clear ifmgd->bssid only after building DELBA (2012-06-21 21:44:25 +0200)
-
-----------------------------------------------------------------
-Eliad Peller (1):
-      mac80211: clear ifmgd->bssid only after building DELBA
-
- net/mac80211/mlme.c |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
-
-
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
+b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IEZyaWRheSwgSnVuZSAyOSwgMjAxMiAx
+MjozMiBQTQ0KVG86IE1haGVzaCBQYWxpdmVsYQ0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
+bmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSF0gbWFjODAyMTE6IFZIVCBDYXAgSUUNCg0KT24g
+RnJpLCAyMDEyLTA2LTI5IGF0IDA2OjE3ICswMDAwLCBNYWhlc2ggUGFsaXZlbGEgd3JvdGU6DQoN
+Cj4gK3U4ICppZWVlODAyMTFfaWVfYnVpbGRfdmh0X2NhcCh1OCAqcG9zLCBzdHJ1Y3QgaWVlZTgw
+MjExX3N0YV92aHRfY2FwICp2aHRfY2FwLA0KPiArCQkJCQkJCSAgIHUzMiBjYXApOw0KDQpVbW1t
+bSwgQXJlbmQgd2FzIHByZXR0eSBzcGVjaWZpYy4uLiBubz8NCg0Kam9oYW5uZXMNCg0Kc29ycnku
+IFByb2JhYmx5IG15IGVtYWlsIGNsaWVudCBpcyBtYWtpbmcgaXQgc2hvdyBsaWtlIHRoYXQuIElm
+IHlvdSBsb29rIGF0IHRoZSBpbmRlbnRhdGlvbiBJIGhhdmUgNyB0YWJzIGFuZCAzIHNwYWNlcyB3
+aGljaCBpcyBsaWtlIDMxIGNoYXJzIHRoYXQgYWNjb3VudHMgZm9yIGZ1bGwgZnVuY3Rpb24gbmFt
+ZSBwbHVzIHJldHVybiB0eXBlLiANCg0K
