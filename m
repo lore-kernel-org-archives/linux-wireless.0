@@ -1,69 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53915 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754634Ab2F3NSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:18:12 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 18/18] brcmsmac: handle non PCI devices in the phy code
-Date: Sat, 30 Jun 2012 15:16:21 +0200
-Message-Id: <1341062181-28071-19-git-send-email-hauke@hauke-m.de> (sfid-20120630_151818_255041_48F0B0CA)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:53289 "HELO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755713Ab2F2DbM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jun 2012 23:31:12 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/6] mwifiex: add change_beacon cfg80211 handler
+Date: Thu, 28 Jun 2012 20:30:28 -0700
+Message-Id: <1340940630-27172-5-git-send-email-bzhao@marvell.com> (sfid-20120629_053120_468044_E57C212E)
+In-Reply-To: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
+References: <1340940630-27172-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some code in write_{radio,radio}_reg() should just be run if this is a
-pci based device. Add the condition again which was removed in commit:
-commit 821e4e93172e4f7d5ac1eade04665c3dc5049c4a
-Author: Roland Vossen <rvossen@broadcom.com>
-Date:   Mon Aug 8 15:58:58 2011 +0200
+From: Avinash Patil <patila@marvell.com>
 
-    staging: brcm80211: removed unused bus code from softmac
+This patch adds support for change_beacon handler which is needed
+for setting modified management IEs to driver and FW.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-index 1703e7d..91937c5 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -198,6 +198,8 @@ u16 read_radio_reg(struct brcms_phy *pi, u16 addr)
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index fce8155..1c5edc2 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -914,6 +914,33 @@ static int mwifiex_cfg80211_set_cqm_rssi_config(struct wiphy *wiphy,
+ 	return 0;
+ }
  
- void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
- {
-+	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
++/* cfg80211 operation handler for change_beacon.
++ * Function retrieves and sets modified management IEs to FW.
++ */
++static int mwifiex_cfg80211_change_beacon(struct wiphy *wiphy,
++					  struct net_device *dev,
++					  struct cfg80211_beacon_data *data)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
 +
- 	if ((D11REV_GE(pi->sh->corerev, 24)) ||
- 	    (D11REV_IS(pi->sh->corerev, 22)
- 	     && (pi->pubpi.phy_type != PHY_TYPE_SSN))) {
-@@ -209,7 +211,8 @@ void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
- 		bcma_write16(pi->d11core, D11REGOFFS(phy4wdatalo), val);
- 	}
++	if (priv->bss_type != MWIFIEX_BSS_TYPE_UAP) {
++		wiphy_err(wiphy, "%s: bss_type mismatched\n", __func__);
++		return -EINVAL;
++	}
++
++	if (!priv->bss_started) {
++		wiphy_err(wiphy, "%s: bss not started\n", __func__);
++		return -EINVAL;
++	}
++
++	if (mwifiex_set_mgmt_ies(priv, data)) {
++		wiphy_err(wiphy, "%s: setting mgmt ies failed\n", __func__);
++		return -EFAULT;
++	}
++
++	return 0;
++}
++
+ /* cfg80211 operation handler for stop ap.
+  * Function stops BSS running at uAP interface.
+  */
+@@ -1696,6 +1723,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.set_bitrate_mask = mwifiex_cfg80211_set_bitrate_mask,
+ 	.start_ap = mwifiex_cfg80211_start_ap,
+ 	.stop_ap = mwifiex_cfg80211_stop_ap,
++	.change_beacon = mwifiex_cfg80211_change_beacon,
+ 	.set_cqm_rssi_config = mwifiex_cfg80211_set_cqm_rssi_config,
+ };
  
--	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
-+	if ((sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) &&
-+	    (++pi->phy_wreg >= pi->phy_wreg_limit)) {
- 		(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
- 		pi->phy_wreg = 0;
- 	}
-@@ -294,8 +297,11 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
- 	if (addr == 0x72)
- 		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
- #else
-+	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
-+
- 	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
--	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
-+	if ((sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) &&
-+	    (++pi->phy_wreg >= pi->phy_wreg_limit)) {
- 		pi->phy_wreg = 0;
- 		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
- 	}
 -- 
-1.7.9.5
+1.7.0.2
 
