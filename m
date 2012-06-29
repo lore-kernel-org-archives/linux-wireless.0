@@ -1,124 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53860 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753006Ab2F3NRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jun 2012 09:17:49 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 09/18] brcmsmac: use core id constants from bcma
-Date: Sat, 30 Jun 2012 15:16:12 +0200
-Message-Id: <1341062181-28071-10-git-send-email-hauke@hauke-m.de> (sfid-20120630_151752_976363_15DCD6F7)
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+Received: from perches-mx.perches.com ([206.117.179.246]:43345 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751336Ab2F2QII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 12:08:08 -0400
+Message-ID: <1340986086.6562.36.camel@joe2Laptop> (sfid-20120629_180827_501755_A6BD562B)
+Subject: Re: [RFC][PATCH 1/2] lib: printf: append support of '%*p[Mm][FR]'
+From: Joe Perches <joe@perches.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: proski@gnu.org, Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 29 Jun 2012 09:08:06 -0700
+In-Reply-To: <1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <20110930115306.3bc105cb@mj>
+	 <1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch depends on adding the IDs to bcma done in
-this commit in my pending patch series for bcma.
-Author: Hauke Mehrtens <hauke@hauke-m.de>
-Date:   Sun Jun 3 18:17:57 2012 +0200
+On Fri, 2012-06-29 at 18:58 +0300, Andy Shevchenko wrote:
+> There are many places in the kernel where the drivers print small buffers as a
+> hex string. This patch adds a support of the variable width buffer to print it
+> as a hex string with a delimiter. The idea came from Pavel Roskin here:
+> http://www.digipedia.pl/usenet/thread/18835/17449/
 
-    bcma: add constants for chip ids
+Seems sensible, but one stack caveat below
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/dma.c |    4 +-
- drivers/net/wireless/brcm80211/include/soc.h  |   62 -------------------------
- 2 files changed, 2 insertions(+), 64 deletions(-)
+> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+[]
+> @@ -655,11 +655,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
+>  }
+>  
+>  static noinline_for_stack
+> -char *mac_address_string(char *buf, char *end, u8 *addr,
+> -			 struct printf_spec spec, const char *fmt)
+> +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
+> +		 const char *fmt)
+>  {
+> -	char mac_addr[sizeof("xx:xx:xx:xx:xx:xx")];
+> -	char *p = mac_addr;
+> +	char hex_str[64*3];	/* support up to 64 bytes to print */
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-index 11054ae..b67b20c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
-@@ -639,10 +639,10 @@ struct dma_pub *dma_attach(char *name, struct si_pub *sih,
- 	di->dataoffsetlow = di->ddoffsetlow;
- 	di->dataoffsethigh = di->ddoffsethigh;
- 	/* WAR64450 : DMACtl.Addr ext fields are not supported in SDIOD core. */
--	if ((core->id.id == SDIOD_CORE_ID)
-+	if ((core->id.id == BCMA_CORE_SDIO_DEV)
- 	    && ((rev > 0) && (rev <= 2)))
- 		di->addrext = false;
--	else if ((core->id.id == I2S_CORE_ID) &&
-+	else if ((core->id.id == BCMA_CORE_I2S) &&
- 		 ((rev == 0) || (rev == 1)))
- 		di->addrext = false;
- 	else
-diff --git a/drivers/net/wireless/brcm80211/include/soc.h b/drivers/net/wireless/brcm80211/include/soc.h
-index 4e9b7e4..123cfa8 100644
---- a/drivers/net/wireless/brcm80211/include/soc.h
-+++ b/drivers/net/wireless/brcm80211/include/soc.h
-@@ -19,68 +19,6 @@
- 
- #define SI_ENUM_BASE		0x18000000	/* Enumeration space base */
- 
--/* core codes */
--#define	NODEV_CORE_ID		0x700	/* Invalid coreid */
--#define	CC_CORE_ID		0x800	/* chipcommon core */
--#define	ILINE20_CORE_ID		0x801	/* iline20 core */
--#define	SRAM_CORE_ID		0x802	/* sram core */
--#define	SDRAM_CORE_ID		0x803	/* sdram core */
--#define	PCI_CORE_ID		0x804	/* pci core */
--#define	MIPS_CORE_ID		0x805	/* mips core */
--#define	ENET_CORE_ID		0x806	/* enet mac core */
--#define	CODEC_CORE_ID		0x807	/* v90 codec core */
--#define	USB_CORE_ID		0x808	/* usb 1.1 host/device core */
--#define	ADSL_CORE_ID		0x809	/* ADSL core */
--#define	ILINE100_CORE_ID	0x80a	/* iline100 core */
--#define	IPSEC_CORE_ID		0x80b	/* ipsec core */
--#define	UTOPIA_CORE_ID		0x80c	/* utopia core */
--#define	PCMCIA_CORE_ID		0x80d	/* pcmcia core */
--#define	SOCRAM_CORE_ID		0x80e	/* internal memory core */
--#define	MEMC_CORE_ID		0x80f	/* memc sdram core */
--#define	OFDM_CORE_ID		0x810	/* OFDM phy core */
--#define	EXTIF_CORE_ID		0x811	/* external interface core */
--#define	D11_CORE_ID		0x812	/* 802.11 MAC core */
--#define	APHY_CORE_ID		0x813	/* 802.11a phy core */
--#define	BPHY_CORE_ID		0x814	/* 802.11b phy core */
--#define	GPHY_CORE_ID		0x815	/* 802.11g phy core */
--#define	MIPS33_CORE_ID		0x816	/* mips3302 core */
--#define	USB11H_CORE_ID		0x817	/* usb 1.1 host core */
--#define	USB11D_CORE_ID		0x818	/* usb 1.1 device core */
--#define	USB20H_CORE_ID		0x819	/* usb 2.0 host core */
--#define	USB20D_CORE_ID		0x81a	/* usb 2.0 device core */
--#define	SDIOH_CORE_ID		0x81b	/* sdio host core */
--#define	ROBO_CORE_ID		0x81c	/* roboswitch core */
--#define	ATA100_CORE_ID		0x81d	/* parallel ATA core */
--#define	SATAXOR_CORE_ID		0x81e	/* serial ATA & XOR DMA core */
--#define	GIGETH_CORE_ID		0x81f	/* gigabit ethernet core */
--#define	PCIE_CORE_ID		0x820	/* pci express core */
--#define	NPHY_CORE_ID		0x821	/* 802.11n 2x2 phy core */
--#define	SRAMC_CORE_ID		0x822	/* SRAM controller core */
--#define	MINIMAC_CORE_ID		0x823	/* MINI MAC/phy core */
--#define	ARM11_CORE_ID		0x824	/* ARM 1176 core */
--#define	ARM7S_CORE_ID		0x825	/* ARM7tdmi-s core */
--#define	LPPHY_CORE_ID		0x826	/* 802.11a/b/g phy core */
--#define	PMU_CORE_ID		0x827	/* PMU core */
--#define	SSNPHY_CORE_ID		0x828	/* 802.11n single-stream phy core */
--#define	SDIOD_CORE_ID		0x829	/* SDIO device core */
--#define	ARMCM3_CORE_ID		0x82a	/* ARM Cortex M3 core */
--#define	HTPHY_CORE_ID		0x82b	/* 802.11n 4x4 phy core */
--#define	MIPS74K_CORE_ID		0x82c	/* mips 74k core */
--#define	GMAC_CORE_ID		0x82d	/* Gigabit MAC core */
--#define	DMEMC_CORE_ID		0x82e	/* DDR1/2 memory controller core */
--#define	PCIERC_CORE_ID		0x82f	/* PCIE Root Complex core */
--#define	OCP_CORE_ID		0x830	/* OCP2OCP bridge core */
--#define	SC_CORE_ID		0x831	/* shared common core */
--#define	AHB_CORE_ID		0x832	/* OCP2AHB bridge core */
--#define	SPIH_CORE_ID		0x833	/* SPI host core */
--#define	I2S_CORE_ID		0x834	/* I2S core */
--#define	DMEMS_CORE_ID		0x835	/* SDR/DDR1 memory controller core */
--#define	DEF_SHIM_COMP		0x837	/* SHIM component in ubus/6362 */
--#define OOB_ROUTER_CORE_ID	0x367	/* OOB router core ID */
--#define	DEF_AI_COMP		0xfff	/* Default component, in ai chips it
--					 * maps all unused address ranges
--					 */
--
- /* Common core control flags */
- #define	SICF_BIST_EN		0x8000
- #define	SICF_PME_EN		0x4000
--- 
-1.7.9.5
+Might be too much stack though.
+
 
