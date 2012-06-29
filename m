@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45376 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548Ab2FCF64 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25597 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907Ab2F2Git (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jun 2012 01:58:56 -0400
-Received: by obbtb18 with SMTP id tb18so5330081obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jun 2012 22:58:55 -0700 (PDT)
-From: Chris Yungmann <yungmann.chris@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Chris Yungmann <yungmann.chris@gmail.com>
-Subject: [PATCH] brcm80211: brcmsmac: fixed checkpatch and sparse warnings
-Date: Sun,  3 Jun 2012 00:57:57 -0500
-Message-Id: <1338703077-15700-1-git-send-email-yungmann.chris@gmail.com> (sfid-20120603_080002_149773_CE01B936)
+	Fri, 29 Jun 2012 02:38:49 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/5] ath9k_hw: start noisefloor calibration after MCI reset
+Date: Fri, 29 Jun 2012 12:10:05 +0530
+Message-ID: <1340952009-12223-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120629_083853_919903_E4214D56)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed checkpatch and sparse warnings related to aiutils.*
+noisefloor calibration has to be loaded and started after
+chip reset completion and restoring chainmask. Right now it is
+being started before MCI reset completion on full reset. Fix that.
 
-Signed-off-by: Chris Yungmann <yungmann.chris@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    3 +--
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index 6d8b721..3c6f9b1 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -631,9 +631,8 @@ uint ai_cc_reg(struct si_pub *sih, uint regoff, u32 mask, u32 val)
- 	cc = sii->icbus->drv_cc.core;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ebfb2a3..10a55bc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1949,9 +1949,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_init_cal(ah, chan))
+ 		return -EIO;
  
- 	/* mask and set */
--	if (mask || val) {
-+	if (mask || val)
- 		bcma_maskset32(cc, regoff, ~mask, val);
--	}
+-	ath9k_hw_loadnf(ah, chan);
+-	ath9k_hw_start_nfcal(ah, true);
+-
+ 	if (ath9k_hw_mci_is_enabled(ah) && ar9003_mci_end_reset(ah, chan, caldata))
+ 		return -EIO;
  
- 	/* readback */
- 	w = bcma_read32(cc, regoff);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index d9f04a6..d6fa982 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -193,7 +193,7 @@ extern void ai_detach(struct si_pub *sih);
- extern uint ai_cc_reg(struct si_pub *sih, uint regoff, u32 mask, u32 val);
- extern void ai_clkctl_init(struct si_pub *sih);
- extern u16 ai_clkctl_fast_pwrup_delay(struct si_pub *sih);
--extern bool ai_clkctl_cc(struct si_pub *sih, uint mode);
-+extern bool ai_clkctl_cc(struct si_pub *sih, enum bcma_clkmode mode);
- extern bool ai_deviceremoved(struct si_pub *sih);
+@@ -2000,6 +1997,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ar9003_mci_check_bt(ah);
  
- extern void ai_pci_down(struct si_pub *sih);
++	ath9k_hw_loadnf(ah, chan);
++	ath9k_hw_start_nfcal(ah, true);
++
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ar9003_hw_bb_watchdog_config(ah);
+ 
 -- 
-1.7.10
+1.7.11.1
 
