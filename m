@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:35568 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964978Ab2FAQTI (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:64449 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554Ab2F2KGn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 12:19:08 -0400
-Received: by dady13 with SMTP id y13so2986699dad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jun 2012 09:19:08 -0700 (PDT)
-From: Grant Erickson <marathon96@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] wl12xx: Add support for an external 26 MHz crystal source
-Date: Fri,  1 Jun 2012 09:19:01 -0700
-Message-Id: <1338567541-25585-1-git-send-email-marathon96@gmail.com> (sfid-20120601_181912_465407_0AC8ADE9)
+	Fri, 29 Jun 2012 06:06:43 -0400
+Received: by werb14 with SMTP id b14so893488wer.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2012 03:06:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1340964011-17528-1-git-send-email-zajec5@gmail.com>
+References: <1340964011-17528-1-git-send-email-zajec5@gmail.com>
+Date: Fri, 29 Jun 2012 12:06:42 +0200
+Message-ID: <CACna6rxTYbSLu8KFOWSkK38Ft3DxJ2GZqC_s-SCRBpw35Ui48A@mail.gmail.com> (sfid-20120629_120647_205571_E440606F)
+Subject: Re: [PATCH] bcma: use custom printing functions
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Joe Perches <joe@perches.com>, Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for an external 26 MHz crystal source.
+2012/6/29 Rafał Miłecki <zajec5@gmail.com>:
+> Having bus number printed makes it much easier to anaylze logs on
+> systems with more buses. For example Netgear WNDR4500 has 3 AMBA buses
+> in total, which makes standard log really messy.
 
-Signed-off-by: Grant Erickson <marathon96@gmail.com>
----
-  v1 Initial submission.
-  v2 Add a body description to the commit.
+John: this applies on top of 5 patches accepted in the
+[PATCH 0/8] bcma misc updates
+patchset.
 
- drivers/net/wireless/ti/wl12xx/main.c |    1 +
- 1 file changed, 1 insertion(+)
+So:
+wireless-testing +
+	bcma: extend workaround for bcm4331
+	bcma: add constants for chip ids
+	bcma: add PCI ID for BCM43224
+	bcma: complete workaround for BCMA43224 and BCM4313
+	bcma: add bcma_pmu_spuravoid_pllupdate()
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index d7dd3de..8617403 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -863,6 +863,7 @@ static int wl127x_boot_clk(struct wl1271 *wl)
- 		/* ref clk: 19.2/38.4/38.4-XTAL */
- 		clk = 0x3;
- 	else if (wl->ref_clock == CONF_REF_CLK_26_E ||
-+		 wl->ref_clock == CONF_REF_CLK_26_M_XTAL ||
- 		 wl->ref_clock == CONF_REF_CLK_52_E)
- 		/* ref clk: 26/52 */
- 		clk = 0x5;
+And then:
+bcma: use custom printing functions
+applies cleanly :)
+
 -- 
-1.7.10.2
-
+Rafał
