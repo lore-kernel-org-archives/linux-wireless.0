@@ -1,56 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:57020 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753305Ab2FSAUG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jun 2012 20:20:06 -0400
-Message-ID: <4FDFC5B5.5000009@opentechinstitute.org> (sfid-20120619_022011_571722_B2E29C73)
-Date: Mon, 18 Jun 2012 20:20:05 -0400
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
+Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:22835
+	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750842Ab2F2GRQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jun 2012 02:17:16 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: VHT Cap IE
+Date: Fri, 29 Jun 2012 06:17:15 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D6345@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120629_081720_450830_3FECD806)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linville@tuxdriver.com
-Subject: [PATCH 2/2 v3] mac80211/cfg80211: add support for userspace to handle
- auth frames on adhoc ifaces
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the necessary flags to allow user space applications to register for
-authentication frames on adhoc interfaces. Also, check to make sure that
-"open" authentication frames are not sent when a userspace application
-is registered for authentication frames.
+VHT cap IE insertion in probeReq as part of 11ac changes.
 
-Signed-off-by: Will Hawkins <hawkinsw@opentechinstitute.org>
+Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
 ---
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 725cb4b..5709dcb 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -279,7 +279,8 @@ static struct sta_info
-*ieee80211_ibss_finish_sta(struct sta_info *sta,
- 	/* If it fails, maybe we raced another insertion? */
- 	if (sta_info_insert_rcu(sta))
- 		return sta_info_get(sdata, addr);
--	if (auth) {
-+	if (auth && !cfg80211_mgmt_reg_match(sdata->dev,
-+	    	IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH)) {
- 		ibss_vdbg("TX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=1)\n",
- 			  sdata->vif.addr, sdata->u.ibss.bssid, addr);
- 		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/main.c        |    8 +++++++-
+ net/mac80211/util.c        |   25 +++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f834a00..478ed48 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1481,6 +1481,8 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+ 			       enum nl80211_channel_type channel_type,
+ 			       u16 prot_mode);
++u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++							   u32 cap);
+ 
+ /* channel management */
+ enum ieee80211_chan_mode {
 diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d81c178..4467162 100644
+index 0b040fb..06e6cc9 100644
 --- a/net/mac80211/main.c
 +++ b/net/mac80211/main.c
-@@ -455,7 +455,9 @@ static const struct ieee80211_txrx_stypes
- ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 	[NL80211_IFTYPE_ADHOC] = {
- 		.tx = 0xffff,
--		.rx = BIT(IEEE80211_STYPE_ACTION >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+			BIT(IEEE80211_STYPE_AUTH >> 4) |
-+			BIT(IEEE80211_STYPE_DEAUTH >> 4),
- 	},
- 	[NL80211_IFTYPE_STATION] = {
- 		.tx = 0xffff,
+@@ -688,7 +688,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	int result, i;
+ 	enum ieee80211_band band;
+ 	int channels, max_bitrates;
+-	bool supp_ht;
++	bool supp_ht, supp_vht;
+ 	netdev_features_t feature_whitelist;
+ 	static const u32 cipher_suites[] = {
+ 		/* keep WEP first, it may be removed below */
+@@ -733,6 +733,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	channels = 0;
+ 	max_bitrates = 0;
+ 	supp_ht = false;
++	supp_vht = false;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		struct ieee80211_supported_band *sband;
+ 
+@@ -750,6 +751,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		if (max_bitrates < sband->n_bitrates)
+ 			max_bitrates = sband->n_bitrates;
+ 		supp_ht = supp_ht || sband->ht_cap.ht_supported;
++		supp_vht = supp_vht || sband->vht_cap.vht_supported;
+ 	}
+ 
+ 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
+@@ -825,6 +827,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (supp_ht)
+ 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
+ 
++	if (supp_vht)
++		local->scan_ies_len += 2 + 
++			sizeof(struct ieee80211_vht_capabilities);
++
+ 	if (!local->ops->hw_scan) {
+ 		/* For hw_scan, driver needs to set these up. */
+ 		local->hw.wiphy->max_scan_ssids = 4;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 242ecde..94728de 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1072,6 +1072,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 		pos += noffset - offset;
+ 	}
+ 
++	if (sband->vht_cap.vht_supported)
++		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
++										 sband->vht_cap.cap);
++
+ 	return pos - buffer;
+ }
+ 
+@@ -1699,6 +1703,27 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	return pos;
+ }
+ 
++u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++							   u32 cap)
++{
++	__le32 tmp;
++
++	*pos++ = WLAN_EID_VHT_CAPABILITY;
++	*pos++ = sizeof(struct ieee80211_vht_capabilities);
++	memset(pos, 0, sizeof(struct ieee80211_vht_capabilities));
++
++	/* capability flags */
++	tmp = cpu_to_le32(cap);
++	memcpy(pos, &tmp, sizeof(u32));
++	pos += sizeof(u32);
++
++	/* VHT MCS set */
++	memcpy(pos, &vht_cap->vht_mcs, sizeof(vht_cap->vht_mcs));
++	pos += sizeof(vht_cap->vht_mcs);
++
++	return pos;
++}
++
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+ 			       enum nl80211_channel_type channel_type,
