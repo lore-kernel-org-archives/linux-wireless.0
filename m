@@ -1,52 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:53644 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994Ab2FFXTv (ORCPT
+Received: from mail-yw0-f42.google.com ([209.85.213.42]:49279 "EHLO
+	mail-yw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753515Ab2F2QfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 19:19:51 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so197408pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 16:19:51 -0700 (PDT)
-From: Jason Abele <jason@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/5] mac80211: Remove unused variable
-Date: Wed,  6 Jun 2012 16:19:32 -0700
-Message-Id: <1339024775-15405-3-git-send-email-jason@cozybit.com> (sfid-20120607_011955_140888_76E90BF6)
-In-Reply-To: <1339024775-15405-1-git-send-email-jason@cozybit.com>
-References: <1339024775-15405-1-git-send-email-jason@cozybit.com>
+	Fri, 29 Jun 2012 12:35:06 -0400
+Message-ID: <4FEDD935.6050908@lwfinger.net> (sfid-20120629_183537_736556_C2085D45)
+Date: Fri, 29 Jun 2012 11:35:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+CC: proski@gnu.org, Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC][PATCH 2/2] wireless: at76c50x: eliminate hex2str()
+References: <20110930115306.3bc105cb@mj> <1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com> <1340985513-15655-2-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1340985513-15655-2-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On 06/29/2012 10:58 AM, Andy Shevchenko wrote:
+> The hex2str() is substituted by '%*pMF' specificator.
+>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>   drivers/net/wireless/at76c50x-usb.c |   54 ++++++++---------------------------
+>   1 file changed, 12 insertions(+), 42 deletions(-)
+>
+> diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+> index efc162e..f82f76b 100644
+> --- a/drivers/net/wireless/at76c50x-usb.c
+> +++ b/drivers/net/wireless/at76c50x-usb.c
+> @@ -498,36 +498,6 @@ exit:
+>   	return ret;
+>   }
+>
+> -#define HEX2STR_BUFFERS 4
+> -#define HEX2STR_MAX_LEN 64
+> -
+> -/* Convert binary data into hex string */
+> -static char *hex2str(void *buf, size_t len)
+> -{
+> -	static atomic_t a = ATOMIC_INIT(0);
+> -	static char bufs[HEX2STR_BUFFERS][3 * HEX2STR_MAX_LEN + 1];
+> -	char *ret = bufs[atomic_inc_return(&a) & (HEX2STR_BUFFERS - 1)];
+> -	char *obuf = ret;
+> -	u8 *ibuf = buf;
+> -
+> -	if (len > HEX2STR_MAX_LEN)
+> -		len = HEX2STR_MAX_LEN;
+> -
+> -	if (len == 0)
+> -		goto exit;
+> -
+> -	while (len--) {
+> -		obuf = hex_byte_pack(obuf, *ibuf++);
+> -		*obuf++ = '-';
+> -	}
+> -	obuf--;
+> -
+> -exit:
+> -	*obuf = '\0';
+> -
+> -	return ret;
+> -}
+> -
+>   /* LED trigger */
+>   static int tx_activity;
+>   static void at76_ledtrig_tx_timerfunc(unsigned long data);
+> @@ -1004,9 +974,9 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
+>   	    WEP_SMALL_KEY_LEN : WEP_LARGE_KEY_LEN;
+>
+>   	for (i = 0; i < WEP_KEYS; i++)
+> -		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %s",
+> +		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %*pMF",
+>   			 wiphy_name(priv->hw->wiphy), i,
+> -			 hex2str(m->wep_default_keyvalue[i], key_len));
+> +			 key_len, m->wep_default_keyvalue[i]);
+>   exit:
+>   	kfree(m);
+>   }
+> @@ -1031,7 +1001,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+>   	at76_dbg(DBG_MIB, "%s: MIB MAC_MGMT: beacon_period %d CFP_max_duration "
+>   		 "%d medium_occupancy_limit %d station_id 0x%x ATIM_window %d "
+>   		 "CFP_mode %d privacy_opt_impl %d DTIM_period %d CFP_period %d "
+> -		 "current_bssid %pM current_essid %s current_bss_type %d "
+> +		 "current_bssid %pM current_essid %*pMF current_bss_type %d "
+>   		 "pm_mode %d ibss_change %d res %d "
+>   		 "multi_domain_capability_implemented %d "
+>   		 "international_roaming %d country_string %.3s",
+> @@ -1041,7 +1011,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+>   		 le16_to_cpu(m->station_id), le16_to_cpu(m->ATIM_window),
+>   		 m->CFP_mode, m->privacy_option_implemented, m->DTIM_period,
+>   		 m->CFP_period, m->current_bssid,
+> -		 hex2str(m->current_essid, IW_ESSID_MAX_SIZE),
+> +		 IW_ESSID_MAX_SIZE, m->current_essid,
+>   		 m->current_bss_type, m->power_mgmt_mode, m->ibss_change,
+>   		 m->res, m->multi_domain_capability_implemented,
+>   		 m->multi_domain_capability_enabled, m->country_string);
+> @@ -1069,7 +1039,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+>   		 "cwmin %d cwmax %d short_retry_time %d long_retry_time %d "
+>   		 "scan_type %d scan_channel %d probe_delay %u "
+>   		 "min_channel_time %d max_channel_time %d listen_int %d "
+> -		 "desired_ssid %s desired_bssid %pM desired_bsstype %d",
+> +		 "desired_ssid %*pMF desired_bssid %pM desired_bsstype %d",
+>   		 wiphy_name(priv->hw->wiphy),
+>   		 le32_to_cpu(m->max_tx_msdu_lifetime),
+>   		 le32_to_cpu(m->max_rx_lifetime),
+> @@ -1080,7 +1050,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+>   		 le16_to_cpu(m->min_channel_time),
+>   		 le16_to_cpu(m->max_channel_time),
+>   		 le16_to_cpu(m->listen_interval),
+> -		 hex2str(m->desired_ssid, IW_ESSID_MAX_SIZE),
+> +		 IW_ESSID_MAX_SIZE, m->desired_ssid,
+>   		 m->desired_bssid, m->desired_bsstype);
+>   exit:
+>   	kfree(m);
+> @@ -1160,13 +1130,13 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
+>   		goto exit;
+>   	}
+>
+> -	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %s",
+> +	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %*pMF",
+>   		 wiphy_name(priv->hw->wiphy),
+> -		 hex2str(m->channel_list, sizeof(m->channel_list)));
+> +		 sizeof(m->channel_list), m->channel_list);
+>
+> -	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %s",
+> +	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %*pMF",
+>   		 wiphy_name(priv->hw->wiphy),
+> -		 hex2str(m->tx_powerlevel, sizeof(m->tx_powerlevel)));
+> +		 sizeof(m->tx_powerlevel), m->tx_powerlevel);
+>   exit:
+>   	kfree(m);
+>   }
+> @@ -1369,9 +1339,9 @@ static int at76_startup_device(struct at76_priv *priv)
+>   	int ret;
+>
+>   	at76_dbg(DBG_PARAMS,
+> -		 "%s param: ssid %.*s (%s) mode %s ch %d wep %s key %d "
+> +		 "%s param: ssid %.*s (%*pMF) mode %s ch %d wep %s key %d "
+>   		 "keylen %d", wiphy_name(priv->hw->wiphy), priv->essid_size,
+> -		 priv->essid, hex2str(priv->essid, IW_ESSID_MAX_SIZE),
+> +		 priv->essid, IW_ESSID_MAX_SIZE, priv->essid,
+>   		 priv->iw_mode == IW_MODE_ADHOC ? "adhoc" : "infra",
+>   		 priv->channel, priv->wep_enabled ? "enabled" : "disabled",
+>   		 priv->wep_key_id, priv->wep_keys_len[priv->wep_key_id]);
+>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |    3 ---
- 1 file changed, 3 deletions(-)
+I have not yet tested this patch, but it generates warnings on a 64-bit system 
+as follows:
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index fa7c580..acbd1ad 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -323,7 +323,6 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 				   struct sta_info *sta)
- {
--	struct ieee80211_supported_band *sband;
- 	struct rate_info rinfo;
- 	/* This should be adjusted for each device */
- 	int device_constant = 1 << ARITH_SHIFT;
-@@ -333,8 +332,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	u32 tx_time, estimated_retx;
- 	u64 result;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--
- 	if (sta->fail_avg >= 100)
- 		return MAX_METRIC;
- 
--- 
-1.7.9.5
+CC [M]  drivers/net/wireless/at76c50x-usb.o
+drivers/net/wireless/at76c50x-usb.c: In function ‘at76_dump_mib_mdomain’:
+drivers/net/wireless/at76c50x-usb.c:1133:2: warning: field width specifier ‘*’ 
+expects argument of type ‘int’, but argument 3 has type ‘long unsigned int’ 
+[-Wformat]
+drivers/net/wireless/at76c50x-usb.c:1137:2: warning: field width specifier ‘*’ 
+expects argument of type ‘int’, but argument 3 has type ‘long unsigned int’ 
+[-Wformat]
+
+Replacing "sizeof" by "(int)sizeof" removes the warning.
+
+Larry
+
 
