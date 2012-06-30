@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:23103 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937Ab2FIP5l (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:41882 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785Ab2F3SSH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 11:57:41 -0400
-Date: Sat, 9 Jun 2012 18:57:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] iwlwifi: turn on a lockdep assertion
-Message-ID: <20120609155718.GB6488@elgon.mountain> (sfid-20120609_175745_768929_5935229F)
+	Sat, 30 Jun 2012 14:18:07 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1341062406.1911.76.camel@x61.thuisdomein>
+References: <1340786187.1911.24.camel@x61.thuisdomein>
+	<1341062406.1911.76.camel@x61.thuisdomein>
+Date: Sat, 30 Jun 2012 21:18:04 +0300
+Message-ID: <CANUX_P3kypkUv+-meABAOGa6GQ9cR5ugySJj+SjvVfCykCQuYQ@mail.gmail.com> (sfid-20120630_201859_045340_4EA043D3)
+Subject: Re: [PATCH] iwlegacy: print how long queue was actually stuck
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CMD_SYNC is zero so the if (cmd->flags & CMD_SYNC) is never true.  I
-think it should be if (cmd->flags == CMD_SYNC).  This enables a lockdep
-assertion.
+>
+> On Wed, 2012-06-27 at 10:36 +0200, Paul Bolle wrote:
+> > Every now and then, after resuming from suspend, the iwlegacy driver
+> > prints
+> >     iwl4965 0000:03:00.0: Queue 2 stuck for 2000 ms.
+> >     iwl4965 0000:03:00.0: On demand firmware reload
+> >
+> > I have no idea what causes these errors. But the code currently uses
+> > wd_timeout in the first error. wd_timeout will generally be set at
+> > IL_DEF_WD_TIMEOUT (ie, 2000). Perhaps printing for how long the queue
+> > was actually stuck can clarify the cause of these errors.
+>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index e55ec6c..c5ccdfa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1259,7 +1259,7 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	 * the mutex, this ensures we don't try to send two
- 	 * (or more) synchronous commands at a time.
- 	 */
--	if (cmd->flags & CMD_SYNC)
-+	if (cmd->flags == CMD_SYNC)
- 		lockdep_assert_held(&priv->mutex);
- 
- 	if (priv->ucode_owner == IWL_OWNERSHIP_TM &&
+You may want to try this one:
+http://www.spinics.net/lists/stable-commits/msg18110.html
