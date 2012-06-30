@@ -1,51 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:52043 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752696Ab2FWICR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 04:02:17 -0400
-Message-ID: <1340438536.2274.9.camel@joe2Laptop> (sfid-20120623_100226_733307_ED2AAD2D)
-Subject: Re: [PATCH 4/6] mac80211: clean up debugging
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Sat, 23 Jun 2012 01:02:16 -0700
-In-Reply-To: <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
-References: <1340385525-14487-1-git-send-email-johannes@sipsolutions.net>
-	 <1340385525-14487-5-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41991 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095Ab2F3GIM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 02:08:12 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 5/5] ath9k_hw: fix AR9462 2g5g switch on full reset
+Date: Sat, 30 Jun 2012 11:38:49 +0530
+Message-ID: <1341036529-10823-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120630_080815_214305_12BCADB2)
+In-Reply-To: <1341036529-10823-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1341036529-10823-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-06-22 at 19:18 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There are a few things that make the logging and
-> debugging in mac80211 less useful than it should
-> be right now:
->  * a lot of messages should be pr_info, not pr_debug
->  * wholesale use of pr_debug makes it require *both*
->    Kconfig and dynamic configuration
->  * there are still a lot of ifdefs
->  * the style is very inconsistent, sometimes the
->    sdata->name is printed in front
+On full reset, mci reset will put LNA update on 2G mode. And
+Whenever 2g5g_switch is forced at the end of full reset, lna
+update should not be skipped. Not doing so, is affecting WLAN
+rx and causing beacon loss when BTCOEX is enabled on AR9462.
 
-> Clean up everything, introducing new macros and
-> separating out the station MLME debugging into
-> a new Kconfig symbol.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-I think all the Kconfig debugging options aren't
-particularly useful.
-
-I think you should use a level/mask module debug
-variable to enable these instead of appearing to try
-to minimize the size of the objects via individual
-Kconfig options.
-
-I think it'd be better to enable them all the time
-(or not at all when !DEBUG) and select them for output
-via the debug level.
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 6155837..9a34fca 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1015,12 +1015,9 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 		return;
+ 
+ 	if (mci->is_2g) {
+-		if (!force) {
+-			ar9003_mci_send_2g5g_status(ah, true);
+-
+-			ar9003_mci_send_lna_transfer(ah, true);
+-			udelay(5);
+-		}
++		ar9003_mci_send_2g5g_status(ah, true);
++		ar9003_mci_send_lna_transfer(ah, true);
++		udelay(5);
+ 
+ 		REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
+ 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+@@ -1030,10 +1027,8 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 		if (!(mci->config & ATH_MCI_CONFIG_DISABLE_OSLA))
+ 			ar9003_mci_osla_setup(ah, true);
+ 	} else {
+-		if (!force) {
+-			ar9003_mci_send_lna_take(ah, true);
+-			udelay(5);
+-		}
++		ar9003_mci_send_lna_take(ah, true);
++		udelay(5);
+ 
+ 		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
+ 			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+@@ -1041,8 +1036,7 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool force)
+ 			    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
+ 
+ 		ar9003_mci_osla_setup(ah, false);
+-		if (!force)
+-			ar9003_mci_send_2g5g_status(ah, true);
++		ar9003_mci_send_2g5g_status(ah, true);
+ 	}
+ }
+ 
+-- 
+1.7.11.1
 
