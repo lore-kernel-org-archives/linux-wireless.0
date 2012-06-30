@@ -1,65 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2420 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431Ab2FIVZV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jun 2012 17:25:21 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 1/5] brcmsmac: remove brcms_set_hint() function
-Date: Sat, 9 Jun 2012 22:51:41 +0200
-Message-ID: <1339275105-3593-2-git-send-email-arend@broadcom.com> (sfid-20120609_232524_979459_4650AFD2)
-In-Reply-To: <1339275105-3593-1-git-send-email-arend@broadcom.com>
-References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37734 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753245Ab2F3Sxn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 14:53:43 -0400
+Message-ID: <1341082411.4852.30.camel@deadeye.wl.decadent.org.uk> (sfid-20120630_205347_008948_D67A706E)
+Subject: Re: linux-firmware: pull-request wl12xx 2012-06-27 (v2)
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Luciano Coelho <coelho@ti.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org, arik@wizery.com
+Date: Sat, 30 Jun 2012 19:53:31 +0100
+In-Reply-To: <1341072404.1631.758.camel@cumari.coelho.fi>
+References: <1341072404.1631.758.camel@cumari.coelho.fi>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-MLGbr+dZBFbRRPqckCHL"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcms_set_hint() does not add any functionality
-so regulatory_hint() can be called directly. The error value
-has been removed from the message when regulatory_hint() fails.
 
-Reported-by: Seth Forshee <seth.forshee@canonical.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+--=-MLGbr+dZBFbRRPqckCHL
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 50f92a0..341e06a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -721,14 +721,6 @@ static const struct ieee80211_ops brcms_ops = {
- 	.flush = brcms_ops_flush,
- };
- 
--/*
-- * is called in brcms_bcma_probe() context, therefore no locking required.
-- */
--static int brcms_set_hint(struct brcms_info *wl, char *abbrev)
--{
--	return regulatory_hint(wl->pub->ieee_hw->wiphy, abbrev);
--}
--
- void brcms_dpc(unsigned long data)
- {
- 	struct brcms_info *wl;
-@@ -1068,9 +1060,9 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
- 		wiphy_err(wl->wiphy, "%s: ieee80211_register_hw failed, status"
- 			  "%d\n", __func__, err);
- 
--	if (wl->pub->srom_ccode[0] && brcms_set_hint(wl, wl->pub->srom_ccode))
--		wiphy_err(wl->wiphy, "%s: regulatory_hint failed, status %d\n",
--			  __func__, err);
-+	if (wl->pub->srom_ccode[0] &&
-+	    regulatory_hint(wl->wiphy, wl->pub->srom_ccode))
-+		wiphy_err(wl->wiphy, "%s: regulatory hint failed\n", __func__);
- 
- 	n_adapters_found++;
- 	return wl;
--- 
-1.7.9.5
+On Sat, 2012-06-30 at 19:06 +0300, Luciano Coelho wrote:
+> Hi Ben,
+>=20
+> Here's v2 of my pull-request with a new section for wl18xx in the WHENCE
+> file, as you requested.
+>=20
+> Please let me know if there are any more problems.
+>=20
+>=20
+> The following changes since commit 5f9710a5770ad1f741caa67f7e97b824fb51ef=
+2c:
+>=20
+>   Merge branch 'for-upstream' of git://git.chelsio.net/pub/git/linux-firm=
+ware (2012-06-15 03:10:25 +0100)
+>=20
+> are available in the git repository at:
+>=20
+>=20
+>   git://github.com/TI-OpenLink/firmwares.git linux-firmware
+>=20
+> for you to fetch changes up to 4384c8a7bda1bfdca92526004dd1aa9a3f33c209:
+>=20
+>   wl18xx: add firmware for WiLink8 WLAN chips (2012-06-30 18:58:41 +0300)
+[...]
 
+Pulled and pushed out, thanks.
 
+Ben.
+
+--=20
+Ben Hutchings
+Lowery's Law:
+             If it jams, force it. If it breaks, it needed replacing anyway=
+.
+
+--=-MLGbr+dZBFbRRPqckCHL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAT+9LLOe/yOyVhhEJAQplXQ/9E/3fNVpz2yHFrkYyGmD5unH9cywSbOr6
+I8JOQUrfyxXNEgfK6QibNzFcY5TMM/UuHriVFzZBVgGzJ+PkeU2a0eMppfjiucuz
+FtPPQdW8+SFV2yL0c+TPlJoH8PG0hVXEOwgo0wCsez44plaR9+B8g4tOVb/9jDX+
+izeGXMKpeaqc/U1bkTvlCKFbbLif3fWFvrXPcS27bEIPobdRYYuYegJnAoo/NvLP
+kFwlf0ymf7gMNc+InBzHIu2hGQXjOecy5EllT+uF0v+D1r0gGN/YFYSeuX6Oyxds
+ykDEQTmP4l0DOJW+ofa5J7nVEqfoZrX4SMe0FNVU1IPlbW/sIaz5WosnuaNtY/nH
+skcSHNX1nlHaNsvm8p27rL887zCTR4WN2ngtpq/OZRohf1/cdI+q1+qxNn4CfTIB
+BjPDX9LsoqM8T0b64e1VqdbQIBcdCj88AuBhxvIaTwRqZe0upYjiEVBem+osh3p/
+toqwlNiGT8+TNXYEA+5XGRJarhjcryHleyc5+1m5wWATSoLrC/aTHpEJUIzqMXTY
+gJ6NW6sJiPuejzxbFs2XEO5yuga8wVk9+tCiUKnP+/N+Dno+iZ6W02X0mUBZfIi5
+ftp/Ls5XlMSi1nPIgReK5oEmxr2qil6fNmtHs5ONcu2X4Z5JCDdGu5EFGmJWPSg+
+AxpQ3mZFmjk=
+=ubZC
+-----END PGP SIGNATURE-----
+
+--=-MLGbr+dZBFbRRPqckCHL--
