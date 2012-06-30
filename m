@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39625 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755279Ab2FTHiw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jun 2012 03:38:52 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 10/12] iwlwifi: fix 11n_disable EEPROM refactoring regression
-Date: Wed, 20 Jun 2012 09:38:12 +0200
-Message-Id: <1340177894-12992-11-git-send-email-johannes@sipsolutions.net> (sfid-20120620_093856_461372_99714E93)
-In-Reply-To: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
-References: <1340177894-12992-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53915 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754634Ab2F3NSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 09:18:12 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 18/18] brcmsmac: handle non PCI devices in the phy code
+Date: Sat, 30 Jun 2012 15:16:21 +0200
+Message-Id: <1341062181-28071-19-git-send-email-hauke@hauke-m.de> (sfid-20120630_151818_255041_48F0B0CA)
+In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Some code in write_{radio,radio}_reg() should just be run if this is a
+pci based device. Add the condition again which was removed in commit:
+commit 821e4e93172e4f7d5ac1eade04665c3dc5049c4a
+Author: Roland Vossen <rvossen@broadcom.com>
+Date:   Mon Aug 8 15:58:58 2011 +0200
 
-My commit 26a7ca9a71a ("iwlwifi: refactor EEPROM reading/parsing")
-broke the 11n_disable module parameter's BIT(0) to disable all HT
-operation (using the other bits to disable aggregation only was
-unaffected). Restore this by overriding the SKU when parsing the
-EEPROM if the module parameter is set.
+    staging: brcm80211: removed unused bus code from softmac
 
-Reported-by: Matthijs Kooijman <matthijs@stdin.nl>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c |    3 +++
- 1 file changed, 3 insertions(+)
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-index c87a05c..f10170f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-@@ -853,6 +853,9 @@ iwl_parse_eeprom_data(struct device *dev, const struct iwl_cfg *cfg,
- 					     EEPROM_RADIO_CONFIG);
- 	data->sku = iwl_eeprom_query16(eeprom, eeprom_size,
- 				       EEPROM_SKU_CAP);
-+	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
-+		data->sku &= ~EEPROM_SKU_CAP_11N_ENABLE;
-+
- 	data->eeprom_version = iwl_eeprom_query16(eeprom, eeprom_size,
- 						  EEPROM_VERSION);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index 1703e7d..91937c5 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -198,6 +198,8 @@ u16 read_radio_reg(struct brcms_phy *pi, u16 addr)
  
+ void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ {
++	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
++
+ 	if ((D11REV_GE(pi->sh->corerev, 24)) ||
+ 	    (D11REV_IS(pi->sh->corerev, 22)
+ 	     && (pi->pubpi.phy_type != PHY_TYPE_SSN))) {
+@@ -209,7 +211,8 @@ void write_radio_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ 		bcma_write16(pi->d11core, D11REGOFFS(phy4wdatalo), val);
+ 	}
+ 
+-	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
++	if ((sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) &&
++	    (++pi->phy_wreg >= pi->phy_wreg_limit)) {
+ 		(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
+ 		pi->phy_wreg = 0;
+ 	}
+@@ -294,8 +297,11 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ 	if (addr == 0x72)
+ 		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
+ #else
++	struct si_info *sii = container_of(pi->sh->sih, struct si_info, pub);
++
+ 	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
+-	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
++	if ((sii->icbus->hosttype == BCMA_HOSTTYPE_PCI) &&
++	    (++pi->phy_wreg >= pi->phy_wreg_limit)) {
+ 		pi->phy_wreg = 0;
+ 		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
+ 	}
 -- 
-1.7.10
+1.7.9.5
 
