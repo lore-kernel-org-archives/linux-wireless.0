@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:38956 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752834Ab2FMReY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25301 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204Ab2F3GIC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 13:34:24 -0400
-Received: by ghbg16 with SMTP id g16so810945ghb.17
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2012 10:34:23 -0700 (PDT)
-From: Yoni Divinsky <yoni.divinsky@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: coelho@ti.com, Eliad Peller <eliad@wizery.com>,
-	Yoni Divinsky <yoni.divinsky@ti.com>
-Subject: [PATCH] wlcore: declare interface combinations
-Date: Wed, 13 Jun 2012 20:29:16 +0300
-Message-Id: <1339608556-23346-1-git-send-email-yoni.divinsky@ti.com> (sfid-20120613_193426_943521_045C6DEA)
+	Sat, 30 Jun 2012 02:08:02 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 4/5] ath9k: fix power consumption on network sleep when BTCOEX is enabled
+Date: Sat, 30 Jun 2012 11:38:48 +0530
+Message-ID: <1341036529-10823-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120630_080806_498333_472AAC3B)
+In-Reply-To: <1341036529-10823-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1341036529-10823-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+The chip is waken up for every 45ms in btcoex timer cycle to
+for sharing the radio between BT and WLAN. Whenever the wlan
+interface is in network sleep mode, do not schedule hw timers.
+This could reduce power consumption on idle associated state.
 
-Advertise to the stack that the wlcore driver
-supports multiple interfaces for a single device.
-This is required in order to be able to run
-multirole with mac80211.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/gpio.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 5886da5..cac5f46 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5019,6 +5019,29 @@ static void wl1271_unregister_hw(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 9ae6a4d..c17168e 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -194,6 +194,16 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 	struct ath_mci_profile *mci = &btcoex->mci;
+ 	u32 timer_period;
+ 	bool is_btscan;
++	unsigned long flags;
++
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	if (sc->sc_ah->power_mode == ATH9K_PM_NETWORK_SLEEP) {
++		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++		if (btcoex->hw_timer_enabled)
++			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
++		goto skip_hw_wakeup;
++	}
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  
+ 	ath9k_ps_wakeup(sc);
+ 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
+@@ -232,6 +242,7 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 	}
+ 
+ 	ath9k_ps_restore(sc);
++skip_hw_wakeup:
+ 	timer_period = btcoex->btcoex_period;
+ 	mod_timer(&btcoex->period_timer, jiffies + msecs_to_jiffies(timer_period));
  }
- 
-+static const struct ieee80211_iface_limit wlcore_iface_limits[] = {
-+	{
-+		.max = 2,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_AP) |
-+			 BIT(NL80211_IFTYPE_P2P_GO) |
-+			 BIT(NL80211_IFTYPE_P2P_CLIENT),
-+	},
-+};
-+
-+static const struct ieee80211_iface_combination
-+wlcore_iface_combinations[] = {
-+	{
-+	  .num_different_channels = 1,
-+	  .max_interfaces = 2,
-+	  .limits = wlcore_iface_limits,
-+	  .n_limits = ARRAY_SIZE(wlcore_iface_limits),
-+	},
-+};
-+
- static int wl1271_init_ieee80211(struct wl1271 *wl)
- {
- 	static const u32 cipher_suites[] = {
-@@ -5113,6 +5136,11 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
- 
-+	/* allowed interface combinations */
-+	wl->hw->wiphy->iface_combinations = wlcore_iface_combinations;
-+	wl->hw->wiphy->n_iface_combinations =
-+		ARRAY_SIZE(wlcore_iface_combinations);
-+
- 	SET_IEEE80211_DEV(wl->hw, wl->dev);
- 
- 	wl->hw->sta_data_size = sizeof(struct wl1271_station);
 -- 
-1.7.0.4
+1.7.11.1
 
