@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:39774 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754698Ab2FFIRv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jun 2012 04:17:51 -0400
-Received: by lbbgk8 with SMTP id gk8so5149510lbb.26
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2012 01:17:25 -0700 (PDT)
-Message-ID: <1338970636.7078.0.camel@cumari.coelho.fi> (sfid-20120606_101800_861907_BE17EB5E)
-Subject: Re: [PATCH 1/4] wlcore: use psd_type indexing according to spec
-From: Luciano Coelho <coelho@ti.com>
-To: Yoni Divinsky <yoni.divinsky@ti.com>
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com
-Date: Wed, 06 Jun 2012 11:17:16 +0300
-In-Reply-To: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com>
-References: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53912 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754634Ab2F3NSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 09:18:10 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 17/18] brcmsmac: fix read in write_phy_reg
+Date: Sat, 30 Jun 2012 15:16:20 +0200
+Message-Id: <1341062181-28071-18-git-send-email-hauke@hauke-m.de> (sfid-20120630_151815_527490_B208E5CD)
+In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-08 at 14:02 +0300, Yoni Divinsky wrote:
-> In ieee80211.h the uapsd bit mask is defined such that
-> VO=BIT(0), VI=BIT(1), BK=BIT(2), BE=BIT(3).
-> The firmware uses the indexing as defined in the ieee80211
-> spec, meaning that VO=3, VI=2, BK=1, BE=0.
-> 
-> In AP mode when adding peer wlcore needs to convert
-> the indexing accordingly.
-> 
-> Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
-> ---
+This reverts a unintended change mad in commit.
+commit 4b006b11ca18995677c5f1cd03cc9c42fbe80693
+Author: Arend van Spriel <arend@broadcom.com>
+Date:   Thu Dec 8 15:06:54 2011 -0800
 
-Applied and pushed this series, except for 3/4, which was sent as v2 in
-a separate patchset.
+    brcm80211: smac: use bcma functions for register access in phy code
 
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index d16cbec..1703e7d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -292,7 +292,7 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
+ 	bcma_wflush16(pi->d11core, D11REGOFFS(phyregaddr), addr);
+ 	bcma_write16(pi->d11core, D11REGOFFS(phyregdata), val);
+ 	if (addr == 0x72)
+-		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
++		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
+ #else
+ 	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
+ 	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
 -- 
-Luca.
+1.7.9.5
 
