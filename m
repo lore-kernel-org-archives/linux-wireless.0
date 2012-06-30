@@ -1,76 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:42324 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752537Ab2FYCFS convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Sun, 24 Jun 2012 22:05:18 -0400
-Received: by bkcji2 with SMTP id ji2so2744945bkc.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2012 19:05:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn0qmRtwQGqG3GizxuPbPX_xh7Fwvgd9DchQuwA1T66XQA@mail.gmail.com>
-References: <CALx5=V--5TEC2J39xdJn1fxLbmgEXsWwxbAVaXMsw=Lk2WxKRg@mail.gmail.com>
-	<CAD2nsn04Bi5aNMBMLWGm9uQwTXzT8GnDfHZcBP8-+vMEgqBCag@mail.gmail.com>
-	<CALx5=V-MEZVNkQ0SqqtLqBcDG_Dkp1V6XjiZEv4BBSVn9JQpCw@mail.gmail.com>
-	<CALx5=V-L83VUcRddP=hk_vB4AK5+uZ5Gcdbg+HSbhvqNurrMbQ@mail.gmail.com>
-	<CAD2nsn35gDLLP3Wkn9qpG5UhxUGPOcn1q_kpP2WexjQ1+LvXFg@mail.gmail.com>
-	<CALx5=V-+aCcOMXHPrxmqVHwaiosNurT17gHBTi0mTdYJ6bZRMA@mail.gmail.com>
-	<CAD2nsn2KrgLh-Oth-npUjY59bh2ycpEv7UocfXH0uE27TD19fQ@mail.gmail.com>
-	<CALx5=V8s54ytfRVT2hscXCYRCj1MTdvKjM1jFa-OwxAyUMKFLw@mail.gmail.com>
-	<CAD2nsn0qmRtwQGqG3GizxuPbPX_xh7Fwvgd9DchQuwA1T66XQA@mail.gmail.com>
-Date: Mon, 25 Jun 2012 10:05:04 +0800
-Message-ID: <CALx5=V-AnKKMSwqyrJCV889fJ9K-XBB_Yp_hPejK8_rgFpq=pA@mail.gmail.com> (sfid-20120625_040556_549132_777FCF85)
-Subject: Re: Atheros [168c 0034] can't enable wireless button LED.
-From: Matt Chen <machen@suse.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53798 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751682Ab2F3NRN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 09:17:13 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 01/18] brcmsmac: remove PCIE() macro
+Date: Sat, 30 Jun 2012 15:16:04 +0200
+Message-Id: <1341062181-28071-2-git-send-email-hauke@hauke-m.de> (sfid-20120630_151717_399202_2CB833B3)
+In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+Instead of checking if there is a PCIe core on the bus, better check if
+hosttype is PCIe.
 
-2012/6/23 Mohammed Shafi <shafi.wireless@gmail.com>:
-> On Fri, Jun 22, 2012 at 2:45 PM, Matt Chen <machen@suse.com> wrote:
->> Hi Mohammed,
->>
->> 2012/6/20 Mohammed Shafi <shafi.wireless@gmail.com>:
->>> Hi Matt,
->>>
->>>> Both 0x2f and 0x2d can work fine to me of enabling
->>>> wiphy_rfkill_start_polling() in gpio.c:ath_start_rfkill_poll().
->>>>
->>>> 1) with 0x2f
->>>>   0x404c address would change when press wifi button
->>>>   rfkill block : yes -> 0x00000455
->>>>   rfkill block : no   -> 0x00000c55
->>>> 2) with 0x2d
->>>>   0x404c address would change when press wifi button
->>>>   rfkill block : yes -> 0x00000455
->>>>   rfkill block : no   -> 0x00000c55
->>>>
->>>>
->>>> But I don't see the LED is changing, it is staying OFF (Amber).
->>>
->>> not sure about that, but i think rfkill is working for both of us
->>> i told 0xeed changes to 0x6ed for me
->>>
->>> you got 0x455 changes to 0xc55
->>>
->>> BIT 12(GPIO pin 11 seems to toggle  4 ->C), you can confirm by rfkill list
->> Would it be the patch to fix it ? or it is just a workaround to prove
->> the rfkill_poll can be enabled ?
->
-> ideally, this should have been properly hard coded in the EEPROM stuff itself.
-> i think you got a very brand new AR9462 just when it came to the market :)
-> its a kind of workaround only.
-Is there anything I can do help to enable this?  ;)  Not a workaround.
-> --
-> thanks,
-> shafi
->
+In the original submission to staging PCIE() checked, if the bustype is
+PCI and the buscore is a PCIe core. Now we assume that all cores bcma
+supports are PCIe based, so we just have to check if the bustype is PCI.
 
+The old code bcmsmac currently uses searches for a PCIe core on the bus
+and if there is one assumes that this is the buscore, which is wrong.
+Some SoCs have a PCIe core operating in host mode and this is not the
+bus core. The old code also caused a null pointer in
+ai_get_buscoretype() and ai_get_buscorerev() if buscore was not set
+because there was no PCIe core on the bus.
 
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index 3c6f9b1..c942a88 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -318,9 +318,8 @@
+ #define	IS_SIM(chippkg)	\
+ 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+ 
+-#define PCIE(sih)	(ai_get_buscoretype(sih) == PCIE_CORE_ID)
+-
+-#define PCI_FORCEHT(sih) (PCIE(sih) && (ai_get_chip_id(sih) == BCM4716_CHIP_ID))
++#define PCI_FORCEHT(sih) ((ai_get_buscoretype(sih) == PCIE_CORE_ID) && \
++			  (ai_get_chip_id(sih) == BCM4716_CHIP_ID))
+ 
+ #ifdef DEBUG
+ #define	SI_MSG(fmt, ...)	pr_debug(fmt, ##__VA_ARGS__)
+@@ -774,7 +773,7 @@ void ai_pci_up(struct si_pub *sih)
+ 		bcma_core_set_clockmode(cc, BCMA_CLKMODE_FAST);
+ 	}
+ 
+-	if (PCIE(sih))
++	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
+ 		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci, true);
+ }
+ 
+@@ -792,7 +791,7 @@ void ai_pci_down(struct si_pub *sih)
+ 		bcma_core_set_clockmode(cc, BCMA_CLKMODE_DYNAMIC);
+ 	}
+ 
+-	if (PCIE(sih))
++	if (sii->icbus->hosttype == BCMA_HOSTTYPE_PCI)
+ 		bcma_core_pci_extend_L1timer(&sii->icbus->drv_pci, false);
+ }
+ 
 -- 
-Thank you.
+1.7.9.5
+
