@@ -1,47 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4966 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753688Ab2FMN3r convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:43282 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704Ab2F3JYD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 09:29:47 -0400
-Message-ID: <4FD895B7.8030105@broadcom.com> (sfid-20120613_152952_655147_F8747008)
-Date: Wed, 13 Jun 2012 15:29:27 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	Sat, 30 Jun 2012 05:24:03 -0400
+Received: by wibhr14 with SMTP id hr14so1668896wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jun 2012 02:24:02 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/5] brcmfmac: introduce checkdied debugfs
- functionality
-References: <1339275105-3593-1-git-send-email-arend@broadcom.com>
- <1339275105-3593-6-git-send-email-arend@broadcom.com>
- <CA+XFjioPG4aT-umi1BD+RH0q0a3AEY=QXTAFapGhz3x25cLdSw@mail.gmail.com>
- <4FD42939.2020404@broadcom.com>
- <CA+XFjioaw4Bmxd_Wy_hjWO4G+LWWx4YmRAMFEgU4H_hFdoRVuw@mail.gmail.com>
-In-Reply-To: <CA+XFjioaw4Bmxd_Wy_hjWO4G+LWWx4YmRAMFEgU4H_hFdoRVuw@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <4FEE3F90.7020409@hauke-m.de>
+References: <1340971809-23703-1-git-send-email-zajec5@gmail.com>
+	<4FEE3F90.7020409@hauke-m.de>
+Date: Sat, 30 Jun 2012 11:24:01 +0200
+Message-ID: <CACna6rx=4HJvRcCJWUdz3MSrZjdZgNmLZLeS6KDr4QQzv85Y2A@mail.gmail.com> (sfid-20120630_112408_189136_7B56093A)
+Subject: Re: [PATCH V2] bcma: use custom printing functions
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2012 07:14 AM, G�bor Stefanik wrote:
-> On Sun, Jun 10, 2012 at 6:57 AM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 06/10/2012 04:13 AM, G�bor Stefanik wrote:
->>> On Sat, Jun 9, 2012 at 10:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
->>>>
->>>> +/* Device console log buffer state */
->>>> +#define CONSOLE_BUFFER_MAX     2024
->>>
->>> Just out of curiosity; what is the significance of this number?
+2012/6/30 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 06/29/2012 02:10 PM, Rafał Miłecki wrote:
+>> Having bus number printed makes it much easier to anaylze logs on
+>> systems with more buses. For example Netgear WNDR4500 has 3 AMBA buses
+>> in total, which makes standard log really messy.
 >>
->> It is used in the code fragment below. I have to admit the comment is
->> not explaining its significance.
-> 
-> But why this particular number? Did you mean 2048?
-> 
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> V2: don't create "bus" variable when it's not really helpful
+>> don't brak strings
+>>
+>> John: this applies on top of 5 patches accepted in the
+>> [PATCH 0/8] bcma misc updates
+>> patchset.
+>>
+>> So:
+>> wireless-testing +
+>>       bcma: extend workaround for bcm4331
+>>       bcma: add constants for chip ids
+>>       bcma: add PCI ID for BCM43224
+>>       bcma: complete workaround for BCMA43224 and BCM4313
+>>       bcma: add bcma_pmu_spuravoid_pllupdate()
+>>
+>> And then:
+>> bcma: use custom printing functions
+>> applies cleanly :)
+>
+> After applying your patch I still found some pr_ statements in the code,
+> just use "grep pr_ drivers/bcma/ -r", is this intended?
 
-Not sure. Maybe the console info has 24 bytes overhead leaving 2024
-bytes of raw buffer data, but I can only guess.
+Yes, it is. Sometimes we don't have bus reference (or it doesn't
+exists at all yet). For such a situations I kept define of pr_fmt - it
+allows us to still have "bcma: " prefix when using standard pr_<level>
+functions.
 
-Gr. AvS
 
+> I just send a new version of my patches for bcma, they are now removing
+> some functions form driver_chipcommon_pmu.c so your patch will not apply
+> on them any more.
+
+Yeah, I'll. John: drop this version of patch as it won't apply.
+
+-- 
+Rafał
