@@ -1,174 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42266 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965359Ab2FAQPq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jun 2012 12:15:46 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/10] brcm80211: smac: remove unused code for 40MHz channels
-Date: Fri,  1 Jun 2012 11:15:29 -0500
-Message-Id: <1338567336-12076-4-git-send-email-seth.forshee@canonical.com> (sfid-20120601_181550_343614_539CB5DF)
-In-Reply-To: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
-References: <1338567336-12076-1-git-send-email-seth.forshee@canonical.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53860 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753006Ab2F3NRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 09:17:49 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 09/18] brcmsmac: use core id constants from bcma
+Date: Sat, 30 Jun 2012 15:16:12 +0200
+Message-Id: <1341062181-28071-10-git-send-email-hauke@hauke-m.de> (sfid-20120630_151752_976363_15DCD6F7)
+In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code has been kept around in anticipation of adding support for
-40MHz channels, but subsequent patches to better integrate with mac80211
-regulatory support will render it completely broken. Therefore we should
-go ahead and remove it.
+This patch depends on adding the IDs to bcma done in
+this commit in my pending patch series for bcma.
+Author: Hauke Mehrtens <hauke@hauke-m.de>
+Date:   Sun Jun 3 18:17:57 2012 +0200
 
-Keep these changes separate from other cleanup patches in order to make
-it easier to resurrect 40MHz channel support at some point in the
-future.
+    bcma: add constants for chip ids
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |  116 ---------------------
- 1 file changed, 116 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/dma.c |    4 +-
+ drivers/net/wireless/brcm80211/include/soc.h  |   62 -------------------------
+ 2 files changed, 2 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 049d78f..089cc87 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -512,83 +512,6 @@ static const struct {
- 	"X2", LOCALES(i, 11, bn, 11n)},	/* Worldwide RoW 2 */
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+index 11054ae..b67b20c 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/dma.c
+@@ -639,10 +639,10 @@ struct dma_pub *dma_attach(char *name, struct si_pub *sih,
+ 	di->dataoffsetlow = di->ddoffsetlow;
+ 	di->dataoffsethigh = di->ddoffsethigh;
+ 	/* WAR64450 : DMACtl.Addr ext fields are not supported in SDIOD core. */
+-	if ((core->id.id == SDIOD_CORE_ID)
++	if ((core->id.id == BCMA_CORE_SDIO_DEV)
+ 	    && ((rev > 0) && (rev <= 2)))
+ 		di->addrext = false;
+-	else if ((core->id.id == I2S_CORE_ID) &&
++	else if ((core->id.id == BCMA_CORE_I2S) &&
+ 		 ((rev == 0) || (rev == 1)))
+ 		di->addrext = false;
+ 	else
+diff --git a/drivers/net/wireless/brcm80211/include/soc.h b/drivers/net/wireless/brcm80211/include/soc.h
+index 4e9b7e4..123cfa8 100644
+--- a/drivers/net/wireless/brcm80211/include/soc.h
++++ b/drivers/net/wireless/brcm80211/include/soc.h
+@@ -19,68 +19,6 @@
  
--#ifdef SUPPORT_40MHZ
--/* 20MHz channel info for 40MHz pairing support */
--struct chan20_info {
--	u8 sb;
--	u8 adj_sbs;
--};
--
--/* indicates adjacent channels that are allowed for a 40 Mhz channel and
-- * those that permitted by the HT
-- */
--struct chan20_info chan20_info[] = {
--	/* 11b/11g */
--/* 0 */ {1, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 1 */ {2, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 2 */ {3, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 3 */ {4, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 4 */ {5, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
--/* 5 */ {6, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
--/* 6 */ {7, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
--/* 7 */ {8, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
--/* 8 */ {9, (CH_UPPER_SB | CH_LOWER_SB | CH_EWA_VALID)},
--/* 9 */ {10, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 10 */ {11, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 11 */ {12, (CH_LOWER_SB)},
--/* 12 */ {13, (CH_LOWER_SB)},
--/* 13 */ {14, (CH_LOWER_SB)},
--
--/* 11a japan high */
--/* 14 */ {34, (CH_UPPER_SB)},
--/* 15 */ {38, (CH_LOWER_SB)},
--/* 16 */ {42, (CH_LOWER_SB)},
--/* 17 */ {46, (CH_LOWER_SB)},
--
--/* 11a usa low */
--/* 18 */ {36, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 19 */ {40, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 20 */ {44, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 21 */ {48, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 22 */ {52, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 23 */ {56, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 24 */ {60, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 25 */ {64, (CH_LOWER_SB | CH_EWA_VALID)},
--
--/* 11a Europe */
--/* 26 */ {100, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 27 */ {104, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 28 */ {108, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 29 */ {112, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 30 */ {116, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 31 */ {120, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 32 */ {124, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 33 */ {128, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 34 */ {132, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 35 */ {136, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 36 */ {140, (CH_LOWER_SB)},
--
--/* 11a usa high, ref5 only */
--/* The 0x80 bit in pdiv means these are REF5, other entries are REF20 */
--/* 37 */ {149, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 38 */ {153, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 39 */ {157, (CH_UPPER_SB | CH_EWA_VALID)},
--/* 40 */ {161, (CH_LOWER_SB | CH_EWA_VALID)},
--/* 41 */ {165, (CH_LOWER_SB)},
--
--/* 11a japan */
--/* 42 */ {184, (CH_UPPER_SB)},
--/* 43 */ {188, (CH_LOWER_SB)},
--/* 44 */ {192, (CH_UPPER_SB)},
--/* 45 */ {196, (CH_LOWER_SB)},
--/* 46 */ {200, (CH_UPPER_SB)},
--/* 47 */ {204, (CH_LOWER_SB)},
--/* 48 */ {208, (CH_UPPER_SB)},
--/* 49 */ {212, (CH_LOWER_SB)},
--/* 50 */ {216, (CH_LOWER_SB)}
--};
--#endif				/* SUPPORT_40MHZ */
--
- static const struct locale_info *brcms_c_get_locale_2g(u8 locale_idx)
- {
- 	if (locale_idx >= ARRAY_SIZE(g_locale_2g_table))
-@@ -1449,45 +1372,6 @@ brcms_c_valid_chanspec_ext(struct brcms_cm_info *wlc_cm, u16 chspec,
- 			return brcms_c_valid_channel20(wlc_cm->wlc->cmi,
- 						       channel);
- 	}
--#ifdef SUPPORT_40MHZ
--	/*
--	 * We know we are now checking a 40MHZ channel, so we should
--	 * only be here for NPHYS
--	 */
--	if (BRCMS_ISNPHY(wlc->band) || BRCMS_ISSSLPNPHY(wlc->band)) {
--		u8 upper_sideband = 0, idx;
--		u8 num_ch20_entries =
--		    sizeof(chan20_info) / sizeof(struct chan20_info);
--
--		if (!VALID_40CHANSPEC_IN_BAND(wlc, chspec_bandunit(chspec)))
--			return false;
--
--		if (dualband) {
--			if (!brcms_c_valid_channel20_db(wlc->cmi,
--							lower_20_sb(channel)) ||
--			    !brcms_c_valid_channel20_db(wlc->cmi,
--							upper_20_sb(channel)))
--				return false;
--		} else {
--			if (!brcms_c_valid_channel20(wlc->cmi,
--						     lower_20_sb(channel)) ||
--			    !brcms_c_valid_channel20(wlc->cmi,
--						     upper_20_sb(channel)))
--				return false;
--		}
--
--		/* find the lower sideband info in the sideband array */
--		for (idx = 0; idx < num_ch20_entries; idx++) {
--			if (chan20_info[idx].sb == lower_20_sb(channel))
--				upper_sideband = chan20_info[idx].adj_sbs;
--		}
--		/* check that the lower sideband allows an upper sideband */
--		if ((upper_sideband & (CH_UPPER_SB | CH_EWA_VALID)) ==
--		    (CH_UPPER_SB | CH_EWA_VALID))
--			return true;
--		return false;
--	}
--#endif				/* 40 MHZ */
+ #define SI_ENUM_BASE		0x18000000	/* Enumeration space base */
  
- 	return false;
- }
+-/* core codes */
+-#define	NODEV_CORE_ID		0x700	/* Invalid coreid */
+-#define	CC_CORE_ID		0x800	/* chipcommon core */
+-#define	ILINE20_CORE_ID		0x801	/* iline20 core */
+-#define	SRAM_CORE_ID		0x802	/* sram core */
+-#define	SDRAM_CORE_ID		0x803	/* sdram core */
+-#define	PCI_CORE_ID		0x804	/* pci core */
+-#define	MIPS_CORE_ID		0x805	/* mips core */
+-#define	ENET_CORE_ID		0x806	/* enet mac core */
+-#define	CODEC_CORE_ID		0x807	/* v90 codec core */
+-#define	USB_CORE_ID		0x808	/* usb 1.1 host/device core */
+-#define	ADSL_CORE_ID		0x809	/* ADSL core */
+-#define	ILINE100_CORE_ID	0x80a	/* iline100 core */
+-#define	IPSEC_CORE_ID		0x80b	/* ipsec core */
+-#define	UTOPIA_CORE_ID		0x80c	/* utopia core */
+-#define	PCMCIA_CORE_ID		0x80d	/* pcmcia core */
+-#define	SOCRAM_CORE_ID		0x80e	/* internal memory core */
+-#define	MEMC_CORE_ID		0x80f	/* memc sdram core */
+-#define	OFDM_CORE_ID		0x810	/* OFDM phy core */
+-#define	EXTIF_CORE_ID		0x811	/* external interface core */
+-#define	D11_CORE_ID		0x812	/* 802.11 MAC core */
+-#define	APHY_CORE_ID		0x813	/* 802.11a phy core */
+-#define	BPHY_CORE_ID		0x814	/* 802.11b phy core */
+-#define	GPHY_CORE_ID		0x815	/* 802.11g phy core */
+-#define	MIPS33_CORE_ID		0x816	/* mips3302 core */
+-#define	USB11H_CORE_ID		0x817	/* usb 1.1 host core */
+-#define	USB11D_CORE_ID		0x818	/* usb 1.1 device core */
+-#define	USB20H_CORE_ID		0x819	/* usb 2.0 host core */
+-#define	USB20D_CORE_ID		0x81a	/* usb 2.0 device core */
+-#define	SDIOH_CORE_ID		0x81b	/* sdio host core */
+-#define	ROBO_CORE_ID		0x81c	/* roboswitch core */
+-#define	ATA100_CORE_ID		0x81d	/* parallel ATA core */
+-#define	SATAXOR_CORE_ID		0x81e	/* serial ATA & XOR DMA core */
+-#define	GIGETH_CORE_ID		0x81f	/* gigabit ethernet core */
+-#define	PCIE_CORE_ID		0x820	/* pci express core */
+-#define	NPHY_CORE_ID		0x821	/* 802.11n 2x2 phy core */
+-#define	SRAMC_CORE_ID		0x822	/* SRAM controller core */
+-#define	MINIMAC_CORE_ID		0x823	/* MINI MAC/phy core */
+-#define	ARM11_CORE_ID		0x824	/* ARM 1176 core */
+-#define	ARM7S_CORE_ID		0x825	/* ARM7tdmi-s core */
+-#define	LPPHY_CORE_ID		0x826	/* 802.11a/b/g phy core */
+-#define	PMU_CORE_ID		0x827	/* PMU core */
+-#define	SSNPHY_CORE_ID		0x828	/* 802.11n single-stream phy core */
+-#define	SDIOD_CORE_ID		0x829	/* SDIO device core */
+-#define	ARMCM3_CORE_ID		0x82a	/* ARM Cortex M3 core */
+-#define	HTPHY_CORE_ID		0x82b	/* 802.11n 4x4 phy core */
+-#define	MIPS74K_CORE_ID		0x82c	/* mips 74k core */
+-#define	GMAC_CORE_ID		0x82d	/* Gigabit MAC core */
+-#define	DMEMC_CORE_ID		0x82e	/* DDR1/2 memory controller core */
+-#define	PCIERC_CORE_ID		0x82f	/* PCIE Root Complex core */
+-#define	OCP_CORE_ID		0x830	/* OCP2OCP bridge core */
+-#define	SC_CORE_ID		0x831	/* shared common core */
+-#define	AHB_CORE_ID		0x832	/* OCP2AHB bridge core */
+-#define	SPIH_CORE_ID		0x833	/* SPI host core */
+-#define	I2S_CORE_ID		0x834	/* I2S core */
+-#define	DMEMS_CORE_ID		0x835	/* SDR/DDR1 memory controller core */
+-#define	DEF_SHIM_COMP		0x837	/* SHIM component in ubus/6362 */
+-#define OOB_ROUTER_CORE_ID	0x367	/* OOB router core ID */
+-#define	DEF_AI_COMP		0xfff	/* Default component, in ai chips it
+-					 * maps all unused address ranges
+-					 */
+-
+ /* Common core control flags */
+ #define	SICF_BIST_EN		0x8000
+ #define	SICF_PME_EN		0x4000
 -- 
 1.7.9.5
 
