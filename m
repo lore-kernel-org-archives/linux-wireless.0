@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57452 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713Ab2FWEST (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jun 2012 00:18:19 -0400
-Date: Sat, 23 Jun 2012 00:11:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-06-22
-Message-ID: <20120623041103.GA29801@tuxdriver.com> (sfid-20120623_061852_342621_E133EB3E)
-References: <20120622201716.GB13918@tuxdriver.com>
- <20452.64701.760819.559191@gargle.gargle.HOWL>
- <20453.302.671438.533390@gargle.gargle.HOWL>
- <20120622.165611.2220193371527786713.davem@davemloft.net>
- <20453.9687.225096.194368@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20453.9687.225096.194368@gargle.gargle.HOWL>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53871 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753006Ab2F3NRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 09:17:52 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 11/18] brcmsmac: remove some unnessessacry casts and void pointer
+Date: Sat, 30 Jun 2012 15:16:14 +0200
+Message-Id: <1341062181-28071-12-git-send-email-hauke@hauke-m.de> (sfid-20120630_151756_559125_46B52D23)
+In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 23, 2012 at 07:41:35AM +0530, Sujith Manoharan wrote:
-> David Miller wrote:
-> > From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> > Date: Sat, 23 Jun 2012 05:05:10 +0530
-> > 
-> > > Sujith Manoharan wrote:
-> > >> John W. Linville wrote:
-> > >> > Mohammed Shafi Shajakhan (1):
-> > >> >       ath9k_hw: avoid possible infinite loop in ar9003_get_pll_sqsum_dvc
-> > >> 
-> > >> Um, this commit doesn't really fix anything - the timeout is also
-> > >> arbitrary. Can you remove this from the 3.5 queue ? Thanks.
-> > > 
-> > > A review of the patch later, I think it's good. At least there's a
-> > > WARN_ON_ONCE() to indicate the situation in which the measurement fails.
-> > > It might come in handy as a debugging aid.
-> > 
-> > Thanks for wasting our time.
-> > 
-> > Make these determinations when changes to into John's tree, not
-> > later when he asks me to pull them into mine.
-> 
-> The patch was under review:
-> http://marc.info/?l=linux-wireless&m=134001371002288&w=2
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Quibbling over the exact number of iterations for a timeout didn't
-seem is important as avoiding an endless loop...
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 478b374..8bad8b6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -4218,9 +4218,8 @@ static void brcms_c_radio_timer(void *arg)
+ }
+ 
+ /* common low-level watchdog code */
+-static void brcms_b_watchdog(void *arg)
++static void brcms_b_watchdog(struct brcms_c_info *wlc)
+ {
+-	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
+ 	struct brcms_hardware *wlc_hw = wlc->hw;
+ 
+ 	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
+@@ -4241,10 +4240,8 @@ static void brcms_b_watchdog(void *arg)
+ }
+ 
+ /* common watchdog code */
+-static void brcms_c_watchdog(void *arg)
++static void brcms_c_watchdog(struct brcms_c_info *wlc)
+ {
+-	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
+-
+ 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+ 
+ 	if (!wlc->pub->up)
+@@ -4284,7 +4281,9 @@ static void brcms_c_watchdog(void *arg)
+ 
+ static void brcms_c_watchdog_by_timer(void *arg)
+ {
+-	brcms_c_watchdog(arg);
++	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
++
++	brcms_c_watchdog(wlc);
+ }
+ 
+ static bool brcms_c_timers_init(struct brcms_c_info *wlc, int unit)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
