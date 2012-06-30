@@ -1,142 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64975 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756054Ab2FZMaf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jun 2012 08:30:35 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC v3 01/13] cfg80211: introduce cfg80211_stop_ap
-Date: Tue, 26 Jun 2012 14:30:06 +0200
-Message-ID: <1340713818-28549-2-git-send-email-michal.kazior@tieto.com> (sfid-20120626_145129_880801_8F6EB2DD)
-In-Reply-To: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-References: <1340713818-28549-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53874 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754214Ab2F3NRy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jun 2012 09:17:54 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 12/18] brcmsmac: add a conditions for core rev 17 again
+Date: Sat, 30 Jun 2012 15:16:15 +0200
+Message-Id: <1341062181-28071-13-git-send-email-hauke@hauke-m.de> (sfid-20120630_151759_564019_AEA3E013)
+In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This functionality will be reused when interface
-is going down. Avoids code duplication. Also adds
-missing wdev locking.
+This reverts some changes made in this commit:
+commit 7234592364e2efe8b4ac1040c99b1d7ef01cf502
+Author: Roland Vossen <rvossen@broadcom.com>
+Date:   Mon Feb 14 12:16:45 2011 +0100
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+    staging: brcm80211: removal of inactive d11 code
+
+The bcm4716 has a rev 17 wireless core and this condition is needed.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/wireless/Makefile  |    2 +-
- net/wireless/ap.c      |   44 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h    |    4 ++++
- net/wireless/nl80211.c |   17 +----------------
- 4 files changed, 50 insertions(+), 17 deletions(-)
- create mode 100644 net/wireless/ap.c
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index 55a28ab..0f7e0d6 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -10,7 +10,7 @@ obj-$(CONFIG_WEXT_SPY) += wext-spy.o
- obj-$(CONFIG_WEXT_PRIV) += wext-priv.o
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 8bad8b6..547ae5b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -1942,7 +1942,8 @@ static bool brcms_b_radio_read_hwdisabled(struct brcms_hardware *wlc_hw)
+ 		 * accesses phyreg throughput mac. This can be skipped since
+ 		 * only mac reg is accessed below
+ 		 */
+-		flags |= SICF_PCLKE;
++		if (D11REV_GE(wlc_hw->corerev, 18))
++			flags |= SICF_PCLKE;
  
- cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
--cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o
-+cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o ap.o
- cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
- cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
- cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-new file mode 100644
-index 0000000..45199cc
---- /dev/null
-+++ b/net/wireless/ap.c
-@@ -0,0 +1,44 @@
-+#include <linux/ieee80211.h>
-+#include <linux/export.h>
-+#include <net/cfg80211.h>
-+#include "nl80211.h"
-+#include "core.h"
-+
-+
-+static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
-+			      struct net_device *dev)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	int err;
-+
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	if (!rdev->ops->stop_ap)
-+		return -EOPNOTSUPP;
-+
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-+		return -EOPNOTSUPP;
-+
-+	if (!wdev->beacon_interval)
-+		return -ENOENT;
-+
-+	err = rdev->ops->stop_ap(&rdev->wiphy, dev);
-+	if (!err)
-+		wdev->beacon_interval = 0;
-+
-+	return err;
-+}
-+
-+int cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
-+		     struct net_device *dev)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	int err;
-+
-+	wdev_lock(wdev);
-+	err = __cfg80211_stop_ap(rdev, dev);
-+	wdev_unlock(wdev);
-+
-+	return err;
-+}
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 9348a47..a366ffd 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -315,6 +315,10 @@ int cfg80211_set_mesh_freq(struct cfg80211_registered_device *rdev,
- 			   struct wireless_dev *wdev, int freq,
- 			   enum nl80211_channel_type channel_type);
+ 		/*
+ 		 * TODO: test suspend/resume
+@@ -2023,7 +2024,8 @@ void brcms_b_corereset(struct brcms_hardware *wlc_hw, u32 flags)
+ 	 * phyreg throughput mac, AND phy_reset is skipped at early stage when
+ 	 * band->pi is invalid. need to enable PHY CLK
+ 	 */
+-	flags |= SICF_PCLKE;
++	if (D11REV_GE(wlc_hw->corerev, 18))
++		flags |= SICF_PCLKE;
  
-+/* AP */
-+int cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
-+		     struct net_device *dev);
-+
- /* MLME */
- int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
- 			 struct net_device *dev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ae54b8..c17b57b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2390,23 +2390,8 @@ static int nl80211_stop_ap(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
--	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	int err;
--
--	if (!rdev->ops->stop_ap)
--		return -EOPNOTSUPP;
- 
--	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
--	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
--		return -EOPNOTSUPP;
--
--	if (!wdev->beacon_interval)
--		return -ENOENT;
--
--	err = rdev->ops->stop_ap(&rdev->wiphy, dev);
--	if (!err)
--		wdev->beacon_interval = 0;
--	return err;
-+	return cfg80211_stop_ap(rdev, dev);
- }
- 
- static const struct nla_policy sta_flags_policy[NL80211_STA_FLAG_MAX + 1] = {
+ 	/*
+ 	 * reset the core
 -- 
-1.7.0.4
+1.7.9.5
 
