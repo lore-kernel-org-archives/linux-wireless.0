@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43068 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752849Ab2FMUzD (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45337 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752970Ab2F3J4L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jun 2012 16:55:03 -0400
-Date: Wed, 13 Jun 2012 13:50:07 -0700
-From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<victorg@ti.com>
-Subject: Re: [PATCH] nl80211: specify RSSI threshold when scanning
-Message-ID: <20120613205007.GB3043@pista> (sfid-20120613_225509_204417_A1F9A48C)
-References: <1339533801-32016-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <1339566003.4519.1.camel@jlt3.sipsolutions.net>
- <1339587447.3840.272.camel@cumari.coelho.fi>
- <4FD87FEA.3070208@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4FD87FEA.3070208@qca.qualcomm.com>
+	Sat, 30 Jun 2012 05:56:11 -0400
+From: Sasha Levin <levinsasha928@gmail.com>
+To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sasha Levin <levinsasha928@gmail.com>
+Subject: [PATCH] NFC: Prevent NULL deref when getting socket name
+Date: Sat, 30 Jun 2012 11:56:47 +0200
+Message-Id: <1341050207-13145-1-git-send-email-levinsasha928@gmail.com> (sfid-20120630_115707_707265_3A58827F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2012 at 02:56:26PM +0300, Kalle Valo wrote:
-> On 06/13/2012 02:37 PM, Luciano Coelho wrote:
-> > On Wed, 2012-06-13 at 07:40 +0200, Johannes Berg wrote:
-> >> On Tue, 2012-06-12 at 13:43 -0700, Thomas Pedersen wrote:
-> >>> Support configuring an RSSI threshold in dBm (s32) when requesting
-> >>> scheduled scan, below which a BSS won't be reported by the cfg80211
-> >>> driver.
-> >>
-> >> I'm confused -- were you going to do scheduled scan only? Makes sense,
-> >> but if you could maybe change the subject a bit to "specify ... in
-> >> scheduled scan"?
-> > 
-> > It makes more sense with scheduled scans, but maybe it is also desirable
-> > with normal scans to reduce the amount of scan results traffic?
-> > 
-> > At least if we consider the intermediate scan results that Victor has
-> > been working on... We may want to report all scan results at the end,
-> > but only send intermediate events if all the matches are satisfied, for
-> > example.
-> > 
-> > Just thinking out loud a bit.
-> 
-> Good point.
-> 
-> Funnily enough I don't have any idea how ath6kl has implemented this
-> feature, but in theory this feature is useful also for the current
-> normal scan (when the firmware/hardware supports it) as we can avoid
-> host wakeups. If there are 10 APs, but all are below the RSSI threshold,
-> we will have only 1 host wakeup (scan ready event) opposed to 11 wakeups
-> (10 AP found events plus 1 scan ready event).
+llcp_sock_getname can be called without a device attached to the nfc_llcp_sock.
 
-But can the host even sleep on normal scans?
+This would lead to the following BUG:
 
-If so, maybe it makes sense to convert NL80211_ATTR_SCHED_SCAN_MATCH
-into general scan matching parameters instead of having a set for each
-scan type?
+[  362.341807] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[  362.341815] IP: [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
+[  362.341818] PGD 31b35067 PUD 30631067 PMD 0
+[  362.341821] Oops: 0000 [#627] PREEMPT SMP DEBUG_PAGEALLOC
+[  362.341826] CPU 3
+[  362.341827] Pid: 7816, comm: trinity-child55 Tainted: G      D W    3.5.0-rc4-next-20120628-sasha-00005-g9f23eb7 #479
+[  362.341831] RIP: 0010:[<ffffffff836258e5>]  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
+[  362.341832] RSP: 0018:ffff8800304fde88  EFLAGS: 00010286
+[  362.341834] RAX: 0000000000000000 RBX: ffff880033cb8000 RCX: 0000000000000001
+[  362.341835] RDX: ffff8800304fdec4 RSI: ffff8800304fdec8 RDI: ffff8800304fdeda
+[  362.341836] RBP: ffff8800304fdea8 R08: 7ebcebcb772b7ffb R09: 5fbfcb9c35bdfd53
+[  362.341838] R10: 4220020c54326244 R11: 0000000000000246 R12: ffff8800304fdec8
+[  362.341839] R13: ffff8800304fdec4 R14: ffff8800304fdec8 R15: 0000000000000044
+[  362.341841] FS:  00007effa376e700(0000) GS:ffff880035a00000(0000) knlGS:0000000000000000
+[  362.341843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  362.341844] CR2: 0000000000000000 CR3: 0000000030438000 CR4: 00000000000406e0
+[  362.341851] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  362.341856] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  362.341858] Process trinity-child55 (pid: 7816, threadinfo ffff8800304fc000, task ffff880031270000)
+[  362.341858] Stack:
+[  362.341862]  ffff8800304fdea8 ffff880035156780 0000000000000000 0000000000001000
+[  362.341865]  ffff8800304fdf78 ffffffff83183b40 00000000304fdec8 0000006000000000
+[  362.341868]  ffff8800304f0027 ffffffff83729649 ffff8800304fdee8 ffff8800304fdf48
+[  362.341869] Call Trace:
+[  362.341874]  [<ffffffff83183b40>] sys_getpeername+0xa0/0x110
+[  362.341877]  [<ffffffff83729649>] ? _raw_spin_unlock_irq+0x59/0x80
+[  362.341882]  [<ffffffff810f342b>] ? do_setitimer+0x23b/0x290
+[  362.341886]  [<ffffffff81985ede>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+[  362.341889]  [<ffffffff8372a539>] system_call_fastpath+0x16/0x1b
+[  362.341921] Code: 84 00 00 00 00 00 b8 b3 ff ff ff 48 85 db 74 54 66 41 c7 04 24 27 00 49 8d 7c 24 12 41 c7 45 00 60 00 00 00 48 8b 83 28 05 00 00 <8b> 00 41 89 44 24 04 0f b6 83 41 05 00 00 41 88 44 24 10 0f b6
+[  362.341924] RIP  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
+[  362.341925]  RSP <ffff8800304fde88>
+[  362.341926] CR2: 0000000000000000
+[  362.341928] ---[ end trace 6d450e935ee18bf3 ]---
 
-Thomas
+Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+---
+ net/nfc/llcp/sock.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+index 2c0b317..05ca5a6 100644
+--- a/net/nfc/llcp/sock.c
++++ b/net/nfc/llcp/sock.c
+@@ -292,7 +292,7 @@ static int llcp_sock_getname(struct socket *sock, struct sockaddr *addr,
+ 
+ 	pr_debug("%p\n", sk);
+ 
+-	if (llcp_sock == NULL)
++	if (llcp_sock == NULL || llcp_sock->dev == NULL)
+ 		return -EBADFD;
+ 
+ 	addr->sa_family = AF_NFC;
+-- 
+1.7.8.6
+
