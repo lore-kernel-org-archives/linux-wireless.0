@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46845 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758250Ab2GLMl1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 08:41:27 -0400
-Message-ID: <1342096884.4531.19.camel@jlt3.sipsolutions.net> (sfid-20120712_144138_627451_75F92EB3)
-Subject: Re: pull-request: mac80211-next 2012-07-12
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 12 Jul 2012 14:41:24 +0200
-In-Reply-To: <1342088129.4531.16.camel@jlt3.sipsolutions.net> (sfid-20120712_121541_700966_1EAF6065)
-References: <1341946090.4475.31.camel@jlt3.sipsolutions.net>
-	 (sfid-20120710_204821_128762_BC016001) <1342088129.4531.16.camel@jlt3.sipsolutions.net>
-	 (sfid-20120712_121541_700966_1EAF6065)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from 212.199.104.198.static.012.net.il ([212.199.104.198]:9526 "EHLO
+	qualcomm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932239Ab2GAMHX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2012 08:07:23 -0400
+From: Vladimir Kondratiev <vkondrat@qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [RFC 60g 2/5] wireless: rate check logic for 60g
+Date: Sun, 01 Jul 2012 15:05:44 +0300
+Message-ID: <1497614.ftLOcXq5Bn@lx-vladimir> (sfid-20120701_140727_723210_3797C990)
+In-Reply-To: <1340906664.4491.47.camel@jlt3.sipsolutions.net>
+References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1340882220-31768-3-git-send-email-qca_vkondrat@qca.qualcomm.com> <1340906664.4491.47.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-12 at 12:15 +0200, Johannes Berg wrote:
-> John,
+On Thursday, June 28, 2012 08:04:24 PM Johannes Berg wrote:
+> On Thu, 2012-06-28 at 14:16 +0300, Vladimir Kondratiev wrote:
+> > +		/*
+> > +		 * on 60gHz band, there are no legacy rates, so
+> > +		 * n_bitrates is 0
+> > +		 */
+> > +		if (WARN_ON((band != IEEE80211_BAND_60GHZ) &&
+> > +		    !sband->n_bitrates))
+> > 
+> >  			return -EINVAL;
 > 
-> Here's a fixed pull request, please take this version. I've included the
-> fixed version of the API additions/updates for the P2P Device
-> abstraction, I still don't know if we'll get the actual code done in
-> time for 3.6 but I didn't want to hang on to these APIs for too long to
-> avoid conflicts.
+> Please fix indentation.
 > 
-> I've also included some more fixes for the multi-channel and 60GHz work
-> as well as a few other fixes.
-> 
-> The "iterate monitor interfaces patch" is new over the previous version
-> of the pull request.
-> 
-> Thanks,
-> Johannes
-> 
-> The following changes since commit 4d6d0ae2a088e1e054ef6d96ceb1b41523291e71:
-> 
->   mac80211_hwsim: add testmode code to stop/wake queues (2012-07-06 15:27:15 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git 
+> johannes
 
-Hmm. This doesn't call out the "for-john" branch for some reason? Not
-sure why that happened.
+I am confused a bit. What is "proper" identation for this case
+(wrapped expression)?
+Immediately following code use same identation (4 spaces).
 
-johannes
+		if (cfg80211_disable_40mhz_24ghz &&
+		    band == IEEE80211_BAND_2GHZ &&
+		    sband->ht_cap.ht_supported) {
+			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
+		}
+
+Should I ident line containing (see above):
+!sband->n_bitrates))
+with:
+ - 4 spaces as next code fragment,
+ - one tab (same level as 'return')
+ - 2 tabs (one level more then 'return')
+ - other (what?)
+
 
