@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:45688 "EHLO ebb05.tieto.com"
+Received: from purkki.adurom.net ([80.68.90.206]:56296 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751997Ab2G0LmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:42:03 -0400
-Message-ID: <50127E88.6020109@tieto.com> (sfid-20120727_134208_368687_F55F4AE4)
-Date: Fri, 27 Jul 2012 13:42:00 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
+	id S1753721Ab2GANEq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2012 09:04:46 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: don't require associated->beacon_ies for ps
+References: <1340610505-7713-1-git-send-email-eliad@wizery.com>
+	<87395j4j3y.fsf@purkki.adurom.net>
+	<CAB3XZEcUoo0g7ZjGCkZViAs+B=nsYgfsZGvN1vE+WN8bFuE8Sw@mail.gmail.com>
+Date: Sun, 01 Jul 2012 16:04:44 +0300
+In-Reply-To: <CAB3XZEcUoo0g7ZjGCkZViAs+B=nsYgfsZGvN1vE+WN8bFuE8Sw@mail.gmail.com>
+	(Eliad Peller's message of "Mon, 25 Jun 2012 16:54:39 +0300")
+Message-ID: <87txxr3a4z.fsf@purkki.adurom.net> (sfid-20120701_150449_826077_AB2A8394)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [RFC 18/20] mac80211: allow drv_add_chanctx to fail
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net> <1343387816-9414-19-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1343387816-9414-19-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27/07/12 13:16, Johannes Berg wrote:
-> --- a/net/mac80211/chan.c
-> +++ b/net/mac80211/chan.c
-> @@ -237,7 +237,10 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
->
->   	list_add(&ctx->list, &local->chanctx_list);
->
-> -	drv_add_chanctx(local, ctx);
-> +	if (drv_add_chanctx(local, ctx)) {
-> +		kfree(ctx);
+Hi Eliad,
 
-We should also do a list_del() here.
+sorry for the late reply, I'm on vacation and enjoying Finland's great
+summer, 18 C and raining :)
 
+Eliad Peller <eliad@wizery.com> writes:
 
-> +		return NULL;
-> +	}
->
->   	return ctx;
->   }
+> On Mon, Jun 25, 2012 at 4:27 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>>> beacon_ies is needed only in order to extract the dtim
+>>> period. However, even if it's missing we can still enter
+>>> ps with dtim=1 (which also happens if the TIM ie is invalid).
+>>>
+>>> Most drivers don't use conf.max_sleep_period/ps_dtim_period
+>>> anyway, and this check prevents them from entering ps if
+>>> they don't have beacon (but only probe response), even though
+>>> the beacon is not needed at all.
+>>
+>> Does this increase the chances of accidentally using dtim 1 even though
+>> AP has dtim > 1? I'm just worried that it's difficult to detect cases
+>> when we are forcing dtim to 1 and nobody might not notice it. How often
+>> will this happen?
+>>
+> doesn't dtim=1 is still better than not entering ps at all?
+> i think the only bad effect of using dtim=1 (instead of greater value)
+> is wrt power saving. but entering psm with dtim=1 is still better than
+> not entering psm at all.
 
+Sure. I was just thinking ahead and trying to avoid future problems
+(ie. accidentally using dtim=1).
 
--- Pozdrawiam / Best regards, Michal Kazior.
+-- 
+Kalle Valo
