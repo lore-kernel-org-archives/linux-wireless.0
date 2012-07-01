@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55677 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868Ab2GaNPU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 09:15:20 -0400
-Date: Tue, 31 Jul 2012 09:13:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pedro Francisco <pedrogfrancisco@gmail.com>
-Cc: ML linux-wireless <linux-wireless@vger.kernel.org>,
-	johannes@sipsolutions.net
-Subject: Re: unloading WiFi modules is usually triggering kernel crash
-Message-ID: <20120731131311.GA19067@tuxdriver.com> (sfid-20120731_151525_010497_920AD533)
-References: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:19186 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932326Ab2GANaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2012 09:30:05 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: RE: [RFT] iwlegacy: don't mess up the SCD when removing a key
+Date: Sun, 1 Jul 2012 13:29:02 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB317245E@HASMSX103.ger.corp.intel.com> (sfid-20120701_153012_002123_7398EA9B)
+References: <1341148023-17673-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1341144092.1911.95.camel@x61.thuisdomein>
+In-Reply-To: <1341144092.1911.95.camel@x61.thuisdomein>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 31, 2012 at 01:54:52PM +0100, Pedro Francisco wrote:
-> I've noticed in the past few days a pattern: sometimes nm-applet
-> starts showing empty bars for the signal strength.
-> 
-> Running the script:
-> sudo ifconfig wlan0 down; sleep 1
-> sudo rmmod hp_wmi; sudo rmmod iwl3945; sudo rmmod iwlegacy; sudo rmmod
-> mac80211; sudo rmmod cfg80211
-> sleep 2; sudo rmmod rfkill; sync
-> sudo modprobe rfkill; sudo modprobe cfg80211; sudo modprobe mac80211;
-> sudo modprobe iwlegacy
-> sudo modprobe iwl3945; sudo modprobe hp_wmi; sleep 1; sudo ifconfig wlan0 up
-> 
-> usually triggers a kernel crash. This has happened twice so far. I
-> tried it now for the third time but it didn't crash.
-> 
-> Logs (running with slub_debug ):
-> https://dl.dropbox.com/u/1332655/WiFi-issues/notTainted-cfg80211_mlme_disassoc-WARNING.log
-> https://dl.dropbox.com/u/1332655/WiFi-issues/alreadyTainted-debug_print_object-WARNING.log
-> (debug_print_object-WARNING was caused by running the above script
-> rmmoding things)
-> https://dl.dropbox.com/u/1332655/WiFi-issues/iw_dev_scan.log
-> https://dl.dropbox.com/u/1332655/WiFi-issues/gshell-wifiBars_empty.png
-> 
-> Any ideas on what is going on? Looking at other mails around here it
-> seems not to be driver specific, at least the cfg80211_mlme_disassoc
-> part.
+PiANCj4gRW1tYW51ZWwsDQo+IA0KPiBPbiBTdW4sIDIwMTItMDctMDEgYXQgMTY6MDcgKzAzMDAs
+IEVtbWFudWVsIEdydW1iYWNoIHdyb3RlOg0KPiA+IFBhdWwsIGNhbiB5b3UgcGxlYXNlIHRlc3Qg
+Pw0KPiANCj4gU3VyZSwgYW5kIHRoYW5rcyBmb3IgcG9ydGluZyB0aGF0IHBhdGNoLg0KPiANCj4g
+PiBJZiBpdCBzb2x2ZSB0aGUgaXNzdWVzIGZvciB5b3UsIEkgd2lsbCBzZW5kIGFzIGEgcGF0Y2gg
+YW5kIENjIHN0YWJsZQ0KPiA+IFRvdGFsbHkgbm90IHRlc3RlZA0KPiANCj4gTm90ZSB0aGF0IGl0
+IG1pZ2h0IHRha2Ugc29tZSBkYXlzLCBtYXliZSBldmVuIGEgd2VlaywgYmVmb3JlIEkgY2FuIGJl
+DQo+IGNvbmZpZGVudCB0aGF0IHRoZSBwYXRjaCB3b3Jrcy4gUGVyaGFwcyBJIHNob3VsZCBnaXZl
+IHN1c3BlbmRpbmcgYW5kDQo+IHJlc3VtaW5nIGluIGEgbG9vcCBhIHRyeSwgdGhhdCBzaG91bGQg
+c3BlZWQgdXAgdGVzdGluZy4NCj4gDQoNCllvdSBjYW4gYWxzbyB0cnkgdG8gc2ltcGx5IGFzc29j
+aWF0ZSAvIGRpc2Fzc29jaWF0ZSBpbiBhIGxvb3Agd2l0aCBhbmQgd2l0aG91dCBteSBwYXRjaC4g
+VGhpcyB3YXMgdGhlIHNjZW5hcmlvIHRoYXQgd2FzIGZpeGVkIGJ5IG15IHBhdGNoIGluIGl3bHdp
+ZmkuDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0KSW50ZWwgSXNyYWVsICg3NCkgTGltaXRlZAoKVGhpcyBlLW1haWwg
+YW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9y
+CnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9y
+IGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFy
+ZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBh
+bmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
 
-Looks the same as this one, FWIW...
-
-	https://bugzilla.redhat.com/show_bug.cgi?id=834158
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
