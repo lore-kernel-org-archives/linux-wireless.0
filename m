@@ -1,118 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from telenetsystems.com ([130.94.222.88]:53599 "EHLO
-	telenetsystems.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630Ab2GGKin (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2012 06:38:43 -0400
-Date: Sat, 07 Jul 2012 16:01:56 +0530
-Subject: Re: [ath9k-devel] ath9k: Problems with diversity on AR9330
-From: Sunil Mehta <sunil2@telenetsystems.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Message-ID: <CC1E0C97.12FC3%sunil2@telenetsystems.com> (sfid-20120707_123846_868450_0C727044)
-In-Reply-To: <CAD2nsn1-ZrKQxTYc_YZ6ETxovD9o7=Ygd2j2MxJiq8Vsiu19QQ@mail.gmail.com>
-Mime-version: 1.0
-Content-type: text/plain;
-	charset="US-ASCII"
+Received: from 212.199.104.198.static.012.net.il ([212.199.104.198]:10958 "EHLO
+	qualcomm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750937Ab2GAQ3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2012 12:29:41 -0400
+From: Vladimir Kondratiev <vkondrat@qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH 60g v1 0/5] Infrastructure for 60g (802.11ad)
+Date: Sun, 01 Jul 2012 19:28 +0300
+Message-ID: <3398883.J9mbiBD70h@lx-vladimir> (sfid-20120701_182945_490484_4A114F9B)
+In-Reply-To: <1341141808.6603.1.camel@jlt3.sipsolutions.net>
+References: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1341141808.6603.1.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Hi Shafi,
-
-We are facing similar problems with configuring the LNA2 of AR9331 for
-diversity. Even though we try to set the RXCHAINMASK = 0x03, on checking
-the value, it keeps showing as 0x01.
-
-We are currently using LSDK-9.2.0_U10.1020. It appears that some where the
-value may be hardcoded to 0x01 in this Release.
-
-Can you suggest how to solve this.
-
-Regards,
-Sunil.
+On Sunday, July 01, 2012 01:23:28 PM Johannes Berg wrote:
+> 
+> Please fix indentation better :-)
+> 
+> johannes
 
 
-On 7/7/12 3:44 PM, "Mohammed Shafi" <shafi.wireless@gmail.com> wrote:
+I am confused a bit. What is "proper" identation for this case?
+Immediately following code idents with 4 spaces:
 
->On Sat, Jul 7, 2012 at 3:28 PM, Mohammed Shafi <shafi.wireless@gmail.com>
->wrote:
->> Hi Sven,
->>
->> On Fri, Jul 6, 2012 at 10:05 PM, Sven Eckelmann <sven@narfation.org>
->>wrote:
->>> On Friday 06 July 2012 17:13:42 Sven Eckelmann wrote:
->>> [...]
->>>> > I just also observer the chain0 is "preferred" unless the RSSI is so
->>>> > poor in it so chain1 is taken.
->>>> > Please check if this work out for your case too.
->>>>
->>>> Removing the antenna on chain0 doesn't change the alt_rssi value for
->>>>us. We
->>>> only noticed that frames with alt_rssi != -128 have  the value
->>>>rx_ant_conf
->>>> == 1 (LNA2) when only chain1 is attached and rx_ant_conf == 2 (LNA1)
->>>>when
->>>> both/chain0-only are attached. Still most of the packets had alt_rssi
->>>>==
->>>> -128 and we saw changes in curr_main_set and curr_alt_set (after lot
->>>>of
->>>> data was sent).
->>>
->>> Here are some logs. We added some debug printk before first check in
->>> ath_ant_comb_scan ("if (main_rssi > 0 && alt_rssi > 0) {"). We can see
->>>a
->>> difference in the output after (a more or less long time) both
->>>antennas were
->>> unplugged. The output looks extreme different when at least one
->>>antenna is
->>> attached.
->>
->> thanks, i saw the logs. i could do some analysis with AR9485/AR9285.
->> as you had said before
->> alt_rssi is -128 when one antenna is unplugged, while having both out
->> seems to bring some
->> +tive value for alt_rssi.
->>
->>>
->>> alt_ant_conf is calculated using
->>> "alt_ant_conf = (rs->rs_rssi_ctl[2]) & ATH_ANT_RX_MASK;" and could be
->>>wrong.
->>> curr_alt_set and curr_main_set come from div_ant_conf queried using
->>> ath9k_hw_antdiv_comb_conf_get.
->>
->> thanks i would check this out.  As the algorithm itself is bit
->> complex, i would just revisit
->> and check it out. If i remember correctly Fast antenna diversity was
->> working fine with AR9485.
->
->further i check with the CCK/DETECT and MC_GAIN_CTRL in ar9485, it  seems
->to be
-> ar9003_hw_ant_ctrl_apply CCK_DETECT 80be6788
-> ar9003_hw_ant_ctrl_apply MC_GAIN_CTRLL 13ef0200
->will check it out whats the one bit difference in CCK_DETECT
->
->
->>
->>>
->>> Kind regards
->>>         Sven
->>
->>
->>
->> --
->> thanks,
->> shafi
->
->
->
->-- 
->thanks,
->shafi
->_______________________________________________
->ath9k-devel mailing list
->ath9k-devel@lists.ath9k.org
->https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+                if (cfg80211_disable_40mhz_24ghz &&
+                    band == IEEE80211_BAND_2GHZ &&
+                    sband->ht_cap.ht_supported) {
+                        sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+                        sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
+                }
 
+This is what I did initially, to comply with surrounding code style.
+Fragment in question is:
+
+		if (WARN_ON((band != IEEE80211_BAND_60GHZ) &&
+				!sband->n_bitrates))
+			return -EINVAL;
+
+
+Should I ident line containing
+!sband->n_bitrates))
+with:
+ - 4 spaces as next code fragment,
+ - one tab (same level as 'return')
+ - 2 tabs (one level more then 'return')
+ - other (what?)
 
