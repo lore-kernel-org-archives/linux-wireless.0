@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50754 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684Ab2GFN0W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 09:26:22 -0400
-Message-ID: <1341581180.16893.2.camel@jlt3.sipsolutions.net> (sfid-20120706_152626_196582_D096A2EC)
-Subject: Re: [PATCH] mac80211: fix crash with single-queue drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 06 Jul 2012 15:26:20 +0200
-In-Reply-To: <4FF6E50B.4090205@lwfinger.net> (sfid-20120706_151601_313202_4A7FB65B)
-References: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net>
-	 <4FF6E50B.4090205@lwfinger.net> (sfid-20120706_151601_313202_4A7FB65B)
+Received: from perches-mx.perches.com ([206.117.179.246]:50543 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753178Ab2GAQzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2012 12:55:47 -0400
+Message-ID: <1341161747.2032.25.camel@joe2Laptop> (sfid-20120701_185551_632945_B19FCCEC)
+Subject: Re: [PATCH 60g v1 0/5] Infrastructure for 60g (802.11ad)
+From: Joe Perches <joe@perches.com>
+To: Vladimir Kondratiev <vkondrat@qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Sun, 01 Jul 2012 09:55:47 -0700
+In-Reply-To: <3398883.J9mbiBD70h@lx-vladimir>
+References: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1341141808.6603.1.camel@jlt3.sipsolutions.net>
+	 <3398883.J9mbiBD70h@lx-vladimir>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-07-06 at 08:15 -0500, Larry Finger wrote:
-> On 07/04/2012 05:53 AM, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > Larry (and some others I think) reported that with
-> > single-queue drivers mac80211 crashes when waking
-> > the queues. This happens because we allocate just
-> > a single queue for each virtual interface in case
-> > the driver doesn't have at least 4 queues, but the
-> > code stopping/waking the virtual interface queues
-> > wasn't taking this into account.
-> >
-> > Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> >   net/mac80211/util.c |   12 ++++++++++--
-> >   1 file changed, 10 insertions(+), 2 deletions(-)
+On Sun, 2012-07-01 at 19:28 +0300, Vladimir Kondratiev wrote:
+> On Sunday, July 01, 2012 01:23:28 PM Johannes Berg wrote:
+> > Please fix indentation better :-)
+> I am confused a bit. What is "proper" identation for this case?
+> Immediately following code idents with 4 spaces:
 > 
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+>                 if (cfg80211_disable_40mhz_24ghz &&
+>                     band == IEEE80211_BAND_2GHZ &&
+>                     sband->ht_cap.ht_supported) {
+>                         sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+>                         sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
+>                 }
+
+Yes.
+
+> This is what I did initially, to comply with surrounding code style.
+> Fragment in question is:
 > 
-> This patch fixes the problem for drivers that always report a single queue such 
-> as at76c503-usb.
+> 		if (WARN_ON((band != IEEE80211_BAND_60GHZ) &&
+> 				!sband->n_bitrates))
+> 			return -EINVAL;
+> 
+> 
+> Should I ident line containing
+> !sband->n_bitrates))
+> with:
+>  - 4 spaces as next code fragment,
+>  - one tab (same level as 'return')
+>  - 2 tabs (one level more then 'return')
+>  - other (what?)
 
-Thanks, I'll merge this.
+Align subsequent line to character after parenthesis depth.
+Maximally fill with tabs, use 0 to 7 spaces to indent
+		   1       23                            2
+                   v       vv                            v
+		if (WARN_ON((band != IEEE80211_BAND_60GHZ) &&
+			    !sband->n_bitrates))
 
->  There is still a problem for b43 with open-source firmware 
-> where the number of queues changes from 4 to 1. As that only affects b43, do you 
-> agree that the problem should be fixed there?
+There is an unnecessary parenthesis here around the first
+test and this is perhaps better written as:
 
-Yes, b43 confuses me a bit. We were looking at this a few weeks ago, but
-I couldn't figure out how to solve it.
+		if (WARN_ON(band != IEEE80211_BAND_60GHZ &&
+			    !sband->n_bitrates))
 
-I think for b43 the solution should be to check if it's proprietary or
-free firmware before registering with mac80211, then to mac80211 it's
-really just either 1 or 4, not changing.
+You could also use "scripts/checkpatch.pl --strict" and
+it should tell you.
 
-johannes
 
