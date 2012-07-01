@@ -1,73 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39785 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751107Ab2GYW5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 18:57:08 -0400
-Message-ID: <501079BC.6050607@suse.de> (sfid-20120726_005712_592710_FD1722F4)
-Date: Wed, 25 Jul 2012 18:57:00 -0400
-From: Jeff Mahoney <jeffm@suse.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8064 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784Ab2GAGqr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2012 02:46:47 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 60g v1 5/5] wireless: bitrate calculation for 60g
+Date: Sun, 1 Jul 2012 09:45:54 +0300
+Message-ID: <1341125155-628-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120701_084701_696221_DFC4F9B0)
+In-Reply-To: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>
-Subject: [PATCH] brcmsmac: document firmware dependencies
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+60g band uses different from .11n MCS scheme, so bitrate should be calculated
+differently
 
-The brcmsmac driver requests firmware but doesn't document the
-dependency. This means that software that analyzes the modules to
-determine if firmware is needed won't detect it.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/net/cfg80211.h |    2 ++
+ net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
-Specifically, (at least) openSUSE won't install the kernel-firmware
-package if no hardware requires it.
-
-This patch adds the MODULE_FIRMWARE directives.
-
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-- ---
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-- --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -86,7 +86,9 @@ MODULE_AUTHOR("Broadcom Corporation");
- MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN driver.");
- MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN cards");
- MODULE_LICENSE("Dual BSD/GPL");
-- -
-+/* This needs to be adjusted when brcms_firmwares changes */
-+MODULE_FIRMWARE("brcm/bcm43xx-0.fw");
-+MODULE_FIRMWARE("brcm/bcm43xx_hdr-0.fw");
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 56e840d..f760520 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -563,11 +563,13 @@ enum station_info_flags {
+  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
+  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
+  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ * @RATE_INFO_FLAGS_60G: 60gHz MCS
+  */
+ enum rate_info_flags {
+ 	RATE_INFO_FLAGS_MCS		= 1<<0,
+ 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
+ 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
++	RATE_INFO_FLAGS_60G		= 1<<3,
+ };
  
- /* recognized BCMA Core IDs */
- static struct bcma_device_id brcms_coreid_table[] = {
+ /**
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 11188c6..4fe1766 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -890,12 +890,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
+ 
++static u16 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
++{
++	static const u16 __mcs2bitrate[] = {
++		/* control PHY */
++		[0] =   275,
++		/* SC PHY */
++		[1] =  3850,
++		[2] =  7700,
++		[3] =  9625,
++		[4] = 11550,
++		[5] = 12512, /* 1251.25 mbps */
++		[6] = 15400,
++		[7] = 19250,
++		[8] = 23100,
++		[9] = 25025,
++		[10] = 30800,
++		[11] = 38500,
++		[12] = 46200,
++		/* OFDM PHY */
++		[13] =  6930,
++		[14] =  8662, /* 866.25 mbps */
++		[15] = 13860,
++		[16] = 17325,
++		[17] = 20790,
++		[18] = 27720,
++		[19] = 34650,
++		[20] = 41580,
++		[21] = 45045,
++		[22] = 51975,
++		[23] = 62370,
++		[24] = 67568, /* 6756.75 mbps */
++		/* LP-SC PHY */
++		[25] =  6260,
++		[26] =  8340,
++		[27] = 11120,
++		[28] = 12510,
++		[29] = 16680,
++		[30] = 22240,
++		[31] = 25030,
++	};
++
++	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
++		return 0;
++
++	return __mcs2bitrate[rate->mcs];
++}
++
+ u16 cfg80211_calculate_bitrate(struct rate_info *rate)
+ {
+ 	int modulation, streams, bitrate;
+ 
+ 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
+ 		return rate->legacy;
++	if (rate->flags & RATE_INFO_FLAGS_60G)
++		return cfg80211_calculate_bitrate_60g(rate);
+ 
+ 	/* the formula below does only work for MCS values smaller than 32 */
+ 	if (WARN_ON_ONCE(rate->mcs >= 32))
+-- 
+1.7.9.5
 
-- -- 
-Jeff Mahoney
-SUSE Labs
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.18 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQIcBAEBAgAGBQJQEHm8AAoJEB57S2MheeWySqEQALkb2wGqTYsbjeKSz4gbXshf
-aUohL3UWrE81FH/2QzcXzLlLYPWmRdzsdMve6uafNfWWVHEXJDW5PzNbegCOwaPt
-8CdDFCUztKElfOzuqs6gUA3RgKdCl0ORSEFvFg6qg77jpw348e749dHUalmrsxga
-eR1R7NbFb7i2dcl0cK8d6SefdWtzcPonYYtb/pjSbJXlGMPxPpjFpXA2e/eGx+sf
-X5RP2AVGXDPQ7KgtVcZMMbOfmWRYLNmLfFZjXkpZGGPPiGgIc523HP3+PAAEi054
-LG3YcRIURAmqklrrHs2QQh9kQB3IxwXonkOiPsUuj9kJzv1mgMyxvXSOwywgI2O3
-AWRxCeQMsujrSLXUJJVHKjOk7sOmYHy/y7KytA1gvxQ18XnEHs0BrnOEUtgdbNdO
-rsc9gtZwtc1OOSmuH1kX12IyLe8YFatQ/d3nrFjWlMYeY0eqP349/vhgMdzQyTN5
-yz8wrbANBxDMiqsh+wUCtMEU5YPAailNcYPl2mUT2ptGmup6LGZSS0lpk1/GfPkr
-qpHW+4coFeJyIGT4IEnux3+32KaIrU/m93Vd7H7D0Lv4AsDV3Dn6YTD6EbdUgWmW
-bwvuAUWhVhgRoeVB6nO+fkHRrQyWUDRqknGXL+qtPn/TKDyJw7x3md1yR+/WbIeX
-jFFv5i1+CDoR+JlMmkOK
-=7FV2
------END PGP SIGNATURE-----
