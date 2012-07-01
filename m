@@ -1,160 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:57098 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753179Ab2GRO34 (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 18 Jul 2012 10:29:56 -0400
-Received: by bkwj10 with SMTP id j10so1463074bkw.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 07:29:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120718112131.GB29030@mi.fu-berlin.de>
-References: <1342600827-18420-1-git-send-email-machen@suse.com>
-	<20120718112131.GB29030@mi.fu-berlin.de>
-Date: Wed, 18 Jul 2012 22:29:38 +0800
-Message-ID: <CALx5=V--BNuq1rEx9MA9DF9quXC4nhBPo=4B9MZbnyoWh12wcQ@mail.gmail.com> (sfid-20120718_163000_041302_5005B00D)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
-From: Matt Chen <machen@suse.com>
-To: Henning Heinold <heinold@inf.fu-berlin.de>
-Cc: users@rt2x00.serialmonkey.com, kevin.chou@mediatek.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3146 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932358Ab2GANgP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jul 2012 09:36:15 -0400
+Message-ID: <1341149770.1911.101.camel@x61.thuisdomein> (sfid-20120701_153618_890965_07AF1354)
+Subject: RE: [RFT] iwlegacy: don't mess up the SCD when removing a key
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Sun, 01 Jul 2012 15:36:10 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB317245E@HASMSX103.ger.corp.intel.com>
+References: <1341148023-17673-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1341144092.1911.95.camel@x61.thuisdomein>
+	 <0BA3FCBA62E2DC44AF3030971E174FB317245E@HASMSX103.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Emmanuel,
 
-2012/7/18 Henning Heinold <heinold@inf.fu-berlin.de>:
-> On Wed, Jul 18, 2012 at 04:40:27PM +0800, Chen, Chien-Chia wrote:
->> This patch is going to fix the resuming failed from S3/S4
->> for rt3290 chip.
->>
->> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index e76f03c..1715776 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -400,6 +400,13 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
->>  {
->>       unsigned int i;
->>       u32 reg;
->> +     int retval;
->> +
->> +     if (rt2x00_rt(rt2x00dev,RT3290)){
->> +             retval = rt2800_enable_wlan_rt3290(rt2x00dev);
->> +             if (retval)
->> +                     return -EBUSY;
->> +     }
->>
->>       /*
->>        * If driver doesn't wake up firmware here,
->> @@ -5152,6 +5159,65 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
->>  }
->>  EXPORT_SYMBOL_GPL(rt2800_get_survey);
->>
->> +int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
->> +{
->> +     u32 reg;
->> +     int i, count;
->> +
->> +     rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
->> +     if ((rt2x00_get_field32(reg, WLAN_EN) == 1))
->> +             return 0;
->> +
->> +     rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
->> +     rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
->> +     rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
->> +     rt2x00_set_field32(&reg, WLAN_EN, 1);
->> +     rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
->> +
->> +     udelay(REGISTER_BUSY_DELAY);
->> +     count = 0;
->> +     do {
->> +             /*
->> +              * Check PLL_LD & XTAL_RDY.
->> +              */
->> +             for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
->> +                     rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
->> +                     if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
->> +                             (rt2x00_get_field32(reg, XTAL_RDY) == 1))
->> +                                     break;
->> +                     udelay(REGISTER_BUSY_DELAY);
->> +             }
->> +             if (i >= REGISTER_BUSY_COUNT) {
->> +                     if (count >= 10)
->> +                             return -EIO;
->> +
->> +                     rt2800_register_write(rt2x00dev, 0x58, 0x018);
->> +                     udelay(REGISTER_BUSY_DELAY);
->> +                     rt2800_register_write(rt2x00dev, 0x58, 0x418);
->> +                     udelay(REGISTER_BUSY_DELAY);
->> +                     rt2800_register_write(rt2x00dev, 0x58, 0x618);
->> +                     udelay(REGISTER_BUSY_DELAY);
->> +                     count++;
->> +             } else {
->> +                     count = 0;
->> +             }
->> +
->> +             rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
->> +             rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
->> +             rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
->> +             rt2x00_set_field32(&reg, WLAN_RESET, 1);
->> +             rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
->> +             udelay(10);
->> +             rt2x00_set_field32(&reg, WLAN_RESET, 0);
->> +             rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
->> +             udelay(10);
->> +             rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
->> +     } while (count != 0);
->> +
->> +     return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(rt2800_enable_wlan_rt3290);
->> +
->>  MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
->>  MODULE_VERSION(DRV_VERSION);
->>  MODULE_DESCRIPTION("Ralink RT2800 library");
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
->> index 18a0b67..12d6eeb 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
->> @@ -209,5 +209,5 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->>  int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
->>                     struct survey_info *survey);
->>  void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
->> -
->> +int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev);
->>  #endif /* RT2800LIB_H */
->> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
->> index 235376e..135c2a2 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
->> @@ -980,6 +980,7 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
->>       return rt2800_validate_eeprom(rt2x00dev);
->>  }
->>
->> +#if 0
->>  static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
->>  {
->>       u32 reg;
->> @@ -1040,6 +1041,8 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
->>
->>       return 0;
->>  }
->> +
->> +#endif
->
-> Why do you need the #ifdefs here?
-If this is no need anymore here, then I will remove this and submit it again. :)
->>  static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
->>  {
->>       int retval;
->>
->
-> Bye Henning
->
+On Sun, 2012-07-01 at 13:29 +0000, Grumbach, Emmanuel wrote:
+> You can also try to simply associate / disassociate in a loop with and
+> without my patch. This was the scenario that was fixed by my patch in
+> iwlwifi.
+
+I'm actually unfamiliar with associating and disassociating. How can I
+do that in a loop?
 
 
+Paul Bolle
 
--- 
-Thank you.
