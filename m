@@ -1,190 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:35890 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751245Ab2GHHXo (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3161 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781Ab2GAGq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 03:23:44 -0400
-Received: by lbok6 with SMTP id k6so4196052lbo.32
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 00:23:41 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 1/8] wlcore: Prevent processing of work items during op_stop
-Date: Sun,  8 Jul 2012 10:23:24 +0300
-Message-Id: <1341732211-25871-2-git-send-email-coelho@ti.com> (sfid-20120708_092347_881572_252E9A9E)
-In-Reply-To: <1341732211-25871-1-git-send-email-coelho@ti.com>
-References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+	Sun, 1 Jul 2012 02:46:27 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 60g v1 4/5] wireless: 60g protocol constants
+Date: Sun, 1 Jul 2012 09:45:53 +0300
+Message-ID: <1341125155-628-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120701_084703_741732_01B22E35)
+In-Reply-To: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+Provide various constants as defined by the 802.11ad:
+frame types, IE's, capability bits, action categories
 
-The interrupt line is disabled in op_stop using disable_irq. Since
-pending interrupts are synchronized, the mutex has to be released before
-disabling the interrupt to avoid a deadlock with the interrupt handler.
+Introduce GCMP cipher, mandatory by 802.11ad
 
-In addition, the internal state of the driver is only set to 'off'
-after the interrupt is disabled. Otherwise, if an interrupt fires after
-the state is set but before the interrupt line is disabled, the
-interrupt handler will not be able to acknowledge the interrupt
-resulting in an interrupt storm.
-
-The driver's operations might be called during recovery. If these
-acquire the mutex after it was released by op_stop, but before the
-driver's state is changed, they may queue new work items instead of just
-failing. This is especially problematic in the case of scans, in which a
-new scan may be scheduled after all scan requests were cancelled.
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/io.c   |    6 ++++
- drivers/net/wireless/ti/wlcore/io.h   |    1 +
- drivers/net/wireless/ti/wlcore/main.c |   50 ++++++++++++++++-----------------
- 3 files changed, 32 insertions(+), 25 deletions(-)
+ include/linux/ieee80211.h |   89 ++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 88 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/io.c b/drivers/net/wireless/ti/wlcore/io.c
-index 9976219..68e74ee 100644
---- a/drivers/net/wireless/ti/wlcore/io.c
-+++ b/drivers/net/wireless/ti/wlcore/io.c
-@@ -60,6 +60,12 @@ void wlcore_enable_interrupts(struct wl1271 *wl)
- }
- EXPORT_SYMBOL_GPL(wlcore_enable_interrupts);
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 318fc1f..90145bd 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -47,6 +47,7 @@
+ #define IEEE80211_FCTL_MOREDATA		0x2000
+ #define IEEE80211_FCTL_PROTECTED	0x4000
+ #define IEEE80211_FCTL_ORDER		0x8000
++#define IEEE80211_FCTL_CTL_EXT		0x0f00
  
-+void wlcore_synchronize_interrupts(struct wl1271 *wl)
-+{
-+	synchronize_irq(wl->irq);
-+}
-+EXPORT_SYMBOL_GPL(wlcore_synchronize_interrupts);
+ #define IEEE80211_SCTL_FRAG		0x000F
+ #define IEEE80211_SCTL_SEQ		0xFFF0
+@@ -54,6 +55,7 @@
+ #define IEEE80211_FTYPE_MGMT		0x0000
+ #define IEEE80211_FTYPE_CTL		0x0004
+ #define IEEE80211_FTYPE_DATA		0x0008
++#define IEEE80211_FTYPE_EXT		0x000c
+ 
+ /* management */
+ #define IEEE80211_STYPE_ASSOC_REQ	0x0000
+@@ -70,6 +72,7 @@
+ #define IEEE80211_STYPE_ACTION		0x00D0
+ 
+ /* control */
++#define IEEE80211_STYPE_CTL_EXT		0x0060
+ #define IEEE80211_STYPE_BACK_REQ	0x0080
+ #define IEEE80211_STYPE_BACK		0x0090
+ #define IEEE80211_STYPE_PSPOLL		0x00A0
+@@ -97,6 +100,18 @@
+ #define IEEE80211_STYPE_QOS_CFPOLL		0x00E0
+ #define IEEE80211_STYPE_QOS_CFACKPOLL		0x00F0
+ 
++/* extension, added by 802.11ad */
++#define IEEE80211_STYPE_DMG_BEACON		0x0000
 +
- int wlcore_translate_addr(struct wl1271 *wl, int addr)
- {
- 	struct wlcore_partition_set *part = &wl->curr_part;
-diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-index fef80ad..458da55 100644
---- a/drivers/net/wireless/ti/wlcore/io.h
-+++ b/drivers/net/wireless/ti/wlcore/io.h
-@@ -47,6 +47,7 @@ struct wl1271;
- void wlcore_disable_interrupts(struct wl1271 *wl);
- void wlcore_disable_interrupts_nosync(struct wl1271 *wl);
- void wlcore_enable_interrupts(struct wl1271 *wl);
-+void wlcore_synchronize_interrupts(struct wl1271 *wl);
++/* control extension - for IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTL_EXT */
++#define IEEE80211_CTL_EXT_POLL		0x2000
++#define IEEE80211_CTL_EXT_SPR		0x3000
++#define IEEE80211_CTL_EXT_GRANT	0x4000
++#define IEEE80211_CTL_EXT_DMG_CTS	0x5000
++#define IEEE80211_CTL_EXT_DMG_DTS	0x6000
++#define IEEE80211_CTL_EXT_SSW		0x8000
++#define IEEE80211_CTL_EXT_SSW_FBACK	0x9000
++#define IEEE80211_CTL_EXT_SSW_ACK	0xa000
  
- void wl1271_io_reset(struct wl1271 *wl);
- void wl1271_io_init(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 6ac3323..5632194 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -62,7 +62,7 @@ static bool no_recovery;
- static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 					 struct ieee80211_vif *vif,
- 					 bool reset_tx_queues);
--static void wl1271_op_stop(struct ieee80211_hw *hw);
-+static void wlcore_op_stop_locked(struct wl1271 *wl);
- static void wl1271_free_ap_keys(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- 
- static int wl12xx_set_authorized(struct wl1271 *wl,
-@@ -956,9 +956,8 @@ static void wl1271_recovery_work(struct work_struct *work)
- 		vif = wl12xx_wlvif_to_vif(wlvif);
- 		__wl1271_op_remove_interface(wl, vif, false);
- 	}
--        wl->watchdog_recovery = false;
--	mutex_unlock(&wl->mutex);
--	wl1271_op_stop(wl->hw);
+ /* miscellaneous IEEE 802.11 constants */
+ #define IEEE80211_MAX_FRAG_THRESHOLD	2352
+@@ -1124,6 +1139,21 @@ struct ieee80211_ht_operation {
+ #define WLAN_CAPABILITY_QOS		(1<<9)
+ #define WLAN_CAPABILITY_SHORT_SLOT_TIME	(1<<10)
+ #define WLAN_CAPABILITY_DSSS_OFDM	(1<<13)
 +
-+	wlcore_op_stop_locked(wl);
- 
- 	ieee80211_restart_hw(wl->hw);
- 
-@@ -967,7 +966,7 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	 * to restart the HW.
- 	 */
- 	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
--	return;
++/* DMG (60gHz) 802.11ad */
++/* type - bits 0..1 */
++#define WLAN_CAPABILITY_DMG_TYPE_IBSS		(1<<0) /* Tx by: STA */
++#define WLAN_CAPABILITY_DMG_TYPE_PBSS		(2<<0) /* Tx by: PCP */
++#define WLAN_CAPABILITY_DMG_TYPE_AP		(3<<0) /* Tx by: AP */
 +
- out_unlock:
- 	wl->watchdog_recovery = false;
- 	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
-@@ -1800,33 +1799,15 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
- 	return 0;
- }
++#define WLAN_CAPABILITY_DMG_CBAP_ONLY		(1<<2)
++#define WLAN_CAPABILITY_DMG_CBAP_SOURCE	(1<<3)
++#define WLAN_CAPABILITY_DMG_PRIVACY		(1<<4)
++#define WLAN_CAPABILITY_DMG_ECPAC		(1<<5)
++
++#define WLAN_CAPABILITY_DMG_SPECTRUM_MGMT	(1<<8)
++#define WLAN_CAPABILITY_DMG_RADIO_MEASURE	(1<<12)
++
+ /* measurement */
+ #define IEEE80211_SPCT_MSR_RPRT_MODE_LATE	(1<<0)
+ #define IEEE80211_SPCT_MSR_RPRT_MODE_INCAPABLE	(1<<1)
+@@ -1133,7 +1163,6 @@ struct ieee80211_ht_operation {
+ #define IEEE80211_SPCT_MSR_RPRT_TYPE_CCA	1
+ #define IEEE80211_SPCT_MSR_RPRT_TYPE_RPI	2
  
--static void wl1271_op_stop(struct ieee80211_hw *hw)
-+static void wlcore_op_stop_locked(struct wl1271 *wl)
- {
--	struct wl1271 *wl = hw->priv;
- 	int i;
- 
--	wl1271_debug(DEBUG_MAC80211, "mac80211 stop");
 -
--	/*
--	 * Interrupts must be disabled before setting the state to OFF.
--	 * Otherwise, the interrupt handler might be called and exit without
--	 * reading the interrupt status.
--	 */
--	wlcore_disable_interrupts(wl);
--	mutex_lock(&wl->mutex);
- 	if (wl->state == WL1271_STATE_OFF) {
- 		if (test_and_clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS,
- 					&wl->flags))
- 			wlcore_enable_interrupts(wl);
+ /* 802.11g ERP information element */
+ #define WLAN_ERP_NON_ERP_PRESENT (1<<0)
+ #define WLAN_ERP_USE_PROTECTION (1<<1)
+@@ -1145,6 +1174,16 @@ enum {
+ 	WLAN_ERP_PREAMBLE_LONG = 1,
+ };
  
--		mutex_unlock(&wl->mutex);
--
--		/*
--		 * This will not necessarily enable interrupts as interrupts
--		 * may have been disabled when op_stop was called. It will,
--		 * however, balance the above call to disable_interrupts().
--		 */
--		wlcore_enable_interrupts(wl);
- 		return;
- 	}
++/* Band ID, 802.11ad #8.4.1.45 */
++enum {
++	IEEE80211_BANDID_TV_WS = 0, /* TV white spaces */
++	IEEE80211_BANDID_SUB1  = 1, /* Sub-1 GHz (excluding TV white spaces) */
++	IEEE80211_BANDID_2G    = 2, /* 2.4 GHz */
++	IEEE80211_BANDID_3G    = 3, /* 3.6 GHz */
++	IEEE80211_BANDID_5G    = 4, /* 4.9 and 5 GHz */
++	IEEE80211_BANDID_60G   = 5, /* 60 GHz */
++};
++
+ /* Status codes */
+ enum ieee80211_statuscode {
+ 	WLAN_STATUS_SUCCESS = 0,
+@@ -1196,6 +1235,17 @@ enum ieee80211_statuscode {
+ 	WLAN_STATUS_ANTI_CLOG_REQUIRED = 76,
+ 	WLAN_STATUS_FCG_NOT_SUPP = 78,
+ 	WLAN_STATUS_STA_NO_TBTT = 78,
++	/* 802.11ad */
++	WLAN_STATUS_REJECTED_WITH_SUGGESTED_CHANGES = 39,
++	WLAN_STATUS_REJECTED_FOR_DELAY_PERIOD = 47,
++	WLAN_STATUS_REJECT_WITH_SCHEDULE = 83,
++	WLAN_STATUS_PENDING_ADMITTING_FST_SESSION = 86,
++	WLAN_STATUS_PERFORMING_FST_NOW = 87,
++	WLAN_STATUS_PENDING_GAP_IN_BA_WINDOW = 88,
++	WLAN_STATUS_REJECT_U_PID_SETTING = 89,
++	WLAN_STATUS_REJECT_DSE_BAND = 96,
++	WLAN_STATUS_DENIED_WITH_SUGGESTED_BAND_AND_CHANNEL = 99,
++	WLAN_STATUS_DENIED_DUE_TO_SPECTRUM_MANAGEMENT = 103,
+ };
  
-@@ -1835,8 +1816,16 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	 * functions don't perform further work.
- 	 */
- 	wl->state = WL1271_STATE_OFF;
-+
-+	/*
-+	 * Use the nosync variant to disable interrupts, so the mutex could be
-+	 * held while doing so without deadlocking.
-+	 */
-+	wlcore_disable_interrupts_nosync(wl);
-+
- 	mutex_unlock(&wl->mutex);
  
-+	wlcore_synchronize_interrupts(wl);
- 	wl1271_flush_deferred_work(wl);
- 	cancel_delayed_work_sync(&wl->scan_complete_work);
- 	cancel_work_sync(&wl->netstack_work);
-@@ -1903,6 +1892,17 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->tx_res_if = NULL;
- 	kfree(wl->target_mem_map);
- 	wl->target_mem_map = NULL;
-+}
-+
-+static void wlcore_op_stop(struct ieee80211_hw *hw)
-+{
-+	struct wl1271 *wl = hw->priv;
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 stop");
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wlcore_op_stop_locked(wl);
+@@ -1352,6 +1402,39 @@ enum ieee80211_eid {
+ 	WLAN_EID_DSE_REGISTERED_LOCATION = 58,
+ 	WLAN_EID_SUPPORTED_REGULATORY_CLASSES = 59,
+ 	WLAN_EID_EXT_CHANSWITCH_ANN = 60,
++	/* 802.11ad */
++	WLAN_EID_NON_TX_BSSID_CAP =  83,
++	WLAN_EID_WAKEUP_SCHEDULE = 143,
++	WLAN_EID_EXT_SCHEDULE = 144,
++	WLAN_EID_STA_AVAILABILITY = 145,
++	WLAN_EID_DMG_TSPEC = 146,
++	WLAN_EID_DMG_AT = 147,
++	WLAN_EID_DMG_CAP = 148,
++	WLAN_EID_DMG_OPERATION = 151,
++	WLAN_EID_DMG_BSS_PARAM_CHANGE = 152,
++	WLAN_EID_DMG_BEAM_REFINEMENT = 153,
++	WLAN_EID_CHANNEL_MEASURE_FEEDBACK = 154,
++	WLAN_EID_AWAKE_WINDOW = 157,
++	WLAN_EID_MULTI_BAND = 158,
++	WLAN_EID_ADDBA_EXT = 159,
++	WLAN_EID_NEXT_PCP_LIST = 160,
++	WLAN_EID_PCP_HANDOVER = 161,
++	WLAN_EID_DMG_LINK_MARGIN = 162,
++	WLAN_EID_SWITCHING_STREAM = 163,
++	WLAN_EID_SESSION_TRANSITION = 164,
++	WLAN_EID_DYN_TONE_PAIRING_REPORT = 165,
++	WLAN_EID_CLUSTER_REPORT = 166,
++	WLAN_EID_RELAY_CAP = 167,
++	WLAN_EID_RELAY_XFER_PARAM_SET = 168,
++	WLAN_EID_BEAM_LINK_MAINT = 169,
++	WLAN_EID_MULTIPLE_MAC_ADDR = 170,
++	WLAN_EID_U_PID = 171,
++	WLAN_EID_DMG_LINK_ADAPT_ACK = 172,
++	WLAN_EID_QUIET_PERIOD_REQ = 175,
++	WLAN_EID_QUIET_PERIOD_RESP = 177,
++	WLAN_EID_EPAC_POLICY = 182,
++	WLAN_EID_CLISTER_TIME_OFF = 183,
++	WLAN_EID_ANTENNA_SECTOR_ID_PATTERN = 190,
+ };
  
- 	mutex_unlock(&wl->mutex);
- }
-@@ -4806,7 +4806,7 @@ static struct ieee80211_supported_band wl1271_band_5ghz = {
+ /* Action category code */
+@@ -1368,7 +1451,10 @@ enum ieee80211_category {
+ 	WLAN_CATEGORY_MESH_ACTION = 13,
+ 	WLAN_CATEGORY_MULTIHOP_ACTION = 14,
+ 	WLAN_CATEGORY_SELF_PROTECTED = 15,
++	WLAN_CATEGORY_DMG = 16,
+ 	WLAN_CATEGORY_WMM = 17,
++	WLAN_CATEGORY_FST = 18,
++	WLAN_CATEGORY_UNPROT_DMG = 20,
+ 	WLAN_CATEGORY_VENDOR_SPECIFIC_PROTECTED = 126,
+ 	WLAN_CATEGORY_VENDOR_SPECIFIC = 127,
+ };
+@@ -1616,6 +1702,7 @@ enum ieee80211_sa_query_action {
+ #define WLAN_CIPHER_SUITE_CCMP		0x000FAC04
+ #define WLAN_CIPHER_SUITE_WEP104	0x000FAC05
+ #define WLAN_CIPHER_SUITE_AES_CMAC	0x000FAC06
++#define WLAN_CIPHER_SUITE_GCMP		0x000FAC08
  
- static const struct ieee80211_ops wl1271_ops = {
- 	.start = wl1271_op_start,
--	.stop = wl1271_op_stop,
-+	.stop = wlcore_op_stop,
- 	.add_interface = wl1271_op_add_interface,
- 	.remove_interface = wl1271_op_remove_interface,
- 	.change_interface = wl12xx_op_change_interface,
+ #define WLAN_CIPHER_SUITE_SMS4		0x00147201
+ 
 -- 
-1.7.10
+1.7.9.5
 
