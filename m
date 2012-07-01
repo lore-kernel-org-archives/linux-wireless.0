@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13741 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759Ab2GJUSX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38715 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755242Ab2GAOVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 16:18:23 -0400
-From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: use custom MAC address for newly created interfaces
-Date: Tue, 10 Jul 2012 13:20:40 -0700
-Message-ID: <1341951640-27434-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20120710_221827_359095_827339DB)
+	Sun, 1 Jul 2012 10:21:22 -0400
+Date: Sun, 1 Jul 2012 19:52:43 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 4/5] ath9k: fix power consumption on network sleep
+ when BTCOEX is enabled
+Message-ID: <20120701142242.GA4643@vmraj-lnx.users.atheros.com> (sfid-20120701_162158_333287_6D1A665E)
+References: <1341036529-10823-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1341036529-10823-4-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1341036529-10823-4-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware and driver generate MAC addresses for the second and third interfaces.
-In addition to the existing algorithm, flip bit 7 of 5th octet. Since both
-firmware and driver individually generate the MAC addresses, introduce a new
-firmware capability bit to keep them compatible.
+On Sat, Jun 30, 2012 at 11:38:48AM +0530, Rajkumar Manoharan wrote:
+> The chip is waken up for every 45ms in btcoex timer cycle to
+> for sharing the radio between BT and WLAN. Whenever the wlan
+> interface is in network sleep mode, do not schedule hw timers.
+> This could reduce power consumption on idle associated state.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/gpio.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+> index 9ae6a4d..c17168e 100644
+> --- a/drivers/net/wireless/ath/ath9k/gpio.c
+> +++ b/drivers/net/wireless/ath/ath9k/gpio.c
+> @@ -194,6 +194,16 @@ static void ath_btcoex_period_timer(unsigned long data)
+>  	struct ath_mci_profile *mci = &btcoex->mci;
+>  	u32 timer_period;
+>  	bool is_btscan;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+> +	if (sc->sc_ah->power_mode == ATH9K_PM_NETWORK_SLEEP) {
+> +		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+> +		if (btcoex->hw_timer_enabled)
+> +			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
 
-Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +++++-
- drivers/net/wireless/ath/ath6kl/core.h     |    3 +++
- 2 files changed, 8 insertions(+), 1 deletions(-)
+Register access on sleep state should be avoided. Please drop this patchset.
+Will send v3 series.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 230e35b..fc14d0e 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3628,9 +3628,13 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	vif->htcap[IEEE80211_BAND_5GHZ].ht_enable = true;
- 
- 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
--	if (fw_vif_idx != 0)
-+	if (fw_vif_idx != 0) {
- 		ndev->dev_addr[0] = (ndev->dev_addr[0] ^ (1 << fw_vif_idx)) |
- 				     0x2;
-+		if (test_bit(ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR,
-+			    ar->fw_capabilities))
-+			ndev->dev_addr[4] ^= 0x80;
-+	}
- 
- 	init_netdev(ndev);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index f36da4a..867c966 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -126,6 +126,9 @@ enum ath6kl_fw_capability {
- 	 */
- 	ATH6KL_FW_CAPABILITY_SCHED_SCAN_MATCH_LIST,
- 
-+	/* FW sets mac_addr[4] ^= 0x80 for newly created interfaces */
-+	ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR,
-+
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
--- 
-1.7.0.4
-
+-Rajkumar
