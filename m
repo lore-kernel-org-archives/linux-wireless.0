@@ -1,106 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:36140 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751385Ab2GHNk7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42201 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649Ab2GAGqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 09:40:59 -0400
-Received: by lboj14 with SMTP id j14so13406156lbo.7
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 06:40:56 -0700 (PDT)
-Message-ID: <1341754854.4354.45.camel@cumari.coelho.fi> (sfid-20120708_154102_586537_E37820C6)
-Subject: Re: pull request: TI wireless drivers 2012-07-08 (for 3.6)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com, assaf@ti.com
-Date: Sun, 08 Jul 2012 16:40:54 +0300
-In-Reply-To: <1341754768.4354.44.camel@cumari.coelho.fi>
-References: <1341754768.4354.44.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 1 Jul 2012 02:46:19 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 60g v1 1/5] wireless: add 802.11ad (60gHz band)
+Date: Sun, 1 Jul 2012 09:45:50 +0300
+Message-ID: <1341125155-628-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120701_084657_394290_F1427420)
+In-Reply-To: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oops, fixed the subject, which was obviously sent with the wrong date.
-Sorry for the mix up.
+Add enumerations for both cfg80211 and nl80211.
+This expands wiphy.bands etc. arrays.
 
-Luca.
+Extend channel <-> frequency translation to cover 60g band
 
-On Sun, 2012-07-08 at 16:39 +0300, Luciano Coelho wrote:
-> Hi John,
-> 
-> A few more patches with some bugfixes and an update in the firmware APIs
-> intended for 3.6.  The new firmware has already been applied in
-> linux-firmware.git and renamed, so this should work with the latest
-> stuff from there.
-> 
-> Please let me know if there are any problems with this.
-> 
-> 
-> The following changes since commit abb14fc399bb895bc5ab86af5d4defc2dfec4e70:
-> 
->   Merge tag 'nfc-next-3.6-2' of git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0 (2012-07-06 16:20:33 -0400)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
-> 
-> for you to fetch changes up to b950b01308bdcb07b16eb0ea63a76901d029bfd8:
-> 
->   Merge branch 'wl12xx-next' into for-linville (2012-07-08 16:27:26 +0300)
-> 
-> ----------------------------------------------------------------
-> 
-> Arik Nemtsov (9):
->       wlcore/wl12xx/wl18xx: check min FW version
->       wlcore: don't stop tx queue via watermark if already stopped
->       wlcore: remove recover cmd from testmode
->       wlcore: avoid debug prints during intended FW recovery
->       wlcore: always clear recovery flag during recovery_work
->       wlcore: don't set SDIO_FAILED flag when driver state is off
->       wlcore: define number of supported bands internally
->       wl12xx/wl18xx: use a dynamic PS timeout of 1.5sec
->       wlcore: determine AP extra rates correctly
-> 
-> Dan Carpenter (1):
->       wlcore: fix a couple small memory leaks
-> 
-> Eliad Peller (2):
->       wlcore: implement .flush callback
->       wlcore: check ssid length against the correct element
-> 
-> Ido Yariv (1):
->       wlcore: Prevent processing of work items during op_stop
-> 
-> Luciano Coelho (2):
->       wl12xx/wlcore: increase FW filename version
->       Merge branch 'wl12xx-next' into for-linville
-> 
-> Victor Goldenshtein (1):
->       wlcore: enable sched scan while connected
-> 
-> Yoni Divinsky (2):
->       wlcore: add probe request templates for sched and one-shot scans
->       wlcore: change the wait for event mechanism
-> 
->  drivers/net/wireless/ti/wl12xx/main.c     |   26 ++++++++++++++-----
->  drivers/net/wireless/ti/wl12xx/wl12xx.h   |   14 ++++++++++
->  drivers/net/wireless/ti/wl18xx/main.c     |   27 ++++++++++++++-----
->  drivers/net/wireless/ti/wl18xx/wl18xx.h   |    7 +++++
->  drivers/net/wireless/ti/wlcore/boot.c     |   55 +++++++++++++++++++++++++++++++++++++--
->  drivers/net/wireless/ti/wlcore/cmd.c      |   22 +++++++++++++---
->  drivers/net/wireless/ti/wlcore/cmd.h      |    6 ++---
->  drivers/net/wireless/ti/wlcore/init.c     |   16 ++++++++++++
->  drivers/net/wireless/ti/wlcore/io.c       |    6 +++++
->  drivers/net/wireless/ti/wlcore/io.h       |   13 +++++-----
->  drivers/net/wireless/ti/wlcore/main.c     |   75 ++++++++++++++++++++++++++++++-----------------------
->  drivers/net/wireless/ti/wlcore/scan.c     |   11 ++++----
->  drivers/net/wireless/ti/wlcore/sdio.c     |    6 -----
->  drivers/net/wireless/ti/wlcore/spi.c      |    6 -----
->  drivers/net/wireless/ti/wlcore/testmode.c |   13 +---------
->  drivers/net/wireless/ti/wlcore/wlcore.h   |   25 ++++++++++++++++--
->  drivers/net/wireless/ti/wlcore/wlcore_i.h |   16 ++++--------
->  17 files changed, 242 insertions(+), 102 deletions(-)
-> 
-> 
+Small fix for mac80211/tx.c required to fix compiler warning
 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/linux/nl80211.h |    2 ++
+ include/net/cfg80211.h  |    2 ++
+ net/mac80211/tx.c       |    2 ++
+ net/wireless/util.c     |   30 ++++++++++++++++++++++--------
+ 4 files changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index c0fc5d2..679831e 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2539,10 +2539,12 @@ enum nl80211_tx_rate_attributes {
+  * enum nl80211_band - Frequency band
+  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
+  * @NL80211_BAND_5GHZ: around 5 GHz band (4.9 - 5.7 GHz)
++ * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
+  */
+ enum nl80211_band {
+ 	NL80211_BAND_2GHZ,
+ 	NL80211_BAND_5GHZ,
++	NL80211_BAND_60GHZ,
+ };
+ 
+ /**
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 061c019..56e840d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -70,11 +70,13 @@
+  *
+  * @IEEE80211_BAND_2GHZ: 2.4GHz ISM band
+  * @IEEE80211_BAND_5GHZ: around 5GHz band (4.9-5.7)
++ * @IEEE80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
+  * @IEEE80211_NUM_BANDS: number of defined bands
+  */
+ enum ieee80211_band {
+ 	IEEE80211_BAND_2GHZ = NL80211_BAND_2GHZ,
+ 	IEEE80211_BAND_5GHZ = NL80211_BAND_5GHZ,
++	IEEE80211_BAND_60GHZ = NL80211_BAND_60GHZ,
+ 
+ 	/* keep last */
+ 	IEEE80211_NUM_BANDS
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ec8f5346..eebd33a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -140,6 +140,8 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 			if (r->flags & IEEE80211_RATE_MANDATORY_A)
+ 				mrate = r->bitrate;
+ 			break;
++		case IEEE80211_BAND_60GHZ:
++			/* TODO, for now fall through */
+ 		case IEEE80211_NUM_BANDS:
+ 			WARN_ON(1);
+ 			break;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 316cfd0..f3ce35b 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -35,19 +35,29 @@ int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
+ {
+ 	/* see 802.11 17.3.8.3.2 and Annex J
+ 	 * there are overlapping channel numbers in 5GHz and 2GHz bands */
+-	if (band == IEEE80211_BAND_5GHZ) {
+-		if (chan >= 182 && chan <= 196)
+-			return 4000 + chan * 5;
+-		else
+-			return 5000 + chan * 5;
+-	} else { /* IEEE80211_BAND_2GHZ */
++	if (chan <= 0)
++		return 0; /* not supported */
++	switch (band) {
++	case IEEE80211_BAND_2GHZ:
+ 		if (chan == 14)
+ 			return 2484;
+ 		else if (chan < 14)
+ 			return 2407 + chan * 5;
++		break;
++	case IEEE80211_BAND_5GHZ:
++		if (chan >= 182 && chan <= 196)
++			return 4000 + chan * 5;
+ 		else
+-			return 0; /* not supported */
++			return 5000 + chan * 5;
++		break;
++	case IEEE80211_BAND_60GHZ:
++		if (chan < 5)
++			return 56160 + chan * 2160;
++		break;
++	default:
++		;
+ 	}
++	return 0; /* not supported */
+ }
+ EXPORT_SYMBOL(ieee80211_channel_to_frequency);
+ 
+@@ -60,8 +70,12 @@ int ieee80211_frequency_to_channel(int freq)
+ 		return (freq - 2407) / 5;
+ 	else if (freq >= 4910 && freq <= 4980)
+ 		return (freq - 4000) / 5;
+-	else
++	else if (freq <= 45000) /* DMG band lower limit */
+ 		return (freq - 5000) / 5;
++	else if (freq >= 58320 && freq <= 64800)
++		return (freq - 56160) / 2160;
++	else
++		return 0;
+ }
+ EXPORT_SYMBOL(ieee80211_frequency_to_channel);
+ 
+-- 
+1.7.9.5
 
