@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34298 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024Ab2G3Hge (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:62522 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929Ab2GBXKx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 03:36:34 -0400
-Message-ID: <1343633789.4452.5.camel@jlt3.sipsolutions.net> (sfid-20120730_093639_871027_D3F99ABD)
-Subject: Re: [PATCH 2/2] mac80211: Add transmit power control support (TPC)
- for ACK packets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org
-Date: Mon, 30 Jul 2012 09:36:29 +0200
-In-Reply-To: <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120727_180038_027363_C1B333FB)
-References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120727_180038_027363_C1B333FB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 2 Jul 2012 19:10:53 -0400
+Received: by ghrr11 with SMTP id r11so4683710ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 16:10:52 -0700 (PDT)
+MIME-Version: 1.0
+From: Amith Belur <amithbn@gmail.com>
+Date: Tue, 3 Jul 2012 01:10:32 +0200
+Message-ID: <CADxMoMdusT7bvjBhh3fuT_0G2qEJko-P2LEugZjWvEQLE1tx-Q@mail.gmail.com> (sfid-20120703_011056_772135_7BCB9F52)
+Subject: Stations processing probe requests from other stations
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-07-27 at 18:00 +0200, Thomas Huehn wrote:
+Hello everyone,
 
-> @@ -283,6 +284,9 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
->  					      txrc->bss_conf->basic_rates,
->  					      sband);
->  		}
-> +		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
-> +			info->control.rates[i].tpc = txrc->hw->conf.power_level;
-> +		}
+I need to modify station behavior such that it looks for certain IEs
+in probe requests from other stations associated with every BSS. I
+tried looking into rx.c under mac80211. However, I am not quite clear
+of where I need to change the code so that management frames of kind
+probe requests are not dropped and that I can read some fields from
+it. Any help will be appreciated!
 
-No need for braces, and a blank line above it would be good. Remember
-code is meant to be read by people and compilers (in that order)
+Thanks
 
-Anyway I don't think I'm going to apply any of this until we have some
-code that uses it.
-
-johannes
-
+--
+Best Regards,
+Amith
