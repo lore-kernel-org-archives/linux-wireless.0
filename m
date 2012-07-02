@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:33166 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834Ab2GFOMG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 10:12:06 -0400
-Received: by ghrr11 with SMTP id r11so8625153ghr.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2012 07:12:05 -0700 (PDT)
-Message-ID: <4FF6F231.8040300@lwfinger.net> (sfid-20120706_161211_470493_710F0A51)
-Date: Fri, 06 Jul 2012 09:12:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nautica.notk.org ([91.121.71.147]:45165 "EHLO nautica.notk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751206Ab2GBIEb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2012 04:04:31 -0400
+Date: Mon, 2 Jul 2012 16:54:50 +0900
+From: Dominique Martinet <asmadeus@codewreck.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	arend@broadcom.com, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 11/18] brcmsmac: remove some unnessessacry casts and
+ void pointer
+Message-ID: <20120702075450.GB18990@nautica> (sfid-20120702_100436_790639_E13CE2A1)
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+ <1341062181-28071-12-git-send-email-hauke@hauke-m.de>
+ <CAGRGNgU3=WoGBrSBsuiGhTs2tx3iZMt_fjqYaxLk7rSAMw8jHQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix crash with single-queue drivers
-References: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net>  <4FF6E50B.4090205@lwfinger.net> (sfid-20120706_151601_313202_4A7FB65B) <1341581180.16893.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1341581180.16893.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGRGNgU3=WoGBrSBsuiGhTs2tx3iZMt_fjqYaxLk7rSAMw8jHQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/06/2012 08:26 AM, Johannes Berg wrote:
-> On Fri, 2012-07-06 at 08:15 -0500, Larry Finger wrote:
->> On 07/04/2012 05:53 AM, Johannes Berg wrote:
->>> From: Johannes Berg <johannes.berg@intel.com>
->>>
->>> Larry (and some others I think) reported that with
->>> single-queue drivers mac80211 crashes when waking
->>> the queues. This happens because we allocate just
->>> a single queue for each virtual interface in case
->>> the driver doesn't have at least 4 queues, but the
->>> code stopping/waking the virtual interface queues
->>> wasn't taking this into account.
->>>
->>> Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->>> ---
->>>    net/mac80211/util.c |   12 ++++++++++--
->>>    1 file changed, 10 insertions(+), 2 deletions(-)
->>
->> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
->>
->> This patch fixes the problem for drivers that always report a single queue such
->> as at76c503-usb.
->
-> Thanks, I'll merge this.
->
->>   There is still a problem for b43 with open-source firmware
->> where the number of queues changes from 4 to 1. As that only affects b43, do you
->> agree that the problem should be fixed there?
->
-> Yes, b43 confuses me a bit. We were looking at this a few weeks ago, but
-> I couldn't figure out how to solve it.
->
-> I think for b43 the solution should be to check if it's proprietary or
-> free firmware before registering with mac80211, then to mac80211 it's
-> really just either 1 or 4, not changing.
+Julian Calaby wrote on Mon, Jul 02, 2012 :
+> On Sat, Jun 30, 2012 at 11:16 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> > diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> > index 478b374..8bad8b6 100644
+> > --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> > +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> > @@ -4241,10 +4240,8 @@ static void brcms_b_watchdog(void *arg)
+> >  }
+> >
+> >  /* common watchdog code */
+> > -static void brcms_c_watchdog(void *arg)
+> > +static void brcms_c_watchdog(struct brcms_c_info *wlc)
+> >  {
+> > -       struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
+> > -
+> >         BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+> >
+> >         if (!wlc->pub->up)
+> > @@ -4284,7 +4281,9 @@ static void brcms_c_watchdog(void *arg)
+> >
+> >  static void brcms_c_watchdog_by_timer(void *arg)
+> >  {
+> > -       brcms_c_watchdog(arg);
+> > +       struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
+> > +
+> > +       brcms_c_watchdog(wlc);
+> 
+> You remove 2 cases of this pattern in your patch then add one. Why?
 
-I agree with that solution, and I will try to implement that model.
+I'm not Hauke :) but as far as I understand, brcms_c_watchdog_by_timer
+is used by brcms_init_timer which expects a void (*fn) (void *); and
+which is also used with brcms_c_radio_timer
+Admitedly, brcms_c_radio_timer also uses a struct brcms_c_info* as
+argument, so everything could be change this way, but I think it's not
+completely insane to keep callbacks as void* :)
 
-Larry
+I also see the point of removing this "pattern" since it makes it easier
+to understand with the proper type information.
 
+Regards,
+-- 
+Asmadeus | Dominique Martinet
