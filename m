@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:48709 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755748Ab2GLTzS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61332 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975Ab2GBGc5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 15:55:18 -0400
-Received: by eekb15 with SMTP id b15so758728eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 12:55:16 -0700 (PDT)
-Message-ID: <4FFF2B15.5070502@codigosur.org> (sfid-20120712_215616_116351_766348CA)
-Date: Thu, 12 Jul 2012 16:52:53 -0300
-From: =?ISO-8859-1?Q?Nicol=E1s_Ech=E1niz?= <nicoechaniz@codigosur.org>
+	Mon, 2 Jul 2012 02:32:57 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 60g v2 3/5] wireless: regulatory for 60g
+Date: Mon, 2 Jul 2012 09:32:34 +0300
+Message-ID: <1341210756-11054-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120702_083302_110926_0476D19D)
+In-Reply-To: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: Guido Iribarren <guidoiribarren@buenosaireslibre.org>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] ath9k_htc 1mbps in IBSS mode
-References: <4FD56DCA.1080200@codigosur.org> <CAJ-VmomzoXV8YBdiS_2nkzVagBupX3Be-Dmboxotwy9s3h3r7w@mail.gmail.com> <CAHD-aqKWdUBGyadCnVoSbkf4BysoSuvBBHrupXx-JbowqqNZPQ@mail.gmail.com> <CAHD-aqJrKfL8OL97wcnaaTYFZrx2cBXvdY5vKeK67u_-VjGOKg@mail.gmail.com> <20474.20627.928963.262924@gargle.gargle.HOWL>
-In-Reply-To: <20474.20627.928963.262924@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2012 12:31 AM, Sujith Manoharan wrote:
-> Guido Iribarren wrote:
->> I know nothing about the internal workings of the driver, but i get
->> the feeling that nodes are somehow not acknowledging supported speeds
->> of newly joined nodes, but instead only check other hosts speeds when
->> they join the IBSS cloud for the first time, and so it's limited to
->> nodes already present at the moment of the join.
-> 
-> It looks like commit 6d810f10 changed the behavior.
-> 
-> The station addition notification is now passed to the driver before the
-> supported rates are updated for the peer (which happens via ieee80211_rx_bss_info()).
-> Drivers which offload rate control to the firmware but depend on mac80211 for
-> station management would be affected, I think.
+Add regulatory rule for the 60g band
 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ net/wireless/reg.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Sujith, does this mean that the problem is outside the scope of the
-ath9k_htc driver itself or could it be fixed?
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index baf5704..b2b3222 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -129,7 +129,7 @@ static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
+ 
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+-	.n_reg_rules = 5,
++	.n_reg_rules = 6,
+ 	.alpha2 =  "00",
+ 	.reg_rules = {
+ 		/* IEEE 802.11b/g, channels 1..11 */
+@@ -156,6 +156,9 @@ static const struct ieee80211_regdomain world_regdom = {
+ 		REG_RULE(5745-10, 5825+10, 40, 6, 20,
+ 			NL80211_RRF_PASSIVE_SCAN |
+ 			NL80211_RRF_NO_IBSS),
++
++		/* IEEE 802.11ad (60gHz), channels 1..3 */
++		REG_RULE(56160+2160*1-1080, 56160+2160*3+1080, 2160, 0, 0, 0),
+ 	}
+ };
+ 
+-- 
+1.7.9.5
 
-we are doing some heavy use of hardware based on this driver for many
-projects; any further debugging work you might need, we are more than
-willing to help.
-
-
-Cheers,
-NicoEchániz
