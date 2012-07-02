@@ -1,66 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:43179 "EHLO
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:45740 "EHLO
 	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575Ab2GPQWD (ORCPT
+	with ESMTP id S1753781Ab2GBOW1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2012 12:22:03 -0400
-Subject: Re: 3.4.4/amd64 full interrupt hangs under big nfs copies
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Marc MERLIN <marc@merlins.org>
-Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20120716151826.GA10586@merlins.org>
-References: <20120409.143710.879746943062854492.davem@davemloft.net>
-	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Jul 2012 18:21:57 +0200
-Message-ID: <1342455717.2830.14.camel@edumazet-glaptop> (sfid-20120716_182209_998419_714220CD)
-Mime-Version: 1.0
+	Mon, 2 Jul 2012 10:22:27 -0400
+Received: by eeit10 with SMTP id t10so2095596eei.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 07:22:26 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: mcgrof@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH 2/5] compat: Backport shmem_read_mapping_page()
+Date: Mon,  2 Jul 2012 17:22:11 +0300
+Message-Id: <1341238934-30855-2-git-send-email-ozancag@gmail.com> (sfid-20120702_162242_917344_7C5A0E26)
+In-Reply-To: <1341238934-30855-1-git-send-email-ozancag@gmail.com>
+References: <1341238934-30855-1-git-send-email-ozancag@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-16 at 08:18 -0700, Marc MERLIN wrote:
-> On Mon, Jul 16, 2012 at 08:18:49AM +0200, Eric Dumazet wrote:
-> > > My understanding is that user space calling drivers that shut off all
-> > > interrupts for extended periods of time (as least I think so since my mouse
-> > > cursor would not move), is still a kernel bug.
-> > > 
-> > > For what it's worth, copying 1GB of data in lots of small files does not
-> > > cause problems, it seems that it's big files that cause a problem since they
-> > > likely fill a buffer somewhere while interrupts are disabled.
-> > > 
-> > > Do you have an idea of how I can find out where my mc process is stuck in
-> > > the kernel?
-> > > Should I reproduce with specific sysrq output?
-> > 
-> > Just to clarify, you get this freeze when transferring a big file from a
-> > remote NFS server to your PC, (aka a download), not the reverse way ?
->  
-> No, it's atually when I'm 'uploading' from my laptop to my server.
-> One interesting thing is that my server is running lvm2 with snapshots,
-> which makes writes slower than my laptop can push data over the network, so
-> it's definitely causing buffers to fill up.
-> I just did a download test and got 4.5MB/s sustained without problems.
+This backports:
 
-Hmm, nfs apparently is able to push lot of data, try to reduce
-rsize/wsize to sane values, like 32K instead of 512K ?
+commit d9d90e5eb70e09903dadff42099b6c948f814050
+Author: Hugh Dickins <hughd@google.com>
+Date:   Mon Jun 27 16:18:04 2011 -0700
 
-gargamel:/mnt/dshelf2/ /net/gargamel/mnt/dshelf2 nfs4
-rw,nosuid,nodev,relatime,vers=4.0,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.205.7,local_lock=none,addr=192.168.205.3 0 0
+    tmpfs: add shmem_read_mapping_page_gfp
 
-You could trace svc_sock_setbufsize() and check how large is set
-sk_sndbuf
+shmem_read_mapping_page() is a wrapper around
+shmem_read_mapping_page_gfp().
 
-(iwlwifi is unable to use sendpage anyway, since SG is not enabled)
+Trying kernel  3.4.0-030400-generic [OK]
+Trying kernel  3.3.7-030307-generic [OK]
+Trying kernel  3.2.2-030202-generic [OK]
+Trying kernel  3.1.10-030110-generic [OK]
+Trying kernel  3.0.18-030018-generic [OK]
+Trying kernel  2.6.39-02063904-generic [OK]
+Trying kernel  2.6.38-02063808-generic [OK]
+Trying kernel  2.6.37-02063706-generic [OK]
+Trying kernel  2.6.36-02063604-generic [OK]
+Trying kernel  2.6.35-02063512-generic [OK]
+Trying kernel  2.6.34-02063410-generic [OK]
+Trying kernel  2.6.33-02063305-generic [OK]
+Trying kernel  2.6.32-02063255-generic [OK]
+Trying kernel  2.6.31-02063113-generic [OK]
+Trying kernel  2.6.30-02063010-generic [OK]
+Trying kernel  2.6.29-02062906-generic [OK]
+Trying kernel  2.6.28-02062810-generic [OK]
+Trying kernel  2.6.27-020627-generic [OK]
+Trying kernel  2.6.26-020626-generic [OK]
+Trying kernel  2.6.25-020625-generic [OK]
+Trying kernel  2.6.24-020624-generic [OK]
 
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+---
+ compat/compat-3.0.c        |   23 +++++++++++++++++++++++
+ include/linux/compat-3.0.h |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+)
 
-
+diff --git a/compat/compat-3.0.c b/compat/compat-3.0.c
+index 1da45ac..e841373 100644
+--- a/compat/compat-3.0.c
++++ b/compat/compat-3.0.c
+@@ -12,6 +12,29 @@
+ #include <linux/compat.h>
+ #include <linux/if_ether.h>
+ 
++/* This pulls-in a lot of non-exported symbol backports
++ * on kernels older than 2.6.32. There's no harm for not
++ * making this available on kernels < 2.6.32. */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++#include <linux/pagemap.h>
++
++/* This backports:
++ *
++ * commit d9d90e5eb70e09903dadff42099b6c948f814050
++ * Author: Hugh Dickins <hughd@google.com>
++ * Date:   Mon Jun 27 16:18:04 2011 -0700
++ *
++ *	tmpfs: add shmem_read_mapping_page_gfp
++ */
++
++struct page *shmem_read_mapping_page_gfp(struct address_space *mapping,
++                                        pgoff_t index, gfp_t gfp)
++{
++       return read_cache_page_gfp(mapping, index, gfp);
++}
++EXPORT_SYMBOL_GPL(shmem_read_mapping_page_gfp);
++#endif
++
+ int mac_pton(const char *s, u8 *mac)
+ {
+ 	int i;
+diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
+index 22ab539..ba25846 100644
+--- a/include/linux/compat-3.0.h
++++ b/include/linux/compat-3.0.h
+@@ -7,6 +7,35 @@
+ 
+ #include <linux/rcupdate.h>
+ 
++/* This pulls-in a lot of non-exported symbol backports
++ * on kernels older than 2.6.32. There's no harm for not
++ * making this available on kernels < 2.6.32. */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++#include <linux/pagemap.h>
++
++/* This backports the 2nd part of:
++ *
++ * commit d9d90e5eb70e09903dadff42099b6c948f814050
++ * Author: Hugh Dickins <hughd@google.com>
++ * Date:   Mon Jun 27 16:18:04 2011 -0700
++ *
++ *	tmpfs: add shmem_read_mapping_page_gfp
++ *
++ * First part is in compat-3.0.c.
++ */
++extern struct page *shmem_read_mapping_page_gfp(struct address_space *mapping,
++						pgoff_t index, gfp_t gfp);
++
++
++static inline struct page *shmem_read_mapping_page(
++                               struct address_space *mapping, pgoff_t index)
++{
++       return shmem_read_mapping_page_gfp(mapping, index,
++                                       mapping_gfp_mask(mapping));
++}
++#endif
++
++
+ /*
+  * since commit 1c5cae815d19ffe02bdfda1260949ef2b1806171
+  * "net: call dev_alloc_name from register_netdevice" dev_alloc_name is
+-- 
+1.7.10.4
 
