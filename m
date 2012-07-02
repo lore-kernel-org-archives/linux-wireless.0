@@ -1,62 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49742 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808Ab2GFTsb (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18369 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460Ab2GBGcw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:48:31 -0400
-Date: Fri, 6 Jul 2012 15:37:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: thomas <thomas@net.t-labs.tu-berlin.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	brcm80211-dev-list@broadcom.com, pieterpg@broadcom.com,
-	gregkh@suse.de, frankyl@broadcom.com, arend@broadcom.com,
-	rvossen@broadcom.com, brudley@broadcom.com
-Subject: Re: [PATCH v2] brcmsmac: restructure info->control.sta handling as
- it is goning to be removed soon.
-Message-ID: <20120706193733.GC1879@tuxdriver.com> (sfid-20120706_214836_692954_A1D79519)
-References: <1340974563-77085-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <1340975210.4472.1.camel@jlt3.sipsolutions.net>
- <4FEDC3F0.1000201@net.t-labs.tu-berlin.de>
+	Mon, 2 Jul 2012 02:32:52 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 60g v2 1/5] wireless: add 802.11ad (60gHz band)
+Date: Mon, 2 Jul 2012 09:32:32 +0300
+Message-ID: <1341210756-11054-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120702_083255_395735_A990EEEB)
+In-Reply-To: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FEDC3F0.1000201@net.t-labs.tu-berlin.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 29, 2012 at 11:04:16AM -0400, thomas wrote:
-> Johannes Berg schrieb:
-> 
-> > On Fri, 2012-06-29 at 05:56 -0700, Thomas Huehn wrote:
-> >> brcmsmac uses info->control.sta while doing ampdu aggregation. This patch
-> >> changes the usage of the structure info->control.sta, as it is going to be
-> >> removed soon from struct ieee80211_tx_info. This patch is a pre-requisit in
-> >> order to add transmission power control (TPC) to the mac80211 subsystem.
-> >>
-> >> Suggested-by: Felix Fietkau <nbd@openwrt.org>
-> >> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> >> ---
-> >> Change sequence of overwriting data. Thx to Johannes.
-> > 
-> > 
-> >> @@ -665,7 +665,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
-> >>  			u8 plcp0, plcp3, is40, sgi;
-> >>  			struct ieee80211_sta *sta;
-> >>  
-> >> -			sta = tx_info->control.sta;
-> >> +			sta = tx_info->rate_driver_data[0];
-> > 
-> > Are you sure it actually works now?
-> 
-> 
-> From locking at the code, sta is never used after it gets overridden.
-> The brcmsmac driver does not use the vif pointer at all. I asked Felix
-> to double check as I do not have a Broadcom device over here.
-> 
-> Bye Thomas
+Add enumerations for both cfg80211 and nl80211.
+This expands wiphy.bands etc. arrays.
 
-Any comments on this one from the Broadcom camp?
+Extend channel <-> frequency translation to cover 60g band
 
+Small fix for mac80211/tx.c required to fix compiler warning
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/linux/nl80211.h |    2 ++
+ include/net/cfg80211.h  |    2 ++
+ net/mac80211/tx.c       |    2 ++
+ net/wireless/util.c     |   30 ++++++++++++++++++++++--------
+ 4 files changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index c0fc5d2..679831e 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2539,10 +2539,12 @@ enum nl80211_tx_rate_attributes {
+  * enum nl80211_band - Frequency band
+  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
+  * @NL80211_BAND_5GHZ: around 5 GHz band (4.9 - 5.7 GHz)
++ * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
+  */
+ enum nl80211_band {
+ 	NL80211_BAND_2GHZ,
+ 	NL80211_BAND_5GHZ,
++	NL80211_BAND_60GHZ,
+ };
+ 
+ /**
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 061c019..56e840d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -70,11 +70,13 @@
+  *
+  * @IEEE80211_BAND_2GHZ: 2.4GHz ISM band
+  * @IEEE80211_BAND_5GHZ: around 5GHz band (4.9-5.7)
++ * @IEEE80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
+  * @IEEE80211_NUM_BANDS: number of defined bands
+  */
+ enum ieee80211_band {
+ 	IEEE80211_BAND_2GHZ = NL80211_BAND_2GHZ,
+ 	IEEE80211_BAND_5GHZ = NL80211_BAND_5GHZ,
++	IEEE80211_BAND_60GHZ = NL80211_BAND_60GHZ,
+ 
+ 	/* keep last */
+ 	IEEE80211_NUM_BANDS
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ec8f5346..eebd33a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -140,6 +140,8 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 			if (r->flags & IEEE80211_RATE_MANDATORY_A)
+ 				mrate = r->bitrate;
+ 			break;
++		case IEEE80211_BAND_60GHZ:
++			/* TODO, for now fall through */
+ 		case IEEE80211_NUM_BANDS:
+ 			WARN_ON(1);
+ 			break;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 316cfd0..f3ce35b 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -35,19 +35,29 @@ int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
+ {
+ 	/* see 802.11 17.3.8.3.2 and Annex J
+ 	 * there are overlapping channel numbers in 5GHz and 2GHz bands */
+-	if (band == IEEE80211_BAND_5GHZ) {
+-		if (chan >= 182 && chan <= 196)
+-			return 4000 + chan * 5;
+-		else
+-			return 5000 + chan * 5;
+-	} else { /* IEEE80211_BAND_2GHZ */
++	if (chan <= 0)
++		return 0; /* not supported */
++	switch (band) {
++	case IEEE80211_BAND_2GHZ:
+ 		if (chan == 14)
+ 			return 2484;
+ 		else if (chan < 14)
+ 			return 2407 + chan * 5;
++		break;
++	case IEEE80211_BAND_5GHZ:
++		if (chan >= 182 && chan <= 196)
++			return 4000 + chan * 5;
+ 		else
+-			return 0; /* not supported */
++			return 5000 + chan * 5;
++		break;
++	case IEEE80211_BAND_60GHZ:
++		if (chan < 5)
++			return 56160 + chan * 2160;
++		break;
++	default:
++		;
+ 	}
++	return 0; /* not supported */
+ }
+ EXPORT_SYMBOL(ieee80211_channel_to_frequency);
+ 
+@@ -60,8 +70,12 @@ int ieee80211_frequency_to_channel(int freq)
+ 		return (freq - 2407) / 5;
+ 	else if (freq >= 4910 && freq <= 4980)
+ 		return (freq - 4000) / 5;
+-	else
++	else if (freq <= 45000) /* DMG band lower limit */
+ 		return (freq - 5000) / 5;
++	else if (freq >= 58320 && freq <= 64800)
++		return (freq - 56160) / 2160;
++	else
++		return 0;
+ }
+ EXPORT_SYMBOL(ieee80211_frequency_to_channel);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
