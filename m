@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:60583 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932Ab2GSEha (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33817 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750815Ab2GBNHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:37:30 -0400
-Date: Wed, 18 Jul 2012 21:37:13 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH RESEND 0/9] OLPC: create a generic OLPC EC driver
-Message-ID: <20120718213713.232e4161@dev.queued.net> (sfid-20120719_063749_144494_628A49F9)
+	Mon, 2 Jul 2012 09:07:12 -0400
+Message-ID: <1341234430.19642.9.camel@jlt3.sipsolutions.net> (sfid-20120702_150717_140847_49AE50F6)
+Subject: Re: [PATCH] mac80211: reduce IEEE80211_TX_MAX_RATES from 5 to 4 to
+ enable upcoming TPC support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	nbd@openwrt.org
+Date: Mon, 02 Jul 2012 15:07:10 +0200
+In-Reply-To: <1340981843-81779-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120629_165846_247689_05DD2B23)
+References: <1340981843-81779-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 (sfid-20120629_165846_247689_05DD2B23)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The OLPC EC (Embedded Controller) code that is currently upstream is
-x86-only, originally written for the XO-1.  Since then, we've had the
-XO-1.5 (also x86), and XO-1.75 (arm-based) enter mass production.  The
-1.75 uses a vastly different EC protocol, and future hardware revisions
-are likely to change it even further.
+On Fri, 2012-06-29 at 10:57 -0400, Thomas Huehn wrote:
+> IEEE80211_TX_MAX_RATES are reduced from 5 to 4, as there is no hardware out
+> there supporting a rate chain with 5 stages, so 4 is enough. The space that
+> is freed will be used for the upcoming Transmission Power Control (TPC).
 
-However, the drivers do share quite a bit of code, so it makes sense to
-have a platform-agnostic driver that calls into platform-specific hooks
-for each XO's EC driver.  This is the first stab and creating such a
-beast (with further patches pending).  Aside from the lack of code
-duplication, this is helpful for fixing bugs in one place (for example,
-we fixed an EC suspend/resume bug in 1.75 that I've just seen happen on
-1.5 without these patches.  With these patches, the problem goes away).
+Applied, but I rewrote your commit message a bit, a clearer message
+would be appreciated. :-)
 
-These patches are against Linus's current HEAD; let me know if they
-don't apply somewhere, and I'll happily redo them against the -next
-tree.  I'm assuming that these changes (which touch places like x86,
-wireless, and staging) should go through either the x86 tree, or
-through akpm's tree.
+johannes
 
-Alternatively, if the reviews are positive and I can get SOBs from the
-relevant maintainers, I can set up a platform-olpc tree somewhere and
-request a pull from Linus.
