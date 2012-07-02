@@ -1,63 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:59044 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752680Ab2G1P04 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jul 2012 11:26:56 -0400
-Message-ID: <501404BE.7040606@net.t-labs.tu-berlin.de> (sfid-20120728_172658_595930_079D802D)
-Date: Sat, 28 Jul 2012 17:26:54 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:55911
+	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750720Ab2GBLZO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2012 07:25:14 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: VHT Cap IE
+Date: Mon, 2 Jul 2012 11:25:12 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0D6AB9@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120702_132520_291202_9786E53D)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 3/4] ath5k: Preserve tx power level requested from above
- on phy_init
-References: <1343485971-31360-1-git-send-email-mickflemm@gmail.com> <1343485971-31360-3-git-send-email-mickflemm@gmail.com>
-In-Reply-To: <1343485971-31360-3-git-send-email-mickflemm@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nick,
+Insertion of VHT Cap IE in probe request as part of 11ac changes
 
-Nick Kossifidis schrieb:
+Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/main.c        |    8 +++++++-
+ net/mac80211/util.c        |   25 +++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 1 deletions(-)
 
-> By using cur_pwr on phy_init we re-use the power level previously set by the
-> driver, not the one we got from above.
-> 
-> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index 84a9aaf..27ca993 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -3802,8 +3802,8 @@ ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
->  	 * RF buffer settings on 5211/5212+ so that we
->  	 * properly set curve indices.
->  	 */
-> -	ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
-> -			ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
-> +	ret = ath5k_hw_txpower(ah, channel, ah->power_level ?
-> +			ah->power_level * 2 : AR5K_TUNE_MAX_TXPOWER);
->  	if (ret)
->  		return ret;
->  
-
-
-I would suggest to initialise the power_level as AR5K_TUNE_MAX_TXPOWER
-in base.c funktion ath5k_init(struct ieee80211_hw *hw)
-
-      /* init tx_power setting to maximum */
-      ah->ah_txpower.txp_user_pwr = AR5K_TUNE_MAX_TXPOWER;
-
-that would simplify the readability form above into:
-	ret = ath5k_hw_txpower(ah, channel, ah->power_level)
-
-What do you think ?
-
-Greetings Thomas
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f834a00..67c6b2f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1481,6 +1481,8 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+ 			       enum nl80211_channel_type channel_type,
+ 			       u16 prot_mode);
++u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++			       u32 cap);
+ 
+ /* channel management */
+ enum ieee80211_chan_mode {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0b040fb..06e6cc9 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -688,7 +688,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	int result, i;
+ 	enum ieee80211_band band;
+ 	int channels, max_bitrates;
+-	bool supp_ht;
++	bool supp_ht, supp_vht;
+ 	netdev_features_t feature_whitelist;
+ 	static const u32 cipher_suites[] = {
+ 		/* keep WEP first, it may be removed below */
+@@ -733,6 +733,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	channels = 0;
+ 	max_bitrates = 0;
+ 	supp_ht = false;
++	supp_vht = false;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		struct ieee80211_supported_band *sband;
+ 
+@@ -750,6 +751,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		if (max_bitrates < sband->n_bitrates)
+ 			max_bitrates = sband->n_bitrates;
+ 		supp_ht = supp_ht || sband->ht_cap.ht_supported;
++		supp_vht = supp_vht || sband->vht_cap.vht_supported;
+ 	}
+ 
+ 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
+@@ -825,6 +827,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (supp_ht)
+ 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
+ 
++	if (supp_vht)
++		local->scan_ies_len += 2 + 
++			sizeof(struct ieee80211_vht_capabilities);
++
+ 	if (!local->ops->hw_scan) {
+ 		/* For hw_scan, driver needs to set these up. */
+ 		local->hw.wiphy->max_scan_ssids = 4;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 242ecde..7856f04 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1072,6 +1072,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 		pos += noffset - offset;
+ 	}
+ 
++	if (sband->vht_cap.vht_supported)
++		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
++						 sband->vht_cap.cap);
++
+ 	return pos - buffer;
+ }
+ 
+@@ -1699,6 +1703,27 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	return pos;
+ }
+ 
++u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++							   u32 cap)
++{
++	__le32 tmp;
++
++	*pos++ = WLAN_EID_VHT_CAPABILITY;
++	*pos++ = sizeof(struct ieee80211_vht_capabilities);
++	memset(pos, 0, sizeof(struct ieee80211_vht_capabilities));
++
++	/* capability flags */
++	tmp = cpu_to_le32(cap);
++	memcpy(pos, &tmp, sizeof(u32));
++	pos += sizeof(u32);
++
++	/* VHT MCS set */
++	memcpy(pos, &vht_cap->vht_mcs, sizeof(vht_cap->vht_mcs));
++	pos += sizeof(vht_cap->vht_mcs);
++
++	return pos;
++}
++
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+ 			       enum nl80211_channel_type channel_type,
