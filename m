@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:54503 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882Ab2GSO7r (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5147 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752866Ab2GBPBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 10:59:47 -0400
-Received: by gglu4 with SMTP id u4so2850952ggl.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2012 07:59:46 -0700 (PDT)
-Message-ID: <500820DF.1030008@lwfinger.net> (sfid-20120719_165951_284904_1ED31395)
-Date: Thu, 19 Jul 2012 09:59:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 2 Jul 2012 11:01:50 -0400
+From: Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH 60g v2 0/5] Infrastructure for 60g (802.11ad)
+Date: Mon, 02 Jul 2012 18:01:42 +0300
+Message-ID: <5202151.WBzXQarS2v@lx-vladimir> (sfid-20120702_170214_742154_66AE346B)
+In-Reply-To: <1341233919.19642.7.camel@jlt3.sipsolutions.net>
+References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1341233662.19642.6.camel@jlt3.sipsolutions.net> <1341233919.19642.7.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Andreas_Br=E4u?= <ab@andi95.de>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Bastian Bittorf <bittorf@bluebottle.com>,
-	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	feint@lists.subsignal.org
-Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
-References: <1342612598.5006a476022c6@mail.bluebottle.com> <CA+XFjiqGXCdMYOnQz95biGYdR65x8dEAZzWnyAoWovEJ1tFQrw@mail.gmail.com> <982FBF04-5969-436D-9D3A-A6388C077667@andi95.de>
-In-Reply-To: <982FBF04-5969-436D-9D3A-A6388C077667@andi95.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2012 02:18 AM, Andreas Bräu wrote:
->>>
->>> 1) why does a band change (can be seen through minstrel) is a problem?
->>
->> Because IIRC b43 doesn't support anything other than 2.4GHz at all.
->
-> It's not a change between 2.4 and 5 GHz.
-> Wifi stops working if the bitrate changes between 11b (1, 2, 5.5, 11) and 11g (6, 9, 12, 18, 24, 36, 48, 54) rates
->
-> So if we tell the system to only use 11g rates, wifi doesn't stop.
+On Monday, July 02, 2012 02:58:39 PM Johannes Berg wrote:
+> > > Vladimir Kondratiev (5):
+> > >   wireless: add 802.11ad (60gHz band)
+> > >   wireless: rate check logic for 60g
+> > >   wireless: regulatory for 60g
+> > >   wireless: 60g protocol constants
+> > >   wireless: bitrate calculation for 60g
+> >
+> > 
+> >
+> > Applied the first four patches, but I fixed the subjects for you (this
+> > time)
+> 
+> And I had to squash patches to make it compile without warnings after
+> each patch.
+> 
+> Please be more careful next time.
+> 
+> johannes
 
-Andi,
+Thanks a lot! I'll do my best.
 
-Rates for 11g include 1, 2, 5.5, and 11, as well as 6, 9, ... What you really 
-want to say is that it fails when it switches between CCCK and OFDM rates.
+So, now I'll focus on the last patch - bitrate calculation.
 
-What chip is in your WRT54G?
+My plan is:
 
-Larry
+- add new element like NL80211_RATE_INFO_BITRATE_HT with u32 data
+- change nl80211_put_sta_rate() to fill both
+  NL80211_RATE_INFO_BITRATE (with u16 value)
+  and NL80211_RATE_INFO_BITRATE_HT (with u32 value)
+- when bitrate not fit into u16, put 0 for u16 value and fill only u32
 
+This opens migration path for the drivers and user space tools to the
+new u32 representation without breaking existing code.
 
+Comments?
+
+Thanks, Vladimir
