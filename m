@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:54081 "EHLO
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:47864 "EHLO
 	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754300Ab2GWQBX (ORCPT
+	by vger.kernel.org with ESMTP id S1751141Ab2GBMkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 12:01:23 -0400
+	Mon, 2 Jul 2012 08:40:03 -0400
 From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 To: linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	johannes.berg@intel.com, thomas@net.t-labs.tu-berlin.de,
-	nbd@nbd.name
-Subject: [PATCH 0/2] ath5k: fixing broken power gain calibration at 5GHz and txpower handling 
-Date: Mon, 23 Jul 2012 18:01:13 +0200
-Message-Id: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120723_180129_448177_F10BDC75)
+Cc: dan.carpenter@oracle.com, wfg@linux.intel.com,
+	linux-wireless@vger.kernel.org, franzschrober@yahoo.de,
+	julian.calaby@gmail.com, johannes@sipsolutions.net,
+	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org
+Subject: [PATCH] mac80211: fix kzalloc memory corruption introduced in minstrel_ht
+Date: Mon,  2 Jul 2012 14:39:52 +0200
+Message-Id: <1341232792-6247-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120702_144008_138760_7D990196)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series fix a wrong power gain calibration in ath5k for
-entire 5GHz band and enables consistent usage of tx_power specified by
-the user.
+The patch: "mac80211: correct size the argument to
+kzalloc in minstrel_ht" (from Jun 29, 2012), leads to memory corruption.
+"msp->ratelist" is a void pointer - therfore going back to the
+expicit form: sizeof(struct minstrel_rate) which brings back correct
+memory allocation.
 
-(1)
-Function ath5k_eeprom_read_target_rate_pwr_info() read 10 lines of
-rate_pcal_info[i].target_power which worngly produces e.g. from 
-Winstron CM9:
-[   38.988000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[0].freq = 4920, rate_pcal_info[0].target_power_6to24 = 36, rate_pcal_info[0].target_power_54 = 24
-[   39.004000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[1].freq = 5040, rate_pcal_info[1].target_power_6to24 = 36, rate_pcal_info[1].target_power_54 = 24
-[   39.020000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[2].freq = 5170, rate_pcal_info[2].target_power_6to24 = 36, rate_pcal_info[2].target_power_54 = 26
-[   39.040000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[3].freq = 5240, rate_pcal_info[3].target_power_6to24 = 38, rate_pcal_info[3].target_power_54 = 26
-[   39.056000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[4].freq = 5320, rate_pcal_info[4].target_power_6to24 = 38, rate_pcal_info[4].target_power_54 = 26
-[   39.076000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[5].freq = 5500, rate_pcal_info[5].target_power_6to24 = 38, rate_pcal_info[5].target_power_54 = 26
-[   39.092000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[6].freq = 5700, rate_pcal_info[6].target_power_6to24 = 36, rate_pcal_info[6].target_power_54 = 26
-[   39.112000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[7].freq = 5825, rate_pcal_info[7].target_power_6to24 = 34, rate_pcal_info[7].target_power_54 = 24
-[   39.128000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[8].freq = 5360, rate_pcal_info[8].target_power_6to24 = 39, rate_pcal_info[8].target_power_54 = 39
-[   39.144000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[9].freq = 5720, rate_pcal_info[9].target_power_6to24 = 38, rate_pcal_info[9].target_power_54 = 38
+Reported-by: Fengguang Wu <wfg@linux.intel.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ net/mac80211/rc80211_minstrel_ht.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Beside that both last 2 lines hold invalid power gain values the last
-line is responsible that subsequent interpolation functions apply
-full power gain to all rates at all frequencies greater
-rate_pcal_info[max].freq, i.e. > 5720 MHz. This leads to spectral
-distortion when then global tx_power is higher than the expected
-rate_pcal_info[xy].target_power_54 and therfore gives rates above
-24MBit a very poor performance in therms of throughput. The first
-patch reduces the eeprom calibration reads to 8. A validation
-against madwifi showed 8x eeprom reads at 5GHz as well.
-
-(2)
-Furthermore the tx_power specified by the user is not respected in
-cases where function phy_init() got called: tx_power is always
-set to ah->ah_txpower.txp_cur_pwr which is never updated with the
-txpower value specified by the user instead it equales max chan power
-and is even incremented. So this wrong behavior amplifies the
-occurrence of the performance problems coming from the wrong
-calibration in cases the user set a low power. The second patch
-fixes this by properly introduce and respect user tx_power.
-
-Greetings Thomas
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 1ca8f2b..f9e51ef 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -813,7 +813,7 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+ 	if (!msp)
+ 		return NULL;
+ 
+-	msp->ratelist = kzalloc(sizeof(*msp->ratelist) * max_rates, gfp);
++	msp->ratelist = kzalloc(sizeof(struct minstrel_rate) * max_rates, gfp);
+ 	if (!msp->ratelist)
+ 		goto error;
+ 
+-- 
+1.7.10.4
 
