@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57947 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751979Ab2G0JfZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 05:35:25 -0400
-Message-ID: <501260DB.1020606@net.t-labs.tu-berlin.de> (sfid-20120727_113528_900249_C53577C9)
-Date: Fri, 27 Jul 2012 11:35:23 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arik Nemtsov <arik@wizery.com>, nbd@openwrt.org, coelho@ti.com,
-	brcm80211-dev-list@broadcom.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	ilw@linux.intel.com, ath9k-devel@lists.ath9k.org,
-	b43-dev@lists.infradead.org, chunkeey@googlemail.com,
-	dsd@gentoo.org, buytenh@wantstofly.org
-Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct ieee80211_tx_info
- and restructure tx-path
-References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>  <1343319453.4477.2.camel@jlt3.sipsolutions.net>  <1343319579.4477.3.camel@jlt3.sipsolutions.net>  <501170F2.3050300@net.t-labs.tu-berlin.de>  <CA+XVXfegYYwc=esyZmJHu1tEqQKcq+h+MnSyp9dXiiwqroG3tw@mail.gmail.com>  <CA+XVXfcrb9=XQauvbPzw2t_jMoQisrh5aSB1qwpLxXsKJKy2Yg@mail.gmail.com>  <CA+XVXfe1uomu4XYD33==bFFozbo9k4mkqC1PE1ORnvVN_1PeTg@mail.gmail.com>  <5011A250.4010500@net.t-labs.tu-berlin.de> <1343374017.4449.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1343374017.4449.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:45476 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753334Ab2GBIda (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2012 04:33:30 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] iwlegacy: don't mess up the SCD when removing a key
+Date: Mon,  2 Jul 2012 14:31:21 +0300
+Message-Id: <1341228681-19358-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20120702_103334_348648_AFB8D292)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+When we remove a key, we put a key index which was supposed
+to tell the fw that we are actually removing the key. But
+instead the fw took that index as a valid index and messed
+up the SRAM of the device.
 
-Johannes Berg schrieb:
+This memory corruption on the device mangled the data of
+the SCD. The impact on the user is that SCD queue 2 got
+stuck after having removed keys.
 
+Change-Id: I721f71c1a3a0af6058abe1975cebd9b613c7ff2b
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+Paul, can you please test ?
+If it solve the issues for you, I will send as a patch and Cc stable Totally not tested
+v2: first hunk of this patch thanks to Stanislaw's review
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> When you do, please remove the last two hunks from your patch that are
-> spurious indentation changes in tx.c
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index d24eaf8..34f61a0 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -3405,7 +3405,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
+ 		return 0;
+ 	}
+ 
+-	if (il->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET) {
++	if (il->stations[sta_id].sta.key.key_flags & STA_KEY_FLG_INVALID) {
+ 		IL_WARN("Removing wrong key %d 0x%x\n", keyconf->keyidx,
+ 			key_flags);
+ 		spin_unlock_irqrestore(&il->sta_lock, flags);
+@@ -3420,7 +3420,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
+ 	memset(&il->stations[sta_id].sta.key, 0, sizeof(struct il4965_keyinfo));
+ 	il->stations[sta_id].sta.key.key_flags =
+ 	    STA_KEY_FLG_NO_ENC | STA_KEY_FLG_INVALID;
+-	il->stations[sta_id].sta.key.key_offset = WEP_INVALID_OFFSET;
++	il->stations[sta_id].sta.key.key_offset = keyconf->hw_key_idx;
+ 	il->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	il->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
+-- 
+1.7.1
 
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-When Ariks two TI driver patches make it in your tree I will clean up
-this two hunks... no prob.
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-Greetings Thomas
