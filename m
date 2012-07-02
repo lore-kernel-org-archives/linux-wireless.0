@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:59907 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750778Ab2GSEV5 (ORCPT
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:1038 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754482Ab2GBJxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:21:57 -0400
-Date: Wed, 18 Jul 2012 21:21:40 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Mon, 2 Jul 2012 05:53:12 -0400
+Message-ID: <1341222789.1911.145.camel@x61.thuisdomein> (sfid-20120702_115330_944412_58D4098B)
+Subject: Re: [PATCH] iwlegacy: print how long queue was actually stuck
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 0/9] OLPC: create a generic OLPC EC driver
-Message-ID: <20120718212140.2e538301@dev.queued.net> (sfid-20120719_062218_222097_1DE030EB)
+	linux-kernel@vger.kernel.org
+Date: Mon, 02 Jul 2012 11:53:09 +0200
+In-Reply-To: <20120702093913.GA9045@redhat.com>
+References: <1340786187.1911.24.camel@x61.thuisdomein>
+	 <1341062406.1911.76.camel@x61.thuisdomein>
+	 <20120702090602.GA8286@redhat.com>
+	 <1341221563.1911.141.camel@x61.thuisdomein>
+	 <20120702093913.GA9045@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The OLPC EC (Embedded Controller) code that is currently upstream is
-x86-only, originally written for the XO-1.  Since then, we've had the
-XO-1.5 (also x86), and XO-1.75 (arm-based) enter mass production.  The
-1.75 uses a vastly different EC protocol, and future hardware revisions
-are likely to change it even further.
+On Mon, 2012-07-02 at 11:39 +0200, Stanislaw Gruszka wrote:
+> On Mon, Jul 02, 2012 at 11:32:43AM +0200, Paul Bolle wrote:
+> Oh, you were not CCed, and lkml too, v2 patch is here:
+> http://marc.info/?l=linux-wireless&m=134121823510017&w=2
 
-However, the drivers do share quite a bit of code, so it makes sense to
-have a platform-agnostic driver that calls into platform-specific hooks
-for each XO's EC driver.  This is the first stab and creating such a
-beast (with further patches pending).  Aside from the lack of code
-duplication, this is helpful for fixing bugs in one place (for example,
-we fixed an EC suspend/resume bug in 1.75 that I've just seen happen on
-1.5 without these patches.  With these patches, the problem goes away).
+Thanks.
 
-These patches are against Linus's current HEAD; let me know if they
-don't apply somewhere, and I'll happily redo them against the -next
-tree.  I'm assuming that these changes (which touch places like x86,
-wireless, and staging) should go through either the x86 tree, or
-through akpm's tree.
+> > Should I report whether the iwlegacy version works
+> > or not?
+> Actually I'll post it anyway. But if this patch and Emmanuel's will not 
+> fix the problem you should report it. 
 
-Alternatively, if the reviews are positive and I can get SOBs from the
-relevant maintainers, I can set up a platform-olpc tree somewhere and
-request a pull from Linus.
+I'll try to report any oddities I notice.
+
+> > Any thoughts on my patch (ie, the patch that is actually the subject of
+> > this thread?
+> It was applied to wireless-testing.
+
+That's nice.
+
+
+Paul Bolle
+
