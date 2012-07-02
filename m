@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:20108 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752023Ab2GQSs6 convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:47843 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013Ab2GBABj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 14:48:58 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: David Miller <davem@davemloft.net>
-CC: "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-	"<netfilter-devel@vger.kernel.org>" <netfilter-devel@vger.kernel.org>
-Subject: Re: That's pretty much it for 3.5.0
-Date: Tue, 17 Jul 2012 18:48:55 +0000
-Message-ID: <DD369258-0958-4965-8E75-F6939892072D@intel.com> (sfid-20120717_204909_109800_DFF5943B)
-References: <20120717.090142.125145009944045241.davem@davemloft.net>
- <997C449C-D599-4F46-A0A3-A2B869DEE36E@intel.com>
-In-Reply-To: <997C449C-D599-4F46-A0A3-A2B869DEE36E@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 1 Jul 2012 20:01:39 -0400
+Received: by lbbgm6 with SMTP id gm6so6945162lbb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2012 17:01:38 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1341062181-28071-15-git-send-email-hauke@hauke-m.de>
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de> <1341062181-28071-15-git-send-email-hauke@hauke-m.de>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 2 Jul 2012 10:01:17 +1000
+Message-ID: <CAGRGNgU6SXLg5w88q6Lpg=kPnb-Q_ik0OJkhhWCXiw_VnVvczg@mail.gmail.com> (sfid-20120702_020142_213995_26FC8AC4)
+Subject: Re: [PATCH v2 14/18] brcmsmac: extend xmtfifo_sz array
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, arend@broadcom.com,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jul 17, 2012, at 10:41 AM, Rustad, Mark D wrote:
+Hi Hauke,
 
-> On Jul 17, 2012, at 9:01 AM, David Miller wrote:
-> 
->> Linus was _extremely_ generous and took in all the stuff that was
->> pending in the net tree just now.
-> 
-> Maybe *too* generous. :-) I just updated and when I boot I get an early crash in update_netdev_tables which is in netprio_cgroup.c.
-> 
->> Besides very serious issues, I'm not willing to consider any more bug
->> fixes for the 'net' tree at this time.
-> 
-> I think the above issue will have to be fixed, as it completely prevents booting for any kernel that includes the netprio_cgroup option.
-> 
->> Only one pending known bug qualifies, and that's the CIPSO ip option
->> processing OOPS'er.  And I'll work on that myself if Paul Moore
->> doesn't show a sign of life in the next day.
->> 
->> Thanks.
-> 
-> 
-> I can start taking a look at this if you like, but I see that Gao feng has two patches in the last set of patches that may be related.
-> 
-> To give you an idea how early the crash is, here are a few log messages leading up to it:
-> 
-> [    0.003455] Dentry cache hash table entries: 262144 (order: 9, 2097152 bytes)
-> [    0.005550] Inode-cache hash table entries: 131072 (order: 8, 1048576 bytes)
-> [    0.007165] Mount-cache hash table entries: 256
-> [    0.010289] Initializing cgroup subsys net_cls
-> [    0.010947] Initializing cgroup subsys net_prio
-> [    0.011039] BUG: unable to handle kernel NULL pointer dereference at 0000000000000828
-> [    0.011998] IP: [<ffffffff814202c8>] update_netdev_tables+0x68/0xe0
+On Sat, Jun 30, 2012 at 11:16 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> The xmtfifo_sz array contains the queue sizes for the different core
+> revs. This array missed the sizes for the core rev 17 and 28. This
+> patch extends the array to also include these sizes and adds a warning
+> if no queue size is stored in the array for the given core rev.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c |   24 +++++++++++++++++++++++-
+>  1 file changed, 23 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index 547ae5b..46d7646 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -343,6 +349,18 @@ static const u16 xmtfifo_sz[][NFIFO] = {
+>         {20, 192, 192, 21, 17, 5},
+>         /* corerev 24: 2304, 14848, 5632, 3584, 3584, 1280 */
+>         {9, 58, 22, 14, 14, 5},
+> +       /* corerev 25: */
+> +       {0, 0, 0, 0, 0, 0},
+> +       /* corerev 26: */
+> +       {0, 0, 0, 0, 0, 0},
+> +       /* corerev 27: */
+> +       {0, 0, 0, 0, 0, 0},
+> +       /* corerev 28: 2304, 14848, 5632, 3584, 3584, 1280 */
+> +       {9, 58, 22, 14, 14, 5},
+> +       /* corerev 29: */
+> +       {0, 0, 0, 0, 0, 0},
+> +       /* corerev 30: */
+> +       {0, 0, 0, 0, 0, 0},
 
+Why add data for 29 and 30?
 
-I found that I can avoid the crash by configuring the netprio_cgroup as a module. I don't need to have it built in, I just happened to. This finding may lower the temperature of this issue a lot from what I had been feeling.
+Thanks,
 
 -- 
-Mark Rustad, LAN Access Division, Intel Corporation
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
