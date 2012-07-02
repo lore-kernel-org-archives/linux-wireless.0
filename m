@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55746 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:33773 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340Ab2GGTnA (ORCPT
+	with ESMTP id S1750815Ab2GBMyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2012 15:43:00 -0400
-Message-ID: <1341690177.5334.2.camel@jlt3.sipsolutions.net> (sfid-20120707_214330_859248_34291513)
-Subject: Re: [PATCH 1/2] mac80211: fix read outside array bounds
+	Mon, 2 Jul 2012 08:54:03 -0400
+Message-ID: <1341233640.19642.5.camel@jlt3.sipsolutions.net> (sfid-20120702_145408_419599_FB418A61)
+Subject: Re: [PATCH 60g v2 5/5] wireless: bitrate calculation for 60g
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Sat, 07 Jul 2012 21:42:57 +0200
-In-Reply-To: <3accb52e0c55e2ac8388de7903ed6adfd964671b.1341667309.git.chunkeey@googlemail.com> (sfid-20120707_153449_534821_D143D8DC)
-References: <3accb52e0c55e2ac8388de7903ed6adfd964671b.1341667309.git.chunkeey@googlemail.com>
-	 (sfid-20120707_153449_534821_D143D8DC)
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 02 Jul 2012 14:54:00 +0200
+In-Reply-To: <1341210756-11054-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1341210756-11054-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-07-07 at 15:07 +0200, Christian Lamparter wrote:
-> ieee802_1d_to_ac is defined as a const int[8],
-> but the tid parameter has a range from 0 to 15.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
-> IMHO the patch should be correct, although it's been a while.
+On Mon, 2012-07-02 at 09:32 +0300, Vladimir Kondratiev wrote:
 
-It looks necessary. I'd say it shouldn't be needed for stable, but it
-seems safer because we could get incoming frames with TIDs that we don't
-support I guess?
+> +#if 0
+> +		/*
+> +		 * TODO: How to report this bitrate?
+> +		 * It don't fit into u16
+> +		 */
+> +		[24] = 67568, /* 6756.75 mbps */
+> +#endif
 
-It's not really "correct", but as we don't support TIDs 8-15 anyway it
-doesn't matter.
-
-John, can you apply it please?
+So how do you plan to address this todo? I think we need to have a new
+U32 attribute for the bitrate and then put this when the value is too
+large etc.
 
 johannes
 
