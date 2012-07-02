@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:42798 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755392Ab2GEICb convert rfc822-to-8bit (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:47883 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752632Ab2GBMlK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 04:02:31 -0400
+	Mon, 2 Jul 2012 08:41:10 -0400
+Message-ID: <4FF196E0.2090804@net.t-labs.tu-berlin.de> (sfid-20120702_144126_445610_DD8ABBB5)
+Date: Mon, 02 Jul 2012 14:41:04 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-In-Reply-To: <1341414588.3627.42.camel@joe2Laptop>
-References: <1341341280.2012.3.camel@joe2Laptop>
-	<1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1341391552-4842-2-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1341414588.3627.42.camel@joe2Laptop>
-Date: Thu, 5 Jul 2012 11:02:28 +0300
-Message-ID: <CAHp75VfOjRL3w-tFLkyWAy3eh-wUOmCd9i5BGscoW=noqjbmBA@mail.gmail.com> (sfid-20120705_100330_890311_01E02878)
-Subject: Re: [PATCHv3 2/3] lib: printf: append support of '%*ph[CDN]'
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
-	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: mac80211: correct size the argument to kzalloc in
+References: <20120702115907.GA28105@elgon.mountain> <4FF18E57.7040704@net.t-labs.tu-berlin.de> <20120702122643.GC4519@mwanda>
+In-Reply-To: <20120702122643.GC4519@mwanda>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 4, 2012 at 6:09 PM, Joe Perches <joe@perches.com> wrote:
-> On Wed, 2012-07-04 at 11:45 +0300, Andy Shevchenko wrote:
->> This patch adds a support of the variable width buffer to print it
->> as a hex string with a delimiter.
 
->> +     if (spec.field_width <= 0)
->> +             /* nothing to print */
->> +             return buf;
->
-> It may be better to default to a 1 and add
->
->         if (addr == ZERO_OR_NULL_PTR)
->
-> to avoid dereferencing a NULL or a pointer
-> to a zero length object.
-Good point.
+Dan Carpenter schrieb:
 
->> +             for (p = hex_str; *p != '\0'; p++) {
->> +                     if (buf < end)
->> +                             *buf = *p;
->> +                     ++buf;
->> +             }
->
-> why not just directly write to *buf as long as buf < end?
-buf < end - 1, otherwise correct.
-And yes, it eliminates hex_str array as well.
+> On Mon, Jul 02, 2012 at 02:04:39PM +0200, Thomas Huehn wrote:
+>> Hi Dan,
+>>
+>> I allready fixed this in my patch v3 on the list a couple of days ago.
+>>
+> 
+> You'll have to sent a patch which applies on top of linux-next
+> because your other patch was already applied.
+> 
+> Please don't drop the list from the CC.
+> 
+> regards,
+> dan carpenter
 
--- 
-With Best Regards,
-Andy Shevchenko
+
+Thx Dan ...new  patch is sent.
+
+Bye Thomas
