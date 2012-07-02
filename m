@@ -1,129 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53460 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755765Ab2GDHWR (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:57990 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909Ab2GBMIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 03:22:17 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v1 1/2] {nl,cfg}80211: support high bitrates
-Date: Wed, 4 Jul 2012 10:21:59 +0300
-Message-ID: <1341386520-25244-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120704_092221_354671_F75F6C3F)
-In-Reply-To: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 2 Jul 2012 08:08:17 -0400
+Received: by wibhq12 with SMTP id hq12so2691470wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 05:08:16 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: always set in_reconfig=false on wakeup
+Date: Mon,  2 Jul 2012 15:08:25 +0300
+Message-Id: <1341230905-8929-1-git-send-email-eliad@wizery.com> (sfid-20120702_140821_279531_928FEEE7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Until now, u16 value was used to represent bitrate value.
-With recently introduced high bitrates, u16 becomes too small.
+If the interfaces were removed just before a restart
+work was started, open_count will be 0, and most of
+the reconfig work will be skipped, including the
+resetting of local->in_reconfig to false.
 
-Thus, new 32-bit bitrate introduced.
-nl80211 reports both new bitrate and old one, in case it
-fits into u16. If bitrate is too high for u16, only new (32 bit)
-value reported
+Leaving local->inconfig = true will result in
+dropping any incoming packet.
 
-User space tools encouraged to switch to new bitrate.
+Fix it by always setting local->in_reconfig = false
+(even if there are no active interfaces).
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- include/linux/nl80211.h |    8 ++++++++
- include/net/cfg80211.h  |    2 +-
- net/wireless/nl80211.c  |    9 +++++++--
- net/wireless/util.c     |    2 +-
- 4 files changed, 17 insertions(+), 4 deletions(-)
+this should go to 3.5
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 74cc55c..0f03969 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1638,12 +1638,19 @@ struct nl80211_sta_flag_update {
-  *
-  * These attribute types are used with %NL80211_STA_INFO_TXRATE
-  * when getting information about the bitrate of a station.
-+ * There are 2 types for bitrate, legacy one that represents
-+ * 16-bit value, and new one that represents 32-bit value.
-+ * If rate value fits into 16 bit, both attributes reported with
-+ * the same value. If rate is too high to fit into 16 bit (>6.5535Gbps),
-+ * only new value included.
-+ * User space tools encouraged to use new bitrate.
-  *
-  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
-  * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
-  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
-  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
-+ * @NL80211_RATE_INFO_BITRATE_HT: total bitrate (u32, 100kbit/s)
-  * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
-  * @__NL80211_RATE_INFO_AFTER_LAST: internal use
-  */
-@@ -1653,6 +1660,7 @@ enum nl80211_rate_info {
- 	NL80211_RATE_INFO_MCS,
- 	NL80211_RATE_INFO_40_MHZ_WIDTH,
- 	NL80211_RATE_INFO_SHORT_GI,
-+	NL80211_RATE_INFO_BITRATE_HT,
+ net/mac80211/util.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 242ecde..e1b7c63 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1411,10 +1411,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		if (ieee80211_sdata_running(sdata))
+ 			ieee80211_enable_keys(sdata);
  
- 	/* keep last */
- 	__NL80211_RATE_INFO_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0b564e8..8837efc 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3487,7 +3487,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
-  *
-  * return 0 if MCS index >= 32
-  */
--u16 cfg80211_calculate_bitrate(struct rate_info *rate);
-+u32 cfg80211_calculate_bitrate(struct rate_info *rate);
++ wake_up:
+ 	local->in_reconfig = false;
+ 	barrier();
  
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 77102e6..4fd7f0a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2618,7 +2618,8 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
- 				 int attr)
- {
- 	struct nlattr *rate;
--	u16 bitrate;
-+	u32 bitrate;
-+	u16 bitrate_compat;
- 
- 	rate = nla_nest_start(msg, attr);
- 	if (!rate)
-@@ -2626,8 +2627,12 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
- 
- 	/* cfg80211_calculate_bitrate will return 0 for mcs >= 32 */
- 	bitrate = cfg80211_calculate_bitrate(info);
-+	/* report 16-bit bitrate only if we can */
-+	bitrate_compat = bitrate < (1UL << 16) ? bitrate : 0;
- 	if ((bitrate > 0 &&
--	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate)) ||
-+	     nla_put_u32(msg, NL80211_RATE_INFO_BITRATE_HT, bitrate)) ||
-+	    (bitrate_compat > 0 &&
-+	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate_compat)) ||
- 	    ((info->flags & RATE_INFO_FLAGS_MCS) &&
- 	     nla_put_u8(msg, NL80211_RATE_INFO_MCS, info->mcs)) ||
- 	    ((info->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) &&
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 0228c64..6e52726 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -900,7 +900,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
- 
--u16 cfg80211_calculate_bitrate(struct rate_info *rate)
-+u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
- 	int modulation, streams, bitrate;
- 
+- wake_up:
+ 	/*
+ 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
+ 	 * sessions can be established after a resume.
 -- 
-1.7.9.5
+1.7.6.401.g6a319
 
