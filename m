@@ -1,49 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49580 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755219Ab2GLPET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 11:04:19 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 01/12] ath9k_hw: fall back to OTP ROM when platform data has no valid eeprom data
-Date: Thu, 12 Jul 2012 17:04:00 +0200
-Message-Id: <1342105451-42297-1-git-send-email-nbd@openwrt.org> (sfid-20120712_170450_198762_10E8593E)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33172 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756264Ab2GEOwV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 10:52:21 -0400
+Date: Mon, 2 Jul 2012 14:17:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: always set in_reconfig=false on wakeup
+Message-ID: <20120702181747.GA2010@tuxdriver.com> (sfid-20120705_165225_838850_C26D22D3)
+References: <1341230905-8929-1-git-send-email-eliad@wizery.com>
+ <1341231541.19642.3.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1341231541.19642.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+On Mon, Jul 02, 2012 at 02:19:01PM +0200, Johannes Berg wrote:
+> On Mon, 2012-07-02 at 15:08 +0300, Eliad Peller wrote:
+> > If the interfaces were removed just before a restart
+> > work was started, open_count will be 0, and most of
+> > the reconfig work will be skipped, including the
+> > resetting of local->in_reconfig to false.
+> > 
+> > Leaving local->inconfig = true will result in
+> > dropping any incoming packet.
+> > 
+> > Fix it by always setting local->in_reconfig = false
+> > (even if there are no active interfaces).
+> > 
+> > Signed-off-by: Eliad Peller <eliad@wizery.com>
+> > ---
+> > this should go to 3.5
+> 
+> Also looks good, thanks
+> 
+> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> John, could you also pick this up?
+> 
+> johannes
+> 
+> 
+> >  net/mac80211/util.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> > index 242ecde..e1b7c63 100644
+> > --- a/net/mac80211/util.c
+> > +++ b/net/mac80211/util.c
+> > @@ -1411,10 +1411,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+> >  		if (ieee80211_sdata_running(sdata))
+> >  			ieee80211_enable_keys(sdata);
+> >  
+> > + wake_up:
+> >  	local->in_reconfig = false;
+> >  	barrier();
+> >  
+> > - wake_up:
+> >  	/*
+> >  	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
+> >  	 * sessions can be established after a resume.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 25de6f9..3cddd78 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3260,10 +3260,20 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	int it;
- 	u16 checksum, mchecksum;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ar9300_eeprom *eep;
- 	eeprom_read_op read;
- 
--	if (ath9k_hw_use_flash(ah))
--		return ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+	if (ath9k_hw_use_flash(ah)) {
-+		u8 txrx;
-+
-+		ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+
-+		/* check if eeprom contains valid data */
-+		eep = (struct ar9300_eeprom *) mptr;
-+		txrx = eep->baseEepHeader.txrxMask;
-+		if (txrx != 0 && txrx != 0xff)
-+			return 0;
-+	}
- 
- 	word = kzalloc(2048, GFP_KERNEL);
- 	if (!word)
+This doesn't apply to 3.5 -- the "local->in_reconfig = false" bit isn't there.
+
+John
 -- 
-1.7.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
