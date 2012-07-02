@@ -1,98 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39091 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:34192 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756048Ab2GaLoE (ORCPT
+	with ESMTP id S1751183Ab2GBPIJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:44:04 -0400
+	Mon, 2 Jul 2012 11:08:09 -0400
+Message-ID: <1341241685.19642.15.camel@jlt3.sipsolutions.net> (sfid-20120702_170814_137434_907B5A11)
+Subject: Re: [PATCH 60g v2 0/5] Infrastructure for 60g (802.11ad)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/10] mac80211: remove freq/chantype from debugfs
-Date: Tue, 31 Jul 2012 13:43:51 +0200
-Message-Id: <1343735038-16030-4-git-send-email-johannes@sipsolutions.net> (sfid-20120731_134439_557014_13A00164)
-In-Reply-To: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
-References: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
+To: Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 02 Jul 2012 17:08:05 +0200
+In-Reply-To: <5202151.WBzXQarS2v@lx-vladimir>
+References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1341233662.19642.6.camel@jlt3.sipsolutions.net>
+	 <1341233919.19642.7.camel@jlt3.sipsolutions.net>
+	 <5202151.WBzXQarS2v@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2012-07-02 at 18:01 +0300, Vladimir Kondratiev wrote:
 
-You can now get these values through iw, and
-they conflict with multi-channel work.
+> So, now I'll focus on the last patch - bitrate calculation.
+> 
+> My plan is:
+> 
+> - add new element like NL80211_RATE_INFO_BITRATE_HT with u32 data
+> - change nl80211_put_sta_rate() to fill both
+>   NL80211_RATE_INFO_BITRATE (with u16 value)
+>   and NL80211_RATE_INFO_BITRATE_HT (with u32 value)
+> - when bitrate not fit into u16, put 0 for u16 value and fill only u32
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/debugfs.c |   32 --------------------------------
- 1 file changed, 32 deletions(-)
+I think you should leave out the BITRATE value completely, not fill it
+with 0.
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index b8dfb44..97173f8 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -63,8 +63,6 @@ DEBUGFS_READONLY_FILE(user_power, "%d",
- 		      local->user_power_level);
- DEBUGFS_READONLY_FILE(power, "%d",
- 		      local->hw.conf.power_level);
--DEBUGFS_READONLY_FILE(frequency, "%d",
--		      local->hw.conf.channel->center_freq);
- DEBUGFS_READONLY_FILE(total_ps_buffered, "%d",
- 		      local->total_ps_buffered);
- DEBUGFS_READONLY_FILE(wep_iv, "%#08x",
-@@ -91,33 +89,6 @@ static const struct file_operations reset_ops = {
- 	.llseek = noop_llseek,
- };
- 
--static ssize_t channel_type_read(struct file *file, char __user *user_buf,
--		       size_t count, loff_t *ppos)
--{
--	struct ieee80211_local *local = file->private_data;
--	const char *buf;
--
--	switch (local->hw.conf.channel_type) {
--	case NL80211_CHAN_NO_HT:
--		buf = "no ht\n";
--		break;
--	case NL80211_CHAN_HT20:
--		buf = "ht20\n";
--		break;
--	case NL80211_CHAN_HT40MINUS:
--		buf = "ht40-\n";
--		break;
--	case NL80211_CHAN_HT40PLUS:
--		buf = "ht40+\n";
--		break;
--	default:
--		buf = "???";
--		break;
--	}
--
--	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
--}
--
- static ssize_t hwflags_read(struct file *file, char __user *user_buf,
- 			    size_t count, loff_t *ppos)
- {
-@@ -205,7 +176,6 @@ static ssize_t queues_read(struct file *file, char __user *user_buf,
- }
- 
- DEBUGFS_READONLY_FILE_OPS(hwflags);
--DEBUGFS_READONLY_FILE_OPS(channel_type);
- DEBUGFS_READONLY_FILE_OPS(queues);
- 
- /* statistics stuff */
-@@ -272,12 +242,10 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 
- 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
- 
--	DEBUGFS_ADD(frequency);
- 	DEBUGFS_ADD(total_ps_buffered);
- 	DEBUGFS_ADD(wep_iv);
- 	DEBUGFS_ADD(queues);
- 	DEBUGFS_ADD_MODE(reset, 0200);
--	DEBUGFS_ADD(channel_type);
- 	DEBUGFS_ADD(hwflags);
- 	DEBUGFS_ADD(user_power);
- 	DEBUGFS_ADD(power);
--- 
-1.7.10.4
+> This opens migration path for the drivers and user space tools to the
+> new u32 representation without breaking existing code.
+
+Other than that, yes, good plan.
+
+johannes
 
