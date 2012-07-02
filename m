@@ -1,37 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm20-vm0.bullet.mail.ird.yahoo.com ([77.238.189.221]:29147 "HELO
-	nm20-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751044Ab2G0NJm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 09:09:42 -0400
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com> <501280BF.4070409@lwfinger.net>
-Message-ID: <1343394581.87030.YahooMailNeo@web28902.mail.ir2.yahoo.com> (sfid-20120727_150947_068014_6F5A456F)
-Date: Fri, 27 Jul 2012 14:09:41 +0100 (BST)
-From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <501280BF.4070409@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:34628 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445Ab2GBRPZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2012 13:15:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: remove tx_frags driver callback
+Date: Mon,  2 Jul 2012 19:15:15 +0200
+Message-Id: <1341249315-11372-1-git-send-email-johannes@sipsolutions.net> (sfid-20120702_191530_866915_A8B2DEA6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So I have download the file from your link which provides a directory called: "compat-wireless-2012-05-10". I was using one called "compat-wireless-2012-07-03".
+From: Johannes Berg <johannes.berg@intel.com>
 
-FYI I already compiled the 3.5 kernel but as you recommend I keep using the 3.4.6 for now as it will not necessary bring something new around the rtl8188ce wifi driver.
+The implementation of tx_frags is buggy due to
+not handling queue stop, and there's no driver
+implementing it so remove it.
 
-FYI there should be something wrong in the README as if I do:
-root@HTPC:/home/xabix/tmp/compat-wireless-2012-05-10# ./scripts/driver-select rtl8192ce
-Processing new driver-select request...
-Backing up makefile: Makefile.bk
-Unsupported driver
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h    |   15 ---------------
+ net/mac80211/driver-ops.h |    8 --------
+ net/mac80211/main.c       |    2 +-
+ net/mac80211/tx.c         |    7 ++-----
+ 4 files changed, 3 insertions(+), 29 deletions(-)
 
-I ve got the Unsupported driver message
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b5da094..dc2a97a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1896,19 +1896,6 @@ enum ieee80211_rate_control_changed {
+  *	The low-level driver should send the frame out based on
+  *	configuration in the TX control data. This handler should,
+  *	preferably, never fail and stop queues appropriately.
+- *	This must be implemented if @tx_frags is not.
+- *	Must be atomic.
+- *
+- * @tx_frags: Called to transmit multiple fragments of a single MSDU.
+- *	This handler must consume all fragments, sending out some of
+- *	them only is useless and it can't ask for some of them to be
+- *	queued again. If the frame is not fragmented the queue has a
+- *	single SKB only. To avoid issues with the networking stack
+- *	when TX status is reported the frames should be removed from
+- *	the skb queue.
+- *	If this is used, the tx_info @vif and @sta pointers will be
+- *	invalid -- you must not use them in that case.
+- *	This must be implemented if @tx isn't.
+  *	Must be atomic.
+  *
+  * @start: Called before the first netdevice attached to the hardware
+@@ -2260,8 +2247,6 @@ enum ieee80211_rate_control_changed {
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+-	void (*tx_frags)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			 struct ieee80211_sta *sta, struct sk_buff_head *skbs);
+ 	int (*start)(struct ieee80211_hw *hw);
+ 	void (*stop)(struct ieee80211_hw *hw);
+ #ifdef CONFIG_PM
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 44e8c12..5042151 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -27,14 +27,6 @@ static inline void drv_tx(struct ieee80211_local *local, struct sk_buff *skb)
+ 	local->ops->tx(&local->hw, skb);
+ }
+ 
+-static inline void drv_tx_frags(struct ieee80211_local *local,
+-				struct ieee80211_vif *vif,
+-				struct ieee80211_sta *sta,
+-				struct sk_buff_head *skbs)
+-{
+-	local->ops->tx_frags(&local->hw, vif, sta, skbs);
+-}
+-
+ static inline void drv_get_et_strings(struct ieee80211_sub_if_data *sdata,
+ 				      u32 sset, u8 *data)
+ {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index ab32c59..c794101 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -587,7 +587,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 
+ 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
+ 
+-	BUG_ON(!ops->tx && !ops->tx_frags);
++	BUG_ON(!ops->tx);
+ 	BUG_ON(!ops->start);
+ 	BUG_ON(!ops->stop);
+ 	BUG_ON(!ops->config);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 4990f4f..364a1e7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1295,11 +1295,8 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
+ 		break;
+ 	}
+ 
+-	if (local->ops->tx_frags)
+-		drv_tx_frags(local, vif, pubsta, skbs);
+-	else
+-		result = ieee80211_tx_frags(local, vif, pubsta, skbs,
+-					    txpending);
++	result = ieee80211_tx_frags(local, vif, pubsta, skbs,
++				    txpending);
+ 
+ 	ieee80211_tpt_led_trig_tx(local, fc, led_len);
+ 	ieee80211_led_tx(local, 1);
+-- 
+1.7.10
 
-Anyway I am compilling them all based on the link you suggested: compat-wireless-2012-05-10
-
-Will report when done
-
-merci
