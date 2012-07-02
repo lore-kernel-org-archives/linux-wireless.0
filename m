@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51724 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961Ab2GVIch (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:58778 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754212Ab2GBPQO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jul 2012 04:32:37 -0400
-Message-ID: <500BBAA0.5050304@qca.qualcomm.com> (sfid-20120722_103319_957673_BE27067E)
-Date: Sun, 22 Jul 2012 11:32:32 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 2 Jul 2012 11:16:14 -0400
+Received: by gglu4 with SMTP id u4so4174669ggl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 08:16:14 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 3/3] ath6kl: add support for changing contry code
-References: <20120719125937.22047.91375.stgit@x201> <20120719130056.22047.19196.stgit@x201> <CAB=NE6UTDeYowTXdZ-2uGzQgQ3MWxwg-xpYYXxbpT-J6iacjcg@mail.gmail.com>
-In-Reply-To: <CAB=NE6UTDeYowTXdZ-2uGzQgQ3MWxwg-xpYYXxbpT-J6iacjcg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1341241929.19642.17.camel@jlt3.sipsolutions.net>
+References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1341210756-11054-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <CA+XVXfduVieZEVF4eav+K+YHv=B+VoTjZmquMtOrg6XPKVVkOA@mail.gmail.com> <1341241929.19642.17.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <anamtsov@gmail.com>
+Date: Mon, 2 Jul 2012 18:15:58 +0300
+Message-ID: <CA+XVXfebumem+DMgsmUSd7vr7ZaK+x-S2gxzu8BAhB-KoXTr6Q@mail.gmail.com> (sfid-20120702_171618_174025_37C631E4)
+Subject: Re: [PATCH 60g v2 1/5] wireless: add 802.11ad (60gHz band)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2012 10:54 PM, Luis R. Rodriguez wrote:
-> On Thu, Jul 19, 2012 at 6:00 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> To make it possible to change the country code from user space via nl80211
->> add handler for reg_notifier. The feature is only enabled when built
->> time option CONFIG_ATH6KL_REGDOMAIN is enabled, which again depends on
->> CFG80211_CERTIFICATION_ONUS for certication purposes.
+On Mon, Jul 2, 2012 at 6:12 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2012-07-02 at 17:22 +0300, Arik Nemtsov wrote:
+>
+>> enum ieee80211_band {
+>>       IEEE80211_BAND_2GHZ = NL80211_BAND_2GHZ,
+>>       IEEE80211_BAND_5GHZ = NL80211_BAND_5GHZ,
 >>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> Ah OK so a followup patch would use ath6kl_wmi_set_regdomain_cmd() ?
+>>       /* keep last */
+>>       IEEE80211_NUM_BANDS
+>> };
+>>
+>> If the 60Ghz band goes here as well, IEEE80211_NUM_BANDS will be
+>> incremented.
+>
+> Yes, this happened.
+>
+>> I'm guessing this can be problematic for a lot of drivers
+>> that use this value more or less blindly (and pass indices to FW etc).
+>> At least the wlcore driver will be impacted.
+>>
+>> So this probably should be added, but maybe keep IEEE80211_NUM_BANDS
+>> the same for legacy reasons?
+>
+> Can't do that, it's used for array sizing etc.
+>
+> It looks like your driver may crash as it accesses bands[x] for all
+> possible values of x ... might want to fix that soon as I've applied
+> these patches :)
 
-The current code already does that. The followup patch would change
-ath6kl so that it follows the cellular BTS hints and advertises the
-support for that.
-
-Kalle
+Yes. That's the alternative :)
