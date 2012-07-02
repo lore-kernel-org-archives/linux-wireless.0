@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38204 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752365Ab2GQLyg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:54:36 -0400
-Message-ID: <50055276.20304@openwrt.org> (sfid-20120717_135443_122414_34BB4E83)
-Date: Tue, 17 Jul 2012 13:54:30 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:44091 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751981Ab2GBWuY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jul 2012 18:50:24 -0400
+Received: by gglu4 with SMTP id u4so4661215ggl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 15:50:24 -0700 (PDT)
+Message-ID: <4FF225AC.8020205@lwfinger.net> (sfid-20120703_005028_442918_1FDA9F27)
+Date: Mon, 02 Jul 2012 17:50:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
- TXOP limit
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org> <1342105451-42297-2-git-send-email-nbd@openwrt.org> <1342105451-42297-3-git-send-email-nbd@openwrt.org> <1342105451-42297-4-git-send-email-nbd@openwrt.org> <1342105451-42297-5-git-send-email-nbd@openwrt.org> <1342105451-42297-6-git-send-email-nbd@openwrt.org> <1342105451-42297-7-git-send-email-nbd@openwrt.org> <1342105451-42297-8-git-send-email-nbd@openwrt.org> <20481.3065.540576.366365@gargle.gargle.HOWL> <500143CA.1020804@openwrt.org> <506697F5827BD842B7CB80D046EBE618995399@aphydexd01b> <5002A7B2.409@openwrt.org> <20483.52640.521243.418804@gargle.gargle.HOWL> <5003EABD.5040506@openwrt.org> <20484.23881.582002.607413@gargle.gargle.HOWL> <50046A71.9020302@openwrt.org> <20485.19956.285571.372831@gargle.gargle.HOWL>
-In-Reply-To: <20485.19956.285571.372831@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel oops in __netif_schedule() for at76c50x-usb
+References: <4FF1BC71.4070002@lwfinger.net>   (sfid-20120702_172127_238924_ED185EFD) <1341243087.19642.20.camel@jlt3.sipsolutions.net>  <4FF1C887.8090009@lwfinger.net> (sfid-20120702_181310_720968_3FE88ADC) <1341250736.19642.22.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1341250736.19642.22.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-17 1:35 PM, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> The way I understand this, the TXOP limit is meant to limit the duration
->> of a single transmission on the channel. An aggregate is transmitted in
->> one go, there's no SIFS or extra PHY headers inbetween, just short
->> delimiters. So an A-MPDU should be treated pretty much like an MPDU
->> here, its transmission duration should not exceed the TXOP limit.
-> 
-> Yeah, makes sense.
-> 
-> But we need to handle multiple interfaces, otherwise this would break
-> modes like P2P. For example, bring up a P2P-GO and setup a HT20 network,
-> and then bring up a new station interface - this would unconditionally
-> update the aggr. limits of the existing network. This wasn't the case earlier
-> since the limits were being maintained globally and were common to all interfaces
-> and addition/removal of new interfaces would not change the aggr. limits.
-Before my patch, the aggr limits were always broken for the VI queue.
-Now they're just sometimes broken :)
+On 07/02/2012 12:38 PM, Johannes Berg wrote:
+>
+>>> I'm not sure which fix is correct though. Should we have software QoS
+>>> queues for these drivers, but we'll never use them? Then this would
+>>> work:
+>>> http://p.sipsolutions.net/e015bf7db9a05887.txt
+>>>
+>>> Or we could change the enable code path. Hmm.
+>>
+>> That patch does prevent the oops. I was not able to make a connection with the
+>> device, but I just acquired it, and I'm not sure of its quality, or that of the
+>> driver.
+>
+> I don't think that device works today -- IIRC it requires the BSSID
+> before authentication and that wasn't possible before the auth redesign.
+>
+>> It does scan OK, and I think the patch is OK. I'll do more tests with
+>> b43legacy later as the machine with that iface is busy. I will also test b43 on
+>> the PPC using the open-source firmware.
+>>
+>> Although you may want to change the enable code path, some patch will be needed
+>> to prevent a regression in 3.5. If this is the one, you may add a "Tested-by"
+>> for me.
+>
+> Thanks. Could you try this patch instead? I think it makes more sense.
+>
+> http://p.sipsolutions.net/c3e9b814a409ca11.txt
 
-- Felix
+That one fails and gives the oops in __netif_schedule.
+
+Larry
+
