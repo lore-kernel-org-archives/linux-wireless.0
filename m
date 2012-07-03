@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34281 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278Ab2GBPb2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 11:31:28 -0400
-Message-ID: <1341243087.19642.20.camel@jlt3.sipsolutions.net> (sfid-20120702_173132_268611_FFAAC1C1)
-Subject: Re: Kernel oops in __netif_schedule() for at76c50x-usb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 02 Jul 2012 17:31:27 +0200
-In-Reply-To: <4FF1BC71.4070002@lwfinger.net> (sfid-20120702_172127_238924_ED185EFD)
-References: <4FF1BC71.4070002@lwfinger.net>
-	 (sfid-20120702_172127_238924_ED185EFD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:51907 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756986Ab2GCQtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 12:49:39 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 00/10] qca-swiss-army-knife: initvals fixes and improvements
+Date: Tue,  3 Jul 2012 18:42:45 +0200
+Message-Id: <1341333775-14091-1-git-send-email-juhosg@openwrt.org> (sfid-20120703_184944_660439_8A16CEE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+This patch-set contain patches for the initvals tool. 
+The first three patches are fixing minor bugs, the next 
+three imporves the code a bit and the last four patches 
+are adding suport for AR9550. 
 
-Sorry! I had your other email still marked unread but hadn't gotten
-around to it :-(
+Gabor Juhos (10):
+  qca-swiss-army-knife: fix string length for ar9340
+  qca-swiss-army-knife: add ar9462-2p0 to the usage text
+  qca-swiss-army-knife: add ar9462-2p0 to verify_checksums.sh
+  qca-swiss-army-knife: reformat INI_PRINT_* macros
+  qca-swiss-army-knife: simplify initval family handling
+  qca-swiss-army-knife: allow to print initvals with more than 5 columns
+  qca-swiss-army-knife: add initval support for AR955X
+  qca-swiss-army-knife: add checksums for AR955X initvals
+  qca-swiss-army-knife: generate ath9k specific initvals for AR955X
+  qca-swiss-army-knife: allow to verify AR955X initvals
 
-> Regarding the oops that I reported for PPC architecture that reported "Unable to 
-> handle kernel paging request for data at address 0x000004c", I have now repeated 
-> it on x86_64 architecture, where the objdump tool is better. The error occurs in 
-> the line in __netif_schedule() that says
-> 
->           if (!test_and_set_bit(__QDISC_STATE_SCHED, &q->state))
-> 
-> Debug printouts have shown that q is not NULL, and it appears to be in the 
-> correct address range. I think q->state is zero; however, q->state cannot be 
-> written.
-> 
-> Additional testing shows this problem to be another side effect of commit 
-> 3a25a8c ("mac80211: add improved HW queue control") for a device with only a 
-> single HW queue.
+ tools/initvals/Makefile              |    2 +
+ tools/initvals/ar955x_1p0_initvals.h | 1284 ++++++++++++++++++++++++++++++++++
+ tools/initvals/checksums.txt         |   16 +
+ tools/initvals/initvals.c            |  293 +++++----
+ tools/initvals/verify_checksums.sh   |    2 +-
+ 5 files changed, 1477 insertions(+), 120 deletions(-)
+ create mode 100644 tools/initvals/ar955x_1p0_initvals.h
 
-Looking at the code again, it seems pretty obviously wrong ... OUCH!
-
-I'm not sure which fix is correct though. Should we have software QoS
-queues for these drivers, but we'll never use them? Then this would
-work:
-http://p.sipsolutions.net/e015bf7db9a05887.txt
-
-Or we could change the enable code path. Hmm.
-
-johannes
+-- 
+1.7.2.1
 
