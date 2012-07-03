@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2440 "EHLO mms1.broadcom.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:40105 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932569Ab2GCSqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 14:46:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S933261Ab2GCROJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:09 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
 To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>,
-	"Johannes Berg" <johannes.berg@intel.com>
-Subject: [PATCH] brcmsmac: fix brcms_c_regd_init() which crashed after
- 11ad patch
-Date: Tue, 3 Jul 2012 20:46:02 +0200
-Message-ID: <1341341162-2709-1-git-send-email-arend@broadcom.com> (sfid-20120703_204637_485798_4E1F76E1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 06/20] ath9k: clear pciexpress flag for AR9550
+Date: Tue,  3 Jul 2012 19:13:20 +0200
+Message-Id: <1341335614-15419-7-git-send-email-juhosg@openwrt.org> (sfid-20120703_191416_285690_43618987)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an OOPS in brcmsmac driver, which was introduced
-by the 11ad patch 'cfg80211: add 802.11ad (60gHz band) support'.
-The value IEEE80211_NUM_BANDS increased, which was used in the
-brcms_c_regd_init() function.
-
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Acked-by: Seth Forshee <seth.forshee@canonical.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 2d365d3..9a4c63f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -763,20 +763,17 @@ void brcms_c_regd_init(struct brcms_c_info *wlc)
- 	int band_idx, i;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8eb7f58..fdd2f04 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -658,7 +658,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	}
  
- 	/* Disable any channels not supported by the phy */
--	for (band_idx = 0; band_idx < IEEE80211_NUM_BANDS; band_idx++) {
--		if (band_idx == IEEE80211_BAND_2GHZ)
--			band = wlc->bandstate[BAND_2G_INDEX];
--		else
--			band = wlc->bandstate[BAND_5G_INDEX];
--
--		/* skip if band not initialized */
--		if (band->pi == NULL)
--			continue;
-+	for (band_idx = 0; band_idx < wlc->pub->_nbands; band_idx++) {
-+		band = wlc->bandstate[band_idx];
+ 	if (AR_SREV_9271(ah) || AR_SREV_9100(ah) || AR_SREV_9340(ah) ||
+-	    AR_SREV_9330(ah))
++	    AR_SREV_9330(ah) || AR_SREV_9550(ah))
+ 		ah->is_pciexpress = false;
  
- 		wlc_phy_chanspec_band_validch(band->pi, band->bandtype,
- 					      &sup_chan);
- 
--		sband = wiphy->bands[band_idx];
-+		if (band_idx == BAND_2G_INDEX)
-+			sband = wiphy->bands[IEEE80211_BAND_2GHZ];
-+		else
-+			sband = wiphy->bands[IEEE80211_BAND_5GHZ];
-+
- 		for (i = 0; i < sband->n_channels; i++) {
- 			ch = &sband->channels[i];
- 			if (!isset(sup_chan.vec, ch->hw_value))
+ 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
 -- 
-1.7.9.5
-
+1.7.2.1
 
