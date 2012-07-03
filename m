@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006Ab2GWM7N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 08:59:13 -0400
-Message-ID: <1343048346.4584.11.camel@jlt3.sipsolutions.net> (sfid-20120723_145916_954759_15B835E9)
-Subject: Re: [PATCH] mac80211: VHT (11ac) Association
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 23 Jul 2012 14:59:06 +0200
-In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC5E31@mbx022-e1-nj-10.exch022.domain.local>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC5E31@mbx022-e1-nj-10.exch022.domain.local>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:40381 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756865Ab2GCROi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:38 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 10/20] ath9k: read spur frequency information from eeprom for AR9550
+Date: Tue,  3 Jul 2012 19:13:24 +0200
+Message-Id: <1341335614-15419-11-git-send-email-juhosg@openwrt.org> (sfid-20120703_192129_062265_605D440F)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-23 at 09:13 +0000, Mahesh Palivela wrote:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> @@ -359,6 +359,7 @@ enum ieee80211_sta_flags {
->  	IEEE80211_STA_NULLFUNC_ACKED	= BIT(8),
->  	IEEE80211_STA_RESET_SIGNAL_AVE	= BIT(9),
->  	IEEE80211_STA_DISABLE_40MHZ	= BIT(10),
-> +	IEEE80211_STA_DISABLE_11AC	= BIT(11),
-
-I'd prefer this being named DISABLE_VHT, even though we never renamed
-the old DISABLE_11N (yet)
-
-
-> +	BUILD_BUG_ON(sizeof(vht_cap) != sizeof(sband->vht_cap));
-> +
-> +	memcpy(&vht_cap, &sband->vht_cap, sizeof(vht_cap));
-> +	//ieee80211_apply_vhtcap_overrides(sdata, &ht_cap);
-
-Please just remove that line
-
->  static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
->  {
->  	struct ieee80211_local *local = sdata->local;
-> @@ -503,6 +524,10 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
->  		ieee80211_add_ht_ie(sdata, skb, assoc_data->ap_ht_param,
->  				    sband, local->oper_channel, ifmgd->ap_smps);
->  
-> +	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_11AC))
-> +		ieee80211_add_vht_ie(sdata, skb, sband);
-> +
-> +
-
-Please remove the extra blank line. You also forgot to account for the
-size of this field so the skb might be too short.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 898ee14..70ada2e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -180,7 +180,8 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 	 * is out-of-band and can be ignored.
+ 	 */
+ 
+-	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah)) {
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
++	    AR_SREV_9550(ah)) {
+ 		if (spur_fbin_ptr[0] == 0) /* No spur */
+ 			return;
+ 		max_spur_cnts = 5;
+@@ -205,7 +206,8 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 		if (AR_SREV_9462(ah) && (i == 0 || i == 3))
+ 			continue;
+ 		negative = 0;
+-		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah))
++		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
++		    AR_SREV_9550(ah))
+ 			cur_bb_spur = ath9k_hw_fbin2freq(spur_fbin_ptr[i],
+ 							 IS_CHAN_2GHZ(chan));
+ 		else
+-- 
+1.7.2.1
 
