@@ -1,28 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47317 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753813Ab2GWSEW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 14:04:22 -0400
-Received: by pbbrp8 with SMTP id rp8so11226960pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 11:04:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20492.53272.943747.11705@gargle.gargle.HOWL>
-References: <20492.53272.943747.11705@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 23 Jul 2012 11:04:02 -0700
-Message-ID: <CAB=NE6UneoaYZxnF20X_ac5sijx2nLcLtY_xcYfxhRQexDBesA@mail.gmail.com> (sfid-20120723_200426_949781_590940E1)
-Subject: Re: [PATCH] qca-swiss-army-knife: Add a tool to dump EEPROM
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+Received: from arrakis.dune.hu ([78.24.191.176]:51905 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752741Ab2GCQti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 12:49:38 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 03/10] qca-swiss-army-knife: add ar9462-2p0 to verify_checksums.sh
+Date: Tue,  3 Jul 2012 18:42:48 +0200
+Message-Id: <1341333775-14091-4-git-send-email-juhosg@openwrt.org> (sfid-20120703_184942_954585_60E8A50A)
+In-Reply-To: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
+References: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 22, 2012 at 9:16 PM, Sujith Manoharan
-<c_manoha@qca.qualcomm.com> wrote:
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ tools/initvals/verify_checksums.sh |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Wow, awesome, applied and pushed, thanks!
+diff --git a/tools/initvals/verify_checksums.sh b/tools/initvals/verify_checksums.sh
+index 6878ca5..fd03478 100755
+--- a/tools/initvals/verify_checksums.sh
++++ b/tools/initvals/verify_checksums.sh
+@@ -31,7 +31,7 @@ verify_family_checksum()
+ }
+ 
+ FAMILIES="$@"
+-[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9485 ar9580-1p0"
++[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9462-2p0 ar9485 ar9580-1p0"
+ 
+ mkdir -p "$CSUM_DIR"
+ for family in $FAMILIES; do
+-- 
+1.7.2.1
 
-  Luis
