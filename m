@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34654 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755025Ab2GIOzX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 10:55:23 -0400
-Message-ID: <1341845721.4455.50.camel@jlt3.sipsolutions.net> (sfid-20120709_165532_885853_EDBF8B57)
-Subject: Re: [PATCH] mac80211: use full power if off-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Jul 2012 16:55:21 +0200
-In-Reply-To: <4FFAEFCB.2080109@candelatech.com>
-References: <1341740130-6199-1-git-send-email-johannes@sipsolutions.net>
-	  <4FF99A80.9040700@candelatech.com>
-	 <1341822596.4455.6.camel@jlt3.sipsolutions.net>
-	 <4FFAEFCB.2080109@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3423 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309Ab2GCHJJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 03:09:09 -0400
+Message-ID: <4FF29A88.40103@broadcom.com> (sfid-20120703_090912_837707_6A493F79)
+Date: Tue, 3 Jul 2012 09:08:56 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 14/18] brcmsmac: extend xmtfifo_sz array
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+ <1341062181-28071-15-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1341062181-28071-15-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-09 at 07:50 -0700, Ben Greear wrote:
-> On 07/09/2012 01:29 AM, Johannes Berg wrote:
-> > On Sun, 2012-07-08 at 07:34 -0700, Ben Greear wrote:
-> >> On 07/08/2012 02:35 AM, Johannes Berg wrote:
-> >>> From: Johannes Berg <johannes.berg@intel.com>
-> >>>
-> >>> Instead of using full power when scanning, use
-> >>> full power when off-channel. This is different
-> >>> since off-channel can be remain-on-channel.
-> >>
-> >> What if we are scanning on our current channel?  Shouldn't
-> >> it be full-power then as well?
-> >
-> > Arguable. If we're on the channel that the AP explicitly told us to use
-> > less power on, and we're not stopping normal traffic, then I'm not sure
-> > we should.
+On 06/30/2012 03:16 PM, Hauke Mehrtens wrote:
+> The xmtfifo_sz array contains the queue sizes for the different core
+> revs. This array missed the sizes for the core rev 17 and 28. This
+> patch extends the array to also include these sizes and adds a warning
+> if no queue size is stored in the array for the given core rev.
 > 
-> Well, if you are scanning, you might be wanting to find other APs that
-> perhaps require full power to reach, so it seems to me it should scan
-> at full power...
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c |   24 +++++++++++++++++++++++-
+>  1 file changed, 23 insertions(+), 1 deletion(-)
 
-Yes, but you're not supposed to send the data packets at the higher
-power. So unless you have per-packet power control you'd be breaking
-your TPC implementation (which is regulatory relevant) if you do
-on-channel scan.
+Gr. AvS
 
-I suppose the other option would be to skip the optimisation in that
-case, but ...
 
-johannes
 
