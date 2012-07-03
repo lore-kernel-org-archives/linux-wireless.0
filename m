@@ -1,37 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:46207 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170Ab2GQFjs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 01:39:48 -0400
-Date: Mon, 16 Jul 2012 22:39:47 -0700 (PDT)
-Message-Id: <20120716.223947.963699777040428903.davem@davemloft.net> (sfid-20120717_073955_288432_5AB48EBD)
-To: joe@perches.com
-Cc: netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-	wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, linux-s390@vger.kernel.org,
-	johannes@sipsolutions.net, uclinux-dist-devel@blackfin.uclinux.org,
-	linux-kernel@vger.kernel.org, linux-c6x-dev@linux-c6x.org,
-	linux-mips@linux-mips.org,
-	user-mode-linux-devel@lists.sourceforge.net,
-	user-mode-linux-user@lists.sourceforge.net,
-	e1000-devel@lists.sourceforge.net
-Subject: Re: [PATCH net-next 0/8] etherdevice: Rename random_ether_addr to
- eth_random_addr
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <cover.1342157022.git.joe@perches.com>
-References: <1341968967.13724.23.camel@joe2Laptop>
-	<cover.1342157022.git.joe@perches.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from arrakis.dune.hu ([78.24.191.176]:40124 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933261Ab2GCROL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:11 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 17/20] ath9k: fix PLL initialization for AR9550
+Date: Tue,  3 Jul 2012 19:13:31 +0200
+Message-Id: <1341335614-15419-18-git-send-email-juhosg@openwrt.org> (sfid-20120703_191419_047110_89653960)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Thu, 12 Jul 2012 22:33:04 -0700
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   27 +++++++++++++++++++--------
+ 1 files changed, 19 insertions(+), 8 deletions(-)
 
-> net-next commit ad7eee98be ("etherdevice: introduce eth_broadcast_addr")
-> added a new style API.  Rename random_ether_addr to eth_random_addr to
-> create some API symmetry.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1ddec4b..991b2ef 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -868,7 +868,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 		/* program BB PLL phase_shift */
+ 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
+ 			      AR_CH0_BB_DPLL3_PHASE_SHIFT, 0x1);
+-	} else if (AR_SREV_9340(ah)) {
++	} else if (AR_SREV_9340(ah) || AR_SREV_9550(ah)) {
+ 		u32 regval, pll2_divint, pll2_divfrac, refdiv;
+ 
+ 		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
+@@ -882,9 +882,15 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			pll2_divfrac = 0x1eb85;
+ 			refdiv = 3;
+ 		} else {
+-			pll2_divint = 88;
+-			pll2_divfrac = 0;
+-			refdiv = 5;
++			if (AR_SREV_9340(ah)) {
++				pll2_divint = 88;
++				pll2_divfrac = 0;
++				refdiv = 5;
++			} else {
++				pll2_divint = 0x11;
++				pll2_divfrac = 0x26666;
++				refdiv = 1;
++			}
+ 		}
+ 
+ 		regval = REG_READ(ah, AR_PHY_PLL_MODE);
+@@ -897,8 +903,12 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 		udelay(100);
+ 
+ 		regval = REG_READ(ah, AR_PHY_PLL_MODE);
+-		regval = (regval & 0x80071fff) | (0x1 << 30) | (0x1 << 13) |
+-			 (0x4 << 26) | (0x18 << 19);
++		if (AR_SREV_9340(ah))
++			regval = (regval & 0x80071fff) | (0x1 << 30) |
++				 (0x1 << 13) | (0x4 << 26) | (0x18 << 19);
++		else
++			regval = (regval & 0x80071fff) | (0x3 << 30) |
++				 (0x1 << 13) | (0x4 << 26) | (0x60 << 19);
+ 		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
+ 		REG_WRITE(ah, AR_PHY_PLL_MODE,
+ 			  REG_READ(ah, AR_PHY_PLL_MODE) & 0xfffeffff);
+@@ -909,7 +919,8 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+-	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah))
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
++	    AR_SREV_9550(ah))
+ 		udelay(1000);
+ 
+ 	/* Switch the core clock for ar9271 to 117Mhz */
+@@ -922,7 +933,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 
+ 	REG_WRITE(ah, AR_RTC_SLEEP_CLK, AR_RTC_FORCE_DERIVED_CLK);
+ 
+-	if (AR_SREV_9340(ah)) {
++	if (AR_SREV_9340(ah) || AR_SREV_9550(ah)) {
+ 		if (ah->is_clk_25mhz) {
+ 			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
+ 			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
+-- 
+1.7.2.1
 
-Series applied, thanks Joe.
