@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:33576 "EHLO c60.cesmail.net"
+Received: from arrakis.dune.hu ([78.24.191.176]:40063 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751566Ab2GIQGZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 12:06:25 -0400
-Date: Mon, 9 Jul 2012 11:56:43 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Antonio Quartulli <ordex@autistici.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl/cfg/mac80211: use BIT(x) instead of (1 << x)
-Message-ID: <20120709115643.19699ca0@mj> (sfid-20120709_180628_895538_071D80BC)
-In-Reply-To: <1341825724.4455.16.camel@jlt3.sipsolutions.net>
-References: <1341763805-7386-1-git-send-email-ordex@autistici.org>
-	<1341825724.4455.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1756865Ab2GCROE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:04 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 04/20] ath9k: add platform_device_id for AR9550
+Date: Tue,  3 Jul 2012 19:13:18 +0200
+Message-Id: <1341335614-15419-5-git-send-email-juhosg@openwrt.org> (sfid-20120703_191411_805496_2B96DE52)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 09 Jul 2012 11:22:04 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ahb.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-> 
-> > --- a/net/mac80211/iface.c
-> > +++ b/net/mac80211/iface.c
-> > @@ -1432,7 +1432,7 @@ int ieee80211_if_add(struct ieee80211_local
-> > *local, const char *name, struct ieee80211_supported_band *sband;
-> >  		sband = local->hw.wiphy->bands[i];
-> >  		sdata->rc_rateidx_mask[i] =
-> > -			sband ? (1 << sband->n_bitrates) - 1 : 0;
-> > +			sband ? BIT(sband->n_bitrates) - 1 : 0;
-> 
-> I don't like the BIT()-1 pattern, "(1 << x) - 1" seems like a more
-> regular pattern. Arguably, there should be a define for it, but I
-> can't seem to come up with a good name.
-
->From drivers/mfd/dbx500-prcmu-regs.h:
-
-#define BITS(_start, _end) ((BIT(_end) - BIT(_start)) + BIT(_end))
-
-So it would be
-
-BITS(0, sband->n_bitrates - 1)
-
-Perhaps BITS could be made safer and more generic when moved to a
-common header.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 4a4e8a2..3a69804 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -35,6 +35,10 @@ static const struct platform_device_id ath9k_platform_id_table[] = {
+ 		.name = "ar934x_wmac",
+ 		.driver_data = AR9300_DEVID_AR9340,
+ 	},
++	{
++		.name = "qca955x_wmac",
++		.driver_data = AR9300_DEVID_QCA955X,
++	},
+ 	{},
+ };
+ 
 -- 
-Regards,
-Pavel Roskin
+1.7.2.1
+
