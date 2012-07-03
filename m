@@ -1,68 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49718 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932221Ab2GKR72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 13:59:28 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 09/12] ath9k_hw: apply XPA timing control values from EEPROM
-Date: Wed, 11 Jul 2012 19:59:12 +0200
-Message-Id: <1342029555-31618-9-git-send-email-nbd@openwrt.org> (sfid-20120711_195936_491922_D08798AF)
-In-Reply-To: <1342029555-31618-8-git-send-email-nbd@openwrt.org>
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
- <1342029555-31618-2-git-send-email-nbd@openwrt.org>
- <1342029555-31618-3-git-send-email-nbd@openwrt.org>
- <1342029555-31618-4-git-send-email-nbd@openwrt.org>
- <1342029555-31618-5-git-send-email-nbd@openwrt.org>
- <1342029555-31618-6-git-send-email-nbd@openwrt.org>
- <1342029555-31618-7-git-send-email-nbd@openwrt.org>
- <1342029555-31618-8-git-send-email-nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19301 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710Ab2GCIht (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 04:37:49 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 1/2] {nl,cfg}80211: support high bitrates
+Date: Tue, 3 Jul 2012 11:37:29 +0300
+Message-ID: <1341304650-2593-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120703_103752_521225_A723E6A3)
+In-Reply-To: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+With recently introduced high bitrates, u16 that used to represent bitrate
+becomes too small.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 3cddd78..86e4be4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3962,9 +3962,32 @@ static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
- 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAA_OFF, value);
+Thus, new 32-bit bitrate introduced. nl80211 reports new bitrate and old one,
+in case bitrate fits into u16.
+
+User space tools should switch to new bitrate. Old one is deprecated and going to be
+removed in the future.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/linux/nl80211.h |    5 +++++
+ include/net/cfg80211.h  |    2 +-
+ net/wireless/nl80211.c  |    8 ++++++--
+ net/wireless/util.c     |    2 +-
+ 4 files changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 74cc55c..4ba32e3 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1638,12 +1638,16 @@ struct nl80211_sta_flag_update {
+  *
+  * These attribute types are used with %NL80211_STA_INFO_TXRATE
+  * when getting information about the bitrate of a station.
++ * Legacy bitrate represented with 16-bit value, while new
++ * "high throughput" bitrate uses 32-bit value. User space tools
++ * should use new bitrate.
+  *
+  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
+  * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
+  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
+  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
+  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
++ * @NL80211_RATE_INFO_BITRATE_HT: total bitrate (u32, 100kbit/s)
+  * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
+  * @__NL80211_RATE_INFO_AFTER_LAST: internal use
+  */
+@@ -1653,6 +1657,7 @@ enum nl80211_rate_info {
+ 	NL80211_RATE_INFO_MCS,
+ 	NL80211_RATE_INFO_40_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_SHORT_GI,
++	NL80211_RATE_INFO_BITRATE_HT,
+ 
+ 	/* keep last */
+ 	__NL80211_RATE_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0b564e8..8837efc 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3487,7 +3487,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
+  *
+  * return 0 if MCS index >= 32
+  */
+-u16 cfg80211_calculate_bitrate(struct rate_info *rate);
++u32 cfg80211_calculate_bitrate(struct rate_info *rate);
+ 
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 77102e6..3e370d9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2618,7 +2618,8 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 				 int attr)
+ {
+ 	struct nlattr *rate;
+-	u16 bitrate;
++	u32 bitrate;
++	u16 bitrate_compat;
+ 
+ 	rate = nla_nest_start(msg, attr);
+ 	if (!rate)
+@@ -2626,8 +2627,11 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 
+ 	/* cfg80211_calculate_bitrate will return 0 for mcs >= 32 */
+ 	bitrate = cfg80211_calculate_bitrate(info);
++	bitrate_compat = bitrate < (1UL << 16) ? bitrate : 0;
+ 	if ((bitrate > 0 &&
+-	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate)) ||
++	     nla_put_u32(msg, NL80211_RATE_INFO_BITRATE_HT, bitrate)) ||
++	    (bitrate_compat > 0 &&
++	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate_compat)) ||
+ 	    ((info->flags & RATE_INFO_FLAGS_MCS) &&
+ 	     nla_put_u8(msg, NL80211_RATE_INFO_MCS, info->mcs)) ||
+ 	    ((info->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) &&
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 0228c64..6e52726 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -900,7 +900,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	return err;
  }
  
-+static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	u8 xpa_ctl;
-+
-+	if (!(eep->baseEepHeader.featureEnable & 0x80))
-+		return;
-+
-+	if (!AR_SREV_9300(ah) && !AR_SREV_9340(ah) && !AR_SREV_9580(ah))
-+		return;
-+
-+	if (is_2ghz) {
-+		xpa_ctl = eep->modalHeader2G.txFrameToXpaOn;
-+		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
-+			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAB_ON, xpa_ctl);
-+	} else {
-+		xpa_ctl = eep->modalHeader5G.txFrameToXpaOn;
-+		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
-+			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAA_ON, xpa_ctl);
-+	}
-+}
-+
- static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 					     struct ath9k_channel *chan)
+-u16 cfg80211_calculate_bitrate(struct rate_info *rate)
++u32 cfg80211_calculate_bitrate(struct rate_info *rate)
  {
-+	ar9003_hw_xpa_timing_control_apply(ah, IS_CHAN_2GHZ(chan));
- 	ar9003_hw_xpa_bias_level_apply(ah, IS_CHAN_2GHZ(chan));
- 	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
- 	ar9003_hw_drive_strength_apply(ah);
+ 	int modulation, streams, bitrate;
+ 
 -- 
-1.7.3.2
+1.7.9.5
 
