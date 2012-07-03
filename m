@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39025 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755985Ab2GaLZy (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:49744 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757118Ab2GCUIp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:25:54 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SwAaH-0007HW-7j
-	for linux-wireless@vger.kernel.org; Tue, 31 Jul 2012 13:25:53 +0200
-Message-ID: <1343733951.4474.3.camel@jlt3.sipsolutions.net> (sfid-20120731_132557_988407_E7677364)
-Subject: Re: [PATCH 0/6] mac80211: use correct operating channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 31 Jul 2012 13:25:51 +0200
-In-Reply-To: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130808_918452_CA9F2092)
-References: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120727_130808_918452_CA9F2092)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 3 Jul 2012 16:08:45 -0400
+Received: by eeit10 with SMTP id t10so2639601eei.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 13:08:44 -0700 (PDT)
+Message-ID: <4FF35149.1070707@gmail.com> (sfid-20120703_220849_262315_C2486EE3)
+Date: Tue, 03 Jul 2012 22:08:41 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, shiang_tu@ralinktech.com
+Subject: obsolete rt2800usb firmware (rt2870.bin)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-07-27 at 13:07 +0200, Johannes Berg wrote:
-> A number of places in mac80211 are erroneously using the
-> *current* channel (hw.conf.channel) rather than the current
-> *operating* channel (oper_channel). This is wrong as the
-> current channel can change during scan/roc and therefore
-> doesn't point to the correct channel all the time so that
-> due to races the wrong channel might be used.
-> 
-> Address this and use the correct channel in all places.
-> Some keep using hw.conf.channel, of course, since they
-> really do need the current channel.
+hi,
 
-All applied.
+linux-firmware/rt2870.bin							0.29
 
-johannes
+ralink drivers:
+2010_0709_RT2870_Linux_STA_v2.4.0.1/common/rt2870.bin				0.24
+2011_0427_RT3572_Linux_STA_v2.5.0.0.DPO/common/rt2870.bin			0.236
+2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO/common/rt2870.bin	0.32
+2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO/common/rt2870.bin			0.33
 
+
+Can anyone, from ralink,  send an update to linux-firmware ?
+
+-thanks-
