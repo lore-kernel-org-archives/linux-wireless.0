@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50788 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227Ab2GTJxX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2012 05:53:23 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20120720094748.GA16598@redhat.com>
-References: <CA+icZUWXire09owq2Q9bN=C+VKuzSG+48Cz3-Ex+ZaTtGrEmQA@mail.gmail.com>
-	<20120720094748.GA16598@redhat.com>
-Date: Fri, 20 Jul 2012 11:53:20 +0200
-Message-ID: <CA+icZUX5+3b1Hkqv1wT70iR=FuYBnf6NSn71PJ7Fjueb1HrOfw@mail.gmail.com> (sfid-20120720_115344_633731_E8C6945E)
-Subject: Re: linux-next: Tree for July 17 (debugobjects: bt | btusb | usb related?)
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-bluetooth@vger.kernel.org, linux-usb@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from perches-mx.perches.com ([206.117.179.246]:56492 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755918Ab2GCQ2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 12:28:55 -0400
+Message-ID: <1341332934.2164.17.camel@joe2Laptop> (sfid-20120703_182901_353228_71D8AB96)
+Subject: Re: [PATCH] compat-wireless: fix debugging in iwlwifi
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Jul 2012 09:28:54 -0700
+In-Reply-To: <1341332487.20124.7.camel@jlt3.sipsolutions.net>
+References: <1341322108.20124.3.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6VvJ+rv4mtYMngVg==tDVZpRM2CrGJ3Yc4u7a7ZLwiGOA@mail.gmail.com>
+	 <CAB=NE6WDyFS5gK85Lq1uEA5A5HLRhhyVcFT7EQkK0SALG0YF6g@mail.gmail.com>
+	 (sfid-20120703_181714_567213_CDA8319F) <1341332487.20124.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 20, 2012 at 11:47 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Wed, Jul 18, 2012 at 08:06:17PM +0200, Sedat Dilek wrote:
->> On Tue, Jul 17, 2012 at 7:41 AM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
->> > Hi all,
->> >
->> > Changes since 20120716:
->> >
->>
->> Not sure what the root cause of this issue is.
->>
->> I see the following call-trace in linux-next (next-20120717).
->>
->> [   23.431889] ------------[ cut here ]------------
->> [   23.431896] WARNING: at lib/debugobjects.c:261 debug_print_object+0x8e/0xb0()
->> [   23.431897] Hardware name: <HIDDEN>
->> [   23.431901] ODEBUG: free active (active state 0) object type:
->> timer_list hint: delayed_work_timer_fn+0x0/0x40
-> There are few delayed works on hci_dev structure, it's hard to say which
-> one is not stopped before kfree.
->
->> # CONFIG_DEBUG_OBJECTS_WORK is not set
-> If you enable that option, it should show which delayed work is causing trouble.
->
+On Tue, 2012-07-03 at 18:21 +0200, Johannes Berg wrote:
+> On Tue, 2012-07-03 at 09:16 -0700, Luis R. Rodriguez wrote:
+> > On Tue, Jul 3, 2012 at 8:47 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > > On Tue, Jul 3, 2012 at 6:28 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > >> From: Johannes Berg <johannes.berg@intel.com>
+> > >>
+> > >> As compat includes linux/device.h well before iwlwifi, the
+> > >> definitions from there are used without DEBUG, but iwlwifi
+> > >> defines DEBUG to get debug output. Use dev_printk instead
+> > >> of dev_dbg to get debugging back.
+> > >>
+> > >> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > >
+> > > Applied and pushed, thanks!
+> > 
+> > On today's linux-next.git the dev_dbg() changed to dev_err(), I've
+> > updated the patch to reflect this.
+> 
+> Huh, sorry. Please drop this for now -- the patch to change it *from*
+> dev_err *to* dev_dbg is only in my iwlwifi-next tree now.
 
-OK, thanks for the explanations & hints!
-I will activate that kconfig-option.
+And besides, the concept is wrong.
 
-FYI: With yesterday's linux-next (next-20120719) I didn't trap into
-this regression (same kernel-config + several bootups).
+There's no reason to drop dynamic_debug support by
+forcing output to KERN_DEBUG.
 
-- Sedat -
 
-> Stanislaw
