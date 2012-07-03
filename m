@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:1038 "EHLO
-	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754482Ab2GBJxM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 05:53:12 -0400
-Message-ID: <1341222789.1911.145.camel@x61.thuisdomein> (sfid-20120702_115330_944412_58D4098B)
-Subject: Re: [PATCH] iwlegacy: print how long queue was actually stuck
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 02 Jul 2012 11:53:09 +0200
-In-Reply-To: <20120702093913.GA9045@redhat.com>
-References: <1340786187.1911.24.camel@x61.thuisdomein>
-	 <1341062406.1911.76.camel@x61.thuisdomein>
-	 <20120702090602.GA8286@redhat.com>
-	 <1341221563.1911.141.camel@x61.thuisdomein>
-	 <20120702093913.GA9045@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:40035 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756886Ab2GCROC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:02 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 01/20] ath9k: define DEVID for QCA955x
+Date: Tue,  3 Jul 2012 19:13:15 +0200
+Message-Id: <1341335614-15419-2-git-send-email-juhosg@openwrt.org> (sfid-20120703_191408_579143_A8528C08)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-02 at 11:39 +0200, Stanislaw Gruszka wrote:
-> On Mon, Jul 02, 2012 at 11:32:43AM +0200, Paul Bolle wrote:
-> Oh, you were not CCed, and lkml too, v2 patch is here:
-> http://marc.info/?l=linux-wireless&m=134121823510017&w=2
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Thanks.
-
-> > Should I report whether the iwlegacy version works
-> > or not?
-> Actually I'll post it anyway. But if this patch and Emmanuel's will not 
-> fix the problem you should report it. 
-
-I'll try to report any oddities I notice.
-
-> > Any thoughts on my patch (ie, the patch that is actually the subject of
-> > this thread?
-> It was applied to wireless-testing.
-
-That's nice.
-
-
-Paul Bolle
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9409660..97060c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -48,6 +48,7 @@
+ #define AR9300_DEVID_AR9580	0x0033
+ #define AR9300_DEVID_AR9462	0x0034
+ #define AR9300_DEVID_AR9330	0x0035
++#define AR9300_DEVID_QCA955X	0x0038
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+ 
+-- 
+1.7.2.1
 
