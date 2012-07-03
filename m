@@ -1,145 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:56043 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000Ab2GEQi5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 12:38:57 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:1551 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932325Ab2GCGvl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 02:51:41 -0400
+Message-ID: <4FF29671.1020406@broadcom.com> (sfid-20120703_085144_175957_95AE7A1E)
+Date: Tue, 3 Jul 2012 08:51:29 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20469.7733.613739.886141@gargle.gargle.HOWL>
-References: <20469.7733.613739.886141@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 5 Jul 2012 09:38:35 -0700
-Message-ID: <CAB=NE6XP0cVhPL2FqVhsSeaQ7BV4QndhmZNbto9P3=9ko6YGFg@mail.gmail.com> (sfid-20120705_183920_494012_7F731E70)
-Subject: Re: Stable compat-wireless updates
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alex Mendoza <wargod@suneco.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: REGRESSION: [PATCH v2 0/9] bcma misc updates
+References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 4, 2012 at 9:55 PM, Sujith Manoharan
-<c_manoha@qca.qualcomm.com> wrote:
-> Hi,
->
-> A pull request for the 3.5.y branch.
->
-> Sujith
->
-> The following changes since commit a1959d00333104cd58bd07741ef0c40766836a77:
->
->   compat-wireless: skip forcing refresh on gen-stable-release.sh (2012-06-19 15:24:07 -0700)
->
-> are available in the git repository at:
->
->   https://github.com/sujith/compat-wireless.git linux-3.5.y
->
-> for you to fetch changes up to 73df80f65d3ab2a83275e2ffcb54b64484cf3821:
->
->   compat-wireless: Update offsets of the new patches (2012-07-04 23:06:29 +0530)
->
-> ----------------------------------------------------------------
-> Sujith Manoharan (6):
->       compat-wireless: Remove patches from linux-next-pending
->       compat-wireless: Add pending stable patches (v3.5-rc5)
->       compat-wireless: Remove a patch
->       compat-wireless: Update patch offsets
->       compat-wireless: Add cherry picked patches
->       compat-wireless: Update offsets of the new patches
+On 06/30/2012 01:44 AM, Hauke Mehrtens wrote:
+> These are some updates for bcma. Some are extending or completing some 
+> workarounds for PCIe based wireless cards. A patch adds 
+> bcma_pmu_spuravoid_pllupdate, used by brcmsmac and an other patch adds 
+> constants for the chip ids. This code is mostly based on code from 
+> brcmsmac and the Broadcom SDK for BCM47XX SoCs.
+> 
+> This was tested on a BCM4718 SoC with a BCM43224 PCIe and a BCM5357.
+> The Wifi part of the BCM4718 and BCM43224 is more or less working with 
+> brcmsmac, which need some more patches for that, but it has low speed 
+> and some times or with some access points I still get errors. The wifi 
+> of the BCM5357 does not work.
+> 
 
-Thanks! Just a reminder to other vendors that if they wish to include
-their own set of deltas for stable compat-wireless releases but still
-prioritize and respect the upstream process the additional patches to
-compat-wireless allows for this, and this is exactly what Sujith is
-using here.
+Hi Hauke,
 
-Kicked out 3 new releases, all test compiled across 21 kernels:
+This patch series caused a regression in one of our smoketest machines
+last night. I have not looked at the exact patch causing it (suspect
+2/9). The failure happens on a BCM43224 chip with external SPROM. Here
+is the log info:
 
-http://wireless.kernel.org/en/users/Download/stable/
-http://wireless.kernel.org/en/users/Download/stable/#Additional_patches_to_stable_releases
+[317752.101665] bcma: Found chip with id 0xA8D8, rev 0x01 and package 0x08
+[317752.101809] bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800,
+rev 0x22, class 0x0)
+[317752.101827] bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812,
+rev 0x17, class 0x0)
+[317752.101870] bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev
+0x0F, class 0x0)
+[317752.171926] bcma: Failed to get SPROM: -71 <== -EPROTO (crc failed).
+[317752.171982] bcma: Bus registered
+[317753.184455] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 16
+[317753.191868] brcmsmac: Applying 43224B0+ WARs
+[317753.193918] ieee80211 phy0: wl0: brcms_b_attach: bad macaddr
+[317753.193924] ieee80211 phy0: wl0: brcms_b_attach: failed with err 22
+[317753.193928] ieee80211 phy0: wl0: brcms_c_attach: failed with err 22
+[317753.193959] ieee80211 phy0: brcmsmac: attach() failed with code 22
+[317753.193966] brcmsmac: brcms_bcma_probe: brcms_attach failed!
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ChangeLog-3.5-rc5
+I suspect it tries reading OTP instead of the external SPROM.
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5-rc5-1.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5-rc5-1-sn.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5-rc5-1-snpc.tar.bz2
+Gr. AvS
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ckmake-3.5-rc5-1.log.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ckmake-3.5-rc3-1-sn.log.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ckmake-3.5-rc5-1-snpc.log.bz2
-
-If someone has access to a fast box I can use or set of boxes it would
-really help with speeding up releases. Test compiling each releases
-takes 120 minutes right now as it cross compiles across 21 kernels.
-Just this test compilation for all 3 releases took 6 hours. If we
-could test compile one kernel per server that would shave down
-compilation time considerably.
-
-mcgrof@flash ~/tmp $ for i in compat-wireless-3.5-rc5-1
-compat-wireless-3.5-rc5-1-sn compat-wireless-3.5-rc5-1-snpc ; do cd
-$i; ckmake ; cd .. ; done
-Trying kernel                  3.4.0-030400rc4-generic  [OK]
-Trying kernel                     3.3.3-030303-generic  [OK]
-Trying kernel                     3.2.2-030202-generic  [OK]
-Trying kernel                    3.1.10-030110-generic  [OK]
-Trying kernel                    3.0.18-030018-generic  [OK]
-Trying kernel                  2.6.39-02063904-generic  [OK]
-Trying kernel                  2.6.38-02063808-generic  [OK]
-Trying kernel                  2.6.37-02063706-generic  [OK]
-Trying kernel                  2.6.36-02063604-generic  [OK]
-Trying kernel                  2.6.35-02063512-generic  [OK]
-Trying kernel                  2.6.34-02063410-generic  [OK]
-Trying kernel                  2.6.33-02063305-generic  [OK]
-Trying kernel                  2.6.32-02063255-generic  [OK]
-Trying kernel                  2.6.31-02063113-generic  [OK]
-Trying kernel                  2.6.30-02063010-generic  [OK]
-Trying kernel                  2.6.29-02062906-generic  [OK]
-Trying kernel                  2.6.28-02062810-generic  [OK]
-Trying kernel                    2.6.27-020627-generic  [OK]
-Trying kernel                    2.6.26-020626-generic  [OK]
-Trying kernel                    2.6.25-020625-generic  [OK]
-Trying kernel                    2.6.24-020624-generic  [OK]
-Trying kernel                  3.4.0-030400rc4-generic  [OK]
-Trying kernel                     3.3.3-030303-generic  [OK]
-Trying kernel                     3.2.2-030202-generic  [OK]
-Trying kernel                    3.1.10-030110-generic  [OK]
-Trying kernel                    3.0.18-030018-generic  [OK]
-Trying kernel                  2.6.39-02063904-generic  [OK]
-Trying kernel                  2.6.38-02063808-generic  [OK]
-Trying kernel                  2.6.37-02063706-generic  [OK]
-Trying kernel                  2.6.36-02063604-generic  [OK]
-Trying kernel                  2.6.35-02063512-generic  [OK]
-Trying kernel                  2.6.34-02063410-generic  [OK]
-Trying kernel                  2.6.33-02063305-generic  [OK]
-Trying kernel                  2.6.32-02063255-generic  [OK]
-Trying kernel                  2.6.31-02063113-generic  [OK]
-Trying kernel                  2.6.30-02063010-generic  [OK]
-Trying kernel                  2.6.29-02062906-generic  [OK]
-Trying kernel                  2.6.28-02062810-generic  [OK]
-Trying kernel                    2.6.27-020627-generic  [OK]
-Trying kernel                    2.6.26-020626-generic  [OK]
-Trying kernel                    2.6.25-020625-generic  [OK]
-Trying kernel                    2.6.24-020624-generic  [OK]
-Trying kernel                  3.4.0-030400rc4-generic  [OK]
-Trying kernel                     3.3.3-030303-generic  [OK]
-Trying kernel                     3.2.2-030202-generic  [OK]
-Trying kernel                    3.1.10-030110-generic  [OK]
-Trying kernel                    3.0.18-030018-generic  [OK]
-Trying kernel                  2.6.39-02063904-generic  [OK]
-Trying kernel                  2.6.38-02063808-generic  [OK]
-Trying kernel                  2.6.37-02063706-generic  [OK]
-Trying kernel                  2.6.36-02063604-generic  [OK]
-Trying kernel                  2.6.35-02063512-generic  [OK]
-Trying kernel                  2.6.34-02063410-generic  [OK]
-Trying kernel                  2.6.33-02063305-generic  [OK]
-Trying kernel                  2.6.32-02063255-generic  [OK]
-Trying kernel                  2.6.31-02063113-generic  [OK]
-Trying kernel                  2.6.30-02063010-generic  [OK]
-Trying kernel                  2.6.29-02062906-generic  [OK]
-Trying kernel                  2.6.28-02062810-generic  [OK]
-Trying kernel                    2.6.27-020627-generic  [OK]
-Trying kernel                    2.6.26-020626-generic  [OK]
-Trying kernel                    2.6.25-020625-generic  [OK]
-Trying kernel                    2.6.24-020624-generic  [OK]
-
-  Luis
