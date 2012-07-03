@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43598 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430Ab2GRPE1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 11:04:27 -0400
-Message-ID: <1342623865.5310.9.camel@jlt3.sipsolutions.net> (sfid-20120718_170430_371940_92F3D1F1)
-Subject: Re: [PATCH] cfg80211: Fix mutex locking in
- reg_last_request_cell_base
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>
-Date: Wed, 18 Jul 2012 17:04:25 +0200
-In-Reply-To: <1342615289-3088-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1342615289-3088-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1195 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309Ab2GCHIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 03:08:50 -0400
+Message-ID: <4FF29A73.2080807@broadcom.com> (sfid-20120703_090853_758720_BEB90C75)
+Date: Tue, 3 Jul 2012 09:08:35 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 13/18] brcmsmac: add some workarounds for other
+ chips again
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+ <1341062181-28071-14-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1341062181-28071-14-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-18 at 18:11 +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 06/30/2012 03:16 PM, Hauke Mehrtens wrote:
+> This adds some workarounds for the BCM4716, BCM47162, BCM5357 to the
+> phy code again. This patch reverts parts of the following patch.
 > 
-> should fix the following issue
+> commit c2c724977f95135f397fe0cb45f3c041d26b91e1
+> Author: Arend van Spriel <arend@broadcom.com>
+> Date:   Wed Jun 29 16:46:35 2011 -0700
 > 
-> 	[ 3229.815012] [ BUG: lock held when returning to user space! ]
-> 	[ 3229.815016] 3.5.0-rc7-wl #28 Tainted: G        W  O
-> 	[ 3229.815017]
-> 	------------------------------------------------
-> 	[ 3229.815019] wpa_supplicant/5783 is leaving the kernel with locks still held!
-> 	[ 3229.815022] 1 lock held by wpa_supplicant/5783:
-> 	[ 3229.815023]  #0: (reg_mutex){+.+.+.}, at: [<fa65834d>]
-> 	reg_last_request_cell_base+0x1d/0x60 [cfg80211]
+>     staging: brcm80211: remove unsupported chipset code from brcmsmac phy
 > 
-> Cc: Luis Rodriguez <mcgrof@gmail.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> The BCM4716 is working for me with an other firmware and I am working
+> on adding support for the other chips.
+> 
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |  131 +++++++++++++-------
+>  1 file changed, 89 insertions(+), 42 deletions(-)
 
-Applied, thanks
+Gr. AvS
 
-johannes
+
 
