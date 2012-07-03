@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40145 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751238Ab2GZF0J (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:43124 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab2GCNoD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 01:26:09 -0400
-Received: by lahd3 with SMTP id d3so1137807lah.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 22:26:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
-References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 26 Jul 2012 15:25:47 +1000
-Message-ID: <CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com> (sfid-20120726_072613_945239_4FCE18AC)
-Subject: Re: [PATCH] Revert "rfkill: remove dead code"
-To: AceLan Kao <acelan.kao@canonical.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Corentin Chary <corentincj@iksaif.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 3 Jul 2012 09:44:03 -0400
+Received: by wgbds11 with SMTP id ds11so3791320wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 06:44:02 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wlcore: check ssid length against the correct element
+Date: Tue,  3 Jul 2012 16:44:01 +0300
+Message-Id: <1341323041-8946-1-git-send-email-eliad@wizery.com> (sfid-20120703_154408_516294_FEE19D44)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi AceLan,
+commit 587cc28 ("wlcore: compare ssid_len before comparing
+ssids") introduced a new bug - the ssid length from the
+request struct was compared against the ssid length of
+another request, instead the one of the cmd.
 
-On Thu, Jul 26, 2012 at 11:51 AM, AceLan Kao <acelan.kao@canonical.com> wrote:
-> This reverts commit 2e48928d8a0f38c1b5c81eb3f1294de8a6382c68.
->
-> Those functions are needed and should not be removed, or
-> there is no way to set the rfkill led trigger name.
+This might cause the sched scan request to fail
+(with -EINVAL) in many cases.
 
-Who or what is using these functions?
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-As I understand it, they wouldn't have been removed if any upstream
-code was using them.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index 524afe0..467e244 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -658,7 +658,7 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
+ 
+ 				for (j = 0; j < cmd->n_ssids; j++)
+ 					if ((req->ssids[i].ssid_len ==
+-					     req->ssids[j].ssid_len) &&
++					     cmd->ssids[j].len) &&
+ 					    !memcmp(req->ssids[i].ssid,
+ 						   cmd->ssids[j].ssid,
+ 						   req->ssids[i].ssid_len)) {
 -- 
-Julian Calaby
+1.7.6.401.g6a319
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
