@@ -1,75 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:34729 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753599Ab2GWPgH (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19301 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054Ab2GCIhw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 11:36:07 -0400
-Received: by weyx8 with SMTP id x8so4347016wey.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 08:36:06 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: BCM43228 support
-Date: Mon, 23 Jul 2012 18:20:12 +0200
-Message-Id: <1343060412-6793-1-git-send-email-zajec5@gmail.com> (sfid-20120723_173612_616819_B56FA0FA)
+	Tue, 3 Jul 2012 04:37:52 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2/2] cfg80211: bitrate calculation for 60g
+Date: Tue, 3 Jul 2012 11:37:30 +0300
+Message-ID: <1341304650-2593-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120703_103755_030028_842A1088)
+In-Reply-To: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+60g band uses different from .11n MCS scheme, so bitrate should be calculated
+differently
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/bcma/host_pci.c                     |    1 +
- drivers/bcma/sprom.c                        |    4 +++-
- include/linux/bcma/bcma_driver_chipcommon.h |    6 ++++++
- 3 files changed, 10 insertions(+), 1 deletions(-)
+ include/net/cfg80211.h |    2 ++
+ net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 11b32d2..a6e5672 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -272,6 +272,7 @@ static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
- 	{ 0, },
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8837efc..51f67a9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -580,11 +580,13 @@ enum station_info_flags {
+  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
+  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
+  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ * @RATE_INFO_FLAGS_60G: 60gHz MCS
+  */
+ enum rate_info_flags {
+ 	RATE_INFO_FLAGS_MCS		= 1<<0,
+ 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
+ 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
++	RATE_INFO_FLAGS_60G		= 1<<3,
  };
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index 26823d9..9ea4627 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -507,7 +507,9 @@ static bool bcma_sprom_onchip_available(struct bcma_bus *bus)
- 		/* for these chips OTP is always available */
- 		present = true;
- 		break;
--
-+	case BCMA_CHIP_ID_BCM43228:
-+		present = chip_status & BCMA_CC_CHIPST_43228_OTP_PRESENT;
-+		break;
- 	default:
- 		present = false;
- 		break;
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 3c80885..d323a4b 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -89,6 +89,12 @@
- #define  BCMA_CC_CHIPST_4313_OTP_PRESENT	2
- #define  BCMA_CC_CHIPST_4331_SPROM_PRESENT	2
- #define  BCMA_CC_CHIPST_4331_OTP_PRESENT	4
-+#define  BCMA_CC_CHIPST_43228_ILP_DIV_EN	0x00000001
-+#define  BCMA_CC_CHIPST_43228_OTP_PRESENT	0x00000002
-+#define  BCMA_CC_CHIPST_43228_SERDES_REFCLK_PADSEL	0x00000004
-+#define  BCMA_CC_CHIPST_43228_SDIO_MODE		0x00000008
-+#define  BCMA_CC_CHIPST_43228_SDIO_OTP_PRESENT	0x00000010
-+#define  BCMA_CC_CHIPST_43228_SDIO_RESET	0x00000020
- #define  BCMA_CC_CHIPST_4706_PKG_OPTION		BIT(0) /* 0: full-featured package 1: low-cost package */
- #define  BCMA_CC_CHIPST_4706_SFLASH_PRESENT	BIT(1) /* 0: parallel, 1: serial flash is present */
- #define  BCMA_CC_CHIPST_4706_SFLASH_TYPE	BIT(2) /* 0: 8b-p/ST-s flash, 1: 16b-p/Atmal-s flash */
+ 
+ /**
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 6e52726..e31f1db 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -900,12 +900,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
+ 
++static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
++{
++	static const u32 __mcs2bitrate[] = {
++		/* control PHY */
++		[0] =   275,
++		/* SC PHY */
++		[1] =  3850,
++		[2] =  7700,
++		[3] =  9625,
++		[4] = 11550,
++		[5] = 12512, /* 1251.25 mbps */
++		[6] = 15400,
++		[7] = 19250,
++		[8] = 23100,
++		[9] = 25025,
++		[10] = 30800,
++		[11] = 38500,
++		[12] = 46200,
++		/* OFDM PHY */
++		[13] =  6930,
++		[14] =  8662, /* 866.25 mbps */
++		[15] = 13860,
++		[16] = 17325,
++		[17] = 20790,
++		[18] = 27720,
++		[19] = 34650,
++		[20] = 41580,
++		[21] = 45045,
++		[22] = 51975,
++		[23] = 62370,
++		[24] = 67568, /* 6756.75 mbps */
++		/* LP-SC PHY */
++		[25] =  6260,
++		[26] =  8340,
++		[27] = 11120,
++		[28] = 12510,
++		[29] = 16680,
++		[30] = 22240,
++		[31] = 25030,
++	};
++
++	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
++		return 0;
++
++	return __mcs2bitrate[rate->mcs];
++}
++
+ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ {
+ 	int modulation, streams, bitrate;
+ 
+ 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
+ 		return rate->legacy;
++	if (rate->flags & RATE_INFO_FLAGS_60G)
++		return cfg80211_calculate_bitrate_60g(rate);
+ 
+ 	/* the formula below does only work for MCS values smaller than 32 */
+ 	if (WARN_ON_ONCE(rate->mcs >= 32))
 -- 
-1.7.7
+1.7.9.5
 
