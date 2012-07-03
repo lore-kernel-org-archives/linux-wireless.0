@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56456 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932810Ab2GLSt2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 14:49:28 -0400
-Received: by pbbrp8 with SMTP id rp8so4121581pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 11:49:28 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH v5 0/5] wireless: rebase onus patches
-Date: Thu, 12 Jul 2012 11:49:16 -0700
-Message-Id: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20120712_204932_508210_72B9B2DB)
+Received: from mms3.broadcom.com ([216.31.210.19]:4758 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309Ab2GCHHf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 03:07:35 -0400
+Message-ID: <4FF29A29.2050901@broadcom.com> (sfid-20120703_090752_095621_C38A18EA)
+Date: Tue, 3 Jul 2012 09:07:21 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 01/18] brcmsmac: remove PCIE() macro
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+ <1341062181-28071-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1341062181-28071-2-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+On 06/30/2012 03:16 PM, Hauke Mehrtens wrote:
+> Instead of checking if there is a PCIe core on the bus, better check if
+> hosttype is PCIe.
+> 
+> In the original submission to staging PCIE() checked, if the bustype is
+> PCI and the buscore is a PCIe core. Now we assume that all cores bcma
+> supports are PCIe based, so we just have to check if the bustype is PCI.
+> 
+> The old code bcmsmac currently uses searches for a PCIe core on the bus
+> and if there is one assumes that this is the buscore, which is wrong.
+> Some SoCs have a PCIe core operating in host mode and this is not the
+> bus core. The old code also caused a null pointer in
+> ai_get_buscoretype() and ai_get_buscorerev() if buscore was not set
+> because there was no PCIe core on the bus.
+> 
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
 
-This v5 series rebases the onus patches on to today's mac80211-next.
-John, once this is applied you can simply apply the v4 driver updates
-given that they should apply without any issues.
-
-Luis R. Rodriguez (5):
-  cfg80211: add CONFIG_CFG80211_CERTIFICATION_ONUS
-  cfg80211: add cellular base station regulatory hint support
-  cfg80211: rename reg_device_remove() to wiphy_regulatory_deregister()
-  cfg80211: make regulatory_update() static
-  cfg80211: remove regulatory_update()
-
- include/linux/nl80211.h  |   32 ++++++++++++
- include/net/regulatory.h |    5 ++
- net/wireless/Kconfig     |   21 ++++++++
- net/wireless/core.c      |   10 ++--
- net/wireless/nl80211.c   |   23 ++++++++-
- net/wireless/reg.c       |  125 ++++++++++++++++++++++++++++++++++++++++------
- net/wireless/reg.h       |    8 +--
- 7 files changed, 201 insertions(+), 23 deletions(-)
-
--- 
-1.7.10.rc1.22.gf5241
+Gr. AvS
 
