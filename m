@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49385 "EHLO mx1.redhat.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:40089 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755846Ab2GJNhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 09:37:17 -0400
-Date: Tue, 10 Jul 2012 15:37:09 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RHEL6 PATCH] iwlwifi: remove spurious warning
-Message-ID: <20120710133708.GC2260@redhat.com> (sfid-20120710_153725_858846_15E4DE5F)
-References: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
- <1341834647.4455.32.camel@jlt3.sipsolutions.net>
- <20120709115423.GE2438@redhat.com>
- <CANUX_P23xv5rXynEJHm=boR_g_7YqR1ROOQki6KGv+9LR9KEkg@mail.gmail.com>
- <20120710060211.GA2260@redhat.com>
- <CANUX_P3Vh1pqyK7TnNdYPS6nHpiUEzWDr4j8+8a5kXdhY3DrAA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P3Vh1pqyK7TnNdYPS6nHpiUEzWDr4j8+8a5kXdhY3DrAA@mail.gmail.com>
+	id S933261Ab2GCROH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:07 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 15/20] ath9k: disable SYNC_HOST1_FATAL interrupts for AR9550
+Date: Tue,  3 Jul 2012 19:13:29 +0200
+Message-Id: <1341335614-15419-16-git-send-email-juhosg@openwrt.org> (sfid-20120703_191413_743583_CB259817)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 04:15:09PM +0300, Emmanuel Grumbach wrote:
-> Emmanuel Grumbach
-> egrumbach@gmail.com
-> 
-> 
-> On Tue, Jul 10, 2012 at 9:02 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > On Mon, Jul 09, 2012 at 10:10:38PM +0300, Emmanuel Grumbach wrote:
-> >> I would be glad to know on what commands this WARN_ON triggers
-> >> though... The command name should be printed along with the WARN_ON.
-> >
-> > REPLY_RX_PHY_CMD
-> >
-> 
-> Ok thanks. This comes from the fw for every HT frame received in 4965.
-> Do you see that the WARNING triggers for every HT frame Rx?
-> I don't mind removing that code anyway, I was just asking to
-> understand what happens :-)
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    2 +-
+ drivers/net/wireless/ath/ath9k/mac.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-I did not hit that. It was raported for iwl1000 on RHEL6.3:
-https://bugzilla.redhat.com/show_bug.cgi?id=837754
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c16c59f..1ddec4b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -946,7 +946,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+ 		AR_IMR_RXORN |
+ 		AR_IMR_BCNMISC;
+ 
+-	if (AR_SREV_9340(ah))
++	if (AR_SREV_9340(ah) || AR_SREV_9550(ah))
+ 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 04ef775..7990cd5 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -810,7 +810,7 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ 		return;
+ 	}
+ 
+-	if (AR_SREV_9340(ah))
++	if (AR_SREV_9340(ah) || AR_SREV_9550(ah))
+ 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+ 
+ 	async_mask = AR_INTR_MAC_IRQ;
+-- 
+1.7.2.1
 
-Stanislaw
