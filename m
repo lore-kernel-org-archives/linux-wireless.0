@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49584 "EHLO nbd.name"
+Received: from arrakis.dune.hu ([78.24.191.176]:40525 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757365Ab2GLPEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 11:04:20 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 12/12] ath9k_hw: fix SREV checks for applying tuning caps from EEPROM
-Date: Thu, 12 Jul 2012 17:04:11 +0200
-Message-Id: <1342105451-42297-12-git-send-email-nbd@openwrt.org> (sfid-20120712_170430_518313_43B709AD)
-In-Reply-To: <1342105451-42297-11-git-send-email-nbd@openwrt.org>
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
- <1342105451-42297-2-git-send-email-nbd@openwrt.org>
- <1342105451-42297-3-git-send-email-nbd@openwrt.org>
- <1342105451-42297-4-git-send-email-nbd@openwrt.org>
- <1342105451-42297-5-git-send-email-nbd@openwrt.org>
- <1342105451-42297-6-git-send-email-nbd@openwrt.org>
- <1342105451-42297-7-git-send-email-nbd@openwrt.org>
- <1342105451-42297-8-git-send-email-nbd@openwrt.org>
- <1342105451-42297-9-git-send-email-nbd@openwrt.org>
- <1342105451-42297-10-git-send-email-nbd@openwrt.org>
- <1342105451-42297-11-git-send-email-nbd@openwrt.org>
+	id S933327Ab2GCROw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:52 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 12/20] ath9k: fix antenna control configuration for AR9550
+Date: Tue,  3 Jul 2012 19:13:26 +0200
+Message-Id: <1341335614-15419-13-git-send-email-juhosg@openwrt.org> (sfid-20120703_192130_717582_D0FF168E)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9485, AR9330 and AR9340 are the chips that this is *NOT* supposed to be
-applied on.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    3 +++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    2 ++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c5f3c43..b5c8450 100644
+index 52e6955..57002d1 100644
 --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
 +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3890,6 +3890,9 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	u8 tuning_caps_param = eep->baseEepHeader.params_for_tuning_caps[0];
- 
-+	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
-+		return;
-+
- 	if (eep->baseEepHeader.featureEnable & 0x40) {
- 		tuning_caps_param &= 0x7f;
- 		REG_RMW_FIELD(ah, AR_CH0_XTAL, AR_CH0_XTAL_CAPINDAC,
-@@ -3987,8 +3990,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	ar9003_hw_quick_drop_apply(ah, chan->channel);
- 	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9550(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
--	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
--		ar9003_hw_apply_tuning_caps(ah);
-+	ar9003_hw_apply_tuning_caps(ah);
- 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
- }
- 
+@@ -3591,6 +3591,9 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 	if (AR_SREV_9462(ah)) {
+ 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
+ 				AR_SWITCH_TABLE_COM_AR9462_ALL, value);
++	} else if (AR_SREV_9550(ah)) {
++		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
++				AR_SWITCH_TABLE_COM_AR9550_ALL, value);
+ 	} else
+ 		REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM,
+ 			      AR_SWITCH_TABLE_COM_ALL, value);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 89907c8..751c83b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -650,6 +650,8 @@
+ #define AR_SWITCH_TABLE_COM_ALL_S (0)
+ #define AR_SWITCH_TABLE_COM_AR9462_ALL (0xffffff)
+ #define AR_SWITCH_TABLE_COM_AR9462_ALL_S (0)
++#define AR_SWITCH_TABLE_COM_AR9550_ALL (0xffffff)
++#define AR_SWITCH_TABLE_COM_AR9550_ALL_S (0)
+ #define AR_SWITCH_TABLE_COM_SPDT (0x00f00000)
+ #define AR_SWITCH_TABLE_COM_SPDT_ALL (0x0000fff0)
+ #define AR_SWITCH_TABLE_COM_SPDT_ALL_S (4)
 -- 
-1.7.3.2
+1.7.2.1
 
