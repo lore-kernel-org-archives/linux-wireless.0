@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57379 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752002Ab2GZUC2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 16:02:28 -0400
-Message-ID: <5011A250.4010500@net.t-labs.tu-berlin.de> (sfid-20120726_220231_271050_A3118323)
-Date: Thu, 26 Jul 2012 22:02:24 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-To: Arik Nemtsov <arik@wizery.com>
-CC: nbd@openwrt.org, coelho@ti.com, brcm80211-dev-list@broadcom.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, ilw@linux.intel.com,
-	ath9k-devel@lists.ath9k.org, b43-dev@lists.infradead.org,
-	chunkeey@googlemail.com, dsd@gentoo.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	buytenh@wantstofly.org
-Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct ieee80211_tx_info
- and restructure tx-path
-References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343319453.4477.2.camel@jlt3.sipsolutions.net> <1343319579.4477.3.camel@jlt3.sipsolutions.net> <501170F2.3050300@net.t-labs.tu-berlin.de> <CA+XVXfegYYwc=esyZmJHu1tEqQKcq+h+MnSyp9dXiiwqroG3tw@mail.gmail.com> <CA+XVXfcrb9=XQauvbPzw2t_jMoQisrh5aSB1qwpLxXsKJKy2Yg@mail.gmail.com> <CA+XVXfe1uomu4XYD33==bFFozbo9k4mkqC1PE1ORnvVN_1PeTg@mail.gmail.com>
-In-Reply-To: <CA+XVXfe1uomu4XYD33==bFFozbo9k4mkqC1PE1ORnvVN_1PeTg@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from arrakis.dune.hu ([78.24.191.176]:40143 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933303Ab2GCRON (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:14:13 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 19/20] ath9k: set 4ADDRESS bit in RX filter for AR9550
+Date: Tue,  3 Jul 2012 19:13:33 +0200
+Message-Id: <1341335614-15419-20-git-send-email-juhosg@openwrt.org> (sfid-20120703_191421_704644_FC674A02)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arik,
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.h  |    1 +
+ drivers/net/wireless/ath/ath9k/recv.c |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-Arik Nemtsov schrieb:
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 21c9556..0eba36d 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -646,6 +646,7 @@ enum ath9k_rx_filter {
+ 	ATH9K_RX_FILTER_PHYRADAR = 0x00002000,
+ 	ATH9K_RX_FILTER_MCAST_BCAST_ALL = 0x00008000,
+ 	ATH9K_RX_FILTER_CONTROL_WRAPPER = 0x00080000,
++	ATH9K_RX_FILTER_4ADDRESS = 0x00100000,
+ };
+ 
+ #define ATH9K_RATESERIES_RTS_CTS  0x0001
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 6a7dd26..11f3703 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -430,6 +430,9 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+ 	}
+ 
++	if (AR_SREV_9550(sc->sc_ah))
++		rfilt |= ATH9K_RX_FILTER_4ADDRESS;
++
+ 	return rfilt;
+ 
+ }
+-- 
+1.7.2.1
 
-
-> Better to just wait some time. I wrote up something to make it much
-> easier for you. Waiting for some internal review before sending it up.
-> 
-
-Thx for helping out here, I ws allready checking into what kind of
-struct I can put the sta pointer. But if you have a better solution in
-mind, I wait until my v7.
-
-
-Greetings Thomas
