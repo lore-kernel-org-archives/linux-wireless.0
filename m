@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51436 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030357Ab2GLLGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 07:06:21 -0400
-Message-ID: <4FFEAFAA.3030601@openwrt.org> (sfid-20120712_130624_771453_AD7C40F8)
-Date: Thu, 12 Jul 2012 13:06:18 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:36253 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab2GCTCz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 15:02:55 -0400
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH 08/12] ath9k: fix aggregate size limit based on queue
- TXOP limit
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org> <1342029555-31618-2-git-send-email-nbd@openwrt.org> <1342029555-31618-3-git-send-email-nbd@openwrt.org> <1342029555-31618-4-git-send-email-nbd@openwrt.org> <1342029555-31618-5-git-send-email-nbd@openwrt.org> <1342029555-31618-6-git-send-email-nbd@openwrt.org> <1342029555-31618-7-git-send-email-nbd@openwrt.org> <1342029555-31618-8-git-send-email-nbd@openwrt.org> <20478.28271.704162.754323@gargle.gargle.HOWL>
-In-Reply-To: <20478.28271.704162.754323@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4FF2F109.2010300@lwfinger.net>
+References: <1341264199.10162.2.camel@joe2Laptop>
+	<1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	<1341310000-4082-3-git-send-email-andriy.shevchenko@linux.intel.com>
+	<4FF2F109.2010300@lwfinger.net>
+Date: Tue, 3 Jul 2012 22:02:53 +0300
+Message-ID: <CAHp75Vfy15PfcVYSbF5QOjdU5CqZKVMH88Ct3FKM5U2+2sAvaA@mail.gmail.com> (sfid-20120703_210315_542613_37D32C1A)
+Subject: Re: [RFC][PATCHv2 3/3] wireless: at76c50x: eliminate hex2str()
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	joe@perches.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-12 8:27 AM, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> If the aggregate size exceeds the TXOP limit, it leads to lots of unnecessary
->> hardware and software retries.
->> 
->> The previous 4ms frame limit table was completely undocumented, the commit
->> that updated it only vaguely referenced and equation from the standard,
->> but I've been unable to replicate its results.
->> 
->> Fix this by using a formula based on the code in ath_pkt_duration, which is
->> more likely to be correct for this case.
-> 
-> I think this needs to be verified. The 4ms restriction is for Japanese
-> regulatory compliance, IIRC.
-I did check the generated tables and also tested that it would not
-generate aggregates with a duration of more than 4ms.
+On Tue, Jul 3, 2012 at 4:18 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 07/03/2012 05:06 AM, Andy Shevchenko wrote:
+>>
+>> The hex2str() is substituted by '%*pMF' specificator.
+>>
+>> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>> ---
+>>   drivers/net/wireless/at76c50x-usb.c |   54
+>> ++++++++---------------------------
+>>   1 file changed, 12 insertions(+), 42 deletions(-)
+>
+>
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Thanks for testing. Today I found in my mailbox (not gmail) your
+previous message about compilation warnings. Are they still present?
+(I guess so) Probably I need to update the patch (anyway it probably
+has to be updated because we discussed with Joe about different letter
+for the hex strings).
 
-- Felix
+
+-- 
+With Best Regards,
+Andy Shevchenko
