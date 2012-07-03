@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49677 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab2GFHPt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 03:15:49 -0400
-Message-ID: <1341558944.4462.9.camel@jlt3.sipsolutions.net> (sfid-20120706_091553_207247_08BAB338)
-Subject: Re: v3.4.4 ath9k: kernel NULL pointer dereference in skb_dequeue
- during heavy udp xmit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Chant <andrew.chant@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Date: Fri, 06 Jul 2012 09:15:44 +0200
-In-Reply-To: <CANugF37dDx1mvNJ-Y3is6OaeVFD1KwH=yh8Xef2BrN=YQPsiZQ@mail.gmail.com> (sfid-20120706_063735_542275_72C9855A)
-References: <CANugF35YQzs7gi4htrgCUKrTDp_ia0RUo9g_HNJ=CzfnOCkO2g@mail.gmail.com>
-	 <CANugF37dDx1mvNJ-Y3is6OaeVFD1KwH=yh8Xef2BrN=YQPsiZQ@mail.gmail.com>
-	 (sfid-20120706_063735_542275_72C9855A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2440 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932569Ab2GCSqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 14:46:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>,
+	"Johannes Berg" <johannes.berg@intel.com>
+Subject: [PATCH] brcmsmac: fix brcms_c_regd_init() which crashed after
+ 11ad patch
+Date: Tue, 3 Jul 2012 20:46:02 +0200
+Message-ID: <1341341162-2709-1-git-send-email-arend@broadcom.com> (sfid-20120703_204637_485798_4E1F76E1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
--John
-+QCA folks
+This patch fixes an OOPS in brcmsmac driver, which was introduced
+by the 11ad patch 'cfg80211: add 802.11ad (60gHz band) support'.
+The value IEEE80211_NUM_BANDS increased, which was used in the
+brcms_c_regd_init() function.
 
-On Thu, 2012-07-05 at 21:36 -0700, Andrew Chant wrote:
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Acked-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c |   17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
->  while performance testing ath9k -> ath9k performance in 3.4.4, I got
-> a nasty kernel panic.  My performance testing involved filling the air
-> with 1410-byte UDP packets between the machines, and switching the
-> frequencies of the two cards to see how frequency affected
-> performance.  I had switched between channels 36, 40, 44, and 48.
-> Oops was on the transmitting machine, which was acting as the AP.
-> 
-> Very clear screen image of the oops is at
-> https://picasaweb.google.com/lh/photo/CjBdHLZH0up5PrnmCySJidMTjNZETYmyPJy0liipFm0?feat=directlink
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+index 2d365d3..9a4c63f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+@@ -763,20 +763,17 @@ void brcms_c_regd_init(struct brcms_c_info *wlc)
+ 	int band_idx, i;
+ 
+ 	/* Disable any channels not supported by the phy */
+-	for (band_idx = 0; band_idx < IEEE80211_NUM_BANDS; band_idx++) {
+-		if (band_idx == IEEE80211_BAND_2GHZ)
+-			band = wlc->bandstate[BAND_2G_INDEX];
+-		else
+-			band = wlc->bandstate[BAND_5G_INDEX];
+-
+-		/* skip if band not initialized */
+-		if (band->pi == NULL)
+-			continue;
++	for (band_idx = 0; band_idx < wlc->pub->_nbands; band_idx++) {
++		band = wlc->bandstate[band_idx];
+ 
+ 		wlc_phy_chanspec_band_validch(band->pi, band->bandtype,
+ 					      &sup_chan);
+ 
+-		sband = wiphy->bands[band_idx];
++		if (band_idx == BAND_2G_INDEX)
++			sband = wiphy->bands[IEEE80211_BAND_2GHZ];
++		else
++			sband = wiphy->bands[IEEE80211_BAND_5GHZ];
++
+ 		for (i = 0; i < sband->n_channels; i++) {
+ 			ch = &sband->channels[i];
+ 			if (!isset(sup_chan.vec, ch->hw_value))
+-- 
+1.7.9.5
 
-I briefly looked at this, but I don't see a bug in mac80211. It seems
-likely that ath9k hands back a corrupted SKB, or frees one it no longer
-owns, or such. The skb->next/prev pointers seem corrupted (rcx is NULL)
-in one of the SKBs on the list, but mac80211 can't do that afaict.
-
-johannes
 
