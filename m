@@ -1,67 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:32787 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751614Ab2GNT6T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2012 15:58:19 -0400
-Message-ID: <1342295887.25597.487.camel@deadeye.wl.decadent.org.uk> (sfid-20120714_215823_452236_0316E8D9)
-Subject: Re: [PATCH] linux-firmware: add carl9170 firmware
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: dwmw2@infradead.org, Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Date: Sat, 14 Jul 2012 20:58:07 +0100
-In-Reply-To: <1342291606-11596-1-git-send-email-xose.vazquez@gmail.com>
-References: <1342291606-11596-1-git-send-email-xose.vazquez@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-FI0XEHI+txVm1K8NLKin"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1198 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751998Ab2GCNPB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 09:15:01 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>,
+	"Johannes Berg" <johannes.berg@intel.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>
+Subject: [PATCH] brcmsmac: fix brcms_c_regd_init() which crashed after
+ 11ad patch
+Date: Tue, 3 Jul 2012 15:14:40 +0200
+Message-ID: <1341321280-6136-1-git-send-email-arend@broadcom.com> (sfid-20120703_151507_187009_4C87618A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch fixes an OOPS in brcmsmac driver, which was introduced
+by the 11ad patch 'cfg80211: add 802.11ad (60gHz band) support'.
+The value IEEE80211_NUM_BANDS increased, which was used in the
+brcms_c_regd_init() function.
 
---=-FI0XEHI+txVm1K8NLKin
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c |   17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-On Sat, 2012-07-14 at 20:46 +0200, Xose Vazquez Perez wrote:
-> GPLv2 firmware for carl9170, Atheros AR9170 802.11 draft-n USB driver.
->
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> Cc: linux-wireless@vger.kernel.org
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-[...]
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+index 2d365d3..2643669 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
+@@ -763,20 +763,17 @@ void brcms_c_regd_init(struct brcms_c_info *wlc)
+ 	int band_idx, i;
+ 
+ 	/* Disable any channels not supported by the phy */
+-	for (band_idx = 0; band_idx < IEEE80211_NUM_BANDS; band_idx++) {
+-		if (band_idx == IEEE80211_BAND_2GHZ)
+-			band = wlc->bandstate[BAND_2G_INDEX];
+-		else
+-			band = wlc->bandstate[BAND_5G_INDEX];
+-
+-		/* skip if band not initialized */
+-		if (band->pi == NULL)
+-			continue;
++	for (band_idx = 0; band_idx < wlc->pub->_nbands; band_idx++) {
++		band = wlc->bandstate[band_idx];
+ 
+ 		wlc_phy_chanspec_band_validch(band->pi, band->bandtype,
+ 					      &sup_chan);
+ 
+-		sband = wiphy->bands[band_idx];
++		if (band_idx == BAND_2G_INDEX) {
++			sband = wiphy->bands[IEEE80211_BAND_2GHZ];
++		} else {
++			sband = wiphy->bands[IEEE80211_BAND_5GHZ];
++		}
+ 		for (i = 0; i < sband->n_channels; i++) {
+ 			ch = &sband->channels[i];
+ 			if (!isset(sup_chan.vec, ch->hw_value))
+-- 
+1.7.9.5
 
-We need to include full source, not a pointer to it.
 
-Ben.
-
---=20
-Ben Hutchings
-The generation of random numbers is too important to be left to chance.
-                                                            - Robert Coveyo=
-u
-
---=-FI0XEHI+txVm1K8NLKin
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUAHPT+e/yOyVhhEJAQozEw/+KINLuLq9Gp2zjx/gXvTFtz/p9JlFw5jp
-KIzjdRVNY7uNqPUcMICHtRmqMBL4AFFF7j9HGjCoGRSenReVbk4mSCJKCYrX3UtJ
-bUFLDd3a743tK+arRI1JklPnVM6FiH2MDf42bmeYOrwxbSpQZsBU0VgXTmwBCSnu
-EmGbH/iA0/7Jqa3HtMXQBR9o87WKHg1A1GdzNDV3+YDDv2ol6ktpM9Hnh8Yindj7
-Nf8jk5US0gl3eqPSRsF5iLQCMSwIzjAW2OltNerYGdynGWu5mp/OjMA+Pw93wS9V
-fh8XKRMDNCU3OCXPByev6wFvJ79WOqpVLgHTFvLNYOXi5hULLLuXqveml30k87O6
-lBe96GIzPlqZ2aKzjYR93IYkxd86T7IGChOjiESZoDDWPEUc9Bc2PgOCmDiC8smR
-hBGtALERHIYNK7nvdIbyX249qknigESWTydhxjCT+wvPm7bNgLwQtj8l0qOaqbGl
-vB9vyCZJ5jgOxk3YOKF4cCYy9DjHqFSsncHwAsNCIgkwJJXkK7fe9a3KSD3uvWVi
-iJ11ysGK6klmmBJeTxYSm65RFMMYSMqIOQo/vz71tCP2YGQ+Ji2I2mjOQ/rRRWGw
-i0IgJKIPbLW43rVpnqSsykL3Wmhzy2nJ/TAQg/rsQ2JiLPL3unGpVUkbBzLbGXP1
-5MEqL3Wu3vI=
-=GhD/
------END PGP SIGNATURE-----
-
---=-FI0XEHI+txVm1K8NLKin--
