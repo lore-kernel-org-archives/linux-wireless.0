@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2402 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910Ab2GCHHC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 03:07:02 -0400
-Message-ID: <4FF29A07.9030702@broadcom.com> (sfid-20120703_090709_837946_F4E36A7C)
-Date: Tue, 3 Jul 2012 09:06:47 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brcm80211-dev-list@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 12/18] brcmsmac: add a conditions for core rev 17
- again
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
- <1341062181-28071-13-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1341062181-28071-13-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:38478 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933032Ab2GCPQ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 11:16:56 -0400
+Message-ID: <1341328615.20124.5.camel@jlt3.sipsolutions.net> (sfid-20120703_171713_653810_310F38FD)
+Subject: Re: [PATCH] etherdevice: introduce broadcast_ether_addr
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Jul 2012 17:16:55 +0200
+In-Reply-To: <1341328402.2164.3.camel@joe2Laptop>
+References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
+	 <1341328402.2164.3.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2012 03:16 PM, Hauke Mehrtens wrote:
-> This reverts some changes made in this commit:
-> commit 7234592364e2efe8b4ac1040c99b1d7ef01cf502
-> Author: Roland Vossen <rvossen@broadcom.com>
-> Date:   Mon Feb 14 12:16:45 2011 +0100
+On Tue, 2012-07-03 at 08:13 -0700, Joe Perches wrote:
+> On Tue, 2012-07-03 at 12:16 +0200, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > A lot of code has either the memset or an
+> > inefficient copy from a static array that
+> > contains the all-ones broadcast address.
+> > Introduce broadcast_ether_addr() to fill
+> > an address with all ones, making the code
+> > clearer and allowing us to get rid of the
+> > various constant arrays.
+> []
+> > diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
+> []
+> > +static inline void broadcast_ether_addr(u8 *addr)
+> > +{
+> > +	memset(addr, 0xff, ETH_ALEN);
+> > +}
 > 
->     staging: brcm80211: removal of inactive d11 code
+> I think this sort of patch should come as the first
+> patch in a series with some example conversions.
 > 
-> The bcm4716 has a rev 17 wireless core and this condition is needed.
-> 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/main.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> It might be too easy to confuse is_broadcast_ether_addr
+> with this function name too.  Maybe set_broadcast_ether_addr
+> might be better.
 
-Gr. AvS
+Well, it's void so that'd be a compiler error :-)
+Also, it's more like random_ether_addr()
 
-
+johannes
 
