@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49710 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757225Ab2GKR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 13:59:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 01/12] ath9k_hw: fall back to OTP ROM when platform data has no valid eeprom data
-Date: Wed, 11 Jul 2012 19:59:04 +0200
-Message-Id: <1342029555-31618-1-git-send-email-nbd@openwrt.org> (sfid-20120711_195931_714681_33E7868A)
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:33933 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753349Ab2GCVZh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 17:25:37 -0400
+Received: by wibhr14 with SMTP id hr14so4779180wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 14:25:36 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
+	linux-wireless@vger.kernel.org, xose.vazquez@gmail.com
+Subject: [PATCH] wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
+Date: Tue,  3 Jul 2012 23:25:30 +0200
+Message-Id: <1341350730-11037-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120703_232540_941956_1BBFF9E3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+Spanish law was based on CEPT/EU rules:
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000058.html
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000059.html
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 25de6f9..3cddd78 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3260,10 +3260,20 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	int it;
- 	u16 checksum, mchecksum;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ar9300_eeprom *eep;
- 	eeprom_read_op read;
+
+Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
+nacional de atribución de frecuencias (CNAF):
+https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
+https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
+
+search for:
+ UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
+ UN – 128 RLANs en 5 GHz (pag. 232)
+
+more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
+http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
+
+---
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 4c54543..11409d6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -239,10 +239,10 @@ country EG:
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
  
--	if (ath9k_hw_use_flash(ah))
--		return ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+	if (ath9k_hw_use_flash(ah)) {
-+		u8 txrx;
-+
-+		ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+
-+		/* check if eeprom contains valid data */
-+		eep = (struct ar9300_eeprom *) mptr;
-+		txrx = eep->baseEepHeader.txrxMask;
-+		if (txrx != 0 && txrx != 0xff)
-+			return 0;
-+	}
+ country ES: DFS-ETSI
+-	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(2400 - 2483.5 @ 40), (N/A, 100 mW)
++	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
++	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
++	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
  
- 	word = kzalloc(2048, GFP_KERNEL);
- 	if (!word)
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.7.3.2
+1.7.10.4
 
