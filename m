@@ -1,147 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43065 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362Ab2GKOSw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 10:18:52 -0400
-Message-ID: <1342016326.4464.4.camel@jlt3.sipsolutions.net> (sfid-20120711_161857_195080_A478B4C3)
-Subject: Re: warning in iwlwifi on monitor mode in 3.5.0-rc6-wl
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Date: Wed, 11 Jul 2012 16:18:46 +0200
-In-Reply-To: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com> (sfid-20120711_160556_704769_2EBEB24C)
-References: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com>
-	 (sfid-20120711_160556_704769_2EBEB24C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:46678 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964780Ab2GCQyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 12:54:38 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 07/10] qca-swiss-army-knife: add initval support for AR955X
+Date: Tue,  3 Jul 2012 18:42:52 +0200
+Message-Id: <1341333775-14091-8-git-send-email-juhosg@openwrt.org> (sfid-20120703_185444_805553_0631E7A2)
+In-Reply-To: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
+References: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This isn't really related to iwlwifi...
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ tools/initvals/Makefile   |    1 +
+ tools/initvals/initvals.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+), 0 deletions(-)
 
-Looks like this might be due to Michal's changes, maybe the monitor
-callback is coming too early?
-
-johannes
-
-
-On Wed, 2012-07-11 at 19:35 +0530, Mohammed Shafi wrote:
-> Hi all,
-> 
-> i got this warning in bringing up monitor mode with iwlwifi  in 3.5.0-rc6-wl
-> 
-> [ 4788.914848] iwlwifi 0000:03:00.0: Try to add interface when device not ready
-> [ 4788.914851] ------------[ cut here ]------------
-> [ 4788.914870] WARNING: at
-> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/iface.c:357
-> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]()
-> [ 4788.914872] Hardware name: 64756D6
-> [ 4788.914874] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
-> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
-> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
-> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
-> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
-> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
-> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
-> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
-> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
-> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
-> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
-> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
-> [ 4788.914967] Pid: 7486, comm: ifconfig Tainted: G           O 3.5.0-rc6-wl #25
-> [ 4788.914969] Call Trace:
-> [ 4788.914976]  [<c0136322>] warn_slowpath_common+0x72/0xa0
-> [ 4788.914991]  [<f98164b2>] ?
-> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
-> [ 4788.915005]  [<f98164b2>] ?
-> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
-> [ 4788.915008]  [<c0136372>] warn_slowpath_null+0x22/0x30
-> [ 4788.915022]  [<f98164b2>] ieee80211_add_virtual_monitor+0x192/0x2b0
-> [mac80211]
-> [ 4788.915027]  [<c06bb3c6>] ? printk+0x4d/0x4f
-> [ 4788.915041]  [<f98185ea>] ieee80211_set_monitor_enabled+0x1a/0x50 [mac80211]
-> [ 4788.915050]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
-> [ 4788.915058]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
-> [cfg80211]
-> [ 4788.915062]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
-> [ 4788.915066]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
-> [ 4788.915070]  [<c06c2982>] notifier_call_chain+0x42/0xf0
-> [ 4788.915075]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
-> [ 4788.915080]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
-> [ 4788.915085]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
-> [ 4788.915088]  [<c05b209c>] __dev_open+0x5c/0xf0
-> [ 4788.915091]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
-> [ 4788.915095]  [<c05b0e29>] __dev_change_flags+0x109/0x170
-> [ 4788.915098]  [<c05b2003>] dev_change_flags+0x23/0x60
-> [ 4788.915102]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
-> [ 4788.915106]  [<c061f725>] inet_ioctl+0x95/0xb0
-> [ 4788.915109]  [<c059d2b0>] sock_ioctl+0x70/0x270
-> [ 4788.915113]  [<c059d240>] ? sock_fasync+0xc0/0xc0
-> [ 4788.915117]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
-> [ 4788.915121]  [<c016197b>] ? up_read+0x1b/0x30
-> [ 4788.915124]  [<c06c2714>] ? do_page_fault+0x244/0x470
-> [ 4788.915128]  [<c0255c75>] ? fget_light+0x355/0x410
-> [ 4788.915131]  [<c0163314>] ? __put_cred+0x34/0x50
-> [ 4788.915135]  [<c0265c37>] sys_ioctl+0x77/0x80
-> [ 4788.915139]  [<c06c65e3>] sysenter_do_call+0x12/0x38
-> [ 4788.915141] ---[ end trace 2b26c2a43fea3613 ]---
-> [ 4788.915146] ------------[ cut here ]------------
-> [ 4788.915160] WARNING: at
-> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/cfg.c:2993
-> ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]()
-> [ 4788.915161] Hardware name: 64756D6
-> [ 4788.915163] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
-> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
-> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
-> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
-> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
-> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
-> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
-> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
-> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
-> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
-> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
-> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
-> [ 4788.915231] Pid: 7486, comm: ifconfig Tainted: G        W  O 3.5.0-rc6-wl #25
-> [ 4788.915233] Call Trace:
-> [ 4788.915237]  [<c0136322>] warn_slowpath_common+0x72/0xa0
-> [ 4788.915251]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
-> [mac80211]
-> [ 4788.915265]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
-> [mac80211]
-> [ 4788.915268]  [<c0136372>] warn_slowpath_null+0x22/0x30
-> [ 4788.915282]  [<f981861c>] ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]
-> [ 4788.915289]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
-> [ 4788.915296]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
-> [cfg80211]
-> [ 4788.915299]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
-> [ 4788.915303]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
-> [ 4788.915307]  [<c06c2982>] notifier_call_chain+0x42/0xf0
-> [ 4788.915311]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
-> [ 4788.915314]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
-> [ 4788.915317]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
-> [ 4788.915321]  [<c05b209c>] __dev_open+0x5c/0xf0
-> [ 4788.915324]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
-> [ 4788.915327]  [<c05b0e29>] __dev_change_flags+0x109/0x170
-> [ 4788.915331]  [<c05b2003>] dev_change_flags+0x23/0x60
-> [ 4788.915334]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
-> [ 4788.915338]  [<c061f725>] inet_ioctl+0x95/0xb0
-> [ 4788.915341]  [<c059d2b0>] sock_ioctl+0x70/0x270
-> [ 4788.915344]  [<c059d240>] ? sock_fasync+0xc0/0xc0
-> [ 4788.915347]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
-> [ 4788.915350]  [<c016197b>] ? up_read+0x1b/0x30
-> [ 4788.915353]  [<c06c2714>] ? do_page_fault+0x244/0x470
-> [ 4788.915357]  [<c0255c75>] ? fget_light+0x355/0x410
-> [ 4788.915360]  [<c0163314>] ? __put_cred+0x34/0x50
-> [ 4788.915363]  [<c0265c37>] sys_ioctl+0x77/0x80
-> [ 4788.915367]  [<c06c65e3>] sysenter_do_call+0x12/0x38
-> [ 4788.915368] ---[ end trace 2b26c2a43fea3614 ]---
-> [ 4788.915371]
-> 
-> 
-
+diff --git a/tools/initvals/Makefile b/tools/initvals/Makefile
+index a7f7c0c..a4e375e 100644
+--- a/tools/initvals/Makefile
++++ b/tools/initvals/Makefile
+@@ -20,6 +20,7 @@ ATHEROS_DEPS += \
+ 	ar9330_12.ini		\
+ 	ar9340.ini		\
+ 	ar9485.ini		\
++	ar955x.ini		\
+ 	ar9580.ini		\
+ 	ar9300_jupiter20.ini
+ endif
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index d7df352..4327f0d 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -233,6 +233,25 @@ struct initval_family {
+ 
+ #include "ar9485_1_1.ini"
+ 
++#define ar955x_scorpion_1p0_radio_postamble			ar955x_1p0_radio_postamble
++#define ar955x_scorpion_1p0_baseband_core_txfir_coeff_japan_2484 ar955x_1p0_baseband_core_txfir_coeff_japan_2484
++#define ar955x_scorpion_1p0_baseband_postamble			ar955x_1p0_baseband_postamble
++#define ar955x_scorpion_1p0_radio_core				ar955x_1p0_radio_core
++#define ar955xModes_xpa_tx_gain_table_scorpion_1p0		ar955x_1p0_modes_xpa_tx_gain_table
++#define ar955x_scorpion_1p0_mac_core				ar955x_1p0_mac_core
++#define ar955xCommon_rx_gain_table_scorpion_1p0			ar955x_1p0_common_rx_gain_table
++#define ar955x_scorpion_1p0_baseband_core			ar955x_1p0_baseband_core
++#define ar955xCommon_wo_xlna_rx_gain_table_scorpion_1p0		ar955x_1p0_common_wo_xlna_rx_gain_table
++#define ar955x_scorpion_1p0_soc_preamble			ar955x_1p0_soc_preamble
++#define ar955xCommon_wo_xlna_rx_gain_bounds_scorpion_1p0	ar955x_1p0_common_wo_xlna_rx_gain_bounds
++#define ar955x_scorpion_1p0_mac_postamble			ar955x_1p0_mac_postamble
++#define ar955xCommon_rx_gain_bounds_scorpion_1p0		ar955x_1p0_common_rx_gain_bounds
++#define ar955xModes_no_xpa_tx_gain_table_scorpion_1p0		ar955x_1p0_modes_no_xpa_tx_gain_table
++#define ar955x_scorpion_1p0_soc_postamble			ar955x_1p0_soc_postamble
++#define ar955xModes_fast_clock_scorpion_1p0			ar955x_1p0_modes_fast_clock
++
++#include "ar955x.ini"
++
+ #define ar9300Modes_fast_clock_ar9580_1p0			ar9580_1p0_modes_fast_clock
+ #define ar9300_ar9580_1p0_radio_postamble			ar9580_1p0_radio_postamble
+ #define ar9300_ar9580_1p0_baseband_core				ar9580_1p0_baseband_core
+@@ -418,6 +437,9 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 		printf("static const u32 %s[][%d] = {\n", name, p_columns);
+ 
+ 	switch (p_columns) {
++	case 9:
++		printf("\t/* Addr      5G_HT20_L   5G_HT40_L   5G_HT20_M   5G_HT40_M   5G_HT20_H   5G_HT40_H   2G_HT40     2G_HT20  */\n");
++		break;
+ 	case 5:
+ 		printf("\t/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */\n");
+ 		break;
+@@ -716,6 +738,26 @@ static void ar9485_hw_print_initvals(bool check)
+ 	INI_PRINT(ar9485_1_1_mac_core);
+ }
+ 
++static void ar955x_1p0_hw_print_initvals(bool check)
++{
++	INI_PRINT(ar955x_1p0_radio_postamble);
++	INI_PRINT(ar955x_1p0_baseband_core_txfir_coeff_japan_2484);
++	INI_PRINT(ar955x_1p0_baseband_postamble);
++	INI_PRINT(ar955x_1p0_radio_core);
++	INI_PRINTW(ar955x_1p0_modes_xpa_tx_gain_table);
++	INI_PRINT(ar955x_1p0_mac_core);
++	INI_PRINT(ar955x_1p0_common_rx_gain_table);
++	INI_PRINT(ar955x_1p0_baseband_core);
++	INI_PRINT(ar955x_1p0_common_wo_xlna_rx_gain_table);
++	INI_PRINT(ar955x_1p0_soc_preamble);
++	INI_PRINT(ar955x_1p0_common_wo_xlna_rx_gain_bounds);
++	INI_PRINT(ar955x_1p0_mac_postamble);
++	INI_PRINT(ar955x_1p0_common_rx_gain_bounds);
++	INI_PRINTW(ar955x_1p0_modes_no_xpa_tx_gain_table);
++	INI_PRINT(ar955x_1p0_soc_postamble);
++	INI_PRINT(ar955x_1p0_modes_fast_clock);
++}
++
+ static void ar9580_1p0_hw_print_initvals(bool check)
+ {
+ 	INI_PRINT_DUP(ar9580_1p0_modes_fast_clock,
+@@ -788,6 +830,7 @@ struct initval_family families[] = {
+ 	FAM("ar9330-1p2", "9330_1P2", NULL        , ar9330_1p2_hw_print_initvals),
+ 	FAM("ar9340"    , "9340"    , NULL        , ar9340_hw_print_initvals),
+ 	FAM("ar9485"    , "9485"    , "AR9485 1.0", ar9485_hw_print_initvals),
++	FAM("ar955x-1p0", "955X_1P0", "AR955X 1.0", ar955x_1p0_hw_print_initvals),
+ 	FAM("ar9580"    , "9580_1P0", "AR9580 1.0", ar9580_1p0_hw_print_initvals),
+ 	FAM("ar9462-2p0", "9462_2P0", "AR9462 2.0", ar9462_2p0_hw_print_initvals),
+ };
+-- 
+1.7.2.1
 
