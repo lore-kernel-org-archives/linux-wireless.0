@@ -1,74 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42201 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674Ab2GAGqW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jul 2012 02:46:22 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 60g v1 2/5] wireless: rate check logic for 60g
-Date: Sun, 1 Jul 2012 09:45:51 +0300
-Message-ID: <1341125155-628-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120701_084700_490077_7ECBF4D7)
-In-Reply-To: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from arrakis.dune.hu ([78.24.191.176]:51904 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756868Ab2GCQti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 12:49:38 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 04/10] qca-swiss-army-knife: reformat INI_PRINT_* macros
+Date: Tue,  3 Jul 2012 18:42:49 +0200
+Message-Id: <1341333775-14091-5-git-send-email-juhosg@openwrt.org> (sfid-20120703_184945_327216_4D9C2DAD)
+In-Reply-To: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
+References: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the 60g band, there is no 'basic rates'. Only MCS used.
-Instead of mandatory basic rates, standard requires support for
-mandatory MCS 1..4
+Keep the length of the macro lines under 80 character.
 
-Modify logic to comply with 60g requirements
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- net/wireless/core.c |   10 ++++++++--
- net/wireless/util.c |    5 +++++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ tools/initvals/initvals.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 907f62c..e25234d 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -458,8 +458,14 @@ int wiphy_register(struct wiphy *wiphy)
- 			continue;
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index d3740da..4205b08 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -297,15 +297,19 @@ typedef long long unsigned int u64;
+ 	if (check) { \
+ 		char *sha1sum; \
+ 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
+-						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
++						ARRAY_SIZE(_array), \
++						ARRAY_SIZE((_array)[0])); \
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+-		if (sizeof(_ref) == sizeof(_array) && !memcmp(&_ref, &_array, sizeof(_ref))) { \
++		if (sizeof(_ref) == sizeof(_array) && \
++		    !memcmp(&_ref, &_array, sizeof(_ref))) { \
+ 			printf("#define " #_array " " #_ref "\n\n"); \
+ 			break; \
+ 		} \
+ 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+-				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
++				       ARRAY_SIZE(_array), \
++				       ARRAY_SIZE((_array)[0]), \
++				       false); \
+ 	} \
+     } while (0)
  
- 		sband->band = band;
--
--		if (WARN_ON(!sband->n_channels || !sband->n_bitrates))
-+		if (WARN_ON(!sband->n_channels))
-+			return -EINVAL;
-+		/*
-+		 * on 60gHz band, there are no legacy rates, so
-+		 * n_bitrates is 0
-+		 */
-+		if (WARN_ON((band != IEEE80211_BAND_60GHZ) &&
-+				!sband->n_bitrates))
- 			return -EINVAL;
+@@ -313,11 +317,14 @@ typedef long long unsigned int u64;
+ 	if (check) { \
+ 		char *sha1sum; \
+ 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
+-						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
++						 ARRAY_SIZE(_array), \
++						 ARRAY_SIZE((_array)[0])); \
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+ 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+-				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
++				       ARRAY_SIZE(_array), \
++				       ARRAY_SIZE((_array)[0]), \
++				       false); \
+ 	} \
+     } while (0)
  
- 		/*
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f3ce35b..11188c6 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -151,6 +151,11 @@ static void set_mandatory_flags_band(struct ieee80211_supported_band *sband,
- 		}
- 		WARN_ON(want != 0 && want != 3 && want != 6);
- 		break;
-+	case IEEE80211_BAND_60GHZ:
-+		/* check for mandatory HT MCS 1..4 */
-+		WARN_ON(!sband->ht_cap.ht_supported);
-+		WARN_ON((sband->ht_cap.mcs.rx_mask[0] & 0x1e) != 0x1e);
-+		break;
- 	case IEEE80211_NUM_BANDS:
- 		WARN_ON(1);
- 		break;
 -- 
-1.7.9.5
+1.7.2.1
 
