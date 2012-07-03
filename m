@@ -1,132 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:50861 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804Ab2GSE2j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:28:39 -0400
-Date: Wed, 18 Jul 2012 21:28:21 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4/9] Platform: OLPC: turn EC driver into a platform_driver
-Message-ID: <20120718212821.4d942867@dev.queued.net> (sfid-20120719_063101_609794_2C95C9AE)
-In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
-References: <20120718182144.2d7b0b50@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60516 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755796Ab2GCHoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 03:44:30 -0400
+Message-ID: <4FF2A2D4.9070308@hauke-m.de> (sfid-20120703_094433_614237_8F2D5D40)
+Date: Tue, 03 Jul 2012 09:44:20 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: REGRESSION: [PATCH v2 0/9] bcma misc updates
+References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de> <4FF29671.1020406@broadcom.com>
+In-Reply-To: <4FF29671.1020406@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 1.75-based OLPC EC driver already does this; let's do it for all EC
-drivers.  This gives us nice suspend/resume hooks, amongst other things.
+On 07/03/2012 08:51 AM, Arend van Spriel wrote:
+> On 06/30/2012 01:44 AM, Hauke Mehrtens wrote:
+>> These are some updates for bcma. Some are extending or completing some 
+>> workarounds for PCIe based wireless cards. A patch adds 
+>> bcma_pmu_spuravoid_pllupdate, used by brcmsmac and an other patch adds 
+>> constants for the chip ids. This code is mostly based on code from 
+>> brcmsmac and the Broadcom SDK for BCM47XX SoCs.
+>>
+>> This was tested on a BCM4718 SoC with a BCM43224 PCIe and a BCM5357.
+>> The Wifi part of the BCM4718 and BCM43224 is more or less working with 
+>> brcmsmac, which need some more patches for that, but it has low speed 
+>> and some times or with some access points I still get errors. The wifi 
+>> of the BCM5357 does not work.
+>>
+> 
+> Hi Hauke,
+> 
+> This patch series caused a regression in one of our smoketest machines
+> last night. I have not looked at the exact patch causing it (suspect
+> 2/9). The failure happens on a BCM43224 chip with external SPROM. Here
+> is the log info:
+> 
+> [317752.101665] bcma: Found chip with id 0xA8D8, rev 0x01 and package 0x08
+> [317752.101809] bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800,
+> rev 0x22, class 0x0)
+> [317752.101827] bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812,
+> rev 0x17, class 0x0)
+> [317752.101870] bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev
+> 0x0F, class 0x0)
+> [317752.171926] bcma: Failed to get SPROM: -71 <== -EPROTO (crc failed).
+> [317752.171982] bcma: Bus registered
+> [317753.184455] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 16
+> [317753.191868] brcmsmac: Applying 43224B0+ WARs
+> [317753.193918] ieee80211 phy0: wl0: brcms_b_attach: bad macaddr
+> [317753.193924] ieee80211 phy0: wl0: brcms_b_attach: failed with err 22
+> [317753.193928] ieee80211 phy0: wl0: brcms_c_attach: failed with err 22
+> [317753.193959] ieee80211 phy0: brcmsmac: attach() failed with code 22
+> [317753.193966] brcmsmac: brcms_bcma_probe: brcms_attach failed!
+> 
+> I suspect it tries reading OTP instead of the external SPROM.
+> 
+> Gr. AvS
+> 
+Hi Arend,
 
-We want to run the EC's suspend hooks later than other drivers (which may
-be setting wakeup masks or be running EC commands).  We also want to run
-the EC's resume hooks earlier than other drivers (which may want to run EC
-commands).
+my BCM43224 uses a Sprom from the flash chip of the SoC, so it could be
+that something is wrong in the sprom reading, but I haven't touched the
+sprom code expect for using constants.
 
-Signed-off-by: Andres Salomon <dilinger@queued.net>
----
- drivers/platform/olpc/olpc-ec.c |   48 +++++++++++++++++++++++++++++++++++++++
- include/linux/olpc-ec.h         |    6 +++++
- 2 files changed, 54 insertions(+), 0 deletions(-)
+Do you know which patch is causing this issue?
 
-diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
-index 44e6a4f..d00523c 100644
---- a/drivers/platform/olpc/olpc-ec.c
-+++ b/drivers/platform/olpc/olpc-ec.c
-@@ -8,6 +8,7 @@
- #include <linux/completion.h>
- #include <linux/spinlock.h>
- #include <linux/mutex.h>
-+#include <linux/platform_device.h>
- #include <linux/workqueue.h>
- #include <linux/module.h>
- #include <linux/list.h>
-@@ -122,3 +123,50 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
- 	return desc.err;
- }
- EXPORT_SYMBOL_GPL(olpc_ec_cmd);
-+
-+static int olpc_ec_probe(struct platform_device *pdev)
-+{
-+	int err;
-+
-+	if (!ec_driver)
-+		return -ENODEV;
-+
-+	err = ec_driver->probe ? ec_driver->probe(pdev) : 0;
-+
-+	return err;
-+}
-+
-+static int olpc_ec_suspend(struct device *dev)
-+{
-+	struct platform_device *pdev = to_platform_device(dev);
-+	return ec_driver->suspend ? ec_driver->suspend(pdev) : 0;
-+}
-+
-+static int olpc_ec_resume(struct device *dev)
-+{
-+	struct platform_device *pdev = to_platform_device(dev);
-+	return ec_driver->resume ? ec_driver->resume(pdev) : 0;
-+}
-+
-+static const struct dev_pm_ops olpc_ec_pm_ops = {
-+	.suspend_late = olpc_ec_suspend,
-+	.resume_early = olpc_ec_resume,
-+};
-+
-+static struct platform_driver olpc_ec_plat_driver = {
-+	.probe = olpc_ec_probe,
-+	.driver = {
-+		.name = "olpc-ec",
-+		.pm = &olpc_ec_pm_ops,
-+	},
-+};
-+
-+static int __init olpc_ec_init_module(void)
-+{
-+	return platform_driver_register(&olpc_ec_plat_driver);
-+}
-+
-+module_init(olpc_ec_init_module);
-+
-+MODULE_AUTHOR("Andres Salomon <dilinger@queued.net>");
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/olpc-ec.h b/include/linux/olpc-ec.h
-index 231e96f..5bb6e76 100644
---- a/include/linux/olpc-ec.h
-+++ b/include/linux/olpc-ec.h
-@@ -14,7 +14,13 @@
- #define EC_SCI_QUERY			0x84
- #define EC_EXT_SCI_QUERY		0x85
- 
-+struct platform_device;
-+
- struct olpc_ec_driver {
-+	int (*probe)(struct platform_device *);
-+	int (*suspend)(struct platform_device *);
-+	int (*resume)(struct platform_device *);
-+
- 	int (*ec_cmd)(u8, u8 *, size_t, u8 *, size_t, void *);
- };
- 
--- 
-1.7.2.5
-
+Hauke
