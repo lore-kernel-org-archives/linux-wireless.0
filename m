@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:48550 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752382Ab2G2Ler convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jul 2012 07:34:47 -0400
-Received: by wgbdr13 with SMTP id dr13so4030738wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2012 04:34:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FB57C61.3090302@hauke-m.de>
-References: <4FB57C61.3090302@hauke-m.de>
-Date: Sun, 29 Jul 2012 13:34:46 +0200
-Message-ID: <CACna6rzO2579YdN_GdmP+=-+L308KjKhKsejevAzJ19dp6LxVg@mail.gmail.com> (sfid-20120729_133451_770680_D68CD8D4)
-Subject: Re: brcmsmac and BCM47186 (BCM5357) + brcmfmac and BCM43236 V2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from arrakis.dune.hu ([78.24.191.176]:40577 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933338Ab2GCRPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 13:15:00 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 16/20] ath9k: skip internal regulator configuration for AR9550
+Date: Tue,  3 Jul 2012 19:13:30 +0200
+Message-Id: <1341335614-15419-17-git-send-email-juhosg@openwrt.org> (sfid-20120703_192129_499785_CA92FA15)
+In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/5/18 Hauke Mehrtens <hauke@hauke-m.de>:
-> I got a new device, a Linksys E3200 with a BCM47186 (id: 0x5357) and a
-> BCM43236 v2 for 5GHz wifi.
->
-> The BCM47186 has a wifi core rev 28, a N-PHY rev 9 and a 2057 radio rev
-> 5 and it does not work with brcmsmac or b43. :-(
->
-> Are there plans to add support for such new N-PHY revs to brcmsmac and
-> the firmware?
->
-> Here are some parts of my log with brcmsamc with firmware from
-> linux-firmware.
->
-> bcma: Found chip with id 0x5357, rev 0x02 and package 0x0A
-> ....
-> bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x1C, class 0x0)
-> ....
-> [   14.776000] b43-phy0: Broadcom 5357 WLAN found (core revision 28)
-> [   14.780000] b43-phy0 debug: Found PHY: Analog 9, Type 4, Revision 9
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Hauke, is this 0x5357 a SoC bcma, or additional bcma connected via
-PCIE to the main one? If it's the second case, could you provide pci
-id, please?
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 57002d1..25de6f9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3960,7 +3960,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_drive_strength_apply(ah);
+ 	ar9003_hw_atten_apply(ah, chan);
+ 	ar9003_hw_quick_drop_apply(ah, chan->channel);
+-	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
++	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9550(ah))
+ 		ar9003_hw_internal_regulator_apply(ah);
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+ 		ar9003_hw_apply_tuning_caps(ah);
 -- 
-Rafał
+1.7.2.1
+
