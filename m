@@ -1,53 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932983Ab2GLKAN (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:56852 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933032Ab2GCTfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 06:00:13 -0400
-Message-ID: <1342087211.4531.12.camel@jlt3.sipsolutions.net> (sfid-20120712_120018_674592_22967432)
-Subject: Re: pull-request: mac80211-next 2012-07-10
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 12 Jul 2012 12:00:11 +0200
-In-Reply-To: <1342087000.4531.11.camel@jlt3.sipsolutions.net> (sfid-20120712_115658_371123_64E83BB6)
-References: <1341946090.4475.31.camel@jlt3.sipsolutions.net>
-	 (sfid-20120710_204821_128762_BC016001) <1342085261.4531.9.camel@jlt3.sipsolutions.net>
-	 (sfid-20120712_112748_417680_83E2626B) <1342087000.4531.11.camel@jlt3.sipsolutions.net>
-	 (sfid-20120712_115658_371123_64E83BB6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 3 Jul 2012 15:35:44 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120628081607.GG31944@gamma.logic.tuwien.ac.at>
+References: <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com>
+	<20120413014047.GB25681@gamma.logic.tuwien.ac.at>
+	<20120330011734.GH6277@gamma.logic.tuwien.ac.at>
+	<20120411023747.GA10126@gamma.logic.tuwien.ac.at>
+	<4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
+	<20120412000202.GA15286@gamma.logic.tuwien.ac.at>
+	<20120628072512.GF31944@gamma.logic.tuwien.ac.at>
+	<1340869868.4491.4.camel@jlt3.sipsolutions.net>
+	<20120628081607.GG31944@gamma.logic.tuwien.ac.at>
+Date: Tue, 3 Jul 2012 21:35:43 +0200
+Message-ID: <CAKWSe6C_rEQgcB5Hg2DXJpTL-g+zsPbTzmO+fh86+EW+vbzFvA@mail.gmail.com> (sfid-20120703_213604_846931_F52BCBA3)
+Subject: Re: [Ilw] Re: 3.4-rc2, ilwagn still most of the time completely unusable
+From: Alessandro Suardi <alessandro.suardi@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"Lin, Hsien KuoX" <hsien.kuox.lin@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-12 at 11:56 +0200, Johannes Berg wrote:
-> On Thu, 2012-07-12 at 11:27 +0200, Johannes Berg wrote:
-> > On Tue, 2012-07-10 at 20:48 +0200, Johannes Berg wrote:
-> > > John,
-> > > 
-> > > Please pull some more patches. I've included the first round of API
-> > > additions/updates for the P2P Device abstraction, I don't know if we'll
-> > > get the actual code done in time for 3.6 but I didn't want to hang on to
-> > > these APIs for too long to avoid conflicts.
-> > 
-> > Ugh, I found a bug with this, please drop, I'll respin. Sorry!
-> 
-> Ok the bug is this -- if we remove a wdev (that doesn't have a netdev),
-> this change is obviously needed:
-> 
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 27cd18e..70452aa 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -6768,6 +6768,7 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
->  			info->user_ptr[1] = dev;
->  		} else {
->  			info->user_ptr[1] = wdev;
-> +			info->user_ptr[2] = wdev->netdev;
+On Thu, Jun 28, 2012 at 10:16 AM, Norbert Preining <preining@logic.at> wrote:
+> On Do, 28 Jun 2012, Johannes Berg wrote:
+>> Somehow your mail didn't make it to the lists, not sure why.
+>
+> Hmm, yeah, some of the emails were privte exchange with
+> Venkataraman and Lin.
+>
+>> Fun. I don't actually see how this can possibly happen though?!
+>
+> Hmm, actually I think I have seen similar things quite regularly,
+> and reported them also.
+>
+>> > > > >   [ 9457.176828] iwlwifi 0000:06:00.0: ACTIVATE a non DRIVER active
+>> > > > >station id 0 addr 00:24:c4:ab:bd:e0
+>> >
+>> > These messages now appear only now and then.
+>>
+>> I fixed those recently.
+>
+> Good.
 
-Ok, it's not that simple, ouch! The user_ptr[] array only has two
-entries!
+Just a report to say that I still see those in 3.5.0-rc5.
 
-johannes
+I recently moved from a Dell Latitude 6400, with a bcm4322 chip managed
+ by the Broadcom-STA out-of-tree driver (wl module) to the new Latitude 6420,
+ which has this as per lspci:
 
+02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6205 (rev 34)
+
+ and I have two issues compared to the bcm4322; one is the above message,
+ which appears when the driver can't associate to my D-Link DSL2740B router;
+ telnetting into the router and bouncing its AP component via wlctl is enough
+ to allow the laptop to connect again.
+At the same time, my wife's old 32-bit Dell D610 with an ipw2200 connects just
+ fine to the DSL-2740B.
+
+
+The second issue is that the wifi speed is much lower with the new 6420 under
+ iwlwifi - topping out at under 3MB/s compared with peaks of 10MB/s with the
+ bcm4322's wl driver, which hardly ever went under 6MB/s.
+
+iwconfig wlan0 reports fluctuating bitrates of 18/24/36 Mb/s whereas I could see
+ very easily 130Mb/s with the wl driver. Maybe something is also due to the fact
+ that the DSL-2740B has a draft-N implementation and its Broadcom chip has
+ better feelings with the laptop's Broadcom wl than the iwlwifi.
+
+
+I'm available for more detailed reporting and testing.
+
+Thanks,
+
+>> You seem to be on 3.5.0-rc now, is that really no different from 3.4?
+>
+> The feeling is that it is definitely better.
+>
+> I can actually work now wirelessly, and in case of hangs an rfkill block
+> rfkill unblock practically always, and mostly is not needed.
+>
+> So yes, it is better, definitely.
+>
+> I think till 3.4 I had to use the cable quite regularly.
+>
+> Best wishes
+>
+> Norbert
+
+--alessandro
+
+"don't underestimate the things that I will do"
+
+ (Adele, "Rolling In The Deep")
