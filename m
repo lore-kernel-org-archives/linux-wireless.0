@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37651 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37522 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445Ab2GCLEY (ORCPT
+	with ESMTP id S1752604Ab2GCKQa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 07:04:24 -0400
-Message-ID: <1341313457.5131.3.camel@jlt3.sipsolutions.net> (sfid-20120703_130427_842651_4A7DF367)
-Subject: Re: cfg80211: add 802.11ad (60gHz band) support
+	Tue, 3 Jul 2012 06:16:30 -0400
+Message-ID: <1341310587.5131.2.camel@jlt3.sipsolutions.net> (sfid-20120703_121638_804051_361C64F6)
+Subject: [PATCH] etherdevice: introduce broadcast_ether_addr
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 03 Jul 2012 13:04:17 +0200
-In-Reply-To: <20120703105342.GA29879@elgon.mountain> (sfid-20120703_125355_865535_D89FFB14)
-References: <20120703105342.GA29879@elgon.mountain>
-	 (sfid-20120703_125355_865535_D89FFB14)
+To: netdev <netdev@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Jul 2012 12:16:27 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-03 at 13:53 +0300, Dan Carpenter wrote:
-> Hello Vladimir Kondratiev,
-> 
-> The patch 3a0c52a6d82c: "cfg80211: add 802.11ad (60gHz band) support" 
-> from Jul 2, 2012, leads to the following warning:
-> drivers/net/wireless/mac80211_hwsim.c:1841 init_mac80211_hwsim()
-> 	 warn: buffer overflow 'data->bands' 2 <= 2
-> 
-> drivers/net/wireless/mac80211_hwsim.c
->   1839  
->   1840                  for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
->                                                                 ^^^^^^^^^^^^^^^^^^^
-> We raised IEEE80211_NUM_BANDS to 3.
-> 
->   1841                          struct ieee80211_supported_band *sband = &data->bands[band];
->                                                                                 ^^^^^^^^^^^
-> This only has 2 elements still.
-> 
->   1842                          switch (band) {
->   1843                          case IEEE80211_BAND_2GHZ:
-> 
-> It causes a bogus dereference later.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks Dan!
+A lot of code has either the memset or an
+inefficient copy from a static array that
+contains the all-ones broadcast address.
+Introduce broadcast_ether_addr() to fill
+an address with all ones, making the code
+clearer and allowing us to get rid of the
+various constant arrays.
 
-Is this one of your non-default tests? I think I ran smatch on this, but
-it might be old. Anyway, I'll commit this fix: 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/etherdevice.h |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-http://p.sipsolutions.net/a1c40eea7e33541b.txt
+diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
+index 3d406e0..6da05bb 100644
+--- a/include/linux/etherdevice.h
++++ b/include/linux/etherdevice.h
+@@ -138,6 +138,17 @@ static inline void random_ether_addr(u8 *addr)
+ }
+ 
+ /**
++ * broadcast_ether_addr - Assign broadcast address
++ * @addr: Pointer to a six-byte array containing the Ethernet address
++ *
++ * Assign the broadcast address to the given address array.
++ */
++static inline void broadcast_ether_addr(u8 *addr)
++{
++	memset(addr, 0xff, ETH_ALEN);
++}
++
++/**
+  * eth_hw_addr_random - Generate software assigned random Ethernet and
+  * set device flag
+  * @dev: pointer to net_device structure
+-- 
+1.7.10
 
-johannes
+
 
