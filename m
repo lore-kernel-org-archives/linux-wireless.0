@@ -1,85 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7925 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932690Ab2GLS16 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 14:27:58 -0400
-Date: Thu, 12 Jul 2012 20:27:54 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>
-Subject: [PATCH 1/2 v2] NFC: Set target nfcid1 for all HCI reader A targets
-Message-ID: <20120712182754.GE23772@sortiz-mobl> (sfid-20120712_202801_763497_C72D0202)
-References: <1342113454-23110-1-git-send-email-sameo@linux.intel.com>
- <1342113454-23110-2-git-send-email-sameo@linux.intel.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:36369 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753277Ab2GCUnP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 16:43:15 -0400
+Received: by pbbrp8 with SMTP id rp8so9790198pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 13:43:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1342113454-23110-2-git-send-email-sameo@linux.intel.com>
+In-Reply-To: <1341345818-24924-1-git-send-email-ozancag@gmail.com>
+References: <1341345818-24924-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 3 Jul 2012 13:42:54 -0700
+Message-ID: <CAB=NE6V+=iwuEk=du4HzF-1KhWnbGu9ea11hXZ5tiMEFcYGhvQ@mail.gmail.com> (sfid-20120703_224318_903254_A16FE9E9)
+Subject: Re: [PATCH] compat: Backport cpufreq_quick_get_max()
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jul 3, 2012 at 1:03 PM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> This backports:
+>
+> commit 3d73710880afa3d61cf57b5d4eb192e812eb7e4f
+> Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Date:   Tue Jun 28 10:59:12 2011 -0700
+>
+>   cpufreq: expose a cpufreq_quick_get_max routine
+>
+> Trying kernel  3.4.0-030400-generic [OK]
+> Trying kernel  3.3.7-030307-generic [OK]
+> Trying kernel  3.2.2-030202-generic [OK]
+> Trying kernel  3.1.10-030110-generic [OK]
+> Trying kernel  3.0.18-030018-generic [OK]
+> Trying kernel  2.6.39-02063904-generic [OK]
+> Trying kernel  2.6.38-02063808-generic [OK]
+> Trying kernel  2.6.37-02063706-generic [OK]
+> Trying kernel  2.6.36-02063604-generic [OK]
+> Trying kernel  2.6.35-02063512-generic [OK]
+> Trying kernel  2.6.34-02063410-generic [OK]
+> Trying kernel  2.6.33-02063305-generic [OK]
+> Trying kernel  2.6.32-02063255-generic [OK]
+> Trying kernel  2.6.31-02063113-generic [OK]
+> Trying kernel  2.6.30-02063010-generic [OK]
+> Trying kernel  2.6.29-02062906-generic [OK]
+> Trying kernel  2.6.28-02062810-generic [OK]
+> Trying kernel  2.6.27-020627-generic [OK]
+> Trying kernel  2.6.26-020626-generic [OK]
+> Trying kernel  2.6.25-020625-generic [OK]
+> Trying kernel  2.6.24-020624-generic [OK]
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-From: Eric Lapuyade <eric.lapuyade@intel.com>
+Thanks, applied and pushed, next time if you can add in the commit log
+something like this:
 
-Without the discovered target nfcid1 and its length set properly, type 2
-tags detection fails with the pn544 as it checks for them from
-pn544_hci_complete_target_discovered().
+mcgrof@tux ~/linux-stable (git::master)$ git describe --contains
+3d73710880afa3d61cf57b5d4eb192e812eb7e4f
+v3.1-rc1~230^2~18^2~36
 
-Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Reported-by: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
-v2: Add proper changelog and fix a checkpatch warning
+That would prove this was introduced in 3.1 and that compat-3.1.[ch]
+are the right files to be modifying.
 
----
- net/nfc/hci/core.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Thanks!
 
-diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-index e1a640d..c48f534 100644
---- a/net/nfc/hci/core.c
-+++ b/net/nfc/hci/core.c
-@@ -170,6 +170,7 @@ static int nfc_hci_target_discovered(struct nfc_hci_dev *hdev, u8 gate)
- 	struct nfc_target *targets;
- 	struct sk_buff *atqa_skb = NULL;
- 	struct sk_buff *sak_skb = NULL;
-+	struct sk_buff *uid_skb = NULL;
- 	int r;
- 
- 	pr_debug("from gate %d\n", gate);
-@@ -205,6 +206,19 @@ static int nfc_hci_target_discovered(struct nfc_hci_dev *hdev, u8 gate)
- 		targets->sens_res = be16_to_cpu(*(u16 *)atqa_skb->data);
- 		targets->sel_res = sak_skb->data[0];
- 
-+		r = nfc_hci_get_param(hdev, NFC_HCI_RF_READER_A_GATE,
-+				      NFC_HCI_RF_READER_A_UID, &uid_skb);
-+		if (r < 0)
-+			goto exit;
-+
-+		if (uid_skb->len == 0 || uid_skb->len > NFC_NFCID1_MAXSIZE) {
-+			r = -EPROTO;
-+			goto exit;
-+		}
-+
-+		memcpy(targets->nfcid1, uid_skb->data, uid_skb->len);
-+		targets->nfcid1_len = uid_skb->len;
-+
- 		if (hdev->ops->complete_target_discovered) {
- 			r = hdev->ops->complete_target_discovered(hdev, gate,
- 								  targets);
-@@ -240,6 +254,7 @@ exit:
- 	kfree(targets);
- 	kfree_skb(atqa_skb);
- 	kfree_skb(sak_skb);
-+	kfree_skb(uid_skb);
- 
- 	return r;
- }
--- 
-1.7.10
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+  Luis
