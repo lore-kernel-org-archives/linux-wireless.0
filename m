@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29589 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753833Ab2GQWNh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 18:13:37 -0400
-Message-ID: <5005E390.7020706@intel.com> (sfid-20120718_001343_183513_A59B85EF)
-Date: Tue, 17 Jul 2012 15:13:36 -0700
-From: John Fastabend <john.r.fastabend@intel.com>
-MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: mark.d.rustad@intel.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
-Subject: Re: That's pretty much it for 3.5.0
-References: <5005B881.8010505@intel.com> <20120717.122459.2240133900020140698.davem@davemloft.net> <5005D008.6060103@intel.com> <20120717.140241.1599386555723262095.davem@davemloft.net>
-In-Reply-To: <20120717.140241.1599386555723262095.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:47830 "HELO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751326Ab2GCW4v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 18:56:51 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.5] mwifiex: fix Coverity SCAN CID 709078: Resource leak (RESOURCE_LEAK)
+Date: Tue,  3 Jul 2012 15:53:13 -0700
+Message-Id: <1341355993-4060-1-git-send-email-bzhao@marvell.com> (sfid-20120704_005655_064765_39DDCA75)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/17/2012 2:02 PM, David Miller wrote:
-> From: John Fastabend <john.r.fastabend@intel.com>
-> Date: Tue, 17 Jul 2012 13:50:16 -0700
->
->> On 7/17/2012 12:24 PM, David Miller wrote:
->>> From: John Fastabend <john.r.fastabend@intel.com>
->>> Date: Tue, 17 Jul 2012 12:09:53 -0700
->>>
->>>> although we don't have an early_init hook for netprio_cgroup so this
->>>> is probably not correct.
->>>
->>> The dependency is actually on net_dev_init (a subsys_initcall) rather
->>> than a pure_initcall.
->>>
->>> net_dev_init is what registers the netdev_net_ops, which in turn
->>> initializes the netdev list in namespaces such as &init_net
->>>
->>
->> Ah right thanks sorry for the thrash. I guess we need to check if the
->> netdev list in the init_net namespace is initialized.
->
-> It's a hack, but we could export and then test dev_boot_phase == 0,
-> and if that test is true then skip the init_net device walk in the
-> cgroup code.
->
-> But I don't like that very much.
->
-> The things this code cares about can't even be an issue until
-> net_dev_init() runs.
->
-> There is a comment warning not to do this in linux/init.h, but we
-> could change the module_init() in netprio_cgroup.c to some level which
-> runs after subsys_inticall().  When built as a module, linux/init.h
-> will translate this into module_init() which is basically the behavior
-> we want.
->
+> *. CID 709078: Resource leak (RESOURCE_LEAK)
+> 	- drivers/net/wireless/mwifiex/cfg80211.c, line: 935
+> Assigning: "bss_cfg" = storage returned from "kzalloc(132UL, 208U)"
+> 	- but was not free
+> drivers/net/wireless/mwifiex/cfg80211.c:935
 
-Perhaps the easiest way is to check net->count this should be zero
-until setup_net is called.
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-if (!atomic_read(&init_net.count))
-	return ret;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 3875b1a..6c57e83 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1039,6 +1039,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 	case NL80211_HIDDEN_SSID_ZERO_CONTENTS:
+ 		/* firmware doesn't support this type of hidden SSID */
+ 	default:
++		kfree(bss_cfg);
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+1.7.0.2
+
