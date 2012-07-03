@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9830 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752924Ab2GJKuJ (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:60935 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752897Ab2GCAS0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 06:50:09 -0400
-Message-ID: <4FFC08C5.2050606@qca.qualcomm.com> (sfid-20120710_125014_507550_72546CC5)
-Date: Tue, 10 Jul 2012 13:49:41 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 2 Jul 2012 20:18:26 -0400
+Received: by ghrr11 with SMTP id r11so4721630ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 17:18:25 -0700 (PDT)
 MIME-Version: 1.0
-To: <drwho@infidigm.net>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	<linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: ar6004 / ar9374 firmware
-References: <43a66e0f20b45e9cc461272e83f2c4e4.squirrel@www.infidigm.net>
-In-Reply-To: <43a66e0f20b45e9cc461272e83f2c4e4.squirrel@www.infidigm.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1341238934-30855-5-git-send-email-ozancag@gmail.com>
+References: <1341238934-30855-1-git-send-email-ozancag@gmail.com> <1341238934-30855-5-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 2 Jul 2012 17:18:04 -0700
+Message-ID: <CAB=NE6WHUC5bXx4Vj4vQFavzZDrdwztBC3QKvjLcUMsMysLGEA@mail.gmail.com> (sfid-20120703_021830_689996_77A165B0)
+Subject: Re: [PATCH 5/5] compat: Backport DIV_ROUND_UP_DLL macro
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ath6kl-devel
+On Mon, Jul 2, 2012 at 7:22 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> This backports:
+>
+> commit 36a26c69b4c70396ef569c3452690fba0c1dec08
+> Author: Nicholas Bellinger <nab@linux-iscsi.org>
+> Date:   Tue Jul 26 00:35:26 2011 -0700
+>
+>     kernel.h: Add DIV_ROUND_UP_ULL and DIV_ROUND_UP_SECTOR_T macro usage
+>
+> Trying kernel  3.4.0-030400-generic [OK]
+> Trying kernel  3.3.7-030307-generic [OK]
+> Trying kernel  3.2.2-030202-generic [OK]
+> Trying kernel  3.1.10-030110-generic [OK]
+> Trying kernel  3.0.18-030018-generic [OK]
+> Trying kernel  2.6.39-02063904-generic [OK]
+> Trying kernel  2.6.38-02063808-generic [OK]
+> Trying kernel  2.6.37-02063706-generic [OK]
+> Trying kernel  2.6.36-02063604-generic [OK]
+> Trying kernel  2.6.35-02063512-generic [OK]
+> Trying kernel  2.6.34-02063410-generic [OK]
+> Trying kernel  2.6.33-02063305-generic [OK]
+> Trying kernel  2.6.32-02063255-generic [OK]
+> Trying kernel  2.6.31-02063113-generic [OK]
+> Trying kernel  2.6.30-02063010-generic [OK]
+> Trying kernel  2.6.29-02062906-generic [OK]
+> Trying kernel  2.6.28-02062810-generic [OK]
+> Trying kernel  2.6.27-020627-generic [OK]
+> Trying kernel  2.6.26-020626-generic [OK]
+> Trying kernel  2.6.25-020625-generic [OK]
+> Trying kernel  2.6.24-020624-generic [OK]
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-Hi Jon,
+Applied and pushed all, thanks!
 
-On 06/28/2012 12:28 AM, drwho@infidigm.net wrote:
-> I've noticed in core.h in the ath6kl driver that it is defining the
-> following firmware for the ar6004....
-> 
-> ath6k/AR6004/hw1.0/fw.ram.bin
-> ath6k/AR6004/hw1.1/fw.ram.bin
-> ath6k/AR6004/hw1.2/fw.ram.bin
-> 
-> In linux-firmware.git all that exists is...
-> 
-> ath6k/AR6004/hw1.2/fw-2.bin
-> ath6k/AR6004/hw1.2/bdata.bin
-> 
-> fw-2.bin need a rename?
-
-fw.ram.bin is for FW API 1 and fw-2.bin is FW API 2. So fw-2.bin is
-correct, I'll send a patch for ath6kl to fix this.
-
-> Also, my UB134 is coming up with a device ID of 0x31c8088a?
-> 
-> [  361.676440] ath6kl: Unsupported hardware version: 0x31c8088a
-> [  361.680437] ath6kl: Failed to init ath6kl core: -22
-> [  361.680491] ath6kl_usb: probe of 2-1:1.0 failed with error -22
-> [  361.680520] usbcore: registered new interface driver ath6kl_usb
-
-That's odd, I'm not familiar with 0x31c8088a. I wonder if it's corrupted
-somehow or is it a valid device id? Does anyone from ath6kl-devel know?
-
-Kalle
+  Luis
