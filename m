@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:50323 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754813Ab2GQULX (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:48835 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181Ab2GCPpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 16:11:23 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org, ilw@linux.intel.com,
-	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
-	buytenh@wantstofly.org, dsd@gentoo.org, coelho@ti.com,
-	johannes.berg@intel.com
-Subject: [PATCH v2 0/0 1/2] mac80211_hwsim: fix possible race condition in usage of info->control.sta & control.vif
-Date: Tue, 17 Jul 2012 22:11:16 +0200
-Message-Id: <1342555877-23563-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120717_221128_996699_E328662E)
-In-Reply-To: <1342555877-23563-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1342555877-23563-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Tue, 3 Jul 2012 11:45:16 -0400
+Received: by pbbrp8 with SMTP id rp8so9413658pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 08:45:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1341322180.20124.4.camel@jlt3.sipsolutions.net>
+References: <E50901D4F2CF69428D43141B7C85867929E154AE7B@EXMB03.eu.tieto.com> <1341322180.20124.4.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 3 Jul 2012 08:44:55 -0700
+Message-ID: <CAB=NE6XJj4pQZ+nB+yWp16n=t9CahhEi+tFuJ9KbGtvjc0K3yA@mail.gmail.com> (sfid-20120703_174521_098957_7E54239E)
+Subject: Re: wlan automated tests
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Piotr.Nakraszewicz@tieto.com, linux-wireless@vger.kernel.org,
+	filip.matusiak@tieto.com, pstew@chromium.org,
+	Kathy Giori <kgiori@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-info->control.sta and control.vif may only be dereferenced during the
-drv_tx call otherwise could lead to use-after-free bugs.
+On Tue, Jul 3, 2012 at 6:29 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2012-07-03 at 15:47 +0300, Piotr.Nakraszewicz@tieto.com wrote:
+>
+>> 1. wifi-test:
+>> http://wireless.kernel.org/en/developers/Testing/wifi-test
+>> But it looks dead. Last commit is from 2010.
+>
+> This is definitely dead.
+>
+>> 2. LTP:
+>> http://thread.gmane.org/gmane.linux.kernel.wireless.general/19759
+>> http://thread.gmane.org/gmane.linux.ltp/7884
+>
+> I don't know about this.
+>
+>> 3. Chromium Wifi tests:
+>> http://thread.gmane.org/gmane.linux.kernel.wireless.general/57576
+>
+> But I think this is probably the best one to extend.
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 5 -----
- 1 file changed, 5 deletions(-)
+Indeed, in fact I'm hoping somewhere out there AP mode operation can
+be extended to the framework by some entity.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 3f38d84..826ac7b 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1540,11 +1540,6 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	/* now send back TX status */
- 	txi = IEEE80211_SKB_CB(skb);
- 
--	if (txi->control.vif)
--		hwsim_check_magic(txi->control.vif);
--	if (txi->control.sta)
--		hwsim_check_sta_magic(txi->control.sta);
--
- 	ieee80211_tx_info_clear_status(txi);
- 
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
--- 
-1.7.11.1
-
+  Luis
