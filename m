@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:41710 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495Ab2GLLUV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 07:20:21 -0400
-Date: Thu, 12 Jul 2012 14:20:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: re: brcmsmac: use container_of instead of cast
-Message-ID: <20120712112007.GA12822@elgon.mountain> (sfid-20120712_132024_851527_150D9F64)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from arrakis.dune.hu ([78.24.191.176]:46680 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964775Ab2GCQyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 12:54:38 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 10/10] qca-swiss-army-knife: allow to verify AR955X initvals
+Date: Tue,  3 Jul 2012 18:42:55 +0200
+Message-Id: <1341333775-14091-11-git-send-email-juhosg@openwrt.org> (sfid-20120703_185445_506848_F44A08AE)
+In-Reply-To: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
+References: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch ed1dd81464f5: "brcmsmac: use container_of instead of cast" 
-from Jun 30, 2012, leads to the following Smatch warning:
-drivers/net/wireless/brcm80211/brcmsmac/aiutils.c:543 ai_detach()
-	 warn: can 'sii' even be NULL?
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ tools/initvals/Makefile            |    1 +
+ tools/initvals/initvals.c          |    1 +
+ tools/initvals/verify_checksums.sh |    2 +-
+ 3 files changed, 3 insertions(+), 1 deletions(-)
 
-   533  /* may be called with core in reset */
-   534  void ai_detach(struct si_pub *sih)
-   535  {
-   536          struct si_info *sii;
-   537  
-   538          struct si_pub *si_local = NULL;
-   539          memcpy(&si_local, &sih, sizeof(struct si_pub **));
-   540  
-   541          sii = container_of(sih, struct si_info, pub);
-   542  
-   543          if (sii == NULL)
-   544                  return;
-   545  
-   546          kfree(sii);
-   547  }
+diff --git a/tools/initvals/Makefile b/tools/initvals/Makefile
+index a4e375e..89169c1 100644
+--- a/tools/initvals/Makefile
++++ b/tools/initvals/Makefile
+@@ -34,6 +34,7 @@ ATH9K_HEADERS = \
+ 	ar9330-1p2:ar9330_1p2_initvals.h	\
+ 	ar9340:ar9340_initvals.h	\
+ 	ar9485:ar9485_initvals.h		\
++	ar955x-1p0:ar955x_1p0_initvals.h	\
+ 	ar9580-1p0:ar9580_1p0_initvals.h \
+ 	ar9462-2p0:ar9462_2p0_initvals.h
+ 
+diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
+index 4327f0d..f0b582c 100644
+--- a/tools/initvals/initvals.c
++++ b/tools/initvals/initvals.c
+@@ -35,6 +35,7 @@ struct initval_family {
+ #include "ar9330_1p2_initvals.h"
+ #include "ar9340_initvals.h"
+ #include "ar9485_initvals.h"
++#include "ar955x_1p0_initvals.h"
+ #include "ar9580_1p0_initvals.h"
+ #include "ar9462_2p0_initvals.h"
+ 
+diff --git a/tools/initvals/verify_checksums.sh b/tools/initvals/verify_checksums.sh
+index fd03478..a6d4b32 100755
+--- a/tools/initvals/verify_checksums.sh
++++ b/tools/initvals/verify_checksums.sh
+@@ -31,7 +31,7 @@ verify_family_checksum()
+ }
+ 
+ FAMILIES="$@"
+-[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9462-2p0 ar9485 ar9580-1p0"
++[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9462-2p0 ar9485 ar955x-1p0 ar9580-1p0"
+ 
+ mkdir -p "$CSUM_DIR"
+ for family in $FAMILIES; do
+-- 
+1.7.2.1
 
-
-Smatch complains because container_of() of does pointer math and the
-check for NULL only works when ->pub is first member of the si_info
-struct.
-
-Are you sure you want to free sii and not sih?
-
-Also kfree() checks for NULL.
-
-The memcpy() is pointless.
-
-The white space is not right.  There should be a blank line after the
-variable declarations.
-
-regards,
-dan carpenter
