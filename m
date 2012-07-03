@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53638 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754561Ab2GJJWk (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:61527 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932088Ab2GCEQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 05:22:40 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH v4 00/10] Add support for WOW in ath9k
-Date: Tue, 10 Jul 2012 14:52:29 +0530
-Message-ID: <1341912149-11807-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120710_112244_297555_5B8CEC17)
+	Tue, 3 Jul 2012 00:16:20 -0400
+Received: by lbbgm6 with SMTP id gm6so8659118lbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 21:16:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1341241685.19642.15.camel@jlt3.sipsolutions.net>
+References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+ <1341233662.19642.6.camel@jlt3.sipsolutions.net> <1341233919.19642.7.camel@jlt3.sipsolutions.net>
+ <5202151.WBzXQarS2v@lx-vladimir> <1341241685.19642.15.camel@jlt3.sipsolutions.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 3 Jul 2012 14:15:59 +1000
+Message-ID: <CAGRGNgVMLtOwsHxNsRkNO7tFUv7aQfSsHtw7JeXmLOF4X-oMHg@mail.gmail.com> (sfid-20120703_061625_448299_894E1BCA)
+Subject: Re: [PATCH 60g v2 0/5] Infrastructure for 60g (802.11ad)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi,
 
-Add support for hardware WoW in ath9k. Magic-packet,
-beacon loss triggers, deauth/disassoc patterns
-(a special case of user pattern) are tested. 
-User pattern needs a bit of investigation
-on parsing to appropriate 802.11 format.
-we will do more rigorous testing and address bugs.
+On Tue, Jul 3, 2012 at 1:08 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2012-07-02 at 18:01 +0300, Vladimir Kondratiev wrote:
+>
+>> So, now I'll focus on the last patch - bitrate calculation.
+>>
+>> My plan is:
+>>
+>> - add new element like NL80211_RATE_INFO_BITRATE_HT with u32 data
+>> - change nl80211_put_sta_rate() to fill both
+>>   NL80211_RATE_INFO_BITRATE (with u16 value)
+>>   and NL80211_RATE_INFO_BITRATE_HT (with u32 value)
+>> - when bitrate not fit into u16, put 0 for u16 value and fill only u32
+>
+> I think you should leave out the BITRATE value completely, not fill it
+> with 0.
 
-Thanks a lot to Vadivel for providing me the hardware and
-inputs to test. Thanks to Rajkumar, Sujith for their review &
-Russell for his all help. Thanks to Aeolous, Senthil and Raja. 
-Thanks a lot to Luis for providing the complete
-frame work for WoW in his initial wow patches.
+Why not make it 65535?
 
-Mohammed Shafi Shajakhan (10):
-  ath9k_hw: Add register definitions for WoW support
-  ath9k: Add definitions and structures to support WoW
-  ath9k_hw: Add WoW hardware capability flags
-  ath9k_hw: advertise WoW support for capable chipsets
-  ath9k: advertise supported WoW flags to upper layer
-  ath9k_hw: INI changes for WoW for AR9002 chipsets
-  ath9k_hw: Add hardware code for WoW
-  ath: Add Wake-on-Wireless debug mask
-  ath9k: Add WoW related mac80211 callbacks
-  ath9k: do not disable hardware while wow is enabled
+Thanks,
 
- drivers/net/wireless/ath/ath.h                   |    2 +
- drivers/net/wireless/ath/ath9k/Makefile          |    1 +
- drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +
- drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 +
- drivers/net/wireless/ath/ath9k/ath9k.h           |   13 +
- drivers/net/wireless/ath/ath9k/hw.c              |    8 +
- drivers/net/wireless/ath/ath9k/hw.h              |   82 ++++
- drivers/net/wireless/ath/ath9k/init.c            |   18 +
- drivers/net/wireless/ath/ath9k/main.c            |  373 +++++++++++++++
- drivers/net/wireless/ath/ath9k/pci.c             |    3 +
- drivers/net/wireless/ath/ath9k/reg.h             |  145 ++++++-
- drivers/net/wireless/ath/ath9k/wow.c             |  532 ++++++++++++++++++++++
- 12 files changed, 1195 insertions(+), 1 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
+-- 
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
