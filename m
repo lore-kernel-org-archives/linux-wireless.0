@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:40142 "EHLO
+Received: from perches-mx.perches.com ([206.117.179.246]:48188 "EHLO
 	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752849Ab2GDPJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 11:09:49 -0400
-Message-ID: <1341414588.3627.42.camel@joe2Laptop> (sfid-20120704_170954_532913_CE686D0D)
-Subject: Re: [PATCHv3 2/3] lib: printf: append support of '%*ph[CDN]'
+	id S1751081Ab2GCPNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 11:13:23 -0400
+Message-ID: <1341328402.2164.3.camel@joe2Laptop> (sfid-20120703_171329_868078_E447F351)
+Subject: Re: [PATCH] etherdevice: introduce broadcast_ether_addr
 From: Joe Perches <joe@perches.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
-	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Wed, 04 Jul 2012 08:09:48 -0700
-In-Reply-To: <1341391552-4842-2-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1341341280.2012.3.camel@joe2Laptop>
-	 <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1341391552-4842-2-git-send-email-andriy.shevchenko@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Jul 2012 08:13:22 -0700
+In-Reply-To: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
+References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-04 at 11:45 +0300, Andy Shevchenko wrote:
-> This patch adds a support of the variable width buffer to print it
-> as a hex string with a delimiter.
-
-Hi again Andy.
-
-> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+On Tue, 2012-07-03 at 12:16 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> A lot of code has either the memset or an
+> inefficient copy from a static array that
+> contains the all-ones broadcast address.
+> Introduce broadcast_ether_addr() to fill
+> an address with all ones, making the code
+> clearer and allowing us to get rid of the
+> various constant arrays.
 []
-> @@ -655,6 +655,57 @@ char *resource_string(char *buf, char *end, struct resource *res,
->  }
->  
->  static noinline_for_stack
-> +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
-> +		 const char *fmt)
+> diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
+[]
+> +static inline void broadcast_ether_addr(u8 *addr)
 > +{
-> +	char hex_str[8*3+1];	/* support up to 8 bytes to print */
+> +	memset(addr, 0xff, ETH_ALEN);
+> +}
 
-I think you don't need hex_str at all.
+I think this sort of patch should come as the first
+patch in a series with some example conversions.
 
-[]
+It might be too easy to confuse is_broadcast_ether_addr
+with this function name too.  Maybe set_broadcast_ether_addr
+might be better.
 
-> +	if (spec.field_width <= 0)
-> +		/* nothing to print */
-> +		return buf;
+I really don't see an issue with using memset though.
+Everyone already knows what that does.
 
-It may be better to default to a 1 and add
-
-	if (addr == ZERO_OR_NULL_PTR)
-
-to avoid dereferencing a NULL or a pointer
-to a zero length object.
-
-> +
-> +	len = min_t(int, spec.field_width, 64);
-> +
-> +	while (i < len) {
-> +		p = hex_str;
-> +		for (j = 0; j < 8 && i < len; j++, i++) {
-> +			p = hex_byte_pack(p, addr[i]);
-> +
-> +			if (separator && i != len - 1)
-> +				*p++ = separator;
-> +		}
-> +		*p = '\0';
-> +
-> +		for (p = hex_str; *p != '\0'; p++) {
-> +			if (buf < end)
-> +				*buf = *p;
-> +			++buf;
-> +		}
-
-why not just directly write to *buf as long as buf < end?
-
-cheers, Joe
 
