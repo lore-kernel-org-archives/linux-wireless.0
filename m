@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:53558 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860Ab2GGWjI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2012 18:39:08 -0400
-Received: by obbuo13 with SMTP id uo13so17615127obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2012 15:39:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1341608733-7503-4-git-send-email-johannes@sipsolutions.net>
-References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
-	<1341608733-7503-4-git-send-email-johannes@sipsolutions.net>
-Date: Sun, 8 Jul 2012 01:39:07 +0300
-Message-ID: <CAB3XZEdmBi4gb=HMnwXRq4wygoQ6Gi=eTkocTA_NGNZLusWj_Q@mail.gmail.com> (sfid-20120708_003917_834855_5B818BFC)
-Subject: Re: [RFC 3/3] mac80211: redesign scan RX
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:48708 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753616Ab2GCPdw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 11:33:52 -0400
+Message-ID: <1341329631.2164.15.camel@joe2Laptop> (sfid-20120703_173410_498271_7AEE282C)
+Subject: Re: [RFC][PATCHv2 2/3] lib: printf: append support of '%*p[Mm][FR]'
+From: Joe Perches <joe@perches.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Date: Tue, 03 Jul 2012 08:33:51 -0700
+In-Reply-To: <1341310000-4082-2-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1341264199.10162.2.camel@joe2Laptop>
+	 <1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1341310000-4082-2-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 7, 2012 at 12:05 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Scan receive is rather inefficient when there are
-> multiple virtual interfaces. We iterate all of the
-> virtual interfaces and then notify cfg80211 about
-> each beacon many times.
->
-> Redesign scan RX to happen before everything else.
-> Then we can also get rid of IEEE80211_RX_IN_SCAN
-> since we don't have to accept frames into the RX
-> handlers for scanning or scheduled scanning any
-> more. Overall, this simplifies the code.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-[...]
+On Tue, 2012-07-03 at 13:06 +0300, Andy Shevchenko wrote:
+> There are many places in the kernel where the drivers print small buffers as a
+> hex string. This patch adds a support of the variable width buffer to print it
+> as a hex string with a delimiter. The idea came from Pavel Roskin here:
+> http://www.digipedia.pl/usenet/thread/18835/17449/
+> 
+> Sample output of
+> 	pr_info("buf[%d:%d] %*pM\n", from, len, len, &buf[from]);
+> could be look like this:
+> 	[ 0.726130] buf[51:8] e8:16:b6:ef:e3:74:45:6e
+> 	[ 0.750736] buf[59:15] 31:81:b8:3f:35:49:06:ae:df:32:06:05:4a:af:55
+> 	[ 0.757602] buf[17:5] ac:16:d5:2c:ef
 
-> +       sdata1 = rcu_dereference(local->scan_sdata);
-> +       sdata2 = rcu_dereference(local->sched_scan_sdata);
->
-> -       if (skb->len < 24)
-> -               return RX_CONTINUE;
-> +       if (likely(!sdata1 && !sdata2))
-> +               return;
->
-> -       presp = ieee80211_is_probe_resp(fc);
-> -       if (presp) {
-> +       if (ieee80211_is_probe_resp(mgmt->frame_control)) {
->                 /* ignore ProbeResp to foreign address */
-> -               if (!ether_addr_equal(mgmt->da, sdata->vif.addr))
-> -                       return RX_DROP_MONITOR;
-> +               if (!ether_addr_equal(mgmt->da, sdata1->vif.addr) &&
-> +                   !ether_addr_equal(mgmt->da, sdata2->vif.addr))
-> +                       return;
+Hi Andy.
 
-you should check sdata1 and sdata2 before dereferencing them.
+> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+[]
+> @@ -655,12 +655,13 @@ char *resource_string(char *buf, char *end, struct resource *res,
+[]
+> +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
+> +		 const char *fmt)
+[]
+> @@ -678,18 +679,31 @@ char *mac_address_string(char *buf, char *end, u8 *addr,
+[]
+> +	while (i < len) {
 
-other than that, looks good to me.
+Oh good, a while loop, thanks.
 
-Eliad.
+[]
+
+> @@ -947,6 +961,9 @@ int kptr_restrict __read_mostly;
+>   * - 'MF' For a 6-byte MAC FDDI address, it prints the address
+>   *       with a dash-separated hex notation
+>   * - '[mM]R For a 6-byte MAC address, Reverse order (Bluetooth)
+> + *       Optional usage is %*p[Mn][FR] with variable length to print. It
+> + *       supports up to 64 bytes of the input. Consider to use print_hex_dump()
+> + *       for the larger input.
+
+It might be more sensible to use new, distinct
+"%*pH" and "%*ph" functions and not touch the
+mac address function at all.  Will anyone ever
+really want to emit the buffer in reverse?
+I don't think so.
+
+Perhaps when using a hex_string_buffer func the
+separator should be a space/no-space with %*pHh.
+
+You could extend the max to 128 or larger now.
+
+
