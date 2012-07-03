@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26001 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754281Ab2GJRYo (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:36626 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034Ab2GCLcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 13:24:44 -0400
-Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
-	<arend@broadcom.com>, <henry@logout.com>,
-	<senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-Subject: [PATCH v4 5/5] cfg80211: remove regulatory_update()
-Date: Tue, 10 Jul 2012 10:23:11 -0700
-Message-ID: <1341940991-11234-6-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120710_192447_013697_71D83DA7)
-In-Reply-To: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
+	Tue, 3 Jul 2012 07:32:36 -0400
+Date: Tue, 3 Jul 2012 14:32:23 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: cfg80211: add 802.11ad (60gHz band) support
+Message-ID: <20120703113223.GE4519@mwanda> (sfid-20120703_133240_879805_BF7FF38D)
+References: <20120703105342.GA29879@elgon.mountain>
+ <1341313457.5131.3.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1341313457.5131.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+On Tue, Jul 03, 2012 at 01:04:17PM +0200, Johannes Berg wrote:
+> On Tue, 2012-07-03 at 13:53 +0300, Dan Carpenter wrote:
+> > Hello Vladimir Kondratiev,
+> > 
+> > The patch 3a0c52a6d82c: "cfg80211: add 802.11ad (60gHz band) support" 
+> > from Jul 2, 2012, leads to the following warning:
+> > drivers/net/wireless/mac80211_hwsim.c:1841 init_mac80211_hwsim()
+> > 	 warn: buffer overflow 'data->bands' 2 <= 2
+> > 
+> > drivers/net/wireless/mac80211_hwsim.c
+> >   1839  
+> >   1840                  for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
+> >                                                                 ^^^^^^^^^^^^^^^^^^^
+> > We raised IEEE80211_NUM_BANDS to 3.
+> > 
+> >   1841                          struct ieee80211_supported_band *sband = &data->bands[band];
+> >                                                                                 ^^^^^^^^^^^
+> > This only has 2 elements still.
+> > 
+> >   1842                          switch (band) {
+> >   1843                          case IEEE80211_BAND_2GHZ:
+> > 
+> > It causes a bogus dereference later.
+> 
+> Thanks Dan!
+> 
+> Is this one of your non-default tests? I think I ran smatch on this, but
+> it might be old.
 
-regulatory_update() just calls wiphy_update_regulatory().
-wiphy_update_regulatory() assumes you already have
-the reg_mutex held so just move the call within locking
-context and kill the superfluous regulatory_update().
+It should be on by default in the latest code.  :)
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- net/wireless/reg.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b0a09b2..6d57e18 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1232,14 +1232,6 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
- 		wiphy->reg_notifier(wiphy, last_request);
- }
- 
--static void regulatory_update(struct wiphy *wiphy,
--			      enum nl80211_reg_initiator setby)
--{
--	mutex_lock(&reg_mutex);
--	wiphy_update_regulatory(wiphy, setby);
--	mutex_unlock(&reg_mutex);
--}
--
- static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
- {
- 	struct cfg80211_registered_device *rdev;
-@@ -2384,9 +2376,9 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
- 	if (!reg_dev_ignore_cell_hint(wiphy))
- 		reg_num_devs_support_basehint++;
- 
--	mutex_unlock(&reg_mutex);
-+	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
- 
--	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
-+	mutex_unlock(&reg_mutex);
- }
- 
- /* Caller must hold cfg80211_mutex */
--- 
-1.7.10.rc1.22.gf5241
-
+regards,
+dan carpenter
