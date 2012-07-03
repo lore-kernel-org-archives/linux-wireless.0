@@ -1,148 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46677 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964782Ab2GCQyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 12:54:38 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 06/10] qca-swiss-army-knife: allow to print initvals with more than 5 columns
-Date: Tue,  3 Jul 2012 18:42:51 +0200
-Message-Id: <1341333775-14091-7-git-send-email-juhosg@openwrt.org> (sfid-20120703_185450_073799_7F60F809)
-In-Reply-To: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
-References: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:37651 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445Ab2GCLEY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 07:04:24 -0400
+Message-ID: <1341313457.5131.3.camel@jlt3.sipsolutions.net> (sfid-20120703_130427_842651_4A7DF367)
+Subject: Re: cfg80211: add 802.11ad (60gHz band) support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 03 Jul 2012 13:04:17 +0200
+In-Reply-To: <20120703105342.GA29879@elgon.mountain> (sfid-20120703_125355_865535_D89FFB14)
+References: <20120703105342.GA29879@elgon.mountain>
+	 (sfid-20120703_125355_865535_D89FFB14)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is required for the QCA955X initvals, because that
-contain some arrays with 9 columns.
+On Tue, 2012-07-03 at 13:53 +0300, Dan Carpenter wrote:
+> Hello Vladimir Kondratiev,
+> 
+> The patch 3a0c52a6d82c: "cfg80211: add 802.11ad (60gHz band) support" 
+> from Jul 2, 2012, leads to the following warning:
+> drivers/net/wireless/mac80211_hwsim.c:1841 init_mac80211_hwsim()
+> 	 warn: buffer overflow 'data->bands' 2 <= 2
+> 
+> drivers/net/wireless/mac80211_hwsim.c
+>   1839  
+>   1840                  for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
+>                                                                 ^^^^^^^^^^^^^^^^^^^
+> We raised IEEE80211_NUM_BANDS to 3.
+> 
+>   1841                          struct ieee80211_supported_band *sband = &data->bands[band];
+>                                                                                 ^^^^^^^^^^^
+> This only has 2 elements still.
+> 
+>   1842                          switch (band) {
+>   1843                          case IEEE80211_BAND_2GHZ:
+> 
+> It causes a bogus dereference later.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/initvals.c |   58 ++++++++++++++++++++++++++++++--------------
- 1 files changed, 39 insertions(+), 19 deletions(-)
+Thanks Dan!
 
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index f28f2c9..d7df352 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -306,7 +306,8 @@ struct initval_family {
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
- 						ARRAY_SIZE(_array), \
--						ARRAY_SIZE((_array)[0])); \
-+						ARRAY_SIZE((_array)[0]), \
-+						false); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		if (sizeof(_ref) == sizeof(_array) && \
-@@ -317,34 +318,40 @@ struct initval_family {
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
- 				       ARRAY_SIZE(_array), \
- 				       ARRAY_SIZE((_array)[0]), \
-+				       false, \
- 				       false); \
- 	} \
-     } while (0)
- 
--#define INI_PRINT(_array) do { \
-+#define _INI_PRINT(_array, _wide) do { \
- 	if (check) { \
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
--						 ARRAY_SIZE(_array), \
--						 ARRAY_SIZE((_array)[0])); \
-+						ARRAY_SIZE(_array), \
-+					        ARRAY_SIZE((_array)[0]), \
-+						_wide); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
- 				       ARRAY_SIZE(_array), \
- 				       ARRAY_SIZE((_array)[0]), \
--				       false); \
-+				       false, \
-+				       _wide); \
- 	} \
-     } while (0)
- 
-+#define INI_PRINT(_array)	_INI_PRINT(_array, false)
-+#define INI_PRINTW(_array)	_INI_PRINT(_array, true)
-+
- #define INI_PRINT_ONEDIM(_array) do { \
- 	if (check) { \
- 		char *sha1sum; \
- 		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
--						ARRAY_SIZE(_array), 1); \
-+						ARRAY_SIZE(_array), 1, false); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
--				       ARRAY_SIZE(_array), 1, true); \
-+				       ARRAY_SIZE(_array), 1, true, false); \
- 	} \
-     } while (0)
- 
-@@ -384,19 +391,26 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
- 	return val;
- }
- 
--static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
-+static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
-+				   u32 columns, bool onedim, bool wide)
- {
--	u32 p_columns = columns > 5 ? 5 : columns;
-+	u32 p_columns;
- 	u32 col, row;
- 
--	/*
--	 * This checksum stuff is designed for columns <= 8),
--	 * and spreads the checksum over 64 bits but since currently
--	 * the initval max column size is 6 we only use the first 48
--	 * bits.
--	 */
--	if (columns > 6)
--		return;
-+	if (wide) {
-+		p_columns = columns;
-+	} else {
-+		p_columns = columns > 5 ? 5 : columns;
-+
-+		/*
-+		* This checksum stuff is designed for columns <= 8),
-+		* and spreads the checksum over 64 bits but since currently
-+		* the initval max column size is 6 we only use the first 48
-+		* bits.
-+		*/
-+		if (columns > 6)
-+			return;
-+	}
- 
- 	if (onedim)
- 		printf("static const u32 %s[] = {\n", name);
-@@ -440,14 +454,20 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
- 	printf("};\n\n");
- }
- 
--static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns)
-+static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns,
-+				    bool wide)
- {
- 	SHA1_CTX ctx;
- 	unsigned char digest[SHA1_DIGEST_SIZE];
- 	static char buf[64];
--	u32 p_columns = columns > 5 ? 5 : columns;
-+	u32 p_columns;
- 	u32 col, row;
- 
-+	if (wide)
-+		p_columns = columns;
-+	else
-+		p_columns = columns > 5 ? 5 : columns;
-+
- 	SHA1_Init(&ctx);
- 	for (row = 0; row < rows; row++) {
- 		for (col = 0; col < p_columns; col++) {
--- 
-1.7.2.1
+Is this one of your non-default tests? I think I ran smatch on this, but
+it might be old. Anyway, I'll commit this fix: 
+
+http://p.sipsolutions.net/a1c40eea7e33541b.txt
+
+johannes
 
