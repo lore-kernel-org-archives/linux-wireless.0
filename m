@@ -1,30 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7637 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628Ab2GIGf3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 02:35:29 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20474.31597.88049.168563@gargle.gargle.HOWL> (sfid-20120709_083533_065654_798DCB1F)
-Date: Mon, 9 Jul 2012 12:04:21 +0530
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: fix reset work check properly
-In-Reply-To: <1341815640-6299-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1341815640-6299-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mga01.intel.com ([192.55.52.88]:27690 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750923Ab2GCKHC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jul 2012 06:07:02 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joe@smile, Perches@smile, joe@perches.com
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [RFC][PATCHv2 1/3] lib: printf: update documentation to cover all of %p[Mm][FR]
+Date: Tue,  3 Jul 2012 13:06:38 +0300
+Message-Id: <1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120703_120808_830334_59FC7DEC)
+In-Reply-To: <1341264199.10162.2.camel@joe2Laptop>
+References: <1341264199.10162.2.camel@joe2Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> Once the hw reset work is queued up and to bail out current
-> execution properly, use HW_RESET bit ops instead of work_pending.
-> As work_pending might return false when the queued work is in
-> execution. So it is not correct to use the work utility for
-> baining out.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ Documentation/printk-formats.txt |    1 +
+ lib/vsprintf.c                   |    3 +++
+ 2 files changed, 4 insertions(+)
 
-I'll add this on top of my pending series and send it as a
-single patch-bomb.
+diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
+index d8d168fa..90ff4d7 100644
+--- a/Documentation/printk-formats.txt
++++ b/Documentation/printk-formats.txt
+@@ -59,6 +59,7 @@ MAC/FDDI addresses:
+ 	%pMR	05:04:03:02:01:00
+ 	%pMF	00-01-02-03-04-05
+ 	%pm	000102030405
++	%pmR	050403020100
+ 
+ 	For printing 6-byte MAC/FDDI addresses in hex notation. The 'M' and 'm'
+ 	specifiers result in a printed address with ('M') or without ('m') byte
+diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+index a0b5f15..c65f5d4 100644
+--- a/lib/vsprintf.c
++++ b/lib/vsprintf.c
+@@ -1287,7 +1287,10 @@ qualifier:
+  * %pR output the address range in a struct resource with decoded flags
+  * %pr output the address range in a struct resource with raw flags
+  * %pM output a 6-byte MAC address with colons
++ * %pMR output a 6-byte MAC address with colons in reversed order
++ * %pMF output a 6-byte MAC address with dashes
+  * %pm output a 6-byte MAC address without colons
++ * %pmR output a 6-byte MAC address without colons in reversed order
+  * %pI4 print an IPv4 address without leading zeros
+  * %pi4 print an IPv4 address with leading zeros
+  * %pI6 print an IPv6 address with colons
+-- 
+1.7.10
 
-Sujith
