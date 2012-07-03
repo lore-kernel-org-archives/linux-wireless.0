@@ -1,124 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19301 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710Ab2GCIht (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38649 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752321Ab2GCQV2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 04:37:49 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/2] {nl,cfg}80211: support high bitrates
-Date: Tue, 3 Jul 2012 11:37:29 +0300
-Message-ID: <1341304650-2593-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120703_103752_521225_A723E6A3)
-In-Reply-To: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 3 Jul 2012 12:21:28 -0400
+Message-ID: <1341332487.20124.7.camel@jlt3.sipsolutions.net> (sfid-20120703_182132_301245_D7783388)
+Subject: Re: [PATCH] compat-wireless: fix debugging in iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Jul 2012 18:21:27 +0200
+In-Reply-To: <CAB=NE6WDyFS5gK85Lq1uEA5A5HLRhhyVcFT7EQkK0SALG0YF6g@mail.gmail.com> (sfid-20120703_181714_567213_CDA8319F)
+References: <1341322108.20124.3.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6VvJ+rv4mtYMngVg==tDVZpRM2CrGJ3Yc4u7a7ZLwiGOA@mail.gmail.com>
+	 <CAB=NE6WDyFS5gK85Lq1uEA5A5HLRhhyVcFT7EQkK0SALG0YF6g@mail.gmail.com>
+	 (sfid-20120703_181714_567213_CDA8319F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With recently introduced high bitrates, u16 that used to represent bitrate
-becomes too small.
+On Tue, 2012-07-03 at 09:16 -0700, Luis R. Rodriguez wrote:
+> On Tue, Jul 3, 2012 at 8:47 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Tue, Jul 3, 2012 at 6:28 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> From: Johannes Berg <johannes.berg@intel.com>
+> >>
+> >> As compat includes linux/device.h well before iwlwifi, the
+> >> definitions from there are used without DEBUG, but iwlwifi
+> >> defines DEBUG to get debug output. Use dev_printk instead
+> >> of dev_dbg to get debugging back.
+> >>
+> >> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> >
+> > Applied and pushed, thanks!
+> 
+> On today's linux-next.git the dev_dbg() changed to dev_err(), I've
+> updated the patch to reflect this.
 
-Thus, new 32-bit bitrate introduced. nl80211 reports new bitrate and old one,
-in case bitrate fits into u16.
+Huh, sorry. Please drop this for now -- the patch to change it *from*
+dev_err *to* dev_dbg is only in my iwlwifi-next tree now.
 
-User space tools should switch to new bitrate. Old one is deprecated and going to be
-removed in the future.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- include/linux/nl80211.h |    5 +++++
- include/net/cfg80211.h  |    2 +-
- net/wireless/nl80211.c  |    8 ++++++--
- net/wireless/util.c     |    2 +-
- 4 files changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 74cc55c..4ba32e3 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1638,12 +1638,16 @@ struct nl80211_sta_flag_update {
-  *
-  * These attribute types are used with %NL80211_STA_INFO_TXRATE
-  * when getting information about the bitrate of a station.
-+ * Legacy bitrate represented with 16-bit value, while new
-+ * "high throughput" bitrate uses 32-bit value. User space tools
-+ * should use new bitrate.
-  *
-  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
-  * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
-  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
-  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
-+ * @NL80211_RATE_INFO_BITRATE_HT: total bitrate (u32, 100kbit/s)
-  * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
-  * @__NL80211_RATE_INFO_AFTER_LAST: internal use
-  */
-@@ -1653,6 +1657,7 @@ enum nl80211_rate_info {
- 	NL80211_RATE_INFO_MCS,
- 	NL80211_RATE_INFO_40_MHZ_WIDTH,
- 	NL80211_RATE_INFO_SHORT_GI,
-+	NL80211_RATE_INFO_BITRATE_HT,
- 
- 	/* keep last */
- 	__NL80211_RATE_INFO_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0b564e8..8837efc 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3487,7 +3487,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
-  *
-  * return 0 if MCS index >= 32
-  */
--u16 cfg80211_calculate_bitrate(struct rate_info *rate);
-+u32 cfg80211_calculate_bitrate(struct rate_info *rate);
- 
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 77102e6..3e370d9 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2618,7 +2618,8 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
- 				 int attr)
- {
- 	struct nlattr *rate;
--	u16 bitrate;
-+	u32 bitrate;
-+	u16 bitrate_compat;
- 
- 	rate = nla_nest_start(msg, attr);
- 	if (!rate)
-@@ -2626,8 +2627,11 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
- 
- 	/* cfg80211_calculate_bitrate will return 0 for mcs >= 32 */
- 	bitrate = cfg80211_calculate_bitrate(info);
-+	bitrate_compat = bitrate < (1UL << 16) ? bitrate : 0;
- 	if ((bitrate > 0 &&
--	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate)) ||
-+	     nla_put_u32(msg, NL80211_RATE_INFO_BITRATE_HT, bitrate)) ||
-+	    (bitrate_compat > 0 &&
-+	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate_compat)) ||
- 	    ((info->flags & RATE_INFO_FLAGS_MCS) &&
- 	     nla_put_u8(msg, NL80211_RATE_INFO_MCS, info->mcs)) ||
- 	    ((info->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) &&
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 0228c64..6e52726 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -900,7 +900,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
- 
--u16 cfg80211_calculate_bitrate(struct rate_info *rate)
-+u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
- 	int modulation, streams, bitrate;
- 
--- 
-1.7.9.5
+johannes
 
