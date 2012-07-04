@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:62844 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182Ab2GELs6 (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:37921 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754Ab2GDAlT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 07:48:58 -0400
-Received: by yenl2 with SMTP id l2so7242145yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 04:48:57 -0700 (PDT)
+	Tue, 3 Jul 2012 20:41:19 -0400
+Received: by wgbdr13 with SMTP id dr13so6808702wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 17:41:18 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: mcgrof@frijolero.org, linville@tuxdriver.com,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	xose.vazquez@gmail.com
+Subject: [PATCH v2] wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
+Date: Wed,  4 Jul 2012 02:41:13 +0200
+Message-Id: <1341362473-18747-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120704_024122_684278_3476B13D)
 MIME-Version: 1.0
-In-Reply-To: <1341474140.4455.4.camel@jlt3.sipsolutions.net>
-References: <1341417530-9062-1-git-send-email-arik@wizery.com>
- <1341417530-9062-4-git-send-email-arik@wizery.com> <1341474140.4455.4.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 5 Jul 2012 14:48:42 +0300
-Message-ID: <CA+XVXffsSac_CC5-yh0MAozm+z2P_ge9BfNbsdMWV_YmY7dHiA@mail.gmail.com> (sfid-20120705_134902_007190_F903CAED)
-Subject: Re: [RFC 3/4] cfg80211: allow driver to implement HT capabilities per netdev
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 5, 2012 at 10:42 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-07-04 at 18:58 +0300, Arik Nemtsov wrote:
->
->>       void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
->> +     struct ieee80211_sta_ht_cap *(*get_ht_cap)(struct wiphy *wiphy,
->> +                                                struct net_device *dev,
->> +                                                enum ieee80211_band band);
->
-> Ok so ... I really don't like this whole concept to start with, but you
-> convinced me it was needed. This is just ugly though. Now you can
-> suddenly change the HT caps randomly at runtime? That's ... distressing
-> for userspace!
->
-> Is there any chance this can just be a pointer inside the wdev struct?
-> Then at least we can verify it in NETDEV_UP if you had invalid HT caps
-> originally, etc.
+Spanish law was based on CEPT/EU rules:
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000058.html
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000059.html
 
-Yea I guess it can be confusing. Sure we can make it part of the wdev
-and add some verification. Propagate the pointers from the mac80211
-vif in ieee80211_do_open().
-But does cfg80211 code even have a hook on NETDEV_UP?
+
+Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
+nacional de atribución de frecuencias (CNAF):
+https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
+https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
+
+search for:
+ UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
+ UN – 128 RLANs en 5 GHz (pag. 232)
+
+more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
+http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
+
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+
+---
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 4c54543..11409d6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -239,10 +239,10 @@ country EG:
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
+ 
+ country ES: DFS-ETSI
+-	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(2400 - 2483.5 @ 40), (N/A, 100 mW)
++	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
++	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
++	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
+ 
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
+
