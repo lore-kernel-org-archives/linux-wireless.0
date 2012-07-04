@@ -1,24 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39034 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755481Ab2GaLcW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:32:22 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SwAgX-0007LV-Qd
-	for linux-wireless@vger.kernel.org; Tue, 31 Jul 2012 13:32:22 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: P2P Device abstraction
-Date: Tue, 31 Jul 2012 13:32:14 +0200
-Message-Id: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net> (sfid-20120731_133229_357665_AB4AC533)
+Received: from smtp2.u-psud.fr ([129.175.33.42]:27840 "EHLO smtp2.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753035Ab2GDJNw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 05:13:52 -0400
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mac80211: tx: do not drop non-robust mgmt to non-MFP stas.
+Date: Wed,  4 Jul 2012 11:13:41 +0200
+Message-Id: <1341393221-5396-1-git-send-email-cavallar@lri.fr> (sfid-20120704_111406_891380_AA2BED18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We ran into a few more small issues that I've fixed now,
-I intend to apply these patches soon.
+When drop_unencrypted is enabled and MFP is disabled, non-robust
+management frames for not-yet associated STA are dropped  before
+being transmitted.
 
-johannes
+This isn't visible as many management frames sent from  the kernel
+have TX_INTFL_DONT_ENCRYPT set and management frames injected from
+monitor vifs have TX_CTL_INJECTED set, so are never dropped in the
+tx path. But mgmt frames sent from userspace via NL80211_CMD_FRAME
+do not have any of these flags, so are dropped.
+
+This patch make it accept non-robust management frames,
+but drops non-management frames and robust management frames as usual.
+
+Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
+
+---
+
+Found this while trying to manage auth  frames in userspace
+on a IBSS RSN network.
+I'm  a bit surprised that drop_unencrypted is disabled both
+in AP and managed mode, but only enabled in IBSS RSN, which
+does not support MFP, yet.
+
+patch based on linux-wireless 565e1fc.
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 4990f4f..97682e0 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -545,6 +545,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 	else if (tx->sdata->drop_unencrypted &&
+ 		 (tx->skb->protocol != tx->sdata->control_port_protocol) &&
+ 		 !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
++		 (!ieee80211_is_mgmt(hdr->frame_control) ||
++		  ieee80211_is_robust_mgmt_frame(hdr)) &&
+ 		 (!ieee80211_is_robust_mgmt_frame(hdr) ||
+ 		  (ieee80211_is_action(hdr->frame_control) &&
+ 		   tx->sta && test_sta_flag(tx->sta, WLAN_STA_MFP)))) {
+-- 
+1.7.10.4
 
