@@ -1,156 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37848 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848Ab2GCLwA (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:63422 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754850Ab2GDP7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 07:52:00 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: add TX prepare API
-Date: Tue,  3 Jul 2012 13:51:56 +0200
-Message-Id: <1341316316-18134-1-git-send-email-johannes@sipsolutions.net> (sfid-20120703_135204_942551_77E975FA)
+	Wed, 4 Jul 2012 11:59:00 -0400
+Received: by mail-we0-f174.google.com with SMTP id b14so4517616wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 08:59:00 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [RFC 2/4] cfg80211: support unused HT-cap-per-band configuration
+Date: Wed,  4 Jul 2012 18:58:48 +0300
+Message-Id: <1341417530-9062-3-git-send-email-arik@wizery.com> (sfid-20120704_175906_891967_EF052DFB)
+In-Reply-To: <1341417530-9062-1-git-send-email-arik@wizery.com>
+References: <1341417530-9062-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Allow drivers not to use the HT capabilities given per band in struct
+wiphy. This can be indicated by setting ht_cap_invalid to true for the
+wiphy.
 
-Some drivers require setup before being able to send
-management frames in managed mode, in particular in
-multi-channel cases.
+In any case the band will contain a boolean value indicating if HT is
+supported.
 
-Introduce API to allow the drivers to do such setup
-while being able to sleep waiting for the setup to
-finish in the device. This isn't possible inside the
-TX call since that can't sleep.
-
-A future patch may also restructure the TX retry to
-wait for the driver to report the frame status, as
-suggested by Arik in
-http://mid.gmane.org/CA+XVXffKSEL6ZQPQ98x-zO-NL2=TNF1uN==mprRyUmAaRn254g@mail.gmail.com
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- include/net/mac80211.h    |   15 +++++++++++++++
- net/mac80211/driver-ops.h |   14 ++++++++++++++
- net/mac80211/mlme.c       |    8 ++++++++
- net/mac80211/trace.h      |    7 +++++++
- 4 files changed, 44 insertions(+)
+ include/net/cfg80211.h     |   14 ++++++++++++--
+ net/wireless/chan.c        |   10 +++++++---
+ net/wireless/core.c        |    3 ++-
+ net/wireless/wext-compat.c |    4 ++--
+ 4 files changed, 23 insertions(+), 8 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3f1b58c..e3fa90c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2244,6 +2244,18 @@ enum ieee80211_rate_control_changed {
-  * @get_rssi: Get current signal strength in dBm, the function is optional
-  *	and can sleep.
-  *
-+ * @mgd_prepare_tx: Prepare for transmitting a management frame for association
-+ *	before associated. In multi-channel scenarios, a virtual interface is
-+ *	bound to a channel before it is associated, but as it isn't associated
-+ *	yet it need not necessarily be given airtime, in particular since any
-+ *	transmission to a P2P GO needs to be synchronized against the GO's
-+ *	powersave state. mac80211 will call this function before transmitting a
-+ *	management frame prior to having successfully associated to allow the
-+ *	driver to give it channel time for the transmission, to get a response
-+ *	and to be able to synchronize with the GO.
-+ *	The callback will be called before each transmission and upon return
-+ *	mac80211 will transmit the frame right away.
-+ *	The callback is optional and can (should!) sleep.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0b564e8..7b24d88 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -205,8 +205,8 @@ struct ieee80211_rate {
+  * @mcs: Supported MCS rates
   */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -2383,6 +2395,9 @@ struct ieee80211_ops {
- 				  u32 sset, u8 *data);
- 	int	(*get_rssi)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, s8 *rssi_dbm);
-+
-+	void	(*mgd_prepare_tx)(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif);
+ struct ieee80211_sta_ht_cap {
++	bool ht_supported; /* this must be first */
+ 	u16 cap; /* use IEEE80211_HT_CAP_ */
+-	bool ht_supported;
+ 	u8 ampdu_factor;
+ 	u8 ampdu_density;
+ 	struct ieee80211_mcs_info mcs;
+@@ -243,6 +243,12 @@ struct ieee80211_sta_vht_cap {
+  *	rates" IE, i.e. CCK rates first, then OFDM.
+  * @n_bitrates: Number of bitrates in @bitrates
+  * @ht_cap: HT capabilities in this band
++ * @ht_supported: Gives general HT support status in case HT capabilities
++ *	are set per &struct net_device, and @ht_cap is not used.
++ * @ht_cap_invalid: Indicates the @ht_cap field of the band is not used.
++ *	This should be set for devices implementing the get_ht_cap() op
++ *	for changing the HT capabilities per interface.
++ * @vht_cap: VHT capabilities in this band
+  */
+ struct ieee80211_supported_band {
+ 	struct ieee80211_channel *channels;
+@@ -250,7 +256,11 @@ struct ieee80211_supported_band {
+ 	enum ieee80211_band band;
+ 	int n_channels;
+ 	int n_bitrates;
+-	struct ieee80211_sta_ht_cap ht_cap;
++	union {
++		struct ieee80211_sta_ht_cap ht_cap;
++		bool ht_supported;
++	};
++	bool ht_cap_invalid;
+ 	struct ieee80211_sta_vht_cap vht_cap;
  };
  
- /**
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 5042151..df92031 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -852,4 +852,18 @@ static inline int drv_get_rssi(struct ieee80211_local *local,
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 434c56b..09b0012 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -16,6 +16,7 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ {
+ 	struct ieee80211_channel *chan;
+ 	struct ieee80211_sta_ht_cap *ht_cap;
++	struct ieee80211_supported_band *sband;
  
- 	return ret;
- }
-+
-+static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
-+				      struct ieee80211_sub_if_data *sdata)
-+{
-+	might_sleep();
-+
-+	check_sdata_in_driver(sdata);
-+	WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION);
-+
-+	trace_drv_mgd_prepare_tx(local, sdata);
-+	if (local->ops->mgd_prepare_tx)
-+		local->ops->mgd_prepare_tx(&local->hw, &sdata->vif);
-+	trace_drv_return_void(local);
-+}
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e9c0d1b..d563f7c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -541,6 +541,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		memcpy(pos, assoc_data->ie + offset, noffset - offset);
+ 	chan = ieee80211_get_channel(&rdev->wiphy, freq);
+ 
+@@ -30,13 +31,16 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 		 chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
+ 		return NULL;
+ 
+-	ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
++	sband = rdev->wiphy.bands[chan->band];
++	ht_cap = &sband->ht_cap;
+ 
+ 	if (channel_type != NL80211_CHAN_NO_HT) {
+-		if (!ht_cap->ht_supported)
++		if (!sband->ht_supported)
+ 			return NULL;
+ 
+-		if (channel_type != NL80211_CHAN_HT20 &&
++		/* this check is ignored when per-band HT caps are not used */
++		if (!sband->ht_cap_invalid &&
++		    channel_type != NL80211_CHAN_HT20 &&
+ 		    (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
+ 		    ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT))
+ 			return NULL;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index e13365f..f8c48e6 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -482,10 +482,11 @@ int wiphy_register(struct wiphy *wiphy)
+ 		 * Since cfg80211_disable_40mhz_24ghz is global, we can
+ 		 * modify the sband's ht data even if the driver uses a
+ 		 * global structure for that.
++		 * Don't do anything if the driver uses per-vif HT caps.
+ 		 */
+ 		if (cfg80211_disable_40mhz_24ghz &&
+ 		    band == IEEE80211_BAND_2GHZ &&
+-		    sband->ht_cap.ht_supported) {
++		    sband->ht_cap.ht_supported && !sband->ht_cap_invalid) {
+ 			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
+ 		}
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 7df42f5..f3781ef 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -34,7 +34,7 @@ int cfg80211_wext_giwname(struct net_device *dev,
+ 	sband = wdev->wiphy->bands[IEEE80211_BAND_5GHZ];
+ 	if (sband) {
+ 		is_a = true;
+-		is_ht |= sband->ht_cap.ht_supported;
++		is_ht |= sband->ht_supported;
  	}
  
-+	drv_mgd_prepare_tx(local, sdata);
-+
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 	ieee80211_tx_skb(sdata, skb);
- }
-@@ -580,6 +582,9 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
- 		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
- 			IEEE80211_SKB_CB(skb)->flags |=
- 				IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+
-+		drv_mgd_prepare_tx(local, sdata);
-+
- 		ieee80211_tx_skb(sdata, skb);
- 	}
- }
-@@ -1756,6 +1761,7 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
- 	if (!elems.challenge)
- 		return;
- 	auth_data->expected_transaction = 4;
-+	drv_mgd_prepare_tx(sdata->local, sdata);
- 	ieee80211_send_auth(sdata, 3, auth_data->algorithm,
- 			    elems.challenge - 2, elems.challenge_len + 2,
- 			    auth_data->bss->bssid, auth_data->bss->bssid,
-@@ -2641,6 +2647,8 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
- 		return -ETIMEDOUT;
+ 	sband = wdev->wiphy->bands[IEEE80211_BAND_2GHZ];
+@@ -47,7 +47,7 @@ int cfg80211_wext_giwname(struct net_device *dev,
+ 			if (sband->bitrates[i].bitrate == 60)
+ 				is_g = true;
+ 		}
+-		is_ht |= sband->ht_cap.ht_supported;
++		is_ht |= sband->ht_supported;
  	}
  
-+	drv_mgd_prepare_tx(local, sdata);
-+
- 	if (auth_data->bss->proberesp_ies) {
- 		sdata_info(sdata, "send auth to %pM (try %d/%d)\n",
- 			   auth_data->bss->bssid, auth_data->tries,
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 2e60f4a..e1e9d10 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1244,6 +1244,13 @@ TRACE_EVENT(drv_get_rssi,
- 	)
- );
- 
-+DEFINE_EVENT(local_sdata_evt, drv_mgd_prepare_tx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+
-+	TP_ARGS(local, sdata)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
+ 	strcpy(name, "IEEE 802.11");
 -- 
-1.7.10
+1.7.9.5
 
