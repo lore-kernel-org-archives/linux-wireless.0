@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:51475 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754063Ab2GRMOE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41922 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752809Ab2GDK70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:14:04 -0400
-Received: by lbbgk8 with SMTP id gk8so2245815lbb.12
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:14:00 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+	Wed, 4 Jul 2012 06:59:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 14/14] wlcore: increase command completion timeout
-Date: Wed, 18 Jul 2012 15:13:33 +0300
-Message-Id: <1342613613-917-15-git-send-email-coelho@ti.com> (sfid-20120718_141418_592338_BE8F3A07)
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211_hwsim: add testmode code to stop/wake queues
+Date: Wed,  4 Jul 2012 12:59:17 +0200
+Message-Id: <1341399557-12814-1-git-send-email-johannes@sipsolutions.net> (sfid-20120704_125929_972260_2F4D2778)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some rare cases, the CMD_ROC completion may take over 1 second.
-The timeout had earlier been increased to 1000ms (from 750ms), but it
-is still not enoug.  Increase it to 1500ms.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+This was useful for debugging the queue stop/wake
+issues and is pretty small so let's just put it in.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wlcore/cmd.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index d7d9f80..4ef0b09 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -192,7 +192,7 @@ enum cmd_templ {
- #define WL1271_COMMAND_TIMEOUT     2000
- #define WL1271_CMD_TEMPL_DFLT_SIZE 252
- #define WL1271_CMD_TEMPL_MAX_SIZE  512
--#define WL1271_EVENT_TIMEOUT       1000
-+#define WL1271_EVENT_TIMEOUT       1500
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index f0a906b..9388338 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1082,6 +1082,8 @@ enum hwsim_testmode_attr {
+ enum hwsim_testmode_cmd {
+ 	HWSIM_TM_CMD_SET_PS		= 0,
+ 	HWSIM_TM_CMD_GET_PS		= 1,
++	HWSIM_TM_CMD_STOP_QUEUES	= 2,
++	HWSIM_TM_CMD_WAKE_QUEUES	= 3,
+ };
  
- struct wl1271_cmd_header {
- 	__le16 id;
+ static const struct nla_policy hwsim_testmode_policy[HWSIM_TM_ATTR_MAX + 1] = {
+@@ -1121,6 +1123,12 @@ static int mac80211_hwsim_testmode_cmd(struct ieee80211_hw *hw,
+ 		if (nla_put_u32(skb, HWSIM_TM_ATTR_PS, hwsim->ps))
+ 			goto nla_put_failure;
+ 		return cfg80211_testmode_reply(skb);
++	case HWSIM_TM_CMD_STOP_QUEUES:
++		ieee80211_stop_queues(hw);
++		return 0;
++	case HWSIM_TM_CMD_WAKE_QUEUES:
++		ieee80211_wake_queues(hw);
++		return 0;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
 -- 
-1.7.10.4
+1.7.10
 
