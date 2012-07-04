@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2451 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756419Ab2GJRXs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41655 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753541Ab2GDJfd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 13:23:48 -0400
-Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
-	<arend@broadcom.com>, <henry@logout.com>,
-	<senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-Subject: [PATCH v4 1/5] cfg80211: add CONFIG_CFG80211_CERTIFICATION_ONUS
-Date: Tue, 10 Jul 2012 10:23:07 -0700
-Message-ID: <1341940991-11234-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120710_192351_678921_EF73644C)
-In-Reply-To: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 4 Jul 2012 05:35:33 -0400
+Message-ID: <1341394528.4482.4.camel@jlt3.sipsolutions.net> (sfid-20120704_113536_968504_2D94CC7C)
+Subject: Re: [PATCH v2] mac80211: tx: do not drop non-robust mgmt to non-MFP
+ stas.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Date: Wed, 04 Jul 2012 11:35:28 +0200
+In-Reply-To: <1341393221-5396-1-git-send-email-cavallar@lri.fr>
+References: <1341393221-5396-1-git-send-email-cavallar@lri.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+On Wed, 2012-07-04 at 11:13 +0200, Nicolas Cavallari wrote:
+> When drop_unencrypted is enabled and MFP is disabled, non-robust
+> management frames for not-yet associated STA are dropped  before
+> being transmitted.
+> 
+> This isn't visible as many management frames sent from  the kernel
+> have TX_INTFL_DONT_ENCRYPT set and management frames injected from
+> monitor vifs have TX_CTL_INJECTED set, so are never dropped in the
+> tx path. But mgmt frames sent from userspace via NL80211_CMD_FRAME
+> do not have any of these flags, so are dropped.
+> 
+> This patch make it accept non-robust management frames,
+> but drops non-management frames and robust management frames as usual.
+> 
+> Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
+> 
+> ---
+> 
+> Found this while trying to manage auth  frames in userspace
+> on a IBSS RSN network.
+> I'm  a bit surprised that drop_unencrypted is disabled both
+> in AP and managed mode, but only enabled in IBSS RSN, which
+> does not support MFP, yet.
 
-This adds CONFIG_CFG80211_CERTIFICATION_ONUS which is to
-be used for features / code which require a bit of work on
-the system integrator's part to ensure that the system will
-still pass 802.11 regulatory certification. This option is
-also usable for researchers and experimenters looking to add
-code in the kernel without impacting compliant code.
+Hmmm. Yes, all this seems a bit messy. Can we clean this up first?
 
-We'd use CONFIG_EXPERT alone but it seems that most standard
-Linux distributions are enabling CONFIG_EXPERT already. This
-allows us to define 802.11 specific kernel features under a
-flag that is intended by design to be disabled by standard
-Linux distributions, and only enabled by system integrators
-or distributions that have done work to ensure regulatory
-certification on the system with the enabled features.
+Maybe something like this?
+http://p.sipsolutions.net/d68a99dd3d9b1ab1.txt
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- net/wireless/Kconfig |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+The whole drop_unencrypted seems strange to start with though...
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 4d2b1ec..fe4adb1 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -74,6 +74,27 @@ config CFG80211_REG_DEBUG
- 
- 	  If unsure, say N.
- 
-+config CFG80211_CERTIFICATION_ONUS
-+	bool "cfg80211 certification onus"
-+	depends on CFG80211 && EXPERT
-+	default n
-+	---help---
-+	  You should disable this option unless you are both capable
-+	  and willing to ensure your system will remain regulatory
-+	  compliant with the features available under this option.
-+	  Some options may still be under heavy development and
-+	  for whatever reason regulatory compliance has not or
-+	  cannot yet be verified. Regulatory verification may at
-+	  times only be possible until you have the final system
-+	  in place.
-+
-+	  This option should only be enabled by system integrators
-+	  or distributions that have done work necessary to ensure
-+	  regulatory certification on the system with the enabled
-+	  features. Alternatively you can enable this option if
-+	  you are a wireless researcher and are working in a controlled
-+	  and approved environment by your local regulatory agency.
-+
- config CFG80211_DEFAULT_PS
- 	bool "enable powersave by default"
- 	depends on CFG80211
--- 
-1.7.10.rc1.22.gf5241
+johannes
 
