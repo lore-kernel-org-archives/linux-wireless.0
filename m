@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47092 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756898Ab2GLG3T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 02:29:19 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20478.28271.704162.754323@gargle.gargle.HOWL> (sfid-20120712_082923_596415_1369E5D7)
-Date: Thu, 12 Jul 2012 11:57:59 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: [PATCH 08/12] ath9k: fix aggregate size limit based on queue TXOP limit
-In-Reply-To: <1342029555-31618-8-git-send-email-nbd@openwrt.org>
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
-	<1342029555-31618-2-git-send-email-nbd@openwrt.org>
-	<1342029555-31618-3-git-send-email-nbd@openwrt.org>
-	<1342029555-31618-4-git-send-email-nbd@openwrt.org>
-	<1342029555-31618-5-git-send-email-nbd@openwrt.org>
-	<1342029555-31618-6-git-send-email-nbd@openwrt.org>
-	<1342029555-31618-7-git-send-email-nbd@openwrt.org>
-	<1342029555-31618-8-git-send-email-nbd@openwrt.org>
+Received: from mx1.redhat.com ([209.132.183.28]:26855 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752606Ab2GDLUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 07:20:41 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3.5] iwlegacy: always monitor for stuck queues
+Date: Wed,  4 Jul 2012 13:20:20 +0200
+Message-Id: <1341400820-2957-1-git-send-email-sgruszka@redhat.com> (sfid-20120704_132044_733234_A5692E7C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> If the aggregate size exceeds the TXOP limit, it leads to lots of unnecessary
-> hardware and software retries.
-> 
-> The previous 4ms frame limit table was completely undocumented, the commit
-> that updated it only vaguely referenced and equation from the standard,
-> but I've been unable to replicate its results.
-> 
-> Fix this by using a formula based on the code in ath_pkt_duration, which is
-> more likely to be correct for this case.
+This is iwlegacy version of:
 
-I think this needs to be verified. The 4ms restriction is for Japanese
-regulatory compliance, IIRC.
+commit 342bbf3fee2fa9a18147e74b2e3c4229a4564912
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Sun Mar 4 08:50:46 2012 -0800
 
-Sujith
+    iwlwifi: always monitor for stuck queues
+
+    If we only monitor while associated, the following
+    can happen:
+     - we're associated, and the queue stuck check
+       runs, setting the queue "touch" time to X
+     - we disassociate, stopping the monitoring,
+       which leaves the time set to X
+     - almost 2s later, we associate, and enqueue
+       a frame
+     - before the frame is transmitted, we monitor
+       for stuck queues, and find the time set to
+       X, although it is now later than X + 2000ms,
+       so we decide that the queue is stuck and
+       erroneously restart the device
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/common.c |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index cbf2dc1..5d4807c 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4767,14 +4767,12 @@ il_bg_watchdog(unsigned long data)
+ 		return;
+ 
+ 	/* monitor and check for other stuck queues */
+-	if (il_is_any_associated(il)) {
+-		for (cnt = 0; cnt < il->hw_params.max_txq_num; cnt++) {
+-			/* skip as we already checked the command queue */
+-			if (cnt == il->cmd_queue)
+-				continue;
+-			if (il_check_stuck_queue(il, cnt))
+-				return;
+-		}
++	for (cnt = 0; cnt < il->hw_params.max_txq_num; cnt++) {
++		/* skip as we already checked the command queue */
++		if (cnt == il->cmd_queue)
++			continue;
++		if (il_check_stuck_queue(il, cnt))
++			return;
+ 	}
+ 
+ 	mod_timer(&il->watchdog,
+-- 
+1.7.1
+
