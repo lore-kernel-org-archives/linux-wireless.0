@@ -1,65 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45488 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:41929 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383Ab2GEHkC (ORCPT
+	with ESMTP id S1030245Ab2GDLB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 03:40:02 -0400
-Message-ID: <1341473996.4455.2.camel@jlt3.sipsolutions.net> (sfid-20120705_094006_491427_7FCCABE5)
-Subject: Re: [RFC 2/4] cfg80211: support unused HT-cap-per-band configuration
+	Wed, 4 Jul 2012 07:01:57 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SmNLH-0007TV-U0
+	for linux-wireless@vger.kernel.org; Wed, 04 Jul 2012 13:01:56 +0200
+Message-ID: <1341399715.12432.2.camel@jlt3.sipsolutions.net> (sfid-20120704_130200_769435_500F38F2)
+Subject: Re: [PATCH] mac80211: fix crash with single-queue drivers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 05 Jul 2012 09:39:56 +0200
-In-Reply-To: <1341417530-9062-3-git-send-email-arik@wizery.com> (sfid-20120704_175900_656383_8C6BE321)
-References: <1341417530-9062-1-git-send-email-arik@wizery.com>
-	 <1341417530-9062-3-git-send-email-arik@wizery.com>
-	 (sfid-20120704_175900_656383_8C6BE321)
+To: linux-wireless@vger.kernel.org
+Date: Wed, 04 Jul 2012 13:01:55 +0200
+In-Reply-To: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net> (sfid-20120704_125354_863223_72112624)
+References: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120704_125354_863223_72112624)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-04 at 18:58 +0300, Arik Nemtsov wrote:
-
->  struct ieee80211_sta_ht_cap {
-> +	bool ht_supported; /* this must be first */
->  	u16 cap; /* use IEEE80211_HT_CAP_ */
-> -	bool ht_supported;
+On Wed, 2012-07-04 at 12:53 +0200, Johannes Berg wrote:
 
 
-> -	struct ieee80211_sta_ht_cap ht_cap;
-> +	union {
-> +		struct ieee80211_sta_ht_cap ht_cap;
-> +		bool ht_supported;
-> +	};
-> +	bool ht_cap_invalid;
-
-
-Yuck. Why use the union at all? You could just put the ht_cap_invalid
-into the ht_cap struct, and it wouldn't even take space, there's
-padding :-)
-
-
-> @@ -30,13 +31,16 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
->  		 chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
->  		return NULL;
+> @@ -362,7 +370,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+>  		if (!sdata->dev)
+>  			continue;
 >  
-> -	ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
-> +	sband = rdev->wiphy.bands[chan->band];
-> +	ht_cap = &sband->ht_cap;
->  
->  	if (channel_type != NL80211_CHAN_NO_HT) {
-> -		if (!ht_cap->ht_supported)
-> +		if (!sband->ht_supported)
->  			return NULL;
->  
-> -		if (channel_type != NL80211_CHAN_HT20 &&
-> +		/* this check is ignored when per-band HT caps are not used */
-> +		if (!sband->ht_cap_invalid &&
-> +		    channel_type != NL80211_CHAN_HT20 &&
+> -		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+> +		for (ac = 0; ac < n_acs; ac++) {
 
-This is also major confusion, it seems you should roll 2/3 into one
-patch?
+Ok, I based this on the wrong tree, but should be easy to resolve. I've
+applied a fixed version, but will wait for Larry to report test results.
 
 johannes
 
