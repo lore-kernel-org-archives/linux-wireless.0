@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43267 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:41913 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756722Ab2GYMug (ORCPT
+	with ESMTP id S933181Ab2GDKyr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 08:50:36 -0400
-Message-ID: <1343220625.4463.31.camel@jlt3.sipsolutions.net> (sfid-20120725_145046_172759_150E9277)
-Subject: Re: [PATCH v5] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
+	Wed, 4 Jul 2012 06:54:47 -0400
+Message-ID: <1341399285.12432.1.camel@jlt3.sipsolutions.net> (sfid-20120704_125449_882919_EFE0C5BA)
+Subject: Re: Kernel oops in __netif_schedule() for at76c50x-usb
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
-	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
-	coelho@ti.com, nbd@openwrt.org
-Date: Wed, 25 Jul 2012 14:50:25 +0200
-In-Reply-To: <1343208990.4463.25.camel@jlt3.sipsolutions.net> (sfid-20120725_113644_599580_8AC4476F)
-References: <1343161108-6941-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120724_221843_511093_701FFAF2) <1343208990.4463.25.camel@jlt3.sipsolutions.net>
-	 (sfid-20120725_113644_599580_8AC4476F)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 04 Jul 2012 12:54:45 +0200
+In-Reply-To: <1341398983.12432.0.camel@jlt3.sipsolutions.net> (sfid-20120704_124949_270873_53E38893)
+References: <4FF1BC71.4070002@lwfinger.net>
+	 (sfid-20120702_172127_238924_ED185EFD) <1341243087.19642.20.camel@jlt3.sipsolutions.net>
+	 <4FF1C887.8090009@lwfinger.net>
+	 (sfid-20120702_181310_720968_3FE88ADC) <1341250736.19642.22.camel@jlt3.sipsolutions.net>
+	 <4FF225AC.8020205@lwfinger.net>
+	 (sfid-20120703_005025_974399_3EFA8A16) <1341395171.4482.10.camel@jlt3.sipsolutions.net>
+	 (sfid-20120704_114618_455741_41EF0E8A) <1341398983.12432.0.camel@jlt3.sipsolutions.net>
+	 (sfid-20120704_124949_270873_53E38893)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-25 at 11:36 +0200, Johannes Berg wrote:
-> On Tue, 2012-07-24 at 22:18 +0200, Thomas Huehn wrote:
-> > The pointer control.sta is removed from ieee80211_tx_info to free up
-> > sufficient memory in SKB_CB on the tx-path to enable new annotations
-> > per data packet e.g.support of upcoming Transmit Power Control (TPC).
-> > Now the control.sta pointer is put on the stack where passed as
-> > function parameter to the .tx equivalent (ieee80211_ops) of each
-> > affected wireless driver.
-> > Therefore a new structure ieee80211_tx_control is added to mac80211.h
-> > which holds the sta structure instead. The tx-path of all affected
-> > drivers is restructured to respect the chaneges.
-> > 
-> > Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> > Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> > ---
-> > restructure this patch to respect logical API evolutions. thx to Johannes Berg
-> > add missing drivers that are effected as well. thx to Xose Vazquez Perez
-> > add missing drivers that are effected as well. thx to Johannes Berg
-> > simplified control pointer passing in tx.c - thx to Johannes Berg
+On Wed, 2012-07-04 at 12:49 +0200, Johannes Berg wrote:
+> On Wed, 2012-07-04 at 11:46 +0200, Johannes Berg wrote:
 > 
-> Finally applied, but I dropped these spurious changes:
+> > > >> Although you may want to change the enable code path, some patch will be needed
+> > > >> to prevent a regression in 3.5. If this is the one, you may add a "Tested-by"
+> > > >> for me.
+> > > >
+> > > > Thanks. Could you try this patch instead? I think it makes more sense.
+> > > >
+> > > > http://p.sipsolutions.net/c3e9b814a409ca11.txt
+> > > 
+> > > That one fails and gives the oops in __netif_schedule.
+> > 
+> > Hmmm, that's odd. I'll try to reproduce this to be able to track it
+> > better.
+> 
+> Ok, strange. I can reproduce the original problem easily with hwsim, but
+> with this new patch, which should be equivalent to the old, it's fixed:
+> 
+> http://p.sipsolutions.net/d78d8740ad2d15b4.txt
 
-Never mind, it still doesn't compile, dropped it.
+Ok, actually, the same bug is on stop, but for some reason that doesn't
+crash for me.
 
-I had to rebase my tree due to that, sorry!
+I've posted this patch now:
+http://p.sipsolutions.net/55032a5ae0520dd8.txt
 
 johannes
 
