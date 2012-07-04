@@ -1,118 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34028 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754727Ab2GEL0K (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41900 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756961Ab2GDKtp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 07:26:10 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 2/2] cfg80211: bitrate calculation for 60g
-Date: Thu, 5 Jul 2012 14:25:50 +0300
-Message-ID: <1341487550-11502-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120705_132615_182538_5DA140B2)
-In-Reply-To: <1341487550-11502-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341487550-11502-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 4 Jul 2012 06:49:45 -0400
+Message-ID: <1341398983.12432.0.camel@jlt3.sipsolutions.net> (sfid-20120704_124949_270873_53E38893)
+Subject: Re: Kernel oops in __netif_schedule() for at76c50x-usb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 04 Jul 2012 12:49:43 +0200
+In-Reply-To: <1341395171.4482.10.camel@jlt3.sipsolutions.net> (sfid-20120704_114618_455741_41EF0E8A)
+References: <4FF1BC71.4070002@lwfinger.net>
+	 (sfid-20120702_172127_238924_ED185EFD) <1341243087.19642.20.camel@jlt3.sipsolutions.net>
+	 <4FF1C887.8090009@lwfinger.net>
+	 (sfid-20120702_181310_720968_3FE88ADC) <1341250736.19642.22.camel@jlt3.sipsolutions.net>
+	 <4FF225AC.8020205@lwfinger.net>
+	 (sfid-20120703_005025_974399_3EFA8A16) <1341395171.4482.10.camel@jlt3.sipsolutions.net>
+	 (sfid-20120704_114618_455741_41EF0E8A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-60g band uses different from .11n MCS scheme, so bitrate
-should be calculated differently
+On Wed, 2012-07-04 at 11:46 +0200, Johannes Berg wrote:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- include/net/cfg80211.h |    2 ++
- net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+)
+> > >> Although you may want to change the enable code path, some patch will be needed
+> > >> to prevent a regression in 3.5. If this is the one, you may add a "Tested-by"
+> > >> for me.
+> > >
+> > > Thanks. Could you try this patch instead? I think it makes more sense.
+> > >
+> > > http://p.sipsolutions.net/c3e9b814a409ca11.txt
+> > 
+> > That one fails and gives the oops in __netif_schedule.
+> 
+> Hmmm, that's odd. I'll try to reproduce this to be able to track it
+> better.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8837efc..51f67a9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -580,11 +580,13 @@ enum station_info_flags {
-  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
-  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
-  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
-+ * @RATE_INFO_FLAGS_60G: 60gHz MCS
-  */
- enum rate_info_flags {
- 	RATE_INFO_FLAGS_MCS		= 1<<0,
- 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
- 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
-+	RATE_INFO_FLAGS_60G		= 1<<3,
- };
- 
- /**
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 6e52726..e31f1db 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -900,12 +900,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
- 
-+static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
-+{
-+	static const u32 __mcs2bitrate[] = {
-+		/* control PHY */
-+		[0] =   275,
-+		/* SC PHY */
-+		[1] =  3850,
-+		[2] =  7700,
-+		[3] =  9625,
-+		[4] = 11550,
-+		[5] = 12512, /* 1251.25 mbps */
-+		[6] = 15400,
-+		[7] = 19250,
-+		[8] = 23100,
-+		[9] = 25025,
-+		[10] = 30800,
-+		[11] = 38500,
-+		[12] = 46200,
-+		/* OFDM PHY */
-+		[13] =  6930,
-+		[14] =  8662, /* 866.25 mbps */
-+		[15] = 13860,
-+		[16] = 17325,
-+		[17] = 20790,
-+		[18] = 27720,
-+		[19] = 34650,
-+		[20] = 41580,
-+		[21] = 45045,
-+		[22] = 51975,
-+		[23] = 62370,
-+		[24] = 67568, /* 6756.75 mbps */
-+		/* LP-SC PHY */
-+		[25] =  6260,
-+		[26] =  8340,
-+		[27] = 11120,
-+		[28] = 12510,
-+		[29] = 16680,
-+		[30] = 22240,
-+		[31] = 25030,
-+	};
-+
-+	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
-+		return 0;
-+
-+	return __mcs2bitrate[rate->mcs];
-+}
-+
- u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
- 	int modulation, streams, bitrate;
- 
- 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
- 		return rate->legacy;
-+	if (rate->flags & RATE_INFO_FLAGS_60G)
-+		return cfg80211_calculate_bitrate_60g(rate);
- 
- 	/* the formula below does only work for MCS values smaller than 32 */
- 	if (WARN_ON_ONCE(rate->mcs >= 32))
--- 
-1.7.9.5
+Ok, strange. I can reproduce the original problem easily with hwsim, but
+with this new patch, which should be equivalent to the old, it's fixed:
+
+http://p.sipsolutions.net/d78d8740ad2d15b4.txt
+
+Can you try just this patch?
+
+johannes
 
