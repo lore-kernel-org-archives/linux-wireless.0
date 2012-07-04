@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from storm.alittletooquiet.net ([67.23.28.199]:39123 "EHLO
-	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078Ab2GMQ0H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 12:26:07 -0400
-Date: Fri, 13 Jul 2012 12:26:06 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH resubmit] rtlwifi: rtl8192de: Fix phy-based version
- calculation
-Message-ID: <20120713162605.GH9489@alittletooquiet.net> (sfid-20120713_182612_928590_97CA4F78)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5000484E.9070700@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:8417 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750877Ab2GDL7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 07:59:39 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Paul Bolle <pebolle@tiscali.nl>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3.5] iwlegacy: don't mess up the SCD when removing a key
+Date: Wed,  4 Jul 2012 13:59:08 +0200
+Message-Id: <1341403148-3360-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20120704_135948_361242_A1F2E61E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Forest Bond <forest.bond@rapidrollout.com>
+When we remove a key, we put a key index which was supposed
+to tell the fw that we are actually removing the key. But
+instead the fw took that index as a valid index and messed
+up the SRAM of the device.
 
-Commit d83579e2a50ac68389e6b4c58b845c702cf37516 incorporated some
-changes from the vendor driver that made it newly important that the
-calculated hardware version correctly include the CHIP_92D bit, as all
-of the IS_92D_* macros were changed to depend on it.  However, this bit
-was being unset for dual-mac, dual-phy devices.  The vendor driver
-behavior was modified to not do this, but unfortunately this change was
-not picked up along with the others.  This caused scanning in the 2.4GHz
-band to be broken, and possibly other bugs as well.
+This memory corruption on the device mangled the data of
+the SCD. The impact on the user is that SCD queue 2 got
+stuck after having removed keys.
 
-This patch brings the version calculation logic in parity with the
-vendor driver in this regard, and in doing so fixes the regression.
-However, the version calculation code in general continues to be largely
-incoherent and messy, and needs to be cleaned up.
-
-Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
-Cc: Stable <stable@vger.kernel.org> [v3.2+]
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Paul Bolle <pebolle@tiscali.nl>
+Cc: stable@vger.kernel.org
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-index 18380a7..4420312 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -3345,21 +3345,21 @@ void rtl92d_phy_config_macphymode_info(struct ieee80211_hw *hw)
- 	switch (rtlhal->macphymode) {
- 	case DUALMAC_SINGLEPHY:
- 		rtlphy->rf_type = RF_2T2R;
--		rtlhal->version |= CHIP_92D_SINGLEPHY;
-+		rtlhal->version |= RF_TYPE_2T2R;
- 		rtlhal->bandset = BAND_ON_BOTH;
- 		rtlhal->current_bandtype = BAND_ON_2_4G;
- 		break;
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index d24eaf8..34f61a0 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -3405,7 +3405,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
+ 		return 0;
+ 	}
  
- 	case SINGLEMAC_SINGLEPHY:
- 		rtlphy->rf_type = RF_2T2R;
--		rtlhal->version |= CHIP_92D_SINGLEPHY;
-+		rtlhal->version |= RF_TYPE_2T2R;
- 		rtlhal->bandset = BAND_ON_BOTH;
- 		rtlhal->current_bandtype = BAND_ON_2_4G;
- 		break;
+-	if (il->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET) {
++	if (il->stations[sta_id].sta.key.key_flags & STA_KEY_FLG_INVALID) {
+ 		IL_WARN("Removing wrong key %d 0x%x\n", keyconf->keyidx,
+ 			key_flags);
+ 		spin_unlock_irqrestore(&il->sta_lock, flags);
+@@ -3420,7 +3420,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
+ 	memset(&il->stations[sta_id].sta.key, 0, sizeof(struct il4965_keyinfo));
+ 	il->stations[sta_id].sta.key.key_flags =
+ 	    STA_KEY_FLG_NO_ENC | STA_KEY_FLG_INVALID;
+-	il->stations[sta_id].sta.key.key_offset = WEP_INVALID_OFFSET;
++	il->stations[sta_id].sta.key.key_offset = keyconf->hw_key_idx;
+ 	il->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	il->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
  
- 	case DUALMAC_DUALPHY:
- 		rtlphy->rf_type = RF_1T1R;
--		rtlhal->version &= (~CHIP_92D_SINGLEPHY);
-+		rtlhal->version &= RF_TYPE_1T1R;
- 		/* Now we let MAC0 run on 5G band. */
- 		if (rtlhal->interfaceindex == 0) {
- 			rtlhal->bandset = BAND_ON_5G;
 -- 
-1.7.0.4
+1.7.1
+
