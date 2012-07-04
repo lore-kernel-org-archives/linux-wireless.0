@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:49239 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753344Ab2GRMNy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56405 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755513Ab2GDIpb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:13:54 -0400
-Received: by lbol5 with SMTP id l5so2178808lbo.34
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:51 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 06/14] wlcore: don't issue SLEEP_AUTH command during recovery
-Date: Wed, 18 Jul 2012 15:13:25 +0300
-Message-Id: <1342613613-917-7-git-send-email-coelho@ti.com> (sfid-20120718_141402_388770_37CD85DC)
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+	Wed, 4 Jul 2012 04:45:31 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 3/4] introduce GCMP cipher
+Date: Wed, 4 Jul 2012 11:45:10 +0300
+Message-ID: <1341391511-11359-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120704_104536_215822_9A883DCA)
+In-Reply-To: <1341391511-11359-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341391511-11359-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Recognize OUI and print "GCMP" name
 
-During interface removal, don't adjust sleep_auth if we are during
-recovery. Since the FW is potentially dead we shouldn't talk to it.
-
-Reported-by: Yossi Wortzel <yossiw@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+    Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ info.c |    2 ++
+ scan.c |    3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index d486eea..05c3912 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2377,7 +2377,14 @@ deinit:
- 	else
- 		wl->sta_count--;
- 
--	/* Last AP, have more stations. Configure according to STA. */
-+	/*
-+	 * Last AP, have more stations. Configure sleep auth according to STA.
-+	 * Don't do thin on unintended recovery.
-+	 */
-+	if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags) &&
-+	    !test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags))
-+		goto unlock;
-+
- 	if (wl->ap_count == 0 && is_ap && wl->sta_count) {
- 		u8 sta_auth = wl->conf.conn.sta_sleep_auth;
- 		/* Configure for power according to debugfs */
-@@ -2391,6 +2398,7 @@ deinit:
- 			wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
- 	}
- 
-+unlock:
- 	mutex_unlock(&wl->mutex);
- 
- 	del_timer_sync(&wlvif->rx_streaming_timer);
+diff --git a/info.c b/info.c
+index e896eb5..50a9073 100644
+--- a/info.c
++++ b/info.c
+@@ -36,6 +36,8 @@ static char *cipher_name(__u32 c)
+ 		return "CCMP (00-0f-ac:4)";
+ 	case 0x000fac06:
+ 		return "CMAC (00-0f-ac:6)";
++	case 0x000fac08:
++		return "GCMP (00-0f-ac:8)";
+ 	case 0x00147201:
+ 		return "WPI-SMS4 (00-14-72:1)";
+ 	default:
+diff --git a/scan.c b/scan.c
+index 5f8ce93..7ae7929 100644
+--- a/scan.c
++++ b/scan.c
+@@ -305,6 +305,9 @@ static void print_cipher(const uint8_t *data)
+ 		case 6:
+ 			printf("AES-128-CMAC");
+ 			break;
++		case 8:
++			printf("GCMP");
++			break;
+ 		default:
+ 			printf("%.02x-%.02x-%.02x:%d",
+ 				data[0], data[1] ,data[2], data[3]);
 -- 
-1.7.10.4
+1.7.9.5
 
