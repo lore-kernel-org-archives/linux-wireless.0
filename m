@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bluegiga.fi ([194.100.31.45]:34773 "EHLO darkblue.bluegiga.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54359 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752071Ab2GJKJr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 06:09:47 -0400
-Message-ID: <4FFBFCF0.6030506@bluegiga.com> (sfid-20120710_120950_871998_0DC577F8)
-Date: Tue, 10 Jul 2012 12:59:12 +0300
-From: Veli-Pekka Peltola <veli-pekka.peltola@bluegiga.com>
+	id S1750803Ab2GDLKj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 07:10:39 -0400
+Date: Wed, 4 Jul 2012 13:10:02 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Franco Miceli <fmiceli@plan.ceibal.edu.uy>,
+	Tom Horsley <horsley1953@gmail.com>
+Subject: [PATCH 3.5] rt2x00usb: fix indexes ordering on RX queue kick
+Message-ID: <20120704111001.GA2570@redhat.com> (sfid-20120704_131042_932907_048DEB97)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Woody Hung <Woody.Hung@mediatek.com>
-Subject: Re: [PATCH 1/2] rt2x00pci: small 3290 changes cleanup
-References: <1341837708-22689-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1341837708-22689-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2012 03:41 PM, Stanislaw Gruszka wrote:
-> Fix indention and remove unnecessary brackets and compares.
+On rt2x00_dmastart() we increase index specified by Q_INDEX and on
+rt2x00_dmadone() we increase index specified by Q_INDEX_DONE. So entries
+between Q_INDEX_DONE and Q_INDEX are those we currently process in the
+hardware. Entries between Q_INDEX and Q_INDEX_DONE are those we can
+submit to the hardware.
 
-Hi,
+According to that fix rt2x00usb_kick_queue(), as we need to submit RX
+entries that are not processed by the hardware. It worked before only
+for empty queue, otherwise was broken.
 
-Otherwise looks ok but I have a one comment, see below.
+Note that for TX queues indexes ordering are ok. We need to kick entries
+that have filled skb, but was not submitted to the hardware, i.e.
+started from Q_INDEX_DONE and have ENTRY_DATA_PENDING bit set.
 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->   drivers/net/wireless/rt2x00/rt2800pci.c |   11 +++++------
->   1 files changed, 5 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index dd43612..bf0e71e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+>From practical standpoint this fixes RX queue stall, usually reproducible
+in AP mode, like for example reported here:
+https://bugzilla.redhat.com/show_bug.cgi?id=828824
 
-<snip>
+Reported-and-tested-by: Franco Miceli <fmiceli@plan.ceibal.edu.uy>
+Reported-and-tested-by: Tom Horsley <horsley1953@gmail.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> @@ -1022,9 +1022,8 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
->   			rt2800_register_write(rt2x00dev, 0x58, 0x618);
->   			udelay(REGISTER_BUSY_DELAY);
->   			count++;
-> -		} else {
-> +		} else
->   			count = 0;
-> -		}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index d357d1e..74ecc33 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -436,8 +436,8 @@ void rt2x00usb_kick_queue(struct data_queue *queue)
+ 	case QID_RX:
+ 		if (!rt2x00queue_full(queue))
+ 			rt2x00queue_for_each_entry(queue,
+-						   Q_INDEX_DONE,
+ 						   Q_INDEX,
++						   Q_INDEX_DONE,
+ 						   NULL,
+ 						   rt2x00usb_kick_rx_entry);
+ 		break;
+-- 
+1.7.1
 
-I have understood that Linux CodingStyle requires braces on all else/if 
-branches if any of those have more than one statement. So I would not 
-remove braces here.
-
---
-Veli-Pekka Peltola
