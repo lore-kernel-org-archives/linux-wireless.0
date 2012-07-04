@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40168 "EHLO nbd.name"
+Received: from plane.gmane.org ([80.91.229.3]:58533 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752326Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 13:53:46 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+	id S933869Ab2GDKm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 06:42:56 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SmN2p-0006gU-9j
+	for linux-wireless@vger.kernel.org; Wed, 04 Jul 2012 12:42:51 +0200
+Received: from 2.94.91.148 ([2.94.91.148])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 12:42:51 +0200
+Received: from scorp.dev.null by 2.94.91.148 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 12:42:51 +0200
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 03/12] ath9k_hw: enable ANI on AR934x
-Date: Sun, 15 Jul 2012 19:53:31 +0200
-Message-Id: <1342374820-92409-3-git-send-email-nbd@openwrt.org> (sfid-20120715_195402_788304_2A3016E8)
-In-Reply-To: <1342374820-92409-2-git-send-email-nbd@openwrt.org>
-References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
- <1342374820-92409-2-git-send-email-nbd@openwrt.org>
+From: Artem Chekunov <scorp.dev.null@gmail.com>
+Subject: Re: Building and Installation errors due to modprobe -l was deprecated
+Date: Wed, 4 Jul 2012 10:42:33 +0000 (UTC)
+Message-ID: <loom.20120704T124128-884@post.gmane.org> (sfid-20120704_124317_007952_EB16F3B9)
+References: <4F58D80D.8070905@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It has been tested and works properly
+Try run next
+########################
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9c8e0d8..ddb24bf 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -671,10 +671,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	if (!AR_SREV_9300_20_OR_LATER(ah))
- 		ah->ani_function &= ~ATH9K_ANI_MRC_CCK;
- 
--	/* disable ANI for 9340 */
--	if (AR_SREV_9340(ah))
--		ah->config.enable_ani = false;
--
- 	ath9k_hw_init_mode_regs(ah);
- 
- 	if (!ah->is_pciexpress)
--- 
-1.7.7.5 (Apple Git-26)
+cat > /sbin/modprobe.sh <<EOF
+#!/bin/bash
+
+if [[ \$1 == -l ]]
+then
+
+if [ -z \$2 ]    
+then
+find /lib/modules/\$(uname -r) -name '*.ko' | sed -e "s#\/lib\/modules\/\$(uname
+-r)\/##g"
+else
+find /lib/modules/\$(uname -r) -name '*.ko' | sed -e "s#\/lib\/modules\/\$(uname
+-r)\/##g" | grep \$2
+fi
+
+else
+/sbin/modprobe \$@
+fi
+EOF
+
+chmod +x /sbin/modprobe.sh
+alias modprobe=/sbin/modprobe.sh
+echo "alias modprobe=/sbin/modprobe.sh" >> /etc/bash.bashrc
+
+cp Makefile Makefile.save
+sed -i -e 's/^MODPROBE.*/MODPROBE := \/sbin\/modprobe.sh/g' Makefile
+
+
+
+
+
+
 
