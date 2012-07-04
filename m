@@ -1,67 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:51134 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756464Ab2GDLt1 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53478 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755765Ab2GDHWW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 07:49:27 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Paul Bolle <pebolle@tiscali.nl>
-Subject: RE: [PATCH] iwlegacy: don't mess up the SCD when removing a key
-Date: Wed, 4 Jul 2012 11:49:21 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3174771@HASMSX103.ger.corp.intel.com> (sfid-20120704_134955_508418_3AAB79CB)
-References: <1341228681-19358-1-git-send-email-emmanuel.grumbach@intel.com>
- <20120704112208.GB2570@redhat.com>
- <CANUX_P2gvyRejAmvW-BSxKaA7TG1s=KcRczwShb8+WtT9==L5w@mail.gmail.com>
- <20120704114029.GC2570@redhat.com>
-In-Reply-To: <20120704114029.GC2570@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 4 Jul 2012 03:22:22 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v1 2/2] cfg80211: bitrate calculation for 60g
+Date: Wed, 4 Jul 2012 10:22:00 +0300
+Message-ID: <1341386520-25244-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120704_092226_289554_1A6BCC95)
+In-Reply-To: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Wed, Jul 04, 2012 at 02:33:48PM +0300, Emmanuel Grumbach wrote:
-> > > On Mon, Jul 02, 2012 at 02:31:21PM +0300, Emmanuel Grumbach wrote:
-> > > > When we remove a key, we put a key index which was supposed to
-> > > > tell the fw that we are actually removing the key. But instead the
-> > > > fw took that index as a valid index and messed up the SRAM of the
-> > > > device.
-> > > >
-> > > > This memory corruption on the device mangled the data of the SCD.
-> > > > The impact on the user is that SCD queue 2 got stuck after having
-> > > > removed keys.
-> > > >
-> > > > Change-Id: I721f71c1a3a0af6058abe1975cebd9b613c7ff2b
-> > > > Signed-off-by: Emmanuel Grumbach
-> <emmanuel.grumbach@intel.com>
-> > > > ---
-> > > > Paul, can you please test ?
-> > > > If it solve the issues for you, I will send as a patch and Cc
-> > > > stable Totally not tested
-> > > > v2: first hunk of this patch thanks to Stanislaw's review
-> > >
-> > > I tested that patch and did not found any problem.
-> > >
-> >
-> > Ok, but doest it solve the bug ?
-> 
-> CCing Poul.
-> 
-> But even if not, we still probably need that patch, right? Or is possible that
-> 4965 firmware do not corrupt memory when we provide wrong key offset to
-> it? Or maybe for 4965 key offset 0xff is something that is expected and
-> needed to invalidate the key?
-> 
+60g band uses different from .11n MCS scheme, so bitrate
+should be calculated differently
 
-I guess the patch is needed for 4965. This code in fw is quite old and hasn't changed for a while, so...
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/net/cfg80211.h |    2 ++
+ net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8837efc..51f67a9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -580,11 +580,13 @@ enum station_info_flags {
+  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
+  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
+  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
++ * @RATE_INFO_FLAGS_60G: 60gHz MCS
+  */
+ enum rate_info_flags {
+ 	RATE_INFO_FLAGS_MCS		= 1<<0,
+ 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
+ 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
++	RATE_INFO_FLAGS_60G		= 1<<3,
+ };
+ 
+ /**
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 6e52726..e31f1db 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -900,12 +900,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
+ 
++static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
++{
++	static const u32 __mcs2bitrate[] = {
++		/* control PHY */
++		[0] =   275,
++		/* SC PHY */
++		[1] =  3850,
++		[2] =  7700,
++		[3] =  9625,
++		[4] = 11550,
++		[5] = 12512, /* 1251.25 mbps */
++		[6] = 15400,
++		[7] = 19250,
++		[8] = 23100,
++		[9] = 25025,
++		[10] = 30800,
++		[11] = 38500,
++		[12] = 46200,
++		/* OFDM PHY */
++		[13] =  6930,
++		[14] =  8662, /* 866.25 mbps */
++		[15] = 13860,
++		[16] = 17325,
++		[17] = 20790,
++		[18] = 27720,
++		[19] = 34650,
++		[20] = 41580,
++		[21] = 45045,
++		[22] = 51975,
++		[23] = 62370,
++		[24] = 67568, /* 6756.75 mbps */
++		/* LP-SC PHY */
++		[25] =  6260,
++		[26] =  8340,
++		[27] = 11120,
++		[28] = 12510,
++		[29] = 16680,
++		[30] = 22240,
++		[31] = 25030,
++	};
++
++	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
++		return 0;
++
++	return __mcs2bitrate[rate->mcs];
++}
++
+ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ {
+ 	int modulation, streams, bitrate;
+ 
+ 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
+ 		return rate->legacy;
++	if (rate->flags & RATE_INFO_FLAGS_60G)
++		return cfg80211_calculate_bitrate_60g(rate);
+ 
+ 	/* the formula below does only work for MCS values smaller than 32 */
+ 	if (WARN_ON_ONCE(rate->mcs >= 32))
+-- 
+1.7.9.5
 
