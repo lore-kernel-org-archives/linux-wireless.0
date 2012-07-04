@@ -1,118 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19301 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054Ab2GCIhw (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:34554 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753903Ab2GDVFT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 04:37:52 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 2/2] cfg80211: bitrate calculation for 60g
-Date: Tue, 3 Jul 2012 11:37:30 +0300
-Message-ID: <1341304650-2593-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120703_103755_030028_842A1088)
-In-Reply-To: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 4 Jul 2012 17:05:19 -0400
+Received: by wgbdr13 with SMTP id dr13so7672119wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 14:05:17 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: mcgrof@frijolero.org, linville@tuxdriver.com,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	xose.vazquez@gmail.com
+Subject: [PATCH 2/3] wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
+Date: Wed,  4 Jul 2012 23:05:06 +0200
+Message-Id: <1341435907-3787-2-git-send-email-xose.vazquez@gmail.com> (sfid-20120704_230526_474809_D2A5994E)
+In-Reply-To: <1341435907-3787-1-git-send-email-xose.vazquez@gmail.com>
+References: <1341435907-3787-1-git-send-email-xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-60g band uses different from .11n MCS scheme, so bitrate should be calculated
-differently
+- Replace units: dBm by mW
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Spanish law was based on CEPT/EU rules:
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000058.html
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000059.html
+
+Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
+nacional de atribución de frecuencias (CNAF):
+https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
+https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
+
+search for:
+ UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
+ UN - 128 RLANs en 5 GHz (pag. 232)
+
+more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
+http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
+
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- include/net/cfg80211.h |    2 ++
- net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+)
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8837efc..51f67a9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -580,11 +580,13 @@ enum station_info_flags {
-  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
-  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
-  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
-+ * @RATE_INFO_FLAGS_60G: 60gHz MCS
-  */
- enum rate_info_flags {
- 	RATE_INFO_FLAGS_MCS		= 1<<0,
- 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
- 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
-+	RATE_INFO_FLAGS_60G		= 1<<3,
- };
+diff --git a/db.txt b/db.txt
+index 152eb0c..cea63bd 100644
+--- a/db.txt
++++ b/db.txt
+@@ -239,10 +239,10 @@ country EG:
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
  
- /**
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 6e52726..e31f1db 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -900,12 +900,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
+ country ES: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (N/A, 20)
+-	(5150 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5350 @ 40), (N/A, 20), DFS
+-	(5470 - 5725 @ 40), (N/A, 27), DFS
++	(2400 - 2483.5 @ 40), (N/A, 100 mW)
++	(5150 - 5250 @ 40), (N/A, 100 mW)
++	(5250 - 5350 @ 40), (N/A, 100 mW), DFS
++	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
  
-+static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
-+{
-+	static const u32 __mcs2bitrate[] = {
-+		/* control PHY */
-+		[0] =   275,
-+		/* SC PHY */
-+		[1] =  3850,
-+		[2] =  7700,
-+		[3] =  9625,
-+		[4] = 11550,
-+		[5] = 12512, /* 1251.25 mbps */
-+		[6] = 15400,
-+		[7] = 19250,
-+		[8] = 23100,
-+		[9] = 25025,
-+		[10] = 30800,
-+		[11] = 38500,
-+		[12] = 46200,
-+		/* OFDM PHY */
-+		[13] =  6930,
-+		[14] =  8662, /* 866.25 mbps */
-+		[15] = 13860,
-+		[16] = 17325,
-+		[17] = 20790,
-+		[18] = 27720,
-+		[19] = 34650,
-+		[20] = 41580,
-+		[21] = 45045,
-+		[22] = 51975,
-+		[23] = 62370,
-+		[24] = 67568, /* 6756.75 mbps */
-+		/* LP-SC PHY */
-+		[25] =  6260,
-+		[26] =  8340,
-+		[27] = 11120,
-+		[28] = 12510,
-+		[29] = 16680,
-+		[30] = 22240,
-+		[31] = 25030,
-+	};
-+
-+	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
-+		return 0;
-+
-+	return __mcs2bitrate[rate->mcs];
-+}
-+
- u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
- 	int modulation, streams, bitrate;
- 
- 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
- 		return rate->legacy;
-+	if (rate->flags & RATE_INFO_FLAGS_60G)
-+		return cfg80211_calculate_bitrate_60g(rate);
- 
- 	/* the formula below does only work for MCS values smaller than 32 */
- 	if (WARN_ON_ONCE(rate->mcs >= 32))
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.7.9.5
+1.7.10.4
 
