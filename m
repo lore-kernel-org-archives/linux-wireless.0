@@ -1,29 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:34858 "EHLO
+Received: from perches-mx.perches.com ([206.117.179.246]:40142 "EHLO
 	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751133Ab2GaPqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 11:46:11 -0400
-Message-ID: <1343749569.6383.2.camel@joe2Laptop> (sfid-20120731_174619_324239_B647D473)
-Subject: Re: [PATCH] mac80211: use eth_broadcast_addr
+	id S1752849Ab2GDPJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 11:09:49 -0400
+Message-ID: <1341414588.3627.42.camel@joe2Laptop> (sfid-20120704_170954_532913_CE686D0D)
+Subject: Re: [PATCHv3 2/3] lib: printf: append support of '%*ph[CDN]'
 From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	netdev <netdev@vger.kernel.org>
-Date: Tue, 31 Jul 2012 08:46:09 -0700
-In-Reply-To: <1343744471-5910-1-git-send-email-johannes@sipsolutions.net>
-References: <1343744471-5910-1-git-send-email-johannes@sipsolutions.net>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Date: Wed, 04 Jul 2012 08:09:48 -0700
+In-Reply-To: <1341391552-4842-2-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1341341280.2012.3.camel@joe2Laptop>
+	 <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <1341391552-4842-2-git-send-email-andriy.shevchenko@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-31 at 16:21 +0200, Johannes Berg wrote:
-> Instead of memset().
+On Wed, 2012-07-04 at 11:45 +0300, Andy Shevchenko wrote:
+> This patch adds a support of the variable width buffer to print it
+> as a hex string with a delimiter.
 
-Maybe just do them all?
+Hi again Andy.
 
-git ls-files net drivers/net |
-xargs perl -p -i -e 's/\bmemset\s*\(\s*([^,]+),\s*(?i:0xff|255)\s*\,\s*(ETH_ALEN|6)\s*\)/eth_broadcast_addr\(\1\)/g'
+> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+[]
+> @@ -655,6 +655,57 @@ char *resource_string(char *buf, char *end, struct resource *res,
+>  }
+>  
+>  static noinline_for_stack
+> +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
+> +		 const char *fmt)
+> +{
+> +	char hex_str[8*3+1];	/* support up to 8 bytes to print */
 
+I think you don't need hex_str at all.
+
+[]
+
+> +	if (spec.field_width <= 0)
+> +		/* nothing to print */
+> +		return buf;
+
+It may be better to default to a 1 and add
+
+	if (addr == ZERO_OR_NULL_PTR)
+
+to avoid dereferencing a NULL or a pointer
+to a zero length object.
+
+> +
+> +	len = min_t(int, spec.field_width, 64);
+> +
+> +	while (i < len) {
+> +		p = hex_str;
+> +		for (j = 0; j < 8 && i < len; j++, i++) {
+> +			p = hex_byte_pack(p, addr[i]);
+> +
+> +			if (separator && i != len - 1)
+> +				*p++ = separator;
+> +		}
+> +		*p = '\0';
+> +
+> +		for (p = hex_str; *p != '\0'; p++) {
+> +			if (buf < end)
+> +				*buf = *p;
+> +			++buf;
+> +		}
+
+why not just directly write to *buf as long as buf < end?
+
+cheers, Joe
 
