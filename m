@@ -1,100 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:54985 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238Ab2GZF0X (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42397 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750797Ab2GDN3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 01:26:23 -0400
-Received: by obbuo13 with SMTP id uo13so2177888obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 22:26:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAAT9HsgXHe-0qZ5vTvCuU8QZ006MrsCyu7Zc_PRFccz52TWcUw@mail.gmail.com>
-References: <CAAT9HsjZ7wPbkRMH94HDNBS+vOhLigKLYULqfyQobh_Oyt9M4w@mail.gmail.com>
-	<501030E9.3090707@lwfinger.net>
-	<CAAT9Hshwb+iPMALGvP1P2UHzEQbyvYNM0_zz0dHp0mJuy6KwLA@mail.gmail.com>
-	<50103BE8.1020203@lwfinger.net>
-	<CAAT9HsjQ_tkm77NT_Rn5_Pi9BHGhY9Vz7jcVzkwdDUjUoKamtw@mail.gmail.com>
-	<501061C8.5010108@lwfinger.net>
-	<CA+XFjioVy_pmKxcJAe1U_M+zKNiiPEsb0bmkAfEWzmnnDBjLFw@mail.gmail.com>
-	<CAAT9HsgXHe-0qZ5vTvCuU8QZ006MrsCyu7Zc_PRFccz52TWcUw@mail.gmail.com>
-Date: Thu, 26 Jul 2012 10:56:22 +0530
-Message-ID: <CAD2nsn2022_CbNtLCy64uFSMF=2PBMN4sDmO4pLbFodLQ139ZQ@mail.gmail.com> (sfid-20120726_072625_517469_9CA01437)
-Subject: Re: New Laptop and Driver
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Tim and Alison Bentley <Home@trarbentley.net>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=bcaec54ee8cc09755204c5b4d643
+	Wed, 4 Jul 2012 09:29:10 -0400
+Message-ID: <1341408545.12432.10.camel@jlt3.sipsolutions.net> (sfid-20120704_152914_572025_E23781F9)
+Subject: Re: [PATCH v2] mac80211: tx: do not drop non-robust mgmt to non-MFP
+ stas.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Date: Wed, 04 Jul 2012 15:29:05 +0200
+In-Reply-To: <4FF43E53.6050805@lri.fr>
+References: <1341393221-5396-1-git-send-email-cavallar@lri.fr>
+	  <1341394528.4482.4.camel@jlt3.sipsolutions.net> <4FF414D9.4060509@lri.fr>
+	 <1341396753.4482.13.camel@jlt3.sipsolutions.net> <4FF43E53.6050805@lri.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---bcaec54ee8cc09755204c5b4d643
-Content-Type: text/plain; charset=ISO-8859-1
+On Wed, 2012-07-04 at 15:00 +0200, Nicolas Cavallari wrote:
 
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.876477] cfg80211: Calling CRDA
-> to update world regulatory domain
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.916447] cfg80211: World
-> regulatory domain updated:
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.916450] cfg80211:   (start_freq
-> - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.916453] cfg80211:   (2402000
-> KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.916455] cfg80211:   (2457000
-> KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.916457] cfg80211:   (2474000
-> KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.916459] cfg80211:   (5170000
-> KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> Jul 26 05:58:23 tigger2 kernel: [ 1546.916461] cfg80211:   (5735000
-> KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> Jul 26 05:58:30 tigger2 kernel: [ 1553.767939] ath: phy0: Hardware
-> device ID 0x0037 not supported
-> Jul 26 05:58:30 tigger2 kernel: [ 1553.767948] ath9k 0000:03:00.0:
-> Failed to initialize device
-> Jul 26 05:58:30 tigger2 kernel: [ 1553.768137] ath9k: probe of
-> 0000:03:00.0 failed with error -95
+> > +	else if (ieee80211_is_robust_mgmt_frame(hdr) &&
+> > +		 (!ieee80211_is_action(hdr->frame_control) ||
+> > +		  !tx->sta || !test_sta_flag(tx->sta, WLAN_STA_MFP)))
+> > +		tx->key = NULL;
+> 
+> I would have written that more like
+> 
+> is_robust_mgmt && !(is_action && tx->sta && test_sta_flag(mfp))
+> 
+> So it's more clear that we drop action frames to mfp stas, as per the spec.
 
-can you please try the attached dummy patch. see if the device is working.
-if its a version of AR9485 it should work. if its properly working, we
-can add a proper support.
+Yeah, makes sense. I was translating it directly.
 
->
->
-> --
-> Tim and Alison Bentley
-> Home@TRARBentley.net
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > +	else {
+> > +
+> >  		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
+> >  		return TX_DROP;
+> 
+> is that blank line needed ?
 
+Err, no :-)
 
+> >> Do you want to apply it yourself ? or should i include it in a series ?
+> > 
+> > Then ... probably easiest for you to include it so you can work on top.
+> > Here's a version with commit log:
+> > http://p.sipsolutions.net/17ea0ebece544a59.txt
+> > 
+> 
+> Ok. will send a series with this patch modified once i test it and my
+> new patch version.
 
--- 
-thanks,
-shafi
+Great, thanks.
 
---bcaec54ee8cc09755204c5b4d643
-Content-Type: application/octet-stream; name="temp.patch"
-Content-Disposition: attachment; filename="temp.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h53eg6d80
+> >>> The whole drop_unencrypted seems strange to start with though...
+> >>
+> >> what to you find strange ? that it is not used in a ESS, or how it works
+> >> ? or both ?
+> > 
+> > The way it's used/works/isn't used.
+> 
+> From what i understand, data frames to unauthorized stations are dropped
+> well before selecting the encryption key. as stations are authorized
+> after or at the same time their encryption key are set, it somewhat
+> works. But for MFP, i'm not sure. I think that drop_unencrypted is
+> mistaken for "drop_unencrypted_management" there.
+> But i'm not an MFP expert.
+> 
+> I'm not sure if we should just add a separate
+> drop_unencrypted_management, or just replace drop_unencrypted with
+> drop_unencrypted_management. But in a IBSS with RSN, if wpa_supplicant
+> isn't recent enough, stations are always authorized by default. so
+> drop_encrypted is required in this case.
 
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9ody5jIGIvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2h3LmMKaW5kZXggY2ZhOTFhYi4uNzMxMWNhOSAxMDA2
-NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2h3LmMKKysrIGIvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2h3LmMKQEAgLTczMCw2ICs3MzAsNyBAQCBpbnQgYXRo
-OWtfaHdfaW5pdChzdHJ1Y3QgYXRoX2h3ICphaCkKIAljYXNlIEFSOTMwMF9ERVZJRF9RQ0E5NTVY
-OgogCWNhc2UgQVI5MzAwX0RFVklEX0FSOTU4MDoKIAljYXNlIEFSOTMwMF9ERVZJRF9BUjk0NjI6
-CisJY2FzZSAweDM3OgogCQlicmVhazsKIAlkZWZhdWx0OgogCQlpZiAoY29tbW9uLT5idXNfb3Bz
-LT5hdGhfYnVzX3R5cGUgPT0gQVRIX1VTQikKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL2F0aC9hdGg5ay9wY2kuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9wY2ku
-YwppbmRleCA4N2I4OWQ1Li5jYjNkOWQ2IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9hdGgvYXRoOWsvcGNpLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL3Bj
-aS5jCkBAIC0zNyw2ICszNyw3IEBAIHN0YXRpYyBERUZJTkVfUENJX0RFVklDRV9UQUJMRShhdGhf
-cGNpX2lkX3RhYmxlKSA9IHsKIAl7IFBDSV9WREVWSUNFKEFUSEVST1MsIDB4MDAzMikgfSwgLyog
-UENJLUUgIEFSOTQ4NSAqLwogCXsgUENJX1ZERVZJQ0UoQVRIRVJPUywgMHgwMDMzKSB9LCAvKiBQ
-Q0ktRSAgQVI5NTgwICovCiAJeyBQQ0lfVkRFVklDRShBVEhFUk9TLCAweDAwMzQpIH0sIC8qIFBD
-SS1FICBBUjk0NjIgKi8KKwl7IFBDSV9WREVWSUNFKEFUSEVST1MsIDB4MDAzNykgfSwgLyogUENJ
-LUUgICA/ICAqLwogCXsgMCB9CiB9OwogCg==
---bcaec54ee8cc09755204c5b4d643--
+Ok ...
+
+I guess I'll have to let Jouni comment on this, right now I'm not much
+less confused than before :-)
+
+johannes
+
