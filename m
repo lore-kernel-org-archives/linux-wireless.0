@@ -1,118 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:33134 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762Ab2GZKbe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41907 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933181Ab2GDKxu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 06:31:34 -0400
-Received: by obbuo13 with SMTP id uo13so2489066obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 03:31:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <50111BB3.9090802@openwrt.org>
-References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	<1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	<CAFtRNNwY-1JLEJa_qZpUfsyQVdUQLO3CWcEB9xef-g5jPzndNQ@mail.gmail.com>
-	<50107C35.9050807@net.t-labs.tu-berlin.de>
-	<CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com>
-	<501083F6.8060002@net.t-labs.tu-berlin.de>
-	<CAFtRNNxEHaON-uBjgLyeJdgN6UKfed6fAeCYPpo6xToi3dixOw@mail.gmail.com>
-	<50111BB3.9090802@openwrt.org>
-Date: Thu, 26 Jul 2012 13:31:34 +0300
-Message-ID: <CAFtRNNyk051oLGuZOMcthf_mO6sArQzp+yCDvLQR2b=mACe9tQ@mail.gmail.com> (sfid-20120726_123139_830679_CC3E2732)
-Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
- txpower changes
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>, jirislaby@gmail.com,
-	johannes.berg@intel.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 4 Jul 2012 06:53:50 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix crash with single-queue drivers
+Date: Wed,  4 Jul 2012 12:53:45 +0200
+Message-Id: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net> (sfid-20120704_125354_863223_72112624)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/26 Felix Fietkau <nbd@openwrt.org>:
-> On 2012-07-26 12:20 PM, Nick Kossifidis wrote:
->> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
->>> Hi Nick,
->>>
->>> Nick Kossifidis schrieb:
->>>
->>>> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
->>>
->>>> There is nothing in your patch that suggests that's related to this.
->>>> Anyway there's a simple way to fix this:
->>>>
->>>> Just move this:
->>>>
->>>> 3575         /* Min/max in 0.25dB units */
->>>> 3576         ah->ah_txpower.txp_min_pwr = 2 * rates[7];
->>>> 3577         ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
->>>> 3578         ah->ah_txpower.txp_ofdm = rates[7];
->>>>
->>>> above the for loop and you are done.
->>>>
->>>> Note rates[i] don't hold tx power values, they hold indices to the
->>>> channel powertable.
->>>>
->>>
->>>
->>> Are you agreeing that current ath5k txpower handling set from user space
->>> is not working and we need to fix it ?
->>
->> Is that a rhetorical question ? Just check out the TODOs on wireless.kernel.org.
->>
->> The current code does not preserve the tx power value across resets,
->> thats the problem and the change I mentioned above fixes it (patch on
->> the way, it's just that where I am right now I don't have bw to
->> download wireless-testing) but other than that when we set tx power
->> without reseting at least it does what it's supposed to do (and the
->> result is the same with madwifi, using a spectrum analyzer or another
->> client/monitor interface you see some power levels supported or only
->> the max txpower supported, it's really up to the vendor, not all of
->> them follow Atheros's reference designs). Your patch passes 1dbm units
->> on a function that expects 0.5dbm units, you fix the problem with
->> preserving tx power but you break the tx power setting.
->>
->> The change I mentioned above fixes the problem without introducing new
->> variables just because "Felix will use the other one", I don't
->> understand why you have a problem with that and why you think I don't
->> want this to get fixed...
->>
->>> Beside that, what about a channel switch and wrongly re-use txp_cur_pwr
->>> on a channel witch other max power levels ?
->>
->> That won't be a problem, when channel changes we 'll call
->>
->> reset -> phy_init -> set_txpower -> (calibration) -> set rate target power
->>
->> and then it's going to get limited before it's written on hw here:
->>
->> max_pwr = min(max_pwr, (u16) ah->ah_txpower.txp_max_pwr) / 2;
->>
->> txp_max_pwr is initialized on calibration (the max power for this
->> channel), then it gets limited by CTL edge information on EEPROM, then
->> by max_pwr and then max_pwr is limited by rate_info->target_power_X
->> from EEPROM to create rates[i]. We write rates[i] on hw, not
->> txp_cur_pwr.
-> I think it's a bad idea to store the user's choice of txpower in a
-> variable that internally gets reused to store the hw limit. Even when
-> the offset isn't added to it, it's still fragile.
->
-> A problem with this is that different channels have different max power
-> values, so if you switch to a channel with a lower power, and then
-> switch back (without explicitly changing txpower inbetween), don't you
-> then end up with less power than you configured?
->
-> This can be easily avoided by storing the user's txpower choice
-> separately from the actual hw limit...
->
-> - Felix
+From: Johannes Berg <johannes.berg@intel.com>
 
-That's what ah->power_level already does, what's the point of
-introducing another one. Do you think power_level is baldy
-used/implemented ?
+Larry (and some others I think) reported that with
+single-queue drivers mac80211 crashes when waking
+the queues. This happens because we allocate just
+a single queue for each virtual interface in case
+the driver doesn't have at least 4 queues, but the
+code stopping/waking the virtual interface queues
+wasn't taking this into account.
 
+Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/util.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 26d2103..8f34d2f 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -268,6 +268,10 @@ EXPORT_SYMBOL(ieee80211_ctstoself_duration);
+ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
++	int n_acs = IEEE80211_NUM_ACS;
++
++	if (local->hw.queues < IEEE80211_NUM_ACS)
++		n_acs = 1;
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		int ac;
+@@ -282,7 +286,7 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 		    local->queue_stop_reasons[sdata->vif.cab_queue] != 0)
+ 			continue;
+ 
+-		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		for (ac = 0; ac < n_acs; ac++) {
+ 			int ac_queue = sdata->vif.hw_queue[ac];
+ 
+ 			if (ac_queue == queue ||
+@@ -344,6 +348,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
++	int n_acs = IEEE80211_NUM_ACS;
+ 
+ 	trace_stop_queue(local, queue, reason);
+ 
+@@ -355,6 +360,9 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 
+ 	__set_bit(reason, &local->queue_stop_reasons[queue]);
+ 
++	if (local->hw.queues < IEEE80211_NUM_ACS)
++		n_acs = 1;
++
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		int ac;
+@@ -362,7 +370,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 		if (!sdata->dev)
+ 			continue;
+ 
+-		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		for (ac = 0; ac < n_acs; ac++) {
+ 			if (sdata->vif.hw_queue[ac] == queue ||
+ 			    sdata->vif.cab_queue == queue)
+ 				netif_stop_subqueue(sdata->dev, ac);
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.10
+
