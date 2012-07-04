@@ -1,88 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55723 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751566Ab2GIVfS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 17:35:18 -0400
-Message-ID: <4FFB4E8F.4020900@hauke-m.de> (sfid-20120709_233523_292950_139A254D)
-Date: Mon, 09 Jul 2012 23:35:11 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53460 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755765Ab2GDHWR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 03:22:17 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v1 1/2] {nl,cfg}80211: support high bitrates
+Date: Wed, 4 Jul 2012 10:21:59 +0300
+Message-ID: <1341386520-25244-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120704_092221_354671_F75F6C3F)
+In-Reply-To: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC][PATCH] bcma: support alternative (BCM4706) ChipCommon core
- id
-References: <1341864848-9707-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1341864848-9707-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafał,
+Until now, u16 value was used to represent bitrate value.
+With recently introduced high bitrates, u16 becomes too small.
 
-Could you add some info why you haven't replaced all places where
-BCMA_CORE_CHIPCOMMON was used with this functions in the commit message.
+Thus, new 32-bit bitrate introduced.
+nl80211 reports both new bitrate and old one, in case it
+fits into u16. If bitrate is too high for u16, only new (32 bit)
+value reported
 
-By the way, why is bcma_find_core() beeing called in bcma_bus_resume()?
-The code should better check for bus->drv_cc.core and not for core.
+User space tools encouraged to switch to new bitrate.
 
-On 07/09/2012 10:14 PM, Rafał Miłecki wrote:
-> ---
->  drivers/bcma/main.c |   14 +++++++++++---
->  1 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index 173a0b4..61ac6cf 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -61,6 +61,13 @@ static struct bus_type bcma_bus_type = {
->  	.dev_attrs	= bcma_device_attrs,
->  };
->  
-> +static u16 bcma_cc_core_id(struct bcma_bus *bus)
-> +{
-> +	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
-> +		return BCMA_CORE_4706_CHIPCOMMON;
-> +	return BCMA_CORE_CHIPCOMMON;
-> +}
-> +
->  struct bcma_device *bcma_find_core(struct bcma_bus *bus, u16 coreid)
->  {
->  	struct bcma_device *core;
-> @@ -91,6 +98,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
->  	list_for_each_entry(core, &bus->cores, list) {
->  		/* We support that cores ourself */
->  		switch (core->id.id) {
-> +		case BCMA_CORE_4706_CHIPCOMMON:
->  		case BCMA_CORE_CHIPCOMMON:
->  		case BCMA_CORE_PCI:
->  		case BCMA_CORE_PCIE:
-> @@ -157,7 +165,7 @@ int __devinit bcma_bus_register(struct bcma_bus *bus)
->  	}
->  
->  	/* Init CC core */
-> -	core = bcma_find_core(bus, BCMA_CORE_CHIPCOMMON);
-> +	core = bcma_find_core(bus, bcma_cc_core_id(bus));
->  	if (core) {
->  		bus->drv_cc.core = core;
->  		bcma_core_chipcommon_init(&bus->drv_cc);
-> @@ -215,7 +223,7 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
->  	bcma_init_bus(bus);
->  
->  	match.manuf = BCMA_MANUF_BCM;
-> -	match.id = BCMA_CORE_CHIPCOMMON;
-> +	match.id = bcma_cc_core_id(bus);
->  	match.class = BCMA_CL_SIM;
->  	match.rev = BCMA_ANY_REV;
->  
-> @@ -239,7 +247,7 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
->  	}
->  
->  	/* Init CC core */
-> -	core = bcma_find_core(bus, BCMA_CORE_CHIPCOMMON);
-> +	core = bcma_find_core(bus, bcma_cc_core_id(bus));
->  	if (core) {
->  		bus->drv_cc.core = core;
->  		bcma_core_chipcommon_init(&bus->drv_cc);
-> 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ include/linux/nl80211.h |    8 ++++++++
+ include/net/cfg80211.h  |    2 +-
+ net/wireless/nl80211.c  |    9 +++++++--
+ net/wireless/util.c     |    2 +-
+ 4 files changed, 17 insertions(+), 4 deletions(-)
 
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 74cc55c..0f03969 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1638,12 +1638,19 @@ struct nl80211_sta_flag_update {
+  *
+  * These attribute types are used with %NL80211_STA_INFO_TXRATE
+  * when getting information about the bitrate of a station.
++ * There are 2 types for bitrate, legacy one that represents
++ * 16-bit value, and new one that represents 32-bit value.
++ * If rate value fits into 16 bit, both attributes reported with
++ * the same value. If rate is too high to fit into 16 bit (>6.5535Gbps),
++ * only new value included.
++ * User space tools encouraged to use new bitrate.
+  *
+  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
+  * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
+  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
+  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
+  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
++ * @NL80211_RATE_INFO_BITRATE_HT: total bitrate (u32, 100kbit/s)
+  * @NL80211_RATE_INFO_MAX: highest rate_info number currently defined
+  * @__NL80211_RATE_INFO_AFTER_LAST: internal use
+  */
+@@ -1653,6 +1660,7 @@ enum nl80211_rate_info {
+ 	NL80211_RATE_INFO_MCS,
+ 	NL80211_RATE_INFO_40_MHZ_WIDTH,
+ 	NL80211_RATE_INFO_SHORT_GI,
++	NL80211_RATE_INFO_BITRATE_HT,
+ 
+ 	/* keep last */
+ 	__NL80211_RATE_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0b564e8..8837efc 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3487,7 +3487,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
+  *
+  * return 0 if MCS index >= 32
+  */
+-u16 cfg80211_calculate_bitrate(struct rate_info *rate);
++u32 cfg80211_calculate_bitrate(struct rate_info *rate);
+ 
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 77102e6..4fd7f0a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2618,7 +2618,8 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 				 int attr)
+ {
+ 	struct nlattr *rate;
+-	u16 bitrate;
++	u32 bitrate;
++	u16 bitrate_compat;
+ 
+ 	rate = nla_nest_start(msg, attr);
+ 	if (!rate)
+@@ -2626,8 +2627,12 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 
+ 	/* cfg80211_calculate_bitrate will return 0 for mcs >= 32 */
+ 	bitrate = cfg80211_calculate_bitrate(info);
++	/* report 16-bit bitrate only if we can */
++	bitrate_compat = bitrate < (1UL << 16) ? bitrate : 0;
+ 	if ((bitrate > 0 &&
+-	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate)) ||
++	     nla_put_u32(msg, NL80211_RATE_INFO_BITRATE_HT, bitrate)) ||
++	    (bitrate_compat > 0 &&
++	     nla_put_u16(msg, NL80211_RATE_INFO_BITRATE, bitrate_compat)) ||
+ 	    ((info->flags & RATE_INFO_FLAGS_MCS) &&
+ 	     nla_put_u8(msg, NL80211_RATE_INFO_MCS, info->mcs)) ||
+ 	    ((info->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) &&
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 0228c64..6e52726 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -900,7 +900,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
+ 
+-u16 cfg80211_calculate_bitrate(struct rate_info *rate)
++u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ {
+ 	int modulation, streams, bitrate;
+ 
+-- 
+1.7.9.5
 
