@@ -1,89 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41159 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050Ab2GQLsQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:48:16 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20485.20636.11008.266065@gargle.gargle.HOWL> (sfid-20120717_134819_384774_45F3AB70)
-Date: Tue, 17 Jul 2012 17:16:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/12] ath9k: Reconfigure VIF state properly
+Received: from mga11.intel.com ([192.55.52.93]:7380 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756912Ab2GDIqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 04:46:20 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, joe@perches.com,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCHv3 3/3] wireless: at76c50x: eliminate hex2str()
+Date: Wed,  4 Jul 2012 11:45:52 +0300
+Message-Id: <1341391552-4842-3-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120704_104644_355344_6CAC3D9F)
+In-Reply-To: <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1341341280.2012.3.camel@joe2Laptop>
+ <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an interface in AP or P2P-GO mode is removed,
-check whether a station interface is already present and
-reconfigure the beacon timers etc. properly if it's
-associated.
+The hex2str() is substituted by '%*phD' specificator.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ drivers/net/wireless/at76c50x-usb.c |   54 ++++++++---------------------------
+ 1 file changed, 12 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 55c9095..6a44c95 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -19,6 +19,9 @@
- #include "ath9k.h"
- #include "btcoex.h"
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index efc162e..e5bd2ad 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -498,36 +498,6 @@ exit:
+ 	return ret;
+ }
  
-+static void ath9k_set_assoc_state(struct ath_softc *sc,
-+				  struct ieee80211_vif *vif);
-+
- u8 ath9k_parse_mpdudensity(u8 mpdudensity)
- {
- 	/*
-@@ -878,6 +881,18 @@ static void ath9k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+-#define HEX2STR_BUFFERS 4
+-#define HEX2STR_MAX_LEN 64
+-
+-/* Convert binary data into hex string */
+-static char *hex2str(void *buf, size_t len)
+-{
+-	static atomic_t a = ATOMIC_INIT(0);
+-	static char bufs[HEX2STR_BUFFERS][3 * HEX2STR_MAX_LEN + 1];
+-	char *ret = bufs[atomic_inc_return(&a) & (HEX2STR_BUFFERS - 1)];
+-	char *obuf = ret;
+-	u8 *ibuf = buf;
+-
+-	if (len > HEX2STR_MAX_LEN)
+-		len = HEX2STR_MAX_LEN;
+-
+-	if (len == 0)
+-		goto exit;
+-
+-	while (len--) {
+-		obuf = hex_byte_pack(obuf, *ibuf++);
+-		*obuf++ = '-';
+-	}
+-	obuf--;
+-
+-exit:
+-	*obuf = '\0';
+-
+-	return ret;
+-}
+-
+ /* LED trigger */
+ static int tx_activity;
+ static void at76_ledtrig_tx_timerfunc(unsigned long data);
+@@ -1004,9 +974,9 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
+ 	    WEP_SMALL_KEY_LEN : WEP_LARGE_KEY_LEN;
+ 
+ 	for (i = 0; i < WEP_KEYS; i++)
+-		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %s",
++		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %*phD",
+ 			 wiphy_name(priv->hw->wiphy), i,
+-			 hex2str(m->wep_default_keyvalue[i], key_len));
++			 key_len, m->wep_default_keyvalue[i]);
+ exit:
+ 	kfree(m);
+ }
+@@ -1031,7 +1001,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+ 	at76_dbg(DBG_MIB, "%s: MIB MAC_MGMT: beacon_period %d CFP_max_duration "
+ 		 "%d medium_occupancy_limit %d station_id 0x%x ATIM_window %d "
+ 		 "CFP_mode %d privacy_opt_impl %d DTIM_period %d CFP_period %d "
+-		 "current_bssid %pM current_essid %s current_bss_type %d "
++		 "current_bssid %pM current_essid %*phD current_bss_type %d "
+ 		 "pm_mode %d ibss_change %d res %d "
+ 		 "multi_domain_capability_implemented %d "
+ 		 "international_roaming %d country_string %.3s",
+@@ -1041,7 +1011,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
+ 		 le16_to_cpu(m->station_id), le16_to_cpu(m->ATIM_window),
+ 		 m->CFP_mode, m->privacy_option_implemented, m->DTIM_period,
+ 		 m->CFP_period, m->current_bssid,
+-		 hex2str(m->current_essid, IW_ESSID_MAX_SIZE),
++		 IW_ESSID_MAX_SIZE, m->current_essid,
+ 		 m->current_bss_type, m->power_mgmt_mode, m->ibss_change,
+ 		 m->res, m->multi_domain_capability_implemented,
+ 		 m->multi_domain_capability_enabled, m->country_string);
+@@ -1069,7 +1039,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+ 		 "cwmin %d cwmax %d short_retry_time %d long_retry_time %d "
+ 		 "scan_type %d scan_channel %d probe_delay %u "
+ 		 "min_channel_time %d max_channel_time %d listen_int %d "
+-		 "desired_ssid %s desired_bssid %pM desired_bsstype %d",
++		 "desired_ssid %*phD desired_bssid %pM desired_bsstype %d",
+ 		 wiphy_name(priv->hw->wiphy),
+ 		 le32_to_cpu(m->max_tx_msdu_lifetime),
+ 		 le32_to_cpu(m->max_rx_lifetime),
+@@ -1080,7 +1050,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
+ 		 le16_to_cpu(m->min_channel_time),
+ 		 le16_to_cpu(m->max_channel_time),
+ 		 le16_to_cpu(m->listen_interval),
+-		 hex2str(m->desired_ssid, IW_ESSID_MAX_SIZE),
++		 IW_ESSID_MAX_SIZE, m->desired_ssid,
+ 		 m->desired_bssid, m->desired_bsstype);
+ exit:
+ 	kfree(m);
+@@ -1160,13 +1130,13 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
+ 		goto exit;
  	}
+ 
+-	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %s",
++	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %*phD",
+ 		 wiphy_name(priv->hw->wiphy),
+-		 hex2str(m->channel_list, sizeof(m->channel_list)));
++		 (int)sizeof(m->channel_list), m->channel_list);
+ 
+-	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %s",
++	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %*phD",
+ 		 wiphy_name(priv->hw->wiphy),
+-		 hex2str(m->tx_powerlevel, sizeof(m->tx_powerlevel)));
++		 (int)sizeof(m->tx_powerlevel), m->tx_powerlevel);
+ exit:
+ 	kfree(m);
  }
+@@ -1369,9 +1339,9 @@ static int at76_startup_device(struct at76_priv *priv)
+ 	int ret;
  
-+static void ath9k_sta_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	struct ath_softc *sc = data;
-+	struct ath_vif *avp = (void *)vif->drv_priv;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (avp->primary_sta_vif)
-+		ath9k_set_assoc_state(sc, vif);
-+}
-+
- /* Called with sc->mutex held. */
- void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
-@@ -911,6 +926,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_vif_iter_data iter_data;
-+	enum nl80211_iftype old_opmode = ah->opmode;
- 
- 	ath9k_calculate_iter_data(hw, vif, &iter_data);
- 
-@@ -941,6 +957,17 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 		ah->imask &= ~ATH9K_INT_TSFOOR;
- 
- 	ath9k_hw_set_interrupts(ah);
-+
-+	/*
-+	 * If we are changing the opmode to STATION,
-+	 * a beacon sync needs to be done.
-+	 */
-+	if (ah->opmode == NL80211_IFTYPE_STATION &&
-+	    old_opmode == NL80211_IFTYPE_AP &&
-+	    test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
-+		ieee80211_iterate_active_interfaces_atomic(sc->hw,
-+						   ath9k_sta_vif_iter, sc);
-+	}
- }
- 
- static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	at76_dbg(DBG_PARAMS,
+-		 "%s param: ssid %.*s (%s) mode %s ch %d wep %s key %d "
++		 "%s param: ssid %.*s (%*phD) mode %s ch %d wep %s key %d "
+ 		 "keylen %d", wiphy_name(priv->hw->wiphy), priv->essid_size,
+-		 priv->essid, hex2str(priv->essid, IW_ESSID_MAX_SIZE),
++		 priv->essid, IW_ESSID_MAX_SIZE, priv->essid,
+ 		 priv->iw_mode == IW_MODE_ADHOC ? "adhoc" : "infra",
+ 		 priv->channel, priv->wep_enabled ? "enabled" : "disabled",
+ 		 priv->wep_key_id, priv->wep_keys_len[priv->wep_key_id]);
 -- 
-1.7.11.2
+1.7.10
 
