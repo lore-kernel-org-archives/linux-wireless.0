@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:45422 "EHLO purkki.adurom.net"
+Received: from mx1.redhat.com ([209.132.183.28]:6739 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753457Ab2GINOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 09:14:55 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: "Arend van Spriel" <arend@broadcom.com>
-Cc: "Xose Vazquez Perez" <xose.vazquez@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>, linville@tuxdriver.com,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
-References: <1341362473-18747-1-git-send-email-xose.vazquez@gmail.com>
-	<CAB=NE6U=bk6RSXHouuHvJd0=GErYJp82jkgeNWGnPDooZ_SONQ@mail.gmail.com>
-	<4FF396DD.7060408@gmail.com> <4FF3DC31.2030004@broadcom.com>
-Date: Mon, 09 Jul 2012 16:14:50 +0300
-In-Reply-To: <4FF3DC31.2030004@broadcom.com> (Arend van Spriel's message of
-	"Wed, 4 Jul 2012 08:01:21 +0200")
-Message-ID: <87pq852i0l.fsf@purkki.adurom.net> (sfid-20120709_151459_156069_A4D58CDE)
+	id S1752636Ab2GDLWL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 07:22:11 -0400
+Date: Wed, 4 Jul 2012 13:22:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlegacy: don't mess up the SCD when removing a key
+Message-ID: <20120704112208.GB2570@redhat.com> (sfid-20120704_132215_262066_84D9DE04)
+References: <1341228681-19358-1-git-send-email-emmanuel.grumbach@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1341228681-19358-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Arend van Spriel" <arend@broadcom.com> writes:
+On Mon, Jul 02, 2012 at 02:31:21PM +0300, Emmanuel Grumbach wrote:
+> When we remove a key, we put a key index which was supposed
+> to tell the fw that we are actually removing the key. But
+> instead the fw took that index as a valid index and messed
+> up the SRAM of the device.
+> 
+> This memory corruption on the device mangled the data of
+> the SCD. The impact on the user is that SCD queue 2 got
+> stuck after having removed keys.
+> 
+> Change-Id: I721f71c1a3a0af6058abe1975cebd9b613c7ff2b
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+> Paul, can you please test ?
+> If it solve the issues for you, I will send as a patch and Cc stable Totally not tested
+> v2: first hunk of this patch thanks to Stanislaw's review
 
-> Just a general remark not specific to this patch. The commit message
-> often contains a source reference. I think it would be useful to have
-> this reference in the database a well so people validating it do not
-> need to do the digging using 'git blame'. Does that make sense?
+I tested that patch and did not found any problem.
 
-Yes :)
-
-IMHO makes a lot easier to validate the entries.
-
--- 
-Kalle Valo
+Stanislaw
+ 
