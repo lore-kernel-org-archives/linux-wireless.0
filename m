@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9249 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161288Ab2GLRRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 13:17:52 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Dave Jones <davej@redhat.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 2/2] NFC: NCI module license 'unspecified' taints kernel
-Date: Thu, 12 Jul 2012 19:17:34 +0200
-Message-Id: <1342113454-23110-3-git-send-email-sameo@linux.intel.com> (sfid-20120712_191755_130740_3CAAC794)
-In-Reply-To: <1342113454-23110-1-git-send-email-sameo@linux.intel.com>
-References: <1342113454-23110-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:53781 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab2GDLdt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 07:33:49 -0400
+Received: by wgbdr13 with SMTP id dr13so7263657wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 04:33:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120704112208.GB2570@redhat.com>
+References: <1341228681-19358-1-git-send-email-emmanuel.grumbach@intel.com>
+	<20120704112208.GB2570@redhat.com>
+Date: Wed, 4 Jul 2012 14:33:48 +0300
+Message-ID: <CANUX_P2gvyRejAmvW-BSxKaA7TG1s=KcRczwShb8+WtT9==L5w@mail.gmail.com> (sfid-20120704_133353_592823_7DFDFA95)
+Subject: Re: [PATCH] iwlegacy: don't mess up the SCD when removing a key
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dave Jones <davej@redhat.com>
+> On Mon, Jul 02, 2012 at 02:31:21PM +0300, Emmanuel Grumbach wrote:
+> > When we remove a key, we put a key index which was supposed
+> > to tell the fw that we are actually removing the key. But
+> > instead the fw took that index as a valid index and messed
+> > up the SRAM of the device.
+> >
+> > This memory corruption on the device mangled the data of
+> > the SCD. The impact on the user is that SCD queue 2 got
+> > stuck after having removed keys.
+> >
+> > Change-Id: I721f71c1a3a0af6058abe1975cebd9b613c7ff2b
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > ---
+> > Paul, can you please test ?
+> > If it solve the issues for you, I will send as a patch and Cc stable
+> > Totally not tested
+> > v2: first hunk of this patch thanks to Stanislaw's review
+>
+> I tested that patch and did not found any problem.
+>
 
-Signed-off-by: Dave Jones <davej@redhat.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/nci/core.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index d560e6f..f18f207 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -27,6 +27,7 @@
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
-+#include <linux/module.h>
- #include <linux/types.h>
- #include <linux/workqueue.h>
- #include <linux/completion.h>
-@@ -878,3 +879,5 @@ static void nci_cmd_work(struct work_struct *work)
- 			  jiffies + msecs_to_jiffies(NCI_CMD_TIMEOUT));
- 	}
- }
-+
-+MODULE_LICENSE("GPL");
--- 
-1.7.10
-
+Ok, but doest it solve the bug ?
