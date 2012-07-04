@@ -1,86 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:59927 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702Ab2G2WtG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jul 2012 18:49:06 -0400
-Received: by obbuo13 with SMTP id uo13so8013678obb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2012 15:49:06 -0700 (PDT)
-Date: Sun, 29 Jul 2012 17:48:57 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Roland Vossen <rvossen@broadcom.com>
-Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
-Message-ID: <20120729224857.GA21285@burratino> (sfid-20120730_004911_994878_E0A113CE)
-References: <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
- <20120604084200.GA30645@tiikeri.vuoristo.local>
- <20120604173121.GA9238@stt008.linux.site>
- <20120605050620.GC3118@burratino>
- <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
- <20120611031544.GB3092@burratino>
- <4FE0CA49.3030909@broadcom.com>
- <20120716213122.GA3078@burratino>
- <50051A2F.3030206@broadcom.com>
- <20120723002808.GA3305@burratino>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120723002808.GA3305@burratino>
+Received: from plane.gmane.org ([80.91.229.3]:60540 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752063Ab2GDKKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 06:10:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SmMX8-00054k-NT
+	for linux-wireless@vger.kernel.org; Wed, 04 Jul 2012 12:10:06 +0200
+Received: from 2.94.91.148 ([2.94.91.148])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 12:10:06 +0200
+Received: from scorp.dev.null by 2.94.91.148 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 12:10:06 +0200
+To: linux-wireless@vger.kernel.org
+From: Artem Chekunov <scorp.dev.null@gmail.com>
+Subject: Re: Building and Installation errors due to modprobe -l was deprecated
+Date: Wed, 4 Jul 2012 10:03:34 +0000 (UTC)
+Message-ID: <loom.20120704T120059-164@post.gmane.org> (sfid-20120704_121012_759455_343EBEBC)
+References: <4F58D80D.8070905@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jonathan Nieder wrote:
-> Arend van Spriel wrote:
+Aaron <regtothismail@...> writes:
 
->> I guess the behaviour improved due to the last two patches listed above,
->> but I also suspect that it is only an improvement and the root cause
->> still exists.
->
-> I think you're right.  Camaleón tried with all patches except the last
-> one and still got the unwanted reconnects.
->
-> Would 6b8da423315b and 94a2ca311cf4 be good candidates for stable@ in
-> the meantime (for symptom relief and saner regulatory code) until the
-> root cause is found?
+> 
+> Hello,
+> 
+> I have problems with building and installing compat-wireless-3.3-rc1-2 
+> drivers due to modprobe -l option is obsolete.
+> Debian wheezy/sid
+> Linux laptop 3.2.0-2-amd64 #1 SMP Sun Mar 4 22:48:17 UTC 2012 x86_64 
+> GNU/Linux
+> 
+> # make install
+> /sbin/modprobe: invalid option -- 'l'
+> /sbin/modprobe: invalid option -- 'l'
+> 
+> Your old wireless subsystem modules were left intact:
+> 
+> /sbin/modprobe: invalid option -- 'l'
+> make: *** [uninstall] Error 1
+> 
+> Best regards,
+> Aaron
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-To answer my own question: I guess not, at least not on the basis of
-Camaleón's experience.
+Try run next
+####################################################
+cat > /sbin/modprobe.sh <<EOF
+#!/bin/bash
 
-Results so far:
+if [[ \$1 == -l ]]
+then
 
- * mainline >= 3.4.y: seemed to be ok for a few days, never showed the
-   problem.
- * 3.2.19 + the 23 patches discussed in this thread: worked fine for about
-   a week, never showed the problem.
- * 3.2.18: failed quickly.
- * 3.2.19 + first patch: failed quickly.
- * 3.2.2: worked ok for a while, then acted up again.  Affected.
- * 3.2.21 + 10 patches: failed quickly.
- * 3.2.21 + all 23 patches: worked ok-ish (?) for a week ("only a
-   couple reconnects in 7 days, but when that happened gnome-shell was
-   not segfaulting at least...").  I should have paid more attention:
-   that meant it was affected!
- * 3.2.21 + 17 patches: failed quickly.
- * 3.2.21 + 19 patches: failed quickly.
- * 3.2.22 + 22 patches: failed quickly.
- * 3.2.21 + patch #23 alone: failed quickly.
- * 3.2.21 + all 23 patches: failed quickly.
+if [ -z \$2 ]    
+then
+find /lib/modules/\$(uname -r) -name '*.ko' | sed -e "s#\/lib\/modules\/\$(uname
+-r)\/##g"
+else
+find /lib/modules/\$(uname -r) -name '*.ko' | sed -e "s#\/lib\/modules\/\$(uname
+-r)\/##g" | grep \$2
+fi
 
-Arend, you're very good at this guessing game. ;-)
+else
+/sbin/modprobe \$@
+fi
+EOF
 
-I imagine the problem is still present in mainline.  Camaleón, the
-next useful test would probably be mainline or wireless-testing, and
-we should probably stop being so lazy and try to figure out _what_ is
-happening when it reconnects and whether it is even a kernel bug.  It
-might be something normal (like rekeying) not being handled well by
-userspace.
+chmod +x /sbin/modprobe.sh
+alias modprobe=/sbin/modprobe.sh
+echo "alias modprobe=/sbin/modprobe.sh" >> /etc/bash.bashrc
 
-Whatever it is, it seems that the kernel can help, since the
-proprietary Broadcom wl driver works better if I have understood
-Camaleón correctly.
+cp Makefile Makefile.save
+sed -i -e 's/^MODPROBE.*/MODPROBE := \/sbin\/modprobe.sh/g' Makefile
 
-Thanks,
-Jonathan
+
