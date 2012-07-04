@@ -1,219 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:50890 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761Ab2GSE2t (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:63422 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995Ab2GDP67 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:28:49 -0400
-Date: Wed, 18 Jul 2012 21:28:27 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 6/9] x86: OLPC: switch over to using new EC driver on x86
-Message-ID: <20120718212827.2080b28b@dev.queued.net> (sfid-20120719_062909_804991_0CF71237)
-In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
-References: <20120718182144.2d7b0b50@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 4 Jul 2012 11:58:59 -0400
+Received: by werb14 with SMTP id b14so4517616wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 08:58:57 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [RFC 1/4] nl80211: accept optional netdev in send_wiphy
+Date: Wed,  4 Jul 2012 18:58:47 +0300
+Message-Id: <1341417530-9062-2-git-send-email-arik@wizery.com> (sfid-20120704_175903_375037_FD3EE5A2)
+In-Reply-To: <1341417530-9062-1-git-send-email-arik@wizery.com>
+References: <1341417530-9062-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This uses the new EC driver framework in drivers/platform/olpc.  The
-XO-1 and XO-1.5-specific code is still in arch/x86, but the generic
-stuff (including a new workqueue; no more running EC commands with IRQs
-disabled!) can be shared with other architectures.
+When a specific interface is requested in a GET_WIPHY command, propagate
+the interface to the send_wiphy. This allows interface specific abilities
+to be sent up.
 
-Signed-off-by: Andres Salomon <dilinger@queued.net>
+This change requires us to implement a new internal flag for NL commands
+for optionally getting the netdev. This flag is used for GET_WIPHY.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- arch/x86/include/asm/olpc.h     |    5 ---
- arch/x86/platform/olpc/olpc.c   |   53
-++++++++++++++++++++------------------- drivers/platform/olpc/olpc-ec.c
-|    5 --- 3 files changed, 27 insertions(+), 36 deletions(-)
+ net/wireless/nl80211.c |   38 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 33 insertions(+), 5 deletions(-)
 
-diff --git a/arch/x86/include/asm/olpc.h b/arch/x86/include/asm/olpc.h
-index 5b28f3e..72f9adf6 100644
---- a/arch/x86/include/asm/olpc.h
-+++ b/arch/x86/include/asm/olpc.h
-@@ -100,11 +100,6 @@ extern void olpc_xo1_pm_wakeup_clear(u16 value);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 77102e6..010ff47 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -791,7 +791,8 @@ nla_put_failure:
+ }
  
- extern int pci_olpc_init(void);
- 
--/* EC related functions */
--
--extern int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf,
--		size_t inlen, unsigned char *outbuf, size_t outlen);
--
- /* SCI source values */
- 
- #define EC_SCI_SRC_EMPTY	0x00
-diff --git a/arch/x86/platform/olpc/olpc.c
-b/arch/x86/platform/olpc/olpc.c index a3fa180..4590096 100644
---- a/arch/x86/platform/olpc/olpc.c
-+++ b/arch/x86/platform/olpc/olpc.c
-@@ -14,7 +14,6 @@
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/delay.h>
--#include <linux/spinlock.h>
- #include <linux/io.h>
- #include <linux/string.h>
- #include <linux/platform_device.h>
-@@ -32,8 +31,6 @@
- struct olpc_platform_t olpc_platform_info;
- EXPORT_SYMBOL_GPL(olpc_platform_info);
- 
--static DEFINE_SPINLOCK(ec_lock);
--
- /* debugfs interface to EC commands */
- #define EC_MAX_CMD_ARGS (5 + 1)	/* cmd byte + 5 args */
- #define EC_MAX_CMD_REPLY (8)
-@@ -126,16 +123,13 @@ static int __wait_on_obf(unsigned int line,
-unsigned int port, int desired)
-  * <http://wiki.laptop.org/go/Ec_specification>.  Unfortunately, while
-  * OpenFirmware's source is available, the EC's is not.
-  */
--int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf, size_t
-inlen,
--		unsigned char *outbuf,  size_t outlen)
-+static int olpc_xo1_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
-+		size_t outlen, void *arg)
+ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+-			      struct cfg80211_registered_device *dev)
++			      struct cfg80211_registered_device *dev,
++			      struct net_device *netdev)
  {
--	unsigned long flags;
- 	int ret = -EIO;
- 	int i;
- 	int restarts = 0;
- 
--	spin_lock_irqsave(&ec_lock, flags);
--
- 	/* Clear OBF */
- 	for (i = 0; i < 10 && (obf_status(0x6c) == 1); i++)
- 		inb(0x68);
-@@ -199,10 +193,8 @@ restart:
- 
- 	ret = 0;
- err:
--	spin_unlock_irqrestore(&ec_lock, flags);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(olpc_ec_cmd_x86);
- 
- void olpc_ec_wakeup_set(u16 value)
+ 	void *hdr;
+ 	struct nlattr *nl_bands, *nl_band;
+@@ -1207,7 +1208,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
+ 			continue;
+ 		if (nl80211_send_wiphy(skb, NETLINK_CB(cb->skb).pid,
+ 				       cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-				       dev) < 0) {
++				       dev, NULL) < 0) {
+ 			idx--;
+ 			break;
+ 		}
+@@ -1223,12 +1224,14 @@ static int nl80211_get_wiphy(struct sk_buff *skb, struct genl_info *info)
  {
-@@ -366,7 +358,7 @@ static void setup_debugfs(void)
- 			    &ec_debugfs_genops);
- }
+ 	struct sk_buff *msg;
+ 	struct cfg80211_registered_device *dev = info->user_ptr[0];
++	struct net_device *netdev = info->user_ptr[1];
  
--static int olpc_ec_suspend(void)
-+static int olpc_ec_suspend(struct platform_device *pdev)
- {
- 	return olpc_ec_mask_write(ec_wakeup_mask);
- }
-@@ -425,8 +417,28 @@ static int __init add_xo1_platform_devices(void)
- 	return 0;
- }
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
  
--static struct syscore_ops olpc_syscore_ops = {
-+static int olpc_xo1_ec_probe(struct platform_device *pdev)
-+{
-+	/* get the EC revision */
-+	olpc_ec_cmd(EC_FIRMWARE_REV, NULL, 0,
-+			(unsigned char *) &olpc_platform_info.ecver,
-1); +
-+	/* EC version 0x5f adds support for wide SCI mask */
-+	if (olpc_platform_info.ecver >= 0x5f)
-+		olpc_platform_info.flags |= OLPC_F_EC_WIDE_SCI;
+-	if (nl80211_send_wiphy(msg, info->snd_pid, info->snd_seq, 0, dev) < 0) {
++	if (nl80211_send_wiphy(msg, info->snd_pid, info->snd_seq, 0, dev,
++			       netdev) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+ 	}
+@@ -6648,6 +6651,7 @@ static int nl80211_register_beacons(struct sk_buff *skb, struct genl_info *info)
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+ #define NL80211_FLAG_CHECK_NETDEV_UP	0x08
++#define NL80211_FLAG_OPT_NETDEV_UP	0x10 /* get netdev if given and up */
+ #define NL80211_FLAG_NEED_NETDEV_UP	(NL80211_FLAG_NEED_NETDEV |\
+ 					 NL80211_FLAG_CHECK_NETDEV_UP)
+ 
+@@ -6688,6 +6692,30 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
+ 		}
+ 		info->user_ptr[0] = rdev;
+ 		info->user_ptr[1] = dev;
++	} else if (ops->internal_flags & NL80211_FLAG_OPT_NETDEV_UP) {
++		if (info->attrs[NL80211_ATTR_IFINDEX]) {
++			err = get_rdev_dev_by_ifindex(genl_info_net(info),
++						      info->attrs, &rdev,
++						      &dev);
++			/* only get the netdev if up */
++			if (!err && !netif_running(dev)) {
++				dev_put(dev);
++				dev = NULL;
++			}
++		} else {
++			dev = NULL;
++			rdev = cfg80211_get_dev_from_info(genl_info_net(info),
++							  info);
++			err = IS_ERR(rdev) ? PTR_ERR(rdev) : 0;
++		}
++		if (err) {
++			if (rtnl)
++				rtnl_unlock();
++			return err;
++		}
 +
-+	pr_info("OLPC board revision %s%X (EC=%x)\n",
-+			((olpc_platform_info.boardrev & 0xf) < 8) ?
-"pre" : "",
-+			olpc_platform_info.boardrev >> 4,
-+			olpc_platform_info.ecver);
-+
-+	return 0;
-+}
-+
-+static struct olpc_ec_driver ec_xo1_driver = {
- 	.suspend = olpc_ec_suspend,
-+	.probe = olpc_xo1_ec_probe,
-+	.ec_cmd = olpc_xo1_ec_cmd,
- };
- 
- static int __init olpc_init(void)
-@@ -436,16 +448,14 @@ static int __init olpc_init(void)
- 	if (!olpc_ofw_present() || !platform_detect())
- 		return 0;
- 
--	spin_lock_init(&ec_lock);
-+	/* register the XO-1 and 1.5-specific EC handler */
-+	olpc_ec_driver_register(&ec_xo1_driver, NULL);
-+	platform_device_register_simple("olpc-ec", -1, NULL, 0);
- 
- 	/* assume B1 and above models always have a DCON */
- 	if (olpc_board_at_least(olpc_board(0xb1)))
- 		olpc_platform_info.flags |= OLPC_F_DCON;
- 
--	/* get the EC revision */
--	olpc_ec_cmd(EC_FIRMWARE_REV, NULL, 0,
--			(unsigned char *) &olpc_platform_info.ecver,
-1); -
- #ifdef CONFIG_PCI_OLPC
- 	/* If the VSA exists let it emulate PCI, if not emulate in
-kernel.
- 	 * XO-1 only. */
-@@ -453,14 +463,6 @@ static int __init olpc_init(void)
- 			!cs5535_has_vsa2())
- 		x86_init.pci.arch_init = pci_olpc_init;
- #endif
--	/* EC version 0x5f adds support for wide SCI mask */
--	if (olpc_platform_info.ecver >= 0x5f)
--		olpc_platform_info.flags |= OLPC_F_EC_WIDE_SCI;
--
--	printk(KERN_INFO "OLPC board revision %s%X (EC=%x)\n",
--			((olpc_platform_info.boardrev & 0xf) < 8) ?
-"pre" : "",
--			olpc_platform_info.boardrev >> 4,
--			olpc_platform_info.ecver);
- 
- 	if (olpc_platform_info.boardrev < olpc_board_pre(0xd0)) { /*
-XO-1 */ r = add_xo1_platform_devices();
-@@ -468,7 +470,6 @@ static int __init olpc_init(void)
- 			return r;
++		info->user_ptr[0] = rdev;
++		info->user_ptr[1] = dev; /* might be null */
  	}
  
--	register_syscore_ops(&olpc_syscore_ops);
- 	setup_debugfs();
- 
  	return 0;
-diff --git a/drivers/platform/olpc/olpc-ec.c
-b/drivers/platform/olpc/olpc-ec.c index cfba41f..a3d32c2 100644
---- a/drivers/platform/olpc/olpc-ec.c
-+++ b/drivers/platform/olpc/olpc-ec.c
-@@ -113,11 +113,6 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen,
-u8 *outbuf, size_t outlen) struct olpc_ec_priv *ec = ec_priv;
- 	struct ec_cmd_desc desc;
+@@ -6711,7 +6739,7 @@ static struct genl_ops nl80211_ops[] = {
+ 		.dumpit = nl80211_dump_wiphy,
+ 		.policy = nl80211_policy,
+ 		/* can be retrieved by unprivileged users */
+-		.internal_flags = NL80211_FLAG_NEED_WIPHY,
++		.internal_flags = NL80211_FLAG_OPT_NETDEV_UP,
+ 	},
+ 	{
+ 		.cmd = NL80211_CMD_SET_WIPHY,
+@@ -7262,7 +7290,7 @@ void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev)
+ 	if (!msg)
+ 		return;
  
--	/* XXX: this will be removed in later patches */
--	/* Are we using old-style callers? */
--	if (!ec_driver || !ec_driver->ec_cmd)
--		return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf,
-outlen); -
- 	/* Ensure a driver and ec hook have been registered */
- 	if (WARN_ON(!ec_driver || !ec_driver->ec_cmd))
- 		return -ENODEV;
+-	if (nl80211_send_wiphy(msg, 0, 0, 0, rdev) < 0) {
++	if (nl80211_send_wiphy(msg, 0, 0, 0, rdev, NULL) < 0) {
+ 		nlmsg_free(msg);
+ 		return;
+ 	}
 -- 
-1.7.2.5
+1.7.9.5
 
