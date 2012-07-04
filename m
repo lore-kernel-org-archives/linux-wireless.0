@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51365 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761Ab2G0LIF (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:48365 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754843Ab2GDQ0w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:08:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 4 Jul 2012 12:26:52 -0400
+Received: by ghrr11 with SMTP id r11so6621718ghr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 09:26:52 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/6] mac80211: use oper_channel in mesh
-Date: Fri, 27 Jul 2012 13:07:56 +0200
-Message-Id: <1343387281-7252-2-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130810_776493_34D77373)
-In-Reply-To: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] iw: allow setting mesh proactive tree building mode related parameters
+Date: Thu,  5 Jul 2012 00:26:33 +0800
+Message-Id: <1341419193-5670-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120704_182655_587151_13C2EAB2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch allows the setting of following mesh parameters:
+mesh_hwmp_active_path_to_root_timeout
+mesh_hwmp_root_interval
+mesh_hwmp_confirmation_interval
 
-Using hw.conf.channel is wrong as it could be the
-temporary channel if any function like the beacon
-get function is called while scanning or during
-other temporary out-of-channel activities.
-
-Use oper_channel instead.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Also ensure the TU is printed for mesh_hwmp_rann_interval.
 ---
- net/mac80211/mesh.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ mesh.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 764593d..e6d1788 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -349,17 +349,18 @@ int mesh_add_ds_params_ie(struct sk_buff *skb,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *chan = local->oper_channel;
- 	u8 *pos;
+diff --git a/mesh.c b/mesh.c
+index f678dc0..7b7efe8 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -199,7 +199,7 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
+ 	{"mesh_hwmp_rootmode", NL80211_MESHCONF_HWMP_ROOTMODE,
+ 	_my_nla_put_u8, _parse_u8, _print_u8},
+ 	{"mesh_hwmp_rann_interval", NL80211_MESHCONF_HWMP_RANN_INTERVAL,
+-	_my_nla_put_u16, _parse_u16, _print_u16},
++	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
+ 	{"mesh_gate_announcements", NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 	_my_nla_put_u8, _parse_u8, _print_u8},
+ 	{"mesh_fwding", NL80211_MESHCONF_FORWARDING,
+@@ -209,6 +209,14 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
+ 	_my_nla_put_u32, _parse_u32, _print_u32},
+ 	{"mesh_rssi_threshold", NL80211_MESHCONF_RSSI_THRESHOLD,
+ 	_my_nla_put_u32, _parse_s32, _print_s32_in_dBm},
++	{"mesh_hwmp_active_path_to_root_timeout",
++	NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
++	_my_nla_put_u32, _parse_u32, _print_u32_in_TUs},
++	{"mesh_hwmp_root_interval", NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
++	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
++	{"mesh_hwmp_confirmation_interval",
++	NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
++	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
+ };
  
- 	if (skb_tailroom(skb) < 3)
- 		return -ENOMEM;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[chan->band];
- 	if (sband->band == IEEE80211_BAND_2GHZ) {
- 		pos = skb_put(skb, 2 + 1);
- 		*pos++ = WLAN_EID_DS_PARAMS;
- 		*pos++ = 1;
--		*pos++ = ieee80211_frequency_to_channel(local->hw.conf.channel->center_freq);
-+		*pos++ = ieee80211_frequency_to_channel(chan->center_freq);
- 	}
- 
- 	return 0;
-@@ -603,7 +604,7 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
- 	sdata->vif.bss_conf.basic_rates =
- 		ieee80211_mandatory_rates(sdata->local,
--					  sdata->local->hw.conf.channel->band);
-+					  sdata->local->oper_channel->band);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
- 						BSS_CHANGED_BEACON_ENABLED |
- 						BSS_CHANGED_HT |
+ static void print_all_mesh_param_descr(void)
 -- 
-1.7.10.4
+1.7.0.4
 
