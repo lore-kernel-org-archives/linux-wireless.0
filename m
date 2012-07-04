@@ -1,88 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60840 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751966Ab2GZPqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 11:46:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	fengguang.wu@intel.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] bcma: add missing iounmap on error path
-Date: Thu, 26 Jul 2012 17:45:52 +0200
-Message-Id: <1343317552-3918-1-git-send-email-hauke@hauke-m.de> (sfid-20120726_174623_568392_CA22D6FF)
+Received: from ebb06.tieto.com ([131.207.168.38]:56451 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751288Ab2GDL2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 07:28:21 -0400
+From: <Piotr.Nakraszewicz@tieto.com>
+To: <mcgrof@gmail.com>, <pstew@chromium.org>
+CC: <linux-wireless@vger.kernel.org>, <filip.matusiak@tieto.com>
+Date: Wed, 4 Jul 2012 14:25:34 +0300
+Subject: RE: wlan automated tests
+Message-ID: <E50901D4F2CF69428D43141B7C85867929E154B0A7@EXMB03.eu.tieto.com> (sfid-20120704_132824_670351_93D553D5)
+References: <E50901D4F2CF69428D43141B7C85867929E154AE7B@EXMB03.eu.tieto.com>
+ <CAMcMvsioAY3sZZ77gu1MwHi5hcq4D71SAVSHYh3m=bYiWAXSqg@mail.gmail.com>
+ <CAB=NE6VPpP55jF9Jz2aftK7isLj1X1kCZnHSB8tBe4TFyiHqew@mail.gmail.com>
+In-Reply-To: <CAB=NE6VPpP55jF9Jz2aftK7isLj1X1kCZnHSB8tBe4TFyiHqew@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should fix the problem reported by Fengguang:
-
-The coccinelle static checker emits these warnings:
-
-drivers/bcma/scan.c:466:3-9: ERROR: missing iounmap; ioremap on line 451 and execution via conditional on line 465
-drivers/bcma/scan.c:540:3-9: ERROR: missing iounmap; ioremap on line 515 and execution via conditional on line 539
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/scan.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 5672b13..8d0b571 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -462,8 +462,10 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 	while (eromptr < eromend) {
- 		struct bcma_device *other_core;
- 		struct bcma_device *core = kzalloc(sizeof(*core), GFP_KERNEL);
--		if (!core)
--			return -ENOMEM;
-+		if (!core) {
-+			err = -ENOMEM;
-+			goto out;
-+		}
- 		INIT_LIST_HEAD(&core->list);
- 		core->bus = bus;
- 
-@@ -478,7 +480,7 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 			} else if (err == -ESPIPE) {
- 				break;
- 			}
--			return err;
-+			goto out;
- 		}
- 
- 		core->core_index = core_num++;
-@@ -494,10 +496,12 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 		list_add_tail(&core->list, &bus->cores);
- 	}
- 
-+	err = 0;
-+out:
- 	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
- 		iounmap(eromptr);
- 
--	return 0;
-+	return err;
- }
- 
- int __init bcma_bus_scan_early(struct bcma_bus *bus,
-@@ -537,7 +541,7 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 		else if (err == -ESPIPE)
- 			break;
- 		else if (err < 0)
--			return err;
-+			goto out;
- 
- 		core->core_index = core_num++;
- 		bus->nr_cores++;
-@@ -551,6 +555,7 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 		break;
- 	}
- 
-+out:
- 	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
- 		iounmap(eromptr);
- 
--- 
-1.7.9.5
-
+T24gVHVlLCBKdWwgMywgMjAxMiBhdCA1OjU0IFBNLCBQYXVsIFN0ZXdhcnQgPHBzdGV3QGNocm9t
+aXVtLm9yZz4gd3JvdGU6DQo+DQo+IEl0IHNob3VsZCBiZSByZWFzb25hYmx5IHN0cmFpZ2h0Zm9y
+d2FyZCB0byB1c2UgdGhpcyBzZXR1cCB3aXRoIA0KPiBzb21ldGhpbmcgb3RoZXIgdGhhbiBDaHJv
+bWVPUy4gIE1vc3Qgb2YgdGhlIHdvcmsgcmVxdWlyZWQgdG8gZG8gc28gDQo+IHdvdWxkIGNpcmNs
+ZSBhcm91bmQgY3JlYXRpbmcgcGxhdGZvcm0tc3BlY2lmaWMgcm91dGluZXMgdXNlZCB0byANCj4g
+ZXN0YWJsaXNoIGFuZCBtb25pdG9yIHN0YXR1cyBvZiBjb25uZWN0aW9ucyAtLSB0aGUgDQo+IHNp
+dGVfd2xhbl9jb25uZWN0LnB5IGFuZCBzaXRlX3dsYW5fd2FpdF9zdGF0ZS5weSBzY3JpcHRzLg0K
+DQpUaGF0IGxvb2tzIHByb21pc2luZywgSSB3aWxsIGZvY3VzIG9uIHRoYXQuDQpUaGFua3MgZm9y
+IGFsbCB0aGUgcmVwbGllcy4NCkknbGwgYmUgcG9zdGluZyBteSBmaW5kaW5ncyBhbmQvb3IgcXVl
+c3Rpb25zIGhlcmUuDQoNClBvemRyYXdpYW0gLyBCZXN0IHJlZ2FyZHMsDQpQaW90cg0K
