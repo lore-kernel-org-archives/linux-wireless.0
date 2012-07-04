@@ -1,93 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:34342 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751238Ab2GHHXr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 03:23:47 -0400
-Received: by lbbgj10 with SMTP id gj10so4634185lbb.23
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 00:23:44 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 4/8] wlcore: define number of supported bands internally
-Date: Sun,  8 Jul 2012 10:23:27 +0300
-Message-Id: <1341732211-25871-5-git-send-email-coelho@ti.com> (sfid-20120708_092353_785084_55E59D0E)
-In-Reply-To: <1341732211-25871-1-git-send-email-coelho@ti.com>
-References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+Received: from mga03.intel.com ([143.182.124.21]:50323 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753035Ab2GDIqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jul 2012 04:46:18 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, joe@perches.com,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCHv3 2/3] lib: printf: append support of '%*ph[CDN]'
+Date: Wed,  4 Jul 2012 11:45:51 +0300
+Message-Id: <1341391552-4842-2-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120704_104623_219245_904B9931)
+In-Reply-To: <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1341341280.2012.3.camel@joe2Laptop>
+ <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+There are many places in the kernel where the drivers print small buffers as a
+hex string. This patch adds a support of the variable width buffer to print it
+as a hex string with a delimiter. The idea came from Pavel Roskin here:
+http://www.digipedia.pl/usenet/thread/18835/17449/
 
-Avoid using the IEEE80211_NUM_BANDS constant for arrays sizes etc, as
-this can contain bands unsupported by the driver (e.g. 60Ghz). Use an
-internal constant to determine the number of bands.
+Sample output of
+	pr_info("buf[%d:%d] %*phC\n", from, len, len, &buf[from]);
+could be look like this:
+	[ 0.726130] buf[51:8] e8:16:b6:ef:e3:74:45:6e
+	[ 0.750736] buf[59:15] 31:81:b8:3f:35:49:06:ae:df:32:06:05:4a:af:55
+	[ 0.757602] buf[17:5] ac:16:d5:2c:ef
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c     |    2 +-
- drivers/net/wireless/ti/wlcore/wlcore.h   |    4 ++--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    5 ++++-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ Documentation/printk-formats.txt |   10 ++++++
+ lib/vsprintf.c                   |   62 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 72 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 5632194..1aecc46 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4569,7 +4569,7 @@ static int wl12xx_set_bitrate_mask(struct ieee80211_hw *hw,
+diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
+index 90ff4d7..8ffb274 100644
+--- a/Documentation/printk-formats.txt
++++ b/Documentation/printk-formats.txt
+@@ -53,6 +53,16 @@ Struct Resources:
+ 	For printing struct resources. The 'R' and 'r' specifiers result in a
+ 	printed resource with ('R') or without ('r') a decoded flags member.
  
- 	mutex_lock(&wl->mutex);
- 
--	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+	for (i = 0; i < WLCORE_NUM_BANDS; i++)
- 		wlvif->bitrate_masks[i] =
- 			wl1271_tx_enabled_rates_get(wl,
- 						    mask->control[i].legacy,
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 0df731a..27ccc27 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -304,7 +304,7 @@ struct wl1271 {
- 	s8 noise;
- 
- 	/* bands supported by this instance of wl12xx */
--	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
-+	struct ieee80211_supported_band bands[WLCORE_NUM_BANDS];
- 
- 	/*
- 	 * wowlan trigger was configured during suspend.
-@@ -371,7 +371,7 @@ struct wl1271 {
- 	u8 hw_min_ht_rate;
- 
- 	/* HW HT (11n) capabilities */
--	struct ieee80211_sta_ht_cap ht_cap[IEEE80211_NUM_BANDS];
-+	struct ieee80211_sta_ht_cap ht_cap[WLCORE_NUM_BANDS];
- 
- 	/* size of the private FW status data */
- 	size_t fw_status_priv_len;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 2a0e896..0187eef 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -62,6 +62,9 @@
- #define WL12XX_INVALID_ROLE_ID     0xff
- #define WL12XX_INVALID_LINK_ID     0xff
- 
-+/* the driver supports the 2.4Ghz and 5Ghz bands */
-+#define WLCORE_NUM_BANDS           2
++Raw buffer as a hex string:
++	%*ph	00 01 02  ...  3f
++	%*phC	00:01:02: ... :3f
++	%*phD	00-01-02- ... -3f
++	%*phN	000102 ... 3f
 +
- #define WL12XX_MAX_RATE_POLICIES 16
++	For printing a small buffers (up to 64 bytes long) as a hex string with
++	certain separator. For the larger buffers consider to use
++	print_hex_dump().
++
+ MAC/FDDI addresses:
  
- /* Defined by FW as 0. Will not be freed or allocated. */
-@@ -360,7 +363,7 @@ struct wl12xx_vif {
- 	int channel;
- 	enum nl80211_channel_type channel_type;
+ 	%pM	00:01:02:03:04:05
+diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+index e500158..86d6a12 100644
+--- a/lib/vsprintf.c
++++ b/lib/vsprintf.c
+@@ -655,6 +655,57 @@ char *resource_string(char *buf, char *end, struct resource *res,
+ }
  
--	u32 bitrate_masks[IEEE80211_NUM_BANDS];
-+	u32 bitrate_masks[WLCORE_NUM_BANDS];
- 	u32 basic_rate_set;
- 
- 	/*
+ static noinline_for_stack
++char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
++		 const char *fmt)
++{
++	char hex_str[8*3+1];	/* support up to 8 bytes to print */
++	int len;
++	char *p;
++	int i = 0, j;
++	char separator;
++
++	switch (fmt[1]) {
++	case 'C':
++		separator = ':';
++		break;
++	case 'D':
++		separator = '-';
++		break;
++	case 'N':
++		separator = 0;
++		break;
++	default:
++		separator = ' ';
++		break;
++	}
++
++	if (spec.field_width <= 0)
++		/* nothing to print */
++		return buf;
++
++	len = min_t(int, spec.field_width, 64);
++
++	while (i < len) {
++		p = hex_str;
++		for (j = 0; j < 8 && i < len; j++, i++) {
++			p = hex_byte_pack(p, addr[i]);
++
++			if (separator && i != len - 1)
++				*p++ = separator;
++		}
++		*p = '\0';
++
++		for (p = hex_str; *p != '\0'; p++) {
++			if (buf < end)
++				*buf = *p;
++			++buf;
++		}
++	}
++
++	return buf;
++}
++
++static noinline_for_stack
+ char *mac_address_string(char *buf, char *end, u8 *addr,
+ 			 struct printf_spec spec, const char *fmt)
+ {
+@@ -974,6 +1025,13 @@ int kptr_restrict __read_mostly;
+  *       correctness of the format string and va_list arguments.
+  * - 'K' For a kernel pointer that should be hidden from unprivileged users
+  * - 'NF' For a netdev_features_t
++ * - 'h[CDN]' For a variable-length buffer, it prints it as a hex string with
++ *            a certain separator (' ' by default):
++ *              C colon
++ *              D dash
++ *              N no separator
++ *            The maximum supported length is 64 bytes of the input. Consider
++ *            to use print_hex_dump() for the larger input.
+  *
+  * Note: The difference between 'S' and 'F' is that on ia64 and ppc64
+  * function pointers are really function descriptors, which contain a
+@@ -1007,6 +1065,8 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
+ 	case 'R':
+ 	case 'r':
+ 		return resource_string(buf, end, ptr, spec, fmt);
++	case 'h':
++		return hex_string(buf, end, ptr, spec, fmt);
+ 	case 'M':			/* Colon separated: 00:01:02:03:04:05 */
+ 	case 'm':			/* Contiguous: 000102030405 */
+ 					/* [mM]F (FDDI) */
+@@ -1298,6 +1358,8 @@ qualifier:
+  * %pI6c print an IPv6 address as specified by RFC 5952
+  * %pU[bBlL] print a UUID/GUID in big or little endian using lower or upper
+  *   case.
++ * %*ph[CDN] a variable-length hex string with a separator (supports up to 64
++ *           bytes of the input)
+  * %n is ignored
+  *
+  * ** Please update Documentation/printk-formats.txt when making changes **
 -- 
 1.7.10
 
