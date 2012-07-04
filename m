@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab2G0LRx (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12725 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153Ab2GDMoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:53 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 11/20] mac80211: use oper_channel in rate init
-Date: Fri, 27 Jul 2012 13:16:47 +0200
-Message-Id: <1343387816-9414-12-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131822_387617_C871E0A7)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 4 Jul 2012 08:44:54 -0400
+Date: Wed, 4 Jul 2012 18:16:08 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 06/13] cfg80211: track monitor interfaces count
+Message-ID: <20120704124606.GA9866@vmraj-lnx.users.atheros.com> (sfid-20120704_144458_567519_B35712C2)
+References: <1340966828-22874-1-git-send-email-michal.kazior@tieto.com>
+ <1340966828-22874-7-git-send-email-michal.kazior@tieto.com>
+ <1341400378.12432.4.camel@jlt3.sipsolutions.net>
+ <1341400632.12432.5.camel@jlt3.sipsolutions.net>
+ <1341401180.12432.6.camel@jlt3.sipsolutions.net>
+ <1341401264.12432.7.camel@jlt3.sipsolutions.net>
+ <4FF43838.4010908@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4FF43838.4010908@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Jul 04, 2012 at 02:34:00PM +0200, Michal Kazior wrote:
+> Johannes Berg wrote:
+> >On Wed, 2012-07-04 at 13:26 +0200, Johannes Berg wrote:
+> >>On Wed, 2012-07-04 at 13:17 +0200, Johannes Berg wrote:
+> >>>On Wed, 2012-07-04 at 13:12 +0200, Johannes Berg wrote:
+> >>>>Hi Michal,
+> >>>>
+> >>>>A few people noticed that these patches cause deadlocks. I think the
+> >>>>reason is that it's not allowed to lock the device here:
+> >>>>
+> >>>>>  	case NETDEV_DOWN:
+> >>>>>  		dev_hold(dev);
+> >>>>>+		cfg80211_lock_rdev(rdev);
+> >>>>
+> >>>>This causes a deadlock since the interface is set down inside mac80211
+> >>>>when inside a handler from cfg80211 already, or so.
+> >>>
+> >>>I just reproduce it -- it's because we come from nl80211_del_interface()
+> >>
+> >>Ok ... we don't really need to hold the rdev lock since it's all under
+> >>rtnl. Can you please confirm this is safe?
+> >>
+> >>http://p.sipsolutions.net/bde4760671f3e250.txt
+> >
+> >I guess we can remove more locking:
+> >http://p.sipsolutions.net/8a1b875a431e72a0.txt
+> 
+> I can't really test it right now, but it looks good to me.
+> 
+The patch fixes the issue. Works for me.
 
-Using hw.conf.channel is wrong as it could be the
-temporary channel if the station is added from the
-workqueue while the device is already on another
-channel. Use oper_channel instead.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rate.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 6e4fd32..10de668 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -56,7 +56,7 @@ static inline void rate_control_rate_init(struct sta_info *sta)
- 	if (!ref)
- 		return;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[local->oper_channel->band];
- 
- 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
- 	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
--- 
-1.7.10.4
-
+-Rajkumar
