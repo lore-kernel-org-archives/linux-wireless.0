@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:50359 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444Ab2GZKHD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41947 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab2GDLNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 06:07:03 -0400
-Date: Thu, 26 Jul 2012 03:06:59 -0700 (PDT)
-Message-Id: <20120726.030659.2063192496743861099.davem@davemloft.net> (sfid-20120726_120754_945486_6AFE28F6)
-To: hauke@hauke-m.de
-Cc: torvalds@linux-foundation.org, linville@tuxdriver.com,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, pieterpg@broadcom.com,
-	brudley@broadcom.com, arend@broadcom.com, zajec5@gmail.com
-Subject: Re: [PATCH] bcma: fix regression in pmu workaround reg masks
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1343294151-5691-1-git-send-email-hauke@hauke-m.de>
-References: <1343294151-5691-1-git-send-email-hauke@hauke-m.de>
+	Wed, 4 Jul 2012 07:13:01 -0400
+Message-ID: <1341400378.12432.4.camel@jlt3.sipsolutions.net> (sfid-20120704_131306_010478_4A0DA490)
+Subject: Re: [PATCH 06/13] cfg80211: track monitor interfaces count
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+Date: Wed, 04 Jul 2012 13:12:58 +0200
+In-Reply-To: <1340966828-22874-7-git-send-email-michal.kazior@tieto.com>
+References: <1340966828-22874-1-git-send-email-michal.kazior@tieto.com>
+	 <1340966828-22874-7-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Date: Thu, 26 Jul 2012 11:15:51 +0200
+Hi Michal,
 
-> This fixes a regression introduced in:
-> commit b9562545ef0b13c0440ccd8d6dd4111fb77cb17a
-> Author: Hauke Mehrtens <hauke@hauke-m.de>
-> Date:   Sat Jun 30 01:44:41 2012 +0200
-> 
->     bcma: complete workaround for BCMA43224 and BCM4313
-> 
-> The regression broke reading of the sprom from the chip and seamed to
-> cause a change of the pci id on a BCMA43224 device so that it is
-> rejected by brcmsmac. If this problem occurred, after applying this
-> patch, a cold boot is needed to make the device work again.
-> 
-> In the original patch the workaround set the intended bits in the chip
-> common core chip control registers, but the patch also unset all the
-> other bits in that register, because of a wrong mask. The original
-> patch was based on code from brcmsmac and there was an additional
-> inversing of the mask in the code setting these regs which was missing
-> here. Now the regs are set like brcmsmac did it before.
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Tested-by: Seth Forshee <seth.forshee@canonical.com>
+A few people noticed that these patches cause deadlocks. I think the
+reason is that it's not allowed to lock the device here:
 
-Acked-by: David S. Miller <davem@davemloft.net>
+>  	case NETDEV_DOWN:
+>  		dev_hold(dev);
+> +		cfg80211_lock_rdev(rdev);
+
+This causes a deadlock since the interface is set down inside mac80211
+when inside a handler from cfg80211 already, or so.
+
+johannes
+
