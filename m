@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hetz2.bluebottle.com ([176.9.57.138]:37867 "EHLO
-	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754152Ab2GRMDa (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:65257 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754992Ab2GDVFN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:03:30 -0400
-To: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org
-Cc: feint@lists.subsignal.org
-Message-ID: <1342612598.5006a476022c6@mail.bluebottle.com> (sfid-20120718_140343_258062_EC0792D9)
-Date: Wed, 18 Jul 2012 12:56:38 +0100
-From: Bastian Bittorf <bittorf@bluebottle.com>
-Subject: WRT54g / b43 / mac802.11 BREAKTHROUGH
+	Wed, 4 Jul 2012 17:05:13 -0400
+Received: by werb14 with SMTP id b14so4732438wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 14:05:12 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: mcgrof@frijolero.org, linville@tuxdriver.com,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	xose.vazquez@gmail.com
+Subject: [PATCH 1/3] wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
+Date: Wed,  4 Jul 2012 23:05:05 +0200
+Message-Id: <1341435907-3787-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120704_230522_343416_D4141ECE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi devs!
+- Change frequencies.
 
-yesterday we had a breaktrough debugging b43 in our hackspace maschinenraum/m18[1,2]
-at weimar.freifunk.net[3,4] - since a long time our darling wrt54g suffers from a
-hanging wifi and bad performance[5], but the workaround is easy: now it's up to
-you to fix the rootcause.
+Spanish law was based on CEPT/EU rules:
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000058.html
+http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000059.html
 
-our testsetup, where we could _reproduce_ reliably a stopping TX is like this:
+Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
+nacional de atribución de frecuencias (CNAF):
+https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
+https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
 
-laptop ---lan--- "A"-wrt54g/adhoc ~~~   air  ~~~ "B"-anyrouter/adhoc
+search for:
+ UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
+ UN - 128 RLANs en 5 GHz (pag. 232)
 
-now make a testdownload with the laptop from B.
-wireless will stop working after ~10 seconds.
+more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
+http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
 
-wifi up will reanimate and our freifunk-cron.minutely-check
-will do this automagically. (read further, this is not the solution)
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ db.txt |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-we tried to limit the rateset to e.g. lower rates, but this does NOT change
-the behaviour. what works is: define a rateset on BOTH router which makes
-it impossible to change the band, e.g.:
-
-iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
-OR
-iw dev $WIFIDEV set bitrates legacy-2.4 6 9 12 18 24 36 48 54
-
-now we had a great performance, 10 Gigabytes of wireless transfer,
-no stopping TX anymore and an empty box of beer. three things to do now:
-
-1) why does a band change (can be seen through minstrel) is a problem?
-
-2) we have to make in config-option to force a band, or a rateset:
-	e.g. uci set wireless.radio0.hwmode=11g
-	e.g. uci set wireless.radio0.bitrates='6 9 12 18 24 36 48 54'
-
-3) spread to word:
-   there is a great frustration in the community about b43,
-   but the old drivers _have_ to die, it's about time - really.
-
-thanks for your work,
-bye storchi, andi, bastian + m18 crew
-
-[1] http://blog.maschinenraum.tk/
-[2] http://blog.maschinenraum.tk/2012/07/15/bitcoin-vending-machine-exchange-euro-coins-for-bitcoin-wallets/
-[3] http://wireless.subsignal.org
-[4] http://wireless.subsignal.org/index.php?title=Main_Page_en
-[5] https://dev.openwrt.org/ticket/7552
+diff --git a/db.txt b/db.txt
+index 4c54543..152eb0c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -239,10 +239,10 @@ country EG:
+ 	(5250 - 5330 @ 20), (N/A, 20), DFS
+ 
+ country ES: DFS-ETSI
+-	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(2400 - 2483.5 @ 40), (N/A, 20)
++	(5150 - 5250 @ 40), (N/A, 20)
++	(5250 - 5350 @ 40), (N/A, 20), DFS
++	(5470 - 5725 @ 40), (N/A, 27), DFS
+ 
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
