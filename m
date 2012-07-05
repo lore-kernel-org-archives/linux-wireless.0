@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40528 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933332Ab2GCROw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:14:52 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32982 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882Ab2GEPOg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 11:14:36 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 13/20] ath9k: fix PAPRD settings for AR9550
-Date: Tue,  3 Jul 2012 19:13:27 +0200
-Message-Id: <1341335614-15419-14-git-send-email-juhosg@openwrt.org> (sfid-20120703_192129_735516_F6F2EE5B)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath9k: Fix MCI cleanup
+Date: Thu, 5 Jul 2012 20:44:25 +0530
+Message-ID: <1341501265-27388-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120705_171440_799132_A15F4114)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 3d400e8..2c9f7d7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -211,7 +211,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_NUM_CORR_STAGES, 7);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_MIN_LOOPBACK_DEL, 1);
--	if (AR_SREV_9485(ah) || AR_SREV_9462(ah))
-+	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9550(ah))
- 		REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP,
- 			      -3);
+We are doing MCI cleanup eventhough BTCOEX is not enabled
+via module parameter. This means we do ath_mci_cleanup
+though we skipped calling ath_mci_setup. Yet it does not
+causes any issues now  as we free the DMA buffer allocated
+only when it is allocated during ath_mci_setup.
+
+Reviewed-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 5eac4d1..43557c2 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -387,11 +387,13 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
+ 
+ void ath9k_deinit_btcoex(struct ath_softc *sc)
+ {
++	struct ath_hw *ah = sc->sc_ah;
++
+         if ((sc->btcoex.no_stomp_timer) &&
+ 	    ath9k_hw_get_btcoex_scheme(sc->sc_ah) == ATH_BTCOEX_CFG_3WIRE)
+ 		ath_gen_timer_free(sc->sc_ah, sc->btcoex.no_stomp_timer);
+ 
+-	if (AR_SREV_9462(sc->sc_ah))
++	if (ath9k_hw_mci_is_enabled(ah))
+ 		ath_mci_cleanup(sc);
+ }
+ 
 -- 
-1.7.2.1
+1.7.0.4
 
