@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5147 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752866Ab2GBPBu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46608 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932339Ab2GENTT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 11:01:50 -0400
-From: Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
+	Thu, 5 Jul 2012 09:19:19 -0400
+Message-ID: <1341494355.4455.43.camel@jlt3.sipsolutions.net> (sfid-20120705_151922_857422_54A4BD90)
+Subject: Re: [PATCH v2 0/2] High bitrate support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org,
 	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH 60g v2 0/5] Infrastructure for 60g (802.11ad)
-Date: Mon, 02 Jul 2012 18:01:42 +0300
-Message-ID: <5202151.WBzXQarS2v@lx-vladimir> (sfid-20120702_170214_742154_66AE346B)
-In-Reply-To: <1341233919.19642.7.camel@jlt3.sipsolutions.net>
-References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1341233662.19642.6.camel@jlt3.sipsolutions.net> <1341233919.19642.7.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Thu, 05 Jul 2012 15:19:15 +0200
+In-Reply-To: <1341487550-11502-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341487550-11502-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, July 02, 2012 02:58:39 PM Johannes Berg wrote:
-> > > Vladimir Kondratiev (5):
-> > >   wireless: add 802.11ad (60gHz band)
-> > >   wireless: rate check logic for 60g
-> > >   wireless: regulatory for 60g
-> > >   wireless: 60g protocol constants
-> > >   wireless: bitrate calculation for 60g
-> >
-> > 
-> >
-> > Applied the first four patches, but I fixed the subjects for you (this
-> > time)
+On Thu, 2012-07-05 at 14:25 +0300, Vladimir Kondratiev wrote:
+> I like what Johannes suggested, thus name for new bitrate option
+> changed to NL80211_RATE_INFO_BITRATE32
 > 
-> And I had to squash patches to make it compile without warnings after
-> each patch.
+> Patch for iw will follow shortly
 > 
-> Please be more careful next time.
-> 
-> johannes
+> Proposed patches solve issue with high bitrates not fitting into u16.                                                                                                              
+>                                                                                                                                                                                    
+> I split it into 2 patches: one introduces new u32 bitrate,                                                                                                                         
+> and 2-nd adds 60g specific calculations.                                                                                                                                           
+>                                                                                                                                                                                    
+> Idea is to report (in nl80211) both old and new values,
+> or only new if it not fits into u16.
+> User space tools encouraged to migrate to the new bitrate.
 
-Thanks a lot! I'll do my best.
+Applied, thanks. I've done a few small modifications in comments since
+we can't just have userspace migrate, it needs to be compatible with
+older kernels.
 
-So, now I'll focus on the last patch - bitrate calculation.
+I'll apply the iw patches after I push this to John.
 
-My plan is:
+johannes
 
-- add new element like NL80211_RATE_INFO_BITRATE_HT with u32 data
-- change nl80211_put_sta_rate() to fill both
-  NL80211_RATE_INFO_BITRATE (with u16 value)
-  and NL80211_RATE_INFO_BITRATE_HT (with u32 value)
-- when bitrate not fit into u16, put 0 for u16 value and fill only u32
-
-This opens migration path for the drivers and user space tools to the
-new u32 representation without breaking existing code.
-
-Comments?
-
-Thanks, Vladimir
