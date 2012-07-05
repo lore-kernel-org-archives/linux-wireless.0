@@ -1,104 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm18-vm0.bullet.mail.ird.yahoo.com ([77.238.189.215]:32001 "HELO
-	nm18-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752275Ab2G0OMi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 10:12:38 -0400
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com> <501280BF.4070409@lwfinger.net> <1343394581.87030.YahooMailNeo@web28902.mail.ir2.yahoo.com>
-Message-ID: <1343398356.19742.YahooMailNeo@web28904.mail.ir2.yahoo.com> (sfid-20120727_161250_019548_605603B1)
-Date: Fri, 27 Jul 2012 15:12:36 +0100 (BST)
-From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1343394581.87030.YahooMailNeo@web28902.mail.ir2.yahoo.com>
+Received: from mga09.intel.com ([134.134.136.24]:8117 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754123Ab2GEPal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 11:30:41 -0400
+Date: Thu, 5 Jul 2012 17:42:02 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Sasha Levin <levinsasha928@gmail.com>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] NFC: Prevent NULL deref when getting socket name
+Message-ID: <20120705154202.GI18200@sortiz-mobl> (sfid-20120705_173058_461144_239287FC)
+References: <1341050207-13145-1-git-send-email-levinsasha928@gmail.com>
+ <20120702182438.GB2010@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120702182438.GB2010@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->So I have download the file from your link which provides a directory called: "compat-wireless-2012-05-10". I was using one called "compat-wireless-2012-07-03".
->
->FYI I already compiled the 3.5 kernel but as you recommend I keep using the 3.4.6 for now as it will not necessary bring something new around the rtl8188ce wifi driver.
->
->FYI there should be something wrong in the README as if I do:
->root@HTPC:/home/xabix/tmp/compat-wireless-2012-05-10# ./scripts/driver-select rtl8192ce
->Processing new driver-select request...
->Backing up makefile: Makefile.bk
->Unsupported driver
->
->I ve got the Unsupported driver message
->
->Anyway I am compilling them all based on the link you suggested: compat-wireless-2012-05-10
->
->Will report when done
->
->merci
->
+Hi John,
 
+On Mon, Jul 02, 2012 at 02:24:38PM -0400, John W. Linville wrote:
+> On Sat, Jun 30, 2012 at 11:56:47AM +0200, Sasha Levin wrote:
+> > llcp_sock_getname can be called without a device attached to the nfc_llcp_sock.
+> > 
+> > This would lead to the following BUG:
+> > 
+> > [  362.341807] BUG: unable to handle kernel NULL pointer dereference at           (null)
+> > [  362.341815] IP: [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
+> > [  362.341818] PGD 31b35067 PUD 30631067 PMD 0
+> > [  362.341821] Oops: 0000 [#627] PREEMPT SMP DEBUG_PAGEALLOC
+> > [  362.341826] CPU 3
+> > [  362.341827] Pid: 7816, comm: trinity-child55 Tainted: G      D W    3.5.0-rc4-next-20120628-sasha-00005-g9f23eb7 #479
+> > [  362.341831] RIP: 0010:[<ffffffff836258e5>]  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
+> > [  362.341832] RSP: 0018:ffff8800304fde88  EFLAGS: 00010286
+> > [  362.341834] RAX: 0000000000000000 RBX: ffff880033cb8000 RCX: 0000000000000001
+> > [  362.341835] RDX: ffff8800304fdec4 RSI: ffff8800304fdec8 RDI: ffff8800304fdeda
+> > [  362.341836] RBP: ffff8800304fdea8 R08: 7ebcebcb772b7ffb R09: 5fbfcb9c35bdfd53
+> > [  362.341838] R10: 4220020c54326244 R11: 0000000000000246 R12: ffff8800304fdec8
+> > [  362.341839] R13: ffff8800304fdec4 R14: ffff8800304fdec8 R15: 0000000000000044
+> > [  362.341841] FS:  00007effa376e700(0000) GS:ffff880035a00000(0000) knlGS:0000000000000000
+> > [  362.341843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > [  362.341844] CR2: 0000000000000000 CR3: 0000000030438000 CR4: 00000000000406e0
+> > [  362.341851] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> > [  362.341856] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> > [  362.341858] Process trinity-child55 (pid: 7816, threadinfo ffff8800304fc000, task ffff880031270000)
+> > [  362.341858] Stack:
+> > [  362.341862]  ffff8800304fdea8 ffff880035156780 0000000000000000 0000000000001000
+> > [  362.341865]  ffff8800304fdf78 ffffffff83183b40 00000000304fdec8 0000006000000000
+> > [  362.341868]  ffff8800304f0027 ffffffff83729649 ffff8800304fdee8 ffff8800304fdf48
+> > [  362.341869] Call Trace:
+> > [  362.341874]  [<ffffffff83183b40>] sys_getpeername+0xa0/0x110
+> > [  362.341877]  [<ffffffff83729649>] ? _raw_spin_unlock_irq+0x59/0x80
+> > [  362.341882]  [<ffffffff810f342b>] ? do_setitimer+0x23b/0x290
+> > [  362.341886]  [<ffffffff81985ede>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+> > [  362.341889]  [<ffffffff8372a539>] system_call_fastpath+0x16/0x1b
+> > [  362.341921] Code: 84 00 00 00 00 00 b8 b3 ff ff ff 48 85 db 74 54 66 41 c7 04 24 27 00 49 8d 7c 24 12 41 c7 45 00 60 00 00 00 48 8b 83 28 05 00 00 <8b> 00 41 89 44 24 04 0f b6 83 41 05 00 00 41 88 44 24 10 0f b6
+> > [  362.341924] RIP  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
+> > [  362.341925]  RSP <ffff8800304fde88>
+> > [  362.341926] CR2: 0000000000000000
+> > [  362.341928] ---[ end trace 6d450e935ee18bf3 ]---
+> > 
+> > Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+> 
+> Samuel, I'm taking this one directly.
+Thanks. It was already on my for-wireless branch.
 
-Hi Larry,
+Cheers,
+Samuel.
 
-So after rebooting (and installing the compat drivers from 05-10) it seems to work meaning that the process runs:
-
-5 S root      1486     1  0  80   0 -  1415 poll_s 16:03 ?        00:00:00 /usr/sbin/hostapd -B -P /var/run/hostapd.pid -dd /etc/hostapd/hostapd.conf
-
-
-Jul 27 16:06:15 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authentication OK (open system)
-Jul 27 16:06:15 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authenticated
-Jul 27 16:06:15 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: association OK (aid 1)
-Jul 27 16:06:15 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: associated (aid 1)
-Jul 27 16:06:18 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: deauthenticated due to local deauth request
-Jul 27 16:06:22 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authentication OK (open system)
-Jul 27 16:06:22 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authenticated
-Jul 27 16:06:22 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: association OK (aid 1)
-Jul 27 16:06:22 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: associated (aid 1)
-Jul 27 16:06:25 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: deauthenticated due to local deauth request
-Jul 27 16:06:29 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authentication OK (open system)
-Jul 27 16:06:29 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authenticated
-Jul 27 16:06:29 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: association OK (aid 1)
-Jul 27 16:06:29 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: associated (aid 1)
-
-but I launch manually it doesn't work anymore
-
-xabix@HTPC:~$ sudo service hostapd stop
-[sudo] password for xabix: 
- * Stopping advanced IEEE 802.11 management hostapd
-   ...done.
-xabix@HTPC:~$ /usr/sbin/hostapd -B -P /var/run/hostapd.pid -dd /etc/hostapd/hostapd.conf
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=0
-nl80211: Register Action command failed: ret=-1 (Operation not permitted)
-nl80211: Register Action match - hexdump(len=1): 06
-nl80211: Failed to register Action frame processing - ignore for now
-nl80211: Add own interface ifindex 3
-nl80211: Add own interface ifindex 4
-nl80211: Failed to set interface 4 to mode 3: -1 (Operation not permitted)
-nl80211: Failed to set interface 4 to mode 3: -1 (Operation not permitted)
-Could not set interface wlan0 flags: Permission denied
-nl80211: Interface mode change to 3 from 0 failed
-nl80211: Failed to set interface wlan0 into AP mode
-nl80211 driver initialization failed.
-rmdir[ctrl_interface]: No such file or directory
-ELOOP: remaining socket: sock=4 eloop_data=0x9cdc910 user_data=0x9cde780 handler=0x807c
-
-
-so the only to launch it for now is to reboot :)
-
-I dit put this on the conf file
-# Levels (minimum value for logged events):
-#  0 = verbose debugging
-#  1 = debugging
-#  2 = informational messages
-#  3 = notification
-#  4 = warning
-logger_syslog=1
-logger_syslog_level=0
-
-
-but I don't see enough logs to know why after the association there is a deauthentication.
-
-Cheers
-almost there :D
-
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
