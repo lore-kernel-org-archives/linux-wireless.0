@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:32779 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab2G0OWy (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Fri, 27 Jul 2012 10:22:54 -0400
-Received: by bkwj10 with SMTP id j10so1940521bkw.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 07:22:44 -0700 (PDT)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54658 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968Ab2GEHaZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 03:30:25 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120727101840.GA2436@redhat.com>
-References: <1343372634-19870-1-git-send-email-machen@suse.com>
-	<20120727101840.GA2436@redhat.com>
-Date: Fri, 27 Jul 2012 22:22:44 +0800
-Message-ID: <CALx5=V_GSs8xv0-OnEC-2h82E9LWVpRjd1UDyPE3+=etX0z29A@mail.gmail.com> (sfid-20120727_162302_354233_B0D9C424)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
-From: Matt Chen <machen@suse.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	kevin.chou@mediatek.com, woody.hung@mediatek.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20469.16960.475409.87512@gargle.gargle.HOWL> (sfid-20120705_093032_144575_43334242)
+Date: Thu, 5 Jul 2012 12:59:04 +0530
+To: Luis Rodriguez <rodrigue@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat-wireless: Make target/compat branch check optional
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+The safety check to ensure that the target kernel and the
+local compat-wireless branch are the same can be adjusted a
+bit to allow users to generate stable releases from a temporary
+branch.
 
-2012/7/27 Stanislaw Gruszka <sgruszka@redhat.com>:
-> On Fri, Jul 27, 2012 at 03:03:54PM +0800, Chen, Chien-Chia wrote:
->> This patch is going to fix the resuming failed from S3/S4
->> for rt3290 chip.
->>
->> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
->> CC-by: Kevin Chou <kevin.chou@mediatek.com>
->
-> Could you please post patches that compile? Also you did not set true
-Compile ? you mean the *.o files and *.ko ?
-> author of the patch. Additionally, since repost that patch with changes,
-> you should mark version of the patch and provide information about
-> changes, like for example here:
-Hmm....I added the Author: Woody Hung <Woody.Hung@mediatek.com> but
-don't know why it doesn't show here. :(
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ scripts/gen-stable-release.sh | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-> http://marc.info/?l=linux-wireless&m=134338186523059&w=2
-It makes sense to me. I will repost it and mark version of the patch.
-> Still patch does not include registers/values names, but if providing
-> such information is not possible, we will accept that.
-Thanks, Ralink doesn't intend to give me the registers/values names.
-> Thanks
-> Stanislaw
->
->
-
-
-
+diff --git a/scripts/gen-stable-release.sh b/scripts/gen-stable-release.sh
+index 6bfba03..5a7dc5f 100755
+--- a/scripts/gen-stable-release.sh
++++ b/scripts/gen-stable-release.sh
+@@ -145,7 +145,12 @@ if [[ $COMPAT_WIRELESS_BRANCH != $TARGET_KERNEL_RELEASE ]]; then
+ 	echo -e "You are on the compat-wireless ${GREEN}${COMPAT_WIRELESS_BRANCH}${NORMAL} but are "
+ 	echo -en "on the ${RED}${TARGET_KERNEL_RELEASE}${NORMAL} branch... "
+ 	echo -e "try changing to that first."
+-	exit
++
++	read -p "Do you still want to continue (y/N)? "
++	if [[ "${REPLY}" != "y" ]]; then
++	    echo -e "Bailing out !"
++	    exit
++	fi
+ fi
+ 
+ 
 -- 
-Thank you.
+1.7.11.1
+
