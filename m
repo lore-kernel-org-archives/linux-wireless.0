@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:44523 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753063Ab2GZXPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 19:15:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SuXGr-0007xt-PE
-	for linux-wireless@vger.kernel.org; Fri, 27 Jul 2012 01:15:05 +0200
-Received: from p4FD6F74B.dip.t-dialin.net ([79.214.247.75])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 01:15:05 +0200
-Received: from mrmocool by p4FD6F74B.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 01:15:05 +0200
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:62503 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343Ab2GEOZw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 10:25:52 -0400
+Received: by wibhm11 with SMTP id hm11so6699819wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 07:25:51 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 5 Jul 2012 16:25:49 +0200
+Message-ID: <CADnjpYvb15WvfZVnSpNvUiUAEdUgntOS2yoCyfxDZqHu+JBA5Q@mail.gmail.com> (sfid-20120705_162557_048014_F2AC6601)
+Subject: SIOCSIFFLAGS: operation not supported error message when tryinging to
+ bring up an interface in adhoc mode
+From: Philippe Agostini <philippe.agostini@gmail.com>
 To: linux-wireless@vger.kernel.org
-From: Fred <mrmocool@gmx.de>
-Subject: Re: Broadcom brcm80211 monitor mode
-Date: Thu, 26 Jul 2012 23:12:38 +0000 (UTC)
-Message-ID: <loom.20120727T010814-118@post.gmane.org> (sfid-20120727_011513_357638_773FED99)
-References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com> <4F356004.9090409@broadcom.com> <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com> <4F469ADF.5040806@broadcom.com> <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com> <4F8C8A52.1070908@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Franky Lin <frankyl@...> writes:
-> However, I do plan to work on the monitor mode support on the firmware
-> for SDIO dongle as a leisure project although I don't have a schedule for it.
-> I will announce it on the mail list when it's ready. Stay tuned :)
+Hello,
 
-Any news on this? :)
-Seems like the Galaxy S3 uses BCM4330 as well.
+I am currently developing a wifi driver and I am having trouble with
+the adhoc mode. I am developing on Ubuntu 10.04 with kernel 2.6.32. To
+verify that my initialization is correct, I try to bring up and
+configure virtual interfaces. It's working in managed mode, but when I
+try an "ifconfig wlan0 up" in adhoc mode I get the following error
+message: "SIOCSIFFLAGS: operation not supported". At first I thought
+that it was because of the regulatory domain, but I defined only one
+supported channel (channel 6, F=2437 MHz) and it seems to me that iw
+reg get tells me that on this frequency I am allowed to set up
+wireless device in adhoc mode (country 00: (2402 - 2472 @ 40), (3, 20)
+and no flags following).
 
+Are there mandatory flags to set up (besides wiphy->interface_modes =
+BIT(NL80211_IFTYPE_ADHOC)) that I missed, or callbacks to define in
+order to have a working adhoc interface ?
+
+Best regards
+
+Philippe
