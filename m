@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39101 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756019Ab2GaLoG (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:39445 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025Ab2GEUQE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:44:06 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 07/10] mac80211: check operating channel in scan
-Date: Tue, 31 Jul 2012 13:43:55 +0200
-Message-Id: <1343735038-16030-8-git-send-email-johannes@sipsolutions.net> (sfid-20120731_134411_327572_3B45EAC6)
-In-Reply-To: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
-References: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 5 Jul 2012 16:16:04 -0400
+Received: by gglu4 with SMTP id u4so7857658ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 13:16:04 -0700 (PDT)
+Message-ID: <4FF5F600.9040900@lwfinger.net> (sfid-20120705_221609_805447_5EB048C2)
+Date: Thu, 05 Jul 2012 15:16:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ivan Ivanich <ivanich@ivanich.org.ua>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Trial change to rtl8192ce used as AP
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Ivan,
 
-The optimisation of scanning only on the current
-channel should check the operating channel. Also
-modify it to compare channel pointer rather than
-the frequency.
+The following patch is suggested by the code-analysis tool cppcheck as the test 
+is always false. As it will not affect STA usage, I have no way to test the 
+change. Could you please do so?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/scan.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Thanks,
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index e80a8b6..0045869 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -480,11 +480,10 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 	if (local->ops->hw_scan) {
- 		__set_bit(SCAN_HW_SCANNING, &local->scanning);
- 	} else if ((req->n_channels == 1) &&
--		   (req->channels[0]->center_freq ==
--		    local->hw.conf.channel->center_freq)) {
--
--		/* If we are scanning only on the current channel, then
--		 * we do not need to stop normal activities
-+		   (req->channels[0] == local->oper_channel)) {
-+		/*
-+		 * If we are scanning only on the operating channel
-+		 * then we do not need to stop normal activities
- 		 */
- 		unsigned long next_delay;
- 
--- 
-1.7.10.4
+Larry
+
+
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1097,7 +1097,7 @@ static int _rtl92ce_set_media_status(str
+
+  	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+  	rtlpriv->cfg->ops->led_control(hw, ledaction);
+-	if ((bt_msr & 0xfc) == MSR_AP)
++	if ((bt_msr & 0x03) == MSR_AP)
+  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+  	else
+  		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
 
