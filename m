@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47036 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753212Ab2GPVod (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2012 17:44:33 -0400
-Message-ID: <50048B39.7060507@hauke-m.de> (sfid-20120716_234436_762340_1AB05BC1)
-Date: Mon, 16 Jul 2012 23:44:25 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: REGRESSION: [PATCH v2 0/9] bcma misc updates
-References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de> <4FF29671.1020406@broadcom.com> <4FF2A2D4.9070308@hauke-m.de> <4FF2ABD6.3070007@broadcom.com>
-In-Reply-To: <4FF2ABD6.3070007@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:45661 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755331Ab2GEIZH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 04:25:07 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: "Richard A. Griffiths" <richardx.a.griffiths@intel.com>
+Subject: [PATCH 9/9] iwlwifi: disallow log_event access if interface down
+Date: Thu,  5 Jul 2012 10:24:55 +0200
+Message-Id: <1341476695-6889-10-git-send-email-johannes@sipsolutions.net> (sfid-20120705_102524_736216_C141F536)
+In-Reply-To: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
+References: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/03/2012 10:22 AM, Arend van Spriel wrote:
-> On 07/03/2012 09:44 AM, Hauke Mehrtens wrote:
->>> I suspect it tries reading OTP instead of the external SPROM.
->>>>
->>>> Gr. AvS
->>>>
->> Hi Arend,
->>
->> my BCM43224 uses a Sprom from the flash chip of the SoC, so it could be
->> that something is wrong in the sprom reading, but I haven't touched the
->> sprom code expect for using constants.
->>
->> Do you know which patch is causing this issue?
->>
->> Hauke
->>
-> 
-> I intended to bisect the series. I will let you know what I find.
-> 
-> Gr. AvS
+From: "Richard A. Griffiths" <richardx.a.griffiths@intel.com>
 
-Hi Arend,
+'echo 1 > log_event' generates the bogus "MAC is in deep sleep"
+or "Timeout waiting for hardware access" log messages when
+the interface is down, we should just disallow accessing the
+device through debugfs when it is down.
 
-Did you bisect this? I still have no idea which or why any of the
-patches could cause this.
+Signed-off-by: Richard A. Griffiths <richardx.a.griffiths@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Hauke
+diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+index 8a2d9e6..b0f125c 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+@@ -83,7 +83,7 @@ static ssize_t iwl_dbgfs_##name##_write(struct file *file,              \
+ #define DEBUGFS_READ_FILE_OPS(name)                                     \
+ 	DEBUGFS_READ_FUNC(name);                                        \
+ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
+-	.read = iwl_dbgfs_##name##_read,                       		\
++	.read = iwl_dbgfs_##name##_read,				\
+ 	.open = simple_open,						\
+ 	.llseek = generic_file_llseek,					\
+ };
+@@ -2254,6 +2254,10 @@ static ssize_t iwl_dbgfs_log_event_write(struct file *file,
+ 	char buf[8];
+ 	int buf_size;
+ 
++	/* check that the interface is up */
++	if (!iwl_is_ready(priv))
++		return -EAGAIN;
++
+ 	memset(buf, 0, sizeof(buf));
+ 	buf_size = min(count, sizeof(buf) -  1);
+ 	if (copy_from_user(buf, user_buf, buf_size))
+-- 
+1.7.10
+
