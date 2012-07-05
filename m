@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28592 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756548Ab2GFWm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 18:42:29 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org,
-	Mathias Jeppsson <mathias.jeppsson@sonymobile.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 2/2] NFC: Fix order of arguments to list_add_tail() when queueing HCP frames
-Date: Sat,  7 Jul 2012 00:53:19 +0200
-Message-Id: <1341615199-11246-3-git-send-email-sameo@linux.intel.com> (sfid-20120707_004232_344418_BD3D4A69)
-In-Reply-To: <1341615199-11246-1-git-send-email-sameo@linux.intel.com>
-References: <1341615199-11246-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45647 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754683Ab2GEIZC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 04:25:02 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/9] iwlwifi: bump trace message limit
+Date: Thu,  5 Jul 2012 10:24:48 +0200
+Message-Id: <1341476695-6889-3-git-send-email-johannes@sipsolutions.net> (sfid-20120705_102519_823912_B0B532C4)
+In-Reply-To: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
+References: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The HCP message should be added to transmit queue, not the other way around.
+There's one message that goes just over the
+limit of 100 characters, so bump the limit to
+110 to get rid of the warning from that.
 
-Signed-off-by: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/nfc/hci/hcp.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/nfc/hci/hcp.c b/net/nfc/hci/hcp.c
-index 7212cf2..f4dad1a 100644
---- a/net/nfc/hci/hcp.c
-+++ b/net/nfc/hci/hcp.c
-@@ -105,7 +105,7 @@ int nfc_hci_hcp_message_tx(struct nfc_hci_dev *hdev, u8 pipe,
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+index 6536479..ad2dba8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+@@ -176,7 +176,7 @@ TRACE_EVENT(iwlwifi_dev_ucode_wrap_event,
+ #undef TRACE_SYSTEM
+ #define TRACE_SYSTEM iwlwifi_msg
  
- 	mutex_lock(&hdev->msg_tx_mutex);
--	list_add_tail(&hdev->msg_tx_queue, &cmd->msg_l);
-+	list_add_tail(&cmd->msg_l, &hdev->msg_tx_queue);
- 	mutex_unlock(&hdev->msg_tx_mutex);
+-#define MAX_MSG_LEN	100
++#define MAX_MSG_LEN	110
  
- 	queue_work(hdev->msg_tx_wq, &hdev->msg_tx_work);
+ DECLARE_EVENT_CLASS(iwlwifi_msg_event,
+ 	TP_PROTO(struct va_format *vaf),
 -- 
 1.7.10
 
