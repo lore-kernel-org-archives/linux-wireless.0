@@ -1,106 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43090 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45565 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932882Ab2GYLy0 (ORCPT
+	with ESMTP id S1752853Ab2GEHze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 07:54:26 -0400
+	Thu, 5 Jul 2012 03:55:34 -0400
+Message-ID: <1341474929.4455.10.camel@jlt3.sipsolutions.net> (sfid-20120705_095538_368106_1160160E)
+Subject: Re: [PATCH v2] mac80211: tx: do not drop non-robust mgmt to non-MFP
+ stas.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: yeohchunyeow@gmail.com, thomas@cozybit.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: mesh: don't use global channel type
-Date: Wed, 25 Jul 2012 13:54:19 +0200
-Message-Id: <1343217259-10043-1-git-send-email-johannes@sipsolutions.net> (sfid-20120725_135445_910113_268C9BB5)
+To: Jouni Malinen <j@w1.fi>
+Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 05 Jul 2012 09:55:29 +0200
+In-Reply-To: <20120704174421.GA6070@w1.fi>
+References: <1341393221-5396-1-git-send-email-cavallar@lri.fr>
+	 <1341394528.4482.4.camel@jlt3.sipsolutions.net> <4FF414D9.4060509@lri.fr>
+	 <1341396753.4482.13.camel@jlt3.sipsolutions.net> <4FF43E53.6050805@lri.fr>
+	 <20120704174421.GA6070@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-07-04 at 20:44 +0300, Jouni Malinen wrote:
 
-Using local->_oper_channel_type in the mesh code is
-completely wrong as this value is the combination
-of the various interface channel types and can be
-a different value from the mesh interface in case
-there are multiple virtual interfaces.
+> drop_unencrypted was originally (i.e., way before MFP) added as an extra
+> protection for some corner cases where keys may not have been set. In
+> theory, the PAE (authorized vs. unauthorized) should have covered those
+> cases, but there were some multi-SSID AP cases that were not obviously
+> clear. Consequently, it felt safer to add an extra protection for BSSes
+> that are known to use encryption for data frames.
 
-Use sdata->vif.bss_conf.channel_type instead as it
-tracks the per-vif channel type.
+Hmm, ok.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mesh.c       |   11 ++++++-----
- net/mac80211/mesh_plink.c |    7 ++++---
- 2 files changed, 10 insertions(+), 8 deletions(-)
+> As far as MFP is concerned, we have the WLAN_STA_MFP flag that should be
+> more reliable way of determining whether robust management frames have
+> to be protected.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e6d1788..62d93ab 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -109,11 +109,11 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
- 
- 	/* Disallow HT40+/- mismatch */
- 	if (ie->ht_operation &&
--	    (local->_oper_channel_type == NL80211_CHAN_HT40MINUS ||
--	    local->_oper_channel_type == NL80211_CHAN_HT40PLUS) &&
-+	    (sdata->vif.bss_conf.channel_type == NL80211_CHAN_HT40MINUS ||
-+	     sdata->vif.bss_conf.channel_type == NL80211_CHAN_HT40PLUS) &&
- 	    (sta_channel_type == NL80211_CHAN_HT40MINUS ||
- 	     sta_channel_type == NL80211_CHAN_HT40PLUS) &&
--	    local->_oper_channel_type != sta_channel_type)
-+	    sdata->vif.bss_conf.channel_type != sta_channel_type)
- 		goto mismatch;
- 
- 	return true;
-@@ -375,7 +375,7 @@ int mesh_add_ht_cap_ie(struct sk_buff *skb,
- 
- 	sband = local->hw.wiphy->bands[local->oper_channel->band];
- 	if (!sband->ht_cap.ht_supported ||
--	    local->_oper_channel_type == NL80211_CHAN_NO_HT)
-+	    sdata->vif.bss_conf.channel_type == NL80211_CHAN_NO_HT)
- 		return 0;
- 
- 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
-@@ -392,7 +392,8 @@ int mesh_add_ht_oper_ie(struct sk_buff *skb,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_channel *channel = local->oper_channel;
--	enum nl80211_channel_type channel_type = local->_oper_channel_type;
-+	enum nl80211_channel_type channel_type =
-+				sdata->vif.bss_conf.channel_type;
- 	struct ieee80211_supported_band *sband =
- 				local->hw.wiphy->bands[channel->band];
- 	struct ieee80211_sta_ht_cap *ht_cap = &sband->ht_cap;
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 6df9fc0..a203166 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -117,7 +117,7 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
- 	u16 ht_opmode;
- 	bool non_ht_sta = false, ht20_sta = false;
- 
--	if (local->_oper_channel_type == NL80211_CHAN_NO_HT)
-+	if (sdata->vif.bss_conf.channel_type == NL80211_CHAN_NO_HT)
- 		return 0;
- 
- 	rcu_read_lock();
-@@ -147,7 +147,8 @@ out:
- 
- 	if (non_ht_sta)
- 		ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED;
--	else if (ht20_sta && local->_oper_channel_type > NL80211_CHAN_HT20)
-+	else if (ht20_sta &&
-+		 sdata->vif.bss_conf.channel_type > NL80211_CHAN_HT20)
- 		ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_20MHZ;
- 	else
- 		ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_NONE;
-@@ -370,7 +371,7 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
- 
- 	sta->sta.supp_rates[band] = rates;
- 	if (elems->ht_cap_elem &&
--	    sdata->local->_oper_channel_type != NL80211_CHAN_NO_HT)
-+	    sdata->vif.bss_conf.channel_type != NL80211_CHAN_NO_HT)
- 		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 						  elems->ht_cap_elem,
- 						  &sta->sta.ht_cap);
--- 
-1.7.10.4
+Right.
+
+> > But in a IBSS with RSN, if wpa_supplicant
+> > isn't recent enough, stations are always authorized by default. so
+> > drop_encrypted is required in this case.
+> 
+> For a BSS that uses RSN, we could maintain a new flag that indicates
+> that (non-nullfunc) Data frames are not to be transmitted or received
+> without protected. Though, this would be quite similar to
+> drop_unencrypted in practice.
+> 
+> 
+> As far as the new patch is concerned, it would look like this is
+> extending the fix in commit e0463f501fb945c1fde536d98eefc5ba156ff497.
+> The commit log for that change seems to claim that the goal was to avoid
+> dropping any management frames to a STA that does not use MFP, but the
+> change does not seem to do that.
+
+Yeah, it's a bit confusing, especially since the drop_unencrypted is in
+there.
+
+> As far as drop_unencrypted not being used in AP/managed mode is
+> concerned, that sounds like an additional bug.. This code is supposed to
+> drop Action frames from STA/AP before 4-way handshake. If we want to get
+> rid of drop_unencrypted, this function may need another condition to
+> drop the frame based on WLAN_STA_MFP flag. I have clearly assumed that
+> drop_unencrypted was set here (and maybe that was indeed the case in
+> early 2009 or maybe I did testing with WEXT at the time based on commit
+> 0c7c10c7cc6bc890d23c8c62b81b4feccd92124b).
+
+It looks a bit it got lost years ago in commit
+f21293549f60f88c74fcb9944737f11048896dc4, but I can't tell you why. We
+also never added nl80211 API for it. Did we just miss it?
+
+I guess what we should do now is figure out what should be going on, do
+we even need drop_unencrypted still or are we ok with only MFP?
+
+johannes
 
