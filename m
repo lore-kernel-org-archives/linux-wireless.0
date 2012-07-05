@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39498 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754317Ab2GXO4m (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:36720 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933402Ab2GEXSW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 10:56:42 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1StgXR-0006Tj-Rp
-	for linux-wireless@vger.kernel.org; Tue, 24 Jul 2012 16:56:42 +0200
-Message-ID: <1343141801.4415.42.camel@jlt3.sipsolutions.net> (sfid-20120724_165646_313684_3A95150F)
-Subject: Re: [PATCH] mac80211: don't react to beacon loss if HW monitoring
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 24 Jul 2012 16:56:41 +0200
-In-Reply-To: <1342636834-5166-1-git-send-email-johannes@sipsolutions.net> (sfid-20120718_204039_311363_FABADB0C)
-References: <1342636834-5166-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120718_204039_311363_FABADB0C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 5 Jul 2012 19:18:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120705230842.GA26510@kroah.com>
+References: <20468.35601.132955.802881@gargle.gargle.HOWL> <7A9ADFFA56024346AAE90B6BABC3BD15DD6DEB@NASANEXD02B.na.qualcomm.com>
+ <20469.13787.767293.602337@gargle.gargle.HOWL> <20120705190801.GB11228@tux> <20120705230842.GA26510@kroah.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 5 Jul 2012 16:18:01 -0700
+Message-ID: <CAB=NE6WxsyKJQiX6ar_tyFfiwnLZEQVNwnL336XU-VOzwQxZ6Q@mail.gmail.com> (sfid-20120706_011838_744818_91D4F2F6)
+Subject: Re: 3.5 stable compat-wireless
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"Balasubramanian, Senthil Kumar" <senthilb@qca.qualcomm.com>,
+	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	qca-linux-team <qca-linux-team@qualcomm.com>,
+	Imran Ansari <imran@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sfr@canb.auug.org.au, hauke@hauke-m.de, ozancag@gmail.com,
+	pstew@google.com, warthog9@kernel.org, jrnieder@gmail.com,
+	ben@decadent.org.uk, akpm@linux-foundation.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-18 at 20:40 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If the HW is monitoring connection loss (as advertised
-> by IEEE80211_HW_CONNECTION_MONITOR) but not filtering
-> beacons (IEEE80211_VIF_BEACON_FILTER) then mac80211 will
-> still start the beacon loss timer and if a few beacons
-> are lost, e.g. due to scanning, drop the connection.
-> 
-> If the hardware doesn't advertise connection monitoring,
-> then it won't drop the connection right away but probe
-> the AP, which is intended, but due to the logic in the
-> timer when connection monitoring is done it assumes the
-> connection was actually lost.
-> 
-> Fix this problem by not starting the timer when the HW
-> does connection monitoring.
+On Thu, Jul 5, 2012 at 4:08 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Thu, Jul 05, 2012 at 12:08:01PM -0700, Luis R. Rodriguez wrote:
+>>   * linux-crap.git: based on linux-next-pending.git and allows
+>>     contributors to send pull requests of crap that is not *ready*
+>>     to be sent properly upstream. Examples would be code we know
+>>     we simply already know that is not dealing with proper architecture
+>>     or style / etc. The drivers/staging/ allows vendors to post full
+>>     crap drivers, this would enable us to merge crap patches but that
+>>     some vendors might need / want.
+>
+> I really doubt this will work, look at the patches in some distros for
+> examples of why.  I'm having a hard enough time with the LTSI project in
+> conveying that "Yes, you can send patches to me for merging into the
+> LSTI kernel, you still have to justify it, and work to get the patches
+> then upstream, I'm not going to do your work for you."
+>
+> Having a random tree where these patches show up help no one except the
+> original developer so that they can fire-and-forget, which is not what
+> you want, unless you wish to take on the "get it cleaned up and merged
+> upstream" task yourself, which you really don't want to.
 
-Applied for -next
+Ah but that's the trick with the metrics. Kind of like with kernel
+contribution statistics we should be able to show *who* is working
+with *crap*, and see if the delta is reducing. Without this -- such
+entities are just keeping the *crap* to themselves anyway, and in fact
+given that there is no outlet they work on private outlets. I'd like
+to not do the work for them but -- to enable that crap to become
+public and for me to prod on with a stick to shrink crap but to also
+understand it. The other thing about the technique here is that each
+release is annotated to reflect *where* delta is pulled from.
+Distributions / system integrators can then cringe if they are asked
+to use releases with crap delta, or they may very well be OK with it.
 
-johannes
+Something similar had happened with hostapd -- if we have no outlet
+for "crap" then the only option is to not make it public. This doesn't
+get us anywhere. As much as I'd love assume we can live in a world
+where no delta is required experience so far is showing there are some
+*reasonable* justifications for some of these deltas. But without
+enabling them -- we can't study them, or prod to correct them.
 
+  Luis
