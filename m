@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:41444 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755159Ab2GXBSA (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:64335 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228Ab2GET4C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 21:18:00 -0400
-Received: by yenl2 with SMTP id l2so6152204yen.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 18:17:59 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v3] mac80211: add extra checking for RC init upon receiving mesh beacon
-Date: Tue, 24 Jul 2012 09:15:54 +0800
-Message-Id: <1343092554-17734-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120724_031805_304161_AD9A3265)
+	Thu, 5 Jul 2012 15:56:02 -0400
+Received: by wibhr14 with SMTP id hr14so44087wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 12:56:00 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: fix RSSI calibration
+Date: Thu,  5 Jul 2012 21:55:46 +0200
+Message-Id: <1341518146-20261-1-git-send-email-zajec5@gmail.com> (sfid-20120705_215620_139713_5015D89F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rate control statistic is flushed whenever the mesh beacon
-is received. This may not optimizes the performance of rate
-control algorithm. This patch ensures that we return early
-from mesh_peer_init if the plink_state is ESTAB. Thus, avoid
-calling the rate_control_rate_init again for established mesh
-STA.
+Specs were updated, change code to match it.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-v2: simplify the logic checking (Thomas Pedersen)
-v3: updating the sta last rx activity (Thomas Pedersen)
+ drivers/net/wireless/b43/phy_n.c |   17 +++++++++--------
+ 1 files changed, 9 insertions(+), 8 deletions(-)
 
- net/mac80211/mesh_plink.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4256859..4f5740e 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -360,6 +360,12 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 1081188..b92bb9c 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1369,7 +1369,7 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
+ 					i << 2);
+ 			b43_nphy_poll_rssi(dev, 2, results[i], 8);
+ 		}
+-		for (i = 0; i < 4; i++) {
++		for (i = 0; i < 4; i += 2) {
+ 			s32 curr;
+ 			s32 mind = 40;
+ 			s32 minpoll = 249;
+@@ -1415,14 +1415,15 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
+ 			b43_nphy_scale_offset_rssi(dev, 0, 0, core + 1, 1, i);
+ 			b43_nphy_poll_rssi(dev, i, poll_results, 8);
+ 			for (j = 0; j < 4; j++) {
+-				if (j / 2 == core)
++				if (j / 2 == core) {
+ 					offset[j] = 232 - poll_results[j];
+-				if (offset[j] < 0)
+-					offset[j] = -(abs(offset[j] + 4) / 8);
+-				else
+-					offset[j] = (offset[j] + 4) / 8;
+-				b43_nphy_scale_offset_rssi(dev, 0,
+-					offset[2 * core], core + 1, j % 2, i);
++					if (offset[j] < 0)
++						offset[j] = -(abs(offset[j] + 4) / 8);
++					else
++						offset[j] = (offset[j] + 4) / 8;
++					b43_nphy_scale_offset_rssi(dev, 0,
++						offset[2 * core], core + 1, j % 2, i);
++				}
+ 			}
+ 		}
  	}
- 
- 	spin_lock_bh(&sta->lock);
-+	if (sta->plink_state == NL80211_PLINK_ESTAB) {
-+		sta->last_rx = jiffies;
-+		spin_unlock_bh(&sta->lock);
-+		return sta;
-+	}
-+
- 	sta->last_rx = jiffies;
- 	sta->sta.supp_rates[band] = rates;
- 	if (elems->ht_cap_elem &&
 -- 
-1.7.0.4
+1.7.7
 
