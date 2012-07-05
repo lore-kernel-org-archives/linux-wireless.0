@@ -1,39 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:64993 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755531Ab2GaFAG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26137 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754727Ab2GELgi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 01:00:06 -0400
-Received: by wibhm11 with SMTP id hm11so2470870wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2012 22:00:05 -0700 (PDT)
+	Thu, 5 Jul 2012 07:36:38 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v1 2/4] Prefer 32-bit bitrate
+Date: Thu, 5 Jul 2012 14:36:19 +0300
+Message-ID: <1341488181-12542-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120705_133725_986845_49A937BB)
+In-Reply-To: <1341488181-12542-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341488181-12542-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <5016F59E.9070101@01019freenet.de>
-References: <5016F03F.1020508@t-online.de>
-	<5016F59E.9070101@01019freenet.de>
-Date: Tue, 31 Jul 2012 08:00:05 +0300
-Message-ID: <CANUX_P2CZW5ji--KkXoyBZUuZfOqkPk_A8Ui9tw4rNeuY=mebQ@mail.gmail.com> (sfid-20120731_070014_702462_0D5F6730)
-Subject: Re: No WLAN on DELL XPS L702x with Ubuntu 12.04LTS (64Bit)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "Ch. Hanisch" <ch-hanisch@t-online.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> on an DELL XPS L702x under Ubuntu 12.04LTS (64Bit) the WLAN is not working.
->> The network manager show the message
->> "device is no ready"
->
+If 32-bit bitrate reported, use it. Otherwise, use 16-bit one.
 
-How long does the boot take? (From the time you press the power button
-until you see the message in the logs).
+    Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ link.c    |   10 +++++++---
+ station.c |   10 +++++++---
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-Can you please add a file (let's say iwlwifi.conf) in
-/etc/modprobe.conf with content:
-options iwlwifi debug=0xffffffff
+diff --git a/link.c b/link.c
+index 11ee0aa..eb27de2 100644
+--- a/link.c
++++ b/link.c
+@@ -131,6 +131,7 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
+ 
+ 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+ 		[NL80211_RATE_INFO_BITRATE] = { .type = NLA_U16 },
++		[NL80211_RATE_INFO_BITRATE32] = { .type = NLA_U32 },
+ 		[NL80211_RATE_INFO_MCS] = { .type = NLA_U8 },
+ 		[NL80211_RATE_INFO_40_MHZ_WIDTH] = { .type = NLA_FLAG },
+ 		[NL80211_RATE_INFO_SHORT_GI] = { .type = NLA_FLAG },
+@@ -174,11 +175,14 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
+ 				     sinfo[NL80211_STA_INFO_TX_BITRATE], rate_policy)) {
+ 			fprintf(stderr, "failed to parse nested rate attributes!\n");
+ 		} else {
++			int rate = 0;
+ 			printf("\ttx bitrate: ");
+-			if (rinfo[NL80211_RATE_INFO_BITRATE]) {
+-				int rate = nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]);
++			if (rinfo[NL80211_RATE_INFO_BITRATE32])
++				rate = nla_get_u32(rinfo[NL80211_RATE_INFO_BITRATE32]);
++			else if (rinfo[NL80211_RATE_INFO_BITRATE])
++				rate = nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]);
++			if (rate > 0)
+ 				printf("%d.%d MBit/s", rate / 10, rate % 10);
+-			}
+ 
+ 			if (rinfo[NL80211_RATE_INFO_MCS])
+ 				printf(" MCS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_MCS]));
+diff --git a/station.c b/station.c
+index ac73e48..45e84ad 100644
+--- a/station.c
++++ b/station.c
+@@ -58,6 +58,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 
+ 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+ 		[NL80211_RATE_INFO_BITRATE] = { .type = NLA_U16 },
++		[NL80211_RATE_INFO_BITRATE32] = { .type = NLA_U32 },
+ 		[NL80211_RATE_INFO_MCS] = { .type = NLA_U8 },
+ 		[NL80211_RATE_INFO_40_MHZ_WIDTH] = { .type = NLA_FLAG },
+ 		[NL80211_RATE_INFO_SHORT_GI] = { .type = NLA_FLAG },
+@@ -123,11 +124,14 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 				     sinfo[NL80211_STA_INFO_TX_BITRATE], rate_policy)) {
+ 			fprintf(stderr, "failed to parse nested rate attributes!\n");
+ 		} else {
++			int rate = 0;
+ 			printf("\n\ttx bitrate:\t");
+-			if (rinfo[NL80211_RATE_INFO_BITRATE]) {
+-				int rate = nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]);
++			if (rinfo[NL80211_RATE_INFO_BITRATE32])
++				rate = nla_get_u32(rinfo[NL80211_RATE_INFO_BITRATE32]);
++			else if (rinfo[NL80211_RATE_INFO_BITRATE])
++				rate = nla_get_u16(rinfo[NL80211_RATE_INFO_BITRATE]);
++			if (rate > 0)
+ 				printf("%d.%d MBit/s", rate / 10, rate % 10);
+-			}
+ 
+ 			if (rinfo[NL80211_RATE_INFO_MCS])
+ 				printf(" MCS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_MCS]));
+-- 
+1.7.9.5
 
-And send the output.
-
-Is this a laptop from a big corporate?
