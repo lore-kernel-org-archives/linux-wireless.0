@@ -1,79 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41806 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187Ab2GGS7l (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:56043 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000Ab2GEQi5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jul 2012 14:59:41 -0400
-Date: Sat, 7 Jul 2012 20:59:54 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Sven Eckelmann <sven@narfation.org>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	ath9k-devel@lists.ath9k.org,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: ath9k: Problems with diversity on AR9330
-Message-ID: <20120707185953.GA3911@pandem0nium> (sfid-20120707_205945_292265_4D26D26A)
-References: <20120706125043.GA23189@pandem0nium>
- <CAD2nsn1=PDBTRXumDh93DzvmFcBnyFeLD-5c5oSJmv3OO6LWGw@mail.gmail.com>
- <5244861.J1Tyef1FCX@bentobox>
- <4991617.K7XqcvhjBY@bentobox>
- <CAD2nsn2m1wizCw6WY-k0KRY2NJTaqqxdoA_d_+K-kqrhw+FZ3w@mail.gmail.com>
- <CAD2nsn1-ZrKQxTYc_YZ6ETxovD9o7=Ygd2j2MxJiq8Vsiu19QQ@mail.gmail.com>
- <CAD2nsn2_16KcE2g5gysc5XwVtns5jAwD+doRzqTQdsim8xbchQ@mail.gmail.com>
+	Thu, 5 Jul 2012 12:38:57 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="17pEHd4RhPHOinZp"
-In-Reply-To: <CAD2nsn2_16KcE2g5gysc5XwVtns5jAwD+doRzqTQdsim8xbchQ@mail.gmail.com>
+In-Reply-To: <20469.7733.613739.886141@gargle.gargle.HOWL>
+References: <20469.7733.613739.886141@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 5 Jul 2012 09:38:35 -0700
+Message-ID: <CAB=NE6XP0cVhPL2FqVhsSeaQ7BV4QndhmZNbto9P3=9ko6YGFg@mail.gmail.com> (sfid-20120705_183920_494012_7F731E70)
+Subject: Re: Stable compat-wireless updates
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alex Mendoza <wargod@suneco.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jul 4, 2012 at 9:55 PM, Sujith Manoharan
+<c_manoha@qca.qualcomm.com> wrote:
+> Hi,
+>
+> A pull request for the 3.5.y branch.
+>
+> Sujith
+>
+> The following changes since commit a1959d00333104cd58bd07741ef0c40766836a77:
+>
+>   compat-wireless: skip forcing refresh on gen-stable-release.sh (2012-06-19 15:24:07 -0700)
+>
+> are available in the git repository at:
+>
+>   https://github.com/sujith/compat-wireless.git linux-3.5.y
+>
+> for you to fetch changes up to 73df80f65d3ab2a83275e2ffcb54b64484cf3821:
+>
+>   compat-wireless: Update offsets of the new patches (2012-07-04 23:06:29 +0530)
+>
+> ----------------------------------------------------------------
+> Sujith Manoharan (6):
+>       compat-wireless: Remove patches from linux-next-pending
+>       compat-wireless: Add pending stable patches (v3.5-rc5)
+>       compat-wireless: Remove a patch
+>       compat-wireless: Update patch offsets
+>       compat-wireless: Add cherry picked patches
+>       compat-wireless: Update offsets of the new patches
 
---17pEHd4RhPHOinZp
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks! Just a reminder to other vendors that if they wish to include
+their own set of deltas for stable compat-wireless releases but still
+prioritize and respect the upstream process the additional patches to
+compat-wireless allows for this, and this is exactly what Sujith is
+using here.
 
-Hey Shafi,
+Kicked out 3 new releases, all test compiled across 21 kernels:
 
-we had this checked out before, the EEPROM/EEP_ANT_DIV_CTL1 value is set to=
- 000000c9,
-so bit 6 and 7 are on (as checked in this function).
+http://wireless.kernel.org/en/users/Download/stable/
+http://wireless.kernel.org/en/users/Download/stable/#Additional_patches_to_stable_releases
 
-Cheers,
-	Simon
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ChangeLog-3.5-rc5
 
-On Sat, Jul 07, 2012 at 04:02:12PM +0530, Mohammed Shafi wrote:
-> > further i check with the CCK/DETECT and MC_GAIN_CTRL in ar9485, it  see=
-ms to be
-> >  ar9003_hw_ant_ctrl_apply CCK_DETECT 80be6788
-> >  ar9003_hw_ant_ctrl_apply MC_GAIN_CTRLL 13ef0200
-> > will check it out whats the one bit difference in CCK_DETECT
->=20
-> also could you provide the output of the attached patch, i would just
-> check the diversity
-> configuration
->=20
->=20
-> --=20
-> thanks,
-> shafi
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5-rc5-1.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5-rc5-1-sn.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5-rc5-1-snpc.tar.bz2
 
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ckmake-3.5-rc5-1.log.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ckmake-3.5-rc3-1-sn.log.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/ckmake-3.5-rc5-1-snpc.log.bz2
 
+If someone has access to a fast box I can use or set of boxes it would
+really help with speeding up releases. Test compiling each releases
+takes 120 minutes right now as it cross compiles across 21 kernels.
+Just this test compilation for all 3 releases took 6 hours. If we
+could test compile one kernel per server that would shave down
+compilation time considerably.
 
---17pEHd4RhPHOinZp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+mcgrof@flash ~/tmp $ for i in compat-wireless-3.5-rc5-1
+compat-wireless-3.5-rc5-1-sn compat-wireless-3.5-rc5-1-snpc ; do cd
+$i; ckmake ; cd .. ; done
+Trying kernel                  3.4.0-030400rc4-generic  [OK]
+Trying kernel                     3.3.3-030303-generic  [OK]
+Trying kernel                     3.2.2-030202-generic  [OK]
+Trying kernel                    3.1.10-030110-generic  [OK]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [OK]
+Trying kernel                  2.6.34-02063410-generic  [OK]
+Trying kernel                  2.6.33-02063305-generic  [OK]
+Trying kernel                  2.6.32-02063255-generic  [OK]
+Trying kernel                  2.6.31-02063113-generic  [OK]
+Trying kernel                  2.6.30-02063010-generic  [OK]
+Trying kernel                  2.6.29-02062906-generic  [OK]
+Trying kernel                  2.6.28-02062810-generic  [OK]
+Trying kernel                    2.6.27-020627-generic  [OK]
+Trying kernel                    2.6.26-020626-generic  [OK]
+Trying kernel                    2.6.25-020625-generic  [OK]
+Trying kernel                    2.6.24-020624-generic  [OK]
+Trying kernel                  3.4.0-030400rc4-generic  [OK]
+Trying kernel                     3.3.3-030303-generic  [OK]
+Trying kernel                     3.2.2-030202-generic  [OK]
+Trying kernel                    3.1.10-030110-generic  [OK]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [OK]
+Trying kernel                  2.6.34-02063410-generic  [OK]
+Trying kernel                  2.6.33-02063305-generic  [OK]
+Trying kernel                  2.6.32-02063255-generic  [OK]
+Trying kernel                  2.6.31-02063113-generic  [OK]
+Trying kernel                  2.6.30-02063010-generic  [OK]
+Trying kernel                  2.6.29-02062906-generic  [OK]
+Trying kernel                  2.6.28-02062810-generic  [OK]
+Trying kernel                    2.6.27-020627-generic  [OK]
+Trying kernel                    2.6.26-020626-generic  [OK]
+Trying kernel                    2.6.25-020625-generic  [OK]
+Trying kernel                    2.6.24-020624-generic  [OK]
+Trying kernel                  3.4.0-030400rc4-generic  [OK]
+Trying kernel                     3.3.3-030303-generic  [OK]
+Trying kernel                     3.2.2-030202-generic  [OK]
+Trying kernel                    3.1.10-030110-generic  [OK]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [OK]
+Trying kernel                  2.6.34-02063410-generic  [OK]
+Trying kernel                  2.6.33-02063305-generic  [OK]
+Trying kernel                  2.6.32-02063255-generic  [OK]
+Trying kernel                  2.6.31-02063113-generic  [OK]
+Trying kernel                  2.6.30-02063010-generic  [OK]
+Trying kernel                  2.6.29-02062906-generic  [OK]
+Trying kernel                  2.6.28-02062810-generic  [OK]
+Trying kernel                    2.6.27-020627-generic  [OK]
+Trying kernel                    2.6.26-020626-generic  [OK]
+Trying kernel                    2.6.25-020625-generic  [OK]
+Trying kernel                    2.6.24-020624-generic  [OK]
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk/4hykACgkQrzg/fFk7axbIsACg5UEsET1bF8Z1RlHXuNY/jPqA
-IAcAoI5XyRGf2aAsMoJZvsn8n3rSVcXK
-=xcGf
------END PGP SIGNATURE-----
-
---17pEHd4RhPHOinZp--
+  Luis
