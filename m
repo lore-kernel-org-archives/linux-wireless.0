@@ -1,43 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42928 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807Ab2GOFkz convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45642 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754227Ab2GEIZB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 01:40:55 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Message-ID: <20482.22437.126251.847921@gargle.gargle.HOWL> (sfid-20120715_074137_165443_5C23C808)
-Date: Sun, 15 Jul 2012 11:09:49 +0530
-To: =?iso-8859-1?Q?Nicol=E1s_Ech=E1niz?= <nicoechaniz@codigosur.org>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Guido Iribarren <guidoiribarren@buenosaireslibre.org>,
-	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>,
-	<ordex@autistici.org>
-Subject: Re: [ath9k-devel] ath9k_htc 1mbps in IBSS mode
-In-Reply-To: <4FFF2B15.5070502@codigosur.org>
-References: <4FD56DCA.1080200@codigosur.org>
-	<CAJ-VmomzoXV8YBdiS_2nkzVagBupX3Be-Dmboxotwy9s3h3r7w@mail.gmail.com>
-	<CAHD-aqKWdUBGyadCnVoSbkf4BysoSuvBBHrupXx-JbowqqNZPQ@mail.gmail.com>
-	<CAHD-aqJrKfL8OL97wcnaaTYFZrx2cBXvdY5vKeK67u_-VjGOKg@mail.gmail.com>
-	<20474.20627.928963.262924@gargle.gargle.HOWL>
-	<4FFF2B15.5070502@codigosur.org>
+	Thu, 5 Jul 2012 04:25:01 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SmhMy-0002Zl-H0
+	for linux-wireless@vger.kernel.org; Thu, 05 Jul 2012 10:25:00 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: pull-request: iwlwifi-next 2012-07-05
+Date: Thu,  5 Jul 2012 10:24:46 +0200
+Message-Id: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net> (sfid-20120705_102514_567239_CCD8EEFE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicolás Echániz wrote:
-> Sujith, does this mean that the problem is outside the scope of the
-> ath9k_htc driver itself or could it be fixed?
-> 
-> we are doing some heavy use of hardware based on this driver for many
-> projects; any further debugging work you might need, we are more than
-> willing to help.
+John,
 
-This is a regression introduced by this commit:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=6d810f10325522cfcf498dc6d64b9f96e1f5153f
+It's been a while since my last pull request, and even though
+we haven't accumulated many patches I thought I'd send you
+some more. :-)
 
-Fixing this requires either introducing a new mac80211 callback or
-revert to the older behavior which issued a station notification only
-after the supported rates have been setup.
+I've included disabling watchdog queues by default, at least
+while we figure out why they sometimes stall for longer than
+the watchdog, only to recover if it's disabled. Also included
+is a fix from Richard for rejecting debugfs access early when
+the device isn't running. To top it off, some small fixes and
+refactorings from Emmanuel and myself.
 
-Sujith
+johannes
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+The following changes since commit e75dac921d88ac1fa1ad08686ab242556f8b888b:
+
+  iwlwifi: limit mac_change_interface to BSS context (2012-06-21 10:01:43 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+
+for you to fetch changes up to 0ff1bd35f5aece42879b04cbfe6b4040cf50a697:
+
+  iwlwifi: disallow log_event access if interface down (2012-07-03 14:03:26 +0200)
+
+- ----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: configure the queues from the op_mode
+      iwlwifi: disable the watchdog for queues by default
+
+Johannes Berg (6):
+      iwlwifi: bump trace message limit
+      iwlwifi: use __get_str in tracing
+      iwlwifi: limit dwell time more strictly
+      iwlwifi: add trailing newline to some messages
+      iwlwifi: fix debug message level
+      iwlwifi: remove unneeded NULL check
+
+Richard A. Griffiths (1):
+      iwlwifi: disallow log_event access if interface down
+
+ drivers/net/wireless/iwlwifi/dvm/commands.h  |   40 +++++++++++++++++-
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c   |    6 ++-
+ drivers/net/wireless/iwlwifi/dvm/dev.h       |   16 --------
+ drivers/net/wireless/iwlwifi/dvm/main.c      |   56 +-------------------------
+ drivers/net/wireless/iwlwifi/dvm/scan.c      |   37 ++++++++++++-----
+ drivers/net/wireless/iwlwifi/dvm/ucode.c     |   37 +++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-debug.c     |    5 ++-
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h  |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-drv.c       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |   27 ++++++++-----
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    3 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |    3 --
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |   36 ++++++-----------
+ 13 files changed, 145 insertions(+), 126 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJP9U7uAAoJEDBSmw7B7bqrrQAP/i8jduHKaRbj5STN+9G6835q
+akQiY1L9vW98Ry217c+a7GwxzPIxyZ8xftQwITgxQOVMYAu60gRf5bA2EVwgNgJg
+U8IaXyP7vWbiSEzaLXdOIiLmJUcDuSUXj3vDzKXMfl2mil/6g9fPj3ELzZ4hO+ca
+fH2Ox4QRwhvWYTj9bQWA666yUQurRCobeNgPxiCt6dfdE7Vjz7C+PoO5Hua/HtSX
+o6HDUM24gdC27miTbVBeieGM2XaMhth9uOSMTeyEscaQN/5tZTuyS2pdesxCOPKV
+dkjLYJTeoz9NAnCPGob8UBQ9sPSoZzcTNBD1xZZgijnoGHHoEh4M+nbB2xp8z/7e
+RlTRw4SwL/0qdOT7zB/By2aAacnSBL6kKlqbRs+5B8dkfLdsz1PhNr3buAqy+DZ6
+NHkESrTQsZv0oSmMJ75N/C8LfUo0aK2onfIZTeTagQHDCSNu/WIqzIWkAy+hCe4L
+ut+I1qLZWIOQLx4dlbzXvbh4uCH5cWTrqPva3HUQja8+bniyY9qYd3BZ+/pU+4OI
+dcp8KiuysnpfD6y4KXRsehvAID7SLOlk+z7Ut0mCgODDtqfbZSSjLHHp+c1JGq5E
+wvdKpImZVbw8VzHJ96saKkAIszQ77Qttog4SAaJVKpWXdVQMWmd8oI39cPEoyJID
+Q/XpOZH5yUfqHRKzAq5z
+=6lHU
+-----END PGP SIGNATURE-----
+
+
+johannes
+
