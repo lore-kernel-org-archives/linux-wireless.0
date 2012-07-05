@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:56207 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751238Ab2GHHXo (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46255 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752900Ab2GEPB6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 03:23:44 -0400
-Received: by lboj14 with SMTP id j14so17297207lbo.35
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 00:23:40 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 0/8] wlcore/wl12xx/wl18xx: some updates for 3.6
-Date: Sun,  8 Jul 2012 10:23:23 +0300
-Message-Id: <1341732211-25871-1-git-send-email-coelho@ti.com> (sfid-20120708_092349_570704_926AC180)
+	Thu, 5 Jul 2012 11:01:58 -0400
+Received: by obbuo13 with SMTP id uo13so13153657obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 08:01:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120702181747.GA2010@tuxdriver.com>
+References: <1341230905-8929-1-git-send-email-eliad@wizery.com>
+	<1341231541.19642.3.camel@jlt3.sipsolutions.net>
+	<20120702181747.GA2010@tuxdriver.com>
+Date: Thu, 5 Jul 2012 18:01:58 +0300
+Message-ID: <CAB3XZEe-ckFE3ivCpYtRsZaFw0v6dFjDaywUje4TKO18kWiz3A@mail.gmail.com> (sfid-20120705_170203_443077_52E99B4D)
+Subject: Re: [PATCH] mac80211: always set in_reconfig=false on wakeup
+From: Eliad Peller <eliad@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Jul 2, 2012 at 9:17 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Mon, Jul 02, 2012 at 02:19:01PM +0200, Johannes Berg wrote:
+>> On Mon, 2012-07-02 at 15:08 +0300, Eliad Peller wrote:
+>> > If the interfaces were removed just before a restart
+>> > work was started, open_count will be 0, and most of
+>> > the reconfig work will be skipped, including the
+>> > resetting of local->in_reconfig to false.
+>> >
+>> > Leaving local->inconfig = true will result in
+>> > dropping any incoming packet.
+>> >
+>> > Fix it by always setting local->in_reconfig = false
+>> > (even if there are no active interfaces).
+>> >
+>> > Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> > ---
+>> > this should go to 3.5
+>>
+>> Also looks good, thanks
+>>
+>> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+>>
+>> John, could you also pick this up?
+>>
+>> johannes
+>>
+>>
+>> >  net/mac80211/util.c |    2 +-
+>> >  1 files changed, 1 insertions(+), 1 deletions(-)
+>> >
+>> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+>> > index 242ecde..e1b7c63 100644
+>> > --- a/net/mac80211/util.c
+>> > +++ b/net/mac80211/util.c
+>> > @@ -1411,10 +1411,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+>> >             if (ieee80211_sdata_running(sdata))
+>> >                     ieee80211_enable_keys(sdata);
+>> >
+>> > + wake_up:
+>> >     local->in_reconfig = false;
+>> >     barrier();
+>> >
+>> > - wake_up:
+>> >     /*
+>> >      * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
+>> >      * sessions can be established after a resume.
+>
+> This doesn't apply to 3.5 -- the "local->in_reconfig = false" bit isn't there.
+>
+err... my mistake. this only applies on wireless-next.
+sorry for the hassle.
 
-A few more updates intended for 3.6.  Mostly small bugfixes.
-
-Please review.
-
-Cheers,
-Luca.
-
-Arik Nemtsov (5):
-  wlcore: don't set SDIO_FAILED flag when driver state is off
-  wlcore: define number of supported bands internally
-  wl12xx/wl18xx: use a dynamic PS timeout of 1.5sec
-  wl18xx: don't send static global struct to FW
-  wlcore: determine AP extra rates correctly
-
-Eliad Peller (1):
-  wlcore: check ssid length against the correct element
-
-Ido Yariv (1):
-  wlcore: Prevent processing of work items during op_stop
-
-Yoni Divinsky (1):
-  wlcore: change the wait for event mechanism
-
- drivers/net/wireless/ti/wl12xx/main.c     |    2 +-
- drivers/net/wireless/ti/wl18xx/main.c     |   37 +++++++++++++++-----
- drivers/net/wireless/ti/wlcore/cmd.c      |    8 ++++-
- drivers/net/wireless/ti/wlcore/io.c       |    6 ++++
- drivers/net/wireless/ti/wlcore/io.h       |   13 ++++----
- drivers/net/wireless/ti/wlcore/main.c     |   52 ++++++++++++++---------------
- drivers/net/wireless/ti/wlcore/scan.c     |    2 +-
- drivers/net/wireless/ti/wlcore/wlcore.h   |    4 +--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    7 ++--
- 9 files changed, 84 insertions(+), 47 deletions(-)
-
--- 
-1.7.10
-
+Eliad.
