@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:33389 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751331Ab2GHHXt (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:39978 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754227Ab2GEJpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 03:23:49 -0400
-Received: by lbgc1 with SMTP id c1so3896794lbg.29
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 00:23:46 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 6/8] wlcore: check ssid length against the correct element
-Date: Sun,  8 Jul 2012 10:23:29 +0300
-Message-Id: <1341732211-25871-7-git-send-email-coelho@ti.com> (sfid-20120708_092404_643667_5F007B36)
-In-Reply-To: <1341732211-25871-1-git-send-email-coelho@ti.com>
-References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+	Thu, 5 Jul 2012 05:45:34 -0400
+Received: by gglu4 with SMTP id u4so7160472ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 02:45:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1339874808-9991-1-git-send-email-notasas@gmail.com>
+References: <1339874808-9991-1-git-send-email-notasas@gmail.com>
+Date: Thu, 5 Jul 2012 12:45:33 +0300
+Message-ID: <CANOLnOPfO4Jcfs24tRDu=80bmJNYvFigLi2oKyu3ZUtP4Rz1mQ@mail.gmail.com> (sfid-20120705_114538_957757_4AFD6AD9)
+Subject: Re: [PATCH 0/3] wl1251: maemo fixes
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Sat, Jun 16, 2012 at 10:26 PM, Grazvydas Ignotas <notasas@gmail.com> wrote:
+> Here are a few old wl1251 patches found in maemo repositories that haven't
+> ever reached mainline. I did not keep 'From:' and s-o-b as the patches are
+> rebased and slightly modified, also most emails are probably dead due to
+> Nokia's reorganization, so original authors are just listed in commit
+> messages.
 
-commit 587cc28 ("wlcore: compare ssid_len before comparing
-ssids") introduced a new bug - the ssid length from the
-request struct was compared against the ssid length of
-another request, instead the one of the cmd.
+Anything wrong with these? There was a comment on 0001, but that was a
+question unrelated to the patch itself.
 
-This might cause the sched scan request to fail
-(with -EINVAL) in many cases.
+>
+> Grazvydas Ignotas (3):
+>   wl1251: remove unused filter_work
+>   wl1251: fix filtering support
+>   wl1251: send filters to firmware as they are set
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/scan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I've just noticed this shortlog is wrong, but patches themselves that
+were sent to the list are correct, do I need to resend? Here is the
+right shortlog:
 
-diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
-index b03eb9a..dbeca1b 100644
---- a/drivers/net/wireless/ti/wlcore/scan.c
-+++ b/drivers/net/wireless/ti/wlcore/scan.c
-@@ -633,7 +633,7 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
- 
- 				for (j = 0; j < cmd->n_ssids; j++)
- 					if ((req->ssids[i].ssid_len ==
--					     req->ssids[j].ssid_len) &&
-+					     cmd->ssids[j].len) &&
- 					    !memcmp(req->ssids[i].ssid,
- 						   cmd->ssids[j].ssid,
- 						   req->ssids[i].ssid_len)) {
--- 
-1.7.10
+Grazvydas Ignotas (3):
+  wl1251: fix TSF calculation
+  wl1251: always report beacon loss to the stack
+  wl1251: Fix memory leaks in SPI initialization
 
+ drivers/net/wireless/ti/wl1251/acx.c   |    2 +-
+ drivers/net/wireless/ti/wl1251/event.c |    3 +--
+ drivers/net/wireless/ti/wl1251/spi.c   |    4 ++++
+ 3 files changed, 6 insertions(+), 3 deletions(-)
