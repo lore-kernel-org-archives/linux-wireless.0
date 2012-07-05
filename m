@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46110 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932522Ab2GLOKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 10:10:05 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com
-Subject: [PATCH v2] cfg80211: ignore channel state for stopped AP/mesh interfaces
-Date: Thu, 12 Jul 2012 16:10:02 +0200
-Message-Id: <1342102202-21045-1-git-send-email-nbd@openwrt.org> (sfid-20120712_161010_431220_E73C7A0E)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43571 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754868Ab2GELgo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 07:36:44 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v1 4/4] Fix print channel number for 60g
+Date: Thu, 5 Jul 2012 14:36:21 +0300
+Message-ID: <1341488181-12542-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120705_133719_250793_CE70C7F0)
+In-Reply-To: <1341488181-12542-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1341488181-12542-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this change, running AP + station on the same wiphy does not work
-since the commit "cfg80211: add channel checking for iface combinations".
-The stopped AP prevents the client from connecting to an AP on a different
-channel.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- net/wireless/chan.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ util.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 434c56b..1e03e04 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -136,9 +136,16 @@ cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_P2P_GO:
-+		if (wdev->beacon_interval) {
-+			*chan = wdev->channel;
-+			*chanmode = CHAN_MODE_SHARED;
-+		}
-+		return;
- 	case NL80211_IFTYPE_MESH_POINT:
--		*chan = wdev->channel;
--		*chanmode = CHAN_MODE_SHARED;
-+		if (wdev->mesh_id_len) {
-+			*chan = wdev->channel;
-+			*chanmode = CHAN_MODE_SHARED;
-+		}
- 		return;
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_AP_VLAN:
+diff --git a/util.c b/util.c
+index 26d27c3..20d3d06 100644
+--- a/util.c
++++ b/util.c
+@@ -269,7 +269,13 @@ int ieee80211_frequency_to_channel(int freq)
+ 		return (freq - 2407) / 5;
+ 
+ 	/* FIXME: dot11ChannelStartingFactor (802.11-2007 17.3.8.3.2) */
+-	return freq/5 - 1000;
++	if (freq < 45000)
++		return freq/5 - 1000;
++
++	if (freq >= 58320 && freq <= 64800)
++		return (freq - 56160) / 2160;
++
++    return 0;
+ }
+ 
+ void print_ssid_escaped(const uint8_t len, const uint8_t *data)
 -- 
-1.7.3.2
+1.7.9.5
 
