@@ -1,70 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from storm.alittletooquiet.net ([67.23.28.199]:45383 "EHLO
-	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753807Ab2GMOfw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 10:35:52 -0400
-Date: Fri, 13 Jul 2012 10:35:51 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192de: Fix phy-based version calculation
-Message-ID: <20120713143551.GF9489@alittletooquiet.net> (sfid-20120713_163557_029044_8DC145B3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:13048 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756094Ab2GENWA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 09:22:00 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>, joe@perches.com
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCHv3.6] lib: printf: append support of '%*ph[CDN]'
+Date: Thu,  5 Jul 2012 16:21:38 +0300
+Message-Id: <1341494498-22770-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120705_152220_445179_7F8C0316)
+In-Reply-To: <1341414588.3627.42.camel@joe2Laptop>
+References: <1341414588.3627.42.camel@joe2Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Forest Bond <forest.bond@rapidrollout.com>
+There are many places in the kernel where the drivers print small buffers as a
+hex string. This patch adds a support of the variable width buffer to print it
+as a hex string with a delimiter. The idea came from Pavel Roskin here:
+http://www.digipedia.pl/usenet/thread/18835/17449/
 
-Commit d83579e2a50ac68389e6b4c58b845c702cf37516 incorporated some
-changes from the vendor driver that made it newly important that the
-calculated hardware version correctly include the CHIP_92D bit, as all
-of the IS_92D_* macros were changed to depend on it.  However, this bit
-was being unset for dual-mac, dual-phy devices.  The vendor driver
-behavior was modified to not do this, but unfortunately this change was
-not picked up along with the others.  This caused scanning in the 2.4GHz
-band to be broken, and possibly other bugs as well.
+Sample output of
+	pr_info("buf[%d:%d] %*phC\n", from, len, len, &buf[from]);
+could be look like this:
+	[ 0.726130] buf[51:8] e8:16:b6:ef:e3:74:45:6e
+	[ 0.750736] buf[59:15] 31:81:b8:3f:35:49:06:ae:df:32:06:05:4a:af:55
+	[ 0.757602] buf[17:5] ac:16:d5:2c:ef
 
-This patch brings the version calculation logic in parity with the
-vendor driver in this regard, and in doing so fixes the regression.
-However, the version calculation code in general continues to be largely
-incoherent and messy, and needs to be cleaned up.
-
-Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ Documentation/printk-formats.txt |   10 +++++++
+ lib/vsprintf.c                   |   55 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 65 insertions(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-index 18380a7..4420312 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -3345,21 +3345,21 @@ void rtl92d_phy_config_macphymode_info(struct ieee80211_hw *hw)
- 	switch (rtlhal->macphymode) {
- 	case DUALMAC_SINGLEPHY:
- 		rtlphy->rf_type = RF_2T2R;
--		rtlhal->version |= CHIP_92D_SINGLEPHY;
-+		rtlhal->version |= RF_TYPE_2T2R;
- 		rtlhal->bandset = BAND_ON_BOTH;
- 		rtlhal->current_bandtype = BAND_ON_2_4G;
- 		break;
+diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
+index 90ff4d7..8ffb274 100644
+--- a/Documentation/printk-formats.txt
++++ b/Documentation/printk-formats.txt
+@@ -53,6 +53,16 @@ Struct Resources:
+ 	For printing struct resources. The 'R' and 'r' specifiers result in a
+ 	printed resource with ('R') or without ('r') a decoded flags member.
  
- 	case SINGLEMAC_SINGLEPHY:
- 		rtlphy->rf_type = RF_2T2R;
--		rtlhal->version |= CHIP_92D_SINGLEPHY;
-+		rtlhal->version |= RF_TYPE_2T2R;
- 		rtlhal->bandset = BAND_ON_BOTH;
- 		rtlhal->current_bandtype = BAND_ON_2_4G;
- 		break;
++Raw buffer as a hex string:
++	%*ph	00 01 02  ...  3f
++	%*phC	00:01:02: ... :3f
++	%*phD	00-01-02- ... -3f
++	%*phN	000102 ... 3f
++
++	For printing a small buffers (up to 64 bytes long) as a hex string with
++	certain separator. For the larger buffers consider to use
++	print_hex_dump().
++
+ MAC/FDDI addresses:
  
- 	case DUALMAC_DUALPHY:
- 		rtlphy->rf_type = RF_1T1R;
--		rtlhal->version &= (~CHIP_92D_SINGLEPHY);
-+		rtlhal->version &= RF_TYPE_1T1R;
- 		/* Now we let MAC0 run on 5G band. */
- 		if (rtlhal->interfaceindex == 0) {
- 			rtlhal->bandset = BAND_ON_5G;
+ 	%pM	00:01:02:03:04:05
+diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+index e500158..8afa954 100644
+--- a/lib/vsprintf.c
++++ b/lib/vsprintf.c
+@@ -655,6 +655,50 @@ char *resource_string(char *buf, char *end, struct resource *res,
+ }
+ 
+ static noinline_for_stack
++char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
++		 const char *fmt)
++{
++	int i, len = 1;		/* if we pass '%ph[CDN]', field witdh remains
++				   negative value, fallback to the default */
++	char separator;
++
++	if (spec.field_width == 0)
++		/* nothing to print */
++		return buf;
++
++	if (ZERO_OR_NULL_PTR(addr))
++		/* NULL pointer */
++		return string(buf, end, NULL, spec);
++
++	switch (fmt[1]) {
++	case 'C':
++		separator = ':';
++		break;
++	case 'D':
++		separator = '-';
++		break;
++	case 'N':
++		separator = 0;
++		break;
++	default:
++		separator = ' ';
++		break;
++	}
++
++	if (spec.field_width > 0)
++		len = min_t(int, spec.field_width, 64);
++
++	for (i = 0; i < len && buf < end - 1; i++) {
++		buf = hex_byte_pack(buf, addr[i]);
++
++		if (buf < end && separator && i != len - 1)
++			*buf++ = separator;
++	}
++
++	return buf;
++}
++
++static noinline_for_stack
+ char *mac_address_string(char *buf, char *end, u8 *addr,
+ 			 struct printf_spec spec, const char *fmt)
+ {
+@@ -974,6 +1018,13 @@ int kptr_restrict __read_mostly;
+  *       correctness of the format string and va_list arguments.
+  * - 'K' For a kernel pointer that should be hidden from unprivileged users
+  * - 'NF' For a netdev_features_t
++ * - 'h[CDN]' For a variable-length buffer, it prints it as a hex string with
++ *            a certain separator (' ' by default):
++ *              C colon
++ *              D dash
++ *              N no separator
++ *            The maximum supported length is 64 bytes of the input. Consider
++ *            to use print_hex_dump() for the larger input.
+  *
+  * Note: The difference between 'S' and 'F' is that on ia64 and ppc64
+  * function pointers are really function descriptors, which contain a
+@@ -1007,6 +1058,8 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
+ 	case 'R':
+ 	case 'r':
+ 		return resource_string(buf, end, ptr, spec, fmt);
++	case 'h':
++		return hex_string(buf, end, ptr, spec, fmt);
+ 	case 'M':			/* Colon separated: 00:01:02:03:04:05 */
+ 	case 'm':			/* Contiguous: 000102030405 */
+ 					/* [mM]F (FDDI) */
+@@ -1298,6 +1351,8 @@ qualifier:
+  * %pI6c print an IPv6 address as specified by RFC 5952
+  * %pU[bBlL] print a UUID/GUID in big or little endian using lower or upper
+  *   case.
++ * %*ph[CDN] a variable-length hex string with a separator (supports up to 64
++ *           bytes of the input)
+  * %n is ignored
+  *
+  * ** Please update Documentation/printk-formats.txt when making changes **
 -- 
-1.7.0.4
+1.7.10
+
