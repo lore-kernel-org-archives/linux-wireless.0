@@ -1,36 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:24183 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161301Ab2GLRtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 13:49:09 -0400
-Date: Thu, 12 Jul 2012 13:48:55 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath6kl: fix incorrect use of IEEE80211_NUM_BANDS
-Message-ID: <20120712134855.53d23fef@mj> (sfid-20120712_194930_453725_91E5BB33)
-In-Reply-To: <20120712091311.9751.60082.stgit@localhost6.localdomain6>
-References: <20120712091311.9751.60082.stgit@localhost6.localdomain6>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from he.sipsolutions.net ([78.46.109.217]:47719 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755772Ab2GETjD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jul 2012 15:39:03 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix debugfs default key links
+Date: Thu,  5 Jul 2012 21:38:56 +0200
+Message-Id: <1341517136-6246-1-git-send-email-johannes@sipsolutions.net> (sfid-20120705_213907_401502_2BDD35EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 12 Jul 2012 12:13:12 +0300
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +	/* only check 2.4 and 5 GHz bands, skip the rest */
-> +	for (band = 0; band <= IEEE80211_BAND_5GHZ; band++) {
+Due to the way the default key links are created,
+it happens that a link is left dangling:
+ * both unicast/multicast links are created
+ * unicast link is destroyed, and the links
+   are updated
+ * during this update, adding the multicast
+   link again fails because it is present,
+   destroying the debugfs pointer
+ * removing the multicast link won't work as
+   the pointer has been destroyed
 
-There is something inelegant here.  The code is mixing an integer and
-an enum.  I'd rather go with one or those:
+Fix this by always removing the links and then
+re-creating them if needed.
 
-two enums:
-for (band = IEEE80211_BAND_2GHZ; band <= IEEE80211_BAND_5GHZ; band++) {
+Reported-by: Antonio Quartulli <ordex@autistici.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_key.c |   16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-or two integers:
-for (band = 0; band <= ATH6KL_NUM_BANDS; band++) {
-
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 7932767..090d08f 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -283,6 +283,11 @@ void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
+ 
+ 	lockdep_assert_held(&sdata->local->key_mtx);
+ 
++	if (sdata->debugfs.default_unicast_key) {
++		debugfs_remove(sdata->debugfs.default_unicast_key);
++		sdata->debugfs.default_unicast_key = NULL;
++	}
++
+ 	if (sdata->default_unicast_key) {
+ 		key = key_mtx_dereference(sdata->local,
+ 					  sdata->default_unicast_key);
+@@ -290,9 +295,11 @@ void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
+ 		sdata->debugfs.default_unicast_key =
+ 			debugfs_create_symlink("default_unicast_key",
+ 					       sdata->debugfs.dir, buf);
+-	} else {
+-		debugfs_remove(sdata->debugfs.default_unicast_key);
+-		sdata->debugfs.default_unicast_key = NULL;
++	}
++
++	if (sdata->debugfs.default_multicast_key) {
++		debugfs_remove(sdata->debugfs.default_multicast_key);
++		sdata->debugfs.default_multicast_key = NULL;
+ 	}
+ 
+ 	if (sdata->default_multicast_key) {
+@@ -302,9 +309,6 @@ void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
+ 		sdata->debugfs.default_multicast_key =
+ 			debugfs_create_symlink("default_multicast_key",
+ 					       sdata->debugfs.dir, buf);
+-	} else {
+-		debugfs_remove(sdata->debugfs.default_multicast_key);
+-		sdata->debugfs.default_multicast_key = NULL;
+ 	}
+ }
+ 
 -- 
-Regards,
-Pavel Roskin
+1.7.10
+
