@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:33420 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757378Ab2GLHoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 03:44:08 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] wireless: brcm80211: use %pM to print BSSID
-Date: Thu, 12 Jul 2012 10:43:44 +0300
-Message-Id: <1342079024-18851-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120712_094413_686913_9BD0CD75)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14320 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440Ab2GFOjZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 10:39:25 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v2 1/2] ath9k: Fix MCI cleanup
+Date: Fri, 6 Jul 2012 20:09:16 +0530
+Message-ID: <1341585556-9992-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120706_163929_697650_EF7B0C92)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index d13ae9c..e3c0446 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -919,9 +919,7 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
- 	set_bit(WL_STATUS_CONNECTING, &cfg_priv->status);
+We are doing MCI cleanup eventhough BTCOEX is not enabled
+via module parameter. This means we do ath_mci_cleanup
+though we skipped calling ath_mci_setup. Yet it does not
+causes any issues now  as we free the DMA buffer allocated
+only when it is allocated during ath_mci_setup.
+
+Reviewed-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 5eac4d1..43557c2 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -387,11 +387,13 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
  
- 	if (params->bssid)
--		WL_CONN("BSSID: %02X %02X %02X %02X %02X %02X\n",
--		params->bssid[0], params->bssid[1], params->bssid[2],
--		params->bssid[3], params->bssid[4], params->bssid[5]);
-+		WL_CONN("BSSID: %pM\n", params->bssid);
- 	else
- 		WL_CONN("No BSSID specified\n");
+ void ath9k_deinit_btcoex(struct ath_softc *sc)
+ {
++	struct ath_hw *ah = sc->sc_ah;
++
+         if ((sc->btcoex.no_stomp_timer) &&
+ 	    ath9k_hw_get_btcoex_scheme(sc->sc_ah) == ATH_BTCOEX_CFG_3WIRE)
+ 		ath_gen_timer_free(sc->sc_ah, sc->btcoex.no_stomp_timer);
+ 
+-	if (AR_SREV_9462(sc->sc_ah))
++	if (ath9k_hw_mci_is_enabled(ah))
+ 		ath_mci_cleanup(sc);
+ }
  
 -- 
-1.7.10.4
+1.7.0.4
 
