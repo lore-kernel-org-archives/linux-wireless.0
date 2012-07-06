@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:62251 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387Ab2G1OdM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jul 2012 10:33:12 -0400
-Received: by wibhm11 with SMTP id hm11so512965wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jul 2012 07:33:11 -0700 (PDT)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
-	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 1/4] ath5k: Use correct value for min_pwr and cur_pwr
-Date: Sat, 28 Jul 2012 17:32:48 +0300
-Message-Id: <1343485971-31360-1-git-send-email-mickflemm@gmail.com> (sfid-20120728_163350_169922_78350151)
+Received: from mga01.intel.com ([192.55.52.88]:29557 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754154Ab2GFT7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 15:59:37 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 12/33] NFC: nfc_driver_failure() implementation
+Date: Fri,  6 Jul 2012 22:09:32 +0200
+Message-Id: <1341605393-32056-13-git-send-email-sameo@linux.intel.com> (sfid-20120706_220532_071857_E2314AF5)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure we don't store the table offsets for min and cur power levels,
-store the 0.25dB values instead. This way we don't clamp the tx power level
-to max (because now cur_pwr holds the 0.25dB value, not the table offset) after
-re-using cur_pwr on reset.
+From: Eric Lapuyade <eric.lapuyade@intel.com>
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+If the device is polling we sent a 0 target found event.
+
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath5k/phy.c |   19 ++++++++++++++-----
- 1 files changed, 14 insertions(+), 5 deletions(-)
+ net/nfc/core.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 8b71a2d..aa1a77d 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -3562,6 +3562,20 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
- 		for (i = 8; i <= 15; i++)
- 			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
- 
-+	/* Save min/max and current tx power for this channel
-+	 * in 0.25dB units.
-+	 *
-+	 * Note: We use rates[0] for current tx power because
-+	 * it covers most of the rates, in most cases. It's our
-+	 * tx power limit and what the user expects to see. */
-+	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
-+	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
-+
-+	/* Set max txpower for correct OFDM operation on all rates
-+	 * -that is the txpower for 54Mbit-, it's used for the PAPD
-+	 * gain probe and it's in 0.5dB units */
-+	ah->ah_txpower.txp_ofdm = rates[7];
-+
- 	/* Now that we have all rates setup use table offset to
- 	 * match the power range set by user with the power indices
- 	 * on PCDAC/PDADC table */
-@@ -3571,11 +3585,6 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
- 		if (rates[i] > 63)
- 			rates[i] = 63;
- 	}
--
--	/* Min/max in 0.25dB units */
--	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
--	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
--	ah->ah_txpower.txp_ofdm = rates[7];
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 749ee48..00105e7 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -663,13 +663,9 @@ int nfc_target_lost(struct nfc_dev *dev, u32 target_idx)
  }
+ EXPORT_SYMBOL(nfc_target_lost);
  
+-void nfc_driver_failure(struct nfc_dev *dev, int err)
++inline void nfc_driver_failure(struct nfc_dev *dev, int err)
+ {
+-	/*
+-	 * TODO: if polling is active, send empty target_found
+-	 * or else do whatever makes sense to let user space
+-	 * know this device needs to be closed and reinitialized.
+-	 */
++	nfc_targets_found(dev, NULL, 0);
+ }
+ EXPORT_SYMBOL(nfc_driver_failure);
  
 -- 
-1.7.3.4
+1.7.10
 
