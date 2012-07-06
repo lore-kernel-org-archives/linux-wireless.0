@@ -1,104 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:41363 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752311Ab2GJKFD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 06:05:03 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	thomas@net.t-labs.tu-berlin.de, brcm80211-dev-list@broadcom.com,
-	pieterpg@broadcom.com, gregkh@suse.de, frankyl@broadcom.com,
-	arend@broadcom.com, rvossen@broadcom.com, brudley@broadcom.com
-Subject: [PATCH v3] brcmsmac: restructure info->control.sta handling as it is goning to be removed soon.
-Date: Tue, 10 Jul 2012 12:04:57 +0200
-Message-Id: <1341914697-59039-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120710_120510_119759_83AA2326)
+Received: from mga03.intel.com ([143.182.124.21]:40587 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756118Ab2GFT7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 15:59:49 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 19/33] NFC: Fix LLCP getname socket op
+Date: Fri,  6 Jul 2012 22:09:39 +0200
+Message-Id: <1341605393-32056-20-git-send-email-sameo@linux.intel.com> (sfid-20120706_220534_976101_08F7E938)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmsmac uses info->control.sta while doing ampdu aggregation. This patch
-changes the usage of the structure info->control.sta, as it is going to be
-removed soon from struct ieee80211_tx_info. This patch is a pre-requisit in
-order to add transmission power control (TPC) to the mac80211 subsystem.
+Set the right target index and use a better socket declaration routine.
 
-Suggested-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
-sta pointer is not used in brcms_c_sendampdu(), sta removed. thx to A.v.Spriel
----
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c       | 10 ++++------
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |  2 ++
- drivers/net/wireless/brcm80211/brcmsmac/main.c        |  2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ net/nfc/llcp/sock.c |   11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index 01b190a..77c5f57 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -665,8 +665,6 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
- 			u8 plcp0, plcp3, is40, sgi;
- 			struct ieee80211_sta *sta;
- 
--			sta = tx_info->control.sta;
--
- 			if (rr) {
- 				plcp0 = plcp[0];
- 				plcp3 = plcp[3];
-@@ -1195,8 +1193,8 @@ static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, void *arg_a)
- 	bool rc;
- 
- 	rc = tx_info->flags & IEEE80211_TX_CTL_AMPDU ? true : false;
--	rc = rc && (tx_info->control.sta == NULL || ampdu_pars->sta == NULL ||
--		    tx_info->control.sta == ampdu_pars->sta);
-+	rc = rc && (tx_info->rate_driver_data[0] == NULL || ampdu_pars->sta == NULL ||
-+		    tx_info->rate_driver_data[0] == ampdu_pars->sta);
- 	rc = rc && ((u8)(mpdu->priority) == ampdu_pars->tid);
- 	return rc;
- }
-@@ -1210,8 +1208,8 @@ static void dma_cb_fn_ampdu(void *txi, void *arg_a)
- 	struct ieee80211_tx_info *tx_info = (struct ieee80211_tx_info *)txi;
- 
- 	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
--	    (tx_info->control.sta == sta || sta == NULL))
--		tx_info->control.sta = NULL;
-+	    (tx_info->rate_driver_data[0] == sta || sta == NULL))
-+		tx_info->rate_driver_data[0] = NULL;
+diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+index 05ca5a6..b08e99d 100644
+--- a/net/nfc/llcp/sock.c
++++ b/net/nfc/llcp/sock.c
+@@ -283,22 +283,25 @@ error:
+ 	return ret;
  }
  
- /*
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 2d5a404..f3ab8a6 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -267,6 +267,7 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
- static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+-static int llcp_sock_getname(struct socket *sock, struct sockaddr *addr,
++static int llcp_sock_getname(struct socket *sock, struct sockaddr *uaddr,
+ 			     int *len, int peer)
  {
- 	struct brcms_info *wl = hw->priv;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	struct sockaddr_nfc_llcp *llcp_addr = (struct sockaddr_nfc_llcp *)addr;
+ 	struct sock *sk = sock->sk;
+ 	struct nfc_llcp_sock *llcp_sock = nfc_llcp_sock(sk);
++	DECLARE_SOCKADDR(struct sockaddr_nfc_llcp *, llcp_addr, uaddr);
  
- 	spin_lock_bh(&wl->lock);
- 	if (!wl->pub->up) {
-@@ -275,6 +276,7 @@ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		goto done;
- 	}
- 	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
-+	tx_info->rate_driver_data[0] = tx_info->control.sta;
-  done:
- 	spin_unlock_bh(&wl->lock);
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 8776fbc..28dd37e3 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -879,7 +879,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
- 	tx_info = IEEE80211_SKB_CB(p);
- 	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
+-	pr_debug("%p\n", sk);
++	pr_debug("%p %d %d %d\n", sk, llcp_sock->target_idx,
++		 llcp_sock->dsap, llcp_sock->ssap);
  
--	if (tx_info->control.sta)
-+	if (tx_info->rate_driver_data[0])
- 		scb = &wlc->pri_scb;
+ 	if (llcp_sock == NULL || llcp_sock->dev == NULL)
+ 		return -EBADFD;
  
- 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
+-	addr->sa_family = AF_NFC;
++	uaddr->sa_family = AF_NFC;
++
+ 	*len = sizeof(struct sockaddr_nfc_llcp);
+ 
+ 	llcp_addr->dev_idx = llcp_sock->dev->idx;
++	llcp_addr->target_idx = llcp_sock->target_idx;
+ 	llcp_addr->dsap = llcp_sock->dsap;
+ 	llcp_addr->ssap = llcp_sock->ssap;
+ 	llcp_addr->service_name_len = llcp_sock->service_name_len;
 -- 
-1.7.11.1
+1.7.10
 
