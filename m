@@ -1,96 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49709 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:57512 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757280Ab2GKR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 13:59:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 04/12] ath9k_hw: fix tx gain tables for AR934x
-Date: Wed, 11 Jul 2012 19:59:07 +0200
-Message-Id: <1342029555-31618-4-git-send-email-nbd@openwrt.org> (sfid-20120711_195947_384195_366D5437)
-In-Reply-To: <1342029555-31618-3-git-send-email-nbd@openwrt.org>
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
- <1342029555-31618-2-git-send-email-nbd@openwrt.org>
- <1342029555-31618-3-git-send-email-nbd@openwrt.org>
+	id S1751994Ab2GFT7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 15:59:09 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 08/33] NFC: Factorize HCI cmd completion
+Date: Fri,  6 Jul 2012 22:09:28 +0200
+Message-Id: <1341605393-32056-9-git-send-email-sameo@linux.intel.com> (sfid-20120706_215912_825249_EE685568)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the EEPROM information to choose the right tx gain table
+From: Eric Lapuyade <eric.lapuyade@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+HCI cmd can be completed either from an HCI response or from an
+internal driver or HCI error. This requires to factorize the
+completion code outside of the device lock.
+
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   29 ++++++++++++++++++++++-----
- 1 files changed, 23 insertions(+), 6 deletions(-)
+ net/nfc/hci/core.c |   27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 41e88c6..718241d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -561,8 +561,8 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
- 			5);
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			ar9340Modes_high_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_high_ob_db_tx_gain_table_1p0),
- 			5);
- 	else if (AR_SREV_9485_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
-@@ -605,8 +605,8 @@ static void ar9003_tx_gain_table_mode2(struct ath_hw *ah)
- 			5);
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			ar9340Modes_low_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_low_ob_db_tx_gain_table_1p0),
- 			5);
- 	else if (AR_SREV_9485_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
-@@ -639,8 +639,8 @@ static void ar9003_tx_gain_table_mode3(struct ath_hw *ah)
- 			5);
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			ar9340Modes_high_power_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_high_power_tx_gain_table_1p0),
- 			5);
- 	else if (AR_SREV_9485_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
-@@ -659,6 +659,20 @@ static void ar9003_tx_gain_table_mode3(struct ath_hw *ah)
- 			5);
- }
- 
-+static void ar9003_tx_gain_table_mode4(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9340Modes_mixed_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_mixed_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9580_1p0_mixed_ob_db_tx_gain_table,
-+			ARRAY_SIZE(ar9580_1p0_mixed_ob_db_tx_gain_table),
-+			5);
-+}
-+
- static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- {
- 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
-@@ -675,6 +689,9 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 	case 3:
- 		ar9003_tx_gain_table_mode3(ah);
- 		break;
-+	case 4:
-+		ar9003_tx_gain_table_mode4(ah);
-+		break;
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index 5be7405..9a1a12f 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -127,21 +127,13 @@ static void nfc_hci_msg_rx_work(struct work_struct *work)
  	}
  }
  
+-void nfc_hci_resp_received(struct nfc_hci_dev *hdev, u8 result,
+-			   struct sk_buff *skb)
++static void __nfc_hci_cmd_completion(struct nfc_hci_dev *hdev, int err,
++				     struct sk_buff *skb)
+ {
+-	mutex_lock(&hdev->msg_tx_mutex);
+-
+-	if (hdev->cmd_pending_msg == NULL) {
+-		kfree_skb(skb);
+-		goto exit;
+-	}
+-
+ 	del_timer_sync(&hdev->cmd_timer);
+ 
+ 	if (hdev->cmd_pending_msg->cb)
+-		hdev->cmd_pending_msg->cb(hdev, nfc_hci_result_to_errno(result),
+-					  skb,
++		hdev->cmd_pending_msg->cb(hdev, err, skb,
+ 					  hdev->cmd_pending_msg->cb_context);
+ 	else
+ 		kfree_skb(skb);
+@@ -150,6 +142,19 @@ void nfc_hci_resp_received(struct nfc_hci_dev *hdev, u8 result,
+ 	hdev->cmd_pending_msg = NULL;
+ 
+ 	queue_work(hdev->msg_tx_wq, &hdev->msg_tx_work);
++}
++
++void nfc_hci_resp_received(struct nfc_hci_dev *hdev, u8 result,
++			   struct sk_buff *skb)
++{
++	mutex_lock(&hdev->msg_tx_mutex);
++
++	if (hdev->cmd_pending_msg == NULL) {
++		kfree_skb(skb);
++		goto exit;
++	}
++
++	__nfc_hci_cmd_completion(hdev, nfc_hci_result_to_errno(result), skb);
+ 
+ exit:
+ 	mutex_unlock(&hdev->msg_tx_mutex);
 -- 
-1.7.3.2
+1.7.10
 
