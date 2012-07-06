@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39063 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754030Ab2GJQSs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32273 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932984Ab2GFWUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 12:18:48 -0400
-Message-ID: <1341937124.4475.27.camel@jlt3.sipsolutions.net> (sfid-20120710_181855_865526_623F58BE)
-Subject: [PATCH] etherdevice: introduce eth_broadcast_addr
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Tue, 10 Jul 2012 18:18:44 +0200
-In-Reply-To: <20120708.235808.1602900783296556684.davem@davemloft.net>
-References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
-	 <20120708.235808.1602900783296556684.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 6 Jul 2012 18:20:30 -0400
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
+	<arend@broadcom.com>, <henry@logout.com>,
+	<senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [PATCH v3 0/3] wireless: certification onus and cell regulatory hint
+Date: Fri, 6 Jul 2012 15:20:23 -0700
+Message-ID: <1341613226-11774-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120707_002109_168895_CA51CB10)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
 
-A lot of code has either the memset or an inefficient copy
-from a static array that contains the all-ones broadcast
-address. Introduce eth_broadcast_addr() to fill an address
-with all ones, making the code clearer and allowing us to
-get rid of some constant arrays.
+This v3 series addresses disabling the cell base station hint
+regulatory if no device registered with the wireless core
+supports the feature.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/etherdevice.h |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+I'll also send the ath5k / ath9k patches separately.
 
-diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-index 3d406e0..98a27cc 100644
---- a/include/linux/etherdevice.h
-+++ b/include/linux/etherdevice.h
-@@ -138,6 +138,17 @@ static inline void random_ether_addr(u8 *addr)
- }
- 
- /**
-+ * eth_broadcast_addr - Assign broadcast address
-+ * @addr: Pointer to a six-byte array containing the Ethernet address
-+ *
-+ * Assign the broadcast address to the given address array.
-+ */
-+static inline void eth_broadcast_addr(u8 *addr)
-+{
-+	memset(addr, 0xff, ETH_ALEN);
-+}
-+
-+/**
-  * eth_hw_addr_random - Generate software assigned random Ethernet and
-  * set device flag
-  * @dev: pointer to net_device structure
+Luis R. Rodriguez (3):
+  cfg80211: add CONFIG_CFG80211_CERTIFICATION_ONUS
+  cfg80211: add cellular base station regulatory hint support
+  cfg80211: rename reg_device_remove() to wiphy_regulatory_deregister()
+
+ include/linux/nl80211.h  |   32 +++++++++++++
+ include/net/regulatory.h |    4 ++
+ net/wireless/Kconfig     |   21 +++++++++
+ net/wireless/core.c      |    9 ++--
+ net/wireless/nl80211.c   |   15 +++++-
+ net/wireless/reg.c       |  115 +++++++++++++++++++++++++++++++++++++++++++---
+ net/wireless/reg.h       |    7 ++-
+ 7 files changed, 190 insertions(+), 13 deletions(-)
+
 -- 
-1.7.10.4
-
-
+1.7.10.rc1.22.gf5241
 
