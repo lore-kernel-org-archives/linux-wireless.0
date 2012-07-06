@@ -1,31 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38075 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753686Ab2GQKAG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 06:00:06 -0400
-Message-ID: <1342519201.18105.2.camel@jlt3.sipsolutions.net> (sfid-20120717_120010_714341_EC818960)
-Subject: Re: [PATCH v2] cfg80211: support TX error rate CQM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Date: Tue, 17 Jul 2012 12:00:01 +0200
-In-Reply-To: <1342135053-12045-1-git-send-email-c_tpeder@qca.qualcomm.com>
-References: <1342135053-12045-1-git-send-email-c_tpeder@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:1068 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755814Ab2GFUAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 16:00:07 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 24/33] NFC: Forbid SSAP binding to a not well known LLCP service
+Date: Fri,  6 Jul 2012 22:09:44 +0200
+Message-Id: <1341605393-32056-25-git-send-email-sameo@linux.intel.com> (sfid-20120706_220536_164409_C9ED01F4)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-12 at 16:17 -0700, Thomas Pedersen wrote:
-> Let the user configure serveral TX error conection quality monitoring
-> parameters: % error rate, survey interval, and # of attempted packets.
-> 
-> On exceeding the TX failure rate over the given interval, the driver
-> will send a CQM notify event with the actual TX failure rate and
-> packets attempted.
+With not Well Known Services there is no guarantees as to which
+SSAP the server will be listening on, so there is no reason to
+support binding to a specific source SAP.
 
-Applied, thanks.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/llcp/llcp.c |   22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
-johannes
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 1031abd..9ab17ec 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -234,24 +234,12 @@ u8 nfc_llcp_get_sdp_ssap(struct nfc_llcp_local *local,
+ 
+ 		return LLCP_WKS_NUM_SAP + ssap;
+ 
+-	} else if (sock->ssap != 0) {
+-		if (sock->ssap < LLCP_WKS_NUM_SAP) {
+-			if (!test_bit(sock->ssap, &local->local_wks)) {
+-				set_bit(sock->ssap, &local->local_wks);
+-				mutex_unlock(&local->sdp_lock);
+-
+-				return sock->ssap;
+-			}
+-
+-		} else if (sock->ssap < LLCP_SDP_NUM_SAP) {
+-			if (!test_bit(sock->ssap - LLCP_WKS_NUM_SAP,
+-				      &local->local_sdp)) {
+-				set_bit(sock->ssap - LLCP_WKS_NUM_SAP,
+-					&local->local_sdp);
+-				mutex_unlock(&local->sdp_lock);
++	} else if (sock->ssap != 0 && sock->ssap < LLCP_WKS_NUM_SAP) {
++		if (!test_bit(sock->ssap, &local->local_wks)) {
++			set_bit(sock->ssap, &local->local_wks);
++			mutex_unlock(&local->sdp_lock);
+ 
+-				return sock->ssap;
+-			}
++			return sock->ssap;
+ 		}
+ 	}
+ 
+-- 
+1.7.10
 
