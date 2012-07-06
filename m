@@ -1,212 +1,428 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14565 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000Ab2GQLrV (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32302 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933481Ab2GFWUu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:47:21 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Fri, 6 Jul 2012 18:20:50 -0400
+Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
+	<arend@broadcom.com>, <henry@logout.com>,
+	<senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+Subject: [PATCH v3 2/3] cfg80211: add cellular base station regulatory hint support
+Date: Fri, 6 Jul 2012 15:20:25 -0700
+Message-ID: <1341613226-11774-3-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120707_002116_852292_02CBCD7E)
+In-Reply-To: <1341613226-11774-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1341613226-11774-1-git-send-email-rodrigue@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20485.20590.137366.956003@gargle.gargle.HOWL> (sfid-20120717_134723_919098_272BE3D1)
-Date: Tue, 17 Jul 2012 17:15:50 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/12] ath9k: Simplify ASSOC handling
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup the messy logic dealing with station association
-and disassociation.
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cellular base stations can provide hints to cfg80211 about
+where they think we are. This can be done for example by on
+a cell phone. To enable these hints we simply allow them
+through as user regulatory hints but we allow userspace
+to clasify the hint. This option is only available for
+system integrators which are willing to enable
+CONFIG_CFG80211_CERTIFICATION_ONUS.
+
+The base station hints themselves will not be processsed
+by the core unless at least one device on the system
+supports this feature.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/beacon.c |   2 +-
- drivers/net/wireless/ath/ath9k/main.c   | 118 +++++++++++++-------------------
- 2 files changed, 49 insertions(+), 71 deletions(-)
+ include/linux/nl80211.h  |   32 +++++++++++++
+ include/net/regulatory.h |    4 ++
+ net/wireless/core.c      |    1 +
+ net/wireless/nl80211.c   |   15 +++++-
+ net/wireless/reg.c       |  113 +++++++++++++++++++++++++++++++++++++++++++---
+ net/wireless/reg.h       |    5 +-
+ 6 files changed, 162 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index d357002..351ded5 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -472,7 +472,7 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
- 	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 74cc55c..f49dd18 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1242,6 +1242,12 @@ enum nl80211_commands {
+  * @NL80211_ATTR_BG_SCAN_PERIOD: Background scan period in seconds
+  *      or 0 to disable background scan.
+  *
++ * @NL80211_ATTR_USER_REG_HINT_TYPE: type of regulatory hint passed from
++ *	userspace. If unset it is assumed the hint comes directly from
++ *	a user. If set code could specify exactly what type of source
++ *	was used to provide the hint. For the different types of
++ *	allowed user regulatory hints see nl80211_user_reg_hint_type.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1493,6 +1499,8 @@ enum nl80211_attrs {
  
- 	/* No need to configure beacon if we are not associated */
--	if (!common->curaid) {
-+	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
- 		ath_dbg(common, BEACON,
- 			"STA is not yet associated..skipping beacon config\n");
- 		return;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d4060ec..80348d8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1430,86 +1430,53 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 	NL80211_ATTR_BG_SCAN_PERIOD,
  
- 	return ret;
- }
--static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++	NL80211_ATTR_USER_REG_HINT_TYPE,
 +
-+static void ath9k_set_assoc_state(struct ath_softc *sc,
-+				  struct ieee80211_vif *vif)
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2045,6 +2053,26 @@ enum nl80211_dfs_regions {
+ };
+ 
+ /**
++ * enum nl80211_user_reg_hint_type - type of user regulatory hint
++ *
++ * @NL80211_USER_REG_HINT_USER: a user sent the hint. This is always
++ *	assumed if the attribute is not set.
++ * @NL80211_USER_REG_HINT_CELL_BASE: the hint comes from a cellular
++ *	base station. Device drivers that have been tested to work
++ *	properly to support this type of hint can enable these hints
++ *	by setting the NL80211_FEATURE_CELL_BASE_REG_HINTS feature
++ *	capability on the struct wiphy. The wireless core will
++ *	ignore all cell base station hints until at least one device
++ *	present has been registered with the wireless core that
++ *	has listed NL80211_FEATURE_CELL_BASE_REG_HINTS as a
++ *	supported feature.
++ */
++enum nl80211_user_reg_hint_type {
++	NL80211_USER_REG_HINT_USER	= 0,
++	NL80211_USER_REG_HINT_CELL_BASE = 1,
++};
++
++/**
+  * enum nl80211_survey_info - survey information
+  *
+  * These attribute types are used with %NL80211_ATTR_SURVEY_INFO
+@@ -2933,11 +2961,15 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_HT_IBSS: This driver supports IBSS with HT datarates.
+  * @NL80211_FEATURE_INACTIVITY_TIMER: This driver takes care of freeing up
+  *	the connected inactive stations in AP mode.
++ * @NL80211_FEATURE_CELL_BASE_REG_HINTS: This driver has been tested
++ *	to work properly to suppport receiving regulatory hints from
++ *	cellular base stations.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
+ 	NL80211_FEATURE_HT_IBSS		= 1 << 1,
+ 	NL80211_FEATURE_INACTIVITY_TIMER = 1 << 2,
++	NL80211_FEATURE_CELL_BASE_REG_HINTS = 1 << 3,
+ };
+ 
+ /**
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index a5f7993..61c394a 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -52,6 +52,9 @@ enum environment_cap {
+  *	DFS master operation on a known DFS region (NL80211_DFS_*),
+  *	dfs_region represents that region. Drivers can use this and the
+  *	@alpha2 to adjust their device's DFS parameters as required.
++ * @user_reg_hint_type: if the @initiator was of type
++ *	%NL80211_REGDOM_SET_BY_USER, this clasifies the type
++ *	of hint passed. This could be any of the %NL80211_USER_REG_HINT_*
+  * @intersect: indicates whether the wireless core should intersect
+  * 	the requested regulatory domain with the presently set regulatory
+  * 	domain.
+@@ -70,6 +73,7 @@ enum environment_cap {
+ struct regulatory_request {
+ 	int wiphy_idx;
+ 	enum nl80211_reg_initiator initiator;
++	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 	char alpha2[2];
+ 	u8 dfs_region;
+ 	bool intersect;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index e13365f..153f7dc 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -537,6 +537,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 	}
+ 
+ 	/* set up regulatory info */
++	wiphy_regulatory_register(wiphy);
+ 	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ 
+ 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 77102e6..037cc57a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -294,6 +294,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_INACTIVITY_TIMEOUT] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
++	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3480,6 +3481,7 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
  {
--	struct ath_softc *sc = data;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 	struct ath_vif *avp = (void *)vif->drv_priv;
-+	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 	unsigned long flags;
-+
-+	set_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
-+	avp->primary_sta_vif = true;
-+
+ 	int r;
+ 	char *data = NULL;
++	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 
  	/*
--	 * Skip iteration if primary station vif's bss info
--	 * was not changed
-+	 * Set the AID, BSSID and do beacon-sync only when
-+	 * the HW opmode is STATION.
-+	 *
-+	 * But the primary bit is set above in any case.
- 	 */
--	if (test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
-+	if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
- 		return;
+ 	 * You should only get this when cfg80211 hasn't yet initialized
+@@ -3499,7 +3501,13 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
  
--	if (bss_conf->assoc) {
--		set_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
--		avp->primary_sta_vif = true;
--		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
--		common->curaid = bss_conf->aid;
--		ath9k_hw_write_associd(sc->sc_ah);
--		ath_dbg(common, CONFIG, "Bss Info ASSOC %d, bssid: %pM\n",
--			bss_conf->aid, common->curbssid);
--		ath_beacon_config(sc, vif);
--		/*
--		 * Request a re-configuration of Beacon related timers
--		 * on the receipt of the first Beacon frame (i.e.,
--		 * after time sync with the AP).
--		 */
--		spin_lock_irqsave(&sc->sc_pm_lock, flags);
--		sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
--		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
--
--		/* Reset rssi stats */
--		sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
--		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
-+	memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
-+	common->curaid = bss_conf->aid;
-+	ath9k_hw_write_associd(sc->sc_ah);
+ 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
  
--		ath_start_rx_poll(sc, 3);
-+	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
-+	sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+-	r = regulatory_hint_user(data);
++	if (info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE])
++		user_reg_hint_type =
++		  nla_get_u8(info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE]);
++	else
++		user_reg_hint_type = NL80211_USER_REG_HINT_USER;
++
++	r = regulatory_hint_user(data, user_reg_hint_type);
  
--		if (!common->disable_ani) {
--			set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--			ath_start_ani(common);
--		}
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
--	}
-+	ath_dbg(common, CONFIG,
-+		"Primary Station interface: %pM, BSSID: %pM\n",
-+		vif->addr, common->curbssid);
+ 	return r;
  }
+@@ -3869,6 +3877,11 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 			cfg80211_regdomain->dfs_region)))
+ 		goto nla_put_failure;
  
--static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
-+static void ath9k_bss_assoc_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++	if (reg_last_request_cell_base() &&
++	    nla_put_u8(msg, NL80211_ATTR_USER_REG_HINT_TYPE,
++		       NL80211_USER_REG_HINT_CELL_BASE))
++		goto nla_put_failure;
++
+ 	nl_reg_rules = nla_nest_start(msg, NL80211_ATTR_REG_RULES);
+ 	if (!nl_reg_rules)
+ 		goto nla_put_failure;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b2b3222..05af62d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -97,9 +97,16 @@ const struct ieee80211_regdomain *cfg80211_regdomain;
+  *     - cfg80211_world_regdom
+  *     - cfg80211_regdom
+  *     - last_request
++ *     - reg_num_devs_support_basehint
+  */
+ static DEFINE_MUTEX(reg_mutex);
+ 
++/*
++ * Number of devices that registered to the core
++ * that support cellular base station regulatory hints
++ */
++static int reg_num_devs_support_basehint;
++
+ static inline void assert_reg_lock(void)
  {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_softc *sc = data;
- 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
--	struct ath_vif *avp = (void *)vif->drv_priv;
- 
--	if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
-+	if (test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
- 		return;
- 
--	/* Reconfigure bss info */
--	if (avp->primary_sta_vif && !bss_conf->assoc) {
--		ath_dbg(common, CONFIG, "Bss Info DISASSOC %d, bssid %pM\n",
--			common->curaid, common->curbssid);
--		clear_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
--		clear_bit(SC_OP_BEACONS, &sc->sc_flags);
--		avp->primary_sta_vif = false;
--		memset(common->curbssid, 0, ETH_ALEN);
--		common->curaid = 0;
--	}
--
--	ieee80211_iterate_active_interfaces_atomic(
--			sc->hw, ath9k_bss_iter, sc);
--
--	/*
--	 * None of station vifs are associated.
--	 * Clear bssid & aid
--	 */
--	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
--		ath9k_hw_write_associd(sc->sc_ah);
--		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--		del_timer_sync(&common->ani.timer);
--		del_timer_sync(&sc->rx_poll_timer);
--		memset(&sc->caldata, 0, sizeof(sc->caldata));
--	}
-+	if (bss_conf->assoc)
-+		ath9k_set_assoc_state(sc, vif);
+ 	lockdep_assert_held(&reg_mutex);
+@@ -911,6 +918,59 @@ static void handle_band(struct wiphy *wiphy,
+ 		handle_channel(wiphy, initiator, band, i);
  }
  
- static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
-@@ -1527,30 +1494,41 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	mutex_lock(&sc->mutex);
- 
- 	if (changed & BSS_CHANGED_ASSOC) {
--		ath9k_config_bss(sc, vif);
-+		ath_dbg(common, CONFIG, "BSSID %pM Changed ASSOC %d\n",
-+			bss_conf->bssid, bss_conf->assoc);
++static bool reg_request_cell_base(struct regulatory_request *request)
++{
++	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
++		return false;
++	if (request->user_reg_hint_type != NL80211_USER_REG_HINT_CELL_BASE)
++		return false;
++	return true;
++}
 +
-+		if (avp->primary_sta_vif && !bss_conf->assoc) {
-+			clear_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags);
-+			avp->primary_sta_vif = false;
++bool reg_last_request_cell_base(void)
++{
++	assert_cfg80211_lock();
 +
-+			if (ah->opmode == NL80211_IFTYPE_STATION)
-+				clear_bit(SC_OP_BEACONS, &sc->sc_flags);
-+		}
++	mutex_lock(&reg_mutex);
++	return reg_request_cell_base(last_request);
++	mutex_unlock(&reg_mutex);
++}
 +
-+		ieee80211_iterate_active_interfaces_atomic(sc->hw,
-+						   ath9k_bss_assoc_iter, sc);
- 
--		ath_dbg(common, CONFIG, "BSSID: %pM aid: 0x%x\n",
--			common->curbssid, common->curaid);
-+		if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags) &&
-+		    ah->opmode == NL80211_IFTYPE_STATION) {
-+			memset(common->curbssid, 0, ETH_ALEN);
-+			common->curaid = 0;
-+			ath9k_hw_write_associd(sc->sc_ah);
-+		}
++#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
++
++/* Core specific check */
++static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
++{
++	if (!reg_num_devs_support_basehint)
++		return -EOPNOTSUPP;
++
++	if (reg_request_cell_base(last_request)) {
++		if (!regdom_changes(pending_request->alpha2))
++			return -EALREADY;
++		return 0;
++	}
++	return 0;
++}
++
++/* Device specific check */
++static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
++{
++	if (!(wiphy->features & NL80211_FEATURE_CELL_BASE_REG_HINTS))
++		return true;
++	return false;
++}
++#else
++static int reg_ignore_cell_hint(struct regulatory_request *pending_request)
++{
++	return -EOPNOTSUPP;
++}
++static int reg_dev_ignore_cell_hint(struct wiphy *wiphy)
++{
++	return true;
++}
++#endif
++
++
+ static bool ignore_reg_update(struct wiphy *wiphy,
+ 			      enum nl80211_reg_initiator initiator)
+ {
+@@ -944,6 +1004,9 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 		return true;
  	}
  
- 	if (changed & BSS_CHANGED_IBSS) {
--		/* There can be only one vif available */
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
- 		common->curaid = bss_conf->aid;
- 		ath9k_hw_write_associd(sc->sc_ah);
++	if (reg_request_cell_base(last_request))
++		return reg_dev_ignore_cell_hint(wiphy);
++
+ 	return false;
+ }
  
- 		if (bss_conf->ibss_joined) {
--			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
--
- 			if (!common->disable_ani) {
- 				set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 				ath_start_ani(common);
- 			}
--
- 		} else {
- 			clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
- 			del_timer_sync(&common->ani.timer);
--			del_timer_sync(&sc->rx_poll_timer);
- 		}
+@@ -1307,6 +1370,13 @@ static int ignore_request(struct wiphy *wiphy,
+ 		return 0;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+ 
++		if (reg_request_cell_base(last_request)) {
++			/* Trust a Cell base station over the AP's country IE */
++			if (regdom_changes(pending_request->alpha2))
++				return -EOPNOTSUPP;
++			return -EALREADY;
++		}
++
+ 		last_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+ 
+ 		if (unlikely(!is_an_alpha2(pending_request->alpha2)))
+@@ -1351,6 +1421,12 @@ static int ignore_request(struct wiphy *wiphy,
+ 
+ 		return REG_INTERSECT;
+ 	case NL80211_REGDOM_SET_BY_USER:
++		if (reg_request_cell_base(pending_request))
++			return reg_ignore_cell_hint(pending_request);
++
++		if (reg_request_cell_base(last_request))
++			return -EOPNOTSUPP;
++
+ 		if (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
+ 			return REG_INTERSECT;
+ 		/*
+@@ -1640,7 +1716,8 @@ static int regulatory_hint_core(const char *alpha2)
+ }
+ 
+ /* User hints */
+-int regulatory_hint_user(const char *alpha2)
++int regulatory_hint_user(const char *alpha2,
++			 enum nl80211_user_reg_hint_type user_reg_hint_type)
+ {
+ 	struct regulatory_request *request;
+ 
+@@ -1654,6 +1731,7 @@ int regulatory_hint_user(const char *alpha2)
+ 	request->alpha2[0] = alpha2[0];
+ 	request->alpha2[1] = alpha2[1];
+ 	request->initiator = NL80211_REGDOM_SET_BY_USER;
++	request->user_reg_hint_type = user_reg_hint_type;
+ 
+ 	queue_regulatory_request(request);
+ 
+@@ -1906,7 +1984,7 @@ static void restore_regulatory_settings(bool reset_user)
+ 	 * settings, user regulatory settings takes precedence.
+ 	 */
+ 	if (is_an_alpha2(alpha2))
+-		regulatory_hint_user(user_alpha2);
++		regulatory_hint_user(user_alpha2, NL80211_USER_REG_HINT_USER);
+ 
+ 	if (list_empty(&tmp_reg_req_list))
+ 		return;
+@@ -2081,9 +2159,16 @@ static void print_regdomain(const struct ieee80211_regdomain *rd)
+ 	else {
+ 		if (is_unknown_alpha2(rd->alpha2))
+ 			pr_info("Regulatory domain changed to driver built-in settings (unknown country)\n");
+-		else
+-			pr_info("Regulatory domain changed to country: %c%c\n",
+-				rd->alpha2[0], rd->alpha2[1]);
++		else {
++			if (reg_request_cell_base(last_request))
++				pr_info("Regulatory domain changed "
++					"to country: %c%c by Cell Station\n",
++					rd->alpha2[0], rd->alpha2[1]);
++			else
++				pr_info("Regulatory domain changed "
++					"to country: %c%c\n",
++					rd->alpha2[0], rd->alpha2[1]);
++		}
  	}
+ 	print_dfs_region(rd->dfs_region);
+ 	print_rd_rules(rd);
+@@ -2290,6 +2375,18 @@ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ }
+ #endif /* CONFIG_HOTPLUG */
  
++void wiphy_regulatory_register(struct wiphy *wiphy)
++{
++	assert_cfg80211_lock();
++
++	mutex_lock(&reg_mutex);
++
++	if (!reg_dev_ignore_cell_hint(wiphy))
++		reg_num_devs_support_basehint++;
++
++	mutex_unlock(&reg_mutex);
++}
++
+ /* Caller must hold cfg80211_mutex */
+ void reg_device_remove(struct wiphy *wiphy)
+ {
+@@ -2299,6 +2396,9 @@ void reg_device_remove(struct wiphy *wiphy)
+ 
+ 	mutex_lock(&reg_mutex);
+ 
++	if (!reg_dev_ignore_cell_hint(wiphy))
++		reg_num_devs_support_basehint--;
++
+ 	kfree(wiphy->regd);
+ 
+ 	if (last_request)
+@@ -2364,7 +2464,8 @@ int __init regulatory_init(void)
+ 	 * as a user hint.
+ 	 */
+ 	if (!is_world_regdom(ieee80211_regdom))
+-		regulatory_hint_user(ieee80211_regdom);
++		regulatory_hint_user(ieee80211_regdom,
++				     NL80211_USER_REG_HINT_USER);
+ 
+ 	return 0;
+ }
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index e2aaaf5..519492f 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -22,9 +22,11 @@ bool is_world_regdom(const char *alpha2);
+ bool reg_is_valid_request(const char *alpha2);
+ bool reg_supported_dfs_region(u8 dfs_region);
+ 
+-int regulatory_hint_user(const char *alpha2);
++int regulatory_hint_user(const char *alpha2,
++			 enum nl80211_user_reg_hint_type user_reg_hint_type);
+ 
+ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env);
++void wiphy_regulatory_register(struct wiphy *wiphy);
+ void reg_device_remove(struct wiphy *wiphy);
+ 
+ int __init regulatory_init(void);
+@@ -33,6 +35,7 @@ void regulatory_exit(void);
+ int set_regdom(const struct ieee80211_regdomain *rd);
+ 
+ void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
++bool reg_last_request_cell_base(void);
+ 
+ /**
+  * regulatory_hint_found_beacon - hints a beacon was found on a channel
 -- 
-1.7.11.2
+1.7.10.rc1.22.gf5241
 
