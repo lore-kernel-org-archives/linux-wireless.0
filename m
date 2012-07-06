@@ -1,74 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:57128 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755991Ab2GYK50 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49741 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab2GFTsa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 06:57:26 -0400
-Received: by obbuo13 with SMTP id uo13so909396obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 03:57:25 -0700 (PDT)
+	Fri, 6 Jul 2012 15:48:30 -0400
+Date: Fri, 6 Jul 2012 15:35:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@venema.h4ckr.net,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	vadivel@qca.qualcomm.com, rhu@qca.qualcomm.com
+Subject: Re: [PATCH v3 00/10] Add support for WOW in ath9k
+Message-ID: <20120706193523.GB1879@tuxdriver.com> (sfid-20120706_214835_140785_F49F5F0E)
+References: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1343140469.4415.36.camel@jlt3.sipsolutions.net>
-References: <1342703465-26703-1-git-send-email-eliad@wizery.com>
-	<1343140469.4415.36.camel@jlt3.sipsolutions.net>
-Date: Wed, 25 Jul 2012 13:57:25 +0300
-Message-ID: <CAB3XZEc2Z20v2txO_B2H7iZXWsx+SWU_2YtCuRfdE6y7+ktGnA@mail.gmail.com> (sfid-20120725_125730_046252_68064F5E)
-Subject: Re: [RFC] mac80211: add PS flag to bss_conf
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1340633579-7514-1-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 24, 2012 at 5:34 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-07-19 at 16:11 +0300, Eliad Peller wrote:
->> Currently, ps mode is indicated per device (rather than
->> per interface), which doesn't make a lot of sense.
->>
->> Moreover, there are subtle bugs caused by the inability
->> to indicate ps change along with other changes
->> (e.g. when the AP deauth us, we'd like to indicate
->> CHANGED_PS | CHANGED_ASSOC, as changing PS before
->> notifying about disassociation will result in null-packets
->> being sent (if IEEE80211_HW_SUPPORTS_DYNAMIC_PS) while
->> the sta is already disconnected.)
->>
->> Keep the current per-device notifications, and add
->> additional per-vif notifications. In order to keep it
->> simple, these notifications are NOT called due to
->> (temporary) dynamic_ps/offchannel operations.
->
-> So I think if we do this, it would make sense to not do it in recalc_ps,
-> but like you did in disassoc:
->
->> @@ -1368,6 +1388,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->>       if (local->hw.conf.flags & IEEE80211_CONF_PS) {
->>               local->hw.conf.flags &= ~IEEE80211_CONF_PS;
->>               ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
->> +             sdata->vif.bss_conf.ps = false;
->> +             changed |= BSS_CHANGED_PS;
->>       }
->>       local->ps_sdata = NULL;
->
-> set it directly in the relevant code.
->
->
-> However, I'm not sure that we really should toggle it with association?
-> For the original CONF_PS semantics where mac80211 actually woke up for
-> dynamic PS etc. this made sense, but for smarter devices I think the PS
-> flag could be solely mirroring the combination of
->  a) broken AP => no PS
->  b) user enable/disable
->
-ok, i think i got your point.
+Is there going to be a repost of this series?  It looked like Sujith
+had a number of concerns.
 
-> even when not associated?
+On Mon, Jun 25, 2012 at 07:42:49PM +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> 
+> Add support for hardware WoW in ath9k. Magic-packet,
+> beacon loss triggers, deauth/disassoc patterns
+> (a special case of user pattern) are tested with 
+> AR9485. User pattern needs a bit of investigation
+> on parsing to appropriate 802.11 format.
+> we will do more rigorous testing and address bugs.
+> Also we will quickly validate with chipsets like
+> AR9462, AR9280, AR9285, AR9287 for any bugs.
+> 
+> Thanks a lot to Vadivel for providing me the hardware and
+> inputs to test. Thanks to Rajkumar, Russell for
+> their invaluable help. Thanks to Aeolous, Senthil and
+> Sujith, Raja. Thanks a lot to Luis for providing the complete
+> frame work for WoW in his initial wow patches.
+> 
+> Mohammed Shafi Shajakhan (10):
+>   ath9k_hw: Add register definitions for WoW support
+>   ath9k: Add definitions and structures to support WoW
+>   ath9k_hw: Add WoW hardware capability flags
+>   ath9k_hw: advertise WoW support for capable chipsets
+>   ath9k: advertise supported WoW flags to upper layer
+>   ath9k_hw: INI changes for WoW for AR9002 chipsets
+>   ath9k_hw: Add hardware code for WoW
+>   ath: Add Wake-on-Wireless debug mask
+>   ath9k: Add WoW related mac80211 callbacks
+>   ath9k: do not disable hardware while wow is enabled
+> 
+>  drivers/net/wireless/ath/ath.h                   |    2 +
+>  drivers/net/wireless/ath/ath9k/Makefile          |    1 +
+>  drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +
+>  drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 +
+>  drivers/net/wireless/ath/ath9k/ath9k.h           |   28 ++
+>  drivers/net/wireless/ath/ath9k/hw.c              |    8 +
+>  drivers/net/wireless/ath/ath9k/hw.h              |   68 +++
+>  drivers/net/wireless/ath/ath9k/init.c            |   17 +
+>  drivers/net/wireless/ath/ath9k/main.c            |  390 +++++++++++++++
+>  drivers/net/wireless/ath/ath9k/pci.c             |    3 +
+>  drivers/net/wireless/ath/ath9k/reg.h             |  145 ++++++-
+>  drivers/net/wireless/ath/ath9k/wow.c             |  560 ++++++++++++++++++++++
+>  12 files changed, 1240 insertions(+), 1 deletions(-)
+>  create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
+> 
+> 
 
-we actually check for authorization, so i think it does make some
-sense to leave this check.
-
-thanks for the review.
-i'll apply your comments and send it as a patch.
-
-Eliad.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
