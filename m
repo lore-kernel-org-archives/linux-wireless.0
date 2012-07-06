@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:42196 "EHLO ebb06.tieto.com"
+Received: from mga01.intel.com ([192.55.52.88]:29557 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751177Ab2GCMrr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 08:47:47 -0400
-From: <Piotr.Nakraszewicz@tieto.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <filip.matusiak@tieto.com>, <mcgrof@gmail.com>,
-	<pstew@chromium.org>
-Date: Tue, 3 Jul 2012 15:47:44 +0300
-Subject: wlan automated tests
-Message-ID: <E50901D4F2CF69428D43141B7C85867929E154AE7B@EXMB03.eu.tieto.com> (sfid-20120703_144755_333640_EC1CCA88)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1755616Ab2GFT7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 15:59:45 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 18/33] NFC: Update LLCP socket target index when getting a connection
+Date: Fri,  6 Jul 2012 22:09:38 +0200
+Message-Id: <1341605393-32056-19-git-send-email-sameo@linux.intel.com> (sfid-20120706_220532_934337_D3CE3534)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Getting a valid CONNECT means we have a valid target index.
 
-What is the current status of wlan automated tests?
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/llcp/llcp.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-I found 3 started projects:
-
-1. wifi-test:
-http://wireless.kernel.org/en/developers/Testing/wifi-test
-But it looks dead. Last commit is from 2010.
-
-2. LTP:
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/19759
-http://thread.gmane.org/gmane.linux.ltp/7884
-
-The last comment I found was from 2009 from Luis R. Rodriguez:
-"The GSoC student fell off from the face of the earth without even notice so the project was never finished. The project is up for grabs for anyone now to implement."
-
-Is that still valid?
-
-3. Chromium Wifi tests:
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/57576
-
-The problem is they are designed to test chromium OS so it looks like they can't be used for purpose described here:
-https://wiki.linuxfoundation.org/en/Google_Summer_of_Code_2009#Automation_of_testing_using_mac80211_hwsim_and_Orbit
-"Ideally we'd like to see automated tests run weekly to ensure there are no regressions for basic functionality. To test mac80211 and cfg80211 we can use and advance mac80211_hwsim as required without the need to actually use hardware."
-
-
-I'm planning to use and extend one of these projects and I'd like to know which one is preferable.
-Any hints?
-
-Pozdrawiam / Best regards,
-Piotr
-
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 5d503ee..eee4b92 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -677,6 +677,7 @@ static void nfc_llcp_recv_connect(struct nfc_llcp_local *local,
+ 	new_sock->nfc_protocol = sock->nfc_protocol;
+ 	new_sock->ssap = sock->ssap;
+ 	new_sock->dsap = ssap;
++	new_sock->target_idx = local->target_idx;
+ 	new_sock->parent = parent;
+ 
+ 	nfc_llcp_parse_connection_tlv(new_sock, &skb->data[LLCP_HEADER_SIZE],
+-- 
+1.7.10
 
