@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:36720 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933402Ab2GEXSW (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46524 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756005Ab2GFVpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 19:18:22 -0400
+	Fri, 6 Jul 2012 17:45:19 -0400
+Message-ID: <4FF75C6C.9030108@candelatech.com> (sfid-20120706_234524_437152_32195FFE)
+Date: Fri, 06 Jul 2012 14:45:16 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20120705230842.GA26510@kroah.com>
-References: <20468.35601.132955.802881@gargle.gargle.HOWL> <7A9ADFFA56024346AAE90B6BABC3BD15DD6DEB@NASANEXD02B.na.qualcomm.com>
- <20469.13787.767293.602337@gargle.gargle.HOWL> <20120705190801.GB11228@tux> <20120705230842.GA26510@kroah.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 5 Jul 2012 16:18:01 -0700
-Message-ID: <CAB=NE6WxsyKJQiX6ar_tyFfiwnLZEQVNwnL336XU-VOzwQxZ6Q@mail.gmail.com> (sfid-20120706_011838_744818_91D4F2F6)
-Subject: Re: 3.5 stable compat-wireless
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"Balasubramanian, Senthil Kumar" <senthilb@qca.qualcomm.com>,
-	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
-	qca-linux-team <qca-linux-team@qualcomm.com>,
-	Imran Ansari <imran@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sfr@canb.auug.org.au, hauke@hauke-m.de, ozancag@gmail.com,
-	pstew@google.com, warthog9@kernel.org, jrnieder@gmail.com,
-	ben@decadent.org.uk, akpm@linux-foundation.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/3] mac80211 scanning restructuring
+References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>  <4FF758DB.5010206@candelatech.com> <1341610508.16893.26.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1341610508.16893.26.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 5, 2012 at 4:08 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Thu, Jul 05, 2012 at 12:08:01PM -0700, Luis R. Rodriguez wrote:
->>   * linux-crap.git: based on linux-next-pending.git and allows
->>     contributors to send pull requests of crap that is not *ready*
->>     to be sent properly upstream. Examples would be code we know
->>     we simply already know that is not dealing with proper architecture
->>     or style / etc. The drivers/staging/ allows vendors to post full
->>     crap drivers, this would enable us to merge crap patches but that
->>     some vendors might need / want.
+On 07/06/2012 02:35 PM, Johannes Berg wrote:
+> On Fri, 2012-07-06 at 14:30 -0700, Ben Greear wrote:
+>> On 07/06/2012 02:05 PM, Johannes Berg wrote:
+>>> I decided that with multi-channel coming and thus us using more
+>>> virtual interfaces, the scanning code was going to be the first
+>>> victim of some factoring ;-)
+>>>
+>>> Please review. The only thing that isn't quite clear to me is
+>>> whether or not I can really remove the channel == oper_channel
+>>> check, but it's only applied to probe resp/beacon frames so it
+>>> seems a bit pointless to try to keep it?
+>>
+>> For what it's worth, I don't see any problems with the patches.
 >
-> I really doubt this will work, look at the patches in some distros for
-> examples of why.  I'm having a hard enough time with the LTSI project in
-> conveying that "Yes, you can send patches to me for merging into the
-> LSTI kernel, you still have to justify it, and work to get the patches
-> then upstream, I'm not going to do your work for you."
+> :-)
+> I think you should see much fewer calls to cfg80211 with this when
+> beacons are received, when you have many virtual interfaces, but I'm not
+> sure how you'd see that unless you carefully measure CPU utilization.
 >
-> Having a random tree where these patches show up help no one except the
-> original developer so that they can fire-and-forget, which is not what
-> you want, unless you wish to take on the "get it cleaned up and merged
-> upstream" task yourself, which you really don't want to.
+>> Another enhancement I was thinking about would be to allow
+>> vifs to piggy-back on other vif's scans.  Instead of
+>> returning EBUSY when another vif is already scanning, just
+>> register to receive the scanning vif's results when it finishes.
+>
+> Hmm, yes, technically that's possible. However, you'd have to verify
+> that it used exactly the same scan parameters, which seems like a lot of
+> overhead? Given that we give you the scan parameters in the nl80211
+> event when the scan finishes (at least I think we do), you could even do
+> this optimisation in userspace, when -EBUSY is returned?
 
-Ah but that's the trick with the metrics. Kind of like with kernel
-contribution statistics we should be able to show *who* is working
-with *crap*, and see if the delta is reducing. Without this -- such
-entities are just keeping the *crap* to themselves anyway, and in fact
-given that there is no outlet they work on private outlets. I'd like
-to not do the work for them but -- to enable that crap to become
-public and for me to prod on with a stick to shrink crap but to also
-understand it. The other thing about the technique here is that each
-release is annotated to reflect *where* delta is pulled from.
-Distributions / system integrators can then cringe if they are asked
-to use releases with crap delta, or they may very well be OK with it.
+I was thinking to only enable the wait-for-peer-scan logic if
+peer and requested scans are 'normal', or some simple subset of
+mostly-normal that is easy to check for.  It would still always
+be valid to return EBUSY if you cannot obviously share scan results.
 
-Something similar had happened with hostapd -- if we have no outlet
-for "crap" then the only option is to not make it public. This doesn't
-get us anywhere. As much as I'd love assume we can live in a world
-where no delta is required experience so far is showing there are some
-*reasonable* justifications for some of these deltas. But without
-enabling them -- we can't study them, or prod to correct them.
+Main issue that I see is that if one interface is constantly scanning
+in wpa_supplicant because it can't find what it's looking for,
+you can often get a failure if you manually run 'iw scan'
+on the command line, and that is exactly when you often DO want
+to see some manual scan results :)
 
-  Luis
+I've already optimized wpa_supplicant to share scans in user-space
+some time back (and code has been upstream for a while), and that is
+a big help..but doesn't help non-supplicant programs.
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
+
+
