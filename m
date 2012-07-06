@@ -1,301 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17161 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039Ab2GQLrm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49323 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757763Ab2GFSs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:47:42 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Fri, 6 Jul 2012 14:48:28 -0400
+Date: Fri, 6 Jul 2012 14:35:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 00/18] brcmsmac: update to get SoCs working
+Message-ID: <20120706183547.GC2353@tuxdriver.com> (sfid-20120706_204832_841469_2FE9FCA5)
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+ <4FF29B89.3040300@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20485.20622.413840.858895@gargle.gargle.HOWL> (sfid-20120717_134745_626440_50DBAC83)
-Date: Tue, 17 Jul 2012 17:16:22 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/12] ath9k: Cleanup the beacon tasklet
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FF29B89.3040300@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused variables, use a helper function to choose
-the slot and reset beaconing status at one place.
+On Tue, Jul 03, 2012 at 09:13:13AM +0200, Arend van Spriel wrote:
+> On 06/30/2012 03:16 PM, Hauke Mehrtens wrote:
+> > This series contains some patches needed to get brcmsmac working on 
+> > SoCs like the BCM4718.
+> > The last part which adds core rev 17 (used in the BCM4718) to the list 
+> > of supported cores is missing, because we do not have a firmware 
+> > supporting this core yet, but I extended the b43 fwcutter to generate 
+> > a firmware which brcmsmac accepts. With this firmware my BCM4718 
+> > works. I would appreciate an official firmware release from Broadcom 
+> > adding support for this core.
+> > The final patch adding support for the BCM43224 is missing because 
+> > the PCIe host controller on the BCM4718 still causes problems and I 
+> > have to add some more read after writes into the code, for now it uses 
+> > an ugly hack and sometimes the problems still occur.
+> > 
+> > The wifi is not stable on the BCM4718, I had no problems connecting to 
+> > my ath9k driven access point but I have problems connecting to my 
+> > BCM47186 based AP running the vendor firmware with the Broadcom 
+> > proprietary driver.
+> > I get 12MBit/s max with the BCM4718 connected to ath9k on the 2.4 GHz 
+> > band and 35 MBit/s max with the BCM43224 on the 5Ghz band connected to 
+> > a Broadcom based AP running the proprietary driver. This seams to be 
+> > CPU bounced as I have over 50% sirq in both cases.
+> > 
+> > brcmsmac starts on the BCM47186 (id: 0x5357), but it does not tx or rx 
+> > any traffic.
+> > 
+> > One patch extends the xmtfifo_sz array for more core revs, I just toke 
+> > the values from the other phy-n cores and hope this is correct.
+> > 
+> > These patches are depending on: "[PATCH v2 0/9] bcma misc updates" and 
+> > based on wireless-testing.
+> > 
+> > I will send a patch for bcma which converts the warning message when it 
+> > found a PCI and not a PCIe card into a WARN.
+> > 
+> > v2:
+> >   - when something depends on a patch for bcma, which is not in 
+> >     wireless-testing yet, I add that to the commit comment.
+> >   - removed changes for BCM43421 and BCM6362 as I do not have a device
+> >     to test this.
+> >   - xmtfifo_sz now starts at core rev 17 and contains the correct values 
+> >     for core rev 28
+> >   - make brcms_c_chipmatch() also work for SoCs
+> >   - typos and format changes
+> > 
+> 
+> I have acked all patches, but would like to do some sanity testing today.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |   3 +-
- drivers/net/wireless/ath/ath9k/beacon.c | 126 ++++++++++++++++----------------
- drivers/net/wireless/ath/ath9k/init.c   |   2 +-
- 3 files changed, 63 insertions(+), 68 deletions(-)
+Have you had a chance to do this testing?  Are you OK with this series?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7e4839a..bb86e1b 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -398,7 +398,6 @@ struct ath_beacon {
- 
- 	u32 beaconq;
- 	u32 bmisscnt;
--	u32 ast_be_xmit;
- 	u32 bc_tstamp;
- 	struct ieee80211_vif *bslot[ATH_BCBUF];
- 	int slottime;
-@@ -412,7 +411,7 @@ struct ath_beacon {
- 	bool tx_last;
- };
- 
--void ath_beacon_tasklet(unsigned long data);
-+void ath9k_beacon_tasklet(unsigned long data);
- bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
- 			 u32 changed);
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index f2a2131..006ae99d 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -68,7 +68,7 @@ static void ath9k_beaconq_config(struct ath_softc *sc)
-  *  up rate codes, and channel flags. Beacons are always sent out at the
-  *  lowest rate, and are not retried.
- */
--static void ath_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
-+static void ath9k_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
- 			     struct ath_buf *bf, int rateidx)
- {
- 	struct sk_buff *skb = bf->bf_mpdu;
-@@ -79,8 +79,6 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
- 	u8 chainmask = ah->txchainmask;
- 	u8 rate = 0;
- 
--	ath9k_reset_beacon_status(sc);
--
- 	sband = &sc->sbands[common->hw->conf.channel->band];
- 	rate = sband->bitrates[rateidx].hw_value;
- 	if (vif->bss_conf.use_short_preamble)
-@@ -109,7 +107,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
- 	ath9k_hw_set_txdesc(ah, bf->bf_desc, &info);
- }
- 
--static void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb)
-+static void ath9k_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -126,8 +124,8 @@ static void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- }
- 
--static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
--					   struct ieee80211_vif *vif)
-+static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
-+					     struct ieee80211_vif *vif)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -136,15 +134,12 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 	struct sk_buff *skb;
- 	struct ath_txq *cabq = sc->beacon.cabq;
- 	struct ieee80211_tx_info *info;
-+	struct ieee80211_mgmt *mgmt_hdr;
- 	int cabq_depth;
- 
- 	if (avp->av_bcbuf == NULL)
- 		return NULL;
- 
--	ath9k_reset_beacon_status(sc);
--
--	/* Release the old beacon first */
--
- 	bf = avp->av_bcbuf;
- 	skb = bf->bf_mpdu;
- 	if (skb) {
-@@ -154,14 +149,14 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 		bf->bf_buf_addr = 0;
- 	}
- 
--	/* Get a new beacon from mac80211 */
--
- 	skb = ieee80211_beacon_get(hw, vif);
--	bf->bf_mpdu = skb;
- 	if (skb == NULL)
- 		return NULL;
--	((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp =
--		avp->tsf_adjust;
-+
-+	bf->bf_mpdu = skb;
-+
-+	mgmt_hdr = (struct ieee80211_mgmt *)skb->data;
-+	mgmt_hdr->u.beacon.timestamp = avp->tsf_adjust;
- 
- 	info = IEEE80211_SKB_CB(skb);
- 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-@@ -207,10 +202,10 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	ath_beacon_setup(sc, vif, bf, info->control.rates[0].idx);
-+	ath9k_beacon_setup(sc, vif, bf, info->control.rates[0].idx);
- 
- 	while (skb) {
--		ath_tx_cabq(hw, skb);
-+		ath9k_tx_cabq(hw, skb);
- 		skb = ieee80211_get_buffered_bc(hw, vif);
- 	}
- 
-@@ -268,6 +263,33 @@ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	tasklet_enable(&sc->bcon_tasklet);
- }
- 
-+static int ath9k_beacon_choose_slot(struct ath_softc *sc)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
-+	u16 intval;
-+	u32 tsftu;
-+	u64 tsf;
-+	int slot;
-+
-+	if (sc->sc_ah->opmode != NL80211_IFTYPE_AP) {
-+		ath_dbg(common, BEACON, "slot 0, tsf: %llu\n",
-+			ath9k_hw_gettsf64(sc->sc_ah));
-+		return 0;
-+	}
-+
-+	intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
-+	tsf = ath9k_hw_gettsf64(sc->sc_ah);
-+	tsf += TU_TO_USEC(sc->sc_ah->config.sw_beacon_response_time);
-+	tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
-+	slot = (tsftu % (intval * ATH_BCBUF)) / intval;
-+
-+	ath_dbg(common, BEACON, "slot: %d tsf: %llu tsftu: %u\n",
-+		slot, tsf, tsftu / ATH_BCBUF);
-+
-+	return slot;
-+}
-+
- void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -285,17 +307,15 @@ void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
- 		(unsigned long long)tsfadjust, avp->av_bslot);
- }
- 
--void ath_beacon_tasklet(unsigned long data)
-+void ath9k_beacon_tasklet(unsigned long data)
- {
- 	struct ath_softc *sc = (struct ath_softc *)data;
--	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_buf *bf = NULL;
- 	struct ieee80211_vif *vif;
- 	bool edma = !!(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA);
- 	int slot;
--	u32 bfaddr, bc = 0;
- 
- 	if (work_pending(&sc->hw_reset_work)) {
- 		ath_dbg(common, RESET,
-@@ -331,48 +351,19 @@ void ath_beacon_tasklet(unsigned long data)
- 		return;
- 	}
- 
--	/*
--	 * Generate beacon frames. we are sending frames
--	 * staggered so calculate the slot for this frame based
--	 * on the tsf to safeguard against missing an swba.
--	 */
--
-+	slot = ath9k_beacon_choose_slot(sc);
-+	vif = sc->beacon.bslot[slot];
- 
--	if (ah->opmode == NL80211_IFTYPE_AP) {
--		u16 intval;
--		u32 tsftu;
--		u64 tsf;
-+	if (!vif || !vif->bss_conf.enable_beacon)
-+		return;
- 
--		intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
--		tsf = ath9k_hw_gettsf64(ah);
--		tsf += TU_TO_USEC(ah->config.sw_beacon_response_time);
--		tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
--		slot = (tsftu % (intval * ATH_BCBUF)) / intval;
--		vif = sc->beacon.bslot[slot];
-+	bf = ath9k_beacon_generate(sc->hw, vif);
-+	WARN_ON(!bf);
- 
--		ath_dbg(common, BEACON,
--			"slot %d [tsf %llu tsftu %u intval %u] vif %p\n",
--			slot, tsf, tsftu / ATH_BCBUF, intval, vif);
--	} else {
--		slot = 0;
--		vif = sc->beacon.bslot[slot];
--	}
--
--
--	bfaddr = 0;
--	if (vif) {
--		bf = ath_beacon_generate(sc->hw, vif);
--		if (bf != NULL) {
--			bfaddr = bf->bf_daddr;
--			bc = 1;
--		}
--
--		if (sc->beacon.bmisscnt != 0) {
--			ath_dbg(common, BSTUCK,
--				"resume beacon xmit after %u misses\n",
--				sc->beacon.bmisscnt);
--			sc->beacon.bmisscnt = 0;
--		}
-+	if (sc->beacon.bmisscnt != 0) {
-+		ath_dbg(common, BSTUCK, "resume beacon xmit after %u misses\n",
-+			sc->beacon.bmisscnt);
-+		sc->beacon.bmisscnt = 0;
- 	}
- 
- 	/*
-@@ -392,21 +383,26 @@ void ath_beacon_tasklet(unsigned long data)
- 	 *     set to ATH_BCBUF so this check is a noop.
- 	 */
- 	if (sc->beacon.updateslot == UPDATE) {
--		sc->beacon.updateslot = COMMIT; /* commit next beacon */
-+		sc->beacon.updateslot = COMMIT;
- 		sc->beacon.slotupdate = slot;
--	} else if (sc->beacon.updateslot == COMMIT && sc->beacon.slotupdate == slot) {
-+	} else if (sc->beacon.updateslot == COMMIT &&
-+		   sc->beacon.slotupdate == slot) {
- 		ah->slottime = sc->beacon.slottime;
- 		ath9k_hw_init_global_settings(ah);
- 		sc->beacon.updateslot = OK;
- 	}
--	if (bfaddr != 0) {
-+
-+	if (bf) {
-+		ath9k_reset_beacon_status(sc);
-+
-+		ath_dbg(common, BEACON,
-+			"Transmitting beacon for slot: %d\n", slot);
-+
- 		/* NB: cabq traffic should already be queued and primed */
--		ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bfaddr);
-+		ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bf->bf_daddr);
- 
- 		if (!edma)
- 			ath9k_hw_txstart(ah, sc->beacon.beaconq);
--
--		sc->beacon.ast_be_xmit += bc;     /* XXX per-vif? */
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index af95d18..41b2f3e 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -558,7 +558,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	spin_lock_init(&sc->debug.samp_lock);
- #endif
- 	tasklet_init(&sc->intr_tq, ath9k_tasklet, (unsigned long)sc);
--	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
-+	tasklet_init(&sc->bcon_tasklet, ath9k_beacon_tasklet,
- 		     (unsigned long)sc);
- 
- 	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+John
 -- 
-1.7.11.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
