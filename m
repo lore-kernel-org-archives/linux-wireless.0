@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:59077 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752775Ab2G1Pds (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47875 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081Ab2GFWWF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jul 2012 11:33:48 -0400
-Message-ID: <5014065B.7070909@net.t-labs.tu-berlin.de> (sfid-20120728_173355_744247_B026306E)
-Date: Sat, 28 Jul 2012 17:33:47 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+	Fri, 6 Jul 2012 18:22:05 -0400
+Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
+	<arend@broadcom.com>, <henry@logout.com>,
+	<senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+Subject: [PATCH v3 2/2] ath9k: make CONFIG_ATH9K_DFS_CERTIFIED depend on CFG80211_CERTIFICATION_ONUS
+Date: Fri, 6 Jul 2012 15:21:52 -0700
+Message-ID: <1341613312-11971-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120707_002209_415740_0D83080D)
+In-Reply-To: <1341613312-11971-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1341613312-11971-1-git-send-email-rodrigue@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 3/4] ath5k: Preserve tx power level requested from above
- on phy_init
-References: <1343485971-31360-1-git-send-email-mickflemm@gmail.com> <1343485971-31360-3-git-send-email-mickflemm@gmail.com> <501404BE.7040606@net.t-labs.tu-berlin.de>
-In-Reply-To: <501404BE.7040606@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let my correct myself
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-Thomas Huehn schrieb:
+Turns out every most standard Linux distributions enable
+CONFIG_EXPERT, so use the shiny new CFG80211_CERTIFICATION_ONUS
+which is meant by design to not be enabled by all Linux
+distributions.
 
-> Hi Nick,
-> 
-> Nick Kossifidis schrieb:
-> 
->> By using cur_pwr on phy_init we re-use the power level previously set by the
->> driver, not the one we got from above.
->>
->> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
->>  1 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
->> index 84a9aaf..27ca993 100644
->> --- a/drivers/net/wireless/ath/ath5k/phy.c
->> +++ b/drivers/net/wireless/ath/ath5k/phy.c
->> @@ -3802,8 +3802,8 @@ ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
->>  	 * RF buffer settings on 5211/5212+ so that we
->>  	 * properly set curve indices.
->>  	 */
->> -	ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
->> -			ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
->> +	ret = ath5k_hw_txpower(ah, channel, ah->power_level ?
->> +			ah->power_level * 2 : AR5K_TUNE_MAX_TXPOWER);
->>  	if (ret)
->>  		return ret;
->>  
-> 
-> 
-> I would suggest to initialise the power_level as AR5K_TUNE_MAX_TXPOWER
-> in base.c funktion ath5k_init(struct ieee80211_hw *hw)
-> 
->       /* init tx_power setting to maximum */
->       ah->ah_txpower.txp_user_pwr = AR5K_TUNE_MAX_TXPOWER;
-> 
-> that would simplify the readability form above into:
-> 	ret = ath5k_hw_txpower(ah, channel, ah->power_level)
-> 
-> What do you think ?
-> 
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index e507e78..c7aa664 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -64,7 +64,7 @@ config ATH9K_DEBUGFS
+ 
+ config ATH9K_DFS_CERTIFIED
+ 	bool "Atheros DFS support for certified platforms"
+-	depends on ATH9K && EXPERT
++	depends on ATH9K && CFG80211_CERTIFICATION_ONUS
+ 	default n
+ 	---help---
+ 	  This option enables DFS support for initiating radiation on
+-- 
+1.7.10.rc1.22.gf5241
 
-correct version i thought of should be:
-
-	/* init tx_power setting to maximum */
-	ah->ah_txpower.txp_user_pwr = AR5K_TUNE_MAX_TXPOWER / 2;
-
-that would simplify the readability form above into:
-ret = ath5k_hw_txpower(ah, channel, ah->power_level * 2)
-
-
-Greetings Thomas
