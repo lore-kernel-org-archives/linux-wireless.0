@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25736 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:27129 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753161Ab2GBI1F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 04:27:05 -0400
-Date: Mon, 2 Jul 2012 10:26:55 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [RFT] iwlegacy: don't mess up the SCD when removing a key
-Message-ID: <20120702082653.GA2479@redhat.com> (sfid-20120702_102710_329519_0E161473)
-References: <1341148023-17673-1-git-send-email-emmanuel.grumbach@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1341148023-17673-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1751994Ab2GFT7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 15:59:12 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 09/33] NFC: Implement HCI driver or internal error management
+Date: Fri,  6 Jul 2012 22:09:29 +0200
+Message-Id: <1341605393-32056-10-git-send-email-sameo@linux.intel.com> (sfid-20120706_215916_219699_C9D84835)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 01, 2012 at 04:07:03PM +0300, Emmanuel Grumbach wrote:
-> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-> index d24eaf8..9981f09 100644
-> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-> @@ -3420,7 +3420,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
->  	memset(&il->stations[sta_id].sta.key, 0, sizeof(struct il4965_keyinfo));
->  	il->stations[sta_id].sta.key.key_flags =
->  	    STA_KEY_FLG_NO_ENC | STA_KEY_FLG_INVALID;
-> -	il->stations[sta_id].sta.key.key_offset = WEP_INVALID_OFFSET;
-> +	il->stations[sta_id].sta.key.key_offset = keyconf->hw_key_idx;
+From: Eric Lapuyade <eric.lapuyade@intel.com>
 
-Thanks for the patch. Just small issue with it. We use key_offset to
-check if the key is invalid on the below code:
+If there is an ongoing HCI command executing, it will be completed,
+thereby pushing the error up to the core. Otherwise, HCI will directly
+notify the core with the error.
 
-        if (il->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET) {
-                IL_WARN("Removing wrong key %d 0x%x\n", keyconf->keyidx,
-                        key_flags);
-                spin_unlock_irqrestore(&il->sta_lock, flags);
-                return 0;
-        }
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/hci/core.c |   15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-Since you changed the key_offset, above check should be changed as well,
-probably using STA_KEY_FLG_INVALID flag.
-
-Stanislaw 
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index 9a1a12f..e6b2df3 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -736,10 +736,17 @@ EXPORT_SYMBOL(nfc_hci_get_clientdata);
  
+ static void nfc_hci_failure(struct nfc_hci_dev *hdev, int err)
+ {
+-	/*
+-	 * TODO: lower layer has permanent failure.
+-	 * complete potential HCI command or send an empty tag discovered event
+-	 */
++	mutex_lock(&hdev->msg_tx_mutex);
++
++	if (hdev->cmd_pending_msg == NULL) {
++		nfc_driver_failure(hdev->ndev, err);
++		goto exit;
++	}
++
++	__nfc_hci_cmd_completion(hdev, err, NULL);
++
++exit:
++	mutex_unlock(&hdev->msg_tx_mutex);
+ }
+ 
+ void nfc_hci_driver_failure(struct nfc_hci_dev *hdev, int err)
+-- 
+1.7.10
+
