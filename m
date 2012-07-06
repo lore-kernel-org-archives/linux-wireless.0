@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34294 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753305Ab2GINFw (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4237 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440Ab2GFOjm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 09:05:52 -0400
-Message-ID: <1341839146.4455.40.camel@jlt3.sipsolutions.net> (sfid-20120709_150558_255063_6140ED53)
-Subject: Re: [PATCHv2] nl/cfg/mac80211: add set_mcast_rate API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 09 Jul 2012 15:05:46 +0200
-In-Reply-To: <1341791503-12542-1-git-send-email-ordex@autistici.org>
-References: <1341739885-15385-1-git-send-email-ordex@autistici.org>
-	 <1341791503-12542-1-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 6 Jul 2012 10:39:42 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v2 2/2] ath9k: Stop the BTCOEX timers before disabling BTCOEX
+Date: Fri, 6 Jul 2012 20:09:32 +0530
+Message-ID: <1341585572-10027-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120706_163945_514943_3BA9AF93)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-09 at 01:51 +0200, Antonio Quartulli wrote:
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> +static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
-> +				    int mcast_rate[IEEE80211_NUM_BANDS])
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	u32 basic_rates = sdata->vif.bss_conf.basic_rates;
-> +	int i;
-> +
-> +	/* check if the mcast_rates are also in basic_rates */
-> +	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-> +		if (!(basic_rates & BIT(mcast_rate[i] - 1)))
-> +			return -EINVAL;
+Its safe to stop the BTCOEX timers 'period_timer' and
+'no_stomp_timer' before disabling BTCOEX. These timers
+can call ath9k_hw_btcoex_enable (or) change the BT
+stomp type if they seem to be running after we had
+called ath9k_hw_btcoex_disable, which is obviously
+not correct.
 
-So this is kinda broken. In fact, the whole basic rate thing is broken
-it seems.
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    2 +-
+ drivers/net/wireless/ath/ath9k/mci.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-The mcast rate is per band, as it should, since you could find the same
-BSSID on a 5 GHz channel and then jump to that channel if the TSF is
-higher...
-
-However, the basic rates aren't, which is wrong: the basic rates bitmap
-could be 1,2,6,9. If the driver is like most drivers, that translates to
-a bitmap of 0x33. But 0x33, for most drivers, if applied to the 5 GHz
-rates means 6,9,24,36. See why this is broken? A rate bitmap can't be
-siwtched around between bands and still make any sense.
-
-Oh, also, I'm not sure why you do BIT(... -1), but that's unrelated.
-What kind of value is the mcast rate? A rate index, or a number?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 43557c2..2830cbc 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -377,9 +377,9 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
+ 
+ 	if (ah->btcoex_hw.enabled &&
+ 	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) {
+-		ath9k_hw_btcoex_disable(ah);
+ 		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
+ 			ath9k_btcoex_timer_pause(sc);
++		ath9k_hw_btcoex_disable(ah);
+ 		if (AR_SREV_9462(ah))
+ 			ath_mci_flush_profile(&sc->btcoex.mci);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 64cc782..87acff7 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -174,8 +174,8 @@ skip_tuning:
+ 			btcoex->btcoex_period >>= 1;
+ 	}
+ 
+-	ath9k_hw_btcoex_disable(sc->sc_ah);
+ 	ath9k_btcoex_timer_pause(sc);
++	ath9k_hw_btcoex_disable(sc->sc_ah);
+ 
+ 	if (IS_CHAN_5GHZ(sc->sc_ah->curchan))
+ 		return;
+-- 
+1.7.0.4
 
