@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:37532 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118Ab2GVQvR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50754 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684Ab2GFN0W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jul 2012 12:51:17 -0400
-Received: by wgbfm10 with SMTP id fm10so1852159wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jul 2012 09:51:16 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFT][PATCH 1/3] ssb: update defines
-Date: Sun, 22 Jul 2012 18:51:27 +0200
-Message-Id: <1342975889-32687-2-git-send-email-zajec5@gmail.com> (sfid-20120722_185121_134921_A0180F7B)
-In-Reply-To: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
-References: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 Jul 2012 09:26:22 -0400
+Message-ID: <1341581180.16893.2.camel@jlt3.sipsolutions.net> (sfid-20120706_152626_196582_D096A2EC)
+Subject: Re: [PATCH] mac80211: fix crash with single-queue drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 06 Jul 2012 15:26:20 +0200
+In-Reply-To: <4FF6E50B.4090205@lwfinger.net> (sfid-20120706_151601_313202_4A7FB65B)
+References: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net>
+	 <4FF6E50B.4090205@lwfinger.net> (sfid-20120706_151601_313202_4A7FB65B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2012-07-06 at 08:15 -0500, Larry Finger wrote:
+> On 07/04/2012 05:53 AM, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > Larry (and some others I think) reported that with
+> > single-queue drivers mac80211 crashes when waking
+> > the queues. This happens because we allocate just
+> > a single queue for each virtual interface in case
+> > the driver doesn't have at least 4 queues, but the
+> > code stopping/waking the virtual interface queues
+> > wasn't taking this into account.
+> >
+> > Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> >   net/mac80211/util.c |   12 ++++++++++--
+> >   1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> This patch fixes the problem for drivers that always report a single queue such 
+> as at76c503-usb.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/driver_mipscore.c             |    8 ++++----
- include/linux/ssb/ssb_driver_chipcommon.h |    4 +++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
+Thanks, I'll merge this.
 
-diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
-index 7e2ddc0..f8813f8 100644
---- a/drivers/ssb/driver_mipscore.c
-+++ b/drivers/ssb/driver_mipscore.c
-@@ -192,14 +192,14 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- 
- 	mcore->flash_buswidth = 2;
- 	if (bus->chipco.dev) {
--		mcore->flash_window = 0x1c000000;
--		mcore->flash_window_size = 0x02000000;
-+		mcore->flash_window = SSB_FLASH2;
-+		mcore->flash_window_size = SSB_FLASH2_SZ;
- 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
- 		               & SSB_CHIPCO_CFG_DS16) == 0)
- 			mcore->flash_buswidth = 1;
- 	} else {
--		mcore->flash_window = 0x1fc00000;
--		mcore->flash_window_size = 0x00400000;
-+		mcore->flash_window = SSB_FLASH1;
-+		mcore->flash_window_size = SSB_FLASH1_SZ;
- 	}
- }
- 
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index 1a6b004..c2b02a5 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -504,7 +504,9 @@
- #define SSB_CHIPCO_FLASHCTL_ST_SE	0x02D8		/* Sector Erase */
- #define SSB_CHIPCO_FLASHCTL_ST_BE	0x00C7		/* Bulk Erase */
- #define SSB_CHIPCO_FLASHCTL_ST_DP	0x00B9		/* Deep Power-down */
--#define SSB_CHIPCO_FLASHCTL_ST_RSIG	0x03AB		/* Read Electronic Signature */
-+#define SSB_CHIPCO_FLASHCTL_ST_RES	0x03AB		/* Read Electronic Signature */
-+#define SSB_CHIPCO_FLASHCTL_ST_CSA	0x1000		/* Keep chip select asserted */
-+#define SSB_CHIPCO_FLASHCTL_ST_SSE	0x0220		/* Sub-sector Erase */
- 
- /* Status register bits for ST flashes */
- #define SSB_CHIPCO_FLASHSTA_ST_WIP	0x01		/* Write In Progress */
--- 
-1.7.7
+>  There is still a problem for b43 with open-source firmware 
+> where the number of queues changes from 4 to 1. As that only affects b43, do you 
+> agree that the problem should be fixed there?
+
+Yes, b43 confuses me a bit. We were looking at this a few weeks ago, but
+I couldn't figure out how to solve it.
+
+I think for b43 the solution should be to check if it's proprietary or
+free firmware before registering with mac80211, then to mac80211 it's
+really just either 1 or 4, not changing.
+
+johannes
 
