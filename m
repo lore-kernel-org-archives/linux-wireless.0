@@ -1,63 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42047 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080Ab2GRGz2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 02:55:28 -0400
-Message-ID: <1342594528.5310.5.camel@jlt3.sipsolutions.net> (sfid-20120718_085530_770717_7FC5CC99)
-Subject: Re: [PATCH V2 1/2] {cfg,mac}80211: utility function for calculating
- mandatory rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	javier@cozybit.com, thomas@cozybit.com, devel@lists.open80211s.org
-Date: Wed, 18 Jul 2012 08:55:28 +0200
-In-Reply-To: <1342586570-522-1-git-send-email-ashok@cozybit.com> (sfid-20120718_064259_183994_3D509197)
-References: <1342586570-522-1-git-send-email-ashok@cozybit.com>
-	 (sfid-20120718_064259_183994_3D509197)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:39784 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755814Ab2GFT75 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 15:59:57 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 21/33] NFC: Close listening LLCP sockets when the device is gone
+Date: Fri,  6 Jul 2012 22:09:41 +0200
+Message-Id: <1341605393-32056-22-git-send-email-sameo@linux.intel.com> (sfid-20120706_220536_606046_70A900EE)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-17 at 21:42 -0700, Ashok Nagarajan wrote:
+When the MAC link goes down, we should only keep the bound sockets
+alive. They will be closed by sock_release or when the underlying
+NFC device is moving away.
 
-> + */
-> +
-> +u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/llcp/llcp.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-Please remove the blank line and document the return value.
-
-
-> +u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
-> +			      enum ieee80211_band band)
-
-Passing both the band enum and the sband doesn't make a lot of sense.
-
-> +{
-> +	struct ieee80211_rate *bitrates;
-> +	u32 mandatory_rates = 0;
-> +	enum ieee80211_rate_flags mandatory_flag;
-> +	int i;
-> +
-> +	if (WARN_ON(!sband))
-> +		return 1;
-> +
-> +	bitrates = sband->bitrates;
-> +	if (band == IEEE80211_BAND_5GHZ)
-> +		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
-> +	else {
-> +		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
-> +		for (i = 0; i < sband->n_bitrates; i++)
-> +			if (bitrates[i].bitrate > 110) {
-> +				mandatory_flag =
-> +					IEEE80211_RATE_MANDATORY_G;
-> +				break;
-> +			}
-> +	}
-
-You're not just moving the function but also changing the logic in it,
-it'd be better to do in separate patches I think.
-
-johannes
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 6812b1e..0c8d25e 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -45,7 +45,7 @@ void nfc_llcp_sock_unlink(struct llcp_sock_list *l, struct sock *sk)
+ 	write_unlock(&l->lock);
+ }
+ 
+-static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
++static void nfc_llcp_socket_release(struct nfc_llcp_local *local, bool listen)
+ {
+ 	struct sock *sk;
+ 	struct hlist_node *node, *tmp;
+@@ -78,6 +78,11 @@ static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
+ 
+ 				sock_orphan(accept_sk);
+ 			}
++
++			if (listen == true) {
++				release_sock(sk);
++				continue;
++			}
+ 		}
+ 
+ 		sk->sk_state = LLCP_CLOSED;
+@@ -106,7 +111,7 @@ static void local_release(struct kref *ref)
+ 	local = container_of(ref, struct nfc_llcp_local, ref);
+ 
+ 	list_del(&local->list);
+-	nfc_llcp_socket_release(local);
++	nfc_llcp_socket_release(local, false);
+ 	del_timer_sync(&local->link_timer);
+ 	skb_queue_purge(&local->tx_queue);
+ 	destroy_workqueue(local->tx_wq);
+@@ -991,7 +996,7 @@ void nfc_llcp_mac_is_down(struct nfc_dev *dev)
+ 	nfc_llcp_clear_sdp(local);
+ 
+ 	/* Close and purge all existing sockets */
+-	nfc_llcp_socket_release(local);
++	nfc_llcp_socket_release(local, true);
+ }
+ 
+ void nfc_llcp_mac_is_up(struct nfc_dev *dev, u32 target_idx,
+-- 
+1.7.10
 
