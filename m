@@ -1,83 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:41112 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785Ab2G1Gb7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50912 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181Ab2GFOO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jul 2012 02:31:59 -0400
-Received: by obbuo13 with SMTP id uo13so5434401obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 23:31:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn2022_CbNtLCy64uFSMF=2PBMN4sDmO4pLbFodLQ139ZQ@mail.gmail.com>
-References: <CAAT9HsjZ7wPbkRMH94HDNBS+vOhLigKLYULqfyQobh_Oyt9M4w@mail.gmail.com>
- <501030E9.3090707@lwfinger.net> <CAAT9Hshwb+iPMALGvP1P2UHzEQbyvYNM0_zz0dHp0mJuy6KwLA@mail.gmail.com>
- <50103BE8.1020203@lwfinger.net> <CAAT9HsjQ_tkm77NT_Rn5_Pi9BHGhY9Vz7jcVzkwdDUjUoKamtw@mail.gmail.com>
- <501061C8.5010108@lwfinger.net> <CA+XFjioVy_pmKxcJAe1U_M+zKNiiPEsb0bmkAfEWzmnnDBjLFw@mail.gmail.com>
- <CAAT9HsgXHe-0qZ5vTvCuU8QZ006MrsCyu7Zc_PRFccz52TWcUw@mail.gmail.com> <CAD2nsn2022_CbNtLCy64uFSMF=2PBMN4sDmO4pLbFodLQ139ZQ@mail.gmail.com>
-From: Tim and Alison Bentley <Home@trarbentley.net>
-Date: Sat, 28 Jul 2012 07:31:38 +0100
-Message-ID: <CAAT9HsgZnkc32=Wh+GVphYrMvKQ0t=_mtdgC-7h=Za7YFuX24Q@mail.gmail.com> (sfid-20120728_083239_333015_BA60EBA4)
-Subject: Re: New Laptop and Driver
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 Jul 2012 10:14:29 -0400
+Message-ID: <1341584069.16893.5.camel@jlt3.sipsolutions.net> (sfid-20120706_161440_033438_4F554A2F)
+Subject: Re: [PATCH] mac80211: fix crash with single-queue drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 06 Jul 2012 16:14:29 +0200
+In-Reply-To: <4FF6F231.8040300@lwfinger.net> (sfid-20120706_161207_104974_E56E6B8F)
+References: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net>
+	  <4FF6E50B.4090205@lwfinger.net>
+	 (sfid-20120706_151601_313202_4A7FB65B) <1341581180.16893.2.camel@jlt3.sipsolutions.net>
+	 <4FF6F231.8040300@lwfinger.net> (sfid-20120706_161207_104974_E56E6B8F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 July 2012 06:26, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.876477] cfg80211: Calling CRDA
->> to update world regulatory domain
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916447] cfg80211: World
->> regulatory domain updated:
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916450] cfg80211:   (start_freq
->> - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916453] cfg80211:   (2402000
->> KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916455] cfg80211:   (2457000
->> KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916457] cfg80211:   (2474000
->> KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916459] cfg80211:   (5170000
->> KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916461] cfg80211:   (5735000
->> KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:30 tigger2 kernel: [ 1553.767939] ath: phy0: Hardware
->> device ID 0x0037 not supported
->> Jul 26 05:58:30 tigger2 kernel: [ 1553.767948] ath9k 0000:03:00.0:
->> Failed to initialize device
->> Jul 26 05:58:30 tigger2 kernel: [ 1553.768137] ath9k: probe of
->> 0000:03:00.0 failed with error -95
->
-> can you please try the attached dummy patch. see if the device is working.
-> if its a version of AR9485 it should work. if its properly working, we
-> can add a proper support.
->
->>
->>
->> --
->> Tim and Alison Bentley
->> Home@TRARBentley.net
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> thanks,
-> shafi
+On Fri, 2012-07-06 at 09:12 -0500, Larry Finger wrote:
+> On 07/06/2012 08:26 AM, Johannes Berg wrote:
+> > On Fri, 2012-07-06 at 08:15 -0500, Larry Finger wrote:
+> >> On 07/04/2012 05:53 AM, Johannes Berg wrote:
+> >>> From: Johannes Berg <johannes.berg@intel.com>
+> >>>
+> >>> Larry (and some others I think) reported that with
+> >>> single-queue drivers mac80211 crashes when waking
+> >>> the queues. This happens because we allocate just
+> >>> a single queue for each virtual interface in case
+> >>> the driver doesn't have at least 4 queues, but the
+> >>> code stopping/waking the virtual interface queues
+> >>> wasn't taking this into account.
+> >>>
+> >>> Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> >>> ---
+> >>>    net/mac80211/util.c |   12 ++++++++++--
+> >>>    1 file changed, 10 insertions(+), 2 deletions(-)
+> >>
+> >> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >>
+> >> This patch fixes the problem for drivers that always report a single queue such
+> >> as at76c503-usb.
+> >
+> > Thanks, I'll merge this.
+> >
+> >>   There is still a problem for b43 with open-source firmware
+> >> where the number of queues changes from 4 to 1. As that only affects b43, do you
+> >> agree that the problem should be fixed there?
+> >
+> > Yes, b43 confuses me a bit. We were looking at this a few weeks ago, but
+> > I couldn't figure out how to solve it.
+> >
+> > I think for b43 the solution should be to check if it's proprietary or
+> > free firmware before registering with mac80211, then to mac80211 it's
+> > really just either 1 or 4, not changing.
+> 
+> I agree with that solution, and I will try to implement that model.
 
-It works.  Sorry for the delay in replying but I needed to learn how
-to compile a Kernel.
-Patched the 3.4.6.2 fedora kernel and now Wireless works from boot up.
+My think my last attempt was this:
+http://p.sipsolutions.net/e45e57bbc9509e69.txt
 
-Any chance this could be fixed in the 3.5 series Kernels as Fedora is
-rolling these out.
+Andre reported it didn't work though.
 
-Thanks.
+johannes
 
--- 
-Tim and Alison Bentley
-Home@TRARBentley.net
