@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1677 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748Ab2GHLIZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 07:08:25 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] Fix oops when set_monitor_enabled() not defined in the struct cfg80211_ops
-Date: Sun, 8 Jul 2012 14:08:10 +0300
-Message-ID: <1341745690-12574-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120708_130858_284398_1162D6C1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:28592 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756548Ab2GFWm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 18:42:29 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org,
+	Mathias Jeppsson <mathias.jeppsson@sonymobile.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 2/2] NFC: Fix order of arguments to list_add_tail() when queueing HCP frames
+Date: Sat,  7 Jul 2012 00:53:19 +0200
+Message-Id: <1341615199-11246-3-git-send-email-sameo@linux.intel.com> (sfid-20120707_004232_344418_BD3D4A69)
+In-Reply-To: <1341615199-11246-1-git-send-email-sameo@linux.intel.com>
+References: <1341615199-11246-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quick fix for method being invoked without checking its existence
+From: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+The HCP message should be added to transmit queue, not the other way around.
+
+Signed-off-by: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- net/wireless/core.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ net/nfc/hci/hcp.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index eb60410..e42a97b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -774,8 +774,9 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+diff --git a/net/nfc/hci/hcp.c b/net/nfc/hci/hcp.c
+index 7212cf2..f4dad1a 100644
+--- a/net/nfc/hci/hcp.c
++++ b/net/nfc/hci/hcp.c
+@@ -105,7 +105,7 @@ int nfc_hci_hcp_message_tx(struct nfc_hci_dev *hdev, u8 pipe,
+ 	}
  
- 	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
- 	if (has_monitors_only_new != has_monitors_only_old) {
--		rdev->ops->set_monitor_enabled(&rdev->wiphy,
--					       has_monitors_only_new);
-+		if (rdev->ops->set_monitor_enabled)
-+			rdev->ops->set_monitor_enabled(&rdev->wiphy,
-+						       has_monitors_only_new);
+ 	mutex_lock(&hdev->msg_tx_mutex);
+-	list_add_tail(&hdev->msg_tx_queue, &cmd->msg_l);
++	list_add_tail(&cmd->msg_l, &hdev->msg_tx_queue);
+ 	mutex_unlock(&hdev->msg_tx_mutex);
  
- 		if (!has_monitors_only_new) {
- 			rdev->monitor_channel = NULL;
+ 	queue_work(hdev->msg_tx_wq, &hdev->msg_tx_work);
 -- 
-1.7.9.5
+1.7.10
 
