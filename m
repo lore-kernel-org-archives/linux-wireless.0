@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:35754 "EHLO
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:33166 "EHLO
 	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807Ab2GBPVZ (ORCPT
+	with ESMTP id S1752834Ab2GFOMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 11:21:25 -0400
-Received: by ghrr11 with SMTP id r11so4191259ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 08:21:25 -0700 (PDT)
-Message-ID: <4FF1BC71.4070002@lwfinger.net> (sfid-20120702_172128_982714_DCA6DAA5)
-Date: Mon, 02 Jul 2012 10:21:21 -0500
+	Fri, 6 Jul 2012 10:12:06 -0400
+Received: by ghrr11 with SMTP id r11so8625153ghr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2012 07:12:05 -0700 (PDT)
+Message-ID: <4FF6F231.8040300@lwfinger.net> (sfid-20120706_161211_470493_710F0A51)
+Date: Fri, 06 Jul 2012 09:12:01 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Kernel oops in __netif_schedule() for at76c50x-usb
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix crash with single-queue drivers
+References: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net>  <4FF6E50B.4090205@lwfinger.net> (sfid-20120706_151601_313202_4A7FB65B) <1341581180.16893.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1341581180.16893.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Regarding the oops that I reported for PPC architecture that reported "Unable to 
-handle kernel paging request for data at address 0x000004c", I have now repeated 
-it on x86_64 architecture, where the objdump tool is better. The error occurs in 
-the line in __netif_schedule() that says
+On 07/06/2012 08:26 AM, Johannes Berg wrote:
+> On Fri, 2012-07-06 at 08:15 -0500, Larry Finger wrote:
+>> On 07/04/2012 05:53 AM, Johannes Berg wrote:
+>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>> Larry (and some others I think) reported that with
+>>> single-queue drivers mac80211 crashes when waking
+>>> the queues. This happens because we allocate just
+>>> a single queue for each virtual interface in case
+>>> the driver doesn't have at least 4 queues, but the
+>>> code stopping/waking the virtual interface queues
+>>> wasn't taking this into account.
+>>>
+>>> Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>>> ---
+>>>    net/mac80211/util.c |   12 ++++++++++--
+>>>    1 file changed, 10 insertions(+), 2 deletions(-)
+>>
+>> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>
+>> This patch fixes the problem for drivers that always report a single queue such
+>> as at76c503-usb.
+>
+> Thanks, I'll merge this.
+>
+>>   There is still a problem for b43 with open-source firmware
+>> where the number of queues changes from 4 to 1. As that only affects b43, do you
+>> agree that the problem should be fixed there?
+>
+> Yes, b43 confuses me a bit. We were looking at this a few weeks ago, but
+> I couldn't figure out how to solve it.
+>
+> I think for b43 the solution should be to check if it's proprietary or
+> free firmware before registering with mac80211, then to mac80211 it's
+> really just either 1 or 4, not changing.
 
-          if (!test_and_set_bit(__QDISC_STATE_SCHED, &q->state))
-
-Debug printouts have shown that q is not NULL, and it appears to be in the 
-correct address range. I think q->state is zero; however, q->state cannot be 
-written.
-
-Additional testing shows this problem to be another side effect of commit 
-3a25a8c ("mac80211: add improved HW queue control") for a device with only a 
-single HW queue.
-
-Any suggestions for additional debugging printouts will be greatly appreciated.
-
-Thanks,
+I agree with that solution, and I will try to implement that model.
 
 Larry
+
