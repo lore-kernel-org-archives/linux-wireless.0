@@ -1,76 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63542 "EHLO mga02.intel.com"
+Received: from narfation.org ([79.140.41.39]:60381 "EHLO v3-1039.vlinux.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755521Ab2GXIHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 04:07:25 -0400
-Date: Tue, 24 Jul 2012 11:07:29 +0300
-From: andrei.emeltchenko.news@gmail.com
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, joe@perches.com,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCHv3 1/3] lib: printf: update documentation to cover all of
- %p[Mm][FR]
-Message-ID: <20120724080727.GA11502@aemeltch-MOBL1> (sfid-20120724_100818_208950_220DAD99)
-References: <1341341280.2012.3.camel@joe2Laptop>
- <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	id S1757931Ab2GFQf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 12:35:58 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	ath9k-devel@lists.ath9k.org,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: ath9k: Problems with diversity on AR9330
+Date: Fri, 06 Jul 2012 18:35:55 +0200
+Message-ID: <4991617.K7XqcvhjBY@bentobox> (sfid-20120706_183602_745593_DF01F485)
+In-Reply-To: <5244861.J1Tyef1FCX@bentobox>
+References: <20120706125043.GA23189@pandem0nium> <CAD2nsn1=PDBTRXumDh93DzvmFcBnyFeLD-5c5oSJmv3OO6LWGw@mail.gmail.com> <5244861.J1Tyef1FCX@bentobox>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: multipart/signed; boundary="nextPart1607143.Dtdhpfl4v5"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 04, 2012 at 11:45:50AM +0300, Andy Shevchenko wrote:
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Acked-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com> 
+--nextPart1607143.Dtdhpfl4v5
+Content-Type: multipart/mixed; boundary="nextPart5244880.eeimT6VzcV"
+Content-Transfer-Encoding: 7Bit
 
-> ---
->  Documentation/printk-formats.txt |    1 +
->  lib/vsprintf.c                   |    5 ++++-
->  2 files changed, 5 insertions(+), 1 deletion(-)
+
+--nextPart5244880.eeimT6VzcV
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+On Friday 06 July 2012 17:13:42 Sven Eckelmann wrote:
+[...]
+> > I just also observer the chain0 is "preferred" unless the RSSI is so
+> > poor in it so chain1 is taken.
+> > Please check if this work out for your case too.
 > 
-> diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
-> index d8d168fa..90ff4d7 100644
-> --- a/Documentation/printk-formats.txt
-> +++ b/Documentation/printk-formats.txt
-> @@ -59,6 +59,7 @@ MAC/FDDI addresses:
->  	%pMR	05:04:03:02:01:00
->  	%pMF	00-01-02-03-04-05
->  	%pm	000102030405
-> +	%pmR	050403020100
->  
->  	For printing 6-byte MAC/FDDI addresses in hex notation. The 'M' and 'm'
->  	specifiers result in a printed address with ('M') or without ('m') byte
-> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-> index a0b5f15..e500158 100644
-> --- a/lib/vsprintf.c
-> +++ b/lib/vsprintf.c
-> @@ -946,7 +946,7 @@ int kptr_restrict __read_mostly;
->   * - 'm' For a 6-byte MAC address, it prints the hex address without colons
->   * - 'MF' For a 6-byte MAC FDDI address, it prints the address
->   *       with a dash-separated hex notation
-> - * - '[mM]R For a 6-byte MAC address, Reverse order (Bluetooth)
-> + * - '[mM]R' For a 6-byte MAC address, Reverse order (Bluetooth)
->   * - 'I' [46] for IPv4/IPv6 addresses printed in the usual way
->   *       IPv4 uses dot-separated decimal without leading 0's (1.2.3.4)
->   *       IPv6 uses colon separated network-order 16 bit hex with leading 0's
-> @@ -1287,7 +1287,10 @@ qualifier:
->   * %pR output the address range in a struct resource with decoded flags
->   * %pr output the address range in a struct resource with raw flags
->   * %pM output a 6-byte MAC address with colons
-> + * %pMR output a 6-byte MAC address with colons in reversed order
-> + * %pMF output a 6-byte MAC address with dashes
->   * %pm output a 6-byte MAC address without colons
-> + * %pmR output a 6-byte MAC address without colons in reversed order
->   * %pI4 print an IPv4 address without leading zeros
->   * %pi4 print an IPv4 address with leading zeros
->   * %pI6 print an IPv6 address with colons
-> -- 
-> 1.7.10
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Removing the antenna on chain0 doesn't change the alt_rssi value for us. We
+> only noticed that frames with alt_rssi != -128 have  the value rx_ant_conf
+> == 1 (LNA2) when only chain1 is attached and rx_ant_conf == 2 (LNA1) when
+> both/chain0-only are attached. Still most of the packets had alt_rssi ==
+> -128 and we saw changes in curr_main_set and curr_alt_set (after lot of
+> data was sent).
+
+Here are some logs. We added some debug printk before first check in 
+ath_ant_comb_scan ("if (main_rssi > 0 && alt_rssi > 0) {"). We can see a 
+difference in the output after (a more or less long time) both antennas were 
+unplugged. The output looks extreme different when at least one antenna is 
+attached.
+
+alt_ant_conf is calculated using 
+"alt_ant_conf = (rs->rs_rssi_ctl[2]) & ATH_ANT_RX_MASK;" and could be wrong. 
+curr_alt_set and curr_main_set come from div_ant_conf queried using 
+ath9k_hw_antdiv_comb_conf_get.
+
+Kind regards
+	Sven
+--nextPart5244880.eeimT6VzcV
+Content-Disposition: attachment; filename="after_both_antennas_unplugged.txt.zip"
+Content-Transfer-Encoding: base64
+Content-Type: application/zip; name="after_both_antennas_unplugged.txt.zip"
+
+UEsDBBQAAAAIAIc7R/yAUUHLngQAAGdYAAAhAAAAYWZ0ZXJfYm90aF9hbnRlbm5hc191bnBsdWdn
+ZWQudHh0xVxdapw5EHzfU8wBnObTv3SWsBgTdiGQ9YLthRw/GmetfHY1mpd0tZ/izJiipFZ1tdTS
+peQeJI1j/vx5+efh6+P90/Pz10u5uzx8e/n573F3+fLf09P966fPf71cwv//cf3G9fd09/MvHx5f
+7r/8+/j39QvXz9bv8wtP308f//H58oqb20fcfMJtZril7/ja4dYt32qG24BvtMRNb7jdie/Yzm+x
+w4V1xOAb5YBxThTcsB1nK92IEl3Wb1R08jy/3Qx3r5PZDBd1MlqOc3rDfaXL06vFtwef+R3pI24/
+4QYrgU5yAPAgAUNkmWb+hRtgBTOUMkkE3HAm/ClEq+hKkmE1MVQ6SQFchrubuBDUiRJbNfrNcdty
+tlvHPQPnxOLcudl4cUaXx3AfWUL5iNvOYv3bbW16A44AzArsLAlS8jAlvYAzrGZKasxS9oztgBX9
+ioREkaUBY158dSBdLEVk4Q7kXDicixzAmWFziwTAZZQTRSLXECy+CQwQw4gUyRBb59CyKheLlOq1
+jotUwGaYgSINcyPJABXpgM3hrGgXaZ6rUrEyCscqwScrV4kuYl1viFcyw92Ll1VQVylQyXACq8Ii
+Nq0mFm6DPUWWcNUb5wJWCVnDZZmuqogmw/w0xeydKVvteDVFMM/hZVWsNrZe/sJ1iemmFMim47xw
+sT5m7II0ZXePM84V8gOHb+PmpYWL5pLDd2zXrxVuV4wlw+90CYDLOJvvEl3iqjtuJnZJoNHvztms
+klJXDnB5pItLQuyKUNvu3C7g6lIidsVRkwgrtpZk5btydM2JroEHT6QVNeRwsQJDAuBS2gSGptmk
+ABuS3E4Yh+TtBpuVkgxlL4I00bgZQQJGl8tbzuh0zwFmxxkljDHY45DDI6wnro9+TWDUL4JgT1zU
+Lsam8QRG4SJtdE3s/Uaq0enTxN1vpBo5kYnrJl0Te1+k23F2kq6gSBeDcFCk691KttLMcEO6rCIr
+aLaLFNXBUb2Col6mzZJrnpVW64PFucJRHxEb5ppRNE9gPLgnAZM1e400ajbD9UUnyZ640BFCMV9R
+6dNkyVfUKnUadvLa2Z3YGSabE2QFOR+cKMOGp0qQkag1PJEYdyfGY58prAgnRcEYXiQpAkY4Gpq4
+cdvDZ1U5JkfhSjeEy26OUbgo9iexGzXXQCu6RcqMExsbYymamRTNZJjNpGgmw2zmG5Jp5QO0uzln
+vkZdOBMXJZPDN2FEk1ZTVg7TCR1tExfb2yk+ICvPRpgan4WryBZtkvFMmyFcWYYb56I848BYzEWC
+172NiY1tkxzOfgJWbgiYHWflfg7Fhkxkr/6nib1XT6NbjRMX1ZNRzZQbymlVURSfa9GjSoDda0am
+0C7mUOxAlcS9srpwseObJZlVuRTN4YzHMu+6j676acS4erzJNnHxrbBEGWl8zYEhW1V5K4wV1U0O
+F85NebeLUZ035RUchlQ39rtdiy++gMOZX1RLXkyjYnLGGvWSZTGbopmMk4mmaCYDt8sBcX3OEVa7
+XV25U8iw8l3idh1bWduu3O3j8M0ed+wm7r510C6ey/ZVOKt82JV3Dhkeb+Ky8/APUEsBAhQDFAAA
+AAgAhztH/IBRQcueBAAAZ1gAACEACQAAAAAAAAAAAKSBAAAAAGFmdGVyX2JvdGhfYW50ZW5uYXNf
+dW5wbHVnZ2VkLnR4dFVUBQAH/////1BLBQYAAAAAAQABAFgAAADdBAAAAAA=
+
+--nextPart5244880.eeimT6VzcV
+Content-Disposition: attachment; filename="at_least_one_antenna.txt.zip"
+Content-Transfer-Encoding: base64
+Content-Type: application/zip; name="at_least_one_antenna.txt.zip"
+
+UEsDBBQAAAAIAIc7R/xqFR2mdgQAABaHAAAYAAAAYXRfbGVhc3Rfb25lX2FudGVubmEudHh0xZzR
+ahsxEEXf+xX7AanxSjO72m8JxZjQQqB1wXahn185DcFF97G+p2+uFw6ys1czq+N5nqZtLbttf/v3
+ZfpxfD0dzpfL61TL03T8fv374vNc2tP08ut8Prxdcfl6neb3/7hddHvdr39773i6Hl5+nr7dLri9
+9/G6X3D+fff2p+d39jywZxu7gOuuIDtAdoLsBWSvILuB7I1i190ey7XOHnOt2thjrvnYWK51NpZr
+nY3lWmdjudbZWK519pgttr/zGcyWGcyWGcyWecwWH3vMFh97zBYfe8wWH3vMFh97rJls7DJmi48N
+ZksBs6WA2VLAbCljtuxt7DFbTL1/3VVw/67gPVaxZx6dDd5jFbzHKrh/V3D/ruD+XcH9u4J9SYC1
+Q4C5FmOu2faSGHPNxx5zzccec83HBmuHGHPNx8ae5dZdjtliW3eC2ZJgtiRYMyVYMyVYMyVYMyVY
+MyVYMyVYMy1gzbSAubaA2bKA2bKAZzULmC0LeFazgNmygNmygvf3Cj7rWcFz4BXMlhWsW1YwW1aw
+blnBbFnBbGlg3dLAXGvgOVEDa6YG5loDc62BudbAXGtgrjUw14QTbKsdhBNse9YjnGDbWaxwgn3f
+N9iPcU5wBZ3gCjrBFXSCA3SCQznBPjbWCwbo5Qbo5Qbo5Qbo5XY2li2hnGAbm3OCQzjB7Q5d/zu4
+fICHYJnvFx37x5GxY/cQOvA/q67b41aNHbqHkoF9bOzQPZQMbCrMOxsMNCEi2z5zISL72FgTGEpE
+9rExmSiUiOxjg7lWwFwrY67Z2ELA9rHBbBECto8NZgsnYIeSoG17qJCgfZ852IgJCdrGFhK0jw0+
+5BEStI+NHfiHkqB9bPABk5CgfWzwARMnQXc2mGtCwPaxwZpJCNi+dYO5JiRoHxvMFiFB+9hgtggJ
+2sYWErSPDdZMC5gtQsD2scGaSQjYtr1ECNg+NtgLCgHbxx5zzcZewVwTArZv3ZioGKCAHUrA9n3f
+YM0kBGwfG6yZhIBtYwsB28cGayYhYPvYYM0kBGwfG8w1IUH72GC2CAnaxuaGE4cSkW37NzecOJSI
+7Fs32JcIEdm3buxHDqFEZBM7lYjsY2M/3kpwOHGq4cQ+NpYtqURkHxvLlgRF5ARF5FQismkvSTUg
+2LdurDdINSDYxwazhRsQnOCA4AQHBKdygm1sbjhxggOCExwQnOCA4FRero8NZovwcn1ssG4pYN3C
+OcGpvFzb9y28XN9nDtYtYjCyj42d1aRygn1sMFs4JzhBLzdBLzeVl2vLNeHl+thg3SK8XB8brFuE
+l+tjgz0R5+WmcmNNv01N5cba6jVuOHEqL9e3buycKJWX62Nj/loqN9bHxrz7VG6sjw32RJwbm+Bw
+4lRurI8N9kTCjfWxwZ6Ic2NTDUb2scF+THi5tnpNeLm2PBdero8N1kzCjfWxMe8+lRvrY4M1k3Bj
+fWywHxNurI8NZosYTuxjg/2Y8HJ9bLBm2sCaaRyMvN2hHzZ0LoWMPN8/bHnYkL8UKvK8f/Ca/wBQ
+SwECFAMUAAAACACHO0f8ahUdpnYEAAAWhwAAGAAJAAAAAAAAAAAApIEAAAAAYXRfbGVhc3Rfb25l
+X2FudGVubmEudHh0VVQFAAf/////UEsFBgAAAAABAAEATwAAAKwEAAAAAA==
+
+--nextPart5244880.eeimT6VzcV--
+
+--nextPart1607143.Dtdhpfl4v5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABCgAGBQJP9xPrAAoJEF2HCgfBJntGk+EP/3pL4QIYrsPY7oUG9vIGXUoY
+RVmUOMiPTh9mCN93rD2vVBxl0MD/hcA0gPSG/uzlg6sUi74DQsmJ6i/XvQ/FwLFm
+gk8CK9SxR4Gf1M3sCXnzqXKBfP62ZLs/9Jhvl3gWr+O7xeJSzH6d6rW9Yx1w7WU2
+daikkIIf4mkruKsv+/k5/2/Hq1/F+ZkjYcs4AQrVpA0RFjFrw860LlBROxEZyraE
+cFvYD2jvE31voPVJfF8cbEsHqOGpF9A1jrSgUWTdh6TcAmIBMdef5Ea19OP4xohE
+TZn44eNY3KqYdv/gzAK7gDKoeANfdwlzJpTXeN1/TwFK4eSR+2QgJP0H3Ks8D1rY
+2gBIvbtSmo85SlGowwxF18dUH1YVkiktOcAu07RFnSoktSS/7oU8LXvjYGXXC69c
+C733e42uAm/4UmNSfmi8WLNubu00/tkVI3B+tj5NhgNgokbMLCXC66NtKyCzIVkn
+jKJcU0LrEYT4B5o767Tm18PZfY0YcxTyfdkzce1QekxdAexQQ3QEGZ4oZrE6dyaC
+mcwghlUXiH4v07+0h7e7TcXM1J5Osmmp/VVaxMak14XHeDJljgfluQeyZV1XEBQM
+awZMdR1Sr+3EY3rCcuzc0VhF4VoU75QBBHiFXoLqfATce3yaRMszD5OOCHXKSLnM
+K166MjVtE5E1iA+4Y1Ub
+=LGCu
+-----END PGP SIGNATURE-----
+
+--nextPart1607143.Dtdhpfl4v5--
+
