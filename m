@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44263 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755523Ab2GRSnV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 14:43:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 3/6] mac80211: don't send delBA on addBA failure
-Date: Wed, 18 Jul 2012 20:43:17 +0200
-Message-Id: <1342637000-5270-4-git-send-email-johannes@sipsolutions.net> (sfid-20120718_204329_559341_CBD885EF)
-In-Reply-To: <1342637000-5270-1-git-send-email-johannes@sipsolutions.net>
-References: <1342637000-5270-1-git-send-email-johannes@sipsolutions.net>
+Received: from mga14.intel.com ([143.182.124.37]:2576 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751108Ab2GFUAW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 16:00:22 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 28/33] NFC: Do not return EBUSY when stopping a poll that's already stopped
+Date: Fri,  6 Jul 2012 22:09:48 +0200
+Message-Id: <1341605393-32056-29-git-send-email-sameo@linux.intel.com> (sfid-20120706_220535_956217_CFC85B3B)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+We check for the polling flag before checking if the netlink PID caller
+match.
 
-There's no reason to send a delBA when the
-peer refused our addBA, so change that.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- net/mac80211/agg-tx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/nfc/netlink.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index d0deb3e..3195a63 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -869,7 +869,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 03c31db..99bc6f7 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -634,6 +634,15 @@ static int nfc_genl_stop_poll(struct sk_buff *skb, struct genl_info *info)
+ 	if (!dev)
+ 		return -ENODEV;
  
- 	} else {
- 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR,
--						true);
-+						false);
- 	}
++	device_lock(&dev->dev);
++
++	if (!dev->polling) {
++		device_unlock(&dev->dev);
++		return -EINVAL;
++	}
++
++	device_unlock(&dev->dev);
++
+ 	mutex_lock(&dev->genl_data.genl_data_mutex);
  
-  out:
+ 	if (dev->genl_data.poll_req_pid != info->snd_pid) {
 -- 
-1.7.10.4
+1.7.10
 
