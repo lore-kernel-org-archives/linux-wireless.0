@@ -1,63 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46782 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:23801 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752260Ab2GITnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 15:43:41 -0400
-Message-ID: <4FFB3469.4000003@openwrt.org> (sfid-20120709_214345_566532_6D8A2B5B)
-Date: Mon, 09 Jul 2012 21:43:37 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: thomas@net.t-labs.tu-berlin.de, x-alina@gmx.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Add transmit power control support (TPC)
-References: <4FFB2E78.9090402@gmail.com>
-In-Reply-To: <4FFB2E78.9090402@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1751108Ab2GFUAd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jul 2012 16:00:33 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 31/33] NFC: Use communicate thru only for PaSoRi when trying to read Felica tags
+Date: Fri,  6 Jul 2012 22:09:51 +0200
+Message-Id: <1341605393-32056-32-git-send-email-sameo@linux.intel.com> (sfid-20120706_220532_264084_9C049CAD)
+In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-09 9:18 PM, Xose Vazquez Perez wrote:
-> Thomas Huehn wrote:
-> 
->> (6) restructure tx-path of all effected drivers
->> Restructure tx-path of all effected drivers to respect new TPC support in
->> mac80211. TPC support is added to mac80211 by restructuring of struct
->> ieee80211_tx_info. Therfore the tx-path of all effected drivers is modified
->> to receive struct sta from the stack and respect the new ieee80211_tx_info
->> struct. List of modified driver:
-> 
->> ath9k
->> ath5k
->> iwl3954
->> iwl4965
->> iwl-agn
->> mwl8k
->> carl9170
->> ath9k-htc
->> p54
->> rt2x00
->> rtl8180
->> rtl8087
->> hwsim
->> b43
->> b43legacy
->> brcmsmac
->> zd1211rw
-> 
-> candidates:
-> 
-> ath6kl
-> brcmfmac
-> iwmc3200wifi
-> mwifiex
-> rndis_wlan
-No. (fullmac, thus unaffected by the change)
+Otherwise DATA_EXCHANGE seems to be just fine.
 
-> libertas_tf
-> rtlwifi
-> wl1251
-> wl12xx
-Yes, those indeed look like they need to be added.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |   23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
-- Felix
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index 37786ff..84d8175 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -1806,7 +1806,17 @@ static int pn533_build_tx_frame(struct pn533 *dev, struct sk_buff *skb,
+ 
+ 	if (target == true) {
+ 		switch (dev->device_type) {
+-		case PN533_DEVICE_STD:
++		case PN533_DEVICE_PASORI:
++			if (dev->tgt_active_prot == NFC_PROTO_FELICA) {
++				skb_push(skb, PN533_CMD_DATAEXCH_HEAD_LEN - 1);
++				out_frame = (struct pn533_frame *) skb->data;
++				pn533_tx_frame_init(out_frame,
++						    PN533_CMD_IN_COMM_THRU);
++
++				break;
++			}
++
++		default:
+ 			skb_push(skb, PN533_CMD_DATAEXCH_HEAD_LEN);
+ 			out_frame = (struct pn533_frame *) skb->data;
+ 			pn533_tx_frame_init(out_frame,
+@@ -1815,19 +1825,8 @@ static int pn533_build_tx_frame(struct pn533 *dev, struct sk_buff *skb,
+ 			memcpy(PN533_FRAME_CMD_PARAMS_PTR(out_frame),
+ 			       &tg, sizeof(u8));
+ 			out_frame->datalen += sizeof(u8);
+-			break;
+-
+-		case PN533_DEVICE_PASORI:
+-			skb_push(skb, PN533_CMD_DATAEXCH_HEAD_LEN - 1);
+-			out_frame = (struct pn533_frame *) skb->data;
+-			pn533_tx_frame_init(out_frame, PN533_CMD_IN_COMM_THRU);
+ 
+ 			break;
+-
+-		default:
+-			nfc_dev_err(&dev->interface->dev,
+-				    "Unknown device type %d", dev->device_type);
+-			return -EINVAL;
+ 		}
+ 
+ 	} else {
+-- 
+1.7.10
+
