@@ -1,35 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57134 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751040Ab2GZOjz (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40401 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752448Ab2GFNOz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 10:39:55 -0400
-Message-ID: <501156B9.6020201@net.t-labs.tu-berlin.de> (sfid-20120726_163959_017240_F7376B1D)
-Date: Thu, 26 Jul 2012 16:39:53 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+	Fri, 6 Jul 2012 09:14:55 -0400
+Date: Fri, 6 Jul 2012 14:50:43 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: ath9k-devel@lists.ath9k.org
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Sven Eckelmann <sven@narfation.org>,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	linux-wireless@vger.kernel.org
+Subject: ath9k: Problems with diversity on AR9330
+Message-ID: <20120706125043.GA23189@pandem0nium> (sfid-20120706_151500_748465_6015F7AC)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5] mac80211: Remove control.sta from struct ieee80211_tx_info
- and restructure tx-path
-References: <1343161108-6941-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343208990.4463.25.camel@jlt3.sipsolutions.net> <1343220625.4463.31.camel@jlt3.sipsolutions.net> <500FEDDD.206@net.t-labs.tu-berlin.de> <1343244302.3750.44.camel@cumari.coelho.fi> <1343283856.4611.1.camel@jlt3.sipsolutions.net> <50110D8C.3010705@net.t-labs.tu-berlin.de> <1343303858.4477.1.camel@jlt3.sipsolutions.net> <501147D3.2080606@net.t-labs.tu-berlin.de> <87hasu7g8v.fsf@purkki.adurom.net>
-In-Reply-To: <87hasu7g8v.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--GvXjxJ+pjyke8COw
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 
-Kalle Valo schrieb:
+Hey,
 
+we have trouble with an AR9330 (Hornet) based AP. This device has 2 antennas, and is supposed to support diversity (2 RX, 1 TX). However, diversity is not really enabled because the "alternative" antenna is not considered as "good", because not enough frames are received. It seems that at 99% of the time, alt_rssi (read from rs->rs_rssi_ctl1) is invalid (set to ATH9K_RSSI_BAD, -128), while main_rssi (read from rs->rs_rssi_ctl0) usually has sane values.
 
-> 'make allyesconfig' and 'make allmodconfig' are handy to catch problems
-> like this. Highly recommended when doing not so simple changes, but be
-> prepared for long compile times.
-> 
+We test by sending from a 1m distance (Laptop), and both antennas are connected, so the alternative antenna should usually get some sane frames too.
 
+We have also tried to swap the antenna configuration of main and alt (LNA1 and LNA2), but only the alt_rssi will be invalid, and we then receive via the alternative antenna. We therefore think that the antenna wiring is not the problem.
 
-Thx Kalle for that hint ... something like this I was really looking to
-find !
+We have also checked EEPROM values, which seem to be correct as well. FYI, register set after reading the EEPROM are:
+AR_PHY_MC_GAIN_CTRL = 13EF0200
+AR_PHY_CCK_DETECT = 803E6788
 
-Greetings Thomas
+Any ideas/pointers/suggestions?
+
+Thanks!
+	Simon
+
+--GvXjxJ+pjyke8COw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk/23yMACgkQrzg/fFk7axZ86wCg8A5QQH+H+8H8lMiqBeCpYIyN
+fhEAnjs+pcyM462tbkre2M342k8DEX0C
+=i53p
+-----END PGP SIGNATURE-----
+
+--GvXjxJ+pjyke8COw--
