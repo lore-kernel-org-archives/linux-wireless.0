@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:64829 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751404Ab2GOWsF (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:37964 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932123Ab2GFVeo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 18:48:05 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: dcbw@redhat.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: [PATCH 2/3] libertas: handle command failure immediately
-Message-Id: <20120715224751.42CD29D401E@zog.reactivated.net> (sfid-20120716_004809_264304_68DFE8C3)
-Date: Sun, 15 Jul 2012 23:47:51 +0100 (BST)
+	Fri, 6 Jul 2012 17:34:44 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com>
+References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+	<20120313081235.GC15333@redhat.com>
+	<CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
+	<CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
+	<20120528140448.GA22783@redhat.com>
+	<CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
+	<20120529092154.GA2441@redhat.com>
+	<CAErSpo6Xxq_kcEYACKUsuNDOJDhEDnxWgBUateOJEBcfqufhSg@mail.gmail.com>
+	<CANHD2=o-eyd2JR7oK4gJgQi3Mi-a=R1RKuGsuWzzR_WosQaNEA@mail.gmail.com>
+	<20120702053110.GA2500@redhat.com>
+	<CANHD2=pEham5SZ6EguurMd9MBuyptyx5CGF1RDhU8Ow9CaRoXA@mail.gmail.com>
+	<CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com>
+Date: Fri, 6 Jul 2012 14:34:42 -0700
+Message-ID: <CAE9FiQXwx7L2H=BBcUbH2t3NyfAGZtrm4LG_uQ0OdoSTAZUgTw@mail.gmail.com> (sfid-20120706_233450_901057_D694F753)
+Subject: Re: Initializing iwl3945 error
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kamil Grzebien <ciptok@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fail commands immediately when the request cannot be sent to the hardware.
+On Fri, Jul 6, 2012 at 1:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>  pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
+> -pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0200000-0xf03fffff 64bit pref]
+> +pci 0000:00:1c.1: bridge window [io  0x1000-0x0fff] to [bus 0b-0b]
+> add_size 1000
+> +pci 0000:00:1c.1: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus
+> 0b-0b] add_size 200000
+> +pci 0000:00:1c.1: res[15]=[mem 0x00100000-0x000fffff 64bit pref]
+> get_res_add_size add_size 200000
+> +pci 0000:00:1c.1: res[13]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
+> +pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0400000-0xf05fffff 64bit pref]
+>  pci_bus 0000:0b: resource 1 [mem 0xf1e00000-0xf1efffff]
+> -pci_bus 0000:0b: resource 2 [mem 0xf0200000-0xf03fffff 64bit pref]
+> +pci_bus 0000:0b: resource 2 [mem 0xf0400000-0xf05fffff 64bit pref]
 
-This solves the following deadlock:
- 1. Two commands are in the queue.
- 2. The first command is sent, but causes a timeout, which kicks off an
-    asynchronous device reset
- 3. The second command is submitted to the device, and fails. The failure
-    is noted but the existing code waits for the timeout handler to take
-    care of the failure.
- 4. The device reset kicks in, causing the device "surprise removed" flag
-    to be set as the device disappears from the bus.
- 5. lbs_thread notes this and enters "adapter removed; waiting to die"
-    mode, without processing any further command timeouts.
+Those wild print out about add_size is used to double check if the
+option size is passed correctly.
 
-While adjusting lbs thread logic to handle this situation may be one way
-to fix this, it seems more practical to simplify handling of host_to_card
-failure so that the commands are failed immediately without waiting for
-more compliated timeout logic to kick in.
+diff between 3.3 and 3.4:
+in kernel 3.4, 1c.0 pref mem64 get allocated before 1c.1 pref mem64.
+that should be caused by: We replaced local version resource list with
+generic list.
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/cmd.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+But that should not be reason for why 3.3 does not work on Kamil's setup.
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index dd0743c..26e6832 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1020,9 +1020,9 @@ static void lbs_submit_command(struct lbs_private *priv,
- 	if (ret) {
- 		netdev_info(priv->dev, "DNLD_CMD: hw_host_to_card failed: %d\n",
- 			    ret);
--		/* Let the timer kick in and retry, and potentially reset
--		   the whole thing if the condition persists */
--		timeo = HZ/4;
-+		/* Reset dnld state machine, report failure */
-+		priv->dnld_sent = DNLD_RES_RECEIVED;
-+		lbs_complete_command(priv, cmdnode, ret);
- 	}
- 
- 	if (command == CMD_802_11_DEEP_SLEEP) {
--- 
-1.7.10.4
+I would suspect that pci pm change fixes the problem.
 
+Thanks
+
+Yinghai
