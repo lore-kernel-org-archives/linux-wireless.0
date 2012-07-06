@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36069 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752963Ab2G0DxK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27258 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752798Ab2GFBHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 23:53:10 -0400
-Received: by obbuo13 with SMTP id uo13so3674458obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 20:53:09 -0700 (PDT)
+	Thu, 5 Jul 2012 21:07:43 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <201207262212.06227.chunkeey@googlemail.com>
-References: <1343332743-11845-1-git-send-email-jlopex@cozybit.com> <201207262212.06227.chunkeey@googlemail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 26 Jul 2012 20:52:49 -0700
-Message-ID: <CAPjQAd_0sD69dunzyd4Bx9Ys_XgTA9-Zr5TJkfNweopJWNBTJQ@mail.gmail.com> (sfid-20120727_055314_937880_72F0CAD6)
-Subject: Re: [PATCH] carl9170: Add support for NL80211_IFTYPE_MESH_POINT interfaces
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Javier Lopez <jlopex@cozybit.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20470.14858.754361.629383@gargle.gargle.HOWL> (sfid-20120706_030800_928075_7C4C703A)
+Date: Fri, 6 Jul 2012 06:36:18 +0530
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"Balasubramanian, Senthil Kumar" <senthilb@qca.qualcomm.com>,
+	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	qca-linux-team <qca-linux-team@qualcomm.com>,
+	Imran Ansari <imran@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<sfr@canb.auug.org.au>, <mcgrof@frijolero.org>, <hauke@hauke-m.de>,
+	<ozancag@gmail.com>, <pstew@google.com>, <warthog9@kernel.org>,
+	<jrnieder@gmail.com>, <ben@decadent.org.uk>,
+	<akpm@linux-foundation.org>, <gregkh@linuxfoundation.org>,
+	<linville@tuxdriver.com>
+Subject: Re: 3.5 stable compat-wireless
+In-Reply-To: <20120705190801.GB11228@tux>
+References: <20468.35601.132955.802881@gargle.gargle.HOWL>
+	<7A9ADFFA56024346AAE90B6BABC3BD15DD6DEB@NASANEXD02B.na.qualcomm.com>
+	<20469.13787.767293.602337@gargle.gargle.HOWL>
+	<20120705190801.GB11228@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 1:12 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Thursday 26 July 2012 21:59:03 Javier Lopez wrote:
->> This patch contains following modifications:
->>
->> - Add mesh capabilities on fw.c to permit creation of mesh
->>   interfaces using this driver.
->>
->> - Modify carl9170_set_operating_mode, to use AP-style beaconing
->>   with mesh interfaces.
->>
->> - Allow beacon updates for NL80211_IFTYPE_MESH_POINT type in
->>   carl9170_handle_command_response.
->>
->> Signed-off-by: Javier Lopez <jlopex@cozybit.com>
-> Hm, what about virtual interfaces?
->
-> Do you think it's save to share a MESH node with
-> a STA, IBSS, AP interface on the same hardware?
+Luis R. Rodriguez wrote:
+> > To make internal releases, I do something like this:
+> > 
+> > * Maintain a 'linux-foo-pending' branch, add pending patches and kick out releases
+> >   for immediate testing.
+> 
+> A linux-foo-pending branch of linux-next.git ?
 
-Does this hardware support multiple beacons?
-If not, we probably should limit the driver to only accept one
-beaconing vif at a time (e.g. one mesh vif + multiple STAs vifs ok).
+No, in compat-wireless - not in upstream, but in my 'forked' tree.
+This is just to avoid the shuttling of patches between linux-next-pending/
+and linux-next-cherry-picks/.
 
-> On a side node: Can you tell me anything about
-> the crypto of mesh traffic? Because currently,
-> the code will disable any hardware crypto
-> offload for any mode other than STA and AP.
-
-The hardware crypto needs to support one tx/rx pairwise key per peer,
-a groupwise key for each peer and management frame protection.
-Not sure if this is the case for this hardware, so until we do, it
-seems reasonable to disable crypto offload.
-
-Cheers,
-
-Javier
-
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Sujith
