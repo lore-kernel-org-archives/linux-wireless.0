@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:63026 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754613Ab2GKEoW convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:49237 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757874Ab2GFQxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 00:44:22 -0400
-Received: by wgbdr13 with SMTP id dr13so635200wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 21:44:21 -0700 (PDT)
+	Fri, 6 Jul 2012 12:53:32 -0400
+Received: by pbbrp8 with SMTP id rp8so14873202pbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2012 09:53:32 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4FFCAA7F.502@hauke-m.de>
-References: <1341751888-12679-1-git-send-email-zajec5@gmail.com>
-	<4FFB62DA.9000706@hauke-m.de>
-	<CACna6ry-Hxt56DCn8amKUxnqF+X8juZK26j5bJaRk-ubh7didA@mail.gmail.com>
-	<CACna6rzx8Jt215zJ3WD49XypBShC8yxfQfOwnqgFc0xYsx_6JQ@mail.gmail.com>
-	<4FFCAA7F.502@hauke-m.de>
-Date: Wed, 11 Jul 2012 06:44:21 +0200
-Message-ID: <CACna6rwGOOBY9Na+2ycBQeNzFzBdhsDFi-=1KE6wpLPqxLoJtg@mail.gmail.com> (sfid-20120711_064429_860444_7FFAB8D1)
-Subject: Re: [RFC][PATCH] bcma: add trivial GBIT MAC COMMON driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAB=NE6UDfeN6oj83o4rO6EUJeLnrop82WQswu1O2z=gSbVrcAw@mail.gmail.com>
+References: <1341357315-8053-1-git-send-email-rodrigue@qca.qualcomm.com>
+ <1341357315-8053-5-git-send-email-rodrigue@qca.qualcomm.com>
+ <1341394944.4482.9.camel@jlt3.sipsolutions.net> <CAB=NE6UfGuOh843dSx7NG7UYtEiDVcLUJbu6nFnBJs-Qk4tszw@mail.gmail.com>
+ <1341474303.4455.5.camel@jlt3.sipsolutions.net> <CAB=NE6Uw1pso+HmVAahMvT3BZ0AheWxXuhJFLedvsHKXsUn11g@mail.gmail.com>
+ <1341556785.4462.0.camel@jlt3.sipsolutions.net> <CAB=NE6XmbAu+xkLHYaBt=z6zdxXME5cOoANUd_3yEr+va_jb8g@mail.gmail.com>
+ <1341583919.16893.3.camel@jlt3.sipsolutions.net> <CAB=NE6XNmrS=kqoptMg67JhBQUJfYa=jUFz+aU-4E91vzqjnTg@mail.gmail.com>
+ <1341589880.16893.11.camel@jlt3.sipsolutions.net> <CAB=NE6XaRZa4HKg25gd5zkWn=LrjcAXq4NMPVcFWn+PdtVwRdw@mail.gmail.com>
+ <1341591350.16893.13.camel@jlt3.sipsolutions.net> <CAB=NE6UDfeN6oj83o4rO6EUJeLnrop82WQswu1O2z=gSbVrcAw@mail.gmail.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Fri, 6 Jul 2012 09:53:11 -0700
+Message-ID: <CAB=NE6UGACusnfLAoLOy7L_ofGKawBGHEh0VFJLu9eTWp1ZZmw@mail.gmail.com> (sfid-20120706_185338_377572_4DB53548)
+Subject: Re: [PATCH 4/4] cfg80211: add cellular base station regulatory hint support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kvalo@qca.qualcomm.com, arend@broadcom.com, henry@logout.com,
+	senthilb@qca.qualcomm.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/11 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 07/10/2012 11:56 PM, Rafał Miłecki wrote:
->> 2012/7/10 Rafał Miłecki <zajec5@gmail.com>:
->>> 2012/7/10 Hauke Mehrtens <hauke@hauke-m.de>:
->>>> On 07/08/2012 02:51 PM, Rafał Miłecki wrote:
->>>>> GMAC COMMON core is present on BCM4706 and is used for example to access
->>>>> board PHYs (PHYs can not be accessed directly using GBIT MAC core).
->>>>
->>>> I think this is the cleanest way of doing this. I thought about handling
->>>> this in the Ethernet driver, but as we need locking, an extra driver
->>>> would be needed, just for this stupid locking.
->>>>
->>>> You should not register an external device for this core in
->>>> bcma_register_cores().
->>>
->>> I've just noticed my BCM4706 doesn't have GBIT MAC CMN... but AFAIK
->>> BCM4706 GMAC (0x52d) can not operate without GMAC CMN (0x5dc)...
->>>
->>> Hauke: does it make any sense to you?
->>
->> OK, I found out that quickly.
->>
->> First of all, there is some bridge on my bus. bcma_erom_is_bridge
->> returns true at some point of scanning.
->>
->> Secondly I've printed cia for
->> if (wrappers[0] + wrappers[1] == 0)
->> case:
->> [    2.360000] bcma: bus0: cia 0x43B36701 (0x367)
->> [    2.368000] bcma: bus0: cia 0x43B36601 (0x366)
->> [    2.372000] bcma: bus0: cia 0x43B01A01 (0x01A)
->> [    2.376000] bcma: bus0: cia 0x43B01B01 (0x01B)
->> [    2.380000] bcma: bus0: cia 0x43B01C01 (0x01C)
->> [    2.388000] bcma: bus0: cia 0x43B5DC01 (0x5DC)
->> [    2.392000] bcma: bus0: cia 0x43B5DD01 (0x5DD)
->>
-> Nice, there is the gmac common core. Will you write a patch extending
-> the scan function to find this core?
+On Fri, Jul 6, 2012 at 9:31 AM, Luis R. Rodriguez
+<rodrigue@qca.qualcomm.com> wrote:
+> upon wiphy registration we could detect if
+> a device has the feature enabled and peg core_base_hint_enabled++ or
+> whatever and then allow them through. Upon deregistration we'd
+> core_base_hint_enabled-- and only enable the feature if its > 0.
+>
+> Seems doable.
 
-OFC! I'm going to try that today :)
+Yeah.. I like this -- it means we wouldn't have to add a kconfig for
+the feature, instead each driver could define a kconfig of its own for
+it. I'll respin, thanks!
 
--- 
-Rafał
+  Luis
