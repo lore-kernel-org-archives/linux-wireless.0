@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3483 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751030Ab2G0Q7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 12:59:43 -0400
-Message-ID: <5012C8F5.5070500@broadcom.com> (sfid-20120727_185946_838943_CE4F6340)
-Date: Fri, 27 Jul 2012 09:59:33 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: Fred <mrmocool@gmx.de>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: Broadcom brcm80211 monitor mode
-References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com>
- <4F356004.9090409@broadcom.com>
- <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com>
- <4F469ADF.5040806@broadcom.com>
- <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com>
- <4F8C8A52.1070908@broadcom.com>
- <loom.20120727T010814-118@post.gmane.org>
-In-Reply-To: <loom.20120727T010814-118@post.gmane.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:55754 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab2GGTnK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jul 2012 15:43:10 -0400
+Message-ID: <1341690188.5334.3.camel@jlt3.sipsolutions.net> (sfid-20120707_214331_546134_0683392A)
+Subject: Re: [PATCH 2/2] mac80211: request TX status for BlockAck Requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Sat, 07 Jul 2012 21:43:08 +0200
+In-Reply-To: <edffedafcc56e4b333030ce4f5f8cf85c56d6ab4.1341667309.git.chunkeey@googlemail.com> (sfid-20120707_153449_431412_F1FD3485)
+References: <3accb52e0c55e2ac8388de7903ed6adfd964671b.1341667309.git.chunkeey@googlemail.com>
+	 <edffedafcc56e4b333030ce4f5f8cf85c56d6ab4.1341667309.git.chunkeey@googlemail.com>
+	 (sfid-20120707_153449_431412_F1FD3485)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2012 04:12 PM, Fred wrote:
-> Franky Lin <frankyl@...> writes:
->> However, I do plan to work on the monitor mode support on the firmware
->> for SDIO dongle as a leisure project although I don't have a schedule for it.
->> I will announce it on the mail list when it's ready. Stay tuned :)
->
-> Any news on this? :)
+On Sat, 2012-07-07 at 15:13 +0200, Christian Lamparter wrote:
+> Because ieee80211_tx_status in status.c checks if
+> outgoing BlockAck requests have been acked, it is
+> necessary to tell the driver that tx feedback for
+> this sort of frame is important.
+> 
+> Otherwise, the stack will continue to send the same
+> BlockAck request over and over, which can cause
+> the receiver to flush or clean its reorder buffer
+> over and over.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+> AFAICT no driver will be really affected by this patch since
+> either the TX status is always reported anyway or not at all.
+> 
+> BTW: ieee80211_tx_skb_tid is used by a few other agg functions
+> (mostly addba/delba), so maybe it would make sense to do the
+> same there.
 
-No, I still don't have time get to it.
+Applied.
 
-> Seems like the Galaxy S3 uses BCM4330 as well.
-
-Sorry, wrong answer. :(
-
-Franky
+johannes
 
