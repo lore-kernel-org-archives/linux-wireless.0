@@ -1,70 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34670 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751646Ab2GFT65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:58:57 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 05/33] NFC: Implement HCP reaggregation allocation error case
-Date: Fri,  6 Jul 2012 22:09:25 +0200
-Message-Id: <1341605393-32056-6-git-send-email-sameo@linux.intel.com> (sfid-20120706_215900_697946_1E8EA6C7)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:43297 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304Ab2GGKgT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jul 2012 06:36:19 -0400
+Received: by obbuo13 with SMTP id uo13so16625049obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2012 03:36:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CC1E0C97.12FC3%sunil2@telenetsystems.com>
+References: <CAD2nsn1-ZrKQxTYc_YZ6ETxovD9o7=Ygd2j2MxJiq8Vsiu19QQ@mail.gmail.com>
+	<CC1E0C97.12FC3%sunil2@telenetsystems.com>
+Date: Sat, 7 Jul 2012 16:06:18 +0530
+Message-ID: <CAD2nsn1dkyWvuosr8dhJ1seP_hBO7mBqaFtWQnzNJQBvLKHXnw@mail.gmail.com> (sfid-20120707_123622_300602_0DB16EB3)
+Subject: Re: [ath9k-devel] ath9k: Problems with diversity on AR9330
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Sunil Mehta <sunil2@telenetsystems.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Lapuyade <eric.lapuyade@intel.com>
+Hi Sunil,
 
-We can now report an ENOMEM error up to the HCI layer.
+>
+> We are facing similar problems with configuring the LNA2 of AR9331 for
+> diversity. Even though we try to set the RXCHAINMASK = 0x03, on checking
+> the value, it keeps showing as 0x01.
 
-Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/hci/core.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+chainmask is indeed 1 and its correct
 
-diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-index 1a009d5..7d4fdbc 100644
---- a/net/nfc/hci/core.c
-+++ b/net/nfc/hci/core.c
-@@ -717,12 +717,18 @@ void *nfc_hci_get_clientdata(struct nfc_hci_dev *hdev)
- }
- EXPORT_SYMBOL(nfc_hci_get_clientdata);
- 
--void nfc_hci_driver_failure(struct nfc_hci_dev *hdev, int err)
-+static void nfc_hci_failure(struct nfc_hci_dev *hdev, int err)
- {
--	/* TODO: lower layer has permanent failure.
-+	/*
-+	 * TODO: lower layer has permanent failure.
- 	 * complete potential HCI command or send an empty tag discovered event
- 	 */
- }
-+
-+void nfc_hci_driver_failure(struct nfc_hci_dev *hdev, int err)
-+{
-+	nfc_hci_failure(hdev, err);
-+}
- EXPORT_SYMBOL(nfc_hci_driver_failure);
- 
- void nfc_hci_recv_frame(struct nfc_hci_dev *hdev, struct sk_buff *skb)
-@@ -755,9 +761,8 @@ void nfc_hci_recv_frame(struct nfc_hci_dev *hdev, struct sk_buff *skb)
- 		hcp_skb = nfc_alloc_recv_skb(NFC_HCI_HCP_PACKET_HEADER_LEN +
- 					     msg_len, GFP_KERNEL);
- 		if (hcp_skb == NULL) {
--			/* TODO ELa: cannot deliver HCP message. How to
--			 * propagate error up?
--			 */
-+			nfc_hci_failure(hdev, -ENOMEM);
-+			return;
- 		}
- 
- 		*skb_put(hcp_skb, NFC_HCI_HCP_PACKET_HEADER_LEN) = pipe;
+ (AR_SREV_9485(ah) || AR_SREV_9285(ah) || AR_SREV_9330(ah))
+                chip_chainmask = 1;
+
+
+>
+> We are currently using LSDK-9.2.0_U10.1020. It appears that some where the
+> value may be hardcoded to 0x01 in this Release.
+
+some internal build ?
+
+>
+> Can you suggest how to solve this.
+>
+> Regards,
+> Sunil.
+>
+>
+> On 7/7/12 3:44 PM, "Mohammed Shafi" <shafi.wireless@gmail.com> wrote:
+>
+>>On Sat, Jul 7, 2012 at 3:28 PM, Mohammed Shafi <shafi.wireless@gmail.com>
+>>wrote:
+>>> Hi Sven,
+>>>
+>>> On Fri, Jul 6, 2012 at 10:05 PM, Sven Eckelmann <sven@narfation.org>
+>>>wrote:
+>>>> On Friday 06 July 2012 17:13:42 Sven Eckelmann wrote:
+>>>> [...]
+>>>>> > I just also observer the chain0 is "preferred" unless the RSSI is so
+>>>>> > poor in it so chain1 is taken.
+>>>>> > Please check if this work out for your case too.
+>>>>>
+>>>>> Removing the antenna on chain0 doesn't change the alt_rssi value for
+>>>>>us. We
+>>>>> only noticed that frames with alt_rssi != -128 have  the value
+>>>>>rx_ant_conf
+>>>>> == 1 (LNA2) when only chain1 is attached and rx_ant_conf == 2 (LNA1)
+>>>>>when
+>>>>> both/chain0-only are attached. Still most of the packets had alt_rssi
+>>>>>==
+>>>>> -128 and we saw changes in curr_main_set and curr_alt_set (after lot
+>>>>>of
+>>>>> data was sent).
+>>>>
+>>>> Here are some logs. We added some debug printk before first check in
+>>>> ath_ant_comb_scan ("if (main_rssi > 0 && alt_rssi > 0) {"). We can see
+>>>>a
+>>>> difference in the output after (a more or less long time) both
+>>>>antennas were
+>>>> unplugged. The output looks extreme different when at least one
+>>>>antenna is
+>>>> attached.
+>>>
+>>> thanks, i saw the logs. i could do some analysis with AR9485/AR9285.
+>>> as you had said before
+>>> alt_rssi is -128 when one antenna is unplugged, while having both out
+>>> seems to bring some
+>>> +tive value for alt_rssi.
+>>>
+>>>>
+>>>> alt_ant_conf is calculated using
+>>>> "alt_ant_conf = (rs->rs_rssi_ctl[2]) & ATH_ANT_RX_MASK;" and could be
+>>>>wrong.
+>>>> curr_alt_set and curr_main_set come from div_ant_conf queried using
+>>>> ath9k_hw_antdiv_comb_conf_get.
+>>>
+>>> thanks i would check this out.  As the algorithm itself is bit
+>>> complex, i would just revisit
+>>> and check it out. If i remember correctly Fast antenna diversity was
+>>> working fine with AR9485.
+>>
+>>further i check with the CCK/DETECT and MC_GAIN_CTRL in ar9485, it  seems
+>>to be
+>> ar9003_hw_ant_ctrl_apply CCK_DETECT 80be6788
+>> ar9003_hw_ant_ctrl_apply MC_GAIN_CTRLL 13ef0200
+>>will check it out whats the one bit difference in CCK_DETECT
+>>
+>>
+>>>
+>>>>
+>>>> Kind regards
+>>>>         Sven
+>>>
+>>>
+>>>
+>>> --
+>>> thanks,
+>>> shafi
+>>
+>>
+>>
+>>--
+>>thanks,
+>>shafi
+>>_______________________________________________
+>>ath9k-devel mailing list
+>>ath9k-devel@lists.ath9k.org
+>>https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>
+>
+
+
+
 -- 
-1.7.10
-
+thanks,
+shafi
