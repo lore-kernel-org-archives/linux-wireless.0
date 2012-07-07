@@ -1,94 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21441 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab2GJKID (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:46997 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081Ab2GGNet (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 06:08:03 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
-Date: Tue, 10 Jul 2012 15:37:55 +0530
-Message-ID: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120710_120807_542846_77B1AE35)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 7 Jul 2012 09:34:49 -0400
+Received: by werb14 with SMTP id b14so7028700wer.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2012 06:34:48 -0700 (PDT)
+Message-Id: <3accb52e0c55e2ac8388de7903ed6adfd964671b.1341667309.git.chunkeey@googlemail.com> (sfid-20120707_153542_897799_93455353)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 7 Jul 2012 15:07:13 +0200
+Subject: [PATCH 1/2] mac80211: fix read outside array bounds
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+ieee802_1d_to_ac is defined as a const int[8],
+but the tid parameter has a range from 0 to 15.
 
-Previously we would check in nl80211 with an empty
-cfg80211_wowlan structure to check for 'iw phy phyX wowlan enable'
-with empty arguments (or) no triggers and disable WoWLAN.
-It would be nice to inform the user that the wowlan enable is
-provided with zero arugments in userspace itself rather than
-disabling it in nl80211/cfg80211. A correspoding patch
-was also proposed for 'iw' tool.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- net/wireless/nl80211.c |   31 +++++++++++++++++--------------
- 1 files changed, 17 insertions(+), 14 deletions(-)
+IMHO the patch should be correct, although it's been a while.
+---
+ net/mac80211/tx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2a5cdb6..fb63f72 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6363,17 +6363,20 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d2e8159..3e974f2 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2717,7 +2717,7 @@ EXPORT_SYMBOL(ieee80211_get_buffered_bc);
+ void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
+ 			  struct sk_buff *skb, int tid)
  {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct nlattr *tb[NUM_NL80211_WOWLAN_TRIG];
--	struct cfg80211_wowlan no_triggers = {};
- 	struct cfg80211_wowlan new_triggers = {};
-+	struct cfg80211_wowlan *ntrig;
- 	struct wiphy_wowlan_support *wowlan = &rdev->wiphy.wowlan;
- 	int err, i;
- 	bool prev_enabled = rdev->wowlan;
-+	bool wow_disabled = false;
+-	int ac = ieee802_1d_to_ac[tid];
++	int ac = ieee802_1d_to_ac[tid & 7];
  
- 	if (!rdev->wiphy.wowlan.flags && !rdev->wiphy.wowlan.n_patterns)
- 		return -EOPNOTSUPP;
- 
--	if (!info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS])
-+	if (!info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS]) {
-+		wow_disabled = true;
- 		goto no_triggers;
-+	}
- 
- 	err = nla_parse(tb, MAX_NL80211_WOWLAN_TRIG,
- 			nla_data(info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS]),
-@@ -6484,18 +6487,18 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
--	if (memcmp(&new_triggers, &no_triggers, sizeof(new_triggers))) {
--		struct cfg80211_wowlan *ntrig;
--		ntrig = kmemdup(&new_triggers, sizeof(new_triggers),
--				GFP_KERNEL);
--		if (!ntrig) {
--			err = -ENOMEM;
--			goto error;
--		}
--		cfg80211_rdev_free_wowlan(rdev);
--		rdev->wowlan = ntrig;
--	} else {
-- no_triggers:
-+	ntrig = kmemdup(&new_triggers, sizeof(new_triggers),
-+			GFP_KERNEL);
-+	if (!ntrig) {
-+		err = -ENOMEM;
-+		goto error;
-+	}
-+	cfg80211_rdev_free_wowlan(rdev);
-+	rdev->wowlan = ntrig;
-+
-+no_triggers:
-+
-+	if (wow_disabled) {
- 		cfg80211_rdev_free_wowlan(rdev);
- 		rdev->wowlan = NULL;
- 	}
+ 	skb_set_mac_header(skb, 0);
+ 	skb_set_network_header(skb, 0);
 -- 
-1.7.0.4
+1.7.10
 
