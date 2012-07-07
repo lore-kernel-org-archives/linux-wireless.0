@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59467 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932522Ab2GLOFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 10:05:33 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:59755 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab2GGNet (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jul 2012 09:34:49 -0400
+Received: by wgbdr13 with SMTP id dr13so10090376wgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2012 06:34:48 -0700 (PDT)
+Message-Id: <edffedafcc56e4b333030ce4f5f8cf85c56d6ab4.1341667309.git.chunkeey@googlemail.com> (sfid-20120707_153542_185320_D9417AF3)
+In-Reply-To: <3accb52e0c55e2ac8388de7903ed6adfd964671b.1341667309.git.chunkeey@googlemail.com>
+References: <3accb52e0c55e2ac8388de7903ed6adfd964671b.1341667309.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 7 Jul 2012 15:13:08 +0200
+Subject: [PATCH 2/2] mac80211: request TX status for BlockAck Requests
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, michal.kazior@tieto.com
-Subject: [PATCH] cfg80211: ignore channel state for stopped AP interfaces
-Date: Thu, 12 Jul 2012 16:05:28 +0200
-Message-Id: <1342101928-16639-1-git-send-email-nbd@openwrt.org> (sfid-20120712_160537_106663_98047F1F)
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this change, running AP + station on the same wiphy does not work
-since the commit "cfg80211: add channel checking for iface combinations".
-The stopped AP prevents the client from connecting to an AP on a different
-channel.
+Because ieee80211_tx_status in status.c checks if
+outgoing BlockAck requests have been acked, it is
+necessary to tell the driver that tx feedback for
+this sort of frame is important.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Otherwise, the stack will continue to send the same
+BlockAck request over and over, which can cause
+the receiver to flush or clean its reorder buffer
+over and over.
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- net/wireless/chan.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+AFAICT no driver will be really affected by this patch since
+either the TX status is always reported anyway or not at all.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 434c56b..0840d38 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -137,8 +137,10 @@ cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_MESH_POINT:
--		*chan = wdev->channel;
--		*chanmode = CHAN_MODE_SHARED;
-+		if (wdev->beacon_interval) {
-+			*chan = wdev->channel;
-+			*chanmode = CHAN_MODE_SHARED;
-+		}
- 		return;
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_AP_VLAN:
+BTW: ieee80211_tx_skb_tid is used by a few other agg functions
+(mostly addba/delba), so maybe it would make sense to do the
+same there.
+---
+ net/mac80211/agg-tx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 5cc1bf7..0eaf245 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -135,7 +135,8 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+ 	bar->control = cpu_to_le16(bar_control);
+ 	bar->start_seq_num = cpu_to_le16(ssn);
+ 
+-	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
++		IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 	ieee80211_tx_skb_tid(sdata, skb, tid);
+ }
+ EXPORT_SYMBOL(ieee80211_send_bar);
 -- 
-1.7.3.2
+1.7.10
 
