@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37385 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774Ab2GYVOw (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:53558 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860Ab2GGWjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 17:14:52 -0400
-Received: by yhmm54 with SMTP id m54so1243145yhm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 14:14:52 -0700 (PDT)
-Message-ID: <501061C8.5010108@lwfinger.net> (sfid-20120725_231457_186175_2BCBA1A3)
-Date: Wed, 25 Jul 2012 16:14:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 7 Jul 2012 18:39:08 -0400
+Received: by obbuo13 with SMTP id uo13so17615127obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2012 15:39:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Tim and Alison Bentley <Home@TRARBentley.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: New Laptop and Driver
-References: <CAAT9HsjZ7wPbkRMH94HDNBS+vOhLigKLYULqfyQobh_Oyt9M4w@mail.gmail.com> <501030E9.3090707@lwfinger.net> <CAAT9Hshwb+iPMALGvP1P2UHzEQbyvYNM0_zz0dHp0mJuy6KwLA@mail.gmail.com> <50103BE8.1020203@lwfinger.net> <CAAT9HsjQ_tkm77NT_Rn5_Pi9BHGhY9Vz7jcVzkwdDUjUoKamtw@mail.gmail.com>
-In-Reply-To: <CAAT9HsjQ_tkm77NT_Rn5_Pi9BHGhY9Vz7jcVzkwdDUjUoKamtw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1341608733-7503-4-git-send-email-johannes@sipsolutions.net>
+References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
+	<1341608733-7503-4-git-send-email-johannes@sipsolutions.net>
+Date: Sun, 8 Jul 2012 01:39:07 +0300
+Message-ID: <CAB3XZEdmBi4gb=HMnwXRq4wygoQ6Gi=eTkocTA_NGNZLusWj_Q@mail.gmail.com> (sfid-20120708_003917_834855_5B818BFC)
+Subject: Re: [RFC 3/3] mac80211: redesign scan RX
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/25/2012 01:54 PM, Tim and Alison Bentley wrote:
-> On 25 July 2012 19:33, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 07/25/2012 01:00 PM, Tim and Alison Bentley wrote:
->>>
->>> 01:00.0 VGA compatible controller [0300]: nVidia Corporation Device
->>> [10de:0de9] (rev a1)
->>> 03:00.0 Network controller [0280]: Atheros Communications Inc. Device
->>> [168c:0037] (rev 01)
->>> 04:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
->>> RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
->>> 07)
->>
->>
->> The Realtek device is the one used for your wired network.
->>
->> The Atheros device is not in the tables for the latest version of any
->> wireless driver. Perhaps it will work if you do the following:
->>
->> su -
->> modprobe -v ath9k
->> echo "168c 0037" > /sys/bus/pci/drivers/ath9k/new_id
->> exit
->>
->> The above will work if the driver handles the device, but it is not yet in
->> the tables. Perhaps the Atheros developers will know the status of that
->> device.
->>
->> When replying to E-mail in this list, and most other technical mailing
->> lists, please do not top post. Always put your answer below the quoted
->> material as I did here.
->>
->> Larry
->>
->>
->>
-> Sorry for top posting, bad habbit
-> No luck with the suggestion and I tried a reboot for luck with no success.
+On Sat, Jul 7, 2012 at 12:05 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Scan receive is rather inefficient when there are
+> multiple virtual interfaces. We iterate all of the
+> virtual interfaces and then notify cfg80211 about
+> each beacon many times.
+>
+> Redesign scan RX to happen before everything else.
+> Then we can also get rid of IEEE80211_RX_IN_SCAN
+> since we don't have to accept frames into the RX
+> handlers for scanning or scheduled scanning any
+> more. Overall, this simplifies the code.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+[...]
 
-The effect of those commands would have disappeared after a reboot. One last 
-thing to do is to check /var/log/messages to see if it complained about missing 
-firmware after you entered the new_id. There should be some kind of error 
-messages at that point, but it is likely that no Linux driver handles this device.
+> +       sdata1 = rcu_dereference(local->scan_sdata);
+> +       sdata2 = rcu_dereference(local->sched_scan_sdata);
+>
+> -       if (skb->len < 24)
+> -               return RX_CONTINUE;
+> +       if (likely(!sdata1 && !sdata2))
+> +               return;
+>
+> -       presp = ieee80211_is_probe_resp(fc);
+> -       if (presp) {
+> +       if (ieee80211_is_probe_resp(mgmt->frame_control)) {
+>                 /* ignore ProbeResp to foreign address */
+> -               if (!ether_addr_equal(mgmt->da, sdata->vif.addr))
+> -                       return RX_DROP_MONITOR;
+> +               if (!ether_addr_equal(mgmt->da, sdata1->vif.addr) &&
+> +                   !ether_addr_equal(mgmt->da, sdata2->vif.addr))
+> +                       return;
 
-You might try ndiswrapper and the Windows driver, but if the system is 64-bit, 
-then that might not work either.
+you should check sdata1 and sdata2 before dereferencing them.
 
-Larry
+other than that, looks good to me.
 
+Eliad.
