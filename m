@@ -1,58 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38683 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752404Ab2GQNEI (ORCPT
+Received: from telenetsystems.com ([130.94.222.88]:53599 "EHLO
+	telenetsystems.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630Ab2GGKin (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 09:04:08 -0400
-Message-ID: <1342530237.8139.5.camel@jlt3.sipsolutions.net> (sfid-20120717_150411_727969_B9F4F0C4)
-Subject: Re: [ath5k-devel] [PATCH 2/2] mac80211: Remove control.sta from
- struct ieee80211_tx_info and restructure tx-path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: coelho@ti.com, brcm80211-dev-list@broadcom.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
-	ilw@linux.intel.com, ath9k-devel@lists.ath9k.org,
-	b43-dev@lists.infradead.org, chunkeey@googlemail.com,
-	dsd@gentoo.org, buytenh@wantstofly.org
-Date: Tue, 17 Jul 2012 15:03:57 +0200
-In-Reply-To: <5005613F.1000004@net.t-labs.tu-berlin.de>
-References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120713_205245_114771_49FF4AC7) <1342518290.7427.9.camel@jlt3.sipsolutions.net>
-	 <5005613F.1000004@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 7 Jul 2012 06:38:43 -0400
+Date: Sat, 07 Jul 2012 16:01:56 +0530
+Subject: Re: [ath9k-devel] ath9k: Problems with diversity on AR9330
+From: Sunil Mehta <sunil2@telenetsystems.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Message-ID: <CC1E0C97.12FC3%sunil2@telenetsystems.com> (sfid-20120707_123846_868450_0C727044)
+In-Reply-To: <CAD2nsn1-ZrKQxTYc_YZ6ETxovD9o7=Ygd2j2MxJiq8Vsiu19QQ@mail.gmail.com>
+Mime-version: 1.0
+Content-type: text/plain;
+	charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-17 at 14:57 +0200, Thomas Huehn wrote:
 
-> > Ok first of all, please actually compile the tree after your changes. It
-> > doesn't. When it does, please fix
-> 
-> I always do compile the compat-wireless-tree after changes I introduce,
-> and it compiles without errors in the case of this mac80211:sta-remove
-> patch. But as my build tree is based on the OpenWrt environment, it
-> might be not 100% in sync. Could you be a bit more explicit where does
-> it brake in you case (which function, driver...) ?
+Hi Shafi,
 
-No, I'm not going to play that game. Make sure it compiles on
-wireless-next.
+We are facing similar problems with configuring the LNA2 of AR9331 for
+diversity. Even though we try to set the RXCHAINMASK = 0x03, on checking
+the value, it keeps showing as 0x01.
 
-> I guess you refer to the comment in mac80211.h, struct tx_info that I
-> removed:
-> - * The TX control's sta pointer is only valid during the ->tx call,
-> - * it may be NULL.
-> 
-> I am not sure what you want me to keep here as comment. As the sta
-> pointer is moved into the new struct tx_control and the remaining
-> pointers in the tx_info->control structure (vif, hw_key) are ALL only
-> valid during the ->tx call and may be NULL. So I could think of adding a
-> comment to tx_control about the sta been NULL, but anything more ?
+We are currently using LSDK-9.2.0_U10.1020. It appears that some where the
+value may be hardcoded to 0x01 in this Release.
 
-It's also not allowed to copy the pointer, due to RCU, which is
-information you lost.
+Can you suggest how to solve this.
 
-johannes
+Regards,
+Sunil.
+
+
+On 7/7/12 3:44 PM, "Mohammed Shafi" <shafi.wireless@gmail.com> wrote:
+
+>On Sat, Jul 7, 2012 at 3:28 PM, Mohammed Shafi <shafi.wireless@gmail.com>
+>wrote:
+>> Hi Sven,
+>>
+>> On Fri, Jul 6, 2012 at 10:05 PM, Sven Eckelmann <sven@narfation.org>
+>>wrote:
+>>> On Friday 06 July 2012 17:13:42 Sven Eckelmann wrote:
+>>> [...]
+>>>> > I just also observer the chain0 is "preferred" unless the RSSI is so
+>>>> > poor in it so chain1 is taken.
+>>>> > Please check if this work out for your case too.
+>>>>
+>>>> Removing the antenna on chain0 doesn't change the alt_rssi value for
+>>>>us. We
+>>>> only noticed that frames with alt_rssi != -128 have  the value
+>>>>rx_ant_conf
+>>>> == 1 (LNA2) when only chain1 is attached and rx_ant_conf == 2 (LNA1)
+>>>>when
+>>>> both/chain0-only are attached. Still most of the packets had alt_rssi
+>>>>==
+>>>> -128 and we saw changes in curr_main_set and curr_alt_set (after lot
+>>>>of
+>>>> data was sent).
+>>>
+>>> Here are some logs. We added some debug printk before first check in
+>>> ath_ant_comb_scan ("if (main_rssi > 0 && alt_rssi > 0) {"). We can see
+>>>a
+>>> difference in the output after (a more or less long time) both
+>>>antennas were
+>>> unplugged. The output looks extreme different when at least one
+>>>antenna is
+>>> attached.
+>>
+>> thanks, i saw the logs. i could do some analysis with AR9485/AR9285.
+>> as you had said before
+>> alt_rssi is -128 when one antenna is unplugged, while having both out
+>> seems to bring some
+>> +tive value for alt_rssi.
+>>
+>>>
+>>> alt_ant_conf is calculated using
+>>> "alt_ant_conf = (rs->rs_rssi_ctl[2]) & ATH_ANT_RX_MASK;" and could be
+>>>wrong.
+>>> curr_alt_set and curr_main_set come from div_ant_conf queried using
+>>> ath9k_hw_antdiv_comb_conf_get.
+>>
+>> thanks i would check this out.  As the algorithm itself is bit
+>> complex, i would just revisit
+>> and check it out. If i remember correctly Fast antenna diversity was
+>> working fine with AR9485.
+>
+>further i check with the CCK/DETECT and MC_GAIN_CTRL in ar9485, it  seems
+>to be
+> ar9003_hw_ant_ctrl_apply CCK_DETECT 80be6788
+> ar9003_hw_ant_ctrl_apply MC_GAIN_CTRLL 13ef0200
+>will check it out whats the one bit difference in CCK_DETECT
+>
+>
+>>
+>>>
+>>> Kind regards
+>>>         Sven
+>>
+>>
+>>
+>> --
+>> thanks,
+>> shafi
+>
+>
+>
+>-- 
+>thanks,
+>shafi
+>_______________________________________________
+>ath9k-devel mailing list
+>ath9k-devel@lists.ath9k.org
+>https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+
 
