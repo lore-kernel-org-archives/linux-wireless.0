@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33773 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750815Ab2GBMyD (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45681 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209Ab2GHQ1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 08:54:03 -0400
-Message-ID: <1341233640.19642.5.camel@jlt3.sipsolutions.net> (sfid-20120702_145408_419599_FB418A61)
-Subject: Re: [PATCH 60g v2 5/5] wireless: bitrate calculation for 60g
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 02 Jul 2012 14:54:00 +0200
-In-Reply-To: <1341210756-11054-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1341210756-11054-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 8 Jul 2012 12:27:23 -0400
+Received: by yhmm54 with SMTP id m54so10330123yhm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 09:27:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1341608733-7503-2-git-send-email-johannes@sipsolutions.net>
+References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net> <1341608733-7503-2-git-send-email-johannes@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 8 Jul 2012 19:27:07 +0300
+Message-ID: <CA+XVXfdo7agXE9Osxzmda2ZWi-xQ6pvP66zktdiDJq3P6PULgg@mail.gmail.com> (sfid-20120708_182726_415999_78852915)
+Subject: Re: [RFC 1/3] mac80211: make scan_sdata pointer usable with RCU
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-02 at 09:32 +0300, Vladimir Kondratiev wrote:
+On Sat, Jul 7, 2012 at 12:05 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Making the scan_sdata pointer usable with RCU makes
+> it possible to dereference it in the RX path to see
+> if a received frame actually matches the interface
+> that is scanning. This is just preparations, making
+> the pointer __rcu.
 
-> +#if 0
-> +		/*
-> +		 * TODO: How to report this bitrate?
-> +		 * It don't fit into u16
-> +		 */
-> +		[24] = 67568, /* 6756.75 mbps */
-> +#endif
-
-So how do you plan to address this todo? I think we need to have a new
-U32 attribute for the bitrate and then put this when the value is too
-large etc.
-
-johannes
-
+I noticed no synchronize_rcu() in the start/stop scan calls. Good/bad idea?
