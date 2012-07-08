@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51661 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004Ab2G0MSc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 08:18:32 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SujV0-0007Bs-Mo
-	for linux-wireless@vger.kernel.org; Fri, 27 Jul 2012 14:18:30 +0200
-Message-ID: <1343391506.4449.11.camel@jlt3.sipsolutions.net> (sfid-20120727_141835_704102_16DF2710)
-Subject: driver sparse/smatch warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 27 Jul 2012 14:18:26 +0200
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:49769 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751540Ab2GHR7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2012 13:59:04 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Snvl7-0008CP-C8
+	for linux-wireless@vger.kernel.org; Sun, 08 Jul 2012 19:59:01 +0200
+Received: from c-69-245-126-173.hsd1.mi.comcast.net ([69.245.126.173])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 19:59:01 +0200
+Received: from ilhebe999 by c-69-245-126-173.hsd1.mi.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 19:59:01 +0200
+To: linux-wireless@vger.kernel.org
+From: Ouyang <ilhebe999@gmail.com>
+Subject: make =?utf-8?b?bW9kdWxlc19pbnN0YWxs?= error
+Date: Sun, 8 Jul 2012 17:58:49 +0000 (UTC)
+Message-ID: <loom.20120708T195348-706@post.gmane.org> (sfid-20120708_195908_218116_1871092E)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since I was just running sparse & smatch anyway I figured I'd post it in
-case somebody is interested:
+After I run: make modules make bzImages successfully, I tried to make 
+modules_install but could not go any further.
+# make modules_install
+rm:invalid option -- '3'
+Try 'rm -- help' for more information
+make : *** [_modinst_] Error 1
 
-http://p.sipsolutions.net/04cc4db35c4e5793.txt
+Could anyone please help me with the situation? 
+I just add something to the wireless-testing and compile it. The version of the 
+linux is 3.4.4-3.fc17.x86_64 #1
 
-Drivers with seemingly relevant warnings are:
- * ath9k (bad spin_lock_bh)
- * b43 (some functions can be static)
- * iwlegacy (lots of functions can be static)
- * p54
- * rt2x00 maybe?
- * rtlwifi (null deref, endian warnings)
- * at76c (dma on stack)
-
-
-johannes
+Thank you so much.
 
