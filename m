@@ -1,182 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:46600 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509Ab2G0JdX (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:36140 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751385Ab2GHNk7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 05:33:23 -0400
-Received: by wgbdr13 with SMTP id dr13so2637895wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 02:33:22 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] mac80211: add PS flag to bss_conf
-Date: Fri, 27 Jul 2012 12:33:22 +0300
-Message-Id: <1343381602-10079-1-git-send-email-eliad@wizery.com> (sfid-20120727_113327_549863_526C635C)
+	Sun, 8 Jul 2012 09:40:59 -0400
+Received: by lboj14 with SMTP id j14so13406156lbo.7
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 06:40:56 -0700 (PDT)
+Message-ID: <1341754854.4354.45.camel@cumari.coelho.fi> (sfid-20120708_154102_586537_E37820C6)
+Subject: Re: pull request: TI wireless drivers 2012-07-08 (for 3.6)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, arik@wizery.com, assaf@ti.com
+Date: Sun, 08 Jul 2012 16:40:54 +0300
+In-Reply-To: <1341754768.4354.44.camel@cumari.coelho.fi>
+References: <1341754768.4354.44.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, ps mode is indicated per device (rather than
-per interface), which doesn't make a lot of sense.
+Oops, fixed the subject, which was obviously sent with the wrong date.
+Sorry for the mix up.
 
-Moreover, there are subtle bugs caused by the inability
-to indicate ps change along with other changes
-(e.g. when the AP deauth us, we'd like to indicate
-CHANGED_PS | CHANGED_ASSOC, as changing PS before
-notifying about disassociation will result in null-packets
-being sent (if IEEE80211_HW_SUPPORTS_DYNAMIC_PS) while
-the sta is already disconnected.)
+Luca.
 
-Keep the current per-device notifications, and add
-parallel per-vif notifications.
+On Sun, 2012-07-08 at 16:39 +0300, Luciano Coelho wrote:
+> Hi John,
+> 
+> A few more patches with some bugfixes and an update in the firmware APIs
+> intended for 3.6.  The new firmware has already been applied in
+> linux-firmware.git and renamed, so this should work with the latest
+> stuff from there.
+> 
+> Please let me know if there are any problems with this.
+> 
+> 
+> The following changes since commit abb14fc399bb895bc5ab86af5d4defc2dfec4e70:
+> 
+>   Merge tag 'nfc-next-3.6-2' of git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0 (2012-07-06 16:20:33 -0400)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+> 
+> for you to fetch changes up to b950b01308bdcb07b16eb0ea63a76901d029bfd8:
+> 
+>   Merge branch 'wl12xx-next' into for-linville (2012-07-08 16:27:26 +0300)
+> 
+> ----------------------------------------------------------------
+> 
+> Arik Nemtsov (9):
+>       wlcore/wl12xx/wl18xx: check min FW version
+>       wlcore: don't stop tx queue via watermark if already stopped
+>       wlcore: remove recover cmd from testmode
+>       wlcore: avoid debug prints during intended FW recovery
+>       wlcore: always clear recovery flag during recovery_work
+>       wlcore: don't set SDIO_FAILED flag when driver state is off
+>       wlcore: define number of supported bands internally
+>       wl12xx/wl18xx: use a dynamic PS timeout of 1.5sec
+>       wlcore: determine AP extra rates correctly
+> 
+> Dan Carpenter (1):
+>       wlcore: fix a couple small memory leaks
+> 
+> Eliad Peller (2):
+>       wlcore: implement .flush callback
+>       wlcore: check ssid length against the correct element
+> 
+> Ido Yariv (1):
+>       wlcore: Prevent processing of work items during op_stop
+> 
+> Luciano Coelho (2):
+>       wl12xx/wlcore: increase FW filename version
+>       Merge branch 'wl12xx-next' into for-linville
+> 
+> Victor Goldenshtein (1):
+>       wlcore: enable sched scan while connected
+> 
+> Yoni Divinsky (2):
+>       wlcore: add probe request templates for sched and one-shot scans
+>       wlcore: change the wait for event mechanism
+> 
+>  drivers/net/wireless/ti/wl12xx/main.c     |   26 ++++++++++++++-----
+>  drivers/net/wireless/ti/wl12xx/wl12xx.h   |   14 ++++++++++
+>  drivers/net/wireless/ti/wl18xx/main.c     |   27 ++++++++++++++-----
+>  drivers/net/wireless/ti/wl18xx/wl18xx.h   |    7 +++++
+>  drivers/net/wireless/ti/wlcore/boot.c     |   55 +++++++++++++++++++++++++++++++++++++--
+>  drivers/net/wireless/ti/wlcore/cmd.c      |   22 +++++++++++++---
+>  drivers/net/wireless/ti/wlcore/cmd.h      |    6 ++---
+>  drivers/net/wireless/ti/wlcore/init.c     |   16 ++++++++++++
+>  drivers/net/wireless/ti/wlcore/io.c       |    6 +++++
+>  drivers/net/wireless/ti/wlcore/io.h       |   13 +++++-----
+>  drivers/net/wireless/ti/wlcore/main.c     |   75 ++++++++++++++++++++++++++++++-----------------------
+>  drivers/net/wireless/ti/wlcore/scan.c     |   11 ++++----
+>  drivers/net/wireless/ti/wlcore/sdio.c     |    6 -----
+>  drivers/net/wireless/ti/wlcore/spi.c      |    6 -----
+>  drivers/net/wireless/ti/wlcore/testmode.c |   13 +---------
+>  drivers/net/wireless/ti/wlcore/wlcore.h   |   25 ++++++++++++++++--
+>  drivers/net/wireless/ti/wlcore/wlcore_i.h |   16 ++++--------
+>  17 files changed, 242 insertions(+), 102 deletions(-)
+> 
+> 
 
-In order to keep it simple, the per-device ps and
-the per-vif ps are orthogonal - the per-vif ps
-configuration is determined only by the user
-configuration (enable/disable) and the connection
-state, and is not affected by other vifs state and
-(temporary) dynamic_ps/offchannel operations
-(unlike per-device ps).
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: refactor and always check for actual ps change (thanks Johannes)
-v3: remove redundant changes (thanks Johannes)
-
- include/net/mac80211.h     |    5 +++++
- net/mac80211/cfg.c         |    6 ++++--
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   15 +++++++++++++++
- net/mac80211/util.c        |    3 ++-
- 5 files changed, 27 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3a700fd..1fcb109 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -171,6 +171,7 @@ struct ieee80211_low_level_stats {
-  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
-  * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
-  * @BSS_CHANGED_AP_PROBE_RESP: Probe Response changed for this BSS (AP mode)
-+ * @BSS_CHANGED_PS: PS changed for this BSS (STA mode)
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -190,6 +191,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_IDLE		= 1<<14,
- 	BSS_CHANGED_SSID		= 1<<15,
- 	BSS_CHANGED_AP_PROBE_RESP	= 1<<16,
-+	BSS_CHANGED_PS			= 1<<17,
- 
- 	/* when adding here, make sure to change ieee80211_reconfig */
- };
-@@ -266,6 +268,8 @@ enum ieee80211_rssi_event {
-  * @idle: This interface is idle. There's also a global idle flag in the
-  *	hardware config which may be more appropriate depending on what
-  *	your driver/device needs to do.
-+ * @ps: power-save mode (STA only). This flag is NOT affected by
-+ *	offchannel/dynamic_ps operations.
-  * @ssid: The SSID of the current vif. Only valid in AP-mode.
-  * @ssid_len: Length of SSID given in @ssid.
-  * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
-@@ -296,6 +300,7 @@ struct ieee80211_bss_conf {
- 	bool arp_filter_enabled;
- 	bool qos;
- 	bool idle;
-+	bool ps;
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
- 	size_t ssid_len;
- 	bool hidden_ssid;
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e81b4a5..72c9681 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1283,9 +1283,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	mutex_unlock(&local->sta_mtx);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
--	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
-+	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
- 		ieee80211_recalc_ps(local, -1);
--
-+		ieee80211_recalc_ps_vif(sdata);
-+	}
- 	return 0;
- }
- 
-@@ -2084,6 +2085,7 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 
- 	ieee80211_recalc_ps(local, -1);
-+	ieee80211_recalc_ps_vif(sdata);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d08c547..856d153 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1207,6 +1207,7 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- void ieee80211_send_pspoll(struct ieee80211_local *local,
- 			   struct ieee80211_sub_if_data *sdata);
- void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
-+void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata);
- int ieee80211_max_network_latency(struct notifier_block *nb,
- 				  unsigned long data, void *dummy);
- int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index bf3da5a..e9c3f86 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1007,6 +1007,16 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- 	ieee80211_change_ps(local);
- }
- 
-+void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata)
-+{
-+	bool ps_allowed = ieee80211_powersave_allowed(sdata);
-+
-+	if (sdata->vif.bss_conf.ps != ps_allowed) {
-+		sdata->vif.bss_conf.ps = ps_allowed;
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_PS);
-+	}
-+}
-+
- void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
- {
- 	struct ieee80211_local *local =
-@@ -1310,6 +1320,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_smps(local);
- 	mutex_unlock(&local->iflist_mtx);
- 
-+	ieee80211_recalc_ps_vif(sdata);
-+
- 	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
- }
-@@ -1371,6 +1383,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	}
- 	local->ps_sdata = NULL;
- 
-+	/* disable per-vif ps */
-+	ieee80211_recalc_ps_vif(sdata);
-+
- 	/* flush out any pending frame (e.g. DELBA) before deauth/disassoc */
- 	if (tx)
- 		drv_flush(local, false);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 39b82fe..037d148 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1359,7 +1359,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			changed |= BSS_CHANGED_ASSOC |
--				   BSS_CHANGED_ARP_FILTER;
-+				   BSS_CHANGED_ARP_FILTER |
-+				   BSS_CHANGED_PS;
- 			mutex_lock(&sdata->u.mgd.mtx);
- 			ieee80211_bss_info_change_notify(sdata, changed);
- 			mutex_unlock(&sdata->u.mgd.mtx);
--- 
-1.7.6.401.g6a319
 
