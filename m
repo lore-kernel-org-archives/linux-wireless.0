@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8417 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750877Ab2GDL7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 07:59:39 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Paul Bolle <pebolle@tiscali.nl>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3.5] iwlegacy: don't mess up the SCD when removing a key
-Date: Wed,  4 Jul 2012 13:59:08 +0200
-Message-Id: <1341403148-3360-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20120704_135948_361242_A1F2E61E)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:52796 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752390Ab2GHX1a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2012 19:27:30 -0400
+Received: by lbbgm6 with SMTP id gm6so19003858lbb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 16:27:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1341585556-9992-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1341585556-9992-1-git-send-email-mohammed@qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 9 Jul 2012 09:27:09 +1000
+Message-ID: <CAGRGNgVpk4tk0aCyb77_jE4Dg6d_DRW5MzKacr0CTVZE+1O2sg@mail.gmail.com> (sfid-20120709_012734_450971_44EDA8DE)
+Subject: Re: [PATCH v2 1/2] ath9k: Fix MCI cleanup
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we remove a key, we put a key index which was supposed
-to tell the fw that we are actually removing the key. But
-instead the fw took that index as a valid index and messed
-up the SRAM of the device.
+Hi Mohammed,
 
-This memory corruption on the device mangled the data of
-the SCD. The impact on the user is that SCD queue 2 got
-stuck after having removed keys.
+On Sat, Jul 7, 2012 at 12:39 AM, Mohammed Shafi Shajakhan
+<mohammed@qca.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>
+> We are doing MCI cleanup eventhough BTCOEX is not enabled
+> via module parameter. This means we do ath_mci_cleanup
+> though we skipped calling ath_mci_setup. Yet it does not
+> causes any issues now  as we free the DMA buffer allocated
+> only when it is allocated during ath_mci_setup.
+>
+> Reviewed-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/gpio.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+> index 5eac4d1..43557c2 100644
+> --- a/drivers/net/wireless/ath/ath9k/gpio.c
+> +++ b/drivers/net/wireless/ath/ath9k/gpio.c
+> @@ -387,11 +387,13 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
+>
+>  void ath9k_deinit_btcoex(struct ath_softc *sc)
+>  {
+> +       struct ath_hw *ah = sc->sc_ah;
+> +
 
-Reported-by: Paul Bolle <pebolle@tiscali.nl>
-Cc: stable@vger.kernel.org
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Why introduce a new variable if you only use it once?
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index d24eaf8..34f61a0 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -3405,7 +3405,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
- 		return 0;
- 	}
- 
--	if (il->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET) {
-+	if (il->stations[sta_id].sta.key.key_flags & STA_KEY_FLG_INVALID) {
- 		IL_WARN("Removing wrong key %d 0x%x\n", keyconf->keyidx,
- 			key_flags);
- 		spin_unlock_irqrestore(&il->sta_lock, flags);
-@@ -3420,7 +3420,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
- 	memset(&il->stations[sta_id].sta.key, 0, sizeof(struct il4965_keyinfo));
- 	il->stations[sta_id].sta.key.key_flags =
- 	    STA_KEY_FLG_NO_ENC | STA_KEY_FLG_INVALID;
--	il->stations[sta_id].sta.key.key_offset = WEP_INVALID_OFFSET;
-+	il->stations[sta_id].sta.key.key_offset = keyconf->hw_key_idx;
- 	il->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
- 	il->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
- 
+Thanks,
+
 -- 
-1.7.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
