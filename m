@@ -1,54 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50535 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546Ab2GQLgn (ORCPT
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:34342 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751238Ab2GHHXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:36:43 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Message-ID: <20485.19956.285571.372831@gargle.gargle.HOWL> (sfid-20120717_133656_143545_D0B308E2)
-Date: Tue, 17 Jul 2012 17:05:16 +0530
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue TXOP limit
-In-Reply-To: <50046A71.9020302@openwrt.org>
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-2-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-3-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-4-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-5-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-6-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-7-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-8-git-send-email-nbd@openwrt.org>
-	<20481.3065.540576.366365@gargle.gargle.HOWL>
-	<500143CA.1020804@openwrt.org>
-	<506697F5827BD842B7CB80D046EBE618995399@aphydexd01b>
-	<5002A7B2.409@openwrt.org>
-	<20483.52640.521243.418804@gargle.gargle.HOWL>
-	<5003EABD.5040506@openwrt.org>
-	<20484.23881.582002.607413@gargle.gargle.HOWL>
-	<50046A71.9020302@openwrt.org>
+	Sun, 8 Jul 2012 03:23:47 -0400
+Received: by lbbgj10 with SMTP id gj10so4634185lbb.23
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 00:23:44 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 4/8] wlcore: define number of supported bands internally
+Date: Sun,  8 Jul 2012 10:23:27 +0300
+Message-Id: <1341732211-25871-5-git-send-email-coelho@ti.com> (sfid-20120708_092353_785084_55E59D0E)
+In-Reply-To: <1341732211-25871-1-git-send-email-coelho@ti.com>
+References: <1341732211-25871-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> The way I understand this, the TXOP limit is meant to limit the duration
-> of a single transmission on the channel. An aggregate is transmitted in
-> one go, there's no SIFS or extra PHY headers inbetween, just short
-> delimiters. So an A-MPDU should be treated pretty much like an MPDU
-> here, its transmission duration should not exceed the TXOP limit.
+From: Arik Nemtsov <arik@wizery.com>
 
-Yeah, makes sense.
+Avoid using the IEEE80211_NUM_BANDS constant for arrays sizes etc, as
+this can contain bands unsupported by the driver (e.g. 60Ghz). Use an
+internal constant to determine the number of bands.
 
-But we need to handle multiple interfaces, otherwise this would break
-modes like P2P. For example, bring up a P2P-GO and setup a HT20 network,
-and then bring up a new station interface - this would unconditionally
-update the aggr. limits of the existing network. This wasn't the case earlier
-since the limits were being maintained globally and were common to all interfaces
-and addition/removal of new interfaces would not change the aggr. limits.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c     |    2 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h   |    4 ++--
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    5 ++++-
+ 3 files changed, 7 insertions(+), 4 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 5632194..1aecc46 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4569,7 +4569,7 @@ static int wl12xx_set_bitrate_mask(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++	for (i = 0; i < WLCORE_NUM_BANDS; i++)
+ 		wlvif->bitrate_masks[i] =
+ 			wl1271_tx_enabled_rates_get(wl,
+ 						    mask->control[i].legacy,
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 0df731a..27ccc27 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -304,7 +304,7 @@ struct wl1271 {
+ 	s8 noise;
+ 
+ 	/* bands supported by this instance of wl12xx */
+-	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
++	struct ieee80211_supported_band bands[WLCORE_NUM_BANDS];
+ 
+ 	/*
+ 	 * wowlan trigger was configured during suspend.
+@@ -371,7 +371,7 @@ struct wl1271 {
+ 	u8 hw_min_ht_rate;
+ 
+ 	/* HW HT (11n) capabilities */
+-	struct ieee80211_sta_ht_cap ht_cap[IEEE80211_NUM_BANDS];
++	struct ieee80211_sta_ht_cap ht_cap[WLCORE_NUM_BANDS];
+ 
+ 	/* size of the private FW status data */
+ 	size_t fw_status_priv_len;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 2a0e896..0187eef 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -62,6 +62,9 @@
+ #define WL12XX_INVALID_ROLE_ID     0xff
+ #define WL12XX_INVALID_LINK_ID     0xff
+ 
++/* the driver supports the 2.4Ghz and 5Ghz bands */
++#define WLCORE_NUM_BANDS           2
++
+ #define WL12XX_MAX_RATE_POLICIES 16
+ 
+ /* Defined by FW as 0. Will not be freed or allocated. */
+@@ -360,7 +363,7 @@ struct wl12xx_vif {
+ 	int channel;
+ 	enum nl80211_channel_type channel_type;
+ 
+-	u32 bitrate_masks[IEEE80211_NUM_BANDS];
++	u32 bitrate_masks[WLCORE_NUM_BANDS];
+ 	u32 basic_rate_set;
+ 
+ 	/*
+-- 
+1.7.10
+
