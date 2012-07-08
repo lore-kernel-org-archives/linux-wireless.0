@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:38056 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752292Ab2GYJhC (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40061 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752123Ab2GHTrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 05:37:02 -0400
-Message-ID: <1343209019.11031.3.camel@sortiz-mobl> (sfid-20120725_113707_564084_607611A4)
-Subject: Re: 2nd CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com,
-	Ilan Elias <ilane@ti.com>
-Date: Wed, 25 Jul 2012 11:36:59 +0200
-In-Reply-To: <20120723192057.GE18589@tuxdriver.com>
-References: <20120322192406.GB2432@tuxdriver.com>
-	 <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com>
-	 <1332774906.1870.98.camel@aeonflux> <20120326152541.GH13806@tuxdriver.com>
-	 <20120427174439.GC16207@tuxdriver.com>
-	 <20120723192057.GE18589@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 8 Jul 2012 15:47:53 -0400
+Message-ID: <4FF9E3E5.6080202@net.t-labs.tu-berlin.de> (sfid-20120708_214756_540025_FE7C9D07)
+Date: Sun, 08 Jul 2012 21:47:49 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	brcm80211-dev-list@broadcom.com, pieterpg@broadcom.com,
+	gregkh@suse.de, frankyl@broadcom.com, rvossen@broadcom.com,
+	brudley@broadcom.com
+Subject: Re: [PATCH v2] brcmsmac: restructure info->control.sta handling as
+ it is goning to be removed soon.
+References: <1340974563-77085-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1340975210.4472.1.camel@jlt3.sipsolutions.net> <4FEDC3F0.1000201@net.t-labs.tu-berlin.de> <20120706193733.GC1879@tuxdriver.com> <4FF9E254.7090203@broadcom.com>
+In-Reply-To: <4FF9E254.7090203@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi Arend,
 
-On Mon, 2012-07-23 at 15:20 -0400, John W. Linville wrote:
-> On Fri, Apr 27, 2012 at 01:44:39PM -0400, John W. Linville wrote:
-> 
-> > Just to keep the ball rolling...
-> > 
-> > Angela has reserved space for us at the Hotel Fira
-> > Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
-> > Please note that this will overlap Yocto Dev Days, oVirt Summit and
-> > KVM Forum at the same venue.
-> > 
-> > Now, we need some talk proposals!  Please post in this thread (or
-> > contact me or Marcel directly if necessary) to propose talks.  I would
-> > love to see any topics on any relevant technologies, as well as topics
-> > about how the projects are being managed, new sub-projects, etc.
-> > It seems like a long time away right now, but it is a good time to
-> > start thinking... :-)
-> 
-> Still a while to go, but this event is getting closer.  I would love to
-> see some more concrete topic proposals for talks, both presentations
-> and discussions.
-> 
-> Here is what I've seen so far:
-> 
-> Speaker				Topic
-> -------				-----
-> Joao Paulo Rechi Vita		status and roadmap of Bluetooth LE
-> Andrei Emeltchenko		Virtual Bluetooth AMP Controller for mac80211
-> Alexander Smirnov		802.15.4 stack, 6lowpan
-I think I proposed to do an NFC state of the union talk there. I'm still in if that's Ok with you.
-Ilan Elias volunteered as a co-presenter. He will focus on the NCI status.
+This patch has the following goal. To implement Transmission Power
+Control (TPC) in the mac80211 subsystem, I remove the STA pointer from
+the ieee_tx_info structure to gain free mem for TPC annotation and I put
+the sta  on the stack to pass it to each driver function in the tx-path.
+The broadcom brcmsmac is the only driver where the ieee_tx_info is
+somewhat stored and therefore the sta point is not as straight removable
+as for the other drivers. This patch resolved that issue.
+Please have a look at my recent patch [PATCH] mac80211: Add transmit
+power control support (TPC) where I have included this one again with
+the full story in the code.
 
-Cheers,
-Samuel.
+Greetings Thomas
+
+Arend van Spriel schrieb:
+
+> On 07/06/2012 09:37 PM, John W. Linville wrote:
+>> On Fri, Jun 29, 2012 at 11:04:16AM -0400, thomas wrote:
+>>> Johannes Berg schrieb:
+>>>
+>>>> On Fri, 2012-06-29 at 05:56 -0700, Thomas Huehn wrote:
+>>>>> brcmsmac uses info->control.sta while doing ampdu aggregation. This patch
+>>>>> changes the usage of the structure info->control.sta, as it is going to be
+>>>>> removed soon from struct ieee80211_tx_info. This patch is a pre-requisit in
+>>>>> order to add transmission power control (TPC) to the mac80211 subsystem.
+>>>>>
+>>>>> Suggested-by: Felix Fietkau <nbd@openwrt.org>
+>>>>> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+>>>>> ---
+>>>>> Change sequence of overwriting data. Thx to Johannes.
+>>>>
+>>>>> @@ -665,7 +665,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+>>>>>  			u8 plcp0, plcp3, is40, sgi;
+>>>>>  			struct ieee80211_sta *sta;
+>>>>>  
+>>>>> -			sta = tx_info->control.sta;
+>>>>> +			sta = tx_info->rate_driver_data[0];
+>>>> Are you sure it actually works now?
+>>>
+>>> From locking at the code, sta is never used after it gets overridden.
+>>> The brcmsmac driver does not use the vif pointer at all. I asked Felix
+>>> to double check as I do not have a Broadcom device over here.
+>>>
+>>> Bye Thomas
+>> Any comments on this one from the Broadcom camp?
+>>
+> 
+> Hi John,
+> 
+> Just applied the patch to have a closer look at the changes, but I am
+> missing details on the whole story. I see tx_info->rate_driver_data[0]
+> being set in the tx callback and reset to NULL in some other path which
+> I believe is only called upon tid or sta removal so it does not make
+> sense to me.
+> 
+> I have pushed the patch to our internal review server as I would like
+> some co-workers to have a look. If anyone can provide any more details
+> what this patch is trying to solve, please do.
+> 
+> Gr. AvS
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
