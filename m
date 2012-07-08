@@ -1,63 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42322 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751593Ab2GKSyu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 14:54:50 -0400
-Message-ID: <4FFDCBF6.9080504@openwrt.org> (sfid-20120711_205453_711007_9B1F517C)
-Date: Wed, 11 Jul 2012 20:54:46 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 02/12] ath9k: validate rx antenna settings
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org> <1342029555-31618-2-git-send-email-nbd@openwrt.org> <4FFDC92D.2010103@openwrt.org>
-In-Reply-To: <4FFDC92D.2010103@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-2
+Received: from he.sipsolutions.net ([78.46.109.217]:57979 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251Ab2GHJ4c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2012 05:56:32 -0400
+Message-ID: <1341741386.4987.5.camel@jlt3.sipsolutions.net> (sfid-20120708_115702_704512_7B0E1D85)
+Subject: Re: [PATCH] nl/cfg/mac80211: add set_mcast_rate API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 08 Jul 2012 11:56:26 +0200
+In-Reply-To: <1341739885-15385-1-git-send-email-ordex@autistici.org>
+References: <1341739885-15385-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-11 8:42 PM, Gabor Juhos wrote:
-> 2012.07.11. 19:59 keltezéssel, Felix Fietkau írta:
->> Many chips are not able to deal with non-consecutive rx antenna selections
->> and respond with calibration errors, reset errors, etc.
->> When an antenna is selected as a tx antenna, also flag it for rx to avoid
->> chip issues.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->>  drivers/net/wireless/ath/ath9k/main.c |   19 ++++++++++++++++++-
->>  1 files changed, 18 insertions(+), 1 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index 248e5b2..49f293a 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -1912,12 +1912,29 @@ static u32 fill_chainmask(u32 cap, u32 new)
->>  	return filled;
->>  }
->>  
->> +static bool validate_antenna_mask(struct ath_hw *ah, u32 val)
->> +{
->> +	switch (val & ah->caps.rx_chainmask) {
->> +	case 0x1:
->> +	case 0x3:
->> +	case 0x7:
->> +		return true;
->> +	case 0x2:
->> +		return (ah->caps.rx_chainmask == 1);
-> 
-> This case statement seems superfluous. If 'rx_chainmask == 1' then 'val &
-> rx_chainmask' never will be 0x2.
-> 
->> +	default:
->> +		return false;
->> +	}
-> 
-> Additionally, the function does not allows to set rx antenna to 0x2/0x3 for
-> chips with antenna diversity capabilities.
-Yeah, thanks. I added the case 0x2 above to take care of that, but it's
-obviously buggy because of the masking with rx_chainmask.
-I'll fix it in v2.
+On Sun, 2012-07-08 at 11:31 +0200, Antonio Quartulli wrote:
 
-- Felix
+> +int cfg80211_set_mcast_rate(struct cfg80211_registered_device *rdev,
+> +			    struct net_device *dev,
+> +			    struct cfg80211_ibss_params *params)
+
+I'd say just inline the function into the nl80211.c handler itself, not
+much value in having it separate.
+
+
+> +	mcast_attr = nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE]);
+> +	if (info->attrs[NL80211_ATTR_MCAST_RATE] &&
+
+this is wrong
+
+johannes
+
