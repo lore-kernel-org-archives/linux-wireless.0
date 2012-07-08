@@ -1,122 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63451 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755042Ab2GAKoW (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:36822 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307Ab2GHOIQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jul 2012 06:44:22 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 60g v1 5/5] wireless: bitrate calculation for 60g
-Date: Sun, 1 Jul 2012 13:44:08 +0300
-Message-ID: <1341139448-10624-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120701_124458_982059_D3F87600)
+	Sun, 8 Jul 2012 10:08:16 -0400
+Received: by obbuo13 with SMTP id uo13so18892967obb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 07:08:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1341740110.4987.4.camel@jlt3.sipsolutions.net>
+References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+ <1341732211-25871-8-git-send-email-coelho@ti.com> <1341740110.4987.4.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 8 Jul 2012 17:08:00 +0300
+Message-ID: <CA+XVXfdEqQyiyDQoAddCjC9bhH+WqmANiqf_wUCEJFi7=xG5vQ@mail.gmail.com> (sfid-20120708_160855_104003_CE701872)
+Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-60g band uses different from .11n MCS scheme, so bitrate should be calculated
-differently
+On Sun, Jul 8, 2012 at 12:35 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> So the subject is wrong since "&priv->conf.phy" can hardly be "static
+> global", but
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- include/net/cfg80211.h |    2 ++
- net/wireless/util.c    |   55 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 57 insertions(+)
+Yea you're right. The static global pointer was used before, now it's
+a different location we copy stuff into.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 56e840d..f760520 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -563,11 +563,13 @@ enum station_info_flags {
-  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
-  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
-  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
-+ * @RATE_INFO_FLAGS_60G: 60gHz MCS
-  */
- enum rate_info_flags {
- 	RATE_INFO_FLAGS_MCS		= 1<<0,
- 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
- 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
-+	RATE_INFO_FLAGS_60G		= 1<<3,
- };
- 
- /**
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 11188c6..130eaed 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -890,12 +890,67 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
- 
-+static u16 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
-+{
-+	static const u16 __mcs2bitrate[] = {
-+		/* control PHY */
-+		[0] =   275,
-+		/* SC PHY */
-+		[1] =  3850,
-+		[2] =  7700,
-+		[3] =  9625,
-+		[4] = 11550,
-+		[5] = 12512, /* 1251.25 mbps */
-+		[6] = 15400,
-+		[7] = 19250,
-+		[8] = 23100,
-+		[9] = 25025,
-+		[10] = 30800,
-+		[11] = 38500,
-+		[12] = 46200,
-+		/* OFDM PHY */
-+		[13] =  6930,
-+		[14] =  8662, /* 866.25 mbps */
-+		[15] = 13860,
-+		[16] = 17325,
-+		[17] = 20790,
-+		[18] = 27720,
-+		[19] = 34650,
-+		[20] = 41580,
-+		[21] = 45045,
-+		[22] = 51975,
-+		[23] = 62370,
-+#if 0
-+		/*
-+		 * TODO: How to report this bitrate?
-+		 * It don't fit into u16
-+		 */
-+		[24] = 67568, /* 6756.75 mbps */
-+#endif
-+		/* LP-SC PHY */
-+		[25] =  6260,
-+		[26] =  8340,
-+		[27] = 11120,
-+		[28] = 12510,
-+		[29] = 16680,
-+		[30] = 22240,
-+		[31] = 25030,
-+	};
-+
-+	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
-+		return 0;
-+
-+	return __mcs2bitrate[rate->mcs];
-+}
-+
- u16 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
- 	int modulation, streams, bitrate;
- 
- 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
- 		return rate->legacy;
-+	if (rate->flags & RATE_INFO_FLAGS_60G)
-+		return cfg80211_calculate_bitrate_60g(rate);
- 
- 	/* the formula below does only work for MCS values smaller than 32 */
- 	if (WARN_ON_ONCE(rate->mcs >= 32))
--- 
-1.7.9.5
+>
+>> We get DMA alignment trouble if the beginning of the struct is
+>> unaligned. Allocate memory and send it to FW.
+>
+> If this is all about alignment, and
+>
+>> +     params = kzalloc(sizeof(*params), GFP_KERNEL);
+>
+> kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
+> then most likely you could just put "__aligned(4)" or something on the
+> conf.phy struct member and not allocate memory at all?
 
+Yea we need 4 bytes alignment. The kzalloc is a sort of convention in
+the driver (see acx.c), but probably here we can use kmemdup.
+We can't use fancy __aligned(4) notations most likely, since a
+usermode tool also parses these header files, and it's not too smart
+:)
+
+Anyway I'll fix the subject and use kmemdup. Thanks for the review.
+
+Arik
