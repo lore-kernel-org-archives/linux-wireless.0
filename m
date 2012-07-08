@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50863 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753538Ab2GXDyg (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37431 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab2GHOer (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 23:54:36 -0400
-Received: by pbbrp8 with SMTP id rp8so11971451pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 20:54:35 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v4] mac80211: add extra checking for RC init upon receiving mesh beacon
-Date: Tue, 24 Jul 2012 11:52:35 +0800
-Message-Id: <1343101955-16710-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120724_055511_707021_1B20E3D6)
+	Sun, 8 Jul 2012 10:34:47 -0400
+Message-ID: <4FF99A80.9040700@candelatech.com> (sfid-20120708_163451_418840_C1C14F8A)
+Date: Sun, 08 Jul 2012 07:34:40 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] mac80211: use full power if off-channel
+References: <1341740130-6199-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1341740130-6199-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rate control statistic is flushed whenever the mesh beacon
-is received. This may not optimizes the performance of rate
-control algorithm. This patch ensures that we return early
-from mesh_peer_init if the plink_state is ESTAB. Thus, avoid
-calling the rate_control_rate_init again for established mesh
-STA.
+On 07/08/2012 02:35 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Instead of using full power when scanning, use
+> full power when off-channel. This is different
+> since off-channel can be remain-on-channel.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
-v2: simplify the logic checking (Thomas Pedersen)
-v3: updating the sta last rx activity (Thomas Pedersen)
-v4: avoid duplicate assignment (Thomas Pedersen)
+What if we are scanning on our current channel?  Shouldn't
+it be full-power then as well?
 
- net/mac80211/mesh_plink.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Thanks,
+Ben
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4256859..dfeb243 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -361,6 +361,11 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
- 
- 	spin_lock_bh(&sta->lock);
- 	sta->last_rx = jiffies;
-+	if (sta->plink_state == NL80211_PLINK_ESTAB) {
-+		spin_unlock_bh(&sta->lock);
-+		return sta;
-+	}
-+
- 	sta->sta.supp_rates[band] = rates;
- 	if (elems->ht_cap_elem &&
- 	    sdata->local->_oper_channel_type != NL80211_CHAN_NO_HT)
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>   net/mac80211/main.c |    4 +---
+>   1 file changed, 1 insertion(+), 3 deletions(-)
+>
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index e706f9e..35c4b1d 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -148,9 +148,7 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+>   		changed |= IEEE80211_CONF_CHANGE_SMPS;
+>   	}
+>
+> -	if (test_bit(SCAN_SW_SCANNING, &local->scanning) ||
+> -	    test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning) ||
+> -	    test_bit(SCAN_HW_SCANNING, &local->scanning))
+> +	if (local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL)
+>   		power = chan->max_power;
+>   	else
+>   		power = local->power_constr_level ?
+>
+
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
 
