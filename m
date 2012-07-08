@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:65501 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056Ab2GKI3E (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10628 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238Ab2GHHVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 04:29:04 -0400
-Received: by ghrr11 with SMTP id r11so944093ghr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 01:29:02 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: Fix the Problem of Unreachable Mesh STA from DS
-Date: Wed, 11 Jul 2012 16:28:21 +0800
-Message-Id: <1341995301-24611-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120711_102918_901951_05AB2FA9)
+	Sun, 8 Jul 2012 03:21:53 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: remove debugging masks from AR_MCI_INTERRUPT_RX_MSG_DEFAULT
+Date: Sun, 8 Jul 2012 12:53:16 +0530
+Message-ID: <1341732196-2869-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120708_092234_517130_A7002362)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the problem of unreachable mesh STA from
-Distribution System (DS) due to the introduction of previous
-patch solving the mesh STA joining from one MBSS to another
-MBSS.
+Remove the CONT_* and LNA_* messages from
+AR_MCI_INTERRUPT_RX_MSG_DEFAULT. Those MCI rx messages only
+meant for debugging purpose. Including them in default rx_msg
+series could raise huge amount of MCI interrupts when BT traffic
+is going on. And also it increases power consumption when WLAN
+is scanning.
 
-Reported-by: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- net/mac80211/tx.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/reg.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 07bd305..dd5b151 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1817,6 +1817,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 					/* RA TA mDA mSA AE:DA SA */
- 					mesh_da = mppath->mpp;
- 					is_mesh_mcast = 0;
-+				} else if (mpath) {
-+					mesh_da = mpath->dst;
-+					is_mesh_mcast = 0;
- 				} else {
- 					/* DA TA mSA AE:SA */
- 					mesh_da = bcast;
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 22d2413..6592c07 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -2081,12 +2081,6 @@ enum {
+ 					 AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET| \
+ 					 AR_MCI_INTERRUPT_RX_MSG_SYS_WAKING  | \
+ 					 AR_MCI_INTERRUPT_RX_MSG_SYS_SLEEPING| \
+-					 AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO   | \
+-					 AR_MCI_INTERRUPT_RX_MSG_LNA_CONTROL | \
+-					 AR_MCI_INTERRUPT_RX_MSG_LNA_INFO    | \
+-					 AR_MCI_INTERRUPT_RX_MSG_CONT_NACK   | \
+-					 AR_MCI_INTERRUPT_RX_MSG_CONT_INFO   | \
+-					 AR_MCI_INTERRUPT_RX_MSG_CONT_RST    | \
+ 					 AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)
+ 
+ #define AR_MCI_CPU_INT					0x1840
 -- 
-1.7.0.4
+1.7.11.1
 
