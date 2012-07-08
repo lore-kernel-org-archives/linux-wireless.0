@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:61957 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748Ab2GSM3n (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:43274 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab2GHOkN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 08:29:43 -0400
-Received: by ghrr11 with SMTP id r11so2677353ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2012 05:29:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120719113628.GA32727@elgon.mountain>
-References: <20120719113628.GA32727@elgon.mountain>
-Date: Thu, 19 Jul 2012 14:29:41 +0200
-Message-ID: <CAAd0S9CeFhDi0AZAX7zqcLFkNtiK6vv4i4UCMs8oB5Z0pKe+mA@mail.gmail.com> (sfid-20120719_142946_924703_FD9A4DBF)
-Subject: Re: carl9170: improve unicast PS buffering
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 8 Jul 2012 10:40:13 -0400
+Received: by wgbdr13 with SMTP id dr13so10668376wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 07:40:11 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] wl18xx: alloc conf.phy memory to ensure alignemnt
+Date: Sun,  8 Jul 2012 17:40:05 +0300
+Message-Id: <1341758406-32759-1-git-send-email-arik@wizery.com> (sfid-20120708_164050_608500_F69946A0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Dan,
+We get DMA alignment trouble if the beginning of the conf.phy struct is
+not aligned to 4 bytes. Use kmemdup to ensure alignment.
 
-On Thu, Jul 19, 2012 at 1:36 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> Sorry this is so old.  I was going through some old Smatch warnings.
->
-> This is a semi-automatic email about new static checker warnings.
->
-> The patch caf1eae20668: "carl9170: improve unicast PS buffering" from
-> Apr 24, 2011, leads to the following Smatch complaint:
->
-> drivers/net/wireless/ath/carl9170/tx.c:1488 carl9170_op_tx()
->          error: we previously assumed 'sta' could be null (see line 1482)
->
-> drivers/net/wireless/ath/carl9170/tx.c
->   1481
->   1482          if (sta) {
->                    ^^^^^
-> New check.
->
->   1483                  struct carl9170_sta_info *stai = (void *) sta->drv_priv;
->   1484                  atomic_inc(&stai->pending_frames);
->   1485          }
->   1486
->   1487          if (info->flags & IEEE80211_TX_CTL_AMPDU) {
->   1488                  run = carl9170_tx_ampdu_queue(ar, sta, skb);
->                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Old dereference of "sta" inside the call to carl9170_tx_ampdu_queue().
->
->   1489                  if (run)
->   1490                          carl9170_tx_ampdu(ar);
->
-> Probably we can remove the check?
-What check do you want to remove? The check in smatch
-which produces the warning/error. Or the "if (sta) {" in line
-1482?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v2: use kmemdup
 
-Or do you mean I should extend the check in 1487 to:
-if (sta) {
-     ...
-     if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-     ....
-     }
-}
+ drivers/net/wireless/ti/wl18xx/main.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Regards,
-    Chr
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index b378b34..8bb21b6 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -772,16 +772,24 @@ out:
+ static int wl18xx_set_mac_and_phy(struct wl1271 *wl)
+ {
+ 	struct wl18xx_priv *priv = wl->priv;
++	struct wl18xx_mac_and_phy_params *params;
+ 	int ret;
+ 
++	params = kmemdup(&priv->conf.phy, sizeof(*params), GFP_KERNEL);
++	if (!params) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
+ 	ret = wlcore_set_partition(wl, &wl->ptable[PART_PHY_INIT]);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wlcore_write(wl, WL18XX_PHY_INIT_MEM_ADDR, (u8 *)&priv->conf.phy,
+-			   sizeof(struct wl18xx_mac_and_phy_params), false);
++	ret = wlcore_write(wl, WL18XX_PHY_INIT_MEM_ADDR, params,
++			   sizeof(*params), false);
+ 
+ out:
++	kfree(params);
+ 	return ret;
+ }
+ 
+-- 
+1.7.9.5
+
