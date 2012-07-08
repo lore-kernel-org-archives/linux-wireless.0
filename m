@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ivanich.tenet.odessa.ua ([85.238.100.22]:51354 "EHLO
-	ivanich.org.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476Ab2GEUsT convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57917 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636Ab2GHJfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 16:48:19 -0400
-From: Ivan Ivanich <ivanich@ivanich.org.ua>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Trial change to rtl8192ce used as AP
-Date: Thu, 05 Jul 2012 23:48:12 +0300
-Message-ID: <4694922.N1vy7JykjW@ivanich.org.ua> (sfid-20120705_224823_409340_0CC51E58)
-In-Reply-To: <4FF5F939.8070008@lwfinger.net>
-References: <4FF5F600.9040900@lwfinger.net> <1670791.qBDPst6NTM@ivanich.org.ua> <4FF5F939.8070008@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 8 Jul 2012 05:35:13 -0400
+Message-ID: <1341740110.4987.4.camel@jlt3.sipsolutions.net> (sfid-20120708_113517_982087_4B27C3C9)
+Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, arik@wizery.com
+Date: Sun, 08 Jul 2012 11:35:10 +0200
+In-Reply-To: <1341732211-25871-8-git-send-email-coelho@ti.com> (sfid-20120708_092401_300367_EF4BD9AD)
+References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+	 <1341732211-25871-8-git-send-email-coelho@ti.com>
+	 (sfid-20120708_092401_300367_EF4BD9AD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Четверг, 05-июл-2012 15:29:45 Larry Finger wrote:
-> On 07/05/2012 03:24 PM, Ivan Ivanich wrote:
-> > On Четверг, 05-июл-2012 15:16:00 Larry Finger wrote:
-> >> Ivan,
-> >> 
-> >> The following patch is suggested by the code-analysis tool cppcheck as
-> >> the
-> >> test is always false. As it will not affect STA usage, I have no way to
-> >> test the change. Could you please do so?
-> >> 
-> >> Thanks,
-> >> 
-> >> Larry
-> >> 
-> >> 
-> >> Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> >> ===================================================================
-> >> --- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> >> +++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> >> @@ -1097,7 +1097,7 @@ static int _rtl92ce_set_media_status(str
-> >> 
-> >>    	rtl_write_byte(rtlpriv, (MSR), bt_msr);
-> >>    	rtlpriv->cfg->ops->led_control(hw, ledaction);
-> >> 
-> >> -	if ((bt_msr & 0xfc) == MSR_AP)
-> >> +	if ((bt_msr & 0x03) == MSR_AP)
-> >> 
-> >>    		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> >>    	
-> >>    	else
-> >>    	
-> >>    		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
-> > 
-> > Yes, compiling now, for some reason it doesn't apply cleanyl so I manualy
-> > changed this line.
-> > And what exactly I should test?
-> 
-> Does it affect operation in AP mode? Before this change, the code always
-> wrote 0x66 to the register. Now it seems that it will write 0 if in AP
-> mode. As I have no idea what that register does, I do not know what effect
-> the change will have.
-> 
-> Larry
-At the first look all works as before, I will test a few days and then report.
+So the subject is wrong since "&priv->conf.phy" can hardly be "static
+global", but 
+
+> We get DMA alignment trouble if the beginning of the struct is
+> unaligned. Allocate memory and send it to FW.
+
+If this is all about alignment, and
+
+> +	params = kzalloc(sizeof(*params), GFP_KERNEL);
+
+kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
+then most likely you could just put "__aligned(4)" or something on the
+conf.phy struct member and not allocate memory at all?
+
+johannes
+
