@@ -1,35 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:40685 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755552Ab2GKTAw convert rfc822-to-8bit (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60339 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752390Ab2GHXUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 15:00:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120711183320.GB1937@tuxdriver.com>
-References: <20120711181721.GC1906@tuxdriver.com>
-	<20120711183320.GB1937@tuxdriver.com>
-Date: Wed, 11 Jul 2012 21:00:50 +0200
-Message-ID: <CACna6rwN+tBu=BG0TR2udq3PH9qvPg44jJQPGc4G3jH_t2=GjQ@mail.gmail.com> (sfid-20120711_210101_472954_2F255E7D)
-Subject: Re: pull request: wireless-next 2012-07-11
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 8 Jul 2012 19:20:25 -0400
+Message-ID: <1341789621.25597.247.camel@deadeye.wl.decadent.org.uk> (sfid-20120709_012042_892679_5D1B5C4D)
+Subject: Re: [PATCH V3] rtlwifi: rtl8192ce: rtl8192se: rtl8192de: Update to
+ rtl_92ce_92se_92de_linux_mac80211_0004.0816.2011 driver
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dwmw2@infradead.org
+Date: Mon, 09 Jul 2012 00:20:21 +0100
+In-Reply-To: <1341778577-2544-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1341778577-2544-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-DMkOFfp/xUI1ejlrzmTG"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/11 John W. Linville <linville@tuxdriver.com>:
-> Ugh, forgot the signature again...
->
-> On Wed, Jul 11, 2012 at 02:17:22PM -0400, John W. Linville wrote:
->> Rafał Miłecki (2):
->>       b43: N-PHY: fix RSSI calibration
->>       bcma: use custom printing functions
 
-MIPS users: bcma patch breaks compilation for you (sorry!), please apply
-bcma: fix CC driver compilation on MIPS
-locally before it gets merged.
+--=-DMkOFfp/xUI1ejlrzmTG
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Rafał
+On Sun, 2012-07-08 at 15:16 -0500, Larry Finger wrote:
+> Realtek driver rtl_92ce_92se_92de_linux_mac80211_0004.0816.2011 introduce=
+d new
+> versions of the firmware for rtl8192se, and rtl8192de. It also adds new
+> firmware for new cuts of the RTL8192CE chips.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>=20
+> V2 - sent to Ben Hutchings
+>    - fixed the mode for new files
+>    - made clearer the source of the new files
+> V3 - Removed extraneous material from File line
+[...]
+
+Applied, thanks.
+
+Ben.
+
+--=20
+Ben Hutchings
+No political challenge can be met by shopping. - George Monbiot
+
+--=-DMkOFfp/xUI1ejlrzmTG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAT/oVtee/yOyVhhEJAQoc7w/+OjG7YSRy3PQZDz8Y974/Bs1Bw6LaShXd
+Qhec+Zlyx2QeFVUPu7OVfktdi4nJvGpCh98x7xyAsnlu6LAHV7GXvBsCDV2A3RII
+KdKXp3PFfWdk/8Zwh8Ga0GD7B2X20yegq0EKl5Y6Ykf2b1FBv4LYDlTdhZTXfe4q
+yANjEW35XM/MhcfRMUQRUNomPmjerL2HkR0yANhNUXiYrjj1WHhm5SsPAe6ZdixU
+fCWbblzlholYXy7DPzqvdt5bTbJ0IlOEVm+My9EMhI8J2CCQYhqJPAEqGSfX3PqX
+YJ4PFxJ4wnACzYWtdJ5Pg1Zb7jx7bJ63SU9G3jIFV86h6gxVWGuNRuyfbPa8IVco
+mtSxRxjLles8JZnvTXYk0CfJWRk5FZhO83xe5Y+3ZO3Mh5kxIC7O/2IFkBfoyUoz
+cQhGp7NNVqBEOKIVWHiEN+uBu5RBttBbawVYESz0eOntmZzLN17dm5xWNyXEVZcd
+MzIqkIE8fhMxznvbOuT1vD7yFYx5QdN09WIjTgXWDsXBc7uNKGObZI/htaM8hdrW
+yLZDpj2DMCfXw7UzcT+Alb7ucILO7NaCr19kVqxvJzOIil3/6HzgwycMdXsqdUEg
+eYTlJMt3QE4zHpypAWOhrTWUBoXkA6OxZjh0CbKBpjCh1tb3zm7dwdtN++49zRfx
+S1PVEEFZOpk=
+=2O6L
+-----END PGP SIGNATURE-----
+
+--=-DMkOFfp/xUI1ejlrzmTG--
