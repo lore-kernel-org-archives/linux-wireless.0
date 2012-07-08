@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46166 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab2GZGYX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 02:24:23 -0400
-Message-ID: <1343283856.4611.1.camel@jlt3.sipsolutions.net> (sfid-20120726_082426_812395_E27F9EB2)
-Subject: Re: [PATCH v5] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, ath5k-devel@venema.h4ckr.net,
-	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
-	nbd@openwrt.org
-Date: Thu, 26 Jul 2012 08:24:16 +0200
-In-Reply-To: <1343244302.3750.44.camel@cumari.coelho.fi>
-References: <1343161108-6941-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120724_221843_511093_701FFAF2) <1343208990.4463.25.camel@jlt3.sipsolutions.net>
-	 (sfid-20120725_113644_599580_8AC4476F) <1343220625.4463.31.camel@jlt3.sipsolutions.net>
-	 <500FEDDD.206@net.t-labs.tu-berlin.de>
-	 <1343244302.3750.44.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:3637 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751916Ab2GHTK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jul 2012 15:10:58 -0400
+Message-ID: <4FF9DB2F.3080606@broadcom.com> (sfid-20120708_211102_278171_7905899A)
+Date: Sun, 8 Jul 2012 21:10:39 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 00/18] brcmsmac: update to get SoCs working
+References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
+ <4FF29B89.3040300@broadcom.com> <20120706183547.GC2353@tuxdriver.com>
+In-Reply-To: <20120706183547.GC2353@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-25 at 22:25 +0300, Luciano Coelho wrote:
-
-> > My last PATCH included some changes at a TI driver which was adapted in
-> > wireless-testing in John's tree. As I touch that many drivers I would
-> > like to use your tree instead, to provide a proper PATCH that builds at
-> > your tree state...small de-synchronization issues just make it fail.
+On 07/06/2012 08:35 PM, John W. Linville wrote:
+> On Tue, Jul 03, 2012 at 09:13:13AM +0200, Arend van Spriel wrote:
+>> On 06/30/2012 03:16 PM, Hauke Mehrtens wrote:
+>>> This series contains some patches needed to get brcmsmac working on 
+>>> SoCs like the BCM4718.
+>>> The last part which adds core rev 17 (used in the BCM4718) to the list 
+>>> of supported cores is missing, because we do not have a firmware 
+>>> supporting this core yet, but I extended the b43 fwcutter to generate 
+>>> a firmware which brcmsmac accepts. With this firmware my BCM4718 
+>>> works. I would appreciate an official firmware release from Broadcom 
+>>> adding support for this core.
+>>> The final patch adding support for the BCM43224 is missing because 
+>>> the PCIe host controller on the BCM4718 still causes problems and I 
+>>> have to add some more read after writes into the code, for now it uses 
+>>> an ugly hack and sometimes the problems still occur.
+>>>
+>>> The wifi is not stable on the BCM4718, I had no problems connecting to 
+>>> my ath9k driven access point but I have problems connecting to my 
+>>> BCM47186 based AP running the vendor firmware with the Broadcom 
+>>> proprietary driver.
+>>> I get 12MBit/s max with the BCM4718 connected to ath9k on the 2.4 GHz 
+>>> band and 35 MBit/s max with the BCM43224 on the 5Ghz band connected to 
+>>> a Broadcom based AP running the proprietary driver. This seams to be 
+>>> CPU bounced as I have over 50% sirq in both cases.
+>>>
+>>> brcmsmac starts on the BCM47186 (id: 0x5357), but it does not tx or rx 
+>>> any traffic.
+>>>
+>>> One patch extends the xmtfifo_sz array for more core revs, I just toke 
+>>> the values from the other phy-n cores and hope this is correct.
+>>>
+>>> These patches are depending on: "[PATCH v2 0/9] bcma misc updates" and 
+>>> based on wireless-testing.
+>>>
+>>> I will send a patch for bcma which converts the warning message when it 
+>>> found a PCI and not a PCIe card into a WARN.
+>>>
+>>> v2:
+>>>   - when something depends on a patch for bcma, which is not in 
+>>>     wireless-testing yet, I add that to the commit comment.
+>>>   - removed changes for BCM43421 and BCM6362 as I do not have a device
+>>>     to test this.
+>>>   - xmtfifo_sz now starts at core rev 17 and contains the correct values 
+>>>     for core rev 28
+>>>   - make brcms_c_chipmatch() also work for SoCs
+>>>   - typos and format changes
+>>>
+>>
+>> I have acked all patches, but would like to do some sanity testing today.
 > 
-> Since Johannes has already more or less acked this patch, wouldn't it be
-> easier to integrate via John's tree? I think it would make syncing with
-> mac80211 and all the drivers easier.
+> Have you had a chance to do this testing?  Are you OK with this series?
+> 
+> John
+> 
 
-That wouldn't have helped, I actually merged wireless-next and wireless
-before applying the patch, so it just overlapped with other changes
-between Thomas's testing and applying it.
+Yes, I am. Sorry for not getting back on that earlier.
 
-johannes
+Gr. AvS
+
 
