@@ -1,99 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25559 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081Ab2GFWV5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34197 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753771Ab2GIMiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 18:21:57 -0400
-Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
-	<arend@broadcom.com>, <henry@logout.com>,
-	<senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-Subject: [PATCH v3 1/2] ath5k: replace modparam_all_channels with CONFIG_ATH5K_TEST_CHANNELS
-Date: Fri, 6 Jul 2012 15:21:51 -0700
-Message-ID: <1341613312-11971-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120707_002200_519025_3E6875AA)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 9 Jul 2012 08:38:09 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/8] nl80211: retrieve interface data by wdev
+Date: Mon,  9 Jul 2012 14:37:58 +0200
+Message-Id: <1341837483-18001-4-git-send-email-johannes@sipsolutions.net> (sfid-20120709_143819_006037_085C6660)
+In-Reply-To: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
+References: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This stashes away this feature from standard kernel builds.
+Since soon there will be virtual interfaces that
+don't have a netdev, use the wdev identifier for
+the API to retrieve interface data.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/Kconfig |    8 ++++++++
- drivers/net/wireless/ath/ath5k/base.c  |   17 ++++++++++-------
- 2 files changed, 18 insertions(+), 7 deletions(-)
+ net/wireless/nl80211.c |   26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index e18a9aa..338c5c4 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -64,3 +64,11 @@ config ATH5K_PCI
- 	---help---
- 	  This adds support for PCI type chipsets of the 5xxx Atheros
- 	  family.
-+
-+config ATH5K_TEST_CHANNELS
-+	bool "Enables testing channels on ath5k"
-+	depends on ATH5K && CFG80211_CERTIFICATION_ONUS
-+	---help---
-+	  This enables non-standard IEEE 802.11 channels on ath5k, which
-+	  can be used for research purposes. This option should be disabled
-+	  unless doing research.
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 44ad6fe..8c4c040 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -74,10 +74,6 @@ bool ath5k_modparam_nohwcrypt;
- module_param_named(nohwcrypt, ath5k_modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 27cd18e..5800c49 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1731,21 +1731,25 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
  
--static bool modparam_all_channels;
--module_param_named(all_channels, modparam_all_channels, bool, S_IRUGO);
--MODULE_PARM_DESC(all_channels, "Expose all channels the device can use.");
--
- static bool modparam_fastchanswitch;
- module_param_named(fastchanswitch, modparam_fastchanswitch, bool, S_IRUGO);
- MODULE_PARM_DESC(fastchanswitch, "Enable fast channel switching for AR2413/AR5413 radios.");
-@@ -258,8 +254,15 @@ static int ath5k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *re
- \********************/
- 
- /*
-- * Returns true for the channel numbers used without all_channels modparam.
-+ * Returns true for the channel numbers used.
-  */
-+#ifdef CONFIG_ATH5K_TEST_CHANNELS
-+static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
-+{
-+	return true;
-+}
-+
-+#else
- static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
+ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 			      struct cfg80211_registered_device *rdev,
+-			      struct net_device *dev)
++			      struct wireless_dev *wdev)
  {
- 	if (band == IEEE80211_BAND_2GHZ && chan <= 14)
-@@ -276,6 +279,7 @@ static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
- 		/* 802.11j 4.9GHz (20MHz) */
- 		(chan == 184 || chan == 188 || chan == 192 || chan == 196));
- }
-+#endif
++	struct net_device *dev = wdev->netdev;
+ 	void *hdr;
+-	u64 wdev_id = (u64)dev->ieee80211_ptr->identifier |
++	u64 wdev_id = (u64)wdev->identifier |
+ 		      ((u64)rdev->wiphy_idx << 32);
  
- static unsigned int
- ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
-@@ -316,8 +320,7 @@ ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
- 		if (!ath5k_channel_ok(ah, &channels[count]))
- 			continue;
+ 	hdr = nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_INTERFACE);
+ 	if (!hdr)
+ 		return -1;
  
--		if (!modparam_all_channels &&
--		    !ath5k_is_standard_channel(ch, band))
-+		if (!ath5k_is_standard_channel(ch, band))
- 			continue;
+-	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
+-	    nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+-	    nla_put_string(msg, NL80211_ATTR_IFNAME, dev->name) ||
+-	    nla_put_u32(msg, NL80211_ATTR_IFTYPE,
+-			dev->ieee80211_ptr->iftype) ||
++	if (dev &&
++	    (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
++	     nla_put_string(msg, NL80211_ATTR_IFNAME, dev->name) ||
++	     nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, dev->dev_addr)))
++		goto nla_put_failure;
++
++	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFTYPE, wdev->iftype) ||
+ 	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id) ||
+ 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
+ 			rdev->devlist_generation ^
+@@ -1794,7 +1798,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+ 			}
+ 			if (nl80211_send_iface(skb, NETLINK_CB(cb->skb).pid,
+ 					       cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-					       rdev, wdev->netdev) < 0) {
++					       rdev, wdev) < 0) {
+ 				mutex_unlock(&rdev->devlist_mtx);
+ 				goto out;
+ 			}
+@@ -1817,14 +1821,14 @@ static int nl80211_get_interface(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct sk_buff *msg;
+ 	struct cfg80211_registered_device *dev = info->user_ptr[0];
+-	struct net_device *netdev = info->user_ptr[1];
++	struct wireless_dev *wdev = info->user_ptr[1];
  
- 		count++;
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
+ 
+ 	if (nl80211_send_iface(msg, info->snd_pid, info->snd_seq, 0,
+-			       dev, netdev) < 0) {
++			       dev, wdev) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+ 	}
+@@ -6833,7 +6837,7 @@ static struct genl_ops nl80211_ops[] = {
+ 		.dumpit = nl80211_dump_interface,
+ 		.policy = nl80211_policy,
+ 		/* can be retrieved by unprivileged users */
+-		.internal_flags = NL80211_FLAG_NEED_NETDEV,
++		.internal_flags = NL80211_FLAG_NEED_WDEV,
+ 	},
+ 	{
+ 		.cmd = NL80211_CMD_SET_INTERFACE,
 -- 
-1.7.10.rc1.22.gf5241
+1.7.10.4
 
