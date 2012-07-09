@@ -1,203 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:55592 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab2GSLvm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 07:51:42 -0400
-Received: by pbbrp8 with SMTP id rp8so4267564pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2012 04:51:42 -0700 (PDT)
+Received: from mga02.intel.com ([134.134.136.20]:38870 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753090Ab2GIMDi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 08:03:38 -0400
+Date: Mon, 9 Jul 2012 15:03:33 +0300
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
+	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCHv2 2/3] lib: printf: append support of '%*p[Mm][FR]'
+Message-ID: <20120709120326.GH2627@aemeltch-MOBL1> (sfid-20120709_140407_790522_527B64FC)
+References: <1341264199.10162.2.camel@joe2Laptop>
+ <1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <1341310000-4082-2-git-send-email-andriy.shevchenko@linux.intel.com>
+ <1341329631.2164.15.camel@joe2Laptop>
+ <CAHp75VfN4X9fH7NEUag3XYy7kLiEz-jcjhEOdoHMk3if_m_aOg@mail.gmail.com>
+ <1341341280.2012.3.camel@joe2Laptop>
 MIME-Version: 1.0
-In-Reply-To: <1342667903-27314-1-git-send-email-machen@suse.com>
-References: <1342667903-27314-1-git-send-email-machen@suse.com>
-Date: Thu, 19 Jul 2012 13:51:41 +0200
-Message-ID: <CAGXE3d-Q2xCgfOq7mnWJSPFL5D4S3jhU9wW+JGG5vZinRQ7K1Q@mail.gmail.com> (sfid-20120719_135147_003358_EA28A1BE)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Chen, Chien-Chia" <machen@suse.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	kevin.chou@mediatek.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1341341280.2012.3.camel@joe2Laptop>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 19, 2012 at 5:18 AM, Chen, Chien-Chia <machen@suse.com> wrote:
-> This patch is going to fix the resuming failed from S3/S4
-> for rt3290 chip.
->
-> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
-> CC-by: Kevin Chou <kevin.chou@mediatek.com>
+Hi,
 
-Looks good to me,
-Helmut
+On Tue, Jul 03, 2012 at 11:48:00AM -0700, Joe Perches wrote:
+> On Tue, 2012-07-03 at 21:32 +0300, Andy Shevchenko wrote:
+> > On Tue, Jul 3, 2012 at 6:33 PM, Joe Perches <joe@perches.com> wrote:
+> > > On Tue, 2012-07-03 at 13:06 +0300, Andy Shevchenko wrote:
+> > >> There are many places in the kernel where the drivers print small buffers as a
+> > >> hex string. This patch adds a support of the variable width buffer to print it
+> > >> as a hex string with a delimiter. The idea came from Pavel Roskin here:
+> > >> http://www.digipedia.pl/usenet/thread/18835/17449/
+> > >>
+> > >> Sample output of
+> > >>       pr_info("buf[%d:%d] %*pM\n", from, len, len, &buf[from]);
+> > >> could be look like this:
+> > >>       [ 0.726130] buf[51:8] e8:16:b6:ef:e3:74:45:6e
+> > >>       [ 0.750736] buf[59:15] 31:81:b8:3f:35:49:06:ae:df:32:06:05:4a:af:55
+> > >>       [ 0.757602] buf[17:5] ac:16:d5:2c:ef
 
-> ---
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index e76f03c..1715776 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -400,6 +400,13 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
->  {
->         unsigned int i;
->         u32 reg;
-> +       int retval;
-> +
-> +       if (rt2x00_rt(rt2x00dev,RT3290)){
-> +               retval = rt2800_enable_wlan_rt3290(rt2x00dev);
-> +               if (retval)
-> +                       return -EBUSY;
-> +       }
->
->         /*
->          * If driver doesn't wake up firmware here,
-> @@ -5152,6 +5159,65 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
->  }
->  EXPORT_SYMBOL_GPL(rt2800_get_survey);
->
-> +int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
-> +{
-> +       u32 reg;
-> +       int i, count;
-> +
-> +       rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-> +       if ((rt2x00_get_field32(reg, WLAN_EN) == 1))
-> +               return 0;
-> +
-> +       rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
-> +       rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
-> +       rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
-> +       rt2x00_set_field32(&reg, WLAN_EN, 1);
-> +       rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-> +
-> +       udelay(REGISTER_BUSY_DELAY);
-> +       count = 0;
-> +       do {
-> +               /*
-> +                * Check PLL_LD & XTAL_RDY.
-> +                */
-> +               for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-> +                       rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
-> +                       if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
-> +                               (rt2x00_get_field32(reg, XTAL_RDY) == 1))
-> +                                       break;
-> +                       udelay(REGISTER_BUSY_DELAY);
-> +               }
-> +               if (i >= REGISTER_BUSY_COUNT) {
-> +                       if (count >= 10)
-> +                               return -EIO;
-> +
-> +                       rt2800_register_write(rt2x00dev, 0x58, 0x018);
-> +                       udelay(REGISTER_BUSY_DELAY);
-> +                       rt2800_register_write(rt2x00dev, 0x58, 0x418);
-> +                       udelay(REGISTER_BUSY_DELAY);
-> +                       rt2800_register_write(rt2x00dev, 0x58, 0x618);
-> +                       udelay(REGISTER_BUSY_DELAY);
-> +                       count++;
-> +               } else {
-> +                       count = 0;
-> +               }
-> +
-> +               rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-> +               rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
-> +               rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
-> +               rt2x00_set_field32(&reg, WLAN_RESET, 1);
-> +               rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-> +               udelay(10);
-> +               rt2x00_set_field32(&reg, WLAN_RESET, 0);
-> +               rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-> +               udelay(10);
-> +               rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
-> +       } while (count != 0);
-> +
-> +       return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(rt2800_enable_wlan_rt3290);
-> +
->  MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
->  MODULE_VERSION(DRV_VERSION);
->  MODULE_DESCRIPTION("Ralink RT2800 library");
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-> index 18a0b67..12d6eeb 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-> @@ -209,5 +209,5 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->  int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
->                       struct survey_info *survey);
->  void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
-> -
-> +int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev);
->  #endif /* RT2800LIB_H */
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 235376e..b7a02bf 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -980,66 +980,6 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
->         return rt2800_validate_eeprom(rt2x00dev);
->  }
->
-> -static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
-> -{
-> -       u32 reg;
-> -       int i, count;
-> -
-> -       rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-> -       if (rt2x00_get_field32(reg, WLAN_EN))
-> -               return 0;
-> -
-> -       rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
-> -       rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
-> -       rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
-> -       rt2x00_set_field32(&reg, WLAN_EN, 1);
-> -       rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-> -
-> -       udelay(REGISTER_BUSY_DELAY);
-> -
-> -       count = 0;
-> -       do {
-> -               /*
-> -                * Check PLL_LD & XTAL_RDY.
-> -                */
-> -               for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-> -                       rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
-> -                       if (rt2x00_get_field32(reg, PLL_LD) &&
-> -                           rt2x00_get_field32(reg, XTAL_RDY))
-> -                               break;
-> -                       udelay(REGISTER_BUSY_DELAY);
-> -               }
-> -
-> -               if (i >= REGISTER_BUSY_COUNT) {
-> -
-> -                       if (count >= 10)
-> -                               return -EIO;
-> -
-> -                       rt2800_register_write(rt2x00dev, 0x58, 0x018);
-> -                       udelay(REGISTER_BUSY_DELAY);
-> -                       rt2800_register_write(rt2x00dev, 0x58, 0x418);
-> -                       udelay(REGISTER_BUSY_DELAY);
-> -                       rt2800_register_write(rt2x00dev, 0x58, 0x618);
-> -                       udelay(REGISTER_BUSY_DELAY);
-> -                       count++;
-> -               } else {
-> -                       count = 0;
-> -               }
-> -
-> -               rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-> -               rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
-> -               rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
-> -               rt2x00_set_field32(&reg, WLAN_RESET, 1);
-> -               rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-> -               udelay(10);
-> -               rt2x00_set_field32(&reg, WLAN_RESET, 0);
-> -               rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-> -               udelay(10);
-> -               rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
-> -       } while (count != 0);
-> -
-> -       return 0;
-> -}
->  static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
->  {
->         int retval;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The idea is really good and can make redundant lots of print_hex
+functions.
+
+> > 
+> > > It might be more sensible to use new, distinct
+> > > "%*pH" and "%*ph" functions and not touch the
+> > > mac address function at all.  Will anyone ever
+> > > really want to emit the buffer in reverse?
+> > > I don't think so.
+> > Yeah, probably it's only the case for the Bluetooth addresses.
+> > 
+> > > Perhaps when using a hex_string_buffer func the
+> > > separator should be a space/no-space with %*pHh.
+> > What I learned from today's linux-next is the most used separators are
+> > ' ' (space), '' (nothing), ':' and '-'. We have dozens of the cases
+> > for first three. The '-' support could not be implemented
+> > nevertheless.
+> > So, might be %*pHh[CDS] C for 'colon', S for 'space', D for 'dash' looks better.
+> 
+> Maybe use a space default.
+
+I do not think we need other specifier then space at all.
+
+> 
+> > 'Hh' for capital/small letters than?
+> 
+> If you want, though I'd hope nobody uses upper case.
+> 
+> > > You could extend the max to 128 or larger now.
+> > I don't think it is really needed.
+> 
+> I hope it's not, but I just don't see the need to limit it.
+> 
+> > Most of the current cases usually
+> > print not more than ~30bytes (in average) per time. And I couldn't
+> > imagine good looking printing for long lines anyway.
+
+Maybe insert '\n' after 16 numbers?
+
+> 
+> Yup, they'd be ugly.
+> print_hex_dump() should be favored anyway.
+
+For print_hex_dump we would need to invent unreadable constructions with
+defines like you mentioned in other thread:
+
+#ifdef SOME_BLUETOOTH_DEBUG_FLAG
+#define bt_hex_dump_dbg(...)    \
+        print_hex_dump(...)
+#else
+#define bt_hex_dump_dbg(...)    \
+        do { } while (0)
+#endif
+
+Best regards 
+Andrei Emeltchenko 
+
+---------------------------------------------------------------------
+Intel Finland Oy
+Registered Address: PL 281, 00181 Helsinki 
+Business Identity Code: 0357606 - 4 
+Domiciled in Helsinki 
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
