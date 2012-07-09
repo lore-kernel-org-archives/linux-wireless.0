@@ -1,61 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43283 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754158Ab2GKHV4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17783 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316Ab2GIJQi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 03:21:56 -0400
-From: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Make use of return value from ath6kl_diag_read()
-Date: Wed, 11 Jul 2012 12:51:43 +0530
-Message-ID: <1341991303-1034-1-git-send-email-c_ppitch@qca.qualcomm.com> (sfid-20120711_092200_006477_671F2B8C)
+	Mon, 9 Jul 2012 05:16:38 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20474.41255.432069.560757@gargle.gargle.HOWL> (sfid-20120709_111642_324374_F786F58B)
+Date: Mon, 9 Jul 2012 14:45:19 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 07/11] ath9k: Cleanup beacon queue configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In ath6kl_read_fwlogs(), return value from ath6kl_diag_read()is not
-used to bail out in case of any errors in reading fw log. No real issue
-is observed because of this, reported by source code analyzer.
+Setup the beacon queue parameters after disabling
+interrupts. Also, remove the redundant call in conf_tx()
+for IBSS mode since the queue would be configured
+with the appropriate cwmin/cwmax values when beaconing
+is enabled.
 
-Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/main.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  1 -
+ drivers/net/wireless/ath/ath9k/beacon.c | 11 ++++-------
+ drivers/net/wireless/ath/ath9k/main.c   |  4 ----
+ 3 files changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index c189e28..d01cb36 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -293,13 +293,17 @@ int ath6kl_read_fwlogs(struct ath6kl *ar)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 508ba93..c893f2f 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -418,7 +418,6 @@ void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			 u32 changed);
+ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+-int ath_beaconq_config(struct ath_softc *sc);
+ void ath9k_set_beacon(struct ath_softc *sc);
+ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 926a2f1..b551041 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -30,7 +30,7 @@ static void ath9k_reset_beacon_status(struct ath_softc *sc)
+  *  the operating mode of the station (AP or AdHoc).  Parameters are AIFS
+  *  settings and channel width min/max
+ */
+-int ath_beaconq_config(struct ath_softc *sc)
++static void ath9k_beaconq_config(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -38,6 +38,7 @@ int ath_beaconq_config(struct ath_softc *sc)
+ 	struct ath_txq *txq;
+ 
+ 	ath9k_hw_get_txq_props(ah, sc->beacon.beaconq, &qi);
++
+ 	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP) {
+ 		/* Always burst out beacon and CAB traffic. */
+ 		qi.tqi_aifs = 1;
+@@ -56,12 +57,9 @@ int ath_beaconq_config(struct ath_softc *sc)
  	}
  
- 	address = TARG_VTOP(ar->target_type, debug_hdr_addr);
--	ath6kl_diag_read(ar, address, &debug_hdr, sizeof(debug_hdr));
-+	ret = ath6kl_diag_read(ar, address, &debug_hdr, sizeof(debug_hdr));
-+	if (ret)
-+		goto out;
+ 	if (!ath9k_hw_set_txq_props(ah, sc->beacon.beaconq, &qi)) {
+-		ath_err(common,
+-			"Unable to update h/w beacon queue parameters\n");
+-		return 0;
++		ath_err(common, "Unable to update h/w beacon queue parameters\n");
+ 	} else {
+ 		ath9k_hw_resettxqueue(ah, sc->beacon.beaconq);
+-		return 1;
+ 	}
+ }
  
- 	address = TARG_VTOP(ar->target_type,
- 			    le32_to_cpu(debug_hdr.dbuf_addr));
- 	firstbuf = address;
- 	dropped = le32_to_cpu(debug_hdr.dropped);
--	ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
-+	ret = ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
-+	if (ret)
-+		goto out;
+@@ -401,6 +399,7 @@ static void ath9k_beacon_init(struct ath_softc *sc, u32 nexttbtt, u32 intval)
  
- 	loop = 100;
+ 	ath9k_hw_disable_interrupts(ah);
+ 	ath9k_hw_reset_tsf(ah);
++	ath9k_beaconq_config(sc);
+ 	ath9k_hw_beaconinit(ah, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 	ath9k_hw_set_interrupts(ah);
+@@ -432,7 +431,6 @@ static void ath9k_beacon_config_ap(struct ath_softc *sc,
+ 	ath_dbg(common, BEACON, "AP nexttbtt: %u intval: %u conf_intval: %u\n",
+ 		nexttbtt, intval, conf->beacon_interval);
  
-@@ -322,7 +326,7 @@ int ath6kl_read_fwlogs(struct ath6kl *ar)
+-	ath_beaconq_config(sc);
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ }
  
- 		address = TARG_VTOP(ar->target_type,
- 				    le32_to_cpu(debug_buf.next));
--		ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
-+		ret = ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
- 		if (ret)
- 			goto out;
+@@ -587,7 +585,6 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
+ 	ath_dbg(common, BEACON, "IBSS nexttbtt: %u intval: %u conf_intval: %u\n",
+ 		nexttbtt, intval, conf->beacon_interval);
+ 
+-	ath_beaconq_config(sc);
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3c2708d..2621ea1 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1347,10 +1347,6 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		ath_err(common, "TXQ Update failed\n");
+ 
+-	if (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)
+-		if (queue == WME_AC_BE && !ret)
+-			ath_beaconq_config(sc);
+-
+ 	mutex_unlock(&sc->mutex);
+ 	ath9k_ps_restore(sc);
  
 -- 
-1.7.9.5
+1.7.11.1
 
