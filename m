@@ -1,319 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51427 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968Ab2G0LRB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:01 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 01/20] mac80211: introduce channel context skeleton code
-Date: Fri, 27 Jul 2012 13:16:37 +0200
-Message-Id: <1343387816-9414-2-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131740_071280_89AAE922)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55926 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750917Ab2GIXCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 19:02:15 -0400
+Message-ID: <4FFB62DA.9000706@hauke-m.de> (sfid-20120710_010219_812522_C3C440DF)
+Date: Tue, 10 Jul 2012 01:01:46 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC][PATCH] bcma: add trivial GBIT MAC COMMON driver
+References: <1341751888-12679-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1341751888-12679-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On 07/08/2012 02:51 PM, Rafał Miłecki wrote:
+> GMAC COMMON core is present on BCM4706 and is used for example to access
+> board PHYs (PHYs can not be accessed directly using GBIT MAC core).
 
-Channel context are the foundation for multi-channel
-operation. They are are immutable and are re-created
-(or re-used if other interfaces are bound to a certain
-channel and a compatible channel type) on channel
-switching.
+I think this is the cleanest way of doing this. I thought about handling
+this in the Ethernet driver, but as we need locking, an extra driver
+would be needed, just for this stupid locking.
 
-This is an initial implementation and more features
-will come in separate patches.
+You should not register an external device for this core in
+bcma_register_cores().
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     |   25 +++++++++
- net/mac80211/chan.c        |  134 ++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |   34 +++++++++++
- net/mac80211/main.c        |    3 +
- 4 files changed, 196 insertions(+)
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/bcma/Kconfig                      |    9 +++
+>  drivers/bcma/Makefile                     |    1 +
+>  drivers/bcma/driver_gmac_cmn.c            |   14 ++++
+>  drivers/bcma/main.c                       |    7 ++
+>  include/linux/bcma/bcma.h                 |    2 +
+>  include/linux/bcma/bcma_driver_gmac_cmn.h |  100 +++++++++++++++++++++++++++++
+>  6 files changed, 133 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/bcma/driver_gmac_cmn.c
+>  create mode 100644 include/linux/bcma/bcma_driver_gmac_cmn.h
+> 
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index fb7c80f..9319cde 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -46,6 +46,15 @@ config BCMA_DRIVER_MIPS
+>  
+>  	  If unsure, say N
+>  
+> +config BCMA_DRIVER_GMAC_CMN
+> +	bool "BCMA Broadcom GBIT MAC COMMON core driver"
+> +	depends on BCMA
+> +	help
+> +	  Driver for the Broadcom GBIT MAC COMMON core attached to Broadcom
+> +	  specific Advanced Microcontroller Bus.
+> +
+> +	  If unsure, say N
+> +
+>  config BCMA_DEBUG
+>  	bool "BCMA debugging"
+>  	depends on BCMA
+> diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
+> index 82de24e..d13803f 100644
+> --- a/drivers/bcma/Makefile
+> +++ b/drivers/bcma/Makefile
+> @@ -3,6 +3,7 @@ bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
+>  bcma-y					+= driver_pci.o
+>  bcma-$(CONFIG_BCMA_DRIVER_PCI_HOSTMODE)	+= driver_pci_host.o
+>  bcma-$(CONFIG_BCMA_DRIVER_MIPS)		+= driver_mips.o
+> +bcma-$(CONFIG_BCMA_DRIVER_GMAC_CMN)	+= driver_gmac_cmn.o
+>  bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
+>  bcma-$(CONFIG_BCMA_HOST_SOC)		+= host_soc.o
+>  obj-$(CONFIG_BCMA)			+= bcma.o
+> diff --git a/drivers/bcma/driver_gmac_cmn.c b/drivers/bcma/driver_gmac_cmn.c
+> new file mode 100644
+> index 0000000..834225f
+> --- /dev/null
+> +++ b/drivers/bcma/driver_gmac_cmn.c
+> @@ -0,0 +1,14 @@
+> +/*
+> + * Broadcom specific AMBA
+> + * GBIT MAC COMMON Core
+> + *
+> + * Licensed under the GNU/GPL. See COPYING for details.
+> + */
+> +
+> +#include "bcma_private.h"
+> +#include <linux/bcma/bcma.h>
+> +
+> +void __devinit bcma_core_gmac_cmn_init(struct bcma_drv_gmac_cmn *gc)
+> +{
+> +	mutex_init(&gc->phy_mutex);
+> +}
+> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> index 7ff4bac..173a0b4 100644
+> --- a/drivers/bcma/main.c
+> +++ b/drivers/bcma/main.c
+> @@ -177,6 +177,13 @@ int __devinit bcma_bus_register(struct bcma_bus *bus)
+>  		bcma_core_pci_init(&bus->drv_pci);
+>  	}
+>  
+> +	/* Init GBIT MAC COMMON core */
+> +	core = bcma_find_core(bus, BCMA_CORE_4706_MAC_GBIT_COMMON);
+> +	if (core) {
+> +		bus->drv_gmac_cmn.core = core;
+> +		bcma_core_gmac_cmn_init(&bus->drv_gmac_cmn);
+> +	}
+> +
+>  	/* Try to get SPROM */
+>  	err = bcma_sprom_get(bus);
+>  	if (err == -ENOENT) {
+> diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+> index 03b2f30..1954a4e 100644
+> --- a/include/linux/bcma/bcma.h
+> +++ b/include/linux/bcma/bcma.h
+> @@ -7,6 +7,7 @@
+>  #include <linux/bcma/bcma_driver_chipcommon.h>
+>  #include <linux/bcma/bcma_driver_pci.h>
+>  #include <linux/bcma/bcma_driver_mips.h>
+> +#include <linux/bcma/bcma_driver_gmac_cmn.h>
+>  #include <linux/ssb/ssb.h> /* SPROM sharing */
+>  
+>  #include "bcma_regs.h"
+> @@ -252,6 +253,7 @@ struct bcma_bus {
+>  	struct bcma_drv_cc drv_cc;
+>  	struct bcma_drv_pci drv_pci;
+>  	struct bcma_drv_mips drv_mips;
+> +	struct bcma_drv_gmac_cmn drv_gmac_cmn;
+>  
+>  	/* We decided to share SPROM struct with SSB as long as we do not need
+>  	 * any hacks for BCMA. This simplifies drivers code. */
+> diff --git a/include/linux/bcma/bcma_driver_gmac_cmn.h b/include/linux/bcma/bcma_driver_gmac_cmn.h
+> new file mode 100644
+> index 0000000..def894b
+> --- /dev/null
+> +++ b/include/linux/bcma/bcma_driver_gmac_cmn.h
+> @@ -0,0 +1,100 @@
+> +#ifndef LINUX_BCMA_DRIVER_GMAC_CMN_H_
+> +#define LINUX_BCMA_DRIVER_GMAC_CMN_H_
+> +
+> +#include <linux/types.h>
+> +
+> +#define BCMA_GMAC_CMN_STAG0		0x000
+> +#define BCMA_GMAC_CMN_STAG1		0x004
+> +#define BCMA_GMAC_CMN_STAG2		0x008
+> +#define BCMA_GMAC_CMN_STAG3		0x00C
+> +#define BCMA_GMAC_CMN_PARSER_CTL	0x020
+> +#define BCMA_GMAC_CMN_MIB_MAX_LEN	0x024
+> +#define BCMA_GMAC_CMN_PHY_ACCESS	0x100
+> +#define  BCMA_GMAC_CMN_PA_DATA_MASK	0x0000ffff
+> +#define  BCMA_GMAC_CMN_PA_ADDR_MASK	0x001f0000
+> +#define  BCMA_GMAC_CMN_PA_ADDR_SHIFT	16
+> +#define  BCMA_GMAC_CMN_PA_REG_MASK	0x1f000000
+> +#define  BCMA_GMAC_CMN_PA_REG_SHIFT	24
+> +#define  BCMA_GMAC_CMN_PA_WRITE		0x20000000
+> +#define  BCMA_GMAC_CMN_PA_START		0x40000000
+> +#define BCMA_GMAC_CMN_PHY_CTL		0x104
+> +#define  BCMA_GMAC_CMN_PC_EPA_MASK	0x0000001f
+> +#define  BCMA_GMAC_CMN_PC_MCT_MASK	0x007f0000
+> +#define  BCMA_GMAC_CMN_PC_MCT_SHIFT	16
+> +#define  BCMA_GMAC_CMN_PC_MTE		0x00800000
+> +#define BCMA_GMAC_CMN_GMAC0_RGMII_CTL	0x110
+> +#define BCMA_GMAC_CMN_CFP_ACCESS	0x200
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA0	0x210
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA1	0x214
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA2	0x218
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA3	0x21C
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA4	0x220
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA5	0x224
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA6	0x228
+> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA7	0x22C
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK0	0x230
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK1	0x234
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK2	0x238
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK3	0x23C
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK4	0x240
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK5	0x244
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK6	0x248
+> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK7	0x24C
+> +#define BCMA_GMAC_CMN_CFP_ACTION_DATA	0x250
+> +#define BCMA_GMAC_CMN_TCAM_BIST_CTL	0x2A0
+> +#define BCMA_GMAC_CMN_TCAM_BIST_STATUS	0x2A4
+> +#define BCMA_GMAC_CMN_TCAM_CMP_STATUS	0x2A8
+> +#define BCMA_GMAC_CMN_TCAM_DISABLE	0x2AC
+> +#define BCMA_GMAC_CMN_TCAM_TEST_CTL	0x2F0
+> +#define BCMA_GMAC_CMN_UDF_0_A3_A0	0x300
+> +#define BCMA_GMAC_CMN_UDF_0_A7_A4	0x304
+> +#define BCMA_GMAC_CMN_UDF_0_A8		0x308
+> +#define BCMA_GMAC_CMN_UDF_1_A3_A0	0x310
+> +#define BCMA_GMAC_CMN_UDF_1_A7_A4	0x314
+> +#define BCMA_GMAC_CMN_UDF_1_A8		0x318
+> +#define BCMA_GMAC_CMN_UDF_2_A3_A0	0x320
+> +#define BCMA_GMAC_CMN_UDF_2_A7_A4	0x324
+> +#define BCMA_GMAC_CMN_UDF_2_A8		0x328
+> +#define BCMA_GMAC_CMN_UDF_0_B3_B0	0x330
+> +#define BCMA_GMAC_CMN_UDF_0_B7_B4	0x334
+> +#define BCMA_GMAC_CMN_UDF_0_B8		0x338
+> +#define BCMA_GMAC_CMN_UDF_1_B3_B0	0x340
+> +#define BCMA_GMAC_CMN_UDF_1_B7_B4	0x344
+> +#define BCMA_GMAC_CMN_UDF_1_B8		0x348
+> +#define BCMA_GMAC_CMN_UDF_2_B3_B0	0x350
+> +#define BCMA_GMAC_CMN_UDF_2_B7_B4	0x354
+> +#define BCMA_GMAC_CMN_UDF_2_B8		0x358
+> +#define BCMA_GMAC_CMN_UDF_0_C3_C0	0x360
+> +#define BCMA_GMAC_CMN_UDF_0_C7_C4	0x364
+> +#define BCMA_GMAC_CMN_UDF_0_C8		0x368
+> +#define BCMA_GMAC_CMN_UDF_1_C3_C0	0x370
+> +#define BCMA_GMAC_CMN_UDF_1_C7_C4	0x374
+> +#define BCMA_GMAC_CMN_UDF_1_C8		0x378
+> +#define BCMA_GMAC_CMN_UDF_2_C3_C0	0x380
+> +#define BCMA_GMAC_CMN_UDF_2_C7_C4	0x384
+> +#define BCMA_GMAC_CMN_UDF_2_C8		0x388
+> +#define BCMA_GMAC_CMN_UDF_0_D3_D0	0x390
+> +#define BCMA_GMAC_CMN_UDF_0_D7_D4	0x394
+> +#define BCMA_GMAC_CMN_UDF_0_D11_D8	0x394
+> +
+> +struct bcma_drv_gmac_cmn {
+> +	struct bcma_device *core;
+> +
+> +	/* Drivers accessing BCMA_GMAC_CMN_PHY_ACCESS and
+> +	 * BCMA_GMAC_CMN_PHY_CTL need to take that mutex first. */
+> +	struct mutex phy_mutex;
+> +};
+> +
+> +/* Register access */
+> +#define gmac_cmn_read16(gc, offset)		bcma_read16((gc)->core, offset)
+> +#define gmac_cmn_read32(gc, offset)		bcma_read32((gc)->core, offset)
+> +#define gmac_cmn_write16(gc, offset, val)	bcma_write16((gc)->core, offset, val)
+> +#define gmac_cmn_write32(gc, offset, val)	bcma_write32((gc)->core, offset, val)
+> +
+> +#ifdef CONFIG_BCMA_DRIVER_GMAC_CMN
+> +extern void __devinit bcma_core_gmac_cmn_init(struct bcma_drv_gmac_cmn *gc);
+> +#else
+> +static inline void bcma_core_gmac_cmn_init(struct bcma_drv_gmac_cmn *gc) { }
+> +#endif
+> +
+> +#endif /* LINUX_BCMA_DRIVER_GMAC_CMN_H_ */
+> 
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 924b6c1..6d19726 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -144,6 +144,24 @@ struct ieee80211_low_level_stats {
- };
- 
- /**
-+ * struct ieee80211_chanctx_conf - channel context that vifs may be tuned to
-+ *
-+ * This is the driver-visible part. The ieee80211_chanctx
-+ * that contains it is visible in mac80211 only.
-+ *
-+ * @channel: the channel to tune to
-+ * @channel_type: the channel (HT) type
-+ * @drv_priv: data area for driver use, will always be aligned to
-+ *	sizeof(void *), size is determined in hw information.
-+ */
-+struct ieee80211_chanctx_conf {
-+	struct ieee80211_channel *channel;
-+	enum nl80211_channel_type channel_type;
-+
-+	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
-+};
-+
-+/**
-  * enum ieee80211_bss_change - BSS change notification flags
-  *
-  * These flags are used with the bss_info_changed() callback
-@@ -903,6 +921,8 @@ enum ieee80211_vif_flags {
-  *	at runtime, mac80211 will never touch this field
-  * @hw_queue: hardware queue for each AC
-  * @cab_queue: content-after-beacon (DTIM beacon really) queue, AP mode only
-+ * @chanctx_conf: will be %NULL before the interface is assigned to a channel
-+ *	context
-  * @drv_priv: data area for driver use, will always be aligned to
-  *	sizeof(void *).
-  */
-@@ -915,6 +935,8 @@ struct ieee80211_vif {
- 	u8 cab_queue;
- 	u8 hw_queue[IEEE80211_NUM_ACS];
- 
-+	struct ieee80211_chanctx_conf *chanctx_conf;
-+
- 	u32 driver_flags;
- 
- 	/* must be last */
-@@ -1279,6 +1301,8 @@ enum ieee80211_hw_flags {
-  *	within &struct ieee80211_vif.
-  * @sta_data_size: size (in bytes) of the drv_priv data area
-  *	within &struct ieee80211_sta.
-+ * @chanctx_data_size: size (in bytes) of the drv_priv data area
-+ *	within &struct ieee80211_chanctx_conf.
-  *
-  * @max_rates: maximum number of alternate rate retry stages the hw
-  *	can handle.
-@@ -1323,6 +1347,7 @@ struct ieee80211_hw {
- 	int channel_change_time;
- 	int vif_data_size;
- 	int sta_data_size;
-+	int chanctx_data_size;
- 	int napi_weight;
- 	u16 queues;
- 	u16 max_listen_interval;
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index f0f87e5..184b8bd 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -139,3 +139,137 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 
- 	return result;
- }
-+
-+static struct ieee80211_chanctx *
-+ieee80211_find_chanctx(struct ieee80211_local *local,
-+		       struct ieee80211_channel *channel,
-+		       enum nl80211_channel_type channel_type,
-+		       enum ieee80211_chanctx_mode mode)
-+{
-+	struct ieee80211_chanctx *ctx;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	if (mode == IEEE80211_CHANCTX_EXCLUSIVE)
-+		return NULL;
-+	if (WARN_ON(!channel))
-+		return NULL;
-+
-+	list_for_each_entry(ctx, &local->chanctx_list, list) {
-+		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
-+			continue;
-+		if (ctx->conf.channel != channel)
-+			continue;
-+		if (ctx->conf.channel_type != channel_type)
-+			continue;
-+
-+		return ctx;
-+	}
-+
-+	return NULL;
-+}
-+
-+static struct ieee80211_chanctx *
-+ieee80211_new_chanctx(struct ieee80211_local *local,
-+		      struct ieee80211_channel *channel,
-+		      enum nl80211_channel_type channel_type,
-+		      enum ieee80211_chanctx_mode mode)
-+{
-+	struct ieee80211_chanctx *ctx;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	ctx = kzalloc(sizeof(*ctx) + local->hw.chanctx_data_size, GFP_KERNEL);
-+	if (!ctx)
-+		return NULL;
-+
-+	ctx->conf.channel = channel;
-+	ctx->conf.channel_type = channel_type;
-+	ctx->mode = mode;
-+	ctx->local = local;
-+
-+	list_add(&ctx->list, &local->chanctx_list);
-+
-+	return ctx;
-+}
-+
-+static void ieee80211_free_chanctx(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx)
-+{
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	WARN_ON_ONCE(ctx->refcount != 0);
-+
-+	list_del(&ctx->list);
-+	kfree(ctx);
-+}
-+
-+static void ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
-+					 struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_local *local __maybe_unused = sdata->local;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	sdata->vif.chanctx_conf = &ctx->conf;
-+	ctx->refcount++;
-+}
-+
-+static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
-+					   struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_local *local __maybe_unused = sdata->local;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	ctx->refcount--;
-+	sdata->vif.chanctx_conf = NULL;
-+}
-+
-+static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf = sdata->vif.chanctx_conf;
-+	struct ieee80211_chanctx *ctx =
-+			container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	if (!conf)
-+		return;
-+
-+	ieee80211_unassign_vif_chanctx(sdata, ctx);
-+	if (ctx->refcount == 0)
-+		ieee80211_free_chanctx(local, ctx);
-+}
-+
-+bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
-+			       struct ieee80211_channel *channel,
-+			       enum nl80211_channel_type channel_type,
-+			       enum ieee80211_chanctx_mode mode)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx *ctx;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	__ieee80211_vif_release_channel(sdata);
-+
-+	ctx = ieee80211_find_chanctx(local, channel, channel_type, mode);
-+	if (!ctx)
-+		ctx = ieee80211_new_chanctx(local, channel, channel_type, mode);
-+	if (!ctx) {
-+		mutex_unlock(&local->chanctx_mtx);
-+		return false;
-+	}
-+
-+	ieee80211_assign_vif_chanctx(sdata, ctx);
-+	mutex_unlock(&local->chanctx_mtx);
-+	return true;
-+}
-+
-+void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
-+{
-+	mutex_lock(&sdata->local->chanctx_mtx);
-+	__ieee80211_vif_release_channel(sdata);
-+	mutex_unlock(&sdata->local->chanctx_mtx);
-+}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8608704..4ad715d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -649,6 +649,30 @@ enum ieee80211_sdata_state_bits {
- 	SDATA_STATE_OFFCHANNEL,
- };
- 
-+/**
-+ * enum ieee80211_chanctx_mode - channel context configuration mode
-+ *
-+ * @IEEE80211_CHANCTX_SHARED: channel context may be used by
-+ *	multiple interfaces
-+ * @IEEE80211_CHANCTX_EXCLUSIVE: channel context can be used
-+ *	only by a single interface. This can be used for example for
-+ *	non-fixed channel IBSS.
-+ */
-+enum ieee80211_chanctx_mode {
-+	IEEE80211_CHANCTX_SHARED,
-+	IEEE80211_CHANCTX_EXCLUSIVE
-+};
-+
-+struct ieee80211_chanctx {
-+	struct list_head list;
-+
-+	struct ieee80211_local *local;
-+	enum ieee80211_chanctx_mode mode;
-+	int refcount;
-+
-+	struct ieee80211_chanctx_conf conf;
-+};
-+
- struct ieee80211_sub_if_data {
- 	struct list_head list;
- 
-@@ -979,6 +1003,10 @@ struct ieee80211_local {
- 	struct ieee80211_channel *tmp_channel;
- 	enum nl80211_channel_type tmp_channel_type;
- 
-+	/* channel contexts */
-+	struct list_head chanctx_list;
-+	struct mutex chanctx_mtx;
-+
- 	/* SNMP counters */
- 	/* dot11CountersTable */
- 	u32 dot11TransmittedFragmentCount;
-@@ -1513,6 +1541,12 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- enum nl80211_channel_type
- ieee80211_ht_oper_to_channel_type(struct ieee80211_ht_operation *ht_oper);
- 
-+bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
-+			       struct ieee80211_channel *channel,
-+			       enum nl80211_channel_type channel_type,
-+			       enum ieee80211_chanctx_mode mode);
-+void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
-+
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
- #else
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index e706f9e..f74e52a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -632,6 +632,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	spin_lock_init(&local->filter_lock);
- 	spin_lock_init(&local->queue_stop_reason_lock);
- 
-+	INIT_LIST_HEAD(&local->chanctx_list);
-+	mutex_init(&local->chanctx_mtx);
-+
- 	/*
- 	 * The rx_skb_queue is only accessed from tasklets,
- 	 * but other SKB queues are used from within IRQ
--- 
-1.7.10.4
 
