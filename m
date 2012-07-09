@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:56360 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751062Ab2GYWBG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34355 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840Ab2GINUC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 18:01:06 -0400
-Message-ID: <50106C9F.3050504@net.t-labs.tu-berlin.de> (sfid-20120726_000111_306590_CA2E88AE)
-Date: Thu, 26 Jul 2012 00:01:03 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: jirislaby@gmail.com, johannes.berg@intel.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, nbd@nbd.name
-Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
- eeprom reads for AR5K_EEPROM_MODE_11A
-References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de> <CAFtRNNx+YgGgFp_owGQJcsQVqTuOeWk2J0MwjKMtcUgRq_DF0w@mail.gmail.com>
-In-Reply-To: <CAFtRNNx+YgGgFp_owGQJcsQVqTuOeWk2J0MwjKMtcUgRq_DF0w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Jul 2012 09:20:02 -0400
+Message-ID: <1341839999.4455.48.camel@jlt3.sipsolutions.net> (sfid-20120709_152010_441115_5B9EEDA7)
+Subject: Re: [PATCHv2] nl/cfg/mac80211: add set_mcast_rate API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:19:59 +0200
+In-Reply-To: <20120709131813.GD4488@ritirata.org>
+References: <1341739885-15385-1-git-send-email-ordex@autistici.org>
+	 <1341791503-12542-1-git-send-email-ordex@autistici.org>
+	 <1341839146.4455.40.camel@jlt3.sipsolutions.net>
+	 <20120709131813.GD4488@ritirata.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nick,
+On Mon, 2012-07-09 at 15:18 +0200, Antonio Quartulli wrote:
 
-Nick Kossifidis schrieb:
-
-> Thanks for catching this but the bug is elsewhere:
-
-> So guess why the last 2 "invalid" power gain values have the same
-> power levels for all rates ? They are for XR mode (they've put it
-> there on the eeprom because XR mode also operates at 5GHz) and since
-> XR stuff is stripped off Madwifi (at least the public HAL) that's why
-> it only reads 8 of the piers.
+> > So this is kinda broken. In fact, the whole basic rate thing is broken
+> > it seems.
+> > 
+> > The mcast rate is per band, as it should, since you could find the same
+> > BSSID on a 5 GHz channel and then jump to that channel if the TSF is
+> > higher...
+> > 
+> > However, the basic rates aren't, which is wrong: the basic rates bitmap
+> > could be 1,2,6,9. If the driver is like most drivers, that translates to
+> > a bitmap of 0x33. But 0x33, for most drivers, if applied to the 5 GHz
+> > rates means 6,9,24,36. See why this is broken? A rate bitmap can't be
+> > siwtched around between bands and still make any sense.
 > 
-> Now notice that the last 2 readings on your previous post start from a
-> different frequency and most important that 5360 < 5825  and that
-> makes sense since the idea is to have only 2 points to interpolate
-> between them for the whole XR range. So we have 2 frequency "ranges"
-> to search, the one  is the 11a mode from 4920 to 5825 and the other
-> one is for XR mode from 5360 to 5720. When the first range ends the
-> other starts.
-> 
-> The bug is here:
-> 
-> ath5k_get_rate_pcal_data:
-> 2704         max = ee->ee_rate_target_pwr_num[mode] - 1;
-> [...]
-> 2713         if (target > rpinfo[max].freq) {
-> 2714                 idx_l = idx_r = max;
-> 2715                 goto done;
-> 2716         }
-> 
-> So please instead of tweaking the EEPROM code just change
-> max = ee->ee_rate_target_pwr_num[mode] - 1;
-> to
-> max = ee->ee_rate_target_pwr_num[mode] - 3;
-> in case of AR5K_MODE_11A 
+> I see, I wrongly thought that nl80211_parse_mcast_rate() was checking if the
+> provided mcast_rate belongs to the basic_rate set of the band which we are now.
 
+Well, ok, don't get confused -- there's no basic rate set "of the band",
+it's a BSS property.
 
-The calibration data for 802.11a in the standard conform mode should
-only consider 8 reads from the eeprom, thats why I introduced this new
-define... a "-3" is from my view of readability not as traceable.
-Any other non standard mode as you mentioned XR as one of, could just
-ready its necessary lines of the eeprom ones it get supported in ath5k.
+> But that's wrong! nl80211_parse_mcast_rate() only checks if the provided
+> mcast_rate exists somewhere...
 
-Greetings Thomas
+It checks that each rate exists in the band that it's for.
+
+> > Oh, also, I'm not sure why you do BIT(... -1), but that's unrelated.
+> > What kind of value is the mcast rate? A rate index, or a number?
+> > 
+> 
+> it's an index and actually it's the index +1, as reported in mac80211.h:
+> 
+>  * @mcast_rate: per-band multicast rate index + 1 (0: disabled)
+
+also in the cfg80211 API?
+
+johannes
+
