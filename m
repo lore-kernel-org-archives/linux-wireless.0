@@ -1,136 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:47020 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100Ab2GRIjS (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 18 Jul 2012 04:39:18 -0400
-From: "Chen, Chien-Chia" <machen@suse.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org, kevin.chou@mediatek.com
-Subject: [rt2x00-users][PATCH] rt2x00 : fix rt3290 resuming failed.
-Date: Wed, 18 Jul 2012 16:40:27 +0800
-Message-Id: <1342600827-18420-1-git-send-email-machen@suse.com> (sfid-20120718_103924_854681_8F71F1CA)
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:42879 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752782Ab2GIUDQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 16:03:16 -0400
+Received: by mail-ey0-f174.google.com with SMTP id k11so4463223eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 13:03:15 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: =?UTF-8?q?=5BPATCH=5D=20bcma=3A=20add=20PMU=20clock=20support=20for=20BCM4706?=
+Date: Mon,  9 Jul 2012 22:03:10 +0200
+Message-Id: <1341864190-19188-1-git-send-email-zajec5@gmail.com> (sfid-20120709_220355_002309_1F0A655E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is going to fix the resuming failed from S3/S4
-for rt3290 chip.
+From: Hauke Mehrtens <hauke@hauke-m.de>
 
-Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Tested-by: Rafał Miłecki <zajec5@gmail.com>
+---
+This correctly calculates clock (as 600000000) on my WNDR4500.
+---
+ drivers/bcma/driver_chipcommon_pmu.c        |   40 ++++++++++++++++++++++++---
+ include/linux/bcma/bcma_driver_chipcommon.h |   14 +++++++++
+ 2 files changed, 50 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e76f03c..1715776 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -400,6 +400,13 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- {
- 	unsigned int i;
- 	u32 reg;
-+	int retval;
-+
-+	if (rt2x00_rt(rt2x00dev,RT3290)){
-+		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
-+		if (retval)
-+			return -EBUSY;
-+	}
- 
- 	/*
- 	 * If driver doesn't wake up firmware here,
-@@ -5152,6 +5159,65 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 74a87d5..4432617 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -226,6 +226,36 @@ static u32 bcma_pmu_clock(struct bcma_drv_cc *cc, u32 pll0, u32 m)
+ 	return (fc / div) * 1000000;
  }
- EXPORT_SYMBOL_GPL(rt2800_get_survey);
  
-+int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
++static u32 bcma_pmu_clock_bcm4706(struct bcma_drv_cc *cc, u32 pll0, u32 m)
 +{
-+	u32 reg;
-+	int i, count;
++	u32 tmp, ndiv, p1div, p2div;
++	u32 clock;
 +
-+	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+	if ((rt2x00_get_field32(reg, WLAN_EN) == 1))
-+		return 0;
++	BUG_ON(!m || m > 4);
 +
-+	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
-+	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
-+	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
-+	rt2x00_set_field32(&reg, WLAN_EN, 1);
-+	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
++	/* Get N, P1 and P2 dividers to determine CPU clock */
++	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PMU6_4706_PROCPLL_OFF);
++	ndiv = (tmp & BCMA_CC_PMU6_4706_PROC_NDIV_INT_MASK)
++		>> BCMA_CC_PMU6_4706_PROC_NDIV_INT_SHIFT;
++	p1div = (tmp & BCMA_CC_PMU6_4706_PROC_P1DIV_MASK)
++		>> BCMA_CC_PMU6_4706_PROC_P1DIV_SHIFT;
++	p2div = (tmp & BCMA_CC_PMU6_4706_PROC_P2DIV_MASK)
++		>> BCMA_CC_PMU6_4706_PROC_P2DIV_SHIFT;
 +
-+	udelay(REGISTER_BUSY_DELAY);
-+	count = 0;
-+	do {
-+		/*
-+		 * Check PLL_LD & XTAL_RDY.
-+		 */
-+		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-+			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
-+			if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
-+				(rt2x00_get_field32(reg, XTAL_RDY) == 1))
-+					break;
-+			udelay(REGISTER_BUSY_DELAY);
-+		}
-+		if (i >= REGISTER_BUSY_COUNT) {
-+			if (count >= 10)
-+				return -EIO;
++	tmp = bcma_cc_read32(cc, BCMA_CC_CHIPSTAT);
++	if (tmp & BCMA_CC_CHIPST_4706_PKG_OPTION)
++		/* Low cost bonding: Fixed reference clock 25MHz and m = 4 */
++		clock = (25000000 / 4) * ndiv * p2div / p1div;
++	else
++		/* Fixed reference clock 25MHz and m = 2 */
++		clock = (25000000 / 2) * ndiv * p2div / p1div;
 +
-+			rt2800_register_write(rt2x00dev, 0x58, 0x018);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x418);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x618);
-+			udelay(REGISTER_BUSY_DELAY);
-+			count++;
-+		} else {
-+			count = 0;
-+		}
++	if (m == BCMA_CC_PMU5_MAINPLL_SSB)
++		clock = clock / 4;
 +
-+		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
-+		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 1);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 0);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
-+	} while (count != 0);
-+
-+	return 0;
++	return clock;
 +}
-+EXPORT_SYMBOL_GPL(rt2800_enable_wlan_rt3290);
 +
- MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
- MODULE_VERSION(DRV_VERSION);
- MODULE_DESCRIPTION("Ralink RT2800 library");
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 18a0b67..12d6eeb 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -209,5 +209,5 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- 		      struct survey_info *survey);
- void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
--
-+int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev);
- #endif /* RT2800LIB_H */
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 235376e..135c2a2 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -980,6 +980,7 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	return rt2800_validate_eeprom(rt2x00dev);
- }
- 
-+#if 0
- static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+ /* query bus clock frequency for PMU-enabled chipcommon */
+ u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
  {
- 	u32 reg;
-@@ -1040,6 +1041,8 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+@@ -245,8 +275,8 @@ u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
+ 		return bcma_pmu_clock(cc, BCMA_CC_PMU5357_MAINPLL_PLL0,
+ 				      BCMA_CC_PMU5_MAINPLL_SSB);
+ 	case BCMA_CHIP_ID_BCM4706:
+-		return bcma_pmu_clock(cc, BCMA_CC_PMU4706_MAINPLL_PLL0,
+-				      BCMA_CC_PMU5_MAINPLL_SSB);
++		return bcma_pmu_clock_bcm4706(cc, BCMA_CC_PMU4706_MAINPLL_PLL0,
++					      BCMA_CC_PMU5_MAINPLL_SSB);
+ 	case BCMA_CHIP_ID_BCM53572:
+ 		return 75000000;
+ 	default:
+@@ -267,6 +297,10 @@ u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc)
+ 	if (cc->pmu.rev >= 5) {
+ 		u32 pll;
+ 		switch (bus->chipinfo.id) {
++		case BCMA_CHIP_ID_BCM4706:
++			return bcma_pmu_clock_bcm4706(cc,
++						BCMA_CC_PMU4706_MAINPLL_PLL0,
++						BCMA_CC_PMU5_MAINPLL_CPU);
+ 		case BCMA_CHIP_ID_BCM5356:
+ 			pll = BCMA_CC_PMU5356_MAINPLL_PLL0;
+ 			break;
+@@ -279,8 +313,6 @@ u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc)
+ 			break;
+ 		}
  
- 	return 0;
- }
-+
-+#endif
- static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
+-		/* TODO: if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
+-		  return si_4706_pmu_clock(sih, osh, cc, PMU4706_MAINPLL_PLL0, PMU5_MAINPLL_CPU); */
+ 		return bcma_pmu_clock(cc, pll, BCMA_CC_PMU5_MAINPLL_CPU);
+ 	}
+ 
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 12975ea..53f7d4b 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -88,6 +88,11 @@
+ #define  BCMA_CC_CHIPST_4313_OTP_PRESENT	2
+ #define  BCMA_CC_CHIPST_4331_SPROM_PRESENT	2
+ #define  BCMA_CC_CHIPST_4331_OTP_PRESENT	4
++#define  BCMA_CC_CHIPST_4706_PKG_OPTION		BIT(0) /* 0: full-featured package 1: low-cost package */
++#define  BCMA_CC_CHIPST_4706_SFLASH_PRESENT	BIT(1) /* 0: parallel, 1: serial flash is present */
++#define  BCMA_CC_CHIPST_4706_SFLASH_TYPE	BIT(2) /* 0: 8b-p/ST-s flash, 1: 16b-p/Atmal-s flash */
++#define  BCMA_CC_CHIPST_4706_MIPS_BENDIAN	BIT(3) /* 0: little, 1: big endian */
++#define  BCMA_CC_CHIPST_4706_PCIE1_DISABLE	BIT(5) /* PCIE1 enable strap pin */
+ #define BCMA_CC_JCMD			0x0030		/* Rev >= 10 only */
+ #define  BCMA_CC_JCMD_START		0x80000000
+ #define  BCMA_CC_JCMD_BUSY		0x80000000
+@@ -280,6 +285,15 @@
+ 
+ /* 4706 PMU */
+ #define BCMA_CC_PMU4706_MAINPLL_PLL0	0
++#define BCMA_CC_PMU6_4706_PROCPLL_OFF	4	/* The CPU PLL */
++#define  BCMA_CC_PMU6_4706_PROC_P2DIV_MASK	0x000f0000
++#define  BCMA_CC_PMU6_4706_PROC_P2DIV_SHIFT	16
++#define  BCMA_CC_PMU6_4706_PROC_P1DIV_MASK	0x0000f000
++#define  BCMA_CC_PMU6_4706_PROC_P1DIV_SHIFT	12
++#define  BCMA_CC_PMU6_4706_PROC_NDIV_INT_MASK	0x00000ff8
++#define  BCMA_CC_PMU6_4706_PROC_NDIV_INT_SHIFT	3
++#define  BCMA_CC_PMU6_4706_PROC_NDIV_MODE_MASK	0x00000007
++#define  BCMA_CC_PMU6_4706_PROC_NDIV_MODE_SHIFT	0
+ 
+ /* ALP clock on pre-PMU chips */
+ #define BCMA_CC_PMU_ALP_CLOCK		20000000
+-- 
+1.7.7
+
