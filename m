@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1068 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755814Ab2GFUAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 16:00:07 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 24/33] NFC: Forbid SSAP binding to a not well known LLCP service
-Date: Fri,  6 Jul 2012 22:09:44 +0200
-Message-Id: <1341605393-32056-25-git-send-email-sameo@linux.intel.com> (sfid-20120706_220536_164409_C9ED01F4)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65097 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754469Ab2GIWgq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 18:36:46 -0400
+Received: by pbbrp8 with SMTP id rp8so19908121pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 15:36:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1341841623-21800-1-git-send-email-ozancag@gmail.com>
+References: <1341841623-21800-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 9 Jul 2012 15:36:25 -0700
+Message-ID: <CAB=NE6UpauAVC6L0SGpf_PhEy6o00jcMaHWDPTv6y3nE0U1YTg@mail.gmail.com> (sfid-20120710_003649_524258_1D239670)
+Subject: Re: [PATCH] compat: Directly call perl instead of skip-colors
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With not Well Known Services there is no guarantees as to which
-SSAP the server will be listening on, so there is no reason to
-support binding to a specific source SAP.
+On Mon, Jul 9, 2012 at 6:47 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> Since we can now install ckmake with make, drop dependency
+> on scripts/skip-colors as it is a simple oneliner. Directly
+> call perl instead of using it.
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/llcp.c |   22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+Applied and pushed, thanks!
 
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index 1031abd..9ab17ec 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -234,24 +234,12 @@ u8 nfc_llcp_get_sdp_ssap(struct nfc_llcp_local *local,
- 
- 		return LLCP_WKS_NUM_SAP + ssap;
- 
--	} else if (sock->ssap != 0) {
--		if (sock->ssap < LLCP_WKS_NUM_SAP) {
--			if (!test_bit(sock->ssap, &local->local_wks)) {
--				set_bit(sock->ssap, &local->local_wks);
--				mutex_unlock(&local->sdp_lock);
--
--				return sock->ssap;
--			}
--
--		} else if (sock->ssap < LLCP_SDP_NUM_SAP) {
--			if (!test_bit(sock->ssap - LLCP_WKS_NUM_SAP,
--				      &local->local_sdp)) {
--				set_bit(sock->ssap - LLCP_WKS_NUM_SAP,
--					&local->local_sdp);
--				mutex_unlock(&local->sdp_lock);
-+	} else if (sock->ssap != 0 && sock->ssap < LLCP_WKS_NUM_SAP) {
-+		if (!test_bit(sock->ssap, &local->local_wks)) {
-+			set_bit(sock->ssap, &local->local_wks);
-+			mutex_unlock(&local->sdp_lock);
- 
--				return sock->ssap;
--			}
-+			return sock->ssap;
- 		}
- 	}
- 
--- 
-1.7.10
-
+ Luis
