@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1836 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932307Ab2GKThz (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:58484 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184Ab2GIWvE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 15:37:55 -0400
-Date: Wed, 11 Jul 2012 12:37:44 -0700
-From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: support TX error rate notification
-Message-ID: <20120711193744.GA4334@pista> (sfid-20120711_213758_125531_DF848408)
-References: <1342034589-3979-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <4FFDD42E.6010401@qca.qualcomm.com>
+	Mon, 9 Jul 2012 18:51:04 -0400
+Received: by ghrr11 with SMTP id r11so10687680ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 15:51:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4FFDD42E.6010401@qca.qualcomm.com>
+In-Reply-To: <1341844313-12018-1-git-send-email-ozancag@gmail.com>
+References: <1341844313-12018-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 9 Jul 2012 15:50:42 -0700
+Message-ID: <CAB=NE6V6L2SOTV8baRNkcaZ5mBafh-Xr4fuJ06_W0ouZ7_6sGA@mail.gmail.com> (sfid-20120710_005108_376411_B9B9432F)
+Subject: Re: [RFC] compat: Don't download ubuntu specific kernel images
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 10:29:50PM +0300, Kalle Valo wrote:
-> On 07/11/2012 10:23 PM, Thomas Pedersen wrote:
-> > The ath6kl firmware can monitor a connection and report when a certain
-> > TX failure threshold is crossed. Support this configuration and event
-> > reporting on compatible firmwares.
-> > 
-> > Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-> 
-> [...]
-> 
-> > +	ev = (struct wmi_txe_notify_event *) datap;
-> > +	rate = le32_to_cpu(ev->rate);
-> > +	pkts = le32_to_cpu(ev->pkts);
-> > +	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d pkts %d\n",
-> > +		   vif->bssid, rate, pkts);
-> 
-> Empty line before the ath6kl_dbg() call, please.
+On Mon, Jul 9, 2012 at 7:31 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> The linux-image debs are quite specific to Ubuntu as they will
+> at least require generating a compliant initramfs before being able
+> to boot into them both in Ubuntu and in other distributions.
+>
+> The image installation is also the only part that avoids us from
+> switching to non-root builds.
+>
+> Drop this feature completely.
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-Merge damage. Will fix.
+Looks good -- applied and pushed.
 
-> > +int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
-> > +			      u32 rate, u32 pkts, u32 intvl)
-> > +{
-> > +	struct sk_buff *skb;
-> > +	struct wmi_txe_notify_cmd *cmd;
-> > +
-> > +	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-> > +	if (!skb)
-> > +		return -ENOMEM;
-> > +
-> > +	cmd = (struct wmi_txe_notify_cmd *) skb->data;
-> > +	cmd->rate = rate;
-> > +	cmd->pkts = pkts;
-> > +	cmd->intvl = intvl;
-> 
-> cpu_to_le32()?
-
-Of course.
-
-> > +/* WMI_SET_TXE_NOTIFY_CMD */
-> > +struct wmi_txe_notify_cmd {
-> > +	u32 rate;
-> > +	u32 pkts;
-> > +	u32 intvl;
-> > +} __packed;
-> > +
-> > +/* WMI_TXE_NOTIFY_EVENTID */
-> > +struct wmi_txe_notify_event {
-> > +	u32 rate;
-> > +	u32 pkts;
-> > +} __packed;
-> 
-> Endian annotation?
-
-Ok. v2 coming.
-
-Thanks!
-Thomas
+  Luis
