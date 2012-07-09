@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46474 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751189Ab2GNKC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2012 06:02:57 -0400
-Message-ID: <500143CA.1020804@openwrt.org> (sfid-20120714_120339_286936_EDEED5F8)
-Date: Sat, 14 Jul 2012 12:02:50 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from investici.nine.ch ([217.150.252.179]:37233 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759Ab2GIJ4P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 05:56:15 -0400
+Date: Mon, 9 Jul 2012 11:56:24 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nl/cfg/mac80211: use BIT(x) instead of (1 << x)
+Message-ID: <20120709095624.GC4488@ritirata.org> (sfid-20120709_115618_144031_50C3C561)
+References: <1341763805-7386-1-git-send-email-ordex@autistici.org>
+ <1341825724.4455.16.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
- TXOP limit
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org> <1342105451-42297-2-git-send-email-nbd@openwrt.org> <1342105451-42297-3-git-send-email-nbd@openwrt.org> <1342105451-42297-4-git-send-email-nbd@openwrt.org> <1342105451-42297-5-git-send-email-nbd@openwrt.org> <1342105451-42297-6-git-send-email-nbd@openwrt.org> <1342105451-42297-7-git-send-email-nbd@openwrt.org> <1342105451-42297-8-git-send-email-nbd@openwrt.org> <20481.3065.540576.366365@gargle.gargle.HOWL>
-In-Reply-To: <20481.3065.540576.366365@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="kfjH4zxOES6UT95V"
+In-Reply-To: <1341825724.4455.16.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-14 8:04 AM, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> @@ -1384,6 +1384,7 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
->>  		queue, txq->axq_qnum, params->aifs, params->cw_min,
->>  		params->cw_max, params->txop);
->>  
->> +	ath_update_max_aggr_framelen(sc, queue, qi.tqi_burstTime);
->>  	ret = ath_txq_update(sc, txq->axq_qnum, &qi);
->>  	if (ret)
->>  		ath_err(common, "TXQ Update failed\n");
-> 
-> Wouldn't this break multi-interface operation ? This unconditionally
-> updates the aggr. limits of an existing interface when a new one is added.
-No, this doesn't break multi-interface. TXOP limit (like other WMM
-settings) can only be configured per-wiphy, so the max. aggregation
-lengths are per-wiphy as well.
 
-- Felix
+--kfjH4zxOES6UT95V
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hello Johannes,
+
+On Mon, Jul 09, 2012 at 11:22:04AM +0200, Johannes Berg wrote:
+>=20
+
+=2E..
+
+>=20
+> >  		rthdr->it_present |=3D
+> > -			cpu_to_le32(1 << IEEE80211_RADIOTAP_TSFT);
+> > +			cpu_to_le32(BIT(IEEE80211_RADIOTAP_TSFT));
+>=20
+> This makes sense, of course, it's actually doing bitwise operations.
+>=20
+> johannes
+
+Thank you for your feedback.
+At the beginning they confused me a BIT(), but now it's clear :)
+I'll try to come up with a v2.
+
+Thank you again.
+Cheers,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--kfjH4zxOES6UT95V
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/6qsgACgkQpGgxIkP9cwcedgCeOojVzKZljfMgnqiyGS7Ktn07
+jo0An3roxqW+ZODhpKh5qPed4cXOw01M
+=oxxs
+-----END PGP SIGNATURE-----
+
+--kfjH4zxOES6UT95V--
