@@ -1,104 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:56852 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933032Ab2GCTfo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 15:35:44 -0400
+Received: from purkki.adurom.net ([80.68.90.206]:45422 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753457Ab2GINOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 09:14:55 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: "Xose Vazquez Perez" <xose.vazquez@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>, linville@tuxdriver.com,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
+References: <1341362473-18747-1-git-send-email-xose.vazquez@gmail.com>
+	<CAB=NE6U=bk6RSXHouuHvJd0=GErYJp82jkgeNWGnPDooZ_SONQ@mail.gmail.com>
+	<4FF396DD.7060408@gmail.com> <4FF3DC31.2030004@broadcom.com>
+Date: Mon, 09 Jul 2012 16:14:50 +0300
+In-Reply-To: <4FF3DC31.2030004@broadcom.com> (Arend van Spriel's message of
+	"Wed, 4 Jul 2012 08:01:21 +0200")
+Message-ID: <87pq852i0l.fsf@purkki.adurom.net> (sfid-20120709_151459_156069_A4D58CDE)
 MIME-Version: 1.0
-In-Reply-To: <20120628081607.GG31944@gamma.logic.tuwien.ac.at>
-References: <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com>
-	<20120413014047.GB25681@gamma.logic.tuwien.ac.at>
-	<20120330011734.GH6277@gamma.logic.tuwien.ac.at>
-	<20120411023747.GA10126@gamma.logic.tuwien.ac.at>
-	<4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
-	<20120412000202.GA15286@gamma.logic.tuwien.ac.at>
-	<20120628072512.GF31944@gamma.logic.tuwien.ac.at>
-	<1340869868.4491.4.camel@jlt3.sipsolutions.net>
-	<20120628081607.GG31944@gamma.logic.tuwien.ac.at>
-Date: Tue, 3 Jul 2012 21:35:43 +0200
-Message-ID: <CAKWSe6C_rEQgcB5Hg2DXJpTL-g+zsPbTzmO+fh86+EW+vbzFvA@mail.gmail.com> (sfid-20120703_213604_846931_F52BCBA3)
-Subject: Re: [Ilw] Re: 3.4-rc2, ilwagn still most of the time completely unusable
-From: Alessandro Suardi <alessandro.suardi@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"Lin, Hsien KuoX" <hsien.kuox.lin@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 28, 2012 at 10:16 AM, Norbert Preining <preining@logic.at> wrote:
-> On Do, 28 Jun 2012, Johannes Berg wrote:
->> Somehow your mail didn't make it to the lists, not sure why.
->
-> Hmm, yeah, some of the emails were privte exchange with
-> Venkataraman and Lin.
->
->> Fun. I don't actually see how this can possibly happen though?!
->
-> Hmm, actually I think I have seen similar things quite regularly,
-> and reported them also.
->
->> > > > >   [ 9457.176828] iwlwifi 0000:06:00.0: ACTIVATE a non DRIVER active
->> > > > >station id 0 addr 00:24:c4:ab:bd:e0
->> >
->> > These messages now appear only now and then.
->>
->> I fixed those recently.
->
-> Good.
+"Arend van Spriel" <arend@broadcom.com> writes:
 
-Just a report to say that I still see those in 3.5.0-rc5.
+> Just a general remark not specific to this patch. The commit message
+> often contains a source reference. I think it would be useful to have
+> this reference in the database a well so people validating it do not
+> need to do the digging using 'git blame'. Does that make sense?
 
-I recently moved from a Dell Latitude 6400, with a bcm4322 chip managed
- by the Broadcom-STA out-of-tree driver (wl module) to the new Latitude 6420,
- which has this as per lspci:
+Yes :)
 
-02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6205 (rev 34)
+IMHO makes a lot easier to validate the entries.
 
- and I have two issues compared to the bcm4322; one is the above message,
- which appears when the driver can't associate to my D-Link DSL2740B router;
- telnetting into the router and bouncing its AP component via wlctl is enough
- to allow the laptop to connect again.
-At the same time, my wife's old 32-bit Dell D610 with an ipw2200 connects just
- fine to the DSL-2740B.
-
-
-The second issue is that the wifi speed is much lower with the new 6420 under
- iwlwifi - topping out at under 3MB/s compared with peaks of 10MB/s with the
- bcm4322's wl driver, which hardly ever went under 6MB/s.
-
-iwconfig wlan0 reports fluctuating bitrates of 18/24/36 Mb/s whereas I could see
- very easily 130Mb/s with the wl driver. Maybe something is also due to the fact
- that the DSL-2740B has a draft-N implementation and its Broadcom chip has
- better feelings with the laptop's Broadcom wl than the iwlwifi.
-
-
-I'm available for more detailed reporting and testing.
-
-Thanks,
-
->> You seem to be on 3.5.0-rc now, is that really no different from 3.4?
->
-> The feeling is that it is definitely better.
->
-> I can actually work now wirelessly, and in case of hangs an rfkill block
-> rfkill unblock practically always, and mostly is not needed.
->
-> So yes, it is better, definitely.
->
-> I think till 3.4 I had to use the cable quite regularly.
->
-> Best wishes
->
-> Norbert
-
---alessandro
-
-"don't underestimate the things that I will do"
-
- (Adele, "Rolling In The Deep")
+-- 
+Kalle Valo
