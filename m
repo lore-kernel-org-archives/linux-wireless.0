@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:41782 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750766Ab2GUJDm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jul 2012 05:03:42 -0400
-Received: by wibhr14 with SMTP id hr14so1301818wib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jul 2012 02:03:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FFD7B06.4010401@broadcom.com>
-References: <4FFD7B06.4010401@broadcom.com>
-Date: Sat, 21 Jul 2012 11:03:40 +0200
-Message-ID: <CACna6rzGUUNzL-qcDk8gG0n=J9YdDH30VJumvi=YHU83kXVQmQ@mail.gmail.com> (sfid-20120721_110347_328563_FD71DBFA)
-Subject: Re: bcma-pci-bridge issue with bcm43224
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:63602 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752885Ab2GILsh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 07:48:37 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RHEL6 PATCH] iwlwifi: remove spurious warning
+Date: Mon,  9 Jul 2012 13:48:29 +0200
+Message-Id: <1341834509-11601-1-git-send-email-sgruszka@redhat.com> (sfid-20120709_134840_393170_84B78296)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/11 Arend van Spriel <arend@broadcom.com>:
-> Hi Rafal
->
-> I am testing with BCM43224 in PCIe slot:
-> $ lspci -vns 03:00.0
-> 03:00.0 0280: 14e4:4353 (rev 01)
->         Subsystem: 1028:000e
->         Flags: bus master, fast devsel, latency 0, IRQ 17
->         Memory at e6e00000 (64-bit, non-prefetchable) [size=16K]
->         Capabilities: <access denied>
->         Kernel driver in use: bcma-pci-bridge
->
-> In the log the irq field in the bcma_device structure is printed in
-> brcmsmac probe function and the value seems invalid hence the
-> request_irq() failure. Any clues?
+BZ#837754
 
-Sorry for late reply, I couldn't setup my testing machine to work with
-openSUSE firewall and I couldn't debug that problem remotely :|
+Description:
+Some devices do not set SEQ_RX_FRAME flags for few commands that should
+not be reclaimed. It was supposed to be fixed in firmware, but it was
+not.
 
-I've plugged my BCM43225 and noticed it doesn't provide any RX
-(scanning results) for both: b43 and brcmsmac. I suspected it's indeed
-the regression you noticed and tried going back to other releases.
-After reaching 3.2.0 I noticed sth is wrong. Kernel 3.2.0 was working
-for me for sure.
+Upstream change also add possibility to configure which commands should
+not be reclaimed, but that option is not used - only original 6 commands
+are configured. So I did not backport that part, because it make things
+somewhat (not necessarily) complex.
 
-After playing with my machine a little more, I've figured out the
-problem. When I had my dedicated GPU card connected to the
-motherboard, Broadcom cards diddn't get any RX! I've confirmed that
-problem with "wl" driver as well.
+Upstream:
+commit d663ee73f62903aed334eca25832a76c4a7e4c1c
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Sat Mar 10 13:00:07 2012 -0800
 
-After removing my AMD GPU (and switching to the one on the
-motherboard) card started working correctly. Even with the latest
-wireless-testing, including both: b43 and brcmsmac.
+    iwlwifi: abstract out missing SEQ_RX_FRAME workaround
 
-So I can't really debug that problem you're seeing :( Could you try
-bisecting this, please?
+Testing:
+Compiled only.
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 1daf01e..80e9328 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -449,17 +449,6 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 		else
+ 			cmd = NULL;
+ 
+-		/* warn if this is cmd response / notification and the uCode
+-		 * didn't set the SEQ_RX_FRAME for a frame that is
+-		 * uCode-originated
+-		 * If you saw this code after the second half of 2012, then
+-		 * please remove it
+-		 */
+-		WARN(pkt->hdr.cmd != REPLY_TX && reclaim == false &&
+-		     (!(pkt->hdr.sequence & SEQ_RX_FRAME)),
+-		     "reclaim is false, SEQ_RX_FRAME unset: %s\n",
+-		     get_cmd_string(pkt->hdr.cmd));
+-
+ 		err = iwl_rx_dispatch(priv(trans), rxb, cmd);
+ 
+ 		/*
 -- 
-Rafał
+1.7.1
+
