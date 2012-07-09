@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42017 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287Ab2GRGtp (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48559 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754949Ab2GIOu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 02:49:45 -0400
-Message-ID: <1342594185.5310.3.camel@jlt3.sipsolutions.net> (sfid-20120718_084947_618060_D8FBE2CE)
-Subject: Re: [PATCH v3] ath6kl: support TX error rate notification
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Cc: kvalo@qca.qualcomm.com, ath6kl-devel@qualcomm.com,
-	linux-wireless@vger.kernel.org
-Date: Wed, 18 Jul 2012 08:49:45 +0200
-In-Reply-To: <1342579195-18521-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120718_044010_258914_265CE137)
-References: <1342579195-18521-1-git-send-email-c_tpeder@qca.qualcomm.com>
-	 (sfid-20120718_044010_258914_265CE137)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 9 Jul 2012 10:50:56 -0400
+Message-ID: <4FFAEFCB.2080109@candelatech.com> (sfid-20120709_165102_333720_59A4DC9E)
+Date: Mon, 09 Jul 2012 07:50:51 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: use full power if off-channel
+References: <1341740130-6199-1-git-send-email-johannes@sipsolutions.net>  <4FF99A80.9040700@candelatech.com> <1341822596.4455.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1341822596.4455.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-17 at 19:39 -0700, Thomas Pedersen wrote:
-> The ath6kl firmware can monitor a connection and report when a certain
-> TX failure threshold is crossed. Support this configuration and event
-> reporting on compatible firmwares.
-> 
-> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-> ---
-> v2:
-> 	endianness & formatting (Kalle)
-> v3:
-> 	report configured interval
-> 
-> Kalle,
-> 
-> Please cherry-pick "84f10708f73254878246772cead70a2eb6a123f2" from w-t HEAD to
-> support this.
+On 07/09/2012 01:29 AM, Johannes Berg wrote:
+> On Sun, 2012-07-08 at 07:34 -0700, Ben Greear wrote:
+>> On 07/08/2012 02:35 AM, Johannes Berg wrote:
+>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>> Instead of using full power when scanning, use
+>>> full power when off-channel. This is different
+>>> since off-channel can be remain-on-channel.
+>>
+>> What if we are scanning on our current channel?  Shouldn't
+>> it be full-power then as well?
+>
+> Arguable. If we're on the channel that the AP explicitly told us to use
+> less power on, and we're not stopping normal traffic, then I'm not sure
+> we should.
 
-I don't think you should cherry-pick patches, it makes them show up in
-the trees twice later.
+Well, if you are scanning, you might be wanting to find other APs that
+perhaps require full power to reach, so it seems to me it should scan
+at full power...
 
-johannes
+Thanks,
+Ben
+
+>
+> johannes
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
 
