@@ -1,62 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:55615 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750802Ab2GFT6r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:58:47 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 02/33] NFC: Removed addressed shdlc TODOs
-Date: Fri,  6 Jul 2012 22:09:22 +0200
-Message-Id: <1341605393-32056-3-git-send-email-sameo@linux.intel.com> (sfid-20120706_215850_175837_11DAA99C)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:39660 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197Ab2GIM5Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 08:57:16 -0400
+Message-ID: <4FFAD137.3020806@gtri.gatech.edu> (sfid-20120709_145720_158394_450E9CA9)
+Date: Mon, 9 Jul 2012 08:40:23 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP v2] rtlwifi: rtl8192su subdriver
+References: <4FEF0BD1.90405@gmail.com>
+In-Reply-To: <4FEF0BD1.90405@gmail.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+	micalg=sha1; boundary="------------ms010509020805040209090008"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Lapuyade <eric.lapuyade@intel.com>
+--------------ms010509020805040209090008
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-The questions asked in the comments have been answered and addressed.
+On 06/30/2012 10:23 AM, Xose Vazquez Perez wrote:
+> on Mon, 7 May 2012 Joshua Roys wrote:
+>
+>> Currently a WIP.
+>
+>> A few things have changed between this and the previous version.
+>> Larry Finger's \
+>> patch for handling the race condition with mac80211 and the firmware
+>> callback is used \
+>> instead (rtlwifi: fix for race condition when firmware is cached), and=
 
-Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/hci/shdlc.c |   11 -----------
- 1 file changed, 11 deletions(-)
+>> a new patch \
+>  > [...]
+>
+> hi Joshua,
+>
+> any news on that ?
 
-diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
-index d7c74d1..18d1536 100644
---- a/net/nfc/hci/shdlc.c
-+++ b/net/nfc/hci/shdlc.c
-@@ -340,15 +340,6 @@ static void nfc_shdlc_connect_complete(struct nfc_shdlc *shdlc, int r)
- 		shdlc->state = SHDLC_CONNECTED;
- 	} else {
- 		shdlc->state = SHDLC_DISCONNECTED;
--
--		/*
--		 * TODO: Could it be possible that there are pending
--		 * executing commands that are waiting for connect to complete
--		 * before they can be carried? As connect is a blocking
--		 * operation, it would require that the userspace process can
--		 * send commands on the same device from a second thread before
--		 * the device is up. I don't think that is possible, is it?
--		 */
- 	}
- 
- 	shdlc->connect_result = r;
-@@ -926,8 +917,6 @@ void nfc_shdlc_free(struct nfc_shdlc *shdlc)
- {
- 	pr_debug("\n");
- 
--	/* TODO: Check that this cannot be called while still in use */
--
- 	nfc_hci_unregister_device(shdlc->hdev);
- 	nfc_hci_free_device(shdlc->hdev);
- 
--- 
-1.7.10
+Hello,
 
+Currently I'm still searching for the hidden/undocumented registers that =
+
+will allow the rtlwifi driver to drive the *su chips.  (The rtlwifi=20
+driver uses the softmac infrastructure while the current firmware for=20
+the *su chips really needs a fullmac driver.)
+
+Josh
+
+
+
+
+--------------ms010509020805040209090008
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+--------------ms010509020805040209090008--
