@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2513 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754642Ab2GKNJj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 09:09:39 -0400
-Message-ID: <4FFD7B06.4010401@broadcom.com> (sfid-20120711_150943_343636_8F8B6936)
-Date: Wed, 11 Jul 2012 15:09:26 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Rafal Milecki" <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>
-Subject: bcma-pci-bridge issue with bcm43224
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:48981 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570Ab2GIQ5d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 12:57:33 -0400
+Received: by wgbdr13 with SMTP id dr13so11628296wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 09:57:32 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] mac80211: fix invalid band deref building preq IEs
+Date: Mon,  9 Jul 2012 19:57:28 +0300
+Message-Id: <1341853048-12150-1-git-send-email-arik@wizery.com> (sfid-20120709_185747_490753_C028DCF1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafal
+The function building probe-request IEs does not validate the band is
+supported before dereferencing it. This can result in a panic when
+all bands are traversed, as done during sched-scan start.
 
-I am testing with BCM43224 in PCIe slot:
-$ lspci -vns 03:00.0
-03:00.0 0280: 14e4:4353 (rev 01)
-	Subsystem: 1028:000e
-	Flags: bus master, fast devsel, latency 0, IRQ 17
-	Memory at e6e00000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: <access denied>
-	Kernel driver in use: bcma-pci-bridge
+Warn when this happens and return an empty probe request. Also fix
+sched-scan to not waste memory on unsupported bands.
 
-In the log the irq field in the bcma_device structure is printed in
-brcmsmac probe function and the value seems invalid hence the
-request_irq() failure. Any clues?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+better? :)
 
-Gr. AvS
+ net/mac80211/scan.c |    3 +++
+ net/mac80211/util.c |    2 ++
+ 2 files changed, 5 insertions(+)
 
-[86629.110723] bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and
-package 0x0A
-[86629.110783] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id
-0x800, rev 0x22, class 0x0)
-[86629.110828] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id
-0x812, rev 0x17, class 0x0)
-[86629.110939] bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820,
-rev 0x0F, class 0x0)
-[86629.144286] bcma: bus0: Bus registered
-[86672.144812] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq
--421527552
-[86672.150745] brcmsmac: Applying 43224B0+ WARs
-[86672.153155] ieee80211 phy0: wl0: request_irq() failed
-[86672.153169] brcmsmac: brcms_bcma_probe: brcms_attach failed!
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 379f178..1ff04f6 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -928,6 +928,9 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		if (!local->hw.wiphy->bands[i])
++			continue;
++
+ 		local->sched_scan_ies.ie[i] = kzalloc(2 +
+ 						      IEEE80211_MAX_SSID_LEN +
+ 						      local->scan_ies_len +
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 64493a7..596db0c 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -999,6 +999,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	int ext_rates_len;
+ 
+ 	sband = local->hw.wiphy->bands[band];
++	if (WARN_ON_ONCE(!sband))
++		return 0;
+ 
+ 	pos = buffer;
+ 
+-- 
+1.7.9.5
 
