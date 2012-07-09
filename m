@@ -1,157 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:35617 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756201Ab2GSEox (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48690 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751956Ab2GITS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:44:53 -0400
-Date: Wed, 18 Jul 2012 21:44:31 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH RESEND 9/9] x86: OLPC: move s/r-related EC cmds to EC driver
-Message-ID: <20120718214431.0e1192d0@dev.queued.net> (sfid-20120719_064517_608437_021A83FE)
-In-Reply-To: <20120718213713.232e4161@dev.queued.net>
-References: <20120718213713.232e4161@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 9 Jul 2012 15:18:28 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1SoJTY-0001qy-7A
+	for linux-wireless@vger.kernel.org; Mon, 09 Jul 2012 15:18:28 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.5/8.14.4) with ESMTP id q69J3Ih4014900
+	for <linux-wireless@vger.kernel.org>; Mon, 9 Jul 2012 15:03:19 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.5/8.14.5/Submit) id q69J3Ig0014899
+	for linux-wireless@vger.kernel.org; Mon, 9 Jul 2012 15:03:18 -0400
+Date: Mon, 9 Jul 2012 15:03:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: wireless.git rebased from
+ 0a08adeb773cb6ed79b482c12bd45e37c2fa583b
+Message-ID: <20120709190317.GD1348@tuxdriver.com> (sfid-20120709_211831_274010_FECE8BF1)
+References: <20120709184607.GC1348@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120709184607.GC1348@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Actually, I took the opportunity to consolidate Thomas Huehn's two
+patches (one of which fixes the other).  So the actual base is from
+c9015b24 now.
 
-The new EC driver calls platform-specific suspend and resume hooks; run
-XO-1-specific EC commands from there, rather than deep in s/r code.  If we
-attempt to run EC commands after the new EC driver has suspended, it is
-refused by the ec->suspended checks.
+Sorry for the added confusion...
 
-Signed-off-by: Andres Salomon <dilinger@queued.net>
----
- arch/x86/platform/olpc/olpc-xo1-pm.c |   15 ------------
- arch/x86/platform/olpc/olpc.c        |   43 ++++++++++++++++++++++++++++-----
- 2 files changed, 36 insertions(+), 22 deletions(-)
+On Mon, Jul 09, 2012 at 02:46:07PM -0400, John W. Linville wrote:
+> I had to drop a patch.  Everything up to 0a08adeb stays the same, so if
+> you don't already have that then you should still be able to just pull.
+> 
+> Sorry for the inconvenience!
+> 
+> John
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-diff --git a/arch/x86/platform/olpc/olpc-xo1-pm.c b/arch/x86/platform/olpc/olpc-xo1-pm.c
-index 8054b64..d75582d 100644
---- a/arch/x86/platform/olpc/olpc-xo1-pm.c
-+++ b/arch/x86/platform/olpc/olpc-xo1-pm.c
-@@ -52,16 +52,11 @@ EXPORT_SYMBOL_GPL(olpc_xo1_pm_wakeup_clear);
- static int xo1_power_state_enter(suspend_state_t pm_state)
- {
- 	unsigned long saved_sci_mask;
--	int r;
- 
- 	/* Only STR is supported */
- 	if (pm_state != PM_SUSPEND_MEM)
- 		return -EINVAL;
- 
--	r = olpc_ec_cmd(EC_SET_SCI_INHIBIT, NULL, 0, NULL, 0);
--	if (r)
--		return r;
--
- 	/*
- 	 * Save SCI mask (this gets lost since PM1_EN is used as a mask for
- 	 * wakeup events, which is not necessarily the same event set)
-@@ -77,16 +72,6 @@ static int xo1_power_state_enter(suspend_state_t pm_state)
- 	/* Restore SCI mask (using dword access to CS5536_PM1_EN) */
- 	outl(saved_sci_mask, acpi_base + CS5536_PM1_STS);
- 
--	/* Tell the EC to stop inhibiting SCIs */
--	olpc_ec_cmd(EC_SET_SCI_INHIBIT_RELEASE, NULL, 0, NULL, 0);
--
--	/*
--	 * Tell the wireless module to restart USB communication.
--	 * Must be done twice.
--	 */
--	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
--	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
--
- 	return 0;
- }
- 
-diff --git a/arch/x86/platform/olpc/olpc.c b/arch/x86/platform/olpc/olpc.c
-index ed41b43..2737608 100644
---- a/arch/x86/platform/olpc/olpc.c
-+++ b/arch/x86/platform/olpc/olpc.c
-@@ -263,11 +263,6 @@ int olpc_ec_sci_query(u16 *sci_value)
- }
- EXPORT_SYMBOL_GPL(olpc_ec_sci_query);
- 
--static int olpc_ec_suspend(struct platform_device *pdev)
--{
--	return olpc_ec_mask_write(ec_wakeup_mask);
--}
--
- static bool __init check_ofw_architecture(struct device_node *root)
- {
- 	const char *olpc_arch;
-@@ -339,9 +334,40 @@ static int olpc_xo1_ec_probe(struct platform_device *pdev)
- 
- 	return 0;
- }
-+static int olpc_xo1_ec_suspend(struct platform_device *pdev)
-+{
-+	olpc_ec_mask_write(ec_wakeup_mask);
-+
-+	/*
-+	 * Squelch SCIs while suspended.  This is a fix for
-+	 * <http://dev.laptop.org/ticket/1835>.
-+	 */
-+	return olpc_ec_cmd(EC_SET_SCI_INHIBIT, NULL, 0, NULL, 0);
-+}
-+
-+static int olpc_xo1_ec_resume(struct platform_device *pdev)
-+{
-+	/* Tell the EC to stop inhibiting SCIs */
-+	olpc_ec_cmd(EC_SET_SCI_INHIBIT_RELEASE, NULL, 0, NULL, 0);
-+
-+	/*
-+	 * Tell the wireless module to restart USB communication.
-+	 * Must be done twice.
-+	 */
-+	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
-+	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
-+
-+	return 0;
-+}
- 
- static struct olpc_ec_driver ec_xo1_driver = {
--	.suspend = olpc_ec_suspend,
-+	.probe = olpc_xo1_ec_probe,
-+	.suspend = olpc_xo1_ec_suspend,
-+	.resume = olpc_xo1_ec_resume,
-+	.ec_cmd = olpc_xo1_ec_cmd,
-+};
-+
-+static struct olpc_ec_driver ec_xo1_5_driver = {
- 	.probe = olpc_xo1_ec_probe,
- 	.ec_cmd = olpc_xo1_ec_cmd,
- };
-@@ -354,7 +380,10 @@ static int __init olpc_init(void)
- 		return 0;
- 
- 	/* register the XO-1 and 1.5-specific EC handler */
--	olpc_ec_driver_register(&ec_xo1_driver, NULL);
-+	if (olpc_platform_info.boardrev < olpc_board_pre(0xd0))	/* XO-1 */
-+		olpc_ec_driver_register(&ec_xo1_driver, NULL);
-+	else
-+		olpc_ec_driver_register(&ec_xo1_5_driver, NULL);
- 	platform_device_register_simple("olpc-ec", -1, NULL, 0);
- 
- 	/* assume B1 and above models always have a DCON */
 -- 
-1.7.2.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
