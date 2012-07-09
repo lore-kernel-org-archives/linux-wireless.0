@@ -1,207 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:48650 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262Ab2GEOor (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34306 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753457Ab2GINMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 10:44:47 -0400
-Received: by werb14 with SMTP id b14so5340689wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 07:44:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1341498452.4455.44.camel@jlt3.sipsolutions.net>
-References: <CADnjpYvb15WvfZVnSpNvUiUAEdUgntOS2yoCyfxDZqHu+JBA5Q@mail.gmail.com>
-	<1341498452.4455.44.camel@jlt3.sipsolutions.net>
-Date: Thu, 5 Jul 2012 16:44:44 +0200
-Message-ID: <CADnjpYuWL1DQabomZiGPajv9108p7DwNHyTWwaKn48vVhRbMDg@mail.gmail.com> (sfid-20120705_164452_918522_50F839FB)
-Subject: Re: SIOCSIFFLAGS: operation not supported error message when
- tryinging to bring up an interface in adhoc mode
-From: Philippe Agostini <philippe.agostini@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Jul 2012 09:12:34 -0400
+Message-ID: <1341839551.4455.47.camel@jlt3.sipsolutions.net> (sfid-20120709_151237_732331_E758E273)
+Subject: Re: [PATCHv2] nl/cfg/mac80211: add set_mcast_rate API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:12:31 +0200
+In-Reply-To: <1341839146.4455.40.camel@jlt3.sipsolutions.net> (sfid-20120709_150558_255063_6140ED53)
+References: <1341739885-15385-1-git-send-email-ordex@autistici.org>
+	 <1341791503-12542-1-git-send-email-ordex@autistici.org>
+	 <1341839146.4455.40.camel@jlt3.sipsolutions.net>
+	 (sfid-20120709_150558_255063_6140ED53)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, 2012-07-09 at 15:05 +0200, Johannes Berg wrote:
+> On Mon, 2012-07-09 at 01:51 +0200, Antonio Quartulli wrote:
+> 
+> > +static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
+> > +				    int mcast_rate[IEEE80211_NUM_BANDS])
+> > +{
+> > +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> > +	u32 basic_rates = sdata->vif.bss_conf.basic_rates;
+> > +	int i;
+> > +
+> > +	/* check if the mcast_rates are also in basic_rates */
+> > +	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+> > +		if (!(basic_rates & BIT(mcast_rate[i] - 1)))
+> > +			return -EINVAL;
+> 
+> So this is kinda broken. In fact, the whole basic rate thing is broken
+> it seems.
+> 
+> The mcast rate is per band, as it should, since you could find the same
+> BSSID on a 5 GHz channel and then jump to that channel if the TSF is
+> higher...
+> 
+> However, the basic rates aren't, which is wrong: the basic rates bitmap
+> could be 1,2,6,9. If the driver is like most drivers, that translates to
+> a bitmap of 0x33. But 0x33, for most drivers, if applied to the 5 GHz
+> rates means 6,9,24,36. See why this is broken? A rate bitmap can't be
+> siwtched around between bands and still make any sense.
 
-What a quick answer ! :)
+Ok actually maybe it's not broken. We adopt the basic rates from the
+network we join, I guess, and the original basic rates specified from
+userspace are only used when we actually *create* the network?
 
-Ok here's my code :
+Still though, comparing the bits for all bands against the same bitmap
+like you did in the above code is just wrong :-)
 
-This is the part for the struct ieee80211_hw and struct wiphy
-initialization (between ieee80211_alloc_hw() and
-ieee80211_register_hw() calls)
+Maybe we shouldn't bother at all. If we'd join another network, we might
+have to downgrade the mcast rate, but then if some peer leaves or we
+join another one ... it gets messy quickly.
 
-Global variables
+Since all of this is probably for special cases anyway, maybe we should
+just not check the mcast rate and if you set a stupid one you don't get
+packets through to all peers? Could be hard to debug though ...
 
-/* Supported channel */
-static struct ieee80211_channel channels = {
-	.band = IEEE80211_BAND_2GHZ,
-	.center_freq = 2437,
-	.hw_value = 0,
-	.flags = 0,
-	.max_antenna_gain = 3,
-	.max_power = 20,
-	.max_reg_power = 20,
-	.beacon_found = FALSE,
-	.orig_flags = 0,
-	.orig_mag = 0,
-	.orig_mpwr = 0,
-};/* struct ieee80211_channel */
+johannes
 
-/* Supported bitrate */
-static struct ieee80211_rate bitrates = {
-	.flags = 0,
-	/* bitrate in units of 100 Kbps */
-	.bitrate = 10,
-	.hw_value = 0,
-	.hw_value_short = 0,
-};/* struct ieee80211_rate */
-
-/* Supported band (channel + bitrate) */
-static struct ieee80211_supported_band bands = {
-	.channels = &channels,
-	.bitrates = &bitrates,
-	.band = IEEE80211_BAND_2GHZ,
-	.n_channels = 1,
-	.n_bitrates = 1,
-	.ht_cap.ht_supported = FALSE,
-};/* struct ieee80211_supported_band */
-
-	/* Configuration and hardware information for an 802.11 PHY */	
-	struct ieee80211_hw *hw = priv->hw;
-	struct wiphy *wiphy = hw->wiphy; 	
-
-	int i = 0;
-	int ret = 0;
-	
-	/* Test MAC address */	
-	char mac_address[ETH_ALEN] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
-
-	/******************************
-	 * Initializing hardware data *
-	 ******************************/
-	
-	/* Received frames include FCS field */
-	/* Received signal power is given in dBm */	
-	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS | IEEE80211_HW_SIGNAL_DBM;
-
-	/* Headroom to reserve in each transmit skb */	
-	hw->extra_tx_headroom = 0;
-
-	//hw->channel_change_time = 0;
-	//hw->max_signal = 100;
-	//hw->max_listen_interval = 5;
-
-	/* Number of available hardware queues */
-	hw->queues = IEEE80211P_NUM_TXQ;
-
-	//hw->rate_control_algorithm = NULL;
-	hw->vif_data_size = sizeof(struct ieee80211p_vif_priv);
-	//hw->sta_data_size = sizeof(struct ieee80211p_sta_priv);
-	//hw->max_rates = 1;
-	//hw->max_report_rates = 1;
-	//hw->max_rate_tries = 1;
-	//hw->napi_weight = 0;
-	//hw->max_rx_aggregation = 0;
-	//hw->max_tx_aggregation = 0;
-
-	/***************************
-	 * Initializing wiphy data *
-	 ***************************/
-        /* Regulatory domain */
-	//wiphy->reg_notifier = &ieee80211p_reg_notifier;
-	//ret = reg_copy_regd(&wiphy->regd,&regd);
-
-	//wiphy->signal_type = CFG80211p_SIGNAL_TYPE_NONE;
-	//wiphy->cipher_suites = NULL;
-	//wiphy->n_cipher_suites = 0;
-	//wiphy->retry_short = 1;
-	//wiphy->retry_long = 1;
-	//wiphy->frag_threshold = -1;
-	//wiphy->rts_threshold = -1;
-	//wiphy_net_set(&hw->wiphy,NULL);
-	
-	/* Set MAC address to hw->wiphy->perm_addr */
-	SET_IEEE80211_PERM_ADDR(hw,&mac_address[0]);
-
-	//wiphy->addr_mask
-	//wiphy->n_addresses = 0;
-	//wiphy->addresses = NULL;
-	//wiphy->registered
-	//wiphy->debugfsdir
-	//SET_IEEE80211_DEV(hw,NULL);
-	//wiphy->wext = NULL;
-
-	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-BIT(NL80211_IFTYPE_ADHOC);
-
-	//wiphy->iface_combinations = NULL;
-	//wiphy->n_iface_combinations = 0;
-	//wiphy->software_iftypes = 0;
-
-	//wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
-	//wiphy->flags = 0;
-	//wiphy->features = 0;
-	//wiphy->bss_priv_size = sizeof(struct ieee80211p_bss);
-	//wiphy->max_scan_ssids = 0;
-	//wiphy->max_sched_scan_ssids = 0;
-	//wiphy->max_match_sets = 0;
-	//wiphy->max_scan_ie_len = 0;
-	//wiphy->max_sched_scan_ie = 0;
-	//wiphy->coverage_class = 0;
-	//wiphy->fw_version
-	//wiphy->hw_version = 0;
-	//wiphy->max_num_pmkids = 0;
-	//wiphy->privid
-	
-	/* Describes the frequency bands a wiphy is able to operate in */
-	for (i = 0;i<IEEE80211_NUM_BANDS;i++) {
-		wiphy->bands[i] = NULL;
-	}
-	wiphy->bands[IEEE80211_BAND_2GHZ] = &bands;
-
-	//wiphy->mgmt_stypes = NULL;
-	//wiphy->available_antennas_tx = 0x3;
-	//wiphy->available_antennas_rx = 0x3;
-	//wiphy->probe_resp_offload = 0;
-	//wiphy->max_remain_on_channel_duration = 0;
-	//wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
-	//wiphy->wowlan.n_patterns = 0;
-	//wiphy->wowlan.pattern_max_len = 0;
-	//wiphy->wowlan.pattern_min_len = 0;	
-	//wiphy->ap_sme_capa = 0;
-	//wiphy->ht_capa_mod_mask = NULL;
-
-Best regards.
-
-Philippe
-
-On Thu, Jul 5, 2012 at 4:27 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2012-07-05 at 16:25 +0200, Philippe Agostini wrote:
->> Hello,
->>
->> I am currently developing a wifi driver and I am having trouble with
->> the adhoc mode. I am developing on Ubuntu 10.04 with kernel 2.6.32. To
->> verify that my initialization is correct, I try to bring up and
->> configure virtual interfaces. It's working in managed mode, but when I
->> try an "ifconfig wlan0 up" in adhoc mode I get the following error
->> message: "SIOCSIFFLAGS: operation not supported". At first I thought
->> that it was because of the regulatory domain, but I defined only one
->> supported channel (channel 6, F=2437 MHz) and it seems to me that iw
->> reg get tells me that on this frequency I am allowed to set up
->> wireless device in adhoc mode (country 00: (2402 - 2472 @ 40), (3, 20)
->> and no flags following).
->>
->> Are there mandatory flags to set up (besides wiphy->interface_modes =
->> BIT(NL80211_IFTYPE_ADHOC)) that I missed, or callbacks to define in
->> order to have a working adhoc interface ?
->
-> This would be a lot easier if you'd post your code :-)
->
-> johannes
->
-
-
-
--- 
-P.
