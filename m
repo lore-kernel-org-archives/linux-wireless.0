@@ -1,102 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35106 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753341Ab2GWNaR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 09:30:17 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC/RFT 4/6] mac80211: use oper_channel in utils and config
-Date: Mon, 23 Jul 2012 15:30:09 +0200
-Message-Id: <1343050211-499-5-git-send-email-johannes@sipsolutions.net> (sfid-20120723_153031_414953_1A6E7A06)
-In-Reply-To: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
-References: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:10516 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752348Ab2GIPZH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 11:25:07 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] rt2x00: remove unused argument
+Date: Mon,  9 Jul 2012 17:24:50 +0200
+Message-Id: <1341847490-12573-1-git-send-email-sgruszka@redhat.com> (sfid-20120709_172512_718082_D8CC93F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Data pointer on rt2x00queue_for_each_entry() is never used - remove it.
 
-Using hw.conf.channel is wrong as it could be the
-temporary channel if any function like the beacon
-get function is called while scanning or during
-other temporary out-of-channel activities.
-
-Use oper_channel instead.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/cfg.c   |    6 +++---
- net/mac80211/iface.c |    2 +-
- net/mac80211/util.c  |    4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   10 ++++------
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    5 +----
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |   20 +++++++-------------
+ 3 files changed, 12 insertions(+), 23 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3dba48fa..095aa4c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -342,7 +342,7 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
- 	if (!(rate->flags & RATE_INFO_FLAGS_MCS)) {
- 		struct ieee80211_supported_band *sband;
- 		sband = sta->local->hw.wiphy->bands[
--				sta->local->hw.conf.channel->band];
-+				sta->local->oper_channel->band];
- 		rate->legacy = sband->bitrates[idx].bitrate;
- 	} else
- 		rate->mcs = idx;
-@@ -1673,7 +1673,7 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 	}
- 
- 	if (!sdata->vif.bss_conf.use_short_slot &&
--	    sdata->local->hw.conf.channel->band == IEEE80211_BAND_5GHZ) {
-+	    sdata->local->oper_channel->band == IEEE80211_BAND_5GHZ) {
- 		sdata->vif.bss_conf.use_short_slot = true;
- 		changed |= BSS_CHANGED_ERP_SLOT;
- 	}
-@@ -1940,7 +1940,7 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
- 				  enum nl80211_tx_power_setting type, int mbm)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 2fd8301..f7e74a0 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -774,9 +774,7 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
+ bool rt2x00queue_for_each_entry(struct data_queue *queue,
+ 				enum queue_index start,
+ 				enum queue_index end,
+-				void *data,
+-				bool (*fn)(struct queue_entry *entry,
+-					   void *data))
++				bool (*fn)(struct queue_entry *entry))
  {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
--	struct ieee80211_channel *chan = local->hw.conf.channel;
-+	struct ieee80211_channel *chan = local->oper_channel;
- 	u32 changes = 0;
+ 	unsigned long irqflags;
+ 	unsigned int index_start;
+@@ -807,17 +805,17 @@ bool rt2x00queue_for_each_entry(struct data_queue *queue,
+ 	 */
+ 	if (index_start < index_end) {
+ 		for (i = index_start; i < index_end; i++) {
+-			if (fn(&queue->entries[i], data))
++			if (fn(&queue->entries[i]))
+ 				return true;
+ 		}
+ 	} else {
+ 		for (i = index_start; i < queue->limit; i++) {
+-			if (fn(&queue->entries[i], data))
++			if (fn(&queue->entries[i]))
+ 				return true;
+ 		}
  
- 	switch (type) {
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f280e1f..ced8c6c 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1296,7 +1296,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
- 	/* reset some values that shouldn't be kept across type changes */
- 	sdata->vif.bss_conf.basic_rates =
- 		ieee80211_mandatory_rates(sdata->local,
--			sdata->local->hw.conf.channel->band);
-+			sdata->local->oper_channel->band);
- 	sdata->drop_unencrypted = 0;
- 	if (type == NL80211_IFTYPE_STATION)
- 		sdata->u.mgd.use_4addr = false;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index d4f4a9f..69ede01 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -838,7 +838,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 		for (i = 0; i < index_end; i++) {
+-			if (fn(&queue->entries[i], data))
++			if (fn(&queue->entries[i]))
+ 				return true;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 5f1392c..9b8c10a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -584,7 +584,6 @@ struct data_queue_desc {
+  * @queue: Pointer to @data_queue
+  * @start: &enum queue_index Pointer to start index
+  * @end: &enum queue_index Pointer to end index
+- * @data: Data to pass to the callback function
+  * @fn: The function to call for each &struct queue_entry
+  *
+  * This will walk through all entries in the queue, in chronological
+@@ -597,9 +596,7 @@ struct data_queue_desc {
+ bool rt2x00queue_for_each_entry(struct data_queue *queue,
+ 				enum queue_index start,
+ 				enum queue_index end,
+-				void *data,
+-				bool (*fn)(struct queue_entry *entry,
+-					   void *data));
++				bool (*fn)(struct queue_entry *entry));
  
- 	memset(&qparam, 0, sizeof(qparam));
+ /**
+  * rt2x00queue_empty - Check if the queue is empty.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 74ecc33..40ea807 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -285,7 +285,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
+ }
  
--	use_11b = (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ) &&
-+	use_11b = (local->oper_channel->band == IEEE80211_BAND_2GHZ) &&
- 		 !(sdata->flags & IEEE80211_SDATA_OPERATING_GMODE);
+-static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void* data)
++static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+@@ -390,7 +390,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	queue_work(rt2x00dev->workqueue, &rt2x00dev->rxdone_work);
+ }
+ 
+-static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void* data)
++static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+@@ -427,18 +427,12 @@ void rt2x00usb_kick_queue(struct data_queue *queue)
+ 	case QID_AC_BE:
+ 	case QID_AC_BK:
+ 		if (!rt2x00queue_empty(queue))
+-			rt2x00queue_for_each_entry(queue,
+-						   Q_INDEX_DONE,
+-						   Q_INDEX,
+-						   NULL,
++			rt2x00queue_for_each_entry(queue, Q_INDEX_DONE, Q_INDEX,
+ 						   rt2x00usb_kick_tx_entry);
+ 		break;
+ 	case QID_RX:
+ 		if (!rt2x00queue_full(queue))
+-			rt2x00queue_for_each_entry(queue,
+-						   Q_INDEX,
+-						   Q_INDEX_DONE,
+-						   NULL,
++			rt2x00queue_for_each_entry(queue, Q_INDEX, Q_INDEX_DONE,
+ 						   rt2x00usb_kick_rx_entry);
+ 		break;
+ 	default:
+@@ -447,7 +441,7 @@ void rt2x00usb_kick_queue(struct data_queue *queue)
+ }
+ EXPORT_SYMBOL_GPL(rt2x00usb_kick_queue);
+ 
+-static bool rt2x00usb_flush_entry(struct queue_entry *entry, void* data)
++static bool rt2x00usb_flush_entry(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
+@@ -474,7 +468,7 @@ void rt2x00usb_flush_queue(struct data_queue *queue, bool drop)
+ 	unsigned int i;
+ 
+ 	if (drop)
+-		rt2x00queue_for_each_entry(queue, Q_INDEX_DONE, Q_INDEX, NULL,
++		rt2x00queue_for_each_entry(queue, Q_INDEX_DONE, Q_INDEX,
+ 					   rt2x00usb_flush_entry);
  
  	/*
-@@ -926,7 +926,7 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
- 		if ((supp_rates[i] & 0x7f) * 5 > 110)
- 			have_higher_than_11mbit = 1;
+@@ -565,7 +559,7 @@ void rt2x00usb_clear_entry(struct queue_entry *entry)
+ 	entry->flags = 0;
  
--	if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
-+	if (local->oper_channel->band == IEEE80211_BAND_2GHZ &&
- 	    have_higher_than_11mbit)
- 		sdata->flags |= IEEE80211_SDATA_OPERATING_GMODE;
- 	else
+ 	if (entry->queue->qid == QID_RX)
+-		rt2x00usb_kick_rx_entry(entry, NULL);
++		rt2x00usb_kick_rx_entry(entry);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00usb_clear_entry);
+ 
 -- 
-1.7.10.4
+1.7.1
 
