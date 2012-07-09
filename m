@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41955 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756870Ab2GKIka (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:56663 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755055Ab2GIPKV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 04:40:30 -0400
-Message-ID: <1341996025.4480.11.camel@jlt3.sipsolutions.net> (sfid-20120711_104036_479773_BD733EED)
-Subject: Re: [PATCH] mac80211: Fix the Problem of Unreachable Mesh STA from
- DS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Date: Wed, 11 Jul 2012 10:40:25 +0200
-In-Reply-To: <1341995301-24611-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120711_102904_766340_6B5496BC)
-References: <1341995301-24611-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20120711_102904_766340_6B5496BC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 9 Jul 2012 11:10:21 -0400
+Received: by eeit10 with SMTP id t10so4364529eei.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 08:10:20 -0700 (PDT)
+Message-ID: <4FFAF459.500@gmail.com> (sfid-20120709_171025_392183_31F9A0E1)
+Date: Mon, 09 Jul 2012 17:10:17 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: realtek drivers
+References: <1341844078-2319-1-git-send-email-xose.vazquez@gmail.com> <4FFAF2D8.3070505@lwfinger.net>
+In-Reply-To: <4FFAF2D8.3070505@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-11 at 16:28 +0800, Chun-Yeow Yeoh wrote:
-> This patch fixes the problem of unreachable mesh STA from
-> Distribution System (DS) due to the introduction of previous
-> patch solving the mesh STA joining from one MBSS to another
-> MBSS.
+On 07/09/2012 05:03 PM, Larry Finger wrote:
 
-Is this relevant for any tree other than mac80211-next?
+> On 07/09/2012 09:27 AM, Xose Vazquez Perez wrote:
 
-johannes
+>> -RTL8192CE WIRELESS DRIVER
+>> +RTLWIFI WIRELESS DRIVERS
+>
+> NACK on this part. Rather than removing rtl8192ce, it should be kept. The new line should be
+>
+> RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE, AND RTL8192DE WIRELESS DRIVERS
 
+What about this one?
+
+RTLWIFI: RTL8192CE/CU/DE/SE WIRELESS DRIVERS
