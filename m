@@ -1,149 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13048 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:9787 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756094Ab2GENWA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 09:22:00 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
-	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>, joe@perches.com
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCHv3.6] lib: printf: append support of '%*ph[CDN]'
-Date: Thu,  5 Jul 2012 16:21:38 +0300
-Message-Id: <1341494498-22770-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120705_152220_445179_7F8C0316)
-In-Reply-To: <1341414588.3627.42.camel@joe2Laptop>
-References: <1341414588.3627.42.camel@joe2Laptop>
+	id S1753478Ab2GIMmX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 08:42:23 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	"Woody Hung" <Woody.Hung@mediatek.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] rt2x00pci: small 3290 changes cleanup
+Date: Mon,  9 Jul 2012 14:41:47 +0200
+Message-Id: <1341837708-22689-1-git-send-email-sgruszka@redhat.com> (sfid-20120709_144226_330856_3D1F7535)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are many places in the kernel where the drivers print small buffers as a
-hex string. This patch adds a support of the variable width buffer to print it
-as a hex string with a delimiter. The idea came from Pavel Roskin here:
-http://www.digipedia.pl/usenet/thread/18835/17449/
+Fix indention and remove unnecessary brackets and compares.
 
-Sample output of
-	pr_info("buf[%d:%d] %*phC\n", from, len, len, &buf[from]);
-could be look like this:
-	[ 0.726130] buf[51:8] e8:16:b6:ef:e3:74:45:6e
-	[ 0.750736] buf[59:15] 31:81:b8:3f:35:49:06:ae:df:32:06:05:4a:af:55
-	[ 0.757602] buf[17:5] ac:16:d5:2c:ef
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- Documentation/printk-formats.txt |   10 +++++++
- lib/vsprintf.c                   |   55 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 65 insertions(+)
+ drivers/net/wireless/rt2x00/rt2800pci.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
-index 90ff4d7..8ffb274 100644
---- a/Documentation/printk-formats.txt
-+++ b/Documentation/printk-formats.txt
-@@ -53,6 +53,16 @@ Struct Resources:
- 	For printing struct resources. The 'R' and 'r' specifiers result in a
- 	printed resource with ('R') or without ('r') a decoded flags member.
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index dd43612..bf0e71e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -986,7 +986,7 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+ 	int i, count;
  
-+Raw buffer as a hex string:
-+	%*ph	00 01 02  ...  3f
-+	%*phC	00:01:02: ... :3f
-+	%*phD	00-01-02- ... -3f
-+	%*phN	000102 ... 3f
-+
-+	For printing a small buffers (up to 64 bytes long) as a hex string with
-+	certain separator. For the larger buffers consider to use
-+	print_hex_dump().
-+
- MAC/FDDI addresses:
+ 	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+-	if ((rt2x00_get_field32(reg, WLAN_EN) == 1))
++	if (rt2x00_get_field32(reg, WLAN_EN))
+ 		return 0;
  
- 	%pM	00:01:02:03:04:05
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index e500158..8afa954 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -655,6 +655,50 @@ char *resource_string(char *buf, char *end, struct resource *res,
- }
+ 	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
+@@ -1004,9 +1004,9 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+ 		 */
+ 		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+ 			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
+-			if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
+-				(rt2x00_get_field32(reg, XTAL_RDY) == 1))
+-					break;
++			if (rt2x00_get_field32(reg, PLL_LD) &&
++			    rt2x00_get_field32(reg, XTAL_RDY))
++				break;
+ 			udelay(REGISTER_BUSY_DELAY);
+ 		}
  
- static noinline_for_stack
-+char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
-+		 const char *fmt)
-+{
-+	int i, len = 1;		/* if we pass '%ph[CDN]', field witdh remains
-+				   negative value, fallback to the default */
-+	char separator;
-+
-+	if (spec.field_width == 0)
-+		/* nothing to print */
-+		return buf;
-+
-+	if (ZERO_OR_NULL_PTR(addr))
-+		/* NULL pointer */
-+		return string(buf, end, NULL, spec);
-+
-+	switch (fmt[1]) {
-+	case 'C':
-+		separator = ':';
-+		break;
-+	case 'D':
-+		separator = '-';
-+		break;
-+	case 'N':
-+		separator = 0;
-+		break;
-+	default:
-+		separator = ' ';
-+		break;
-+	}
-+
-+	if (spec.field_width > 0)
-+		len = min_t(int, spec.field_width, 64);
-+
-+	for (i = 0; i < len && buf < end - 1; i++) {
-+		buf = hex_byte_pack(buf, addr[i]);
-+
-+		if (buf < end && separator && i != len - 1)
-+			*buf++ = separator;
-+	}
-+
-+	return buf;
-+}
-+
-+static noinline_for_stack
- char *mac_address_string(char *buf, char *end, u8 *addr,
- 			 struct printf_spec spec, const char *fmt)
- {
-@@ -974,6 +1018,13 @@ int kptr_restrict __read_mostly;
-  *       correctness of the format string and va_list arguments.
-  * - 'K' For a kernel pointer that should be hidden from unprivileged users
-  * - 'NF' For a netdev_features_t
-+ * - 'h[CDN]' For a variable-length buffer, it prints it as a hex string with
-+ *            a certain separator (' ' by default):
-+ *              C colon
-+ *              D dash
-+ *              N no separator
-+ *            The maximum supported length is 64 bytes of the input. Consider
-+ *            to use print_hex_dump() for the larger input.
-  *
-  * Note: The difference between 'S' and 'F' is that on ia64 and ppc64
-  * function pointers are really function descriptors, which contain a
-@@ -1007,6 +1058,8 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
- 	case 'R':
- 	case 'r':
- 		return resource_string(buf, end, ptr, spec, fmt);
-+	case 'h':
-+		return hex_string(buf, end, ptr, spec, fmt);
- 	case 'M':			/* Colon separated: 00:01:02:03:04:05 */
- 	case 'm':			/* Contiguous: 000102030405 */
- 					/* [mM]F (FDDI) */
-@@ -1298,6 +1351,8 @@ qualifier:
-  * %pI6c print an IPv6 address as specified by RFC 5952
-  * %pU[bBlL] print a UUID/GUID in big or little endian using lower or upper
-  *   case.
-+ * %*ph[CDN] a variable-length hex string with a separator (supports up to 64
-+ *           bytes of the input)
-  * %n is ignored
-  *
-  * ** Please update Documentation/printk-formats.txt when making changes **
+@@ -1022,9 +1022,8 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+ 			rt2800_register_write(rt2x00dev, 0x58, 0x618);
+ 			udelay(REGISTER_BUSY_DELAY);
+ 			count++;
+-		} else {
++		} else
+ 			count = 0;
+-		}
+ 
+ 		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+ 		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
 -- 
-1.7.10
+1.7.1
 
