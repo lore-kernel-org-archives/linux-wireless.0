@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:40474 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755771Ab2GXRvH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33273 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108Ab2GIH7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 13:51:07 -0400
-Received: by yenl2 with SMTP id l2so6947510yen.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 10:51:06 -0700 (PDT)
-Message-ID: <500EE086.6000304@lwfinger.net> (sfid-20120724_195111_569751_40197432)
-Date: Tue, 24 Jul 2012 12:51:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com>
-In-Reply-To: <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 9 Jul 2012 03:59:09 -0400
+Message-ID: <1341820743.4455.1.camel@jlt3.sipsolutions.net> (sfid-20120709_095913_791491_90DE4259)
+Subject: Re: [RFC 1/3] mac80211: make scan_sdata pointer usable with RCU
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 09 Jul 2012 09:59:03 +0200
+In-Reply-To: <CA+XVXfdo7agXE9Osxzmda2ZWi-xQ6pvP66zktdiDJq3P6PULgg@mail.gmail.com> (sfid-20120708_182724_613583_12D08BC1)
+References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
+	 <1341608733-7503-2-git-send-email-johannes@sipsolutions.net>
+	 <CA+XVXfdo7agXE9Osxzmda2ZWi-xQ6pvP66zktdiDJq3P6PULgg@mail.gmail.com>
+	 (sfid-20120708_182724_613583_12D08BC1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/24/2012 12:06 PM, Xavier de Almeida wrote:
-> Hi Larry and the team,
->
-> couldn't install my compiled (make + checkinstall) package.
->
-> sudo dpkg -i compat-wireless-2012-07_03-1_i386.deb
-> (Reading database ... 214923 files and directories currently installed.)
-> Unpacking compat-wireless-2012-07 (from compat-wireless-2012-07_03-1_i386.deb) ...
-> dpkg: error processing compat-wireless-2012-07_03-1_i386.deb (--install):
->   trying to overwrite '/bin/ntfs-3g', which is also in package ntfs-3g 1:2012.1.15AR.1-1ubuntu1
-> dpkg-deb: error: subprocess paste was killed by signal (Broken pipe)
-> Errors were encountered while processing:
->   compat-wireless-2012-07_03-1_i386.deb
->
-> Should I just to a make install instead?
+On Sun, 2012-07-08 at 19:27 +0300, Arik Nemtsov wrote:
+> On Sat, Jul 7, 2012 at 12:05 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > Making the scan_sdata pointer usable with RCU makes
+> > it possible to dereference it in the RX path to see
+> > if a received frame actually matches the interface
+> > that is scanning. This is just preparations, making
+> > the pointer __rcu.
+> 
+> I noticed no synchronize_rcu() in the start/stop scan calls. Good/bad idea?
 
-Yes. Using "make" and "sudo make install" is the correct way. Building a .deb. 
-may be necessary to install a whole kernel (it is not on my distro), but not for 
-compat-wireless.
+Well, start() certainly wouldn't need it since you'd only get NULL :-)
 
-Larry
+stop() in theory could use it, but it doesn't actually matter because as
+long as the interface still exists the pointer is valid. We don't free
+the interface in scan stop, so we don't need to make sure that the
+pointer is cleared before we continue. And in the case that we *do* in
+fact clear the interface (when it's going down) we have synchronize_rcu
+already in those code paths due to say the interface list with RCU
+protection.
 
-
+johannes
 
