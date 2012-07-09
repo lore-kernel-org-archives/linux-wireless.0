@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754610Ab2GQJwi (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55968 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753905Ab2GINrL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 05:52:38 -0400
-Message-ID: <1342518733.7427.16.camel@jlt3.sipsolutions.net> (sfid-20120717_115241_457952_F46F930D)
-Subject: Re: [PATCH] cfg80211: fix set_regdom() to cancel requests with
- same alpha2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-	John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-In-Reply-To: <20120712123358.22054.62538.stgit@localhost6.localdomain6> (sfid-20120712_143407_357227_CA39EE4B)
-References: <20120712123358.22054.62538.stgit@localhost6.localdomain6>
-	 (sfid-20120712_143407_357227_CA39EE4B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Jul 2012 11:52:13 +0200
-Mime-Version: 1.0
+	Mon, 9 Jul 2012 09:47:11 -0400
+Received: by bkwj10 with SMTP id j10so5959815bkw.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 06:47:09 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@kernel.org,
+	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH] compat: Directly call perl instead of skip-colors
+Date: Mon,  9 Jul 2012 16:47:03 +0300
+Message-Id: <1341841623-21800-1-git-send-email-ozancag@gmail.com> (sfid-20120709_154717_244190_D45946B8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-12 at 15:33 +0300, Kalle Valo wrote:
-> While adding regulatory support to ath6kl I noticed that I easily
-> got the regulatory code confused. The way to reproduce the bug was:
-> 
-> 1. iw reg set FI (in userspace)
-> 2. cfg80211 calls ath6kl_reg_notify(FI)
-> 3. ath6kl sets regdomain in firmware
-> 4. firmware sends regdomain event to notify about the new regdomain (FI)
-> 5. ath6kl calls regulatory_hint(FI)
-> 
-> And this (from FI to FI transition) confuses cfg80211 and after that I
-> only get "Pending regulatory request, waiting for it to be
-> processed...." messages and regdomain changes won't work anymore.
-> 
-> The reason why ath6kl calls regulatory_hint() is that firmware can change
-> the regulatory domain by it's own, for example due to 11d IEs. I could
-> of course workaround this in ath6kl but I think it's better to handle
-> the case in cfg80211.
-> 
-> The fix is pretty simple, use a different error code if the regdomain is
-> same and then just set the request processed so that it doesn't block new
-> requests.
-> 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Since we can now install ckmake with make, drop dependency
+on scripts/skip-colors as it is a simple oneliner. Directly
+call perl instead of using it.
 
-Should this go to 3.5 and maybe be Cc: stable?
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+---
+ bin/ckmake |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-If so, John please pick it up, fwiw:
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-Otherwise I'll pick it up after Kalle decides :)
-
-johannes
+diff --git a/bin/ckmake b/bin/ckmake
+index 5468b7a..2a0bb3d 100755
+--- a/bin/ckmake
++++ b/bin/ckmake
+@@ -41,7 +41,7 @@ done
+ function tee_color_split()
+ {
+ 	while read; do
+-		echo -e $REPLY | ./scripts/skip-colors >> $1
++		echo -e $REPLY | perl -pe 's|(\e)\[(\d+)(;*)(\d*)(\w)||g' >> $1
+ 		echo -e $REPLY
+ 	done
+ }
+@@ -104,7 +104,7 @@ function run_ckmake()
+ 		# We cannot use tee_color_split() as bash read only spits
+ 		# out output when a newline comes in. We can modif IFS but
+ 		# I am still not sure how to do this properly.
+-		log_try_kernel $KERNEL | ./scripts/skip-colors >> $LOG
++		log_try_kernel $KERNEL | perl -pe 's|(\e)\[(\d+)(;*)(\d*)(\w)||g' >> $LOG
+ 		log_try_kernel $KERNEL
+ 
+ 		#ionice -c 3 nice -n 20 make $QUIET KLIB=$DIR KLIB_BUILD=$DIR -j6 -Wunused-but-set-variable $ARGS &>> $LOG
+-- 
+1.7.10.4
 
