@@ -1,84 +1,324 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60163 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751024Ab2GZJRO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 05:17:14 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: torvalds@linux-foundation.org
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, pieterpg@broadcom.com,
-	brudley@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>,
-	Arend van Spriel <arend@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: fix regression in pmu workaround reg masks
-Date: Thu, 26 Jul 2012 11:15:51 +0200
-Message-Id: <1343294151-5691-1-git-send-email-hauke@hauke-m.de> (sfid-20120726_111724_360135_D719C245)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18622 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752609Ab2GIJP5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 05:15:57 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20474.41213.811128.264473@gargle.gargle.HOWL> (sfid-20120709_111600_867337_D9B6EC6A)
+Date: Mon, 9 Jul 2012 14:44:37 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 01/11] ath9k: Fix beacon setup
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a regression introduced in:
-commit b9562545ef0b13c0440ccd8d6dd4111fb77cb17a
-Author: Hauke Mehrtens <hauke@hauke-m.de>
-Date:   Sat Jun 30 01:44:41 2012 +0200
+This patch revamps interface addition and deletion and simplifies
+slot allocation. There is no need to setup the beacon buffer
+in add/remove interface, remove this and use simple APIs for
+assigning/deleting slots.
 
-    bcma: complete workaround for BCMA43224 and BCM4313
-
-The regression broke reading of the sprom from the chip and seamed to
-cause a change of the pci id on a BCMA43224 device so that it is
-rejected by brcmsmac. If this problem occurred, after applying this
-patch, a cold boot is needed to make the device work again.
-
-In the original patch the workaround set the intended bits in the chip
-common core chip control registers, but the patch also unset all the
-other bits in that register, because of a wrong mask. The original
-patch was based on code from brcmsmac and there was an additional
-inversing of the mask in the code setting these regs which was missing
-here. Now the regs are set like brcmsmac did it before.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Tested-by: Seth Forshee <seth.forshee@canonical.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/bcma/driver_chipcommon_pmu.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |   4 +-
+ drivers/net/wireless/ath/ath9k/beacon.c | 141 ++++++++------------------------
+ drivers/net/wireless/ath/ath9k/main.c   |  48 +++--------
+ 3 files changed, 47 insertions(+), 146 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 4432617..c9a4f46 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -110,7 +110,7 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- 		/* enable 12 mA drive strenth for 4313 and set chipControl
- 		   register bit 1 */
- 		bcma_chipco_chipctl_maskset(cc, 0,
--					    BCMA_CCTRL_4313_12MA_LED_DRIVE,
-+					    ~BCMA_CCTRL_4313_12MA_LED_DRIVE,
- 					    BCMA_CCTRL_4313_12MA_LED_DRIVE);
- 		break;
- 	case BCMA_CHIP_ID_BCM4331:
-@@ -124,14 +124,14 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- 		   register bit 15 */
- 		if (bus->chipinfo.rev == 0) {
- 			bcma_cc_maskset32(cc, BCMA_CC_CHIPCTL,
--					  BCMA_CCTRL_43224_GPIO_TOGGLE,
-+					  ~BCMA_CCTRL_43224_GPIO_TOGGLE,
- 					  BCMA_CCTRL_43224_GPIO_TOGGLE);
- 			bcma_chipco_chipctl_maskset(cc, 0,
--						    BCMA_CCTRL_43224A0_12MA_LED_DRIVE,
-+						    ~BCMA_CCTRL_43224A0_12MA_LED_DRIVE,
- 						    BCMA_CCTRL_43224A0_12MA_LED_DRIVE);
- 		} else {
- 			bcma_chipco_chipctl_maskset(cc, 0,
--						    BCMA_CCTRL_43224B0_12MA_LED_DRIVE,
-+						    ~BCMA_CCTRL_43224B0_12MA_LED_DRIVE,
- 						    BCMA_CCTRL_43224B0_12MA_LED_DRIVE);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 79840d6..ea1bd45 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -413,8 +413,8 @@ struct ath_beacon {
+ 
+ void ath_beacon_tasklet(unsigned long data);
+ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
+-int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif);
+-void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp);
++void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
++void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ int ath_beaconq_config(struct ath_softc *sc);
+ void ath_set_beacon(struct ath_softc *sc);
+ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 40775da..d357002 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -222,132 +222,57 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 	return bf;
+ }
+ 
+-int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif)
++void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ath_vif *avp;
+-	struct ath_buf *bf;
+-	struct sk_buff *skb;
+-	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
+-	__le64 tstamp;
++	struct ath_vif *avp = (void *)vif->drv_priv;
++	int slot;
+ 
+-	avp = (void *)vif->drv_priv;
++	avp->av_bcbuf = list_first_entry(&sc->beacon.bbuf, struct ath_buf, list);
++	list_del(&avp->av_bcbuf->list);
+ 
+-	/* Allocate a beacon descriptor if we haven't done so. */
+-	if (!avp->av_bcbuf) {
+-		/* Allocate beacon state for hostap/ibss.  We know
+-		 * a buffer is available. */
+-		avp->av_bcbuf = list_first_entry(&sc->beacon.bbuf,
+-						 struct ath_buf, list);
+-		list_del(&avp->av_bcbuf->list);
+-
+-		if (ath9k_uses_beacons(vif->type)) {
+-			int slot;
+-			/*
+-			 * Assign the vif to a beacon xmit slot. As
+-			 * above, this cannot fail to find one.
+-			 */
+-			avp->av_bslot = 0;
+-			for (slot = 0; slot < ATH_BCBUF; slot++)
+-				if (sc->beacon.bslot[slot] == NULL) {
+-					avp->av_bslot = slot;
+-					avp->is_bslot_active = false;
+-
+-					/* NB: keep looking for a double slot */
+-					if (slot == 0 || !sc->beacon.bslot[slot-1])
+-						break;
+-				}
+-			BUG_ON(sc->beacon.bslot[avp->av_bslot] != NULL);
+-			sc->beacon.bslot[avp->av_bslot] = vif;
+-			sc->nbcnvifs++;
++	for (slot = 0; slot < ATH_BCBUF; slot++) {
++		if (sc->beacon.bslot[slot] == NULL) {
++			avp->av_bslot = slot;
++			avp->is_bslot_active = false;
++			break;
  		}
- 		break;
+ 	}
+ 
+-	/* release the previous beacon frame, if it already exists. */
+-	bf = avp->av_bcbuf;
+-	if (bf->bf_mpdu != NULL) {
+-		skb = bf->bf_mpdu;
+-		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+-				 skb->len, DMA_TO_DEVICE);
+-		dev_kfree_skb_any(skb);
+-		bf->bf_mpdu = NULL;
+-		bf->bf_buf_addr = 0;
+-	}
+-
+-	/* NB: the beacon data buffer must be 32-bit aligned. */
+-	skb = ieee80211_beacon_get(sc->hw, vif);
+-	if (skb == NULL)
+-		return -ENOMEM;
+-
+-	tstamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+-	sc->beacon.bc_tstamp = (u32) le64_to_cpu(tstamp);
+-	/* Calculate a TSF adjustment factor required for staggered beacons. */
+-	if (avp->av_bslot > 0) {
+-		u64 tsfadjust;
+-		int intval;
++	sc->beacon.bslot[avp->av_bslot] = vif;
++	sc->nbcnvifs++;
+ 
+-		intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
++	ath_dbg(common, CONFIG, "Added interface at beacon slot: %d\n",
++		avp->av_bslot);
++}
+ 
+-		/*
+-		 * Calculate the TSF offset for this beacon slot, i.e., the
+-		 * number of usecs that need to be added to the timestamp field
+-		 * in Beacon and Probe Response frames. Beacon slot 0 is
+-		 * processed at the correct offset, so it does not require TSF
+-		 * adjustment. Other slots are adjusted to get the timestamp
+-		 * close to the TBTT for the BSS.
+-		 */
+-		tsfadjust = TU_TO_USEC(intval * avp->av_bslot) / ATH_BCBUF;
+-		avp->tsf_adjust = cpu_to_le64(tsfadjust);
++void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_vif *avp = (void *)vif->drv_priv;
++	struct ath_buf *bf = avp->av_bcbuf;
+ 
+-		ath_dbg(common, BEACON,
+-			"stagger beacons, bslot %d intval %u tsfadjust %llu\n",
+-			avp->av_bslot, intval, (unsigned long long)tsfadjust);
++	ath_dbg(common, CONFIG, "Removing interface at beacon slot: %d\n",
++		avp->av_bslot);
+ 
+-		((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp =
+-			avp->tsf_adjust;
+-	} else
+-		avp->tsf_adjust = cpu_to_le64(0);
++	tasklet_disable(&sc->bcon_tasklet);
+ 
+-	bf->bf_mpdu = skb;
+-	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
+-					 skb->len, DMA_TO_DEVICE);
+-	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
++	if (bf && bf->bf_mpdu) {
++		struct sk_buff *skb = bf->bf_mpdu;
++		dma_unmap_single(sc->dev, bf->bf_buf_addr,
++				 skb->len, DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_mpdu = NULL;
+ 		bf->bf_buf_addr = 0;
+-		ath_err(common, "dma_mapping_error on beacon alloc\n");
+-		return -ENOMEM;
+ 	}
+-	avp->is_bslot_active = true;
+-
+-	return 0;
+-}
+-
+-void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
+-{
+-	if (avp->av_bcbuf != NULL) {
+-		struct ath_buf *bf;
+-
+-		avp->is_bslot_active = false;
+-		if (avp->av_bslot != -1) {
+-			sc->beacon.bslot[avp->av_bslot] = NULL;
+-			sc->nbcnvifs--;
+-			avp->av_bslot = -1;
+-		}
+ 
+-		bf = avp->av_bcbuf;
+-		if (bf->bf_mpdu != NULL) {
+-			struct sk_buff *skb = bf->bf_mpdu;
+-			dma_unmap_single(sc->dev, bf->bf_buf_addr,
+-					 skb->len, DMA_TO_DEVICE);
+-			dev_kfree_skb_any(skb);
+-			bf->bf_mpdu = NULL;
+-			bf->bf_buf_addr = 0;
+-		}
+-		list_add_tail(&bf->list, &sc->beacon.bbuf);
++	avp->av_bcbuf = NULL;
++	avp->is_bslot_active = false;
++	sc->beacon.bslot[avp->av_bslot] = NULL;
++	sc->nbcnvifs--;
++	list_add_tail(&bf->list, &sc->beacon.bbuf);
+ 
+-		avp->av_bcbuf = NULL;
+-	}
++	tasklet_enable(&sc->bcon_tasklet);
+ }
+ 
+ void ath_beacon_tasklet(unsigned long data)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 248e5b2..19a2274 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -841,16 +841,6 @@ bool ath9k_uses_beacons(int type)
+ 	}
+ }
+ 
+-static void ath9k_reclaim_beacon(struct ath_softc *sc,
+-				 struct ieee80211_vif *vif)
+-{
+-	struct ath_vif *avp = (void *)vif->drv_priv;
+-
+-	ath9k_set_beaconing_status(sc, false);
+-	ath_beacon_return(sc, avp);
+-	ath9k_set_beaconing_status(sc, true);
+-}
+-
+ static void ath9k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ {
+ 	struct ath9k_vif_iter_data *iter_data = data;
+@@ -966,22 +956,6 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 	}
+ }
+ 
+-/* Called with sc->mutex held, vif counts set up properly. */
+-static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
+-				   struct ieee80211_vif *vif)
+-{
+-	struct ath_softc *sc = hw->priv;
+-
+-	ath9k_calculate_summary_state(hw, vif);
+-
+-	if (ath9k_uses_beacons(vif->type)) {
+-		/* Reserve a beacon slot for the vif */
+-		ath9k_set_beaconing_status(sc, false);
+-		ath_beacon_alloc(sc, vif);
+-		ath9k_set_beaconing_status(sc, true);
+-	}
+-}
+-
+ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif)
+ {
+@@ -1021,7 +995,10 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 
+ 	sc->nvifs++;
+ 
+-	ath9k_do_vif_add_setup(hw, vif);
++	ath9k_calculate_summary_state(hw, vif);
++	if (ath9k_uses_beacons(vif->type))
++		ath9k_beacon_assign_slot(sc, vif);
++
+ out:
+ 	mutex_unlock(&sc->mutex);
+ 	ath9k_ps_restore(sc);
+@@ -1038,6 +1015,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 	int ret = 0;
+ 
+ 	ath_dbg(common, CONFIG, "Change Interface\n");
++
+ 	mutex_lock(&sc->mutex);
+ 	ath9k_ps_wakeup(sc);
+ 
+@@ -1050,15 +1028,16 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	/* Clean up old vif stuff */
+ 	if (ath9k_uses_beacons(vif->type))
+-		ath9k_reclaim_beacon(sc, vif);
++		ath9k_beacon_remove_slot(sc, vif);
+ 
+-	/* Add new settings */
+ 	vif->type = new_type;
+ 	vif->p2p = p2p;
+ 
+-	ath9k_do_vif_add_setup(hw, vif);
++	ath9k_calculate_summary_state(hw, vif);
++	if (ath9k_uses_beacons(vif->type))
++		ath9k_beacon_assign_slot(sc, vif);
++
+ out:
+ 	ath9k_ps_restore(sc);
+ 	mutex_unlock(&sc->mutex);
+@@ -1078,9 +1057,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	sc->nvifs--;
+ 
+-	/* Reclaim beacon resources */
+ 	if (ath9k_uses_beacons(vif->type))
+-		ath9k_reclaim_beacon(sc, vif);
++		ath9k_beacon_remove_slot(sc, vif);
+ 
+ 	ath9k_calculate_summary_state(hw, NULL);
+ 
+@@ -1598,9 +1576,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	     (changed & BSS_CHANGED_BEACON_ENABLED) ||
+ 	     (changed & BSS_CHANGED_BEACON_INT))) {
+ 		ath9k_set_beaconing_status(sc, false);
+-		if (bss_conf->enable_beacon)
+-			ath_beacon_alloc(sc, vif);
+-		else
++		if (!bss_conf->enable_beacon)
+ 			avp->is_bslot_active = false;
+ 		ath_beacon_config(sc, vif);
+ 		ath9k_set_beaconing_status(sc, true);
 -- 
-1.7.9.5
+1.7.11.1
 
