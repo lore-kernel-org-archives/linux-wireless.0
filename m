@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23801 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751108Ab2GFUA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 16:00:26 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 29/33] NFC: Dereference LLCP bind socket address after checking for it to be NULL
-Date: Fri,  6 Jul 2012 22:09:49 +0200
-Message-Id: <1341605393-32056-30-git-send-email-sameo@linux.intel.com> (sfid-20120706_220536_377637_46C349EB)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:34294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753305Ab2GINFw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 09:05:52 -0400
+Message-ID: <1341839146.4455.40.camel@jlt3.sipsolutions.net> (sfid-20120709_150558_255063_6140ED53)
+Subject: Re: [PATCHv2] nl/cfg/mac80211: add set_mcast_rate API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:05:46 +0200
+In-Reply-To: <1341791503-12542-1-git-send-email-ordex@autistici.org>
+References: <1341739885-15385-1-git-send-email-ordex@autistici.org>
+	 <1341791503-12542-1-git-send-email-ordex@autistici.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/sock.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Mon, 2012-07-09 at 01:51 +0200, Antonio Quartulli wrote:
 
-diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
-index e5d8014..6152d05 100644
---- a/net/nfc/llcp/sock.c
-+++ b/net/nfc/llcp/sock.c
-@@ -78,11 +78,11 @@ static int llcp_sock_bind(struct socket *sock, struct sockaddr *addr, int alen)
- 	struct sockaddr_nfc_llcp llcp_addr;
- 	int len, ret = 0;
- 
--	pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
--
- 	if (!addr || addr->sa_family != AF_NFC)
- 		return -EINVAL;
- 
-+	pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
-+
- 	memset(&llcp_addr, 0, sizeof(llcp_addr));
- 	len = min_t(unsigned int, sizeof(llcp_addr), alen);
- 	memcpy(&llcp_addr, addr, len);
--- 
-1.7.10
+> +static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
+> +				    int mcast_rate[IEEE80211_NUM_BANDS])
+> +{
+> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	u32 basic_rates = sdata->vif.bss_conf.basic_rates;
+> +	int i;
+> +
+> +	/* check if the mcast_rates are also in basic_rates */
+> +	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+> +		if (!(basic_rates & BIT(mcast_rate[i] - 1)))
+> +			return -EINVAL;
+
+So this is kinda broken. In fact, the whole basic rate thing is broken
+it seems.
+
+The mcast rate is per band, as it should, since you could find the same
+BSSID on a 5 GHz channel and then jump to that channel if the TSF is
+higher...
+
+However, the basic rates aren't, which is wrong: the basic rates bitmap
+could be 1,2,6,9. If the driver is like most drivers, that translates to
+a bitmap of 0x33. But 0x33, for most drivers, if applied to the 5 GHz
+rates means 6,9,24,36. See why this is broken? A rate bitmap can't be
+siwtched around between bands and still make any sense.
+
+Oh, also, I'm not sure why you do BIT(... -1), but that's unrelated.
+What kind of value is the mcast rate? A rate index, or a number?
+
+johannes
 
