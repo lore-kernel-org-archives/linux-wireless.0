@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38143 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:34199 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755006Ab2GJLUH (ORCPT
+	with ESMTP id S1753760Ab2GIMiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 07:20:07 -0400
-Message-ID: <1341919201.4475.11.camel@jlt3.sipsolutions.net> (sfid-20120710_132012_268275_796E1829)
-Subject: Re: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
+	Mon, 9 Jul 2012 08:38:09 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 10 Jul 2012 13:20:01 +0200
-In-Reply-To: <4FFC0F22.6040906@qca.qualcomm.com>
-References: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>
-	 <1341918365.4475.9.camel@jlt3.sipsolutions.net>
-	 <4FFC0F22.6040906@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/8] nl80211: don't assume wdev->netdev exists
+Date: Mon,  9 Jul 2012 14:37:59 +0200
+Message-Id: <1341837483-18001-5-git-send-email-johannes@sipsolutions.net> (sfid-20120709_143823_662161_23253F1E)
+In-Reply-To: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
+References: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-10 at 16:46 +0530, Mohammed Shafi Shajakhan wrote:
-> Hi Johannes,
-> 
-> On Tuesday 10 July 2012 04:36 PM, Johannes Berg wrote:
-> > On Tue, 2012-07-10 at 15:37 +0530, Mohammed Shafi Shajakhan wrote:
-> >> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> >>
-> >> Previously we would check in nl80211 with an empty
-> >> cfg80211_wowlan structure to check for 'iw phy phyX wowlan enable'
-> >> with empty arguments (or) no triggers and disable WoWLAN.
-> >
-> > No ... that's not how it works. If you enable WoWLAN without any
-> > triggers, then that's what you get: the connection is kept alive but
-> > there are no wakeup sources. If you don't specify the triggers at all
-> > then it's disabled.
-> >
-> 
-> If we want to do disable WoWLAN we can use the command 'iw phy phyX 
-> wowlan disable' command. Its true that we would 'Keep Alive'
-> the connection, but we would disable the wake up capability via
-> 'set_wakeup' callback, something similar to wowlan disable command.
-> Please let me know if i am missing something (or) the advantage having
-> the connection Keep alive with wowlan enable without triggers.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I don't know if there's any advantage. It could be useful for example to
-get a connection up quicker after resume. I just didn't want to preclude
-that use case.
+There are a few places that iterate the wdev
+list and assume wdev->netdev exists, check
+there. The rfkill one has to be extended for
+each non-netdev type later.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index b110a8a2..2781a41 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -177,6 +177,8 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 		return -EOPNOTSUPP;
+ 
+ 	list_for_each_entry(wdev, &rdev->wdev_list, list) {
++		if (!wdev->netdev)
++			continue;
+ 		wdev->netdev->features &= ~NETIF_F_NETNS_LOCAL;
+ 		err = dev_change_net_namespace(wdev->netdev, net, "wlan%d");
+ 		if (err)
+@@ -190,6 +192,8 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 
+ 		list_for_each_entry_continue_reverse(wdev, &rdev->wdev_list,
+ 						     list) {
++			if (!wdev->netdev)
++				continue;
+ 			wdev->netdev->features &= ~NETIF_F_NETNS_LOCAL;
+ 			err = dev_change_net_namespace(wdev->netdev, net,
+ 							"wlan%d");
+@@ -227,7 +231,8 @@ static int cfg80211_rfkill_set_block(void *data, bool blocked)
+ 	mutex_lock(&rdev->devlist_mtx);
+ 
+ 	list_for_each_entry(wdev, &rdev->wdev_list, list)
+-		dev_close(wdev->netdev);
++		if (wdev->netdev)
++			dev_close(wdev->netdev);
+ 
+ 	mutex_unlock(&rdev->devlist_mtx);
+ 	rtnl_unlock();
+-- 
+1.7.10.4
 
