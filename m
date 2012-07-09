@@ -1,76 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52732 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181Ab2GCRJK (ORCPT
+Received: from investici.nine.ch ([217.150.252.179]:64573 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753948Ab2GIN1I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:09:10 -0400
-Date: Tue, 3 Jul 2012 12:09:03 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brad Figg <brad.figg@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Warning in brcms_c_wait_for_tx_completion
-Message-ID: <20120703170903.GC5626@thinkpad-t410> (sfid-20120703_190915_227259_EABA1455)
-References: <20120703134520.GB5626@thinkpad-t410>
- <4FF322DD.1050900@broadcom.com>
+	Mon, 9 Jul 2012 09:27:08 -0400
+Date: Mon, 9 Jul 2012 15:27:15 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2] nl/cfg/mac80211: add set_mcast_rate API
+Message-ID: <20120709132715.GF4488@ritirata.org> (sfid-20120709_152712_671801_3B5B345E)
+References: <1341739885-15385-1-git-send-email-ordex@autistici.org>
+ <1341791503-12542-1-git-send-email-ordex@autistici.org>
+ <1341839146.4455.40.camel@jlt3.sipsolutions.net>
+ <20120709131813.GD4488@ritirata.org>
+ <1341839999.4455.48.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FF322DD.1050900@broadcom.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WlEyl6ow+jlIgNUh"
+In-Reply-To: <1341839999.4455.48.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 03, 2012 at 06:50:37PM +0200, Arend van Spriel wrote:
-> On 07/03/2012 03:45 PM, Seth Forshee wrote:
-> > Hi Arend,
-> > 
-> > This message is off-list, only because I know it's been discussed
-> > on-list in the past. Feel free to pull in any individuals or mailing
-> > lists if you wish.
-> 
-> The issue is popping up regularly in Fedora 17. See [1]
-> 
-> > Brad (on Cc) just received a MacBook Air with BCM4313 wireless, and he's
-> > able to very reliably trigger the WARN_ON_ONCE in
-> > brcms_c_wait_for_tx_completion() in his environment. He also gets an
-> > endless stream of these messages when wireless drops out.
-> > 
-> >   ieee80211 phy0: brcms_c_prec_enq_head: No where to go, prec == 4
-> 
-> I only seen this regularly with Fedora 17. Ubuntu 11.04 with 3.5-rc4
-> installed in our smoketest setups does not show it. Basically, it means
-> that packet queue in our driver is full and packets are dropped. As we
-> do not inform mac80211 that traffic is stalled this is expected to happen.
-> 
-> > This is in the 3.5-rc kernels. We're carrying the regulatory patches, in
-> > the Ubuntu kernel, but Brad tested an older rc without the patches and
-> > still gets this.
-> > 
-> > We've done a little debugging and have found a couple of points. First,
-> > all the stack traces I've seen from Brad's machine show that the warning
-> > triggers during a scan. Second, we added debug to brcms_b_mute() to
-> > check whether tx was somehow getting muted in the driver without being
-> > unmuted, but this is not the case.
-> 
-> I did a little debugging as well and also concluded a scan triggers it.
-> I change the WARN_ON_ONCE to a WARN_ON and it seems to correlate with
-> the duration between scan_start and scan_complete. When it is in 8-10
-> sec. range the warning kicks in. I was going to add debugging for the tx
-> mute.
-> 
-> > I wanted to get in touch with you in case there was anything you wanted
-> > Brad to try to help with identifying the cause of this issue. Also you
-> > can find details of his AP setup below.
-> 
-> The issue is either driver related or caused by firmware behaviour. I
-> suspect the firmware, but I have not 100% certainty yet.
-> 
-> Gr. AvS
-> 
-> [1] https://bugzilla.redhat.com/show_bug.cgi?id=799168
 
-Thanks for the update, Arend. Brad and I are eager to help in any way we
-can, so please let us know if there's anything we can do to assist.
+--WlEyl6ow+jlIgNUh
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Seth
+On Mon, Jul 09, 2012 at 03:19:59PM +0200, Johannes Berg wrote:
+> On Mon, 2012-07-09 at 15:18 +0200, Antonio Quartulli wrote:
+>=20
+> > > So this is kinda broken. In fact, the whole basic rate thing is broken
+> > > it seems.
+> > >=20
+> > > The mcast rate is per band, as it should, since you could find the sa=
+me
+> > > BSSID on a 5 GHz channel and then jump to that channel if the TSF is
+> > > higher...
+> > >=20
+> > > However, the basic rates aren't, which is wrong: the basic rates bitm=
+ap
+> > > could be 1,2,6,9. If the driver is like most drivers, that translates=
+ to
+> > > a bitmap of 0x33. But 0x33, for most drivers, if applied to the 5 GHz
+> > > rates means 6,9,24,36. See why this is broken? A rate bitmap can't be
+> > > siwtched around between bands and still make any sense.
+> >=20
+> > I see, I wrongly thought that nl80211_parse_mcast_rate() was checking i=
+f the
+> > provided mcast_rate belongs to the basic_rate set of the band which we =
+are now.
+>=20
+> Well, ok, don't get confused -- there's no basic rate set "of the band",
+> it's a BSS property.
+>=20
+> > But that's wrong! nl80211_parse_mcast_rate() only checks if the provided
+> > mcast_rate exists somewhere...
+>=20
+> It checks that each rate exists in the band that it's for.
+>=20
+> > > Oh, also, I'm not sure why you do BIT(... -1), but that's unrelated.
+> > > What kind of value is the mcast rate? A rate index, or a number?
+> > >=20
+> >=20
+> > it's an index and actually it's the index +1, as reported in mac80211.h:
+> >=20
+> >  * @mcast_rate: per-band multicast rate index + 1 (0: disabled)
+>=20
+> also in the cfg80211 API?
 
+yes
+
+>=20
+> johannes
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--WlEyl6ow+jlIgNUh
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAk/63DMACgkQpGgxIkP9cwcaqACdGl6+fMtcTqgP9B9y5Vz1VLsJ
+HloAoIuAAJMeVX+Hlgf5sCAXo2NjkQtu
+=9u6U
+-----END PGP SIGNATURE-----
+
+--WlEyl6ow+jlIgNUh--
