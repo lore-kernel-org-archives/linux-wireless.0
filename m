@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:40482 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030749Ab2GLTlF (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58280 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917Ab2GIRdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 15:41:05 -0400
-Received: by ghrr11 with SMTP id r11so2828442ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 12:41:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120712093952.9976.84033.stgit@localhost6.localdomain6>
-References: <20120712093944.9976.84585.stgit@localhost6.localdomain6> <20120712093952.9976.84033.stgit@localhost6.localdomain6>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 12 Jul 2012 12:40:44 -0700
-Message-ID: <CAB=NE6WjW-f=giqEEycNcZqjjB7SuioiMyEbrLcGaz8oD1CPNA@mail.gmail.com> (sfid-20120712_214111_044783_DCAD539F)
-Subject: Re: [PATCH 2/2] ath6kl: add support for changing contry code
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Jul 2012 13:33:37 -0400
+Received: by wgbdr13 with SMTP id dr13so11657157wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 10:33:36 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	xose.vazquez@gmail.com
+Subject: [PATCH V2] MAINTAINERS: realtek drivers
+Date: Mon,  9 Jul 2012 19:33:32 +0200
+Message-Id: <1341855212-7151-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120709_193341_811112_405BD5DD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 12, 2012 at 2:39 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> +config ATH6KL_REGDOMAIN
-> +       bool "Atheros ath6kl regdomain support"
-> +       depends on ATH6KL
-> +       depends on CFG80211_CERTIFICATION_ONUS
-> +       ---help---
-> +         Enabling this makes it possible to change the regdomain in
-> +         the firmware. This can be only enabled if regulatory requirements
-> +         are taken into account.
+s/RTL8192CE/RTLWIFI , add wiki pages and delete
+"F:     drivers/net/wireless/rtlwifi/rtl8192ce/", it's redundant.
 
-You will need to add wiphy->features |=
-NL80211_FEATURE_CELL_BASE_REG_HINTS in order to enable the base
-station hints to propagate to the driver and even to the core,
-otherwise this is ignored. This was addressed starting at v4 of my
-onus patches. Given this, I think it makes sense to rename the option
-to enable / disable base station hints and to update the language to
-clearly reflect that is the only type of hint that would be used to
-update the firmware regulatory domain.
+v2 s/RTL8192CE/RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE AND RTL8192DE
 
-  Luis
+
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: John W. Linville <linville@tuxdriver.com>
+---
+ MAINTAINERS |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 03df1d1..27de053 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5753,7 +5753,7 @@ F:	net/rose/
+ RTL8180 WIRELESS DRIVER
+ M:	"John W. Linville" <linville@tuxdriver.com>
+ L:	linux-wireless@vger.kernel.org
+-W:	http://linuxwireless.org/
++W:	http://linuxwireless.org/en/users/Drivers/rtl8187
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ S:	Maintained
+ F:	drivers/net/wireless/rtl818x/rtl8180/
+@@ -5763,20 +5763,19 @@ M:	Herton Ronaldo Krzesinski <herton@canonical.com>
+ M:	Hin-Tak Leung <htl10@users.sourceforge.net>
+ M:	Larry Finger <Larry.Finger@lwfinger.net>
+ L:	linux-wireless@vger.kernel.org
+-W:	http://linuxwireless.org/
++W:	http://linuxwireless.org/en/users/Drivers/rtl8187
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ S:	Maintained
+ F:	drivers/net/wireless/rtl818x/rtl8187/
+ 
+-RTL8192CE WIRELESS DRIVER
++RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE AND RTL8192DE WIRELESS DRIVERS
+ M:	Larry Finger <Larry.Finger@lwfinger.net>
+ M:	Chaoming Li <chaoming_li@realsil.com.cn>
+ L:	linux-wireless@vger.kernel.org
+-W:	http://linuxwireless.org/
++W:	http://linuxwireless.org/en/users/Drivers/rtl819x
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ S:	Maintained
+ F:	drivers/net/wireless/rtlwifi/
+-F:	drivers/net/wireless/rtlwifi/rtl8192ce/
+ 
+ S3 SAVAGE FRAMEBUFFER DRIVER
+ M:	Antonino Daplas <adaplas@gmail.com>
+-- 
+1.7.10.4
+
