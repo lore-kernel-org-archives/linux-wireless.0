@@ -1,80 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34205 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753779Ab2GIMiL (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:65265 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754265Ab2GIPD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 08:38:11 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/8] nl80211: send interface after creation
-Date: Mon,  9 Jul 2012 14:38:02 +0200
-Message-Id: <1341837483-18001-8-git-send-email-johannes@sipsolutions.net> (sfid-20120709_143837_604587_F9D4B63B)
-In-Reply-To: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
-References: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 9 Jul 2012 11:03:59 -0400
+Received: by qcro28 with SMTP id o28so6734582qcr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 08:03:58 -0700 (PDT)
+Message-ID: <4FFAF2D8.3070505@lwfinger.net> (sfid-20120709_170403_029660_41E150C4)
+Date: Mon, 09 Jul 2012 10:03:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: realtek drivers
+References: <1341844078-2319-1-git-send-email-xose.vazquez@gmail.com>
+In-Reply-To: <1341844078-2319-1-git-send-email-xose.vazquez@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 07/09/2012 09:27 AM, Xose Vazquez Perez wrote:
+> s/RTL8192CE/RTLWIFI , add wiki pages and delete
+> "F:     drivers/net/wireless/rtlwifi/rtl8192ce/", it's redundant.
+>
+> ---
+>   MAINTAINERS |    9 ++++-----
+>   1 file changed, 4 insertions(+), 5 deletions(-)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 03df1d1..5c27b0c 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -5753,7 +5753,7 @@ F:	net/rose/
+>   RTL8180 WIRELESS DRIVER
+>   M:	"John W. Linville" <linville@tuxdriver.com>
+>   L:	linux-wireless@vger.kernel.org
+> -W:	http://linuxwireless.org/
+> +W:	http://linuxwireless.org/en/users/Drivers/rtl8187
+>   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>   S:	Maintained
+>   F:	drivers/net/wireless/rtl818x/rtl8180/
+> @@ -5763,20 +5763,19 @@ M:	Herton Ronaldo Krzesinski <herton@canonical.com>
+>   M:	Hin-Tak Leung <htl10@users.sourceforge.net>
+>   M:	Larry Finger <Larry.Finger@lwfinger.net>
+>   L:	linux-wireless@vger.kernel.org
+> -W:	http://linuxwireless.org/
+> +W:	http://linuxwireless.org/en/users/Drivers/rtl8187
+>   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>   S:	Maintained
+>   F:	drivers/net/wireless/rtl818x/rtl8187/
+>
+> -RTL8192CE WIRELESS DRIVER
+> +RTLWIFI WIRELESS DRIVERS
 
-After a new virtual interface is created, reply
-to userspace with a message detailing it so it
-knows the new wdev identifier.
+NACK on this part. Rather than removing rtl8192ce, it should be kept. The new 
+line should be
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE, AND RTL8192DE WIRELESS DRIVERS
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2103327..dfd6e28 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1972,6 +1972,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct vif_params params;
- 	struct wireless_dev *wdev;
-+	struct sk_buff *msg;
- 	int err;
- 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
- 	u32 flags;
-@@ -1998,14 +1999,20 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
- 	err = parse_monitor_flags(type == NL80211_IFTYPE_MONITOR ?
- 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
- 				  &flags);
- 	wdev = rdev->ops->add_virtual_intf(&rdev->wiphy,
- 		nla_data(info->attrs[NL80211_ATTR_IFNAME]),
- 		type, err ? NULL : &flags, &params);
--	if (IS_ERR(wdev))
-+	if (IS_ERR(wdev)) {
-+		nlmsg_free(msg);
- 		return PTR_ERR(wdev);
-+	}
- 
- 	if (type == NL80211_IFTYPE_MESH_POINT &&
- 	    info->attrs[NL80211_ATTR_MESH_ID]) {
-@@ -2019,7 +2026,13 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		wdev_unlock(wdev);
- 	}
- 
--	return 0;
-+	if (nl80211_send_iface(msg, info->snd_pid, info->snd_seq, 0,
-+			       rdev, wdev) < 0) {
-+		nlmsg_free(msg);
-+		return -ENOBUFS;
-+	}
-+
-+	return genlmsg_reply(msg, info);
- }
- 
- static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
--- 
-1.7.10.4
+Larry
+
+>   M:	Larry Finger <Larry.Finger@lwfinger.net>
+>   M:	Chaoming Li <chaoming_li@realsil.com.cn>
+>   L:	linux-wireless@vger.kernel.org
+> -W:	http://linuxwireless.org/
+> +W:	http://linuxwireless.org/en/users/Drivers/rtl819x
+>   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>   S:	Maintained
+>   F:	drivers/net/wireless/rtlwifi/
+> -F:	drivers/net/wireless/rtlwifi/rtl8192ce/
+>
+>   S3 SAVAGE FRAMEBUFFER DRIVER
+>   M:	Antonino Daplas <adaplas@gmail.com>
+>
+
 
