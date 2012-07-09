@@ -1,29 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39191 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750957Ab2GWIvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 04:51:07 -0400
-Message-ID: <500D106E.50500@openwrt.org> (sfid-20120723_105111_471807_B6A25B44)
-Date: Mon, 23 Jul 2012 10:50:54 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40569 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752854Ab2GIKn2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 06:43:28 -0400
+Message-ID: <4FFAB5CF.6080400@net.t-labs.tu-berlin.de> (sfid-20120709_124331_977674_415BD219)
+Date: Mon, 09 Jul 2012 12:43:27 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH] ath: Remove EEPROM dump functions
-References: <20492.53472.318382.889445@gargle.gargle.HOWL>
-In-Reply-To: <20492.53472.318382.889445@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Add transmit power control support (TPC)
+References: <1341766968-29570-1-git-send-email-thomas@net.t-labs.tu-berlin.de>  (sfid-20120708_190314_897831_DE794B3E) <1341826631.4455.24.camel@jlt3.sipsolutions.net>  (sfid-20120709_113745_588565_D68A59A8) <1341828786.4455.31.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1341828786.4455.31.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-23 6:19 AM, Sujith Manoharan wrote:
-> This can be done from userspace.
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-I think we should keep this code until we have a proper user space
-replacement, I've been using it for debugging a number of times.
-The qca-swiss-army-knife patch that you posted is missing quite a bit of
-stuff (AR9003 support, HTC support).
+Johannes Berg schrieb:
 
-- Felix
+> On Mon, 2012-07-09 at 11:37 +0200, Johannes Berg wrote:
+> 
+>>> (6) restructure tx-path of all effected drivers
+>>> Restructure tx-path of all effected drivers to respect new TPC support in
+>>> mac80211. TPC support is added to mac80211 by restructuring of struct
+>>> ieee80211_tx_info. Therfore the tx-path of all effected drivers is modified
+>>> to receive struct sta from the stack and respect the new ieee80211_tx_info
+>>> struct. List of modified driver:
+>> again, separate these patches.
+> 
+> Oh and I don't mean split it per driver. Just split up the patch into
+> the logical API evolutions, like first removing the sta pointer and
+> introducing the tx_control struct. (Where, btw, you lost an important
+> comment about it being NULL along the way)
+
+
+Hi Johannes,
+
+>From the comments so far, I will split this patch into:
+
+-keeping the brcmsmac patch that was send earlier (I thought it is as
+single patch out of context if not combined with the goal to add tpc)
+
+-send one single new patch to remove the sta pointer from ieee_tx_info
+including all driver changes to respect this. (as each patch should not
+break a kernel build, I guess all of this must come in one patch)
+
+-after that introduce the TPC stuff in a separate patch series (where I
+address the comments that where already given)
+
+Greetings Thomas
