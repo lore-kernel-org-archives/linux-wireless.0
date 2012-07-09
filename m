@@ -1,55 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41913 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933181Ab2GDKyr (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:38795 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885Ab2GILsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 06:54:47 -0400
-Message-ID: <1341399285.12432.1.camel@jlt3.sipsolutions.net> (sfid-20120704_125449_882919_EFE0C5BA)
-Subject: Re: Kernel oops in __netif_schedule() for at76c50x-usb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 04 Jul 2012 12:54:45 +0200
-In-Reply-To: <1341398983.12432.0.camel@jlt3.sipsolutions.net> (sfid-20120704_124949_270873_53E38893)
-References: <4FF1BC71.4070002@lwfinger.net>
-	 (sfid-20120702_172127_238924_ED185EFD) <1341243087.19642.20.camel@jlt3.sipsolutions.net>
-	 <4FF1C887.8090009@lwfinger.net>
-	 (sfid-20120702_181310_720968_3FE88ADC) <1341250736.19642.22.camel@jlt3.sipsolutions.net>
-	 <4FF225AC.8020205@lwfinger.net>
-	 (sfid-20120703_005025_974399_3EFA8A16) <1341395171.4482.10.camel@jlt3.sipsolutions.net>
-	 (sfid-20120704_114618_455741_41EF0E8A) <1341398983.12432.0.camel@jlt3.sipsolutions.net>
-	 (sfid-20120704_124949_270873_53E38893)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 9 Jul 2012 07:48:09 -0400
+Received: by eeit10 with SMTP id t10so4281740eei.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 04:48:08 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@kernel.org,
+	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH] compat: Fix setting $TARGET
+Date: Mon,  9 Jul 2012 14:48:01 +0300
+Message-Id: <1341834481-1831-1-git-send-email-ozancag@gmail.com> (sfid-20120709_134814_046576_51D4DAD8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-04 at 12:49 +0200, Johannes Berg wrote:
-> On Wed, 2012-07-04 at 11:46 +0200, Johannes Berg wrote:
-> 
-> > > >> Although you may want to change the enable code path, some patch will be needed
-> > > >> to prevent a regression in 3.5. If this is the one, you may add a "Tested-by"
-> > > >> for me.
-> > > >
-> > > > Thanks. Could you try this patch instead? I think it makes more sense.
-> > > >
-> > > > http://p.sipsolutions.net/c3e9b814a409ca11.txt
-> > > 
-> > > That one fails and gives the oops in __netif_schedule.
-> > 
-> > Hmmm, that's odd. I'll try to reproduce this to be able to track it
-> > better.
-> 
-> Ok, strange. I can reproduce the original problem easily with hwsim, but
-> with this new patch, which should be equivalent to the old, it's fixed:
-> 
-> http://p.sipsolutions.net/d78d8740ad2d15b4.txt
+commit 61077651424add644401b927b52681a191bbd7f1 moved the list of
+kernels above which broke the $TARGET substitutions in them.
 
-Ok, actually, the same bug is on stop, but for some reason that doesn't
-crash for me.
+Move the TARGET detection above of everything to fix this.
 
-I've posted this patch now:
-http://p.sipsolutions.net/55032a5ae0520dd8.txt
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+---
+ bin/get-compat-kernels |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-johannes
+diff --git a/bin/get-compat-kernels b/bin/get-compat-kernels
+index d80c0a7..99392b4 100755
+--- a/bin/get-compat-kernels
++++ b/bin/get-compat-kernels
+@@ -23,6 +23,23 @@ UNDERLINE="\033[02m"
+ KERNELS=""
+ KPATH="http://kernel.ubuntu.com/~kernel-ppa/mainline/"
+ 
++ARCH=$(uname -m)
++TARGET=""
++
++case $ARCH in
++	"x86_64")
++		TARGET="amd64"
++		;;
++	"i686")
++		TARGET="i386"
++		;;
++	*)
++		echo -e "Unsupported architecture"
++		exit
++		;;
++esac
++
++
+ KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624_2.6.24-020624_all.deb"
+ KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624-generic_2.6.24-020624_${TARGET}.deb"
+ KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-image-2.6.24-020624-generic_2.6.24-020624_${TARGET}.deb"
+@@ -109,22 +126,6 @@ KERNELS="$KERNELS ${KPATH}/v3.4.4-quantal/linux-image-3.4.4-030404-generic_3.4.4
+ 
+ function get_ubuntu_kernels() {
+ 
+-	ARCH=$(uname -m)
+-	TARGET=""
+-
+-	case $ARCH in
+-	"x86_64")
+-		TARGET="amd64"
+-		;;
+-	"i686")
+-		TARGET="i386"
+-		;;
+-	*)
+-		echo -e "Unsupported architecture"
+-		exit
+-		;;
+-	esac
+-
+ 	mkdir -p debs
+ 	cd debs
+ 
+-- 
+1.7.10.4
 
