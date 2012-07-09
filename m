@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51457 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab2G0LRy (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:65076 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822Ab2GIIOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:54 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 12/20] mac80211: don't assume channel is set in tracing
-Date: Fri, 27 Jul 2012 13:16:48 +0200
-Message-Id: <1343387816-9414-13-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131831_238976_9E7D165D)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 9 Jul 2012 04:14:30 -0400
+Received: by yenl2 with SMTP id l2so9801641yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 01:14:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1341821025.4455.5.camel@jlt3.sipsolutions.net>
+References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+ <1341732211-25871-8-git-send-email-coelho@ti.com> <1341740110.4987.4.camel@jlt3.sipsolutions.net>
+ <CA+XVXfdEqQyiyDQoAddCjC9bhH+WqmANiqf_wUCEJFi7=xG5vQ@mail.gmail.com> <1341821025.4455.5.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 9 Jul 2012 11:14:14 +0300
+Message-ID: <CA+XVXfdQCPTrEdDb1WY67rSKucjH=aU9S+zzkZ=xB+GW94Ty9A@mail.gmail.com> (sfid-20120709_101442_603545_C508F45D)
+Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Jul 9, 2012 at 11:03 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2012-07-08 at 17:08 +0300, Arik Nemtsov wrote:
+>
+>> > kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
+>> > then most likely you could just put "__aligned(4)" or something on the
+>> > conf.phy struct member and not allocate memory at all?
+>>
+>> Yea we need 4 bytes alignment. The kzalloc is a sort of convention in
+>> the driver (see acx.c), but probably here we can use kmemdup.
+>> We can't use fancy __aligned(4) notations most likely, since a
+>> usermode tool also parses these header files, and it's not too smart
+>> :)
+>
+> This seems like a rather bad excuse for making the runtime code more
+> complex and less performant ... I'll let you sort it out with John
+> though, I wouldn't let you get away with this though if I maintained the
+> tree ;-)
+>
+> FWIW, I think your actual problem is that you mark wl18xx_priv_conf as
+> packed unnecessarily. Otherwise it might actually get alignment, at
+> least on ARM I hear.
 
-With the move to multi-channel and away from
-drv_config(), hw.conf.channel will not always
-be set, only for devices using the current API
-instead of the new channel context APIs. Check
-the channel is set before adding its frequency
-to the trace data.
-
-Also break some overly long lines in the code.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/trace.h |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index a0cd3cb..6004ea7 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -274,9 +274,12 @@ TRACE_EVENT(drv_config,
- 		__entry->dynamic_ps_timeout = local->hw.conf.dynamic_ps_timeout;
- 		__entry->max_sleep_period = local->hw.conf.max_sleep_period;
- 		__entry->listen_interval = local->hw.conf.listen_interval;
--		__entry->long_frame_max_tx_count = local->hw.conf.long_frame_max_tx_count;
--		__entry->short_frame_max_tx_count = local->hw.conf.short_frame_max_tx_count;
--		__entry->center_freq = local->hw.conf.channel->center_freq;
-+		__entry->long_frame_max_tx_count =
-+			local->hw.conf.long_frame_max_tx_count;
-+		__entry->short_frame_max_tx_count =
-+			local->hw.conf.short_frame_max_tx_count;
-+		__entry->center_freq = local->hw.conf.channel ?
-+					local->hw.conf.channel->center_freq : 0;
- 		__entry->channel_type = local->hw.conf.channel_type;
- 		__entry->smps = local->hw.conf.smps_mode;
- 	),
--- 
-1.7.10.4
-
+It's not an excuse, we really have a usermode tool (called wlconf)
+preparing binary conf files. And it usually runs on a different arch
+(x86), so we mark everything packed to avoid errors.
+I'm pretty sure __aligned(4) would screw up the parser there. It has
+to build an internal representation of all the struct, and fill it out
+using an ini file.
