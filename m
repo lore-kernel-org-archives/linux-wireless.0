@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:50360 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755192Ab2GQUQU (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:53399 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752058Ab2GIG6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 16:16:20 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org, ilw@linux.intel.com,
-	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
-	buytenh@wantstofly.org, dsd@gentoo.org, coelho@ti.com,
-	johannes.berg@intel.com
-Subject: [PATCH v3 0/0] mac80211: Restructure ieee80211_tx_info->control to gain free space along tx-path 
-Date: Tue, 17 Jul 2012 22:16:12 +0200
-Message-Id: <1342556174-23769-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120717_221623_927841_921C4815)
+	Mon, 9 Jul 2012 02:58:09 -0400
+Date: Sun, 08 Jul 2012 23:58:08 -0700 (PDT)
+Message-Id: <20120708.235808.1602900783296556684.davem@davemloft.net> (sfid-20120709_085814_909622_65FA3BFA)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] etherdevice: introduce broadcast_ether_addr
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
+References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to enable new annotations per data packet along the max80211 tx-path,
-(e.g. upcoming Transmit Power Control (TPC) per packet) this patch-serie does:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 03 Jul 2012 12:16:27 +0200
 
-- fix the ieee80211_tx_info->control usage in driver mac80211_hwsim
-- remove control.sta from ieee80211_tx_info and adapt all affected drivers
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> A lot of code has either the memset or an
+> inefficient copy from a static array that
+> contains the all-ones broadcast address.
+> Introduce broadcast_ether_addr() to fill
+> an address with all ones, making the code
+> clearer and allowing us to get rid of the
+> various constant arrays.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-
-Greetings Thomas                                                                                                                                                                                                                        
-
----
-CC list is a reduced "get_maintainer.pl", focuses on mailing lists - suggested
-by J. Berg
-
+I would prefer if this were named "eth_something()", thanks.
