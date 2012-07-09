@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:34940 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869Ab2GEEkA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 00:40:00 -0400
-Received: by obbuo13 with SMTP id uo13so12456773obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 21:40:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <loom.20120704T065417-405@post.gmane.org>
-References: <loom.20120704T065417-405@post.gmane.org>
-Date: Thu, 5 Jul 2012 10:10:00 +0530
-Message-ID: <CAD2nsn3kvkOeoSqK3FepSYz-YN-6vyS_TPbyec5jyXoc9wOnLQ@mail.gmail.com> (sfid-20120705_064048_765421_3008554B)
-Subject: Re: hostapd slows down system and sometimes i get message like
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: pravin bharwad <pravinbharwad@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from rousseau.luceor.com ([91.121.31.107]:46261 "EHLO sro-lap"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750917Ab2GIRZT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 13:25:19 -0400
+From: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+Subject: [PATCH v3] minstrel_ht: enable frame aggregation for fixed rate
+Date: Mon,  9 Jul 2012 19:25:09 +0200
+Message-Id: <1341854709-558-1-git-send-email-sylvain.roger.rieunier@gmail.com> (sfid-20120709_192523_935858_56CC8A4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+When sample_idx is set to a value other than -1, it activates
+IEEE80211_TX_CTL_RATE_CTRL_PROBE flag. but this flag Disabled frame
+aggregation. to allow frame aggregation during fixed rate it is necessary to
+set max_tp_rate, max_tp_rate2, max_prob_rate instead of sample_idx.
 
-On Wed, Jul 4, 2012 at 10:33 AM, pravin bharwad <pravinbharwad@gmail.com> wrote:
-> hi all
->
-> frequently restarting hostapd seems to slow down system and sometimes msg
-> like "BUG: soft lockup - CPU#0 stuck for 61s".
+Signed-off-by: Sylvain Roger Rieunier <sylvain.roger.rieunier@gmail.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-please provide information about what driver you are using(also
-lspci), hostapd.conf,  hostapd --version.
-wireless-testing/linux kernel version.
-
->
-> Thanks
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index f9e51ef..fb1d4aa 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -626,8 +626,12 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	/* use fixed index if set */
+-	if (mp->fixed_rate_idx != -1)
+-		sample_idx = mp->fixed_rate_idx;
++	if (mp->fixed_rate_idx != -1) {
++		mi->max_tp_rate = mp->fixed_rate_idx;
++		mi->max_tp_rate2 = mp->fixed_rate_idx;
++		mi->max_prob_rate = mp->fixed_rate_idx;
++		sample_idx = -1;
++	}
+ #endif
+ 
+ 	if (sample_idx >= 0) {
 -- 
-thanks,
-shafi
+1.7.9.5
+
