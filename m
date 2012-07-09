@@ -1,30 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:43838 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261Ab2GJKLE convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48536 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab2GITD2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 06:11:04 -0400
-Received: by gglu4 with SMTP id u4so11051717ggl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 03:11:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1341834481-1831-1-git-send-email-ozancag@gmail.com>
-References: <1341834481-1831-1-git-send-email-ozancag@gmail.com>
-Date: Tue, 10 Jul 2012 13:11:03 +0300
-Message-ID: <CAFub=KTDYF71=GiEMAdVNDTKeMMZYFy4C0YqPpvhOE-+MShrKQ@mail.gmail.com> (sfid-20120710_121108_267881_1B4E34E6)
-Subject: Re: [PATCH] compat: Fix setting $TARGET
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+	Mon, 9 Jul 2012 15:03:28 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1SoJF2-0001mp-5F
+	for linux-wireless@vger.kernel.org; Mon, 09 Jul 2012 15:03:28 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.5/8.14.4) with ESMTP id q69Ik8Qu013790
+	for <linux-wireless@vger.kernel.org>; Mon, 9 Jul 2012 14:46:08 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.5/8.14.5/Submit) id q69Ik7wM013789
+	for linux-wireless@vger.kernel.org; Mon, 9 Jul 2012 14:46:07 -0400
+Date: Mon, 9 Jul 2012 14:46:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: mcgrof@kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: wireless.git rebased from 0a08adeb773cb6ed79b482c12bd45e37c2fa583b
+Message-ID: <20120709184607.GC1348@tuxdriver.com> (sfid-20120709_210332_917561_BB559CD8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 9, 2012 at 2:48 PM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> commit 61077651424add644401b927b52681a191bbd7f1 moved the list of
-> kernels above which broke the $TARGET substitutions in them.
->
-> Move the TARGET detection above of everything to fix this.
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+I had to drop a patch.  Everything up to 0a08adeb stays the same, so if
+you don't already have that then you should still be able to just pull.
 
-I think you missed this as you've pushed the other 2 patches :)
+Sorry for the inconvenience!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
