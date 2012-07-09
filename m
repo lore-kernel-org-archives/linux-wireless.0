@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49708 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:2458 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757047Ab2GKR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 13:59:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 02/12] ath9k: validate rx antenna settings
-Date: Wed, 11 Jul 2012 19:59:05 +0200
-Message-Id: <1342029555-31618-2-git-send-email-nbd@openwrt.org> (sfid-20120711_195933_337623_E808EDBA)
-In-Reply-To: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
+	id S1753731Ab2GINrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 09:47:47 -0400
+Message-ID: <4FFAE0F7.1000601@broadcom.com> (sfid-20120709_154750_399235_251AF2DF)
+Date: Mon, 9 Jul 2012 15:47:35 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Thomas Huehn" <thomas@net.t-labs.tu-berlin.de>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	brcm80211-dev-list@broadcom.com, pieterpg@broadcom.com,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	frankyl@broadcom.com, rvossen@broadcom.com, brudley@broadcom.com
+Subject: Re: [PATCH v2] brcmsmac: restructure info->control.sta handling
+ as it is goning to be removed soon.
+References: <1340974563-77085-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+ <1340975210.4472.1.camel@jlt3.sipsolutions.net>
+ <4FEDC3F0.1000201@net.t-labs.tu-berlin.de>
+ <20120706193733.GC1879@tuxdriver.com> <4FF9E254.7090203@broadcom.com>
+ <4FF9E3E5.6080202@net.t-labs.tu-berlin.de>
+In-Reply-To: <4FF9E3E5.6080202@net.t-labs.tu-berlin.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many chips are not able to deal with non-consecutive rx antenna selections
-and respond with calibration errors, reset errors, etc.
-When an antenna is selected as a tx antenna, also flag it for rx to avoid
-chip issues.
+On 07/08/2012 09:47 PM, Thomas Huehn wrote:
+> Hi Arend,
+> 
+> This patch has the following goal. To implement Transmission Power
+> Control (TPC) in the mac80211 subsystem, I remove the STA pointer from
+> the ieee_tx_info structure to gain free mem for TPC annotation and I put
+> the sta  on the stack to pass it to each driver function in the tx-path.
+> The broadcom brcmsmac is the only driver where the ieee_tx_info is
+> somewhat stored and therefore the sta point is not as straight removable
+> as for the other drivers. This patch resolved that issue.
+> Please have a look at my recent patch [PATCH] mac80211: Add transmit
+> power control support (TPC) where I have included this one again with
+> the full story in the code.
+> 
+> Greetings Thomas
+> 
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+Hi Thomas,
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 248e5b2..49f293a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1912,12 +1912,29 @@ static u32 fill_chainmask(u32 cap, u32 new)
- 	return filled;
- }
- 
-+static bool validate_antenna_mask(struct ath_hw *ah, u32 val)
-+{
-+	switch (val & ah->caps.rx_chainmask) {
-+	case 0x1:
-+	case 0x3:
-+	case 0x7:
-+		return true;
-+	case 0x2:
-+		return (ah->caps.rx_chainmask == 1);
-+	default:
-+		return false;
-+	}
-+}
-+
- static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 
--	if (!rx_ant || !tx_ant)
-+	if (ah->caps.rx_chainmask != 1)
-+		rx_ant |= tx_ant;
-+
-+	if (!validate_antenna_mask(ah, rx_ant) || !tx_ant)
- 		return -EINVAL;
- 
- 	sc->ant_rx = rx_ant;
--- 
-1.7.3.2
+I understand now. I just found the rate_driver_info somewhat obscure. I
+looked into mac80211.h for the description and found that those fields
+are intended for internal driver use. I will comment on the original patch.
+
+Gr. AvS
+
 
