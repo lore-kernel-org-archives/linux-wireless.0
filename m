@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:60732 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198Ab2GDVFW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31296 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751963Ab2GIGqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 17:05:22 -0400
-Received: by wibhm11 with SMTP id hm11so5913866wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2012 14:05:21 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: mcgrof@frijolero.org, linville@tuxdriver.com,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	xose.vazquez@gmail.com
-Subject: [PATCH 3/3] wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
-Date: Wed,  4 Jul 2012 23:05:07 +0200
-Message-Id: <1341435907-3787-3-git-send-email-xose.vazquez@gmail.com> (sfid-20120704_230528_220504_BA2E473C)
-In-Reply-To: <1341435907-3787-1-git-send-email-xose.vazquez@gmail.com>
-References: <1341435907-3787-1-git-send-email-xose.vazquez@gmail.com>
+	Mon, 9 Jul 2012 02:46:10 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20474.32213.21743.932687@gargle.gargle.HOWL> (sfid-20120709_084615_164909_0D07C56C)
+Date: Mon, 9 Jul 2012 12:14:37 +0530
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: fix reset work check properly
+In-Reply-To: <1341815640-6299-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1341815640-6299-1-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- add NO-OUTDOOR to 5150-5250 and 5250-5350
+Rajkumar Manoharan wrote:
+> Once the hw reset work is queued up and to bail out current
+> execution properly, use HW_RESET bit ops instead of work_pending.
+> As work_pending might return false when the queued work is in
+> execution. So it is not correct to use the work utility for
+> baining out.
 
-Spanish law was based on CEPT/EU rules:
-http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000058.html
-http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000059.html
+I have one comment, though.
 
-Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
-nacional de atribución de frecuencias (CNAF):
-https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
-https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
+> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+> index 40775da..567a655 100644
+> --- a/drivers/net/wireless/ath/ath9k/beacon.c
+> +++ b/drivers/net/wireless/ath/ath9k/beacon.c
+> @@ -362,7 +362,7 @@ void ath_beacon_tasklet(unsigned long data)
+>  	int slot;
+>  	u32 bfaddr, bc = 0;
+>  
+> -	if (work_pending(&sc->hw_reset_work)) {
+> +	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags)) {
 
-search for:
- UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
- UN - 128 RLANs en 5 GHz (pag. 232)
+This is not needed, since we bail out in ath_isr().
+(And interrupts are re-enabled only at the end of ath9k_tasklet()).
 
-more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
-http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
-
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- db.txt |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index cea63bd..11409d6 100644
---- a/db.txt
-+++ b/db.txt
-@@ -240,8 +240,8 @@ country EG:
- 
- country ES: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
--	(5150 - 5250 @ 40), (N/A, 100 mW)
--	(5250 - 5350 @ 40), (N/A, 100 mW), DFS
-+	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
-+	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
- 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
- 
- country FI: DFS-ETSI
--- 
-1.7.10.4
-
+Sujith
