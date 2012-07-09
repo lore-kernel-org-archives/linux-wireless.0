@@ -1,156 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10516 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752348Ab2GIPZH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 11:25:07 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] rt2x00: remove unused argument
-Date: Mon,  9 Jul 2012 17:24:50 +0200
-Message-Id: <1341847490-12573-1-git-send-email-sgruszka@redhat.com> (sfid-20120709_172512_718082_D8CC93F4)
+Received: from he.sipsolutions.net ([78.46.109.217]:33474 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771Ab2GIJKF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 05:10:05 -0400
+Message-ID: <1341825002.4455.10.camel@jlt3.sipsolutions.net> (sfid-20120709_111023_365233_A6334DD5)
+Subject: Re: [RFC 1/3] mac80211: make scan_sdata pointer usable with RCU
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 09 Jul 2012 11:10:02 +0200
+In-Reply-To: <CA+XVXfeAhP9EjKJr6Ch1GAuT8u4CV_WsDQiCCt6b4YGjHzZwrQ@mail.gmail.com> (sfid-20120709_104823_940389_C5E8A146)
+References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
+	 <1341608733-7503-2-git-send-email-johannes@sipsolutions.net>
+	 <CA+XVXfdo7agXE9Osxzmda2ZWi-xQ6pvP66zktdiDJq3P6PULgg@mail.gmail.com>
+	 <1341820743.4455.1.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfeAhP9EjKJr6Ch1GAuT8u4CV_WsDQiCCt6b4YGjHzZwrQ@mail.gmail.com>
+	 (sfid-20120709_104823_940389_C5E8A146)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Data pointer on rt2x00queue_for_each_entry() is never used - remove it.
+On Mon, 2012-07-09 at 11:48 +0300, Arik Nemtsov wrote:
+> On Mon, Jul 9, 2012 at 10:59 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sun, 2012-07-08 at 19:27 +0300, Arik Nemtsov wrote:
+> >> On Sat, Jul 7, 2012 at 12:05 AM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >> > From: Johannes Berg <johannes.berg@intel.com>
+> >> >
+> >> > Making the scan_sdata pointer usable with RCU makes
+> >> > it possible to dereference it in the RX path to see
+> >> > if a received frame actually matches the interface
+> >> > that is scanning. This is just preparations, making
+> >> > the pointer __rcu.
+> >>
+> >> I noticed no synchronize_rcu() in the start/stop scan calls. Good/bad idea?
+> >
+> > Well, start() certainly wouldn't need it since you'd only get NULL :-)
+> >
+> > stop() in theory could use it, but it doesn't actually matter because as
+> > long as the interface still exists the pointer is valid. We don't free
+> > the interface in scan stop, so we don't need to make sure that the
+> > pointer is cleared before we continue. And in the case that we *do* in
+> > fact clear the interface (when it's going down) we have synchronize_rcu
+> > already in those code paths due to say the interface list with RCU
+> > protection.
+> 
+> I meant protecting these (in patch 2/3):
+> 
+> -            local->sched_scanning,
+> +            rcu_dereference_protected(local->sched_scan_sdata,
+> +                                      lockdep_is_held(&local->mtx)),
+> 
+> The check is obviously racy here, but it was racy before as well I guess.
+> I'm not sure why something line test_bit(SCHED_SCANNING) wasn't used
+> in these places.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   10 ++++------
- drivers/net/wireless/rt2x00/rt2x00queue.h |    5 +----
- drivers/net/wireless/rt2x00/rt2x00usb.c   |   20 +++++++-------------
- 3 files changed, 12 insertions(+), 23 deletions(-)
+I don't think I understand what you're trying to say ... why is this
+racy? We hold the mutex that we always hold when we assign the pointer.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 2fd8301..f7e74a0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -774,9 +774,7 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- bool rt2x00queue_for_each_entry(struct data_queue *queue,
- 				enum queue_index start,
- 				enum queue_index end,
--				void *data,
--				bool (*fn)(struct queue_entry *entry,
--					   void *data))
-+				bool (*fn)(struct queue_entry *entry))
- {
- 	unsigned long irqflags;
- 	unsigned int index_start;
-@@ -807,17 +805,17 @@ bool rt2x00queue_for_each_entry(struct data_queue *queue,
- 	 */
- 	if (index_start < index_end) {
- 		for (i = index_start; i < index_end; i++) {
--			if (fn(&queue->entries[i], data))
-+			if (fn(&queue->entries[i]))
- 				return true;
- 		}
- 	} else {
- 		for (i = index_start; i < queue->limit; i++) {
--			if (fn(&queue->entries[i], data))
-+			if (fn(&queue->entries[i]))
- 				return true;
- 		}
- 
- 		for (i = 0; i < index_end; i++) {
--			if (fn(&queue->entries[i], data))
-+			if (fn(&queue->entries[i]))
- 				return true;
- 		}
- 	}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 5f1392c..9b8c10a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -584,7 +584,6 @@ struct data_queue_desc {
-  * @queue: Pointer to @data_queue
-  * @start: &enum queue_index Pointer to start index
-  * @end: &enum queue_index Pointer to end index
-- * @data: Data to pass to the callback function
-  * @fn: The function to call for each &struct queue_entry
-  *
-  * This will walk through all entries in the queue, in chronological
-@@ -597,9 +596,7 @@ struct data_queue_desc {
- bool rt2x00queue_for_each_entry(struct data_queue *queue,
- 				enum queue_index start,
- 				enum queue_index end,
--				void *data,
--				bool (*fn)(struct queue_entry *entry,
--					   void *data));
-+				bool (*fn)(struct queue_entry *entry));
- 
- /**
-  * rt2x00queue_empty - Check if the queue is empty.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 74ecc33..40ea807 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -285,7 +285,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
- }
- 
--static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void* data)
-+static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
-@@ -390,7 +390,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	queue_work(rt2x00dev->workqueue, &rt2x00dev->rxdone_work);
- }
- 
--static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void* data)
-+static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
-@@ -427,18 +427,12 @@ void rt2x00usb_kick_queue(struct data_queue *queue)
- 	case QID_AC_BE:
- 	case QID_AC_BK:
- 		if (!rt2x00queue_empty(queue))
--			rt2x00queue_for_each_entry(queue,
--						   Q_INDEX_DONE,
--						   Q_INDEX,
--						   NULL,
-+			rt2x00queue_for_each_entry(queue, Q_INDEX_DONE, Q_INDEX,
- 						   rt2x00usb_kick_tx_entry);
- 		break;
- 	case QID_RX:
- 		if (!rt2x00queue_full(queue))
--			rt2x00queue_for_each_entry(queue,
--						   Q_INDEX,
--						   Q_INDEX_DONE,
--						   NULL,
-+			rt2x00queue_for_each_entry(queue, Q_INDEX, Q_INDEX_DONE,
- 						   rt2x00usb_kick_rx_entry);
- 		break;
- 	default:
-@@ -447,7 +441,7 @@ void rt2x00usb_kick_queue(struct data_queue *queue)
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_kick_queue);
- 
--static bool rt2x00usb_flush_entry(struct queue_entry *entry, void* data)
-+static bool rt2x00usb_flush_entry(struct queue_entry *entry)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
-@@ -474,7 +468,7 @@ void rt2x00usb_flush_queue(struct data_queue *queue, bool drop)
- 	unsigned int i;
- 
- 	if (drop)
--		rt2x00queue_for_each_entry(queue, Q_INDEX_DONE, Q_INDEX, NULL,
-+		rt2x00queue_for_each_entry(queue, Q_INDEX_DONE, Q_INDEX,
- 					   rt2x00usb_flush_entry);
- 
- 	/*
-@@ -565,7 +559,7 @@ void rt2x00usb_clear_entry(struct queue_entry *entry)
- 	entry->flags = 0;
- 
- 	if (entry->queue->qid == QID_RX)
--		rt2x00usb_kick_rx_entry(entry, NULL);
-+		rt2x00usb_kick_rx_entry(entry);
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_clear_entry);
- 
--- 
-1.7.1
+johannes
 
