@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51433 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932990Ab2GCN0Q (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:34289 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751746Ab2GIIsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 09:26:16 -0400
-Date: Tue, 3 Jul 2012 08:26:08 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] brcmsmac: fix brcms_c_regd_init() which crashed after
- 11ad patch
-Message-ID: <20120703132608.GA5626@thinkpad-t410> (sfid-20120703_152620_537069_C8460958)
-References: <1341321280-6136-1-git-send-email-arend@broadcom.com>
+	Mon, 9 Jul 2012 04:48:22 -0400
+Received: by ghrr11 with SMTP id r11so9837922ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 01:48:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1341321280-6136-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1341820743.4455.1.camel@jlt3.sipsolutions.net>
+References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
+ <1341608733-7503-2-git-send-email-johannes@sipsolutions.net>
+ <CA+XVXfdo7agXE9Osxzmda2ZWi-xQ6pvP66zktdiDJq3P6PULgg@mail.gmail.com> <1341820743.4455.1.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 9 Jul 2012 11:48:06 +0300
+Message-ID: <CA+XVXfeAhP9EjKJr6Ch1GAuT8u4CV_WsDQiCCt6b4YGjHzZwrQ@mail.gmail.com> (sfid-20120709_104826_509162_20669113)
+Subject: Re: [RFC 1/3] mac80211: make scan_sdata pointer usable with RCU
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 03, 2012 at 03:14:40PM +0200, Arend van Spriel wrote:
-> This patch fixes an OOPS in brcmsmac driver, which was introduced
-> by the 11ad patch 'cfg80211: add 802.11ad (60gHz band) support'.
-> The value IEEE80211_NUM_BANDS increased, which was used in the
-> brcms_c_regd_init() function.
-> 
-> Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+On Mon, Jul 9, 2012 at 10:59 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2012-07-08 at 19:27 +0300, Arik Nemtsov wrote:
+>> On Sat, Jul 7, 2012 at 12:05 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> >
+>> > Making the scan_sdata pointer usable with RCU makes
+>> > it possible to dereference it in the RX path to see
+>> > if a received frame actually matches the interface
+>> > that is scanning. This is just preparations, making
+>> > the pointer __rcu.
+>>
+>> I noticed no synchronize_rcu() in the start/stop scan calls. Good/bad idea?
+>
+> Well, start() certainly wouldn't need it since you'd only get NULL :-)
+>
+> stop() in theory could use it, but it doesn't actually matter because as
+> long as the interface still exists the pointer is valid. We don't free
+> the interface in scan stop, so we don't need to make sure that the
+> pointer is cleared before we continue. And in the case that we *do* in
+> fact clear the interface (when it's going down) we have synchronize_rcu
+> already in those code paths due to say the interface list with RCU
+> protection.
 
-Acked-by: Seth Forshee <seth.forshee@canonical.com>
+I meant protecting these (in patch 2/3):
 
-Just one minor nit ...
+-            local->sched_scanning,
++            rcu_dereference_protected(local->sched_scan_sdata,
++                                      lockdep_is_held(&local->mtx)),
 
-> +		if (band_idx == BAND_2G_INDEX) {
-> +			sband = wiphy->bands[IEEE80211_BAND_2GHZ];
-> +		} else {
-> +			sband = wiphy->bands[IEEE80211_BAND_5GHZ];
-> +		}
-
-No need for braces here.
-
-Cheers,
-Seth
-
+The check is obviously racy here, but it was racy before as well I guess.
+I'm not sure why something line test_bit(SCHED_SCANNING) wasn't used
+in these places.
