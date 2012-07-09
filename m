@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57657 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843Ab2GPIQd (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55394 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752398Ab2GIHDd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2012 04:16:33 -0400
+	Mon, 9 Jul 2012 03:03:33 -0400
 From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20483.52640.521243.418804@gargle.gargle.HOWL> (sfid-20120716_101637_894734_86ACE802)
-Date: Mon, 16 Jul 2012 13:45:28 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "Manoharan, Sujith" <c_manoha@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
- TXOP limit
-In-Reply-To: <5002A7B2.409@openwrt.org>
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-2-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-3-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-4-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-5-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-6-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-7-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-8-git-send-email-nbd@openwrt.org>
-	<20481.3065.540576.366365@gargle.gargle.HOWL>
-	<500143CA.1020804@openwrt.org>
-	<506697F5827BD842B7CB80D046EBE618995399@aphydexd01b>
-	<5002A7B2.409@openwrt.org>
+Message-ID: <20474.33283.881761.818702@gargle.gargle.HOWL> (sfid-20120709_090337_388912_D9CCBB69)
+Date: Mon, 9 Jul 2012 12:32:27 +0530
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: fix reset work check properly
+In-Reply-To: <20474.32213.21743.932687@gargle.gargle.HOWL>
+References: <1341815640-6299-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<20474.32213.21743.932687@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Yes, but ath9k only has global queue settings, not per-vif ones, so I'm
-> not sure what can be done about the issue of overwriting queue settings.
+Sujith Manoharan wrote:
+> > diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+> > index 40775da..567a655 100644
+> > --- a/drivers/net/wireless/ath/ath9k/beacon.c
+> > +++ b/drivers/net/wireless/ath/ath9k/beacon.c
+> > @@ -362,7 +362,7 @@ void ath_beacon_tasklet(unsigned long data)
+> >  	int slot;
+> >  	u32 bfaddr, bc = 0;
+> >  
+> > -	if (work_pending(&sc->hw_reset_work)) {
+> > +	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags)) {
+> 
+> This is not needed, since we bail out in ath_isr().
+> (And interrupts are re-enabled only at the end of ath9k_tasklet()).
 
-Yeah, me neither.
-
-> Either way, it's important for the aggregation limit to be in sync with
-> the hardware queue TXOP limit, so I believe this patch is correct.
-
-Except that earlier it was a global, static table. I am curious, which part
-of the standard deals with limiting AMPDU size based on txop ? I searched a bit
-and got lost.
+I am wrong - SWBA is handled differently compared to other interrupts.
 
 Sujith
