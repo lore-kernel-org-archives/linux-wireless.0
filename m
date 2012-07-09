@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41922 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809Ab2GDK70 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 06:59:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: add testmode code to stop/wake queues
-Date: Wed,  4 Jul 2012 12:59:17 +0200
-Message-Id: <1341399557-12814-1-git-send-email-johannes@sipsolutions.net> (sfid-20120704_125929_972260_2F4D2778)
+Received: from mx1.redhat.com ([209.132.183.28]:7808 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751783Ab2GIJOS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jul 2012 05:14:18 -0400
+Date: Mon, 9 Jul 2012 11:14:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Woody Hung <Woody.Hung@mediatek.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2x00 : RT3290 chip support v4
+Message-ID: <20120709091408.GD2438@redhat.com> (sfid-20120709_111422_416557_4A64DE74)
+References: <1339570876-2367-1-git-send-email-Woody.Hung@mediatek.com>
+ <CAGXE3d9_y0M0YaibK4+Kq8Gcf_dHawivwC2wT5iV7+u9bT-C3g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAGXE3d9_y0M0YaibK4+Kq8Gcf_dHawivwC2wT5iV7+u9bT-C3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jun 22, 2012 at 09:45:49AM +0200, Helmut Schaa wrote:
+> > +#define RT3290_POWER_BOUND     0x27
+> > +#define RT3290_FREQ_OFFSET_BOUND       0x5f
+> >  #define RT5390_POWER_BOUND     0x27
+> >  #define RT5390_FREQ_OFFSET_BOUND       0x5f
+> 
+> Any reason why we cannot reuse the existing defines as they seem to be equal?
+> Maybe we could just remove the prefix?
 
-This was useful for debugging the queue stop/wake
-issues and is pretty small so let's just put it in.
+Because before that would conflict with some other patch, now we can merge
+those two defines.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index f0a906b..9388338 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1082,6 +1082,8 @@ enum hwsim_testmode_attr {
- enum hwsim_testmode_cmd {
- 	HWSIM_TM_CMD_SET_PS		= 0,
- 	HWSIM_TM_CMD_GET_PS		= 1,
-+	HWSIM_TM_CMD_STOP_QUEUES	= 2,
-+	HWSIM_TM_CMD_WAKE_QUEUES	= 3,
- };
- 
- static const struct nla_policy hwsim_testmode_policy[HWSIM_TM_ATTR_MAX + 1] = {
-@@ -1121,6 +1123,12 @@ static int mac80211_hwsim_testmode_cmd(struct ieee80211_hw *hw,
- 		if (nla_put_u32(skb, HWSIM_TM_ATTR_PS, hwsim->ps))
- 			goto nla_put_failure;
- 		return cfg80211_testmode_reply(skb);
-+	case HWSIM_TM_CMD_STOP_QUEUES:
-+		ieee80211_stop_queues(hw);
-+		return 0;
-+	case HWSIM_TM_CMD_WAKE_QUEUES:
-+		ieee80211_wake_queues(hw);
-+		return 0;
- 	default:
- 		return -EOPNOTSUPP;
- 	}
--- 
-1.7.10
-
+Stanislaw
