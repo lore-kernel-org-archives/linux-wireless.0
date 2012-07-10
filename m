@@ -1,45 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48357 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981Ab2GISse (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38880 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753639Ab2GJP0A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 14:48:34 -0400
-Date: Mon, 9 Jul 2012 14:43:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Subject: Re: pull request: wireless 2012-07-06
-Message-ID: <20120709184351.GB1348@tuxdriver.com> (sfid-20120709_204920_517130_2EA9633F)
-References: <20120706192034.GA1879@tuxdriver.com>
- <20120709.003155.284089706826738623.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120709.003155.284089706826738623.davem@davemloft.net>
+	Tue, 10 Jul 2012 11:26:00 -0400
+Message-ID: <1341933955.4475.24.camel@jlt3.sipsolutions.net> (sfid-20120710_172605_102683_C95770D2)
+Subject: Re: [PATCH v3 2/3] cfg80211: add cellular base station regulatory
+ hint support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kvalo@qca.qualcomm.com, arend@broadcom.com, henry@logout.com,
+	senthilb@qca.qualcomm.com
+Date: Tue, 10 Jul 2012 17:25:55 +0200
+In-Reply-To: <1341613226-11774-3-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1341613226-11774-1-git-send-email-rodrigue@qca.qualcomm.com>
+	 <1341613226-11774-3-git-send-email-rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 09, 2012 at 12:31:55AM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Fri, 6 Jul 2012 15:20:35 -0400
+On Fri, 2012-07-06 at 15:20 -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 > 
-> > Please let me know if there are problems!
-> 
-> This indentation is not correct:
-> 
-> commit 01f9cb073c827c60c43f769763b49a2026f1a897
-> Author: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> Date:   Thu Jun 28 14:39:51 2012 -0700
-> 
->     mwl8k: fix possible race condition in info->control.sta use
->  ...
-> +			sta = ieee80211_find_sta_by_ifaddr(hw, wh->addr1,
-> +								wh->addr2);
+> Cellular base stations can provide hints to cfg80211 about
+> where they think we are. This can be done for example by on
+> a cell phone.
 
-OK, I'll drop this patch and send a new pull request with a couple more fixes as well.
+by what? :)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> To enable these hints we simply allow them
+> through as user regulatory hints but we allow userspace
+> to clasify the hint. This option is only available for
+
+if you're going to respin ... classify
+
+> system integrators which are willing to enable
+
+who are willing? not sure
+
+> CONFIG_CFG80211_CERTIFICATION_ONUS.
+> 
+> The base station hints themselves will not be processsed
+
+processed :)
+
+> by the core unless at least one device on the system
+> supports this feature.
+
+So ... yeah I guess this is fine. we don't really want to distinguish
+between the devices too much anyway. And I suspect that if you're in an
+environment where you allow plugging in random wireless devices you
+wouldn't enable this anyway.
+
+>   *	DFS master operation on a known DFS region (NL80211_DFS_*),
+>   *	dfs_region represents that region. Drivers can use this and the
+>   *	@alpha2 to adjust their device's DFS parameters as required.
+> + * @user_reg_hint_type: if the @initiator was of type
+> + *	%NL80211_REGDOM_SET_BY_USER, this clasifies the type
+
+classifies
+
+> + *	of hint passed. This could be any of the %NL80211_USER_REG_HINT_*
+
+could be any of the ... "values"?
+
+>  	/* set up regulatory info */
+> +	wiphy_regulatory_register(wiphy);
+>  	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+
+might make sense to move the regulatory_update() call into the new
+function, then it could become a static function?
+
+> +++ b/net/wireless/nl80211.c
+> @@ -294,6 +294,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+>  	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
+>  	[NL80211_ATTR_INACTIVITY_TIMEOUT] = { .type = NLA_U16 },
+>  	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
+> +	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U8 },
+
+I think u32 makes more sense, u8 doesn't actually save you anything
+(same space in the netlink attributes, and you have to validate it
+anyway)
+
+> -	r = regulatory_hint_user(data);
+> +	if (info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE])
+> +		user_reg_hint_type =
+> +		  nla_get_u8(info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE]);
+
+need to validate that it's a valid value, otherwise I can pass "42" :-)
+
+johannes
+
