@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40019 "EHLO arrakis.dune.hu"
+Received: from mx1.redhat.com ([209.132.183.28]:49385 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754395Ab2GCROB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:14:01 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 02/20] ath9k: define MAC version for AR9550
-Date: Tue,  3 Jul 2012 19:13:16 +0200
-Message-Id: <1341335614-15419-3-git-send-email-juhosg@openwrt.org> (sfid-20120703_191406_440986_A792C50D)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+	id S1755846Ab2GJNhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 09:37:17 -0400
+Date: Tue, 10 Jul 2012 15:37:09 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RHEL6 PATCH] iwlwifi: remove spurious warning
+Message-ID: <20120710133708.GC2260@redhat.com> (sfid-20120710_153725_858846_15E4DE5F)
+References: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
+ <1341834647.4455.32.camel@jlt3.sipsolutions.net>
+ <20120709115423.GE2438@redhat.com>
+ <CANUX_P23xv5rXynEJHm=boR_g_7YqR1ROOQki6KGv+9LR9KEkg@mail.gmail.com>
+ <20120710060211.GA2260@redhat.com>
+ <CANUX_P3Vh1pqyK7TnNdYPS6nHpiUEzWDr4j8+8a5kXdhY3DrAA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P3Vh1pqyK7TnNdYPS6nHpiUEzWDr4j8+8a5kXdhY3DrAA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/reg.h |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+On Tue, Jul 10, 2012 at 04:15:09PM +0300, Emmanuel Grumbach wrote:
+> Emmanuel Grumbach
+> egrumbach@gmail.com
+> 
+> 
+> On Tue, Jul 10, 2012 at 9:02 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > On Mon, Jul 09, 2012 at 10:10:38PM +0300, Emmanuel Grumbach wrote:
+> >> I would be glad to know on what commands this WARN_ON triggers
+> >> though... The command name should be printed along with the WARN_ON.
+> >
+> > REPLY_RX_PHY_CMD
+> >
+> 
+> Ok thanks. This comes from the fw for every HT frame received in 4965.
+> Do you see that the WARNING triggers for every HT frame Rx?
+> I don't mind removing that code anyway, I was just asking to
+> understand what happens :-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index dd9c726..22d2413 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -798,6 +798,7 @@
- #define AR_SREV_REVISION_9580_10	4 /* AR9580 1.0 */
- #define AR_SREV_VERSION_9462		0x280
- #define AR_SREV_REVISION_9462_20	2
-+#define AR_SREV_VERSION_9550		0x400
- 
- #define AR_SREV_5416(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
-@@ -905,6 +906,9 @@
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
- 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
- 
-+#define AR_SREV_9550(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9550))
-+
- #define AR_SREV_9580(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9580) && \
- 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9580_10))
--- 
-1.7.2.1
+I did not hit that. It was raported for iwl1000 on RHEL6.3:
+https://bugzilla.redhat.com/show_bug.cgi?id=837754
 
+Stanislaw
