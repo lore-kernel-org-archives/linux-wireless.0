@@ -1,130 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39617 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754696Ab2GXPkO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50793 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753960Ab2GJJZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 11:40:14 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] wireless: remove obsolete chan no/center freq conversion functions
-Date: Tue, 24 Jul 2012 17:40:12 +0200
-Message-Id: <1343144412-8562-1-git-send-email-johannes@sipsolutions.net> (sfid-20120724_174020_200174_ADAAB4D4)
+	Tue, 10 Jul 2012 05:25:03 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v4 03/10] ath9k_hw: Add WoW hardware capability flags
+Date: Tue, 10 Jul 2012 14:54:53 +0530
+Message-ID: <1341912293-12049-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120710_112507_940498_1FCB17C0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-There are a number of functions that shouldn't really
-be used when modern functions that take the band are
-available in cfg80211. Remove these, but for now keep
- * ieee80211_freq_to_dsss_chan and
- * ieee80211_dsss_chan_to_freq
-as they're used in older drivers.
+have seperate wow capability flags for
+*basic wow support
+*device capable of matching exact user defined pattern
+or de-authentication/disassoc pattern
+*device such AR9280 requires first four bytes for
+all sort of patterns
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- include/linux/ieee80211.h |   80 ---------------------------------------------
- 1 file changed, 80 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.h |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index e02fc68..2385119 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1935,36 +1935,6 @@ static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
- }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 912f340..09f6c07 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -243,8 +243,22 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_RTT			= BIT(14),
+ 	ATH9K_HW_CAP_MCI			= BIT(15),
+ 	ATH9K_HW_CAP_DFS			= BIT(16),
++	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
++	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(18),
++	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(19),
+ };
  
- /**
-- * ieee80211_fhss_chan_to_freq - get channel frequency
-- * @channel: the FHSS channel
-- *
-- * Convert IEEE802.11 FHSS channel to frequency (MHz)
-- * Ref IEEE 802.11-2007 section 14.6
-- */
--static inline int ieee80211_fhss_chan_to_freq(int channel)
--{
--	if ((channel > 1) && (channel < 96))
--		return channel + 2400;
--	else
--		return -1;
--}
--
--/**
-- * ieee80211_freq_to_fhss_chan - get channel
-- * @freq: the channels frequency
-- *
-- * Convert frequency (MHz) to IEEE802.11 FHSS channel
-- * Ref IEEE 802.11-2007 section 14.6
-- */
--static inline int ieee80211_freq_to_fhss_chan(int freq)
--{
--	if ((freq > 2401) && (freq < 2496))
--		return freq - 2400;
--	else
--		return -1;
--}
--
--/**
-  * ieee80211_dsss_chan_to_freq - get channel center frequency
-  * @channel: the DSSS channel
-  *
-@@ -2000,56 +1970,6 @@ static inline int ieee80211_freq_to_dsss_chan(int freq)
- 		return -1;
- }
- 
--/* Convert IEEE802.11 HR DSSS channel to frequency (MHz) and back
-- * Ref IEEE 802.11-2007 section 18.4.6.2
-- *
-- * The channels and frequencies are the same as those defined for DSSS
-- */
--#define ieee80211_hr_chan_to_freq(chan) ieee80211_dsss_chan_to_freq(chan)
--#define ieee80211_freq_to_hr_chan(freq) ieee80211_freq_to_dsss_chan(freq)
--
--/* Convert IEEE802.11 ERP channel to frequency (MHz) and back
-- * Ref IEEE 802.11-2007 section 19.4.2
-- */
--#define ieee80211_erp_chan_to_freq(chan) ieee80211_hr_chan_to_freq(chan)
--#define ieee80211_freq_to_erp_chan(freq) ieee80211_freq_to_hr_chan(freq)
--
--/**
-- * ieee80211_ofdm_chan_to_freq - get channel center frequency
-- * @s_freq: starting frequency == (dotChannelStartingFactor/2) MHz
-- * @channel: the OFDM channel
-- *
-- * Convert IEEE802.11 OFDM channel to center frequency (MHz)
-- * Ref IEEE 802.11-2007 section 17.3.8.3.2
-- */
--static inline int ieee80211_ofdm_chan_to_freq(int s_freq, int channel)
--{
--	if ((channel > 0) && (channel <= 200) &&
--	    (s_freq >= 4000))
--		return s_freq + (channel * 5);
--	else
--		return -1;
--}
--
--/**
-- * ieee80211_freq_to_ofdm_channel - get channel
-- * @s_freq: starting frequency == (dotChannelStartingFactor/2) MHz
-- * @freq: the frequency
-- *
-- * Convert frequency (MHz) to IEEE802.11 OFDM channel
-- * Ref IEEE 802.11-2007 section 17.3.8.3.2
-- *
-- * This routine selects the channel with the closest center frequency.
-- */
--static inline int ieee80211_freq_to_ofdm_chan(int s_freq, int freq)
--{
--	if ((freq > (s_freq + 2)) && (freq <= (s_freq + 1202)) &&
--	    (s_freq >= 4000))
--		return (freq + 2 - s_freq) / 5;
--	else
--		return -1;
--}
--
- /**
-  * ieee80211_tu_to_usec - convert time units (TU) to microseconds
-  * @tu: the TUs
++/*
++ * WoW device capabilities
++ * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
++ * an exact user defined pattern or de-authentication/disassoc pattern.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
++ * bytes of the pattern for user defined pattern, de-authentication and
++ * disassociation patterns for all types of possible frames recieved
++ * of those types.
++ */
++
+ struct ath9k_hw_capabilities {
+ 	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
+ 	u16 rts_aggr_limit;
 -- 
-1.7.10.4
+1.7.0.4
 
