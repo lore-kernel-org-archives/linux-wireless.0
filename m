@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:46602 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753249Ab2GCXVA convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53638 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754561Ab2GJJWk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 19:21:00 -0400
-Received: by werb14 with SMTP id b14so3858829wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 16:20:59 -0700 (PDT)
-From: Sam Davies <seivadmas@gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Subject: Free hardware offered to anyone who wants to fix kernel built-in driver for rtl8192cu
-Date: Wed, 4 Jul 2012 00:20:52 +0100
-Message-Id: <B155E622-2937-4666-ACD9-6758B9AC9934@gmail.com> (sfid-20120704_012104_879044_4ED991FF)
-To: linux-wireless@vger.kernel.org
-Mime-Version: 1.0 (Apple Message framework v1084)
+	Tue, 10 Jul 2012 05:22:40 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v4 00/10] Add support for WOW in ath9k
+Date: Tue, 10 Jul 2012 14:52:29 +0530
+Message-ID: <1341912149-11807-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120710_112244_297555_5B8CEC17)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just bought an Asus USB N-13 dongle because it supposedly had excellent linux support. Turns out there are multiple versions of this with different chipsets, I got bum luck with one with the rtl8192cu chipset. This is a little frustrating as this usb stick is advertised prominently by ASUS to work on linux.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Running ubuntu 12.04, kernel version 3.2.0.26.
+Add support for hardware WoW in ath9k. Magic-packet,
+beacon loss triggers, deauth/disassoc patterns
+(a special case of user pattern) are tested. 
+User pattern needs a bit of investigation
+on parsing to appropriate 802.11 format.
+we will do more rigorous testing and address bugs.
 
-The card works sometimes on boot but usually disassociates itself from the access point fairly rapidly (5-20 minutes) and cannot re-associate, if it works at all. Some information about many people with identical problems can be found neatly summarised here:
+Thanks a lot to Vadivel for providing me the hardware and
+inputs to test. Thanks to Rajkumar, Sujith for their review &
+Russell for his all help. Thanks to Aeolous, Senthil and Raja. 
+Thanks a lot to Luis for providing the complete
+frame work for WoW in his initial wow patches.
 
-http://ubuntuforums.org/showthread.php?t=1949810
+Mohammed Shafi Shajakhan (10):
+  ath9k_hw: Add register definitions for WoW support
+  ath9k: Add definitions and structures to support WoW
+  ath9k_hw: Add WoW hardware capability flags
+  ath9k_hw: advertise WoW support for capable chipsets
+  ath9k: advertise supported WoW flags to upper layer
+  ath9k_hw: INI changes for WoW for AR9002 chipsets
+  ath9k_hw: Add hardware code for WoW
+  ath: Add Wake-on-Wireless debug mask
+  ath9k: Add WoW related mac80211 callbacks
+  ath9k: do not disable hardware while wow is enabled
 
-Problems also exist in Fedora and Open Suse.
+ drivers/net/wireless/ath/ath.h                   |    2 +
+ drivers/net/wireless/ath/ath9k/Makefile          |    1 +
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 +
+ drivers/net/wireless/ath/ath9k/ath9k.h           |   13 +
+ drivers/net/wireless/ath/ath9k/hw.c              |    8 +
+ drivers/net/wireless/ath/ath9k/hw.h              |   82 ++++
+ drivers/net/wireless/ath/ath9k/init.c            |   18 +
+ drivers/net/wireless/ath/ath9k/main.c            |  373 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/pci.c             |    3 +
+ drivers/net/wireless/ath/ath9k/reg.h             |  145 ++++++-
+ drivers/net/wireless/ath/ath9k/wow.c             |  532 ++++++++++++++++++++++
+ 12 files changed, 1195 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
 
-I could probably fix this if I was willing to spend hours, there are apparently working drivers available on the realtek website. But I have spent too many hours of my life already coaxing life out of badly supported hardware on linux and I'm not really in the mood for it any more. Instead I am just going to use my linksys router as a wireless bridge and be done with it.
-
-If there is somebody out there with the knowhow and drive to sort out this problem but lacks hardware, I will post them this USB dongle for free.
-
-Regards
-Sam
