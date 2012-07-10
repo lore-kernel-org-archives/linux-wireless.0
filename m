@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:48920 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752938Ab2GDU7C (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:57662 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753849Ab2GJVNy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 16:59:02 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 4 Jul 2012 13:58:49 -0700
-Subject: RE: [PATCH] wireless: fix leak found by coverity
-Message-ID: <477F20668A386D41ADCC57781B1F7043083AA5506F@SC-VEXCH1.marvell.com> (sfid-20120704_225941_955780_2FE7FC3D)
-References: <20120704153327.4012.76171.stgit@bluebook>
-In-Reply-To: <20120704153327.4012.76171.stgit@bluebook>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 10 Jul 2012 17:13:54 -0400
+Received: by wgbdr13 with SMTP id dr13so370568wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 14:13:53 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] cfg80211: replace snprintf with scnprintf
+Date: Wed, 11 Jul 2012 00:13:50 +0300
+Message-Id: <1341954831-10313-2-git-send-email-eliad@wizery.com> (sfid-20120710_231358_052694_E9B2D077)
+In-Reply-To: <1341954831-10313-1-git-send-email-eliad@wizery.com>
+References: <1341954831-10313-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQWxhbiwNCg0KPiBTdWJqZWN0OiBbUEFUQ0hdIHdpcmVsZXNzOiBmaXggbGVhayBmb3VuZCBi
-eSBjb3Zlcml0eQ0KDQpJJ3ZlIHNlbnQgYSBzaW1pbGFyIHBhdGNoIHRvIGxpbnV4LXdpcmVsZXNz
-IGxpc3QuDQoNCltQQVRDSCAzLjVdIG13aWZpZXg6IGZpeCBDb3Zlcml0eSBTQ0FOIENJRCA3MDkw
-Nzg6IFJlc291cmNlIGxlYWsgKFJFU09VUkNFX0xFQUspDQoNCmh0dHA6Ly9tYXJjLmluZm8vP2w9
-bGludXgtd2lyZWxlc3MmbT0xMzQxMzU2NDM3Mjc0MjQmdz0yDQoNClRoYW5rcywNCkJpbmcNCg0K
-PiANCj4gRnJvbTogQWxhbiBDb3ggPGFsYW5AbGludXguaW50ZWwuY29tPg0KPiANCj4gU2lnbmVk
-LW9mZi1ieTogQWxhbiBDb3ggPGFsYW5AbGludXguaW50ZWwuY29tPg0KPiAtLS0NCj4gDQo+ICBk
-cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMgfCAgICAxICsNCj4gIDEgZmls
-ZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZp
-ZXgvY2ZnODAyMTEuYw0KPiBpbmRleCA5N2RlNjUyLi40OTdhMDVhIDEwMDY0NA0KPiAtLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMNCj4gKysrIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbXdpZmlleC9jZmc4MDIxMS5jDQo+IEBAIC0xMDAzLDYgKzEwMDMsNyBAQCBz
-dGF0aWMgaW50IG13aWZpZXhfY2ZnODAyMTFfc3RhcnRfYXAoc3RydWN0IHdpcGh5ICp3aXBoeSwN
-Cj4gIAljYXNlIE5MODAyMTFfSElEREVOX1NTSURfWkVST19DT05URU5UUzoNCj4gIAkJLyogZmly
-bXdhcmUgZG9lc24ndCBzdXBwb3J0IHRoaXMgdHlwZSBvZiBoaWRkZW4gU1NJRCAqLw0KPiAgCWRl
-ZmF1bHQ6DQo+ICsJCWtmcmVlKGJzc19jZmcpOw0KPiAgCQlyZXR1cm4gLUVJTlZBTDsNCj4gIAl9
-DQo+IA0KDQo=
+The return value of snprintf was used incorrectly (given
+as param to simple_read_from_buffer, without checking
+it against max buffer size). use scnprintf instead.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/wireless/debugfs.c |   25 ++++++++++++-------------
+ 1 files changed, 12 insertions(+), 13 deletions(-)
+
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index 920cabe..fa669c7 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -43,21 +43,20 @@ DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
+ static int ht_print_chan(struct ieee80211_channel *chan,
+ 			 char *buf, int buf_size, int offset)
+ {
+-	if (WARN_ON(offset > buf_size))
+-		return 0;
+-
+-	if (chan->flags & IEEE80211_CHAN_DISABLED)
+-		return snprintf(buf + offset,
+-				buf_size - offset,
+-				"%d Disabled\n",
+-				chan->center_freq);
+-
+-	return snprintf(buf + offset,
+-			buf_size - offset,
+-			"%d HT40 %c%c\n",
+-			chan->center_freq,
+-			(chan->flags & IEEE80211_CHAN_NO_HT40MINUS) ? ' ' : '-',
+-			(chan->flags & IEEE80211_CHAN_NO_HT40PLUS)  ? ' ' : '+');
++	u32 flags = chan->flags;
++
++	if (flags & IEEE80211_CHAN_DISABLED)
++		return scnprintf(buf + offset,
++				 buf_size - offset,
++				 "%d Disabled\n",
++				 chan->center_freq);
++
++	return scnprintf(buf + offset,
++			 buf_size - offset,
++			 "%d HT40 %c%c\n",
++			 chan->center_freq,
++			 (flags & IEEE80211_CHAN_NO_HT40MINUS) ? ' ' : '-',
++			 (flags & IEEE80211_CHAN_NO_HT40PLUS)  ? ' ' : '+');
+ }
+ 
+ static ssize_t ht40allow_map_read(struct file *file,
+-- 
+1.7.6.401.g6a319
+
