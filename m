@@ -1,108 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14565 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000Ab2GQLrX (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:41363 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752311Ab2GJKFD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:47:23 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20485.20603.389613.955872@gargle.gargle.HOWL> (sfid-20120717_134726_456100_F5B25D9C)
-Date: Tue, 17 Jul 2012 17:16:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/12] ath9k: Remove is_bslot_active
+	Tue, 10 Jul 2012 06:05:03 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	thomas@net.t-labs.tu-berlin.de, brcm80211-dev-list@broadcom.com,
+	pieterpg@broadcom.com, gregkh@suse.de, frankyl@broadcom.com,
+	arend@broadcom.com, rvossen@broadcom.com, brudley@broadcom.com
+Subject: [PATCH v3] brcmsmac: restructure info->control.sta handling as it is goning to be removed soon.
+Date: Tue, 10 Jul 2012 12:04:57 +0200
+Message-Id: <1341914697-59039-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120710_120510_119759_83AA2326)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the tx_last_beacon() callback, mac80211's beaconing
-status can be used instead. The beacon tasklet doesn't require
-it because it is disabled when removing a slot.
+brcmsmac uses info->control.sta while doing ampdu aggregation. This patch
+changes the usage of the structure info->control.sta, as it is going to be
+removed soon from struct ieee80211_tx_info. This patch is a pre-requisit in
+order to add transmission power control (TPC) to the mac80211 subsystem.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Suggested-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h  |  2 +-
- drivers/net/wireless/ath/ath9k/beacon.c | 15 +++++----------
- drivers/net/wireless/ath/ath9k/main.c   |  5 +++--
- 3 files changed, 9 insertions(+), 13 deletions(-)
+sta pointer is not used in brcms_c_sendampdu(), sta removed. thx to A.v.Spriel
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c       | 10 ++++------
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |  2 ++
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |  2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a4dd5b1..641ca9e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -360,7 +360,7 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index 01b190a..77c5f57 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -665,8 +665,6 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+ 			u8 plcp0, plcp3, is40, sgi;
+ 			struct ieee80211_sta *sta;
  
- struct ath_vif {
- 	int av_bslot;
--	bool is_bslot_active, primary_sta_vif;
-+	bool primary_sta_vif;
- 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
- 	struct ath_buf *av_bcbuf;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index a79ec45..2962b3e 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -134,20 +134,17 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_buf *bf;
--	struct ath_vif *avp;
-+	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct sk_buff *skb;
--	struct ath_txq *cabq;
-+	struct ath_txq *cabq = sc->beacon.cabq;
- 	struct ieee80211_tx_info *info;
- 	int cabq_depth;
- 
--	ath9k_reset_beacon_status(sc);
+-			sta = tx_info->control.sta;
 -
--	avp = (void *)vif->drv_priv;
--	cabq = sc->beacon.cabq;
--
--	if ((avp->av_bcbuf == NULL) || !avp->is_bslot_active)
-+	if (avp->av_bcbuf == NULL)
- 		return NULL;
+ 			if (rr) {
+ 				plcp0 = plcp[0];
+ 				plcp3 = plcp[3];
+@@ -1195,8 +1193,8 @@ static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, void *arg_a)
+ 	bool rc;
  
-+	ath9k_reset_beacon_status(sc);
-+
- 	/* Release the old beacon first */
+ 	rc = tx_info->flags & IEEE80211_TX_CTL_AMPDU ? true : false;
+-	rc = rc && (tx_info->control.sta == NULL || ampdu_pars->sta == NULL ||
+-		    tx_info->control.sta == ampdu_pars->sta);
++	rc = rc && (tx_info->rate_driver_data[0] == NULL || ampdu_pars->sta == NULL ||
++		    tx_info->rate_driver_data[0] == ampdu_pars->sta);
+ 	rc = rc && ((u8)(mpdu->priority) == ampdu_pars->tid);
+ 	return rc;
+ }
+@@ -1210,8 +1208,8 @@ static void dma_cb_fn_ampdu(void *txi, void *arg_a)
+ 	struct ieee80211_tx_info *tx_info = (struct ieee80211_tx_info *)txi;
  
- 	bf = avp->av_bcbuf;
-@@ -234,7 +231,6 @@ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	for (slot = 0; slot < ATH_BCBUF; slot++) {
- 		if (sc->beacon.bslot[slot] == NULL) {
- 			avp->av_bslot = slot;
--			avp->is_bslot_active = false;
- 			break;
- 		}
+ 	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
+-	    (tx_info->control.sta == sta || sta == NULL))
+-		tx_info->control.sta = NULL;
++	    (tx_info->rate_driver_data[0] == sta || sta == NULL))
++		tx_info->rate_driver_data[0] = NULL;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 2d5a404..f3ab8a6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -267,6 +267,7 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct brcms_info *wl = hw->priv;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 
+ 	spin_lock_bh(&wl->lock);
+ 	if (!wl->pub->up) {
+@@ -275,6 +276,7 @@ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		goto done;
  	}
-@@ -267,7 +263,6 @@ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	}
+ 	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
++	tx_info->rate_driver_data[0] = tx_info->control.sta;
+  done:
+ 	spin_unlock_bh(&wl->lock);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 8776fbc..28dd37e3 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -879,7 +879,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	tx_info = IEEE80211_SKB_CB(p);
+ 	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
  
- 	avp->av_bcbuf = NULL;
--	avp->is_bslot_active = false;
- 	sc->beacon.bslot[avp->av_bslot] = NULL;
- 	sc->nbcnvifs--;
- 	list_add_tail(&bf->list, &sc->beacon.bbuf);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6a7dfbb..e58c657 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1787,10 +1787,11 @@ static int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
- 	if (!vif)
- 		return 0;
+-	if (tx_info->control.sta)
++	if (tx_info->rate_driver_data[0])
+ 		scb = &wlc->pri_scb;
  
--	avp = (void *)vif->drv_priv;
--	if (!avp->is_bslot_active)
-+	if (!vif->bss_conf.enable_beacon)
- 		return 0;
- 
-+	avp = (void *)vif->drv_priv;
-+
- 	if (!sc->beacon.tx_processed && !edma) {
- 		tasklet_disable(&sc->bcon_tasklet);
- 
+ 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
 -- 
-1.7.11.2
+1.7.11.1
 
