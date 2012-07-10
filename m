@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1551 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932325Ab2GCGvl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 02:51:41 -0400
-Message-ID: <4FF29671.1020406@broadcom.com> (sfid-20120703_085144_175957_95AE7A1E)
-Date: Tue, 3 Jul 2012 08:51:29 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:43650 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752183Ab2GJFmo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 01:42:44 -0400
+Received: by gglu4 with SMTP id u4so10892379ggl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 22:42:43 -0700 (PDT)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: REGRESSION: [PATCH v2 0/9] bcma misc updates
-References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1341013486-2520-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <CAGRGNgXWackce4pHpbOc1Bd9EhhEGSVfGsimMXvEDsJpguWQ5Q@mail.gmail.com>
+References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+ <1341732211-25871-8-git-send-email-coelho@ti.com> <1341740110.4987.4.camel@jlt3.sipsolutions.net>
+ <CA+XVXfdEqQyiyDQoAddCjC9bhH+WqmANiqf_wUCEJFi7=xG5vQ@mail.gmail.com>
+ <1341821025.4455.5.camel@jlt3.sipsolutions.net> <CA+XVXfdQCPTrEdDb1WY67rSKucjH=aU9S+zzkZ=xB+GW94Ty9A@mail.gmail.com>
+ <CAGRGNgXWackce4pHpbOc1Bd9EhhEGSVfGsimMXvEDsJpguWQ5Q@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 10 Jul 2012 08:42:28 +0300
+Message-ID: <CA+XVXfdUxLn-h3dN-tjHccXXwamxdB4ALouFO+8YEvgWKYzuSA@mail.gmail.com> (sfid-20120710_074247_775970_21602972)
+Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2012 01:44 AM, Hauke Mehrtens wrote:
-> These are some updates for bcma. Some are extending or completing some 
-> workarounds for PCIe based wireless cards. A patch adds 
-> bcma_pmu_spuravoid_pllupdate, used by brcmsmac and an other patch adds 
-> constants for the chip ids. This code is mostly based on code from 
-> brcmsmac and the Broadcom SDK for BCM47XX SoCs.
-> 
-> This was tested on a BCM4718 SoC with a BCM43224 PCIe and a BCM5357.
-> The Wifi part of the BCM4718 and BCM43224 is more or less working with 
-> brcmsmac, which need some more patches for that, but it has low speed 
-> and some times or with some access points I still get errors. The wifi 
-> of the BCM5357 does not work.
-> 
+Hey Julian,
 
-Hi Hauke,
+On Tue, Jul 10, 2012 at 7:32 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Arik,
+>
+> On Mon, Jul 9, 2012 at 6:14 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>> On Mon, Jul 9, 2012 at 11:03 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> On Sun, 2012-07-08 at 17:08 +0300, Arik Nemtsov wrote:
+>>>
+>>>> > kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
+>>>> > then most likely you could just put "__aligned(4)" or something on the
+>>>> > conf.phy struct member and not allocate memory at all?
+>>>>
+>>>> Yea we need 4 bytes alignment. The kzalloc is a sort of convention in
+>>>> the driver (see acx.c), but probably here we can use kmemdup.
+>>>> We can't use fancy __aligned(4) notations most likely, since a
+>>>> usermode tool also parses these header files, and it's not too smart
+>>>> :)
+>>>
+>>> This seems like a rather bad excuse for making the runtime code more
+>>> complex and less performant ... I'll let you sort it out with John
+>>> though, I wouldn't let you get away with this though if I maintained the
+>>> tree ;-)
+>>>
+>>> FWIW, I think your actual problem is that you mark wl18xx_priv_conf as
+>>> packed unnecessarily. Otherwise it might actually get alignment, at
+>>> least on ARM I hear.
+>>
+>> It's not an excuse, we really have a usermode tool (called wlconf)
+>> preparing binary conf files. And it usually runs on a different arch
+>> (x86), so we mark everything packed to avoid errors.
+>> I'm pretty sure __aligned(4) would screw up the parser there. It has
+>> to build an internal representation of all the struct, and fill it out
+>> using an ini file.
+>
+> Does this tool parse the compiled code or the actual source files?
+> Because if it parses the source files, surely you could adjust the
+> parser so it doesn't trip over a potential __aligned(4) notation.
 
-This patch series caused a regression in one of our smoketest machines
-last night. I have not looked at the exact patch causing it (suspect
-2/9). The failure happens on a BCM43224 chip with external SPROM. Here
-is the log info:
+The tool goes over source files, but it's not just a matter of
+skipping the token - it has to actually align the next element to 4,
+so it needs to start keeping track of alignment etc.
 
-[317752.101665] bcma: Found chip with id 0xA8D8, rev 0x01 and package 0x08
-[317752.101809] bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800,
-rev 0x22, class 0x0)
-[317752.101827] bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812,
-rev 0x17, class 0x0)
-[317752.101870] bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev
-0x0F, class 0x0)
-[317752.171926] bcma: Failed to get SPROM: -71 <== -EPROTO (crc failed).
-[317752.171982] bcma: Bus registered
-[317753.184455] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 16
-[317753.191868] brcmsmac: Applying 43224B0+ WARs
-[317753.193918] ieee80211 phy0: wl0: brcms_b_attach: bad macaddr
-[317753.193924] ieee80211 phy0: wl0: brcms_b_attach: failed with err 22
-[317753.193928] ieee80211 phy0: wl0: brcms_c_attach: failed with err 22
-[317753.193959] ieee80211 phy0: brcmsmac: attach() failed with code 22
-[317753.193966] brcmsmac: brcms_bcma_probe: brcms_attach failed!
-
-I suspect it tries reading OTP instead of the external SPROM.
-
-Gr. AvS
-
+I'm afraid we have bigger issues with this tool right now. Currently
+it can't even parse arrays properly :)
