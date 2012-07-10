@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40174 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752159Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 13:53:46 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 01/12] ath9k_hw: fall back to OTP ROM when platform data has no valid eeprom data
-Date: Sun, 15 Jul 2012 19:53:29 +0200
-Message-Id: <1342374820-92409-1-git-send-email-nbd@openwrt.org> (sfid-20120715_195354_740265_6886733D)
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:49294 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751437Ab2GJFCX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 01:02:23 -0400
+Received: by wgbdr13 with SMTP id dr13so12106030wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 22:02:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FFB62DA.9000706@hauke-m.de>
+References: <1341751888-12679-1-git-send-email-zajec5@gmail.com>
+	<4FFB62DA.9000706@hauke-m.de>
+Date: Tue, 10 Jul 2012 07:02:22 +0200
+Message-ID: <CACna6rwYi7HvHmijzW-_o4RFhY5exAcCgOptrRu-oFSG=14Qpg@mail.gmail.com> (sfid-20120710_070227_173367_05345A35)
+Subject: Re: [RFC][PATCH] bcma: add trivial GBIT MAC COMMON driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+2012/7/10 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 07/08/2012 02:51 PM, Rafał Miłecki wrote:
+>> GMAC COMMON core is present on BCM4706 and is used for example to access
+>> board PHYs (PHYs can not be accessed directly using GBIT MAC core).
+>
+> I think this is the cleanest way of doing this. I thought about handling
+> this in the Ethernet driver, but as we need locking, an extra driver
+> would be needed, just for this stupid locking.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 25de6f9..3cddd78 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3260,10 +3260,20 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	int it;
- 	u16 checksum, mchecksum;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ar9300_eeprom *eep;
- 	eeprom_read_op read;
- 
--	if (ath9k_hw_use_flash(ah))
--		return ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+	if (ath9k_hw_use_flash(ah)) {
-+		u8 txrx;
-+
-+		ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+
-+		/* check if eeprom contains valid data */
-+		eep = (struct ar9300_eeprom *) mptr;
-+		txrx = eep->baseEepHeader.txrxMask;
-+		if (txrx != 0 && txrx != 0xff)
-+			return 0;
-+	}
- 
- 	word = kzalloc(2048, GFP_KERNEL);
- 	if (!word)
+Yeah... I really wonder why Broadcom didn't just connect GMAC core
+with the proper PHY.
+
+At the beginning I implemented chipphyrd in driver_gmac_cmn.c and
+cared for the mutex internally. It would be much cleaner and easier
+for GMAC driver to just use such a complete function and don't care
+for mutex.
+
+Then I started writing chipphywr and... I noticed that after writing
+to BCMA_GMAC_CMN_PHY_ACCESS in GMAC CMN, this chipphywr have to touch
+intstatus register in GMAC core. Just before accessing
+BCMA_GMAC_CMN_PHY_CTL.
+
+So I decided to keep PHY ops in GMAC core driver. We need to take care
+of this mutex, but we don't need to handle callbacks (touching
+intstatus) or passing GMAC core reference to the GMAC CMN (to let it
+touch intstatus).
+
+
+> You should not register an external device for this core in
+> bcma_register_cores().
+
+Ouch, thanks!
+
 -- 
-1.7.7.5 (Apple Git-26)
-
+Rafał
