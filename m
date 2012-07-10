@@ -1,27 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:53821 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756724Ab2GKJfq (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52065 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756556Ab2GJRZI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 05:35:46 -0400
-Received: by obbuo13 with SMTP id uo13so1411409obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 02:35:46 -0700 (PDT)
+	Tue, 10 Jul 2012 13:25:08 -0400
+Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
+	<arend@broadcom.com>, <henry@logout.com>,
+	<senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+Subject: [PATCH v4 1/2] ath5k: replace modparam_all_channels with CONFIG_ATH5K_TEST_CHANNELS
+Date: Tue, 10 Jul 2012 10:24:53 -0700
+Message-ID: <1341941094-11279-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120710_192515_446722_39B3EA3E)
+In-Reply-To: <1341941094-11279-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1341941094-11279-1-git-send-email-rodrigue@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1341999114.4480.15.camel@jlt3.sipsolutions.net>
-References: <1341995301-24611-1-git-send-email-yeohchunyeow@gmail.com>
-	<1341996025.4480.11.camel@jlt3.sipsolutions.net>
-	<CAEFj986xt62YUw9vEEc+qdor1_7mLR9pmKqyc_pnDeuDEjxL2A@mail.gmail.com>
-	<1341999114.4480.15.camel@jlt3.sipsolutions.net>
-Date: Wed, 11 Jul 2012 17:35:46 +0800
-Message-ID: <CAEFj9846ZnWvCUHfFgKV5tSm99UeHJsrmfJkQQ3+rXMyHHtoSg@mail.gmail.com> (sfid-20120711_113559_978995_0850FFC6)
-Subject: Re: [PATCH] mac80211: Fix the Problem of Unreachable Mesh STA from DS
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> So this should be applied to 3.5?
-Yes
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+
+This stashes away this feature from standard kernel builds.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath5k/Kconfig |    8 ++++++++
+ drivers/net/wireless/ath/ath5k/base.c  |   17 ++++++++++-------
+ 2 files changed, 18 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+index e18a9aa..338c5c4 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -64,3 +64,11 @@ config ATH5K_PCI
+ 	---help---
+ 	  This adds support for PCI type chipsets of the 5xxx Atheros
+ 	  family.
++
++config ATH5K_TEST_CHANNELS
++	bool "Enables testing channels on ath5k"
++	depends on ATH5K && CFG80211_CERTIFICATION_ONUS
++	---help---
++	  This enables non-standard IEEE 802.11 channels on ath5k, which
++	  can be used for research purposes. This option should be disabled
++	  unless doing research.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 44ad6fe..8c4c040 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -74,10 +74,6 @@ bool ath5k_modparam_nohwcrypt;
+ module_param_named(nohwcrypt, ath5k_modparam_nohwcrypt, bool, S_IRUGO);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+ 
+-static bool modparam_all_channels;
+-module_param_named(all_channels, modparam_all_channels, bool, S_IRUGO);
+-MODULE_PARM_DESC(all_channels, "Expose all channels the device can use.");
+-
+ static bool modparam_fastchanswitch;
+ module_param_named(fastchanswitch, modparam_fastchanswitch, bool, S_IRUGO);
+ MODULE_PARM_DESC(fastchanswitch, "Enable fast channel switching for AR2413/AR5413 radios.");
+@@ -258,8 +254,15 @@ static int ath5k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *re
+ \********************/
+ 
+ /*
+- * Returns true for the channel numbers used without all_channels modparam.
++ * Returns true for the channel numbers used.
+  */
++#ifdef CONFIG_ATH5K_TEST_CHANNELS
++static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
++{
++	return true;
++}
++
++#else
+ static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
+ {
+ 	if (band == IEEE80211_BAND_2GHZ && chan <= 14)
+@@ -276,6 +279,7 @@ static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
+ 		/* 802.11j 4.9GHz (20MHz) */
+ 		(chan == 184 || chan == 188 || chan == 192 || chan == 196));
+ }
++#endif
+ 
+ static unsigned int
+ ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
+@@ -316,8 +320,7 @@ ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
+ 		if (!ath5k_channel_ok(ah, &channels[count]))
+ 			continue;
+ 
+-		if (!modparam_all_channels &&
+-		    !ath5k_is_standard_channel(ch, band))
++		if (!ath5k_is_standard_channel(ch, band))
+ 			continue;
+ 
+ 		count++;
+-- 
+1.7.10.rc1.22.gf5241
+
