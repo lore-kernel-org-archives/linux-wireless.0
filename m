@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51502 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751997Ab2G0Lmm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:42:42 -0400
-Message-ID: <1343389359.4449.3.camel@jlt3.sipsolutions.net> (sfid-20120727_134244_971598_F3A110F9)
-Subject: Re: [RFC 18/20] mac80211: allow drv_add_chanctx to fail
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 27 Jul 2012 13:42:39 +0200
-In-Reply-To: <50127E88.6020109@tieto.com>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-	 <1343387816-9414-19-git-send-email-johannes@sipsolutions.net>
-	 <50127E88.6020109@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:49345 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751900Ab2GJGCY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 02:02:24 -0400
+Date: Tue, 10 Jul 2012 08:02:12 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RHEL6 PATCH] iwlwifi: remove spurious warning
+Message-ID: <20120710060211.GA2260@redhat.com> (sfid-20120710_080227_389245_08B1FBBD)
+References: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
+ <1341834647.4455.32.camel@jlt3.sipsolutions.net>
+ <20120709115423.GE2438@redhat.com>
+ <CANUX_P23xv5rXynEJHm=boR_g_7YqR1ROOQki6KGv+9LR9KEkg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P23xv5rXynEJHm=boR_g_7YqR1ROOQki6KGv+9LR9KEkg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-07-27 at 13:42 +0200, Michal Kazior wrote:
-> On 27/07/12 13:16, Johannes Berg wrote:
-> > --- a/net/mac80211/chan.c
-> > +++ b/net/mac80211/chan.c
-> > @@ -237,7 +237,10 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
-> >
-> >   	list_add(&ctx->list, &local->chanctx_list);
-> >
-> > -	drv_add_chanctx(local, ctx);
-> > +	if (drv_add_chanctx(local, ctx)) {
-> > +		kfree(ctx);
-> 
-> We should also do a list_del() here.
+On Mon, Jul 09, 2012 at 10:10:38PM +0300, Emmanuel Grumbach wrote:
+> I would be glad to know on what commands this WARN_ON triggers
+> though... The command name should be printed along with the WARN_ON.
 
-Good catch. Or just move the list_add() later?
+REPLY_RX_PHY_CMD
 
-johannes
-
+Stanislaw
