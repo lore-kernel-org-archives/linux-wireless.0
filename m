@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:50270 "HELO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751668Ab2GNDL5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38078 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822Ab2GJLJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 23:11:57 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/4] mwifiex: patchset for data rate enhancement
-Date: Fri, 13 Jul 2012 20:09:29 -0700
-Message-Id: <1342235373-27613-1-git-send-email-bzhao@marvell.com> (sfid-20120714_051238_828303_F16FA64F)
+	Tue, 10 Jul 2012 07:09:23 -0400
+Message-ID: <1341918560.4475.10.camel@jlt3.sipsolutions.net> (sfid-20120710_130929_709666_D96AC731)
+Subject: Re: kernel oops on wireless-testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 10 Jul 2012 13:09:20 +0200
+In-Reply-To: <4FFC0BA2.3060107@broadcom.com> (sfid-20120710_130212_744547_93D9E56B)
+References: <4FFC0BA2.3060107@broadcom.com>
+	 (sfid-20120710_130212_744547_93D9E56B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series includes data rate releated code cleanups and
-set_bitrate_mask enhancement.
+On Tue, 2012-07-10 at 13:01 +0200, Arend van Spriel wrote:
+> Recently I get a kernel oops in nightly test on the wireless-testing
+> tree (see below). This is on 3.5-rc4 kernel based on following commit:
+> 
+> commit a5b846deb890fbea72267e4e7d98f8f022959d14
+> Merge: 1532e30 bf52592
+> Author: John W. Linville <linville@tuxdriver.com>
+> Date:   Wed Jun 27 16:15:29 2012 -0400
+> 
+>     Merge branch 'master' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/linvi
+> 
+> Can this be expected (eg. recent change in struct wiphy) ? I will built
+> a new kernel from wireless-testing and see if that helps.
 
-Amitkumar Karwar (4):
-  mwifiex: remove redundant code in set channel path
-  mwifiex: remove unnecessary code in data rate configuration
-  mwifiex: add support to use basic rates in ibss join request
-  mwifiex: improvement in cfg80211 set_bitrate_mask handler
+Why would you expect this? Are you running new modules on an old kernel?
 
- drivers/net/wireless/mwifiex/cfg80211.c    |  256 +++++++++++++------------
- drivers/net/wireless/mwifiex/cfp.c         |   31 ---
- drivers/net/wireless/mwifiex/decl.h        |    9 -
- drivers/net/wireless/mwifiex/fw.h          |   10 -
- drivers/net/wireless/mwifiex/init.c        |    1 -
- drivers/net/wireless/mwifiex/ioctl.h       |    6 -
- drivers/net/wireless/mwifiex/main.h        |   10 +-
- drivers/net/wireless/mwifiex/sta_cmd.c     |   38 ----
- drivers/net/wireless/mwifiex/sta_cmdresp.c |   70 +------
- drivers/net/wireless/mwifiex/sta_ioctl.c   |  287 +---------------------------
- 10 files changed, 151 insertions(+), 567 deletions(-)
+johannes
 
