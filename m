@@ -1,76 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57903 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751405Ab2GHRRE (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43777 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753059Ab2GJFvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 13:17:04 -0400
-Message-ID: <1341767819.25597.234.camel@deadeye.wl.decadent.org.uk> (sfid-20120708_191725_958974_DCB18D17)
-Subject: Re: [PATCH V2] rtlwifi: rtl8192ce: rtl8192se: rtl8192de: Update to
- rtl_92ce_92se_92de_linux_mac80211_0004.0816.2011 driver
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dwmw2@infradead.org
-Date: Sun, 08 Jul 2012 18:16:59 +0100
-In-Reply-To: <1341713001-5077-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1341713001-5077-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-7Xn0rm9+cDSldte2vMoh"
-Mime-Version: 1.0
+	Tue, 10 Jul 2012 01:51:10 -0400
+Received: by yenl2 with SMTP id l2so10892005yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 22:51:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgVbGQ6fKR8EfbUEei3JD-EMpg4CJmr-5XKnrJc0VRs8QQ@mail.gmail.com>
+References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+ <1341732211-25871-8-git-send-email-coelho@ti.com> <1341740110.4987.4.camel@jlt3.sipsolutions.net>
+ <CA+XVXfdEqQyiyDQoAddCjC9bhH+WqmANiqf_wUCEJFi7=xG5vQ@mail.gmail.com>
+ <1341821025.4455.5.camel@jlt3.sipsolutions.net> <CA+XVXfdQCPTrEdDb1WY67rSKucjH=aU9S+zzkZ=xB+GW94Ty9A@mail.gmail.com>
+ <CAGRGNgXWackce4pHpbOc1Bd9EhhEGSVfGsimMXvEDsJpguWQ5Q@mail.gmail.com>
+ <CA+XVXfdUxLn-h3dN-tjHccXXwamxdB4ALouFO+8YEvgWKYzuSA@mail.gmail.com> <CAGRGNgVbGQ6fKR8EfbUEei3JD-EMpg4CJmr-5XKnrJc0VRs8QQ@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 10 Jul 2012 08:50:54 +0300
+Message-ID: <CA+XVXfdDLaW7ynYGjZc5XpdqhyRmWRWSa5QAxSrrY93i0e=vRA@mail.gmail.com> (sfid-20120710_075114_693575_12ABCE2D)
+Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jul 10, 2012 at 8:46 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Arik,
+>
+> On Tue, Jul 10, 2012 at 3:42 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>> Hey Julian,
+>>
+>> On Tue, Jul 10, 2012 at 7:32 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>>> Hi Arik,
+>>>
+>>> On Mon, Jul 9, 2012 at 6:14 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>>>> On Mon, Jul 9, 2012 at 11:03 AM, Johannes Berg
+>>>> <johannes@sipsolutions.net> wrote:
+>>>>> On Sun, 2012-07-08 at 17:08 +0300, Arik Nemtsov wrote:
+>>>>>
+>>>>>> > kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
+>>>>>> > then most likely you could just put "__aligned(4)" or something on the
+>>>>>> > conf.phy struct member and not allocate memory at all?
+>>>>>>
+>>>>>> Yea we need 4 bytes alignment. The kzalloc is a sort of convention in
+>>>>>> the driver (see acx.c), but probably here we can use kmemdup.
+>>>>>> We can't use fancy __aligned(4) notations most likely, since a
+>>>>>> usermode tool also parses these header files, and it's not too smart
+>>>>>> :)
+>>>>>
+>>>>> This seems like a rather bad excuse for making the runtime code more
+>>>>> complex and less performant ... I'll let you sort it out with John
+>>>>> though, I wouldn't let you get away with this though if I maintained the
+>>>>> tree ;-)
+>>>>>
+>>>>> FWIW, I think your actual problem is that you mark wl18xx_priv_conf as
+>>>>> packed unnecessarily. Otherwise it might actually get alignment, at
+>>>>> least on ARM I hear.
+>>>>
+>>>> It's not an excuse, we really have a usermode tool (called wlconf)
+>>>> preparing binary conf files. And it usually runs on a different arch
+>>>> (x86), so we mark everything packed to avoid errors.
+>>>> I'm pretty sure __aligned(4) would screw up the parser there. It has
+>>>> to build an internal representation of all the struct, and fill it out
+>>>> using an ini file.
+>>>
+>>> Does this tool parse the compiled code or the actual source files?
+>>> Because if it parses the source files, surely you could adjust the
+>>> parser so it doesn't trip over a potential __aligned(4) notation.
+>>
+>> The tool goes over source files, but it's not just a matter of
+>> skipping the token - it has to actually align the next element to 4,
+>> so it needs to start keeping track of alignment etc.
+>
+> Ah, does it produce binary chunks of data that are then "parsed" with
+> this structure?
 
---=-7Xn0rm9+cDSldte2vMoh
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Yea. It produces a bin file that the driver takes using
+request_firmware(). The driver uses this file as its internal
+configuration struct.
 
-On Sat, 2012-07-07 at 21:03 -0500, Larry Finger wrote:
-> Realtek driver rtl_92ce_92se_92de_linux_mac80211_0004.0816.2011 introduce=
-d new
-> versions of the firmware for rtl8192se, and rtl8192de. It also adds new
-> firmware for new cuts of the RTL8192CE chips.
-[...]
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -1589,6 +1589,8 @@ Licence: Redistributable. See LICENCE.rtlwifi_firmw=
-are.txt for details.
->  Driver: rtl8192ce - Realtek 802.11n WLAN driver for RTL8192CE
-> =20
->  File: rtlwifi/rtl8192cfw.bin
-> +File: rtlwifi/rtl8192cfwU.bin	- Driver for newer A cut chip
-> +File: rtlwifi/rtl8192cfwU_B.bin - Driver for newer B cut chip
-[...]
+>
+>> I'm afraid we have bigger issues with this tool right now. Currently
+>> it can't even parse arrays properly :)
+>
+> That's a big problem =)
 
-Whatever gave you the idea that you could put free text after a
-filename?  Add an Info field if you must.
-
-Ben.
-
---=20
-Ben Hutchings
-Life would be so much easier if we could look at the source code.
-
---=-7Xn0rm9+cDSldte2vMoh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAT/nAi+e/yOyVhhEJAQp2Ag//Y7/Pqs8BPaAAosgFpH32ZmVwqc3VGuSa
-lLFAo9++ZubbFWbhotLFfNBRnLwaFa7jHI67lGZBo2cLDY3lXWZoXzJWtr3EyX9K
-YHN2CsjISD31RvB6NvwYdd/kF2ooLJAGSfggiZk6O7hy/RHm+Yys2G5gCIdoNqqj
-C7Usn+7oelzyoSr3L+qP3iIkImCSI4uxsqGQ/icNPsqPoldA5rWn0D17zR/bto/b
-J+QrFnB8Gt+Ftn8oSe9mHVXNIf8UKizHcZgx7UTES7wFTuSoL8oYiAcNOI+GHfTC
-vVqPUj2W/0LLfar/9RP0qApQ7k8gMulOcSR7qzqsVFedna9XtCPQjOTf/0yXFj/0
-HE+Ugufy8u87y5zcU3ZF+hcWkaePZdHjVrkWHpvGKgispz0ZUX5ypd82/zOQvnNK
-PPlg6tYldmt3j/TU2U2M/tl4XsrF9iFX/KNQ71QTZ239hvJFALjPeEy0+UdADApv
-yBMtSz3yycdothlveOm1ApULVtIoKMF6ot6FaYhnfQaKawdntV+82mcV9f2989r4
-l1T66W3WHNXXrCy5Lypvuj/td3DJbFhVvNI4rxFxjQt8G4f5S3wptkK50HgdkuCw
-O2e9gzWc16Zx6cJJWxU2yE5d35O1qtP9iSdL1Smffamow3opbUhszBItydWIQ/sZ
-JOrGNkB8m0M=
-=oESc
------END PGP SIGNATURE-----
-
---=-7Xn0rm9+cDSldte2vMoh--
+Tell me about it :)
