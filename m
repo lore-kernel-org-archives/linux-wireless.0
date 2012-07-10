@@ -1,31 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51056 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:38074 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617Ab2G0JXd (ORCPT
+	with ESMTP id S1754770Ab2GJLGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 05:23:33 -0400
-Message-ID: <1343381009.4449.1.camel@jlt3.sipsolutions.net> (sfid-20120727_112336_508359_0679EC5D)
-Subject: Re: [PATCH v2] mac80211: add PS flag to bss_conf
+	Tue, 10 Jul 2012 07:06:10 -0400
+Message-ID: <1341918365.4475.9.camel@jlt3.sipsolutions.net> (sfid-20120710_130619_750954_597003B6)
+Subject: Re: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 27 Jul 2012 11:23:29 +0200
-In-Reply-To: <1343380724-4104-1-git-send-email-eliad@wizery.com> (sfid-20120727_111846_681009_6D59F38C)
-References: <1343380724-4104-1-git-send-email-eliad@wizery.com>
-	 (sfid-20120727_111846_681009_6D59F38C)
+Date: Tue, 10 Jul 2012 13:06:05 +0200
+In-Reply-To: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks good, but please undo this change:
+On Tue, 2012-07-10 at 15:37 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> 
+> Previously we would check in nl80211 with an empty
+> cfg80211_wowlan structure to check for 'iw phy phyX wowlan enable'
+> with empty arguments (or) no triggers and disable WoWLAN.
 
-> +bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata);
-
-> -static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
-> +bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
-
-since I don't see that you need it now.
+No ... that's not how it works. If you enable WoWLAN without any
+triggers, then that's what you get: the connection is kept alive but
+there are no wakeup sources. If you don't specify the triggers at all
+then it's disabled.
 
 johannes
 
