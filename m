@@ -1,78 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:53805 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750968Ab2GYPsq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 11:48:46 -0400
-Message-ID: <1343231325.1693.13.camel@joe2Laptop> (sfid-20120725_174849_669438_1C08A9C6)
-Subject: Re: [PATCH V2] b43: be more user friendly with PHY info
-From: Joe Perches <joe@perches.com>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Date: Wed, 25 Jul 2012 08:48:45 -0700
-In-Reply-To: <CACna6rwDo=oW42mEwHXT0M5c56tWWtBqqb+Wv+L0iKzSasux8A@mail.gmail.com>
-References: <1343227629-14161-1-git-send-email-zajec5@gmail.com>
-	 <1343225435.1693.10.camel@joe2Laptop>
-	 <CACna6rwDo=oW42mEwHXT0M5c56tWWtBqqb+Wv+L0iKzSasux8A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:41466 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752611Ab2GJMBl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 08:01:41 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	thomas@net.t-labs.tu-berlin.de, brcm80211-dev-list@broadcom.com,
+	pieterpg@broadcom.com, gregkh@suse.de, frankyl@broadcom.com,
+	arend@broadcom.com, rvossen@broadcom.com, brudley@broadcom.com
+Subject: [PATCH v4] brcmsmac: restructure info->control.sta handling as it is goning to be removed soon.
+Date: Tue, 10 Jul 2012 14:01:37 +0200
+Message-Id: <1341921697-62091-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120710_140153_376859_295E0B4D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-25 at 16:22 +0200, Rafał Miłecki wrote:
-> 2012/7/25 Joe Perches <joe@perches.com>:
-> > On Wed, 2012-07-25 at 16:47 +0200, Rafał Miłecki wrote:
-> >> use PHY names instead of magic numbers.
-> > []
-> >> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> > []
-> >> @@ -4277,6 +4277,37 @@ out:
-> > []
-> >> +static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
-> >> +{
-> >> +     switch (phy_type) {
-> >> +     case B43_PHYTYPE_A:
-> >> +             return "A";
-> > []
-> >> +     }
-> >> +
-> >> +     b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
-> >> +     return "UNKNOWN";
-> >
-> > In general, it's a bad idea to emit error messages
-> > in a generic call like this.
-> 
-> This function is not supposed to be called anywhere else, it's only
-> for a single user-friendly message.
-> 
-> 
-> >> @@ -4337,13 +4368,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
-> >>               unsupported = 1;
-> >>       }
-> >>       if (unsupported) {
-> >> -             b43err(dev->wl, "FOUND UNSUPPORTED PHY "
-> >> -                    "(Analog %u, Type %u, Revision %u)\n",
-> >> -                    analog_type, phy_type, phy_rev);
-> >> +             b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
-> >> +                    analog_type, b43_phy_name(dev, phy_type), phy_rev);
-> >
-> > The extra message doesn't add much useful info
-> > and can also cause errors in continued messages.
-> 
-> By "extra message" do you mean the one from b43_phy_name? I wanted to
-> print PHY type as digit somewhere (in case it is not recognized). I
-> can't use simple
-> return ("UNKNOWN %d", phy_type);
-> , such a solution would require allocating memory for string and
-> freeing it. It would complicate the function.
-> 
-> Do you have any suggestion for better handling this?
-> 
+brcmsmac uses info->control.sta while doing ampdu aggregation. This patch
+changes the usage of the structure info->control.sta, as it is going to be
+removed soon from struct ieee80211_tx_info. This patch is a pre-requisit in
+order to add transmission power control (TPC) to the mac80211 subsystem.
 
-Change the UNSUPPORTED PHY message to
+Suggested-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+sta pointer is not used in brcms_c_sendampdu(), sta removed. thx to A.v.Spriel
+remove sta declaration from ampdu.c as well. thx to A.v.Spriel
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c       | 11 ++++-------
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |  2 ++
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |  2 +-
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
-	"...Type: %d:(%s)...",
-	..., phy_type, b43_phy_name(dev, phy_type), ...
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index 01b190a..be5bcfb 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -663,9 +663,6 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+ 		/* patch the first MPDU */
+ 		if (count == 1) {
+ 			u8 plcp0, plcp3, is40, sgi;
+-			struct ieee80211_sta *sta;
+-
+-			sta = tx_info->control.sta;
+ 
+ 			if (rr) {
+ 				plcp0 = plcp[0];
+@@ -1195,8 +1192,8 @@ static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, void *arg_a)
+ 	bool rc;
+ 
+ 	rc = tx_info->flags & IEEE80211_TX_CTL_AMPDU ? true : false;
+-	rc = rc && (tx_info->control.sta == NULL || ampdu_pars->sta == NULL ||
+-		    tx_info->control.sta == ampdu_pars->sta);
++	rc = rc && (tx_info->rate_driver_data[0] == NULL || ampdu_pars->sta == NULL ||
++		    tx_info->rate_driver_data[0] == ampdu_pars->sta);
+ 	rc = rc && ((u8)(mpdu->priority) == ampdu_pars->tid);
+ 	return rc;
+ }
+@@ -1210,8 +1207,8 @@ static void dma_cb_fn_ampdu(void *txi, void *arg_a)
+ 	struct ieee80211_tx_info *tx_info = (struct ieee80211_tx_info *)txi;
+ 
+ 	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
+-	    (tx_info->control.sta == sta || sta == NULL))
+-		tx_info->control.sta = NULL;
++	    (tx_info->rate_driver_data[0] == sta || sta == NULL))
++		tx_info->rate_driver_data[0] = NULL;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 2d5a404..f3ab8a6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -267,6 +267,7 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct brcms_info *wl = hw->priv;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 
+ 	spin_lock_bh(&wl->lock);
+ 	if (!wl->pub->up) {
+@@ -275,6 +276,7 @@ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		goto done;
+ 	}
+ 	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
++	tx_info->rate_driver_data[0] = tx_info->control.sta;
+  done:
+ 	spin_unlock_bh(&wl->lock);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 8776fbc..28dd37e3 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -879,7 +879,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 	tx_info = IEEE80211_SKB_CB(p);
+ 	h = (struct ieee80211_hdr *)((u8 *) (txh + 1) + D11_PHY_HDR_LEN);
+ 
+-	if (tx_info->control.sta)
++	if (tx_info->rate_driver_data[0])
+ 		scb = &wlc->pri_scb;
+ 
+ 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
+-- 
+1.7.11.1
 
