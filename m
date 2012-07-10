@@ -1,71 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:48844 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750908Ab2GLENU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 00:13:20 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SpAmB-0007uv-Ex
-	for linux-wireless@vger.kernel.org; Thu, 12 Jul 2012 06:13:15 +0200
-Received: from c-69-245-126-173.hsd1.mi.comcast.net ([69.245.126.173])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 06:13:15 +0200
-Received: from ilhebe999 by c-69-245-126-173.hsd1.mi.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 06:13:15 +0200
+Received: from he.sipsolutions.net ([78.46.109.217]:37722 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754693Ab2GJJNJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 05:13:09 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SoWVI-0007ju-GT
+	for linux-wireless@vger.kernel.org; Tue, 10 Jul 2012 11:13:08 +0200
+Message-ID: <1341911586.4475.7.camel@jlt3.sipsolutions.net> (sfid-20120710_111314_349602_18EF8A00)
+Subject: Re: [PATCH] mac80211: optimize ieee80211_rx_status struct layout
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-From: Ouyang <ilhebe999@gmail.com>
-Subject: Re: problem with installing the kernel
-Date: Thu, 12 Jul 2012 04:13:05 +0000 (UTC)
-Message-ID: <loom.20120712T060947-580@post.gmane.org> (sfid-20120712_061325_609725_82AC266C)
-References: <loom.20120712T044726-224@post.gmane.org> <4FFE437E.8080008@lwfinger.net>
+Date: Tue, 10 Jul 2012 11:13:06 +0200
+In-Reply-To: <1341911478-13342-1-git-send-email-johannes@sipsolutions.net> (sfid-20120710_111127_712290_B064822B)
+References: <1341911478-13342-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120710_111127_712290_B064822B)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@...> writes:
+On Tue, 2012-07-10 at 11:11 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> We waste a lot of space in this struct because it uses
+> int values where smaller ones would be sufficient. The
+> upcoming A-MPDU information needs some space, optimize
+> the struct now.
 
-> 
-> On 07/11/2012 09:52 PM, Ouyang wrote:
-> > I add something to the wireless-testing and then run:
-> >> make modules
-> >> make bzImage
-> >
-> > it seems all fine. but could not go any further
-> > # make modules_install
-> > rm:invalid option -- '3'
-> > Try 'rm -- help' for more information
-> > make : *** [_modinst_] Error 1
-> >
-> > Could anyone please help me with the situation?
-> >   The version of the linux is 3.4.4-3.fc17.x86_64 #1
-> 
-> Are you building the kernel as root? That is a terrible policy!!!
-> 
-> You should run "make" as a regular user, and follow that with "sudo make 
-> modules_install install". If that fails, you need to ask about the problem at 
-> Fedora. The standard kernel does the modules installation without any 
-problems.
-> 
-> Larry
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+It'll be a few weeks until the A-MPDU stuff is adopted in radiotap, but
+I figured this could still go upstream already. The previous patch (time
+sync) was based on it (and accidentally the A-MPDU stuff, so it won't
+apply as is, but I've fixed that)
 
-Thank you so much for the reply. Sorry that I run "make" as a root. I am new 
-with linux and I am sure I won`t make the same mistake in the future. By the way 
-, why it tells me about try "rm -- help"? I really do not know what does it 
-mean. In what situation will this "rm -- help " come out?
-
-Thanks
-
-Ouyang
-
-
+johannes
 
