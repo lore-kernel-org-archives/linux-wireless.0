@@ -1,96 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40170 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752348Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 13:53:46 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 04/12] ath9k_hw: fix tx gain tables for AR934x
-Date: Sun, 15 Jul 2012 19:53:32 +0200
-Message-Id: <1342374820-92409-4-git-send-email-nbd@openwrt.org> (sfid-20120715_195358_828882_62A2DCDC)
-In-Reply-To: <1342374820-92409-3-git-send-email-nbd@openwrt.org>
-References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
- <1342374820-92409-2-git-send-email-nbd@openwrt.org>
- <1342374820-92409-3-git-send-email-nbd@openwrt.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:32768 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753307Ab2GJVnM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 17:43:12 -0400
+Received: by wgbdr13 with SMTP id dr13so390233wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 14:43:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FFB62DA.9000706@hauke-m.de>
+References: <1341751888-12679-1-git-send-email-zajec5@gmail.com>
+	<4FFB62DA.9000706@hauke-m.de>
+Date: Tue, 10 Jul 2012 23:43:09 +0200
+Message-ID: <CACna6ry-Hxt56DCn8amKUxnqF+X8juZK26j5bJaRk-ubh7didA@mail.gmail.com> (sfid-20120710_234316_886192_C40720F8)
+Subject: Re: [RFC][PATCH] bcma: add trivial GBIT MAC COMMON driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the EEPROM information to choose the right tx gain table
+2012/7/10 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 07/08/2012 02:51 PM, Rafał Miłecki wrote:
+>> GMAC COMMON core is present on BCM4706 and is used for example to access
+>> board PHYs (PHYs can not be accessed directly using GBIT MAC core).
+>
+> I think this is the cleanest way of doing this. I thought about handling
+> this in the Ethernet driver, but as we need locking, an extra driver
+> would be needed, just for this stupid locking.
+>
+> You should not register an external device for this core in
+> bcma_register_cores().
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   29 ++++++++++++++++++++++-----
- 1 files changed, 23 insertions(+), 6 deletions(-)
+I've just noticed my BCM4706 doesn't have GBIT MAC CMN... but AFAIK
+BCM4706 GMAC (0x52d) can not operate without GMAC CMN (0x5dc)...
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 41e88c6..718241d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -561,8 +561,8 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
- 			5);
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			ar9340Modes_high_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_high_ob_db_tx_gain_table_1p0),
- 			5);
- 	else if (AR_SREV_9485_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
-@@ -605,8 +605,8 @@ static void ar9003_tx_gain_table_mode2(struct ath_hw *ah)
- 			5);
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			ar9340Modes_low_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_low_ob_db_tx_gain_table_1p0),
- 			5);
- 	else if (AR_SREV_9485_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
-@@ -639,8 +639,8 @@ static void ar9003_tx_gain_table_mode3(struct ath_hw *ah)
- 			5);
- 	else if (AR_SREV_9340(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
--			ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+			ar9340Modes_high_power_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_high_power_tx_gain_table_1p0),
- 			5);
- 	else if (AR_SREV_9485_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
-@@ -659,6 +659,20 @@ static void ar9003_tx_gain_table_mode3(struct ath_hw *ah)
- 			5);
- }
- 
-+static void ar9003_tx_gain_table_mode4(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9340Modes_mixed_ob_db_tx_gain_table_1p0,
-+			ARRAY_SIZE(ar9340Modes_mixed_ob_db_tx_gain_table_1p0),
-+			5);
-+	else if (AR_SREV_9580(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9580_1p0_mixed_ob_db_tx_gain_table,
-+			ARRAY_SIZE(ar9580_1p0_mixed_ob_db_tx_gain_table),
-+			5);
-+}
-+
- static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- {
- 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
-@@ -675,6 +689,9 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 	case 3:
- 		ar9003_tx_gain_table_mode3(ah);
- 		break;
-+	case 4:
-+		ar9003_tx_gain_table_mode4(ah);
-+		break;
- 	}
- }
- 
+Hauke: does it make any sense to you?
+
+Found chip with id 0x5300, rev 0x01 and package 0x00
+Core 0 found: BCM4706 ChipCommon (manuf 0x4BF, id 0x500, rev 0x1F,
+class 0x0)
+Core 3 found: MIPS 74K (manuf 0x4A7, id 0x82C, rev 0x00, class 0x0)
+...
+Core 1 found: BCM4706 GBit MAC (manuf 0x4BF, id 0x52D, rev 0x00, class
+0x0)
+Core 2 found: BCM4706 GBit MAC (manuf 0x4BF, id 0x52D, rev 0x00, class
+0x0)
+Core 4 found: USB 2.0 Host (manuf 0x4BF, id 0x819, rev 0x04, class
+0x0)
+Core 5 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0E, class 0x0)
+Core 6 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0E, class 0x0)
+Core 7 found: AMEMC (DDR) (manuf 0x4BF, id 0x52E, rev 0x00, class 0x0)
+Core 8 found: BCM4706 SOC RAM (manuf 0x4BF, id 0x50E, rev 0x05, class
+0x0)
+Core 9 found: ALTA (I2S) (manuf 0x4BF, id 0x534, rev 0x00, class 0x0)
+
 -- 
-1.7.7.5 (Apple Git-26)
-
+Rafał
