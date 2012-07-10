@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:26717 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878Ab2GBM05 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55438 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830Ab2GJTUC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 08:26:57 -0400
-Date: Mon, 2 Jul 2012 15:26:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: mac80211: correct size the argument to kzalloc in
-Message-ID: <20120702122643.GC4519@mwanda> (sfid-20120702_142701_047569_1D8E8D35)
-References: <20120702115907.GA28105@elgon.mountain>
- <4FF18E57.7040704@net.t-labs.tu-berlin.de>
+	Tue, 10 Jul 2012 15:20:02 -0400
+Message-ID: <4FFC805B.909@candelatech.com> (sfid-20120710_212008_037467_0C4CC588)
+Date: Tue, 10 Jul 2012 12:19:55 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FF18E57.7040704@net.t-labs.tu-berlin.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Can one program see another's scan-results?
+References: <4FFC7C4F.9020804@candelatech.com>  (sfid-20120710_210252_194820_A6A69A50) <1341947332.4475.32.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1341947332.4475.32.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 02, 2012 at 02:04:39PM +0200, Thomas Huehn wrote:
-> Hi Dan,
-> 
-> I allready fixed this in my patch v3 on the list a couple of days ago.
-> 
+On 07/10/2012 12:08 PM, Johannes Berg wrote:
+> On Tue, 2012-07-10 at 12:02 -0700, Ben Greear wrote:
+>> Is there a way to open a netlink socket and have it receive
+>> all scan results (even those requested by other applications)?
+>
+> What do you mean by scan results? The results themselves? No, they are a
+> dump and unicast to one application. The fact that a scan finished? Yes,
+> of course.
 
-You'll have to sent a patch which applies on top of linux-next
-because your other patch was already applied.
+I'd like the results themselves..for instance, just piggyback on whatever
+supplicant is already doing to get periodic updates, and of course I'd
+end up requesting some scans myself from time to time if a user wanted
+an immediate update.
 
-Please don't drop the list from the CC.
+I was hoping it could be something like just listening for network-device
+and route updates like netlink already supports.
 
-regards,
-dan carpenter
+Since scanning is relatively slow and expensive, it seems like a good
+idea to allow re-using the results...
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
+
 
