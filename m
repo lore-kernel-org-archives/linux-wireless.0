@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:30558
-	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752230Ab2GXDoE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 23:44:04 -0400
-From: Mahesh Palivela <maheshp@posedge.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: RE: [PATCH v2] mac80211: VHT (11ac) Association
-Date: Tue, 24 Jul 2012 03:44:01 +0000
-Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FE7@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120724_054409_035472_2DF7F245)
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local>,<CAGRGNgVGfXxyPWPs=0gwFnWbAG5oLkrZ5jsO5Q_w1VOV1W2CPQ@mail.gmail.com>
-In-Reply-To: <CAGRGNgVGfXxyPWPs=0gwFnWbAG5oLkrZ5jsO5Q_w1VOV1W2CPQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52027 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281Ab2GJRY6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 13:24:58 -0400
+Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
+	<arend@broadcom.com>, <henry@logout.com>,
+	<senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+Subject: [PATCH v4 0/2] wireless: onus driver updates
+Date: Tue, 10 Jul 2012 10:24:52 -0700
+Message-ID: <1341941094-11279-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120710_192503_123632_C554D197)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-________________________________________
-From: Julian Calaby [julian.calaby@gmail.com]
-Sent: Tuesday, July 24, 2012 9:07 AM
-To: Mahesh Palivela
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; johannes@sipsolutions.net
-Subject: Re: [PATCH v2] mac80211: VHT (11ac) Association
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-Hi Mahesh,
+John, this depends on the v4 series of onus / cell base
+station hints. This v4 has no changes but I am sending
+it just to clarify its dependency and so you can ignore
+the older v3 series.
 
-On Tue, Jul 24, 2012 at 1:33 PM, Mahesh Palivela <maheshp@posedge.com> wrote:
-> VHT (11ac) Association related change version 2. Incorporated Johannes review comments.
+Luis R. Rodriguez (2):
+  ath5k: replace modparam_all_channels with CONFIG_ATH5K_TEST_CHANNELS
+  ath9k: make CONFIG_ATH9K_DFS_CERTIFIED depend on
+    CFG80211_CERTIFICATION_ONUS
 
-The references to Johannes' review comments and version two shouldn't
-go in the changelog, they should go below the "---" line after the
-signoffs and stuff.
+ drivers/net/wireless/ath/ath5k/Kconfig |    8 ++++++++
+ drivers/net/wireless/ath/ath5k/base.c  |   17 ++++++++++-------
+ drivers/net/wireless/ath/ath9k/Kconfig |    2 +-
+ 3 files changed, 19 insertions(+), 8 deletions(-)
 
-> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+-- 
+1.7.10.rc1.22.gf5241
 
-You can't just add a "Reviewed-by" line unless the person referenced
-has explicitly said you can (or provided it themselves)
-
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
-
-Thanks for the corrections Julian. I will not repeat next time.
-
-Thanks,
-Mahesh
