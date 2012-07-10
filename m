@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40420 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756986Ab2GCROm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:14:42 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 11/20] ath9k: fix XPABIASLEVEL settings for AR9550
-Date: Tue,  3 Jul 2012 19:13:25 +0200
-Message-Id: <1341335614-15419-12-git-send-email-juhosg@openwrt.org> (sfid-20120703_192130_203045_6FCBD7F9)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:36987 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752010Ab2GJNPL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 09:15:11 -0400
+Received: by wibhq12 with SMTP id hq12so3593813wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 06:15:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120710060211.GA2260@redhat.com>
+References: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
+	<1341834647.4455.32.camel@jlt3.sipsolutions.net>
+	<20120709115423.GE2438@redhat.com>
+	<CANUX_P23xv5rXynEJHm=boR_g_7YqR1ROOQki6KGv+9LR9KEkg@mail.gmail.com>
+	<20120710060211.GA2260@redhat.com>
+Date: Tue, 10 Jul 2012 16:15:09 +0300
+Message-ID: <CANUX_P3Vh1pqyK7TnNdYPS6nHpiUEzWDr4j8+8a5kXdhY3DrAA@mail.gmail.com> (sfid-20120710_151531_858785_CFAF9641)
+Subject: Re: [RHEL6 PATCH] iwlwifi: remove spurious warning
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Emmanuel Grumbach
+egrumbach@gmail.com
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 2cdf82b..52e6955 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3509,7 +3509,7 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- 
- 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
--	else if (AR_SREV_9462(ah))
-+	else if (AR_SREV_9462(ah) || AR_SREV_9550(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
- 	else {
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index ed662c3..89907c8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -636,8 +636,8 @@
- 
- #define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
- 				((AR_SREV_9462(ah) ? 0x1628c : 0x16280)))
--#define AR_CH0_TOP_XPABIASLVL (0x300)
--#define AR_CH0_TOP_XPABIASLVL_S (8)
-+#define AR_CH0_TOP_XPABIASLVL (AR_SREV_9550(ah) ? 0x3c0 : 0x300)
-+#define AR_CH0_TOP_XPABIASLVL_S (AR_SREV_9550(ah) ? 6 : 8)
- 
- #define AR_CH0_THERM	(AR_SREV_9300(ah) ? 0x16290 : \
- 				((AR_SREV_9485(ah) ? 0x1628c : 0x16294)))
--- 
-1.7.2.1
 
+On Tue, Jul 10, 2012 at 9:02 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Mon, Jul 09, 2012 at 10:10:38PM +0300, Emmanuel Grumbach wrote:
+>> I would be glad to know on what commands this WARN_ON triggers
+>> though... The command name should be printed along with the WARN_ON.
+>
+> REPLY_RX_PHY_CMD
+>
+
+Ok thanks. This comes from the fw for every HT frame received in 4965.
+Do you see that the WARNING triggers for every HT frame Rx?
+I don't mind removing that code anyway, I was just asking to
+understand what happens :-)
