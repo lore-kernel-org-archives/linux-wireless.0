@@ -1,180 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:53800 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601Ab2GSEiU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46695 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274Ab2GJJZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:38:20 -0400
-Date: Wed, 18 Jul 2012 21:38:08 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH RESEND 1/9] Platform: OLPC: add a stub to drivers/platform/
- for the OLPC EC driver
-Message-ID: <20120718213808.0166a775@dev.queued.net> (sfid-20120719_063834_366581_321EEA8E)
-In-Reply-To: <20120718213713.232e4161@dev.queued.net>
-References: <20120718213713.232e4161@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 10 Jul 2012 05:25:00 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<vadivel@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v4 02/10] ath9k: Add definitions and structures to support WoW
+Date: Tue, 10 Jul 2012 14:54:34 +0530
+Message-ID: <1341912274-12013-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120710_112505_264981_F7B002F4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-The OLPC EC driver has outgrown arch/x86/platform/.  It's time to both
-share common code amongst different architectures, as well as move it out
-of arch/x86/.  The XO-1.75 is ARM-based, and the EC driver shares a lot of
-code with the x86 code.
+*add structures, macros and variables for WoW, so that the driver
+can make use of it.
+*maintain a list for user enabled patterns and masks
+*track pattern slots for the hardware limitation on the
+maximum number of patterns that can be stored.
+*track interrupts enabled before WoW suspend, so
+that can be reconfigured after resume
+*have macros to parse user defined wow configurations to
+hardware code
 
-Signed-off-by: Andres Salomon <dilinger@queued.net>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: vadivel@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- arch/x86/include/asm/olpc.h     |   19 +++----------------
- arch/x86/platform/olpc/olpc.c   |    4 ++--
- drivers/platform/Makefile       |    1 +
- drivers/platform/olpc/olpc-ec.c |   16 ++++++++++++++++
- include/linux/olpc-ec.h         |   29 +++++++++++++++++++++++++++++
- 5 files changed, 51 insertions(+), 18 deletions(-)
- create mode 100644 drivers/platform/olpc/olpc-ec.c
- create mode 100644 include/linux/olpc-ec.h
+ drivers/net/wireless/ath/ath9k/ath9k.h |   12 +++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h    |   34 ++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/include/asm/olpc.h b/arch/x86/include/asm/olpc.h
-index 87bdbca..513e999 100644
---- a/arch/x86/include/asm/olpc.h
-+++ b/arch/x86/include/asm/olpc.h
-@@ -4,6 +4,7 @@
- #define _ASM_X86_OLPC_H
- 
- #include <asm/geode.h>
-+#include <linux/olpc-ec.h>
- 
- struct olpc_platform_t {
- 	int flags;
-@@ -102,22 +103,8 @@ extern int pci_olpc_init(void);
- 
- /* EC related functions */
- 
--extern int olpc_ec_cmd(unsigned char cmd, unsigned char *inbuf, size_t inlen,
--		unsigned char *outbuf, size_t outlen);
--
--/* EC commands */
--
--#define EC_FIRMWARE_REV			0x08
--#define EC_WRITE_SCI_MASK		0x1b
--#define EC_WAKE_UP_WLAN			0x24
--#define EC_WLAN_LEAVE_RESET		0x25
--#define EC_READ_EB_MODE			0x2a
--#define EC_SET_SCI_INHIBIT		0x32
--#define EC_SET_SCI_INHIBIT_RELEASE	0x34
--#define EC_WLAN_ENTER_RESET		0x35
--#define EC_WRITE_EXT_SCI_MASK		0x38
--#define EC_SCI_QUERY			0x84
--#define EC_EXT_SCI_QUERY		0x85
-+extern int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf,
-+		size_t inlen, unsigned char *outbuf, size_t outlen);
- 
- /* SCI source values */
- 
-diff --git a/arch/x86/platform/olpc/olpc.c b/arch/x86/platform/olpc/olpc.c
-index a4bee53..796e199 100644
---- a/arch/x86/platform/olpc/olpc.c
-+++ b/arch/x86/platform/olpc/olpc.c
-@@ -125,7 +125,7 @@ static int __wait_on_obf(unsigned int line, unsigned int port, int desired)
-  * <http://wiki.laptop.org/go/Ec_specification>.  Unfortunately, while
-  * OpenFirmware's source is available, the EC's is not.
-  */
--int olpc_ec_cmd(unsigned char cmd, unsigned char *inbuf, size_t inlen,
-+int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf, size_t inlen,
- 		unsigned char *outbuf,  size_t outlen)
- {
- 	unsigned long flags;
-@@ -201,7 +201,7 @@ err:
- 	spin_unlock_irqrestore(&ec_lock, flags);
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 79840d6..f9c88dc 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -510,6 +510,12 @@ static inline void ath9k_btcoex_stop_gen_timer(struct ath_softc *sc)
  }
--EXPORT_SYMBOL_GPL(olpc_ec_cmd);
-+EXPORT_SYMBOL_GPL(olpc_ec_cmd_x86);
+ #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
  
- void olpc_ec_wakeup_set(u16 value)
- {
-diff --git a/drivers/platform/Makefile b/drivers/platform/Makefile
-index 782953a..b17c16c 100644
---- a/drivers/platform/Makefile
-+++ b/drivers/platform/Makefile
-@@ -3,3 +3,4 @@
- #
++struct ath9k_wow_pattern {
++	u8 pattern_bytes[MAX_PATTERN_SIZE];
++	u8 mask_bytes[MAX_PATTERN_SIZE];
++	u32 pattern_len;
++};
++
+ /********************/
+ /*   LED Control    */
+ /********************/
+@@ -711,6 +717,12 @@ struct ath_softc {
+ 	struct ath_ant_comb ant_comb;
+ 	u8 ant_tx, ant_rx;
+ 	struct dfs_pattern_detector *dfs_detector;
++
++#ifdef CONFIG_PM_SLEEP
++	atomic_t wow_got_bmiss_intr;
++	atomic_t wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
++	u32 wow_intr_before_sleep;
++#endif
+ };
  
- obj-$(CONFIG_X86)		+= x86/
-+obj-$(CONFIG_OLPC)		+= olpc/
-diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
-new file mode 100644
-index 0000000..4202603
---- /dev/null
-+++ b/drivers/platform/olpc/olpc-ec.c
-@@ -0,0 +1,16 @@
+ void ath9k_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 26da173..912f340 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -180,6 +180,37 @@
+ #define PAPRD_TABLE_SZ			24
+ #define PAPRD_IDEAL_AGC2_PWR_RANGE	0xe0
+ 
 +/*
-+ * Generic driver for the OLPC Embedded Controller.
-+ *
-+ * Copyright (C) 2011-2012 One Laptop per Child Foundation.
-+ *
-+ * Licensed under the GPL v2 or later.
++ * Wake on Wireless
 + */
-+#include <linux/module.h>
-+#include <asm/olpc.h>
 +
-+int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
-+{
-+	/* Currently a stub; this will be expanded upon later. */
-+	return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
-+}
-+EXPORT_SYMBOL_GPL(olpc_ec_cmd);
-diff --git a/include/linux/olpc-ec.h b/include/linux/olpc-ec.h
-new file mode 100644
-index 0000000..6d4e426
---- /dev/null
-+++ b/include/linux/olpc-ec.h
-@@ -0,0 +1,29 @@
-+#ifndef _LINUX_OLPC_EC_H
-+#define _LINUX_OLPC_EC_H
++/* Keep Alive Frame */
++#define KAL_FRAME_LEN		28
++#define KAL_FRAME_TYPE		0x2	/* data frame */
++#define KAL_FRAME_SUB_TYPE	0x4	/* null data frame */
++#define KAL_DURATION_ID		0x3d
++#define KAL_NUM_DATA_WORDS	6
++#define KAL_NUM_DESC_WORDS	12
++#define KAL_ANTENNA_MODE	1
++#define KAL_TO_DS		1
++#define KAL_DELAY		4	/*delay of 4ms between 2 KAL frames */
++#define KAL_TIMEOUT		900
 +
-+/* XO-1 EC commands */
-+#define EC_FIRMWARE_REV			0x08
-+#define EC_WRITE_SCI_MASK		0x1b
-+#define EC_WAKE_UP_WLAN			0x24
-+#define EC_WLAN_LEAVE_RESET		0x25
-+#define EC_READ_EB_MODE			0x2a
-+#define EC_SET_SCI_INHIBIT		0x32
-+#define EC_SET_SCI_INHIBIT_RELEASE	0x34
-+#define EC_WLAN_ENTER_RESET		0x35
-+#define EC_WRITE_EXT_SCI_MASK		0x38
-+#define EC_SCI_QUERY			0x84
-+#define EC_EXT_SCI_QUERY		0x85
++#define MAX_PATTERN_SIZE		256
++#define MAX_PATTERN_MASK_SIZE		32
++#define MAX_NUM_PATTERN			8
++#define MAX_NUM_USER_PATTERN		6 /*  deducting the disassociate and
++					      deauthenticate packets */
 +
-+#ifdef CONFIG_OLPC
++/*
++ * WoW trigger mapping to hardware code
++ */
 +
-+extern int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
-+		size_t outlen);
++#define AH_WOW_USER_PATTERN_EN		BIT(0)
++#define AH_WOW_MAGIC_PATTERN_EN		BIT(1)
++#define AH_WOW_LINK_CHANGE		BIT(2)
++#define AH_WOW_BEACON_MISS		BIT(3)
 +
-+#else
-+
-+static inline int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
-+		size_t outlen) { return -ENODEV; }
-+
-+#endif /* CONFIG_OLPC */
-+
-+#endif /* _LINUX_OLPC_EC_H */
+ enum ath_hw_txq_subtype {
+ 	ATH_TXQ_AC_BE = 0,
+ 	ATH_TXQ_AC_BK = 1,
+@@ -863,6 +894,9 @@ struct ath_hw {
+ 	/* Enterprise mode cap */
+ 	u32 ent_mode;
+ 
++#ifdef CONFIG_PM_SLEEP
++	u32 wow_event_mask;
++#endif
+ 	bool is_clk_25mhz;
+ 	int (*get_mac_revision)(void);
+ 	int (*external_reset)(void);
 -- 
-1.7.2.5
+1.7.0.4
 
