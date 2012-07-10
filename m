@@ -1,75 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64801 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679Ab2GOCWF convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51620 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752743Ab2GJALi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2012 22:22:05 -0400
-From: "Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-Subject: RE: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
- TXOP limit
-Date: Sun, 15 Jul 2012 02:21:56 +0000
-Message-ID: <506697F5827BD842B7CB80D046EBE618995399@aphydexd01b> (sfid-20120715_042245_650175_518B1FEF)
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
- <1342105451-42297-2-git-send-email-nbd@openwrt.org>
- <1342105451-42297-3-git-send-email-nbd@openwrt.org>
- <1342105451-42297-4-git-send-email-nbd@openwrt.org>
- <1342105451-42297-5-git-send-email-nbd@openwrt.org>
- <1342105451-42297-6-git-send-email-nbd@openwrt.org>
- <1342105451-42297-7-git-send-email-nbd@openwrt.org>
- <1342105451-42297-8-git-send-email-nbd@openwrt.org>
- <20481.3065.540576.366365@gargle.gargle.HOWL>,<500143CA.1020804@openwrt.org>
-In-Reply-To: <500143CA.1020804@openwrt.org>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 9 Jul 2012 20:11:38 -0400
+Received: by yenl2 with SMTP id l2so10716136yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 17:11:37 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAB=NE6UF57isp+z4j3c0JNyTKHKfUsbU1UhMYKbZdGfEaeLn3w@mail.gmail.com>
+References: <1341845663-24539-1-git-send-email-ozancag@gmail.com>
+	<CAB=NE6UF57isp+z4j3c0JNyTKHKfUsbU1UhMYKbZdGfEaeLn3w@mail.gmail.com>
+Date: Tue, 10 Jul 2012 03:11:37 +0300
+Message-ID: <CAFub=KRj46WGkervvZxXB4nFQvPvu6yo_FvCXDGLPiuCyq8VNQ@mail.gmail.com> (sfid-20120710_021142_634414_A2042468)
+Subject: Re: [RFC] compat: Add ability to run as non-root
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I believe mac80211 has a per-VIF idea of queue parameters (tx_conf in struct ieee80211_sub_if_data).
-And we end up overwriting the parameters of the main interface. For example,
-
-* Bringing up an AP interface:
-
-ath: phy0: Configure tx [queue/halq] [0/0], aifs: 1, cw_min: 3, cw_max: 7, txop: 47
-ath: phy0: Configure tx [queue/halq] [1/1], aifs: 1, cw_min: 7, cw_max: 15, txop: 94
-ath: phy0: Configure tx [queue/halq] [2/2], aifs: 3, cw_min: 15, cw_max: 63, txop: 0
-ath: phy0: Configure tx [queue/halq] [3/3], aifs: 7, cw_min: 15, cw_max: 1023, txop: 0
-
-* Adding a new station interface (but not associated yet):
-
-ath: phy0: Attach a VIF of type: 2
-
-ath: phy0: Configure tx [queue/halq] [0/0], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-ath: phy0: Configure tx [queue/halq] [1/1], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-ath: phy0: Configure tx [queue/halq] [2/2], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-ath: phy0: Configure tx [queue/halq] [3/3], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-
-Sujith
-________________________________________
-From: Felix Fietkau [nbd@openwrt.org]
-Sent: Saturday, July 14, 2012 3:32 PM
-To: Manoharan, Sujith
-Cc: linux-wireless@vger.kernel.org; linville@tuxdriver.com; Rodriguez, Luis
-Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue TXOP limit
-
-On 2012-07-14 8:04 AM, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> @@ -1384,6 +1384,7 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
->>              queue, txq->axq_qnum, params->aifs, params->cw_min,
->>              params->cw_max, params->txop);
->>
->> +    ath_update_max_aggr_framelen(sc, queue, qi.tqi_burstTime);
->>      ret = ath_txq_update(sc, txq->axq_qnum, &qi);
->>      if (ret)
->>              ath_err(common, "TXQ Update failed\n");
+On Tue, Jul 10, 2012 at 2:50 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Mon, Jul 9, 2012 at 7:54 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+>> If the EUID of the process is not 0, assume that get-compat-kernels
+>> is run as a regular user and extract the downloaded *.deb files
+>> from debs/ into
 >
-> Wouldn't this break multi-interface operation ? This unconditionally
-> updates the aggr. limits of an existing interface when a new one is added.
-No, this doesn't break multi-interface. TXOP limit (like other WMM
-settings) can only be configured per-wiphy, so the max. aggregation
-lengths are per-wiphy as well.
+>> ksrcs/:
+>
+> How about $HOME/ksrc/ ?
+>
+>> ksrcs/
+>> ├── lib
+>> │   └── modules
+>> │       ├── 2.6.24-020624-generic
+>> │       ├── 2.6.25-020625-generic
+>> │       ├── ...
+>> │       └── 3.4.4-030404-generic
+>> └── usr
+>>     └── src
+>>         ├── linux-headers-2.6.24-020624
+>>         ├── linux-headers-2.6.24-020624-generic
+>>         ├── linux-headers-2.6.25-020625
+>>         ├── linux-headers-2.6.25-020625-generic
+>>         ├── ...
+>>         ├── linux-headers-3.4.4-030404
+>>         └── linux-headers-3.4.4-030404-generic
+>
+> Nice!
+>
+>> If you still want to use your kernel sources under /, run
+>> get-compat-kernels
+>
+> Neat!
+>
+>> or ckmake with 'sudo'.
+>
+> How about instead having ckmake detect first if you have your
+> $HOME/ksrc/ and if so use that, otherwise go with the built in stuff ?
 
-- Felix
+You are right, that would be much better. Will rework and send a new patch.
+
+Thanks :)
+
+
+-- 
+Ozan Çağlayan
