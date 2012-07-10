@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3694 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750846Ab2GDMDh (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13741 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759Ab2GJUSX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 08:03:37 -0400
-Message-ID: <1341403410.1758.11.camel@x61.thuisdomein> (sfid-20120704_140341_085391_DD9BBD61)
-Subject: Re: [PATCH] iwlegacy: don't mess up the SCD when removing a key
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 04 Jul 2012 14:03:30 +0200
-In-Reply-To: <20120704114029.GC2570@redhat.com>
-References: <1341228681-19358-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <20120704112208.GB2570@redhat.com>
-	 <CANUX_P2gvyRejAmvW-BSxKaA7TG1s=KcRczwShb8+WtT9==L5w@mail.gmail.com>
-	 <20120704114029.GC2570@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Jul 2012 16:18:23 -0400
+From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath6kl: use custom MAC address for newly created interfaces
+Date: Tue, 10 Jul 2012 13:20:40 -0700
+Message-ID: <1341951640-27434-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20120710_221827_359095_827339DB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-04 at 13:40 +0200, Stanislaw Gruszka wrote:
-> On Wed, Jul 04, 2012 at 02:33:48PM +0300, Emmanuel Grumbach wrote: 
-> > Ok, but doest it solve the bug ?
-> 
-> CCing Poul.
+Firmware and driver generate MAC addresses for the second and third interfaces.
+In addition to the existing algorithm, flip bit 7 of 5th octet. Since both
+firmware and driver individually generate the MAC addresses, introduce a new
+firmware capability bit to keep them compatible.
 
-Well I didn't see the queue-2-is-stuck error while testing that patch
-for a few days (mostly by disconnecting and reconnecting to my wlan
-through clicking a GUI applet).
+Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +++++-
+ drivers/net/wireless/ath/ath6kl/core.h     |    3 +++
+ 2 files changed, 8 insertions(+), 1 deletions(-)
 
-That being said, since a day or two I'm again running without that patch
-and also haven't noticed that error. So perhaps the jury's still out on
-this patch ...
-
-Maybe I should again try suspending and resuming in a loop. But that
-raises the chance of suspend/resume bugs influencing the results.
-Testing bugs like these (in network code, only triggered every now and
-then) apparently isn't easy.
-
-> But even if not, we still probably need that patch, right? Or is
-> possible that 4965 firmware do not corrupt memory when we provide
-> wrong key offset to it? Or maybe for 4965 key offset 0xff is something
-> that is expected and needed to invalidate the key?
-
-
-Paul Bolle
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 230e35b..fc14d0e 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3628,9 +3628,13 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 	vif->htcap[IEEE80211_BAND_5GHZ].ht_enable = true;
+ 
+ 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
+-	if (fw_vif_idx != 0)
++	if (fw_vif_idx != 0) {
+ 		ndev->dev_addr[0] = (ndev->dev_addr[0] ^ (1 << fw_vif_idx)) |
+ 				     0x2;
++		if (test_bit(ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR,
++			    ar->fw_capabilities))
++			ndev->dev_addr[4] ^= 0x80;
++	}
+ 
+ 	init_netdev(ndev);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index f36da4a..867c966 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -126,6 +126,9 @@ enum ath6kl_fw_capability {
+ 	 */
+ 	ATH6KL_FW_CAPABILITY_SCHED_SCAN_MATCH_LIST,
+ 
++	/* FW sets mac_addr[4] ^= 0x80 for newly created interfaces */
++	ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR,
++
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+-- 
+1.7.0.4
 
