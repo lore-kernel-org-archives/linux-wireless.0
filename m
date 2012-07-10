@@ -1,45 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48184 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497Ab2GZQqJ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26001 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756509Ab2GJRYj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 12:46:09 -0400
-Message-ID: <1343321165.4477.4.camel@jlt3.sipsolutions.net> (sfid-20120726_184622_709807_E9B53370)
-Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	coelho <coelho@ti.com>
-Date: Thu, 26 Jul 2012 18:46:05 +0200
-In-Reply-To: <501170F2.3050300@net.t-labs.tu-berlin.de>
-References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	  (sfid-20120726_180930_993025_AB3D0B96) <1343319453.4477.2.camel@jlt3.sipsolutions.net>
-	  (sfid-20120726_181745_936314_D74A954D) <1343319579.4477.3.camel@jlt3.sipsolutions.net>
-	 <501170F2.3050300@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Jul 2012 13:24:39 -0400
+Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
+	<arend@broadcom.com>, <henry@logout.com>,
+	<senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+Subject: [PATCH v4 4/5] cfg80211: make regulatory_update() static
+Date: Tue, 10 Jul 2012 10:23:10 -0700
+Message-ID: <1341940991-11234-5-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120710_192441_782289_ED5485CE)
+In-Reply-To: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-26 at 18:31 +0200, Thomas Huehn wrote:
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-> This is the call path
-> 
-> in main.c ... INIT_WORK(&wl->tx_work, wl1271_tx_work);
->  jumps to tx.c...wl1271_tx_work(struct work_struct *work)
->   calls wl1271_tx_work(struct work_struct *work)
->    calls wlcore_tx_work_locked(struct wl1271 *wl)
->     calls wl1271_skb_queue_head()
->      calls wl12xx_tx_get_hlid()
->       calls wl12xx_tx_get_hlid_ap() .... where sta is needed.
-> 
-> But I could not find any point in the call path where I could grab the
-> sta pointer and pass it through. I will move the rcu into
-> wl12xx_tx_get_hlid_ap(), but I do not see any cheaper way here as using rcu.
+Now that we have wiphy_regulatory_register() we can
+tuck away the core's regulatory_update() call there
+and make it static.
 
-I don't know this driver, maybe it could determine the hlid before and
-store that.
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ net/wireless/core.c |    1 -
+ net/wireless/reg.c  |    6 ++++--
+ net/wireless/reg.h  |    1 -
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 5b4463e..b7dc646 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -538,7 +538,6 @@ int wiphy_register(struct wiphy *wiphy)
+ 
+ 	/* set up regulatory info */
+ 	wiphy_regulatory_register(wiphy);
+-	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ 
+ 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
+ 	cfg80211_rdev_list_generation++;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 43b7750..b0a09b2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1232,8 +1232,8 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 		wiphy->reg_notifier(wiphy, last_request);
+ }
+ 
+-void regulatory_update(struct wiphy *wiphy,
+-		       enum nl80211_reg_initiator setby)
++static void regulatory_update(struct wiphy *wiphy,
++			      enum nl80211_reg_initiator setby)
+ {
+ 	mutex_lock(&reg_mutex);
+ 	wiphy_update_regulatory(wiphy, setby);
+@@ -2385,6 +2385,8 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
+ 		reg_num_devs_support_basehint++;
+ 
+ 	mutex_unlock(&reg_mutex);
++
++	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ }
+ 
+ /* Caller must hold cfg80211_mutex */
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index f36b15f..f023c8a 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -34,7 +34,6 @@ void regulatory_exit(void);
+ 
+ int set_regdom(const struct ieee80211_regdomain *rd);
+ 
+-void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
+ bool reg_last_request_cell_base(void);
+ 
+ /**
+-- 
+1.7.10.rc1.22.gf5241
 
