@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:38667 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753379Ab2GRMNz (ORCPT
+Received: from mta-blr1.sasken.com ([203.200.200.72]:10558 "EHLO
+	mta-blr1.sasken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752668Ab2GKMvG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:13:55 -0400
-Received: by lbon10 with SMTP id n10so1904969lbo.41
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:52 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 07/14] wlcore: use basic rates for non-data packets
-Date: Wed, 18 Jul 2012 15:13:26 +0300
-Message-Id: <1342613613-917-8-git-send-email-coelho@ti.com> (sfid-20120718_141408_963788_2172F454)
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+	Wed, 11 Jul 2012 08:51:06 -0400
+From: DINO MYCLE <dino.mycle@sasken.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 11 Jul 2012 18:21:00 +0530
+Subject: RE: Per packet TPC is it implimented ?
+Message-ID: <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD7AC@EXGMBX01.sasken.com> (sfid-20120711_145110_914507_6EA4DE53)
+References: <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD6D4@EXGMBX01.sasken.com>
+ <4FFD63C0.6080002@net.t-labs.tu-berlin.de>
+ <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD7A0@EXGMBX01.sasken.com>
+ <4FFD7646.9060404@net.t-labs.tu-berlin.de>
+In-Reply-To: <4FFD7646.9060404@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Hello Thomas,
+  Sorry, got it....so how is the performance any report or observation you can share ?
 
-After the latest mac80211 changes, the sta has
-the ap's sta pointer even before association.
+--
+Thanks and Regards,
+Dino Joseph Mycle, Ext: 3299, +91 9916888337
+Sasken Communication Technologies Ltd.
 
-This cause the auth and assoc frames to be sent
-with the standard ap's rates, rather than the
-basic rates.
 
-Change the tx rate policy logic to use the regular
-ap rates only for data packets (so control and mgmt
-packets will be sent with basic rates)
+-----Original Message-----
+From: Thomas Huehn [mailto:thomas@net.t-labs.tu-berlin.de]
+Sent: Wednesday, July 11, 2012 6:19 PM
+To: DINO MYCLE
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Per packet TPC is it implimented ?
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/tx.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 0bdc950..c1d9320 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -306,7 +306,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		rate_idx = 0;
- 	else if (wlvif->bss_type != BSS_TYPE_AP_BSS) {
- 		/*
--		 * if the packets are destined for AP (have a STA entry)
-+		 * if the packets are data packets
- 		 * send them with AP rate policies (EAPOLs are an exception),
- 		 * otherwise use default basic rates
- 		 */
-@@ -314,7 +314,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			rate_idx = wlvif->sta.basic_rate_idx;
- 		else if (control->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
- 			rate_idx = wlvif->sta.p2p_rate_idx;
--		else if (control->control.sta)
-+		else if (ieee80211_is_data(frame_control))
- 			rate_idx = wlvif->sta.ap_rate_idx;
- 		else
- 			rate_idx = wlvif->sta.basic_rate_idx;
--- 
-1.7.10.4
 
+DINO MYCLE schrieb:
+
+
+>   Thanks for the reply, so it will be for 2.4GHz ? or only for 5GHz ?
+>
+
+
+As I've written: TPC for all IEEE 802.11 g/a/n
+
+Greetings  Thomas
+
+SASKEN BUSINESS DISCLAIMER: This message may contain confidential, proprietary or legally privileged information. In case you are not the original intended Recipient of the message, you must not, directly or indirectly, use, disclose, distribute, print, or copy any part of this message and you are requested to delete it and inform the sender. Any views expressed in this message are those of the individual sender unless otherwise stated. Nothing contained in this message shall be construed as an offer or acceptance of any offer by Sasken Communication Technologies Limited ("Sasken") unless sent with that express intent and with due authority of Sasken. Sasken has taken enough precautions to prevent the spread of viruses. However the company accepts no liability for any damage caused by any virus transmitted by this email.
+Read Disclaimer at http://www.sasken.com/extras/mail_disclaimer.html
