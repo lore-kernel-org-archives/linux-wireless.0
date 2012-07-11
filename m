@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40577 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933338Ab2GCRPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:15:00 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 16/20] ath9k: skip internal regulator configuration for AR9550
-Date: Tue,  3 Jul 2012 19:13:30 +0200
-Message-Id: <1341335614-15419-17-git-send-email-juhosg@openwrt.org> (sfid-20120703_192129_499785_CA92FA15)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22162 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932307Ab2GKT3z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 15:29:55 -0400
+Message-ID: <4FFDD42E.6010401@qca.qualcomm.com> (sfid-20120711_212959_180092_C42542DC)
+Date: Wed, 11 Jul 2012 22:29:50 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: support TX error rate notification
+References: <1342034589-3979-1-git-send-email-c_tpeder@qca.qualcomm.com>
+In-Reply-To: <1342034589-3979-1-git-send-email-c_tpeder@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On 07/11/2012 10:23 PM, Thomas Pedersen wrote:
+> The ath6kl firmware can monitor a connection and report when a certain
+> TX failure threshold is crossed. Support this configuration and event
+> reporting on compatible firmwares.
+> 
+> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 57002d1..25de6f9 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3960,7 +3960,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	ar9003_hw_drive_strength_apply(ah);
- 	ar9003_hw_atten_apply(ah, chan);
- 	ar9003_hw_quick_drop_apply(ah, chan->channel);
--	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
-+	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9550(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
- 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
- 		ar9003_hw_apply_tuning_caps(ah);
--- 
-1.7.2.1
+[...]
 
+> +	ev = (struct wmi_txe_notify_event *) datap;
+> +	rate = le32_to_cpu(ev->rate);
+> +	pkts = le32_to_cpu(ev->pkts);
+> +	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d pkts %d\n",
+> +		   vif->bssid, rate, pkts);
+
+Empty line before the ath6kl_dbg() call, please.
+
+> +int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
+> +			      u32 rate, u32 pkts, u32 intvl)
+> +{
+> +	struct sk_buff *skb;
+> +	struct wmi_txe_notify_cmd *cmd;
+> +
+> +	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	cmd = (struct wmi_txe_notify_cmd *) skb->data;
+> +	cmd->rate = rate;
+> +	cmd->pkts = pkts;
+> +	cmd->intvl = intvl;
+
+cpu_to_le32()?
+
+> +/* WMI_SET_TXE_NOTIFY_CMD */
+> +struct wmi_txe_notify_cmd {
+> +	u32 rate;
+> +	u32 pkts;
+> +	u32 intvl;
+> +} __packed;
+> +
+> +/* WMI_TXE_NOTIFY_EVENTID */
+> +struct wmi_txe_notify_event {
+> +	u32 rate;
+> +	u32 pkts;
+> +} __packed;
+
+Endian annotation?
+
+Kalle
