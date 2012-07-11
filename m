@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:63307 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754198Ab2GRMgG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41742 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756725Ab2GKH1n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:36:06 -0400
-Received: by weyx8 with SMTP id x8so916918wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:36:04 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: flush stations before stop beaconing
-Date: Wed, 18 Jul 2012 15:36:04 +0300
-Message-Id: <1342614964-5826-1-git-send-email-eliad@wizery.com> (sfid-20120718_143613_583758_51D85D7A)
+	Wed, 11 Jul 2012 03:27:43 -0400
+Message-ID: <1341991654.4480.5.camel@jlt3.sipsolutions.net> (sfid-20120711_092810_562521_35DE391C)
+Subject: Re: [PATCH] etherdevice: introduce eth_broadcast_addr
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Date: Wed, 11 Jul 2012 09:27:34 +0200
+In-Reply-To: <CAP=VYLqNyAF1gSsKTd3YojeJXK_-pEzXAKyVQbQfwhtwOyMmwg@mail.gmail.com> (sfid-20120711_021016_338821_DEFABE8B)
+References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
+	 <20120708.235808.1602900783296556684.davem@davemloft.net>
+	 <1341937124.4475.27.camel@jlt3.sipsolutions.net>
+	 <CAP=VYLqNyAF1gSsKTd3YojeJXK_-pEzXAKyVQbQfwhtwOyMmwg@mail.gmail.com>
+	 (sfid-20120711_021016_338821_DEFABE8B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When AP interface is going down, the stations
-are flushed (in ieee80211_do_stop()) only after
-the beaconing was stopped.
+On Tue, 2012-07-10 at 20:09 -0400, Paul Gortmaker wrote:
+> On Tue, Jul 10, 2012 at 12:18 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > A lot of code has either the memset or an inefficient copy
+> > from a static array that contains the all-ones broadcast
+> 
+> Shouldn't we see all that "lot of code" here in this same
+> commit, now using this new shortcut?  If we apply this, we
+> have a new function, but with no users.  If you have done
+> the audit, and found the inefficient cases, why isn't it here?
 
-However, drivers might rely on stations being
-removed before the beaconing was stopped, in
-order to clean up properly.
+I'm planning to fix the wireless uses (at least the ones I'm responsible
+for), but I'm just going to stick them into my mac80211-next tree after
+this patch percolates down there, I don't see a need to send around a
+ton of patches for it.
 
-Fix it by flushing the stations on ap stop.
+> I would think it better to just fix those people who have a
+> pointless static array of all-ones to use the memset.  If it was a
+> multi line thing to achieve the eth_broadcast_addr() then it
+> might make sense to exist.  But as a one line alias, it does
+> seem somewhat pointless to me.
 
-(we already do the same for other interface
-types, e.g. in ieee80211_set_disassoc())
+At least in my code I'm going to prefer this over the memset for
+documentation purposes. I'll agree that memset(..., 0xff, ETH_ALEN) is
+pretty obvious already, but eth_broadcast_addr(...) is even easier to
+read IMHO.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/cfg.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6e4098e..c7df257 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -924,6 +924,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 
- 	kfree_rcu(old, rcu_head);
- 
-+	sta_info_flush(sdata->local, sdata);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
- 
- 	return 0;
--- 
-1.7.6.401.g6a319
+johannes
 
