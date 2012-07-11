@@ -1,180 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:43077 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212Ab2GZRsY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 13:48:24 -0400
-Received: by obbuo13 with SMTP id uo13so2980657obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 10:48:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <50111ECF.1020706@openwrt.org>
-References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	<1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	<CAFtRNNwY-1JLEJa_qZpUfsyQVdUQLO3CWcEB9xef-g5jPzndNQ@mail.gmail.com>
-	<50107C35.9050807@net.t-labs.tu-berlin.de>
-	<CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com>
-	<501083F6.8060002@net.t-labs.tu-berlin.de>
-	<CAFtRNNxEHaON-uBjgLyeJdgN6UKfed6fAeCYPpo6xToi3dixOw@mail.gmail.com>
-	<50111BB3.9090802@openwrt.org>
-	<CAFtRNNyk051oLGuZOMcthf_mO6sArQzp+yCDvLQR2b=mACe9tQ@mail.gmail.com>
-	<50111ECF.1020706@openwrt.org>
-Date: Thu, 26 Jul 2012 20:48:23 +0300
-Message-ID: <CAFtRNNyP69cHcEscH8eeHcL9WW2-qrxKBa=5zmmmbnORTGFNXA@mail.gmail.com> (sfid-20120726_194832_175104_D3F10166)
-Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
- txpower changes
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>, jirislaby@gmail.com,
-	johannes.berg@intel.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:49715 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757241Ab2GKR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 13:59:26 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 12/12] ath9k_hw: fix SREV checks for applying tuning caps from EEPROM
+Date: Wed, 11 Jul 2012 19:59:15 +0200
+Message-Id: <1342029555-31618-12-git-send-email-nbd@openwrt.org> (sfid-20120711_202113_654457_39CA3E31)
+In-Reply-To: <1342029555-31618-11-git-send-email-nbd@openwrt.org>
+References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-2-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-3-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-4-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-5-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-6-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-7-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-8-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-9-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-10-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-11-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/26 Felix Fietkau <nbd@openwrt.org>:
-> On 2012-07-26 12:31 PM, Nick Kossifidis wrote:
->> 2012/7/26 Felix Fietkau <nbd@openwrt.org>:
->>> On 2012-07-26 12:20 PM, Nick Kossifidis wrote:
->>>> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
->>>>> Hi Nick,
->>>>>
->>>>> Nick Kossifidis schrieb:
->>>>>
->>>>>> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
->>>>>
->>>>>> There is nothing in your patch that suggests that's related to this.
->>>>>> Anyway there's a simple way to fix this:
->>>>>>
->>>>>> Just move this:
->>>>>>
->>>>>> 3575         /* Min/max in 0.25dB units */
->>>>>> 3576         ah->ah_txpower.txp_min_pwr = 2 * rates[7];
->>>>>> 3577         ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
->>>>>> 3578         ah->ah_txpower.txp_ofdm = rates[7];
->>>>>>
->>>>>> above the for loop and you are done.
->>>>>>
->>>>>> Note rates[i] don't hold tx power values, they hold indices to the
->>>>>> channel powertable.
->>>>>>
->>>>>
->>>>>
->>>>> Are you agreeing that current ath5k txpower handling set from user space
->>>>> is not working and we need to fix it ?
->>>>
->>>> Is that a rhetorical question ? Just check out the TODOs on wireless.kernel.org.
->>>>
->>>> The current code does not preserve the tx power value across resets,
->>>> thats the problem and the change I mentioned above fixes it (patch on
->>>> the way, it's just that where I am right now I don't have bw to
->>>> download wireless-testing) but other than that when we set tx power
->>>> without reseting at least it does what it's supposed to do (and the
->>>> result is the same with madwifi, using a spectrum analyzer or another
->>>> client/monitor interface you see some power levels supported or only
->>>> the max txpower supported, it's really up to the vendor, not all of
->>>> them follow Atheros's reference designs). Your patch passes 1dbm units
->>>> on a function that expects 0.5dbm units, you fix the problem with
->>>> preserving tx power but you break the tx power setting.
->>>>
->>>> The change I mentioned above fixes the problem without introducing new
->>>> variables just because "Felix will use the other one", I don't
->>>> understand why you have a problem with that and why you think I don't
->>>> want this to get fixed...
->>>>
->>>>> Beside that, what about a channel switch and wrongly re-use txp_cur_pwr
->>>>> on a channel witch other max power levels ?
->>>>
->>>> That won't be a problem, when channel changes we 'll call
->>>>
->>>> reset -> phy_init -> set_txpower -> (calibration) -> set rate target power
->>>>
->>>> and then it's going to get limited before it's written on hw here:
->>>>
->>>> max_pwr = min(max_pwr, (u16) ah->ah_txpower.txp_max_pwr) / 2;
->>>>
->>>> txp_max_pwr is initialized on calibration (the max power for this
->>>> channel), then it gets limited by CTL edge information on EEPROM, then
->>>> by max_pwr and then max_pwr is limited by rate_info->target_power_X
->>>> from EEPROM to create rates[i]. We write rates[i] on hw, not
->>>> txp_cur_pwr.
->>> I think it's a bad idea to store the user's choice of txpower in a
->>> variable that internally gets reused to store the hw limit. Even when
->>> the offset isn't added to it, it's still fragile.
->>>
->>> A problem with this is that different channels have different max power
->>> values, so if you switch to a channel with a lower power, and then
->>> switch back (without explicitly changing txpower inbetween), don't you
->>> then end up with less power than you configured?
->>>
->>> This can be easily avoided by storing the user's txpower choice
->>> separately from the actual hw limit...
->>>
->>> - Felix
->>
->> That's what ah->power_level already does, what's the point of
->> introducing another one. Do you think power_level is baldy
->> used/implemented ?
-> Unless I'm missing something here, it does not seem to get used at reset
-> time, only when mac80211 requests a txpower change (and for TPC values
-> in descriptors).
-> On every reset, ah->ah_txpower.txp_cur_pwr gets reused as configured tx
-> power value (and subsequently clamped to the hw channel power limit).
-> I guess this patch could be simplified to use ah->power_level in
-> ath5k_hw_phy_init instead of ah->ah_txpower.txp_cur_pwr, but I do see an
-> issue in the code as it is without this patch.
->
-> - Felix
->
+AR9485, AR9330 and AR9340 are the chips that this is *NOT* supposed to be
+applied on.
 
-I think this is a better approach (I'll prepare a proper patch as soon
-as I have some bandwidth to work with wireless-testing, maybe
-tomorrow)...
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
---- old/phy.c	2012-07-26 20:40:00.869150187 +0300
-+++ new/phy.c	2012-07-26 20:43:25.074710577 +0300
-@@ -3562,6 +3562,12 @@
- 		for (i = 8; i <= 15; i++)
- 			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index c5f3c43..b5c8450 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3890,6 +3890,9 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+ 	u8 tuning_caps_param = eep->baseEepHeader.params_for_tuning_caps[0];
+ 
++	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
++		return;
 +
-+	/* Min/max in 0.25dB units */
-+	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
-+	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
-+	ah->ah_txpower.txp_ofdm = rates[7];
-+
- 	/* Now that we have all rates setup use table offset to
- 	 * match the power range set by user with the power indices
- 	 * on PCDAC/PDADC table */
-@@ -3571,11 +3577,6 @@
- 		if (rates[i] > 63)
- 			rates[i] = 63;
- 	}
--
--	/* Min/max in 0.25dB units */
--	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
--	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
--	ah->ah_txpower.txp_ofdm = rates[7];
+ 	if (eep->baseEepHeader.featureEnable & 0x40) {
+ 		tuning_caps_param &= 0x7f;
+ 		REG_RMW_FIELD(ah, AR_CH0_XTAL, AR_CH0_XTAL_CAPINDAC,
+@@ -3987,8 +3990,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_quick_drop_apply(ah, chan->channel);
+ 	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9550(ah))
+ 		ar9003_hw_internal_regulator_apply(ah);
+-	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+-		ar9003_hw_apply_tuning_caps(ah);
++	ar9003_hw_apply_tuning_caps(ah);
+ 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
  }
-
-
-@@ -3789,8 +3790,8 @@
- 	 * RF buffer settings on 5211/5212+ so that we
- 	 * properly set curve indices.
- 	 */
--	ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
--			ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
-+	ret = ath5k_hw_txpower(ah, channel, ah->power_level ?
-+			ah->power_level * 2 : AR5K_TUNE_MAX_TXPOWER);
- 	if (ret)
- 		return ret;
-
-Works for you ?
-
-BTW is there a way to pass the actual tx power set back to
-mac80211/cfg80211 so that user knows what power his card is actually
-transmitting at ?
-
+ 
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.3.2
+
