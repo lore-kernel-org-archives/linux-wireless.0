@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:59864 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752736Ab2G3L3u (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:12015 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932379Ab2GKTcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 07:29:50 -0400
-Message-ID: <5016702D.8000801@net.t-labs.tu-berlin.de> (sfid-20120730_133030_892593_B411BF3A)
-Date: Mon, 30 Jul 2012 13:29:49 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+	Wed, 11 Jul 2012 15:32:36 -0400
+Date: Wed, 11 Jul 2012 14:32:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Remove extra argument from queue setup routine
+Message-ID: <4ffdd4d1.Iwl3XOvFMQ8PM7Bc%Larry.Finger@lwfinger.net> (sfid-20120711_213240_810221_79CF31CD)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org
-Subject: Re: [PATCH 1/2] mac80211: Add support of transmit power control (TPC)
- per data packet
-References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de>  <1343404809-70329-2-git-send-email-thomas@net.t-labs.tu-berlin.de>  (sfid-20120727_180037_367100_88493A5C) <1343633674.4452.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1343633674.4452.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes
+Remove unused argument hw from call to rtl_tid_to_ac().
 
-Johannes Berg schrieb:
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> On Fri, 2012-07-27 at 18:00 +0200, Thomas Huehn wrote:
-> 
->>   * &struct ieee80211_tx_info contains an array of these structs
->> - * in the control information, and it will be filled by the rate
->> - * control algorithm according to what should be sent. For example,
->> - * if this array contains, in the format { <idx>, <count> } the
->> + * in the control information, and it will be filled by the joint rate-
->> + * power control algorithm according to what should be sent. For example,
->> + * if this array contains, in the format { <idx>, <count>, <tpc> } the
->>   * information
->> - *    { 3, 2 }, { 2, 2 }, { 1, 4 }, { -1, 0 }, { -1, 0 }
->> + *    { 3, 2, 16 }, { 2, 2, 10 }, { 1, 4, 5 }, { -1, 0, 0 }
->>   * then this means that the frame should be transmitted
->> - * up to twice at rate 3, up to twice at rate 2, and up to four
->> - * times at rate 1 if it doesn't get acknowledged. Say it gets
->> - * acknowledged by the peer after the fifth attempt, the status
->> + * up to twice at rate 3 with 16 dBm, up to twice at rate 2 with 10 dBm,
-> 
-> You might want to consider using 1/2 or 1/4 dBm granularity? A lot of
-> hardware can do that.
-> 
+John,
 
+More 3.6 material.
 
-The choice of 1 dBm as step width was based on our experiments with
-Atheros chips that do support up to 0,5dBm step width. We concluded that
-1dBm is sufficient as it provides 20 steps from 1 till 100 mWatt as
-dynamic range of control. But there is no problem for my tpc algorithm
-to handle a granularity of 0.5 dBm as step size, or any other upcoming
-tpc controller. Should we gather some feedback about todays hardware
-specs in terms of tx_power abilities? Or should I just apply 0.5 dBm
-steps in v2 ?
+Larry
+---
 
-
->>  struct ieee80211_tx_rate {
->>  	s8 idx;
->>  	u8 count;
->>  	u8 flags;
->> +	u8 tpc;
-> 
-> I'm not sure that should be named "tpc". Think about what that means --
-> "transmit power control", but it's really the power value, so it should
-> be "txpower" or so.
-> 
-
-
-I will change this to tx_power in v2, sounds reasonable.
-
-Greetings Thomas
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
+@@ -167,7 +167,7 @@ static const u8 tid_to_ac[] = {
+ 	0, /* IEEE80211_AC_VO */
+ };
+ 
+-u8 rtl_tid_to_ac(struct ieee80211_hw *hw, u8 tid)
++u8 rtl_tid_to_ac(u8 tid)
+ {
+ 	return tid_to_ac[tid];
+ }
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.h
+@@ -138,7 +138,7 @@ int rtl_send_smps_action(struct ieee8021
+ 		enum ieee80211_smps_mode smps);
+ u8 *rtl_find_ie(u8 *data, unsigned int len, u8 ie);
+ void rtl_recognize_peer(struct ieee80211_hw *hw, u8 *data, unsigned int len);
+-u8 rtl_tid_to_ac(struct ieee80211_hw *hw, u8 tid);
++u8 rtl_tid_to_ac(u8 tid);
+ extern struct attribute_group rtl_attribute_group;
+ int rtlwifi_rate_mapping(struct ieee80211_hw *hw,
+ 			 bool isht, u8 desc_rate, bool first_ampdu);
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -480,7 +480,7 @@ static void _rtl_pci_tx_chk_waitq(struct
+ 
+ 	/* we juse use em for BE/BK/VI/VO */
+ 	for (tid = 7; tid >= 0; tid--) {
+-		u8 hw_queue = ac_to_hwq[rtl_tid_to_ac(hw, tid)];
++		u8 hw_queue = ac_to_hwq[rtl_tid_to_ac(tid)];
+ 		struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
+ 		while (!mac->act_scanning &&
+ 		       rtlpriv->psc.rfpwr_state == ERFON) {
