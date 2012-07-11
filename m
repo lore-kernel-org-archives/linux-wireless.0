@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:38226 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756030Ab2GBVXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 17:23:20 -0400
-Message-ID: <1341264199.10162.2.camel@joe2Laptop> (sfid-20120702_232351_578752_9101C281)
-Subject: Re: [RFC][PATCH 1/2] lib: printf: append support of '%*p[Mm][FR]'
-From: Joe Perches <joe@perches.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	proski@gnu.org, Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 02 Jul 2012 14:23:19 -0700
-In-Reply-To: <CAHp75Vde4+A5NCH-YvrsrjE-KA3A+xLdMOozeFU4VV7vvUfcmQ@mail.gmail.com>
-References: <20110930115306.3bc105cb@mj>
-	 <1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1340986086.6562.36.camel@joe2Laptop>
-	 <20120629162649.f277177f.akpm@linux-foundation.org>
-	 <1341067733.10253.2.camel@joe2Laptop>
-	 <CAHp75Vde4+A5NCH-YvrsrjE-KA3A+xLdMOozeFU4VV7vvUfcmQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:55267 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932081Ab2GKQzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 12:55:17 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Sp0C3-0002eL-I7
+	for linux-wireless@vger.kernel.org; Wed, 11 Jul 2012 18:55:15 +0200
+Received: from 83.101.52.162 ([83.101.52.162])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 18:55:15 +0200
+Received: from not0read0765 by 83.101.52.162 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 18:55:15 +0200
+To: linux-wireless@vger.kernel.org
+From: Olive <not0read0765@yopmail.com>
+Subject: Re: rt73usb not working since linux 3.4
+Date: Wed, 11 Jul 2012 18:50:26 +0200
+Message-ID: <20120711185026.657d7786@yopmail.com> (sfid-20120711_185522_107030_7DEE9CC0)
+References: <1364831.ftJE0YjeaD@proton>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-02 at 20:32 +0300, Andy Shevchenko wrote:
-> On Sat, Jun 30, 2012 at 5:48 PM, Joe Perches <joe@perches.com> wrote:
-> > On Fri, 2012-06-29 at 16:26 -0700, Andrew Morton wrote:
-> >> On Fri, 29 Jun 2012 09:08:06 -0700
-> >> Joe Perches <joe@perches.com> wrote:
-> >>
-> >> > > diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-> >> > []
-> >> > > @@ -655,11 +655,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
-> >> > >  }
-> >> > >
-> >> > >  static noinline_for_stack
-> >> > > -char *mac_address_string(char *buf, char *end, u8 *addr,
-> >> > > -                  struct printf_spec spec, const char *fmt)
-> >> > > +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
-> >> > > +          const char *fmt)
-> >> > >  {
-> >> > > - char mac_addr[sizeof("xx:xx:xx:xx:xx:xx")];
-> >> > > - char *p = mac_addr;
-> >> > > + char hex_str[64*3];     /* support up to 64 bytes to print */
-> >> >
-> >> > Might be too much stack though.
-> >>
-> >> Yes, it's a bit marginal, as this new capability might be used in debug
-> >> or crash situations where we're deep into the stack.  The average case
-> >> could be improved by using alloca()-style allocation.
-> >
-> > Or maybe support larger sizes with a smaller
-> > stack buffer and a while loop.
-> 
-> What do you think about mixed approach? Let's say we would use buffer
-> on stack for 8 bytes or less, and allocated buffer in case of larger
-> input. It allows to keep implementation simple.
-> 
+On Tue, 26 Jun 2012 18:03:56 +0200
+Andreas Messer <andi@bastelmap.de> wrote:
 
-I think the while loop is simplest.
-I'll code something up tomorrow unless
-you get to it first.
+> Dear all,
+> 
+> updating my pc from linux kernel 3.3 to linux kernel 3.4 broke my
+> wlan. I'm using rt2571 based wlan module from qcom: LR802UKG, which
+> is wired to an internal usb port of my media center pc. The rfkill
+> switch is hardwired to make wlan active all the time. This setup is
+> (almost) properly working since about three years now. (If i ignore
+> the occasional vendor_request_error things)
+> When I use kernel 3.4., i get a lot of additional devices reported by
+> the kernel - three leds and a rfkill switch which have not been there
+> before. (or at least I did not notice them) The wlan device now
+> refuses to go online, saying that the kill switch is active, which of
+> course can not be as it is working with linux kernel 3.3.
+> Furthermore, the driver reports three leds, but my wlan device has
+> only one, so probably a bad eeprom? i dont know... Anyway, I noticed,
+> that when I set the radio led to brightness 255, which takes a lot of
+> time and gives me some vendor_request_errors, the rfkill switch gets
+> turned off (sys/class/rfkill/../hard = 0). Unfortunately, this
+> doesn't help to bring the interface online: After doing that I get
+> frequent vendor_request_failed messages, even the PC becomes stuck on
+> shutdown. (Probably NetworkManager waiting for something...) So, what
+> can I do to track down the problem?
+> 
+> Cheers,
+> Andreas
+
+I have the same problem with a rt73usb too and with the
+kernel 3.4.4-2-ARCH (Archlinux). The solution was to recompile the
+kernel with the option CONFIG_RFKILL unset (really unset not as a
+module). Then everything works properly (exept you cannot disable it
+with rfkill). I did not had this problem before the kernel 3.4 (but I do
+not know if rfkill actually works, or if the wlan was always enabled).
+
+Olive
 
