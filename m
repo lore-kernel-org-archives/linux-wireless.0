@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:3126 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932273Ab2GAMBf (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42081 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751382Ab2GKFcn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jul 2012 08:01:35 -0400
-Message-ID: <1341144092.1911.95.camel@x61.thuisdomein> (sfid-20120701_140138_925115_311115AA)
-Subject: Re: [RFT] iwlegacy: don't mess up the SCD when removing a key
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Sun, 01 Jul 2012 14:01:32 +0200
-In-Reply-To: <1341148023-17673-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1341148023-17673-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 11 Jul 2012 01:32:43 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, buytenh@wantstofly.org,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2] mwl8k: fix possible race condition in info->control.sta use
+Date: Wed, 11 Jul 2012 07:32:34 +0200
+Message-Id: <1341984754-76477-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120711_073248_103349_746EB1D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel,
+info->control.sta may only be dereferenced during the drv_tx call otherwise
+could lead to use-after-free bugs
 
-On Sun, 2012-07-01 at 16:07 +0300, Emmanuel Grumbach wrote:
-> Paul, can you please test ?
+Reported-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+fix wrog indentation. thx to David Miller
+---
+ drivers/net/wireless/mwl8k.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Sure, and thanks for porting that patch.
-
-> If it solve the issues for you, I will send as a patch and Cc stable
-> Totally not tested
-
-Note that it might take some days, maybe even a week, before I can be
-confident that the patch works. Perhaps I should give suspending and
-resuming in a loop a try, that should speed up testing.
-
-
-Paul Bolle
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index df6c6f1..eec5cd1 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1667,7 +1667,8 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw,
+ 
+ 		info = IEEE80211_SKB_CB(skb);
+ 		if (ieee80211_is_data(wh->frame_control)) {
+-			sta = info->control.sta;
++			sta = ieee80211_find_sta_by_ifaddr(hw, wh->addr1,
++							   wh->addr2);
+ 			if (sta) {
+ 				sta_info = MWL8K_STA(sta);
+ 				BUG_ON(sta_info == NULL);
+-- 
+1.7.11.1
 
