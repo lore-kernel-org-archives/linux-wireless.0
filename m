@@ -1,49 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47982 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933007Ab2GYNsv (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55362 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932307Ab2GKTlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 09:48:51 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1Su1xI-0005O0-S4
-	for linux-wireless@vger.kernel.org; Wed, 25 Jul 2012 09:48:48 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.5/8.14.4) with ESMTP id q6PDXghC005273
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 09:33:43 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.5/8.14.5/Submit) id q6PDXgnR005272
-	for linux-wireless@vger.kernel.org; Wed, 25 Jul 2012 09:33:42 -0400
-Date: Wed, 25 Jul 2012 09:33:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-next closed until -rc1
-Message-ID: <20120725133342.GB3272@tuxdriver.com> (sfid-20120725_154904_507182_5C9BB31B)
-References: <20120724.140209.436222867574556913.davem@davemloft.net>
+	Wed, 11 Jul 2012 15:41:04 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath6kl-devel@qualcomm.com>, <kvalo@qca.qualcomm.com>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH v2] ath6kl: support TX error rate notification
+Date: Wed, 11 Jul 2012 12:40:58 -0700
+Message-ID: <1342035658-4457-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120711_214107_584102_2253091D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120724.140209.436222867574556913.davem@davemloft.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 24, 2012 at 02:02:09PM -0700, David Miller wrote:
-> 
-> Linus has pulled all of the pending merge window work from net-next
-> into his tree.
-> 
-> Therefore, net-next is closed until after the end of the merge
-> window.
-> 
-> 'net' is open for bug fixes
+The ath6kl firmware can monitor a connection and report when a certain
+TX failure threshold is crossed. Support this configuration and event
+reporting on compatible firmwares.
 
-The wireless trees feed Dave's net trees, so we follow his rules.
-Besides, they are really Linus' rules in the first place.
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-So, please be aware that no non-fix wireless patches will be merged
-until after -rc1 is released in another ~1.5 weeks.  This means you!
-Fixes are welcome, of course.
+---
+v2:
+	endianness & formatting (Kalle)
 
-John
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   19 +++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    3 ++
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   47 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   35 ++++++++++++++++++++
+ 4 files changed, 104 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index ca54154..ddcfc95 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3326,6 +3326,24 @@ static int ath6kl_cfg80211_set_bitrate(struct wiphy *wiphy,
+ 					   mask);
+ }
+ 
++static int ath6kl_cfg80211_set_txe_config(struct wiphy *wiphy,
++					  struct net_device *dev,
++					  u32 rate, u32 pkts, u32 intvl)
++{
++	struct ath6kl *ar = ath6kl_priv(dev);
++	struct ath6kl_vif *vif = netdev_priv(dev);
++
++	if (vif->nw_type != INFRA_NETWORK ||
++	    !test_bit(ATH6KL_FW_CAPABILITY_TX_ERR_NOTIFY, ar->fw_capabilities))
++		return -EOPNOTSUPP;
++
++	if (vif->sme_state != SME_CONNECTED)
++		return -ENOTCONN;
++
++	return ath6kl_wmi_set_txe_notify(ar->wmi, vif->fw_vif_idx,
++					 rate, pkts, intvl);
++}
++
+ static const struct ieee80211_txrx_stypes
+ ath6kl_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+ 	[NL80211_IFTYPE_STATION] = {
+@@ -3392,6 +3410,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.sched_scan_start = ath6kl_cfg80211_sscan_start,
+ 	.sched_scan_stop = ath6kl_cfg80211_sscan_stop,
+ 	.set_bitrate_mask = ath6kl_cfg80211_set_bitrate,
++	.set_cqm_txe_config = ath6kl_cfg80211_set_txe_config,
+ };
+ 
+ void ath6kl_cfg80211_stop(struct ath6kl_vif *vif)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index c655438..fb81380 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -121,6 +121,9 @@ enum ath6kl_fw_capability {
+ 	/* FW sets mac_addr[4] ^= 0x80 for newly created interfaces */
+ 	ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR,
+ 
++	/* Firmware supports TX error rate notification */
++	ATH6KL_FW_CAPABILITY_TX_ERR_NOTIFY,
++
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 3629e86..abd6859 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1531,6 +1531,50 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 	return 0;
+ }
+ 
++static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
++					  struct ath6kl_vif *vif)
++{
++	struct wmi_txe_notify_event *ev;
++	u32 rate;
++	u32 pkts;
++
++	if (len < sizeof(*ev))
++		return -EINVAL;
++
++	if (vif->sme_state != SME_CONNECTED)
++		return -ENOTCONN;
++
++	ev = (struct wmi_txe_notify_event *) datap;
++	rate = le32_to_cpu(ev->rate);
++	pkts = le32_to_cpu(ev->pkts);
++
++	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d pkts %d\n",
++		   vif->bssid, rate, pkts);
++
++	cfg80211_cqm_txe_notify(vif->ndev, vif->bssid, pkts, rate, GFP_KERNEL);
++
++	return 0;
++}
++
++int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
++			      u32 rate, u32 pkts, u32 intvl)
++{
++	struct sk_buff *skb;
++	struct wmi_txe_notify_cmd *cmd;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_txe_notify_cmd *) skb->data;
++	cmd->rate = cpu_to_le32(rate);
++	cmd->pkts = cpu_to_le32(pkts);
++	cmd->intvl = cpu_to_le32(intvl);
++
++	return ath6kl_wmi_cmd_send(wmi, idx, skb, WMI_SET_TXE_NOTIFY_CMD,
++				   NO_SYNC_WMIFLAG);
++}
++
+ int ath6kl_wmi_set_rssi_filter_cmd(struct wmi *wmi, u8 if_idx, s8 rssi)
+ {
+ 	struct sk_buff *skb;
+@@ -3768,6 +3812,9 @@ static int ath6kl_wmi_proc_events_vif(struct wmi *wmi, u16 if_idx, u16 cmd_id,
+ 	case WMI_RX_ACTION_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_ACTION_EVENTID\n");
+ 		return ath6kl_wmi_rx_action_event_rx(wmi, datap, len, vif);
++	case WMI_TXE_NOTIFY_EVENTID:
++		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TXE_NOTIFY_EVENTID\n");
++		return ath6kl_wmi_txe_notify_event_rx(wmi, datap, len, vif);
+ 	default:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "unknown cmd id 0x%x\n", cmd_id);
+ 		return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index b5deaff..ae0abb4 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -632,6 +632,12 @@ enum wmi_cmd_id {
+ 	WMI_SET_REGDOMAIN_CMDID,
+ 
+ 	WMI_SET_RSSI_FILTER_CMDID,
++
++	WMI_SET_KEEP_ALIVE_EXT,
++
++	WMI_VOICE_DETECTION_ENABLE_CMDID,
++
++	WMI_SET_TXE_NOTIFY_CMD,
+ };
+ 
+ enum wmi_mgmt_frame_type {
+@@ -1464,6 +1470,20 @@ enum wmi_event_id {
+ 	WMI_P2P_CAPABILITIES_EVENTID,
+ 	WMI_RX_ACTION_EVENTID,
+ 	WMI_P2P_INFO_EVENTID,
++
++	/* WPS Events */
++	WMI_WPS_GET_STATUS_EVENTID,
++	WMI_WPS_PROFILE_EVENTID,
++
++	/* more P2P events */
++	WMI_NOA_INFO_EVENTID,
++	WMI_OPPPS_INFO_EVENTID,
++	WMI_PORT_STATUS_EVENTID,
++
++	/* 802.11w */
++	WMI_GET_RSN_CAP_EVENTID,
++
++	WMI_TXE_NOTIFY_EVENTID,
+ };
+ 
+ struct wmi_ready_event_2 {
+@@ -2096,6 +2116,19 @@ struct wmi_del_wow_pattern_cmd {
+ 	__le16 filter_id;
+ } __packed;
+ 
++/* WMI_SET_TXE_NOTIFY_CMD */
++struct wmi_txe_notify_cmd {
++	__le32 rate;
++	__le32 pkts;
++	__le32 intvl;
++} __packed;
++
++/* WMI_TXE_NOTIFY_EVENTID */
++struct wmi_txe_notify_event {
++	__le32 rate;
++	__le32 pkts;
++} __packed;
++
+ /* WMI_SET_AKMP_PARAMS_CMD */
+ 
+ struct wmi_pmkid {
+@@ -2610,6 +2643,8 @@ int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
+ int ath6kl_wmi_add_del_mcast_filter_cmd(struct wmi *wmi, u8 if_idx,
+ 					u8 *filter, bool add_filter);
+ int ath6kl_wmi_sta_bmiss_enhance_cmd(struct wmi *wmi, u8 if_idx, bool enable);
++int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
++			      u32 rate, u32 pkts, u32 intvl);
+ 
+ /* AP mode uAPSD */
+ int ath6kl_wmi_ap_set_apsd(struct wmi *wmi, u8 if_idx, u8 enable);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
