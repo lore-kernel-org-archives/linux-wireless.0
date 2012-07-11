@@ -1,114 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33111 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751542Ab2GZKlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 06:41:24 -0400
-Message-ID: <50111ECF.1020706@openwrt.org> (sfid-20120726_124127_827011_5279ED83)
-Date: Thu, 26 Jul 2012 12:41:19 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:63026 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754613Ab2GKEoW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 00:44:22 -0400
+Received: by wgbdr13 with SMTP id dr13so635200wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 21:44:21 -0700 (PDT)
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>, jirislaby@gmail.com,
-	johannes.berg@intel.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
- txpower changes
-References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <CAFtRNNwY-1JLEJa_qZpUfsyQVdUQLO3CWcEB9xef-g5jPzndNQ@mail.gmail.com> <50107C35.9050807@net.t-labs.tu-berlin.de> <CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com> <501083F6.8060002@net.t-labs.tu-berlin.de> <CAFtRNNxEHaON-uBjgLyeJdgN6UKfed6fAeCYPpo6xToi3dixOw@mail.gmail.com> <50111BB3.9090802@openwrt.org> <CAFtRNNyk051oLGuZOMcthf_mO6sArQzp+yCDvLQR2b=mACe9tQ@mail.gmail.com>
-In-Reply-To: <CAFtRNNyk051oLGuZOMcthf_mO6sArQzp+yCDvLQR2b=mACe9tQ@mail.gmail.com>
+In-Reply-To: <4FFCAA7F.502@hauke-m.de>
+References: <1341751888-12679-1-git-send-email-zajec5@gmail.com>
+	<4FFB62DA.9000706@hauke-m.de>
+	<CACna6ry-Hxt56DCn8amKUxnqF+X8juZK26j5bJaRk-ubh7didA@mail.gmail.com>
+	<CACna6rzx8Jt215zJ3WD49XypBShC8yxfQfOwnqgFc0xYsx_6JQ@mail.gmail.com>
+	<4FFCAA7F.502@hauke-m.de>
+Date: Wed, 11 Jul 2012 06:44:21 +0200
+Message-ID: <CACna6rwGOOBY9Na+2ycBQeNzFzBdhsDFi-=1KE6wpLPqxLoJtg@mail.gmail.com> (sfid-20120711_064429_860444_7FFAB8D1)
+Subject: Re: [RFC][PATCH] bcma: add trivial GBIT MAC COMMON driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-26 12:31 PM, Nick Kossifidis wrote:
-> 2012/7/26 Felix Fietkau <nbd@openwrt.org>:
->> On 2012-07-26 12:20 PM, Nick Kossifidis wrote:
->>> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
->>>> Hi Nick,
+2012/7/11 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 07/10/2012 11:56 PM, Rafał Miłecki wrote:
+>> 2012/7/10 Rafał Miłecki <zajec5@gmail.com>:
+>>> 2012/7/10 Hauke Mehrtens <hauke@hauke-m.de>:
+>>>> On 07/08/2012 02:51 PM, Rafał Miłecki wrote:
+>>>>> GMAC COMMON core is present on BCM4706 and is used for example to access
+>>>>> board PHYs (PHYs can not be accessed directly using GBIT MAC core).
 >>>>
->>>> Nick Kossifidis schrieb:
+>>>> I think this is the cleanest way of doing this. I thought about handling
+>>>> this in the Ethernet driver, but as we need locking, an extra driver
+>>>> would be needed, just for this stupid locking.
 >>>>
->>>>> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
->>>>
->>>>> There is nothing in your patch that suggests that's related to this.
->>>>> Anyway there's a simple way to fix this:
->>>>>
->>>>> Just move this:
->>>>>
->>>>> 3575         /* Min/max in 0.25dB units */
->>>>> 3576         ah->ah_txpower.txp_min_pwr = 2 * rates[7];
->>>>> 3577         ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
->>>>> 3578         ah->ah_txpower.txp_ofdm = rates[7];
->>>>>
->>>>> above the for loop and you are done.
->>>>>
->>>>> Note rates[i] don't hold tx power values, they hold indices to the
->>>>> channel powertable.
->>>>>
->>>>
->>>>
->>>> Are you agreeing that current ath5k txpower handling set from user space
->>>> is not working and we need to fix it ?
+>>>> You should not register an external device for this core in
+>>>> bcma_register_cores().
 >>>
->>> Is that a rhetorical question ? Just check out the TODOs on wireless.kernel.org.
+>>> I've just noticed my BCM4706 doesn't have GBIT MAC CMN... but AFAIK
+>>> BCM4706 GMAC (0x52d) can not operate without GMAC CMN (0x5dc)...
 >>>
->>> The current code does not preserve the tx power value across resets,
->>> thats the problem and the change I mentioned above fixes it (patch on
->>> the way, it's just that where I am right now I don't have bw to
->>> download wireless-testing) but other than that when we set tx power
->>> without reseting at least it does what it's supposed to do (and the
->>> result is the same with madwifi, using a spectrum analyzer or another
->>> client/monitor interface you see some power levels supported or only
->>> the max txpower supported, it's really up to the vendor, not all of
->>> them follow Atheros's reference designs). Your patch passes 1dbm units
->>> on a function that expects 0.5dbm units, you fix the problem with
->>> preserving tx power but you break the tx power setting.
->>>
->>> The change I mentioned above fixes the problem without introducing new
->>> variables just because "Felix will use the other one", I don't
->>> understand why you have a problem with that and why you think I don't
->>> want this to get fixed...
->>>
->>>> Beside that, what about a channel switch and wrongly re-use txp_cur_pwr
->>>> on a channel witch other max power levels ?
->>>
->>> That won't be a problem, when channel changes we 'll call
->>>
->>> reset -> phy_init -> set_txpower -> (calibration) -> set rate target power
->>>
->>> and then it's going to get limited before it's written on hw here:
->>>
->>> max_pwr = min(max_pwr, (u16) ah->ah_txpower.txp_max_pwr) / 2;
->>>
->>> txp_max_pwr is initialized on calibration (the max power for this
->>> channel), then it gets limited by CTL edge information on EEPROM, then
->>> by max_pwr and then max_pwr is limited by rate_info->target_power_X
->>> from EEPROM to create rates[i]. We write rates[i] on hw, not
->>> txp_cur_pwr.
->> I think it's a bad idea to store the user's choice of txpower in a
->> variable that internally gets reused to store the hw limit. Even when
->> the offset isn't added to it, it's still fragile.
+>>> Hauke: does it make any sense to you?
 >>
->> A problem with this is that different channels have different max power
->> values, so if you switch to a channel with a lower power, and then
->> switch back (without explicitly changing txpower inbetween), don't you
->> then end up with less power than you configured?
+>> OK, I found out that quickly.
 >>
->> This can be easily avoided by storing the user's txpower choice
->> separately from the actual hw limit...
+>> First of all, there is some bridge on my bus. bcma_erom_is_bridge
+>> returns true at some point of scanning.
 >>
->> - Felix
-> 
-> That's what ah->power_level already does, what's the point of
-> introducing another one. Do you think power_level is baldy
-> used/implemented ?
-Unless I'm missing something here, it does not seem to get used at reset
-time, only when mac80211 requests a txpower change (and for TPC values
-in descriptors).
-On every reset, ah->ah_txpower.txp_cur_pwr gets reused as configured tx
-power value (and subsequently clamped to the hw channel power limit).
-I guess this patch could be simplified to use ah->power_level in
-ath5k_hw_phy_init instead of ah->ah_txpower.txp_cur_pwr, but I do see an
-issue in the code as it is without this patch.
+>> Secondly I've printed cia for
+>> if (wrappers[0] + wrappers[1] == 0)
+>> case:
+>> [    2.360000] bcma: bus0: cia 0x43B36701 (0x367)
+>> [    2.368000] bcma: bus0: cia 0x43B36601 (0x366)
+>> [    2.372000] bcma: bus0: cia 0x43B01A01 (0x01A)
+>> [    2.376000] bcma: bus0: cia 0x43B01B01 (0x01B)
+>> [    2.380000] bcma: bus0: cia 0x43B01C01 (0x01C)
+>> [    2.388000] bcma: bus0: cia 0x43B5DC01 (0x5DC)
+>> [    2.392000] bcma: bus0: cia 0x43B5DD01 (0x5DD)
+>>
+> Nice, there is the gmac common core. Will you write a patch extending
+> the scan function to find this core?
 
-- Felix
+OFC! I'm going to try that today :)
 
+-- 
+Rafał
