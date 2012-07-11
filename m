@@ -1,137 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:39202 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755270Ab2GKOFy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 10:05:54 -0400
-Received: by yenl2 with SMTP id l2so1231219yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 07:05:54 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 11 Jul 2012 19:35:54 +0530
-Message-ID: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com> (sfid-20120711_160559_987049_50C1F16E)
-Subject: warning in iwlwifi on monitor mode in 3.5.0-rc6-wl
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:49711 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756554Ab2GKR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 13:59:26 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 10/12] ath9k_hw: clean up AR9003 EEPROM code
+Date: Wed, 11 Jul 2012 19:59:13 +0200
+Message-Id: <1342029555-31618-10-git-send-email-nbd@openwrt.org> (sfid-20120711_195946_608508_8006AC04)
+In-Reply-To: <1342029555-31618-9-git-send-email-nbd@openwrt.org>
+References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-2-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-3-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-4-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-5-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-6-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-7-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-8-git-send-email-nbd@openwrt.org>
+ <1342029555-31618-9-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+- add an inline function for getting the correct modal EEPROM struct
+- remove unnecessary indirection through ath9k_hw_ar9300_get_eeprom
+  access the relevant fields directly
 
-i got this warning in bringing up monitor mode with iwlwifi  in 3.5.0-rc6-wl
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  116 +++++++-----------------
+ drivers/net/wireless/ath/ath9k/eeprom.h        |    4 -
+ 2 files changed, 35 insertions(+), 85 deletions(-)
 
-[ 4788.914848] iwlwifi 0000:03:00.0: Try to add interface when device not ready
-[ 4788.914851] ------------[ cut here ]------------
-[ 4788.914870] WARNING: at
-/home/shafi/new-wireless-testing/wireless-testing/net/mac80211/iface.c:357
-ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]()
-[ 4788.914872] Hardware name: 64756D6
-[ 4788.914874] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
-ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
-bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
-snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
-snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
-coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
-snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
-i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
-yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
-usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
-microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
-nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
-[ 4788.914967] Pid: 7486, comm: ifconfig Tainted: G           O 3.5.0-rc6-wl #25
-[ 4788.914969] Call Trace:
-[ 4788.914976]  [<c0136322>] warn_slowpath_common+0x72/0xa0
-[ 4788.914991]  [<f98164b2>] ?
-ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
-[ 4788.915005]  [<f98164b2>] ?
-ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
-[ 4788.915008]  [<c0136372>] warn_slowpath_null+0x22/0x30
-[ 4788.915022]  [<f98164b2>] ieee80211_add_virtual_monitor+0x192/0x2b0
-[mac80211]
-[ 4788.915027]  [<c06bb3c6>] ? printk+0x4d/0x4f
-[ 4788.915041]  [<f98185ea>] ieee80211_set_monitor_enabled+0x1a/0x50 [mac80211]
-[ 4788.915050]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
-[ 4788.915058]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
-[cfg80211]
-[ 4788.915062]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
-[ 4788.915066]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
-[ 4788.915070]  [<c06c2982>] notifier_call_chain+0x42/0xf0
-[ 4788.915075]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
-[ 4788.915080]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
-[ 4788.915085]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
-[ 4788.915088]  [<c05b209c>] __dev_open+0x5c/0xf0
-[ 4788.915091]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
-[ 4788.915095]  [<c05b0e29>] __dev_change_flags+0x109/0x170
-[ 4788.915098]  [<c05b2003>] dev_change_flags+0x23/0x60
-[ 4788.915102]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
-[ 4788.915106]  [<c061f725>] inet_ioctl+0x95/0xb0
-[ 4788.915109]  [<c059d2b0>] sock_ioctl+0x70/0x270
-[ 4788.915113]  [<c059d240>] ? sock_fasync+0xc0/0xc0
-[ 4788.915117]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
-[ 4788.915121]  [<c016197b>] ? up_read+0x1b/0x30
-[ 4788.915124]  [<c06c2714>] ? do_page_fault+0x244/0x470
-[ 4788.915128]  [<c0255c75>] ? fget_light+0x355/0x410
-[ 4788.915131]  [<c0163314>] ? __put_cred+0x34/0x50
-[ 4788.915135]  [<c0265c37>] sys_ioctl+0x77/0x80
-[ 4788.915139]  [<c06c65e3>] sysenter_do_call+0x12/0x38
-[ 4788.915141] ---[ end trace 2b26c2a43fea3613 ]---
-[ 4788.915146] ------------[ cut here ]------------
-[ 4788.915160] WARNING: at
-/home/shafi/new-wireless-testing/wireless-testing/net/mac80211/cfg.c:2993
-ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]()
-[ 4788.915161] Hardware name: 64756D6
-[ 4788.915163] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
-ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
-bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
-snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
-snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
-coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
-snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
-i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
-yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
-usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
-microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
-nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
-[ 4788.915231] Pid: 7486, comm: ifconfig Tainted: G        W  O 3.5.0-rc6-wl #25
-[ 4788.915233] Call Trace:
-[ 4788.915237]  [<c0136322>] warn_slowpath_common+0x72/0xa0
-[ 4788.915251]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
-[mac80211]
-[ 4788.915265]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
-[mac80211]
-[ 4788.915268]  [<c0136372>] warn_slowpath_null+0x22/0x30
-[ 4788.915282]  [<f981861c>] ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]
-[ 4788.915289]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
-[ 4788.915296]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
-[cfg80211]
-[ 4788.915299]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
-[ 4788.915303]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
-[ 4788.915307]  [<c06c2982>] notifier_call_chain+0x42/0xf0
-[ 4788.915311]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
-[ 4788.915314]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
-[ 4788.915317]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
-[ 4788.915321]  [<c05b209c>] __dev_open+0x5c/0xf0
-[ 4788.915324]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
-[ 4788.915327]  [<c05b0e29>] __dev_change_flags+0x109/0x170
-[ 4788.915331]  [<c05b2003>] dev_change_flags+0x23/0x60
-[ 4788.915334]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
-[ 4788.915338]  [<c061f725>] inet_ioctl+0x95/0xb0
-[ 4788.915341]  [<c059d2b0>] sock_ioctl+0x70/0x270
-[ 4788.915344]  [<c059d240>] ? sock_fasync+0xc0/0xc0
-[ 4788.915347]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
-[ 4788.915350]  [<c016197b>] ? up_read+0x1b/0x30
-[ 4788.915353]  [<c06c2714>] ? do_page_fault+0x244/0x470
-[ 4788.915357]  [<c0255c75>] ? fget_light+0x355/0x410
-[ 4788.915360]  [<c0163314>] ? __put_cred+0x34/0x50
-[ 4788.915363]  [<c0265c37>] sys_ioctl+0x77/0x80
-[ 4788.915367]  [<c06c65e3>] sysenter_do_call+0x12/0x38
-[ 4788.915368] ---[ end trace 2b26c2a43fea3614 ]---
-[ 4788.915371]
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 86e4be4..4d90265 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2971,14 +2971,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 		return (pBase->txrxMask >> 4) & 0xf;
+ 	case EEP_RX_MASK:
+ 		return pBase->txrxMask & 0xf;
+-	case EEP_DRIVE_STRENGTH:
+-#define AR9300_EEP_BASE_DRIV_STRENGTH	0x1
+-		return pBase->miscConfiguration & AR9300_EEP_BASE_DRIV_STRENGTH;
+-	case EEP_INTERNAL_REGULATOR:
+-		/* Bit 4 is internal regulator flag */
+-		return (pBase->featureEnable & 0x10) >> 4;
+-	case EEP_SWREG:
+-		return le32_to_cpu(pBase->swreg);
+ 	case EEP_PAPRD:
+ 		return !!(pBase->featureEnable & BIT(5));
+ 	case EEP_CHAIN_MASK_REDUCE:
+@@ -2989,8 +2981,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 		return eep->modalHeader5G.antennaGain;
+ 	case EEP_ANTENNA_GAIN_2G:
+ 		return eep->modalHeader2G.antennaGain;
+-	case EEP_QUICK_DROP:
+-		return pBase->miscConfiguration & BIT(1);
+ 	default:
+ 		return 0;
+ 	}
+@@ -3503,19 +3493,20 @@ static int ath9k_hw_ar9300_get_eeprom_rev(struct ath_hw *ah)
+ 	return 0;
+ }
+ 
+-static s32 ar9003_hw_xpa_bias_level_get(struct ath_hw *ah, bool is2ghz)
++static struct ar9300_modal_eep_header *ar9003_modal_header(struct ath_hw *ah,
++							   bool is2ghz)
+ {
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+ 
+ 	if (is2ghz)
+-		return eep->modalHeader2G.xpaBiasLvl;
++		return &eep->modalHeader2G;
+ 	else
+-		return eep->modalHeader5G.xpaBiasLvl;
++		return &eep->modalHeader5G;
+ }
+ 
+ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ {
+-	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
++	int bias = ar9003_modal_header(ah, is2ghz)->xpaBiasLvl;
+ 
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
+@@ -3531,57 +3522,26 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ 	}
+ }
+ 
+-static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is_2ghz)
++static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le16 val;
+-
+-	if (is_2ghz)
+-		val = eep->modalHeader2G.switchcomspdt;
+-	else
+-		val = eep->modalHeader5G.switchcomspdt;
+-	return le16_to_cpu(val);
++	return le16_to_cpu(ar9003_modal_header(ah, is2ghz)->switchcomspdt);
+ }
+ 
+ 
+ static u32 ar9003_hw_ant_ctrl_common_get(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le32 val;
+-
+-	if (is2ghz)
+-		val = eep->modalHeader2G.antCtrlCommon;
+-	else
+-		val = eep->modalHeader5G.antCtrlCommon;
+-	return le32_to_cpu(val);
++	return le32_to_cpu(ar9003_modal_header(ah, is2ghz)->antCtrlCommon);
+ }
+ 
+ static u32 ar9003_hw_ant_ctrl_common_2_get(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le32 val;
+-
+-	if (is2ghz)
+-		val = eep->modalHeader2G.antCtrlCommon2;
+-	else
+-		val = eep->modalHeader5G.antCtrlCommon2;
+-	return le32_to_cpu(val);
++	return le32_to_cpu(ar9003_modal_header(ah, is2ghz)->antCtrlCommon2);
+ }
+ 
+-static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah,
+-					int chain,
++static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah, int chain,
+ 					bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le16 val = 0;
+-
+-	if (chain >= 0 && chain < AR9300_MAX_CHAINS) {
+-		if (is2ghz)
+-			val = eep->modalHeader2G.antCtrlChain[chain];
+-		else
+-			val = eep->modalHeader5G.antCtrlChain[chain];
+-	}
+-
++	__le16 val = ar9003_modal_header(ah, is2ghz)->antCtrlChain[chain];
+ 	return le16_to_cpu(val);
+ }
+ 
+@@ -3691,11 +3651,12 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 
+ static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
+ {
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
+ 	int drive_strength;
+ 	unsigned long reg;
+ 
+-	drive_strength = ath9k_hw_ar9300_get_eeprom(ah, EEP_DRIVE_STRENGTH);
+-
++	drive_strength = pBase->miscConfiguration & BIT(0);
+ 	if (!drive_strength)
+ 		return;
+ 
+@@ -3825,11 +3786,11 @@ static bool is_pmu_set(struct ath_hw *ah, u32 pmu_reg, int pmu_set)
+ 
+ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ {
+-	int internal_regulator =
+-		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
+ 	u32 reg_val;
+ 
+-	if (internal_regulator) {
++	if (pBase->featureEnable & BIT(4)) {
+ 		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
+ 			int reg_pmu_set;
+ 
+@@ -3873,11 +3834,11 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
+ 				return;
+ 		} else if (AR_SREV_9462(ah)) {
+-			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
++			reg_val = le32_to_cpu(pBase->swreg);
+ 			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
+ 		} else {
+ 			/* Internal regulator is ON. Write swreg register. */
+-			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
++			reg_val = le32_to_cpu(pBase->swreg);
+ 			REG_WRITE(ah, AR_RTC_REG_CONTROL1,
+ 				  REG_READ(ah, AR_RTC_REG_CONTROL1) &
+ 				  (~AR_RTC_REG_CONTROL1_SWREG_PROGRAM));
+@@ -3931,10 +3892,11 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
+ static void ar9003_hw_quick_drop_apply(struct ath_hw *ah, u16 freq)
+ {
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	int quick_drop = ath9k_hw_ar9300_get_eeprom(ah, EEP_QUICK_DROP);
++	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
++	int quick_drop;
+ 	s32 t[3], f[3] = {5180, 5500, 5785};
+ 
+-	if (!quick_drop)
++	if (!(pBase->miscConfiguration & BIT(1)))
+ 		return;
+ 
+ 	if (freq < 4000)
+@@ -3948,13 +3910,11 @@ static void ar9003_hw_quick_drop_apply(struct ath_hw *ah, u16 freq)
+ 	REG_RMW_FIELD(ah, AR_PHY_AGC, AR_PHY_AGC_QUICK_DROP, quick_drop);
+ }
+ 
+-static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
++static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+ 	u32 value;
+ 
+-	value = (freq < 4000) ? eep->modalHeader2G.txEndToXpaOff :
+-				eep->modalHeader5G.txEndToXpaOff;
++	value = ar9003_modal_header(ah, is2ghz)->txEndToXpaOff;
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
+ 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAB_OFF, value);
+@@ -3962,7 +3922,7 @@ static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
+ 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAA_OFF, value);
+ }
+ 
+-static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
++static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is2ghz)
+ {
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+ 	u8 xpa_ctl;
+@@ -3973,23 +3933,22 @@ static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
+ 	if (!AR_SREV_9300(ah) && !AR_SREV_9340(ah) && !AR_SREV_9580(ah))
+ 		return;
+ 
+-	if (is_2ghz) {
+-		xpa_ctl = eep->modalHeader2G.txFrameToXpaOn;
++	xpa_ctl = ar9003_modal_header(ah, is2ghz)->txFrameToXpaOn;
++	if (is2ghz)
+ 		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
+ 			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAB_ON, xpa_ctl);
+-	} else {
+-		xpa_ctl = eep->modalHeader5G.txFrameToXpaOn;
++	else
+ 		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
+ 			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAA_ON, xpa_ctl);
+-	}
+ }
+ 
+ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 					     struct ath9k_channel *chan)
+ {
+-	ar9003_hw_xpa_timing_control_apply(ah, IS_CHAN_2GHZ(chan));
+-	ar9003_hw_xpa_bias_level_apply(ah, IS_CHAN_2GHZ(chan));
+-	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
++	bool is2ghz = IS_CHAN_2GHZ(chan);
++	ar9003_hw_xpa_timing_control_apply(ah, is2ghz);
++	ar9003_hw_xpa_bias_level_apply(ah, is2ghz);
++	ar9003_hw_ant_ctrl_apply(ah, is2ghz);
+ 	ar9003_hw_drive_strength_apply(ah);
+ 	ar9003_hw_atten_apply(ah, chan);
+ 	ar9003_hw_quick_drop_apply(ah, chan->channel);
+@@ -3997,7 +3956,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 		ar9003_hw_internal_regulator_apply(ah);
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+ 		ar9003_hw_apply_tuning_caps(ah);
+-	ar9003_hw_txend_to_xpa_off_apply(ah, chan->channel);
++	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
+ }
+ 
+ static void ath9k_hw_ar9300_set_addac(struct ath_hw *ah,
+@@ -5133,14 +5092,9 @@ s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah)
+ 	return (eep->baseEepHeader.txrxgain) & 0xf; /* bits 3:0 */
+ }
+ 
+-u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz)
++u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-
+-	if (is_2ghz)
+-		return eep->modalHeader2G.spurChans;
+-	else
+-		return eep->modalHeader5G.spurChans;
++	return ar9003_modal_header(ah, is2ghz)->spurChans;
+ }
+ 
+ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 33acb92..484b313 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -241,16 +241,12 @@ enum eeprom_param {
+ 	EEP_TEMPSENSE_SLOPE,
+ 	EEP_TEMPSENSE_SLOPE_PAL_ON,
+ 	EEP_PWR_TABLE_OFFSET,
+-	EEP_DRIVE_STRENGTH,
+-	EEP_INTERNAL_REGULATOR,
+-	EEP_SWREG,
+ 	EEP_PAPRD,
+ 	EEP_MODAL_VER,
+ 	EEP_ANT_DIV_CTL1,
+ 	EEP_CHAIN_MASK_REDUCE,
+ 	EEP_ANTENNA_GAIN_2G,
+ 	EEP_ANTENNA_GAIN_5G,
+-	EEP_QUICK_DROP
+ };
+ 
+ enum ar5416_rates {
 -- 
-thanks,
-shafi
+1.7.3.2
+
