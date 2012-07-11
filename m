@@ -1,63 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:40587 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756118Ab2GFT7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:59:49 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 19/33] NFC: Fix LLCP getname socket op
-Date: Fri,  6 Jul 2012 22:09:39 +0200
-Message-Id: <1341605393-32056-20-git-send-email-sameo@linux.intel.com> (sfid-20120706_220534_976101_08F7E938)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:52788 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932069Ab2GKAKR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jul 2012 20:10:17 -0400
+MIME-Version: 1.0
+In-Reply-To: <1341937124.4475.27.camel@jlt3.sipsolutions.net>
+References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
+ <20120708.235808.1602900783296556684.davem@davemloft.net> <1341937124.4475.27.camel@jlt3.sipsolutions.net>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Date: Tue, 10 Jul 2012 20:09:44 -0400
+Message-ID: <CAP=VYLqNyAF1gSsKTd3YojeJXK_-pEzXAKyVQbQfwhtwOyMmwg@mail.gmail.com> (sfid-20120711_021030_642446_E761D423)
+Subject: Re: [PATCH] etherdevice: introduce eth_broadcast_addr
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the right target index and use a better socket declaration routine.
+On Tue, Jul 10, 2012 at 12:18 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> A lot of code has either the memset or an inefficient copy
+> from a static array that contains the all-ones broadcast
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/sock.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Shouldn't we see all that "lot of code" here in this same
+commit, now using this new shortcut?  If we apply this, we
+have a new function, but with no users.  If you have done
+the audit, and found the inefficient cases, why isn't it here?
 
-diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
-index 05ca5a6..b08e99d 100644
---- a/net/nfc/llcp/sock.c
-+++ b/net/nfc/llcp/sock.c
-@@ -283,22 +283,25 @@ error:
- 	return ret;
- }
- 
--static int llcp_sock_getname(struct socket *sock, struct sockaddr *addr,
-+static int llcp_sock_getname(struct socket *sock, struct sockaddr *uaddr,
- 			     int *len, int peer)
- {
--	struct sockaddr_nfc_llcp *llcp_addr = (struct sockaddr_nfc_llcp *)addr;
- 	struct sock *sk = sock->sk;
- 	struct nfc_llcp_sock *llcp_sock = nfc_llcp_sock(sk);
-+	DECLARE_SOCKADDR(struct sockaddr_nfc_llcp *, llcp_addr, uaddr);
- 
--	pr_debug("%p\n", sk);
-+	pr_debug("%p %d %d %d\n", sk, llcp_sock->target_idx,
-+		 llcp_sock->dsap, llcp_sock->ssap);
- 
- 	if (llcp_sock == NULL || llcp_sock->dev == NULL)
- 		return -EBADFD;
- 
--	addr->sa_family = AF_NFC;
-+	uaddr->sa_family = AF_NFC;
-+
- 	*len = sizeof(struct sockaddr_nfc_llcp);
- 
- 	llcp_addr->dev_idx = llcp_sock->dev->idx;
-+	llcp_addr->target_idx = llcp_sock->target_idx;
- 	llcp_addr->dsap = llcp_sock->dsap;
- 	llcp_addr->ssap = llcp_sock->ssap;
- 	llcp_addr->service_name_len = llcp_sock->service_name_len;
--- 
-1.7.10
+I would think it better to just fix those people who have a
+pointless static array of all-ones to use the memset.  If it was a
+multi line thing to achieve the eth_broadcast_addr() then it
+might make sense to exist.  But as a one line alias, it does
+seem somewhat pointless to me.
 
+Paul.
+--
+
+> address. Introduce eth_broadcast_addr() to fill an address
+> with all ones, making the code clearer and allowing us to
+> get rid of some constant arrays.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  include/linux/etherdevice.h |   11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
+> index 3d406e0..98a27cc 100644
+> --- a/include/linux/etherdevice.h
+> +++ b/include/linux/etherdevice.h
+> @@ -138,6 +138,17 @@ static inline void random_ether_addr(u8 *addr)
+>  }
+>
+>  /**
+> + * eth_broadcast_addr - Assign broadcast address
+> + * @addr: Pointer to a six-byte array containing the Ethernet address
+> + *
+> + * Assign the broadcast address to the given address array.
+> + */
+> +static inline void eth_broadcast_addr(u8 *addr)
+> +{
+> +       memset(addr, 0xff, ETH_ALEN);
+> +}
+> +
+> +/**
+>   * eth_hw_addr_random - Generate software assigned random Ethernet and
+>   * set device flag
+>   * @dev: pointer to net_device structure
+> --
+> 1.7.10.4
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
