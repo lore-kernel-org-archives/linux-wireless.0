@@ -1,68 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:46681 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401Ab2GZQ5b convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43065 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755362Ab2GKOSw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 12:57:31 -0400
-Received: by gglu4 with SMTP id u4so2180081ggl.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 09:57:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <501170F2.3050300@net.t-labs.tu-berlin.de>
-References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <1343319453.4477.2.camel@jlt3.sipsolutions.net> <1343319579.4477.3.camel@jlt3.sipsolutions.net>
- <501170F2.3050300@net.t-labs.tu-berlin.de>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 26 Jul 2012 19:57:14 +0300
-Message-ID: <CA+XVXfegYYwc=esyZmJHu1tEqQKcq+h+MnSyp9dXiiwqroG3tw@mail.gmail.com> (sfid-20120726_185734_527921_19DFEEFE)
-Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org, ilw@linux.intel.com,
-	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
-	buytenh@wantstofly.org, dsd@gentoo.org, coelho@ti.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=windows-1252
+	Wed, 11 Jul 2012 10:18:52 -0400
+Message-ID: <1342016326.4464.4.camel@jlt3.sipsolutions.net> (sfid-20120711_161857_195080_A478B4C3)
+Subject: Re: warning in iwlwifi on monitor mode in 3.5.0-rc6-wl
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Wed, 11 Jul 2012 16:18:46 +0200
+In-Reply-To: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com> (sfid-20120711_160556_704769_2EBEB24C)
+References: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com>
+	 (sfid-20120711_160556_704769_2EBEB24C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 7:31 PM, Thomas Huehn
-<thomas@net.t-labs.tu-berlin.de> wrote:
-> Hi Johannes,
->
-> Johannes Berg schrieb:
->
->>>
->>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c: In
->>> function ‘wl1271_skb_queue_head’:
->>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:622:48:
->>> warning: ‘hlid’ may be used uninitialized in this function
->>> [-Wuninitialized]
->>
->> Those changes make no sense anyway -- you should be able to pass the
->> station pointer through if it previously used info->control.sta, instead
->> of doing an (expensive) lookup.
->
->
-> This is the call path
->
-> in main.c ... INIT_WORK(&wl->tx_work, wl1271_tx_work);
->  jumps to tx.c...wl1271_tx_work(struct work_struct *work)
->   calls wl1271_tx_work(struct work_struct *work)
->    calls wlcore_tx_work_locked(struct wl1271 *wl)
->     calls wl1271_skb_queue_head()
->      calls wl12xx_tx_get_hlid()
->       calls wl12xx_tx_get_hlid_ap() .... where sta is needed.
->
-> But I could not find any point in the call path where I could grab the
-> sta pointer and pass it through. I will move the rcu into
-> wl12xx_tx_get_hlid_ap(), but I do not see any cheaper way here as using rcu.
+This isn't really related to iwlwifi...
 
-I agree with Johannes. The find_sta() in the Tx path is unacceptable.
+Looks like this might be due to Michal's changes, maybe the monitor
+callback is coming too early?
 
-A relatively simple change here would be to put the sta pointer in the
-portion of the struct reserved for rate control during op_tx(). wlcore
-doesn't use software rate control anyway.
-This would avoid from changing the code too much.
+johannes
+
+
+On Wed, 2012-07-11 at 19:35 +0530, Mohammed Shafi wrote:
+> Hi all,
+> 
+> i got this warning in bringing up monitor mode with iwlwifi  in 3.5.0-rc6-wl
+> 
+> [ 4788.914848] iwlwifi 0000:03:00.0: Try to add interface when device not ready
+> [ 4788.914851] ------------[ cut here ]------------
+> [ 4788.914870] WARNING: at
+> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/iface.c:357
+> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]()
+> [ 4788.914872] Hardware name: 64756D6
+> [ 4788.914874] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
+> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
+> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
+> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
+> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
+> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
+> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
+> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
+> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
+> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
+> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
+> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
+> [ 4788.914967] Pid: 7486, comm: ifconfig Tainted: G           O 3.5.0-rc6-wl #25
+> [ 4788.914969] Call Trace:
+> [ 4788.914976]  [<c0136322>] warn_slowpath_common+0x72/0xa0
+> [ 4788.914991]  [<f98164b2>] ?
+> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
+> [ 4788.915005]  [<f98164b2>] ?
+> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
+> [ 4788.915008]  [<c0136372>] warn_slowpath_null+0x22/0x30
+> [ 4788.915022]  [<f98164b2>] ieee80211_add_virtual_monitor+0x192/0x2b0
+> [mac80211]
+> [ 4788.915027]  [<c06bb3c6>] ? printk+0x4d/0x4f
+> [ 4788.915041]  [<f98185ea>] ieee80211_set_monitor_enabled+0x1a/0x50 [mac80211]
+> [ 4788.915050]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
+> [ 4788.915058]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
+> [cfg80211]
+> [ 4788.915062]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
+> [ 4788.915066]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
+> [ 4788.915070]  [<c06c2982>] notifier_call_chain+0x42/0xf0
+> [ 4788.915075]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
+> [ 4788.915080]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
+> [ 4788.915085]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
+> [ 4788.915088]  [<c05b209c>] __dev_open+0x5c/0xf0
+> [ 4788.915091]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
+> [ 4788.915095]  [<c05b0e29>] __dev_change_flags+0x109/0x170
+> [ 4788.915098]  [<c05b2003>] dev_change_flags+0x23/0x60
+> [ 4788.915102]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
+> [ 4788.915106]  [<c061f725>] inet_ioctl+0x95/0xb0
+> [ 4788.915109]  [<c059d2b0>] sock_ioctl+0x70/0x270
+> [ 4788.915113]  [<c059d240>] ? sock_fasync+0xc0/0xc0
+> [ 4788.915117]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
+> [ 4788.915121]  [<c016197b>] ? up_read+0x1b/0x30
+> [ 4788.915124]  [<c06c2714>] ? do_page_fault+0x244/0x470
+> [ 4788.915128]  [<c0255c75>] ? fget_light+0x355/0x410
+> [ 4788.915131]  [<c0163314>] ? __put_cred+0x34/0x50
+> [ 4788.915135]  [<c0265c37>] sys_ioctl+0x77/0x80
+> [ 4788.915139]  [<c06c65e3>] sysenter_do_call+0x12/0x38
+> [ 4788.915141] ---[ end trace 2b26c2a43fea3613 ]---
+> [ 4788.915146] ------------[ cut here ]------------
+> [ 4788.915160] WARNING: at
+> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/cfg.c:2993
+> ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]()
+> [ 4788.915161] Hardware name: 64756D6
+> [ 4788.915163] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
+> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
+> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
+> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
+> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
+> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
+> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
+> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
+> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
+> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
+> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
+> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
+> [ 4788.915231] Pid: 7486, comm: ifconfig Tainted: G        W  O 3.5.0-rc6-wl #25
+> [ 4788.915233] Call Trace:
+> [ 4788.915237]  [<c0136322>] warn_slowpath_common+0x72/0xa0
+> [ 4788.915251]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
+> [mac80211]
+> [ 4788.915265]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
+> [mac80211]
+> [ 4788.915268]  [<c0136372>] warn_slowpath_null+0x22/0x30
+> [ 4788.915282]  [<f981861c>] ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]
+> [ 4788.915289]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
+> [ 4788.915296]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
+> [cfg80211]
+> [ 4788.915299]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
+> [ 4788.915303]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
+> [ 4788.915307]  [<c06c2982>] notifier_call_chain+0x42/0xf0
+> [ 4788.915311]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
+> [ 4788.915314]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
+> [ 4788.915317]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
+> [ 4788.915321]  [<c05b209c>] __dev_open+0x5c/0xf0
+> [ 4788.915324]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
+> [ 4788.915327]  [<c05b0e29>] __dev_change_flags+0x109/0x170
+> [ 4788.915331]  [<c05b2003>] dev_change_flags+0x23/0x60
+> [ 4788.915334]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
+> [ 4788.915338]  [<c061f725>] inet_ioctl+0x95/0xb0
+> [ 4788.915341]  [<c059d2b0>] sock_ioctl+0x70/0x270
+> [ 4788.915344]  [<c059d240>] ? sock_fasync+0xc0/0xc0
+> [ 4788.915347]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
+> [ 4788.915350]  [<c016197b>] ? up_read+0x1b/0x30
+> [ 4788.915353]  [<c06c2714>] ? do_page_fault+0x244/0x470
+> [ 4788.915357]  [<c0255c75>] ? fget_light+0x355/0x410
+> [ 4788.915360]  [<c0163314>] ? __put_cred+0x34/0x50
+> [ 4788.915363]  [<c0265c37>] sys_ioctl+0x77/0x80
+> [ 4788.915367]  [<c06c65e3>] sysenter_do_call+0x12/0x38
+> [ 4788.915368] ---[ end trace 2b26c2a43fea3614 ]---
+> [ 4788.915371]
+> 
+> 
+
+
