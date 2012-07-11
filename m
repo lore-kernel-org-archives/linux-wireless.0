@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm1.bullet.mail.ird.yahoo.com ([77.238.189.58]:43194 "HELO
-	nm1.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752158Ab2G0KcO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 06:32:14 -0400
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343376844.6746.YahooMailNeo@web28904.mail.ir2.yahoo.com>
-Message-ID: <1343385132.37480.YahooMailNeo@web28903.mail.ir2.yahoo.com> (sfid-20120727_123217_833802_8213001F)
-Date: Fri, 27 Jul 2012 11:32:12 +0100 (BST)
-From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1343376844.6746.YahooMailNeo@web28904.mail.ir2.yahoo.com>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42546 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755390Ab2GKOgd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 10:36:33 -0400
+Message-ID: <4FFD8F6F.7030100@net.t-labs.tu-berlin.de> (sfid-20120711_163636_818668_CC068754)
+Date: Wed, 11 Jul 2012 16:36:31 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+To: DINO MYCLE <dino.mycle@sasken.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Per packet TPC is it implimented ?
+References: <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD6D4@EXGMBX01.sasken.com> <4FFD63C0.6080002@net.t-labs.tu-berlin.de> <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD7A0@EXGMBX01.sasken.com> <4FFD7646.9060404@net.t-labs.tu-berlin.de> <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD7AC@EXGMBX01.sasken.com>
+In-Reply-To: <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD7AC@EXGMBX01.sasken.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hum the issue is now different as I don't have anymore the wlan0 interface:
-
-iwconfig 
-br0       no wireless extensions.
-
-lo        no wireless extensions.
-
-eth0      no wireless extensions.
 
 
-xabix@HTPC:/var/log$ sudo modprobe rtl8192ce
-WARNING: Error inserting rtl8192c_common (/lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-common.ko): Invalid argument
-FATAL: Error inserting rtl8192ce (/lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192ce.ko): Invalid argument
+DINO MYCLE schrieb:
 
-xabix@HTPC:/var/log$ ll /lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-common.ko
--rw-r--r-- 1 root root 71208 Jul 26 12:28 /lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-common.ko
-
-modinfo rtl8192ce
-filename:       /lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192ce.ko
-firmware:       rtlwifi/rtl8192cfwU_B.bin
-firmware:       rtlwifi/rtl8192cfwU.bin
-firmware:       rtlwifi/rtl8192cfw.bin
-description:    Realtek 8192C/8188C 802.11n PCI wireless
-license:        GPL
-author:         Larry Finger    <Larry.Finger@lwfinger.net>
-author:         Realtek WlanFAE <wlanfae@realtek.com>
-author:         lizhaoming      <chaoming_li@realsil.com.cn>
-srcversion:     AE758D5E662358264A4DB35
-alias:          pci:v000010ECd00008176sv*sd*bc*sc*i*
-alias:          pci:v000010ECd00008177sv*sd*bc*sc*i*
-alias:          pci:v000010ECd00008178sv*sd*bc*sc*i*
-alias:          pci:v000010ECd00008191sv*sd*bc*sc*i*
-depends:        rtlwifi,rtl8192c-common,mac80211
-intree:         Y
-vermagic:       3.4.6-custom SMP mod_unload modversions 686 
-parm:           swenc:Set to 1 for software crypto (default 0)
-parm:           ips:Set to 0 to not use link power save (default 1)
-
-parm:           swlps:Set to 1 to use SW control power save (default 0)
-
-parm:           fwlps:Set to 1 to use FW control power save (default 1)
-
-parm:           debug:Set debug level (0-5) (default 0) (int)
+> Hello Thomas,
+>   Sorry, got it....so how is the performance any report or observation you can share ?
+> 
 
 
-Merci
-XabiX
+Our initial results (including mac80211 & TPC controller design, with
+validations) are published at the ICCCN conference end of July within
+our paper: "Practical Power and Rate Control for WiFi"
+
+in short:
+- TPC per packet on Atheros 802.11 g/a/n chips works well
+- without giving up on throughput there are often cases to reduce
+transmit power by significant amount of dB
+- to show increased spatial reuse in a WLAN network is current work
+
+The pdf should be online soon at:
+http://www.inet.tu-berlin.de/menue/research/publications/by_author/thomas_publ/
+
+Currently we are running performance measurements (network sum
+throughput) in outdoor and indoor environments with our joint power-rate
+controller "Minstrel-Blues". Collecting, parsing, plotting
+traces is just ongoing work.
+
+Greetings Thomas
