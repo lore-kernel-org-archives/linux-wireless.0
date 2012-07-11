@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33721 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43092 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857Ab2GIKNI (ORCPT
+	with ESMTP id S1753968Ab2GKOaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 06:13:08 -0400
-Message-ID: <1341828786.4455.31.camel@jlt3.sipsolutions.net> (sfid-20120709_121322_076967_91DDCAFF)
-Subject: Re: [PATCH] mac80211: Add transmit power control support (TPC)
+	Wed, 11 Jul 2012 10:30:35 -0400
+Message-ID: <1342017031.4464.5.camel@jlt3.sipsolutions.net> (sfid-20120711_163038_950723_18A08275)
+Subject: Re: warning in iwlwifi on monitor mode in 3.5.0-rc6-wl
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 09 Jul 2012 12:13:06 +0200
-In-Reply-To: <1341826631.4455.24.camel@jlt3.sipsolutions.net> (sfid-20120709_113745_588565_D68A59A8)
-References: <1341766968-29570-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120708_190314_897831_DE794B3E) <1341826631.4455.24.camel@jlt3.sipsolutions.net>
-	 (sfid-20120709_113745_588565_D68A59A8)
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Wed, 11 Jul 2012 16:30:31 +0200
+In-Reply-To: <CAD2nsn3j4TeopXJtsGACpie6oxo1U+8vYtdv8h65t9jdgqRk1Q@mail.gmail.com> (sfid-20120711_162902_749311_ED39783B)
+References: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com>
+	 <1342016326.4464.4.camel@jlt3.sipsolutions.net>
+	 <CAD2nsn2JrWd4qo_ELZbTmkU_EcL6YFL3x3rmssh_SrF88UXS_g@mail.gmail.com>
+	 <CAD2nsn3j4TeopXJtsGACpie6oxo1U+8vYtdv8h65t9jdgqRk1Q@mail.gmail.com>
+	 (sfid-20120711_162902_749311_ED39783B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-09 at 11:37 +0200, Johannes Berg wrote:
-
-> > (6) restructure tx-path of all effected drivers
-> > Restructure tx-path of all effected drivers to respect new TPC support in
-> > mac80211. TPC support is added to mac80211 by restructuring of struct
-> > ieee80211_tx_info. Therfore the tx-path of all effected drivers is modified
-> > to receive struct sta from the stack and respect the new ieee80211_tx_info
-> > struct. List of modified driver:
+On Wed, 2012-07-11 at 19:59 +0530, Mohammed Shafi wrote:
+> On Wed, Jul 11, 2012 at 7:54 PM, Mohammed Shafi
+> <shafi.wireless@gmail.com> wrote:
+> > On Wed, Jul 11, 2012 at 7:48 PM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> >> This isn't really related to iwlwifi...
+> >>
+> >> Looks like this might be due to Michal's changes, maybe the monitor
+> >> callback is coming too early?
+> >
+> > ath9k got bailed out of drv_add_interface as this flag
+> > IEEE80211_HW_WANT_MONITOR_VIF
+> > was not supported
 > 
-> again, separate these patches.
+> Johannes, i had put few manual prints in mac80211 for something else, if you
+> want i can a give fresh call trace with proper function offsets.
 
-Oh and I don't mean split it per driver. Just split up the patch into
-the logical API evolutions, like first removing the sta pointer and
-introducing the tx_control struct. (Where, btw, you lost an important
-comment about it being NULL along the way)
+Shouldn't be needed, no worries.
 
 johannes
 
