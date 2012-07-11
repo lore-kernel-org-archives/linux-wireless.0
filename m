@@ -1,55 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:6751 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756490Ab2GFWmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 18:42:03 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org,
-	Mathias Jeppsson <mathias.jeppsson@sonymobile.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 1/2] NFC: Fix empty HCI message list check
-Date: Sat,  7 Jul 2012 00:53:18 +0200
-Message-Id: <1341615199-11246-2-git-send-email-sameo@linux.intel.com> (sfid-20120707_004208_137960_3E0CDDC2)
-In-Reply-To: <1341615199-11246-1-git-send-email-sameo@linux.intel.com>
-References: <1341615199-11246-1-git-send-email-sameo@linux.intel.com>
+Received: from mta-blr1.sasken.com ([203.200.200.72]:24368 "EHLO
+	mta-blr1.sasken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab2GKJV3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 05:21:29 -0400
+From: DINO MYCLE <dino.mycle@sasken.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 11 Jul 2012 14:51:23 +0530
+Subject: Per packet TPC is it implimented ?
+Message-ID: <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD6D4@EXGMBX01.sasken.com> (sfid-20120711_112133_433597_9E0BC536)
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
 
-list_first_entry() will never return NULL. Instead use
-list_for_each_entry_safe() to iterate through the list.
+Hello all
+  I want to know whether per packet TPC implemented in the mac80211 ? and it can be made to work in 2.4GHz ?
 
-Signed-off-by: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/hci/core.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+--
+Thanks and Regards,
+Dino
 
-diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-index e1a640d..da6e039 100644
---- a/net/nfc/hci/core.c
-+++ b/net/nfc/hci/core.c
-@@ -682,13 +682,12 @@ EXPORT_SYMBOL(nfc_hci_register_device);
- 
- void nfc_hci_unregister_device(struct nfc_hci_dev *hdev)
- {
--	struct hci_msg *msg;
-+	struct hci_msg *msg, *n;
- 
- 	skb_queue_purge(&hdev->rx_hcp_frags);
- 	skb_queue_purge(&hdev->msg_rx_queue);
- 
--	while ((msg = list_first_entry(&hdev->msg_tx_queue, struct hci_msg,
--				       msg_l)) != NULL) {
-+	list_for_each_entry_safe(msg, n, &hdev->msg_tx_queue, msg_l) {
- 		list_del(&msg->msg_l);
- 		skb_queue_purge(&msg->msg_frags);
- 		kfree(msg);
--- 
-1.7.10
-
+SASKEN BUSINESS DISCLAIMER: This message may contain confidential, proprietary or legally privileged information. In case you are not the original intended Recipient of the message, you must not, directly or indirectly, use, disclose, distribute, print, or copy any part of this message and you are requested to delete it and inform the sender. Any views expressed in this message are those of the individual sender unless otherwise stated. Nothing contained in this message shall be construed as an offer or acceptance of any offer by Sasken Communication Technologies Limited ("Sasken") unless sent with that express intent and with due authority of Sasken. Sasken has taken enough precautions to prevent the spread of viruses. However the company accepts no liability for any damage caused by any virus transmitted by this email.
+Read Disclaimer at http://www.sasken.com/extras/mail_disclaimer.html
