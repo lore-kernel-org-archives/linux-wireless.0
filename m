@@ -1,64 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55593 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751782Ab2GTWIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2012 18:08:41 -0400
-Date: Fri, 20 Jul 2012 18:08:34 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: fix incorrect use of IEEE80211_NUM_BANDS
-Message-ID: <20120720180834.608b1138@mj> (sfid-20120721_000846_712570_D2AC314A)
-In-Reply-To: <5008F829.8020902@qca.qualcomm.com>
-References: <20120712091311.9751.60082.stgit@localhost6.localdomain6>
-	<20120712134855.53d23fef@mj>
-	<5007EABC.5050905@qca.qualcomm.com>
-	<20120719171114.4d904006@mj>
-	<5008F829.8020902@qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from he.sipsolutions.net ([78.46.109.217]:47354 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932679Ab2GLPPg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 11:15:36 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: fix set_monitor_enabled
+Date: Thu, 12 Jul 2012 17:15:33 +0200
+Message-Id: <1342106133-26954-1-git-send-email-johannes@sipsolutions.net> (sfid-20120712_171539_357934_0DF1A33F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 20 Jul 2012 09:18:17 +0300
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On 07/20/2012 12:11 AM, Pavel Roskin wrote:
-> > On Thu, 19 Jul 2012 14:08:44 +0300
-> > Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> >> On 07/12/2012 08:48 PM, Pavel Roskin wrote:
-> >>> On Thu, 12 Jul 2012 12:13:12 +0300
-> >>> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> >>>
-> >>>> +	/* only check 2.4 and 5 GHz bands, skip the rest */
-> >>>> +	for (band = 0; band <= IEEE80211_BAND_5GHZ; band++) {
-> >>>
-> >>> There is something inelegant here.  The code is mixing an integer
-> >>> and an enum.  I'd rather go with one or those:
-> >>>
-> >>> two enums:
-> >>> for (band = IEEE80211_BAND_2GHZ; band <= IEEE80211_BAND_5GHZ;
-> >>> band++) {
-> >>
-> >> I somewhat see your point. But IMHO zero is commonly used when
-> >> iterating over an enum to denote the first value and I don't see
-> >> how IEEE80211_BAND_2GHZ helps here.
-> > 
-> > It's the lowest band we support.  What if the 900MHz band is added
-> > one day?
-> 
-> Then that should be added to the end of the enum, not beginning. I
-> think it would be bad if we change enum values on the fly.
+When bringing monitor mode up with a driver using the
+mac80211 virtual monitor interface this resulted in a
+warning because cfg80211_update_iface_num() is called
+from PRE_UP, which causes it to call mac80211 and the
+low-level driver before the device is started.
 
-Actually, it should be OK.  It's not like it would affect the
-userspace.
+For the case that another interface is added and the
+monitor interface should be removed, this is correct.
+However, in the case where a monitor interface is
+added, it's not correct as the above.
 
-I believe that properly written code should not rely on the numeric
-values of enums.  Well, if 0 means something very special (like no
-error), it should not be changed.  The (ab)uses of enums for bitmasks
-should be exempted too.  But IEEE80211_BAND_2GHZ is just one of the
-bands.
+To fix this, we need to split up the cases and track
+whether or not "only monitor" is active so that the
+code can correctly call into the driver when things
+change.
 
+Reported-by: Mohammed Shafi <shafi.wireless@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c |   62 ++++++++++++++++++++++++++++++++++++++-------------
+ net/wireless/core.h |   10 ++++++++-
+ net/wireless/util.c |    8 +++++--
+ 3 files changed, 61 insertions(+), 19 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 0557bb1..b63c450 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -766,30 +766,56 @@ static void cfg80211_init_mon_chan(struct cfg80211_registered_device *rdev)
+ }
+ 
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+-			       enum nl80211_iftype iftype, int num)
++			       enum nl80211_iftype iftype,
++			       enum cfg80211_iface_action action)
+ {
+-	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
+-	bool has_monitors_only_new;
++	bool monitors_only;
++	int num;
+ 
+ 	ASSERT_RTNL();
+ 
++	switch (action) {
++	case CFG80211_IFACE_DOWN:
++		num = -1;
++		break;
++	case CFG80211_IFACE_PRE_UP:
++		num = 1;
++		break;
++	case CFG80211_IFACE_UP:
++		num = 0;
++		break;
++	default:
++		WARN_ON(1);
++		return;
++	}
++
+ 	rdev->num_running_ifaces += num;
+ 	if (iftype == NL80211_IFTYPE_MONITOR)
+ 		rdev->num_running_monitor_ifaces += num;
+ 
+-	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
+-	if (has_monitors_only_new != has_monitors_only_old) {
++	monitors_only = cfg80211_has_monitors_only(rdev);
++
++	if (monitors_only && rdev->monitor_only_enabled)
++		return;
++
++	if (!monitors_only && !rdev->monitor_only_enabled)
++		return;
++
++	if (monitors_only) {
++		/* Do it in CFG80211_IFACE_UP instead */
++		if (action == CFG80211_IFACE_PRE_UP)
++			return;
+ 		if (rdev->ops->set_monitor_enabled)
+-			rdev->ops->set_monitor_enabled(&rdev->wiphy,
+-						       has_monitors_only_new);
+-
+-		if (!has_monitors_only_new) {
+-			rdev->monitor_channel = NULL;
+-			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
+-		} else {
+-			cfg80211_init_mon_chan(rdev);
+-		}
++			rdev->ops->set_monitor_enabled(&rdev->wiphy, true);
++		cfg80211_init_mon_chan(rdev);
++	} else {
++		rdev->monitor_channel = NULL;
++		rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		if (rdev->ops->set_monitor_enabled)
++			rdev->ops->set_monitor_enabled(&rdev->wiphy, false);
+ 	}
++
++	rdev->monitor_only_enabled = monitors_only;
+ }
+ 
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+@@ -895,7 +921,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		wdev->beacon_interval = 0;
+ 		break;
+ 	case NETDEV_DOWN:
+-		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
++		cfg80211_update_iface_num(rdev, wdev->iftype,
++					  CFG80211_IFACE_DOWN);
+ 		dev_hold(dev);
+ 		queue_work(cfg80211_wq, &wdev->cleanup_work);
+ 		break;
+@@ -912,6 +939,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			mutex_unlock(&rdev->devlist_mtx);
+ 			dev_put(dev);
+ 		}
++		cfg80211_update_iface_num(rdev, wdev->iftype,
++					  CFG80211_IFACE_UP);
+ 		cfg80211_lock_rdev(rdev);
+ 		mutex_lock(&rdev->devlist_mtx);
+ 		wdev_lock(wdev);
+@@ -1006,7 +1035,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		if (ret)
+ 			return notifier_from_errno(ret);
+-		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
++		cfg80211_update_iface_num(rdev, wdev->iftype,
++					  CFG80211_IFACE_PRE_UP);
+ 		break;
+ 	}
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index bac97da..b2b1db3 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -60,6 +60,7 @@ struct cfg80211_registered_device {
+ 	/* protected by RTNL only */
+ 	int num_running_ifaces;
+ 	int num_running_monitor_ifaces;
++	bool monitor_only_enabled;
+ 
+ 	struct ieee80211_channel *monitor_channel;
+ 	enum nl80211_channel_type monitor_channel_type;
+@@ -480,8 +481,15 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int);
+ 
++enum cfg80211_iface_action {
++	CFG80211_IFACE_DOWN,
++	CFG80211_IFACE_PRE_UP,
++	CFG80211_IFACE_UP,
++};
++
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+-			       enum nl80211_iftype iftype, int num);
++			       enum nl80211_iftype iftype,
++			       enum cfg80211_iface_action action);
+ 
+ #define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10
+ 
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 26f8cd3..37e9a3f 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -893,8 +893,12 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	}
+ 
+ 	if (!err && ntype != otype && netif_running(dev)) {
+-		cfg80211_update_iface_num(rdev, ntype, 1);
+-		cfg80211_update_iface_num(rdev, otype, -1);
++		cfg80211_update_iface_num(rdev, ntype,
++					  CFG80211_IFACE_DOWN);
++		cfg80211_update_iface_num(rdev, ntype,
++					  CFG80211_IFACE_PRE_UP);
++		cfg80211_update_iface_num(rdev, otype,
++					  CFG80211_IFACE_UP);
+ 	}
+ 
+ 	return err;
 -- 
-Regards,
-Pavel Roskin
+1.7.10.4
+
