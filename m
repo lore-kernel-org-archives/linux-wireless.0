@@ -1,167 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:44735 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160Ab2GVQvS (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:48709 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755748Ab2GLTzS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jul 2012 12:51:18 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hr14so2132100wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jul 2012 09:51:18 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFT][PATCH 2/3] ssb: move flash info to ChipCommon driver
-Date: Sun, 22 Jul 2012 18:51:28 +0200
-Message-Id: <1342975889-32687-3-git-send-email-zajec5@gmail.com> (sfid-20120722_185124_354951_00637673)
-In-Reply-To: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
-References: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
+	Thu, 12 Jul 2012 15:55:18 -0400
+Received: by eekb15 with SMTP id b15so758728eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 12:55:16 -0700 (PDT)
+Message-ID: <4FFF2B15.5070502@codigosur.org> (sfid-20120712_215616_116351_766348CA)
+Date: Thu, 12 Jul 2012 16:52:53 -0300
+From: =?ISO-8859-1?Q?Nicol=E1s_Ech=E1niz?= <nicoechaniz@codigosur.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: Guido Iribarren <guidoiribarren@buenosaireslibre.org>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] ath9k_htc 1mbps in IBSS mode
+References: <4FD56DCA.1080200@codigosur.org> <CAJ-VmomzoXV8YBdiS_2nkzVagBupX3Be-Dmboxotwy9s3h3r7w@mail.gmail.com> <CAHD-aqKWdUBGyadCnVoSbkf4BysoSuvBBHrupXx-JbowqqNZPQ@mail.gmail.com> <CAHD-aqJrKfL8OL97wcnaaTYFZrx2cBXvdY5vKeK67u_-VjGOKg@mail.gmail.com> <20474.20627.928963.262924@gargle.gargle.HOWL>
+In-Reply-To: <20474.20627.928963.262924@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07/09/2012 12:31 AM, Sujith Manoharan wrote:
+> Guido Iribarren wrote:
+>> I know nothing about the internal workings of the driver, but i get
+>> the feeling that nodes are somehow not acknowledging supported speeds
+>> of newly joined nodes, but instead only check other hosts speeds when
+>> they join the IBSS cloud for the first time, and so it's limited to
+>> nodes already present at the moment of the join.
+> 
+> It looks like commit 6d810f10 changed the behavior.
+> 
+> The station addition notification is now passed to the driver before the
+> supported rates are updated for the peer (which happens via ieee80211_rx_bss_info()).
+> Drivers which offload rate control to the firmware but depend on mac80211 for
+> station management would be affected, I think.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- arch/mips/bcm47xx/nvram.c                 |    8 ++++----
- arch/mips/bcm47xx/wgt634u.c               |   14 +++++++-------
- drivers/ssb/driver_mipscore.c             |   12 ++++++------
- include/linux/ssb/ssb_driver_chipcommon.h |   11 +++++++++++
- include/linux/ssb/ssb_driver_mips.h       |    4 ----
- 5 files changed, 28 insertions(+), 21 deletions(-)
 
-diff --git a/arch/mips/bcm47xx/nvram.c b/arch/mips/bcm47xx/nvram.c
-index d43ceff..53822db 100644
---- a/arch/mips/bcm47xx/nvram.c
-+++ b/arch/mips/bcm47xx/nvram.c
-@@ -27,7 +27,7 @@ static char nvram_buf[NVRAM_SPACE];
- static void early_nvram_init(void)
- {
- #ifdef CONFIG_BCM47XX_SSB
--	struct ssb_mipscore *mcore_ssb;
-+	struct ssb_chipcommon *ssb_cc;
- #endif
- #ifdef CONFIG_BCM47XX_BCMA
- 	struct bcma_drv_cc *bcma_cc;
-@@ -42,9 +42,9 @@ static void early_nvram_init(void)
- 	switch (bcm47xx_bus_type) {
- #ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
--		mcore_ssb = &bcm47xx_bus.ssb.mipscore;
--		base = mcore_ssb->flash_window;
--		lim = mcore_ssb->flash_window_size;
-+		ssb_cc = &bcm47xx_bus.ssb.chipco;
-+		base = ssb_cc->pflash.window;
-+		lim = ssb_cc->pflash.window_size;
- 		break;
- #endif
- #ifdef CONFIG_BCM47XX_BCMA
-diff --git a/arch/mips/bcm47xx/wgt634u.c b/arch/mips/bcm47xx/wgt634u.c
-index e9f9ec8..616da92 100644
---- a/arch/mips/bcm47xx/wgt634u.c
-+++ b/arch/mips/bcm47xx/wgt634u.c
-@@ -142,24 +142,24 @@ static int __init wgt634u_init(void)
- 	if (et0mac[0] == 0x00 &&
- 	    ((et0mac[1] == 0x09 && et0mac[2] == 0x5b) ||
- 	     (et0mac[1] == 0x0f && et0mac[2] == 0xb5))) {
--		struct ssb_mipscore *mcore = &bcm47xx_bus.ssb.mipscore;
-+		struct ssb_chipcommon *cc = &bcm47xx_bus.ssb.chipco;
- 
- 		printk(KERN_INFO "WGT634U machine detected.\n");
- 
- 		if (!request_irq(gpio_to_irq(WGT634U_GPIO_RESET),
- 				 gpio_interrupt, IRQF_SHARED,
--				 "WGT634U GPIO", &bcm47xx_bus.ssb.chipco)) {
-+				 "WGT634U GPIO", cc)) {
- 			gpio_direction_input(WGT634U_GPIO_RESET);
- 			gpio_intmask(WGT634U_GPIO_RESET, 1);
--			ssb_chipco_irq_mask(&bcm47xx_bus.ssb.chipco,
-+			ssb_chipco_irq_mask(cc,
- 					    SSB_CHIPCO_IRQ_GPIO,
- 					    SSB_CHIPCO_IRQ_GPIO);
- 		}
- 
--		wgt634u_flash_data.width = mcore->flash_buswidth;
--		wgt634u_flash_resource.start = mcore->flash_window;
--		wgt634u_flash_resource.end = mcore->flash_window
--					   + mcore->flash_window_size
-+		wgt634u_flash_data.width = cc->pflash.buswidth;
-+		wgt634u_flash_resource.start = cc->pflash.window;
-+		wgt634u_flash_resource.end = cc->pflash.window
-+					   + cc->pflash.window_size
- 					   - 1;
- 		return platform_add_devices(wgt634u_devices,
- 					    ARRAY_SIZE(wgt634u_devices));
-diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
-index f8813f8..873bc0a 100644
---- a/drivers/ssb/driver_mipscore.c
-+++ b/drivers/ssb/driver_mipscore.c
-@@ -190,16 +190,16 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- {
- 	struct ssb_bus *bus = mcore->dev->bus;
- 
--	mcore->flash_buswidth = 2;
-+	bus->chipco.pflash.buswidth = 2;
- 	if (bus->chipco.dev) {
--		mcore->flash_window = SSB_FLASH2;
--		mcore->flash_window_size = SSB_FLASH2_SZ;
-+		bus->chipco.pflash.window = SSB_FLASH2;
-+		bus->chipco.pflash.window_size = SSB_FLASH2_SZ;
- 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
- 		               & SSB_CHIPCO_CFG_DS16) == 0)
--			mcore->flash_buswidth = 1;
-+			bus->chipco.pflash.buswidth = 1;
- 	} else {
--		mcore->flash_window = SSB_FLASH1;
--		mcore->flash_window_size = SSB_FLASH1_SZ;
-+		bus->chipco.pflash.window = SSB_FLASH1;
-+		bus->chipco.pflash.window_size = SSB_FLASH1_SZ;
- 	}
- }
- 
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index c2b02a5..ccb51d1 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -584,6 +584,14 @@ struct ssb_chipcommon_pmu {
- 	u32 crystalfreq;	/* The active crystal frequency (in kHz) */
- };
- 
-+#ifdef CONFIG_SSB_DRIVER_MIPS
-+struct ssb_pflash {
-+	u8 buswidth;
-+	u32 window;
-+	u32 window_size;
-+};
-+#endif /* CONFIG_SSB_DRIVER_MIPS */
-+
- struct ssb_chipcommon {
- 	struct ssb_device *dev;
- 	u32 capabilities;
-@@ -591,6 +599,9 @@ struct ssb_chipcommon {
- 	/* Fast Powerup Delay constant */
- 	u16 fast_pwrup_delay;
- 	struct ssb_chipcommon_pmu pmu;
-+#ifdef CONFIG_SSB_DRIVER_MIPS
-+	struct ssb_pflash pflash;
-+#endif /* CONFIG_SSB_DRIVER_MIPS */
- };
- 
- static inline bool ssb_chipco_available(struct ssb_chipcommon *cc)
-diff --git a/include/linux/ssb/ssb_driver_mips.h b/include/linux/ssb/ssb_driver_mips.h
-index 5f44e97..7e707ff 100644
---- a/include/linux/ssb/ssb_driver_mips.h
-+++ b/include/linux/ssb/ssb_driver_mips.h
-@@ -19,10 +19,6 @@ struct ssb_mipscore {
- 
- 	int nr_serial_ports;
- 	struct ssb_serial_port serial_ports[4];
--
--	u8 flash_buswidth;
--	u32 flash_window;
--	u32 flash_window_size;
- };
- 
- extern void ssb_mipscore_init(struct ssb_mipscore *mcore);
--- 
-1.7.7
+Sujith, does this mean that the problem is outside the scope of the
+ath9k_htc driver itself or could it be fixed?
 
+we are doing some heavy use of hardware based on this driver for many
+projects; any further debugging work you might need, we are more than
+willing to help.
+
+
+Cheers,
+NicoEch�niz
