@@ -1,61 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49715 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:7925 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757241Ab2GKR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 13:59:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 12/12] ath9k_hw: fix SREV checks for applying tuning caps from EEPROM
-Date: Wed, 11 Jul 2012 19:59:15 +0200
-Message-Id: <1342029555-31618-12-git-send-email-nbd@openwrt.org> (sfid-20120711_202113_654457_39CA3E31)
-In-Reply-To: <1342029555-31618-11-git-send-email-nbd@openwrt.org>
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
- <1342029555-31618-2-git-send-email-nbd@openwrt.org>
- <1342029555-31618-3-git-send-email-nbd@openwrt.org>
- <1342029555-31618-4-git-send-email-nbd@openwrt.org>
- <1342029555-31618-5-git-send-email-nbd@openwrt.org>
- <1342029555-31618-6-git-send-email-nbd@openwrt.org>
- <1342029555-31618-7-git-send-email-nbd@openwrt.org>
- <1342029555-31618-8-git-send-email-nbd@openwrt.org>
- <1342029555-31618-9-git-send-email-nbd@openwrt.org>
- <1342029555-31618-10-git-send-email-nbd@openwrt.org>
- <1342029555-31618-11-git-send-email-nbd@openwrt.org>
+	id S932690Ab2GLS16 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 14:27:58 -0400
+Date: Thu, 12 Jul 2012 20:27:54 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>
+Subject: [PATCH 1/2 v2] NFC: Set target nfcid1 for all HCI reader A targets
+Message-ID: <20120712182754.GE23772@sortiz-mobl> (sfid-20120712_202801_763497_C72D0202)
+References: <1342113454-23110-1-git-send-email-sameo@linux.intel.com>
+ <1342113454-23110-2-git-send-email-sameo@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1342113454-23110-2-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9485, AR9330 and AR9340 are the chips that this is *NOT* supposed to be
-applied on.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+From: Eric Lapuyade <eric.lapuyade@intel.com>
+
+Without the discovered target nfcid1 and its length set properly, type 2
+tags detection fails with the pn544 as it checks for them from
+pn544_hci_complete_target_discovered().
+
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Reported-by: Mathias Jeppsson <mathias.jeppsson@sonymobile.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+v2: Add proper changelog and fix a checkpatch warning
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c5f3c43..b5c8450 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3890,6 +3890,9 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	u8 tuning_caps_param = eep->baseEepHeader.params_for_tuning_caps[0];
+---
+ net/nfc/hci/core.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index e1a640d..c48f534 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -170,6 +170,7 @@ static int nfc_hci_target_discovered(struct nfc_hci_dev *hdev, u8 gate)
+ 	struct nfc_target *targets;
+ 	struct sk_buff *atqa_skb = NULL;
+ 	struct sk_buff *sak_skb = NULL;
++	struct sk_buff *uid_skb = NULL;
+ 	int r;
  
-+	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
-+		return;
+ 	pr_debug("from gate %d\n", gate);
+@@ -205,6 +206,19 @@ static int nfc_hci_target_discovered(struct nfc_hci_dev *hdev, u8 gate)
+ 		targets->sens_res = be16_to_cpu(*(u16 *)atqa_skb->data);
+ 		targets->sel_res = sak_skb->data[0];
+ 
++		r = nfc_hci_get_param(hdev, NFC_HCI_RF_READER_A_GATE,
++				      NFC_HCI_RF_READER_A_UID, &uid_skb);
++		if (r < 0)
++			goto exit;
 +
- 	if (eep->baseEepHeader.featureEnable & 0x40) {
- 		tuning_caps_param &= 0x7f;
- 		REG_RMW_FIELD(ah, AR_CH0_XTAL, AR_CH0_XTAL_CAPINDAC,
-@@ -3987,8 +3990,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	ar9003_hw_quick_drop_apply(ah, chan->channel);
- 	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9550(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
--	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
--		ar9003_hw_apply_tuning_caps(ah);
-+	ar9003_hw_apply_tuning_caps(ah);
- 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
- }
++		if (uid_skb->len == 0 || uid_skb->len > NFC_NFCID1_MAXSIZE) {
++			r = -EPROTO;
++			goto exit;
++		}
++
++		memcpy(targets->nfcid1, uid_skb->data, uid_skb->len);
++		targets->nfcid1_len = uid_skb->len;
++
+ 		if (hdev->ops->complete_target_discovered) {
+ 			r = hdev->ops->complete_target_discovered(hdev, gate,
+ 								  targets);
+@@ -240,6 +254,7 @@ exit:
+ 	kfree(targets);
+ 	kfree_skb(atqa_skb);
+ 	kfree_skb(sak_skb);
++	kfree_skb(uid_skb);
  
+ 	return r;
+ }
 -- 
-1.7.3.2
+1.7.10
 
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
