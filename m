@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:61871 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933087Ab2GDBFh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 21:05:37 -0400
-Received: by wibhm11 with SMTP id hm11so4925485wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 18:05:36 -0700 (PDT)
-Message-ID: <4FF396DD.7060408@gmail.com> (sfid-20120704_030543_869105_B33F3E37)
-Date: Wed, 04 Jul 2012 03:05:33 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-CC: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for ES (Spain)
- on 5GHz and 2.4GHz
-References: <1341362473-18747-1-git-send-email-xose.vazquez@gmail.com> <CAB=NE6U=bk6RSXHouuHvJd0=GErYJp82jkgeNWGnPDooZ_SONQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6U=bk6RSXHouuHvJd0=GErYJp82jkgeNWGnPDooZ_SONQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:57300 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161288Ab2GLRRp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 13:17:45 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 0/2] NFC fixes for 3.5
+Date: Thu, 12 Jul 2012 19:17:32 +0200
+Message-Id: <1342113454-23110-1-git-send-email-sameo@linux.intel.com> (sfid-20120712_191749_627915_87AF5B1F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/04/2012 02:49 AM, Luis R. Rodriguez wrote:
-> On Tue, Jul 3, 2012 at 5:41 PM, Xose Vazquez Perez
-> <xose.vazquez@gmail.com> wrote:
+Hi John,
 
->>   country ES: DFS-ETSI
->> -       (2402 - 2482 @ 40), (N/A, 20)
->> -       (5170 - 5250 @ 40), (N/A, 20)
->> -       (5250 - 5330 @ 40), (N/A, 20), DFS
->> -       (5490 - 5710 @ 40), (N/A, 27), DFS
->> +       (2400 - 2483.5 @ 40), (N/A, 100 mW)
->> +       (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
->> +       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
->> +       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+The 3rd and hopefully last pull request for NFC fixes.
+You can pull them from:
 
-> You are changing from dBm to mW directly... please do the unit change
-> in one patch and *then* the actual change. This would make it easier
-> to review....
+git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git tags/nfc-fixes-3.5-3
 
-I did copy & paste from DE to ES. These are basic CEPT rules.
+Dave Jones (1):
+  NFC: NCI module license 'unspecified' taints kernel
 
-10 log(100) = 20
-10 log(500) ~ 27
+Eric Lapuyade (1):
+  NFC: Set target nfcid1 for all HCI reader A targets
 
-Anyway tomorrow, I will send a new patch.
+ net/nfc/hci/core.c |   15 +++++++++++++++
+ net/nfc/nci/core.c |    3 +++
+ 2 files changed, 18 insertions(+)
+
+-- 
+1.7.10
+
