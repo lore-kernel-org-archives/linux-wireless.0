@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9787 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753478Ab2GIMmX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 08:42:23 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	"Woody Hung" <Woody.Hung@mediatek.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/2] rt2x00pci: small 3290 changes cleanup
-Date: Mon,  9 Jul 2012 14:41:47 +0200
-Message-Id: <1341837708-22689-1-git-send-email-sgruszka@redhat.com> (sfid-20120709_144226_330856_3D1F7535)
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:36454 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932810Ab2GLSpL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 14:45:11 -0400
+Received: by ghrr11 with SMTP id r11so2761707ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 11:45:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1342106081.4531.29.camel@jlt3.sipsolutions.net>
+References: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com> <1342106081.4531.29.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 12 Jul 2012 11:44:50 -0700
+Message-ID: <CAB=NE6Umwmz2iiy+kvpGsc8H1G8NBa5n21v9Wiu7V3-v3q5bmg@mail.gmail.com> (sfid-20120712_204519_946561_1CACD8DC)
+Subject: Re: [PATCH v4 0/5] cfg80211: onus and cell base station hint
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kvalo@qca.qualcomm.com, arend@broadcom.com, henry@logout.com,
+	senthilb@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix indention and remove unnecessary brackets and compares.
+On Thu, Jul 12, 2012 at 8:14 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2012-07-10 at 10:23 -0700, Luis R. Rodriguez wrote:
+>> From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+>>
+>> These address the latest feedback on the v3 series. I've added
+>> two more patches to address removing of a superflous call
+>> given the introduction of wiphy_regulatory_register().
+>>
+>> Luis R. Rodriguez (5):
+>>   cfg80211: add CONFIG_CFG80211_CERTIFICATION_ONUS
+>>   cfg80211: add cellular base station regulatory hint support
+>>   cfg80211: rename reg_device_remove() to wiphy_regulatory_deregister()
+>>   cfg80211: make regulatory_update() static
+>>   cfg80211: remove regulatory_update()
+>
+> Could you rebase on mac80211-next? These don't seem to apply, due to
+> some overlapping changes in nl80211.h.
+>
+> Also, generally I would prefer to have the cleanups first. You could
+> have changed regulatory_update -> wiphy_regulatory_register first and
+> then not have the intermediate step with two functions called from the
+> core? But if you don't want to change it now that's fine too.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
+I'm lazy, and since you're OK with it, I'll just send a respin.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index dd43612..bf0e71e 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -986,7 +986,7 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
- 	int i, count;
- 
- 	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
--	if ((rt2x00_get_field32(reg, WLAN_EN) == 1))
-+	if (rt2x00_get_field32(reg, WLAN_EN))
- 		return 0;
- 
- 	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
-@@ -1004,9 +1004,9 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
- 		 */
- 		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
- 			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
--			if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
--				(rt2x00_get_field32(reg, XTAL_RDY) == 1))
--					break;
-+			if (rt2x00_get_field32(reg, PLL_LD) &&
-+			    rt2x00_get_field32(reg, XTAL_RDY))
-+				break;
- 			udelay(REGISTER_BUSY_DELAY);
- 		}
- 
-@@ -1022,9 +1022,8 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
- 			rt2800_register_write(rt2x00dev, 0x58, 0x618);
- 			udelay(REGISTER_BUSY_DELAY);
- 			count++;
--		} else {
-+		} else
- 			count = 0;
--		}
- 
- 		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
- 		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
--- 
-1.7.1
+John -- I won't send a respin of the device driver updates given that
+they should apply fine after these get sucked in.
 
+ Luis
