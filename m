@@ -1,72 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42738 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752943Ab2GFT72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:59:28 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 13/33] NFC: Error management documentation
-Date: Fri,  6 Jul 2012 22:09:33 +0200
-Message-Id: <1341605393-32056-14-git-send-email-sameo@linux.intel.com> (sfid-20120706_220535_723415_D70A55F6)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45624 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755310Ab2GLTde (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 15:33:34 -0400
+Date: Thu, 12 Jul 2012 15:16:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] MAINTAINERS: realtek drivers
+Message-ID: <20120712191645.GC25494@tuxdriver.com> (sfid-20120712_213406_106415_3DC36037)
+References: <1341855212-7151-1-git-send-email-xose.vazquez@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1341855212-7151-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Lapuyade <eric.lapuyade@intel.com>
+This patch doesn't apply...
 
-Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- Documentation/nfc/nfc-hci.txt |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+On Mon, Jul 09, 2012 at 07:33:32PM +0200, Xose Vazquez Perez wrote:
+> s/RTL8192CE/RTLWIFI , add wiki pages and delete
+> "F:     drivers/net/wireless/rtlwifi/rtl8192ce/", it's redundant.
+> 
+> v2 s/RTL8192CE/RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE AND RTL8192DE
+> 
+> 
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> ---
+>  MAINTAINERS |    9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 03df1d1..27de053 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -5753,7 +5753,7 @@ F:	net/rose/
+>  RTL8180 WIRELESS DRIVER
+>  M:	"John W. Linville" <linville@tuxdriver.com>
+>  L:	linux-wireless@vger.kernel.org
+> -W:	http://linuxwireless.org/
+> +W:	http://linuxwireless.org/en/users/Drivers/rtl8187
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>  S:	Maintained
+>  F:	drivers/net/wireless/rtl818x/rtl8180/
+> @@ -5763,20 +5763,19 @@ M:	Herton Ronaldo Krzesinski <herton@canonical.com>
+>  M:	Hin-Tak Leung <htl10@users.sourceforge.net>
+>  M:	Larry Finger <Larry.Finger@lwfinger.net>
+>  L:	linux-wireless@vger.kernel.org
+> -W:	http://linuxwireless.org/
+> +W:	http://linuxwireless.org/en/users/Drivers/rtl8187
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>  S:	Maintained
+>  F:	drivers/net/wireless/rtl818x/rtl8187/
+>  
+> -RTL8192CE WIRELESS DRIVER
+> +RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE AND RTL8192DE WIRELESS DRIVERS
+>  M:	Larry Finger <Larry.Finger@lwfinger.net>
+>  M:	Chaoming Li <chaoming_li@realsil.com.cn>
+>  L:	linux-wireless@vger.kernel.org
+> -W:	http://linuxwireless.org/
+> +W:	http://linuxwireless.org/en/users/Drivers/rtl819x
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>  S:	Maintained
+>  F:	drivers/net/wireless/rtlwifi/
+> -F:	drivers/net/wireless/rtlwifi/rtl8192ce/
+>  
+>  S3 SAVAGE FRAMEBUFFER DRIVER
+>  M:	Antonino Daplas <adaplas@gmail.com>
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-diff --git a/Documentation/nfc/nfc-hci.txt b/Documentation/nfc/nfc-hci.txt
-index 320f933..89a339c 100644
---- a/Documentation/nfc/nfc-hci.txt
-+++ b/Documentation/nfc/nfc-hci.txt
-@@ -178,3 +178,36 @@ ANY_GET_PARAMETER to the reader A gate to get information on the target
- that was discovered).
- 
- Typically, such an event will be propagated to NFC Core from MSGRXWQ context.
-+
-+Error management
-+----------------
-+
-+Errors that occur synchronously with the execution of an NFC Core request are
-+simply returned as the execution result of the request. These are easy.
-+
-+Errors that occur asynchronously (e.g. in a background protocol handling thread)
-+must be reported such that upper layers don't stay ignorant that something
-+went wrong below and know that expected events will probably never happen.
-+Handling of these errors is done as follows:
-+
-+- driver (pn544) fails to deliver an incoming frame: it stores the error such
-+that any subsequent call to the driver will result in this error. Then it calls
-+the standard nfc_shdlc_recv_frame() with a NULL argument to report the problem
-+above. shdlc stores a EREMOTEIO sticky status, which will trigger SMW to
-+report above in turn.
-+
-+- SMW is basically a background thread to handle incoming and outgoing shdlc
-+frames. This thread will also check the shdlc sticky status and report to HCI
-+when it discovers it is not able to run anymore because of an unrecoverable
-+error that happened within shdlc or below. If the problem occurs during shdlc
-+connection, the error is reported through the connect completion.
-+
-+- HCI: if an internal HCI error happens (frame is lost), or HCI is reported an
-+error from a lower layer, HCI will either complete the currently executing
-+command with that error, or notify NFC Core directly if no command is executing.
-+
-+- NFC Core: when NFC Core is notified of an error from below and polling is
-+active, it will send a tag discovered event with an empty tag list to the user
-+space to let it know that the poll operation will never be able to detect a tag.
-+If polling is not active and the error was sticky, lower levels will return it
-+at next invocation.
 -- 
-1.7.10
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
