@@ -1,60 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38133 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:47177 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183Ab2GCN2d (ORCPT
+	with ESMTP id S933913Ab2GLOPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 09:28:33 -0400
-Message-ID: <1341322108.20124.3.camel@jlt3.sipsolutions.net> (sfid-20120703_152837_072336_348777E2)
-Subject: [PATCH] compat-wireless: fix debugging in iwlwifi
+	Thu, 12 Jul 2012 10:15:39 -0400
+Message-ID: <1342102537.4531.24.camel@jlt3.sipsolutions.net> (sfid-20120712_161553_076723_A5503296)
+Subject: Re: [PATCH v2] cfg80211: ignore channel state for stopped AP/mesh
+ interfaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 03 Jul 2012 15:28:28 +0200
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com
+Date: Thu, 12 Jul 2012 16:15:37 +0200
+In-Reply-To: <1342102202-21045-1-git-send-email-nbd@openwrt.org>
+References: <1342102202-21045-1-git-send-email-nbd@openwrt.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2012-07-12 at 16:10 +0200, Felix Fietkau wrote:
+> Without this change, running AP + station on the same wiphy does not work
+> since the commit "cfg80211: add channel checking for iface combinations".
+> The stopped AP prevents the client from connecting to an AP on a different
+> channel.
 
-As compat includes linux/device.h well before iwlwifi, the
-definitions from there are used without DEBUG, but iwlwifi
-defines DEBUG to get debug output. Use dev_printk instead
-of dev_dbg to get debugging back.
+Applied, thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- patches/57-iwlwifi-debug-fix.patch |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
- create mode 100644 patches/57-iwlwifi-debug-fix.patch
-
-diff --git a/patches/57-iwlwifi-debug-fix.patch b/patches/57-iwlwifi-debug-fix.patch
-new file mode 100644
-index 0000000..4b2dfa9
---- /dev/null
-+++ b/patches/57-iwlwifi-debug-fix.patch
-@@ -0,0 +1,19 @@
-+Due to compat including linux/device.h before we do,
-+we don't get a chance to #define DEBUG to get our
-+debugging prints. This patch replaces dev_dbg with
-+dev_printk to make them show up again.
-+
-+--- a/drivers/net/wireless/iwlwifi/iwl-debug.c
-++++ b/drivers/net/wireless/iwlwifi/iwl-debug.c
-+@@ -138,8 +138,9 @@ void __iwl_dbg(struct device *dev,
-+ 
-+ 		va_copy(args2, args);
-+ 		vaf.va = &args2;
-+-		dev_dbg(dev, "%c %s %pV", in_interrupt() ? 'I' : 'U',
-+-			function, &vaf);
-++		dev_printk(KERN_DEBUG, dev, "%c %s %pV",
-++			   in_interrupt() ? 'I' : 'U',
-++			   function, &vaf);
-+ 		va_end(args2);
-+ 	}
-+ #endif
--- 
-1.7.10
-
-
+johannes
 
