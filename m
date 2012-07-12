@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35747 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932679Ab2GLPPD (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:34516 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934064Ab2GLQAX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 11:15:03 -0400
-Message-ID: <4FFEE9ED.6020906@qca.qualcomm.com> (sfid-20120712_171508_194169_16F80243)
-Date: Thu, 12 Jul 2012 20:44:53 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Thu, 12 Jul 2012 12:00:23 -0400
+Received: by qadb17 with SMTP id b17so3981457qad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 09:00:22 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1342106133-26954-1-git-send-email-johannes@sipsolutions.net>
+References: <1342106133-26954-1-git-send-email-johannes@sipsolutions.net>
+Date: Thu, 12 Jul 2012 19:00:22 +0300
+Message-ID: <CAB3XZEdfVAgNH4vP6B0O36riyDokpf+UHEG-+Yqn2a1Xjpt8ow@mail.gmail.com> (sfid-20120712_180036_026881_54FCAEC4)
+Subject: Re: [PATCH] cfg80211: fix set_monitor_enabled
+From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
-References: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>   <1341918365.4475.9.camel@jlt3.sipsolutions.net>   <4FFC0F22.6040906@qca.qualcomm.com>  <1341919201.4475.11.camel@jlt3.sipsolutions.net>  <4FFD1014.2000109@qca.qualcomm.com> <1342103072.4531.26.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1342103072.4531.26.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-thanks for getting back to this :)
-
-On Thursday 12 July 2012 07:54 PM, Johannes Berg wrote:
-> On Wed, 2012-07-11 at 11:03 +0530, Mohammed Shafi Shajakhan wrote:
+On Thu, Jul 12, 2012 at 6:15 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
->>> I don't know if there's any advantage. It could be useful for example to
->>> get a connection up quicker after resume. I just didn't want to preclude
->>> that use case.
->>>
->>
->> sorry i just missed this thing. rdev->wowlan is made 'false' for empty
+> When bringing monitor mode up with a driver using the
+> mac80211 virtual monitor interface this resulted in a
+> warning because cfg80211_update_iface_num() is called
+> from PRE_UP, which causes it to call mac80211 and the
+> low-level driver before the device is started.
 >
-> I think you mean "NULL"?
-
-oh yes.
-
+> For the case that another interface is added and the
+> monitor interface should be removed, this is correct.
+> However, in the case where a monitor interface is
+> added, it's not correct as the above.
 >
-> Maybe something like this would make sense then?
+> To fix this, we need to split up the cases and track
+> whether or not "only monitor" is active so that the
+> code can correctly call into the driver when things
+> change.
 >
-> http://p.sipsolutions.net/2aac79bcfe3a9b8b.txt
+> Reported-by: Mohammed Shafi <shafi.wireless@gmail.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+why not always do it only on IFACE_UP?
 
-yeah this was the thing i am proposing
-http://www.spinics.net/lists/linux-wireless/msg94023.html
+> @@ -893,8 +893,12 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+>         if (!err && ntype != otype && netif_running(dev)) {
+> -               cfg80211_update_iface_num(rdev, ntype, 1);
+> -               cfg80211_update_iface_num(rdev, otype, -1);
+> +               cfg80211_update_iface_num(rdev, ntype,
+> +                                         CFG80211_IFACE_DOWN);
+> +               cfg80211_update_iface_num(rdev, ntype,
+> +                                         CFG80211_IFACE_PRE_UP);
+> +               cfg80211_update_iface_num(rdev, otype,
+> +                                         CFG80211_IFACE_UP);
 
-your patch is better optimized as it avoids a bool variable to check for 
-wow disable command, so this should be fine with the other iw
-patch to check for empty triggers ?
-http://www.spinics.net/lists/linux-wireless/msg94022.html
+this sequence (down(new_type), pre_up (new_type), up(old_type))
+doesn't make any sense to me :)
 
-thank you!
-
->
-> johannes
->
-
-
--- 
-thanks,
-shafi
-
-
+Eliad.
