@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37714 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752893Ab2GJJLY (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:58701 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759Ab2GLHeW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 05:11:24 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 12 Jul 2012 03:34:22 -0400
+Received: by vbbff1 with SMTP id ff1so1309878vbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 00:34:21 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 12 Jul 2012 10:34:21 +0300
+Message-ID: <CAOzdAZRhMJ2pmidGCFLD6_LFvg5KY9SS64ub2uFyfYtw7sLvCw@mail.gmail.com> (sfid-20120712_093426_899072_B04425C9)
+Subject: BUG in compat-2.6.28.h
+From: Yaroslav Petrov <joy4eg@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: optimize ieee80211_rx_status struct layout
-Date: Tue, 10 Jul 2012 11:11:18 +0200
-Message-Id: <1341911478-13342-1-git-send-email-johannes@sipsolutions.net> (sfid-20120710_111127_712290_B064822B)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi, i have found a bug in file compat-2.6.28.h, here is it:
 
-We waste a lot of space in this struct because it uses
-int values where smaller ones would be sufficient. The
-upcoming A-MPDU information needs some space, optimize
-the struct now.
+/home/userx/wifi/compat-wireless-2012-07-03/include/linux/compat-2.6.28.h:35:57:
+warning: "defned" is not defined
+/home/userx/wifi/compat-wireless-2012-07-03/include/linux/compat-2.6.28.h:35:63:
+missing binary operator before token "("
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Solution:
+On line 35 file compat-2.6.28.h
+Replace
+#if defined(CONFIG_64BIT) || defined(CONFIG_X86_PAE) ||
+defned(CONFIG_PPC64) || defined(CONFIG_PHYS_64BIT)
+On
+#if defined(CONFIG_64BIT) || defined(CONFIG_X86_PAE) ||
+defined(CONFIG_PPC64) || defined(CONFIG_PHYS_64BIT)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c5dbb46..7300cb5 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -709,13 +709,13 @@ enum mac80211_rx_flags {
-  */
- struct ieee80211_rx_status {
- 	u64 mactime;
--	enum ieee80211_band band;
--	int freq;
--	int signal;
--	int antenna;
--	int rate_idx;
--	int flag;
--	unsigned int rx_flags;
-+	u16 flag;
-+	u16 freq;
-+	u8 rate_idx;
-+	u8 rx_flags;
-+	u8 band;
-+	u8 antenna;
-+	s8 signal;
- };
- 
- /**
--- 
-1.7.10.4
+compat-wireless version:
+[i14]~userx/wifi/compat-wireless-2012-07-03/ #tail .compat_*
+==> .compat_autoconf_compat-wireless-2012-07-03-2-2-g40ec2b6 <==
 
+==> .compat_base <==
+compat-2012-07-03
+
+==> .compat_base_tree <==
+linux-next.git
+
+==> .compat_base_tree_version <==
+next-20120703
+
+==> .compat_version <==
+compat-wireless-2012-07-03-2-2-g40ec2b6
+
+--
+Yaaroslav Ivanov
