@@ -1,45 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.u-psud.fr ([129.175.33.42]:54354 "EHLO smtp2.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932569Ab2GDKDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 06:03:07 -0400
-Message-ID: <4FF414D9.4060509@lri.fr> (sfid-20120704_120311_810826_C0460139)
-Date: Wed, 04 Jul 2012 12:03:05 +0200
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:54361 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030271Ab2GLQ0O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 12:26:14 -0400
+Received: by ghrr11 with SMTP id r11so2594830ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 09:26:13 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1342108999.4531.34.camel@jlt3.sipsolutions.net>
+References: <1342106133-26954-1-git-send-email-johannes@sipsolutions.net>
+	<CAB3XZEdfVAgNH4vP6B0O36riyDokpf+UHEG-+Yqn2a1Xjpt8ow@mail.gmail.com>
+	<1342108999.4531.34.camel@jlt3.sipsolutions.net>
+Date: Thu, 12 Jul 2012 19:26:13 +0300
+Message-ID: <CAB3XZEc0nk5xj10WadANvHaUxMYaZ9k26aCUnDbMDLGbTGEzPw@mail.gmail.com> (sfid-20120712_182617_777259_87192F64)
+Subject: Re: [PATCH] cfg80211: fix set_monitor_enabled
+From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH v2] mac80211: tx: do not drop non-robust mgmt to non-MFP
- stas.
-References: <1341393221-5396-1-git-send-email-cavallar@lri.fr> <1341394528.4482.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1341394528.4482.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/2012 11:35, Johannes Berg wrote:
-> On Wed, 2012-07-04 at 11:13 +0200, Nicolas Cavallari wrote:
->> Found this while trying to manage auth  frames in userspace
->> on a IBSS RSN network.
->> I'm  a bit surprised that drop_unencrypted is disabled both
->> in AP and managed mode, but only enabled in IBSS RSN, which
->> does not support MFP, yet.
-> 
-> Hmmm. Yes, all this seems a bit messy. Can we clean this up first?
+On Thu, Jul 12, 2012 at 7:03 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-07-12 at 19:00 +0300, Eliad Peller wrote:
+>> On Thu, Jul 12, 2012 at 6:15 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> >
+>> > When bringing monitor mode up with a driver using the
+>> > mac80211 virtual monitor interface this resulted in a
+>> > warning because cfg80211_update_iface_num() is called
+>> > from PRE_UP, which causes it to call mac80211 and the
+>> > low-level driver before the device is started.
+>> >
+>> > For the case that another interface is added and the
+>> > monitor interface should be removed, this is correct.
+>> > However, in the case where a monitor interface is
+>> > added, it's not correct as the above.
+>> >
+>> > To fix this, we need to split up the cases and track
+>> > whether or not "only monitor" is active so that the
+>> > code can correctly call into the driver when things
+>> > change.
+>
+>> why not always do it only on IFACE_UP?
+>
+> Yeah .. thought so too at first, but it doesn't work, say you have this
+> situation:
+>
+>  * up moni0 (monitor)
+>  * up wlan0 (managed)
+>
+> Then the set_monitor_enabled(false) should happen before wlan0 is
+> brought up, otherwise mac80211/the driver will correctly reject wlan0
+> being brought up.
+>
+but you don't call set_monitor_enabled(false) on pre_up in your
+patch... so i guess the driver will still get its add_interface
+callback while the monitor is enabled?
 
-The whole function is a bit messy. some clean ups would be nice
-but it is too easy to break corner cases.
+afaict, the only effect of pre_up is updating
+rdev->num_running_ifaces/rdev->num_running_monitor_ifaces, which don't
+seem to matter much...
 
-> 
-> Maybe something like this?
-> http://p.sipsolutions.net/d68a99dd3d9b1ab1.txt
-
-No problem for me. I didn't want that patch to too intrusive at first.
-
-Do you want to apply it yourself ? or should i include it in a series ?
-
-> The whole drop_unencrypted seems strange to start with though...
-
-what to you find strange ? that it is not used in a ESS, or how it works
-? or both ?
+Eliad.
