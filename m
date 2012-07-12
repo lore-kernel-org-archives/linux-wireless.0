@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:41227 "EHLO plane.gmane.org"
+Received: from nbd.name ([46.4.11.11]:46110 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751977Ab2GEDFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 23:05:10 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SmcNL-0004ie-VY
-	for linux-wireless@vger.kernel.org; Thu, 05 Jul 2012 05:05:03 +0200
-Received: from 202.131.123.66 ([202.131.123.66])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 05:05:03 +0200
-Received: from pravinbharwad by 202.131.123.66 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 05:05:03 +0200
+	id S932522Ab2GLOKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 10:10:05 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-From: pravin bharwad <pravinbharwad@gmail.com>
-Subject: hostapd slows down system and sometimes i get message like 
-Date: Wed, 4 Jul 2012 05:03:27 +0000 (UTC)
-Message-ID: <loom.20120704T065417-405@post.gmane.org> (sfid-20120705_050552_356421_0E2A0C7E)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: johannes@sipsolutions.net, michal.kazior@tieto.com
+Subject: [PATCH v2] cfg80211: ignore channel state for stopped AP/mesh interfaces
+Date: Thu, 12 Jul 2012 16:10:02 +0200
+Message-Id: <1342102202-21045-1-git-send-email-nbd@openwrt.org> (sfid-20120712_161010_431220_E73C7A0E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi all
+Without this change, running AP + station on the same wiphy does not work
+since the commit "cfg80211: add channel checking for iface combinations".
+The stopped AP prevents the client from connecting to an AP on a different
+channel.
 
-frequently restarting hostapd seems to slow down system and sometimes msg 
-like "BUG: soft lockup - CPU#0 stuck for 61s". 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/wireless/chan.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-Thanks
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 434c56b..1e03e04 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -136,9 +136,16 @@ cfg80211_get_chan_state(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
++		if (wdev->beacon_interval) {
++			*chan = wdev->channel;
++			*chanmode = CHAN_MODE_SHARED;
++		}
++		return;
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		*chan = wdev->channel;
+-		*chanmode = CHAN_MODE_SHARED;
++		if (wdev->mesh_id_len) {
++			*chan = wdev->channel;
++			*chanmode = CHAN_MODE_SHARED;
++		}
+ 		return;
+ 	case NL80211_IFTYPE_MONITOR:
+ 	case NL80211_IFTYPE_AP_VLAN:
+-- 
+1.7.3.2
 
