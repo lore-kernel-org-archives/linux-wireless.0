@@ -1,27 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39552 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133Ab2GaOT3 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:45333 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755741Ab2GLToX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 10:19:29 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SwDIG-00011E-8b
-	for linux-wireless@vger.kernel.org; Tue, 31 Jul 2012 16:19:28 +0200
-Message-ID: <1343744367.4474.7.camel@jlt3.sipsolutions.net> (sfid-20120731_161933_554895_C4A268AD)
-Subject: mac80211-next rebased
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 31 Jul 2012 16:19:27 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 12 Jul 2012 15:44:23 -0400
+Received: by eekb15 with SMTP id b15so756831eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 12:44:22 -0700 (PDT)
+Message-ID: <4FFF2913.7090101@gmail.com> (sfid-20120712_214426_795000_DECBFE41)
+Date: Thu, 12 Jul 2012 21:44:19 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] MAINTAINERS: realtek drivers
+References: <1341855212-7151-1-git-send-email-xose.vazquez@gmail.com> <20120712191645.GC25494@tuxdriver.com>
+In-Reply-To: <20120712191645.GC25494@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Somehow I was getting merge errors in completely unrelated code when
-merging wireless-next, so I decided to rebase. Sorry for the
-inconvenience.
+On 07/12/2012 09:16 PM, John W. Linville wrote:
 
-johannes
+> This patch doesn't apply...
 
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+:-?
