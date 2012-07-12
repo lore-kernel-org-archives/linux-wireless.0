@@ -1,73 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:43650 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183Ab2GJFmo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48245 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759236Ab2GLUfu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 01:42:44 -0400
-Received: by gglu4 with SMTP id u4so10892379ggl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 22:42:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgXWackce4pHpbOc1Bd9EhhEGSVfGsimMXvEDsJpguWQ5Q@mail.gmail.com>
-References: <1341732211-25871-1-git-send-email-coelho@ti.com>
- <1341732211-25871-8-git-send-email-coelho@ti.com> <1341740110.4987.4.camel@jlt3.sipsolutions.net>
- <CA+XVXfdEqQyiyDQoAddCjC9bhH+WqmANiqf_wUCEJFi7=xG5vQ@mail.gmail.com>
- <1341821025.4455.5.camel@jlt3.sipsolutions.net> <CA+XVXfdQCPTrEdDb1WY67rSKucjH=aU9S+zzkZ=xB+GW94Ty9A@mail.gmail.com>
- <CAGRGNgXWackce4pHpbOc1Bd9EhhEGSVfGsimMXvEDsJpguWQ5Q@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 10 Jul 2012 08:42:28 +0300
-Message-ID: <CA+XVXfdUxLn-h3dN-tjHccXXwamxdB4ALouFO+8YEvgWKYzuSA@mail.gmail.com> (sfid-20120710_074247_775970_21602972)
-Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 12 Jul 2012 16:35:50 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: michal.kazior@tieto.com, mohammed@qca.qualcomm.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/3] Revert "cfg80211/mac80211: remove .get_channel"
+Date: Thu, 12 Jul 2012 22:35:39 +0200
+Message-Id: <1342125340-6468-3-git-send-email-johannes@sipsolutions.net> (sfid-20120712_223557_064302_22677AA2)
+In-Reply-To: <1342125340-6468-1-git-send-email-johannes@sipsolutions.net>
+References: <1342125340-6468-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Julian,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Tue, Jul 10, 2012 at 7:32 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Arik,
->
-> On Mon, Jul 9, 2012 at 6:14 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> On Mon, Jul 9, 2012 at 11:03 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Sun, 2012-07-08 at 17:08 +0300, Arik Nemtsov wrote:
->>>
->>>> > kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
->>>> > then most likely you could just put "__aligned(4)" or something on the
->>>> > conf.phy struct member and not allocate memory at all?
->>>>
->>>> Yea we need 4 bytes alignment. The kzalloc is a sort of convention in
->>>> the driver (see acx.c), but probably here we can use kmemdup.
->>>> We can't use fancy __aligned(4) notations most likely, since a
->>>> usermode tool also parses these header files, and it's not too smart
->>>> :)
->>>
->>> This seems like a rather bad excuse for making the runtime code more
->>> complex and less performant ... I'll let you sort it out with John
->>> though, I wouldn't let you get away with this though if I maintained the
->>> tree ;-)
->>>
->>> FWIW, I think your actual problem is that you mark wl18xx_priv_conf as
->>> packed unnecessarily. Otherwise it might actually get alignment, at
->>> least on ARM I hear.
->>
->> It's not an excuse, we really have a usermode tool (called wlconf)
->> preparing binary conf files. And it usually runs on a different arch
->> (x86), so we mark everything packed to avoid errors.
->> I'm pretty sure __aligned(4) would screw up the parser there. It has
->> to build an internal representation of all the struct, and fill it out
->> using an ini file.
->
-> Does this tool parse the compiled code or the actual source files?
-> Because if it parses the source files, surely you could adjust the
-> parser so it doesn't trip over a potential __aligned(4) notation.
+This reverts commit 2e165b818456ecc1024dd0387eeac64745526377.
 
-The tool goes over source files, but it's not just a matter of
-skipping the token - it has to actually align the next element to 4,
-so it needs to start keeping track of alignment etc.
+Since we're going to have to revert the monitor
+interface tracking in cfg80211, we won't have
+the ability to track the channel either so we
+do need the get_channel callback.
 
-I'm afraid we have bigger issues with this tool right now. Currently
-it can't even parse arrays properly :)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h     |    6 ++++++
+ net/mac80211/cfg.c         |   11 +++++++++++
+ net/wireless/nl80211.c     |   15 ++++++++++-----
+ net/wireless/wext-compat.c |    9 +++++++--
+ 4 files changed, 34 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5a67165..e0968d5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1506,6 +1506,9 @@ struct cfg80211_gtk_rekey_data {
+  *	be stored for when a monitor interface becomes active.
+  * @set_monitor_enabled: Notify driver that there are only monitor
+  *	interfaces running.
++ * @get_channel: Get the current operating channel, should return %NULL if
++ *	there's no single defined operating channel if for example the
++ *	device implements channel hopping for multi-channel virtual interfaces.
+  *
+  * @scan: Request to do a scan. If returning zero, the scan request is given
+  *	the driver, and will be valid until passed to cfg80211_scan_done().
+@@ -1813,6 +1816,9 @@ struct cfg80211_ops {
+ 				  struct net_device *dev,
+ 				  u16 noack_map);
+ 
++	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
++						 enum nl80211_channel_type *type);
++
+ 	int	(*get_et_sset_count)(struct wiphy *wiphy,
+ 				     struct net_device *dev, int sset);
+ 	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e95f24e..1e27017 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2982,6 +2982,16 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static struct ieee80211_channel *
++ieee80211_wiphy_get_channel(struct wiphy *wiphy,
++			    enum nl80211_channel_type *type)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	*type = local->_oper_channel_type;
++	return local->oper_channel;
++}
++
+ #ifdef CONFIG_PM
+ static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
+ {
+@@ -3055,6 +3065,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.tdls_oper = ieee80211_tdls_oper,
+ 	.tdls_mgmt = ieee80211_tdls_mgmt,
+ 	.probe_client = ieee80211_probe_client,
++	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
+ #ifdef CONFIG_PM
+ 	.set_wakeup = ieee80211_set_wakeup,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 079fc49..54726a6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1759,11 +1759,16 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 			(cfg80211_rdev_list_generation << 2)))
+ 		goto nla_put_failure;
+ 
+-	if (rdev->monitor_channel) {
+-		if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
+-				rdev->monitor_channel->center_freq) ||
+-		    nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+-				rdev->monitor_channel_type))
++	if (rdev->ops->get_channel) {
++		struct ieee80211_channel *chan;
++		enum nl80211_channel_type channel_type;
++
++		chan = rdev->ops->get_channel(&rdev->wiphy, &channel_type);
++		if (chan &&
++		    (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
++				 chan->center_freq) ||
++		     nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++				 channel_type)))
+ 			goto nla_put_failure;
+ 	}
+ 
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 7df42f5..bc87983 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -827,6 +827,8 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	struct ieee80211_channel *chan;
++	enum nl80211_channel_type channel_type;
+ 
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -834,10 +836,13 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (!rdev->monitor_channel)
++		if (!rdev->ops->get_channel)
+ 			return -EINVAL;
+ 
+-		freq->m = rdev->monitor_channel->center_freq;
++		chan = rdev->ops->get_channel(wdev->wiphy, &channel_type);
++		if (!chan)
++			return -EINVAL;
++		freq->m = chan->center_freq;
+ 		freq->e = 6;
+ 		return 0;
+ 	default:
+-- 
+1.7.10.4
+
