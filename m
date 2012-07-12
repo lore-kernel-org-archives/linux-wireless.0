@@ -1,60 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33578 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753781Ab2GBOWa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11873 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757994Ab2GLHMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 10:22:30 -0400
-Received: by mail-ey0-f174.google.com with SMTP id k11so2110016eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 07:22:29 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: mcgrof@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH 3/5] compat: Define I2C_FUNC_NOSTART
-Date: Mon,  2 Jul 2012 17:22:12 +0300
-Message-Id: <1341238934-30855-3-git-send-email-ozancag@gmail.com> (sfid-20120702_162243_669813_368B8037)
-In-Reply-To: <1341238934-30855-1-git-send-email-ozancag@gmail.com>
-References: <1341238934-30855-1-git-send-email-ozancag@gmail.com>
+	Thu, 12 Jul 2012 03:12:38 -0400
+Message-ID: <4FFE78DF.1060108@qca.qualcomm.com> (sfid-20120712_091241_984092_0B63BEFF)
+Date: Thu, 12 Jul 2012 10:12:31 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Make use of return value from ath6kl_diag_read()
+References: <1341991303-1034-1-git-send-email-c_ppitch@qca.qualcomm.com>
+In-Reply-To: <1341991303-1034-1-git-send-email-c_ppitch@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This backports:
+On 07/11/2012 10:21 AM, Pandiyarajan Pitchaimuthu wrote:
+> In ath6kl_read_fwlogs(), return value from ath6kl_diag_read()is not
+> used to bail out in case of any errors in reading fw log. No real issue
+> is observed because of this, reported by source code analyzer.
+> 
+> Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
 
- commit 14674e70119ea01549ce593d8901a797f8a90f74
- Author: Mark Brown <broonie@opensource.wolfsonmicro.com>
- Date:   Wed May 30 10:55:34 2012 +0200
+Thanks, applied. I just fixed a checkpatch warning about too long line.
 
-     i2c: Split I2C_M_NOSTART support out of I2C_FUNC_PROTOCOL_MANGLING
+But please CC ath6kl-devel and kvalo@qca.qualcomm.com when submitting
+ath6kl patches. It makes it easier for me to track patches.
 
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
----
- include/linux/compat-3.5.h |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
-index 7855ac9..6bb450d 100644
---- a/include/linux/compat-3.5.h
-+++ b/include/linux/compat-3.5.h
-@@ -113,6 +113,17 @@ static inline int compat_vga_switcheroo_register_client(struct pci_dev *dev,
- 
- #endif
- 
-+/* This backports
-+ *
-+ * commit 14674e70119ea01549ce593d8901a797f8a90f74
-+ * Author: Mark Brown <broonie@opensource.wolfsonmicro.com>
-+ * Date:   Wed May 30 10:55:34 2012 +0200
-+ *
-+ *     i2c: Split I2C_M_NOSTART support out of I2C_FUNC_PROTOCOL_MANGLING
-+ */
-+
-+#define I2C_FUNC_NOSTART 0x00000010 /* I2C_M_NOSTART */
-+
- /*
-  * This backports:
-  *
--- 
-1.7.10.4
-
+Kalle
