@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33551 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771Ab2GIJbw (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:59101 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282Ab2GLGgP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 05:31:52 -0400
-Message-ID: <1341826309.4455.19.camel@jlt3.sipsolutions.net> (sfid-20120709_113155_614836_A8AB1443)
-Subject: Re: [RFC 2/4] cfg80211: support unused HT-cap-per-band configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Jul 2012 11:31:49 +0200
-In-Reply-To: <CA+XVXfcRWY+DT8RVfMdC8gzfKY+_2W5msp65ba0xaAZLYA09Fw@mail.gmail.com> (sfid-20120706_094134_352404_50BE7EFA)
-References: <1341417530-9062-1-git-send-email-arik@wizery.com>
-	 <1341417530-9062-3-git-send-email-arik@wizery.com>
-	 <1341473996.4455.2.camel@jlt3.sipsolutions.net>
-	 <CA+XVXfdwGAdxdmZTx+4pC4=6agM0SuvHV_xsF0gGCE_5NMB7YA@mail.gmail.com>
-	 <1341557988.4462.6.camel@jlt3.sipsolutions.net>
-	 <CA+XVXff3_ugusQ=HPVeg3YSp3OBjWwpCVHTxd+Tnxg5Rf_5W3w@mail.gmail.com>
-	 <1341560078.4462.11.camel@jlt3.sipsolutions.net>
-	 <CA+XVXfcRWY+DT8RVfMdC8gzfKY+_2W5msp65ba0xaAZLYA09Fw@mail.gmail.com>
-	 (sfid-20120706_094134_352404_50BE7EFA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 12 Jul 2012 02:36:15 -0400
+Received: by pbbrp8 with SMTP id rp8so3247717pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 23:36:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANugF35qjKLdhBprQviNJaAPfM910wFCSbyEvdcCRj_UoKLqPQ@mail.gmail.com>
+References: <CANugF35YQzs7gi4htrgCUKrTDp_ia0RUo9g_HNJ=CzfnOCkO2g@mail.gmail.com>
+ <CANugF37dDx1mvNJ-Y3is6OaeVFD1KwH=yh8Xef2BrN=YQPsiZQ@mail.gmail.com>
+ <1341558944.4462.9.camel@jlt3.sipsolutions.net> <CANugF35qjKLdhBprQviNJaAPfM910wFCSbyEvdcCRj_UoKLqPQ@mail.gmail.com>
+From: Andrew Chant <andrew.chant@gmail.com>
+Date: Wed, 11 Jul 2012 23:35:35 -0700
+Message-ID: <CANugF34NThUR1KkDHX8tiO7RC8uJLfbGLU=0=fFd2OQcBnAwAw@mail.gmail.com> (sfid-20120712_083619_779086_0DD3126C)
+Subject: Re: v3.4.4 ath9k: kernel NULL pointer dereference in skb_dequeue
+ during heavy udp xmit
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-07-06 at 10:41 +0300, Arik Nemtsov wrote:
+Any QCA people get a chance to take a look?  This is completely
+reproducible for me on 3.4.4, sometimes within a few minutes but
+occasionally requires up to an hour.  Do you qca folks have any tests
+where you continuously transmit as many UDP packets as you possibly
+can to another host?
 
-> >> You mean move out ht_supported?
-> >
-> > Yeah, I think that'd make more sense? Have it in the sband directly.
-> 
-> It does make more sense. But I was thinking there might be code
-> setting this dynamically in some drivers, so the changes would be
-> non-trivial. The union was sort of a compromise.
-
-Well the thing is ... it'll always stay that way if we don't fix it now.
-I don't think it's a huge deal to change all the drivers, though I'll
-admit that it might be a little tricky in some drivers.
-
-
-> Maybe move it out for vht_cap for now? :)
-
-Here's to hoping you fix the chips in the future instead! ;-)
-
-> > I think the function should restrict to NO_HT in case it doesn't have
-> > caps, otherwise it can't properly restrict. I suppose that means you
-> > won't be able to do HT monitoring with your device, but I can live with
-> > that.
-> 
-> Actually the ht_supported flag is still global, so HT monitoring is
-> possible, just not HT40 monitoring I think. We'll fix that if the need
-> arises (or just boot the driver with fixed caps via a module param).
-
-Yeah I guess that's true.
-
-johannes
-
+On Fri, Jul 6, 2012 at 12:46 AM, Andrew Chant <andrew.chant@gmail.com> wrote:
+> I was able to reproduce this on a boot shortly afterwards without
+> changing the frequencies.
+> Exact same stack trace w/ exception of slightly different values for
+> RBX & R15, and R10 had 0x7f instead of 0x80.  I have not been able to
+> reproduce since despite trying quite hard :)  I have a picture of the
+> second oops if that helps.
+> PCI ID is 168c:0030 (AR9300 Wireless LAN adaptor (rev 01))
+> -Andrew
+>
+> On Fri, Jul 6, 2012 at 12:15 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> -John
+>> +QCA folks
+>>
+>> On Thu, 2012-07-05 at 21:36 -0700, Andrew Chant wrote:
+>>
+>>>  while performance testing ath9k -> ath9k performance in 3.4.4, I got
+>>> a nasty kernel panic.  My performance testing involved filling the air
+>>> with 1410-byte UDP packets between the machines, and switching the
+>>> frequencies of the two cards to see how frequency affected
+>>> performance.  I had switched between channels 36, 40, 44, and 48.
+>>> Oops was on the transmitting machine, which was acting as the AP.
+>>>
+>>> Very clear screen image of the oops is at
+>>> https://picasaweb.google.com/lh/photo/CjBdHLZH0up5PrnmCySJidMTjNZETYmyPJy0liipFm0?feat=directlink
+>>
+>> I briefly looked at this, but I don't see a bug in mac80211. It seems
+>> likely that ath9k hands back a corrupted SKB, or frees one it no longer
+>> owns, or such. The skb->next/prev pointers seem corrupted (rcx is NULL)
+>> in one of the SKBs on the list, but mac80211 can't do that afaict.
+>>
+>> johannes
+>>
