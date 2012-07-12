@@ -1,69 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout09.t-online.de ([194.25.134.84]:38870 "EHLO
-	mailout09.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754267Ab2G3UxR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 16:53:17 -0400
-Message-ID: <5016F431.70702@t-online.de> (sfid-20120730_225320_835569_5F01E044)
-Date: Mon, 30 Jul 2012 22:53:05 +0200
-From: "Ch. Hanisch" <ch-hanisch@t-online.de>
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:48844 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750908Ab2GLENU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 00:13:20 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SpAmB-0007uv-Ex
+	for linux-wireless@vger.kernel.org; Thu, 12 Jul 2012 06:13:15 +0200
+Received: from c-69-245-126-173.hsd1.mi.comcast.net ([69.245.126.173])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 06:13:15 +0200
+Received: from ilhebe999 by c-69-245-126-173.hsd1.mi.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 06:13:15 +0200
 To: linux-wireless@vger.kernel.org
-Subject: No WLAN on DELL XPS L702x with Ubuntu 12.04LTS (64Bit)
-Content-Type: text/plain; charset=ISO-8859-15
+From: Ouyang <ilhebe999@gmail.com>
+Subject: Re: problem with installing the kernel
+Date: Thu, 12 Jul 2012 04:13:05 +0000 (UTC)
+Message-ID: <loom.20120712T060947-580@post.gmane.org> (sfid-20120712_061325_609725_82AC266C)
+References: <loom.20120712T044726-224@post.gmane.org> <4FFE437E.8080008@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Larry Finger <Larry.Finger@...> writes:
 
-on an DELL XPS L702x under Ubuntu 12.04LTS (64Bit) the WLAN is not working.
-The network manager show the message
-"device is no ready"
+> 
+> On 07/11/2012 09:52 PM, Ouyang wrote:
+> > I add something to the wireless-testing and then run:
+> >> make modules
+> >> make bzImage
+> >
+> > it seems all fine. but could not go any further
+> > # make modules_install
+> > rm:invalid option -- '3'
+> > Try 'rm -- help' for more information
+> > make : *** [_modinst_] Error 1
+> >
+> > Could anyone please help me with the situation?
+> >   The version of the linux is 3.4.4-3.fc17.x86_64 #1
+> 
+> Are you building the kernel as root? That is a terrible policy!!!
+> 
+> You should run "make" as a regular user, and follow that with "sudo make 
+> modules_install install". If that fails, you need to ask about the problem at 
+> Fedora. The standard kernel does the modules installation without any 
+problems.
+> 
+> Larry
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
- On an other DELL XPS L702x Notebook with the same "lspci -v" with only
-one difference in graphic controller
-< 01:00.0 VGA compatible controller: NVIDIA Corporation Device 0dd6 (rev ff)
----
-> 01:00.0 VGA compatible controller: NVIDIA Corporation GF106 [GeForce
-GT 555M] (rev ff)
-works on the Notebook with "NVIDIA Corporation Device 0dd6" the WLAN well.
+Thank you so much for the reply. Sorry that I run "make" as a root. I am new 
+with linux and I am sure I won`t make the same mistake in the future. By the way 
+, why it tells me about try "rm -- help"? I really do not know what does it 
+mean. In what situation will this "rm -- help " come out?
 
-With a Live-DVD (64Bit) the same effect.
-sudo dmidecode give no differences.
-Kernel is 3.2.0-27-generic or older.
+Thanks
 
-The effect is like the modul iwlwifi is not loaded (sudo rmmod iwlwifi),
-although the module is loaded on both Notebooks.
+Ouyang
 
-Is the module dell_laptop buggy?
 
-What can I do that the WLAN is working also on the second Notebook?
-    Beschreibung: Tragbarer Rechner
-    Produkt: Dell System XPS L702X (System SKUNumber)
-    Hersteller: Winbond Electronics
-    Version: 0.1
-    Seriennummer: 8Q6TRQ1
-sudo lshw
-...
-           *-network DEAKTIVIERT
-                Beschreibung: Kabellose Verbindung
-                Produkt: Centrino Wireless-N 1000
-                Hersteller: Intel Corporation
-                Physische ID: 0
-                Bus-Informationen: pci@0000:03:00.0
-                Logischer Name: wlan1
-                Version: 00
-                Seriennummer: 74:e5:0b:0e:b6:6c
-                Breite: 64 bits
-                Uhr: 33MHz
-                Fähigkeiten: pm msi pciexpress bus_master cap_list
-ethernet physical wireless
-                Konfiguration: broadcast=yes driver=iwlwifi
-driverversion=3.2.0-27-generic firmware=39.31.5.1 build 35138 latency=0
-link=no multicast=yes wireless=IEEE 802.11bgn
-                Ressourcen: irq:55 memory:f4300000-f4301fff
-...
-
- regards
-Ch. Hanisch
 
