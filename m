@@ -1,85 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33578 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753973Ab2GBOWm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46395 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932983Ab2GLKAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 10:22:42 -0400
-Received: by mail-ey0-f174.google.com with SMTP id k11so2110016eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 07:22:42 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: mcgrof@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH 5/5] compat: Backport DIV_ROUND_UP_DLL macro
-Date: Mon,  2 Jul 2012 17:22:14 +0300
-Message-Id: <1341238934-30855-5-git-send-email-ozancag@gmail.com> (sfid-20120702_162249_016100_10A7DF41)
-In-Reply-To: <1341238934-30855-1-git-send-email-ozancag@gmail.com>
-References: <1341238934-30855-1-git-send-email-ozancag@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 12 Jul 2012 06:00:13 -0400
+Message-ID: <1342087211.4531.12.camel@jlt3.sipsolutions.net> (sfid-20120712_120018_674592_22967432)
+Subject: Re: pull-request: mac80211-next 2012-07-10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 12 Jul 2012 12:00:11 +0200
+In-Reply-To: <1342087000.4531.11.camel@jlt3.sipsolutions.net> (sfid-20120712_115658_371123_64E83BB6)
+References: <1341946090.4475.31.camel@jlt3.sipsolutions.net>
+	 (sfid-20120710_204821_128762_BC016001) <1342085261.4531.9.camel@jlt3.sipsolutions.net>
+	 (sfid-20120712_112748_417680_83E2626B) <1342087000.4531.11.camel@jlt3.sipsolutions.net>
+	 (sfid-20120712_115658_371123_64E83BB6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This backports:
+On Thu, 2012-07-12 at 11:56 +0200, Johannes Berg wrote:
+> On Thu, 2012-07-12 at 11:27 +0200, Johannes Berg wrote:
+> > On Tue, 2012-07-10 at 20:48 +0200, Johannes Berg wrote:
+> > > John,
+> > > 
+> > > Please pull some more patches. I've included the first round of API
+> > > additions/updates for the P2P Device abstraction, I don't know if we'll
+> > > get the actual code done in time for 3.6 but I didn't want to hang on to
+> > > these APIs for too long to avoid conflicts.
+> > 
+> > Ugh, I found a bug with this, please drop, I'll respin. Sorry!
+> 
+> Ok the bug is this -- if we remove a wdev (that doesn't have a netdev),
+> this change is obviously needed:
+> 
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 27cd18e..70452aa 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -6768,6 +6768,7 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
+>  			info->user_ptr[1] = dev;
+>  		} else {
+>  			info->user_ptr[1] = wdev;
+> +			info->user_ptr[2] = wdev->netdev;
 
-commit 36a26c69b4c70396ef569c3452690fba0c1dec08
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Tue Jul 26 00:35:26 2011 -0700
+Ok, it's not that simple, ouch! The user_ptr[] array only has two
+entries!
 
-    kernel.h: Add DIV_ROUND_UP_ULL and DIV_ROUND_UP_SECTOR_T macro usage
-
-Trying kernel  3.4.0-030400-generic [OK]
-Trying kernel  3.3.7-030307-generic [OK]
-Trying kernel  3.2.2-030202-generic [OK]
-Trying kernel  3.1.10-030110-generic [OK]
-Trying kernel  3.0.18-030018-generic [OK]
-Trying kernel  2.6.39-02063904-generic [OK]
-Trying kernel  2.6.38-02063808-generic [OK]
-Trying kernel  2.6.37-02063706-generic [OK]
-Trying kernel  2.6.36-02063604-generic [OK]
-Trying kernel  2.6.35-02063512-generic [OK]
-Trying kernel  2.6.34-02063410-generic [OK]
-Trying kernel  2.6.33-02063305-generic [OK]
-Trying kernel  2.6.32-02063255-generic [OK]
-Trying kernel  2.6.31-02063113-generic [OK]
-Trying kernel  2.6.30-02063010-generic [OK]
-Trying kernel  2.6.29-02062906-generic [OK]
-Trying kernel  2.6.28-02062810-generic [OK]
-Trying kernel  2.6.27-020627-generic [OK]
-Trying kernel  2.6.26-020626-generic [OK]
-Trying kernel  2.6.25-020625-generic [OK]
-Trying kernel  2.6.24-020624-generic [OK]
-
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
----
- include/linux/compat-3.1.h |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/include/linux/compat-3.1.h b/include/linux/compat-3.1.h
-index da8e971..788128d 100644
---- a/include/linux/compat-3.1.h
-+++ b/include/linux/compat-3.1.h
-@@ -9,6 +9,20 @@
- #include <linux/skbuff.h>
- #include <net/ip.h>
- #include <linux/idr.h>
-+#include <asm/div64.h>
-+
-+
-+/* This backports:
-+ *
-+ * commit 36a26c69b4c70396ef569c3452690fba0c1dec08
-+ * Author: Nicholas Bellinger <nab@linux-iscsi.org>
-+ * Date:   Tue Jul 26 00:35:26 2011 -0700
-+ * 	
-+ * 	kernel.h: Add DIV_ROUND_UP_ULL and DIV_ROUND_UP_SECTOR_T macro usage
-+ */
-+
-+#define DIV_ROUND_UP_ULL(ll,d) \
-+	({ unsigned long long _tmp = (ll)+(d)-1; do_div(_tmp, d); _tmp; })
- 
- /* Backports 56f8a75c */
- static inline bool ip_is_fragment(const struct iphdr *iph)
--- 
-1.7.10.4
+johannes
 
