@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37431 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742Ab2GHOer (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 10:34:47 -0400
-Message-ID: <4FF99A80.9040700@candelatech.com> (sfid-20120708_163451_418840_C1C14F8A)
-Date: Sun, 08 Jul 2012 07:34:40 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: use full power if off-channel
-References: <1341740130-6199-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1341740130-6199-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from plane.gmane.org ([80.91.229.3]:33003 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758627Ab2GLCw2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jul 2012 22:52:28 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Sp9Vy-0004lC-Dg
+	for linux-wireless@vger.kernel.org; Thu, 12 Jul 2012 04:52:26 +0200
+Received: from c-69-245-126-173.hsd1.mi.comcast.net ([69.245.126.173])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 04:52:26 +0200
+Received: from ilhebe999 by c-69-245-126-173.hsd1.mi.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 04:52:26 +0200
+To: linux-wireless@vger.kernel.org
+From: Ouyang <ilhebe999@gmail.com>
+Subject: problem with installing the kernel
+Date: Thu, 12 Jul 2012 02:52:15 +0000 (UTC)
+Message-ID: <loom.20120712T044726-224@post.gmane.org> (sfid-20120712_045234_739947_F6950FCF)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/2012 02:35 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Instead of using full power when scanning, use
-> full power when off-channel. This is different
-> since off-channel can be remain-on-channel.
+I add something to the wireless-testing and then run:
+> make modules
+> make bzImage
 
-What if we are scanning on our current channel?  Shouldn't
-it be full-power then as well?
+it seems all fine. but could not go any further
+# make modules_install
+rm:invalid option -- '3'
+Try 'rm -- help' for more information
+make : *** [_modinst_] Error 1
 
-Thanks,
-Ben
-
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->   net/mac80211/main.c |    4 +---
->   1 file changed, 1 insertion(+), 3 deletions(-)
->
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index e706f9e..35c4b1d 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -148,9 +148,7 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
->   		changed |= IEEE80211_CONF_CHANGE_SMPS;
->   	}
->
-> -	if (test_bit(SCAN_SW_SCANNING, &local->scanning) ||
-> -	    test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning) ||
-> -	    test_bit(SCAN_HW_SCANNING, &local->scanning))
-> +	if (local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL)
->   		power = chan->max_power;
->   	else
->   		power = local->power_constr_level ?
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Could anyone please help me with the situation? 
+ The version of the linux is 3.4.4-3.fc17.x86_64 #1
 
 
