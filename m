@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:48171 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932288Ab2GMRJE (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:40482 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030749Ab2GLTlF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 13:09:04 -0400
-Received: by pbbrp8 with SMTP id rp8so5756733pbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 10:09:04 -0700 (PDT)
+	Thu, 12 Jul 2012 15:41:05 -0400
+Received: by ghrr11 with SMTP id r11so2828442ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 12:41:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1342183848.4452.1.camel@jlt3.sipsolutions.net>
-References: <20120712123358.22054.62538.stgit@localhost6.localdomain6> <1342183848.4452.1.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 13 Jul 2012 10:08:44 -0700
-Message-ID: <CAB=NE6Uo02ADchkcy156=uZ3dwLiC529YvvqhR6pkS81s3xadQ@mail.gmail.com> (sfid-20120713_190909_906117_986B25A5)
-Subject: Re: [PATCH] cfg80211: fix set_regdom() to cancel requests with same alpha2
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+In-Reply-To: <20120712093952.9976.84033.stgit@localhost6.localdomain6>
+References: <20120712093944.9976.84585.stgit@localhost6.localdomain6> <20120712093952.9976.84033.stgit@localhost6.localdomain6>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 12 Jul 2012 12:40:44 -0700
+Message-ID: <CAB=NE6WjW-f=giqEEycNcZqjjB7SuioiMyEbrLcGaz8oD1CPNA@mail.gmail.com> (sfid-20120712_214111_044783_DCAD539F)
+Subject: Re: [PATCH 2/2] ath6kl: add support for changing contry code
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 13, 2012 at 5:50 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Luis?
+On Thu, Jul 12, 2012 at 2:39 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> +config ATH6KL_REGDOMAIN
+> +       bool "Atheros ath6kl regdomain support"
+> +       depends on ATH6KL
+> +       depends on CFG80211_CERTIFICATION_ONUS
+> +       ---help---
+> +         Enabling this makes it possible to change the regdomain in
+> +         the firmware. This can be only enabled if regulatory requirements
+> +         are taken into account.
 
-It follows the -EALREADY convention of when a regdomain is already applied.
-
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-
->>               if (!regdom_changes(rd->alpha2))
->> -                     return -EINVAL;
->> +                     return -EALREADY;
->>       }
->>
->>       /*
->> @@ -2325,6 +2325,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
->>       /* Note that this doesn't update the wiphys, this is done below */
->>       r = __set_regdom(rd);
->>       if (r) {
->> +             if (r == -EALREADY)
->> +                     reg_set_request_processed();
->> +
->
-> I'm not really sure I like the reliance on the error code ... would it
-> make more sense to invent a status enum? Or just return 0 to start with?
-
-The code already did this with -EALREADY, if we want to treat this
-differently we should go in and sweep change all that. But the big
-sweep is better to happen on the regsim IMHO. I've been trying to do
-as little changes as possible to existing code.
+You will need to add wiphy->features |=
+NL80211_FEATURE_CELL_BASE_REG_HINTS in order to enable the base
+station hints to propagate to the driver and even to the core,
+otherwise this is ignored. This was addressed starting at v4 of my
+onus patches. Given this, I think it makes sense to rename the option
+to enable / disable base station hints and to update the language to
+clearly reflect that is the only type of hint that would be used to
+update the firmware regulatory domain.
 
   Luis
