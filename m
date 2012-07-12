@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968Ab2G0LIE (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56456 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932810Ab2GLSt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:08:04 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SuiOp-0005z9-5r
-	for linux-wireless@vger.kernel.org; Fri, 27 Jul 2012 13:08:03 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/6] mac80211: use correct operating channel
-Date: Fri, 27 Jul 2012 13:07:55 +0200
-Message-Id: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130808_918452_CA9F2092)
+	Thu, 12 Jul 2012 14:49:28 -0400
+Received: by pbbrp8 with SMTP id rp8so4121581pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 11:49:28 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH v5 0/5] wireless: rebase onus patches
+Date: Thu, 12 Jul 2012 11:49:16 -0700
+Message-Id: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20120712_204932_508210_72B9B2DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A number of places in mac80211 are erroneously using the
-*current* channel (hw.conf.channel) rather than the current
-*operating* channel (oper_channel). This is wrong as the
-current channel can change during scan/roc and therefore
-doesn't point to the correct channel all the time so that
-due to races the wrong channel might be used.
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-Address this and use the correct channel in all places.
-Some keep using hw.conf.channel, of course, since they
-really do need the current channel.
+This v5 series rebases the onus patches on to today's mac80211-next.
+John, once this is applied you can simply apply the v4 driver updates
+given that they should apply without any issues.
 
-johannes
+Luis R. Rodriguez (5):
+  cfg80211: add CONFIG_CFG80211_CERTIFICATION_ONUS
+  cfg80211: add cellular base station regulatory hint support
+  cfg80211: rename reg_device_remove() to wiphy_regulatory_deregister()
+  cfg80211: make regulatory_update() static
+  cfg80211: remove regulatory_update()
+
+ include/linux/nl80211.h  |   32 ++++++++++++
+ include/net/regulatory.h |    5 ++
+ net/wireless/Kconfig     |   21 ++++++++
+ net/wireless/core.c      |   10 ++--
+ net/wireless/nl80211.c   |   23 ++++++++-
+ net/wireless/reg.c       |  125 ++++++++++++++++++++++++++++++++++++++++------
+ net/wireless/reg.h       |    8 +--
+ 7 files changed, 201 insertions(+), 23 deletions(-)
+
+-- 
+1.7.10.rc1.22.gf5241
 
