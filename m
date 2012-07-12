@@ -1,70 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39603 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:47357 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754062Ab2GXPgK (ORCPT
+	with ESMTP id S934032Ab2GLPRN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 11:36:10 -0400
+	Thu, 12 Jul 2012 11:17:13 -0400
+Message-ID: <1342106232.4531.31.camel@jlt3.sipsolutions.net> (sfid-20120712_171719_653853_132B1DAB)
+Subject: Re: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: arend@broadcom.com, brcm80211-dev-list@broadcom.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] brcmsmac: use ieee80211_channel_to_frequency
-Date: Tue, 24 Jul 2012 17:35:57 +0200
-Message-Id: <1343144157-8349-1-git-send-email-johannes@sipsolutions.net> (sfid-20120724_173614_692844_D7D2D8B0)
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 12 Jul 2012 17:17:12 +0200
+In-Reply-To: <4FFEE9ED.6020906@qca.qualcomm.com>
+References: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>
+	   <1341918365.4475.9.camel@jlt3.sipsolutions.net>
+	   <4FFC0F22.6040906@qca.qualcomm.com>
+	  <1341919201.4475.11.camel@jlt3.sipsolutions.net>
+	  <4FFD1014.2000109@qca.qualcomm.com>
+	 <1342103072.4531.26.camel@jlt3.sipsolutions.net>
+	 <4FFEE9ED.6020906@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Instead of hard-coding almost the same functionality,
-just use ieee80211_channel_to_frequency() directly.
+> > Maybe something like this would make sense then?
+> >
+> > http://p.sipsolutions.net/2aac79bcfe3a9b8b.txt
+> 
+> yeah this was the thing i am proposing
+> http://www.spinics.net/lists/linux-wireless/msg94023.html
+> 
+> your patch is better optimized as it avoids a bool variable to check for 
+> wow disable command, so this should be fine with the other iw
+> patch to check for empty triggers ?
+> http://www.spinics.net/lists/linux-wireless/msg94022.html
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c      |   13 ++++---------
- drivers/net/wireless/brcm80211/include/brcmu_wifi.h |    5 -----
- 2 files changed, 4 insertions(+), 14 deletions(-)
+Well, my patch is different, it actually allows empty triggers to go
+through as I had explained.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index f36dabc..32ef2ed 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7512,15 +7512,10 @@ prep_mac80211_status(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
- 
- 	channel = BRCMS_CHAN_CHANNEL(rxh->RxChan);
- 
--	if (channel > 14) {
--		rx_status->band = IEEE80211_BAND_5GHZ;
--		rx_status->freq = ieee80211_ofdm_chan_to_freq(
--					WF_CHAN_FACTOR_5_G/2, channel);
--
--	} else {
--		rx_status->band = IEEE80211_BAND_2GHZ;
--		rx_status->freq = ieee80211_dsss_chan_to_freq(channel);
--	}
-+	rx_status->band =
-+		channel > 14 ? IEEE80211_BAND_5GHZ : IEEE80211_BAND_2GHZ;
-+	rx_status->freq =
-+		ieee80211_channel_to_frequency(channel, rx_status->band);
- 
- 	rx_status->signal = wlc_phy_rssi_compute(wlc->hw->band->pi, rxh);
- 
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-index f10d302..c11a290 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_wifi.h
-@@ -67,11 +67,6 @@
- #define WL_CHANSPEC_BAND_2G		0x2000
- #define INVCHANSPEC			255
- 
--/* used to calculate the chan_freq = chan_factor * 500Mhz + 5 * chan_number */
--#define WF_CHAN_FACTOR_2_4_G		4814	/* 2.4 GHz band, 2407 MHz */
--#define WF_CHAN_FACTOR_5_G		10000	/* 5   GHz band, 5000 MHz */
--#define WF_CHAN_FACTOR_4_G		8000	/* 4.9 GHz band for Japan */
--
- #define CHSPEC_CHANNEL(chspec)	((u8)((chspec) & WL_CHANSPEC_CHAN_MASK))
- #define CHSPEC_BAND(chspec)	((chspec) & WL_CHANSPEC_BAND_MASK)
- 
--- 
-1.7.10.4
+I'm just not sure which one makes more sense? I kinda feel that allowing
+empty triggers might be a corner case but useful, while disallowing it
+now would make it hard to ever support such a case?
+
+johannes
 
