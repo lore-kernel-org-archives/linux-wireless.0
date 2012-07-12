@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7506 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756832Ab2GCPsz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 11:48:55 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC] ath9k: Stop the BT timers before disabling BT
-Date: Tue, 3 Jul 2012 21:18:38 +0530
-Message-ID: <1341330518-14685-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120703_174912_142841_AA0273D6)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:49578 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755191Ab2GLPET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jul 2012 11:04:19 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 02/12] ath9k: validate rx antenna settings
+Date: Thu, 12 Jul 2012 17:04:01 +0200
+Message-Id: <1342105451-42297-2-git-send-email-nbd@openwrt.org> (sfid-20120712_170425_737479_D4B2E13E)
+In-Reply-To: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
+References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Many chips are not able to deal with non-consecutive rx antenna selections
+and respond with calibration errors, reset errors, etc.
+When an antenna is selected as a tx antenna, also flag it for rx to avoid
+chip issues.
 
-Stop the BT timers 'period_timer' and 'no_stomp_timer'.
-Both these timers can change the BT stomp type especially
-for AR9462 chipsets eventhough we had called ath9k_hw_btcoex_disable.
-ath9k_hw_btcoex_disable->ath9k_hw_btcoex_bt_stomp(ah,
-ATH_BTCOEX_STOMP_NONE). Will do some more analysis before sending
-at as a patch.
-
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/gpio.c |    2 +-
- drivers/net/wireless/ath/ath9k/mci.c  |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 5eac4d1..b224e1f 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -377,9 +377,9 @@ void ath9k_stop_btcoex(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 248e5b2..724f415 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1912,12 +1912,29 @@ static u32 fill_chainmask(u32 cap, u32 new)
+ 	return filled;
+ }
  
- 	if (ah->btcoex_hw.enabled &&
- 	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) {
--		ath9k_hw_btcoex_disable(ah);
- 		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
- 			ath9k_btcoex_timer_pause(sc);
-+		ath9k_hw_btcoex_disable(ah);
- 		if (AR_SREV_9462(ah))
- 			ath_mci_flush_profile(&sc->btcoex.mci);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 64cc782..87acff7 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -174,8 +174,8 @@ skip_tuning:
- 			btcoex->btcoex_period >>= 1;
- 	}
++static bool validate_antenna_mask(struct ath_hw *ah, u32 val)
++{
++	switch (val & 0x7) {
++	case 0x1:
++	case 0x3:
++	case 0x7:
++		return true;
++	case 0x2:
++		return (ah->caps.rx_chainmask == 1);
++	default:
++		return false;
++	}
++}
++
+ static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
  
--	ath9k_hw_btcoex_disable(sc->sc_ah);
- 	ath9k_btcoex_timer_pause(sc);
-+	ath9k_hw_btcoex_disable(sc->sc_ah);
+-	if (!rx_ant || !tx_ant)
++	if (ah->caps.rx_chainmask != 1)
++		rx_ant |= tx_ant;
++
++	if (!validate_antenna_mask(ah, rx_ant) || !tx_ant)
+ 		return -EINVAL;
  
- 	if (IS_CHAN_5GHZ(sc->sc_ah->curchan))
- 		return;
+ 	sc->ant_rx = rx_ant;
 -- 
-1.7.0.4
+1.7.3.2
 
