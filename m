@@ -1,70 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38831 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:46084 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753117Ab2GXLRY (ORCPT
+	with ESMTP id S1753015Ab2GLIQw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 07:17:24 -0400
-Message-ID: <1343128638.4415.17.camel@jlt3.sipsolutions.net> (sfid-20120724_131728_673070_D607250E)
-Subject: Re: [PATCH] cfg80211: 80MHz (11ac) regulatory change
+	Thu, 12 Jul 2012 04:16:52 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 24 Jul 2012 13:17:18 +0200
-In-Reply-To: <500E7D76.9010205@posedge.com>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC5E3B@mbx022-e1-nj-10.exch022.domain.local>
-	 ,<1343048772.4584.18.camel@jlt3.sipsolutions.net>
-	  <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC704B@mbx022-e1-nj-10.exch022.domain.local>
-	 <1343120184.4415.16.camel@jlt3.sipsolutions.net>
-	 <500E7D76.9010205@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: iterate the virtual monitor interface
+Date: Thu, 12 Jul 2012 10:16:46 +0200
+Message-Id: <1342081006-6289-1-git-send-email-johannes@sipsolutions.net> (sfid-20120712_101659_336557_059CB35A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-24 at 16:18 +0530, Mahesh Palivela wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> >> indicating the number of channels below/above control (for control
-> >> channel 1,2,3,4 respectively). Similarly, for VHT160 you'd have 8
-> >> possibilities:
-> >>
-> >> |-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|
-> >>
-> >> (which one could again capture as VHT_CHAN_LAYOUT_0_7 etc.)
-> >>
-> >> [MP] I see your point. But according to 11ac spec, AP will use primary
-> >> chan as specified in HT operation IE chan num. Secondary channel is
-> >> center freq specified in VHT Operation IE. So I am thinking secondary
-> >> channel is not relative offset to primary channel. Hope I am not
-> >> mistaken here.
-> >
-> > Ok so HT has primary channel and secondary, and VHT has secondary VHT
-> > which can again be above/below? That would make sense, but you wouldn't
-> > be covering it.
-> >
-> 
-> I am thinking no need of above/below convention as the center frequency 
-> value itself we know.
+If the virtual monitor interface is requested
+by the driver, it should also be iterated over
+when the driver wants to iterate all active
+interfaces.
 
-But we don't use the center frequency of the overall Ht40/80/160
-channel, we always use the center frequency of the control channel.
+To allow that protect it with the iflist_mtx.
 
-> >>> +     /* This would happen when regulatory rules disallow VHT80 completely */
-> >>> +     if (IEEE80211_CHAN_NO_VHT80 == (chan->flags & (IEEE80211_CHAN_NO_VHT80)))
-> >>> +             return true;
-> >>
-> >> Is that really right? Need to document what the return value of this
-> >> function should be, I guess?
-> >>
-> >> [MP] I guess, it's possible for a channel not allowed for 80Mhz operation.
-> >
-> > Yeah but should it really check *all* the bits rather than any one of
-> > them?
-> >
-> 
-> You mean to say other bits like HT40MINUS, HT40PLUS or even DFS?
+Change-Id: I58ac5de2f4ce93d12c5a98ecd2859f60158d5d69
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c |   29 +++++++++++++++++++----------
+ net/mac80211/util.c  |    9 +++++++++
+ 2 files changed, 28 insertions(+), 10 deletions(-)
 
-No, I mean all the bits that are part of CHAN_NO_VHT80.
-
-johannes
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index e3c4974..334ee0f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -334,17 +334,21 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+-	int ret;
++	int ret = 0;
+ 
+ 	if (!(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))
+ 		return 0;
+ 
++	mutex_lock(&local->iflist_mtx);
++
+ 	if (local->monitor_sdata)
+-		return 0;
++		goto out_unlock;
+ 
+ 	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
+-	if (!sdata)
+-		return -ENOMEM;
++	if (!sdata) {
++		ret = -ENOMEM;
++		goto out_unlock;
++	}
+ 
+ 	/* set up data */
+ 	sdata->local = local;
+@@ -358,18 +362,19 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	if (WARN_ON(ret)) {
+ 		/* ok .. stupid driver, it asked for this! */
+ 		kfree(sdata);
+-		return ret;
++		goto out_unlock;
+ 	}
+ 
+ 	ret = ieee80211_check_queues(sdata);
+ 	if (ret) {
+ 		kfree(sdata);
+-		return ret;
++		goto out_unlock;
+ 	}
+ 
+ 	rcu_assign_pointer(local->monitor_sdata, sdata);
+-
+-	return 0;
++ out_unlock:
++	mutex_unlock(&local->iflist_mtx);
++	return ret;
+ }
+ 
+ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+@@ -379,10 +384,12 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ 	if (!(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))
+ 		return;
+ 
+-	sdata = rtnl_dereference(local->monitor_sdata);
++	mutex_lock(&local->iflist_mtx);
+ 
++	sdata = rcu_dereference_protected(local->monitor_sdata,
++					  lockdep_is_held(&local->iflist_mtx));
+ 	if (!sdata)
+-		return;
++		goto out_unlock;
+ 
+ 	rcu_assign_pointer(local->monitor_sdata, NULL);
+ 	synchronize_net();
+@@ -390,6 +397,8 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ 	drv_remove_interface(local, sdata);
+ 
+ 	kfree(sdata);
++ out_unlock:
++	mutex_unlock(&local->iflist_mtx);
+ }
+ 
+ /*
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 596db0c..39b82fe 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -529,6 +529,11 @@ void ieee80211_iterate_active_interfaces(
+ 				 &sdata->vif);
+ 	}
+ 
++	sdata = rcu_dereference_protected(local->monitor_sdata,
++					  lockdep_is_held(&local->iflist_mtx));
++	if (sdata)
++		iterator(data, sdata->vif.addr, &sdata->vif);
++
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
+@@ -557,6 +562,10 @@ void ieee80211_iterate_active_interfaces_atomic(
+ 				 &sdata->vif);
+ 	}
+ 
++	sdata = rcu_dereference(local->monitor_sdata);
++	if (sdata)
++		iterator(data, sdata->vif.addr, &sdata->vif);
++
+ 	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_atomic);
+-- 
+1.7.10.4
 
