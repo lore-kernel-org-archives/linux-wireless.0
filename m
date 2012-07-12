@@ -1,67 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3703 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924Ab2GNJsZ convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:56456 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932810Ab2GLStp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2012 05:48:25 -0400
-Message-ID: <5001405A.6090308@broadcom.com> (sfid-20120714_114829_764342_67094B7A)
-Date: Sat, 14 Jul 2012 11:48:10 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>
-Subject: Re: bcma-pci-bridge issue with bcm43224
-References: <4FFD7B06.4010401@broadcom.com>
- <CACna6rxf2bmhEKqGPcgP50au=XxeRHUQUvMm1OSidp+oQ6ycuA@mail.gmail.com>
-In-Reply-To: <CACna6rxf2bmhEKqGPcgP50au=XxeRHUQUvMm1OSidp+oQ6ycuA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8
+	Thu, 12 Jul 2012 14:49:45 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so4121581pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 11:49:45 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH v5 4/5] cfg80211: make regulatory_update() static
+Date: Thu, 12 Jul 2012 11:49:20 -0700
+Message-Id: <1342118961-13008-5-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20120712_204948_358597_69F68360)
+In-Reply-To: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/2012 04:32 PM, Rafał Miłecki wrote:
-> 2012/7/11 Arend van Spriel <arend@broadcom.com>:
->> Hi Rafal
->>
->> I am testing with BCM43224 in PCIe slot:
->> $ lspci -vns 03:00.0
->> 03:00.0 0280: 14e4:4353 (rev 01)
->>         Subsystem: 1028:000e
->>         Flags: bus master, fast devsel, latency 0, IRQ 17
->>         Memory at e6e00000 (64-bit, non-prefetchable) [size=16K]
->>         Capabilities: <access denied>
->>         Kernel driver in use: bcma-pci-bridge
->>
->> In the log the irq field in the bcma_device structure is printed in
->> brcmsmac probe function and the value seems invalid hence the
->> request_irq() failure. Any clues?
->>
->> Gr. AvS
->>
->> [86629.110723] bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and
->> package 0x0A
->> [86629.110783] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id
->> 0x800, rev 0x22, class 0x0)
->> [86629.110828] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id
->> 0x812, rev 0x17, class 0x0)
->> [86629.110939] bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820,
->> rev 0x0F, class 0x0)
->> [86629.144286] bcma: bus0: Bus registered
->> [86672.144812] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq
->> -421527552
->> [86672.150745] brcmsmac: Applying 43224B0+ WARs
->> [86672.153155] ieee80211 phy0: wl0: request_irq() failed
->> [86672.153169] brcmsmac: brcms_bcma_probe: brcms_attach failed!
-> 
-> No idea at the moment. I can setup my machine and give it a try. I'll
-> need a day or rather two.
-> 
-> Are you using wireless-testing?
-> 
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-Additional info: the issue does not show on a x86_64 platform, which has
-the same PCIe chip.
+Now that we have wiphy_regulatory_register() we can
+tuck away the core's regulatory_update() call there
+and make it static.
 
-Gr. AvS
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ net/wireless/core.c |    1 -
+ net/wireless/reg.c  |    6 ++++--
+ net/wireless/reg.h  |    1 -
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 9a64b65..693819b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -543,7 +543,6 @@ int wiphy_register(struct wiphy *wiphy)
+ 
+ 	/* set up regulatory info */
+ 	wiphy_regulatory_register(wiphy);
+-	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ 
+ 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
+ 	cfg80211_rdev_list_generation++;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 43b7750..b0a09b2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1232,8 +1232,8 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 		wiphy->reg_notifier(wiphy, last_request);
+ }
+ 
+-void regulatory_update(struct wiphy *wiphy,
+-		       enum nl80211_reg_initiator setby)
++static void regulatory_update(struct wiphy *wiphy,
++			      enum nl80211_reg_initiator setby)
+ {
+ 	mutex_lock(&reg_mutex);
+ 	wiphy_update_regulatory(wiphy, setby);
+@@ -2385,6 +2385,8 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
+ 		reg_num_devs_support_basehint++;
+ 
+ 	mutex_unlock(&reg_mutex);
++
++	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ }
+ 
+ /* Caller must hold cfg80211_mutex */
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index f36b15f..f023c8a 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -34,7 +34,6 @@ void regulatory_exit(void);
+ 
+ int set_regdom(const struct ieee80211_regdomain *rd);
+ 
+-void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
+ bool reg_last_request_cell_base(void);
+ 
+ /**
+-- 
+1.7.10.rc1.22.gf5241
 
