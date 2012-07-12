@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:54748 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754621Ab2GYDHj (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:64931 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933965Ab2GLOrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 23:07:39 -0400
-Date: Wed, 25 Jul 2012 12:07:31 +0900
-From: Norbert Preining <preining@logic.at>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"Lin, Hsien KuoX" <hsien.kuox.lin@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Subject: Re: [Ilw]  Re: 3.4-rc2, ilwagn still most of the time completely
-	unusable
-Message-ID: <20120725030731.GB8504@gamma.logic.tuwien.ac.at> (sfid-20120725_050755_848740_064162CE)
-References: <20120413014047.GB25681@gamma.logic.tuwien.ac.at> <20120330011734.GH6277@gamma.logic.tuwien.ac.at> <20120411023747.GA10126@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com> <20120412000202.GA15286@gamma.logic.tuwien.ac.at> <20120628072512.GF31944@gamma.logic.tuwien.ac.at> <1340869868.4491.4.camel@jlt3.sipsolutions.net> <20120628081607.GG31944@gamma.logic.tuwien.ac.at> <20120712081457.GA32465@gamma.logic.tuwien.ac.at> <1342109807.4531.38.camel@jlt3.sipsolutions.net>
+	Thu, 12 Jul 2012 10:47:49 -0400
+Received: by yhmm54 with SMTP id m54so2775028yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 07:47:48 -0700 (PDT)
+Message-ID: <4FFEE390.8080104@lwfinger.net> (sfid-20120712_164800_382934_6FBB8E8F)
+Date: Thu, 12 Jul 2012 09:47:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1342109807.4531.38.camel@jlt3.sipsolutions.net>
+To: Ouyang <ilhebe999@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: problem with installing the kernel
+References: <loom.20120712T044726-224@post.gmane.org> <4FFE437E.8080008@lwfinger.net> <loom.20120712T060947-580@post.gmane.org>
+In-Reply-To: <loom.20120712T060947-580@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 07/11/2012 11:13 PM, Ouyang wrote:
+>
+> Thank you so much for the reply. Sorry that I run "make" as a root. I am new
+> with linux and I am sure I won`t make the same mistake in the future. By the way
+> , why it tells me about try "rm -- help"? I really do not know what does it
+> mean. In what situation will this "rm -- help " come out?
 
-Sorry for the late reply, I was travelling around the world ...
-I have now tested the =2 and =4 settings at home, with the following
-outcome:
+In some script that is called from "make modules_install", your system is 
+calling the utility rm with option 3. That is not a standard script. It could be 
+that something is messed up with your source tree. If you reload the source that 
+you got from Fedora, and rebuild as a regular user, it might fix the problem. If 
+not, you need to ask on a Fedora forum. The wireless and mainline kernels do not 
+have this problem.
 
-On Do, 12 Jul 2012, Johannes Berg wrote:
-> With the latest, I've extended 11n_disable to have more bits.
-> 
-> 11n_disable=1 will disable HT completely
-> 11n_disable=2 will disable TX aggregation
-> 11n_disable=4 will disable RX aggregation
+Larry
 
-11n_disabled=2:
-lots of messages
-  Open BA session requested for 00:0a:79:eb:56:10 tid 0
-  BA request denied - HW unavailable for tid 0
-and
-  Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 inititator reason: 0
-  Rx A-MPDU request on tid 0 result 0
-
-Connection is stable for quite some time, but after 1-2 hours I got
-a bad hang, grinding to a halt. pings to kernel.org gives 26% 
-packet loss, but the rest of the packets are fast 130ms 
-
-(Isn't that a strange thing - 25+% packet loss and all others are fast?)
-I assume the packaet loss is related to the above messages.
-
-
-11n_disabled=4:
-
-lots of messages
-  Rx A-MPDU request on tid 0 result -22
-and at some point ping timeouts of 80+ secs (!) and then total hang
-(as far as I remember)
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-PERRANZABULOE (n.)
-One of those spray things used to wet ironing with.
-			--- Douglas Adams, The Meaning of Liff
