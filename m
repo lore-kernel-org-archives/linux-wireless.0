@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:62194 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154Ab2GaUsS (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:33467 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932810Ab2GLSth (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 16:48:18 -0400
-MIME-Version: 1.0
-In-Reply-To: <1343765698.4474.10.camel@jlt3.sipsolutions.net>
-References: <CADKZ3FKDw78ac9JPXJuw0s7Mqg1RrVfonbjXZ6zHmtwF2i5HoQ@mail.gmail.com>
-	<1343765698.4474.10.camel@jlt3.sipsolutions.net>
-Date: Wed, 1 Aug 2012 00:48:17 +0400
-Message-ID: <CADKZ3FLs444RfLx=RyBPKs+Lza_mZHhT=zHauMt3BUnqAUtY0w@mail.gmail.com> (sfid-20120731_224848_592436_A0DA59C8)
-Subject: Re: wlcore: might_sleep operation in interrupt handler
-From: Denis Yefremov <yefremov.denis@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 12 Jul 2012 14:49:37 -0400
+Received: by yenl2 with SMTP id l2so2763781yen.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 11:49:37 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH v5 1/5] cfg80211: add CONFIG_CFG80211_CERTIFICATION_ONUS
+Date: Thu, 12 Jul 2012 11:49:17 -0700
+Message-Id: <1342118961-13008-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20120712_204940_071251_7447ED5B)
+In-Reply-To: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-More precise (IRQF_ONESHOT flag may be used):
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
-{
-...
-        if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
-                irqflags = IRQF_TRIGGER_RISING;
-        else
-                irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+This adds CONFIG_CFG80211_CERTIFICATION_ONUS which is to
+be used for features / code which require a bit of work on
+the system integrator's part to ensure that the system will
+still pass 802.11 regulatory certification. This option is
+also usable for researchers and experimenters looking to add
+code in the kernel without impacting compliant code.
 
-        ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wlcore_irq,
-                                   irqflags,
-                                   pdev->name, wl);
+We'd use CONFIG_EXPERT alone but it seems that most standard
+Linux distributions are enabling CONFIG_EXPERT already. This
+allows us to define 802.11 specific kernel features under a
+flag that is intended by design to be disabled by standard
+Linux distributions, and only enabled by system integrators
+or distributions that have done work to ensure regulatory
+certification on the system with the enabled features.
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ net/wireless/Kconfig |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-2012/8/1 Johannes Berg <johannes@sipsolutions.net>:
-> On Tue, 2012-07-31 at 22:28 +0400, Denis Yefremov wrote:
->> Interrupt handler wlcore_irq in wlcore/main.c file
->> invokes mutex_lock that is might sleep operation.
->
->> int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
->> {
->> ...
->>         ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wlcore_irq,
->>                                    irqflags,
->>                                    pdev->name, wl);
->
-> Yes, umm, why do you think they're using a *threaded* IRQ? :-)
->
-> johannes
->
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 4d2b1ec..fe4adb1 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -74,6 +74,27 @@ config CFG80211_REG_DEBUG
+ 
+ 	  If unsure, say N.
+ 
++config CFG80211_CERTIFICATION_ONUS
++	bool "cfg80211 certification onus"
++	depends on CFG80211 && EXPERT
++	default n
++	---help---
++	  You should disable this option unless you are both capable
++	  and willing to ensure your system will remain regulatory
++	  compliant with the features available under this option.
++	  Some options may still be under heavy development and
++	  for whatever reason regulatory compliance has not or
++	  cannot yet be verified. Regulatory verification may at
++	  times only be possible until you have the final system
++	  in place.
++
++	  This option should only be enabled by system integrators
++	  or distributions that have done work necessary to ensure
++	  regulatory certification on the system with the enabled
++	  features. Alternatively you can enable this option if
++	  you are a wireless researcher and are working in a controlled
++	  and approved environment by your local regulatory agency.
++
+ config CFG80211_DEFAULT_PS
+ 	bool "enable powersave by default"
+ 	depends on CFG80211
+-- 
+1.7.10.rc1.22.gf5241
+
