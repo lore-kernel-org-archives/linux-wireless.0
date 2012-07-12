@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41907 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933181Ab2GDKxu (ORCPT
+Received: from storm.alittletooquiet.net ([67.23.28.199]:37708 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755895Ab2GLA3o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 06:53:50 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 11 Jul 2012 20:29:44 -0400
+Date: Wed, 11 Jul 2012 20:21:49 -0400
+From: Forest Bond <forest@alittletooquiet.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix crash with single-queue drivers
-Date: Wed,  4 Jul 2012 12:53:45 +0200
-Message-Id: <1341399225-12604-1-git-send-email-johannes@sipsolutions.net> (sfid-20120704_125354_863223_72112624)
+Subject: Anyone using rtl8192de with 2.4GHz 802.11g?
+Message-ID: <20120712002149.GA14850@alittletooquiet.net> (sfid-20120712_022948_423966_15792A68)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Larry (and some others I think) reported that with
-single-queue drivers mac80211 crashes when waking
-the queues. This happens because we allocate just
-a single queue for each virtual interface in case
-the driver doesn't have at least 4 queues, but the
-code stopping/waking the virtual interface queues
-wasn't taking this into account.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/util.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Hi,
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 26d2103..8f34d2f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -268,6 +268,10 @@ EXPORT_SYMBOL(ieee80211_ctstoself_duration);
- void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
- {
- 	struct ieee80211_sub_if_data *sdata;
-+	int n_acs = IEEE80211_NUM_ACS;
-+
-+	if (local->hw.queues < IEEE80211_NUM_ACS)
-+		n_acs = 1;
- 
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		int ac;
-@@ -282,7 +286,7 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
- 		    local->queue_stop_reasons[sdata->vif.cab_queue] != 0)
- 			continue;
- 
--		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+		for (ac = 0; ac < n_acs; ac++) {
- 			int ac_queue = sdata->vif.hw_queue[ac];
- 
- 			if (ac_queue == queue ||
-@@ -344,6 +348,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
-+	int n_acs = IEEE80211_NUM_ACS;
- 
- 	trace_stop_queue(local, queue, reason);
- 
-@@ -355,6 +360,9 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
- 
- 	__set_bit(reason, &local->queue_stop_reasons[queue]);
- 
-+	if (local->hw.queues < IEEE80211_NUM_ACS)
-+		n_acs = 1;
-+
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		int ac;
-@@ -362,7 +370,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
- 		if (!sdata->dev)
- 			continue;
- 
--		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+		for (ac = 0; ac < n_acs; ac++) {
- 			if (sdata->vif.hw_queue[ac] == queue ||
- 			    sdata->vif.cab_queue == queue)
- 				netif_stop_subqueue(sdata->dev, ac);
--- 
-1.7.10
+The rtl8192de driver is working fine for me at 5GHz, but I am having trouble
+getting scan results for 2.4GHz 802.11g networks.  I have been doing a lot =
+of
+debugging but am not making much progress.  I suspect the 802.11 b/g/n phy =
+is
+not being initialized correctly, but I'm pretty far outside my domain on th=
+is
+one.
 
+Is anyone successfully using this driver with a 2.4GHz 802.11g network?
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
+
+--OgqxwSJOaUobr8KG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk/+GJ0ACgkQRO4fQQdv5Az2tgCgi3fyIm26KodMp3woZ5LAsfXP
+FFUAoJkOCi0GUAYMnsKslCEGndUfLa4L
+=ctS+
+-----END PGP SIGNATURE-----
+
+--OgqxwSJOaUobr8KG--
