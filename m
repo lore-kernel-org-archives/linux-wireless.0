@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26712 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932106Ab2GKQvk convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47346 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932679Ab2GLPOq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 12:51:40 -0400
-From: "Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ortiz, Samuel" <samuel.ortiz@intel.com>,
-	linux-wimax <linux-wimax@intel.com>,
-	"wimax@linuxwimax.org" <wimax@linuxwimax.org>
-Subject: RE: [RFC 1/2] i2400m: remove SDIO device support
-Date: Wed, 11 Jul 2012 16:50:27 +0000
-Message-ID: <3A78FAA0EC814D4B8ECC99B3AB32B33208141AC2@fmsmsx110.amr.corp.intel.com> (sfid-20120711_185149_894844_B3D4A564)
-References: <1341952049-32193-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1341952049-32193-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 12 Jul 2012 11:14:46 -0400
+Message-ID: <1342106081.4531.29.camel@jlt3.sipsolutions.net> (sfid-20120712_171452_126198_0FD779FA)
+Subject: Re: [PATCH v4 0/5] cfg80211: onus and cell base station hint
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	kvalo@qca.qualcomm.com, arend@broadcom.com, henry@logout.com,
+	senthilb@qca.qualcomm.com
+Date: Thu, 12 Jul 2012 17:14:41 +0200
+In-Reply-To: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1341940991-11234-1-git-send-email-rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: John W. Linville [mailto:linville@tuxdriver.com]
+On Tue, 2012-07-10 at 10:23 -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 > 
-> From: "John W. Linville" <linville@tuxdriver.com>
+> These address the latest feedback on the v3 series. I've added
+> two more patches to address removing of a superflous call
+> given the introduction of wiphy_regulatory_register().
 > 
-> SDIO support in this driver was intended to support the iwmc3200
-> device.  This hardware never became available to normal humans.
-> Leaving this driver imposes unwelcome maintenance costs for no clear
-> benefit.
-> 
-> Cc: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> If there are no objections, I'll push this series through the
-> wireless-next tree along with the iwmc3200wifi removal.
+> Luis R. Rodriguez (5):
+>   cfg80211: add CONFIG_CFG80211_CERTIFICATION_ONUS
+>   cfg80211: add cellular base station regulatory hint support
+>   cfg80211: rename reg_device_remove() to wiphy_regulatory_deregister()
+>   cfg80211: make regulatory_update() static
+>   cfg80211: remove regulatory_update()
 
-Acked-by: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
+Could you rebase on mac80211-next? These don't seem to apply, due to
+some overlapping changes in nl80211.h.
+
+Also, generally I would prefer to have the cleanups first. You could
+have changed regulatory_update -> wiphy_regulatory_register first and
+then not have the intermediate step with two functions called from the
+core? But if you don't want to change it now that's fine too.
+
+johannes
+
