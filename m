@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:48581 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753387Ab2GWG5m convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46406 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753636Ab2GLKIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 02:57:42 -0400
-From: "Berg, Johannes" <johannes.berg@intel.com>
-To: Daniel J Blueman <daniel@quora.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-CC: Linux Kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: RE: 3.5.0 iwlagn AP crash...
-Date: Mon, 23 Jul 2012 06:56:33 +0000
-Message-ID: <1DC40B07CD6EC041A66726C271A73AE61959314E@IRSMSX102.ger.corp.intel.com> (sfid-20120723_085759_577302_08626B92)
-References: <CAMVG2su3DfOTRHDr7oFPLM5LVOBEXtChPEy4LL_2QS-VT9vBgg@mail.gmail.com>
- <CAMVG2suiMXojoptfNNJEZWhiBfgVcU99BTvG6jqdKAFGBf65MA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 12 Jul 2012 06:08:20 -0400
+Message-ID: <1342087697.4531.14.camel@jlt3.sipsolutions.net> (sfid-20120712_120824_446206_F3585520)
+Subject: Re: pull-request: mac80211-next 2012-07-10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 12 Jul 2012 12:08:17 +0200
+In-Reply-To: <1342087211.4531.12.camel@jlt3.sipsolutions.net> (sfid-20120712_120018_674592_22967432)
+References: <1341946090.4475.31.camel@jlt3.sipsolutions.net>
+	 (sfid-20120710_204821_128762_BC016001) <1342085261.4531.9.camel@jlt3.sipsolutions.net>
+	 (sfid-20120712_112748_417680_83E2626B) <1342087000.4531.11.camel@jlt3.sipsolutions.net>
+	 (sfid-20120712_115658_371123_64E83BB6) <1342087211.4531.12.camel@jlt3.sipsolutions.net>
+	 (sfid-20120712_120018_674592_22967432)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > BUG: unable to handle kernel NULL pointer dereference at      (null)
-> > > IP: [<ffffffffa02e869d>] ieee80211_ave_rssi+0xd/0x50 [mac80211]
-> >
-> > From my debug kernel, sdata is clearly NULL:
-> >
-> > (gdb) list *0xffffffff815b74f8
-> > 0xffffffff815b74f8 is in ieee80211_ave_rssi (net/mac80211/util.c:1801).
-> > 1796	int ieee80211_ave_rssi(struct ieee80211_vif *vif)
-> > 1797	{
-> > 1798		struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> 
-> I'll look into it, thanks.
+On Thu, 2012-07-12 at 12:00 +0200, Johannes Berg wrote:
 
-We had a fix, but it seems I missed putting it into 3.5:
+> > Ok the bug is this -- if we remove a wdev (that doesn't have a netdev),
+> > this change is obviously needed:
 
-commit e19ebcab01cc130fa832764d453b263460ec3b91
-Author: Ilan Peer <ilan.peer@intel.com>
-Date:   Thu May 10 15:53:14 2012 +0300
+Better just handle the special case, I'm rolling this into the patch
+"cfg80211: use wireless_dev for interface management":
 
-    iwlwifi: Check BSS ctx active before call mac80211
 
-I'll ask Greg to include it in 3.5 stable.
-
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2030,6 +2030,16 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->del_virtual_intf)
+ 		return -EOPNOTSUPP;
+ 
++	/*
++	 * If we remove a wireless device without a netdev then clear
++	 * user_ptr[1] so that nl80211_post_doit won't dereference it
++	 * to check if it needs to do dev_put(). Otherwise it crashes
++	 * since the wdev has been freed, unlike with a netdev where
++	 * we need the dev_put() for the netdev to really be freed.
++	 */
++	if (!wdev->netdev)
++		info->user_ptr[1] = NULL;
++
+ 	return rdev->ops->del_virtual_intf(&rdev->wiphy, wdev);
+ }
+ 
 johannes
-Intel GmbH
-Dornacher Strasse 1
-85622 Feldkirchen/Muenchen, Deutschland
-Sitz der Gesellschaft: Feldkirchen bei Muenchen
-Geschaeftsfuehrer: Douglas Lusk, Peter Gleissner, Hannes Schwaderer, Christian Lamprechter
-Registergericht: Muenchen HRB 47456
-Ust.-IdNr./VAT Registration No.: DE129385895
-Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
 
