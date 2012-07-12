@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55800 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198Ab2GJEcr (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:40177 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755221Ab2GLSts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 00:32:47 -0400
-Received: by lbbgm6 with SMTP id gm6so21475186lbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 21:32:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+XVXfdQCPTrEdDb1WY67rSKucjH=aU9S+zzkZ=xB+GW94Ty9A@mail.gmail.com>
-References: <1341732211-25871-1-git-send-email-coelho@ti.com>
- <1341732211-25871-8-git-send-email-coelho@ti.com> <1341740110.4987.4.camel@jlt3.sipsolutions.net>
- <CA+XVXfdEqQyiyDQoAddCjC9bhH+WqmANiqf_wUCEJFi7=xG5vQ@mail.gmail.com>
- <1341821025.4455.5.camel@jlt3.sipsolutions.net> <CA+XVXfdQCPTrEdDb1WY67rSKucjH=aU9S+zzkZ=xB+GW94Ty9A@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 10 Jul 2012 14:32:25 +1000
-Message-ID: <CAGRGNgXWackce4pHpbOc1Bd9EhhEGSVfGsimMXvEDsJpguWQ5Q@mail.gmail.com> (sfid-20120710_063251_952291_F88BBBA1)
-Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 12 Jul 2012 14:49:48 -0400
+Received: by ghrr11 with SMTP id r11so2767419ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 11:49:48 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH v5 5/5] cfg80211: remove regulatory_update()
+Date: Thu, 12 Jul 2012 11:49:21 -0700
+Message-Id: <1342118961-13008-6-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20120712_204951_602849_7926B7FD)
+In-Reply-To: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arik,
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
 
-On Mon, Jul 9, 2012 at 6:14 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Mon, Jul 9, 2012 at 11:03 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Sun, 2012-07-08 at 17:08 +0300, Arik Nemtsov wrote:
->>
->>> > kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
->>> > then most likely you could just put "__aligned(4)" or something on the
->>> > conf.phy struct member and not allocate memory at all?
->>>
->>> Yea we need 4 bytes alignment. The kzalloc is a sort of convention in
->>> the driver (see acx.c), but probably here we can use kmemdup.
->>> We can't use fancy __aligned(4) notations most likely, since a
->>> usermode tool also parses these header files, and it's not too smart
->>> :)
->>
->> This seems like a rather bad excuse for making the runtime code more
->> complex and less performant ... I'll let you sort it out with John
->> though, I wouldn't let you get away with this though if I maintained the
->> tree ;-)
->>
->> FWIW, I think your actual problem is that you mark wl18xx_priv_conf as
->> packed unnecessarily. Otherwise it might actually get alignment, at
->> least on ARM I hear.
->
-> It's not an excuse, we really have a usermode tool (called wlconf)
-> preparing binary conf files. And it usually runs on a different arch
-> (x86), so we mark everything packed to avoid errors.
-> I'm pretty sure __aligned(4) would screw up the parser there. It has
-> to build an internal representation of all the struct, and fill it out
-> using an ini file.
+regulatory_update() just calls wiphy_update_regulatory().
+wiphy_update_regulatory() assumes you already have
+the reg_mutex held so just move the call within locking
+context and kill the superfluous regulatory_update().
 
-Does this tool parse the compiled code or the actual source files?
-Because if it parses the source files, surely you could adjust the
-parser so it doesn't trip over a potential __aligned(4) notation.
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ net/wireless/reg.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-Thanks,
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b0a09b2..6d57e18 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1232,14 +1232,6 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 		wiphy->reg_notifier(wiphy, last_request);
+ }
+ 
+-static void regulatory_update(struct wiphy *wiphy,
+-			      enum nl80211_reg_initiator setby)
+-{
+-	mutex_lock(&reg_mutex);
+-	wiphy_update_regulatory(wiphy, setby);
+-	mutex_unlock(&reg_mutex);
+-}
+-
+ static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+ {
+ 	struct cfg80211_registered_device *rdev;
+@@ -2384,9 +2376,9 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
+ 	if (!reg_dev_ignore_cell_hint(wiphy))
+ 		reg_num_devs_support_basehint++;
+ 
+-	mutex_unlock(&reg_mutex);
++	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ 
+-	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
++	mutex_unlock(&reg_mutex);
+ }
+ 
+ /* Caller must hold cfg80211_mutex */
 -- 
-Julian Calaby
+1.7.10.rc1.22.gf5241
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
