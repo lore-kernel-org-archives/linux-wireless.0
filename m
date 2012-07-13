@@ -1,70 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1198 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751998Ab2GCNPB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 09:15:01 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>,
-	"Johannes Berg" <johannes.berg@intel.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: [PATCH] brcmsmac: fix brcms_c_regd_init() which crashed after
- 11ad patch
-Date: Tue, 3 Jul 2012 15:14:40 +0200
-Message-ID: <1341321280-6136-1-git-send-email-arend@broadcom.com> (sfid-20120703_151507_187009_4C87618A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:50817 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932167Ab2GML6y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 07:58:54 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SpeWK-0002yu-PI
+	for linux-wireless@vger.kernel.org; Fri, 13 Jul 2012 13:58:53 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] cfg80211/mac80211 channel fixes
+Date: Fri, 13 Jul 2012 13:58:47 +0200
+Message-Id: <1342180730-19987-1-git-send-email-johannes@sipsolutions.net> (sfid-20120713_135857_735412_B113CE60)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an OOPS in brcmsmac driver, which was introduced
-by the 11ad patch 'cfg80211: add 802.11ad (60gHz band) support'.
-The value IEEE80211_NUM_BANDS increased, which was used in the
-brcms_c_regd_init() function.
+Ok so the last series worked but wasn't really good. I realized
+that even for normal multi-channel operation we're going to need
+get_channel() since otherwise we don't know the channel *type*
+that the interface is using (e.g. in managed mode) since the AP
+is no real indication of it as we might decide to not use HT40
+or whatever...
 
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+So instead of just reverting the get_channel removal, I'm adding
+it back now with an interface argument. Nothing much changes for
+mac80211, but in the future I'll adjust the cfg80211 channel
+tracking code to make use of it so that it'll be required for
+multi-channel (or the code will have to assume incompatibility.)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 2d365d3..2643669 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -763,20 +763,17 @@ void brcms_c_regd_init(struct brcms_c_info *wlc)
- 	int band_idx, i;
- 
- 	/* Disable any channels not supported by the phy */
--	for (band_idx = 0; band_idx < IEEE80211_NUM_BANDS; band_idx++) {
--		if (band_idx == IEEE80211_BAND_2GHZ)
--			band = wlc->bandstate[BAND_2G_INDEX];
--		else
--			band = wlc->bandstate[BAND_5G_INDEX];
--
--		/* skip if band not initialized */
--		if (band->pi == NULL)
--			continue;
-+	for (band_idx = 0; band_idx < wlc->pub->_nbands; band_idx++) {
-+		band = wlc->bandstate[band_idx];
- 
- 		wlc_phy_chanspec_band_validch(band->pi, band->bandtype,
- 					      &sup_chan);
- 
--		sband = wiphy->bands[band_idx];
-+		if (band_idx == BAND_2G_INDEX) {
-+			sband = wiphy->bands[IEEE80211_BAND_2GHZ];
-+		} else {
-+			sband = wiphy->bands[IEEE80211_BAND_5GHZ];
-+		}
- 		for (i = 0; i < sband->n_channels; i++) {
- 			ch = &sband->channels[i];
- 			if (!isset(sup_chan.vec, ch->hw_value))
--- 
-1.7.9.5
+This series fixes the monitor mode problems and I've committed
+them (but haven't pushed, in case somebody finds errors.)
 
+johannes
 
