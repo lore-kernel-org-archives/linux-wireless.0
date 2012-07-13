@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36191 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753225Ab2GTJrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2012 05:47:55 -0400
-Date: Fri, 20 Jul 2012 11:47:49 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Sedat Dilek <sedat.dilek@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-bluetooth@vger.kernel.org, linux-usb@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: Tree for July 17 (debugobjects: bt | btusb | usb
- related?)
-Message-ID: <20120720094748.GA16598@redhat.com> (sfid-20120720_114812_098946_AA5908F9)
-References: <CA+icZUWXire09owq2Q9bN=C+VKuzSG+48Cz3-Ex+ZaTtGrEmQA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+icZUWXire09owq2Q9bN=C+VKuzSG+48Cz3-Ex+ZaTtGrEmQA@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:50319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756666Ab2GMIyw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 04:54:52 -0400
+Message-ID: <1342169684.4983.0.camel@jlt3.sipsolutions.net> (sfid-20120713_105510_996521_75C9F5A5)
+Subject: Re: mac80211: optimize ieee80211_rx_status struct layout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 13 Jul 2012 10:54:44 +0200
+In-Reply-To: <20120713085227.GA16445@elgon.mountain> (sfid-20120713_105245_577228_12927670)
+References: <20120713085227.GA16445@elgon.mountain>
+	 (sfid-20120713_105245_577228_12927670)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 18, 2012 at 08:06:17PM +0200, Sedat Dilek wrote:
-> On Tue, Jul 17, 2012 at 7:41 AM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> > Hi all,
-> >
-> > Changes since 20120716:
-> >
-> 
-> Not sure what the root cause of this issue is.
-> 
-> I see the following call-trace in linux-next (next-20120717).
-> 
-> [   23.431889] ------------[ cut here ]------------
-> [   23.431896] WARNING: at lib/debugobjects.c:261 debug_print_object+0x8e/0xb0()
-> [   23.431897] Hardware name: <HIDDEN>
-> [   23.431901] ODEBUG: free active (active state 0) object type:
-> timer_list hint: delayed_work_timer_fn+0x0/0x40
-There are few delayed works on hci_dev structure, it's hard to say which
-one is not stopped before kfree.
+Yay... Thanks Dan.
 
-> # CONFIG_DEBUG_OBJECTS_WORK is not set
-If you enable that option, it should show which delayed work is causing trouble.
 
-Stanislaw
+> drivers/net/wireless/b43/xmit.c
+>    768          if (phystat0 & B43_RX_PHYST0_OFDM)
+>    769                  status.rate_idx = b43_plcp_get_bitrate_idx_ofdm(plcp,
+>    770                                                  phytype == B43_PHYTYPE_A);
+>    771          else
+>    772                  status.rate_idx = b43_plcp_get_bitrate_idx_cck(plcp);
+>    773          if (unlikely(status.rate_idx == -1)) {
+>    774                  /* PLCP seems to be corrupted.
+>    775                   * Drop the frame, if we are not interested in corrupted frames. */
+>    776                  if (!(dev->wl->filter_flags & FIF_PLCPFAIL))
+>    777                          goto drop;
+
+Looks like it should have a temporary variable, I'll post a fix.
+
+johannes
+
