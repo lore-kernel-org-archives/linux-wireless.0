@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6782 "EHLO mx1.redhat.com"
+Received: from serv04.lahn.de ([213.239.197.57]:57942 "EHLO serv04.lahn.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751865Ab2GSOyo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 10:54:44 -0400
-Date: Thu, 19 Jul 2012 16:54:31 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Chen, Chien-Chia" <machen@suse.com>
-Cc: users@rt2x00.serialmonkey.com, kevin.chou@mediatek.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users]  [PATCH] rt2x00 : fix rt3290 resuming failed.
-Message-ID: <20120719145430.GA4231@redhat.com> (sfid-20120719_165448_314160_0DDB625C)
-References: <1342667903-27314-1-git-send-email-machen@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1342667903-27314-1-git-send-email-machen@suse.com>
+	id S1754891Ab2GMJdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 05:33:09 -0400
+Received: from xenia.leun.net (localhost [127.0.0.1])
+	by xenia.leun.net (8.14.5/8.14.4/SuSE Linux 0.8) with ESMTP id q6D9O68o022107
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 11:24:07 +0200
+Date: Fri, 13 Jul 2012 11:24:06 +0200
+From: Michael Leun <lkml20120218@newton.leun.net>
+To: <linux-wireless@vger.kernel.org>
+Subject: ath9k_htc: Issue with channel 52 and above (DFS?)
+Message-ID: <20120713112406.29aca09a@xenia.leun.net> (sfid-20120713_113312_856201_C0CED11B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 19, 2012 at 11:18:23AM +0800, Chen, Chien-Chia wrote:
-> +	if (rt2x00_rt(rt2x00dev,RT3290)){
-Please add space after a comma.
+Hi,
 
-> +		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
-> +		if (retval)
-> +			return -EBUSY;
-> +	}
-Since we enabling device here, it's probably not needed to do this on
-rt2800pci_probe_hw, or I'm wrong?
+with an intel based and an ath9k mini pci express card I see my 5GHz AP
+in iwlist scan results regardless if it is on channels 36-48 or on 52
+and above.
 
-> +			if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
-> +				(rt2x00_get_field32(reg, XTAL_RDY) == 1))
-> +					break;
-Use proper coding style here (see below). Seems you did not copy this
-function from rt2800pci.c, but take it form other source, so it could
-miss some other changes as well.
+With this
 
-> +
-> +			rt2800_register_write(rt2x00dev, 0x58, 0x018);
-> +			udelay(REGISTER_BUSY_DELAY);
-> +			rt2800_register_write(rt2x00dev, 0x58, 0x418);
-> +			udelay(REGISTER_BUSY_DELAY);
-> +			rt2800_register_write(rt2x00dev, 0x58, 0x618);
-We really like to know what those black magic numbers mean.
+Bus 002 Device 031: ID 0846:9018 NetGear, Inc. WNDA3200 802.11abgn Wireless Adapter [Atheros AR7010+AR9280]
 
-> -			if (rt2x00_get_field32(reg, PLL_LD) &&
-> -			    rt2x00_get_field32(reg, XTAL_RDY))
-> -				break;
-Here is how above part should look like.
+ath9k_htc based card I see the same AP only if it operates on channel
+36-48, I do NOT see it in iwlist scan results if it is on channel 52 to
+140 - I again see it when it is on 149 or above.
 
-Stanislaw
+So, exactly the channels which require radar detection seem to be
+missing.
+
+I wonder why this happens (if related to DFS) - radar detection needs
+to happen on the AP, not the client, or do I overlook something?
+
+
+-- 
+MfG,
+
+Michael Leun
+
