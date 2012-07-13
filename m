@@ -1,89 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51435 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751997Ab2G0LRC (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:41797 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932653Ab2GMMcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:02 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 05/20] mac80211: use channel context notifications
-Date: Fri, 27 Jul 2012 13:16:41 +0200
-Message-Id: <1343387816-9414-6-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131736_126778_2A4BAC6F)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 13 Jul 2012 08:32:25 -0400
+Received: by gglu4 with SMTP id u4so3485479ggl.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 05:32:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FF60B53.4070603@lwfinger.net>
+References: <CAJrANNJutyjAUPeQsLK4M30oe0PqArHJUVeJKUUJ6GExSEv6Eg@mail.gmail.com>
+	<4FF60B53.4070603@lwfinger.net>
+Date: Fri, 13 Jul 2012 13:32:24 +0100
+Message-ID: <CAJrANNLNUXue-FSuu+QTT9vwFrokKsrjJAKcTNvcr4mAm_NDpw@mail.gmail.com> (sfid-20120713_143230_079449_0FC91601)
+Subject: Re: PROBLEM: RTL8192CU / TRENDnet TEW-648UBM V1.1 USB Wireless
+From: David Moore <spasysheep@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On Thu, Jul 5, 2012 at 10:46 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 07/05/2012 04:34 PM, David Moore wrote:
+>>
+>> - TRENDware/TRENDnet TEW-648UBM V1.1 USB Wireless doesn't work properly
+>> - Driver (RTL8192CU) loads, device appears to work, but will not pick
+>> up most networks and will not connect to any. Fails with bad
+>> passphrase if connected through Wicd or DHCPCD times out waiting for
+>> carrier carrier if connected manually (WPA2-PSK)
+>> - Linux version 3.4.4-2-ARCH (tobias@T-POWA-LX) (gcc version 4.7.1
+>> (GCC) ) #1 SMP PREEMPT Sun Jun 24 18:59:47 CEST 2012
+>> - Recreated by trying to connect to wireless networks with TEW-648UBM V1.1
+>> - http://www.wikidevi.com/wiki/TRENDnet_TEW-648UBM
+>> - http://ubuntuforums.org/showthread.php?t=1667682
+>
+>
+> Does the attached patch help?
+>
+> Larry
+>
 
-Channel context pointer will be accessible on
-both assign and unassign events.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/chan.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 184b8bd..8d77ad13 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -5,6 +5,7 @@
- #include <linux/nl80211.h>
- #include <net/cfg80211.h>
- #include "ieee80211_i.h"
-+#include "driver-ops.h"
- 
- static enum ieee80211_chan_mode
- __ieee80211_get_channel_mode(struct ieee80211_local *local,
-@@ -190,6 +191,8 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 
- 	list_add(&ctx->list, &local->chanctx_list);
- 
-+	drv_add_chanctx(local, ctx);
-+
- 	return ctx;
- }
- 
-@@ -200,6 +203,8 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 
- 	WARN_ON_ONCE(ctx->refcount != 0);
- 
-+	drv_remove_chanctx(ctx->local, ctx);
-+
- 	list_del(&ctx->list);
- 	kfree(ctx);
- }
-@@ -207,21 +212,25 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- static void ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_chanctx *ctx)
- {
--	struct ieee80211_local *local __maybe_unused = sdata->local;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
- 	sdata->vif.chanctx_conf = &ctx->conf;
- 	ctx->refcount++;
-+
-+	drv_assign_vif_chanctx(local, sdata, ctx);
- }
- 
- static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 					   struct ieee80211_chanctx *ctx)
- {
--	struct ieee80211_local *local __maybe_unused = sdata->local;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
-+	drv_unassign_vif_chanctx(local, sdata, ctx);
-+
- 	ctx->refcount--;
- 	sdata->vif.chanctx_conf = NULL;
- }
--- 
-1.7.10.4
-
+No, it doesn't seem to change anything
