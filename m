@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47486 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161327Ab2GLQGu (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:46130 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756809Ab2GMNfc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 12:06:50 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SpLui-0003sd-Uc
-	for linux-wireless@vger.kernel.org; Thu, 12 Jul 2012 18:06:49 +0200
-Message-ID: <1342109209.4531.35.camel@jlt3.sipsolutions.net> (sfid-20120712_180658_868425_E94D63E4)
-Subject: Re: [PATCH v2] cfg80211: fix set_monitor_enabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 12 Jul 2012 18:06:49 +0200
-In-Reply-To: <1342109117-28348-1-git-send-email-johannes@sipsolutions.net> (sfid-20120712_180526_680352_4ABD41DD)
-References: <1342109117-28348-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120712_180526_680352_4ABD41DD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 13 Jul 2012 09:35:32 -0400
+Received: by eaak11 with SMTP id k11so1073062eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 06:35:31 -0700 (PDT)
+Message-ID: <5000241F.5050608@gmail.com> (sfid-20120713_153536_952107_AD987E52)
+Date: Fri, 13 Jul 2012 15:35:27 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: lkml20120218@newton.leun.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: ath9k_htc: Issue with channel 52 and above (DFS?)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-12 at 18:05 +0200, Johannes Berg wrote:
+Michael Leun wrote:
 
->  	if (!err && ntype != otype && netif_running(dev)) {
-> -		cfg80211_update_iface_num(rdev, ntype, 1);
-> -		cfg80211_update_iface_num(rdev, otype, -1);
-> +		cfg80211_update_iface_num(rdev, otype,
-> +					  CFG80211_IFACE_DOWN);
-> +		cfg80211_update_iface_num(rdev, ntype,
-> +					  CFG80211_IFACE_PRE_UP);
-> +		cfg80211_update_iface_num(rdev, ntype,
-> +					  CFG80211_IFACE_UP);
+> ath9k_htc based card I see the same AP only if it operates on channel
+> 36-48, I do NOT see it in iwlist scan results if it is on channel 52 to
+> 140 - I again see it when it is on 149 or above.
 
-Ok actually the other way around like it was previously makes more sense
-to avoid spurious going into/out of monitor...
+This "Virgin Media" device, aka Netgear WNDA3200, is selling with a
+world roaming regulatory domain = 0x65.
 
-johannes
+[ 1547.403743] ath: EEPROM regdomain: 0x65
+[ 1547.403745] ath: EEPROM indicates we should expect a direct regpair map
+[ 1547.403748] ath: Country alpha2 being used: 00
+[ 1547.403750] ath: Regpair used: 0x65
 
+And it's restricted *by the driver* to:
+
+                 Frequencies:
+                         * 5180 MHz [36] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5200 MHz [40] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5220 MHz [44] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5240 MHz [48] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5260 MHz [52] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+                         * 5280 MHz [56] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+                         * 5300 MHz [60] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+                         * 5320 MHz [64] (30.0 dBm) (passive scanning, no IBSS, radar detection)
+                         * 5500 MHz [100] (disabled)
+                         * 5520 MHz [104] (disabled)
+                         * 5540 MHz [108] (disabled)
+                         * 5560 MHz [112] (disabled)
+                         * 5580 MHz [116] (disabled)
+                         * 5600 MHz [120] (disabled)
+                         * 5620 MHz [124] (disabled)
+                         * 5640 MHz [128] (disabled)
+                         * 5660 MHz [132] (disabled)
+                         * 5680 MHz [136] (disabled)
+                         * 5700 MHz [140] (disabled)
+                         * 5745 MHz [149] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5765 MHz [153] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5785 MHz [157] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5805 MHz [161] (30.0 dBm) (passive scanning, no IBSS)
+                         * 5825 MHz [165] (30.0 dBm) (passive scanning, no IBSS)
