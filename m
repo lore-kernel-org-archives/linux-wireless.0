@@ -1,149 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27690 "EHLO mga01.intel.com"
+Received: from icf.org.ru ([91.193.237.1]:49227 "EHLO icf.org.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754231Ab2GCKHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 06:07:03 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
-	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Joe@smile, Perches@smile, joe@perches.com
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [RFC][PATCHv2 3/3] wireless: at76c50x: eliminate hex2str()
-Date: Tue,  3 Jul 2012 13:06:40 +0300
-Message-Id: <1341310000-4082-3-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20120703_120831_041559_DE44438C)
-In-Reply-To: <1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1341264199.10162.2.camel@joe2Laptop>
- <1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	id S1752136Ab2GML0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 07:26:39 -0400
+Received: from bottleman (helo=localhost)
+	by icf.org.ru with local-esmtp (Exim 4.75)
+	(envelope-from <bottleman@icf.org.ru>)
+	id 1Spe17-0002w7-Px
+	for linux-wireless@vger.kernel.org; Fri, 13 Jul 2012 15:26:37 +0400
+Date: Fri, 13 Jul 2012 15:26:37 +0400 (MSK)
+From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+To: linux-wireless@vger.kernel.org
+Subject: ath: phy0: Failed to stop TX DMA, queues=0x001!
+Message-ID: <alpine.DEB.2.02.1207131523080.10911@icf.org.ru> (sfid-20120713_132644_176754_203A181F)
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1051000339-741420132-1342178797=:10911"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hex2str() is substituted by '%*pMF' specificator.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/at76c50x-usb.c |   54 ++++++++---------------------------
- 1 file changed, 12 insertions(+), 42 deletions(-)
+---1051000339-741420132-1342178797=:10911
+Content-Type: TEXT/PLAIN; format=flowed; charset=KOI8-R
+Content-Transfer-Encoding: 8BIT
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index efc162e..f82f76b 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -498,36 +498,6 @@ exit:
- 	return ret;
- }
- 
--#define HEX2STR_BUFFERS 4
--#define HEX2STR_MAX_LEN 64
--
--/* Convert binary data into hex string */
--static char *hex2str(void *buf, size_t len)
--{
--	static atomic_t a = ATOMIC_INIT(0);
--	static char bufs[HEX2STR_BUFFERS][3 * HEX2STR_MAX_LEN + 1];
--	char *ret = bufs[atomic_inc_return(&a) & (HEX2STR_BUFFERS - 1)];
--	char *obuf = ret;
--	u8 *ibuf = buf;
--
--	if (len > HEX2STR_MAX_LEN)
--		len = HEX2STR_MAX_LEN;
--
--	if (len == 0)
--		goto exit;
--
--	while (len--) {
--		obuf = hex_byte_pack(obuf, *ibuf++);
--		*obuf++ = '-';
--	}
--	obuf--;
--
--exit:
--	*obuf = '\0';
--
--	return ret;
--}
--
- /* LED trigger */
- static int tx_activity;
- static void at76_ledtrig_tx_timerfunc(unsigned long data);
-@@ -1004,9 +974,9 @@ static void at76_dump_mib_mac_wep(struct at76_priv *priv)
- 	    WEP_SMALL_KEY_LEN : WEP_LARGE_KEY_LEN;
- 
- 	for (i = 0; i < WEP_KEYS; i++)
--		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %s",
-+		at76_dbg(DBG_MIB, "%s: MIB MAC_WEP: key %d: %*pMF",
- 			 wiphy_name(priv->hw->wiphy), i,
--			 hex2str(m->wep_default_keyvalue[i], key_len));
-+			 key_len, m->wep_default_keyvalue[i]);
- exit:
- 	kfree(m);
- }
-@@ -1031,7 +1001,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 	at76_dbg(DBG_MIB, "%s: MIB MAC_MGMT: beacon_period %d CFP_max_duration "
- 		 "%d medium_occupancy_limit %d station_id 0x%x ATIM_window %d "
- 		 "CFP_mode %d privacy_opt_impl %d DTIM_period %d CFP_period %d "
--		 "current_bssid %pM current_essid %s current_bss_type %d "
-+		 "current_bssid %pM current_essid %*pMF current_bss_type %d "
- 		 "pm_mode %d ibss_change %d res %d "
- 		 "multi_domain_capability_implemented %d "
- 		 "international_roaming %d country_string %.3s",
-@@ -1041,7 +1011,7 @@ static void at76_dump_mib_mac_mgmt(struct at76_priv *priv)
- 		 le16_to_cpu(m->station_id), le16_to_cpu(m->ATIM_window),
- 		 m->CFP_mode, m->privacy_option_implemented, m->DTIM_period,
- 		 m->CFP_period, m->current_bssid,
--		 hex2str(m->current_essid, IW_ESSID_MAX_SIZE),
-+		 IW_ESSID_MAX_SIZE, m->current_essid,
- 		 m->current_bss_type, m->power_mgmt_mode, m->ibss_change,
- 		 m->res, m->multi_domain_capability_implemented,
- 		 m->multi_domain_capability_enabled, m->country_string);
-@@ -1069,7 +1039,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 		 "cwmin %d cwmax %d short_retry_time %d long_retry_time %d "
- 		 "scan_type %d scan_channel %d probe_delay %u "
- 		 "min_channel_time %d max_channel_time %d listen_int %d "
--		 "desired_ssid %s desired_bssid %pM desired_bsstype %d",
-+		 "desired_ssid %*pMF desired_bssid %pM desired_bsstype %d",
- 		 wiphy_name(priv->hw->wiphy),
- 		 le32_to_cpu(m->max_tx_msdu_lifetime),
- 		 le32_to_cpu(m->max_rx_lifetime),
-@@ -1080,7 +1050,7 @@ static void at76_dump_mib_mac(struct at76_priv *priv)
- 		 le16_to_cpu(m->min_channel_time),
- 		 le16_to_cpu(m->max_channel_time),
- 		 le16_to_cpu(m->listen_interval),
--		 hex2str(m->desired_ssid, IW_ESSID_MAX_SIZE),
-+		 IW_ESSID_MAX_SIZE, m->desired_ssid,
- 		 m->desired_bssid, m->desired_bsstype);
- exit:
- 	kfree(m);
-@@ -1160,13 +1130,13 @@ static void at76_dump_mib_mdomain(struct at76_priv *priv)
- 		goto exit;
- 	}
- 
--	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %s",
-+	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: channel_list %*pMF",
- 		 wiphy_name(priv->hw->wiphy),
--		 hex2str(m->channel_list, sizeof(m->channel_list)));
-+		 sizeof(m->channel_list), m->channel_list);
- 
--	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %s",
-+	at76_dbg(DBG_MIB, "%s: MIB MDOMAIN: tx_powerlevel %*pMF",
- 		 wiphy_name(priv->hw->wiphy),
--		 hex2str(m->tx_powerlevel, sizeof(m->tx_powerlevel)));
-+		 sizeof(m->tx_powerlevel), m->tx_powerlevel);
- exit:
- 	kfree(m);
- }
-@@ -1369,9 +1339,9 @@ static int at76_startup_device(struct at76_priv *priv)
- 	int ret;
- 
- 	at76_dbg(DBG_PARAMS,
--		 "%s param: ssid %.*s (%s) mode %s ch %d wep %s key %d "
-+		 "%s param: ssid %.*s (%*pMF) mode %s ch %d wep %s key %d "
- 		 "keylen %d", wiphy_name(priv->hw->wiphy), priv->essid_size,
--		 priv->essid, hex2str(priv->essid, IW_ESSID_MAX_SIZE),
-+		 priv->essid, IW_ESSID_MAX_SIZE, priv->essid,
- 		 priv->iw_mode == IW_MODE_ADHOC ? "adhoc" : "infra",
- 		 priv->channel, priv->wep_enabled ? "enabled" : "disabled",
- 		 priv->wep_key_id, priv->wep_keys_len[priv->wep_key_id]);
--- 
-1.7.10
 
+Hi all again, seems i hit another bug, my test setup is a three mesh nodes,
+all in one room, two is alix pc engines with EMP9605H (ar9220) with antennas
+like on soho routers and one is my laptop with dbii f52n-pro ar9220 based too. 
+Use compat-wireless-3.5-rc5-1-snpc on all nodes.
+
+All three nodes work fine, but then i remove antenas from one of the node (it
+contiue work only with pigtails) signal levels with this node is low but enough
+to work, it continue to work but i have errors in dmesg on all three nodes:
+
+ath: phy0: Failed to stop TX DMA, queues=0x001!
+
+Links is become unstable, packet loss regardless to which node taffic is goes,
+to node without antennas or betwen nodes with antennas.
+
+I tryin change wireless cards with no results, but all what i try is ar9220 based, 
+just different manufactures. Also i try add ubiquiti nanostation M2 with openwrt
+on it in this setup, and get same results on it too - dma erros and unstable links 
+with packetloss.
+
+Then i connect antennas back, all strat working fine again withous erorors.
+I think it seems low signal and/or low quality links is triggering with bug.
+
+I also trying use stock kernel 3.2.x and 3.4.x, compat-wireless bleeding edge, but 
+no luck - same results.
+
+Please give any suggestions how i can help find a root case of this bug to resolve
+it?
+
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
+---1051000339-741420132-1342178797=:10911--
