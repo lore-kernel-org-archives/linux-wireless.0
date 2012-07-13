@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:37964 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932123Ab2GFVeo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 17:34:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
-	<20120313081235.GC15333@redhat.com>
-	<CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
-	<CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
-	<20120528140448.GA22783@redhat.com>
-	<CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
-	<20120529092154.GA2441@redhat.com>
-	<CAErSpo6Xxq_kcEYACKUsuNDOJDhEDnxWgBUateOJEBcfqufhSg@mail.gmail.com>
-	<CANHD2=o-eyd2JR7oK4gJgQi3Mi-a=R1RKuGsuWzzR_WosQaNEA@mail.gmail.com>
-	<20120702053110.GA2500@redhat.com>
-	<CANHD2=pEham5SZ6EguurMd9MBuyptyx5CGF1RDhU8Ow9CaRoXA@mail.gmail.com>
-	<CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com>
-Date: Fri, 6 Jul 2012 14:34:42 -0700
-Message-ID: <CAE9FiQXwx7L2H=BBcUbH2t3NyfAGZtrm4LG_uQ0OdoSTAZUgTw@mail.gmail.com> (sfid-20120706_233450_901057_D694F753)
-Subject: Re: Initializing iwl3945 error
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kamil Grzebien <ciptok@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.neratec.com ([80.75.119.105]:33156 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756231Ab2GMIio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 04:38:44 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: mcgrof@kernel.org
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] compat: fix system crash on 2.6.35 when flushing work
+Date: Fri, 13 Jul 2012 10:38:34 +0200
+Message-Id: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120713_103854_514868_C772FD19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 6, 2012 at 1:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->  pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
-> -pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0200000-0xf03fffff 64bit pref]
-> +pci 0000:00:1c.1: bridge window [io  0x1000-0x0fff] to [bus 0b-0b]
-> add_size 1000
-> +pci 0000:00:1c.1: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus
-> 0b-0b] add_size 200000
-> +pci 0000:00:1c.1: res[15]=[mem 0x00100000-0x000fffff 64bit pref]
-> get_res_add_size add_size 200000
-> +pci 0000:00:1c.1: res[13]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
-> +pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0400000-0xf05fffff 64bit pref]
->  pci_bus 0000:0b: resource 1 [mem 0xf1e00000-0xf1efffff]
-> -pci_bus 0000:0b: resource 2 [mem 0xf0200000-0xf03fffff 64bit pref]
-> +pci_bus 0000:0b: resource 2 [mem 0xf0400000-0xf05fffff 64bit pref]
+Ubuntu 10.10 stock kernel (2.6.35-22-generic) crashes in
+compat_flush_scheduled_work(), that is called e.g. when
+mac80211 module is unloaded.
 
-Those wild print out about add_size is used to double check if the
-option size is passed correctly.
+The problem was introduced with 80bf8a83
+compat: backport system work queues system_wq and system_long_wq
 
-diff between 3.3 and 3.4:
-in kernel 3.4, 1c.0 pref mem64 get allocated before 1c.1 pref mem64.
-that should be caused by: We replaced local version resource list with
-generic list.
+The crash happens in compat_flush_scheduled_work() where both
+flush_workqueue() and flush_scheduled_work() are called successively.
+Removing one of them resolves the issue.
 
-But that should not be reason for why 3.3 does not work on Kamil's setup.
+All compat-wireless tarballs after 2012-03-18 are affected.
 
-I would suspect that pci pm change fixes the problem.
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+---
+ compat/compat-2.6.36.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Thanks
+diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
+index 9190ecd..8f25be0 100644
+--- a/compat/compat-2.6.36.c
++++ b/compat/compat-2.6.36.c
+@@ -140,7 +140,6 @@ void compat_flush_scheduled_work(void)
+ 	 * go with the old kernel's one first for now (keventd_wq) and
+ 	 * if think its reasonable later we can flip this around.
+ 	 */
+-	flush_workqueue(system_wq);
+ 	flush_scheduled_work();
+ }
+ EXPORT_SYMBOL_GPL(compat_flush_scheduled_work);
+-- 
+1.7.4.1
 
-Yinghai
