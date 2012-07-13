@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:45189 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753761Ab2GQOPu (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:40026 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932140Ab2GMMB7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 10:15:50 -0400
-Message-ID: <19811dfd94388fb6406373822974cee7.squirrel@www.infidigm.net> (sfid-20120717_161554_221038_75D25AAB)
-In-Reply-To: <4FFD7621.5020207@qca.qualcomm.com>
-References: <43a66e0f20b45e9cc461272e83f2c4e4.squirrel@www.infidigm.net>
-    <4FFC08C5.2050606@qca.qualcomm.com>
-    <71781241c331fcbb5687068ddc6bbb06.squirrel@www.infidigm.net>
-    <4FFD7621.5020207@qca.qualcomm.com>
-Date: Tue, 17 Jul 2012 10:53:07 -0400
-Subject: ath6kl: Add support for AR6004 hardware version 1.3
-From: drwho@infidigm.net
-To: bkamatch@qca.qualcomm.com, "Kalle Valo" <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-	"ath6kl-devel" <ath6kl-devel@qualcomm.com>
+	Fri, 13 Jul 2012 08:01:59 -0400
+Received: by lbbgm6 with SMTP id gm6so5717528lbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 05:01:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1342180730-19987-1-git-send-email-johannes@sipsolutions.net>
+References: <1342180730-19987-1-git-send-email-johannes@sipsolutions.net>
+Date: Fri, 13 Jul 2012 14:01:57 +0200
+Message-ID: <CA+icZUVs-XMjWhuUE8-8+nyVADw-GRrMGp8=VfRj2F_2H42FLw@mail.gmail.com> (sfid-20120713_140202_909767_94675BE0)
+Subject: Re: [PATCH 0/3] cfg80211/mac80211 channel fixes
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Would it be possible to get hw1.3 pushed up to linux-firmware git?
+On Fri, Jul 13, 2012 at 1:58 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Ok so the last series worked but wasn't really good. I realized
+> that even for normal multi-channel operation we're going to need
+> get_channel() since otherwise we don't know the channel *type*
+> that the interface is using (e.g. in managed mode) since the AP
+> is no real indication of it as we might decide to not use HT40
+> or whatever...
+>
+> So instead of just reverting the get_channel removal, I'm adding
+> it back now with an interface argument. Nothing much changes for
+> mac80211, but in the future I'll adjust the cfg80211 channel
+> tracking code to make use of it so that it'll be required for
+> multi-channel (or the code will have to assume incompatibility.)
+>
+> This series fixes the monitor mode problems and I've committed
+> them (but haven't pushed, in case somebody finds errors.)
+>
 
-Jon
+For what tree is this? -next aka 3.6 material?
 
-Add support for AR6004 hardware with version 1.3 and has
-id 0x31c8088a.
+- Sedat -
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    7 +++++++
- drivers/net/wireless/ath/ath6kl/init.c |   20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/sdio.c |    3 +++
- drivers/net/wireless/ath/ath6kl/usb.c  |    3 +++
- 4 files changed, 33 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h
-b/drivers/net/wireless/ath/ath6kl/core.h
-index c655438..2d1b8ac 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -192,6 +192,13 @@ enum ath6kl_hw_flags {
- #define AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE \
- 	AR6004_HW_1_2_FW_DIR "/bdata.bin"
-
-+/* AR6004 1.3 definitions */
-+#define AR6004_HW_1_3_VERSION			0x31c8088a
-+#define AR6004_HW_1_3_FW_DIR			"ath6k/AR6004/hw1.3"
-+#define AR6004_HW_1_3_FIRMWARE_FILE		"fw.ram.bin"
-+#define AR6004_HW_1_3_BOARD_DATA_FILE		"ath6k/AR6004/hw1.3/bdata.bin"
-+#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE	"ath6k/AR6004/hw1.3/bdata.bin"
-
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
