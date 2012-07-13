@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36822 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307Ab2GHOIQ (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:48171 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932288Ab2GMRJE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 10:08:16 -0400
-Received: by obbuo13 with SMTP id uo13so18892967obb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 07:08:16 -0700 (PDT)
+	Fri, 13 Jul 2012 13:09:04 -0400
+Received: by pbbrp8 with SMTP id rp8so5756733pbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 10:09:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1341740110.4987.4.camel@jlt3.sipsolutions.net>
-References: <1341732211-25871-1-git-send-email-coelho@ti.com>
- <1341732211-25871-8-git-send-email-coelho@ti.com> <1341740110.4987.4.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 8 Jul 2012 17:08:00 +0300
-Message-ID: <CA+XVXfdEqQyiyDQoAddCjC9bhH+WqmANiqf_wUCEJFi7=xG5vQ@mail.gmail.com> (sfid-20120708_160855_104003_CE701872)
-Subject: Re: [PATCH 7/8] wl18xx: don't send static global struct to FW
+In-Reply-To: <1342183848.4452.1.camel@jlt3.sipsolutions.net>
+References: <20120712123358.22054.62538.stgit@localhost6.localdomain6> <1342183848.4452.1.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 13 Jul 2012 10:08:44 -0700
+Message-ID: <CAB=NE6Uo02ADchkcy156=uZ3dwLiC529YvvqhR6pkS81s3xadQ@mail.gmail.com> (sfid-20120713_190909_906117_986B25A5)
+Subject: Re: [PATCH] cfg80211: fix set_regdom() to cancel requests with same alpha2
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 8, 2012 at 12:35 PM, Johannes Berg
+On Fri, Jul 13, 2012 at 5:50 AM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
-> So the subject is wrong since "&priv->conf.phy" can hardly be "static
-> global", but
+> Luis?
 
-Yea you're right. The static global pointer was used before, now it's
-a different location we copy stuff into.
+It follows the -EALREADY convention of when a regdomain is already applied.
 
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+
+>>               if (!regdom_changes(rd->alpha2))
+>> -                     return -EINVAL;
+>> +                     return -EALREADY;
+>>       }
+>>
+>>       /*
+>> @@ -2325,6 +2325,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+>>       /* Note that this doesn't update the wiphys, this is done below */
+>>       r = __set_regdom(rd);
+>>       if (r) {
+>> +             if (r == -EALREADY)
+>> +                     reg_set_request_processed();
+>> +
 >
->> We get DMA alignment trouble if the beginning of the struct is
->> unaligned. Allocate memory and send it to FW.
->
-> If this is all about alignment, and
->
->> +     params = kzalloc(sizeof(*params), GFP_KERNEL);
->
-> kzalloc (which is pointless -- use kmemdup) alignment is sufficient,
-> then most likely you could just put "__aligned(4)" or something on the
-> conf.phy struct member and not allocate memory at all?
+> I'm not really sure I like the reliance on the error code ... would it
+> make more sense to invent a status enum? Or just return 0 to start with?
 
-Yea we need 4 bytes alignment. The kzalloc is a sort of convention in
-the driver (see acx.c), but probably here we can use kmemdup.
-We can't use fancy __aligned(4) notations most likely, since a
-usermode tool also parses these header files, and it's not too smart
-:)
+The code already did this with -EALREADY, if we want to treat this
+differently we should go in and sweep change all that. But the big
+sweep is better to happen on the regsim IMHO. I've been trying to do
+as little changes as possible to existing code.
 
-Anyway I'll fix the subject and use kmemdup. Thanks for the review.
-
-Arik
+  Luis
