@@ -1,35 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39021 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755715Ab2GaLYk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:24:40 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SwAZ5-0007Cl-Lu
-	for linux-wireless@vger.kernel.org; Tue, 31 Jul 2012 13:24:39 +0200
-Message-ID: <1343733877.4474.1.camel@jlt3.sipsolutions.net> (sfid-20120731_132443_247500_D2BC1A60)
-Subject: Re: [PATCH] mac80211: rename sta to new_sta
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 31 Jul 2012 13:24:37 +0200
-In-Reply-To: <1343387377-7768-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130943_742391_03E0FF36)
-References: <1343387377-7768-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120727_130943_742391_03E0FF36)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from perches-mx.perches.com ([206.117.179.246]:46605 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754410Ab2GMFdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 01:33:39 -0400
+From: Joe Perches <joe@perches.com>
+To: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, wimax@linuxwimax.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-s390@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	linux-kernel@vger.kernel.org, linux-c6x-dev@linux-c6x.org,
+	linux-mips@linux-mips.org,
+	user-mode-linux-devel@lists.sourceforge.net,
+	user-mode-linux-user@lists.sourceforge.net,
+	e1000-devel@lists.sourceforge.net
+Subject: [PATCH net-next 0/8] etherdevice: Rename random_ether_addr to eth_random_addr
+Date: Thu, 12 Jul 2012 22:33:04 -0700
+Message-Id: <cover.1342157022.git.joe@perches.com> (sfid-20120713_073647_256166_4F36B97A)
+In-Reply-To: <1341968967.13724.23.camel@joe2Laptop>
+References: <1341968967.13724.23.camel@joe2Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-07-27 at 13:09 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In ieee80211_prep_connection(), the station (if not NULL)
-> is the new station (representing the AP) that needs to be
-> added. Rename the variable to "new_sta" to clarify this.
+net-next commit ad7eee98be ("etherdevice: introduce eth_broadcast_addr")
+added a new style API.  Rename random_ether_addr to eth_random_addr to
+create some API symmetry.
 
-Applied.
+Joe Perches (8):
+  etherdevice: Rename random_ether_addr to eth_random_addr
+  ethernet: Use eth_random_addr
+  net: usb: Use eth_random_addr
+  wireless: Use eth_random_addr
+  drivers/net: Use eth_random_addr
+  s390: Use eth_random_addr
+  usb: Use eth_random_addr
+  arch: Use eth_random_addr
 
-johannes
+ arch/blackfin/mach-bf537/boards/stamp.c           |    2 +-
+ arch/c6x/kernel/soc.c                             |    2 +-
+ arch/mips/ar7/platform.c                          |    4 ++--
+ arch/mips/powertv/powertv_setup.c                 |    6 +++---
+ arch/um/drivers/net_kern.c                        |    2 +-
+ drivers/net/ethernet/atheros/atl1c/atl1c_hw.c     |    2 +-
+ drivers/net/ethernet/atheros/atlx/atl1.c          |    2 +-
+ drivers/net/ethernet/atheros/atlx/atl2.c          |    2 +-
+ drivers/net/ethernet/ethoc.c                      |    2 +-
+ drivers/net/ethernet/intel/igb/igb_main.c         |    4 ++--
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c    |    2 +-
+ drivers/net/ethernet/lantiq_etop.c                |    2 +-
+ drivers/net/ethernet/micrel/ks8851.c              |    2 +-
+ drivers/net/ethernet/micrel/ks8851_mll.c          |    2 +-
+ drivers/net/ethernet/smsc/smsc911x.c              |    2 +-
+ drivers/net/ethernet/ti/cpsw.c                    |    2 +-
+ drivers/net/ethernet/tile/tilegx.c                |    2 +-
+ drivers/net/ethernet/wiznet/w5100.c               |    2 +-
+ drivers/net/ethernet/wiznet/w5300.c               |    2 +-
+ drivers/net/ethernet/xilinx/xilinx_axienet_main.c |    2 +-
+ drivers/net/tun.c                                 |    2 +-
+ drivers/net/usb/smsc75xx.c                        |    2 +-
+ drivers/net/usb/smsc95xx.c                        |    2 +-
+ drivers/net/usb/usbnet.c                          |    2 +-
+ drivers/net/wimax/i2400m/driver.c                 |    2 +-
+ drivers/net/wireless/adm8211.c                    |    2 +-
+ drivers/net/wireless/p54/eeprom.c                 |    2 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c           |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c           |    2 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c           |    2 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c           |    2 +-
+ drivers/net/wireless/rt2x00/rt61pci.c             |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c             |    2 +-
+ drivers/net/wireless/rtl818x/rtl8180/dev.c        |    2 +-
+ drivers/net/wireless/rtl818x/rtl8187/dev.c        |    2 +-
+ drivers/s390/net/qeth_l2_main.c                   |    2 +-
+ drivers/s390/net/qeth_l3_main.c                   |    2 +-
+ drivers/usb/atm/xusbatm.c                         |    4 ++--
+ drivers/usb/gadget/u_ether.c                      |    2 +-
+ include/linux/etherdevice.h                       |   14 ++++++++------
+ 40 files changed, 52 insertions(+), 50 deletions(-)
+
+-- 
+1.7.8.111.gad25c.dirty
 
