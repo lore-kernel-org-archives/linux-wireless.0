@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:37233 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759Ab2GIJ4P (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50978 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756721Ab2GMMux (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 05:56:15 -0400
-Date: Mon, 9 Jul 2012 11:56:24 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl/cfg/mac80211: use BIT(x) instead of (1 << x)
-Message-ID: <20120709095624.GC4488@ritirata.org> (sfid-20120709_115618_144031_50C3C561)
-References: <1341763805-7386-1-git-send-email-ordex@autistici.org>
- <1341825724.4455.16.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kfjH4zxOES6UT95V"
-In-Reply-To: <1341825724.4455.16.camel@jlt3.sipsolutions.net>
+	Fri, 13 Jul 2012 08:50:53 -0400
+Message-ID: <1342183848.4452.1.camel@jlt3.sipsolutions.net> (sfid-20120713_145120_606796_3C75BDA3)
+Subject: Re: [PATCH] cfg80211: fix set_regdom() to cancel requests with same
+ alpha2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 13 Jul 2012 14:50:48 +0200
+In-Reply-To: <20120712123358.22054.62538.stgit@localhost6.localdomain6> (sfid-20120712_143407_357227_CA39EE4B)
+References: <20120712123358.22054.62538.stgit@localhost6.localdomain6>
+	 (sfid-20120712_143407_357227_CA39EE4B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis?
 
---kfjH4zxOES6UT95V
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>  		if (!regdom_changes(rd->alpha2))
+> -			return -EINVAL;
+> +			return -EALREADY;
+>  	}
+>  
+>  	/*
+> @@ -2325,6 +2325,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+>  	/* Note that this doesn't update the wiphys, this is done below */
+>  	r = __set_regdom(rd);
+>  	if (r) {
+> +		if (r == -EALREADY)
+> +			reg_set_request_processed();
+> +
 
-Hello Johannes,
+I'm not really sure I like the reliance on the error code ... would it
+make more sense to invent a status enum? Or just return 0 to start with?
 
-On Mon, Jul 09, 2012 at 11:22:04AM +0200, Johannes Berg wrote:
->=20
+johannes
 
-=2E..
-
->=20
-> >  		rthdr->it_present |=3D
-> > -			cpu_to_le32(1 << IEEE80211_RADIOTAP_TSFT);
-> > +			cpu_to_le32(BIT(IEEE80211_RADIOTAP_TSFT));
->=20
-> This makes sense, of course, it's actually doing bitwise operations.
->=20
-> johannes
-
-Thank you for your feedback.
-At the beginning they confused me a BIT(), but now it's clear :)
-I'll try to come up with a v2.
-
-Thank you again.
-Cheers,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---kfjH4zxOES6UT95V
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAk/6qsgACgkQpGgxIkP9cwcedgCeOojVzKZljfMgnqiyGS7Ktn07
-jo0An3roxqW+ZODhpKh5qPed4cXOw01M
-=oxxs
------END PGP SIGNATURE-----
-
---kfjH4zxOES6UT95V--
