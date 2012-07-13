@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48665 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753280Ab2GILy3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 07:54:29 -0400
-Date: Mon, 9 Jul 2012 13:54:24 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RHEL6 PATCH] iwlwifi: remove spurious warning
-Message-ID: <20120709115423.GE2438@redhat.com> (sfid-20120709_135435_432922_AAEDDD56)
-References: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
- <1341834647.4455.32.camel@jlt3.sipsolutions.net>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50547 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753137Ab2GMPwC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 11:52:02 -0400
+Received: by eaak11 with SMTP id k11so1126377eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 08:52:01 -0700 (PDT)
+Message-ID: <5000441D.70308@gmail.com> (sfid-20120713_175207_954702_D58D974C)
+Date: Fri, 13 Jul 2012 17:51:57 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1341834647.4455.32.camel@jlt3.sipsolutions.net>
+To: arliton@gmail.com, linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Problem: Realtek Semiconductor RTL8190 does not work
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 09, 2012 at 01:50:47PM +0200, Johannes Berg wrote:
-> On Mon, 2012-07-09 at 13:48 +0200, Stanislaw Gruszka wrote:
-> > BZ#837754
-> > 
-> > Description:
-> > Some devices do not set SEQ_RX_FRAME flags for few commands that should
-> > not be reclaimed. It was supposed to be fixed in firmware, but it was
-> > not.
-> > 
-> > Upstream change also add possibility to configure which commands should
-> > not be reclaimed, but that option is not used - only original 6 commands
-> > are configured. So I did not backport that part, because it make things
-> > somewhat (not necessarily) complex.
-> 
-> Yeah, looks fine. I'd hoped it was fixed for iwlwifi drivers (we
-> couldn't remember if it was 4965 only or not) but it turns out it wasn't
-> so this is needed.
-> 
-> I don't know if there's anything I should do about this though?
+Arliton Rocha wrote:
 
-Sorry Johannes that was not intended to go to you and to the public.
+> The following card does not work.
+>     Realtek Semiconductor Co., Ltd. RTL8190 802.11n Wireless LAN
 
-Stanislaw
+> lspci -n:
+>
+>     03:00.0 0280: 10ec:8190
+
+There is no support for RTL8190P devices in any upstream realtek driver.
+
+It's only supported by an old vendor driver.
+
+You can get it from: http://people.debian.org/~benh/rtl-wlan/rtl8192e_linux_2.6.0015.1013.2010.tar.gz
+or by request to wlanfae@realtek.com
