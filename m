@@ -1,54 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44246 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755454Ab2GRSkf (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:38773 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755260Ab2GMQJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 14:40:35 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't react to beacon loss if HW monitoring
-Date: Wed, 18 Jul 2012 20:40:34 +0200
-Message-Id: <1342636834-5166-1-git-send-email-johannes@sipsolutions.net> (sfid-20120718_204039_311363_FABADB0C)
+	Fri, 13 Jul 2012 12:09:54 -0400
+Received: by yhmm54 with SMTP id m54so4031360yhm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2012 09:09:54 -0700 (PDT)
+Message-ID: <5000484E.9070700@lwfinger.net> (sfid-20120713_181037_367753_E25DFB79)
+Date: Fri, 13 Jul 2012 11:09:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Forest Bond <forest@alittletooquiet.net>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192de: Fix phy-based version calculation
+References: <20120713143551.GF9489@alittletooquiet.net>
+In-Reply-To: <20120713143551.GF9489@alittletooquiet.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 07/13/2012 09:35 AM, Forest Bond wrote:
+> From: Forest Bond <forest.bond@rapidrollout.com>
+>
+> Commit d83579e2a50ac68389e6b4c58b845c702cf37516 incorporated some
+> changes from the vendor driver that made it newly important that the
+> calculated hardware version correctly include the CHIP_92D bit, as all
+> of the IS_92D_* macros were changed to depend on it.  However, this bit
+> was being unset for dual-mac, dual-phy devices.  The vendor driver
+> behavior was modified to not do this, but unfortunately this change was
+> not picked up along with the others.  This caused scanning in the 2.4GHz
+> band to be broken, and possibly other bugs as well.
+>
+> This patch brings the version calculation logic in parity with the
+> vendor driver in this regard, and in doing so fixes the regression.
+> However, the version calculation code in general continues to be largely
+> incoherent and messy, and needs to be cleaned up.
+>
+> Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    6 +++---
+>   1 files changed, 3 insertions(+), 3 deletions(-)
 
-If the HW is monitoring connection loss (as advertised
-by IEEE80211_HW_CONNECTION_MONITOR) but not filtering
-beacons (IEEE80211_VIF_BEACON_FILTER) then mac80211 will
-still start the beacon loss timer and if a few beacons
-are lost, e.g. due to scanning, drop the connection.
+The code changes are OK; however, please resubmit with a "Cc: Stable 
+<stable@vger.kernel.org> [v3.2+]" When you make that change, you can also add a 
+Signed-off-by for me.
 
-If the hardware doesn't advertise connection monitoring,
-then it won't drop the connection right away but probe
-the AP, which is intended, but due to the logic in the
-timer when connection monitoring is done it assumes the
-connection was actually lost.
+John,
 
-Fix this problem by not starting the timer when the HW
-does connection monitoring.
+If possible, please include this in the changes for 3.5.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |    3 +++
- 1 file changed, 3 insertions(+)
+Thanks,
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7c0613c..b7975be 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -146,6 +146,9 @@ void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
- 	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
- 		return;
- 
-+	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
-+		return;
-+
- 	mod_timer(&sdata->u.mgd.bcn_mon_timer,
- 		  round_jiffies_up(jiffies + sdata->u.mgd.beacon_timeout));
- }
--- 
-1.7.10.4
+Larry
+
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> index 18380a7..4420312 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> @@ -3345,21 +3345,21 @@ void rtl92d_phy_config_macphymode_info(struct ieee80211_hw *hw)
+>   	switch (rtlhal->macphymode) {
+>   	case DUALMAC_SINGLEPHY:
+>   		rtlphy->rf_type = RF_2T2R;
+> -		rtlhal->version |= CHIP_92D_SINGLEPHY;
+> +		rtlhal->version |= RF_TYPE_2T2R;
+>   		rtlhal->bandset = BAND_ON_BOTH;
+>   		rtlhal->current_bandtype = BAND_ON_2_4G;
+>   		break;
+>
+>   	case SINGLEMAC_SINGLEPHY:
+>   		rtlphy->rf_type = RF_2T2R;
+> -		rtlhal->version |= CHIP_92D_SINGLEPHY;
+> +		rtlhal->version |= RF_TYPE_2T2R;
+>   		rtlhal->bandset = BAND_ON_BOTH;
+>   		rtlhal->current_bandtype = BAND_ON_2_4G;
+>   		break;
+>
+>   	case DUALMAC_DUALPHY:
+>   		rtlphy->rf_type = RF_1T1R;
+> -		rtlhal->version &= (~CHIP_92D_SINGLEPHY);
+> +		rtlhal->version &= RF_TYPE_1T1R;
+>   		/* Now we let MAC0 run on 5G band. */
+>   		if (rtlhal->interfaceindex == 0) {
+>   			rtlhal->bandset = BAND_ON_5G;
+>
+
 
