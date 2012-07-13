@@ -1,90 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51459 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142Ab2G0LR4 (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:60378 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932695Ab2GMVV3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:56 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 18/20] mac80211: allow drv_add_chanctx to fail
-Date: Fri, 27 Jul 2012 13:16:54 +0200
-Message-Id: <1343387816-9414-19-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131823_317962_AA8D50FC)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 13 Jul 2012 17:21:29 -0400
+Message-ID: <5000917E.2030801@gtri.gatech.edu> (sfid-20120713_232137_104734_E3AF688D)
+Date: Fri, 13 Jul 2012 17:22:06 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP v2] rtlwifi: rtl8192su subdriver
+References: <4FEF0BD1.90405@gmail.com> <4FFAD137.3020806@gtri.gatech.edu> <50009024.4080607@gmail.com>
+In-Reply-To: <50009024.4080607@gmail.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+	micalg=sha1; boundary="------------ms080109070603010406020901"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--------------ms080109070603010406020901
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-The driver might need to do some operations to the
-device that could fail, so allow drv_add_chanctx()
-to fail and propagate that error.
+On 07/13/2012 05:16 PM, Xose Vazquez Perez wrote:
+> On 07/09/2012 02:40 PM, Joshua Roys wrote:
+>
+>> Currently I'm still searching for the hidden/undocumented registers
+>> that will
+>  > allow the rtlwifi driver to drive the *su chips.  (The rtlwifi drive=
+r
+> uses the
+>  > softmac infrastructure while the current firmware for the *su chips
+> really
+>  > needs a fullmac driver.)
+>
+> Is there any reason to think a fullmac driver is better than a softmac
+> for this chip ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h    |    4 ++--
- net/mac80211/chan.c       |    5 ++++-
- net/mac80211/driver-ops.h |   12 ++++++++----
- 3 files changed, 14 insertions(+), 7 deletions(-)
+The firmware provides a very similar set of services as called by=20
+drivers/net/wireless/rndis_wlan.c (albeit through a different calling=20
+interface).  This would offload some processing to the device and=20
+potentially allow the host to sleep more.  The big reason not to is that =
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 969eb20..a3c647c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2445,8 +2445,8 @@ struct ieee80211_ops {
- 	void	(*mgd_prepare_tx)(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif);
- 
--	void (*add_chanctx)(struct ieee80211_hw *hw,
--			    struct ieee80211_chanctx_conf *ctx);
-+	int (*add_chanctx)(struct ieee80211_hw *hw,
-+			   struct ieee80211_chanctx_conf *ctx);
- 	void (*remove_chanctx)(struct ieee80211_hw *hw,
- 			       struct ieee80211_chanctx_conf *ctx);
- 	void (*change_chantype)(struct ieee80211_hw *hw,
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 40e707c..2c7c975 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -237,7 +237,10 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 
- 	list_add(&ctx->list, &local->chanctx_list);
- 
--	drv_add_chanctx(local, ctx);
-+	if (drv_add_chanctx(local, ctx)) {
-+		kfree(ctx);
-+		return NULL;
-+	}
- 
- 	return ctx;
- }
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index da0fa69..bca963a 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -867,13 +867,17 @@ static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
--static inline void drv_add_chanctx(struct ieee80211_local *local,
--				   struct ieee80211_chanctx *ctx)
-+static inline int drv_add_chanctx(struct ieee80211_local *local,
-+				  struct ieee80211_chanctx *ctx)
- {
-+	int ret = -EOPNOTSUPP;
-+
- 	trace_drv_add_chanctx(local, ctx);
- 	if (local->ops->add_chanctx)
--		local->ops->add_chanctx(&local->hw, &ctx->conf);
--	trace_drv_return_void(local);
-+		ret = local->ops->add_chanctx(&local->hw, &ctx->conf);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
- }
- 
- static inline void drv_remove_chanctx(struct ieee80211_local *local,
--- 
-1.7.10.4
+we have rtlwifi/softmac already...
 
+Josh
+
+
+
+
+--------------ms080109070603010406020901
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+--------------ms080109070603010406020901--
