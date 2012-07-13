@@ -1,150 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:56676 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751067Ab2GZFRv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 01:17:51 -0400
-Received: by obbuo13 with SMTP id uo13so2169735obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 22:17:48 -0700 (PDT)
+Received: from icf.org.ru ([91.193.237.1]:49723 "EHLO icf.org.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932140Ab2GMMNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jul 2012 08:13:42 -0400
+Received: from bottleman (helo=localhost)
+	by icf.org.ru with local-esmtp (Exim 4.75)
+	(envelope-from <bottleman@icf.org.ru>)
+	id 1SpeFt-0003RA-7j
+	for linux-wireless@vger.kernel.org; Fri, 13 Jul 2012 15:41:53 +0400
+Date: Fri, 13 Jul 2012 15:41:53 +0400 (MSK)
+From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+To: linux-wireless@vger.kernel.org
+Subject: Re: ath: phy0: Failed to stop TX DMA, queues=0x001!
+In-Reply-To: <alpine.DEB.2.02.1207131523080.10911@icf.org.ru>
+Message-ID: <alpine.DEB.2.02.1207131538260.12697@icf.org.ru> (sfid-20120713_141346_707216_B24B91CF)
+References: <alpine.DEB.2.02.1207131523080.10911@icf.org.ru>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn3z=Vp4UaJ23T_F5BqMgM7u6ATV3zOeAs1fQrBD+=KJqA@mail.gmail.com>
-References: <CAAT9HsjZ7wPbkRMH94HDNBS+vOhLigKLYULqfyQobh_Oyt9M4w@mail.gmail.com>
-	<501030E9.3090707@lwfinger.net>
-	<CAAT9Hshwb+iPMALGvP1P2UHzEQbyvYNM0_zz0dHp0mJuy6KwLA@mail.gmail.com>
-	<50103BE8.1020203@lwfinger.net>
-	<CAAT9HsjQ_tkm77NT_Rn5_Pi9BHGhY9Vz7jcVzkwdDUjUoKamtw@mail.gmail.com>
-	<501061C8.5010108@lwfinger.net>
-	<CA+XFjioVy_pmKxcJAe1U_M+zKNiiPEsb0bmkAfEWzmnnDBjLFw@mail.gmail.com>
-	<CAAT9HsgXHe-0qZ5vTvCuU8QZ006MrsCyu7Zc_PRFccz52TWcUw@mail.gmail.com>
-	<CAD2nsn3z=Vp4UaJ23T_F5BqMgM7u6ATV3zOeAs1fQrBD+=KJqA@mail.gmail.com>
-Date: Thu, 26 Jul 2012 10:47:48 +0530
-Message-ID: <CAD2nsn19Oa_mUc_D9hqUzxOOQkKXBgEpxhghsTw_9H9LHP=3xQ@mail.gmail.com> (sfid-20120726_071802_630542_26D71F6B)
-Subject: Re: New Laptop and Driver
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Tim and Alison Bentley <Home@trarbentley.net>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-480947806-1342179713=:12697"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 10:34 AM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> On Thu, Jul 26, 2012 at 10:31 AM, Tim and Alison Bentley
-> <Home@trarbentley.net> wrote:
->> On 26 July 2012 02:25, GАbor Stefanik <netrolller.3d@gmail.com> wrote:
->>> On Wed, Jul 25, 2012 at 11:14 PM, Larry Finger
->>> <Larry.Finger@lwfinger.net> wrote:
->>>> On 07/25/2012 01:54 PM, Tim and Alison Bentley wrote:
->>>>>
->>>>> On 25 July 2012 19:33, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>>>>>
->>>>>> On 07/25/2012 01:00 PM, Tim and Alison Bentley wrote:
->>>>>>>
->>>>>>>
->>>>>>> 01:00.0 VGA compatible controller [0300]: nVidia Corporation Device
->>>>>>> [10de:0de9] (rev a1)
->>>>>>> 03:00.0 Network controller [0280]: Atheros Communications Inc. Device
->>>>>>> [168c:0037] (rev 01)
->>>>>>> 04:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
->>>>>>> RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
->>>>>>> 07)
->>>>>>
->>>>>>
->>>>>>
->>>>>> The Realtek device is the one used for your wired network.
->>>>>>
->>>>>> The Atheros device is not in the tables for the latest version of any
->>>>>> wireless driver. Perhaps it will work if you do the following:
->>>>>>
->>>>>> su -
->>>>>> modprobe -v ath9k
->>>>>> echo "168c 0037" > /sys/bus/pci/drivers/ath9k/new_id
->>>>>> exit
->>>>>>
->>>>>> The above will work if the driver handles the device, but it is not yet
->>>>>> in
->>>>>> the tables. Perhaps the Atheros developers will know the status of that
->>>>>> device.
->>>>>>
->>>>>> When replying to E-mail in this list, and most other technical mailing
->>>>>> lists, please do not top post. Always put your answer below the quoted
->>>>>> material as I did here.
->>>>>>
->>>>>> Larry
->>>>>>
->>>>>>
->>>>>>
->>>>> Sorry for top posting, bad habbit
->>>>> No luck with the suggestion and I tried a reboot for luck with no success.
->>>>
->>>>
->>>> The effect of those commands would have disappeared after a reboot. One last
->>>> thing to do is to check /var/log/messages to see if it complained about
->>>> missing firmware after you entered the new_id. There should be some kind of
->>>> error messages at that point, but it is likely that no Linux driver handles
->>>> this device.
->>>>
->>>> You might try ndiswrapper and the Windows driver, but if the system is
->>>> 64-bit, then that might not work either.
->>>>
->>>> Larry
->>>
->>> 168c:0037 appears to be a chipset called "AR1111", based on Windows
->>> drivers. However, I suspect this is a provisional/placeholder name.
->>
->> Re ran the commands and have the /var/log/messages output
->>
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.876477] cfg80211: Calling CRDA
->> to update world regulatory domain
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916447] cfg80211: World
->> regulatory domain updated:
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916450] cfg80211:   (start_freq
->> - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916453] cfg80211:   (2402000
->> KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916455] cfg80211:   (2457000
->> KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916457] cfg80211:   (2474000
->> KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916459] cfg80211:   (5170000
->> KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:23 tigger2 kernel: [ 1546.916461] cfg80211:   (5735000
->> KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> Jul 26 05:58:30 tigger2 kernel: [ 1553.767939] ath: phy0: Hardware
->> device ID 0x0037 not supported
->
-> it wasn't there in the device ID table in pci.c of ath9k, lets see
-> this chip is actually
-> has h/w code support in ath9k.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-yes indeed its AR1111, seems like a AR9485 chip.
+---1050998036-480947806-1342179713=:12697
+Content-Type: TEXT/PLAIN; charset=KOI8-R
+Content-Transfer-Encoding: 8BIT
 
->
->
->> Jul 26 05:58:30 tigger2 kernel: [ 1553.767948] ath9k 0000:03:00.0:
->> Failed to initialize device
->> Jul 26 05:58:30 tigger2 kernel: [ 1553.768137] ath9k: probe of
->> 0000:03:00.0 failed with error -95
->>
->>
->> --
->> Tim and Alison Bentley
->> Home@TRARBentley.net
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> thanks,
-> shafi
+On 2012-07-13 15:26 +0400, Georgiewskiy Yuriy wrote linux-wireless@vger.ker...:
 
+also update - i also try to test it with AP<->client mode, just start hostapd
+on one node, remove antennas nad start iperf, in this case there is no errors
+and link seems very more stable then i use mesh nodes, may be this is also
+802.11s related too.
 
+GY>
+GY>Hi all again, seems i hit another bug, my test setup is a three mesh nodes,
+GY>all in one room, two is alix pc engines with EMP9605H (ar9220) with antennas
+GY>like on soho routers and one is my laptop with dbii f52n-pro ar9220 based
+GY>too. Use compat-wireless-3.5-rc5-1-snpc on all nodes.
+GY>
+GY>All three nodes work fine, but then i remove antenas from one of the node (it
+GY>contiue work only with pigtails) signal levels with this node is low but
+GY>enough
+GY>to work, it continue to work but i have errors in dmesg on all three nodes:
+GY>
+GY>ath: phy0: Failed to stop TX DMA, queues=0x001!
+GY>
+GY>Links is become unstable, packet loss regardless to which node taffic is
+GY>goes,
+GY>to node without antennas or betwen nodes with antennas.
+GY>
+GY>I tryin change wireless cards with no results, but all what i try is ar9220
+GY>based, just different manufactures. Also i try add ubiquiti nanostation M2
+GY>with openwrt
+GY>on it in this setup, and get same results on it too - dma erros and unstable
+GY>links with packetloss.
+GY>
+GY>Then i connect antennas back, all strat working fine again withous erorors.
+GY>I think it seems low signal and/or low quality links is triggering with bug.
+GY>
+GY>I also trying use stock kernel 3.2.x and 3.4.x, compat-wireless bleeding
+GY>edge, but no luck - same results.
+GY>
+GY>Please give any suggestions how i can help find a root case of this bug to
+GY>resolve
+GY>it?
+GY>
+GY>C уважением                       With Best Regards
+GY>Георгиевский Юрий.                Georgiewskiy Yuriy
+GY>+7 4872 711666                    +7 4872 711666
+GY>факс +7 4872 711143               fax +7 4872 711143
+GY>Компания ООО "Ай Ти Сервис"       IT Service Ltd
+GY>http://nkoort.ru                  http://nkoort.ru
+GY>JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+GY>YG129-RIPE                        YG129-RIPE
 
--- 
-thanks,
-shafi
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
+---1050998036-480947806-1342179713=:12697--
