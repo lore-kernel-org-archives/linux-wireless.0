@@ -1,235 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37200 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751571Ab2GIGco (ORCPT
+Received: from mail-yw0-f42.google.com ([209.85.213.42]:42641 "EHLO
+	mail-yw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538Ab2GMDOV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 02:32:44 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k: fix reset work check properly
-Date: Mon, 9 Jul 2012 12:04:00 +0530
-Message-ID: <1341815640-6299-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120709_083248_231932_76032EBE)
+	Thu, 12 Jul 2012 23:14:21 -0400
+Received: by yhoo21 with SMTP id o21so2838648yho.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 20:14:20 -0700 (PDT)
+Message-ID: <4FFF927D.7020106@lwfinger.net> (sfid-20120713_051459_990030_AB8113FF)
+Date: Thu, 12 Jul 2012 22:14:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Forest Bond <forest@alittletooquiet.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Anyone using rtl8192de with 2.4GHz 802.11g?
+References: <20120712002149.GA14850@alittletooquiet.net> <4FFE211C.3020506@lwfinger.net> <20120712013216.GB14850@alittletooquiet.net> <4FFE2F38.7030604@lwfinger.net> <20120712152545.GA9489@alittletooquiet.net> <4FFEF9F8.5060106@lwfinger.net> <20120712181751.GB9489@alittletooquiet.net> <20120712210703.GC9489@alittletooquiet.net> <20120712215730.GD9489@alittletooquiet.net>
+In-Reply-To: <20120712215730.GD9489@alittletooquiet.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Once the hw reset work is queued up and to bail out current
-execution properly, use HW_RESET bit ops instead of work_pending.
-As work_pending might return false when the queued work is in
-execution. So it is not correct to use the work utility for
-baining out.
+On 07/12/2012 04:57 PM, Forest Bond wrote:
+> Hi Larry,
+>
+> On Thu, Jul 12, 2012 at 05:07:03PM -0400, Forest Bond wrote:
+>> On Thu, Jul 12, 2012 at 02:17:51PM -0400, Forest Bond wrote:
+>>> On Thu, Jul 12, 2012 at 11:23:20AM -0500, Larry Finger wrote:
+>>>> On 07/12/2012 10:25 AM, Forest Bond wrote:
+>>>>> On Wed, Jul 11, 2012 at 08:58:16PM -0500, Larry Finger wrote:
+>>>>>> On 07/11/2012 08:32 PM, Forest Bond wrote:
+>>>>>>> On Wed, Jul 11, 2012 at 07:58:04PM -0500, Larry Finger wrote:
+>>>>>>>> On 07/11/2012 07:21 PM, Forest Bond wrote:
+>>>>>>>>> The rtl8192de driver is working fine for me at 5GHz, but I am having trouble
+>>>>>>>>> getting scan results for 2.4GHz 802.11g networks.  I have been doing a lot of
+>>>>>>>>> debugging but am not making much progress.  I suspect the 802.11 b/g/n phy is
+>>>>>>>>> not being initialized correctly, but I'm pretty far outside my domain on this
+>>>>>>>>> one.
+>>>>>>>>>
+>>>>>>>>> Is anyone successfully using this driver with a 2.4GHz 802.11g network?
+>>>>>>>>
+>>>>>>>> I have several different models - some work better than others. What
+>>>>>>>> is the PCI ID for yours?
+>>>>>>>
+>>>>>>> This is the one I have:
+>>>>>>>
+>>>>>>> 02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. Device [10ec:8193]
+>>>>>>> 02:00.1 Network controller [0280]: Realtek Semiconductor Co., Ltd. Device [10ec:8193] (rev 01)
+>>>>>>
+>>>>>> It turns out that both kinds have the same ID. I think one of them
+>>>>>> is a prototype, while the other is probably a production unit.
+>>>>>> Obviously, bitrot has set in while I wasn't testing. With the kernel
+>>>>>> driver, neither unit can even scan in the 2.4 GHz band. Using the
+>>>>>> latest version of the vendor driver, the production version connects
+>>>>>> with APs running WEP, WPA, or WPA2. The prototype can only handle
+>>>>>> WEP.
+>>>>>>
+>>>>>> Obviously, I have some work to do. In the meantime, I will send you
+>>>>>> a tarball containing the vendor driver - privately so as not to spam
+>>>>>> the list.
+>>>>>
+>>>>> Thank you, I appreciate that.
+>>>>>
+>>>>> Of course, my preference would be to fix up the kernel driver.  I don't mind
+>>>>> doing some manual bisection with compat-wireless releases unless you think that
+>>>>> would be a total waste of time.  Do you have any sense for what the last working
+>>>>> kernel version would have been?
+>>>>>
+>>>>> As you suggest, we may need to use the vendor driver in the meantime.  Thanks
+>>>>> again for sending it over (although I suspect it is the same version I
+>>>>> downloaded from Realtek's web site).
+>>>>
+>>>> It started with the Realtek version, but has some important bug
+>>>> fixes that I wanted you to have.
+>>>
+>>> Thanks, that's really helpful.
+>>>
+>>>> Of course, we want to fix the kernel version, but if you want to
+>>>> bisect compat-wireless, that would be a big help. In the meantime, I
+>>>> will try bisecting wireless-testing when I get a chance.
+>>>
+>>> I have begun disecting compat-wireless releases.  3.1.1-1 works, 3.2.5-1
+>>> doesn't.  I'm going to try to identify the commit that broke things by applying
+>>> patches to 3.1.1-1.
+>>
+>> So unless I screwed something up while bisecting, I think this is where things
+>> broke:
+>>
+>>
+>> commit d83579e2a50ac68389e6b4c58b845c702cf37516
+>> Author: Chaoming Li <chaoming_li@realsil.com.cn>
+>> Date:   Tue Oct 11 21:28:51 2011 -0500
+>>
+>>      rtlwifi: rtl8192de: Updates from latest Reaktek driver - Part III
+>>
+>>      This patch incorporate the differences between the 06/20/2011 and
+>>      08/16/2011 Realtek releases of the rtl8192de driver.
+>>
+>>      The changes include:
+>>
+>>      1. Update for new chip versions
+>>
+>>      Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
+>>      Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>      Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>
+>>
+>> I managed to get into an interesting situation at one point during testing where
+>> neither MAC would return scan results, even after reverting to a known-good
+>> driver version.  This was resolved by removing and re-applying power (i.e. a
+>> reboot did not fix it).  Something must've put the hardware in a bad state.  I
+>> haven't seen this problem again.
+>>
+>> Anyway, I'll probably play with that patch a bit to see if I can figure out what
+>> broke, but let me know if you have any ideas.
+>
+>
+> So this seems to fix things:
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> index 18380a7..be21c81 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> @@ -3345,21 +3345,25 @@ void rtl92d_phy_config_macphymode_info(struct ieee80211_hw *hw)
+>   	switch (rtlhal->macphymode) {
+>   	case DUALMAC_SINGLEPHY:
+>   		rtlphy->rf_type = RF_2T2R;
+> -		rtlhal->version |= CHIP_92D_SINGLEPHY;
+> +		/*rtlhal->version |= CHIP_92D_SINGLEPHY;*/
+> +		rtlhal->version |= RF_TYPE_2T2R;
+>   		rtlhal->bandset = BAND_ON_BOTH;
+>   		rtlhal->current_bandtype = BAND_ON_2_4G;
+>   		break;
+>
+>   	case SINGLEMAC_SINGLEPHY:
+>   		rtlphy->rf_type = RF_2T2R;
+> -		rtlhal->version |= CHIP_92D_SINGLEPHY;
+> +		/*rtlhal->version |= CHIP_92D_SINGLEPHY;*/
+> +		rtlhal->version |= RF_TYPE_2T2R;
+>   		rtlhal->bandset = BAND_ON_BOTH;
+>   		rtlhal->current_bandtype = BAND_ON_2_4G;
+>   		break;
+>
+>   	case DUALMAC_DUALPHY:
+>   		rtlphy->rf_type = RF_1T1R;
+> -		rtlhal->version &= (~CHIP_92D_SINGLEPHY);
+> +		/*rtlhal->version &= (~CHIP_92D_SINGLEPHY);*/
+> +		rtlhal->version &= RF_TYPE_1T1R;
+> +
+>   		/* Now we let MAC0 run on 5G band. */
+>   		if (rtlhal->interfaceindex == 0) {
+>   			rtlhal->bandset = BAND_ON_5G;
+>
+>
+> And this is unrelated, but also seems important:
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> index b338d52..59e85f5 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> @@ -1058,11 +1058,14 @@ static enum version_8192d _rtl92de_read_chip_version(struct ieee80211_hw *hw)
+>   	u32 value32;
+>
+>   	value32 = rtl_read_dword(rtlpriv, REG_SYS_CFG);
+> +	version |= CHIP_92D;
+> +
+>   	if (!(value32 & 0x000f0000)) {
+>   		version = VERSION_TEST_CHIP_92D_SINGLEPHY;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "TEST CHIP!!!\n");
+>   	} else {
+> -		version = VERSION_NORMAL_CHIP_92D_SINGLEPHY;
+> +		/*version = VERSION_NORMAL_CHIP_92D_SINGLEPHY;*/
+> +		version |= NORMAL_CHIP;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Normal CHIP!!!\n");
+>   	}
+>   	return version;
+>
+>
+> Let me know what you think.  I can prepare some proper patches sometime
+> tomorrow.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |  1 +
- drivers/net/wireless/ath/ath9k/beacon.c |  4 ++--
- drivers/net/wireless/ath/ath9k/debug.h  |  2 ++
- drivers/net/wireless/ath/ath9k/link.c   | 13 ++++++-------
- drivers/net/wireless/ath/ath9k/main.c   | 14 ++++++++++----
- drivers/net/wireless/ath/ath9k/mci.c    |  2 +-
- drivers/net/wireless/ath/ath9k/xmit.c   | 13 ++++++-------
- 7 files changed, 28 insertions(+), 21 deletions(-)
+All of those match the code in the 0816.2011 driver. I have no idea what went 
+wrong earlier, but I think those patches are OK.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 79840d6..f65fd3a 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -445,6 +445,7 @@ void ath_ani_calibrate(unsigned long data);
- void ath_start_ani(struct ath_common *common);
- int ath_update_survey_stats(struct ath_softc *sc);
- void ath_update_survey_nf(struct ath_softc *sc, int channel);
-+void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
- 
- /**********/
- /* BTCOEX */
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 40775da..567a655 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -362,7 +362,7 @@ void ath_beacon_tasklet(unsigned long data)
- 	int slot;
- 	u32 bfaddr, bc = 0;
- 
--	if (work_pending(&sc->hw_reset_work)) {
-+	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags)) {
- 		ath_dbg(common, RESET,
- 			"reset work is pending, skip beaconing now\n");
- 		return;
-@@ -391,7 +391,7 @@ void ath_beacon_tasklet(unsigned long data)
- 			ath_dbg(common, BSTUCK, "beacon is officially stuck\n");
- 			sc->beacon.bmisscnt = 0;
- 			set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
--			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-+			ath9k_queue_reset(sc, RESET_TYPE_BEACON_STUCK);
- 		}
- 
- 		return;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index d0f851c..2078ecc 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -217,6 +217,8 @@ enum ath_reset_type {
- 	RESET_TYPE_TX_HANG,
- 	RESET_TYPE_PLL_HANG,
- 	RESET_TYPE_MAC_HANG,
-+	RESET_TYPE_BEACON_STUCK,
-+	RESET_TYPE_MCI,
- 	__RESET_TYPE_MAX
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 91650fe..7463069 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -50,8 +50,7 @@ void ath_tx_complete_poll_work(struct work_struct *work)
- 	if (needreset) {
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), RESET,
- 			"tx hung, resetting the chip\n");
--		RESET_STAT_INC(sc, RESET_TYPE_TX_HANG);
--		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-+		ath9k_queue_reset(sc, RESET_TYPE_TX_HANG);
- 		return;
- 	}
- 
-@@ -69,6 +68,7 @@ void ath_hw_check(struct work_struct *work)
- 	unsigned long flags;
- 	int busy;
- 	u8 is_alive, nbeacon = 1;
-+	enum ath_reset_type type;
- 
- 	ath9k_ps_wakeup(sc);
- 	is_alive = ath9k_hw_check_alive(sc->sc_ah);
-@@ -78,7 +78,7 @@ void ath_hw_check(struct work_struct *work)
- 	else if (!is_alive && AR_SREV_9300(sc->sc_ah)) {
- 		ath_dbg(common, RESET,
- 			"DCU stuck is detected. Schedule chip reset\n");
--		RESET_STAT_INC(sc, RESET_TYPE_MAC_HANG);
-+		type = RESET_TYPE_MAC_HANG;
- 		goto sched_reset;
- 	}
- 
-@@ -90,7 +90,7 @@ void ath_hw_check(struct work_struct *work)
- 		busy, sc->hw_busy_count + 1);
- 	if (busy >= 99) {
- 		if (++sc->hw_busy_count >= 3) {
--			RESET_STAT_INC(sc, RESET_TYPE_BB_HANG);
-+			type = RESET_TYPE_BB_HANG;
- 			goto sched_reset;
- 		}
- 	} else if (busy >= 0) {
-@@ -102,7 +102,7 @@ void ath_hw_check(struct work_struct *work)
- 	goto out;
- 
- sched_reset:
--	ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-+	ath9k_queue_reset(sc, type);
- out:
- 	ath9k_ps_restore(sc);
- }
-@@ -119,8 +119,7 @@ static bool ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
- 		count++;
- 		if (count == 3) {
- 			ath_dbg(common, RESET, "PLL WAR, resetting the chip\n");
--			RESET_STAT_INC(sc, RESET_TYPE_PLL_HANG);
--			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-+			ath9k_queue_reset(sc, RESET_TYPE_PLL_HANG);
- 			count = 0;
- 			return true;
- 		}
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 248e5b2..e31be58 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -381,11 +381,8 @@ void ath9k_tasklet(unsigned long data)
- 			type = RESET_TYPE_FATAL_INT;
- 		else
- 			type = RESET_TYPE_BB_WATCHDOG;
--
--		RESET_STAT_INC(sc, type);
- #endif
--		set_bit(SC_OP_HW_RESET, &sc->sc_flags);
--		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-+		ath9k_queue_reset(sc, type);
- 		goto out;
- 	}
- 
-@@ -575,6 +572,15 @@ static int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	return r;
- }
- 
-+void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type)
-+{
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+	RESET_STAT_INC(sc, type);
-+#endif
-+	set_bit(SC_OP_HW_RESET, &sc->sc_flags);
-+	ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-+}
-+
- void ath_reset_work(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_reset_work);
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 87acff7..fb536e7 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -202,7 +202,7 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
- 	case MCI_GPM_BT_CAL_REQ:
- 		if (mci_hw->bt_state == MCI_BT_AWAKE) {
- 			ar9003_mci_state(ah, MCI_STATE_SET_BT_CAL_START);
--			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-+			ath9k_queue_reset(sc, RESET_TYPE_MCI);
- 		}
- 		ath_dbg(common, MCI, "MCI State : %d\n", mci_hw->bt_state);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index cafb4a0..20929e9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -614,10 +614,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	rcu_read_unlock();
- 
--	if (needreset) {
--		RESET_STAT_INC(sc, RESET_TYPE_TX_ERROR);
--		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
--	}
-+	if (needreset)
-+		ath9k_queue_reset(sc, RESET_TYPE_TX_ERROR);
- }
- 
- static bool ath_lookup_legacy(struct ath_buf *bf)
-@@ -1586,7 +1584,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
- 	struct ath_atx_tid *tid, *last_tid;
- 
--	if (work_pending(&sc->hw_reset_work) || list_empty(&txq->axq_acq) ||
-+	if (test_bit(SC_OP_HW_RESET, &sc->sc_flags) ||
-+	    list_empty(&txq->axq_acq) ||
- 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
- 		return;
- 
-@@ -2191,7 +2190,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 
- 	ath_txq_lock(sc, txq);
- 	for (;;) {
--		if (work_pending(&sc->hw_reset_work))
-+		if (test_bit(SC_OP_HW_RESET, &sc->sc_flags))
- 			break;
- 
- 		if (list_empty(&txq->axq_q)) {
-@@ -2274,7 +2273,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 	int status;
- 
- 	for (;;) {
--		if (work_pending(&sc->hw_reset_work))
-+		if (test_bit(SC_OP_HW_RESET, &sc->sc_flags))
- 			break;
- 
- 		status = ath9k_hw_txprocdesc(ah, NULL, (void *)&ts);
--- 
-1.7.11.1
+Larry
 
