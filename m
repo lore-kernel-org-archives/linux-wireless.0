@@ -1,228 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50586 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826Ab2GQLrt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:47:49 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:48256 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752206Ab2GNLoh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jul 2012 07:44:37 -0400
+Message-ID: <50015B98.60705@openwrt.org> (sfid-20120714_134441_774453_2A3EB076)
+Date: Sat, 14 Jul 2012 13:44:24 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20485.20629.357872.205001@gargle.gargle.HOWL> (sfid-20120717_134753_031258_8254EDA2)
-Date: Tue, 17 Jul 2012 17:16:29 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/12] ath9k: Fix ANI management
+To: Arend van Spriel <arend@broadcom.com>
+CC: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>, coelho@ti.com,
+	johannes.berg@intel.com, brcm80211-dev-list@broadcom.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	ilw@linux.intel.com, ath9k-devel@lists.ath9k.org,
+	b43-dev@lists.infradead.org, chunkeey@googlemail.com,
+	dsd@gentoo.org, buytenh@wantstofly.org
+Subject: Re: [ath9k-devel] [PATCH 2/2] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
+References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <50014580.7060702@broadcom.com>
+In-Reply-To: <50014580.7060702@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, there are problems with how ANI is handled in
-multi-VIF scenarios. This patch addresses them by unifying
-the start/stop logic.
+On 2012-07-14 12:10 PM, Arend van Spriel wrote:
+> On 07/13/2012 08:52 PM, Thomas Huehn wrote:
+>> The pointer control.sta is removed from ieee80211_tx_info to free up sufficient
+>> memory in SKB_CB on the tx-path to enable new annotations per data packet e.g.
+>> support of upcoming Transmit Power Control (TPC).
+>> Now the control.sta pointer is put on the stack where it is passed as function
+>> parameter to the .tx equivalent (ieee80211_ops) of each affected wireless
+>> driver. Therefore a new structure ieee80211_tx_control is added to mac80211.h
+>> which holds the sta structure instead.
+>> 
+>> ---
+>>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  6 +++--
+>> 
+>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+>> index 9e79d47..a7be68d 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+>> @@ -264,7 +264,9 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+>>  	}
+>>  }
+>>  
+>> -static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>> +static void brcms_ops_tx(struct ieee80211_hw *hw,
+>> +			 struct ieee80211_tx_control *control,
+>> +			 struct sk_buff *skb)
+> 
+> Fix indent here (if it is not a mailer issue).
+Indentation looks correct to me. The + in front of the 'static' moves
+the rest of the line one character further to the right, whereas in the
+other lines it's compensated by the tabstop.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  4 ++-
- drivers/net/wireless/ath/ath9k/debug.c |  5 ++-
- drivers/net/wireless/ath/ath9k/link.c  | 60 ++++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/main.c  | 29 +++++++---------
- 4 files changed, 70 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index bb86e1b..029e7bf 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -444,7 +444,9 @@ void ath_rx_poll(unsigned long data);
- void ath_start_rx_poll(struct ath_softc *sc, u8 nbeacon);
- void ath_paprd_calibrate(struct work_struct *work);
- void ath_ani_calibrate(unsigned long data);
--void ath_start_ani(struct ath_common *common);
-+void ath_start_ani(struct ath_softc *sc);
-+void ath_stop_ani(struct ath_softc *sc);
-+void ath_check_ani(struct ath_softc *sc);
- int ath_update_survey_stats(struct ath_softc *sc);
- void ath_update_survey_nf(struct ath_softc *sc, int channel);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 5c3192f..33b0689 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -206,10 +206,9 @@ static ssize_t write_file_disable_ani(struct file *file,
- 
- 	if (disable_ani) {
- 		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--		del_timer_sync(&common->ani.timer);
-+		ath_stop_ani(sc);
- 	} else {
--		set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--		ath_start_ani(common);
-+		ath_check_ani(sc);
- 	}
- 
- 	return count;
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 91650fe..42fc0a3 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -432,26 +432,72 @@ set_timer:
- 	}
- }
- 
--void ath_start_ani(struct ath_common *common)
-+void ath_start_ani(struct ath_softc *sc)
- {
--	struct ath_hw *ah = common->ah;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	unsigned long timestamp = jiffies_to_msecs(jiffies);
--	struct ath_softc *sc = (struct ath_softc *) common->priv;
--
--	if (!test_bit(SC_OP_ANI_RUN, &sc->sc_flags))
--		return;
- 
--	if (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
-+	if (common->disable_ani ||
-+	    !test_bit(SC_OP_ANI_RUN, &sc->sc_flags) ||
-+	    (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
- 		return;
- 
- 	common->ani.longcal_timer = timestamp;
- 	common->ani.shortcal_timer = timestamp;
- 	common->ani.checkani_timer = timestamp;
- 
-+	ath_dbg(common, ANI, "Starting ANI\n");
- 	mod_timer(&common->ani.timer,
- 		  jiffies + msecs_to_jiffies((u32)ah->config.ani_poll_interval));
- }
- 
-+void ath_stop_ani(struct ath_softc *sc)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	ath_dbg(common, ANI, "Stopping ANI\n");
-+	del_timer_sync(&common->ani.timer);
-+}
-+
-+void ath_check_ani(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
-+
-+	/*
-+	 * Check for the various conditions in which ANI has to
-+	 * be stopped.
-+	 */
-+	if (ah->opmode == NL80211_IFTYPE_ADHOC) {
-+		if (!cur_conf->enable_beacon)
-+			goto stop_ani;
-+	} else if (ah->opmode == NL80211_IFTYPE_AP) {
-+		if (!cur_conf->enable_beacon) {
-+			/*
-+			 * Disable ANI only when there are no
-+			 * associated stations.
-+			 */
-+			if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
-+				goto stop_ani;
-+		}
-+	} else if (ah->opmode == NL80211_IFTYPE_STATION) {
-+		if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
-+			goto stop_ani;
-+	}
-+
-+	if (!test_bit(SC_OP_ANI_RUN, &sc->sc_flags)) {
-+		set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
-+		ath_start_ani(sc);
-+	}
-+
-+	return;
-+
-+stop_ani:
-+	clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
-+	ath_stop_ani(sc);
-+}
-+
- void ath_update_survey_nf(struct ath_softc *sc, int channel)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c23912c..55c9095 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -167,8 +167,6 @@ static void ath_cancel_work(struct ath_softc *sc)
- 
- static void ath_restart_work(struct ath_softc *sc)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--
- 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
- 
- 	if (AR_SREV_9340(sc->sc_ah) || AR_SREV_9485(sc->sc_ah) ||
-@@ -177,21 +175,18 @@ static void ath_restart_work(struct ath_softc *sc)
- 				     msecs_to_jiffies(ATH_PLL_WORK_INTERVAL));
- 
- 	ath_start_rx_poll(sc, 3);
--
--	if (!common->disable_ani)
--		ath_start_ani(common);
-+	ath_start_ani(sc);
- }
- 
- static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
- 	bool ret = true;
- 
- 	ieee80211_stop_queues(sc->hw);
- 
- 	sc->hw_busy_count = 0;
--	del_timer_sync(&common->ani.timer);
-+	ath_stop_ani(sc);
- 	del_timer_sync(&sc->rx_poll_timer);
- 
- 	ath9k_debug_samp_bb_mac(sc);
-@@ -1480,6 +1475,11 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 				   struct ieee80211_bss_conf *bss_conf,
- 				   u32 changed)
- {
-+#define CHECK_ANI				\
-+	(BSS_CHANGED_ASSOC |			\
-+	 BSS_CHANGED_IBSS |			\
-+	 BSS_CHANGED_BEACON_ENABLED)
-+
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1516,16 +1516,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
- 		common->curaid = bss_conf->aid;
- 		ath9k_hw_write_associd(sc->sc_ah);
--
--		if (bss_conf->ibss_joined) {
--			if (!common->disable_ani) {
--				set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--				ath_start_ani(common);
--			}
--		} else {
--			clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--			del_timer_sync(&common->ani.timer);
--		}
- 	}
- 
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
-@@ -1556,8 +1546,13 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	if (changed & CHECK_ANI)
-+		ath_check_ani(sc);
-+
- 	mutex_unlock(&sc->mutex);
- 	ath9k_ps_restore(sc);
-+
-+#undef CHECK_ANI
- }
- 
- static u64 ath9k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
--- 
-1.7.11.2
-
+- Felix
