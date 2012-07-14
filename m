@@ -1,489 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:58040 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265Ab2GEUHr (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:50287 "HELO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757268Ab2GNDMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 16:07:47 -0400
-Received: by wgbdr13 with SMTP id dr13so8641718wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 13:07:45 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, Joe Perches <joe@perches.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V5] bcma: use custom printing functions
-Date: Thu,  5 Jul 2012 22:07:32 +0200
-Message-Id: <1341518852-20782-1-git-send-email-zajec5@gmail.com> (sfid-20120705_220752_526844_4C7BF0B3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 13 Jul 2012 23:12:18 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/4] mwifiex: improvement in cfg80211 set_bitrate_mask handler
+Date: Fri, 13 Jul 2012 20:09:33 -0700
+Message-Id: <1342235373-27613-5-git-send-email-bzhao@marvell.com> (sfid-20120714_051242_274189_518CA868)
+In-Reply-To: <1342235373-27613-1-git-send-email-bzhao@marvell.com>
+References: <1342235373-27613-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Having bus number printed makes it much easier to anaylze logs on
-systems with more buses. For example Netgear WNDR4500 has 3 AMBA buses
-in total, which makes standard log really messy.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+This patch configures data rates to firmware using bitrate mask
+provided by cfg80211.
+
+Earlier we used to only update band information in this handler
+which will be used later for ibss network. Due to recent
+modifications in ibss join code we don't need to do that.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-V2: don't create "bus" variable when it's not really helpful
-    don't brak strings
+ drivers/net/wireless/mwifiex/cfg80211.c |   61 ++++++++++++++-----------------
+ drivers/net/wireless/mwifiex/main.h     |    1 -
+ 2 files changed, 27 insertions(+), 35 deletions(-)
 
-V3: rebase
-    add bcma_debug
-
-V4: replace some pr_debug I missed in V3
-
-V5: screw that few dots, just use pr_<level> in custom functions
-    no more bcma_debug problem
----
- drivers/bcma/bcma_private.h          |    9 +++++++++
- drivers/bcma/core.c                  |   10 +++++-----
- drivers/bcma/driver_chipcommon.c     |    5 ++---
- drivers/bcma/driver_chipcommon_pmu.c |   26 ++++++++++++--------------
- drivers/bcma/driver_mips.c           |   16 ++++++++--------
- drivers/bcma/driver_pci_host.c       |   10 ++++++----
- drivers/bcma/host_pci.c              |    4 ++--
- drivers/bcma/main.c                  |   19 ++++++++++---------
- drivers/bcma/scan.c                  |   24 +++++++++++-------------
- drivers/bcma/sprom.c                 |    8 ++++----
- 10 files changed, 69 insertions(+), 62 deletions(-)
-
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index b81755b..f6589eb 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -10,6 +10,15 @@
- 
- #define BCMA_CORE_SIZE		0x1000
- 
-+#define bcma_err(bus, fmt, ...) \
-+	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
-+#define bcma_warn(bus, fmt, ...) \
-+	pr_warn("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
-+#define bcma_info(bus, fmt, ...) \
-+	pr_info("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
-+#define bcma_debug(bus, fmt, ...) \
-+	pr_debug("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
-+
- struct bcma_bus;
- 
- /* main.c */
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index bc6e892..63c8b47 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -75,7 +75,7 @@ void bcma_core_set_clockmode(struct bcma_device *core,
- 			udelay(10);
- 		}
- 		if (i)
--			pr_err("HT force timeout\n");
-+			bcma_err(core->bus, "HT force timeout\n");
- 		break;
- 	case BCMA_CLKMODE_DYNAMIC:
- 		bcma_set32(core, BCMA_CLKCTLST, ~BCMA_CLKCTLST_FORCEHT);
-@@ -102,9 +102,9 @@ void bcma_core_pll_ctl(struct bcma_device *core, u32 req, u32 status, bool on)
- 			udelay(10);
- 		}
- 		if (i)
--			pr_err("PLL enable timeout\n");
-+			bcma_err(core->bus, "PLL enable timeout\n");
- 	} else {
--		pr_warn("Disabling PLL not supported yet!\n");
-+		bcma_warn(core->bus, "Disabling PLL not supported yet!\n");
- 	}
- }
- EXPORT_SYMBOL_GPL(bcma_core_pll_ctl);
-@@ -120,8 +120,8 @@ u32 bcma_core_dma_translation(struct bcma_device *core)
- 		else
- 			return BCMA_DMA_TRANSLATION_DMA32_CMT;
- 	default:
--		pr_err("DMA translation unknown for host %d\n",
--		       core->bus->hosttype);
-+		bcma_err(core->bus, "DMA translation unknown for host %d\n",
-+			 core->bus->hosttype);
- 	}
- 	return BCMA_DMA_TRANSLATION_NONE;
- }
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index e9f1b3f..61c19ce 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -44,7 +44,7 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
- 	if (cc->capabilities & BCMA_CC_CAP_PMU)
- 		bcma_pmu_init(cc);
- 	if (cc->capabilities & BCMA_CC_CAP_PCTL)
--		pr_err("Power control not implemented!\n");
-+		bcma_err(cc->core->bus, "Power control not implemented!\n");
- 
- 	if (cc->core->id.rev >= 16) {
- 		if (cc->core->bus->sprom.leddc_on_time &&
-@@ -137,8 +137,7 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- 				       | BCMA_CC_CORECTL_UARTCLKEN);
- 		}
- 	} else {
--		pr_err("serial not supported on this device ccrev: 0x%x\n",
--		       ccrev);
-+		bcma_err(bus, "serial not supported on this device ccrev: 0x%x\n", ccrev);
- 		return;
- 	}
- 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index ca5a919..74a87d5 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -66,8 +66,8 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
- 		max_msk = 0xFFFF;
- 		break;
- 	default:
--		pr_debug("PMU resource config unknown or not needed for device 0x%04X\n",
--			 bus->chipinfo.id);
-+		bcma_debug(bus, "PMU resource config unknown or not needed for device 0x%04X\n",
-+			   bus->chipinfo.id);
- 	}
- 
- 	/* Set the resource masks. */
-@@ -136,8 +136,8 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- 		}
- 		break;
- 	default:
--		pr_debug("Workarounds unknown or not needed for device 0x%04X\n",
--			 bus->chipinfo.id);
-+		bcma_debug(bus, "Workarounds unknown or not needed for device 0x%04X\n",
-+			   bus->chipinfo.id);
- 	}
- }
- 
-@@ -148,8 +148,8 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
- 	pmucap = bcma_cc_read32(cc, BCMA_CC_PMU_CAP);
- 	cc->pmu.rev = (pmucap & BCMA_CC_PMU_CAP_REVISION);
- 
--	pr_debug("Found rev %u PMU (capabilities 0x%08X)\n", cc->pmu.rev,
--		 pmucap);
-+	bcma_debug(cc->core->bus, "Found rev %u PMU (capabilities 0x%08X)\n",
-+		   cc->pmu.rev, pmucap);
- 
- 	if (cc->pmu.rev == 1)
- 		bcma_cc_mask32(cc, BCMA_CC_PMU_CTL,
-@@ -181,9 +181,8 @@ u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc)
- 		/* always 25Mhz */
- 		return 25000 * 1000;
- 	default:
--		pr_warn("No ALP clock specified for %04X device, "
--			"pmu rev. %d, using default %d Hz\n",
--			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_ALP_CLOCK);
-+		bcma_warn(bus, "No ALP clock specified for %04X device, pmu rev. %d, using default %d Hz\n",
-+			  bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_ALP_CLOCK);
- 	}
- 	return BCMA_CC_PMU_ALP_CLOCK;
- }
-@@ -251,9 +250,8 @@ u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
- 	case BCMA_CHIP_ID_BCM53572:
- 		return 75000000;
- 	default:
--		pr_warn("No backplane clock specified for %04X device, "
--			"pmu rev. %d, using default %d Hz\n",
--			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_HT_CLOCK);
-+		bcma_warn(bus, "No backplane clock specified for %04X device, pmu rev. %d, using default %d Hz\n",
-+			  bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_HT_CLOCK);
- 	}
- 	return BCMA_CC_PMU_HT_CLOCK;
- }
-@@ -459,8 +457,8 @@ void bcma_pmu_spuravoid_pllupdate(struct bcma_drv_cc *cc, int spuravoid)
- 		tmp = 1 << 10;
- 		break;
- 	default:
--		pr_err("unknown spuravoidance settings for chip 0x%04X, not changing PLL\n",
--		       bus->chipinfo.id);
-+		bcma_err(bus, "Unknown spuravoidance settings for chip 0x%04X, not changing PLL\n",
-+			 bus->chipinfo.id);
- 		break;
- 	}
- 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 73ed301..ef34ed2 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -143,8 +143,8 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
- 			     1 << irqflag);
- 	}
- 
--	pr_info("set_irq: core 0x%04x, irq %d => %d\n",
--		dev->id.id, oldirq + 2, irq + 2);
-+	bcma_info(bus, "set_irq: core 0x%04x, irq %d => %d\n",
-+		  dev->id.id, oldirq + 2, irq + 2);
- }
- 
- static void bcma_core_mips_print_irq(struct bcma_device *dev, unsigned int irq)
-@@ -173,7 +173,7 @@ u32 bcma_cpu_clock(struct bcma_drv_mips *mcore)
- 	if (bus->drv_cc.capabilities & BCMA_CC_CAP_PMU)
- 		return bcma_pmu_get_clockcpu(&bus->drv_cc);
- 
--	pr_err("No PMU available, need this to get the cpu clock\n");
-+	bcma_err(bus, "No PMU available, need this to get the cpu clock\n");
- 	return 0;
- }
- EXPORT_SYMBOL(bcma_cpu_clock);
-@@ -185,10 +185,10 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 	switch (bus->drv_cc.capabilities & BCMA_CC_CAP_FLASHT) {
- 	case BCMA_CC_FLASHT_STSER:
- 	case BCMA_CC_FLASHT_ATSER:
--		pr_err("Serial flash not supported.\n");
-+		bcma_err(bus, "Serial flash not supported.\n");
- 		break;
- 	case BCMA_CC_FLASHT_PARA:
--		pr_info("found parallel flash.\n");
-+		bcma_info(bus, "found parallel flash.\n");
- 		bus->drv_cc.pflash.window = 0x1c000000;
- 		bus->drv_cc.pflash.window_size = 0x02000000;
- 
-@@ -199,7 +199,7 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 			bus->drv_cc.pflash.buswidth = 2;
- 		break;
- 	default:
--		pr_err("flash not supported.\n");
-+		bcma_err(bus, "flash not supported.\n");
- 	}
- }
- 
-@@ -209,7 +209,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 	struct bcma_device *core;
- 	bus = mcore->core->bus;
- 
--	pr_info("Initializing MIPS core...\n");
-+	bcma_info(bus, "Initializing MIPS core...\n");
- 
- 	if (!mcore->setup_done)
- 		mcore->assigned_irqs = 1;
-@@ -244,7 +244,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 			break;
- 		}
- 	}
--	pr_info("IRQ reconfiguration done\n");
-+	bcma_info(bus, "IRQ reconfiguration done\n");
- 	bcma_core_mips_dump_irq(bus);
- 
- 	if (mcore->setup_done)
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index d6e8a37..cbae2c2 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -36,7 +36,7 @@ bool __devinit bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
- 		return false;
- 
- 	if (bus->sprom.boardflags_lo & BCMA_CORE_PCI_BFL_NOPCI) {
--		pr_info("This PCI core is disabled and not working\n");
-+		bcma_info(bus, "This PCI core is disabled and not working\n");
- 		return false;
- 	}
- 
-@@ -341,6 +341,7 @@ static u8 __devinit bcma_find_pci_capability(struct bcma_drv_pci *pc,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ed3b8b2..657841d 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -753,8 +753,8 @@ static const u32 mwifiex_cipher_suites[] = {
+ /*
+  * CFG802.11 operation handler for setting bit rates.
+  *
+- * Function selects legacy bang B/G/BG from corresponding bitrates selection.
+- * Currently only 2.4GHz band is supported.
++ * Function configures data rates to firmware using bitrate mask
++ * provided by cfg80211.
   */
- static void __devinit bcma_core_pci_enable_crs(struct bcma_drv_pci *pc)
+ static int mwifiex_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				struct net_device *dev,
+@@ -762,43 +762,36 @@ static int mwifiex_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				const struct cfg80211_bitrate_mask *mask)
  {
-+	struct bcma_bus *bus = pc->core->bus;
- 	u8 cap_ptr, root_ctrl, root_cap, dev;
- 	u16 val16;
- 	int i;
-@@ -379,7 +380,8 @@ static void __devinit bcma_core_pci_enable_crs(struct bcma_drv_pci *pc)
- 				udelay(10);
- 			}
- 			if (val16 == 0x1)
--				pr_err("PCI: Broken device in slot %d\n", dev);
-+				bcma_err(bus, "PCI: Broken device in slot %d\n",
-+					 dev);
- 		}
- 	}
- }
-@@ -392,11 +394,11 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 	u32 pci_membase_1G;
- 	unsigned long io_map_base;
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+-	int index = 0, mode = 0, i;
+-	struct mwifiex_adapter *adapter = priv->adapter;
++	u16 bitmap_rates[MAX_BITMAP_RATES_SIZE];
++	enum ieee80211_band band;
  
--	pr_info("PCIEcore in host mode found\n");
-+	bcma_info(bus, "PCIEcore in host mode found\n");
- 
- 	pc_host = kzalloc(sizeof(*pc_host), GFP_KERNEL);
- 	if (!pc_host)  {
--		pr_err("can not allocate memory");
-+		bcma_err(bus, "can not allocate memory");
- 		return;
+-	/* Currently only 2.4GHz is supported */
+-	for (i = 0; i < mwifiex_band_2ghz.n_bitrates; i++) {
+-		/*
+-		 * Rates below 6 Mbps in the table are CCK rates; 802.11b
+-		 * and from 6 they are OFDM; 802.11G
+-		 */
+-		if (mwifiex_rates[i].bitrate == 60) {
+-			index = 1 << i;
+-			break;
+-		}
++	if (!priv->media_connected) {
++		dev_err(priv->adapter->dev,
++			"Can not set Tx data rate in disconnected state\n");
++		return -EINVAL;
  	}
  
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index c693c0b..11b32d2 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -18,7 +18,7 @@ static void bcma_host_pci_switch_core(struct bcma_device *core)
- 	pci_write_config_dword(core->bus->host_pci, BCMA_PCI_BAR0_WIN2,
- 			       core->wrap);
- 	core->bus->mapped_core = core;
--	pr_debug("Switched to core: 0x%X\n", core->id.id);
-+	bcma_debug(core->bus, "Switched to core: 0x%X\n", core->id.id);
- }
+-	if (mask->control[IEEE80211_BAND_2GHZ].legacy < index) {
+-		mode = BAND_B;
+-	} else {
+-		mode = BAND_G;
+-		if (mask->control[IEEE80211_BAND_2GHZ].legacy % index)
+-			mode |=  BAND_B;
+-	}
++	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
  
- /* Provides access to the requested core. Returns base offset that has to be
-@@ -188,7 +188,7 @@ static int __devinit bcma_host_pci_probe(struct pci_dev *dev,
+-	if (!((mode | adapter->fw_bands) & ~adapter->fw_bands)) {
+-		adapter->config_bands = mode;
+-		if (priv->bss_mode == NL80211_IFTYPE_ADHOC) {
+-			adapter->adhoc_start_band = mode;
+-			adapter->adhoc_11n_enabled = false;
+-		}
+-	}
+-	adapter->sec_chan_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
+-	adapter->channel_type = NL80211_CHAN_NO_HT;
++	memset(bitmap_rates, 0, sizeof(bitmap_rates));
  
- 	/* SSB needed additional powering up, do we have any AMBA PCI cards? */
- 	if (!pci_is_pcie(dev))
--		pr_err("PCI card detected, report problems.\n");
-+		bcma_err(bus, "PCI card detected, report problems.\n");
+-	wiphy_debug(wiphy, "info: device configured in 802.11%s%s mode\n",
+-		    (mode & BAND_B) ? "b" : "", (mode & BAND_G) ? "g" : "");
++	/* Fill HR/DSSS rates. */
++	if (band == IEEE80211_BAND_2GHZ)
++		bitmap_rates[0] = mask->control[band].legacy & 0x000f;
  
- 	/* Map MMIO */
- 	err = -ENOMEM;
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 7e138ec..7ff4bac 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -118,8 +118,9 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 
- 		err = device_register(&core->dev);
- 		if (err) {
--			pr_err("Could not register dev for core 0x%03X\n",
--			       core->id.id);
-+			bcma_err(bus,
-+				 "Could not register dev for core 0x%03X\n",
-+				 core->id.id);
- 			continue;
- 		}
- 		core->dev_registered = true;
-@@ -151,7 +152,7 @@ int __devinit bcma_bus_register(struct bcma_bus *bus)
- 	/* Scan for devices (cores) */
- 	err = bcma_bus_scan(bus);
- 	if (err) {
--		pr_err("Failed to scan: %d\n", err);
-+		bcma_err(bus, "Failed to scan: %d\n", err);
- 		return -1;
- 	}
- 
-@@ -179,14 +180,14 @@ int __devinit bcma_bus_register(struct bcma_bus *bus)
- 	/* Try to get SPROM */
- 	err = bcma_sprom_get(bus);
- 	if (err == -ENOENT) {
--		pr_err("No SPROM available\n");
-+		bcma_err(bus, "No SPROM available\n");
- 	} else if (err)
--		pr_err("Failed to get SPROM: %d\n", err);
-+		bcma_err(bus, "Failed to get SPROM: %d\n", err);
- 
- 	/* Register found cores */
- 	bcma_register_cores(bus);
- 
--	pr_info("Bus registered\n");
-+	bcma_info(bus, "Bus registered\n");
- 
- 	return 0;
- }
-@@ -214,7 +215,7 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 	/* Scan for chip common core */
- 	err = bcma_bus_scan_early(bus, &match, core_cc);
- 	if (err) {
--		pr_err("Failed to scan for common core: %d\n", err);
-+		bcma_err(bus, "Failed to scan for common core: %d\n", err);
- 		return -1;
- 	}
- 
-@@ -226,7 +227,7 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 	/* Scan for mips core */
- 	err = bcma_bus_scan_early(bus, &match, core_mips);
- 	if (err) {
--		pr_err("Failed to scan for mips core: %d\n", err);
-+		bcma_err(bus, "Failed to scan for mips core: %d\n", err);
- 		return -1;
- 	}
- 
-@@ -244,7 +245,7 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 		bcma_core_mips_init(&bus->drv_mips);
- 	}
- 
--	pr_info("Early bus registered\n");
-+	bcma_info(bus, "Early bus registered\n");
- 
- 	return 0;
- }
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index a342058..a0272bb 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -340,7 +340,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 		if (tmp <= 0) {
- 			return -EILSEQ;
- 		} else {
--			pr_info("Bridge found\n");
-+			bcma_info(bus, "Bridge found\n");
- 			return -ENXIO;
- 		}
- 	}
-@@ -427,8 +427,8 @@ void bcma_init_bus(struct bcma_bus *bus)
- 	chipinfo->id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
- 	chipinfo->rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
- 	chipinfo->pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
--	pr_info("Found chip with id 0x%04X, rev 0x%02X and package 0x%02X\n",
--		chipinfo->id, chipinfo->rev, chipinfo->pkg);
-+	bcma_info(bus, "Found chip with id 0x%04X, rev 0x%02X and package 0x%02X\n",
-+		  chipinfo->id, chipinfo->rev, chipinfo->pkg);
- 
- 	bus->init_done = true;
- }
-@@ -482,11 +482,10 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 		other_core = bcma_find_core_reverse(bus, core->id.id);
- 		core->core_unit = (other_core == NULL) ? 0 : other_core->core_unit + 1;
- 
--		pr_info("Core %d found: %s "
--			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
--			core->core_index, bcma_device_name(&core->id),
--			core->id.manuf, core->id.id, core->id.rev,
--			core->id.class);
-+		bcma_info(bus, "Core %d found: %s (manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
-+			  core->core_index, bcma_device_name(&core->id),
-+			  core->id.manuf, core->id.id, core->id.rev,
-+			  core->id.class);
- 
- 		list_add(&core->list, &bus->cores);
- 	}
-@@ -538,11 +537,10 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 
- 		core->core_index = core_num++;
- 		bus->nr_cores++;
--		pr_info("Core %d found: %s "
--			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
--			core->core_index, bcma_device_name(&core->id),
--			core->id.manuf, core->id.id, core->id.rev,
--			core->id.class);
-+		bcma_info(bus, "Core %d found: %s (manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
-+			  core->core_index, bcma_device_name(&core->id),
-+			  core->id.manuf, core->id.id, core->id.rev,
-+			  core->id.class);
- 
- 		list_add(&core->list, &bus->cores);
- 		err = 0;
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index e1eb598..26823d9 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -60,11 +60,11 @@ static int bcma_fill_sprom_with_fallback(struct bcma_bus *bus,
- 	if (err)
- 		goto fail;
- 
--	pr_debug("Using SPROM revision %d provided by"
--		 " platform.\n", bus->sprom.revision);
-+	bcma_debug(bus, "Using SPROM revision %d provided by platform.\n",
-+		   bus->sprom.revision);
- 	return 0;
- fail:
--	pr_warn("Using fallback SPROM failed (err %d)\n", err);
-+	bcma_warn(bus, "Using fallback SPROM failed (err %d)\n", err);
- 	return err;
+-	return 0;
++	/* Fill OFDM rates */
++	if (band == IEEE80211_BAND_2GHZ)
++		bitmap_rates[1] = (mask->control[band].legacy & 0x0ff0) >> 4;
++	else
++		bitmap_rates[1] = mask->control[band].legacy;
++
++	/* Fill MCS rates */
++	bitmap_rates[2] = mask->control[band].mcs[0];
++	if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2)
++		bitmap_rates[2] |= mask->control[band].mcs[1] << 8;
++
++	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_TX_RATE_CFG,
++				     HostCmd_ACT_GEN_SET, 0, bitmap_rates);
  }
  
-@@ -583,7 +583,7 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	    bus->chipinfo.id == BCMA_CHIP_ID_BCM43431)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
- 
--	pr_debug("SPROM offset 0x%x\n", offset);
-+	bcma_debug(bus, "SPROM offset 0x%x\n", offset);
- 	bcma_sprom_read(bus, offset, sprom);
- 
- 	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4331 ||
+ /*
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 34705f5..e7c2a82 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -678,7 +678,6 @@ struct mwifiex_adapter {
+ 	u8 hw_dev_mcs_support;
+ 	u8 adhoc_11n_enabled;
+ 	u8 sec_chan_offset;
+-	enum nl80211_channel_type channel_type;
+ 	struct mwifiex_dbg dbg;
+ 	u8 arp_filter[ARP_FILTER_MAX_BUF_SIZE];
+ 	u32 arp_filter_size;
 -- 
-1.7.7
+1.7.0.2
 
