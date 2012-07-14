@@ -1,118 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53478 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12379 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755765Ab2GDHWW (ORCPT
+	with ESMTP id S1757142Ab2GNGFt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 03:22:22 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v1 2/2] cfg80211: bitrate calculation for 60g
-Date: Wed, 4 Jul 2012 10:22:00 +0300
-Message-ID: <1341386520-25244-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120704_092226_289554_1A6BCC95)
-In-Reply-To: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341386520-25244-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sat, 14 Jul 2012 02:05:49 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20481.3065.540576.366365@gargle.gargle.HOWL> (sfid-20120714_080620_587612_2F5A24FB)
+Date: Sat, 14 Jul 2012 11:34:41 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue TXOP limit
+In-Reply-To: <1342105451-42297-8-git-send-email-nbd@openwrt.org>
+References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-2-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-3-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-4-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-5-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-6-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-7-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-8-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-60g band uses different from .11n MCS scheme, so bitrate
-should be calculated differently
+Felix Fietkau wrote:
+> @@ -1384,6 +1384,7 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
+>  		queue, txq->axq_qnum, params->aifs, params->cw_min,
+>  		params->cw_max, params->txop);
+>  
+> +	ath_update_max_aggr_framelen(sc, queue, qi.tqi_burstTime);
+>  	ret = ath_txq_update(sc, txq->axq_qnum, &qi);
+>  	if (ret)
+>  		ath_err(common, "TXQ Update failed\n");
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- include/net/cfg80211.h |    2 ++
- net/wireless/util.c    |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+)
+Wouldn't this break multi-interface operation ? This unconditionally
+updates the aggr. limits of an existing interface when a new one is added.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8837efc..51f67a9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -580,11 +580,13 @@ enum station_info_flags {
-  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
-  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
-  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
-+ * @RATE_INFO_FLAGS_60G: 60gHz MCS
-  */
- enum rate_info_flags {
- 	RATE_INFO_FLAGS_MCS		= 1<<0,
- 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
- 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
-+	RATE_INFO_FLAGS_60G		= 1<<3,
- };
- 
- /**
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 6e52726..e31f1db 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -900,12 +900,61 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
- }
- 
-+static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
-+{
-+	static const u32 __mcs2bitrate[] = {
-+		/* control PHY */
-+		[0] =   275,
-+		/* SC PHY */
-+		[1] =  3850,
-+		[2] =  7700,
-+		[3] =  9625,
-+		[4] = 11550,
-+		[5] = 12512, /* 1251.25 mbps */
-+		[6] = 15400,
-+		[7] = 19250,
-+		[8] = 23100,
-+		[9] = 25025,
-+		[10] = 30800,
-+		[11] = 38500,
-+		[12] = 46200,
-+		/* OFDM PHY */
-+		[13] =  6930,
-+		[14] =  8662, /* 866.25 mbps */
-+		[15] = 13860,
-+		[16] = 17325,
-+		[17] = 20790,
-+		[18] = 27720,
-+		[19] = 34650,
-+		[20] = 41580,
-+		[21] = 45045,
-+		[22] = 51975,
-+		[23] = 62370,
-+		[24] = 67568, /* 6756.75 mbps */
-+		/* LP-SC PHY */
-+		[25] =  6260,
-+		[26] =  8340,
-+		[27] = 11120,
-+		[28] = 12510,
-+		[29] = 16680,
-+		[30] = 22240,
-+		[31] = 25030,
-+	};
-+
-+	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
-+		return 0;
-+
-+	return __mcs2bitrate[rate->mcs];
-+}
-+
- u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
- 	int modulation, streams, bitrate;
- 
- 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
- 		return rate->legacy;
-+	if (rate->flags & RATE_INFO_FLAGS_60G)
-+		return cfg80211_calculate_bitrate_60g(rate);
- 
- 	/* the formula below does only work for MCS values smaller than 32 */
- 	if (WARN_ON_ONCE(rate->mcs >= 32))
--- 
-1.7.9.5
-
+Sujith
