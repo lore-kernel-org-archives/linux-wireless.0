@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752735Ab2GZRrj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 13:47:39 -0400
-Message-ID: <1343324856.4477.9.camel@jlt3.sipsolutions.net> (sfid-20120726_194742_882154_1E6365F1)
-Subject: Re: [PATCH] mac80211: add PS flag to bss_conf
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Jul 2012 19:47:36 +0200
-In-Reply-To: <1343231359-3024-1-git-send-email-eliad@wizery.com> (sfid-20120725_174933_259741_C18DB574)
-References: <1343231359-3024-1-git-send-email-eliad@wizery.com>
-	 (sfid-20120725_174933_259741_C18DB574)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2278 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750893Ab2GNKKf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jul 2012 06:10:35 -0400
+Message-ID: <50014580.7060702@broadcom.com> (sfid-20120714_121116_678570_6175AC80)
+Date: Sat, 14 Jul 2012 12:10:08 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Thomas Huehn" <thomas@net.t-labs.tu-berlin.de>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
+	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
+	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
+	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
+	coelho@ti.com, johannes.berg@intel.com
+Subject: Re: [PATCH 2/2] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
+References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+ <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-25 at 18:49 +0300, Eliad Peller wrote:
-
-> @@ -2085,6 +2092,9 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+On 07/13/2012 08:52 PM, Thomas Huehn wrote:
+> The pointer control.sta is removed from ieee80211_tx_info to free up sufficient
+> memory in SKB_CB on the tx-path to enable new annotations per data packet e.g.
+> support of upcoming Transmit Power Control (TPC).
+> Now the control.sta pointer is put on the stack where it is passed as function
+> parameter to the .tx equivalent (ieee80211_ops) of each affected wireless
+> driver. Therefore a new structure ieee80211_tx_control is added to mac80211.h
+> which holds the sta structure instead.
+> 
+> ---
+>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  6 +++--
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> index 9e79d47..a7be68d 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> @@ -264,7 +264,9 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+>  	}
+>  }
 >  
->  	ieee80211_recalc_ps(local, -1);
->  
-> +	sdata->vif.bss_conf.ps = ieee80211_powersave_allowed(sdata);
-> +	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_PS);
+> -static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+> +static void brcms_ops_tx(struct ieee80211_hw *hw,
+> +			 struct ieee80211_tx_control *control,
+> +			 struct sk_buff *skb)
 
-It need not have changed, since the AP could be broken? We might also
-not even be associated, so I don't think this is right.
+Fix indent here (if it is not a mailer issue).
 
+>  {
+>  	struct brcms_info *wl = hw->priv;
+>  	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+> @@ -276,7 +278,7 @@ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  		goto done;
+>  	}
+>  	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
+> -	tx_info->rate_driver_data[0] = tx_info->control.sta;
+> +	tx_info->rate_driver_data[0] = control->sta;
+>   done:
+>  	spin_unlock_bh(&wl->lock);
+>  }
 
-I also wonder if ieee80211_recalc_ps() should use vif.bss_conf.ps
-instead of calling powersave_allowed() itself?
-
-johannes
+Gr. AvS
 
