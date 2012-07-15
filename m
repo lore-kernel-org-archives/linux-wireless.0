@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:35222 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964774Ab2GYOzv (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:3079 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751161Ab2GOWsF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 10:55:51 -0400
-Received: by obbuo13 with SMTP id uo13so1172241obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 07:55:50 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 25 Jul 2012 16:55:50 +0200
-Message-ID: <CALBypN7BpiyRJNYzXwHEdUvSp2iB6xwx6RyP_9zUCeggJXNSdg@mail.gmail.com> (sfid-20120725_165554_719773_9D1B8622)
-Subject: [NFC] nfc subsystem queries
-From: Martin Fuzzey <mfuzzey@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 15 Jul 2012 18:48:05 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: dcbw@redhat.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: [PATCH 3/3] libertas USB: don't set surpriseremoved flag
+Message-Id: <20120715224801.008E69D401F@zog.reactivated.net> (sfid-20120716_004810_186524_97D79BFE)
+Date: Sun, 15 Jul 2012 23:48:00 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-I have a few questions about the new NFC subsystem:
+We found a deadlock in the handling of command failures/reset conditions.
+For example:
 
-1) The devices currently supported (pn533, pn544) are quite
-"intelligent", in that they accept fairly high level commands (using
-HCI, NCI or a chip specific USB protocol) and abstract away the
-ISO1443 -3 and -4 details. There are also chips available (such as the
-recent NXP CLRC663 or the older NXP MFRC531) that provide a lower
-level interface and hence require a software implementation of ISO1443
--3 and -4. Are such chips within the scope of the nfc subsystem? Is
-anyone currently working on or planning to work on drivers fot this
-kind of chip?
+ 1. Two commands are in the queue.
+ 2. The first command is sent, but causes a timeout, which kicks off an
+    asynchronous device reset
+ 3. The second command is queued (but not yet sent to the hardware)
+ 4. The device reset kicks in, causing the if_usb disconnect handler to
+    set the "surprise removed" flag to be set as the device disappears
+    from the bus. This causes lbs_thread to stop processing things
+    ("adapter removed; waiting to die"), not processing any further
+    commands, leaving the second queued command "in the air", causing a
+    deadlock.
 
-2) Are there any test suites that drivers for this subsystem are
-expected to pass (as there are for USB and MMC for example)?
+Fix this by removing the surpriseremoved flag setting in if_usb. I can't
+see any reason why this needs to be done so early. lbs_remove_card will set
+this flag at an appropriate time - i.e. after all pending commands have
+been completed or cancelled, avoiding this deadlock.
 
-3) Does anyone know if Android is planning to switch to the
-nfc-subsystem? I know this is a bit off topic for this list but the
-question was recently asked (by someone else) with no reply on
-android-kernel.
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+---
+ drivers/net/wireless/libertas/if_usb.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Best regards,
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index cd3b0d4..92b6885 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -309,7 +309,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 	cardp->surprise_removed = 1;
+ 
+ 	if (priv) {
+-		priv->surpriseremoved = 1;
+ 		lbs_stop_card(priv);
+ 		lbs_remove_card(priv);
+ 	}
+-- 
+1.7.10.4
 
-Martin
