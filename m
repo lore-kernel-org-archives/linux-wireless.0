@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35046 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418Ab2GIQyE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64801 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751679Ab2GOCWF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 12:54:04 -0400
-Message-ID: <1341852841.4455.51.camel@jlt3.sipsolutions.net> (sfid-20120709_185408_709627_30099A08)
-Subject: Re: [PATCH] mac80211: fix invalid band deref building preq IEs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Jul 2012 18:54:01 +0200
-In-Reply-To: <1341852581-8456-1-git-send-email-arik@wizery.com> (sfid-20120709_184946_798984_856287AB)
-References: <1341852581-8456-1-git-send-email-arik@wizery.com>
-	 (sfid-20120709_184946_798984_856287AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 14 Jul 2012 22:22:05 -0400
+From: "Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
+Subject: RE: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
+ TXOP limit
+Date: Sun, 15 Jul 2012 02:21:56 +0000
+Message-ID: <506697F5827BD842B7CB80D046EBE618995399@aphydexd01b> (sfid-20120715_042245_650175_518B1FEF)
+References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
+ <1342105451-42297-2-git-send-email-nbd@openwrt.org>
+ <1342105451-42297-3-git-send-email-nbd@openwrt.org>
+ <1342105451-42297-4-git-send-email-nbd@openwrt.org>
+ <1342105451-42297-5-git-send-email-nbd@openwrt.org>
+ <1342105451-42297-6-git-send-email-nbd@openwrt.org>
+ <1342105451-42297-7-git-send-email-nbd@openwrt.org>
+ <1342105451-42297-8-git-send-email-nbd@openwrt.org>
+ <20481.3065.540576.366365@gargle.gargle.HOWL>,<500143CA.1020804@openwrt.org>
+In-Reply-To: <500143CA.1020804@openwrt.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-09 at 19:49 +0300, Arik Nemtsov wrote:
-> The function building probe-request IEs does not validate the band is
-> supported before dereferencing it. This can result in a panic when
-> all bands are traversed, as done during sched-scan start.
-> 
-> Warn when this happens and return an empty probe request. Also fix
-> sched-scan to not waste memory on unsupported bands.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> This is not cc stable since the panic only started happening once
-> the 60Ghz band was added. Apparently all sched-scan drivers supported
-> all possible bands until then.
-> 
-> 
->  net/mac80211/scan.c |    3 +++
->  net/mac80211/util.c |    2 ++
->  2 files changed, 5 insertions(+)
-> 
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> index 379f178..1ff04f6 100644
-> --- a/net/mac80211/scan.c
-> +++ b/net/mac80211/scan.c
-> @@ -928,6 +928,9 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
->  	}
->  
->  	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-> +		if (!local->hw.wiphy->bands[i])
-> +			continue;
-> +
->  		local->sched_scan_ies.ie[i] = kzalloc(2 +
->  						      IEEE80211_MAX_SSID_LEN +
->  						      local->scan_ies_len +
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 64493a7..503412a 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -999,6 +999,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
->  	int ext_rates_len;
->  
->  	sband = local->hw.wiphy->bands[band];
-> +	if (!WARN_ON_ONCE(sband))
-> +		return 0;
+I believe mac80211 has a per-VIF idea of queue parameters (tx_conf in struct ieee80211_sub_if_data).
+And we end up overwriting the parameters of the main interface. For example,
 
-That's not right :-)
+* Bringing up an AP interface:
 
-johannes
+ath: phy0: Configure tx [queue/halq] [0/0], aifs: 1, cw_min: 3, cw_max: 7, txop: 47
+ath: phy0: Configure tx [queue/halq] [1/1], aifs: 1, cw_min: 7, cw_max: 15, txop: 94
+ath: phy0: Configure tx [queue/halq] [2/2], aifs: 3, cw_min: 15, cw_max: 63, txop: 0
+ath: phy0: Configure tx [queue/halq] [3/3], aifs: 7, cw_min: 15, cw_max: 1023, txop: 0
 
+* Adding a new station interface (but not associated yet):
+
+ath: phy0: Attach a VIF of type: 2
+
+ath: phy0: Configure tx [queue/halq] [0/0], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
+ath: phy0: Configure tx [queue/halq] [1/1], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
+ath: phy0: Configure tx [queue/halq] [2/2], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
+ath: phy0: Configure tx [queue/halq] [3/3], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
+
+Sujith
+________________________________________
+From: Felix Fietkau [nbd@openwrt.org]
+Sent: Saturday, July 14, 2012 3:32 PM
+To: Manoharan, Sujith
+Cc: linux-wireless@vger.kernel.org; linville@tuxdriver.com; Rodriguez, Luis
+Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue TXOP limit
+
+On 2012-07-14 8:04 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> @@ -1384,6 +1384,7 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
+>>              queue, txq->axq_qnum, params->aifs, params->cw_min,
+>>              params->cw_max, params->txop);
+>>
+>> +    ath_update_max_aggr_framelen(sc, queue, qi.tqi_burstTime);
+>>      ret = ath_txq_update(sc, txq->axq_qnum, &qi);
+>>      if (ret)
+>>              ath_err(common, "TXQ Update failed\n");
+>
+> Wouldn't this break multi-interface operation ? This unconditionally
+> updates the aggr. limits of an existing interface when a new one is added.
+No, this doesn't break multi-interface. TXOP limit (like other WMM
+settings) can only be configured per-wiphy, so the max. aggregation
+lengths are per-wiphy as well.
+
+- Felix
