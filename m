@@ -1,33 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm2-vm0.bullet.mail.ird.yahoo.com ([77.238.189.199]:34436 "HELO
-	nm2-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754120Ab2G3URS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 16:17:18 -0400
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com> <501280BF.4070409@lwfinger.net> <1343394581.87030.YahooMailNeo@web28902.mail.ir2.yahoo.com> <1343398356.19742.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343403507.54955.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343404770.91235.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343407089.96532.YahooMailNeo@web28901.mail.ir2.yahoo.com> <50140463.3080209@lwfinger.net> <1343591834.22699.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5015A2DB.50106@lwfinger.net> <1343671587.79175.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5016E5CD.2090100@lwfinger.net> <1343678594.9254.YahooMailNeo@web28902.mail.ir2.yahoo.com>
-Message-ID: <1343679436.38076.YahooMailNeo@web28902.mail.ir2.yahoo.com> (sfid-20120730_221722_301202_E086F8C8)
-Date: Mon, 30 Jul 2012 21:17:16 +0100 (BST)
-From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1343678594.9254.YahooMailNeo@web28902.mail.ir2.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from nbd.name ([46.4.11.11]:40172 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752088Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jul 2012 13:53:46 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 07/12] ath9k: make per-WMM-AC queue sizes configurable via debugfs
+Date: Sun, 15 Jul 2012 19:53:35 +0200
+Message-Id: <1342374820-92409-7-git-send-email-nbd@openwrt.org> (sfid-20120715_195350_948252_7DFB8977)
+In-Reply-To: <1342374820-92409-6-git-send-email-nbd@openwrt.org>
+References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-2-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-3-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-4-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-5-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I did some ADSL test connected through the wireless.
-When I use my router wifi (bcm57xx) I get 20 times a better download than with the rtl8188 chip. The upload is exactly the same and both are connected with g.
+Prepare for using different queue size defaults for each AC.
 
-Signal is lower but still good at 4/5 meters from the barebone.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/debug.c |    8 ++++++++
+ drivers/net/wireless/ath/ath9k/init.c  |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c  |    6 ++++--
+ 4 files changed, 14 insertions(+), 2 deletions(-)
 
-Any potential reason?
-
-mon.wlan0  IEEE 802.11bgn  Mode:Monitor  Frequency:2.437 GHz  Tx-Power=20 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Power Management:on
-
-XabiX
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 54f0c9d0..db17ec4 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -297,6 +297,7 @@ struct ath_tx {
+ 	struct ath_txq txq[ATH9K_NUM_TX_QUEUES];
+ 	struct ath_descdma txdma;
+ 	struct ath_txq *txq_map[WME_NUM_AC];
++	u32 txq_max_pending[WME_NUM_AC];
+ };
+ 
+ struct ath_rx_edma {
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 5c3192f..b9ea067 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1556,6 +1556,14 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_interrupt);
+ 	debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_xmit);
++	debugfs_create_u32("qlen_bk", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
++			   &sc->tx.txq_max_pending[WME_AC_BK]);
++	debugfs_create_u32("qlen_be", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
++			   &sc->tx.txq_max_pending[WME_AC_BE]);
++	debugfs_create_u32("qlen_vi", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
++			   &sc->tx.txq_max_pending[WME_AC_VI]);
++	debugfs_create_u32("qlen_vo", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
++			   &sc->tx.txq_max_pending[WME_AC_VO]);
+ 	debugfs_create_file("stations", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_stations);
+ 	debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy, sc,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index af95d18..181977a 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -434,6 +434,7 @@ static int ath9k_init_queues(struct ath_softc *sc)
+ 	for (i = 0; i < WME_NUM_AC; i++) {
+ 		sc->tx.txq_map[i] = ath_txq_setup(sc, ATH9K_TX_QUEUE_DATA, i);
+ 		sc->tx.txq_map[i]->mac80211_qnum = i;
++		sc->tx.txq_max_pending[i] = ATH_MAX_QDEPTH;
+ 	}
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index cafb4a0..571d773 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1988,7 +1988,8 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 
+ 	ath_txq_lock(sc, txq);
+ 	if (txq == sc->tx.txq_map[q] &&
+-	    ++txq->pending_frames > ATH_MAX_QDEPTH && !txq->stopped) {
++	    ++txq->pending_frames > sc->tx.txq_max_pending[q] &&
++	    !txq->stopped) {
+ 		ieee80211_stop_queue(sc->hw, q);
+ 		txq->stopped = true;
+ 	}
+@@ -2047,7 +2048,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 		if (WARN_ON(--txq->pending_frames < 0))
+ 			txq->pending_frames = 0;
+ 
+-		if (txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
++		if (txq->stopped &&
++		    txq->pending_frames < sc->tx.txq_max_pending[q]) {
+ 			ieee80211_wake_queue(sc->hw, q);
+ 			txq->stopped = false;
+ 		}
+-- 
+1.7.7.5 (Apple Git-26)
 
