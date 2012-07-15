@@ -1,124 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18383 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab2GBGdD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 02:33:03 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 60g v2 5/5] wireless: bitrate calculation for 60g
-Date: Mon, 2 Jul 2012 09:32:36 +0300
-Message-ID: <1341210756-11054-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120702_083308_636546_FB1ACFCC)
-In-Reply-To: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:40178 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752511Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jul 2012 13:53:46 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 10/12] ath9k_hw: clean up AR9003 EEPROM code
+Date: Sun, 15 Jul 2012 19:53:38 +0200
+Message-Id: <1342374820-92409-10-git-send-email-nbd@openwrt.org> (sfid-20120715_202113_444038_5F36E585)
+In-Reply-To: <1342374820-92409-9-git-send-email-nbd@openwrt.org>
+References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-2-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-3-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-4-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-5-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-6-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-7-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-8-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-9-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-60g band uses different from .11n MCS scheme, so bitrate should be calculated
-differently
+- add an inline function for getting the correct modal EEPROM struct
+- remove unnecessary indirection through ath9k_hw_ar9300_get_eeprom
+  access the relevant fields directly
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/cfg80211.h |    2 ++
- net/wireless/util.c    |   55 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 57 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  116 +++++++-----------------
+ drivers/net/wireless/ath/ath9k/eeprom.h        |    4 -
+ 2 files changed, 35 insertions(+), 85 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 56e840d..f760520 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -563,11 +563,13 @@ enum station_info_flags {
-  * @RATE_INFO_FLAGS_MCS: @tx_bitrate_mcs filled
-  * @RATE_INFO_FLAGS_40_MHZ_WIDTH: 40 Mhz width transmission
-  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
-+ * @RATE_INFO_FLAGS_60G: 60gHz MCS
-  */
- enum rate_info_flags {
- 	RATE_INFO_FLAGS_MCS		= 1<<0,
- 	RATE_INFO_FLAGS_40_MHZ_WIDTH	= 1<<1,
- 	RATE_INFO_FLAGS_SHORT_GI	= 1<<2,
-+	RATE_INFO_FLAGS_60G		= 1<<3,
- };
- 
- /**
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 11188c6..130eaed 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -890,12 +890,67 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 	return err;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 86e4be4..4d90265 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2971,14 +2971,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 		return (pBase->txrxMask >> 4) & 0xf;
+ 	case EEP_RX_MASK:
+ 		return pBase->txrxMask & 0xf;
+-	case EEP_DRIVE_STRENGTH:
+-#define AR9300_EEP_BASE_DRIV_STRENGTH	0x1
+-		return pBase->miscConfiguration & AR9300_EEP_BASE_DRIV_STRENGTH;
+-	case EEP_INTERNAL_REGULATOR:
+-		/* Bit 4 is internal regulator flag */
+-		return (pBase->featureEnable & 0x10) >> 4;
+-	case EEP_SWREG:
+-		return le32_to_cpu(pBase->swreg);
+ 	case EEP_PAPRD:
+ 		return !!(pBase->featureEnable & BIT(5));
+ 	case EEP_CHAIN_MASK_REDUCE:
+@@ -2989,8 +2981,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 		return eep->modalHeader5G.antennaGain;
+ 	case EEP_ANTENNA_GAIN_2G:
+ 		return eep->modalHeader2G.antennaGain;
+-	case EEP_QUICK_DROP:
+-		return pBase->miscConfiguration & BIT(1);
+ 	default:
+ 		return 0;
+ 	}
+@@ -3503,19 +3493,20 @@ static int ath9k_hw_ar9300_get_eeprom_rev(struct ath_hw *ah)
+ 	return 0;
  }
  
-+static u16 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
-+{
-+	static const u16 __mcs2bitrate[] = {
-+		/* control PHY */
-+		[0] =   275,
-+		/* SC PHY */
-+		[1] =  3850,
-+		[2] =  7700,
-+		[3] =  9625,
-+		[4] = 11550,
-+		[5] = 12512, /* 1251.25 mbps */
-+		[6] = 15400,
-+		[7] = 19250,
-+		[8] = 23100,
-+		[9] = 25025,
-+		[10] = 30800,
-+		[11] = 38500,
-+		[12] = 46200,
-+		/* OFDM PHY */
-+		[13] =  6930,
-+		[14] =  8662, /* 866.25 mbps */
-+		[15] = 13860,
-+		[16] = 17325,
-+		[17] = 20790,
-+		[18] = 27720,
-+		[19] = 34650,
-+		[20] = 41580,
-+		[21] = 45045,
-+		[22] = 51975,
-+		[23] = 62370,
-+#if 0
-+		/*
-+		 * TODO: How to report this bitrate?
-+		 * It don't fit into u16
-+		 */
-+		[24] = 67568, /* 6756.75 mbps */
-+#endif
-+		/* LP-SC PHY */
-+		[25] =  6260,
-+		[26] =  8340,
-+		[27] = 11120,
-+		[28] = 12510,
-+		[29] = 16680,
-+		[30] = 22240,
-+		[31] = 25030,
-+	};
-+
-+	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
-+		return 0;
-+
-+	return __mcs2bitrate[rate->mcs];
-+}
-+
- u16 cfg80211_calculate_bitrate(struct rate_info *rate)
+-static s32 ar9003_hw_xpa_bias_level_get(struct ath_hw *ah, bool is2ghz)
++static struct ar9300_modal_eep_header *ar9003_modal_header(struct ath_hw *ah,
++							   bool is2ghz)
  {
- 	int modulation, streams, bitrate;
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
  
- 	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
- 		return rate->legacy;
-+	if (rate->flags & RATE_INFO_FLAGS_60G)
-+		return cfg80211_calculate_bitrate_60g(rate);
+ 	if (is2ghz)
+-		return eep->modalHeader2G.xpaBiasLvl;
++		return &eep->modalHeader2G;
+ 	else
+-		return eep->modalHeader5G.xpaBiasLvl;
++		return &eep->modalHeader5G;
+ }
  
- 	/* the formula below does only work for MCS values smaller than 32 */
- 	if (WARN_ON_ONCE(rate->mcs >= 32))
+ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ {
+-	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
++	int bias = ar9003_modal_header(ah, is2ghz)->xpaBiasLvl;
+ 
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
+@@ -3531,57 +3522,26 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ 	}
+ }
+ 
+-static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is_2ghz)
++static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le16 val;
+-
+-	if (is_2ghz)
+-		val = eep->modalHeader2G.switchcomspdt;
+-	else
+-		val = eep->modalHeader5G.switchcomspdt;
+-	return le16_to_cpu(val);
++	return le16_to_cpu(ar9003_modal_header(ah, is2ghz)->switchcomspdt);
+ }
+ 
+ 
+ static u32 ar9003_hw_ant_ctrl_common_get(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le32 val;
+-
+-	if (is2ghz)
+-		val = eep->modalHeader2G.antCtrlCommon;
+-	else
+-		val = eep->modalHeader5G.antCtrlCommon;
+-	return le32_to_cpu(val);
++	return le32_to_cpu(ar9003_modal_header(ah, is2ghz)->antCtrlCommon);
+ }
+ 
+ static u32 ar9003_hw_ant_ctrl_common_2_get(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le32 val;
+-
+-	if (is2ghz)
+-		val = eep->modalHeader2G.antCtrlCommon2;
+-	else
+-		val = eep->modalHeader5G.antCtrlCommon2;
+-	return le32_to_cpu(val);
++	return le32_to_cpu(ar9003_modal_header(ah, is2ghz)->antCtrlCommon2);
+ }
+ 
+-static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah,
+-					int chain,
++static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah, int chain,
+ 					bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le16 val = 0;
+-
+-	if (chain >= 0 && chain < AR9300_MAX_CHAINS) {
+-		if (is2ghz)
+-			val = eep->modalHeader2G.antCtrlChain[chain];
+-		else
+-			val = eep->modalHeader5G.antCtrlChain[chain];
+-	}
+-
++	__le16 val = ar9003_modal_header(ah, is2ghz)->antCtrlChain[chain];
+ 	return le16_to_cpu(val);
+ }
+ 
+@@ -3691,11 +3651,12 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 
+ static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
+ {
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
+ 	int drive_strength;
+ 	unsigned long reg;
+ 
+-	drive_strength = ath9k_hw_ar9300_get_eeprom(ah, EEP_DRIVE_STRENGTH);
+-
++	drive_strength = pBase->miscConfiguration & BIT(0);
+ 	if (!drive_strength)
+ 		return;
+ 
+@@ -3825,11 +3786,11 @@ static bool is_pmu_set(struct ath_hw *ah, u32 pmu_reg, int pmu_set)
+ 
+ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ {
+-	int internal_regulator =
+-		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
+ 	u32 reg_val;
+ 
+-	if (internal_regulator) {
++	if (pBase->featureEnable & BIT(4)) {
+ 		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
+ 			int reg_pmu_set;
+ 
+@@ -3873,11 +3834,11 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
+ 				return;
+ 		} else if (AR_SREV_9462(ah)) {
+-			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
++			reg_val = le32_to_cpu(pBase->swreg);
+ 			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
+ 		} else {
+ 			/* Internal regulator is ON. Write swreg register. */
+-			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
++			reg_val = le32_to_cpu(pBase->swreg);
+ 			REG_WRITE(ah, AR_RTC_REG_CONTROL1,
+ 				  REG_READ(ah, AR_RTC_REG_CONTROL1) &
+ 				  (~AR_RTC_REG_CONTROL1_SWREG_PROGRAM));
+@@ -3931,10 +3892,11 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
+ static void ar9003_hw_quick_drop_apply(struct ath_hw *ah, u16 freq)
+ {
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	int quick_drop = ath9k_hw_ar9300_get_eeprom(ah, EEP_QUICK_DROP);
++	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
++	int quick_drop;
+ 	s32 t[3], f[3] = {5180, 5500, 5785};
+ 
+-	if (!quick_drop)
++	if (!(pBase->miscConfiguration & BIT(1)))
+ 		return;
+ 
+ 	if (freq < 4000)
+@@ -3948,13 +3910,11 @@ static void ar9003_hw_quick_drop_apply(struct ath_hw *ah, u16 freq)
+ 	REG_RMW_FIELD(ah, AR_PHY_AGC, AR_PHY_AGC_QUICK_DROP, quick_drop);
+ }
+ 
+-static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
++static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+ 	u32 value;
+ 
+-	value = (freq < 4000) ? eep->modalHeader2G.txEndToXpaOff :
+-				eep->modalHeader5G.txEndToXpaOff;
++	value = ar9003_modal_header(ah, is2ghz)->txEndToXpaOff;
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
+ 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAB_OFF, value);
+@@ -3962,7 +3922,7 @@ static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
+ 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAA_OFF, value);
+ }
+ 
+-static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
++static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is2ghz)
+ {
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+ 	u8 xpa_ctl;
+@@ -3973,23 +3933,22 @@ static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
+ 	if (!AR_SREV_9300(ah) && !AR_SREV_9340(ah) && !AR_SREV_9580(ah))
+ 		return;
+ 
+-	if (is_2ghz) {
+-		xpa_ctl = eep->modalHeader2G.txFrameToXpaOn;
++	xpa_ctl = ar9003_modal_header(ah, is2ghz)->txFrameToXpaOn;
++	if (is2ghz)
+ 		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
+ 			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAB_ON, xpa_ctl);
+-	} else {
+-		xpa_ctl = eep->modalHeader5G.txFrameToXpaOn;
++	else
+ 		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
+ 			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAA_ON, xpa_ctl);
+-	}
+ }
+ 
+ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 					     struct ath9k_channel *chan)
+ {
+-	ar9003_hw_xpa_timing_control_apply(ah, IS_CHAN_2GHZ(chan));
+-	ar9003_hw_xpa_bias_level_apply(ah, IS_CHAN_2GHZ(chan));
+-	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
++	bool is2ghz = IS_CHAN_2GHZ(chan);
++	ar9003_hw_xpa_timing_control_apply(ah, is2ghz);
++	ar9003_hw_xpa_bias_level_apply(ah, is2ghz);
++	ar9003_hw_ant_ctrl_apply(ah, is2ghz);
+ 	ar9003_hw_drive_strength_apply(ah);
+ 	ar9003_hw_atten_apply(ah, chan);
+ 	ar9003_hw_quick_drop_apply(ah, chan->channel);
+@@ -3997,7 +3956,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 		ar9003_hw_internal_regulator_apply(ah);
+ 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
+ 		ar9003_hw_apply_tuning_caps(ah);
+-	ar9003_hw_txend_to_xpa_off_apply(ah, chan->channel);
++	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
+ }
+ 
+ static void ath9k_hw_ar9300_set_addac(struct ath_hw *ah,
+@@ -5133,14 +5092,9 @@ s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah)
+ 	return (eep->baseEepHeader.txrxgain) & 0xf; /* bits 3:0 */
+ }
+ 
+-u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz)
++u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is2ghz)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-
+-	if (is_2ghz)
+-		return eep->modalHeader2G.spurChans;
+-	else
+-		return eep->modalHeader5G.spurChans;
++	return ar9003_modal_header(ah, is2ghz)->spurChans;
+ }
+ 
+ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 33acb92..484b313 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -241,16 +241,12 @@ enum eeprom_param {
+ 	EEP_TEMPSENSE_SLOPE,
+ 	EEP_TEMPSENSE_SLOPE_PAL_ON,
+ 	EEP_PWR_TABLE_OFFSET,
+-	EEP_DRIVE_STRENGTH,
+-	EEP_INTERNAL_REGULATOR,
+-	EEP_SWREG,
+ 	EEP_PAPRD,
+ 	EEP_MODAL_VER,
+ 	EEP_ANT_DIV_CTL1,
+ 	EEP_CHAIN_MASK_REDUCE,
+ 	EEP_ANTENNA_GAIN_2G,
+ 	EEP_ANTENNA_GAIN_5G,
+-	EEP_QUICK_DROP
+ };
+ 
+ enum ar5416_rates {
 -- 
-1.7.9.5
+1.7.7.5 (Apple Git-26)
 
