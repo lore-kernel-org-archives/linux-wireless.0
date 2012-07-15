@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45653 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754926Ab2GEIZE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 04:25:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:40168 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752326Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jul 2012 13:53:46 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 5/9] iwlwifi: disable the watchdog for queues by default
-Date: Thu,  5 Jul 2012 10:24:51 +0200
-Message-Id: <1341476695-6889-6-git-send-email-johannes@sipsolutions.net> (sfid-20120705_102541_053259_217D74D2)
-In-Reply-To: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
-References: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 03/12] ath9k_hw: enable ANI on AR934x
+Date: Sun, 15 Jul 2012 19:53:31 +0200
+Message-Id: <1342374820-92409-3-git-send-email-nbd@openwrt.org> (sfid-20120715_195402_788304_2A3016E8)
+In-Reply-To: <1342374820-92409-2-git-send-email-nbd@openwrt.org>
+References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+It has been tested and works properly
 
-I saw that when the watchdog triggers, the packets do go
-through if we wait enough time. So we still have an issue
-where packets are blocked in the Tx queue for a short while
-and this needs to be debugged separately. For now, don't
-restart the driver when it is not needed.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-drv.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 095547b..6322e2a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1011,6 +1011,7 @@ struct iwl_mod_params iwlwifi_mod_params = {
- 	.power_level = IWL_POWER_INDEX_1,
- 	.bt_ch_announce = true,
- 	.auto_agg = true,
-+	.wd_disable = true,
- 	/* the rest are 0 by default */
- };
- EXPORT_SYMBOL_GPL(iwlwifi_mod_params);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9c8e0d8..ddb24bf 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -671,10 +671,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+ 		ah->ani_function &= ~ATH9K_ANI_MRC_CCK;
+ 
+-	/* disable ANI for 9340 */
+-	if (AR_SREV_9340(ah))
+-		ah->config.enable_ani = false;
+-
+ 	ath9k_hw_init_mode_regs(ah);
+ 
+ 	if (!ah->is_pciexpress)
 -- 
-1.7.10
+1.7.7.5 (Apple Git-26)
 
