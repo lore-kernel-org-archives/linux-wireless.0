@@ -1,81 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47719 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755772Ab2GETjD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 15:39:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:40174 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752159Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jul 2012 13:53:46 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix debugfs default key links
-Date: Thu,  5 Jul 2012 21:38:56 +0200
-Message-Id: <1341517136-6246-1-git-send-email-johannes@sipsolutions.net> (sfid-20120705_213907_401502_2BDD35EC)
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 01/12] ath9k_hw: fall back to OTP ROM when platform data has no valid eeprom data
+Date: Sun, 15 Jul 2012 19:53:29 +0200
+Message-Id: <1342374820-92409-1-git-send-email-nbd@openwrt.org> (sfid-20120715_195354_740265_6886733D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Due to the way the default key links are created,
-it happens that a link is left dangling:
- * both unicast/multicast links are created
- * unicast link is destroyed, and the links
-   are updated
- * during this update, adding the multicast
-   link again fails because it is present,
-   destroying the debugfs pointer
- * removing the multicast link won't work as
-   the pointer has been destroyed
-
-Fix this by always removing the links and then
-re-creating them if needed.
-
-Reported-by: Antonio Quartulli <ordex@autistici.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/mac80211/debugfs_key.c |   16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
-index 7932767..090d08f 100644
---- a/net/mac80211/debugfs_key.c
-+++ b/net/mac80211/debugfs_key.c
-@@ -283,6 +283,11 @@ void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 25de6f9..3cddd78 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3260,10 +3260,20 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+ 	int it;
+ 	u16 checksum, mchecksum;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ar9300_eeprom *eep;
+ 	eeprom_read_op read;
  
- 	lockdep_assert_held(&sdata->local->key_mtx);
- 
-+	if (sdata->debugfs.default_unicast_key) {
-+		debugfs_remove(sdata->debugfs.default_unicast_key);
-+		sdata->debugfs.default_unicast_key = NULL;
-+	}
+-	if (ath9k_hw_use_flash(ah))
+-		return ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
++	if (ath9k_hw_use_flash(ah)) {
++		u8 txrx;
 +
- 	if (sdata->default_unicast_key) {
- 		key = key_mtx_dereference(sdata->local,
- 					  sdata->default_unicast_key);
-@@ -290,9 +295,11 @@ void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
- 		sdata->debugfs.default_unicast_key =
- 			debugfs_create_symlink("default_unicast_key",
- 					       sdata->debugfs.dir, buf);
--	} else {
--		debugfs_remove(sdata->debugfs.default_unicast_key);
--		sdata->debugfs.default_unicast_key = NULL;
-+	}
++		ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
 +
-+	if (sdata->debugfs.default_multicast_key) {
-+		debugfs_remove(sdata->debugfs.default_multicast_key);
-+		sdata->debugfs.default_multicast_key = NULL;
- 	}
++		/* check if eeprom contains valid data */
++		eep = (struct ar9300_eeprom *) mptr;
++		txrx = eep->baseEepHeader.txrxMask;
++		if (txrx != 0 && txrx != 0xff)
++			return 0;
++	}
  
- 	if (sdata->default_multicast_key) {
-@@ -302,9 +309,6 @@ void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
- 		sdata->debugfs.default_multicast_key =
- 			debugfs_create_symlink("default_multicast_key",
- 					       sdata->debugfs.dir, buf);
--	} else {
--		debugfs_remove(sdata->debugfs.default_multicast_key);
--		sdata->debugfs.default_multicast_key = NULL;
- 	}
- }
- 
+ 	word = kzalloc(2048, GFP_KERNEL);
+ 	if (!word)
 -- 
-1.7.10
+1.7.7.5 (Apple Git-26)
 
