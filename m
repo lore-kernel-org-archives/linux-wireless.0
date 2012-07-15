@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57902 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751351Ab2GHJ2R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 05:28:17 -0400
-Message-ID: <1341739692.4987.1.camel@jlt3.sipsolutions.net> (sfid-20120708_112821_075419_77600220)
-Subject: Re: [RFC 3/3] mac80211: redesign scan RX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 08 Jul 2012 11:28:12 +0200
-In-Reply-To: <CAB3XZEdmBi4gb=HMnwXRq4wygoQ6Gi=eTkocTA_NGNZLusWj_Q@mail.gmail.com> (sfid-20120708_003910_137592_0919E0B2)
-References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
-	 <1341608733-7503-4-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEdmBi4gb=HMnwXRq4wygoQ6Gi=eTkocTA_NGNZLusWj_Q@mail.gmail.com>
-	 (sfid-20120708_003910_137592_0919E0B2)
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:52831 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751422Ab2GOQzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jul 2012 12:55:08 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SqS65-0000yA-Ud
+	for linux-wireless@vger.kernel.org; Sun, 15 Jul 2012 18:55:06 +0200
+Received: from c-174-63-83-0.hsd1.ma.comcast.net ([174.63.83.0])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jul 2012 18:55:05 +0200
+Received: from yochaigal by c-174-63-83-0.hsd1.ma.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jul 2012 18:55:05 +0200
+To: linux-wireless@vger.kernel.org
+From: Yochai Gal <yochaigal@gmail.com>
+Subject: Re: Frequent disconnects with ath9k
+Date: Sun, 15 Jul 2012 16:46:22 +0000 (UTC)
+Message-ID: <loom.20120715T184407-940@post.gmane.org> (sfid-20120715_185553_620418_8E5AD2ED)
+References: <20120712065805.GA15967@miek.nl>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-07-08 at 01:39 +0300, Eliad Peller wrote:
+Miek Gieben <miek@...> writes:
 
-> > +       sdata1 = rcu_dereference(local->scan_sdata);
-> > +       sdata2 = rcu_dereference(local->sched_scan_sdata);
-> >
-> > -       if (skb->len < 24)
-> > -               return RX_CONTINUE;
-> > +       if (likely(!sdata1 && !sdata2))
-> > +               return;
-> >
-> > -       presp = ieee80211_is_probe_resp(fc);
-> > -       if (presp) {
-> > +       if (ieee80211_is_probe_resp(mgmt->frame_control)) {
-> >                 /* ignore ProbeResp to foreign address */
-> > -               if (!ether_addr_equal(mgmt->da, sdata->vif.addr))
-> > -                       return RX_DROP_MONITOR;
-> > +               if (!ether_addr_equal(mgmt->da, sdata1->vif.addr) &&
-> > +                   !ether_addr_equal(mgmt->da, sdata2->vif.addr))
-> > +                       return;
 > 
-> you should check sdata1 and sdata2 before dereferencing them.
+> Hello,
+> 
+> I'm experiencing frequent disconnects with the ath9k driver and the 
+> AR9485 wireless adapter. This Ubuntu bug report has more information:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/773154
+> 
 
-Yes, good catch, thanks. It seems I should've crashed it in testing,
-I'll make sure I tested the right code ... unless, I think our device
-may be filtering probe responses to foreign addresses, and we don't have
-sched scan. Yeah, that might do it.
+I am having the same exact issue (/var/log/kern.log shows the same output on
+ubunut 12.04 as well) especially when disconnecting from a power source.
+Disabling power management doesn't seem to make much of a difference, nor does
+updating compat-wireless.
 
-Anyway, I'll fix it.
-
-johannes
 
