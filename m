@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46680 "EHLO arrakis.dune.hu"
+Received: from nbd.name ([46.4.11.11]:40169 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964775Ab2GCQyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 12:54:38 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 10/10] qca-swiss-army-knife: allow to verify AR955X initvals
-Date: Tue,  3 Jul 2012 18:42:55 +0200
-Message-Id: <1341333775-14091-11-git-send-email-juhosg@openwrt.org> (sfid-20120703_185445_506848_F44A08AE)
-In-Reply-To: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
-References: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
+	id S1752102Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jul 2012 13:53:46 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 06/12] ath9k/ath9k_htc: fix txop limit handling
+Date: Sun, 15 Jul 2012 19:53:34 +0200
+Message-Id: <1342374820-92409-6-git-send-email-nbd@openwrt.org> (sfid-20120715_195349_010808_010F7EF5)
+In-Reply-To: <1342374820-92409-5-git-send-email-nbd@openwrt.org>
+References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-2-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-3-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-4-git-send-email-nbd@openwrt.org>
+ <1342374820-92409-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/Makefile            |    1 +
- tools/initvals/initvals.c          |    1 +
- tools/initvals/verify_checksums.sh |    2 +-
- 3 files changed, 3 insertions(+), 1 deletions(-)
+In all those years apparently nobody noticed that the txop limit programmed
+into the chip was off by a factor of 32 (!), probably because the VI and VO
+queues aren't used that much aside from mgmt frames on VO.
 
-diff --git a/tools/initvals/Makefile b/tools/initvals/Makefile
-index a4e375e..89169c1 100644
---- a/tools/initvals/Makefile
-+++ b/tools/initvals/Makefile
-@@ -34,6 +34,7 @@ ATH9K_HEADERS = \
- 	ar9330-1p2:ar9330_1p2_initvals.h	\
- 	ar9340:ar9340_initvals.h	\
- 	ar9485:ar9485_initvals.h		\
-+	ar955x-1p0:ar955x_1p0_initvals.h	\
- 	ar9580-1p0:ar9580_1p0_initvals.h \
- 	ar9462-2p0:ar9462_2p0_initvals.h
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c         |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 374c32e..fe2bfff 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1351,7 +1351,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw,
+ 	qi.tqi_aifs = params->aifs;
+ 	qi.tqi_cwmin = params->cw_min;
+ 	qi.tqi_cwmax = params->cw_max;
+-	qi.tqi_burstTime = params->txop;
++	qi.tqi_burstTime = params->txop * 32;
  
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index 4327f0d..f0b582c 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -35,6 +35,7 @@ struct initval_family {
- #include "ar9330_1p2_initvals.h"
- #include "ar9340_initvals.h"
- #include "ar9485_initvals.h"
-+#include "ar955x_1p0_initvals.h"
- #include "ar9580_1p0_initvals.h"
- #include "ar9462_2p0_initvals.h"
+ 	qnum = get_hw_qnum(queue, priv->hwq_map);
  
-diff --git a/tools/initvals/verify_checksums.sh b/tools/initvals/verify_checksums.sh
-index fd03478..a6d4b32 100755
---- a/tools/initvals/verify_checksums.sh
-+++ b/tools/initvals/verify_checksums.sh
-@@ -31,7 +31,7 @@ verify_family_checksum()
- }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index cb9a8c9..d74b4b6 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1388,7 +1388,7 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
+ 	qi.tqi_aifs = params->aifs;
+ 	qi.tqi_cwmin = params->cw_min;
+ 	qi.tqi_cwmax = params->cw_max;
+-	qi.tqi_burstTime = params->txop;
++	qi.tqi_burstTime = params->txop * 32;
  
- FAMILIES="$@"
--[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9462-2p0 ar9485 ar9580-1p0"
-+[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9462-2p0 ar9485 ar955x-1p0 ar9580-1p0"
- 
- mkdir -p "$CSUM_DIR"
- for family in $FAMILIES; do
+ 	ath_dbg(common, CONFIG,
+ 		"Configure tx [queue/halq] [%d/%d], aifs: %d, cw_min: %d, cw_max: %d, txop: %d\n",
 -- 
-1.7.2.1
+1.7.7.5 (Apple Git-26)
 
