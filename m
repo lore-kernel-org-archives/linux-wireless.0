@@ -1,148 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51447 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082Ab2G0LRr (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:58836 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751337Ab2GPVba convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:47 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 17/20] mac80211: track whether to use channel contexts
-Date: Fri, 27 Jul 2012 13:16:53 +0200
-Message-Id: <1343387816-9414-18-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131821_656337_6980A0AF)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 16 Jul 2012 17:31:30 -0400
+Received: by yhmm54 with SMTP id m54so5825404yhm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2012 14:31:30 -0700 (PDT)
+Date: Mon, 16 Jul 2012 16:31:22 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Roland Vossen <rvossen@broadcom.com>
+Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20120716213122.GA3078@burratino> (sfid-20120716_233138_931012_08897DC9)
+References: <CAKprTDGtvUFSBb_XK01bi6bJa3dynu73Lq-jTs=E78E3QwSqpA@mail.gmail.com>
+ <20120601174237.GA31781@burratino>
+ <CAKprTDHepfbCKquvnG8CQ2=-tSNbgOSkT6R0GQmEx9UyuiZyMQ@mail.gmail.com>
+ <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
+ <20120604084200.GA30645@tiikeri.vuoristo.local>
+ <20120604173121.GA9238@stt008.linux.site>
+ <20120605050620.GC3118@burratino>
+ <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
+ <20120611031544.GB3092@burratino>
+ <4FE0CA49.3030909@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4FE0CA49.3030909@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi again,
 
-Depending on the driver, channel contexts may be used or
-not. If they are used, the driver must have support for
-hardware scan and remain-on-channel; otherwise the driver
-must not advertise support for multiple channels.
+Quick update.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         |    3 +++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/main.c        |   14 ++++++++++++++
- net/mac80211/offchannel.c  |    6 ++++++
- net/mac80211/scan.c        |    4 ++++
- 5 files changed, 29 insertions(+)
+Arend van Spriel wrote:
+> On 06/11/2012 05:15 AM, Jonathan Nieder wrote:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1910517..7422ebc 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2159,6 +2159,9 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
- 
- 	lockdep_assert_held(&local->mtx);
- 
-+	if (local->use_chanctx && !local->ops->remain_on_channel)
-+		return -EOPNOTSUPP;
-+
- 	roc = kzalloc(sizeof(*roc), GFP_KERNEL);
- 	if (!roc)
- 		return -ENOMEM;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4ad715d..c52db65 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -873,6 +873,8 @@ struct ieee80211_local {
- 
- 	bool wiphy_ciphers_allocated;
- 
-+	bool use_chanctx;
-+
- 	/* protects the aggregated multicast list and filter calls */
- 	spinlock_t filter_lock;
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 96abcf2..c58b339 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -544,6 +544,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	struct ieee80211_local *local;
- 	int priv_size, i;
- 	struct wiphy *wiphy;
-+	bool use_chanctx;
- 
- 	if (WARN_ON(!ops->tx || !ops->start || !ops->stop || !ops->config ||
- 		    !ops->add_interface || !ops->remove_interface ||
-@@ -559,6 +560,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	    !!ops->unassign_vif_chanctx;
- 	if (WARN_ON(i != 0 && i != 5))
- 		return NULL;
-+	use_chanctx = i == 5;
- 
- 	/* Ensure 32-byte alignment of our private data and hw private data.
- 	 * We use the wiphy priv data for both our ieee80211_local and for
-@@ -610,6 +612,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
- 
- 	local->ops = ops;
-+	local->use_chanctx = use_chanctx;
- 
- 	/* set up some defaults */
- 	local->hw.queues = 1;
-@@ -733,6 +736,17 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if ((hw->flags & IEEE80211_HW_SCAN_WHILE_IDLE) && !local->ops->hw_scan)
- 		return -EINVAL;
- 
-+	if (!local->use_chanctx) {
-+		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
-+			const struct ieee80211_iface_combination *comb;
-+
-+			comb = &local->hw.wiphy->iface_combinations[i];
-+
-+			if (comb->num_different_channels > 1)
-+				return -EINVAL;
-+		}
-+	}
-+
- 	/* Only HW csum features are currently compatible with mac80211 */
- 	feature_whitelist = NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM |
- 			    NETIF_F_HW_CSUM;
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 507121d..4970660 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -107,6 +107,9 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-+	if (WARN_ON(local->use_chanctx))
-+		return;
-+
- 	/*
- 	 * notify the AP about us leaving the channel and stop all
- 	 * STA interfaces.
-@@ -145,6 +148,9 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-+	if (WARN_ON(local->use_chanctx))
-+		return;
-+
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE)
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 0045869..7ca3441 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -337,6 +337,10 @@ EXPORT_SYMBOL(ieee80211_scan_completed);
- 
- static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- {
-+	/* Software scan is not supported in multi-channel cases */
-+	if (local->use_chanctx)
-+		return -EOPNOTSUPP;
-+
- 	/*
- 	 * Hardware/driver doesn't support hw_scan, so use software
- 	 * scanning instead. First send a nullfunc frame with power save
--- 
-1.7.10.4
+>> Newer kernels seemed to work better than old, so I asked her to apply
+>> the following patches agains the 3.2.y tree (the exact patches used
+>> are at [2]):
+>> 
+>>   6b1a89afbf97 brcm80211: smac: drop "40MHz intolerant" flag from HT
+>>                capability info
+>>   c261bdf8acad brcm80211: smac: indicate severe problems to Mac80211
+>>   0bf1f883fd0a brcm80211: smac: removed MPC related code
+>>   4412953061de brcm80211: smac: removed MPC related variables
+>>   28237002e726 brcm80211: smac: removed down-on-watchdog MPC functionality
+>>   43ac09722f8e brcm80211: smac: removed down-on-rf-kill functionality
+>>   a8bc4917ed6b brcm80211: smac: bugfix for tx mute in brcms_b_init()
+>>   c6c44893c864 brcm80211: smac: fixed inconsistency in transmit mute
+>>   2646c46d5679 brcm80211: smac: modified Mac80211 callback interface
+>>   dc460127898c brcm80211: smac: mute transmit on ops_start
+>>   1525662ac280 brcm80211: smac: changed check to confirm STA only support
+>>   b7eec4233c34 brcm80211: smac: replace own access category definitions with
+>>                mac80211 enum
+>>   e9ca530a7b18 brcm80211: smac: don't modify sta parameters when adding sta
+>>   8906c43cb160 brcm80211: smac: fix channel frequency
+>>   02a588a2e3b9 brcm80211: smac: combine promiscuous mode functionality
+>>   be667669ec01 brcm80211: smac: added support for mac80211 filter flags
+>>  [d3f311349add brcm80211: fix usage of set tx power] --- unrelated, my mistake
+>>   aa1f2f0a3218 brcm80211: smac: precendence bug in wlc_phy_attach()
+>>   1570e53c14ff brcm80211: smac: fix unintended fallthru in
+>>                wlc_phy_radio_init_2057()
 
+With all the above patches applied on top of 3.2.21, Camaleón quickly
+gets the reconnects and gnome-shell segfaults if she does not supply
+the password to network-manager in time[1].  That means the patch that
+prevents trouble is presumably one of the four listed below.
+
+>>   137dabed34a1 brcm80211: smac: remove smatch warnings from brcmsmac code
+>>   2b0a53d51b5f brcm80211: smac: only print block-ack timeout message at
+>>                trace level
+>>   6b8da423315b brcm80211: smac: do not use US as fallback regulatory hint
+>>   94a2ca311cf4 brcm80211: smac: only provide valid regulatory hint
+
+Thanks,
+Jonathan
+
+[1] http://bugs.debian.org/cgi-bin/bugreport.cgi?msg=295;bug=664767
