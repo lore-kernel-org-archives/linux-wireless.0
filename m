@@ -1,88 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm4.bullet.mail.ird.yahoo.com ([77.238.189.61]:37808 "HELO
-	nm4.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755255Ab2GXRG6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 13:06:58 -0400
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com>
-Message-ID: <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> (sfid-20120724_190702_305381_79EF7996)
-Date: Tue, 24 Jul 2012 18:06:56 +0100 (BST)
-From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Subject: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-In-Reply-To: <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54115 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037Ab2GPS3Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jul 2012 14:29:24 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20484.23881.582002.607413@gargle.gargle.HOWL> (sfid-20120716_202933_234471_ECB02D9D)
+Date: Mon, 16 Jul 2012 23:58:25 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
+ TXOP limit
+In-Reply-To: <5003EABD.5040506@openwrt.org>
+References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-2-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-3-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-4-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-5-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-6-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-7-git-send-email-nbd@openwrt.org>
+	<1342105451-42297-8-git-send-email-nbd@openwrt.org>
+	<20481.3065.540576.366365@gargle.gargle.HOWL>
+	<500143CA.1020804@openwrt.org>
+	<506697F5827BD842B7CB80D046EBE618995399@aphydexd01b>
+	<5002A7B2.409@openwrt.org>
+	<20483.52640.521243.418804@gargle.gargle.HOWL>
+	<5003EABD.5040506@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry and the team,
-
-couldn't install my compiled (make + checkinstall) package.
-
-sudo dpkg -i compat-wireless-2012-07_03-1_i386.deb 
-(Reading database ... 214923 files and directories currently installed.)
-Unpacking compat-wireless-2012-07 (from compat-wireless-2012-07_03-1_i386.deb) ...
-dpkg: error processing compat-wireless-2012-07_03-1_i386.deb (--install):
- trying to overwrite '/bin/ntfs-3g', which is also in package ntfs-3g 1:2012.1.15AR.1-1ubuntu1
-dpkg-deb: error: subprocess paste was killed by signal (Broken pipe)
-Errors were encountered while processing:
- compat-wireless-2012-07_03-1_i386.deb
-
-Should I just to a make install instead?
-
-Thanks
-XabiX
-
-
------ Mail transféré -----
->De : Xavier de Almeida <xavierdealmeida@yahoo.fr>
->À : Larry Finger <Larry.Finger@lwfinger.net> 
->Cc : "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org> 
->Envoyé le : Mardi 24 juillet 2012 17h25
->Objet : Re: Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+Felix Fietkau wrote:
+> The standard does not say anything specifically about A-MPDU, but it
+> does say this:
 > 
->great following this thread to make my own compat-wireless:
->http://blog.securism.com/2009/01/how-to-cutting-edge-wireless-drivers-in-ubuntu/
->
->
->I hope it's accurate
->
->Merci
->
->
->
->>________________________________
->> De : Larry Finger <Larry.Finger@lwfinger.net>
->>À : Xavier de Almeida <xavierdealmeida@yahoo.fr> 
->>Cc : "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org> 
->>Envoyé le : Mardi 24 juillet 2012 17h06
->>Objet : Re: Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
->> 
->>On 07/24/2012 08:56 AM, Xavier de Almeida wrote:
->>> Thanks Larry for your help.
->>> I tried 3.4.6 and 3.5.0 Quantal kernels but they didn't boot with my i8042 keyboard chip.
->>>
->>> So I have installed 3.2.23-030223 and it now starts OK.
->>>
->>> FYI here is the new log (I ll have to investigate why the auth between the endpoint and the hotspot doesn't work)
->>>
->>> MERCI
->>> XabiX
->>
->>Yes, we do make progress. Kernel 3.2.23 has the bug fixes backported from later 
->>kernels, but there are additional changes that cannot be implemented as they are 
->>too intrusive. You may still need to incorporate compat-wireless.
->>
->>Larry
->>
->>
->>
->>
->>
->> 
->
->
->
+> When the TXOP limit is nonzero, a STA shall fragment an individually
+> addressed MSDU so that the transmission of the first MPDU of the TXOP
+> does not cause the TXOP limit to be exceeded at the PHY rate selected
+> for the initial transmission attempt of that MPDU. The TXOP limit may be
+> exceeded, when using a lower PHY rate than selected for the initial
+> transmission attempt of the first MPDU, for a retransmission of an MPDU,
+> for the initial transmission of an MPDU if any previous MPDU in the
+> current MSDU has been retransmitted, or for group addressed MSDUs. When
+> the TXOP limit is exceeded due to the retransmission of an MPDU at a
+> reduced PHY rate, the STA shall not transmit more than one MPDU in the TXOP.
+
+Um, am not sure how this passage relates to number of subframe calculation in an
+aggregate ?
+
+Sujith
