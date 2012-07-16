@@ -1,114 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:36220 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905Ab2GFHox (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:60320 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751072Ab2GPGSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 03:44:53 -0400
-Received: by wgbdr13 with SMTP id dr13so9054921wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2012 00:44:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1341557069.4462.4.camel@jlt3.sipsolutions.net>
-References: <CADnjpYvb15WvfZVnSpNvUiUAEdUgntOS2yoCyfxDZqHu+JBA5Q@mail.gmail.com>
-	<1341498452.4455.44.camel@jlt3.sipsolutions.net>
-	<CADnjpYuWL1DQabomZiGPajv9108p7DwNHyTWwaKn48vVhRbMDg@mail.gmail.com>
-	<1341557069.4462.4.camel@jlt3.sipsolutions.net>
-Date: Fri, 6 Jul 2012 09:44:52 +0200
-Message-ID: <CADnjpYtsJe=Y_Sb=EwD_Xv-y-Hns4NBKCx1JON_hsbwQJH7+Uw@mail.gmail.com> (sfid-20120706_094515_274870_D70C09A5)
-Subject: Re: SIOCSIFFLAGS: operation not supported error message when
- tryinging to bring up an interface in adhoc mode
-From: Philippe Agostini <philippe.agostini@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 16 Jul 2012 02:18:54 -0400
+Subject: Re: 3.4.4/amd64 full interrupt hangs under big nfs copies
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Marc MERLIN <marc@merlins.org>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20120715215935.GF24420@merlins.org>
+References: <20120409.143710.879746943062854492.davem@davemloft.net>
+	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org>  <20120715215935.GF24420@merlins.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 16 Jul 2012 08:18:49 +0200
+Message-ID: <1342419529.3265.12217.camel@edumazet-glaptop> (sfid-20120716_081900_165779_B765A680)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sun, 2012-07-15 at 14:59 -0700, Marc MERLIN wrote:
+> On Tue, Apr 10, 2012 at 10:27:33PM -0700, Marc MERLIN wrote:
+> > On Tue, Apr 10, 2012 at 08:11:03AM +0200, Eric Dumazet wrote:
+> > > Please try following patch, as it solved the problem for me (no more
+> > > order-1 allocations in tx path)
+> > 
+> > I applied our patch to 3.3.1 and cannot reproduce the problem anymore.
+> > 
+> > I'll leave a big wireless copy running overnight just in case, but I think
+> > you fixed it.
+> 
+> Mmmh, so I'm running 3.4.4 and I had another full machine hang while copying
+> big files (gigabytes) over wireless via NFS.
+> The laptop self recovered after 5mn or so (mouse cursor would not even
+> move) and I was able to kill -9 the process (midnight commander).
+> mc did not actually stop for another 4mn or so (i.e. it took that long for
+> the process to come out of kernel hung state), but the machine was usable
+> during that time.
+> Note that copying the same data with scp works fine.
+> NFS mount looks like this:
+> gargamel:/mnt/dshelf2/ /net/gargamel/mnt/dshelf2 nfs4 rw,nosuid,nodev,relatime,vers=4.0,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.205.7,local_lock=none,addr=192.168.205.3 0 0
+> 
+> I didn't have anything like last time in the kernel logs, and more
+> annoyingly, ps -elf does not show anything for any process in WCHAN,
+> making pointing the finger a bit harder (procps-ng 3.3.3 does not show
+> anything other than '-' in WCHAN for any process with 3.4.4).
+> 
+> My understanding is that user space calling drivers that shut off all
+> interrupts for extended periods of time (as least I think so since my mouse
+> cursor would not move), is still a kernel bug.
+> 
+> For what it's worth, copying 1GB of data in lots of small files does not
+> cause problems, it seems that it's big files that cause a problem since they
+> likely fill a buffer somewhere while interrupts are disabled.
+> 
+> Do you have an idea of how I can find out where my mc process is stuck in
+> the kernel?
+> Should I reproduce with specific sysrq output?
 
-Thank you for your feebacks. I solved my problem, it was coming from
-my add_interface callback. I was looking for a problem at the wrong
-place !
+Just to clarify, you get this freeze when transferring a big file from a
+remote NFS server to your PC, (aka a download), not the reverse way ?
 
-Best regards
+If so, you might hit OOM condition because iwlwifi uses big/fat RX
+buffers, I never understood why...
 
-Philippe
+(amsdu_size_8K = 1)
 
-On Fri, Jul 6, 2012 at 8:44 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2012-07-05 at 16:44 +0200, Philippe Agostini wrote:
->
->> /* Supported channel */
->> static struct ieee80211_channel channels = {
->>       .band = IEEE80211_BAND_2GHZ,
->>       .center_freq = 2437,
->>       .hw_value = 0,
->>       .flags = 0,
->>       .max_antenna_gain = 3,
->>       .max_power = 20,
->>       .max_reg_power = 20,
->>       .beacon_found = FALSE,
->>       .orig_flags = 0,
->>       .orig_mag = 0,
->>       .orig_mpwr = 0,
->> };/* struct ieee80211_channel */
->
-> FWIW, you don't need to set zero values explicitly, like beacon_found.
-> "FALSE" also isn't valid in the kernel, it should be lower case?
->
->
->
->>       /* Configuration and hardware information for an 802.11 PHY */
->>       struct ieee80211_hw *hw = priv->hw;
->
-> So you're using mac80211,
->
->>       /* Number of available hardware queues */
->>       hw->queues = IEEE80211P_NUM_TXQ;
->
-> That constant seems a bit too generic, but we're just debugging your
-> driver now. I just don't think you should use "ieee80211p" as your
-> driver name/tag.
->
->>       //wiphy->signal_type = CFG80211p_SIGNAL_TYPE_NONE;
->
-> that is set by mac80211
->
->>       //wiphy->cipher_suites = NULL;
->>       //wiphy->n_cipher_suites = 0;
->
-> so is this unless you override it
->
->>       //wiphy->retry_short = 1;
->>       //wiphy->retry_long = 1;
->>       //wiphy->frag_threshold = -1;
->>       //wiphy->rts_threshold = -1;
->>       //wiphy_net_set(&hw->wiphy,NULL);
->
-> Heh, no, don't set any of these
->
->>       //SET_IEEE80211_DEV(hw,NULL);
->
-> That you should do
->
->>       //wiphy->wext = NULL;
->
-> don't touch :)
->
->>       /* Describes the frequency bands a wiphy is able to operate in */
->>       for (i = 0;i<IEEE80211_NUM_BANDS;i++) {
->>               wiphy->bands[i] = NULL;
->>       }
->
-> again, no need to 0-initialize anything, it just makes your code
-> needlessly large
->
->
-> Anyway, you've not shown the most important part, the driver ops that it
-> registers with mac80211.
->
-> johannes
->
+Storing an MTU=1500 frams in 8KB of memory sounds really bad.
 
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index cc41cfa..434b924 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1006,7 +1006,7 @@ void iwl_drv_stop(struct iwl_drv *drv)
+ 
+ /* shared module parameters */
+ struct iwl_mod_params iwlwifi_mod_params = {
+-	.amsdu_size_8K = 1,
++	.amsdu_size_8K = 0,
+ 	.restart_fw = 1,
+ 	.plcp_check = true,
+ 	.bt_coex_active = true,
 
--- 
-P.
+
