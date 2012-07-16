@@ -1,96 +1,377 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:40125 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792Ab2GYSmP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 14:42:15 -0400
-Received: by gglu4 with SMTP id u4so1054646ggl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 11:42:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	<1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Date: Wed, 25 Jul 2012 21:42:14 +0300
-Message-ID: <CAFtRNNx+YgGgFp_owGQJcsQVqTuOeWk2J0MwjKMtcUgRq_DF0w@mail.gmail.com> (sfid-20120725_204223_189131_E45D238A)
-Subject: Re: [PATCH 1/2] ath5k: fix wrong per rate target power eeprom reads
- for AR5K_EEPROM_MODE_11A
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, jirislaby@gmail.com,
-	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	nbd@nbd.name
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:34480 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751561Ab2GPHKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jul 2012 03:10:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SqfRU-0000oC-2T
+	for linux-wireless@vger.kernel.org; Mon, 16 Jul 2012 09:10:04 +0200
+Received: from dslb-088-078-189-015.pools.arcor-ip.net ([88.78.189.15])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2012 09:10:04 +0200
+Received: from elektronenblitz63 by dslb-088-078-189-015.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2012 09:10:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Rainer Elstrodt <elektronenblitz63@online.de>
+Subject: new BT device / ath3k unknown Product-ID / error
+Date: Mon, 16 Jul 2012 07:04:43 +0000 (UTC)
+Message-ID: <loom.20120716T085725-103@post.gmane.org> (sfid-20120716_091010_728899_B975987C)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/23 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
-> This patch reduces the per rate target power eeprom reads for
-> AR5K_EEPROM_MODE_11A from 10 to 8, as there are only 8 valid
-> power curve entries on the eeprom. The former 10 reads lead to
-> wrong per rate power limits where rates above 24MBit could be
-> amplified with to high distortion leading to bad performance.
-> This was fix validated against the madwifi codebase and a new
-> AR5K_EEPROM_N_5GHZ_RATE_CHAN 8 is defined.
->
-> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> ---
-> madwifi cross validation check. Thx to Felix Fiethkau
-> ---
+Hello,
+unknown Pruduct-ID, but patch don't work.
+
+Bug Report with detailed information also here:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1024884
+
+Modul ath3k
+BT-Chipset maybe AR3012
+
+WLAN:
+
+0d:00.0 Network controller [0280]: Atheros Communications Inc. AR9462 Wireless
+Network Adapter [168c:0034] (rev 01)
+Subsystem: Lite-On Communications Inc Device [11ad:6621]
+Kernel driver in use: ath9k
+Kernel modules: ath9k
+
+lsusb (BT-device identified as):
+Bus 002 Device 003: ID 04ca:3006 Lite-On Technology Corp.
+
+iProduct value is 2, so it must be a AR3012 based chipset for BT (see lsusb -v).
+
+lsusb -v
+
+Bus 002 Device 004: ID 04ca:3006 Lite-On Technology Corp. 
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               1.10
+  bDeviceClass          224 Wireless
+  bDeviceSubClass         1 Radio Frequency
+  bDeviceProtocol         1 Bluetooth
+  bMaxPacketSize0        64
+  idVendor           0x04ca Lite-On Technology Corp.
+  idProduct          0x3006 
+  bcdDevice            0.01
+  iManufacturer           1 
+  iProduct                2 
+  iSerial                 3 
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength          177
+    bNumInterfaces          2
+    bConfigurationValue     1
+    iConfiguration          4 
+    bmAttributes         0xe0
+      Self Powered
+      Remote Wakeup
+    MaxPower              100mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           3
+      bInterfaceClass       224 Wireless
+      bInterfaceSubClass      1 Radio Frequency
+      bInterfaceProtocol      1 Bluetooth
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0010  1x 16 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x82  EP 2 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               1
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       0
+      bNumEndpoints           2
+      bInterfaceClass       224 Wireless
+      bInterfaceSubClass      1 Radio Frequency
+      bInterfaceProtocol      1 Bluetooth
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0000  1x 0 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0000  1x 0 bytes
+        bInterval               1
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       1
+      bNumEndpoints           2
+      bInterfaceClass       224 Wireless
+      bInterfaceSubClass      1 Radio Frequency
+      bInterfaceProtocol      1 Bluetooth
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0009  1x 9 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0009  1x 9 bytes
+        bInterval               1
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       2
+      bNumEndpoints           2
+      bInterfaceClass       224 Wireless
+      bInterfaceSubClass      1 Radio Frequency
+      bInterfaceProtocol      1 Bluetooth
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0011  1x 17 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0011  1x 17 bytes
+        bInterval               1
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       3
+      bNumEndpoints           2
+      bInterfaceClass       224 Wireless
+      bInterfaceSubClass      1 Radio Frequency
+      bInterfaceProtocol      1 Bluetooth
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0019  1x 25 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0019  1x 25 bytes
+        bInterval               1
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       4
+      bNumEndpoints           2
+      bInterfaceClass       224 Wireless
+      bInterfaceSubClass      1 Radio Frequency
+      bInterfaceProtocol      1 Bluetooth
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0021  1x 33 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0021  1x 33 bytes
+        bInterval               1
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       5
+      bNumEndpoints           2
+      bInterfaceClass       224 Wireless
+      bInterfaceSubClass      1 Radio Frequency
+      bInterfaceProtocol      1 Bluetooth
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0031  1x 49 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            1
+          Transfer Type            Isochronous
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0031  1x 49 bytes
+        bInterval               1
 
 
-Thanks for catching this but the bug is elsewhere:
+diff -urN compat-wireless-2012-07-03/drivers/bluetooth/ath3k.c
+compat-wireless-2012-07-03_bt_ath3k_04ca_3006_mod/drivers/bluetooth/ath3k.c
+--- compat-wireless-2012-07-03/drivers/bluetooth/ath3k.c	2012-07-04
+02:38:39.000000000 +0200
++++ compat-wireless-2012-07-03_bt_ath3k_04ca_3006_mod/drivers/bluetooth/ath3k.c
+2012-07-13 23:29:04.000000000 +0200
+@@ -76,6 +76,7 @@
+ 	{ USB_DEVICE(0x0CF3, 0x311D) },
+ 	{ USB_DEVICE(0x13d3, 0x3375) },
+ 	{ USB_DEVICE(0x04CA, 0x3005) },
++	{ USB_DEVICE(0x04CA, 0x3006) },
+ 	{ USB_DEVICE(0x13d3, 0x3362) },
+ 	{ USB_DEVICE(0x0CF3, 0xE004) },
+ 	{ USB_DEVICE(0x0930, 0x0219) },
+@@ -101,6 +102,7 @@
+ 	{ USB_DEVICE(0x0cf3, 0x311D), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
++	{ USB_DEVICE(0x04ca, 0x3006), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x0930, 0x0219), .driver_info = BTUSB_ATH3012 },
+diff -urN compat-wireless-2012-07-03/drivers/bluetooth/btusb.c
+compat-wireless-2012-07-03_bt_ath3k_04ca_3006_mod/drivers/bluetooth/btusb.c
+--- compat-wireless-2012-07-03/drivers/bluetooth/btusb.c	2012-07-04
+02:38:39.000000000 +0200
++++ compat-wireless-2012-07-03_bt_ath3k_04ca_3006_mod/drivers/bluetooth/btusb.c
+2012-07-13 23:30:35.000000000 +0200
+@@ -130,6 +130,7 @@
+ 	{ USB_DEVICE(0x0cf3, 0x311d), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x04ca, 0x3005), .driver_info = BTUSB_ATH3012 },
++	{ USB_DEVICE(0x04ca, 0x3006), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x13d3, 0x3362), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x0cf3, 0xe004), .driver_info = BTUSB_ATH3012 },
+ 	{ USB_DEVICE(0x0930, 0x0219), .driver_info = BTUSB_ATH3012 },
 
-I've tried to document hw code as much as I can, eeprom stuff is still
-missing and I'm sorry for that but here is what comments say on phy.c
-@ DOC: Per-rate tx power setting, that should give you an idea of
-what's happening...
+error 01 (patch_01):
 
-3498  * Rate power table contains indices to PCDAC/PDADC table (0.5dB steps -
-3499  * x values) and is indexed as follows:
-3500  * rates[0] - rates[7] -> OFDM rates
-3501  * rates[8] - rates[14] -> CCK rates
-3502  * rates[15] -> XR rates (they all have the same power)
-
-So guess why the last 2 "invalid" power gain values have the same
-power levels for all rates ? They are for XR mode (they've put it
-there on the eeprom because XR mode also operates at 5GHz) and since
-XR stuff is stripped off Madwifi (at least the public HAL) that's why
-it only reads 8 of the piers.
-
-Now notice that the last 2 readings on your previous post start from a
-different frequency and most important that 5360 < 5825  and that
-makes sense since the idea is to have only 2 points to interpolate
-between them for the whole XR range. So we have 2 frequency "ranges"
-to search, the one  is the 11a mode from 4920 to 5825 and the other
-one is for XR mode from 5360 to 5720. When the first range ends the
-other starts.
-
-The bug is here:
-
-ath5k_get_rate_pcal_data:
-2704         max = ee->ee_rate_target_pwr_num[mode] - 1;
-[...]
-2713         if (target > rpinfo[max].freq) {
-2714                 idx_l = idx_r = max;
-2715                 goto done;
-2716         }
-
-So please instead of tweaking the EEPROM code just change
-max = ee->ee_rate_target_pwr_num[mode] - 1;
-to
-max = ee->ee_rate_target_pwr_num[mode] - 3;
-in case of AR5K_MODE_11A
-
-Each function has a job to do, ath5k_eeprom_read_target_rate_pwr_info
-should read EEPROM contents, not decide what we'll use on
-interpolation and what we won't use. Also since EEPROM code uses
-offsets etc I don't want to change the way we read it because if we
-miss something then the whole dataset will get "shifted" and we'll get
-weird stuff :P
+[ 38.428012] Bluetooth: Patch file not found ar3k/AthrBT_0x11020000.dfu
+[ 38.428015] Bluetooth: Loading patch file failed
+[ 38.428021] ath3k: probe of 2-1.6:1.0 failed with error -2
 
 
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+diff -urN compat-wireless-2012-07-03/drivers/bluetooth/ath3k.c
+compat-wireless-2012-07-03_bt_ath3k_04ca_3006_mod/drivers/bluetooth/ath3k.c
+--- compat-wireless-2012-07-03/drivers/bluetooth/ath3k.c	2012-07-04
+02:38:39.000000000 +0200
++++ compat-wireless-2012-07-03_bt_ath3k_04ca_3006_mod/drivers/bluetooth/ath3k.c
+2012-07-14 10:09:18.740066000 +0200
+@@ -76,6 +76,7 @@
+ 	{ USB_DEVICE(0x0CF3, 0x311D) },
+ 	{ USB_DEVICE(0x13d3, 0x3375) },
+ 	{ USB_DEVICE(0x04CA, 0x3005) },
++	{ USB_DEVICE(0x04CA, 0x3006) },
+ 	{ USB_DEVICE(0x13d3, 0x3362) },
+ 	{ USB_DEVICE(0x0CF3, 0xE004) },
+ 	{ USB_DEVICE(0x0930, 0x0219) },
+
+error 02 (patch_02):
+
+[ 15.770583] Bluetooth: Core ver 2.16
+[ 15.770601] Bluetooth: HCI device and connection manager initialized
+[ 15.770603] Bluetooth: HCI socket layer initialized
+[ 15.770604] Bluetooth: L2CAP socket layer initialized
+[ 15.770609] Bluetooth: SCO socket layer initialized
+[ 18.979363] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+[ 18.979366] Bluetooth: BNEP filters: protocol multicast
+[ 19.003989] Bluetooth: RFCOMM TTY layer initialized
+[ 19.003995] Bluetooth: RFCOMM socket layer initialized
+[ 19.003997] Bluetooth: RFCOMM ver 1.11
+[ 19.213474] Bluetooth: Error in firmware loading err = -110,len = 0, size = 4096
+[ 19.213506] ath3k: probe of 2-1.6:1.0 failed with error -110
+[ 19.213539] usbcore: registered new interface driver ath3k
+
+with best regards
+Rainer Elstrodt
+
