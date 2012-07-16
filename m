@@ -1,94 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64376 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750924Ab2GFT6l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:58:41 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 00/33] NFC updates for 3.6
-Date: Fri,  6 Jul 2012 22:09:20 +0200
-Message-Id: <1341605393-32056-1-git-send-email-sameo@linux.intel.com> (sfid-20120706_215845_509921_C70372B3)
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:56670 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752367Ab2GPKRg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jul 2012 06:17:36 -0400
+Received: by lbbgj3 with SMTP id gj3so7750831lbb.11
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2012 03:17:33 -0700 (PDT)
+Date: Mon, 16 Jul 2012 13:14:38 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Joe Perches <joe@perches.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, wimax@linuxwimax.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-s390@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	linux-kernel@vger.kernel.org, linux-c6x-dev@linux-c6x.org,
+	linux-mips@linux-mips.org,
+	user-mode-linux-devel@lists.sourceforge.net,
+	user-mode-linux-user@lists.sourceforge.net,
+	e1000-devel@lists.sourceforge.net
+Subject: Re: [PATCH net-next 0/8] etherdevice: Rename random_ether_addr to
+ eth_random_addr
+Message-ID: <20120716101437.GC22638@arwen.pp.htv.fi> (sfid-20120716_121754_420378_E5ACE924)
+Reply-To: balbi@ti.com
+References: <1341968967.13724.23.camel@joe2Laptop>
+ <cover.1342157022.git.joe@perches.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="KN5l+BnMqAQyZLvT"
+In-Reply-To: <cover.1342157022.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the second (and probably last) NFC pull request for 3.6.
-Here are the interesting bits:
 
-- A better error management for the HCI stack.
-- An LLCP "late" binding implementation for a better NFC SAP usage. SAPs are
-  now reserved only when there's a client for it.
-- Support for Sony RC-S360 (a.k.a. PaSoRi) pn533 based dongle. We can read and
-  write NFC tags and also establish a p2p link with this dongle now.
-- A few LLCP fixes.
+--KN5l+BnMqAQyZLvT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-You can either apply those patches manually or pull them from here:
+On Thu, Jul 12, 2012 at 10:33:04PM -0700, Joe Perches wrote:
+> net-next commit ad7eee98be ("etherdevice: introduce eth_broadcast_addr")
+> added a new style API.  Rename random_ether_addr to eth_random_addr to
+> create some API symmetry.
+>=20
+> Joe Perches (8):
+>   etherdevice: Rename random_ether_addr to eth_random_addr
 
-git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git tags/nfc-next-3.6-2
+if you're really renaming the function, then this patch alone will break
+all of the below users. That should all be a single patch, I'm afraid.
 
+>   ethernet: Use eth_random_addr
+>   net: usb: Use eth_random_addr
+>   wireless: Use eth_random_addr
+>   drivers/net: Use eth_random_addr
+>   s390: Use eth_random_addr
+>   usb: Use eth_random_addr
+>   arch: Use eth_random_addr
+>=20
+>  arch/blackfin/mach-bf537/boards/stamp.c           |    2 +-
+>  arch/c6x/kernel/soc.c                             |    2 +-
+>  arch/mips/ar7/platform.c                          |    4 ++--
+>  arch/mips/powertv/powertv_setup.c                 |    6 +++---
+>  arch/um/drivers/net_kern.c                        |    2 +-
+>  drivers/net/ethernet/atheros/atl1c/atl1c_hw.c     |    2 +-
+>  drivers/net/ethernet/atheros/atlx/atl1.c          |    2 +-
+>  drivers/net/ethernet/atheros/atlx/atl2.c          |    2 +-
+>  drivers/net/ethernet/ethoc.c                      |    2 +-
+>  drivers/net/ethernet/intel/igb/igb_main.c         |    4 ++--
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c    |    2 +-
+>  drivers/net/ethernet/lantiq_etop.c                |    2 +-
+>  drivers/net/ethernet/micrel/ks8851.c              |    2 +-
+>  drivers/net/ethernet/micrel/ks8851_mll.c          |    2 +-
+>  drivers/net/ethernet/smsc/smsc911x.c              |    2 +-
+>  drivers/net/ethernet/ti/cpsw.c                    |    2 +-
+>  drivers/net/ethernet/tile/tilegx.c                |    2 +-
+>  drivers/net/ethernet/wiznet/w5100.c               |    2 +-
+>  drivers/net/ethernet/wiznet/w5300.c               |    2 +-
+>  drivers/net/ethernet/xilinx/xilinx_axienet_main.c |    2 +-
+>  drivers/net/tun.c                                 |    2 +-
+>  drivers/net/usb/smsc75xx.c                        |    2 +-
+>  drivers/net/usb/smsc95xx.c                        |    2 +-
+>  drivers/net/usb/usbnet.c                          |    2 +-
+>  drivers/net/wimax/i2400m/driver.c                 |    2 +-
+>  drivers/net/wireless/adm8211.c                    |    2 +-
+>  drivers/net/wireless/p54/eeprom.c                 |    2 +-
+>  drivers/net/wireless/rt2x00/rt2400pci.c           |    2 +-
+>  drivers/net/wireless/rt2x00/rt2500pci.c           |    2 +-
+>  drivers/net/wireless/rt2x00/rt2500usb.c           |    2 +-
+>  drivers/net/wireless/rt2x00/rt2800lib.c           |    2 +-
+>  drivers/net/wireless/rt2x00/rt61pci.c             |    2 +-
+>  drivers/net/wireless/rt2x00/rt73usb.c             |    2 +-
+>  drivers/net/wireless/rtl818x/rtl8180/dev.c        |    2 +-
+>  drivers/net/wireless/rtl818x/rtl8187/dev.c        |    2 +-
+>  drivers/s390/net/qeth_l2_main.c                   |    2 +-
+>  drivers/s390/net/qeth_l3_main.c                   |    2 +-
+>  drivers/usb/atm/xusbatm.c                         |    4 ++--
+>  drivers/usb/gadget/u_ether.c                      |    2 +-
+>  include/linux/etherdevice.h                       |   14 ++++++++------
+>  40 files changed, 52 insertions(+), 50 deletions(-)
+>=20
+> --=20
+> 1.7.8.111.gad25c.dirty
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-Eric Lapuyade (15):
-  NFC: Prepare asynchronous error management for driver and shdlc
-  NFC: Removed addressed shdlc TODOs
-  NFC: Handle SHDLC RSET frames from an SHDLC connected chip
-  NFC: Remove an impossible HCI error case
-  NFC: Implement HCP reaggregation allocation error case
-  NFC: Changed HCI cmd execution completion result to std linux errno
-  NFC: Driver failure API
-  NFC: Factorize HCI cmd completion
-  NFC: Implement HCI driver or internal error management
-  NFC: Core must test the device polling state inside the device lock
-  NFC: nfc_targets_found() should accept zero target found
-  NFC: nfc_driver_failure() implementation
-  NFC: Error management documentation
-  NFC: update PN544 HCI driver state when opened/closed
-  NFC: Allow HCI driver to pre-open pipes to some gates
+--=20
+balbi
 
-Samuel Ortiz (18):
-  NFC: Add modules alias for NFC sockets
-  NFC: Add netlink module alias for NFC
-  NFC: Update LLCP socket target index when getting a connection
-  NFC: Fix LLCP getname socket op
-  NFC: Build LLCP general bytes upon request
-  NFC: Close listening LLCP sockets when the device is gone
-  NFC: Release LLCP SAP when the owner is released
-  NFC: Forbid LLCP service name reusing
-  NFC: Forbid SSAP binding to a not well known LLCP service
-  NFC: LLCP late binding
-  NFC: Handle LLCP Disconnected Mode frames
-  NFC: Remove warning from nfc_llcp_local_put
-  NFC: Do not return EBUSY when stopping a poll that's already stopped
-  NFC: Dereference LLCP bind socket address after checking for it to be
-    NULL
-  NFC: Add initial Sony RC-S360 support to pn533
-  NFC: Use communicate thru only for PaSoRi when trying to read Felica
-    tags
-  NFC: Add ISO 14443 type B protocol
-  NFC: Check for llcp_sock and its device from llcp_sock_getname
+--KN5l+BnMqAQyZLvT
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
- Documentation/nfc/nfc-hci.txt |   33 ++++
- drivers/nfc/nfcwilink.c       |    7 +-
- drivers/nfc/pn533.c           |  224 ++++++++++++++++++++++-----
- drivers/nfc/pn544_hci.c       |   37 +++--
- include/linux/nfc.h           |   14 +-
- include/net/nfc/hci.h         |   19 ++-
- include/net/nfc/nfc.h         |    2 +
- net/nfc/core.c                |   38 ++++-
- net/nfc/hci/command.c         |   26 ++--
- net/nfc/hci/core.c            |  104 ++++++++-----
- net/nfc/hci/hci.h             |   12 +-
- net/nfc/hci/shdlc.c           |   38 ++---
- net/nfc/llcp/llcp.c           |  342 +++++++++++++++++++++++++++--------------
- net/nfc/llcp/llcp.h           |    5 +
- net/nfc/llcp/sock.c           |   31 +++-
- net/nfc/nci/core.c            |    5 +-
- net/nfc/nci/ntf.c             |    5 +-
- net/nfc/netlink.c             |    9 ++
- 18 files changed, 663 insertions(+), 288 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
--- 
-1.7.10
+iQIcBAEBAgAGBQJQA+mNAAoJEIaOsuA1yqRE+ksP/Alli7QgsqKkod+QSJZRmYS6
+wJJT+g2ZqoMatSweM3ZCXzeGMBspr3j0TtRqcLxugkaNullhyfqLmyXAW3FQIboF
+Aw40vVRTZSjTmecHJB53QVMZ+u+lGKu7u5YAvF+ixof9AXZYPppTEghxHdCtdKou
+SpkRsOgw+DwgftlGma27DAiAGTSuV59c74NiOmpCazv2w/TSNF63AkNEfyUH9Cqv
+nT7M89z7BJDGoUKKULpN/wKlCl6qWNEtOWShjAmkmhYJBnsIMGEX+w5/4RO8ABOK
+p82KlsEl0+Ze5dZGJ1sy64Cs9a50dqIrDcPHtnKwACZqwj9SI6uQSpa9spX5qlqA
+64CQzBaudcBcLKzeXlzvOfZmbVbPIXd/wtFXlbYCKGd2Gl+3F211yL7fzd++3RDR
+0bIm5vjUjf/c6830awVc6JRUtnLsEzdNnwpNPlm9oCSu5p7TwEGQkhblI7TyYRNV
+/Xl5sPiSmIlHfV073zXco8CyuXdHnAUdY7Ujg98KXcXds7AxDd3R4wRa9KykGyVf
+Vb4TZ5Rk2bXaFOnfqAT2+aGOGyox/504ud1KVdBvLFc4VLkv4/DN1syiNjDtORu3
+Ls+uNzP85uB5c5p49fvM56Mwjzfql47PRKi86OdPebfFCKmLGoVi8k2aHioTvCMO
+7qp9s0cYaXJREqb3n+Yb
+=EBK7
+-----END PGP SIGNATURE-----
 
+--KN5l+BnMqAQyZLvT--
