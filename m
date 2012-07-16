@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36405 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753828Ab2GWUEj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 16:04:39 -0400
-Message-ID: <1343073870.4584.24.camel@jlt3.sipsolutions.net> (sfid-20120723_220444_702178_1CBDAA0D)
-Subject: Re: 2nd CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
-Date: Mon, 23 Jul 2012 22:04:30 +0200
-In-Reply-To: <20120723192057.GE18589@tuxdriver.com> (sfid-20120723_213359_482339_245FF7E8)
-References: <20120322192406.GB2432@tuxdriver.com>
-	 <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com>
-	 <1332774906.1870.98.camel@aeonflux> <20120326152541.GH13806@tuxdriver.com>
-	 <20120427174439.GC16207@tuxdriver.com>
-	 <20120723192057.GE18589@tuxdriver.com>
-	 (sfid-20120723_213359_482339_245FF7E8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47036 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753212Ab2GPVod (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jul 2012 17:44:33 -0400
+Message-ID: <50048B39.7060507@hauke-m.de> (sfid-20120716_234436_762340_1AB05BC1)
+Date: Mon, 16 Jul 2012 23:44:25 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: REGRESSION: [PATCH v2 0/9] bcma misc updates
+References: <1341013486-2520-1-git-send-email-hauke@hauke-m.de> <4FF29671.1020406@broadcom.com> <4FF2A2D4.9070308@hauke-m.de> <4FF2ABD6.3070007@broadcom.com>
+In-Reply-To: <4FF2ABD6.3070007@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-23 at 15:20 -0400, John W. Linville wrote:
-
-> Not bad, but I'd like to see some more!  Some ideas:
+On 07/03/2012 10:22 AM, Arend van Spriel wrote:
+> On 07/03/2012 09:44 AM, Hauke Mehrtens wrote:
+>>> I suspect it tries reading OTP instead of the external SPROM.
+>>>>
+>>>> Gr. AvS
+>>>>
+>> Hi Arend,
+>>
+>> my BCM43224 uses a Sprom from the flash chip of the SoC, so it could be
+>> that something is wrong in the sprom reading, but I haven't touched the
+>> sprom code expect for using constants.
+>>
+>> Do you know which patch is causing this issue?
+>>
+>> Hauke
+>>
 > 
-> 	-- "state of the union" for bluetooth, nfc, 802.11
-> 	-- wireless mesh networking status updates
-> 	-- cfg80211/mac80211 feature previews (what's coming?)
-> 	-- standards bodies reports (802.11, 802.15.x)
-> 	-- important or unusual use cases (e.g. Freifunk, Internet of Things)
-> 	-- userland wireless management apps (NetworkManager, connman)
-> 	-- wireless-oriented (or wireless-specific) applications
-> 	-- issues with managing a wireless networking sub-tree
-> 	-- long-term support for legacy hardware (Intel?  Atheros?)
-> 	-- driver projects without hardware vendor support?
-> 	-- staging driver migration?  out-of-tree driver merging?
-> 	-- ???
+> I intended to bisect the series. I will let you know what I find.
+> 
+> Gr. AvS
 
-I'd add
+Hi Arend,
 
-	-- state of P2P/Wi-Fi Direct application stack
+Did you bisect this? I still have no idea which or why any of the
+patches could cause this.
 
-I'm not volunteering, though it could be pretty simple: "there's
-none" :-(
-
-Unless somebody knows more than I do?
-
-johannes
-
+Hauke
