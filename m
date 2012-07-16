@@ -1,72 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:65296 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752980Ab2GZV0A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 17:26:00 -0400
-Date: Thu, 26 Jul 2012 17:25:55 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Mijzelf <Mijzelf@live.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Uknown symbols in rfkill_backport.ko on 2.6.25.17 on mips
-Message-ID: <20120726172555.246a668c@mj> (sfid-20120726_232612_070363_64EC22E4)
-In-Reply-To: <loom.20120725T195215-756@post.gmane.org>
-References: <0621389a37a568a7ebd526b0adc87a48@fileserver.lan>
-	<20120724175617.0a4206c4@mj>
-	<loom.20120725T195215-756@post.gmane.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:36409 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235Ab2GPK3E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jul 2012 06:29:04 -0400
+Date: Mon, 16 Jul 2012 03:29:01 -0700 (PDT)
+Message-Id: <20120716.032901.1657058688119342783.davem@davemloft.net> (sfid-20120716_122945_730543_1A986DC5)
+To: balbi@ti.com
+Cc: joe@perches.com, netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+	wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, linux-s390@vger.kernel.org,
+	johannes@sipsolutions.net, uclinux-dist-devel@blackfin.uclinux.org,
+	linux-kernel@vger.kernel.org, linux-c6x-dev@linux-c6x.org,
+	linux-mips@linux-mips.org,
+	user-mode-linux-devel@lists.sourceforge.net,
+	user-mode-linux-user@lists.sourceforge.net,
+	e1000-devel@lists.sourceforge.net
+Subject: Re: [PATCH net-next 0/8] etherdevice: Rename random_ether_addr to
+ eth_random_addr
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120716101437.GC22638@arwen.pp.htv.fi>
+References: <1341968967.13724.23.camel@joe2Laptop>
+	<cover.1342157022.git.joe@perches.com>
+	<20120716101437.GC22638@arwen.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 25 Jul 2012 18:10:38 +0000 (UTC)
-Mijzelf <Mijzelf@live.com> wrote:
+From: Felipe Balbi <balbi@ti.com>
+Date: Mon, 16 Jul 2012 13:14:38 +0300
 
-> Thanks. I was able to compile the input module, and this issue is
-> solved.
-> 
-> Now a new one pops up:
-> /tmpfs/root # modprobe ath9k
-> modprobe: can't load module mac80211
-> (updates/net/mac80211/mac80211.ko): unknown symbol in module, or
-> unknown parameter /tmpfs/root # dmesg 
-> mac80211: Unknown symbol _flush_cache
-> 
-> I grepped the source tree, and the word 'flush_cache' only exists in
-> the objects of mac80211.ko. So I suppose it's some macro expansion.
-> But I also grepped all include files in my kernel tree, and
-> flush_cache only appeared 4 times:
-> 
-> ./drivers/scsi/ips.h:   IPS_FC_CMD         flush_cache;
-> ./drivers/video/i810/i810_main.h:static inline void flush_cache(void)
-> ./drivers/video/i810/i810_main.h:#define flush_cache() do { } while(0)
-> ./arch/powerpc/boot/ops.h:extern void flush_cache(void *, unsigned
-> long);
-> 
-> It seems to me no one of these can cause a symbol _flush_cache in a
-> module. 
+> if you're really renaming the function, then this patch alone will break
+> all of the below users. That should all be a single patch, I'm afraid.
 
-I agree.
+It would help if you actually read his patches before saying what they
+might or might not do.
 
-> Because the symbol is in the object files, I suppose it cannot added
-> by some library either. (Are there any libraries linked against
-> kernel modules?)
-
-No.  Everything used by the modules should be provided by symbols
-exported by the kernel.
-
-> Where does this come from? 
-
-My guess is that either it's a result of some clever macro expansion
-(so that the source doesn't have "flush_cache") or gcc inserts that call
-(perhaps hoping that libgcc has it) but the kernel doesn't satisfy it.
-
-First of all, make sure that you are making a clean build and there are
-no object files left from older builds.
-
-Then find the object file that calls _flush_cache.  Recompile the
-corresponding source file with "-save-temps".  Look for "flush_cache"
-in the *.i and the *.s file.  Try to find out where it comes from.
-
--- 
-Regards,
-Pavel Roskin
+He provides a macro in the first patch that provides the old name,
+and this will get removed at the end.
