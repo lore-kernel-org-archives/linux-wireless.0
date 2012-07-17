@@ -1,131 +1,469 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46695 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753274Ab2GJJZA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50520 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab2GQLrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 05:25:00 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v4 02/10] ath9k: Add definitions and structures to support WoW
-Date: Tue, 10 Jul 2012 14:54:34 +0530
-Message-ID: <1341912274-12013-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120710_112505_264981_F7B002F4)
+	Tue, 17 Jul 2012 07:47:16 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20485.20596.800056.240027@gargle.gargle.HOWL> (sfid-20120717_134720_697095_26561E9C)
+Date: Tue, 17 Jul 2012 17:15:56 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/12] ath9k: Cleanup beacon logic
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+* The beaconing status routine is not required, since in
+  multi-VIF cases the HW beacon parameters should not be
+  re-configured.
 
-*add structures, macros and variables for WoW, so that the driver
-can make use of it.
-*maintain a list for user enabled patterns and masks
-*track pattern slots for the hardware limitation on the
-maximum number of patterns that can be stored.
-*track interrupts enabled before WoW suspend, so
-that can be reconfigured after resume
-*have macros to parse user defined wow configurations to
-hardware code
+* Remove SC_OP_TSF_RESET - when a beaconing interface comes
+  up the first time, the TSF has to be reset.
 
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+* Simplify ath9k_allow_beacon_config().
+
+* Handle setting/clearing the SWBA interrupt properly.
+
+* Remove the TSF mangling in IBSS mode, it is not required.
+
+* General code cleanup.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |   12 +++++++++++
- drivers/net/wireless/ath/ath9k/hw.h    |   34 ++++++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |   8 +-
+ drivers/net/wireless/ath/ath9k/beacon.c | 226 ++++++++++++--------------------
+ drivers/net/wireless/ath/ath9k/main.c   |  24 +---
+ drivers/net/wireless/ath/ath9k/recv.c   |   2 +-
+ 4 files changed, 98 insertions(+), 162 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 79840d6..f9c88dc 100644
+index 248925c..a4dd5b1 100644
 --- a/drivers/net/wireless/ath/ath9k/ath9k.h
 +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -510,6 +510,12 @@ static inline void ath9k_btcoex_stop_gen_timer(struct ath_softc *sc)
- }
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- 
-+struct ath9k_wow_pattern {
-+	u8 pattern_bytes[MAX_PATTERN_SIZE];
-+	u8 mask_bytes[MAX_PATTERN_SIZE];
-+	u32 pattern_len;
-+};
-+
- /********************/
- /*   LED Control    */
- /********************/
-@@ -711,6 +717,12 @@ struct ath_softc {
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
- 	struct dfs_pattern_detector *dfs_detector;
-+
-+#ifdef CONFIG_PM_SLEEP
-+	atomic_t wow_got_bmiss_intr;
-+	atomic_t wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
-+	u32 wow_intr_before_sleep;
-+#endif
+@@ -386,6 +386,7 @@ struct ath_beacon_config {
+ 	u16 dtim_period;
+ 	u16 bmiss_timeout;
+ 	u8 dtim_count;
++	bool enable_beacon;
  };
  
- void ath9k_tasklet(unsigned long data);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 26da173..912f340 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -180,6 +180,37 @@
- #define PAPRD_TABLE_SZ			24
- #define PAPRD_IDEAL_AGC2_PWR_RANGE	0xe0
+ struct ath_beacon {
+@@ -412,11 +413,13 @@ struct ath_beacon {
+ };
  
-+/*
-+ * Wake on Wireless
-+ */
-+
-+/* Keep Alive Frame */
-+#define KAL_FRAME_LEN		28
-+#define KAL_FRAME_TYPE		0x2	/* data frame */
-+#define KAL_FRAME_SUB_TYPE	0x4	/* null data frame */
-+#define KAL_DURATION_ID		0x3d
-+#define KAL_NUM_DATA_WORDS	6
-+#define KAL_NUM_DESC_WORDS	12
-+#define KAL_ANTENNA_MODE	1
-+#define KAL_TO_DS		1
-+#define KAL_DELAY		4	/*delay of 4ms between 2 KAL frames */
-+#define KAL_TIMEOUT		900
-+
-+#define MAX_PATTERN_SIZE		256
-+#define MAX_PATTERN_MASK_SIZE		32
-+#define MAX_NUM_PATTERN			8
-+#define MAX_NUM_USER_PATTERN		6 /*  deducting the disassociate and
-+					      deauthenticate packets */
-+
-+/*
-+ * WoW trigger mapping to hardware code
-+ */
-+
-+#define AH_WOW_USER_PATTERN_EN		BIT(0)
-+#define AH_WOW_MAGIC_PATTERN_EN		BIT(1)
-+#define AH_WOW_LINK_CHANGE		BIT(2)
-+#define AH_WOW_BEACON_MISS		BIT(3)
-+
- enum ath_hw_txq_subtype {
- 	ATH_TXQ_AC_BE = 0,
- 	ATH_TXQ_AC_BK = 1,
-@@ -863,6 +894,9 @@ struct ath_hw {
- 	/* Enterprise mode cap */
- 	u32 ent_mode;
+ void ath_beacon_tasklet(unsigned long data);
+-void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
++bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
++void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
++			 u32 changed);
+ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ int ath_beaconq_config(struct ath_softc *sc);
+-void ath_set_beacon(struct ath_softc *sc);
++void ath9k_set_beacon(struct ath_softc *sc);
+ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
  
-+#ifdef CONFIG_PM_SLEEP
-+	u32 wow_event_mask;
-+#endif
- 	bool is_clk_25mhz;
- 	int (*get_mac_revision)(void);
- 	int (*external_reset)(void);
+ /*******************/
+@@ -619,7 +622,6 @@ enum sc_op_flags {
+ 	SC_OP_INVALID,
+ 	SC_OP_BEACONS,
+ 	SC_OP_RXFLUSH,
+-	SC_OP_TSF_RESET,
+ 	SC_OP_ANI_RUN,
+ 	SC_OP_PRIM_STA_VIF,
+ 	SC_OP_HW_RESET,
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 351ded5..a79ec45 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -315,7 +315,6 @@ void ath_beacon_tasklet(unsigned long data)
+ 		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
+ 			ath_dbg(common, BSTUCK, "beacon is officially stuck\n");
+ 			sc->beacon.bmisscnt = 0;
+-			set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+ 			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 		}
+ 
+@@ -401,21 +400,16 @@ void ath_beacon_tasklet(unsigned long data)
+ 	}
+ }
+ 
+-static void ath9k_beacon_init(struct ath_softc *sc,
+-			      u32 next_beacon,
+-			      u32 beacon_period)
++static void ath9k_beacon_init(struct ath_softc *sc, u32 nexttbtt, u32 intval)
+ {
+-	if (test_bit(SC_OP_TSF_RESET, &sc->sc_flags)) {
+-		ath9k_ps_wakeup(sc);
+-		ath9k_hw_reset_tsf(sc->sc_ah);
+-	}
+-
+-	ath9k_hw_beaconinit(sc->sc_ah, next_beacon, beacon_period);
++	struct ath_hw *ah = sc->sc_ah;
+ 
+-	if (test_bit(SC_OP_TSF_RESET, &sc->sc_flags)) {
+-		ath9k_ps_restore(sc);
+-		clear_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+-	}
++	ath9k_hw_disable_interrupts(ah);
++	ath9k_hw_reset_tsf(ah);
++	ath9k_hw_beaconinit(ah, nexttbtt, intval);
++	sc->beacon.bmisscnt = 0;
++	ath9k_hw_set_interrupts(ah);
++	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+ /*
+@@ -423,32 +417,28 @@ static void ath9k_beacon_init(struct ath_softc *sc,
+  * burst together.  For the former arrange for the SWBA to be delivered for each
+  * slot. Slots that are not occupied will generate nothing.
+  */
+-static void ath_beacon_config_ap(struct ath_softc *sc,
+-				 struct ath_beacon_config *conf)
++static void ath9k_beacon_config_ap(struct ath_softc *sc,
++				   struct ath_beacon_config *conf)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 nexttbtt, intval;
+ 
+ 	/* NB: the beacon interval is kept internally in TU's */
+ 	intval = TU_TO_USEC(conf->beacon_interval);
+-	intval /= ATH_BCBUF;    /* for staggered beacons */
++	intval /= ATH_BCBUF;
+ 	nexttbtt = intval;
+ 
+-	/*
+-	 * In AP mode we enable the beacon timers and SWBA interrupts to
+-	 * prepare beacon frames.
+-	 */
+-	ah->imask |= ATH9K_INT_SWBA;
+-	ath_beaconq_config(sc);
++	if (conf->enable_beacon)
++		ah->imask |= ATH9K_INT_SWBA;
++	else
++		ah->imask &= ~ATH9K_INT_SWBA;
+ 
+-	/* Set the computed AP beacon timers */
++	ath_dbg(common, BEACON, "AP nexttbtt: %u intval: %u conf_intval: %u\n",
++		nexttbtt, intval, conf->beacon_interval);
+ 
+-	ath9k_hw_disable_interrupts(ah);
+-	set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
++	ath_beaconq_config(sc);
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+-	sc->beacon.bmisscnt = 0;
+-	ath9k_hw_set_interrupts(ah);
+-	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+ /*
+@@ -459,8 +449,8 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
+  * we'll receive a BMISS interrupt when we stop seeing beacons from the AP
+  * we've associated with.
+  */
+-static void ath_beacon_config_sta(struct ath_softc *sc,
+-				  struct ath_beacon_config *conf)
++static void ath9k_beacon_config_sta(struct ath_softc *sc,
++				    struct ath_beacon_config *conf)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -579,97 +569,66 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ 	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+-static void ath_beacon_config_adhoc(struct ath_softc *sc,
+-				    struct ath_beacon_config *conf)
++static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
++				      struct ath_beacon_config *conf)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 tsf, intval, nexttbtt;
++	u32 intval, nexttbtt;
+ 
+ 	ath9k_reset_beacon_status(sc);
+-	if (!test_bit(SC_OP_BEACONS, &sc->sc_flags))
+-		ath9k_hw_settsf64(ah, sc->beacon.bc_tstamp);
+ 
+ 	intval = TU_TO_USEC(conf->beacon_interval);
+-	tsf = roundup(ath9k_hw_gettsf32(ah) + TU_TO_USEC(FUDGE), intval);
+-	nexttbtt = tsf + intval;
++	nexttbtt = intval;
+ 
+-	ath_dbg(common, BEACON, "IBSS nexttbtt %u intval %u (%u)\n",
+-		nexttbtt, intval, conf->beacon_interval);
++	if (conf->enable_beacon)
++		ah->imask |= ATH9K_INT_SWBA;
++	else
++		ah->imask &= ~ATH9K_INT_SWBA;
+ 
+-	/*
+-	 * In IBSS mode enable the beacon timers but only enable SWBA interrupts
+-	 * if we need to manually prepare beacon frames.  Otherwise we use a
+-	 * self-linked tx descriptor and let the hardware deal with things.
+-	 */
+-	ah->imask |= ATH9K_INT_SWBA;
++	ath_dbg(common, BEACON, "IBSS nexttbtt: %u intval: %u conf_intval: %u\n",
++		nexttbtt, intval, conf->beacon_interval);
+ 
+ 	ath_beaconq_config(sc);
+-
+-	/* Set the computed ADHOC beacon timers */
+-
+-	ath9k_hw_disable_interrupts(ah);
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+-	sc->beacon.bmisscnt = 0;
+-
+-	ath9k_hw_set_interrupts(ah);
+-	ath9k_hw_enable_interrupts(ah);
+ }
+ 
+-static bool ath9k_allow_beacon_config(struct ath_softc *sc,
+-				      struct ieee80211_vif *vif)
++bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ {
+-	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+ 
+-	/*
+-	 * Can not have different beacon interval on multiple
+-	 * AP interface case
+-	 */
+-	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) &&
+-	    (sc->nbcnvifs > 1) &&
+-	    (vif->type == NL80211_IFTYPE_AP) &&
+-	    (cur_conf->beacon_interval != bss_conf->beacon_int)) {
+-		ath_dbg(common, CONFIG,
+-			"Changing beacon interval of multiple AP interfaces !\n");
+-		return false;
+-	}
+-	/*
+-	 * Can not configure station vif's beacon config
+-	 * while on AP opmode
+-	 */
+-	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) &&
+-	    (vif->type != NL80211_IFTYPE_AP)) {
+-		ath_dbg(common, CONFIG,
+-			"STA vif's beacon not allowed on AP mode\n");
+-		return false;
++	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP) {
++		if ((vif->type != NL80211_IFTYPE_AP) ||
++		    (sc->nbcnvifs > 1)) {
++			ath_dbg(common, CONFIG,
++				"An AP interface is already present !\n");
++			return false;
++		}
+ 	}
+-	/*
+-	 * Do not allow beacon config if HW was already configured
+-	 * with another STA vif
+-	 */
+-	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
+-	    (vif->type == NL80211_IFTYPE_STATION) &&
+-	    test_bit(SC_OP_BEACONS, &sc->sc_flags) &&
+-	    !avp->primary_sta_vif) {
+-		ath_dbg(common, CONFIG,
+-			"Beacon already configured for a station interface\n");
+-		return false;
++
++	if (sc->sc_ah->opmode == NL80211_IFTYPE_STATION) {
++		if ((vif->type == NL80211_IFTYPE_STATION) &&
++		    test_bit(SC_OP_BEACONS, &sc->sc_flags) &&
++		    !avp->primary_sta_vif) {
++			ath_dbg(common, CONFIG,
++				"Beacon already configured for a station interface\n");
++			return false;
++		}
+ 	}
++
+ 	return true;
+ }
+ 
+-void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
++static void ath9k_cache_beacon_config(struct ath_softc *sc,
++				      struct ieee80211_bss_conf *bss_conf)
+ {
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
+-	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 
+-	if (!ath9k_allow_beacon_config(sc, vif))
+-		return;
++	ath_dbg(common, BEACON,
++		"Caching beacon data for BSS: %pM\n", bss_conf->bssid);
+ 
+-	/* Setup the beacon configuration parameters */
+ 	cur_conf->beacon_interval = bss_conf->beacon_int;
+ 	cur_conf->dtim_period = bss_conf->dtim_period;
+ 	cur_conf->listen_interval = 1;
+@@ -694,73 +653,62 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	if (cur_conf->dtim_period == 0)
+ 		cur_conf->dtim_period = 1;
+ 
+-	ath_set_beacon(sc);
+ }
+ 
+-static bool ath_has_valid_bslot(struct ath_softc *sc)
++void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
++			 u32 changed)
+ {
+-	struct ath_vif *avp;
+-	int slot;
+-	bool found = false;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
+ 
+-	for (slot = 0; slot < ATH_BCBUF; slot++) {
+-		if (sc->beacon.bslot[slot]) {
+-			avp = (void *)sc->beacon.bslot[slot]->drv_priv;
+-			if (avp->is_bslot_active) {
+-				found = true;
+-				break;
++	if (sc->sc_ah->opmode == NL80211_IFTYPE_STATION) {
++		ath9k_cache_beacon_config(sc, bss_conf);
++		ath9k_set_beacon(sc);
++		set_bit(SC_OP_BEACONS, &sc->sc_flags);
++	} else {
++		/*
++		 * Take care of multiple interfaces when
++		 * enabling/disabling SWBA.
++		 */
++		if (changed & BSS_CHANGED_BEACON_ENABLED) {
++			if (!bss_conf->enable_beacon &&
++			    (sc->nbcnvifs <= 1)) {
++				cur_conf->enable_beacon = false;
++			} else if (bss_conf->enable_beacon) {
++				cur_conf->enable_beacon = true;
++				ath9k_cache_beacon_config(sc, bss_conf);
+ 			}
+ 		}
++
++		if (cur_conf->beacon_interval) {
++			ath9k_set_beacon(sc);
++
++			if (cur_conf->enable_beacon)
++				set_bit(SC_OP_BEACONS, &sc->sc_flags);
++			else
++				clear_bit(SC_OP_BEACONS, &sc->sc_flags);
++		}
+ 	}
+-	return found;
+ }
+ 
+-
+-void ath_set_beacon(struct ath_softc *sc)
++void ath9k_set_beacon(struct ath_softc *sc)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
+ 
+ 	switch (sc->sc_ah->opmode) {
+ 	case NL80211_IFTYPE_AP:
+-		if (ath_has_valid_bslot(sc))
+-			ath_beacon_config_ap(sc, cur_conf);
++		ath9k_beacon_config_ap(sc, cur_conf);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		ath_beacon_config_adhoc(sc, cur_conf);
++		ath9k_beacon_config_adhoc(sc, cur_conf);
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+-		ath_beacon_config_sta(sc, cur_conf);
++		ath9k_beacon_config_sta(sc, cur_conf);
+ 		break;
+ 	default:
+ 		ath_dbg(common, CONFIG, "Unsupported beaconing mode\n");
+ 		return;
+ 	}
+-
+-	set_bit(SC_OP_BEACONS, &sc->sc_flags);
+-}
+-
+-void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-
+-	if (!ath_has_valid_bslot(sc)) {
+-		clear_bit(SC_OP_BEACONS, &sc->sc_flags);
+-		return;
+-	}
+-
+-	ath9k_ps_wakeup(sc);
+-	if (status) {
+-		/* Re-enable beaconing */
+-		ah->imask |= ATH9K_INT_SWBA;
+-		ath9k_hw_set_interrupts(ah);
+-	} else {
+-		/* Disable SWBA interrupt */
+-		ah->imask &= ~ATH9K_INT_SWBA;
+-		ath9k_hw_set_interrupts(ah);
+-		tasklet_kill(&sc->bcon_tasklet);
+-		ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
+-	}
+-	ath9k_ps_restore(sc);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 80348d8..6a7dfbb 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -236,7 +236,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 		if (!test_bit(SC_OP_BEACONS, &sc->sc_flags))
+ 			goto work;
+ 
+-		ath_set_beacon(sc);
++		ath9k_set_beacon(sc);
+ 
+ 		if (ah->opmode == NL80211_IFTYPE_STATION &&
+ 		    test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
+@@ -1532,24 +1532,10 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	/*
+-	 * In case of AP mode, the HW TSF has to be reset
+-	 * when the beacon interval changes.
+-	 */
+-	if ((changed & BSS_CHANGED_BEACON_INT) &&
+-	    (vif->type == NL80211_IFTYPE_AP))
+-		set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
+-
+-	/* Configure beaconing (AP, IBSS, MESH) */
+-	if (ath9k_uses_beacons(vif->type) &&
+-	    ((changed & BSS_CHANGED_BEACON) ||
+-	     (changed & BSS_CHANGED_BEACON_ENABLED) ||
+-	     (changed & BSS_CHANGED_BEACON_INT))) {
+-		ath9k_set_beaconing_status(sc, false);
+-		if (!bss_conf->enable_beacon)
+-			avp->is_bslot_active = false;
+-		ath_beacon_config(sc, vif);
+-		ath9k_set_beaconing_status(sc, true);
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
++	    (changed & BSS_CHANGED_BEACON_INT)) {
++		if (ath9k_allow_beacon_config(sc, vif))
++			ath9k_beacon_config(sc, vif, changed);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 11f3703..12aca02 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -553,7 +553,7 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
+ 		sc->ps_flags &= ~PS_BEACON_SYNC;
+ 		ath_dbg(common, PS,
+ 			"Reconfigure Beacon timers based on timestamp from the AP\n");
+-		ath_set_beacon(sc);
++		ath9k_set_beacon(sc);
+ 	}
+ 
+ 	if (ath_beacon_dtim_pending_cab(skb)) {
 -- 
-1.7.0.4
+1.7.11.2
 
