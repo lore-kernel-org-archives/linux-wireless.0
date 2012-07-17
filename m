@@ -1,63 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46549 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751754Ab2GDAfE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26788 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751989Ab2GQLr3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 20:35:04 -0400
-Received: by pbbrp8 with SMTP id rp8so10091023pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 17:35:03 -0700 (PDT)
+	Tue, 17 Jul 2012 07:47:29 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4FF38EA9.8000709@gmail.com>
-References: <1341350730-11037-1-git-send-email-xose.vazquez@gmail.com>
- <4FF38492.20003@gmail.com> <CAB=NE6VpCUr1v400bNa1R3Ns4S4QVUt-cjq8=XtoJY=U533Cig@mail.gmail.com>
- <4FF38EA9.8000709@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 3 Jul 2012 17:34:43 -0700
-Message-ID: <CAB=NE6W7pAsTPfZ-pja6hJdRkcgdWCOnwgSPazfXTt+NE0Ve1A@mail.gmail.com> (sfid-20120704_023509_321136_68D32CD8)
-Subject: Re: [wireless-regdb] [PATCH] wireless-regdb: Update regulatory rules
- for ES (Spain) on 5GHz and 2.4GHz
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20485.20609.738827.444626@gargle.gargle.HOWL> (sfid-20120717_134733_075201_6CC256A4)
+Date: Tue, 17 Jul 2012 17:16:09 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/12] ath9k: Cleanup beacon queue configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 3, 2012 at 5:30 PM, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> On 07/04/2012 01:59 AM, Luis R. Rodriguez wrote:
->
->> Please send a new patch and if you are going to convert something form
->> dBm to mW then please do that in *one* single patch so that it can
->> easily be read what changes you are *actually* making. That is one
->> patch to make a conversion in units that will not make any actual
->> changes, and then send another patch with all the verbiage you can use
->> to explain *why* you want the change you are making. You want the
->> commit log to have enough language so that if I forward the patch to a
->> regulatory person who has never read a patch they can read it.
->
->
-> There was only one patch.
->
-> The second mail was only a "Signed-off-by:", just in case.
->
->
->> The agreed upon "bar" for quality of regulatory patches was agreed
->> upon a while ago, for details see:
->>
->> http://marc.info/?l=linux-wireless&m=128414096127554&w=2
->
->
-> Thank youuuuu
-> http://wireless.kernel.org/en/developers/Regulatory#Mailing_list_for_regulatory_updates
-> :-P
->
->
->> The more information you can provide the better.
->
->
-> I believe  I sent enough.
+Setup the beacon queue parameters after disabling
+interrupts. Also, remove the redundant call in conf_tx()
+for IBSS mode since the queue would be configured
+with the appropriate cwmin/cwmax values when beaconing
+is enabled.
 
-Any chance you can just repost a v2 with the SOB on it?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  1 -
+ drivers/net/wireless/ath/ath9k/beacon.c | 11 ++++-------
+ drivers/net/wireless/ath/ath9k/main.c   |  4 ----
+ drivers/net/wireless/ath/ath9k/xmit.c   | 10 ----------
+ 4 files changed, 4 insertions(+), 22 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 641ca9e..ae3e940 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -418,7 +418,6 @@ void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			 u32 changed);
+ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+-int ath_beaconq_config(struct ath_softc *sc);
+ void ath9k_set_beacon(struct ath_softc *sc);
+ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 2962b3e..02fbd3e 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -30,7 +30,7 @@ static void ath9k_reset_beacon_status(struct ath_softc *sc)
+  *  the operating mode of the station (AP or AdHoc).  Parameters are AIFS
+  *  settings and channel width min/max
+ */
+-int ath_beaconq_config(struct ath_softc *sc)
++static void ath9k_beaconq_config(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -38,6 +38,7 @@ int ath_beaconq_config(struct ath_softc *sc)
+ 	struct ath_txq *txq;
+ 
+ 	ath9k_hw_get_txq_props(ah, sc->beacon.beaconq, &qi);
++
+ 	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP) {
+ 		/* Always burst out beacon and CAB traffic. */
+ 		qi.tqi_aifs = 1;
+@@ -56,12 +57,9 @@ int ath_beaconq_config(struct ath_softc *sc)
+ 	}
+ 
+ 	if (!ath9k_hw_set_txq_props(ah, sc->beacon.beaconq, &qi)) {
+-		ath_err(common,
+-			"Unable to update h/w beacon queue parameters\n");
+-		return 0;
++		ath_err(common, "Unable to update h/w beacon queue parameters\n");
+ 	} else {
+ 		ath9k_hw_resettxqueue(ah, sc->beacon.beaconq);
+-		return 1;
+ 	}
+ }
+ 
+@@ -401,6 +399,7 @@ static void ath9k_beacon_init(struct ath_softc *sc, u32 nexttbtt, u32 intval)
+ 
+ 	ath9k_hw_disable_interrupts(ah);
+ 	ath9k_hw_reset_tsf(ah);
++	ath9k_beaconq_config(sc);
+ 	ath9k_hw_beaconinit(ah, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 	ath9k_hw_set_interrupts(ah);
+@@ -432,7 +431,6 @@ static void ath9k_beacon_config_ap(struct ath_softc *sc,
+ 	ath_dbg(common, BEACON, "AP nexttbtt: %u intval: %u conf_intval: %u\n",
+ 		nexttbtt, intval, conf->beacon_interval);
+ 
+-	ath_beaconq_config(sc);
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ }
+ 
+@@ -584,7 +582,6 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
+ 	ath_dbg(common, BEACON, "IBSS nexttbtt: %u intval: %u conf_intval: %u\n",
+ 		nexttbtt, intval, conf->beacon_interval);
+ 
+-	ath_beaconq_config(sc);
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e58c657..7760dc3 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1358,10 +1358,6 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		ath_err(common, "TXQ Update failed\n");
+ 
+-	if (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)
+-		if (queue == WME_AC_BE && !ret)
+-			ath_beaconq_config(sc);
+-
+ 	mutex_unlock(&sc->mutex);
+ 	ath9k_ps_restore(sc);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index cafb4a0..6c509b0 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1403,16 +1403,6 @@ int ath_txq_update(struct ath_softc *sc, int qnum,
+ 	int error = 0;
+ 	struct ath9k_tx_queue_info qi;
+ 
+-	if (qnum == sc->beacon.beaconq) {
+-		/*
+-		 * XXX: for beacon queue, we just save the parameter.
+-		 * It will be picked up by ath_beaconq_config when
+-		 * it's necessary.
+-		 */
+-		sc->beacon.beacon_qi = *qinfo;
+-		return 0;
+-	}
+-
+ 	BUG_ON(sc->tx.txq[qnum].axq_qnum != qnum);
+ 
+ 	ath9k_hw_get_txq_props(ah, qnum, &qi);
+-- 
+1.7.11.2
+
