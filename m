@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:38528 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab2GSFID (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 01:08:03 -0400
-Received: by obbuo13 with SMTP id uo13so3185659obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 22:08:02 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:38204 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752365Ab2GQLyg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2012 07:54:36 -0400
+Message-ID: <50055276.20304@openwrt.org> (sfid-20120717_135443_122414_34BB4E83)
+Date: Tue, 17 Jul 2012 13:54:30 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn31Y5U2A2vDt_WBb_pGghoXqMZGYW5+DFFT+TPwsv-pcw@mail.gmail.com>
-References: <20120706125043.GA23189@pandem0nium>
-	<CAD2nsn1=PDBTRXumDh93DzvmFcBnyFeLD-5c5oSJmv3OO6LWGw@mail.gmail.com>
-	<5244861.J1Tyef1FCX@bentobox>
-	<4991617.K7XqcvhjBY@bentobox>
-	<CAD2nsn2m1wizCw6WY-k0KRY2NJTaqqxdoA_d_+K-kqrhw+FZ3w@mail.gmail.com>
-	<CAD2nsn1-ZrKQxTYc_YZ6ETxovD9o7=Ygd2j2MxJiq8Vsiu19QQ@mail.gmail.com>
-	<CAD2nsn2_16KcE2g5gysc5XwVtns5jAwD+doRzqTQdsim8xbchQ@mail.gmail.com>
-	<20120707185953.GA3911@pandem0nium>
-	<CAD2nsn31Y5U2A2vDt_WBb_pGghoXqMZGYW5+DFFT+TPwsv-pcw@mail.gmail.com>
-Date: Thu, 19 Jul 2012 10:38:02 +0530
-Message-ID: <CAD2nsn16+4gq6Di1CVcHxViYC_J8Et160xww+vGJJpJf6wgv2Q@mail.gmail.com> (sfid-20120719_070809_485052_2E21F137)
-Subject: Re: ath9k: Problems with diversity on AR9330
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: Sven Eckelmann <sven@narfation.org>, ath9k-devel@lists.ath9k.org,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
+ TXOP limit
+References: <1342105451-42297-1-git-send-email-nbd@openwrt.org> <1342105451-42297-2-git-send-email-nbd@openwrt.org> <1342105451-42297-3-git-send-email-nbd@openwrt.org> <1342105451-42297-4-git-send-email-nbd@openwrt.org> <1342105451-42297-5-git-send-email-nbd@openwrt.org> <1342105451-42297-6-git-send-email-nbd@openwrt.org> <1342105451-42297-7-git-send-email-nbd@openwrt.org> <1342105451-42297-8-git-send-email-nbd@openwrt.org> <20481.3065.540576.366365@gargle.gargle.HOWL> <500143CA.1020804@openwrt.org> <506697F5827BD842B7CB80D046EBE618995399@aphydexd01b> <5002A7B2.409@openwrt.org> <20483.52640.521243.418804@gargle.gargle.HOWL> <5003EABD.5040506@openwrt.org> <20484.23881.582002.607413@gargle.gargle.HOWL> <50046A71.9020302@openwrt.org> <20485.19956.285571.372831@gargle.gargle.HOWL>
+In-Reply-To: <20485.19956.285571.372831@gargle.gargle.HOWL>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->> we had this checked out before, the EEPROM/EEP_ANT_DIV_CTL1 value is set to 000000c9,
->> so bit 6 and 7 are on (as checked in this function).
->>
+On 2012-07-17 1:35 PM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> The way I understand this, the TXOP limit is meant to limit the duration
+>> of a single transmission on the channel. An aggregate is transmitted in
+>> one go, there's no SIFS or extra PHY headers inbetween, just short
+>> delimiters. So an A-MPDU should be treated pretty much like an MPDU
+>> here, its transmission duration should not exceed the TXOP limit.
+> 
+> Yeah, makes sense.
+> 
+> But we need to handle multiple interfaces, otherwise this would break
+> modes like P2P. For example, bring up a P2P-GO and setup a HT20 network,
+> and then bring up a new station interface - this would unconditionally
+> update the aggr. limits of the existing network. This wasn't the case earlier
+> since the limits were being maintained globally and were common to all interfaces
+> and addition/removal of new interfaces would not change the aggr. limits.
+Before my patch, the aggr limits were always broken for the VI queue.
+Now they're just sometimes broken :)
 
-with inputs from Felix Bitterli,
-
--128 means: no measurement performed on this antenna.This will happen
-with strong signals where too many gain-changes are needed to bring
-the input signal into range, after which there is no time left to take
-a measurement at the alternate antenna.
-
-So:
-1) to see diversity at work, increase the distance (dramatically).
-2) There is no problem, the system is working correctly.
-
-will provide some updates when i find some time to test.
-
--- 
-thanks,
-shafi
+- Felix
