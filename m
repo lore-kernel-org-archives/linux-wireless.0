@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59844 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755752Ab2GAOW6 (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3870 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751329Ab2GQHyi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jul 2012 10:22:58 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v3 3/5] ath9k: fix fullsleep power consumption when BTCOEX is enabled
-Date: Sun, 1 Jul 2012 19:53:53 +0530
-Message-ID: <1341152635-4840-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120701_162301_239909_193865AE)
-In-Reply-To: <1341152635-4840-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1341152635-4840-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Tue, 17 Jul 2012 03:54:38 -0400
+Message-ID: <50051A2F.3030206@broadcom.com> (sfid-20120717_095442_327130_CBA3A4AB)
+Date: Tue, 17 Jul 2012 09:54:23 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Jonathan Nieder" <jrnieder@gmail.com>
+cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	"Stanislaw Gruszka" <sgruszka@redhat.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
+References: <CAKprTDGtvUFSBb_XK01bi6bJa3dynu73Lq-jTs=E78E3QwSqpA@mail.gmail.com>
+ <20120601174237.GA31781@burratino>
+ <CAKprTDHepfbCKquvnG8CQ2=-tSNbgOSkT6R0GQmEx9UyuiZyMQ@mail.gmail.com>
+ <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
+ <20120604084200.GA30645@tiikeri.vuoristo.local>
+ <20120604173121.GA9238@stt008.linux.site>
+ <20120605050620.GC3118@burratino>
+ <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
+ <20120611031544.GB3092@burratino> <4FE0CA49.3030909@broadcom.com>
+ <20120716213122.GA3078@burratino>
+In-Reply-To: <20120716213122.GA3078@burratino>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As soon as the interface brought up, btcoex timer starts running
-eventhough the interface is in idle state and WLAN chip is moved
-to full sleep mode. There is no point in running btcoex timer when
-the wlan interface is in sleep mode and also it might consumes
-more power on WLAN idle unassociated state. So lets stop the
-btcoex when wlan is idle state.
+On 07/16/2012 11:31 PM, Jonathan Nieder wrote:
+> 
+> With all the above patches applied on top of 3.2.21, Camaleón quickly
+> gets the reconnects and gnome-shell segfaults if she does not supply
+> the password to network-manager in time[1].  That means the patch that
+> prevents trouble is presumably one of the four listed below.
+> 
+>>>   137dabed34a1 brcm80211: smac: remove smatch warnings from brcmsmac code
+>>>   2b0a53d51b5f brcm80211: smac: only print block-ack timeout message at
+>>>                trace level
+>>>   6b8da423315b brcm80211: smac: do not use US as fallback regulatory hint
+>>>   94a2ca311cf4 brcm80211: smac: only provide valid regulatory hint
+> 
+> Thanks,
+> Jonathan
+> 
+> [1] http://bugs.debian.org/cgi-bin/bugreport.cgi?msg=295;bug=664767
+> 
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+Thanks, Jonathan
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e4e73f0..6ce0128 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -666,8 +666,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
--	ath9k_start_btcoex(sc);
--
- 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
- 		common->bus_ops->extn_synch_en(common);
- 
-@@ -774,8 +772,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	/* Ensure HW is awake when we try to shut it down. */
- 	ath9k_ps_wakeup(sc);
- 
--	ath9k_stop_btcoex(sc);
--
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
- 	/* prevent tasklets to enable interrupts once we disable them */
-@@ -1139,14 +1135,17 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
- 		sc->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
--		if (sc->ps_idle)
-+		if (sc->ps_idle) {
- 			ath_cancel_work(sc);
--		else
-+			ath9k_stop_btcoex(sc);
-+		} else {
-+			ath9k_start_btcoex(sc);
- 			/*
- 			 * The chip needs a reset to properly wake up from
- 			 * full sleep
- 			 */
- 			reset_channel = ah->chip_fullsleep;
-+		}
- 	}
- 
- 	/*
--- 
-1.7.11.1
+I guess the behaviour improved due to the last two patches listed above,
+but I also suspect that it is only an improvement and the root cause
+still exists.
+
+Gr. AvS
 
