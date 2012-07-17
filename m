@@ -1,68 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35100 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752915Ab2GWNaQ (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:46207 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170Ab2GQFjs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 09:30:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC/RFT 1/6] mac80211: use oper_channel in mesh
-Date: Mon, 23 Jul 2012 15:30:06 +0200
-Message-Id: <1343050211-499-2-git-send-email-johannes@sipsolutions.net> (sfid-20120723_153037_792218_D964A535)
-In-Reply-To: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
-References: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 17 Jul 2012 01:39:48 -0400
+Date: Mon, 16 Jul 2012 22:39:47 -0700 (PDT)
+Message-Id: <20120716.223947.963699777040428903.davem@davemloft.net> (sfid-20120717_073955_288432_5AB48EBD)
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+	wimax@linuxwimax.org, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, linux-s390@vger.kernel.org,
+	johannes@sipsolutions.net, uclinux-dist-devel@blackfin.uclinux.org,
+	linux-kernel@vger.kernel.org, linux-c6x-dev@linux-c6x.org,
+	linux-mips@linux-mips.org,
+	user-mode-linux-devel@lists.sourceforge.net,
+	user-mode-linux-user@lists.sourceforge.net,
+	e1000-devel@lists.sourceforge.net
+Subject: Re: [PATCH net-next 0/8] etherdevice: Rename random_ether_addr to
+ eth_random_addr
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <cover.1342157022.git.joe@perches.com>
+References: <1341968967.13724.23.camel@joe2Laptop>
+	<cover.1342157022.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Joe Perches <joe@perches.com>
+Date: Thu, 12 Jul 2012 22:33:04 -0700
 
-Using hw.conf.channel is wrong as it could be the
-temporary channel if any function like the beacon
-get function is called while scanning or during
-other temporary out-of-channel activities.
+> net-next commit ad7eee98be ("etherdevice: introduce eth_broadcast_addr")
+> added a new style API.  Rename random_ether_addr to eth_random_addr to
+> create some API symmetry.
 
-Use oper_channel instead.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mesh.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 764593d..e6d1788 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -349,17 +349,18 @@ int mesh_add_ds_params_ie(struct sk_buff *skb,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *chan = local->oper_channel;
- 	u8 *pos;
- 
- 	if (skb_tailroom(skb) < 3)
- 		return -ENOMEM;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[chan->band];
- 	if (sband->band == IEEE80211_BAND_2GHZ) {
- 		pos = skb_put(skb, 2 + 1);
- 		*pos++ = WLAN_EID_DS_PARAMS;
- 		*pos++ = 1;
--		*pos++ = ieee80211_frequency_to_channel(local->hw.conf.channel->center_freq);
-+		*pos++ = ieee80211_frequency_to_channel(chan->center_freq);
- 	}
- 
- 	return 0;
-@@ -603,7 +604,7 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
- 	sdata->vif.bss_conf.basic_rates =
- 		ieee80211_mandatory_rates(sdata->local,
--					  sdata->local->hw.conf.channel->band);
-+					  sdata->local->oper_channel->band);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
- 						BSS_CHANGED_BEACON_ENABLED |
- 						BSS_CHANGED_HT |
--- 
-1.7.10.4
-
+Series applied, thanks Joe.
