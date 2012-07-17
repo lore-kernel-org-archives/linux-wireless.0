@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47541 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933647Ab2GLQQv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 12:16:51 -0400
-Message-ID: <1342109807.4531.38.camel@jlt3.sipsolutions.net> (sfid-20120712_181710_274744_D07CB10F)
-Subject: Re: [Ilw]  Re: 3.4-rc2, ilwagn still most of the time completely
- unusable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Norbert Preining <preining@logic.at>
-Cc: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"Lin, Hsien KuoX" <hsien.kuox.lin@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Thu, 12 Jul 2012 18:16:47 +0200
-In-Reply-To: <20120712081457.GA32465@gamma.logic.tuwien.ac.at>
-References: <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
-	 <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com>
-	 <20120413014047.GB25681@gamma.logic.tuwien.ac.at>
-	 <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
-	 <20120411023747.GA10126@gamma.logic.tuwien.ac.at>
-	 <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
-	 <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
-	 <20120628072512.GF31944@gamma.logic.tuwien.ac.at>
-	 <1340869868.4491.4.camel@jlt3.sipsolutions.net>
-	 <20120628081607.GG31944@gamma.logic.tuwien.ac.at>
-	 <20120712081457.GA32465@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49068 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754585Ab2GQTKS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2012 15:10:18 -0400
+Message-ID: <5005B893.1090302@hauke-m.de> (sfid-20120717_211021_726156_1D67CDE8)
+Date: Tue, 17 Jul 2012 21:10:11 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] bcma: add place for flash memory support
+References: <1342535201-19621-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1342535201-19621-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-12 at 17:14 +0900, Norbert Preining wrote:
+This looks good to me.
 
-> > I can actually work now wirelessly, and in case of hangs an rfkill block
-> > rfkill unblock practically always, and mostly is not needed.
+On 07/17/2012 04:26 PM, Rafał Miłecki wrote:
 > 
-> Ok, that was said *UNTIL* I reenabled 11n. Up to now I was loading the
-> iwlwifi module with
-> 	11n_disable=1
-> 
-> Now, latest git from today, I though, let us try to enable 11n again,
-> and there we go, boot from cold machine and after short time everything
-> is dead without reaction. Dmesg gives many many funny messages:
-> 
-> [   30.047943] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
-> [   30.051933] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
-> [   30.164836] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
-> [   30.167876] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
-> [   37.533619] wlan0: authenticate with 00:0a:79:eb:56:10
-> [   37.536433] wlan0: send auth to 00:0a:79:eb:56:10 (try 1/3)
-> [   37.538241] wlan0: authenticated
-> [   37.538391] wlan0: associating with AP with corrupt beacon
-
-That might be an indication of things already going wrong with your
-AP ... :-(
-
-[snip log]
-
-Mostly from the log it seems that there's a lot of spurious aggregation
-setup/teardown, some of it seems to originate from the AP.
-
-> At that point I removed the iwlwifi module, and reloaded it with 
-> 11n_disable=1 again, otherwise nothing would work at all...
-
-With the latest, I've extended 11n_disable to have more bits.
-
-11n_disable=1 will disable HT completely
-11n_disable=2 will disable TX aggregation
-11n_disable=4 will disable RX aggregation
-
-It'd be interesting to see what happens for you with 11n_disable=2/4/6.
-
-johannes
-
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> Hope my recent patches will make OpenWrt guys mainline their work ;)
+This is mostly because of lack of time to do that. OpenWrt has running
+code for parallel and serial flash access, but it needs some more clean
+ups, mostly the partition parsing code. If you want to mainline it I
+have no problem with that.
+> ---
+>  drivers/bcma/Kconfig                    |   10 ++++++++++
+>  drivers/bcma/Makefile                   |    2 ++
+>  drivers/bcma/bcma_private.h             |   22 ++++++++++++++++++++++
+>  drivers/bcma/driver_chipcommon_nflash.c |   19 +++++++++++++++++++
+>  drivers/bcma/driver_chipcommon_sflash.c |   19 +++++++++++++++++++
+>  drivers/bcma/driver_mips.c              |   15 ++++++++++++---
+>  6 files changed, 84 insertions(+), 3 deletions(-)
+>  create mode 100644 drivers/bcma/driver_chipcommon_nflash.c
+>  create mode 100644 drivers/bcma/driver_chipcommon_sflash.c
