@@ -1,113 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:56173 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860Ab2GaVTa (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41159 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050Ab2GQLsQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 17:19:30 -0400
-Received: by bkwj10 with SMTP id j10so3488365bkw.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2012 14:19:29 -0700 (PDT)
-In-Reply-To: <1343734541-14934-1-git-send-email-johannes@sipsolutions.net>
-References: <1343734541-14934-1-git-send-email-johannes@sipsolutions.net>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Tue, 31 Jul 2012 23:12:16 +0200
-Subject: [PATCH] carl9170: report A-MPDU status
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com
-Message-Id: <20120731211916.1FFC1100193@blech.mobile> (sfid-20120731_231934_107766_36BF003B)
+	Tue, 17 Jul 2012 07:48:16 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20485.20636.11008.266065@gargle.gargle.HOWL> (sfid-20120717_134819_384774_45F3AB70)
+Date: Tue, 17 Jul 2012 17:16:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/12] ath9k: Reconfigure VIF state properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because the hardware reports whenever an frame
-was either at the start, in the middle or at
-the end of a A-MPDU, we can easily report the
-information for radiotap.
+When an interface in AP or P2P-GO mode is removed,
+check whether a station interface is already present and
+reconfigure the beacon timers etc. properly if it's
+associated.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/carl9170/carl9170.h |    1 +
- drivers/net/wireless/ath/carl9170/rx.c       |   15 +++++++++++----
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 376be11..58b73a0 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -425,6 +425,7 @@ struct ar9170 {
- 	bool rx_has_plcp;
- 	struct sk_buff *rx_failover;
- 	int rx_failover_missing;
-+	u32 ampdu_ref;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 55c9095..6a44c95 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -19,6 +19,9 @@
+ #include "ath9k.h"
+ #include "btcoex.h"
  
- 	/* FIFO for collecting outstanding BlockAckRequest */
- 	struct list_head bar_list[__AR9170_NUM_TXQ];
-diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index 25910a1..a57e44e 100644
---- a/drivers/net/wireless/ath/carl9170/rx.c
-+++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -623,7 +623,8 @@ static void carl9170_ba_check(struct ar9170 *ar, void *data, unsigned int len)
- #undef TID_CHECK
++static void ath9k_set_assoc_state(struct ath_softc *sc,
++				  struct ieee80211_vif *vif);
++
+ u8 ath9k_parse_mpdudensity(u8 mpdudensity)
+ {
+ 	/*
+@@ -878,6 +881,18 @@ static void ath9k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	}
  }
  
--static bool carl9170_ampdu_check(struct ar9170 *ar, u8 *buf, u8 ms)
-+static bool carl9170_ampdu_check(struct ar9170 *ar, u8 *buf, u8 ms,
-+				 struct ieee80211_rx_status *rx_status)
- {
- 	__le16 fc;
- 
-@@ -636,6 +637,9 @@ static bool carl9170_ampdu_check(struct ar9170 *ar, u8 *buf, u8 ms)
- 		return true;
- 	}
- 
-+	rx_status->flag |= RX_FLAG_AMPDU_DETAILS | RX_FLAG_AMPDU_LAST_KNOWN;
-+	rx_status->ampdu_reference = ar->ampdu_ref;
++static void ath9k_sta_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++{
++	struct ath_softc *sc = data;
++	struct ath_vif *avp = (void *)vif->drv_priv;
 +
- 	/*
- 	 * "802.11n - 7.4a.3 A-MPDU contents" describes in which contexts
- 	 * certain frame types can be part of an aMPDU.
-@@ -684,12 +688,15 @@ static void carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
- 	if (unlikely(len < sizeof(*mac)))
- 		goto drop;
- 
-+	memset(&status, 0, sizeof(status));
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return;
 +
- 	mpdu_len = len - sizeof(*mac);
- 
- 	mac = (void *)(buf + mpdu_len);
- 	mac_status = mac->status;
- 	switch (mac_status & AR9170_RX_STATUS_MPDU) {
- 	case AR9170_RX_STATUS_MPDU_FIRST:
-+		ar->ampdu_ref++;
- 		/* Aggregated MPDUs start with an PLCP header */
- 		if (likely(mpdu_len >= sizeof(struct ar9170_rx_head))) {
- 			head = (void *) buf;
-@@ -720,12 +727,13 @@ static void carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
- 		break;
- 
- 	case AR9170_RX_STATUS_MPDU_LAST:
-+		status.flag |= RX_FLAG_AMPDU_IS_LAST;
++	if (avp->primary_sta_vif)
++		ath9k_set_assoc_state(sc, vif);
++}
 +
- 		/*
- 		 * The last frame of an A-MPDU has an extra tail
- 		 * which does contain the phy status of the whole
- 		 * aggregate.
- 		 */
--
- 		if (likely(mpdu_len >= sizeof(struct ar9170_rx_phystatus))) {
- 			mpdu_len -= sizeof(struct ar9170_rx_phystatus);
- 			phy = (void *)(buf + mpdu_len);
-@@ -773,11 +781,10 @@ static void carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
- 	if (unlikely(mpdu_len < (2 + 2 + ETH_ALEN + FCS_LEN)))
- 		goto drop;
+ /* Called with sc->mutex held. */
+ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+@@ -911,6 +926,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_vif_iter_data iter_data;
++	enum nl80211_iftype old_opmode = ah->opmode;
  
--	memset(&status, 0, sizeof(status));
- 	if (unlikely(carl9170_rx_mac_status(ar, head, mac, &status)))
- 		goto drop;
+ 	ath9k_calculate_iter_data(hw, vif, &iter_data);
  
--	if (!carl9170_ampdu_check(ar, buf, mac_status))
-+	if (!carl9170_ampdu_check(ar, buf, mac_status, &status))
- 		goto drop;
+@@ -941,6 +957,17 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 		ah->imask &= ~ATH9K_INT_TSFOOR;
  
- 	if (phy)
+ 	ath9k_hw_set_interrupts(ah);
++
++	/*
++	 * If we are changing the opmode to STATION,
++	 * a beacon sync needs to be done.
++	 */
++	if (ah->opmode == NL80211_IFTYPE_STATION &&
++	    old_opmode == NL80211_IFTYPE_AP &&
++	    test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
++		ieee80211_iterate_active_interfaces_atomic(sc->hw,
++						   ath9k_sta_vif_iter, sc);
++	}
+ }
+ 
+ static int ath9k_add_interface(struct ieee80211_hw *hw,
 -- 
-1.7.10.4
+1.7.11.2
 
