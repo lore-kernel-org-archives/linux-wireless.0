@@ -1,43 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52894 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752754Ab2GBUNO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51274 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751836Ab2GQLrf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 16:13:14 -0400
-Date: Mon, 2 Jul 2012 13:13:10 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vladimir Kondratiev <vkondrat_qca@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 60g 5/5] wireless: bitrate calculation for 60g
-Message-ID: <20120702201310.GD21658@tux> (sfid-20120702_221318_606212_5CD55C93)
-References: <1340882220-31768-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
- <1340906876.4491.49.camel@jlt3.sipsolutions.net>
- <1703117.VxUDt2UvbQ@lx-vladimir>
- <2090114.iKoJhGKOAs@lx-vladimir>
- <20120702192804.GA21658@tux>
- <1341259898.19776.0.camel@jlt3.sipsolutions.net>
+	Tue, 17 Jul 2012 07:47:35 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1341259898.19776.0.camel@jlt3.sipsolutions.net>
+Message-ID: <20485.20616.91106.641949@gargle.gargle.HOWL> (sfid-20120717_134738_697111_8DDDFA38)
+Date: Tue, 17 Jul 2012 17:16:16 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/12] ath9k: Set the TSF adjust value properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 02, 2012 at 10:11:38PM +0200, Johannes Berg wrote:
-> On Mon, 2012-07-02 at 12:28 -0700, Luis R. Rodriguez wrote:
-> 
-> > > Expanding bitrate to u32 would break all userspace tools.
-> > 
-> > Unless userspace is told that a new high value is used. We could
-> > for example attach a flag to tell userspace that a different
-> > bitrate type should be used. We can also just get new userspace
-> > to start embracing the new data type, and old userspace would
-> > simply not support that bit rate.
-> 
-> The solution Vladimir proposed addresses all of that :-)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  1 +
+ drivers/net/wireless/ath/ath9k/beacon.c | 17 +++++++++++++++++
+ drivers/net/wireless/ath/ath9k/main.c   |  3 +++
+ 3 files changed, 21 insertions(+)
 
-To the hip hop.. hippity hop !
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index ae3e940..7e4839a 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -418,6 +418,7 @@ void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			 u32 changed);
+ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
++void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_set_beacon(struct ath_softc *sc);
+ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
  
- Luis
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 02fbd3e..f2a2131 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -268,6 +268,23 @@ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	tasklet_enable(&sc->bcon_tasklet);
+ }
+ 
++void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
++	struct ath_vif *avp = (void *)vif->drv_priv;
++	u64 tsfadjust;
++
++	if (avp->av_bslot == 0)
++		return;
++
++	tsfadjust = cur_conf->beacon_interval * avp->av_bslot / ATH_BCBUF;
++	avp->tsf_adjust = cpu_to_le64(TU_TO_USEC(tsfadjust));
++
++	ath_dbg(common, CONFIG, "tsfadjust is: %llu for bslot: %d\n",
++		(unsigned long long)tsfadjust, avp->av_bslot);
++}
++
+ void ath_beacon_tasklet(unsigned long data)
+ {
+ 	struct ath_softc *sc = (struct ath_softc *)data;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7760dc3..c23912c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1530,6 +1530,9 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
+ 	    (changed & BSS_CHANGED_BEACON_INT)) {
++		if (ah->opmode == NL80211_IFTYPE_AP &&
++		    bss_conf->enable_beacon)
++			ath9k_set_tsfadjust(sc, vif);
+ 		if (ath9k_allow_beacon_config(sc, vif))
+ 			ath9k_beacon_config(sc, vif, changed);
+ 	}
+-- 
+1.7.11.2
+
