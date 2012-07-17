@@ -1,35 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932203Ab2GALXa (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:51115 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755760Ab2GQQBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jul 2012 07:23:30 -0400
-Message-ID: <1341141808.6603.1.camel@jlt3.sipsolutions.net> (sfid-20120701_132338_340993_5A8061CE)
-Subject: Re: [PATCH 60g v1 0/5] Infrastructure for 60g (802.11ad)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Sun, 01 Jul 2012 13:23:28 +0200
-In-Reply-To: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341125155-628-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 17 Jul 2012 12:01:43 -0400
+Date: Tue, 17 Jul 2012 09:01:42 -0700 (PDT)
+Message-Id: <20120717.090142.125145009944045241.davem@davemloft.net> (sfid-20120717_180202_932418_E2355017)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: That's pretty much it for 3.5.0
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-07-01 at 09:45 +0300, Vladimir Kondratiev wrote:
-> These patches add minimal infrastructure for the 60gHz (802.11ad)
-> band WiFi drivers.
-> 
-> This change enables offload drivers for the 60GHz devices that implement
-> the 802.11 MAC functionality in the device itself.
-> 
-> Addressed comments form Johannes Berg. Since no significant issues raised,
-> change it from RFC to PATCH.
 
-Please fix indentation better :-)
+Linus was _extremely_ generous and took in all the stuff that was
+pending in the net tree just now.
 
-johannes
+Besides very serious issues, I'm not willing to consider any more bug
+fixes for the 'net' tree at this time.
 
+Only one pending known bug qualifies, and that's the CIPSO ip option
+processing OOPS'er.  And I'll work on that myself if Paul Moore
+doesn't show a sign of life in the next day.
+
+Thanks.
