@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:51615 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751640Ab2GBL7Q (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:28818 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464Ab2GQRl4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 07:59:16 -0400
-Date: Mon, 2 Jul 2012 14:59:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: thomas@net.t-labs.tu-berlin.de
-Cc: linux-wireless@vger.kernel.org
-Subject: re: mac80211: correct size the argument to kzalloc in
-Message-ID: <20120702115907.GA28105@elgon.mountain> (sfid-20120702_135919_947147_B03D699C)
+	Tue, 17 Jul 2012 13:41:56 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: David Miller <davem@davemloft.net>
+CC: "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+	"<netfilter-devel@vger.kernel.org>" <netfilter-devel@vger.kernel.org>
+Subject: Re: That's pretty much it for 3.5.0
+Date: Tue, 17 Jul 2012 17:41:55 +0000
+Message-ID: <997C449C-D599-4F46-A0A3-A2B869DEE36E@intel.com> (sfid-20120717_194205_800254_3D3440B9)
+References: <20120717.090142.125145009944045241.davem@davemloft.net>
+In-Reply-To: <20120717.090142.125145009944045241.davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-minstrel_ht
+On Jul 17, 2012, at 9:01 AM, David Miller wrote:
 
-Hello Thomas Huehn,
+> Linus was _extremely_ generous and took in all the stuff that was
+> pending in the net tree just now.
 
-The patch 0a08adeb773c: "mac80211: correct size the argument to
-kzalloc in minstrel_ht" from Jun 29, 2012, leads to the following
-Sparse warning:
-	net/mac80211/rc80211_minstrel_ht.c:816:33:
-		warning: expression using sizeof(void)
+Maybe *too* generous. :-) I just updated and when I boot I get an early crash in update_netdev_tables which is in netprio_cgroup.c.
 
--       msp->ratelist = kzalloc(sizeof(struct minstrel_rate) * max_rates, gfp);
-+       msp->ratelist = kzalloc(sizeof(*msp->ratelist) * max_rates, gfp);
-        if (!msp->ratelist)
-                goto error;
+> Besides very serious issues, I'm not willing to consider any more bug
+> fixes for the 'net' tree at this time.
 
-"msp->ratelist" is a void pointer so that will cause memory corruption.
-You could consider making it a struct minstrel_rate pointer.  I haven't
-looked at this.
+I think the above issue will have to be fixed, as it completely prevents booting for any kernel that includes the netprio_cgroup option.
 
-regards,
-dan carpenter
+> Only one pending known bug qualifies, and that's the CIPSO ip option
+> processing OOPS'er.  And I'll work on that myself if Paul Moore
+> doesn't show a sign of life in the next day.
+> 
+> Thanks.
+
+
+I can start taking a look at this if you like, but I see that Gao feng has two patches in the last set of patches that may be related.
+
+To give you an idea how early the crash is, here are a few log messages leading up to it:
+
+[    0.003455] Dentry cache hash table entries: 262144 (order: 9, 2097152 bytes)
+[    0.005550] Inode-cache hash table entries: 131072 (order: 8, 1048576 bytes)
+[    0.007165] Mount-cache hash table entries: 256
+[    0.010289] Initializing cgroup subsys net_cls
+[    0.010947] Initializing cgroup subsys net_prio
+[    0.011039] BUG: unable to handle kernel NULL pointer dereference at 0000000000000828
+[    0.011998] IP: [<ffffffff814202c8>] update_netdev_tables+0x68/0xe0
+
+-- 
+Mark Rustad, LAN Access Division, Intel Corporation
 
