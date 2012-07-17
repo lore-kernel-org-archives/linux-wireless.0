@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39507 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751189Ab2GSRCK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 13:02:10 -0400
-Date: Thu, 19 Jul 2012 12:37:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Duan Jiong <djduanjiong@gmail.com>, dcbw@redhat.com,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [RESEND] firmware.c: remove duplicated include
-Message-ID: <20120719163733.GB1846@tuxdriver.com> (sfid-20120719_190214_485889_50375CA3)
-References: <5006CCE7.8090904@gmail.com>
- <87sjco6sn5.fsf@purkki.adurom.net>
+Received: from mga11.intel.com ([192.55.52.93]:29589 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753833Ab2GQWNh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2012 18:13:37 -0400
+Message-ID: <5005E390.7020706@intel.com> (sfid-20120718_001343_183513_A59B85EF)
+Date: Tue, 17 Jul 2012 15:13:36 -0700
+From: John Fastabend <john.r.fastabend@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87sjco6sn5.fsf@purkki.adurom.net>
+To: David Miller <davem@davemloft.net>
+CC: mark.d.rustad@intel.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: Re: That's pretty much it for 3.5.0
+References: <5005B881.8010505@intel.com> <20120717.122459.2240133900020140698.davem@davemloft.net> <5005D008.6060103@intel.com> <20120717.140241.1599386555723262095.davem@davemloft.net>
+In-Reply-To: <20120717.140241.1599386555723262095.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 19, 2012 at 11:51:10AM +0300, Kalle Valo wrote:
-> Duan Jiong <djduanjiong@gmail.com> writes:
-> 
-> > Signed-off-by: Duan Jiong <djduanjiong@gmail.com>
-> 
-> Please prefix the subject with "libertas:", like this:
-> 
-> libertas: remove duplicated include in firmware.c
+On 7/17/2012 2:02 PM, David Miller wrote:
+> From: John Fastabend <john.r.fastabend@intel.com>
+> Date: Tue, 17 Jul 2012 13:50:16 -0700
+>
+>> On 7/17/2012 12:24 PM, David Miller wrote:
+>>> From: John Fastabend <john.r.fastabend@intel.com>
+>>> Date: Tue, 17 Jul 2012 12:09:53 -0700
+>>>
+>>>> although we don't have an early_init hook for netprio_cgroup so this
+>>>> is probably not correct.
+>>>
+>>> The dependency is actually on net_dev_init (a subsys_initcall) rather
+>>> than a pure_initcall.
+>>>
+>>> net_dev_init is what registers the netdev_net_ops, which in turn
+>>> initializes the netdev list in namespaces such as &init_net
+>>>
+>>
+>> Ah right thanks sorry for the thrash. I guess we need to check if the
+>> netdev list in the init_net namespace is initialized.
+>
+> It's a hack, but we could export and then test dev_boot_phase == 0,
+> and if that test is true then skip the init_net device walk in the
+> cgroup code.
+>
+> But I don't like that very much.
+>
+> The things this code cares about can't even be an issue until
+> net_dev_init() runs.
+>
+> There is a comment warning not to do this in linux/init.h, but we
+> could change the module_init() in netprio_cgroup.c to some level which
+> runs after subsys_inticall().  When built as a module, linux/init.h
+> will translate this into module_init() which is basically the behavior
+> we want.
+>
 
-I fixed-up the subject and committed it to wireless-next.
+Perhaps the easiest way is to check net->count this should be zero
+until setup_net is called.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+if (!atomic_read(&init_net.count))
+	return ret;
