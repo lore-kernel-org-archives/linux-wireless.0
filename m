@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:40196 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751820Ab2G0VgO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38683 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404Ab2GQNEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 17:36:14 -0400
-Received: by weyx8 with SMTP id x8so2365272wey.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 14:36:13 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
+	Tue, 17 Jul 2012 09:04:08 -0400
+Message-ID: <1342530237.8139.5.camel@jlt3.sipsolutions.net> (sfid-20120717_150411_727969_B9F4F0C4)
+Subject: Re: [ath5k-devel] [PATCH 2/2] mac80211: Remove control.sta from
+ struct ieee80211_tx_info and restructure tx-path
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Subject: Re: [PATCH 2/2] mac80211: Add transmit power control support (TPC) for ACK packets
-Date: Fri, 27 Jul 2012 23:36:09 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes.berg@intel.com, nbd@openwrt.org
-References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201207272336.09898.chunkeey@googlemail.com> (sfid-20120727_233618_734042_775A3B17)
+Cc: coelho@ti.com, brcm80211-dev-list@broadcom.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	ilw@linux.intel.com, ath9k-devel@lists.ath9k.org,
+	b43-dev@lists.infradead.org, chunkeey@googlemail.com,
+	dsd@gentoo.org, buytenh@wantstofly.org
+Date: Tue, 17 Jul 2012 15:03:57 +0200
+In-Reply-To: <5005613F.1000004@net.t-labs.tu-berlin.de>
+References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 (sfid-20120713_205245_114771_49FF4AC7) <1342518290.7427.9.camel@jlt3.sipsolutions.net>
+	 <5005613F.1000004@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 July 2012 18:00:09 Thomas Huehn wrote:
-> This patch adds support to annotate and change the power-level of ACK
-> packets. To map hardware specific ack power capabilities to mac80211
-> one new hw flag is defined:
+On Tue, 2012-07-17 at 14:57 +0200, Thomas Huehn wrote:
+
+> > Ok first of all, please actually compile the tree after your changes. It
+> > doesn't. When it does, please fix
 > 
-> @IEEE80211_HW_SUPPORTS_TPC_ACK_GLOBAL:
-> 	Power level of ack packets is adjustable and processed in a
-> 	global manner, per hw rather than per ack packet or link.
+> I always do compile the compat-wireless-tree after changes I introduce,
+> and it compiles without errors in the case of this mac80211:sta-remove
+> patch. But as my build tree is based on the OpenWrt environment, it
+> might be not 100% in sync. Could you be a bit more explicit where does
+> it brake in you case (which function, driver...) ?
+
+No, I'm not going to play that game. Make sure it compiles on
+wireless-next.
+
+> I guess you refer to the comment in mac80211.h, struct tx_info that I
+> removed:
+> - * The TX control's sta pointer is only valid during the ->tx call,
+> - * it may be NULL.
 > 
-> The struct hw_config is extended by ack_power a global power level in
-> dBm to be used for all acknowledgement_packets. A new config change
-> event IEEE80211_CONF_CHANGE_ACK_POWER is defined to reacte with driver
-> specific function calls to ack_power changes from the mac80211.
+> I am not sure what you want me to keep here as comment. As the sta
+> pointer is moved into the new struct tx_control and the remaining
+> pointers in the tx_info->control structure (vif, hw_key) are ALL only
+> valid during the ->tx call and may be NULL. So I could think of adding a
+> comment to tx_control about the sta been NULL, but anything more ?
 
-I know this is kind of an odd. But as carl9170 has TPC settings
-for BlockACK, CF-End and QoS-Null frames, it wouldn't be possible
-to extend "ACK" to "response".
+It's also not allowed to copy the pointer, due to RCU, which is
+information you lost.
 
-NB: The HW has also TPC control registers for ERP(RTS/CTS)
-but that's sort of a different issue.
+johannes
 
-Regards,
-	Chr
