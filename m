@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38478 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933032Ab2GCPQ4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 11:16:56 -0400
-Message-ID: <1341328615.20124.5.camel@jlt3.sipsolutions.net> (sfid-20120703_171713_653810_310F38FD)
-Subject: Re: [PATCH] etherdevice: introduce broadcast_ether_addr
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 03 Jul 2012 17:16:55 +0200
-In-Reply-To: <1341328402.2164.3.camel@joe2Laptop>
-References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
-	 <1341328402.2164.3.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:44383 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754316Ab2GQX1z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2012 19:27:55 -0400
+Message-ID: <5005F4F9.6010208@intel.com> (sfid-20120718_012806_776942_3F476D02)
+Date: Tue, 17 Jul 2012 16:27:53 -0700
+From: John Fastabend <john.r.fastabend@intel.com>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: mark.d.rustad@intel.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: Re: That's pretty much it for 3.5.0
+References: <5005D008.6060103@intel.com> <20120717.140241.1599386555723262095.davem@davemloft.net> <5005E390.7020706@intel.com> <20120717.151832.1306978935355646723.davem@davemloft.net>
+In-Reply-To: <20120717.151832.1306978935355646723.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-03 at 08:13 -0700, Joe Perches wrote:
-> On Tue, 2012-07-03 at 12:16 +0200, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > A lot of code has either the memset or an
-> > inefficient copy from a static array that
-> > contains the all-ones broadcast address.
-> > Introduce broadcast_ether_addr() to fill
-> > an address with all ones, making the code
-> > clearer and allowing us to get rid of the
-> > various constant arrays.
-> []
-> > diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-> []
-> > +static inline void broadcast_ether_addr(u8 *addr)
-> > +{
-> > +	memset(addr, 0xff, ETH_ALEN);
-> > +}
-> 
-> I think this sort of patch should come as the first
-> patch in a series with some example conversions.
-> 
-> It might be too easy to confuse is_broadcast_ether_addr
-> with this function name too.  Maybe set_broadcast_ether_addr
-> might be better.
+On 7/17/2012 3:18 PM, David Miller wrote:
+> From: John Fastabend <john.r.fastabend@intel.com>
+> Date: Tue, 17 Jul 2012 15:13:36 -0700
+>
+>> Perhaps the easiest way is to check net->count this should be zero
+>> until setup_net is called.
+>>
+>> if (!atomic_read(&init_net.count))
+>> 	return ret;
+>>
+>
+> Won't work, setup_net() runs via a pure_initcall().
+>
 
-Well, it's void so that'd be a compiler error :-)
-Also, it's more like random_ether_addr()
+Why not must have missed something? cgroup_init() and
+cgroup_early_init() both run before _initcall() routines are
+called via kernel_init() so this will stop the update in
+netprio from occurring.
 
-johannes
-
+And I don't see any race elsewhere for this.
