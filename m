@@ -1,99 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39039 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755986Ab2GaLcY (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:50407 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753858Ab2GQUdo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:32:24 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3/4] mac80211: add IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF
-Date: Tue, 31 Jul 2012 13:32:17 +0200
-Message-Id: <1343734338-14772-4-git-send-email-johannes@sipsolutions.net> (sfid-20120731_133230_028937_3C4FC901)
-In-Reply-To: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net>
-References: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 17 Jul 2012 16:33:44 -0400
+Message-ID: <5005CC26.6090408@net.t-labs.tu-berlin.de> (sfid-20120717_223348_191733_7E84BB3E)
+Date: Tue, 17 Jul 2012 22:33:42 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: coelho@ti.com, brcm80211-dev-list@broadcom.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, ilw@linux.intel.com,
+	ath9k-devel@lists.ath9k.org, b43-dev@lists.infradead.org,
+	chunkeey@googlemail.com, dsd@gentoo.org, buytenh@wantstofly.org
+Subject: Re: [ath5k-devel] [PATCH 2/2] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
+References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120713_205245_114771_49FF4AC7) <1342518290.7427.9.camel@jlt3.sipsolutions.net> <5005613F.1000004@net.t-labs.tu-berlin.de> <1342530237.8139.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1342530237.8139.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Johannes,
 
-Some devices like the current iwlwifi implementation
-require that the P2P interface address match the P2P
-Device address (only one P2P interface is supported.)
-Add the HW flag IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF
-that allows drivers to request that P2P Interfaces
-added while a P2P Device is active get the same MAC
-address by default.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h |    5 +++++
- net/mac80211/iface.c   |   15 ++++++++++++++-
- 2 files changed, 19 insertions(+), 1 deletion(-)
+> No, I'm not going to play that game. Make sure it compiles on
+> wireless-next.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 8114f59..6bca2a9 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1216,6 +1216,10 @@ struct ieee80211_tx_control {
-  *	queue mapping in order to use different queues (not just one per AC)
-  *	for different virtual interfaces. See the doc section on HW queue
-  *	control for more details.
-+ *
-+ * @IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF: Use the P2P Device address for any
-+ *	P2P Interface. This will be honoured even if more than one interface
-+ *	is supported.
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -1243,6 +1247,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
- 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
- 	IEEE80211_HW_SCAN_WHILE_IDLE			= 1<<24,
-+	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
- };
- 
- /**
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0dafd38..4da014f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1333,7 +1333,6 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 	    local->hw.wiphy->n_addresses <= 1)
- 		return;
- 
--
- 	mutex_lock(&local->iflist_mtx);
- 
- 	switch (type) {
-@@ -1351,6 +1350,19 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 		}
- 		/* keep default if no AP interface present */
- 		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+	case NL80211_IFTYPE_P2P_GO:
-+		if (local->hw.flags & IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF) {
-+			list_for_each_entry(sdata, &local->interfaces, list) {
-+				if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
-+					continue;
-+				if (!ieee80211_sdata_running(sdata))
-+					continue;
-+				memcpy(perm_addr, sdata->vif.addr, ETH_ALEN);
-+				goto out_unlock;
-+			}
-+		}
-+		/* otherwise fall through */
- 	default:
- 		/* assign a new address if possible -- try n_addresses first */
- 		for (i = 0; i < local->hw.wiphy->n_addresses; i++) {
-@@ -1425,6 +1437,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 		break;
- 	}
- 
-+ out_unlock:
- 	mutex_unlock(&local->iflist_mtx);
- }
- 
--- 
-1.7.10.4
+Virtual box did the job and I found 3 drivers that somehow did not
+complain in my OpenWRT build env... thx for not playing :)... v3 is out.
+
+I used wireless-testing and not -next,as in -next the necessary patch
+for mwlk8 is not included but in -testing. So my general question is on
+which tree to develop, on testing or next?
+
+Greetings Thomas
+
+
+
+> 
+> 
+> _______________________________________________
+> b43-dev mailing list
+> b43-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/b43-dev
 
