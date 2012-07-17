@@ -1,27 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39008 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39130 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753314Ab2GJQHk (ORCPT
+	with ESMTP id S1754036Ab2GQPMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 12:07:40 -0400
-Message-ID: <1341936456.4475.25.camel@jlt3.sipsolutions.net> (sfid-20120710_180744_117236_6B449E09)
-Subject: Re: [PATCH 1/2] mac80211: restructure key selection
+	Tue, 17 Jul 2012 11:12:31 -0400
+Message-ID: <1342537949.8139.24.camel@jlt3.sipsolutions.net> (sfid-20120717_171235_170024_842D6757)
+Subject: [PATCH 3.5] b43: fix crash with OpenFWWF
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 10 Jul 2012 18:07:36 +0200
-In-Reply-To: <1341418208-28663-1-git-send-email-cavallar@lri.fr>
-References: <1341408545.12432.10.camel@jlt3.sipsolutions.net>
-	 <1341418208-28663-1-git-send-email-cavallar@lri.fr>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefan Lippers-Hollmann <s.l-h@gmx.de>
+Date: Tue, 17 Jul 2012 17:12:29 +0200
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied both. I think we need to figure out more of the story with
-drop_unencrypted and why we say we don't want to encrypt BA action
-frames?!
+From: Johannes Berg <johannes.berg@intel.com>
 
-johannes
+b43 with open firmware crashes mac80211 because
+it changes the number of queues at runtime which,
+while it was never really supported, now crashes
+mac80211 due to the new hardware queue logic.
+
+Fix this by detecting open vs. proprietary fw
+earlier and registering with mac80211 with the
+right number of queues.
+
+Tested-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/b43/b43.h  |    7 -------
+ drivers/net/wireless/b43/main.c |   32 ++++++++++----------------------
+ 2 files changed, 10 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index c06b6cb..7c899fc 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -870,13 +870,6 @@ struct b43_wl {
+ 	 * handler, only. This basically is just the IRQ mask register. */
+ 	spinlock_t hardirq_lock;
+ 
+-	/* The number of queues that were registered with the mac80211 subsystem
+-	 * initially. This is a backup copy of hw->queues in case hw->queues has
+-	 * to be dynamically lowered at runtime (Firmware does not support QoS).
+-	 * hw->queues has to be restored to the original value before unregistering
+-	 * from the mac80211 subsystem. */
+-	u16 mac80211_initially_registered_queues;
+-
+ 	/* Set this if we call ieee80211_register_hw() and check if we call
+ 	 * ieee80211_unregister_hw(). */
+ 	bool hw_registred;
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index acd03a4..3e5cd8d 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2359,6 +2359,8 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 	if (err)
+ 		goto err_load;
+ 
++	fw->opensource = (ctx->req_type == B43_FWTYPE_OPENSOURCE);
++
+ 	return 0;
+ 
+ err_no_ucode:
+@@ -2434,6 +2436,10 @@ static void b43_request_firmware(struct work_struct *work)
+ 	goto out;
+ 
+ start_ieee80211:
++	wl->hw->queues = B43_QOS_QUEUE_NUM;
++	if (!modparam_qos || dev->fw.opensource)
++		wl->hw->queues = 1;
++
+ 	err = ieee80211_register_hw(wl->hw);
+ 	if (err)
+ 		goto err_one_core_detach;
+@@ -2537,11 +2543,9 @@ static int b43_upload_microcode(struct b43_wldev *dev)
+ 		dev->fw.hdr_format = B43_FW_HDR_410;
+ 	else
+ 		dev->fw.hdr_format = B43_FW_HDR_351;
+-	dev->fw.opensource = (fwdate == 0xFFFF);
++	WARN_ON(dev->fw.opensource != (fwdate == 0xFFFF));
+ 
+-	/* Default to use-all-queues. */
+-	dev->wl->hw->queues = dev->wl->mac80211_initially_registered_queues;
+-	dev->qos_enabled = !!modparam_qos;
++	dev->qos_enabled = dev->wl->hw->queues > 1;
+ 	/* Default to firmware/hardware crypto acceleration. */
+ 	dev->hwcrypto_enabled = true;
+ 
+@@ -2559,14 +2563,8 @@ static int b43_upload_microcode(struct b43_wldev *dev)
+ 			/* Disable hardware crypto and fall back to software crypto. */
+ 			dev->hwcrypto_enabled = false;
+ 		}
+-		if (!(fwcapa & B43_FWCAPA_QOS)) {
+-			b43info(dev->wl, "QoS not supported by firmware\n");
+-			/* Disable QoS. Tweak hw->queues to 1. It will be restored before
+-			 * ieee80211_unregister to make sure the networking core can
+-			 * properly free possible resources. */
+-			dev->wl->hw->queues = 1;
+-			dev->qos_enabled = false;
+-		}
++		/* adding QoS support should use an offline discovery mechanism */
++		WARN(fwcapa & B43_FWCAPA_QOS, "QoS in OpenFW not supported\n");
+ 	} else {
+ 		b43info(dev->wl, "Loading firmware version %u.%u "
+ 			"(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
+@@ -5298,8 +5296,6 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
+-	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
+-	wl->mac80211_initially_registered_queues = hw->queues;
+ 	wl->hw_registred = false;
+ 	hw->max_rates = 2;
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+@@ -5374,10 +5370,6 @@ static void b43_bcma_remove(struct bcma_device *core)
+ 
+ 	B43_WARN_ON(!wl);
+ 	if (wl->current_dev == wldev && wl->hw_registred) {
+-		/* Restore the queues count before unregistering, because firmware detect
+-		 * might have modified it. Restoring is important, so the networking
+-		 * stack can properly free resources. */
+-		wl->hw->queues = wl->mac80211_initially_registered_queues;
+ 		b43_leds_stop(wldev);
+ 		ieee80211_unregister_hw(wl->hw);
+ 	}
+@@ -5452,10 +5444,6 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 
+ 	B43_WARN_ON(!wl);
+ 	if (wl->current_dev == wldev && wl->hw_registred) {
+-		/* Restore the queues count before unregistering, because firmware detect
+-		 * might have modified it. Restoring is important, so the networking
+-		 * stack can properly free resources. */
+-		wl->hw->queues = wl->mac80211_initially_registered_queues;
+ 		b43_leds_stop(wldev);
+ 		ieee80211_unregister_hw(wl->hw);
+ 	}
+-- 
+1.7.10.4
+
+
 
