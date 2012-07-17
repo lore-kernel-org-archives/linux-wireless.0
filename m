@@ -1,76 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8117 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754123Ab2GEPal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 11:30:41 -0400
-Date: Thu, 5 Jul 2012 17:42:02 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Sasha Levin <levinsasha928@gmail.com>,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: Prevent NULL deref when getting socket name
-Message-ID: <20120705154202.GI18200@sortiz-mobl> (sfid-20120705_173058_461144_239287FC)
-References: <1341050207-13145-1-git-send-email-levinsasha928@gmail.com>
- <20120702182438.GB2010@tuxdriver.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8748 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754678Ab2GQGbx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jul 2012 02:31:53 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] ath6kl: Add support for AR6004 hardware version 1.3
+Date: Tue, 17 Jul 2012 12:01:55 +0530
+Message-ID: <1342506715-13168-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120717_083157_681542_2F3B91B2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120702182438.GB2010@tuxdriver.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Add support for AR6004 hardware with version 1.3 and has
+id 0x31c8088a.
 
-On Mon, Jul 02, 2012 at 02:24:38PM -0400, John W. Linville wrote:
-> On Sat, Jun 30, 2012 at 11:56:47AM +0200, Sasha Levin wrote:
-> > llcp_sock_getname can be called without a device attached to the nfc_llcp_sock.
-> > 
-> > This would lead to the following BUG:
-> > 
-> > [  362.341807] BUG: unable to handle kernel NULL pointer dereference at           (null)
-> > [  362.341815] IP: [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-> > [  362.341818] PGD 31b35067 PUD 30631067 PMD 0
-> > [  362.341821] Oops: 0000 [#627] PREEMPT SMP DEBUG_PAGEALLOC
-> > [  362.341826] CPU 3
-> > [  362.341827] Pid: 7816, comm: trinity-child55 Tainted: G      D W    3.5.0-rc4-next-20120628-sasha-00005-g9f23eb7 #479
-> > [  362.341831] RIP: 0010:[<ffffffff836258e5>]  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-> > [  362.341832] RSP: 0018:ffff8800304fde88  EFLAGS: 00010286
-> > [  362.341834] RAX: 0000000000000000 RBX: ffff880033cb8000 RCX: 0000000000000001
-> > [  362.341835] RDX: ffff8800304fdec4 RSI: ffff8800304fdec8 RDI: ffff8800304fdeda
-> > [  362.341836] RBP: ffff8800304fdea8 R08: 7ebcebcb772b7ffb R09: 5fbfcb9c35bdfd53
-> > [  362.341838] R10: 4220020c54326244 R11: 0000000000000246 R12: ffff8800304fdec8
-> > [  362.341839] R13: ffff8800304fdec4 R14: ffff8800304fdec8 R15: 0000000000000044
-> > [  362.341841] FS:  00007effa376e700(0000) GS:ffff880035a00000(0000) knlGS:0000000000000000
-> > [  362.341843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [  362.341844] CR2: 0000000000000000 CR3: 0000000030438000 CR4: 00000000000406e0
-> > [  362.341851] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> > [  362.341856] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> > [  362.341858] Process trinity-child55 (pid: 7816, threadinfo ffff8800304fc000, task ffff880031270000)
-> > [  362.341858] Stack:
-> > [  362.341862]  ffff8800304fdea8 ffff880035156780 0000000000000000 0000000000001000
-> > [  362.341865]  ffff8800304fdf78 ffffffff83183b40 00000000304fdec8 0000006000000000
-> > [  362.341868]  ffff8800304f0027 ffffffff83729649 ffff8800304fdee8 ffff8800304fdf48
-> > [  362.341869] Call Trace:
-> > [  362.341874]  [<ffffffff83183b40>] sys_getpeername+0xa0/0x110
-> > [  362.341877]  [<ffffffff83729649>] ? _raw_spin_unlock_irq+0x59/0x80
-> > [  362.341882]  [<ffffffff810f342b>] ? do_setitimer+0x23b/0x290
-> > [  362.341886]  [<ffffffff81985ede>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-> > [  362.341889]  [<ffffffff8372a539>] system_call_fastpath+0x16/0x1b
-> > [  362.341921] Code: 84 00 00 00 00 00 b8 b3 ff ff ff 48 85 db 74 54 66 41 c7 04 24 27 00 49 8d 7c 24 12 41 c7 45 00 60 00 00 00 48 8b 83 28 05 00 00 <8b> 00 41 89 44 24 04 0f b6 83 41 05 00 00 41 88 44 24 10 0f b6
-> > [  362.341924] RIP  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-> > [  362.341925]  RSP <ffff8800304fde88>
-> > [  362.341926] CR2: 0000000000000000
-> > [  362.341928] ---[ end trace 6d450e935ee18bf3 ]---
-> > 
-> > Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
-> 
-> Samuel, I'm taking this one directly.
-Thanks. It was already on my for-wireless branch.
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |    7 +++++++
+ drivers/net/wireless/ath/ath6kl/init.c |   20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/sdio.c |    3 +++
+ drivers/net/wireless/ath/ath6kl/usb.c  |    3 +++
+ 4 files changed, 33 insertions(+)
 
-Cheers,
-Samuel.
-
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index c655438..2d1b8ac 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -192,6 +192,13 @@ enum ath6kl_hw_flags {
+ #define AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE \
+ 	AR6004_HW_1_2_FW_DIR "/bdata.bin"
+ 
++/* AR6004 1.3 definitions */
++#define AR6004_HW_1_3_VERSION			0x31c8088a
++#define AR6004_HW_1_3_FW_DIR			"ath6k/AR6004/hw1.3"
++#define AR6004_HW_1_3_FIRMWARE_FILE		"fw.ram.bin"
++#define AR6004_HW_1_3_BOARD_DATA_FILE		"ath6k/AR6004/hw1.3/bdata.bin"
++#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE	"ath6k/AR6004/hw1.3/bdata.bin"
++
+ /* Per STA data, used in AP mode */
+ #define STA_PS_AWAKE		BIT(0)
+ #define	STA_PS_SLEEP		BIT(1)
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index f90b5db..8bd4299 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -142,6 +142,26 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.fw_board		= AR6004_HW_1_2_BOARD_DATA_FILE,
+ 		.fw_default_board	= AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE,
+ 	},
++	{
++		.id				= AR6004_HW_1_3_VERSION,
++		.name				= "ar6004 hw 1.3",
++		.dataset_patch_addr		= 0x437860,
++		.app_load_addr			= 0x1234,
++		.board_ext_data_addr		= 0x437000,
++		.reserved_ram_size		= 7168,
++		.board_addr			= 0x436400,
++		.refclk_hz                      = 40000000,
++		.uarttx_pin                     = 11,
++		.flags                          = ATH6KL_HW_FLAG_64BIT_RATES,
++
++		.fw = {
++			.dir            = AR6004_HW_1_3_FW_DIR,
++			.fw             = AR6004_HW_1_3_FIRMWARE_FILE,
++		},
++
++		.fw_board               = AR6004_HW_1_3_BOARD_DATA_FILE,
++		.fw_default_board       = AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE,
++	},
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 05b9540..65e9983 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -1462,3 +1462,6 @@ MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_FW_DIR "/" AR6004_HW_1_2_FIRMWARE_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_FW_DIR "/" AR6004_HW_1_3_FIRMWARE_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE);
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 3740c3d..4aa97aa 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1220,3 +1220,6 @@ MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_FIRMWARE_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_FW_DIR "/" AR6004_HW_1_3_FIRMWARE_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE);
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.9.5
+
