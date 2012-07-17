@@ -1,48 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:38028 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316Ab2GJUiI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2119 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753844Ab2GQGID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 16:38:08 -0400
-Received: by weyx8 with SMTP id x8so331609wey.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 13:38:07 -0700 (PDT)
+	Tue, 17 Jul 2012 02:08:03 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath6kl: Add support for AR6004 chipset.
+Date: Tue, 17 Jul 2012 11:38:04 +0530
+Message-ID: <1342505284-12315-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120717_080808_368320_19A2520E)
 MIME-Version: 1.0
-In-Reply-To: <20120710133708.GC2260@redhat.com>
-References: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
-	<1341834647.4455.32.camel@jlt3.sipsolutions.net>
-	<20120709115423.GE2438@redhat.com>
-	<CANUX_P23xv5rXynEJHm=boR_g_7YqR1ROOQki6KGv+9LR9KEkg@mail.gmail.com>
-	<20120710060211.GA2260@redhat.com>
-	<CANUX_P3Vh1pqyK7TnNdYPS6nHpiUEzWDr4j8+8a5kXdhY3DrAA@mail.gmail.com>
-	<20120710133708.GC2260@redhat.com>
-Date: Tue, 10 Jul 2012 23:38:07 +0300
-Message-ID: <CANUX_P2TV+F+CGdhR+UuXi_AFPb_ZD7LHO8s+kXisjou0dJJxw@mail.gmail.com> (sfid-20120710_223813_339760_35987655)
-Subject: Re: [RHEL6 PATCH] iwlwifi: remove spurious warning
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> On Tue, Jul 10, 2012 at 9:02 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> > On Mon, Jul 09, 2012 at 10:10:38PM +0300, Emmanuel Grumbach wrote:
->> >> I would be glad to know on what commands this WARN_ON triggers
->> >> though... The command name should be printed along with the WARN_ON.
->> >
->> > REPLY_RX_PHY_CMD
->> >
->>
->> Ok thanks. This comes from the fw for every HT frame received in 4965.
->> Do you see that the WARNING triggers for every HT frame Rx?
->> I don't mind removing that code anyway, I was just asking to
->> understand what happens :-)
->
-> I did not hit that. It was raported for iwl1000 on RHEL6.3:
-> https://bugzilla.redhat.com/show_bug.cgi?id=837754
->
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |    7 +++++++
+ drivers/net/wireless/ath/ath6kl/init.c |   20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/sdio.c |    3 +++
+ drivers/net/wireless/ath/ath6kl/usb.c  |    3 +++
+ 4 files changed, 33 insertions(+)
 
-Ok, and the bug says - Occasional... Anyway.
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index c655438..2d1b8ac 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -192,6 +192,13 @@ enum ath6kl_hw_flags {
+ #define AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE \
+ 	AR6004_HW_1_2_FW_DIR "/bdata.bin"
+ 
++/* AR6004 1.3 definitions */
++#define AR6004_HW_1_3_VERSION			0x31c8088a
++#define AR6004_HW_1_3_FW_DIR			"ath6k/AR6004/hw1.3"
++#define AR6004_HW_1_3_FIRMWARE_FILE		"fw.ram.bin"
++#define AR6004_HW_1_3_BOARD_DATA_FILE		"ath6k/AR6004/hw1.3/bdata.bin"
++#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE	"ath6k/AR6004/hw1.3/bdata.bin"
++
+ /* Per STA data, used in AP mode */
+ #define STA_PS_AWAKE		BIT(0)
+ #define	STA_PS_SLEEP		BIT(1)
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index f90b5db..8bd4299 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -142,6 +142,26 @@ static const struct ath6kl_hw hw_list[] = {
+ 		.fw_board		= AR6004_HW_1_2_BOARD_DATA_FILE,
+ 		.fw_default_board	= AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE,
+ 	},
++	{
++		.id				= AR6004_HW_1_3_VERSION,
++		.name				= "ar6004 hw 1.3",
++		.dataset_patch_addr		= 0x437860,
++		.app_load_addr			= 0x1234,
++		.board_ext_data_addr		= 0x437000,
++		.reserved_ram_size		= 7168,
++		.board_addr			= 0x436400,
++		.refclk_hz                      = 40000000,
++		.uarttx_pin                     = 11,
++		.flags                          = ATH6KL_HW_FLAG_64BIT_RATES,
++
++		.fw = {
++			.dir            = AR6004_HW_1_3_FW_DIR,
++			.fw             = AR6004_HW_1_3_FIRMWARE_FILE,
++		},
++
++		.fw_board               = AR6004_HW_1_3_BOARD_DATA_FILE,
++		.fw_default_board       = AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE,
++	},
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 05b9540..65e9983 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -1462,3 +1462,6 @@ MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_FW_DIR "/" AR6004_HW_1_2_FIRMWARE_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_FW_DIR "/" AR6004_HW_1_3_FIRMWARE_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE);
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 3740c3d..4aa97aa 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1220,3 +1220,6 @@ MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_FIRMWARE_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_BOARD_DATA_FILE);
+ MODULE_FIRMWARE(AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_FW_DIR "/" AR6004_HW_1_3_FIRMWARE_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_BOARD_DATA_FILE);
++MODULE_FIRMWARE(AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE);
+-- 
+1.7.9.5
+
