@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42081 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751382Ab2GKFcn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38038 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754925Ab2GQJpG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 01:32:43 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, buytenh@wantstofly.org,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2] mwl8k: fix possible race condition in info->control.sta use
-Date: Wed, 11 Jul 2012 07:32:34 +0200
-Message-Id: <1341984754-76477-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120711_073248_103349_746EB1D8)
+	Tue, 17 Jul 2012 05:45:06 -0400
+Message-ID: <1342518290.7427.9.camel@jlt3.sipsolutions.net> (sfid-20120717_114524_248477_D9AA8159)
+Subject: Re: [PATCH 2/2] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
+	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
+	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
+	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
+	coelho@ti.com
+Date: Tue, 17 Jul 2012 11:44:50 +0200
+In-Reply-To: <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120713_205245_114771_49FF4AC7)
+References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 (sfid-20120713_205245_114771_49FF4AC7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-info->control.sta may only be dereferenced during the drv_tx call otherwise
-could lead to use-after-free bugs
+Ok first of all, please actually compile the tree after your changes. It
+doesn't. When it does, please fix
+ 1) line length in the commit log should be < 72 chars
+ 2) indentation in mac80211.h
+ 3) removal of an important comment in mac80211.h that I pointed out in
+    previous review
 
-Reported-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
-fix wrog indentation. thx to David Miller
----
- drivers/net/wireless/mwl8k.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> The tx-path of all affected drivers is restructured to respect the chaneged
+> layout of struct ieee80211_tx_info. List of modified drivers:
+> ath9k
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index df6c6f1..eec5cd1 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1667,7 +1667,8 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw,
- 
- 		info = IEEE80211_SKB_CB(skb);
- 		if (ieee80211_is_data(wh->frame_control)) {
--			sta = info->control.sta;
-+			sta = ieee80211_find_sta_by_ifaddr(hw, wh->addr1,
-+							   wh->addr2);
- 			if (sta) {
- 				sta_info = MWL8K_STA(sta);
- 				BUG_ON(sta_info == NULL);
--- 
-1.7.11.1
+Please also remove the driver list. git can tell you the modified files
+very easily.
+
+johannes
 
