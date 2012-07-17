@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37722 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754693Ab2GJJNJ (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:50364 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756575Ab2GQUQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 05:13:09 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SoWVI-0007ju-GT
-	for linux-wireless@vger.kernel.org; Tue, 10 Jul 2012 11:13:08 +0200
-Message-ID: <1341911586.4475.7.camel@jlt3.sipsolutions.net> (sfid-20120710_111314_349602_18EF8A00)
-Subject: Re: [PATCH] mac80211: optimize ieee80211_rx_status struct layout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 10 Jul 2012 11:13:06 +0200
-In-Reply-To: <1341911478-13342-1-git-send-email-johannes@sipsolutions.net> (sfid-20120710_111127_712290_B064822B)
-References: <1341911478-13342-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120710_111127_712290_B064822B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 17 Jul 2012 16:16:20 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	ath5k-devel@lists.ath5k.org, ilw@linux.intel.com,
+	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
+	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
+	buytenh@wantstofly.org, dsd@gentoo.org, coelho@ti.com,
+	johannes.berg@intel.com
+Subject: [PATCH v3 1/2] mac80211_hwsim: fix possible race condition in usage of info->control.sta & control.vif
+Date: Tue, 17 Jul 2012 22:16:13 +0200
+Message-Id: <1342556174-23769-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120717_221625_703216_240A6D8E)
+In-Reply-To: <1342556174-23769-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1342556174-23769-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-10 at 11:11 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> We waste a lot of space in this struct because it uses
-> int values where smaller ones would be sufficient. The
-> upcoming A-MPDU information needs some space, optimize
-> the struct now.
+info->control.sta and control.vif may only be dereferenced during the
+drv_tx call otherwise could lead to use-after-free bugs.
 
-It'll be a few weeks until the A-MPDU stuff is adopted in radiotap, but
-I figured this could still go upstream already. The previous patch (time
-sync) was based on it (and accidentally the A-MPDU stuff, so it won't
-apply as is, but I've fixed that)
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 3f38d84..826ac7b 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1540,11 +1540,6 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	/* now send back TX status */
+ 	txi = IEEE80211_SKB_CB(skb);
+ 
+-	if (txi->control.vif)
+-		hwsim_check_magic(txi->control.vif);
+-	if (txi->control.sta)
+-		hwsim_check_sta_magic(txi->control.sta);
+-
+ 	ieee80211_tx_info_clear_status(txi);
+ 
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+-- 
+1.7.11.1
 
