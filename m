@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2278 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750893Ab2GNKKf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2012 06:10:35 -0400
-Message-ID: <50014580.7060702@broadcom.com> (sfid-20120714_121116_678570_6175AC80)
-Date: Sat, 14 Jul 2012 12:10:08 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Thomas Huehn" <thomas@net.t-labs.tu-berlin.de>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
-	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
-	coelho@ti.com, johannes.berg@intel.com
-Subject: Re: [PATCH 2/2] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
-References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:42047 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab2GRGz2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2012 02:55:28 -0400
+Message-ID: <1342594528.5310.5.camel@jlt3.sipsolutions.net> (sfid-20120718_085530_770717_7FC5CC99)
+Subject: Re: [PATCH V2 1/2] {cfg,mac}80211: utility function for calculating
+ mandatory rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	javier@cozybit.com, thomas@cozybit.com, devel@lists.open80211s.org
+Date: Wed, 18 Jul 2012 08:55:28 +0200
+In-Reply-To: <1342586570-522-1-git-send-email-ashok@cozybit.com> (sfid-20120718_064259_183994_3D509197)
+References: <1342586570-522-1-git-send-email-ashok@cozybit.com>
+	 (sfid-20120718_064259_183994_3D509197)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2012 08:52 PM, Thomas Huehn wrote:
-> The pointer control.sta is removed from ieee80211_tx_info to free up sufficient
-> memory in SKB_CB on the tx-path to enable new annotations per data packet e.g.
-> support of upcoming Transmit Power Control (TPC).
-> Now the control.sta pointer is put on the stack where it is passed as function
-> parameter to the .tx equivalent (ieee80211_ops) of each affected wireless
-> driver. Therefore a new structure ieee80211_tx_control is added to mac80211.h
-> which holds the sta structure instead.
-> 
-> ---
->  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  6 +++--
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> index 9e79d47..a7be68d 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> @@ -264,7 +264,9 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
->  	}
->  }
->  
-> -static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-> +static void brcms_ops_tx(struct ieee80211_hw *hw,
-> +			 struct ieee80211_tx_control *control,
-> +			 struct sk_buff *skb)
+On Tue, 2012-07-17 at 21:42 -0700, Ashok Nagarajan wrote:
 
-Fix indent here (if it is not a mailer issue).
+> + */
+> +
+> +u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
 
->  {
->  	struct brcms_info *wl = hw->priv;
->  	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-> @@ -276,7 +278,7 @@ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  		goto done;
->  	}
->  	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
-> -	tx_info->rate_driver_data[0] = tx_info->control.sta;
-> +	tx_info->rate_driver_data[0] = control->sta;
->   done:
->  	spin_unlock_bh(&wl->lock);
->  }
+Please remove the blank line and document the return value.
 
-Gr. AvS
+
+> +u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
+> +			      enum ieee80211_band band)
+
+Passing both the band enum and the sband doesn't make a lot of sense.
+
+> +{
+> +	struct ieee80211_rate *bitrates;
+> +	u32 mandatory_rates = 0;
+> +	enum ieee80211_rate_flags mandatory_flag;
+> +	int i;
+> +
+> +	if (WARN_ON(!sband))
+> +		return 1;
+> +
+> +	bitrates = sband->bitrates;
+> +	if (band == IEEE80211_BAND_5GHZ)
+> +		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
+> +	else {
+> +		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
+> +		for (i = 0; i < sband->n_bitrates; i++)
+> +			if (bitrates[i].bitrate > 110) {
+> +				mandatory_flag =
+> +					IEEE80211_RATE_MANDATORY_G;
+> +				break;
+> +			}
+> +	}
+
+You're not just moving the function but also changing the logic in it,
+it'd be better to do in separate patches I think.
+
+johannes
 
