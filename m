@@ -1,50 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:63425 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755715Ab2GJNGG (ORCPT
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:54640 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753344Ab2GRMOA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 09:06:06 -0400
-Message-ID: <71781241c331fcbb5687068ddc6bbb06.squirrel@www.infidigm.net> (sfid-20120710_150612_399018_893D2B74)
-In-Reply-To: <4FFC08C5.2050606@qca.qualcomm.com>
-References: <43a66e0f20b45e9cc461272e83f2c4e4.squirrel@www.infidigm.net>
-    <4FFC08C5.2050606@qca.qualcomm.com>
-Date: Tue, 10 Jul 2012 09:42:48 -0400
-Subject: Re: ar6004 / ar9374
-From: drwho@infidigm.net
-To: "Kalle Valo" <kvalo@qca.qualcomm.com>
-Cc: "Julian Calaby" <julian.calaby@gmail.com>,
-	"Sujith Manoharan" <c_manoha@qca.qualcomm.com>,
-	"Mohammed Shafi" <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"ath6kl-devel" <ath6kl-devel@qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 18 Jul 2012 08:14:00 -0400
+Received: by lbbgj10 with SMTP id gj10so2550267lbb.23
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:57 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 11/14] wlcore: make usage of nla_put clearer
+Date: Wed, 18 Jul 2012 15:13:30 +0300
+Message-Id: <1342613613-917-12-git-send-email-coelho@ti.com> (sfid-20120718_141414_329092_C951D6F1)
+In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
+References: <1342613613-917-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Also, my UB134 is coming up with a device ID of 0x31c8088a?
->>
->> [  361.676440] ath6kl: Unsupported hardware version: 0x31c8088a
->> [  361.680437] ath6kl: Failed to init ath6kl core: -22
->> [  361.680491] ath6kl_usb: probe of 2-1:1.0 failed with error -22
->> [  361.680520] usbcore: registered new interface driver ath6kl_usb
->
-> That's odd, I'm not familiar with 0x31c8088a. I wonder if it's corrupted
-> somehow or is it a valid device id? Does anyone from ath6kl-devel know?
+From: Yair Shapira <yair.shapira@ti.com>
 
-Hi Kalle,
+handle errors of nla_put() inside the if(nla_put...) {}
 
-We have two units, both come up as 0x31c8088a using your kernel on x86
-Ubuntu or using a recent compat-wireless on our arm platform.  The PN on
-the chip is
+This makes the code simpler and clearer because:
+we take advantage from the fact that we have only one nla_put
+in our routines (so no real need for goto label).
+this avoids ugly goto forward followed by goto backward.
 
-AR9374X-4L3E which is on a usb board
+Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/testmode.c |   39 +++++++++++++----------------
+ 1 file changed, 18 insertions(+), 21 deletions(-)
 
-The bubble wrap has the following....
-UB134-055
-QCABUB134
-HT0430121
-
-Jon
-
+diff --git a/drivers/net/wireless/ti/wlcore/testmode.c b/drivers/net/wireless/ti/wlcore/testmode.c
+index 081f175..49e5ee1 100644
+--- a/drivers/net/wireless/ti/wlcore/testmode.c
++++ b/drivers/net/wireless/ti/wlcore/testmode.c
+@@ -129,8 +129,12 @@ static int wl1271_tm_cmd_test(struct wl1271 *wl, struct nlattr *tb[])
+ 			goto out_sleep;
+ 		}
+ 
+-		if (nla_put(skb, WL1271_TM_ATTR_DATA, buf_len, buf))
+-			goto nla_put_failure;
++		if (nla_put(skb, WL1271_TM_ATTR_DATA, buf_len, buf)) {
++			kfree_skb(skb);
++			ret = -EMSGSIZE;
++			goto out_sleep;
++		}
++
+ 		ret = cfg80211_testmode_reply(skb);
+ 		if (ret < 0)
+ 			goto out_sleep;
+@@ -142,11 +146,6 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	return ret;
+-
+-nla_put_failure:
+-	kfree_skb(skb);
+-	ret = -EMSGSIZE;
+-	goto out_sleep;
+ }
+ 
+ static int wl1271_tm_cmd_interrogate(struct wl1271 *wl, struct nlattr *tb[])
+@@ -192,8 +191,12 @@ static int wl1271_tm_cmd_interrogate(struct wl1271 *wl, struct nlattr *tb[])
+ 		goto out_free;
+ 	}
+ 
+-	if (nla_put(skb, WL1271_TM_ATTR_DATA, sizeof(*cmd), cmd))
+-		goto nla_put_failure;
++	if (nla_put(skb, WL1271_TM_ATTR_DATA, sizeof(*cmd), cmd)) {
++		kfree_skb(skb);
++		ret = -EMSGSIZE;
++		goto out_free;
++	}
++
+ 	ret = cfg80211_testmode_reply(skb);
+ 	if (ret < 0)
+ 		goto out_free;
+@@ -206,11 +209,6 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	return ret;
+-
+-nla_put_failure:
+-	kfree_skb(skb);
+-	ret = -EMSGSIZE;
+-	goto out_free;
+ }
+ 
+ static int wl1271_tm_cmd_configure(struct wl1271 *wl, struct nlattr *tb[])
+@@ -343,8 +341,12 @@ static int wl12xx_tm_cmd_get_mac(struct wl1271 *wl, struct nlattr *tb[])
+ 		goto out;
+ 	}
+ 
+-	if (nla_put(skb, WL1271_TM_ATTR_DATA, ETH_ALEN, mac_addr))
+-		goto nla_put_failure;
++	if (nla_put(skb, WL1271_TM_ATTR_DATA, ETH_ALEN, mac_addr)) {
++		kfree_skb(skb);
++		ret = -EMSGSIZE;
++		goto out;
++	}
++
+ 	ret = cfg80211_testmode_reply(skb);
+ 	if (ret < 0)
+ 		goto out;
+@@ -352,11 +354,6 @@ static int wl12xx_tm_cmd_get_mac(struct wl1271 *wl, struct nlattr *tb[])
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 	return ret;
+-
+-nla_put_failure:
+-	kfree_skb(skb);
+-	ret = -EMSGSIZE;
+-	goto out;
+ }
+ 
+ int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len)
+-- 
+1.7.10.4
 
