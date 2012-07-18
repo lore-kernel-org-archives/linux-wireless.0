@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:41090 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753729Ab2GSKql (ORCPT
+Received: from hetz2.bluebottle.com ([176.9.57.138]:37867 "EHLO
+	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754152Ab2GRMDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 06:46:41 -0400
-Received: by yhmm54 with SMTP id m54so2582445yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2012 03:46:41 -0700 (PDT)
+	Wed, 18 Jul 2012 08:03:30 -0400
+To: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org
+Cc: feint@lists.subsignal.org
+Message-ID: <1342612598.5006a476022c6@mail.bluebottle.com> (sfid-20120718_140343_258062_EC0792D9)
+Date: Wed, 18 Jul 2012 12:56:38 +0100
+From: Bastian Bittorf <bittorf@bluebottle.com>
+Subject: WRT54g / b43 / mac802.11 BREAKTHROUGH
 MIME-Version: 1.0
-In-Reply-To: <1326716209.3510.7.camel@jlt3.sipsolutions.net>
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
- <1326621743.3448.1.camel@jlt3.sipsolutions.net> <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
- <1326704259.3510.3.camel@jlt3.sipsolutions.net> <CAPXgP12gM3_OVuxQAkRRarH_TpjVpbh5NpcTPWL0nEi4eoX+kw@mail.gmail.com>
- <1326716209.3510.7.camel@jlt3.sipsolutions.net>
-From: Kay Sievers <kay@vrfy.org>
-Date: Thu, 19 Jul 2012 12:46:20 +0200
-Message-ID: <CAPXgP13xJNx0v9waZx6m47Ye7q71GGz3A3DoQzb=qszHnOkArw@mail.gmail.com> (sfid-20120719_124658_617881_3CD81972)
-Subject: Re: calling request_firmware() from module init will not work with
- recent/future udev versions
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 16, 2012 at 1:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-01-16 at 13:05 +0100, Kay Sievers wrote:
->
->> > What I'm was asking then is this: Can udev know that it is running from
->> > initramfs (presumably that can't be too hard) and simply not reply to
->> > async requests it doesn't have firmware for? Then once the real root is
->> > mounted it could satisfy (or not) firmware requests from the real root.
->>
->> We can surely change it to not cancel the firmware request.
->>
->> Either by making it aware that we run from initramfs, or by never
->> cancelling any firmware request and just leave it hanging around for
->> forever?
+hi devs!
 
-Never say 6 months is a long time to reply. :)
+yesterday we had a breaktrough debugging b43 in our hackspace maschinenraum/m18[1,2]
+at weimar.freifunk.net[3,4] - since a long time our darling wrt54g suffers from a
+hanging wifi and bad performance[5], but the workaround is easy: now it's up to
+you to fix the rootcause.
 
-Fedora uses systemd in the initramfs now, which made it trivial to
-implement this, and to leave the firmware requests hanging around
-until we reach in the real rootfs and know if the firmware file is
-available:
-  http://cgit.freedesktop.org/systemd/systemd/commit/?id=39177382a4f92a834b568d6ae5d750eb2a5a86f9
+our testsetup, where we could _reproduce_ reliably a stopping TX is like this:
 
-The logic to tell udev that it runs in the initramfs could easily be
-implemented by other initramfs tools than dracut, but they usually do
-not really follow what we do here, so this might for now only work on
-recent systems using dracut.
+laptop ---lan--- "A"-wrt54g/adhoc ~~~   air  ~~~ "B"-anyrouter/adhoc
 
-Cheers,
-Kay
+now make a testdownload with the laptop from B.
+wireless will stop working after ~10 seconds.
+
+wifi up will reanimate and our freifunk-cron.minutely-check
+will do this automagically. (read further, this is not the solution)
+
+we tried to limit the rateset to e.g. lower rates, but this does NOT change
+the behaviour. what works is: define a rateset on BOTH router which makes
+it impossible to change the band, e.g.:
+
+iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
+OR
+iw dev $WIFIDEV set bitrates legacy-2.4 6 9 12 18 24 36 48 54
+
+now we had a great performance, 10 Gigabytes of wireless transfer,
+no stopping TX anymore and an empty box of beer. three things to do now:
+
+1) why does a band change (can be seen through minstrel) is a problem?
+
+2) we have to make in config-option to force a band, or a rateset:
+	e.g. uci set wireless.radio0.hwmode=11g
+	e.g. uci set wireless.radio0.bitrates='6 9 12 18 24 36 48 54'
+
+3) spread to word:
+   there is a great frustration in the community about b43,
+   but the old drivers _have_ to die, it's about time - really.
+
+thanks for your work,
+bye storchi, andi, bastian + m18 crew
+
+[1] http://blog.maschinenraum.tk/
+[2] http://blog.maschinenraum.tk/2012/07/15/bitcoin-vending-machine-exchange-euro-coins-for-bitcoin-wallets/
+[3] http://wireless.subsignal.org
+[4] http://wireless.subsignal.org/index.php?title=Main_Page_en
+[5] https://dev.openwrt.org/ticket/7552
+
