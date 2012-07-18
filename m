@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46020 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755034Ab2GXBTP (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:63705 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863Ab2GROtU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 21:19:15 -0400
-Received: by obbuo13 with SMTP id uo13so10339219obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 18:19:14 -0700 (PDT)
+	Wed, 18 Jul 2012 10:49:20 -0400
+Received: by yhmm54 with SMTP id m54so1626046yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 07:49:19 -0700 (PDT)
+Message-ID: <5006CCE7.8090904@gmail.com> (sfid-20120718_164924_347494_173F0C03)
+Date: Wed, 18 Jul 2012 22:49:11 +0800
+From: Duan Jiong <djduanjiong@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAG6hwVPjvSVWwR3LqRkL5_XvuQe=bK2QPL+niaYUK6hH3gbH4Q@mail.gmail.com>
-References: <1343016370-31163-1-git-send-email-yeohchunyeow@gmail.com>
-	<CAG6hwVPjvSVWwR3LqRkL5_XvuQe=bK2QPL+niaYUK6hH3gbH4Q@mail.gmail.com>
-Date: Tue, 24 Jul 2012 09:19:14 +0800
-Message-ID: <CAEFj986ji_XmxKAtnyqyFFVkYoQ9h9F+n+nm5d+5nnwef9awRw@mail.gmail.com> (sfid-20120724_031918_588689_14C8BA47)
-Subject: Re: [PATCH v2] mac80211: add extra checking for RC init upon
- receiving mesh beacon
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: devel@lists.open80211s.org
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: dcbw@redhat.com, linville@tuxdriver.com
+CC: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [RESEND] firmware.c: remove duplicated include
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Thomas
+Signed-off-by: Duan Jiong <djduanjiong@gmail.com>
+---
+ drivers/net/wireless/libertas/firmware.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-> Please keep updating sta->last_rx.
-Noted. Resubmit the patch.
+diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
+index 601f207..c0f9e7e 100644
+--- a/drivers/net/wireless/libertas/firmware.c
++++ b/drivers/net/wireless/libertas/firmware.c
+@@ -4,9 +4,7 @@
+ 
+ #include <linux/sched.h>
+ #include <linux/firmware.h>
+-#include <linux/firmware.h>
+ #include <linux/module.h>
+-#include <linux/sched.h>
+ 
+ #include "dev.h"
+ #include "decl.h"
+-- 
+1.7.9.5
 
-Regards,
-Chun-Yeow
