@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40171 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752482Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 13:53:46 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:36259 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753365Ab2GRMNy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2012 08:13:54 -0400
+Received: by lbom4 with SMTP id m4so4559004lbo.16
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:49 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 02/12] ath9k: validate rx antenna settings
-Date: Sun, 15 Jul 2012 19:53:30 +0200
-Message-Id: <1342374820-92409-2-git-send-email-nbd@openwrt.org> (sfid-20120715_195356_636790_0233CE89)
-In-Reply-To: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
-References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 04/14] wlcore: send EAPOLs using minimum basic rate for all roles
+Date: Wed, 18 Jul 2012 15:13:23 +0300
+Message-Id: <1342613613-917-5-git-send-email-coelho@ti.com> (sfid-20120718_141417_788771_B6AEAFAE)
+In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
+References: <1342613613-917-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many chips are not able to deal with non-consecutive rx antenna selections
-and respond with calibration errors, reset errors, etc.
-When an antenna is selected as a tx antenna, also flag it for rx to avoid
-chip issues.
+From: Igal Chernobelsky <igalc@ti.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Send EAPOLs using minimum basic rate for AP, STA, p2p GO and Client.
+The patch fixes p2p connection issue with Realtek device in p2p
+certification test 5.1.13 (DEVUT reinvokes Persistent Group).
+
+Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ti/wlcore/tx.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 01a5f18..cb9a8c9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1923,12 +1923,29 @@ static u32 fill_chainmask(u32 cap, u32 new)
- 	return filled;
- }
- 
-+static bool validate_antenna_mask(struct ath_hw *ah, u32 val)
-+{
-+	switch (val & 0x7) {
-+	case 0x1:
-+	case 0x3:
-+	case 0x7:
-+		return true;
-+	case 0x2:
-+		return (ah->caps.rx_chainmask == 1);
-+	default:
-+		return false;
-+	}
-+}
-+
- static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 
--	if (!rx_ant || !tx_ant)
-+	if (ah->caps.rx_chainmask != 1)
-+		rx_ant |= tx_ant;
-+
-+	if (!validate_antenna_mask(ah, rx_ant) || !tx_ant)
- 		return -EINVAL;
- 
- 	sc->ant_rx = rx_ant;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 6a28aee..0bdc950 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -310,10 +310,10 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		 * send them with AP rate policies (EAPOLs are an exception),
+ 		 * otherwise use default basic rates
+ 		 */
+-		if (control->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+-			rate_idx = wlvif->sta.p2p_rate_idx;
+-		else if (skb->protocol == cpu_to_be16(ETH_P_PAE))
++		if (skb->protocol == cpu_to_be16(ETH_P_PAE))
+ 			rate_idx = wlvif->sta.basic_rate_idx;
++		else if (control->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
++			rate_idx = wlvif->sta.p2p_rate_idx;
+ 		else if (control->control.sta)
+ 			rate_idx = wlvif->sta.ap_rate_idx;
+ 		else
+@@ -321,7 +321,9 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	} else {
+ 		if (hlid == wlvif->ap.global_hlid)
+ 			rate_idx = wlvif->ap.mgmt_rate_idx;
+-		else if (hlid == wlvif->ap.bcast_hlid)
++		else if (hlid == wlvif->ap.bcast_hlid ||
++			 skb->protocol == cpu_to_be16(ETH_P_PAE))
++			/* send AP bcast and EAPOLs using the min basic rate */
+ 			rate_idx = wlvif->ap.bcast_rate_idx;
+ 		else
+ 			rate_idx = wlvif->ap.ucast_rate_idx[ac];
 -- 
-1.7.7.5 (Apple Git-26)
+1.7.10.4
 
