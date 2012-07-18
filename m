@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42391 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753231Ab2GKLaK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43852 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187Ab2GRJSu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 07:30:10 -0400
-Message-ID: <4FFD63C0.6080002@net.t-labs.tu-berlin.de> (sfid-20120711_133014_770652_5F08953B)
-Date: Wed, 11 Jul 2012 13:30:08 +0200
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+	Wed, 18 Jul 2012 05:18:50 -0400
+Message-ID: <50067F74.5000206@qca.qualcomm.com> (sfid-20120718_111854_024454_8C1EA697)
+Date: Wed, 18 Jul 2012 12:18:44 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: DINO MYCLE <dino.mycle@sasken.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Per packet TPC is it implimented ?
-References: <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD6D4@EXGMBX01.sasken.com>
-In-Reply-To: <28DA1CA8CF17234FB030B1ECF787E6B7B9339AD6D4@EXGMBX01.sasken.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
+	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath6kl: support TX error rate notification
+References: <1342579195-18521-1-git-send-email-c_tpeder@qca.qualcomm.com>  (sfid-20120718_044010_258914_265CE137) <1342594185.5310.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1342594185.5310.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dino,
-
-We have implemented and evaluated TPC per packet in mac80211 based on
-802.11 g/a/n Atheros hardware.
-Currently we are focusing on proper rework to get it upstream.
-
-Greetings Thomas
-
-
-DINO MYCLE schrieb:
-
-> Hello all
->   I want to know whether per packet TPC implemented in the mac80211 ? and it can be made to work in 2.4GHz ?
+On 07/18/2012 09:49 AM, Johannes Berg wrote:
+> On Tue, 2012-07-17 at 19:39 -0700, Thomas Pedersen wrote:
+>> The ath6kl firmware can monitor a connection and report when a certain
+>> TX failure threshold is crossed. Support this configuration and event
+>> reporting on compatible firmwares.
+>>
+>> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+>> ---
+>> v2:
+>> 	endianness & formatting (Kalle)
+>> v3:
+>> 	report configured interval
+>>
+>> Kalle,
+>>
+>> Please cherry-pick "84f10708f73254878246772cead70a2eb6a123f2" from w-t HEAD to
+>> support this.
 > 
-> --
-> Thanks and Regards,
-> Dino
-> 
-> SASKEN BUSINESS DISCLAIMER: This message may contain confidential, proprietary or legally privileged information. In case you are not the original intended Recipient of the message, you must not, directly or indirectly, use, disclose, distribute, print, or copy any part of this message and you are requested to delete it and inform the sender. Any views expressed in this message are those of the individual sender unless otherwise stated. Nothing contained in this message shall be construed as an offer or acceptance of any offer by Sasken Communication Technologies Limited ("Sasken") unless sent with that express intent and with due authority of Sasken. Sasken has taken enough precautions to prevent the spread of viruses. However the company accepts no liability for any damage caused by any virus transmitted by this email.
-> Read Disclaimer at http://www.sasken.com/extras/mail_disclaimer.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I don't think you should cherry-pick patches, it makes them show up in
+> the trees twice later.
 
+Don't worry, I won't :)
+
+I always merge from wireless-next once the cfg80211 patch is there. I
+guess in very exceptional cases I could merge from your mac80211-next
+tree, but I try to avoid that.
+
+Kalle
