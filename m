@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:61933 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933237Ab2GEXIr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43602 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223Ab2GRPEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 19:08:47 -0400
-Received: by ghrr11 with SMTP id r11so8029476ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 16:08:47 -0700 (PDT)
-Date: Thu, 5 Jul 2012 16:08:42 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"Balasubramanian, Senthil Kumar" <senthilb@qca.qualcomm.com>,
-	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
-	qca-linux-team <qca-linux-team@qualcomm.com>,
-	Imran Ansari <imran@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sfr@canb.auug.org.au, mcgrof@frijolero.org, hauke@hauke-m.de,
-	ozancag@gmail.com, pstew@google.com, warthog9@kernel.org,
-	jrnieder@gmail.com, ben@decadent.org.uk, akpm@linux-foundation.org,
-	linville@tuxdriver.com
-Subject: Re: 3.5 stable compat-wireless
-Message-ID: <20120705230842.GA26510@kroah.com> (sfid-20120706_010852_460966_43F1D5D8)
-References: <20468.35601.132955.802881@gargle.gargle.HOWL>
- <7A9ADFFA56024346AAE90B6BABC3BD15DD6DEB@NASANEXD02B.na.qualcomm.com>
- <20469.13787.767293.602337@gargle.gargle.HOWL>
- <20120705190801.GB11228@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120705190801.GB11228@tux>
+	Wed, 18 Jul 2012 11:04:46 -0400
+Message-ID: <1342623886.5310.10.camel@jlt3.sipsolutions.net> (sfid-20120718_170449_419728_6EE087C9)
+Subject: Re: [PATCH] mac80211: flush stations before stop beaconing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 18 Jul 2012 17:04:46 +0200
+In-Reply-To: <1342614964-5826-1-git-send-email-eliad@wizery.com> (sfid-20120718_143605_797227_BF73C886)
+References: <1342614964-5826-1-git-send-email-eliad@wizery.com>
+	 (sfid-20120718_143605_797227_BF73C886)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 05, 2012 at 12:08:01PM -0700, Luis R. Rodriguez wrote:
->   * linux-crap.git: based on linux-next-pending.git and allows
->     contributors to send pull requests of crap that is not *ready*
->     to be sent properly upstream. Examples would be code we know
->     we simply already know that is not dealing with proper architecture
->     or style / etc. The drivers/staging/ allows vendors to post full
->     crap drivers, this would enable us to merge crap patches but that
->     some vendors might need / want.
+On Wed, 2012-07-18 at 15:36 +0300, Eliad Peller wrote:
+> When AP interface is going down, the stations
+> are flushed (in ieee80211_do_stop()) only after
+> the beaconing was stopped.
+> 
+> However, drivers might rely on stations being
+> removed before the beaconing was stopped, in
+> order to clean up properly.
+> 
+> Fix it by flushing the stations on ap stop.
+> 
+> (we already do the same for other interface
+> types, e.g. in ieee80211_set_disassoc())
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
 
-I really doubt this will work, look at the patches in some distros for
-examples of why.  I'm having a hard enough time with the LTSI project in
-conveying that "Yes, you can send patches to me for merging into the
-LSTI kernel, you still have to justify it, and work to get the patches
-then upstream, I'm not going to do your work for you."
+Applied, thanks.
 
-Having a random tree where these patches show up help no one except the
-original developer so that they can fire-and-forget, which is not what
-you want, unless you wish to take on the "get it cleaned up and merged
-upstream" task yourself, which you really don't want to.
+johannes
 
-good luck,
-
-greg k-h
