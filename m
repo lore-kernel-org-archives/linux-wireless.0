@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38822 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339Ab2GCQLr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42003 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab2GRGsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 12:11:47 -0400
-Received: by yhmm54 with SMTP id m54so6242204yhm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 09:11:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMcMvsioAY3sZZ77gu1MwHi5hcq4D71SAVSHYh3m=bYiWAXSqg@mail.gmail.com>
-References: <E50901D4F2CF69428D43141B7C85867929E154AE7B@EXMB03.eu.tieto.com> <CAMcMvsioAY3sZZ77gu1MwHi5hcq4D71SAVSHYh3m=bYiWAXSqg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 3 Jul 2012 09:11:25 -0700
-Message-ID: <CAB=NE6VPpP55jF9Jz2aftK7isLj1X1kCZnHSB8tBe4TFyiHqew@mail.gmail.com> (sfid-20120703_181150_782359_08539A07)
-Subject: Re: wlan automated tests
-To: Paul Stewart <pstew@chromium.org>
-Cc: Piotr.Nakraszewicz@tieto.com, linux-wireless@vger.kernel.org,
-	filip.matusiak@tieto.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 Jul 2012 02:48:39 -0400
+Message-ID: <1342594110.5310.2.camel@jlt3.sipsolutions.net> (sfid-20120718_084843_175898_364BA680)
+Subject: Re: [ath5k-devel] [PATCH 2/2] mac80211: Remove control.sta from
+ struct ieee80211_tx_info and restructure tx-path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: coelho@ti.com, brcm80211-dev-list@broadcom.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, ilw@linux.intel.com,
+	ath9k-devel@lists.ath9k.org, b43-dev@lists.infradead.org,
+	chunkeey@googlemail.com, dsd@gentoo.org, buytenh@wantstofly.org
+Date: Wed, 18 Jul 2012 08:48:30 +0200
+In-Reply-To: <5005CC26.6090408@net.t-labs.tu-berlin.de>
+References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 (sfid-20120713_205245_114771_49FF4AC7) <1342518290.7427.9.camel@jlt3.sipsolutions.net>
+	 <5005613F.1000004@net.t-labs.tu-berlin.de>
+	 <1342530237.8139.5.camel@jlt3.sipsolutions.net>
+	 <5005CC26.6090408@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 3, 2012 at 8:54 AM, Paul Stewart <pstew@chromium.org> wrote:
-> On Tue, Jul 3, 2012 at 5:47 AM,  <Piotr.Nakraszewicz@tieto.com> wrote:
->> Hi,
->>
->> What is the current status of wlan automated tests?
->>
->> I found 3 started projects:
->>
->> 1. wifi-test:
->> http://wireless.kernel.org/en/developers/Testing/wifi-test
->> But it looks dead. Last commit is from 2010.
->>
->> 2. LTP:
->> http://thread.gmane.org/gmane.linux.kernel.wireless.general/19759
->> http://thread.gmane.org/gmane.linux.ltp/7884
->>
->> The last comment I found was from 2009 from Luis R. Rodriguez:
->> "The GSoC student fell off from the face of the earth without even notice so the project was never finished. The project is up for grabs for anyone now to implement."
->>
->> Is that still valid?
->>
->> 3. Chromium Wifi tests:
->> http://thread.gmane.org/gmane.linux.kernel.wireless.general/57576
->>
->> The problem is they are designed to test chromium OS so it looks like they can't be used for purpose described here:
->
-> It should be reasonably straightforward to use this setup with
-> something other than ChromeOS.  Most of the work required to do so
-> would circle around creating platform-specific routines used to
-> establish and monitor status of connections -- the
-> site_wlan_connect.py and site_wlan_wait_state.py scripts.
 
-That's pretty awesome, what is the source of documentation for this?
-Is code pushed back upstream to autotest now ?
+> Virtual box did the job and I found 3 drivers that somehow did not
+> complain in my OpenWRT build env... thx for not playing :)... v3 is out.
 
-  Luis
+See, that's why I don't want to play the game -- I could've gone back
+and forth with you for like a week over multiple compile failures :-)
+
+> I used wireless-testing and not -next,as in -next the necessary patch
+> for mwlk8 is not included but in -testing. So my general question is on
+> which tree to develop, on testing or next?
+
+Well, they don't usually diverge much. I guess I can merge in
+wireless-next.git and wireless.git into mac80211-next.git if there's a
+problem applying. I have meetings now, will try to apply it later.
+
+johannes
+
