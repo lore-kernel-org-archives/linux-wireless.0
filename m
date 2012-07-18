@@ -1,26 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:59379 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227Ab2GIV3A (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44258 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755470Ab2GRSnT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 17:29:00 -0400
-Date: Mon, 09 Jul 2012 14:29:00 -0700 (PDT)
-Message-Id: <20120709.142900.48218599849332348.davem@davemloft.net> (sfid-20120709_232921_965458_2CB0BE73)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-07-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120709192818.GE1348@tuxdriver.com>
-References: <20120709192818.GE1348@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 18 Jul 2012 14:43:19 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SrZDR-0000aY-Tw
+	for linux-wireless@vger.kernel.org; Wed, 18 Jul 2012 20:43:18 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 0/6] some mac80211 aggregation work
+Date: Wed, 18 Jul 2012 20:43:14 +0200
+Message-Id: <1342637000-5270-1-git-send-email-johannes@sipsolutions.net> (sfid-20120718_204322_439711_5CA5130A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 9 Jul 2012 15:28:18 -0400
+This is untested, wanted to see what people think :-)
 
-> Please accept these fixes for the 3.5 stream...
+The basic reason for this is that we currently ask for
+aggregation stop but there's no clear indication of what
+should actually happen, if the frames should be dropped
+or maybe not etc., so I'm changing that.
 
-Pulled, thanks John.
+johannes
+
