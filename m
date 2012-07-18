@@ -1,32 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv10.sysproserver.de ([78.138.89.124]:38932 "EHLO
-	srv10.sysproserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014Ab2GSHZl convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:37081 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753810Ab2GRSd1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 03:25:41 -0400
-Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-From: =?iso-8859-1?Q?Andreas_Br=E4u?= <ab@andi95.de>
-In-Reply-To: <CA+XFjiqGXCdMYOnQz95biGYdR65x8dEAZzWnyAoWovEJ1tFQrw@mail.gmail.com>
-Date: Thu, 19 Jul 2012 09:18:10 +0200
-Cc: Bastian Bittorf <bittorf@bluebottle.com>,
-	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	feint@lists.subsignal.org
-Message-Id: <982FBF04-5969-436D-9D3A-A6388C077667@andi95.de> (sfid-20120719_092617_026598_8F793ADD)
-References: <1342612598.5006a476022c6@mail.bluebottle.com> <CA+XFjiqGXCdMYOnQz95biGYdR65x8dEAZzWnyAoWovEJ1tFQrw@mail.gmail.com>
-To: =?iso-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+	Wed, 18 Jul 2012 14:33:27 -0400
+Date: Wed, 18 Jul 2012 11:33:26 -0700 (PDT)
+Message-Id: <20120718.113326.707391526594137288.davem@davemloft.net> (sfid-20120718_203335_713695_3F3512EA)
+To: mark.d.rustad@intel.com
+Cc: eric.dumazet@gmail.com, nhorman@tuxdriver.com,
+	john.r.fastabend@intel.com, h@hmsreliant.think-freely.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+Subject: Re: That's pretty much it for 3.5.0
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <FEB6B45E-1CCF-4CBC-AEB7-21D2088E175C@intel.com>
+References: <205259E8-A99F-4573-96C9-7A394235B338@intel.com>
+	<1342634139.2626.3281.camel@edumazet-glaptop>
+	<FEB6B45E-1CCF-4CBC-AEB7-21D2088E175C@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> 
->> 1) why does a band change (can be seen through minstrel) is a problem?
-> 
-> Because IIRC b43 doesn't support anything other than 2.4GHz at all.
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Date: Wed, 18 Jul 2012 18:31:31 +0000
 
-It's not a change between 2.4 and 5 GHz. 
-Wifi stops working if the bitrate changes between 11b (1, 2, 5.5, 11) and 11g (6, 9, 12, 18, 24, 36, 48, 54) rates 
+> If this looks like a good change, I can send the patch. Is there any
+> concern about init_net going from bss to data?
 
-So if we tell the system to only use 11g rates, wifi doesn't stop.
-
-Andi
+There is no such concern, I like your change a lot.
