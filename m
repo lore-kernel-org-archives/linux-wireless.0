@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout09.t-online.de ([194.25.134.84]:40028 "EHLO
-	mailout09.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754408Ab2G3U6g (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:53764 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752018Ab2GRMNx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 16:58:36 -0400
-Message-ID: <5016F574.3000002@t-online.de> (sfid-20120730_225840_502698_7B34339C)
-Date: Mon, 30 Jul 2012 22:58:28 +0200
-From: "Ch. Hanisch" <ch-hanisch@t-online.de>
-MIME-Version: 1.0
+	Wed, 18 Jul 2012 08:13:53 -0400
+Received: by lbom4 with SMTP id m4so4559042lbo.16
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:50 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Subject: No WLAN on DELL XPS L702x with Ubuntu 12.04LTS (64Bit)
-Content-Type: text/plain; charset=ISO-8859-15
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 05/14] wl18xx: fix bogus compile warning on cc config option
+Date: Wed, 18 Jul 2012 15:13:24 +0300
+Message-Id: <1342613613-917-6-git-send-email-coelho@ti.com> (sfid-20120718_141359_428790_8A510E68)
+In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
+References: <1342613613-917-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Arik Nemtsov <arik@wizery.com>
 
-on an DELL XPS L702x under Ubuntu 12.04LTS (64Bit) the WLAN is not working.
-The network manager show the message
-"device is no ready"
+Initialize val to 0, to remove the following warning with
+CONFIG_CC_OPTIMIZE_FOR_SIZE. The compiler used was gcc 4.4.1
+(Sourcery G++ Lite 2010q1-202).
 
- On an other DELL XPS L702x Notebook with the same "lspci -v" with only
-one difference in graphic controller
-< 01:00.0 VGA compatible controller: NVIDIA Corporation Device 0dd6 (rev ff)
+drivers/net/wireless/ti/wl18xx/io.c: In function 'wl18xx_top_reg_read':
+drivers/net/wireless/ti/wl18xx/io.c:57: warning: 'val' may be used uninitialized in this function
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
-> 01:00.0 VGA compatible controller: NVIDIA Corporation GF106 [GeForce
-GT 555M] (rev ff)
-works on the Notebook with "NVIDIA Corporation Device 0dd6" the WLAN well.
+ drivers/net/wireless/ti/wl18xx/io.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-With a Live-DVD (64Bit) the same effect.
-sudo dmidecode give no differences.
-Kernel is 3.2.0-27-generic or older.
-
-The effect is like the modul iwlwifi is not loaded (sudo rmmod iwlwifi),
-although the module is loaded on both Notebooks.
-
-Is the module dell_laptop buggy?
-
-What can I do that the WLAN is working also on the second Notebook?
-    Beschreibung: Tragbarer Rechner
-    Produkt: Dell System XPS L702X (System SKUNumber)
-    Hersteller: Winbond Electronics
-    Version: 0.1
-    Seriennummer: 8Q6TRQ1
-sudo lshw
-...
-           *-network DEAKTIVIERT
-                Beschreibung: Kabellose Verbindung
-                Produkt: Centrino Wireless-N 1000
-                Hersteller: Intel Corporation
-                Physische ID: 0
-                Bus-Informationen: pci@0000:03:00.0
-                Logischer Name: wlan1
-                Version: 00
-                Seriennummer: 74:e5:0b:0e:b6:6c
-                Breite: 64 bits
-                Uhr: 33MHz
-                Fähigkeiten: pm msi pciexpress bus_master cap_list
-ethernet physical wireless
-                Konfiguration: broadcast=yes driver=iwlwifi
-driverversion=3.2.0-27-generic firmware=39.31.5.1 build 35138 latency=0
-link=no multicast=yes wireless=IEEE 802.11bgn
-                Ressourcen: irq:55 memory:f4300000-f4301fff
-...
-
- regards
-Ch. Hanisch
+diff --git a/drivers/net/wireless/ti/wl18xx/io.c b/drivers/net/wireless/ti/wl18xx/io.c
+index 0c06ccf..f0abf3e 100644
+--- a/drivers/net/wireless/ti/wl18xx/io.c
++++ b/drivers/net/wireless/ti/wl18xx/io.c
+@@ -54,7 +54,7 @@ out:
+ 
+ int wl18xx_top_reg_read(struct wl1271 *wl, int addr, u16 *out)
+ {
+-	u32 val;
++	u32 val = 0;
+ 	int ret;
+ 
+ 	if (WARN_ON(addr % 2))
+-- 
+1.7.10.4
 
