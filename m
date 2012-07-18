@@ -1,33 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11873 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757994Ab2GLHMi (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:43507 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753656Ab2GRMOA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 03:12:38 -0400
-Message-ID: <4FFE78DF.1060108@qca.qualcomm.com> (sfid-20120712_091241_984092_0B63BEFF)
-Date: Thu, 12 Jul 2012 10:12:31 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Make use of return value from ath6kl_diag_read()
-References: <1341991303-1034-1-git-send-email-c_ppitch@qca.qualcomm.com>
-In-Reply-To: <1341991303-1034-1-git-send-email-c_ppitch@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 18 Jul 2012 08:14:00 -0400
+Received: by lbon10 with SMTP id n10so3739674lbo.27
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:58 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 12/14] wl18xx: enable MIMO rates when connected as a MIMO STA
+Date: Wed, 18 Jul 2012 15:13:31 +0300
+Message-Id: <1342613613-917-13-git-send-email-coelho@ti.com> (sfid-20120718_141420_525600_ABCE2B30)
+In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
+References: <1342613613-917-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/2012 10:21 AM, Pandiyarajan Pitchaimuthu wrote:
-> In ath6kl_read_fwlogs(), return value from ath6kl_diag_read()is not
-> used to bail out in case of any errors in reading fw log. No real issue
-> is observed because of this, reported by source code analyzer.
-> 
-> Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-Thanks, applied. I just fixed a checkpatch warning about too long line.
+Use this opportunity to consolidate the check for MIMO support into a
+separate function.
 
-But please CC ath6kl-devel and kvalo@qca.qualcomm.com when submitting
-ath6kl patches. It makes it easier for me to track patches.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |   16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 2b9398c..69042bb 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1013,6 +1013,13 @@ static void wl18xx_set_rx_csum(struct wl1271 *wl,
+ 		skb->ip_summed = CHECKSUM_UNNECESSARY;
+ }
+ 
++static bool wl18xx_is_mimo_supported(struct wl1271 *wl)
++{
++	struct wl18xx_priv *priv = wl->priv;
++
++	return priv->conf.phy.number_of_assembled_ant2_4 >= 2;
++}
++
+ /*
+  * TODO: instead of having these two functions to get the rate mask,
+  * we should modify the wlvif->rate_set instead
+@@ -1029,6 +1036,9 @@ static u32 wl18xx_sta_get_ap_rate_mask(struct wl1271 *wl,
+ 
+ 		/* we don't support MIMO in wide-channel mode */
+ 		hw_rate_set &= ~CONF_TX_MIMO_RATES;
++	} else if (wl18xx_is_mimo_supported(wl)) {
++		wl1271_debug(DEBUG_ACX, "using MIMO channel rate mask");
++		hw_rate_set |= CONF_TX_MIMO_RATES;
+ 	}
+ 
+ 	return hw_rate_set;
+@@ -1037,8 +1047,6 @@ static u32 wl18xx_sta_get_ap_rate_mask(struct wl1271 *wl,
+ static u32 wl18xx_ap_get_mimo_wide_rate_mask(struct wl1271 *wl,
+ 					     struct wl12xx_vif *wlvif)
+ {
+-	struct wl18xx_priv *priv = wl->priv;
+-
+ 	if (wlvif->channel_type == NL80211_CHAN_HT40MINUS ||
+ 	    wlvif->channel_type == NL80211_CHAN_HT40PLUS) {
+ 		wl1271_debug(DEBUG_ACX, "using wide channel rate mask");
+@@ -1048,7 +1056,7 @@ static u32 wl18xx_ap_get_mimo_wide_rate_mask(struct wl1271 *wl,
+ 			return 0;
+ 
+ 		return CONF_TX_RATE_USE_WIDE_CHAN;
+-	} else if (priv->conf.phy.number_of_assembled_ant2_4 >= 2 &&
++	} else if (wl18xx_is_mimo_supported(wl) &&
+ 		   wlvif->band == IEEE80211_BAND_2GHZ) {
+ 		wl1271_debug(DEBUG_ACX, "using MIMO rate mask");
+ 		/*
+@@ -1478,7 +1486,7 @@ static int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		 * Only support mimo with multiple antennas. Fall back to
+ 		 * siso20.
+ 		 */
+-		if (priv->conf.phy.number_of_assembled_ant2_4 >= 2)
++		if (wl18xx_is_mimo_supported(wl))
+ 			wlcore_set_ht_cap(wl, IEEE80211_BAND_2GHZ,
+ 					  &wl18xx_mimo_ht_cap_2ghz);
+ 		else
+-- 
+1.7.10.4
+
