@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41742 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756725Ab2GKH1n (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:46216 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754619Ab2GROqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 03:27:43 -0400
-Message-ID: <1341991654.4480.5.camel@jlt3.sipsolutions.net> (sfid-20120711_092810_562521_35DE391C)
-Subject: Re: [PATCH] etherdevice: introduce eth_broadcast_addr
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Date: Wed, 11 Jul 2012 09:27:34 +0200
-In-Reply-To: <CAP=VYLqNyAF1gSsKTd3YojeJXK_-pEzXAKyVQbQfwhtwOyMmwg@mail.gmail.com> (sfid-20120711_021016_338821_DEFABE8B)
-References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
-	 <20120708.235808.1602900783296556684.davem@davemloft.net>
-	 <1341937124.4475.27.camel@jlt3.sipsolutions.net>
-	 <CAP=VYLqNyAF1gSsKTd3YojeJXK_-pEzXAKyVQbQfwhtwOyMmwg@mail.gmail.com>
-	 (sfid-20120711_021016_338821_DEFABE8B)
+	Wed, 18 Jul 2012 10:46:10 -0400
+Received: by lbom4 with SMTP id m4so2323817lbo.2
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 07:46:06 -0700 (PDT)
+Message-ID: <1342622762.5363.41.camel@cumari.coelho.fi> (sfid-20120718_164614_413634_C6E66CBE)
+Subject: Re: [PATCH] cfg80211: Fix mutex locking in
+ reg_last_request_cell_base
+From: Luciano Coelho <coelho@ti.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>
+Date: Wed, 18 Jul 2012 17:46:02 +0300
+In-Reply-To: <1342615289-3088-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1342615289-3088-1-git-send-email-mohammed@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-10 at 20:09 -0400, Paul Gortmaker wrote:
-> On Tue, Jul 10, 2012 at 12:18 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > A lot of code has either the memset or an inefficient copy
-> > from a static array that contains the all-ones broadcast
+On Wed, 2012-07-18 at 18:11 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 > 
-> Shouldn't we see all that "lot of code" here in this same
-> commit, now using this new shortcut?  If we apply this, we
-> have a new function, but with no users.  If you have done
-> the audit, and found the inefficient cases, why isn't it here?
+> should fix the following issue
+> 
+> 	[ 3229.815012] [ BUG: lock held when returning to user space! ]
+> 	[ 3229.815016] 3.5.0-rc7-wl #28 Tainted: G        W  O
+> 	[ 3229.815017]
+> 	------------------------------------------------
+> 	[ 3229.815019] wpa_supplicant/5783 is leaving the kernel with locks still held!
+> 	[ 3229.815022] 1 lock held by wpa_supplicant/5783:
+> 	[ 3229.815023]  #0: (reg_mutex){+.+.+.}, at: [<fa65834d>]
+> 	reg_last_request_cell_base+0x1d/0x60 [cfg80211]
+> 
+> Cc: Luis Rodriguez <mcgrof@gmail.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> ---
 
-I'm planning to fix the wireless uses (at least the ones I'm responsible
-for), but I'm just going to stick them into my mac80211-next tree after
-this patch percolates down there, I don't see a need to send around a
-ton of patches for it.
+Tested-by: Luciano Coelho <coelho@ti.com>
 
-> I would think it better to just fix those people who have a
-> pointless static array of all-ones to use the memset.  If it was a
-> multi line thing to achieve the eth_broadcast_addr() then it
-> might make sense to exist.  But as a one line alias, it does
-> seem somewhat pointless to me.
+This actually also fixes a similar circular lock dependency bug when
+starting AP mode with hostapd (which is the case I tested this patch
+on): http://pastebin.com/AVczE1Ej
 
-At least in my code I'm going to prefer this over the memset for
-documentation purposes. I'll agree that memset(..., 0xff, ETH_ALEN) is
-pretty obvious already, but eth_broadcast_addr(...) is even easier to
-read IMHO.
-
-johannes
+--
+Luca.
 
