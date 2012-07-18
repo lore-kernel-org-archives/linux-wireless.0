@@ -1,202 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:53830 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab2GSEjk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755528Ab2GRSnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:39:40 -0400
-Date: Wed, 18 Jul 2012 21:39:23 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH RESEND 3/9] Platform: OLPC: allow EC cmd to be overridden,
- and create a workqueue to call it
-Message-ID: <20120718213923.7e45f037@dev.queued.net> (sfid-20120719_064001_230694_931AE35B)
-In-Reply-To: <20120718213713.232e4161@dev.queued.net>
-References: <20120718213713.232e4161@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 18 Jul 2012 14:43:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 5/6] mac80211: split out aggregation TX removal
+Date: Wed, 18 Jul 2012 20:43:19 +0200
+Message-Id: <1342637000-5270-6-git-send-email-johannes@sipsolutions.net> (sfid-20120718_204334_035250_A88586B8)
+In-Reply-To: <1342637000-5270-1-git-send-email-johannes@sipsolutions.net>
+References: <1342637000-5270-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-This provides a new API allows different OLPC architectures to override the
-EC driver.  x86 and ARM OLPC machines use completely different EC backends.
+Create the function ieee80211_remove_tid_tx to call
+it from ___ieee80211_stop_tx_ba_session in the next
+patch, it's also necessary to move the code up in
+the file for this.
 
-The olpc_ec_cmd is synchronous, and waits for the workqueue to send the
-command to the EC.  Multiple callers can run olpc_ec_cmd() at once, and
-they will by serialized and sleep while only one executes on the EC at a time.
-
-We don't provide an unregister function, as that doesn't make sense within
-the context of OLPC machines - there's only ever 1 EC, it's critical to
-functionality, and it certainly not hotpluggable.
-
-Signed-off-by: Andres Salomon <dilinger@queued.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/platform/olpc/olpc-ec.c |  112 ++++++++++++++++++++++++++++++++++++++-
- include/linux/olpc-ec.h         |    6 ++
- 2 files changed, 116 insertions(+), 2 deletions(-)
+ net/mac80211/agg-tx.c |  196 ++++++++++++++++++++++++++-----------------------
+ 1 file changed, 104 insertions(+), 92 deletions(-)
 
-diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
-index 4202603..44e6a4f 100644
---- a/drivers/platform/olpc/olpc-ec.c
-+++ b/drivers/platform/olpc/olpc-ec.c
-@@ -5,12 +5,120 @@
-  *
-  * Licensed under the GPL v2 or later.
-  */
-+#include <linux/completion.h>
-+#include <linux/spinlock.h>
-+#include <linux/mutex.h>
-+#include <linux/workqueue.h>
- #include <linux/module.h>
-+#include <linux/list.h>
-+#include <linux/olpc-ec.h>
- #include <asm/olpc.h>
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 34d318e..5359b5c 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -149,6 +149,109 @@ void ieee80211_assign_tid_tx(struct sta_info *sta, int tid,
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], tid_tx);
+ }
  
-+struct ec_cmd_desc {
-+	u8 cmd;
-+	u8 *inbuf, *outbuf;
-+	size_t inlen, outlen;
-+
-+	int err;
-+	struct completion finished;
-+	struct list_head node;
-+
-+	void *priv;
-+};
-+
-+static void olpc_ec_worker(struct work_struct *w);
-+
-+static DECLARE_WORK(ec_worker, olpc_ec_worker);
-+static LIST_HEAD(ec_cmd_q);
-+static DEFINE_SPINLOCK(ec_cmd_q_lock);
-+
-+static struct olpc_ec_driver *ec_driver;
-+static void *ec_cb_arg;
-+static DEFINE_MUTEX(ec_cb_lock);
-+
-+void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg)
++static inline int ieee80211_ac_from_tid(int tid)
 +{
-+	ec_driver = drv;
-+	ec_cb_arg = arg;
-+}
-+EXPORT_SYMBOL_GPL(olpc_ec_driver_register);
-+
-+static void olpc_ec_worker(struct work_struct *w)
-+{
-+	struct ec_cmd_desc *desc = NULL;
-+	unsigned long flags;
-+
-+	/* Grab the first pending command from the queue */
-+	spin_lock_irqsave(&ec_cmd_q_lock, flags);
-+	if (!list_empty(&ec_cmd_q)) {
-+		desc = list_first_entry(&ec_cmd_q, struct ec_cmd_desc, node);
-+		list_del(&desc->node);
-+	}
-+	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
-+
-+	/* Do we actually have anything to do? */
-+	if (!desc)
-+		return;
-+
-+	/* Protect the EC hw with a mutex; only run one cmd at a time */
-+	mutex_lock(&ec_cb_lock);
-+	desc->err = ec_driver->ec_cmd(desc->cmd, desc->inbuf, desc->inlen,
-+			desc->outbuf, desc->outlen, ec_cb_arg);
-+	mutex_unlock(&ec_cb_lock);
-+
-+	/* Finished, wake up olpc_ec_cmd() */
-+	complete(&desc->finished);
-+
-+	/* Run the worker thread again in case there are more cmds pending */
-+	schedule_work(&ec_worker);
++	return ieee802_1d_to_ac[tid & 7];
 +}
 +
 +/*
-+ * Throw a cmd descripter onto the list.  We now have SMP OLPC machines, so
-+ * locking is pretty critical.
++ * When multiple aggregation sessions on multiple stations
++ * are being created/destroyed simultaneously, we need to
++ * refcount the global queue stop caused by that in order
++ * to not get into a situation where one of the aggregation
++ * setup or teardown re-enables queues before the other is
++ * ready to handle that.
++ *
++ * These two functions take care of this issue by keeping
++ * a global "agg_queue_stop" refcount.
 + */
-+static void queue_ec_descriptor(struct ec_cmd_desc *desc)
++static void __acquires(agg_queue)
++ieee80211_stop_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
 +{
-+	unsigned long flags;
++	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
 +
-+	INIT_LIST_HEAD(&desc->node);
-+
-+	spin_lock_irqsave(&ec_cmd_q_lock, flags);
-+	list_add_tail(&desc->node, &ec_cmd_q);
-+	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
-+
-+	schedule_work(&ec_worker);
++	if (atomic_inc_return(&sdata->local->agg_queue_stop[queue]) == 1)
++		ieee80211_stop_queue_by_reason(
++			&sdata->local->hw, queue,
++			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
++	__acquire(agg_queue);
 +}
 +
- int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
++static void __releases(agg_queue)
++ieee80211_wake_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
++{
++	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
++
++	if (atomic_dec_return(&sdata->local->agg_queue_stop[queue]) == 0)
++		ieee80211_wake_queue_by_reason(
++			&sdata->local->hw, queue,
++			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
++	__release(agg_queue);
++}
++
++/*
++ * splice packets from the STA's pending to the local pending,
++ * requires a call to ieee80211_agg_splice_finish later
++ */
++static void __acquires(agg_queue)
++ieee80211_agg_splice_packets(struct ieee80211_sub_if_data *sdata,
++			     struct tid_ampdu_tx *tid_tx, u16 tid)
++{
++	struct ieee80211_local *local = sdata->local;
++	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
++	unsigned long flags;
++
++	ieee80211_stop_queue_agg(sdata, tid);
++
++	if (WARN(!tid_tx,
++		 "TID %d gone but expected when splicing aggregates from the pending queue\n",
++		 tid))
++		return;
++
++	if (!skb_queue_empty(&tid_tx->pending)) {
++		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++		/* copy over remaining packets */
++		skb_queue_splice_tail_init(&tid_tx->pending,
++					   &local->pending[queue]);
++		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++	}
++}
++
++static void __releases(agg_queue)
++ieee80211_agg_splice_finish(struct ieee80211_sub_if_data *sdata, u16 tid)
++{
++	ieee80211_wake_queue_agg(sdata, tid);
++}
++
++static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
++{
++	struct tid_ampdu_tx *tid_tx;
++
++	lockdep_assert_held(&sta->ampdu_mlme.mtx);
++	lockdep_assert_held(&sta->lock);
++
++	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
++
++	/*
++	 * When we get here, the TX path will not be lockless any more wrt.
++	 * aggregation, since the OPERATIONAL bit has long been cleared.
++	 * Thus it will block on getting the lock, if it occurs. So if we
++	 * stop the queue now, we will not get any more packets, and any
++	 * that might be being processed will wait for us here, thereby
++	 * guaranteeing that no packets go to the tid_tx pending queue any
++	 * more.
++	 */
++
++	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
++
++	/* future packets must not find the tid_tx struct any more */
++	ieee80211_assign_tid_tx(sta, tid, NULL);
++
++	ieee80211_agg_splice_finish(sta->sdata, tid);
++
++	kfree_rcu(tid_tx, rcu_head);
++}
++
+ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 				    enum ieee80211_agg_stop_reason reason)
  {
--	/* Currently a stub; this will be expanded upon later. */
--	return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
-+	struct ec_cmd_desc desc;
-+
-+	/* XXX: this will be removed in later patches */
-+	/* Are we using old-style callers? */
-+	if (!ec_driver || !ec_driver->ec_cmd)
-+		return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
-+
-+	/* Ensure a driver and ec hook have been registered */
-+	if (WARN_ON(!ec_driver || !ec_driver->ec_cmd))
-+		return -ENODEV;
-+
-+	might_sleep();
-+
-+	desc.cmd = cmd;
-+	desc.inbuf = inbuf;
-+	desc.outbuf = outbuf;
-+	desc.inlen = inlen;
-+	desc.outlen = outlen;
-+	desc.err = 0;
-+	init_completion(&desc.finished);
-+
-+	queue_ec_descriptor(&desc);
-+
-+	/* Timeouts must be handled in the platform-specific EC hook */
-+	wait_for_completion(&desc.finished);
-+
-+	/* The worker thread dequeues the cmd; no need to do anything here */
-+	return desc.err;
+@@ -265,80 +368,6 @@ static void sta_addba_resp_timer_expired(unsigned long data)
+ 	rcu_read_unlock();
  }
- EXPORT_SYMBOL_GPL(olpc_ec_cmd);
-diff --git a/include/linux/olpc-ec.h b/include/linux/olpc-ec.h
-index 6d4e426..231e96f 100644
---- a/include/linux/olpc-ec.h
-+++ b/include/linux/olpc-ec.h
-@@ -14,8 +14,14 @@
- #define EC_SCI_QUERY			0x84
- #define EC_EXT_SCI_QUERY		0x85
  
-+struct olpc_ec_driver {
-+	int (*ec_cmd)(u8, u8 *, size_t, u8 *, size_t, void *);
-+};
-+
- #ifdef CONFIG_OLPC
+-static inline int ieee80211_ac_from_tid(int tid)
+-{
+-	return ieee802_1d_to_ac[tid & 7];
+-}
+-
+-/*
+- * When multiple aggregation sessions on multiple stations
+- * are being created/destroyed simultaneously, we need to
+- * refcount the global queue stop caused by that in order
+- * to not get into a situation where one of the aggregation
+- * setup or teardown re-enables queues before the other is
+- * ready to handle that.
+- *
+- * These two functions take care of this issue by keeping
+- * a global "agg_queue_stop" refcount.
+- */
+-static void __acquires(agg_queue)
+-ieee80211_stop_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
+-{
+-	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
+-
+-	if (atomic_inc_return(&sdata->local->agg_queue_stop[queue]) == 1)
+-		ieee80211_stop_queue_by_reason(
+-			&sdata->local->hw, queue,
+-			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+-	__acquire(agg_queue);
+-}
+-
+-static void __releases(agg_queue)
+-ieee80211_wake_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
+-{
+-	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
+-
+-	if (atomic_dec_return(&sdata->local->agg_queue_stop[queue]) == 0)
+-		ieee80211_wake_queue_by_reason(
+-			&sdata->local->hw, queue,
+-			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
+-	__release(agg_queue);
+-}
+-
+-/*
+- * splice packets from the STA's pending to the local pending,
+- * requires a call to ieee80211_agg_splice_finish later
+- */
+-static void __acquires(agg_queue)
+-ieee80211_agg_splice_packets(struct ieee80211_sub_if_data *sdata,
+-			     struct tid_ampdu_tx *tid_tx, u16 tid)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
+-	unsigned long flags;
+-
+-	ieee80211_stop_queue_agg(sdata, tid);
+-
+-	if (WARN(!tid_tx,
+-		 "TID %d gone but expected when splicing aggregates from the pending queue\n",
+-		 tid))
+-		return;
+-
+-	if (!skb_queue_empty(&tid_tx->pending)) {
+-		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-		/* copy over remaining packets */
+-		skb_queue_splice_tail_init(&tid_tx->pending,
+-					   &local->pending[queue]);
+-		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+-	}
+-}
+-
+-static void __releases(agg_queue)
+-ieee80211_agg_splice_finish(struct ieee80211_sub_if_data *sdata, u16 tid)
+-{
+-	ieee80211_wake_queue_agg(sdata, tid);
+-}
+-
+ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ {
+ 	struct tid_ampdu_tx *tid_tx;
+@@ -751,24 +780,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
+ 		ieee80211_send_delba(sta->sdata, ra, tid,
+ 			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
  
-+extern void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg);
-+
- extern int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
- 		size_t outlen);
+-	/*
+-	 * When we get here, the TX path will not be lockless any more wrt.
+-	 * aggregation, since the OPERATIONAL bit has long been cleared.
+-	 * Thus it will block on getting the lock, if it occurs. So if we
+-	 * stop the queue now, we will not get any more packets, and any
+-	 * that might be being processed will wait for us here, thereby
+-	 * guaranteeing that no packets go to the tid_tx pending queue any
+-	 * more.
+-	 */
+-
+-	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
+-
+-	/* future packets must not find the tid_tx struct any more */
+-	ieee80211_assign_tid_tx(sta, tid, NULL);
+-
+-	ieee80211_agg_splice_finish(sta->sdata, tid);
+-
+-	kfree_rcu(tid_tx, rcu_head);
++	ieee80211_remove_tid_tx(sta, tid);
  
+  unlock_sta:
+ 	spin_unlock_bh(&sta->lock);
 -- 
-1.7.2.5
+1.7.10.4
 
