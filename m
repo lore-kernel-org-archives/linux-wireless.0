@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61276 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752216Ab2GWLYp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 07:24:45 -0400
-Date: Mon, 23 Jul 2012 13:24:22 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Matt Chen <machen@suse.com>
-Cc: kevin.chou@mediatek.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
-Message-ID: <20120723112359.GA2567@redhat.com> (sfid-20120723_132449_450952_C6327FC2)
-References: <1342667903-27314-1-git-send-email-machen@suse.com>
- <20120719145430.GA4231@redhat.com>
- <CALx5=V8Sz_CiqQvX-N1hscmpYa7GTO2YfukS8BJc1YChLFmd5Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALx5=V8Sz_CiqQvX-N1hscmpYa7GTO2YfukS8BJc1YChLFmd5Q@mail.gmail.com>
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:59929 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751954Ab2GRMNs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2012 08:13:48 -0400
+Received: by bkcji2 with SMTP id ji2so1257133bkc.36
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:46 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com, arik@wizery.com
+Subject: [PATCH 01/14] wl18xx: alloc conf.phy memory to ensure alignemnt
+Date: Wed, 18 Jul 2012 15:13:20 +0300
+Message-Id: <1342613613-917-2-git-send-email-coelho@ti.com> (sfid-20120718_141353_603698_DA6811B4)
+In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
+References: <1342613613-917-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Arik Nemtsov <arik@wizery.com>
 
-On Mon, Jul 23, 2012 at 03:01:08PM +0800, Matt Chen wrote:
-> >> +
-> >> +                     rt2800_register_write(rt2x00dev, 0x58, 0x018);
-> >> +                     udelay(REGISTER_BUSY_DELAY);
-> >> +                     rt2800_register_write(rt2x00dev, 0x58, 0x418);
-> >> +                     udelay(REGISTER_BUSY_DELAY);
-> >> +                     rt2800_register_write(rt2x00dev, 0x58, 0x618);
-> > We really like to know what those black magic numbers mean.
-> I have no idea, Ralink gave it to me for the fixing.
+We get DMA alignment trouble if the beginning of the conf.phy struct is
+not aligned to 4 bytes. Use kmemdup to ensure alignment.
 
-So perhaps patch should be posted by Ralink developer, who can fix that
-accordingly?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Also it's clear now that you are not the author of the patch. Would be
-good to indicate true author of the patch by adding "From:" and
-"Signed-off-by:" lines.
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index b378b34..8bb21b6 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -772,16 +772,24 @@ out:
+ static int wl18xx_set_mac_and_phy(struct wl1271 *wl)
+ {
+ 	struct wl18xx_priv *priv = wl->priv;
++	struct wl18xx_mac_and_phy_params *params;
+ 	int ret;
+ 
++	params = kmemdup(&priv->conf.phy, sizeof(*params), GFP_KERNEL);
++	if (!params) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
+ 	ret = wlcore_set_partition(wl, &wl->ptable[PART_PHY_INIT]);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wlcore_write(wl, WL18XX_PHY_INIT_MEM_ADDR, (u8 *)&priv->conf.phy,
+-			   sizeof(struct wl18xx_mac_and_phy_params), false);
++	ret = wlcore_write(wl, WL18XX_PHY_INIT_MEM_ADDR, params,
++			   sizeof(*params), false);
+ 
+ out:
++	kfree(params);
+ 	return ret;
+ }
+ 
+-- 
+1.7.10.4
 
-Thanks
-Stanislaw
