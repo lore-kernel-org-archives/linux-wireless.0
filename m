@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:51905 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752741Ab2GCQti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 12:49:38 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 03/10] qca-swiss-army-knife: add ar9462-2p0 to verify_checksums.sh
-Date: Tue,  3 Jul 2012 18:42:48 +0200
-Message-Id: <1341333775-14091-4-git-send-email-juhosg@openwrt.org> (sfid-20120703_184942_954585_60E8A50A)
-In-Reply-To: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
-References: <1341333775-14091-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:44814 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab2GRGzY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jul 2012 02:55:24 -0400
+Received: by gglu4 with SMTP id u4so1242776ggl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jul 2012 23:55:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <A478988B-A444-4FBA-B9FA-9DF5D17C949A@gmail.com>
+References: <A478988B-A444-4FBA-B9FA-9DF5D17C949A@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 17 Jul 2012 23:55:03 -0700
+Message-ID: <CAB=NE6W_c=1pdQj8WxiWaBBmZ9t8JiHqtNon6tz2RuaJcgxKBQ@mail.gmail.com> (sfid-20120718_085528_033622_FE5A6882)
+Subject: Re: Mismatching sha-1 sums
+To: Garrett Reid <garrett.reid@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- tools/initvals/verify_checksums.sh |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tue, Jul 17, 2012 at 6:18 PM, Garrett Reid <garrett.reid@gmail.com> wrote:
+> Hi guys,
+>
+> I was grabbing compat-wireless-3.5-rc5-1.tar.bz2 from http://wireless.kernel.org/en/users/Download/stable/, and my sha1sum mismatches.
+>
+> The page says I should have a checksum of d5908382831a2fdb79a5078fcc2ffaf49e914a1b, and I'm getting a checksum of d0c6bf8cda947143ad66cbfe79d4bec44fbbcc67.
+>
+> Is this expected?
 
-diff --git a/tools/initvals/verify_checksums.sh b/tools/initvals/verify_checksums.sh
-index 6878ca5..fd03478 100755
---- a/tools/initvals/verify_checksums.sh
-+++ b/tools/initvals/verify_checksums.sh
-@@ -31,7 +31,7 @@ verify_family_checksum()
- }
- 
- FAMILIES="$@"
--[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9485 ar9580-1p0"
-+[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9462-2p0 ar9485 ar9580-1p0"
- 
- mkdir -p "$CSUM_DIR"
- for family in $FAMILIES; do
--- 
-1.7.2.1
+No, I forgot to update the wiki with that new sha1sum, thanks for
+reporting that, this is now fixed.
 
+  Luis
