@@ -1,68 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:12015 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932379Ab2GKTcg (ORCPT
+Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:55500 "EHLO
+	outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751871Ab2GRLk0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 15:32:36 -0400
-Date: Wed, 11 Jul 2012 14:32:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Remove extra argument from queue setup routine
-Message-ID: <4ffdd4d1.Iwl3XOvFMQ8PM7Bc%Larry.Finger@lwfinger.net> (sfid-20120711_213240_810221_79CF31CD)
+	Wed, 18 Jul 2012 07:40:26 -0400
+Date: Wed, 18 Jul 2012 13:21:31 +0200
+From: Henning Heinold <heinold@inf.fu-berlin.de>
+To: "Chen, Chien-Chia" <machen@suse.com>
+Cc: users@rt2x00.serialmonkey.com, kevin.chou@mediatek.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
+Message-ID: <20120718112131.GB29030@mi.fu-berlin.de> (sfid-20120718_134030_675185_04BC137A)
+References: <1342600827-18420-1-git-send-email-machen@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1342600827-18420-1-git-send-email-machen@suse.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused argument hw from call to rtl_tid_to_ac().
+On Wed, Jul 18, 2012 at 04:40:27PM +0800, Chen, Chien-Chia wrote:
+> This patch is going to fix the resuming failed from S3/S4
+> for rt3290 chip.
+> 
+> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index e76f03c..1715776 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -400,6 +400,13 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+>  {
+>  	unsigned int i;
+>  	u32 reg;
+> +	int retval;
+> +
+> +	if (rt2x00_rt(rt2x00dev,RT3290)){
+> +		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
+> +		if (retval)
+> +			return -EBUSY;
+> +	}
+>  
+>  	/*
+>  	 * If driver doesn't wake up firmware here,
+> @@ -5152,6 +5159,65 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
+>  }
+>  EXPORT_SYMBOL_GPL(rt2800_get_survey);
+>  
+> +int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+> +{
+> +	u32 reg;
+> +	int i, count;
+> +
+> +	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+> +	if ((rt2x00_get_field32(reg, WLAN_EN) == 1))
+> +		return 0;
+> +
+> +	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
+> +	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
+> +	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
+> +	rt2x00_set_field32(&reg, WLAN_EN, 1);
+> +	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+> +
+> +	udelay(REGISTER_BUSY_DELAY);
+> +	count = 0;
+> +	do {
+> +		/*
+> +		 * Check PLL_LD & XTAL_RDY.
+> +		 */
+> +		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+> +			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
+> +			if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
+> +				(rt2x00_get_field32(reg, XTAL_RDY) == 1))
+> +					break;
+> +			udelay(REGISTER_BUSY_DELAY);
+> +		}
+> +		if (i >= REGISTER_BUSY_COUNT) {
+> +			if (count >= 10)
+> +				return -EIO;
+> +
+> +			rt2800_register_write(rt2x00dev, 0x58, 0x018);
+> +			udelay(REGISTER_BUSY_DELAY);
+> +			rt2800_register_write(rt2x00dev, 0x58, 0x418);
+> +			udelay(REGISTER_BUSY_DELAY);
+> +			rt2800_register_write(rt2x00dev, 0x58, 0x618);
+> +			udelay(REGISTER_BUSY_DELAY);
+> +			count++;
+> +		} else {
+> +			count = 0;
+> +		}
+> +
+> +		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+> +		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
+> +		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
+> +		rt2x00_set_field32(&reg, WLAN_RESET, 1);
+> +		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+> +		udelay(10);
+> +		rt2x00_set_field32(&reg, WLAN_RESET, 0);
+> +		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+> +		udelay(10);
+> +		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
+> +	} while (count != 0);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(rt2800_enable_wlan_rt3290);
+> +
+>  MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
+>  MODULE_VERSION(DRV_VERSION);
+>  MODULE_DESCRIPTION("Ralink RT2800 library");
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+> index 18a0b67..12d6eeb 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+> @@ -209,5 +209,5 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>  int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
+>  		      struct survey_info *survey);
+>  void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
+> -
+> +int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev);
+>  #endif /* RT2800LIB_H */
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 235376e..135c2a2 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -980,6 +980,7 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	return rt2800_validate_eeprom(rt2x00dev);
+>  }
+>  
+> +#if 0
+>  static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+>  {
+>  	u32 reg;
+> @@ -1040,6 +1041,8 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+>  
+>  	return 0;
+>  }
+> +
+> +#endif
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Why do you need the #ifdefs here?
 
-John,
+>  static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+>  {
+>  	int retval;
+> 
 
-More 3.6 material.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-@@ -167,7 +167,7 @@ static const u8 tid_to_ac[] = {
- 	0, /* IEEE80211_AC_VO */
- };
- 
--u8 rtl_tid_to_ac(struct ieee80211_hw *hw, u8 tid)
-+u8 rtl_tid_to_ac(u8 tid)
- {
- 	return tid_to_ac[tid];
- }
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.h
-@@ -138,7 +138,7 @@ int rtl_send_smps_action(struct ieee8021
- 		enum ieee80211_smps_mode smps);
- u8 *rtl_find_ie(u8 *data, unsigned int len, u8 ie);
- void rtl_recognize_peer(struct ieee80211_hw *hw, u8 *data, unsigned int len);
--u8 rtl_tid_to_ac(struct ieee80211_hw *hw, u8 tid);
-+u8 rtl_tid_to_ac(u8 tid);
- extern struct attribute_group rtl_attribute_group;
- int rtlwifi_rate_mapping(struct ieee80211_hw *hw,
- 			 bool isht, u8 desc_rate, bool first_ampdu);
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-@@ -480,7 +480,7 @@ static void _rtl_pci_tx_chk_waitq(struct
- 
- 	/* we juse use em for BE/BK/VI/VO */
- 	for (tid = 7; tid >= 0; tid--) {
--		u8 hw_queue = ac_to_hwq[rtl_tid_to_ac(hw, tid)];
-+		u8 hw_queue = ac_to_hwq[rtl_tid_to_ac(tid)];
- 		struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
- 		while (!mac->act_scanning &&
- 		       rtlpriv->psc.rfpwr_state == ERFON) {
+Bye Henning
