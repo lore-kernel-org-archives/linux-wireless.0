@@ -1,56 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4466 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753735Ab2GJIfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 04:35:09 -0400
-Message-ID: <4FFBE92B.7070304@broadcom.com> (sfid-20120710_103517_435445_73C08398)
-Date: Tue, 10 Jul 2012 10:34:51 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:49252 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258Ab2GSKD3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2012 06:03:29 -0400
+Date: Thu, 19 Jul 2012 12:03:26 +0200 (CEST)
+From: npl@npl.de
+To: Maschinenraum <feint@lists.subsignal.org>,
+	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: feint@lists.subsignal.org, openwrt-devel@lists.openwrt.org,
+	linux-wireless@vger.kernel.org,
+	Bastian Bittorf <bittorf@bluebottle.com>
+Message-ID: <33140980.10.1342692206075.JavaMail.root@tf> (sfid-20120719_120332_930652_9EAFD8F6)
+In-Reply-To: <982FBF04-5969-436D-9D3A-A6388C077667@andi95.de>
+Subject: Re: [maschinenraum] WRT54g / b43 / mac802.11 BREAKTHROUGH
 MIME-Version: 1.0
-To: "Thomas Huehn" <thomas@net.t-labs.tu-berlin.de>
-cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
-	linville@tuxdriver.com
-Subject: Re: [PATCH v2] brcmsmac: restructure info->control.sta handling
- as it is goning to be removed soon.
-References: <1340974563-77085-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <4FFAE252.4070504@broadcom.com>
- <4FFB5709.6070403@net.t-labs.tu-berlin.de>
-In-Reply-To: <4FFB5709.6070403@net.t-labs.tu-berlin.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/10/2012 12:11 AM, Thomas Huehn wrote:
-> Hi Arend,
-> 
->>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
->>> index 01b190a..d341c91 100644
->>> --- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
->>> +++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
->>> @@ -665,7 +665,7 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
->>>  			u8 plcp0, plcp3, is40, sgi;
->>>  			struct ieee80211_sta *sta;
->>>  
->>> -			sta = tx_info->control.sta;
->>> +			sta = tx_info->rate_driver_data[0];
->>
->> The sta pointer is not used in this function so this assignment is not
->> needed. Also the rate_driver_data[0] does not yet hold the sta pointer
->> upon reaching this function. brcms_c_sendampdu is called from
->> brcms_c_sendpkt_mac80211 (see below).
->>
->> Just remove the sta pointer here.
-> 
-> 
-> Good catch ! v2 is already sent.
-> 
+> It's not a change between 2.4 and 5 GHz. 
+> Wifi stops working if the bitrate changes between 11b (1, 2, 5.5, 11) and 11g (6, 9, 12, 18, 24, 36, 48, 54) rates 
+>
+> So if we tell the system to only use 11g rates, wifi doesn't stop.
 
-Given the subject of this one, I suspect it should have been v3. Hope
-John can keep them apart.
+Dann laufen aber 11b Karten nicht mehr.
 
-Gr. AvS
-
-
-
+Thomas
