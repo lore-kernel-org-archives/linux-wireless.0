@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:44872 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755977Ab2GaMzO (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:38528 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313Ab2GSFID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 08:55:14 -0400
-Received: by qcro28 with SMTP id o28so3617689qcr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2012 05:55:13 -0700 (PDT)
+	Thu, 19 Jul 2012 01:08:03 -0400
+Received: by obbuo13 with SMTP id uo13so3185659obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 22:08:02 -0700 (PDT)
 MIME-Version: 1.0
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Tue, 31 Jul 2012 13:54:52 +0100
-Message-ID: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com> (sfid-20120731_145519_552712_8E3F6AA6)
-Subject: unloading WiFi modules is usually triggering kernel crash
-To: ML linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAD2nsn31Y5U2A2vDt_WBb_pGghoXqMZGYW5+DFFT+TPwsv-pcw@mail.gmail.com>
+References: <20120706125043.GA23189@pandem0nium>
+	<CAD2nsn1=PDBTRXumDh93DzvmFcBnyFeLD-5c5oSJmv3OO6LWGw@mail.gmail.com>
+	<5244861.J1Tyef1FCX@bentobox>
+	<4991617.K7XqcvhjBY@bentobox>
+	<CAD2nsn2m1wizCw6WY-k0KRY2NJTaqqxdoA_d_+K-kqrhw+FZ3w@mail.gmail.com>
+	<CAD2nsn1-ZrKQxTYc_YZ6ETxovD9o7=Ygd2j2MxJiq8Vsiu19QQ@mail.gmail.com>
+	<CAD2nsn2_16KcE2g5gysc5XwVtns5jAwD+doRzqTQdsim8xbchQ@mail.gmail.com>
+	<20120707185953.GA3911@pandem0nium>
+	<CAD2nsn31Y5U2A2vDt_WBb_pGghoXqMZGYW5+DFFT+TPwsv-pcw@mail.gmail.com>
+Date: Thu, 19 Jul 2012 10:38:02 +0530
+Message-ID: <CAD2nsn16+4gq6Di1CVcHxViYC_J8Et160xww+vGJJpJf6wgv2Q@mail.gmail.com> (sfid-20120719_070809_485052_2E21F137)
+Subject: Re: ath9k: Problems with diversity on AR9330
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: Sven Eckelmann <sven@narfation.org>, ath9k-devel@lists.ath9k.org,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	linux-wireless@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've noticed in the past few days a pattern: sometimes nm-applet
-starts showing empty bars for the signal strength.
+>
+>> we had this checked out before, the EEPROM/EEP_ANT_DIV_CTL1 value is set to 000000c9,
+>> so bit 6 and 7 are on (as checked in this function).
+>>
 
-Running the script:
-sudo ifconfig wlan0 down; sleep 1
-sudo rmmod hp_wmi; sudo rmmod iwl3945; sudo rmmod iwlegacy; sudo rmmod
-mac80211; sudo rmmod cfg80211
-sleep 2; sudo rmmod rfkill; sync
-sudo modprobe rfkill; sudo modprobe cfg80211; sudo modprobe mac80211;
-sudo modprobe iwlegacy
-sudo modprobe iwl3945; sudo modprobe hp_wmi; sleep 1; sudo ifconfig wlan0 up
+with inputs from Felix Bitterli,
 
-usually triggers a kernel crash. This has happened twice so far. I
-tried it now for the third time but it didn't crash.
+-128 means: no measurement performed on this antenna.This will happen
+with strong signals where too many gain-changes are needed to bring
+the input signal into range, after which there is no time left to take
+a measurement at the alternate antenna.
 
-Logs (running with slub_debug ):
-https://dl.dropbox.com/u/1332655/WiFi-issues/notTainted-cfg80211_mlme_disassoc-WARNING.log
-https://dl.dropbox.com/u/1332655/WiFi-issues/alreadyTainted-debug_print_object-WARNING.log
-(debug_print_object-WARNING was caused by running the above script
-rmmoding things)
-https://dl.dropbox.com/u/1332655/WiFi-issues/iw_dev_scan.log
-https://dl.dropbox.com/u/1332655/WiFi-issues/gshell-wifiBars_empty.png
+So:
+1) to see diversity at work, increase the distance (dramatically).
+2) There is no problem, the system is working correctly.
 
-Any ideas on what is going on? Looking at other mails around here it
-seems not to be driver specific, at least the cfg80211_mlme_disassoc
-part.
+will provide some updates when i find some time to test.
 
-Thanks in Advance,
 -- 
-Pedro
+thanks,
+shafi
