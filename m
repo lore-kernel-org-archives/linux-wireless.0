@@ -1,81 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51274 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836Ab2GQLrf (ORCPT
+Received: from lunge.queued.net ([173.255.254.236]:53818 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424Ab2GSEjE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:47:35 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20485.20616.91106.641949@gargle.gargle.HOWL> (sfid-20120717_134738_697111_8DDDFA38)
-Date: Tue, 17 Jul 2012 17:16:16 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/12] ath9k: Set the TSF adjust value properly
+	Thu, 19 Jul 2012 00:39:04 -0400
+Date: Wed, 18 Jul 2012 21:38:46 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH RESEND 2/9] drivers: OLPC: update various drivers to include
+ olpc-ec.h
+Message-ID: <20120718213846.2d8d274f@dev.queued.net> (sfid-20120719_063926_651027_C792427D)
+In-Reply-To: <20120718213713.232e4161@dev.queued.net>
+References: <20120718213713.232e4161@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |  1 +
- drivers/net/wireless/ath/ath9k/beacon.c | 17 +++++++++++++++++
- drivers/net/wireless/ath/ath9k/main.c   |  3 +++
- 3 files changed, 21 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index ae3e940..7e4839a 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -418,6 +418,7 @@ void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
- 			 u32 changed);
- void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
-+void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_set_beacon(struct ath_softc *sc);
- void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+Switch over to using olpc-ec.h in multiple steps, so as not to break builds.
+This covers every driver that calls olpc_ec_cmd().
+
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ arch/x86/include/asm/olpc.h            |    1 -
+ arch/x86/platform/olpc/olpc-xo1-pm.c   |    1 +
+ arch/x86/platform/olpc/olpc-xo1-sci.c  |    1 +
+ arch/x86/platform/olpc/olpc-xo15-sci.c |    1 +
+ arch/x86/platform/olpc/olpc.c          |    1 +
+ drivers/net/wireless/libertas/if_usb.c |    1 +
+ drivers/platform/x86/xo1-rfkill.c      |    3 +--
+ drivers/power/olpc_battery.c           |    1 +
+ drivers/staging/olpc_dcon/olpc_dcon.c  |    1 +
+ 9 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/include/asm/olpc.h b/arch/x86/include/asm/olpc.h
+index 513e999..5b28f3e 100644
+--- a/arch/x86/include/asm/olpc.h
++++ b/arch/x86/include/asm/olpc.h
+@@ -4,7 +4,6 @@
+ #define _ASM_X86_OLPC_H
  
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 02fbd3e..f2a2131 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -268,6 +268,23 @@ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	tasklet_enable(&sc->bcon_tasklet);
- }
+ #include <asm/geode.h>
+-#include <linux/olpc-ec.h>
  
-+void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
-+	struct ath_vif *avp = (void *)vif->drv_priv;
-+	u64 tsfadjust;
-+
-+	if (avp->av_bslot == 0)
-+		return;
-+
-+	tsfadjust = cur_conf->beacon_interval * avp->av_bslot / ATH_BCBUF;
-+	avp->tsf_adjust = cpu_to_le64(TU_TO_USEC(tsfadjust));
-+
-+	ath_dbg(common, CONFIG, "tsfadjust is: %llu for bslot: %d\n",
-+		(unsigned long long)tsfadjust, avp->av_bslot);
-+}
-+
- void ath_beacon_tasklet(unsigned long data)
- {
- 	struct ath_softc *sc = (struct ath_softc *)data;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7760dc3..c23912c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1530,6 +1530,9 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ struct olpc_platform_t {
+ 	int flags;
+diff --git a/arch/x86/platform/olpc/olpc-xo1-pm.c b/arch/x86/platform/olpc/olpc-xo1-pm.c
+index 0ce8616c..8054b64 100644
+--- a/arch/x86/platform/olpc/olpc-xo1-pm.c
++++ b/arch/x86/platform/olpc/olpc-xo1-pm.c
+@@ -18,6 +18,7 @@
+ #include <linux/pm.h>
+ #include <linux/mfd/core.h>
+ #include <linux/suspend.h>
++#include <linux/olpc-ec.h>
  
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
- 	    (changed & BSS_CHANGED_BEACON_INT)) {
-+		if (ah->opmode == NL80211_IFTYPE_AP &&
-+		    bss_conf->enable_beacon)
-+			ath9k_set_tsfadjust(sc, vif);
- 		if (ath9k_allow_beacon_config(sc, vif))
- 			ath9k_beacon_config(sc, vif, changed);
- 	}
+ #include <asm/io.h>
+ #include <asm/olpc.h>
+diff --git a/arch/x86/platform/olpc/olpc-xo1-sci.c b/arch/x86/platform/olpc/olpc-xo1-sci.c
+index 04b8c73..63d4aa4 100644
+--- a/arch/x86/platform/olpc/olpc-xo1-sci.c
++++ b/arch/x86/platform/olpc/olpc-xo1-sci.c
+@@ -23,6 +23,7 @@
+ #include <linux/power_supply.h>
+ #include <linux/suspend.h>
+ #include <linux/workqueue.h>
++#include <linux/olpc-ec.h>
+ 
+ #include <asm/io.h>
+ #include <asm/msr.h>
+diff --git a/arch/x86/platform/olpc/olpc-xo15-sci.c b/arch/x86/platform/olpc/olpc-xo15-sci.c
+index 23e5b9d..9899fef 100644
+--- a/arch/x86/platform/olpc/olpc-xo15-sci.c
++++ b/arch/x86/platform/olpc/olpc-xo15-sci.c
+@@ -13,6 +13,7 @@
+ #include <linux/slab.h>
+ #include <linux/workqueue.h>
+ #include <linux/power_supply.h>
++#include <linux/olpc-ec.h>
+ 
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_drivers.h>
+diff --git a/arch/x86/platform/olpc/olpc.c b/arch/x86/platform/olpc/olpc.c
+index 796e199..a3fa180 100644
+--- a/arch/x86/platform/olpc/olpc.c
++++ b/arch/x86/platform/olpc/olpc.c
+@@ -22,6 +22,7 @@
+ #include <linux/syscore_ops.h>
+ #include <linux/debugfs.h>
+ #include <linux/mutex.h>
++#include <linux/olpc-ec.h>
+ 
+ #include <asm/geode.h>
+ #include <asm/setup.h>
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index cd3b0d4..a9828b1 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -10,6 +10,7 @@
+ #include <linux/netdevice.h>
+ #include <linux/slab.h>
+ #include <linux/usb.h>
++#include <linux/olpc-ec.h>
+ 
+ #ifdef CONFIG_OLPC
+ #include <asm/olpc.h>
+diff --git a/drivers/platform/x86/xo1-rfkill.c b/drivers/platform/x86/xo1-rfkill.c
+index b57ad86..1da13ed 100644
+--- a/drivers/platform/x86/xo1-rfkill.c
++++ b/drivers/platform/x86/xo1-rfkill.c
+@@ -12,8 +12,7 @@
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/rfkill.h>
+-
+-#include <asm/olpc.h>
++#include <linux/olpc-ec.h>
+ 
+ static bool card_blocked;
+ 
+diff --git a/drivers/power/olpc_battery.c b/drivers/power/olpc_battery.c
+index 7385092..eaf917d 100644
+--- a/drivers/power/olpc_battery.c
++++ b/drivers/power/olpc_battery.c
+@@ -17,6 +17,7 @@
+ #include <linux/power_supply.h>
+ #include <linux/jiffies.h>
+ #include <linux/sched.h>
++#include <linux/olpc-ec.h>
+ #include <asm/olpc.h>
+ 
+ 
+diff --git a/drivers/staging/olpc_dcon/olpc_dcon.c b/drivers/staging/olpc_dcon/olpc_dcon.c
+index 992275c..2c4bd74 100644
+--- a/drivers/staging/olpc_dcon/olpc_dcon.c
++++ b/drivers/staging/olpc_dcon/olpc_dcon.c
+@@ -27,6 +27,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/ctype.h>
+ #include <linux/reboot.h>
++#include <linux/olpc-ec.h>
+ #include <asm/tsc.h>
+ #include <asm/olpc.h>
+ 
 -- 
-1.7.11.2
+1.7.2.5
 
