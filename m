@@ -1,220 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55362 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932307Ab2GKTlE (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:56516 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754862Ab2GSBlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 15:41:04 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath6kl-devel@qualcomm.com>, <kvalo@qca.qualcomm.com>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [PATCH v2] ath6kl: support TX error rate notification
-Date: Wed, 11 Jul 2012 12:40:58 -0700
-Message-ID: <1342035658-4457-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120711_214107_584102_2253091D)
+	Wed, 18 Jul 2012 21:41:06 -0400
+Received: by wgbdr13 with SMTP id dr13so1895071wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 18:41:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1342612598.5006a476022c6@mail.bluebottle.com>
+References: <1342612598.5006a476022c6@mail.bluebottle.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 19 Jul 2012 03:40:44 +0200
+Message-ID: <CA+XFjiqGXCdMYOnQz95biGYdR65x8dEAZzWnyAoWovEJ1tFQrw@mail.gmail.com> (sfid-20120719_034110_905937_F1EE6101)
+Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
+To: Bastian Bittorf <bittorf@bluebottle.com>
+Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
+	feint@lists.subsignal.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath6kl firmware can monitor a connection and report when a certain
-TX failure threshold is crossed. Support this configuration and event
-reporting on compatible firmwares.
+On Wed, Jul 18, 2012 at 1:56 PM, Bastian Bittorf <bittorf@bluebottle.com> wrote:
+> hi devs!
+>
+> yesterday we had a breaktrough debugging b43 in our hackspace maschinenraum/m18[1,2]
+> at weimar.freifunk.net[3,4] - since a long time our darling wrt54g suffers from a
+> hanging wifi and bad performance[5], but the workaround is easy: now it's up to
+> you to fix the rootcause.
+>
+> our testsetup, where we could _reproduce_ reliably a stopping TX is like this:
+>
+> laptop ---lan--- "A"-wrt54g/adhoc ~~~   air  ~~~ "B"-anyrouter/adhoc
+>
+> now make a testdownload with the laptop from B.
+> wireless will stop working after ~10 seconds.
+>
+> wifi up will reanimate and our freifunk-cron.minutely-check
+> will do this automagically. (read further, this is not the solution)
+>
+> we tried to limit the rateset to e.g. lower rates, but this does NOT change
+> the behaviour. what works is: define a rateset on BOTH router which makes
+> it impossible to change the band, e.g.:
+>
+> iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
+> OR
+> iw dev $WIFIDEV set bitrates legacy-2.4 6 9 12 18 24 36 48 54
+>
+> now we had a great performance, 10 Gigabytes of wireless transfer,
+> no stopping TX anymore and an empty box of beer. three things to do now:
+>
+> 1) why does a band change (can be seen through minstrel) is a problem?
 
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Because IIRC b43 doesn't support anything other than 2.4GHz at all.
 
----
-v2:
-	endianness & formatting (Kalle)
+>
+> 2) we have to make in config-option to force a band, or a rateset:
+>         e.g. uci set wireless.radio0.hwmode=11g
+>         e.g. uci set wireless.radio0.bitrates='6 9 12 18 24 36 48 54'
+>
+> 3) spread to word:
+>    there is a great frustration in the community about b43,
+>    but the old drivers _have_ to die, it's about time - really.
+>
+> thanks for your work,
+> bye storchi, andi, bastian + m18 crew
+>
+> [1] http://blog.maschinenraum.tk/
+> [2] http://blog.maschinenraum.tk/2012/07/15/bitcoin-vending-machine-exchange-euro-coins-for-bitcoin-wallets/
+> [3] http://wireless.subsignal.org
+> [4] http://wireless.subsignal.org/index.php?title=Main_Page_en
+> [5] https://dev.openwrt.org/ticket/7552
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   19 +++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    3 ++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   47 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |   35 ++++++++++++++++++++
- 4 files changed, 104 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index ca54154..ddcfc95 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3326,6 +3326,24 @@ static int ath6kl_cfg80211_set_bitrate(struct wiphy *wiphy,
- 					   mask);
- }
- 
-+static int ath6kl_cfg80211_set_txe_config(struct wiphy *wiphy,
-+					  struct net_device *dev,
-+					  u32 rate, u32 pkts, u32 intvl)
-+{
-+	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
-+
-+	if (vif->nw_type != INFRA_NETWORK ||
-+	    !test_bit(ATH6KL_FW_CAPABILITY_TX_ERR_NOTIFY, ar->fw_capabilities))
-+		return -EOPNOTSUPP;
-+
-+	if (vif->sme_state != SME_CONNECTED)
-+		return -ENOTCONN;
-+
-+	return ath6kl_wmi_set_txe_notify(ar->wmi, vif->fw_vif_idx,
-+					 rate, pkts, intvl);
-+}
-+
- static const struct ieee80211_txrx_stypes
- ath6kl_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 	[NL80211_IFTYPE_STATION] = {
-@@ -3392,6 +3410,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.sched_scan_start = ath6kl_cfg80211_sscan_start,
- 	.sched_scan_stop = ath6kl_cfg80211_sscan_stop,
- 	.set_bitrate_mask = ath6kl_cfg80211_set_bitrate,
-+	.set_cqm_txe_config = ath6kl_cfg80211_set_txe_config,
- };
- 
- void ath6kl_cfg80211_stop(struct ath6kl_vif *vif)
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index c655438..fb81380 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -121,6 +121,9 @@ enum ath6kl_fw_capability {
- 	/* FW sets mac_addr[4] ^= 0x80 for newly created interfaces */
- 	ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR,
- 
-+	/* Firmware supports TX error rate notification */
-+	ATH6KL_FW_CAPABILITY_TX_ERR_NOTIFY,
-+
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 3629e86..abd6859 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1531,6 +1531,50 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
- 	return 0;
- }
- 
-+static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
-+					  struct ath6kl_vif *vif)
-+{
-+	struct wmi_txe_notify_event *ev;
-+	u32 rate;
-+	u32 pkts;
-+
-+	if (len < sizeof(*ev))
-+		return -EINVAL;
-+
-+	if (vif->sme_state != SME_CONNECTED)
-+		return -ENOTCONN;
-+
-+	ev = (struct wmi_txe_notify_event *) datap;
-+	rate = le32_to_cpu(ev->rate);
-+	pkts = le32_to_cpu(ev->pkts);
-+
-+	ath6kl_dbg(ATH6KL_DBG_WMI, "TXE notify event: peer %pM rate %d pkts %d\n",
-+		   vif->bssid, rate, pkts);
-+
-+	cfg80211_cqm_txe_notify(vif->ndev, vif->bssid, pkts, rate, GFP_KERNEL);
-+
-+	return 0;
-+}
-+
-+int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
-+			      u32 rate, u32 pkts, u32 intvl)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_txe_notify_cmd *cmd;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_txe_notify_cmd *) skb->data;
-+	cmd->rate = cpu_to_le32(rate);
-+	cmd->pkts = cpu_to_le32(pkts);
-+	cmd->intvl = cpu_to_le32(intvl);
-+
-+	return ath6kl_wmi_cmd_send(wmi, idx, skb, WMI_SET_TXE_NOTIFY_CMD,
-+				   NO_SYNC_WMIFLAG);
-+}
-+
- int ath6kl_wmi_set_rssi_filter_cmd(struct wmi *wmi, u8 if_idx, s8 rssi)
- {
- 	struct sk_buff *skb;
-@@ -3768,6 +3812,9 @@ static int ath6kl_wmi_proc_events_vif(struct wmi *wmi, u16 if_idx, u16 cmd_id,
- 	case WMI_RX_ACTION_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_ACTION_EVENTID\n");
- 		return ath6kl_wmi_rx_action_event_rx(wmi, datap, len, vif);
-+	case WMI_TXE_NOTIFY_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TXE_NOTIFY_EVENTID\n");
-+		return ath6kl_wmi_txe_notify_event_rx(wmi, datap, len, vif);
- 	default:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "unknown cmd id 0x%x\n", cmd_id);
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index b5deaff..ae0abb4 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -632,6 +632,12 @@ enum wmi_cmd_id {
- 	WMI_SET_REGDOMAIN_CMDID,
- 
- 	WMI_SET_RSSI_FILTER_CMDID,
-+
-+	WMI_SET_KEEP_ALIVE_EXT,
-+
-+	WMI_VOICE_DETECTION_ENABLE_CMDID,
-+
-+	WMI_SET_TXE_NOTIFY_CMD,
- };
- 
- enum wmi_mgmt_frame_type {
-@@ -1464,6 +1470,20 @@ enum wmi_event_id {
- 	WMI_P2P_CAPABILITIES_EVENTID,
- 	WMI_RX_ACTION_EVENTID,
- 	WMI_P2P_INFO_EVENTID,
-+
-+	/* WPS Events */
-+	WMI_WPS_GET_STATUS_EVENTID,
-+	WMI_WPS_PROFILE_EVENTID,
-+
-+	/* more P2P events */
-+	WMI_NOA_INFO_EVENTID,
-+	WMI_OPPPS_INFO_EVENTID,
-+	WMI_PORT_STATUS_EVENTID,
-+
-+	/* 802.11w */
-+	WMI_GET_RSN_CAP_EVENTID,
-+
-+	WMI_TXE_NOTIFY_EVENTID,
- };
- 
- struct wmi_ready_event_2 {
-@@ -2096,6 +2116,19 @@ struct wmi_del_wow_pattern_cmd {
- 	__le16 filter_id;
- } __packed;
- 
-+/* WMI_SET_TXE_NOTIFY_CMD */
-+struct wmi_txe_notify_cmd {
-+	__le32 rate;
-+	__le32 pkts;
-+	__le32 intvl;
-+} __packed;
-+
-+/* WMI_TXE_NOTIFY_EVENTID */
-+struct wmi_txe_notify_event {
-+	__le32 rate;
-+	__le32 pkts;
-+} __packed;
-+
- /* WMI_SET_AKMP_PARAMS_CMD */
- 
- struct wmi_pmkid {
-@@ -2610,6 +2643,8 @@ int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
- int ath6kl_wmi_add_del_mcast_filter_cmd(struct wmi *wmi, u8 if_idx,
- 					u8 *filter, bool add_filter);
- int ath6kl_wmi_sta_bmiss_enhance_cmd(struct wmi *wmi, u8 if_idx, bool enable);
-+int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
-+			      u32 rate, u32 pkts, u32 intvl);
- 
- /* AP mode uAPSD */
- int ath6kl_wmi_ap_set_apsd(struct wmi *wmi, u8 if_idx, u8 enable);
+
 -- 
-1.7.4.1
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
