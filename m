@@ -1,87 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.237.1]:49723 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932140Ab2GMMNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 08:13:42 -0400
-Received: from bottleman (helo=localhost)
-	by icf.org.ru with local-esmtp (Exim 4.75)
-	(envelope-from <bottleman@icf.org.ru>)
-	id 1SpeFt-0003RA-7j
-	for linux-wireless@vger.kernel.org; Fri, 13 Jul 2012 15:41:53 +0400
-Date: Fri, 13 Jul 2012 15:41:53 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: linux-wireless@vger.kernel.org
-Subject: Re: ath: phy0: Failed to stop TX DMA, queues=0x001!
-In-Reply-To: <alpine.DEB.2.02.1207131523080.10911@icf.org.ru>
-Message-ID: <alpine.DEB.2.02.1207131538260.12697@icf.org.ru> (sfid-20120713_141346_707216_B24B91CF)
-References: <alpine.DEB.2.02.1207131523080.10911@icf.org.ru>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-480947806-1342179713=:12697"
+Received: from lunge.queued.net ([173.255.254.236]:53830 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313Ab2GSEjk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2012 00:39:40 -0400
+Date: Wed, 18 Jul 2012 21:39:23 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH RESEND 3/9] Platform: OLPC: allow EC cmd to be overridden,
+ and create a workqueue to call it
+Message-ID: <20120718213923.7e45f037@dev.queued.net> (sfid-20120719_064001_230694_931AE35B)
+In-Reply-To: <20120718213713.232e4161@dev.queued.net>
+References: <20120718213713.232e4161@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
----1050998036-480947806-1342179713=:12697
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+This provides a new API allows different OLPC architectures to override the
+EC driver.  x86 and ARM OLPC machines use completely different EC backends.
 
-On 2012-07-13 15:26 +0400, Georgiewskiy Yuriy wrote linux-wireless@vger.ker...:
+The olpc_ec_cmd is synchronous, and waits for the workqueue to send the
+command to the EC.  Multiple callers can run olpc_ec_cmd() at once, and
+they will by serialized and sleep while only one executes on the EC at a time.
 
-also update - i also try to test it with AP<->client mode, just start hostapd
-on one node, remove antennas nad start iperf, in this case there is no errors
-and link seems very more stable then i use mesh nodes, may be this is also
-802.11s related too.
+We don't provide an unregister function, as that doesn't make sense within
+the context of OLPC machines - there's only ever 1 EC, it's critical to
+functionality, and it certainly not hotpluggable.
 
-GY>
-GY>Hi all again, seems i hit another bug, my test setup is a three mesh nodes,
-GY>all in one room, two is alix pc engines with EMP9605H (ar9220) with antennas
-GY>like on soho routers and one is my laptop with dbii f52n-pro ar9220 based
-GY>too. Use compat-wireless-3.5-rc5-1-snpc on all nodes.
-GY>
-GY>All three nodes work fine, but then i remove antenas from one of the node (it
-GY>contiue work only with pigtails) signal levels with this node is low but
-GY>enough
-GY>to work, it continue to work but i have errors in dmesg on all three nodes:
-GY>
-GY>ath: phy0: Failed to stop TX DMA, queues=0x001!
-GY>
-GY>Links is become unstable, packet loss regardless to which node taffic is
-GY>goes,
-GY>to node without antennas or betwen nodes with antennas.
-GY>
-GY>I tryin change wireless cards with no results, but all what i try is ar9220
-GY>based, just different manufactures. Also i try add ubiquiti nanostation M2
-GY>with openwrt
-GY>on it in this setup, and get same results on it too - dma erros and unstable
-GY>links with packetloss.
-GY>
-GY>Then i connect antennas back, all strat working fine again withous erorors.
-GY>I think it seems low signal and/or low quality links is triggering with bug.
-GY>
-GY>I also trying use stock kernel 3.2.x and 3.4.x, compat-wireless bleeding
-GY>edge, but no luck - same results.
-GY>
-GY>Please give any suggestions how i can help find a root case of this bug to
-GY>resolve
-GY>it?
-GY>
-GY>C уважением                       With Best Regards
-GY>Георгиевский Юрий.                Georgiewskiy Yuriy
-GY>+7 4872 711666                    +7 4872 711666
-GY>факс +7 4872 711143               fax +7 4872 711143
-GY>Компания ООО "Ай Ти Сервис"       IT Service Ltd
-GY>http://nkoort.ru                  http://nkoort.ru
-GY>JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-GY>YG129-RIPE                        YG129-RIPE
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ drivers/platform/olpc/olpc-ec.c |  112 ++++++++++++++++++++++++++++++++++++++-
+ include/linux/olpc-ec.h         |    6 ++
+ 2 files changed, 116 insertions(+), 2 deletions(-)
 
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1050998036-480947806-1342179713=:12697--
+diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
+index 4202603..44e6a4f 100644
+--- a/drivers/platform/olpc/olpc-ec.c
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -5,12 +5,120 @@
+  *
+  * Licensed under the GPL v2 or later.
+  */
++#include <linux/completion.h>
++#include <linux/spinlock.h>
++#include <linux/mutex.h>
++#include <linux/workqueue.h>
+ #include <linux/module.h>
++#include <linux/list.h>
++#include <linux/olpc-ec.h>
+ #include <asm/olpc.h>
+ 
++struct ec_cmd_desc {
++	u8 cmd;
++	u8 *inbuf, *outbuf;
++	size_t inlen, outlen;
++
++	int err;
++	struct completion finished;
++	struct list_head node;
++
++	void *priv;
++};
++
++static void olpc_ec_worker(struct work_struct *w);
++
++static DECLARE_WORK(ec_worker, olpc_ec_worker);
++static LIST_HEAD(ec_cmd_q);
++static DEFINE_SPINLOCK(ec_cmd_q_lock);
++
++static struct olpc_ec_driver *ec_driver;
++static void *ec_cb_arg;
++static DEFINE_MUTEX(ec_cb_lock);
++
++void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg)
++{
++	ec_driver = drv;
++	ec_cb_arg = arg;
++}
++EXPORT_SYMBOL_GPL(olpc_ec_driver_register);
++
++static void olpc_ec_worker(struct work_struct *w)
++{
++	struct ec_cmd_desc *desc = NULL;
++	unsigned long flags;
++
++	/* Grab the first pending command from the queue */
++	spin_lock_irqsave(&ec_cmd_q_lock, flags);
++	if (!list_empty(&ec_cmd_q)) {
++		desc = list_first_entry(&ec_cmd_q, struct ec_cmd_desc, node);
++		list_del(&desc->node);
++	}
++	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
++
++	/* Do we actually have anything to do? */
++	if (!desc)
++		return;
++
++	/* Protect the EC hw with a mutex; only run one cmd at a time */
++	mutex_lock(&ec_cb_lock);
++	desc->err = ec_driver->ec_cmd(desc->cmd, desc->inbuf, desc->inlen,
++			desc->outbuf, desc->outlen, ec_cb_arg);
++	mutex_unlock(&ec_cb_lock);
++
++	/* Finished, wake up olpc_ec_cmd() */
++	complete(&desc->finished);
++
++	/* Run the worker thread again in case there are more cmds pending */
++	schedule_work(&ec_worker);
++}
++
++/*
++ * Throw a cmd descripter onto the list.  We now have SMP OLPC machines, so
++ * locking is pretty critical.
++ */
++static void queue_ec_descriptor(struct ec_cmd_desc *desc)
++{
++	unsigned long flags;
++
++	INIT_LIST_HEAD(&desc->node);
++
++	spin_lock_irqsave(&ec_cmd_q_lock, flags);
++	list_add_tail(&desc->node, &ec_cmd_q);
++	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
++
++	schedule_work(&ec_worker);
++}
++
+ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
+ {
+-	/* Currently a stub; this will be expanded upon later. */
+-	return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
++	struct ec_cmd_desc desc;
++
++	/* XXX: this will be removed in later patches */
++	/* Are we using old-style callers? */
++	if (!ec_driver || !ec_driver->ec_cmd)
++		return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
++
++	/* Ensure a driver and ec hook have been registered */
++	if (WARN_ON(!ec_driver || !ec_driver->ec_cmd))
++		return -ENODEV;
++
++	might_sleep();
++
++	desc.cmd = cmd;
++	desc.inbuf = inbuf;
++	desc.outbuf = outbuf;
++	desc.inlen = inlen;
++	desc.outlen = outlen;
++	desc.err = 0;
++	init_completion(&desc.finished);
++
++	queue_ec_descriptor(&desc);
++
++	/* Timeouts must be handled in the platform-specific EC hook */
++	wait_for_completion(&desc.finished);
++
++	/* The worker thread dequeues the cmd; no need to do anything here */
++	return desc.err;
+ }
+ EXPORT_SYMBOL_GPL(olpc_ec_cmd);
+diff --git a/include/linux/olpc-ec.h b/include/linux/olpc-ec.h
+index 6d4e426..231e96f 100644
+--- a/include/linux/olpc-ec.h
++++ b/include/linux/olpc-ec.h
+@@ -14,8 +14,14 @@
+ #define EC_SCI_QUERY			0x84
+ #define EC_EXT_SCI_QUERY		0x85
+ 
++struct olpc_ec_driver {
++	int (*ec_cmd)(u8, u8 *, size_t, u8 *, size_t, void *);
++};
++
+ #ifdef CONFIG_OLPC
+ 
++extern void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg);
++
+ extern int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
+ 		size_t outlen);
+ 
+-- 
+1.7.2.5
+
