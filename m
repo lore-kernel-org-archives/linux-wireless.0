@@ -1,55 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40143 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933303Ab2GCRON (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:14:13 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 19/20] ath9k: set 4ADDRESS bit in RX filter for AR9550
-Date: Tue,  3 Jul 2012 19:13:33 +0200
-Message-Id: <1341335614-15419-20-git-send-email-juhosg@openwrt.org> (sfid-20120703_191421_704644_FC674A02)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+Received: from lunge.queued.net ([173.255.254.236]:53858 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313Ab2GSEkt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2012 00:40:49 -0400
+Date: Wed, 18 Jul 2012 21:40:37 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH RESEND 5/9] Platform: OLPC: add a suspended flag to the EC
+ driver
+Message-ID: <20120718214037.1606f71a@dev.queued.net> (sfid-20120719_064109_458772_4061A98C)
+In-Reply-To: <20120718213713.232e4161@dev.queued.net>
+References: <20120718213713.232e4161@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/mac.h  |    1 +
- drivers/net/wireless/ath/ath9k/recv.c |    3 +++
- 2 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 21c9556..0eba36d 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -646,6 +646,7 @@ enum ath9k_rx_filter {
- 	ATH9K_RX_FILTER_PHYRADAR = 0x00002000,
- 	ATH9K_RX_FILTER_MCAST_BCAST_ALL = 0x00008000,
- 	ATH9K_RX_FILTER_CONTROL_WRAPPER = 0x00080000,
-+	ATH9K_RX_FILTER_4ADDRESS = 0x00100000,
+A problem we've noticed on XO-1.75 is when we suspend in the middle of
+an EC command.  Don't allow that.
+
+In the process, create a private object for the generic EC driver to use;
+we have a framework for passing around a struct, use that rather than a
+proliferation of global variables.
+
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ drivers/platform/olpc/olpc-ec.c |   46 ++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 45 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
+index d00523c..cfba41f 100644
+--- a/drivers/platform/olpc/olpc-ec.c
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -9,6 +9,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/mutex.h>
+ #include <linux/platform_device.h>
++#include <linux/slab.h>
+ #include <linux/workqueue.h>
+ #include <linux/module.h>
+ #include <linux/list.h>
+@@ -27,6 +28,21 @@ struct ec_cmd_desc {
+ 	void *priv;
  };
  
- #define ATH9K_RATESERIES_RTS_CTS  0x0001
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6a7dd26..11f3703 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -430,6 +430,9 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
- 	}
- 
-+	if (AR_SREV_9550(sc->sc_ah))
-+		rfilt |= ATH9K_RX_FILTER_4ADDRESS;
++struct olpc_ec_priv {
++	struct olpc_ec_driver *drv;
 +
- 	return rfilt;
++	/*
++	 * Running an EC command while suspending means we don't always finish
++	 * the command before the machine suspends.  This means that the EC
++	 * is expecting the command protocol to finish, but we after a period
++	 * of time (while the OS is asleep) the EC times out and restarts its
++	 * idle loop.  Meanwhile, the OS wakes up, thinks it's still in the
++	 * middle of the command protocol, starts throwing random things at
++	 * the EC... and everyone's uphappy.
++	 */
++	bool suspended;
++};
++
+ static void olpc_ec_worker(struct work_struct *w);
  
+ static DECLARE_WORK(ec_worker, olpc_ec_worker);
+@@ -34,6 +50,7 @@ static LIST_HEAD(ec_cmd_q);
+ static DEFINE_SPINLOCK(ec_cmd_q_lock);
+ 
+ static struct olpc_ec_driver *ec_driver;
++static struct olpc_ec_priv *ec_priv;
+ static void *ec_cb_arg;
+ static DEFINE_MUTEX(ec_cb_lock);
+ 
+@@ -93,6 +110,7 @@ static void queue_ec_descriptor(struct ec_cmd_desc *desc)
+ 
+ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
+ {
++	struct olpc_ec_priv *ec = ec_priv;
+ 	struct ec_cmd_desc desc;
+ 
+ 	/* XXX: this will be removed in later patches */
+@@ -104,6 +122,13 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
+ 	if (WARN_ON(!ec_driver || !ec_driver->ec_cmd))
+ 		return -ENODEV;
+ 
++	if (!ec)
++		return -ENOMEM;
++
++	/* Suspending in the middle of a command hoses things really badly */
++	if (WARN_ON(ec->suspended))
++		return -EBUSY;
++
+ 	might_sleep();
+ 
+ 	desc.cmd = cmd;
+@@ -126,11 +151,19 @@ EXPORT_SYMBOL_GPL(olpc_ec_cmd);
+ 
+ static int olpc_ec_probe(struct platform_device *pdev)
+ {
++	struct olpc_ec_priv *ec;
+ 	int err;
+ 
+ 	if (!ec_driver)
+ 		return -ENODEV;
+ 
++	ec = kzalloc(sizeof(*ec), GFP_KERNEL);
++	if (!ec)
++		return -ENOMEM;
++	ec->drv = ec_driver;
++	ec_priv = ec;
++	platform_set_drvdata(pdev, ec);
++
+ 	err = ec_driver->probe ? ec_driver->probe(pdev) : 0;
+ 
+ 	return err;
+@@ -139,12 +172,23 @@ static int olpc_ec_probe(struct platform_device *pdev)
+ static int olpc_ec_suspend(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	return ec_driver->suspend ? ec_driver->suspend(pdev) : 0;
++	struct olpc_ec_priv *ec = platform_get_drvdata(pdev);
++	int err = 0;
++
++	if (ec_driver->suspend)
++		err = ec_driver->suspend(pdev);
++	if (!err)
++		ec->suspended = true;
++
++	return err;
  }
+ 
+ static int olpc_ec_resume(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
++	struct olpc_ec_priv *ec = platform_get_drvdata(pdev);
++
++	ec->suspended = false;
+ 	return ec_driver->resume ? ec_driver->resume(pdev) : 0;
+ }
+ 
 -- 
-1.7.2.1
+1.7.2.5
 
