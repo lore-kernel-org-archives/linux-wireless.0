@@ -1,112 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38870 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753090Ab2GIMDi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 08:03:38 -0400
-Date: Mon, 9 Jul 2012 15:03:33 +0300
-From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
-	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCHv2 2/3] lib: printf: append support of '%*p[Mm][FR]'
-Message-ID: <20120709120326.GH2627@aemeltch-MOBL1> (sfid-20120709_140407_790522_527B64FC)
-References: <1341264199.10162.2.camel@joe2Laptop>
- <1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <1341310000-4082-2-git-send-email-andriy.shevchenko@linux.intel.com>
- <1341329631.2164.15.camel@joe2Laptop>
- <CAHp75VfN4X9fH7NEUag3XYy7kLiEz-jcjhEOdoHMk3if_m_aOg@mail.gmail.com>
- <1341341280.2012.3.camel@joe2Laptop>
-MIME-Version: 1.0
-In-Reply-To: <1341341280.2012.3.camel@joe2Laptop>
-Content-Type: text/plain; charset="us-ascii"
+Received: from lunge.queued.net ([173.255.254.236]:50890 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab2GSE2t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2012 00:28:49 -0400
+Date: Wed, 18 Jul 2012 21:28:27 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 6/9] x86: OLPC: switch over to using new EC driver on x86
+Message-ID: <20120718212827.2080b28b@dev.queued.net> (sfid-20120719_062909_804991_0CF71237)
+In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
+References: <20120718182144.2d7b0b50@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This uses the new EC driver framework in drivers/platform/olpc.  The
+XO-1 and XO-1.5-specific code is still in arch/x86, but the generic
+stuff (including a new workqueue; no more running EC commands with IRQs
+disabled!) can be shared with other architectures.
 
-On Tue, Jul 03, 2012 at 11:48:00AM -0700, Joe Perches wrote:
-> On Tue, 2012-07-03 at 21:32 +0300, Andy Shevchenko wrote:
-> > On Tue, Jul 3, 2012 at 6:33 PM, Joe Perches <joe@perches.com> wrote:
-> > > On Tue, 2012-07-03 at 13:06 +0300, Andy Shevchenko wrote:
-> > >> There are many places in the kernel where the drivers print small buffers as a
-> > >> hex string. This patch adds a support of the variable width buffer to print it
-> > >> as a hex string with a delimiter. The idea came from Pavel Roskin here:
-> > >> http://www.digipedia.pl/usenet/thread/18835/17449/
-> > >>
-> > >> Sample output of
-> > >>       pr_info("buf[%d:%d] %*pM\n", from, len, len, &buf[from]);
-> > >> could be look like this:
-> > >>       [ 0.726130] buf[51:8] e8:16:b6:ef:e3:74:45:6e
-> > >>       [ 0.750736] buf[59:15] 31:81:b8:3f:35:49:06:ae:df:32:06:05:4a:af:55
-> > >>       [ 0.757602] buf[17:5] ac:16:d5:2c:ef
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ arch/x86/include/asm/olpc.h     |    5 ---
+ arch/x86/platform/olpc/olpc.c   |   53
+++++++++++++++++++++------------------- drivers/platform/olpc/olpc-ec.c
+|    5 --- 3 files changed, 27 insertions(+), 36 deletions(-)
 
-The idea is really good and can make redundant lots of print_hex
-functions.
-
-> > 
-> > > It might be more sensible to use new, distinct
-> > > "%*pH" and "%*ph" functions and not touch the
-> > > mac address function at all.  Will anyone ever
-> > > really want to emit the buffer in reverse?
-> > > I don't think so.
-> > Yeah, probably it's only the case for the Bluetooth addresses.
-> > 
-> > > Perhaps when using a hex_string_buffer func the
-> > > separator should be a space/no-space with %*pHh.
-> > What I learned from today's linux-next is the most used separators are
-> > ' ' (space), '' (nothing), ':' and '-'. We have dozens of the cases
-> > for first three. The '-' support could not be implemented
-> > nevertheless.
-> > So, might be %*pHh[CDS] C for 'colon', S for 'space', D for 'dash' looks better.
-> 
-> Maybe use a space default.
-
-I do not think we need other specifier then space at all.
-
-> 
-> > 'Hh' for capital/small letters than?
-> 
-> If you want, though I'd hope nobody uses upper case.
-> 
-> > > You could extend the max to 128 or larger now.
-> > I don't think it is really needed.
-> 
-> I hope it's not, but I just don't see the need to limit it.
-> 
-> > Most of the current cases usually
-> > print not more than ~30bytes (in average) per time. And I couldn't
-> > imagine good looking printing for long lines anyway.
-
-Maybe insert '\n' after 16 numbers?
-
-> 
-> Yup, they'd be ugly.
-> print_hex_dump() should be favored anyway.
-
-For print_hex_dump we would need to invent unreadable constructions with
-defines like you mentioned in other thread:
-
-#ifdef SOME_BLUETOOTH_DEBUG_FLAG
-#define bt_hex_dump_dbg(...)    \
-        print_hex_dump(...)
-#else
-#define bt_hex_dump_dbg(...)    \
-        do { } while (0)
-#endif
-
-Best regards 
-Andrei Emeltchenko 
-
----------------------------------------------------------------------
-Intel Finland Oy
-Registered Address: PL 281, 00181 Helsinki 
-Business Identity Code: 0357606 - 4 
-Domiciled in Helsinki 
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/arch/x86/include/asm/olpc.h b/arch/x86/include/asm/olpc.h
+index 5b28f3e..72f9adf6 100644
+--- a/arch/x86/include/asm/olpc.h
++++ b/arch/x86/include/asm/olpc.h
+@@ -100,11 +100,6 @@ extern void olpc_xo1_pm_wakeup_clear(u16 value);
+ 
+ extern int pci_olpc_init(void);
+ 
+-/* EC related functions */
+-
+-extern int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf,
+-		size_t inlen, unsigned char *outbuf, size_t outlen);
+-
+ /* SCI source values */
+ 
+ #define EC_SCI_SRC_EMPTY	0x00
+diff --git a/arch/x86/platform/olpc/olpc.c
+b/arch/x86/platform/olpc/olpc.c index a3fa180..4590096 100644
+--- a/arch/x86/platform/olpc/olpc.c
++++ b/arch/x86/platform/olpc/olpc.c
+@@ -14,7 +14,6 @@
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/delay.h>
+-#include <linux/spinlock.h>
+ #include <linux/io.h>
+ #include <linux/string.h>
+ #include <linux/platform_device.h>
+@@ -32,8 +31,6 @@
+ struct olpc_platform_t olpc_platform_info;
+ EXPORT_SYMBOL_GPL(olpc_platform_info);
+ 
+-static DEFINE_SPINLOCK(ec_lock);
+-
+ /* debugfs interface to EC commands */
+ #define EC_MAX_CMD_ARGS (5 + 1)	/* cmd byte + 5 args */
+ #define EC_MAX_CMD_REPLY (8)
+@@ -126,16 +123,13 @@ static int __wait_on_obf(unsigned int line,
+unsigned int port, int desired)
+  * <http://wiki.laptop.org/go/Ec_specification>.  Unfortunately, while
+  * OpenFirmware's source is available, the EC's is not.
+  */
+-int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf, size_t
+inlen,
+-		unsigned char *outbuf,  size_t outlen)
++static int olpc_xo1_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
++		size_t outlen, void *arg)
+ {
+-	unsigned long flags;
+ 	int ret = -EIO;
+ 	int i;
+ 	int restarts = 0;
+ 
+-	spin_lock_irqsave(&ec_lock, flags);
+-
+ 	/* Clear OBF */
+ 	for (i = 0; i < 10 && (obf_status(0x6c) == 1); i++)
+ 		inb(0x68);
+@@ -199,10 +193,8 @@ restart:
+ 
+ 	ret = 0;
+ err:
+-	spin_unlock_irqrestore(&ec_lock, flags);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(olpc_ec_cmd_x86);
+ 
+ void olpc_ec_wakeup_set(u16 value)
+ {
+@@ -366,7 +358,7 @@ static void setup_debugfs(void)
+ 			    &ec_debugfs_genops);
+ }
+ 
+-static int olpc_ec_suspend(void)
++static int olpc_ec_suspend(struct platform_device *pdev)
+ {
+ 	return olpc_ec_mask_write(ec_wakeup_mask);
+ }
+@@ -425,8 +417,28 @@ static int __init add_xo1_platform_devices(void)
+ 	return 0;
+ }
+ 
+-static struct syscore_ops olpc_syscore_ops = {
++static int olpc_xo1_ec_probe(struct platform_device *pdev)
++{
++	/* get the EC revision */
++	olpc_ec_cmd(EC_FIRMWARE_REV, NULL, 0,
++			(unsigned char *) &olpc_platform_info.ecver,
+1); +
++	/* EC version 0x5f adds support for wide SCI mask */
++	if (olpc_platform_info.ecver >= 0x5f)
++		olpc_platform_info.flags |= OLPC_F_EC_WIDE_SCI;
++
++	pr_info("OLPC board revision %s%X (EC=%x)\n",
++			((olpc_platform_info.boardrev & 0xf) < 8) ?
+"pre" : "",
++			olpc_platform_info.boardrev >> 4,
++			olpc_platform_info.ecver);
++
++	return 0;
++}
++
++static struct olpc_ec_driver ec_xo1_driver = {
+ 	.suspend = olpc_ec_suspend,
++	.probe = olpc_xo1_ec_probe,
++	.ec_cmd = olpc_xo1_ec_cmd,
+ };
+ 
+ static int __init olpc_init(void)
+@@ -436,16 +448,14 @@ static int __init olpc_init(void)
+ 	if (!olpc_ofw_present() || !platform_detect())
+ 		return 0;
+ 
+-	spin_lock_init(&ec_lock);
++	/* register the XO-1 and 1.5-specific EC handler */
++	olpc_ec_driver_register(&ec_xo1_driver, NULL);
++	platform_device_register_simple("olpc-ec", -1, NULL, 0);
+ 
+ 	/* assume B1 and above models always have a DCON */
+ 	if (olpc_board_at_least(olpc_board(0xb1)))
+ 		olpc_platform_info.flags |= OLPC_F_DCON;
+ 
+-	/* get the EC revision */
+-	olpc_ec_cmd(EC_FIRMWARE_REV, NULL, 0,
+-			(unsigned char *) &olpc_platform_info.ecver,
+1); -
+ #ifdef CONFIG_PCI_OLPC
+ 	/* If the VSA exists let it emulate PCI, if not emulate in
+kernel.
+ 	 * XO-1 only. */
+@@ -453,14 +463,6 @@ static int __init olpc_init(void)
+ 			!cs5535_has_vsa2())
+ 		x86_init.pci.arch_init = pci_olpc_init;
+ #endif
+-	/* EC version 0x5f adds support for wide SCI mask */
+-	if (olpc_platform_info.ecver >= 0x5f)
+-		olpc_platform_info.flags |= OLPC_F_EC_WIDE_SCI;
+-
+-	printk(KERN_INFO "OLPC board revision %s%X (EC=%x)\n",
+-			((olpc_platform_info.boardrev & 0xf) < 8) ?
+"pre" : "",
+-			olpc_platform_info.boardrev >> 4,
+-			olpc_platform_info.ecver);
+ 
+ 	if (olpc_platform_info.boardrev < olpc_board_pre(0xd0)) { /*
+XO-1 */ r = add_xo1_platform_devices();
+@@ -468,7 +470,6 @@ static int __init olpc_init(void)
+ 			return r;
+ 	}
+ 
+-	register_syscore_ops(&olpc_syscore_ops);
+ 	setup_debugfs();
+ 
+ 	return 0;
+diff --git a/drivers/platform/olpc/olpc-ec.c
+b/drivers/platform/olpc/olpc-ec.c index cfba41f..a3d32c2 100644
+--- a/drivers/platform/olpc/olpc-ec.c
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -113,11 +113,6 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen,
+u8 *outbuf, size_t outlen) struct olpc_ec_priv *ec = ec_priv;
+ 	struct ec_cmd_desc desc;
+ 
+-	/* XXX: this will be removed in later patches */
+-	/* Are we using old-style callers? */
+-	if (!ec_driver || !ec_driver->ec_cmd)
+-		return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf,
+outlen); -
+ 	/* Ensure a driver and ec hook have been registered */
+ 	if (WARN_ON(!ec_driver || !ec_driver->ec_cmd))
+ 		return -ENODEV;
+-- 
+1.7.2.5
 
