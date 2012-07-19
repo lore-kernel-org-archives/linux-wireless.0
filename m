@@ -1,98 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:63498 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416Ab2GWQqd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61758 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677Ab2GSLLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 12:46:33 -0400
-Received: by gglu4 with SMTP id u4so5665183ggl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 09:46:32 -0700 (PDT)
-Message-ID: <500D7FE4.1090100@lwfinger.net> (sfid-20120723_184637_252162_1EC8740B)
-Date: Mon, 23 Jul 2012 11:46:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 19 Jul 2012 07:11:33 -0400
+Message-ID: <5007EB60.60705@qca.qualcomm.com> (sfid-20120719_131137_643229_EEC4ABF1)
+Date: Thu, 19 Jul 2012 14:11:28 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43: be more user friendly with PHY info
-References: <1343063462-3719-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1343063462-3719-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath6kl: add support for changing contry code
+References: <20120712093944.9976.84585.stgit@localhost6.localdomain6> <20120712093952.9976.84033.stgit@localhost6.localdomain6> <CAB=NE6WjW-f=giqEEycNcZqjjB7SuioiMyEbrLcGaz8oD1CPNA@mail.gmail.com>
+In-Reply-To: <CAB=NE6WjW-f=giqEEycNcZqjjB7SuioiMyEbrLcGaz8oD1CPNA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/23/2012 12:11 PM, Rafał Miłecki wrote:
-> First of all, use PHY names instead of magic numbers. It should make
-> configuring kernel easier in case of not enabled PHY type support.
-> Secondly, always print info about PHY. This is really basic info about
-> hardware and quite important for the support level.
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->   drivers/net/wireless/b43/main.c |   36 +++++++++++++++++++++++++++++++-----
->   1 files changed, 31 insertions(+), 5 deletions(-)
+On 07/12/2012 10:40 PM, Luis R. Rodriguez wrote:
+> On Thu, Jul 12, 2012 at 2:39 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> +config ATH6KL_REGDOMAIN
+>> +       bool "Atheros ath6kl regdomain support"
+>> +       depends on ATH6KL
+>> +       depends on CFG80211_CERTIFICATION_ONUS
+>> +       ---help---
+>> +         Enabling this makes it possible to change the regdomain in
+>> +         the firmware. This can be only enabled if regulatory requirements
+>> +         are taken into account.
+> 
+> You will need to add wiphy->features |=
+> NL80211_FEATURE_CELL_BASE_REG_HINTS in order to enable the base
+> station hints to propagate to the driver and even to the core,
+> otherwise this is ignored. This was addressed starting at v4 of my
+> onus patches. Given this, I think it makes sense to rename the option
+> to enable / disable base station hints and to update the language to
+> clearly reflect that is the only type of hint that would be used to
+> update the firmware regulatory domain.
 
-I like this change. It is worth the small increase in the size of b43.
+I was planning to do this in two phases, first do a simple
+implementation (these two patches) and then add support for the cellular
+BTS hints.
 
-Larry
-
->
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index b80352b..a56f182 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -4277,6 +4277,33 @@ out:
->   	return err;
->   }
->
-> +static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
-> +{
-> +	switch (phy_type) {
-> +	case B43_PHYTYPE_A:
-> +		return "A";
-> +	case B43_PHYTYPE_B:
-> +		return "B";
-> +	case B43_PHYTYPE_G:
-> +		return "G";
-> +	case B43_PHYTYPE_N:
-> +		return "N";
-> +	case B43_PHYTYPE_LP:
-> +		return "LP";
-> +	case B43_PHYTYPE_SSLPN:
-> +		return "SSLPN";
-> +	case B43_PHYTYPE_HT:
-> +		return "HT";
-> +	case B43_PHYTYPE_LCN:
-> +		return "LCN";
-> +	case B43_PHYTYPE_LCNXN:
-> +		return "LCNXN";
-> +	}
-> +
-> +	b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
-> +	return "UNKNOWN";
-> +}
-> +
->   /* Get PHY and RADIO versioning numbers */
->   static int b43_phy_versioning(struct b43_wldev *dev)
->   {
-> @@ -4337,13 +4364,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
->   		unsupported = 1;
->   	}
->   	if (unsupported) {
-> -		b43err(dev->wl, "FOUND UNSUPPORTED PHY "
-> -		       "(Analog %u, Type %u, Revision %u)\n",
-> -		       analog_type, phy_type, phy_rev);
-> +		b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
-> +		       analog_type, b43_phy_name(dev, phy_type), phy_rev);
->   		return -EOPNOTSUPP;
->   	}
-> -	b43dbg(dev->wl, "Found PHY: Analog %u, Type %u, Revision %u\n",
-> -	       analog_type, phy_type, phy_rev);
-> +	b43info(dev->wl, "Found PHY: Analog %u, Type %s, Revision %u\n",
-> +		analog_type, b43_phy_name(dev, phy_type), phy_rev);
->
->   	/* Get RADIO versioning */
->   	if (dev->dev->core_rev >= 24) {
->
-
-
+Kalle
