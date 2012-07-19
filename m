@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42380 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757172Ab2GKLVu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 07:21:50 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, buytenh@wantstofly.org,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v3] mwl8k: fix possible race condition in info->control.sta use
-Date: Wed, 11 Jul 2012 13:21:41 +0200
-Message-Id: <1342005701-5757-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120711_132154_057728_C982B558)
+Received: from purkki.adurom.net ([80.68.90.206]:56582 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753198Ab2GSIvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2012 04:51:14 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Duan Jiong <djduanjiong@gmail.com>
+Cc: dcbw@redhat.com, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [RESEND] firmware.c: remove duplicated include
+References: <5006CCE7.8090904@gmail.com>
+Date: Thu, 19 Jul 2012 11:51:10 +0300
+In-Reply-To: <5006CCE7.8090904@gmail.com> (Duan Jiong's message of "Wed, 18
+	Jul 2012 22:49:11 +0800")
+Message-ID: <87sjco6sn5.fsf@purkki.adurom.net> (sfid-20120719_105150_757204_66F603C3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-info->control.sta may only be dereferenced during the drv_tx call otherwise
-could lead to use-after-free bugs
+Duan Jiong <djduanjiong@gmail.com> writes:
 
-Reported-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
-fix wrog indentation. thx to David Miller
-make sure *sta* function is called under RCU lock. thx to Christian Lamparter
----
- drivers/net/wireless/mwl8k.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> Signed-off-by: Duan Jiong <djduanjiong@gmail.com>
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index cf7bdc6..224e03a 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1665,7 +1665,9 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
- 
- 		info = IEEE80211_SKB_CB(skb);
- 		if (ieee80211_is_data(wh->frame_control)) {
--			sta = info->control.sta;
-+			rcu_read_lock();
-+			sta = ieee80211_find_sta_by_ifaddr(hw, wh->addr1,
-+							   wh->addr2);
- 			if (sta) {
- 				sta_info = MWL8K_STA(sta);
- 				BUG_ON(sta_info == NULL);
-@@ -1682,6 +1684,7 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
- 					sta_info->is_ampdu_allowed = true;
- 				}
- 			}
-+			rcu_read_unlock();
- 		}
- 
- 		ieee80211_tx_info_clear_status(info);
+Please prefix the subject with "libertas:", like this:
+
+libertas: remove duplicated include in firmware.c
+
 -- 
-1.7.11.1
-
+Kalle Valo
