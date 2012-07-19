@@ -1,117 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:61037 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089Ab2GYWz4 (ORCPT
+Received: from lunge.queued.net ([173.255.254.236]:50927 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287Ab2GSE3d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 18:55:56 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120723192057.GE18589@tuxdriver.com>
-References: <20120322192406.GB2432@tuxdriver.com>
-	<1332698585.1870.88.camel@aeonflux>
-	<20120326145433.GE13806@tuxdriver.com>
-	<1332774906.1870.98.camel@aeonflux>
-	<20120326152541.GH13806@tuxdriver.com>
-	<20120427174439.GC16207@tuxdriver.com>
-	<20120723192057.GE18589@tuxdriver.com>
-Date: Thu, 26 Jul 2012 01:55:55 +0300
-Message-ID: <CAFtRNNzfbWkQnwnkiDjU3HvwbLynNkNyeTff=a4N7LWH6dhcmg@mail.gmail.com> (sfid-20120726_005602_155686_273C2AE9)
-Subject: Re: 2nd CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012 (Barcelona!)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 19 Jul 2012 00:29:33 -0400
+Date: Wed, 18 Jul 2012 21:29:20 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 9/9] x86: OLPC: move s/r-related EC cmds to EC driver
+Message-ID: <20120718212920.237566cb@dev.queued.net> (sfid-20120719_063013_249859_4E625877)
+In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
+References: <20120718182144.2d7b0b50@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/23 John W. Linville <linville@tuxdriver.com>:
-> On Fri, Apr 27, 2012 at 01:44:39PM -0400, John W. Linville wrote:
->
->> Just to keep the ball rolling...
->>
->> Angela has reserved space for us at the Hotel Fira
->> Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
->> Please note that this will overlap Yocto Dev Days, oVirt Summit and
->> KVM Forum at the same venue.
->>
->> Now, we need some talk proposals!  Please post in this thread (or
->> contact me or Marcel directly if necessary) to propose talks.  I would
->> love to see any topics on any relevant technologies, as well as topics
->> about how the projects are being managed, new sub-projects, etc.
->> It seems like a long time away right now, but it is a good time to
->> start thinking... :-)
->
-> Still a while to go, but this event is getting closer.  I would love to
-> see some more concrete topic proposals for talks, both presentations
-> and discussions.
->
-> Here is what I've seen so far:
->
-> Speaker                         Topic
-> -------                         -----
-> Joao Paulo Rechi Vita           status and roadmap of Bluetooth LE
-> Andrei Emeltchenko              Virtual Bluetooth AMP Controller for mac80211
-> Alexander Smirnov               802.15.4 stack, 6lowpan
->
-> Not bad, but I'd like to see some more!  Some ideas:
->
->         -- "state of the union" for bluetooth, nfc, 802.11
->         -- wireless mesh networking status updates
->         -- cfg80211/mac80211 feature previews (what's coming?)
->         -- standards bodies reports (802.11, 802.15.x)
->         -- important or unusual use cases (e.g. Freifunk, Internet of Things)
->         -- userland wireless management apps (NetworkManager, connman)
->         -- wireless-oriented (or wireless-specific) applications
->         -- issues with managing a wireless networking sub-tree
->         -- long-term support for legacy hardware (Intel?  Atheros?)
->         -- driver projects without hardware vendor support?
->         -- staging driver migration?  out-of-tree driver merging?
->         -- ???
->
-> I'm sure there are worthwhile topics that I didn't suggest yet --
-> feel free to suggest your own!  And if you can address one of those
-> topics or one of your own, please reply either to this thread or
-> directly to me.
->
-> Please note -- you do not necessarily to be a kernel developer (or a
-> developer at all) to merit a speaking slot!  Anyone with a topic to
-> propose will receive appropriate consideration.
->
-> So, let's hear it! :-)
->
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The new EC driver calls platform-specific suspend and resume hooks; run
+XO-1-specific EC commands from there, rather than deep in s/r code.  If
+we attempt to run EC commands after the new EC driver has suspended, it
+is refused by the ec->suspended checks.
 
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ arch/x86/platform/olpc/olpc-xo1-pm.c |   15 ------------
+ arch/x86/platform/olpc/olpc.c        |   43
+++++++++++++++++++++++++++++----- 2 files changed, 36 insertions(+), 22
+deletions(-)
 
-Since this time the summit is in Europe I'll try to make it there, if
-I do I 'd like to give a talk on wireless community networks and the
-work we 've done so far. In Barcelona we have the largest wireless
-community network worldwide with over 10.000 nodes called Guifi.net
-(Athens comes next with awmn, check it out  @ wind.awmn.net -more than
-2.500 nodes, in 2002 I set up the first rooftop-pc there :P) so it'll
-be great if we could arrange a meeting or a tour or something.
-
-Anyway what I'd like to do is give you an idea on how our code is
-being used not only to create huge wireless community networks around
-the world (in 2009 we had the International Summit for Community
-Wireless Networks in Vienna and the next one is in Barcelona on
-October, more infos here -> http://wirelesssummit.org/) but also on
-research, activism etc.
-
-Also I'd like to give you some updates on how spectrum policies evolve
-and what we are trying to do on OSA (that's Open Spectrum Alliance
-http://www.openspectrum.eu/drupal6/) to get more free spectrum to play
-with.
-
-
+diff --git a/arch/x86/platform/olpc/olpc-xo1-pm.c
+b/arch/x86/platform/olpc/olpc-xo1-pm.c index 8054b64..d75582d 100644
+--- a/arch/x86/platform/olpc/olpc-xo1-pm.c
++++ b/arch/x86/platform/olpc/olpc-xo1-pm.c
+@@ -52,16 +52,11 @@ EXPORT_SYMBOL_GPL(olpc_xo1_pm_wakeup_clear);
+ static int xo1_power_state_enter(suspend_state_t pm_state)
+ {
+ 	unsigned long saved_sci_mask;
+-	int r;
+ 
+ 	/* Only STR is supported */
+ 	if (pm_state != PM_SUSPEND_MEM)
+ 		return -EINVAL;
+ 
+-	r = olpc_ec_cmd(EC_SET_SCI_INHIBIT, NULL, 0, NULL, 0);
+-	if (r)
+-		return r;
+-
+ 	/*
+ 	 * Save SCI mask (this gets lost since PM1_EN is used as a
+mask for
+ 	 * wakeup events, which is not necessarily the same event set)
+@@ -77,16 +72,6 @@ static int xo1_power_state_enter(suspend_state_t
+pm_state) /* Restore SCI mask (using dword access to CS5536_PM1_EN) */
+ 	outl(saved_sci_mask, acpi_base + CS5536_PM1_STS);
+ 
+-	/* Tell the EC to stop inhibiting SCIs */
+-	olpc_ec_cmd(EC_SET_SCI_INHIBIT_RELEASE, NULL, 0, NULL, 0);
+-
+-	/*
+-	 * Tell the wireless module to restart USB communication.
+-	 * Must be done twice.
+-	 */
+-	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
+-	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
+-
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/platform/olpc/olpc.c
+b/arch/x86/platform/olpc/olpc.c index ed41b43..2737608 100644
+--- a/arch/x86/platform/olpc/olpc.c
++++ b/arch/x86/platform/olpc/olpc.c
+@@ -263,11 +263,6 @@ int olpc_ec_sci_query(u16 *sci_value)
+ }
+ EXPORT_SYMBOL_GPL(olpc_ec_sci_query);
+ 
+-static int olpc_ec_suspend(struct platform_device *pdev)
+-{
+-	return olpc_ec_mask_write(ec_wakeup_mask);
+-}
+-
+ static bool __init check_ofw_architecture(struct device_node *root)
+ {
+ 	const char *olpc_arch;
+@@ -339,9 +334,40 @@ static int olpc_xo1_ec_probe(struct
+platform_device *pdev) 
+ 	return 0;
+ }
++static int olpc_xo1_ec_suspend(struct platform_device *pdev)
++{
++	olpc_ec_mask_write(ec_wakeup_mask);
++
++	/*
++	 * Squelch SCIs while suspended.  This is a fix for
++	 * <http://dev.laptop.org/ticket/1835>.
++	 */
++	return olpc_ec_cmd(EC_SET_SCI_INHIBIT, NULL, 0, NULL, 0);
++}
++
++static int olpc_xo1_ec_resume(struct platform_device *pdev)
++{
++	/* Tell the EC to stop inhibiting SCIs */
++	olpc_ec_cmd(EC_SET_SCI_INHIBIT_RELEASE, NULL, 0, NULL, 0);
++
++	/*
++	 * Tell the wireless module to restart USB communication.
++	 * Must be done twice.
++	 */
++	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
++	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
++
++	return 0;
++}
+ 
+ static struct olpc_ec_driver ec_xo1_driver = {
+-	.suspend = olpc_ec_suspend,
++	.probe = olpc_xo1_ec_probe,
++	.suspend = olpc_xo1_ec_suspend,
++	.resume = olpc_xo1_ec_resume,
++	.ec_cmd = olpc_xo1_ec_cmd,
++};
++
++static struct olpc_ec_driver ec_xo1_5_driver = {
+ 	.probe = olpc_xo1_ec_probe,
+ 	.ec_cmd = olpc_xo1_ec_cmd,
+ };
+@@ -354,7 +380,10 @@ static int __init olpc_init(void)
+ 		return 0;
+ 
+ 	/* register the XO-1 and 1.5-specific EC handler */
+-	olpc_ec_driver_register(&ec_xo1_driver, NULL);
++	if (olpc_platform_info.boardrev <
+olpc_board_pre(0xd0))	/* XO-1 */
++		olpc_ec_driver_register(&ec_xo1_driver, NULL);
++	else
++		olpc_ec_driver_register(&ec_xo1_5_driver, NULL);
+ 	platform_device_register_simple("olpc-ec", -1, NULL, 0);
+ 
+ 	/* assume B1 and above models always have a DCON */
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.2.5
+
