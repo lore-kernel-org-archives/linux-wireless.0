@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:64915 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754257Ab2G3Tvp (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44111 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752309Ab2GSBAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 15:51:45 -0400
-Received: by gglu4 with SMTP id u4so5256986ggl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2012 12:51:45 -0700 (PDT)
-Message-ID: <5016E5CD.2090100@lwfinger.net> (sfid-20120730_215148_950870_721961E2)
-Date: Mon, 30 Jul 2012 14:51:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com> <501280BF.4070409@lwfinger.net> <1343394581.87030.YahooMailNeo@web28902.mail.ir2.yahoo.com> <1343398356.19742.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343403507.54955.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343404770.91235.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343407089.96532.YahooMailNeo@web28901.mail.ir2.yahoo.com> <50140463.3080209@lwfinger.net> <1343591834.22699.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5015A2DB.50106@lwfinger.net> <1343671587.79175.YahooMailNeo@web28901.mail.ir2.yahoo.com>
-In-Reply-To: <1343671587.79175.YahooMailNeo@web28901.mail.ir2.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 18 Jul 2012 21:00:20 -0400
+Message-ID: <1342659615.11373.59.camel@deadeye.wl.decadent.org.uk> (sfid-20120719_030137_467400_F93C276B)
+Subject: Re: [PATCH] r8712u: Update to latest firmware
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	dwmw2@infradead.org
+Date: Thu, 19 Jul 2012 02:00:15 +0100
+In-Reply-To: <1342030710-6543-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1342030710-6543-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-/aZQ/obzfr0nH88rBlt0"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/30/2012 01:06 PM, Xavier de Almeida wrote:
->
-> (any cheap, good and working USB wifi device which has more power than an embedded chip as the rtl8188 ? it's a shame that we can't add just an antenna vs another wifi hw)
 
-One of the Alfa AWUS036 models has an RTL8188CU chip in it. I think it ends in 
-HR. Besides that, there are a number of devices that use the rt2800usb or ath9k 
-variants that have external antennas.
+--=-/aZQ/obzfr0nH88rBlt0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I cannot run my RTL8188CE as an internal device as it is not white listed by my 
-BIOS, thus I have no idea how well it works with standard laptop antennas.
+On Wed, 2012-07-11 at 13:18 -0500, Larry Finger wrote:
+> A new firmware file is used in the vendor driver with name/version
+> rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+[...]
 
-Larry
+Applied, thanks.
 
+Ben.
 
+--=20
+Ben Hutchings
+DNRC Motto:  I can please only one person per day.
+Today is not your day.  Tomorrow isn't looking good either.
+
+--=-/aZQ/obzfr0nH88rBlt0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAUAdcH+e/yOyVhhEJAQpE2BAAxmmyAmDrXk1KzkoTpjJYgJN6Giu3ZS1O
+8fGfQ9slw4X3aKHXquf5V4m+aYbPVPSFJpke0stWWAH0LiQdu3FmlZTdg/UvC03c
+cOnWHGqmqscXjXbiJ7LNFsLxG5ytpMbiLv3c74U/VQXth0/Ej4rWT191mVouVzTO
+wzf6PdQOHvpU3TqZ+skTNN+/lA4cD44jWFOyegDdwXictPldeBcK6poNMASeO4D5
+lRGXIqoyn04BkX6zwRzjVsFVz5ZL45oOXpgaok7RPD7SIF9A3rzjh0vI+Xj2fS7G
+ORajxbqhlnpOP20q4P3BR7qcsuQQOnRfqopdliL4Hb6Jd01ibfzLHVfTE5sHNeX9
+nR1FRoSBPJAufCGUKn7KsHqUazrS/BJiOZHWD3j/y+3zzNupmn0+FpBWeCEKcvt5
+/jxrffc0Vz2XAhjwlxCmNBUYDkJQfiQ4xI/ZhLs/rTDDUdzqtbjMYpUra9PuxRiQ
+1mFoT8jrPaB8LG3Lye2ZZGreK8vqI5AFX+9kbzNX3sevl+V3sirEsAaDE/uswlzp
+0ITcn6G7jtvpGde91avDIq5Z6RcRbOIybGLj23gb5t4qMCXQZQDptQ0RKjB1fPk4
+p2IPRPkk1wQ6Qz+h0/14jsxnm0wYN3tVY5lJML1FmwVLCRR1ibWRJmblhaXMxrYp
+ov34Z9YiaUk=
+=iXYj
+-----END PGP SIGNATURE-----
+
+--=-/aZQ/obzfr0nH88rBlt0--
