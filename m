@@ -1,40 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42349 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756101Ab2GMX1G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 19:27:06 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH] ath9k_hw: fix 5 GHz frequency selection on AR934x/AR955x with 25 MHz refclock
-Date: Sat, 14 Jul 2012 01:26:54 +0200
-Message-Id: <1342222014-27980-1-git-send-email-nbd@openwrt.org> (sfid-20120714_012711_446282_36DAB068)
+Received: from lunge.queued.net ([173.255.254.236]:53800 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601Ab2GSEiU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2012 00:38:20 -0400
+Date: Wed, 18 Jul 2012 21:38:08 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH RESEND 1/9] Platform: OLPC: add a stub to drivers/platform/
+ for the OLPC EC driver
+Message-ID: <20120718213808.0166a775@dev.queued.net> (sfid-20120719_063834_366581_321EEA8E)
+In-Reply-To: <20120718213713.232e4161@dev.queued.net>
+References: <20120718213713.232e4161@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The old code was an accidental copy&paste of the 2.4 GHz version,
-which doesn't work.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+The OLPC EC driver has outgrown arch/x86/platform/.  It's time to both
+share common code amongst different architectures, as well as move it out
+of arch/x86/.  The XO-1.75 is ARM-based, and the EC driver shares a lot of
+code with the x86 code.
+
+Signed-off-by: Andres Salomon <dilinger@queued.net>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ arch/x86/include/asm/olpc.h     |   19 +++----------------
+ arch/x86/platform/olpc/olpc.c   |    4 ++--
+ drivers/platform/Makefile       |    1 +
+ drivers/platform/olpc/olpc-ec.c |   16 ++++++++++++++++
+ include/linux/olpc-ec.h         |   29 +++++++++++++++++++++++++++++
+ 5 files changed, 51 insertions(+), 18 deletions(-)
+ create mode 100644 drivers/platform/olpc/olpc-ec.c
+ create mode 100644 include/linux/olpc-ec.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index d2346db..e476f9f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -117,8 +117,8 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 		    ah->is_clk_25mhz) {
- 			u32 chan_frac;
+diff --git a/arch/x86/include/asm/olpc.h b/arch/x86/include/asm/olpc.h
+index 87bdbca..513e999 100644
+--- a/arch/x86/include/asm/olpc.h
++++ b/arch/x86/include/asm/olpc.h
+@@ -4,6 +4,7 @@
+ #define _ASM_X86_OLPC_H
  
--			channelSel = (freq * 2) / 75;
--			chan_frac = (((freq * 2) % 75) * 0x20000) / 75;
-+			channelSel = freq / 75;
-+			chan_frac = ((freq % 75) * 0x20000) / 75;
- 			channelSel = (channelSel << 17) | chan_frac;
- 		} else {
- 			channelSel = CHANSEL_5G(freq);
+ #include <asm/geode.h>
++#include <linux/olpc-ec.h>
+ 
+ struct olpc_platform_t {
+ 	int flags;
+@@ -102,22 +103,8 @@ extern int pci_olpc_init(void);
+ 
+ /* EC related functions */
+ 
+-extern int olpc_ec_cmd(unsigned char cmd, unsigned char *inbuf, size_t inlen,
+-		unsigned char *outbuf, size_t outlen);
+-
+-/* EC commands */
+-
+-#define EC_FIRMWARE_REV			0x08
+-#define EC_WRITE_SCI_MASK		0x1b
+-#define EC_WAKE_UP_WLAN			0x24
+-#define EC_WLAN_LEAVE_RESET		0x25
+-#define EC_READ_EB_MODE			0x2a
+-#define EC_SET_SCI_INHIBIT		0x32
+-#define EC_SET_SCI_INHIBIT_RELEASE	0x34
+-#define EC_WLAN_ENTER_RESET		0x35
+-#define EC_WRITE_EXT_SCI_MASK		0x38
+-#define EC_SCI_QUERY			0x84
+-#define EC_EXT_SCI_QUERY		0x85
++extern int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf,
++		size_t inlen, unsigned char *outbuf, size_t outlen);
+ 
+ /* SCI source values */
+ 
+diff --git a/arch/x86/platform/olpc/olpc.c b/arch/x86/platform/olpc/olpc.c
+index a4bee53..796e199 100644
+--- a/arch/x86/platform/olpc/olpc.c
++++ b/arch/x86/platform/olpc/olpc.c
+@@ -125,7 +125,7 @@ static int __wait_on_obf(unsigned int line, unsigned int port, int desired)
+  * <http://wiki.laptop.org/go/Ec_specification>.  Unfortunately, while
+  * OpenFirmware's source is available, the EC's is not.
+  */
+-int olpc_ec_cmd(unsigned char cmd, unsigned char *inbuf, size_t inlen,
++int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf, size_t inlen,
+ 		unsigned char *outbuf,  size_t outlen)
+ {
+ 	unsigned long flags;
+@@ -201,7 +201,7 @@ err:
+ 	spin_unlock_irqrestore(&ec_lock, flags);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(olpc_ec_cmd);
++EXPORT_SYMBOL_GPL(olpc_ec_cmd_x86);
+ 
+ void olpc_ec_wakeup_set(u16 value)
+ {
+diff --git a/drivers/platform/Makefile b/drivers/platform/Makefile
+index 782953a..b17c16c 100644
+--- a/drivers/platform/Makefile
++++ b/drivers/platform/Makefile
+@@ -3,3 +3,4 @@
+ #
+ 
+ obj-$(CONFIG_X86)		+= x86/
++obj-$(CONFIG_OLPC)		+= olpc/
+diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
+new file mode 100644
+index 0000000..4202603
+--- /dev/null
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -0,0 +1,16 @@
++/*
++ * Generic driver for the OLPC Embedded Controller.
++ *
++ * Copyright (C) 2011-2012 One Laptop per Child Foundation.
++ *
++ * Licensed under the GPL v2 or later.
++ */
++#include <linux/module.h>
++#include <asm/olpc.h>
++
++int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
++{
++	/* Currently a stub; this will be expanded upon later. */
++	return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
++}
++EXPORT_SYMBOL_GPL(olpc_ec_cmd);
+diff --git a/include/linux/olpc-ec.h b/include/linux/olpc-ec.h
+new file mode 100644
+index 0000000..6d4e426
+--- /dev/null
++++ b/include/linux/olpc-ec.h
+@@ -0,0 +1,29 @@
++#ifndef _LINUX_OLPC_EC_H
++#define _LINUX_OLPC_EC_H
++
++/* XO-1 EC commands */
++#define EC_FIRMWARE_REV			0x08
++#define EC_WRITE_SCI_MASK		0x1b
++#define EC_WAKE_UP_WLAN			0x24
++#define EC_WLAN_LEAVE_RESET		0x25
++#define EC_READ_EB_MODE			0x2a
++#define EC_SET_SCI_INHIBIT		0x32
++#define EC_SET_SCI_INHIBIT_RELEASE	0x34
++#define EC_WLAN_ENTER_RESET		0x35
++#define EC_WRITE_EXT_SCI_MASK		0x38
++#define EC_SCI_QUERY			0x84
++#define EC_EXT_SCI_QUERY		0x85
++
++#ifdef CONFIG_OLPC
++
++extern int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
++		size_t outlen);
++
++#else
++
++static inline int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
++		size_t outlen) { return -ENODEV; }
++
++#endif /* CONFIG_OLPC */
++
++#endif /* _LINUX_OLPC_EC_H */
 -- 
-1.7.7.5 (Apple Git-26)
+1.7.2.5
 
