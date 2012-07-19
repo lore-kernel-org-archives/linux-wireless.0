@@ -1,89 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37952 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329Ab2GZVwT (ORCPT
+Received: from ivanich.tenet.odessa.ua ([85.238.100.22]:56925 "EHLO
+	ivanich.org.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750833Ab2GSLzM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 17:52:19 -0400
-Received: by yhmm54 with SMTP id m54so2538537yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 14:52:18 -0700 (PDT)
-Message-ID: <5011BC0A.8060600@lwfinger.net> (sfid-20120726_235224_024660_6FB6F899)
-Date: Thu, 26 Jul 2012 16:52:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 19 Jul 2012 07:55:12 -0400
+From: Ivanich <ivanich@ivanich.org.ua>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: hostapd locks during restart
+Date: Thu, 19 Jul 2012 14:55:10 +0300
+Message-ID: <3973848.eJNoskK5Tf@ivanich> (sfid-20120719_135515_900697_E265041C)
+In-Reply-To: <CAD2nsn2fMJogNmfzee0NyrvBxnfi=5KhUny+8ayu-XM5ZGPYog@mail.gmail.com>
+References: <1375660.IC4Ixsn6lK@ivanich> <CAD2nsn2fMJogNmfzee0NyrvBxnfi=5KhUny+8ayu-XM5ZGPYog@mail.gmail.com>
 MIME-Version: 1.0
-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com>
-In-Reply-To: <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2012 09:49 AM, Xavier de Almeida wrote:
-> In my case, I don't have a dhcp server but I use isc-dhcp-relay in order to reuse my master DHCP server for wireless endpoints. The advantage over one single point of control is that fixed and wireless endpoints will share the same network 192.168.0/24.
->
-> /etc/default/isc-dhcp-relay
->    # What servers should the DHCP relay forward requests to?
->    SERVERS="192.168.0.254"
->    # On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
->
->    INTERFACES="wlan0"
->    # Additional options that are passed to the DHCP relay daemon?
->
->    OPTIONS="-d"
->
-> Here are the results when using Larry's script:
->
-> sudo ./control_ap.sh start wlan0 eth0
->
-> Starting AP mode for wlan0 at address 192.168.0.200
-> hostapd: no process found
-> isc-dhcp-relay: no process found
-> touch: cannot touch `/var/lib/dhcp/db/dhcpd.leases': No such file or directory
-> Configuration file: /home/xabix/hostapd.conf
-> Could not set interface mon.wlan0 flags: Success
-> nl80211: Failed to set interface wlan0 into AP mode
-> nl80211 driver initialization failed.
-> rmdir[ctrl_interface]: No such file or directory
-> ELOOP: remaining socket: sock=4 eloop_data=0x85a1910 user_data=0x85a3720 handler=0x807c5e0
-> ELOOP: remaining socket: sock=6 eloop_data=0x85a5538 user_data=(nil) handler=0x8086770
->
-> I think the problem I am having is the same as without the script.
->
-> Do you want me to enable additional logging? (plz confirmed how to do so)
-
-I finally finished the bug bisection that I was doing and set up an RTL8188CE 
-with my script on wireless-testing 3.5.0, which is the same wireless code as you 
-will get with the bleeding-edge compat-wireless. BTW, that is the wireless code 
-that will be in 3.6.0 in about 3 months. When I started my script, I got the 
-following:
-
-finger@larrylap:~> sudo ./control_ap start wlan0 eth0
-Starting AP mode for wlan0 at address 192.168.0.1
-iptables: No chain/target/match by that name.
-Internet Systems Consortium DHCP Server 4.2.3-P2
-Copyright 2004-2012 Internet Systems Consortium.
-All rights reserved.
-For info, please visit https://www.isc.org/software/dhcp/
-Not searching LDAP since ldap-server, ldap-port and ldap-base-dn were not 
-specified in the config file
-Wrote 1 leases to leases file.
-Listening on LPF/wlan0/1c:65:9d:15:c2:bd/192.168.0.0/24
-Sending on   LPF/wlan0/1c:65:9d:15:c2:bd/192.168.0.0/24
-Sending on   Socket/fallback/fallback-net
-Configuration file: /root/hostapd.conf
-finger@larrylap:~>
-
-I was able to associate and authenticate with this new AP and connect through it 
-to the Internet. Obviously this kernel does not have one of the iptables 
-modules, but otherwise all is well.
-
-What version of hostapd are you using? Mine is 1.0.
-
-You need to use compat-wireless and make certain that hostapd is new enough. I 
-think 0.7.3 would be OK.
-
-Larry
-
-
-
+On Четверг, 19-июл-2012 15:19:25 Mohammed Shafi wrote:
+> On Thu, Jul 19, 2012 at 2:24 PM, Ivanich <ivanich@ivanich.org.ua> wrote:
+> > In the latest wireless-testing.git hostapd deadlock during restart, using
+> > rtl8192ce in AP mode.
+> 
+> please check if this is related to
+> http://comments.gmane.org/gmane.linux.kernel.wireless.general/95061
+> 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> > in the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes this patch helps, hostapd now restarting fine.
