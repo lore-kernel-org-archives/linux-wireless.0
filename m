@@ -1,52 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51344 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839Ab2G0LC6 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:63468 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170Ab2GSTyj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:02:58 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] mac80211_hwsim: add support for P2P Device
-Date: Fri, 27 Jul 2012 13:02:52 +0200
-Message-Id: <1343386972-5044-5-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130307_682403_5C3278D6)
-In-Reply-To: <1343386972-5044-1-git-send-email-johannes@sipsolutions.net>
-References: <1343386972-5044-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 19 Jul 2012 15:54:39 -0400
+Received: by pbbrp8 with SMTP id rp8so4851414pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2012 12:54:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120719130056.22047.19196.stgit@x201>
+References: <20120719125937.22047.91375.stgit@x201> <20120719130056.22047.19196.stgit@x201>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 19 Jul 2012 12:54:18 -0700
+Message-ID: <CAB=NE6UTDeYowTXdZ-2uGzQgQ3MWxwg-xpYYXxbpT-J6iacjcg@mail.gmail.com> (sfid-20120719_215443_897813_FA5A0FF8)
+Subject: Re: [PATCH v2 3/3] ath6kl: add support for changing contry code
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Jul 19, 2012 at 6:00 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> To make it possible to change the country code from user space via nl80211
+> add handler for reg_notifier. The feature is only enabled when built
+> time option CONFIG_ATH6KL_REGDOMAIN is enabled, which again depends on
+> CFG80211_CERTIFICATION_ONUS for certication purposes.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Advertise support for P2P Device in hwsim
-to be able to test it.
+Ah OK so a followup patch would use ath6kl_wmi_set_regdomain_cmd() ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 826ac7b..d03ee5b 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1732,6 +1732,7 @@ static const struct ieee80211_iface_limit hwsim_if_limits[] = {
- #endif
- 				 BIT(NL80211_IFTYPE_AP) |
- 				 BIT(NL80211_IFTYPE_P2P_GO) },
-+	{ .max = 1, .types = BIT(NL80211_IFTYPE_P2P_DEVICE) },
- };
- 
- static const struct ieee80211_iface_combination hwsim_if_comb = {
-@@ -1818,7 +1819,8 @@ static int __init init_mac80211_hwsim(void)
- 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 			BIT(NL80211_IFTYPE_P2P_GO) |
- 			BIT(NL80211_IFTYPE_ADHOC) |
--			BIT(NL80211_IFTYPE_MESH_POINT);
-+			BIT(NL80211_IFTYPE_MESH_POINT) |
-+			BIT(NL80211_IFTYPE_P2P_DEVICE);
- 
- 		hw->flags = IEEE80211_HW_MFP_CAPABLE |
- 			    IEEE80211_HW_SIGNAL_DBM |
--- 
-1.7.10.4
-
+  Luis
