@@ -1,275 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49192 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460Ab2GITs3 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:65393 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851Ab2GSNLJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 15:48:29 -0400
-Date: Mon, 9 Jul 2012 15:43:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-07-09
-Message-ID: <20120709194330.GF1348@tuxdriver.com> (sfid-20120709_214852_525798_49A3ADE1)
-References: <20120709192818.GE1348@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="T4sUOijqQbZv57TR"
-In-Reply-To: <20120709192818.GE1348@tuxdriver.com>
+	Thu, 19 Jul 2012 09:11:09 -0400
+Received: by wibhm11 with SMTP id hm11so5889822wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jul 2012 06:11:08 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [RFC] mac80211: add PS flag to bss_conf
+Date: Thu, 19 Jul 2012 16:11:04 +0300
+Message-Id: <1342703465-26703-1-git-send-email-eliad@wizery.com> (sfid-20120719_151113_702313_2D9C902C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, ps mode is indicated per device (rather than
+per interface), which doesn't make a lot of sense.
 
---T4sUOijqQbZv57TR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Moreover, there are subtle bugs caused by the inability
+to indicate ps change along with other changes
+(e.g. when the AP deauth us, we'd like to indicate
+CHANGED_PS | CHANGED_ASSOC, as changing PS before
+notifying about disassociation will result in null-packets
+being sent (if IEEE80211_HW_SUPPORTS_DYNAMIC_PS) while
+the sta is already disconnected.)
 
-Forgot to sign -- hopefully this is sufficient? :-)
+Keep the current per-device notifications, and add
+additional per-vif notifications. In order to keep it
+simple, these notifications are NOT called due to
+(temporary) dynamic_ps/offchannel operations.
 
-On Mon, Jul 09, 2012 at 03:28:18PM -0400, John W. Linville wrote:
-> commit c1109736bcdd14b590392e9a96d66e7e823f9e67
->=20
-> Dave,
->=20
-> Please accept these fixes for the 3.5 stream...
->=20
-> Bing Zhao provides an mwifiex fix for a memory leak uncovered by
-> Coverity.
->=20
-> Eliad Peller provides a mac80211 fix to properly clean-up after an
-> association failure.
->=20
-> Emmanuel Grumbach gives us an iwlegacy fix to avoid some on-device
-> memory corruption that leads to a stuck queue.
->=20
-> Sasha Levin offers an NFC fix to prevent a NULL pointer dereference
-> in llcp_sock_getname.
->=20
-> Stanislaw Gruszka offers an rt2x00usb fix for an RX queue stall that
-> results from using the wrong argument order in a macro call.  He also
-> gives us an iwlegacy fix that corresponds to an already merged iwlwifi
-> fix, the effect of which is to avoid stuck queue detection failure.
->=20
-> Finally, Thomas Huehn provides a mac80211 fix to correct some kzalloc
-> arguments.  This was originally two patches, but I consolidated them.
->=20
-> Please let me know if there are problems!
->=20
-> Thanks,
->=20
-> John
->=20
-> ---
->=20
-> The following changes since commit bb3bb3a5b839fa5c0a2c386640e865320a1fb6=
-4c:
->=20
->   Merge branch 'master' of git://1984.lsi.us.es/nf (2012-07-09 02:47:59 -=
-0700)
->=20
-> are available in the git repository at:
->=20
->=20
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for=
--davem
->=20
-> for you to fetch changes up to c1109736bcdd14b590392e9a96d66e7e823f9e67:
->=20
->   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/=
-linville/wireless into for-davem (2012-07-09 15:09:08 -0400)
->=20
-> ----------------------------------------------------------------
->=20
-> Bing Zhao (1):
->       mwifiex: fix Coverity SCAN CID 709078: Resource leak (RESOURCE_LEAK)
->=20
-> Eliad Peller (1):
->       mac80211: destroy assoc_data correctly if assoc fails
->=20
-> Emmanuel Grumbach (1):
->       iwlegacy: don't mess up the SCD when removing a key
->=20
-> John W. Linville (1):
->       Merge branch 'master' of git://git.kernel.org/.../linville/wireless=
- into for-davem
->=20
-> Sasha Levin (1):
->       NFC: Prevent NULL deref when getting socket name
->=20
-> Stanislaw Gruszka (2):
->       rt2x00usb: fix indexes ordering on RX queue kick
->       iwlegacy: always monitor for stuck queues
->=20
-> Thomas Huehn (1):
->       mac80211: correct size the argument to kzalloc in minstrel_ht
->=20
->  drivers/net/wireless/iwlegacy/4965-mac.c |    4 ++--
->  drivers/net/wireless/iwlegacy/common.c   |   14 ++++++--------
->  drivers/net/wireless/mwifiex/cfg80211.c  |    1 +
->  drivers/net/wireless/rt2x00/rt2x00usb.c  |    2 +-
->  net/mac80211/mlme.c                      |    6 ++----
->  net/mac80211/rc80211_minstrel_ht.c       |    2 +-
->  net/nfc/llcp/sock.c                      |    2 +-
->  7 files changed, 14 insertions(+), 17 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wirel=
-ess/iwlegacy/4965-mac.c
-> index 509301a..ff5d689 100644
-> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-> @@ -3405,7 +3405,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
->  		return 0;
->  	}
-> =20
-> -	if (il->stations[sta_id].sta.key.key_offset =3D=3D WEP_INVALID_OFFSET) {
-> +	if (il->stations[sta_id].sta.key.key_flags & STA_KEY_FLG_INVALID) {
->  		IL_WARN("Removing wrong key %d 0x%x\n", keyconf->keyidx,
->  			key_flags);
->  		spin_unlock_irqrestore(&il->sta_lock, flags);
-> @@ -3420,7 +3420,7 @@ il4965_remove_dynamic_key(struct il_priv *il,
->  	memset(&il->stations[sta_id].sta.key, 0, sizeof(struct il4965_keyinfo));
->  	il->stations[sta_id].sta.key.key_flags =3D
->  	    STA_KEY_FLG_NO_ENC | STA_KEY_FLG_INVALID;
-> -	il->stations[sta_id].sta.key.key_offset =3D WEP_INVALID_OFFSET;
-> +	il->stations[sta_id].sta.key.key_offset =3D keyconf->hw_key_idx;
->  	il->stations[sta_id].sta.sta.modify_mask =3D STA_MODIFY_KEY_MASK;
->  	il->stations[sta_id].sta.mode =3D STA_CONTROL_MODIFY_MSK;
-> =20
-> diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireles=
-s/iwlegacy/common.c
-> index cbf2dc1..5d4807c 100644
-> --- a/drivers/net/wireless/iwlegacy/common.c
-> +++ b/drivers/net/wireless/iwlegacy/common.c
-> @@ -4767,14 +4767,12 @@ il_bg_watchdog(unsigned long data)
->  		return;
-> =20
->  	/* monitor and check for other stuck queues */
-> -	if (il_is_any_associated(il)) {
-> -		for (cnt =3D 0; cnt < il->hw_params.max_txq_num; cnt++) {
-> -			/* skip as we already checked the command queue */
-> -			if (cnt =3D=3D il->cmd_queue)
-> -				continue;
-> -			if (il_check_stuck_queue(il, cnt))
-> -				return;
-> -		}
-> +	for (cnt =3D 0; cnt < il->hw_params.max_txq_num; cnt++) {
-> +		/* skip as we already checked the command queue */
-> +		if (cnt =3D=3D il->cmd_queue)
-> +			continue;
-> +		if (il_check_stuck_queue(il, cnt))
-> +			return;
->  	}
-> =20
->  	mod_timer(&il->watchdog,
-> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wirele=
-ss/mwifiex/cfg80211.c
-> index ce61b6f..5c7fd18 100644
-> --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> @@ -958,6 +958,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wi=
-phy,
->  	case NL80211_HIDDEN_SSID_ZERO_CONTENTS:
->  		/* firmware doesn't support this type of hidden SSID */
->  	default:
-> +		kfree(bss_cfg);
->  		return -EINVAL;
->  	}
-> =20
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wirele=
-ss/rt2x00/rt2x00usb.c
-> index d357d1e..74ecc33 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-> @@ -436,8 +436,8 @@ void rt2x00usb_kick_queue(struct data_queue *queue)
->  	case QID_RX:
->  		if (!rt2x00queue_full(queue))
->  			rt2x00queue_for_each_entry(queue,
-> -						   Q_INDEX_DONE,
->  						   Q_INDEX,
-> +						   Q_INDEX_DONE,
->  						   NULL,
->  						   rt2x00usb_kick_rx_entry);
->  		break;
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index a4bb856..0db5d34 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2174,15 +2174,13 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub=
-_if_data *sdata,
->  		       sdata->name, mgmt->sa, status_code);
->  		ieee80211_destroy_assoc_data(sdata, false);
->  	} else {
-> -		printk(KERN_DEBUG "%s: associated\n", sdata->name);
-> -
->  		if (!ieee80211_assoc_success(sdata, *bss, mgmt, len)) {
->  			/* oops -- internal error -- send timeout for now */
-> -			ieee80211_destroy_assoc_data(sdata, true);
-> -			sta_info_destroy_addr(sdata, mgmt->bssid);
-> +			ieee80211_destroy_assoc_data(sdata, false);
->  			cfg80211_put_bss(*bss);
->  			return RX_MGMT_CFG80211_ASSOC_TIMEOUT;
->  		}
-> +		printk(KERN_DEBUG "%s: associated\n", sdata->name);
-> =20
->  		/*
->  		 * destroy assoc_data afterwards, as otherwise an idle
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_mi=
-nstrel_ht.c
-> index 2d1acc6..f9e51ef 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -809,7 +809,7 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_st=
-a *sta, gfp_t gfp)
->  			max_rates =3D sband->n_bitrates;
->  	}
-> =20
-> -	msp =3D kzalloc(sizeof(struct minstrel_ht_sta), gfp);
-> +	msp =3D kzalloc(sizeof(*msp), gfp);
->  	if (!msp)
->  		return NULL;
-> =20
-> diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
-> index 17a707d..e06d458 100644
-> --- a/net/nfc/llcp/sock.c
-> +++ b/net/nfc/llcp/sock.c
-> @@ -292,7 +292,7 @@ static int llcp_sock_getname(struct socket *sock, str=
-uct sockaddr *addr,
-> =20
->  	pr_debug("%p\n", sk);
-> =20
-> -	if (llcp_sock =3D=3D NULL)
-> +	if (llcp_sock =3D=3D NULL || llcp_sock->dev =3D=3D NULL)
->  		return -EBADFD;
-> =20
->  	addr->sa_family =3D AF_NFC;
-> --=20
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ include/net/mac80211.h |    5 +++++
+ net/mac80211/mlme.c    |   22 ++++++++++++++++++++++
+ net/mac80211/util.c    |    3 ++-
+ 3 files changed, 29 insertions(+), 1 deletions(-)
 
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3a700fd..1fcb109 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -171,6 +171,7 @@ struct ieee80211_low_level_stats {
+  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
+  * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
+  * @BSS_CHANGED_AP_PROBE_RESP: Probe Response changed for this BSS (AP mode)
++ * @BSS_CHANGED_PS: PS changed for this BSS (STA mode)
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -190,6 +191,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_IDLE		= 1<<14,
+ 	BSS_CHANGED_SSID		= 1<<15,
+ 	BSS_CHANGED_AP_PROBE_RESP	= 1<<16,
++	BSS_CHANGED_PS			= 1<<17,
+ 
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+@@ -266,6 +268,8 @@ enum ieee80211_rssi_event {
+  * @idle: This interface is idle. There's also a global idle flag in the
+  *	hardware config which may be more appropriate depending on what
+  *	your driver/device needs to do.
++ * @ps: power-save mode (STA only). This flag is NOT affected by
++ *	offchannel/dynamic_ps operations.
+  * @ssid: The SSID of the current vif. Only valid in AP-mode.
+  * @ssid_len: Length of SSID given in @ssid.
+  * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
+@@ -296,6 +300,7 @@ struct ieee80211_bss_conf {
+ 	bool arp_filter_enabled;
+ 	bool qos;
+ 	bool idle;
++	bool ps;
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	size_t ssid_len;
+ 	bool hidden_ssid;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index bf3da5a..b8452d5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1004,6 +1004,26 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 		local->ps_sdata = NULL;
+ 	}
+ 
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++		if (sdata->vif.type != NL80211_IFTYPE_STATION)
++			continue;
++
++		/* already in ps */
++		if (sdata == local->ps_sdata &&
++		    sdata->vif.bss_conf.ps)
++			continue;
++
++		/* already active */
++		if (sdata != local->ps_sdata &&
++		    !sdata->vif.bss_conf.ps)
++			continue;
++
++		sdata->vif.bss_conf.ps = local->ps_sdata == sdata;
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_PS);
++	}
++
+ 	ieee80211_change_ps(local);
+ }
+ 
+@@ -1368,6 +1388,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++		sdata->vif.bss_conf.ps = false;
++		changed |= BSS_CHANGED_PS;
+ 	}
+ 	local->ps_sdata = NULL;
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 39b82fe..037d148 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1359,7 +1359,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			changed |= BSS_CHANGED_ASSOC |
+-				   BSS_CHANGED_ARP_FILTER;
++				   BSS_CHANGED_ARP_FILTER |
++				   BSS_CHANGED_PS;
+ 			mutex_lock(&sdata->u.mgd.mtx);
+ 			ieee80211_bss_info_change_notify(sdata, changed);
+ 			mutex_unlock(&sdata->u.mgd.mtx);
+-- 
+1.7.6.401.g6a319
 
---T4sUOijqQbZv57TR
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJP+zRhAAoJEJctW/TcYTgGv04P/RIDGtSWjyUHMGZmM1SoQ9ve
-oSvQlBh4chv0CFkrfRL8Ru6PKHybVecNH4kL7ef9Q6Qtyr/kaNbjHr+2gNhmTwFS
-vIPp5fsPR1CK4bwdh8zYH/4hebcq48yo9FdpgD3qOcrn9wPoQYuXJxwaQltam91P
-DUTnkPMDReP0WlRzVPjleWdrGJ7xC3YOIMr5yKncWgfHl1NYVb4nsVXImqpEDqjN
-7RrPKI1QqS55O0a+eElnMiWvq4KOB6YEslKNtLYh6WZSLzTdRqFazlyaQRfgEDTt
-lVVVxZT14c9RXjwXkmbfA5Se26f2dZ+NN0siCEFE/jidZMACcjZYUOCXYl5qu4xq
-+pR4pYsDDxAJ5DP5nzRrKPBj5M5jPCX4FtFrYScfYvX1c29fQolt7pH30ZzLiymx
-Yi396QI/hAWQEDoqTF9rPB+gmVZwK9hj7TAyJ9E+TCl8yj0AdxJpaQquHZg5RyFC
-3vOulBySxZk9qoS54z4a53tFMTnm8X/BlMfPGjt16DQ3wMK9PNYLOOKbgAyAb72X
-WssfuY3U1rMiw9rVuCa3Nn+kr6nYp8lPHbFoPMmoAgGgxKQbBgcaLCiGsI4wg1iz
-mwt/jPKvbPJQ30IAuGD5LUwjTXoetcUjS7x1ptVAx3VyKfRCI4s+lFcsp4EB7b48
-kJFZXRxY74Ko+FMZ+Tcj
-=t6AR
------END PGP SIGNATURE-----
-
---T4sUOijqQbZv57TR--
