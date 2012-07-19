@@ -1,62 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63526 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752321Ab2GBRcs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46687 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602Ab2GSJfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 13:32:48 -0400
-MIME-Version: 1.0
-In-Reply-To: <1341067733.10253.2.camel@joe2Laptop>
-References: <20110930115306.3bc105cb@mj>
-	<1340985513-15655-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1340986086.6562.36.camel@joe2Laptop>
-	<20120629162649.f277177f.akpm@linux-foundation.org>
-	<1341067733.10253.2.camel@joe2Laptop>
-Date: Mon, 2 Jul 2012 20:32:46 +0300
-Message-ID: <CAHp75Vde4+A5NCH-YvrsrjE-KA3A+xLdMOozeFU4VV7vvUfcmQ@mail.gmail.com> (sfid-20120702_193318_767318_1E3DB73A)
-Subject: Re: [RFC][PATCH 1/2] lib: printf: append support of '%*p[Mm][FR]'
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	proski@gnu.org, Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 19 Jul 2012 05:35:07 -0400
+Message-ID: <1342690499.6383.3.camel@jlt3.sipsolutions.net> (sfid-20120719_113511_183338_AF63ED76)
+Subject: pull-request: mac80211-next 2012-07-19
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 19 Jul 2012 11:34:59 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-38pPZZzcgqch6l60E2gt"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 30, 2012 at 5:48 PM, Joe Perches <joe@perches.com> wrote:
-> On Fri, 2012-06-29 at 16:26 -0700, Andrew Morton wrote:
->> On Fri, 29 Jun 2012 09:08:06 -0700
->> Joe Perches <joe@perches.com> wrote:
->>
->> > > diff --git a/lib/vsprintf.c b/lib/vsprintf.c
->> > []
->> > > @@ -655,11 +655,12 @@ char *resource_string(char *buf, char *end, struct resource *res,
->> > >  }
->> > >
->> > >  static noinline_for_stack
->> > > -char *mac_address_string(char *buf, char *end, u8 *addr,
->> > > -                  struct printf_spec spec, const char *fmt)
->> > > +char *hex_string(char *buf, char *end, u8 *addr, struct printf_spec spec,
->> > > +          const char *fmt)
->> > >  {
->> > > - char mac_addr[sizeof("xx:xx:xx:xx:xx:xx")];
->> > > - char *p = mac_addr;
->> > > + char hex_str[64*3];     /* support up to 64 bytes to print */
->> >
->> > Might be too much stack though.
->>
->> Yes, it's a bit marginal, as this new capability might be used in debug
->> or crash situations where we're deep into the stack.  The average case
->> could be improved by using alloca()-style allocation.
->
-> Or maybe support larger sizes with a smaller
-> stack buffer and a while loop.
 
-What do you think about mixed approach? Let's say we would use buffer
-on stack for 8 bytes or less, and allocated buffer in case of larger
-input. It allows to keep implementation simple.
+--=-38pPZZzcgqch6l60E2gt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-With Best Regards,
-Andy Shevchenko
+John,
+
+Please pull these two patches, the important one is the regulatory mutex
+fix (for which Luis should go wear a brown paper bag ;-)) )
+
+johannes
+
+The following changes since commit 88bc40e8c3d3bca7d26c756bb0b823d4abad3355=
+:
+
+  mac80211: go out of PS before sending disassoc (2012-07-17 12:17:42 +0200=
+)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
+-john
+
+for you to fetch changes up to 99102bd380f27b8dd5e058e69e3203bfad0cad94:
+
+  mac80211: flush stations before stop beaconing (2012-07-18 17:03:51 +0200=
+)
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      mac80211: flush stations before stop beaconing
+
+Mohammed Shafi Shajakhan (1):
+      cfg80211: Fix mutex locking in reg_last_request_cell_base
+
+ net/mac80211/cfg.c |    1 +
+ net/wireless/reg.c |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+
+--=-38pPZZzcgqch6l60E2gt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQB9TDAAoJEDBSmw7B7bqr2TkQAIKRHzXCk8WI0RKJ6YXXzM2m
+y//rpUsscLL2ZZc9WWADjc2zSewtTJCOilpeWJU30eys3oGSsuEy2Uukl0gi8BoO
+dbroW1k5C8JJzCcdVQjQVDsN62Lr19ni5Vh3syLfFGMYgg4hAsl/yoW9OSZLTYN/
+ZfxZgtqEIgD/SqAIM4KKNEFcDyyorhH6xZJmv7Zu9PmyvVm6mH7XwG+d5fsoVFbe
+OFi7N+lYow5oQ3X5uPZZp5+FjZ8FpdzEuhC7YecjW9XxyPE0GwLfE7lxd7U2byXm
+Y3HFrT9R3EWJjNQ1IliJD5ekHwMlY59fM6lf6q/04EebIBRK70XB20nmJje2lGo2
+XRZIbirVz263SWfbHT2Xah5eTRVJaep/HDoRIp0lsNs/748fdxiCOYMPwXf98EWp
+8x5xvBJ5CbVkQ2GAZN7TbSqWoWHOJfvhnHh0C7/6FkgtElMm6nhoOvyWgjaLM8vC
+0Qd6KoEJwLB7xDEQ3YufuezjktaPXMMeH1wmuEkOGgwVraH7oQWcisfmeIu51Tcp
+NZ/1lVfNzYggfQDE2jVLrtARK8dkaR/UDtyqNxtWNgrZF/Yl+KSJ2zZc0l2DYTQo
+oiLn08iYPqkWpxunjkTPs/QmKEh1CpXS0J3kSmifCBVkjbYOE3DrqPC0mEnGPcWx
+VzdREMG8+qESNJqSy5T1
+=h2C2
+-----END PGP SIGNATURE-----
+
+--=-38pPZZzcgqch6l60E2gt--
+
