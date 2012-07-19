@@ -1,104 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:34157 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113Ab2G0HLn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 03:11:43 -0400
-Received: by mail-we0-f174.google.com with SMTP id x8so1876605wey.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 00:11:43 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 2/2] wlcore: op_tx: pass sta explicitly when inferring frame hlid
-Date: Fri, 27 Jul 2012 10:11:33 +0300
-Message-Id: <1343373093-10065-3-git-send-email-arik@wizery.com> (sfid-20120727_091146_814899_1C5B3352)
-In-Reply-To: <1343373093-10065-1-git-send-email-arik@wizery.com>
-References: <1343373093-10065-1-git-send-email-arik@wizery.com>
+Received: from c60.cesmail.net ([216.154.195.49]:35391 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751036Ab2GSVLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jul 2012 17:11:20 -0400
+Date: Thu, 19 Jul 2012 17:11:14 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: fix incorrect use of IEEE80211_NUM_BANDS
+Message-ID: <20120719171114.4d904006@mj> (sfid-20120719_231123_683868_9B374E4F)
+In-Reply-To: <5007EABC.5050905@qca.qualcomm.com>
+References: <20120712091311.9751.60082.stgit@localhost6.localdomain6>
+	<20120712134855.53d23fef@mj>
+	<5007EABC.5050905@qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-avoid using the skb CB for getting the appropriate sta.
+On Thu, 19 Jul 2012 14:08:44 +0300
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    2 +-
- drivers/net/wireless/ti/wlcore/tx.c   |   15 ++++++---------
- drivers/net/wireless/ti/wlcore/tx.h   |    4 +---
- 3 files changed, 8 insertions(+), 13 deletions(-)
+> Hi Pavel,
+> 
+> sorry for the late reply, this got accidentally buried inside my todo
+> folder.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 7254860..5efd591 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1197,7 +1197,7 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	mapping = skb_get_queue_mapping(skb);
- 	q = wl1271_tx_get_queue(mapping);
- 
--	hlid = wl12xx_tx_get_hlid(wl, wlvif, skb);
-+	hlid = wl12xx_tx_get_hlid(wl, wlvif, skb, info->control.sta);
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index da4a329..38b4fd1 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -130,16 +130,13 @@ bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb)
- }
- EXPORT_SYMBOL(wl12xx_is_dummy_packet);
- 
--u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--			 struct sk_buff *skb)
-+static u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+				struct sk_buff *skb, struct ieee80211_sta *sta)
- {
--	struct ieee80211_tx_info *control = IEEE80211_SKB_CB(skb);
--
--	if (control->control.sta) {
-+	if (sta) {
- 		struct wl1271_station *wl_sta;
- 
--		wl_sta = (struct wl1271_station *)
--				control->control.sta->drv_priv;
-+		wl_sta = (struct wl1271_station *)sta->drv_priv;
- 		return wl_sta->hlid;
- 	} else {
- 		struct ieee80211_hdr *hdr;
-@@ -156,7 +153,7 @@ u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- }
- 
- u8 wl12xx_tx_get_hlid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--		      struct sk_buff *skb)
-+		      struct sk_buff *skb, struct ieee80211_sta *sta)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 
-@@ -164,7 +161,7 @@ u8 wl12xx_tx_get_hlid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		return wl->system_hlid;
- 
- 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
--		return wl12xx_tx_get_hlid_ap(wl, wlvif, skb);
-+		return wl12xx_tx_get_hlid_ap(wl, wlvif, skb, sta);
- 
- 	if ((test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) ||
- 	     test_bit(WLVIF_FLAG_IBSS_JOINED, &wlvif->flags)) &&
-diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
-index 1e939b0..349520d 100644
---- a/drivers/net/wireless/ti/wlcore/tx.h
-+++ b/drivers/net/wireless/ti/wlcore/tx.h
-@@ -243,10 +243,8 @@ u8 wlcore_rate_to_idx(struct wl1271 *wl, u8 rate, enum ieee80211_band band);
- u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set,
- 				enum ieee80211_band rate_band);
- u32 wl1271_tx_min_rate_get(struct wl1271 *wl, u32 rate_set);
--u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--			 struct sk_buff *skb);
- u8 wl12xx_tx_get_hlid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--		      struct sk_buff *skb);
-+		      struct sk_buff *skb, struct ieee80211_sta *sta);
- void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid);
- void wl1271_handle_tx_low_watermark(struct wl1271 *wl);
- bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb);
+No problem.
+
+> On 07/12/2012 08:48 PM, Pavel Roskin wrote:
+> > On Thu, 12 Jul 2012 12:13:12 +0300
+> > Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> > 
+> >> +	/* only check 2.4 and 5 GHz bands, skip the rest */
+> >> +	for (band = 0; band <= IEEE80211_BAND_5GHZ; band++) {
+> > 
+> > There is something inelegant here.  The code is mixing an integer
+> > and an enum.  I'd rather go with one or those:
+> > 
+> > two enums:
+> > for (band = IEEE80211_BAND_2GHZ; band <= IEEE80211_BAND_5GHZ;
+> > band++) {
+> 
+> I somewhat see your point. But IMHO zero is commonly used when
+> iterating over an enum to denote the first value and I don't see how
+> IEEE80211_BAND_2GHZ helps here.
+
+It's the lowest band we support.  What if the 900MHz band is added one
+day?
+
+> > or two integers:
+> > for (band = 0; band <= ATH6KL_NUM_BANDS; band++) {
+> 
+> ATH6KL_NUM_BANDS is also an enum so I don't see the difference.
+
+Actually, it should NOT be _seen_ as an enum, even if it is defined as
+such.  It's a number of bands, not an arbitrary number.
+
+But I don't want to argue further any about it.  Anything short of
+having a bitmap of supported bands would be "good enough for now", and
+having the bitmap may be hard to justify if only three bands are
+recognized.  Things may change if more bands are added (900MHz, 3.7GHz
+etc).
+
 -- 
-1.7.9.5
-
+Regards,
+Pavel Roskin
