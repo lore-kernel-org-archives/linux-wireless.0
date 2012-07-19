@@ -1,38 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:36669 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab2G0VQg (ORCPT
+Received: from lunge.queued.net ([173.255.254.236]:50930 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322Ab2GSE3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 17:16:36 -0400
-Received: by wgbdr13 with SMTP id dr13so3133295wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 14:16:35 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Javier Cardona <javier@cozybit.com>
-Subject: Re: [PATCH] carl9170: Add support for NL80211_IFTYPE_MESH_POINT interfaces
-Date: Fri, 27 Jul 2012 23:16:32 +0200
-Cc: Javier Lopez <jlopex@cozybit.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-References: <1343332743-11845-1-git-send-email-jlopex@cozybit.com> <201207271630.06025.chunkeey@googlemail.com> <CAPjQAd_Ko_WFEoG6uXk7hYYAggL6jbGiuKWdp=f3Aa+JdXNNJg@mail.gmail.com>
-In-Reply-To: <CAPjQAd_Ko_WFEoG6uXk7hYYAggL6jbGiuKWdp=f3Aa+JdXNNJg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201207272316.32411.chunkeey@googlemail.com> (sfid-20120727_231639_423994_77150BA9)
+	Thu, 19 Jul 2012 00:29:34 -0400
+Date: Wed, 18 Jul 2012 21:29:11 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 8/9] Platform: OLPC: move global variables into priv struct
+Message-ID: <20120718212911.0ef38ad5@dev.queued.net> (sfid-20120719_063018_998455_9CF49EB7)
+In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
+References: <20120718182144.2d7b0b50@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 July 2012 17:12:32 Javier Cardona wrote:
-> On Fri, Jul 27, 2012 at 7:30 AM, Christian Lamparter wrote:
-> > BTW: Did you do any experiments? I.e.: Does it really
-> > work?
-> 
-> Basic peering and pinging with ath9k_htc seems to work.
-> We only have one of these cards, so we cannot run our
-> full test suite.  Testing will continue when we
-> receive more cards.
+Populate olpc_ec_priv.
 
-Ok, thanks. I'll take care of updating the information
-on the wiki now.
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ drivers/platform/olpc/olpc-ec.c |   48
+++++++++++++++++++++++---------------- 1 files changed, 28
+insertions(+), 20 deletions(-)
 
-Regards,
-	Chr
+diff --git a/drivers/platform/olpc/olpc-ec.c
+b/drivers/platform/olpc/olpc-ec.c index 1a15a79..0f9f859 100644
+--- a/drivers/platform/olpc/olpc-ec.c
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -31,6 +31,12 @@ struct ec_cmd_desc {
+ 
+ struct olpc_ec_priv {
+ 	struct olpc_ec_driver *drv;
++	struct work_struct worker;
++	struct mutex cmd_lock;
++
++	/* Pending EC commands */
++	struct list_head cmd_q;
++	spinlock_t cmd_q_lock;
+ 
+ 	struct dentry *dbgfs_dir;
+ 
+@@ -46,16 +52,9 @@ struct olpc_ec_priv {
+ 	bool suspended;
+ };
+ 
+-static void olpc_ec_worker(struct work_struct *w);
+-
+-static DECLARE_WORK(ec_worker, olpc_ec_worker);
+-static LIST_HEAD(ec_cmd_q);
+-static DEFINE_SPINLOCK(ec_cmd_q_lock);
+-
+ static struct olpc_ec_driver *ec_driver;
+ static struct olpc_ec_priv *ec_priv;
+ static void *ec_cb_arg;
+-static DEFINE_MUTEX(ec_cb_lock);
+ 
+ void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg)
+ {
+@@ -66,49 +65,51 @@ EXPORT_SYMBOL_GPL(olpc_ec_driver_register);
+ 
+ static void olpc_ec_worker(struct work_struct *w)
+ {
++	struct olpc_ec_priv *ec = container_of(w, struct olpc_ec_priv,
+worker); struct ec_cmd_desc *desc = NULL;
+ 	unsigned long flags;
+ 
+ 	/* Grab the first pending command from the queue */
+-	spin_lock_irqsave(&ec_cmd_q_lock, flags);
+-	if (!list_empty(&ec_cmd_q)) {
+-		desc = list_first_entry(&ec_cmd_q, struct ec_cmd_desc,
+node);
++	spin_lock_irqsave(&ec->cmd_q_lock, flags);
++	if (!list_empty(&ec->cmd_q)) {
++		desc = list_first_entry(&ec->cmd_q, struct
+ec_cmd_desc, node); list_del(&desc->node);
+ 	}
+-	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
++	spin_unlock_irqrestore(&ec->cmd_q_lock, flags);
+ 
+ 	/* Do we actually have anything to do? */
+ 	if (!desc)
+ 		return;
+ 
+ 	/* Protect the EC hw with a mutex; only run one cmd at a time
+*/
+-	mutex_lock(&ec_cb_lock);
++	mutex_lock(&ec->cmd_lock);
+ 	desc->err = ec_driver->ec_cmd(desc->cmd, desc->inbuf,
+desc->inlen, desc->outbuf, desc->outlen, ec_cb_arg);
+-	mutex_unlock(&ec_cb_lock);
++	mutex_unlock(&ec->cmd_lock);
+ 
+ 	/* Finished, wake up olpc_ec_cmd() */
+ 	complete(&desc->finished);
+ 
+ 	/* Run the worker thread again in case there are more cmds
+pending */
+-	schedule_work(&ec_worker);
++	schedule_work(&ec->worker);
+ }
+ 
+ /*
+  * Throw a cmd descripter onto the list.  We now have SMP OLPC
+machines, so
+  * locking is pretty critical.
+  */
+-static void queue_ec_descriptor(struct ec_cmd_desc *desc)
++static void queue_ec_descriptor(struct ec_cmd_desc *desc,
++		struct olpc_ec_priv *ec)
+ {
+ 	unsigned long flags;
+ 
+ 	INIT_LIST_HEAD(&desc->node);
+ 
+-	spin_lock_irqsave(&ec_cmd_q_lock, flags);
+-	list_add_tail(&desc->node, &ec_cmd_q);
+-	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
++	spin_lock_irqsave(&ec->cmd_q_lock, flags);
++	list_add_tail(&desc->node, &ec->cmd_q);
++	spin_unlock_irqrestore(&ec->cmd_q_lock, flags);
+ 
+-	schedule_work(&ec_worker);
++	schedule_work(&ec->worker);
+ }
+ 
+ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t
+outlen) @@ -137,7 +138,7 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t
+inlen, u8 *outbuf, size_t outlen) desc.err = 0;
+ 	init_completion(&desc.finished);
+ 
+-	queue_ec_descriptor(&desc);
++	queue_ec_descriptor(&desc, ec);
+ 
+ 	/* Timeouts must be handled in the platform-specific EC hook */
+ 	wait_for_completion(&desc.finished);
+@@ -266,7 +267,14 @@ static int olpc_ec_probe(struct platform_device
+*pdev) ec = kzalloc(sizeof(*ec), GFP_KERNEL);
+ 	if (!ec)
+ 		return -ENOMEM;
++
+ 	ec->drv = ec_driver;
++	INIT_WORK(&ec->worker, olpc_ec_worker);
++	mutex_init(&ec->cmd_lock);
++
++	INIT_LIST_HEAD(&ec->cmd_q);
++	spin_lock_init(&ec->cmd_q_lock);
++
+ 	ec_priv = ec;
+ 	platform_set_drvdata(pdev, ec);
+ 
+-- 
+1.7.2.5
+
