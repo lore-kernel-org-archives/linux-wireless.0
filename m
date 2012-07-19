@@ -1,26 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39048 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755438Ab2GaLfp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58235 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707Ab2GSJWS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:35:45 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SwAjn-0007Px-FF
-	for linux-wireless@vger.kernel.org; Tue, 31 Jul 2012 13:35:44 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] A-MPDU status reporting
-Date: Tue, 31 Jul 2012 13:35:38 +0200
-Message-Id: <1343734541-14934-1-git-send-email-johannes@sipsolutions.net> (sfid-20120731_133547_495621_2A4EC38C)
+	Thu, 19 Jul 2012 05:22:18 -0400
+Message-ID: <5007D1C5.1050501@qca.qualcomm.com> (sfid-20120719_112221_992477_D8D729D5)
+Date: Thu, 19 Jul 2012 12:22:13 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath6kl: support TX error rate notification
+References: <1342579195-18521-1-git-send-email-c_tpeder@qca.qualcomm.com>
+In-Reply-To: <1342579195-18521-1-git-send-email-c_tpeder@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We just added A-MPDU status reporting in radiotap, this
-implements it in mac80211 and iwlwifi. The changes will
-be adopted formally next week so I'll merge the patches
-then (into the different trees.)
+On 07/18/2012 05:39 AM, Thomas Pedersen wrote:
+> The ath6kl firmware can monitor a connection and report when a certain
+> TX failure threshold is crossed. Support this configuration and event
+> reporting on compatible firmwares.
+> 
+> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-johannes
+Thanks, applied.
 
+Kalle
