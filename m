@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:62503 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343Ab2GEOZw (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:53298 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170Ab2GSNAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 10:25:52 -0400
-Received: by wibhm11 with SMTP id hm11so6699819wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 07:25:51 -0700 (PDT)
+	Thu, 19 Jul 2012 09:00:37 -0400
+Subject: [PATCH v2 0/3] ath6kl: regdomain support
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Thu, 19 Jul 2012 16:00:32 +0300
+Message-ID: <20120719125937.22047.91375.stgit@x201> (sfid-20120719_150041_063672_8A0CB4D4)
 MIME-Version: 1.0
-Date: Thu, 5 Jul 2012 16:25:49 +0200
-Message-ID: <CADnjpYvb15WvfZVnSpNvUiUAEdUgntOS2yoCyfxDZqHu+JBA5Q@mail.gmail.com> (sfid-20120705_162557_048014_F2AC6601)
-Subject: SIOCSIFFLAGS: operation not supported error message when tryinging to
- bring up an interface in adhoc mode
-From: Philippe Agostini <philippe.agostini@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+In v2 I splitted the wmi scan refactoring patch to make it easier to
+read the changes. Also I rebased this agains latest ath6kl.git master
+branch.
 
-I am currently developing a wifi driver and I am having trouble with
-the adhoc mode. I am developing on Ubuntu 10.04 with kernel 2.6.32. To
-verify that my initialization is correct, I try to bring up and
-configure virtual interfaces. It's working in managed mode, but when I
-try an "ifconfig wlan0 up" in adhoc mode I get the following error
-message: "SIOCSIFFLAGS: operation not supported". At first I thought
-that it was because of the regulatory domain, but I defined only one
-supported channel (channel 6, F=2437 MHz) and it seems to me that iw
-reg get tells me that on this frequency I am allowed to set up
-wireless device in adhoc mode (country 00: (2402 - 2472 @ 40), (3, 20)
-and no flags following).
+---
 
-Are there mandatory flags to set up (besides wiphy->interface_modes =
-BIT(NL80211_IFTYPE_ADHOC)) that I missed, or callbacks to define in
-order to have a working adhoc interface ?
+Kalle Valo (3):
+      ath6kl: move ath6kl_wmi_startscan_cmd()
+      ath6kl: refactor wmi scan command
+      ath6kl: add support for changing contry code
 
-Best regards
 
-Philippe
+ drivers/net/wireless/ath/ath6kl/Kconfig    |    9 ++
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   78 ++++++++++++------
+ drivers/net/wireless/ath/ath6kl/core.h     |    3 +
+ drivers/net/wireless/ath/ath6kl/wmi.c      |  124 ++++++++++++++++++----------
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   11 +-
+ 5 files changed, 151 insertions(+), 74 deletions(-)
+
