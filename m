@@ -1,104 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57706 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516Ab2GQW2A (ORCPT
+Received: from lunge.queued.net ([173.255.254.236]:50112 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809Ab2GSE07 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 18:28:00 -0400
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <c_manoha@qca.qualcomm.com>, <chunkeey@googlemail.com>,
-	<nbd@openwrt.org>
-Subject: [RFC] ath: add feature to enable cell base station regulatory hints
-Date: Tue, 17 Jul 2012 15:27:56 -0700
-Message-ID: <1342564076-4010-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20120718_002805_446446_758B5EC6)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 19 Jul 2012 00:26:59 -0400
+Date: Wed, 18 Jul 2012 21:26:42 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 1/9] Platform: OLPC: add a stub to drivers/platform/ for the
+ OLPC EC driver
+Message-ID: <20120718212642.3b53b54d@dev.queued.net> (sfid-20120719_062741_315824_302DD773)
+In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
+References: <20120718182144.2d7b0b50@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+The OLPC EC driver has outgrown arch/x86/platform/.  It's time to both
+share common code amongst different architectures, as well as move it out
+of arch/x86/.  The XO-1.75 is ARM-based, and the EC driver shares a lot of
+code with the x86 code.
 
-This enables the capability to enable cellular base station
-regulatory hint support to ath5k, ath9k, ath9k_htc and carl9170.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Andres Salomon <dilinger@queued.net>
 ---
+ arch/x86/include/asm/olpc.h     |   19 +++----------------
+ arch/x86/platform/olpc/olpc.c   |    4 ++--
+ drivers/platform/Makefile       |    1 +
+ drivers/platform/olpc/olpc-ec.c |   16 ++++++++++++++++
+ include/linux/olpc-ec.h         |   29 +++++++++++++++++++++++++++++
+ 5 files changed, 51 insertions(+), 18 deletions(-)
+ create mode 100644 drivers/platform/olpc/olpc-ec.c
+ create mode 100644 include/linux/olpc-ec.h
 
-Sending as RFC given that I'd like review from Sujith and
-Christian on the firmware side of things on ath9k_htc
-and carl9170. I am pretty certain both allow us to do
-all regulatory control on the driver and becuase of this
-we should be able to support this feature, however I'd
-like to be sure. Other drivers that have this regulatory
-control in firmware require quite a bit of testing /
-synching, as with ath6kl -- but we should be fine here.
-
-We don't enable this by default as we don't want all
-Linux distributions to be enabling CFG80211_CERTIFICATION_ONUS
-sporadically, instead this must be done by system integrators
-on case by case basis only when they are targeting supporting
-and testing these features.
-
- drivers/net/wireless/ath/Kconfig |   14 ++++++++++++++
- drivers/net/wireless/ath/regd.c  |   12 ++++++++++++
- 2 files changed, 26 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index 0960224..6d4f581 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -22,6 +22,20 @@ config ATH_DEBUG
- 	  Say Y, if you want to debug atheros wireless drivers.
- 	  Right now only ath9k makes use of this.
+diff --git a/arch/x86/include/asm/olpc.h b/arch/x86/include/asm/olpc.h
+index 87bdbca..513e999 100644
+--- a/arch/x86/include/asm/olpc.h
++++ b/arch/x86/include/asm/olpc.h
+@@ -4,6 +4,7 @@
+ #define _ASM_X86_OLPC_H
  
-+config ATH_CELL_STATION_HINT
-+	bool "Atheros common cell base station hint support"
-+	depends on (ATH9K || ATH9K_HTC || ATH5K || CARL9170)
-+	depends on CFG80211_CERTIFICATION_ONUS
-+	default n
-+	---help---
-+	  You should disable this feature unless you are a system
-+	  integrator and want to enable cellular base station
-+	  regulatory hint support onto either or these drivers:
-+	  ath5k, ath9k, ath9k_htc, carl9170. You should disable
-+	  this feature unless you are building a specific system
-+	  you are providing complete oversight over and are willing
-+	  and able to test regulatory compliance for it.
-+
- source "drivers/net/wireless/ath/ath5k/Kconfig"
- source "drivers/net/wireless/ath/ath9k/Kconfig"
- source "drivers/net/wireless/ath/carl9170/Kconfig"
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index d816980..6751533 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -504,6 +504,17 @@ ath_get_regpair(int regdmn)
- 	return NULL;
+ #include <asm/geode.h>
++#include <linux/olpc-ec.h>
+ 
+ struct olpc_platform_t {
+ 	int flags;
+@@ -102,22 +103,8 @@ extern int pci_olpc_init(void);
+ 
+ /* EC related functions */
+ 
+-extern int olpc_ec_cmd(unsigned char cmd, unsigned char *inbuf, size_t inlen,
+-		unsigned char *outbuf, size_t outlen);
+-
+-/* EC commands */
+-
+-#define EC_FIRMWARE_REV			0x08
+-#define EC_WRITE_SCI_MASK		0x1b
+-#define EC_WAKE_UP_WLAN			0x24
+-#define EC_WLAN_LEAVE_RESET		0x25
+-#define EC_READ_EB_MODE			0x2a
+-#define EC_SET_SCI_INHIBIT		0x32
+-#define EC_SET_SCI_INHIBIT_RELEASE	0x34
+-#define EC_WLAN_ENTER_RESET		0x35
+-#define EC_WRITE_EXT_SCI_MASK		0x38
+-#define EC_SCI_QUERY			0x84
+-#define EC_EXT_SCI_QUERY		0x85
++extern int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf,
++		size_t inlen, unsigned char *outbuf, size_t outlen);
+ 
+ /* SCI source values */
+ 
+diff --git a/arch/x86/platform/olpc/olpc.c b/arch/x86/platform/olpc/olpc.c
+index a4bee53..796e199 100644
+--- a/arch/x86/platform/olpc/olpc.c
++++ b/arch/x86/platform/olpc/olpc.c
+@@ -125,7 +125,7 @@ static int __wait_on_obf(unsigned int line, unsigned int port, int desired)
+  * <http://wiki.laptop.org/go/Ec_specification>.  Unfortunately, while
+  * OpenFirmware's source is available, the EC's is not.
+  */
+-int olpc_ec_cmd(unsigned char cmd, unsigned char *inbuf, size_t inlen,
++int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf, size_t inlen,
+ 		unsigned char *outbuf,  size_t outlen)
+ {
+ 	unsigned long flags;
+@@ -201,7 +201,7 @@ err:
+ 	spin_unlock_irqrestore(&ec_lock, flags);
+ 	return ret;
  }
+-EXPORT_SYMBOL_GPL(olpc_ec_cmd);
++EXPORT_SYMBOL_GPL(olpc_ec_cmd_x86);
  
-+#ifdef CONFIG_ATH_CELL_STATION_HINT
-+static void ath_regd_features(struct wiphy *wiphy)
-+{
-+	wiphy->features |= NL80211_FEATURE_CELL_BASE_REG_HINTS;
-+}
-+#else
-+static void ath_regd_features(struct wiphy *wiphy)
-+{
-+}
-+#endif
+ void olpc_ec_wakeup_set(u16 value)
+ {
+diff --git a/drivers/platform/Makefile b/drivers/platform/Makefile
+index 782953a..b17c16c 100644
+--- a/drivers/platform/Makefile
++++ b/drivers/platform/Makefile
+@@ -3,3 +3,4 @@
+ #
+ 
+ obj-$(CONFIG_X86)		+= x86/
++obj-$(CONFIG_OLPC)		+= olpc/
+diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
+new file mode 100644
+index 0000000..4202603
+--- /dev/null
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -0,0 +1,16 @@
++/*
++ * Generic driver for the OLPC Embedded Controller.
++ *
++ * Copyright (C) 2011-2012 One Laptop per Child Foundation.
++ *
++ * Licensed under the GPL v2 or later.
++ */
++#include <linux/module.h>
++#include <asm/olpc.h>
 +
- static int
- ath_regd_init_wiphy(struct ath_regulatory *reg,
- 		    struct wiphy *wiphy,
-@@ -514,6 +525,7 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
- 
- 	wiphy->reg_notifier = reg_notifier;
- 	wiphy->flags |= WIPHY_FLAG_STRICT_REGULATORY;
-+	ath_regd_features(wiphy);
- 
- 	if (ath_is_world_regd(reg)) {
- 		/*
++int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
++{
++	/* Currently a stub; this will be expanded upon later. */
++	return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
++}
++EXPORT_SYMBOL_GPL(olpc_ec_cmd);
+diff --git a/include/linux/olpc-ec.h b/include/linux/olpc-ec.h
+new file mode 100644
+index 0000000..6d4e426
+--- /dev/null
++++ b/include/linux/olpc-ec.h
+@@ -0,0 +1,29 @@
++#ifndef _LINUX_OLPC_EC_H
++#define _LINUX_OLPC_EC_H
++
++/* XO-1 EC commands */
++#define EC_FIRMWARE_REV			0x08
++#define EC_WRITE_SCI_MASK		0x1b
++#define EC_WAKE_UP_WLAN			0x24
++#define EC_WLAN_LEAVE_RESET		0x25
++#define EC_READ_EB_MODE			0x2a
++#define EC_SET_SCI_INHIBIT		0x32
++#define EC_SET_SCI_INHIBIT_RELEASE	0x34
++#define EC_WLAN_ENTER_RESET		0x35
++#define EC_WRITE_EXT_SCI_MASK		0x38
++#define EC_SCI_QUERY			0x84
++#define EC_EXT_SCI_QUERY		0x85
++
++#ifdef CONFIG_OLPC
++
++extern int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
++		size_t outlen);
++
++#else
++
++static inline int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
++		size_t outlen) { return -ENODEV; }
++
++#endif /* CONFIG_OLPC */
++
++#endif /* _LINUX_OLPC_EC_H */
 -- 
-1.7.10.rc1.22.gf5241
+1.7.2.5
 
