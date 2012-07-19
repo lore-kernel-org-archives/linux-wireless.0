@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4970 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751960Ab2GQLrX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56851 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536Ab2GSLI6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 07:47:23 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Thu, 19 Jul 2012 07:08:58 -0400
+Message-ID: <5007EABC.5050905@qca.qualcomm.com> (sfid-20120719_130902_766504_3723D039)
+Date: Thu, 19 Jul 2012 14:08:44 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20485.20583.628405.113210@gargle.gargle.HOWL> (sfid-20120717_134728_803720_DAB4EB88)
-Date: Tue, 17 Jul 2012 17:15:43 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/12] ath9k: Cleanup interface handling
+To: Pavel Roskin <proski@gnu.org>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: fix incorrect use of IEEE80211_NUM_BANDS
+References: <20120712091311.9751.60082.stgit@localhost6.localdomain6> <20120712134855.53d23fef@mj>
+In-Reply-To: <20120712134855.53d23fef@mj>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Do not set/clear TSF when adding/deleting an interface.
-  This should be done when the BSS is set up and should also
-  take into account the existence of other interfaces.
+Hi Pavel,
 
-* Set opmode explicitly.
+sorry for the late reply, this got accidentally buried inside my todo
+folder.
 
-* ANI setup needs to be decided based on multiple interfaces.
-  This can be done via the bss_info_changed() callback.
+On 07/12/2012 08:48 PM, Pavel Roskin wrote:
+> On Thu, 12 Jul 2012 12:13:12 +0300
+> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> 
+>> +	/* only check 2.4 and 5 GHz bands, skip the rest */
+>> +	for (band = 0; band <= IEEE80211_BAND_5GHZ; band++) {
+> 
+> There is something inelegant here.  The code is mixing an integer and
+> an enum.  I'd rather go with one or those:
+> 
+> two enums:
+> for (band = IEEE80211_BAND_2GHZ; band <= IEEE80211_BAND_5GHZ; band++) {
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+I somewhat see your point. But IMHO zero is commonly used when iterating
+over an enum to denote the first value and I don't see how
+IEEE80211_BAND_2GHZ helps here.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ff65188..d4060ec 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -924,11 +924,9 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 
- 	if (iter_data.naps > 0) {
- 		ath9k_hw_set_tsfadjust(ah, true);
--		set_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 		ah->opmode = NL80211_IFTYPE_AP;
- 	} else {
- 		ath9k_hw_set_tsfadjust(ah, false);
--		clear_bit(SC_OP_TSF_RESET, &sc->sc_flags);
- 
- 		if (iter_data.nmeshes)
- 			ah->opmode = NL80211_IFTYPE_MESH_POINT;
-@@ -940,25 +938,14 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 			ah->opmode = NL80211_IFTYPE_STATION;
- 	}
- 
-+	ath9k_hw_setopmode(ah);
-+
- 	if ((iter_data.nstations + iter_data.nadhocs + iter_data.nmeshes) > 0)
- 		ah->imask |= ATH9K_INT_TSFOOR;
- 	else
- 		ah->imask &= ~ATH9K_INT_TSFOOR;
- 
- 	ath9k_hw_set_interrupts(ah);
--
--	if (iter_data.naps > 0) {
--		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
--
--		if (!common->disable_ani) {
--			set_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--			ath_start_ani(common);
--		}
--
--	} else {
--		clear_bit(SC_OP_ANI_RUN, &sc->sc_flags);
--		del_timer_sync(&common->ani.timer);
--	}
- }
- 
- static int ath9k_add_interface(struct ieee80211_hw *hw,
--- 
-1.7.11.2
+> or two integers:
+> for (band = 0; band <= ATH6KL_NUM_BANDS; band++) {
 
+ATH6KL_NUM_BANDS is also an enum so I don't see the difference.
+
+Kalle
