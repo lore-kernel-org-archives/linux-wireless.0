@@ -1,53 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:33460 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753152Ab2GESQc (ORCPT
+Received: from lunge.queued.net ([173.255.254.236]:50869 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab2GSE2l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 14:16:32 -0400
-Received: by vcbf11 with SMTP id f11so5599598vcb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 11:16:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFED-jk84vKMRr_NDThMqhZrnXt6ddhViztitB_=M_nKbC6c8Q@mail.gmail.com>
-References: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-	<CAMG6FYjYMqf9C15Bid3hAfzTcB=gEXq8RWRcM9n+HNtvckgVZQ@mail.gmail.com>
-	<CAFED-jk84vKMRr_NDThMqhZrnXt6ddhViztitB_=M_nKbC6c8Q@mail.gmail.com>
-Date: Thu, 5 Jul 2012 13:16:31 -0500
-Message-ID: <CA+Bgp3N2gUDoey-cXV+4sN0q+2Jm7+rPcu776FMUWxaR4F0qwg@mail.gmail.com> (sfid-20120705_201636_435859_8F61365D)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Steev Klimaszewski <steev@genesi-usa.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Thu, 19 Jul 2012 00:28:41 -0400
+Date: Wed, 18 Jul 2012 21:28:24 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 5/9] Platform: OLPC: add a suspended flag to the EC driver
+Message-ID: <20120718212824.70ee6466@dev.queued.net> (sfid-20120719_063031_685385_3D0F8B80)
+In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
+References: <20120718182144.2d7b0b50@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 31, 2012 at 12:45 AM, Janusz Dziedzic
-<janusz.dziedzic@gmail.com> wrote:
-> 2012/5/9 Dmitry Tarnyagin <abi.dmitryt@gmail.com>:
->> Hi,
->>
->> Could you please check status of this submission? It looks like review
->> was passed, but patchset was not taken in. Have I done something
->> wrong?
->>
->
-> Any news?
->
->
-> BR
-> Janusz
-> --
+A problem we've noticed on XO-1.75 is when we suspend in the middle of
+an EC command.  Don't allow that.
 
-Any news on this?
+In the process, create a private object for the generic EC driver to
+use; we have a framework for passing around a struct, use that rather
+than a proliferation of global variables.
 
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ drivers/platform/olpc/olpc-ec.c |   46
+++++++++++++++++++++++++++++++++++++++- 1 files changed, 45
+insertions(+), 1 deletions(-)
 
-
+diff --git a/drivers/platform/olpc/olpc-ec.c
+b/drivers/platform/olpc/olpc-ec.c index d00523c..cfba41f 100644
+--- a/drivers/platform/olpc/olpc-ec.c
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -9,6 +9,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/mutex.h>
+ #include <linux/platform_device.h>
++#include <linux/slab.h>
+ #include <linux/workqueue.h>
+ #include <linux/module.h>
+ #include <linux/list.h>
+@@ -27,6 +28,21 @@ struct ec_cmd_desc {
+ 	void *priv;
+ };
+ 
++struct olpc_ec_priv {
++	struct olpc_ec_driver *drv;
++
++	/*
++	 * Running an EC command while suspending means we don't
+always finish
++	 * the command before the machine suspends.  This means that
+the EC
++	 * is expecting the command protocol to finish, but we after a
+period
++	 * of time (while the OS is asleep) the EC times out and
+restarts its
++	 * idle loop.  Meanwhile, the OS wakes up, thinks it's still
+in the
++	 * middle of the command protocol, starts throwing random
+things at
++	 * the EC... and everyone's uphappy.
++	 */
++	bool suspended;
++};
++
+ static void olpc_ec_worker(struct work_struct *w);
+ 
+ static DECLARE_WORK(ec_worker, olpc_ec_worker);
+@@ -34,6 +50,7 @@ static LIST_HEAD(ec_cmd_q);
+ static DEFINE_SPINLOCK(ec_cmd_q_lock);
+ 
+ static struct olpc_ec_driver *ec_driver;
++static struct olpc_ec_priv *ec_priv;
+ static void *ec_cb_arg;
+ static DEFINE_MUTEX(ec_cb_lock);
+ 
+@@ -93,6 +110,7 @@ static void queue_ec_descriptor(struct ec_cmd_desc
+*desc) 
+ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t
+outlen) {
++	struct olpc_ec_priv *ec = ec_priv;
+ 	struct ec_cmd_desc desc;
+ 
+ 	/* XXX: this will be removed in later patches */
+@@ -104,6 +122,13 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen,
+u8 *outbuf, size_t outlen) if (WARN_ON(!ec_driver
+|| !ec_driver->ec_cmd)) return -ENODEV;
+ 
++	if (!ec)
++		return -ENOMEM;
++
++	/* Suspending in the middle of a command hoses things really
+badly */
++	if (WARN_ON(ec->suspended))
++		return -EBUSY;
++
+ 	might_sleep();
+ 
+ 	desc.cmd = cmd;
+@@ -126,11 +151,19 @@ EXPORT_SYMBOL_GPL(olpc_ec_cmd);
+ 
+ static int olpc_ec_probe(struct platform_device *pdev)
+ {
++	struct olpc_ec_priv *ec;
+ 	int err;
+ 
+ 	if (!ec_driver)
+ 		return -ENODEV;
+ 
++	ec = kzalloc(sizeof(*ec), GFP_KERNEL);
++	if (!ec)
++		return -ENOMEM;
++	ec->drv = ec_driver;
++	ec_priv = ec;
++	platform_set_drvdata(pdev, ec);
++
+ 	err = ec_driver->probe ? ec_driver->probe(pdev) : 0;
+ 
+ 	return err;
+@@ -139,12 +172,23 @@ static int olpc_ec_probe(struct platform_device
+*pdev) static int olpc_ec_suspend(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	return ec_driver->suspend ? ec_driver->suspend(pdev) : 0;
++	struct olpc_ec_priv *ec = platform_get_drvdata(pdev);
++	int err = 0;
++
++	if (ec_driver->suspend)
++		err = ec_driver->suspend(pdev);
++	if (!err)
++		ec->suspended = true;
++
++	return err;
+ }
+ 
+ static int olpc_ec_resume(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
++	struct olpc_ec_priv *ec = platform_get_drvdata(pdev);
++
++	ec->suspended = false;
+ 	return ec_driver->resume ? ec_driver->resume(pdev) : 0;
+ }
+ 
 -- 
-Best Regards,
-Steev
+1.7.2.5
 
-Steev Klimaszewski <steev@genesi-usa.com>
-Senior Software Engineer, Genesi USA, Inc.
