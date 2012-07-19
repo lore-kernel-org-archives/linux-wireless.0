@@ -1,37 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:64931 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933965Ab2GLOrt (ORCPT
+Received: from lunge.queued.net ([173.255.254.236]:50852 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab2GSE2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 10:47:49 -0400
-Received: by yhmm54 with SMTP id m54so2775028yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 07:47:48 -0700 (PDT)
-Message-ID: <4FFEE390.8080104@lwfinger.net> (sfid-20120712_164800_382934_6FBB8E8F)
-Date: Thu, 12 Jul 2012 09:47:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ouyang <ilhebe999@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: problem with installing the kernel
-References: <loom.20120712T044726-224@post.gmane.org> <4FFE437E.8080008@lwfinger.net> <loom.20120712T060947-580@post.gmane.org>
-In-Reply-To: <loom.20120712T060947-580@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 19 Jul 2012 00:28:35 -0400
+Date: Wed, 18 Jul 2012 21:28:18 -0700
+From: Andres Salomon <dilinger@queued.net>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	"Richard A. Smith" <richard@laptop.org>,
+	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Anton Vorontsov <cbou@mail.ru>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Chris Ball <cjb@laptop.org>,
+	Jon Nettleton <jon.nettleton@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 3/9] Platform: OLPC: allow EC cmd to be overridden, and
+ create a workqueue to call it
+Message-ID: <20120718212818.5ed01c8a@dev.queued.net> (sfid-20120719_063044_099857_15165B8E)
+In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
+References: <20120718182144.2d7b0b50@dev.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/2012 11:13 PM, Ouyang wrote:
->
-> Thank you so much for the reply. Sorry that I run "make" as a root. I am new
-> with linux and I am sure I won`t make the same mistake in the future. By the way
-> , why it tells me about try "rm -- help"? I really do not know what does it
-> mean. In what situation will this "rm -- help " come out?
+This provides a new API allows different OLPC architectures to override the
+EC driver.  x86 and ARM OLPC machines use completely different EC backends.
 
-In some script that is called from "make modules_install", your system is 
-calling the utility rm with option 3. That is not a standard script. It could be 
-that something is messed up with your source tree. If you reload the source that 
-you got from Fedora, and rebuild as a regular user, it might fix the problem. If 
-not, you need to ask on a Fedora forum. The wireless and mainline kernels do not 
-have this problem.
+The olpc_ec_cmd is synchronous, and waits for the workqueue to send the
+command to the EC.  Multiple callers can run olpc_ec_cmd() at once, and
+they will by serialized and sleep while only one executes on the EC at a time.
 
-Larry
+We don't provide an unregister function, as that doesn't make sense within
+the context of OLPC machines - there's only ever 1 EC, it's critical to
+functionality, and it certainly not hotpluggable.
+
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+---
+ drivers/platform/olpc/olpc-ec.c |  112 ++++++++++++++++++++++++++++++++++++++-
+ include/linux/olpc-ec.h         |    6 ++
+ 2 files changed, 116 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
+index 4202603..44e6a4f 100644
+--- a/drivers/platform/olpc/olpc-ec.c
++++ b/drivers/platform/olpc/olpc-ec.c
+@@ -5,12 +5,120 @@
+  *
+  * Licensed under the GPL v2 or later.
+  */
++#include <linux/completion.h>
++#include <linux/spinlock.h>
++#include <linux/mutex.h>
++#include <linux/workqueue.h>
+ #include <linux/module.h>
++#include <linux/list.h>
++#include <linux/olpc-ec.h>
+ #include <asm/olpc.h>
+ 
++struct ec_cmd_desc {
++	u8 cmd;
++	u8 *inbuf, *outbuf;
++	size_t inlen, outlen;
++
++	int err;
++	struct completion finished;
++	struct list_head node;
++
++	void *priv;
++};
++
++static void olpc_ec_worker(struct work_struct *w);
++
++static DECLARE_WORK(ec_worker, olpc_ec_worker);
++static LIST_HEAD(ec_cmd_q);
++static DEFINE_SPINLOCK(ec_cmd_q_lock);
++
++static struct olpc_ec_driver *ec_driver;
++static void *ec_cb_arg;
++static DEFINE_MUTEX(ec_cb_lock);
++
++void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg)
++{
++	ec_driver = drv;
++	ec_cb_arg = arg;
++}
++EXPORT_SYMBOL_GPL(olpc_ec_driver_register);
++
++static void olpc_ec_worker(struct work_struct *w)
++{
++	struct ec_cmd_desc *desc = NULL;
++	unsigned long flags;
++
++	/* Grab the first pending command from the queue */
++	spin_lock_irqsave(&ec_cmd_q_lock, flags);
++	if (!list_empty(&ec_cmd_q)) {
++		desc = list_first_entry(&ec_cmd_q, struct ec_cmd_desc, node);
++		list_del(&desc->node);
++	}
++	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
++
++	/* Do we actually have anything to do? */
++	if (!desc)
++		return;
++
++	/* Protect the EC hw with a mutex; only run one cmd at a time */
++	mutex_lock(&ec_cb_lock);
++	desc->err = ec_driver->ec_cmd(desc->cmd, desc->inbuf, desc->inlen,
++			desc->outbuf, desc->outlen, ec_cb_arg);
++	mutex_unlock(&ec_cb_lock);
++
++	/* Finished, wake up olpc_ec_cmd() */
++	complete(&desc->finished);
++
++	/* Run the worker thread again in case there are more cmds pending */
++	schedule_work(&ec_worker);
++}
++
++/*
++ * Throw a cmd descripter onto the list.  We now have SMP OLPC machines, so
++ * locking is pretty critical.
++ */
++static void queue_ec_descriptor(struct ec_cmd_desc *desc)
++{
++	unsigned long flags;
++
++	INIT_LIST_HEAD(&desc->node);
++
++	spin_lock_irqsave(&ec_cmd_q_lock, flags);
++	list_add_tail(&desc->node, &ec_cmd_q);
++	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
++
++	schedule_work(&ec_worker);
++}
++
+ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
+ {
+-	/* Currently a stub; this will be expanded upon later. */
+-	return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
++	struct ec_cmd_desc desc;
++
++	/* XXX: this will be removed in later patches */
++	/* Are we using old-style callers? */
++	if (!ec_driver || !ec_driver->ec_cmd)
++		return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
++
++	/* Ensure a driver and ec hook have been registered */
++	if (WARN_ON(!ec_driver || !ec_driver->ec_cmd))
++		return -ENODEV;
++
++	might_sleep();
++
++	desc.cmd = cmd;
++	desc.inbuf = inbuf;
++	desc.outbuf = outbuf;
++	desc.inlen = inlen;
++	desc.outlen = outlen;
++	desc.err = 0;
++	init_completion(&desc.finished);
++
++	queue_ec_descriptor(&desc);
++
++	/* Timeouts must be handled in the platform-specific EC hook */
++	wait_for_completion(&desc.finished);
++
++	/* The worker thread dequeues the cmd; no need to do anything here */
++	return desc.err;
+ }
+ EXPORT_SYMBOL_GPL(olpc_ec_cmd);
+diff --git a/include/linux/olpc-ec.h b/include/linux/olpc-ec.h
+index 6d4e426..231e96f 100644
+--- a/include/linux/olpc-ec.h
++++ b/include/linux/olpc-ec.h
+@@ -14,8 +14,14 @@
+ #define EC_SCI_QUERY			0x84
+ #define EC_EXT_SCI_QUERY		0x85
+ 
++struct olpc_ec_driver {
++	int (*ec_cmd)(u8, u8 *, size_t, u8 *, size_t, void *);
++};
++
+ #ifdef CONFIG_OLPC
+ 
++extern void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg);
++
+ extern int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
+ 		size_t outlen);
+ 
+-- 
+1.7.2.5
 
