@@ -1,42 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39401 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755087Ab2GXOe7 (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:41454 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab2GTH2e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 10:34:59 -0400
-Message-ID: <1343140493.4415.37.camel@jlt3.sipsolutions.net> (sfid-20120724_163501_544304_0A1D9DD0)
-Subject: Re: [PATCH v2] mac80211: VHT (11ac) Association
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 24 Jul 2012 16:34:53 +0200
-In-Reply-To: <500EB20E.2050706@posedge.com>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local>
-	 <1343139049.4415.28.camel@jlt3.sipsolutions.net>
-	 <500EB20E.2050706@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 20 Jul 2012 03:28:34 -0400
+Date: Fri, 20 Jul 2012 10:28:23 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt2x00: Don't call ieee80211_get_tx_rate for MCS rates
+Message-ID: <20120720072823.GL16348@mwanda> (sfid-20120720_092838_316954_6B477BB3)
+References: <20120719113308.GA32491@elgon.mountain>
+ <CAGXE3d-OVz6Uj_d8YxdCXJ3VTk0iQBWqts1EC5megfR81_Hnsg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d-OVz6Uj_d8YxdCXJ3VTk0iQBWqts1EC5megfR81_Hnsg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-24 at 20:02 +0530, Mahesh Palivela wrote:
-> On 7/24/2012 7:40 PM, Johannes Berg wrote:
-> > On Tue, 2012-07-24 at 03:33 +0000, Mahesh Palivela wrote:
-> >> VHT (11ac) Association related change version 2. Incorporated Johannes review comments.
-> >>
-> >> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
-> >> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+On Thu, Jul 19, 2012 at 01:46:15PM +0200, Helmut Schaa wrote:
+> Hi Dan,
+> 
+> On Thu, Jul 19, 2012 at 1:33 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> > Hello Helmut Schaa,
 > >
-> > Applied, but I fixed up the commit message. Please review & make a
-> > better one next time :)
+> > I'm going through some old static checker warnings and I was concerned
+> > about this one:
 > >
-> > johannes
+> > The patch 55b585e29095: "rt2x00: Don't call ieee80211_get_tx_rate for
+> > MCS rates" from Mar 3, 2011, leads to the following warning:
+> > drivers/net/wireless/rt2x00/rt2x00queue.c:508
+> >         rt2x00queue_create_tx_descriptor()
+> >         error: potential NULL dereference 'hwrate'.
 > >
-> Sure. commited to mac80211-next? I couldn't find it there.
+> >    482          /*
+> >    483           * Determine rate modulation.
+> >    484           */
+> >    485          if (txrate->flags & IEEE80211_TX_RC_GREEN_FIELD)
+> >    486                  txdesc->rate_mode = RATE_MODE_HT_GREENFIELD;
+> >
+> > hwrate is NULL here.
+> >
+> >    487          else if (txrate->flags & IEEE80211_TX_RC_MCS)
+> >    488                  txdesc->rate_mode = RATE_MODE_HT_MIX;
+> >    489          else {
+> >    490                  rate = ieee80211_get_tx_rate(rt2x00dev->hw, tx_info);
+> >    491                  hwrate = rt2x00_get_rate(rate->hw_value);
+> >    492                  if (hwrate->flags & DEV_RATE_OFDM)
+> >    493                          txdesc->rate_mode = RATE_MODE_OFDM;
+> >    494                  else
+> >    495                          txdesc->rate_mode = RATE_MODE_CCK;
+> >    496          }
+> >    497
+> >    498          /*
+> >    499           * Apply TX descriptor handling by components
+> >    500           */
+> >    501          rt2x00crypto_create_tx_descriptor(rt2x00dev, skb, txdesc);
+> >    502          rt2x00queue_create_tx_descriptor_seq(rt2x00dev, skb, txdesc);
+> >    503
+> >    504          if (test_bit(REQUIRE_HT_TX_DESC, &rt2x00dev->cap_flags))
+> >    505                  rt2x00queue_create_tx_descriptor_ht(rt2x00dev, skb, txdesc,
+> >    506                                                      hwrate);
+> >
+> > On this path we dereference dereference hwrate if IEEE80211_TX_RC_MCS is
+> > not set, but we don't check for IEEE80211_TX_RC_GREEN_FIELD.
+> 
+> Right, I guess the basic assumption is that IEEE80211_TX_RC_GREEN_FIELD is
+> only used in conjunction with IEEE80211_TX_RC_MCS.
+> 
+> >
+> >    507          else
+> >    508                  rt2x00queue_create_tx_descriptor_plcp(rt2x00dev, skb, txdesc,
+> >    509                                                        hwrate);
+> >
+> > On this patch we dereference hwrate unconditionally.
+> 
+> mac80211 should never request a MCS rate for devices that don't register
+> MCS rate support.
+> 
+> I think we could make the static checker happy by moving the hwrate
+> dereferencing
+> into rt2x00queue_create_tx_descriptor_plcp and
+> rt2x00queue_create_tx_descriptor_ht?
+> 
+> Any better ideas?
 
-Didn't push out the tree yet, and even if I had git.kernel.org wouldn't
-sync up quickly.
+If IEEE80211_TX_RC_GREEN_FIELD implies IEEE80211_TX_RC_MCS and
+REQUIRE_HT_TX_DESC are set then the code is fine as is.
 
-johannes
+I'm confused by your suggestion, because the "hwrate" dereferencing
+is already inside the functions.  Smatch only cares about the call
+to rt2x00queue_create_tx_descriptor_plcp() because that is an
+unconditional dereference.  But when I was reviewing the error
+message I looked at the dereference inside
+rt2x00queue_create_tx_descriptor_ht() as well.
+
+Anyway, we shouldn't ever make the code less readable for static
+checkers so lets just leave it as is.
+
+regards,
+dan carpenter
 
