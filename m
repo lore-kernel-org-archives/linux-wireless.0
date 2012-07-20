@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38085 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752381Ab2GZT7o (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:26529 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092Ab2GTHX0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 15:59:44 -0400
-Received: by yhmm54 with SMTP id m54so2414616yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 12:59:43 -0700 (PDT)
-From: Javier Lopez <jlopex@cozybit.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, chunkeey@googlemail.com,
-	Javier Lopez <jlopex@cozybit.com>
-Subject: [PATCH] carl9170: Add support for NL80211_IFTYPE_MESH_POINT interfaces
-Date: Thu, 26 Jul 2012 12:59:03 -0700
-Message-Id: <1343332743-11845-1-git-send-email-jlopex@cozybit.com> (sfid-20120726_215947_811094_49597AC4)
+	Fri, 20 Jul 2012 03:23:26 -0400
+Date: Fri, 20 Jul 2012 10:23:15 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: carl9170: improve unicast PS buffering
+Message-ID: <20120720072315.GK16348@mwanda> (sfid-20120720_092329_112604_910C3119)
+References: <20120719113628.GA32727@elgon.mountain>
+ <CAAd0S9CeFhDi0AZAX7zqcLFkNtiK6vv4i4UCMs8oB5Z0pKe+mA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAd0S9CeFhDi0AZAX7zqcLFkNtiK6vv4i4UCMs8oB5Z0pKe+mA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch contains following modifications:
+On Thu, Jul 19, 2012 at 02:29:41PM +0200, Christian Lamparter wrote:
+> Hello Dan,
+> 
+> On Thu, Jul 19, 2012 at 1:36 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> > Sorry this is so old.  I was going through some old Smatch warnings.
+> >
+> > This is a semi-automatic email about new static checker warnings.
+> >
+> > The patch caf1eae20668: "carl9170: improve unicast PS buffering" from
+> > Apr 24, 2011, leads to the following Smatch complaint:
+> >
+> > drivers/net/wireless/ath/carl9170/tx.c:1488 carl9170_op_tx()
+> >          error: we previously assumed 'sta' could be null (see line 1482)
+> >
+> > drivers/net/wireless/ath/carl9170/tx.c
+> >   1481
+> >   1482          if (sta) {
+> >                    ^^^^^
+> > New check.
+> >
+> >   1483                  struct carl9170_sta_info *stai = (void *) sta->drv_priv;
+> >   1484                  atomic_inc(&stai->pending_frames);
+> >   1485          }
+> >   1486
+> >   1487          if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+> >   1488                  run = carl9170_tx_ampdu_queue(ar, sta, skb);
+> >                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> > Old dereference of "sta" inside the call to carl9170_tx_ampdu_queue().
+> >
+> >   1489                  if (run)
+> >   1490                          carl9170_tx_ampdu(ar);
+> >
+> > Probably we can remove the check?
+> What check do you want to remove? The check in smatch
+> which produces the warning/error. Or the "if (sta) {" in line
+> 1482?
+> 
+> Or do you mean I should extend the check in 1487 to:
+> if (sta) {
+>      ...
+>      if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+>      ....
+>      }
+> }
 
-- Add mesh capabilities on fw.c to permit creation of mesh
-  interfaces using this driver.
+What I'm saying is that I don't if it's possible for "sta" to be
+NULL at this pointer or not.
 
-- Modify carl9170_set_operating_mode, to use AP-style beaconing
-  with mesh interfaces.
-
-- Allow beacon updates for NL80211_IFTYPE_MESH_POINT type in
-  carl9170_handle_command_response.
-
-Signed-off-by: Javier Lopez <jlopex@cozybit.com>
----
- drivers/net/wireless/ath/carl9170/fw.c  |    1 +
- drivers/net/wireless/ath/carl9170/mac.c |    2 +-
- drivers/net/wireless/ath/carl9170/rx.c  |    1 +
- 3 files changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
-index cba9d04..b03d7bf 100644
---- a/drivers/net/wireless/ath/carl9170/fw.c
-+++ b/drivers/net/wireless/ath/carl9170/fw.c
-@@ -304,6 +304,7 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
- 		if (SUPP(CARL9170FW_WLANTX_CAB)) {
- 			if_comb_types |=
- 				BIT(NL80211_IFTYPE_AP) |
-+				BIT(NL80211_IFTYPE_MESH_POINT) |
- 				BIT(NL80211_IFTYPE_P2P_GO);
- 		}
- 	}
-diff --git a/drivers/net/wireless/ath/carl9170/mac.c b/drivers/net/wireless/ath/carl9170/mac.c
-index dfda919..a5f5fa0 100644
---- a/drivers/net/wireless/ath/carl9170/mac.c
-+++ b/drivers/net/wireless/ath/carl9170/mac.c
-@@ -318,10 +318,10 @@ int carl9170_set_operating_mode(struct ar9170 *ar)
- 		bssid = common->curbssid;
- 
- 		switch (vif->type) {
--		case NL80211_IFTYPE_MESH_POINT:
- 		case NL80211_IFTYPE_ADHOC:
- 			cam_mode |= AR9170_MAC_CAM_IBSS;
- 			break;
-+		case NL80211_IFTYPE_MESH_POINT:
- 		case NL80211_IFTYPE_AP:
- 			cam_mode |= AR9170_MAC_CAM_AP;
- 
-diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index dc99030..3be2130 100644
---- a/drivers/net/wireless/ath/carl9170/rx.c
-+++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -206,6 +206,7 @@ void carl9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len)
- 
- 		case NL80211_IFTYPE_AP:
- 		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_MESH_POINT:
- 			carl9170_update_beacon(ar, true);
- 			break;
- 
--- 
-1.7.9.5
+regards,
+dan carpenter
 
