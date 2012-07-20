@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:42495 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752370Ab2GNU2Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2012 16:28:24 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Sq8wv-0004QE-KU
-	for linux-wireless@vger.kernel.org; Sat, 14 Jul 2012 22:28:21 +0200
-Received: from 83.101.52.197 ([83.101.52.197])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jul 2012 22:28:21 +0200
-Received: from not0read0765 by 83.101.52.197 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jul 2012 22:28:21 +0200
-To: linux-wireless@vger.kernel.org
-From: Olive <not0read0765@yopmail.com>
-Subject: Re: rt73usb not working since linux 3.4
-Date: Sat, 14 Jul 2012 22:28:11 +0200
-Message-ID: <20120714222811.0422834c@yopmail.com> (sfid-20120714_222828_018139_9219B474)
-References: <1364831.ftJE0YjeaD@proton>
-	<20120711185026.657d7786@yopmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33986 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750752Ab2GTGSW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jul 2012 02:18:22 -0400
+Message-ID: <5008F829.8020902@qca.qualcomm.com> (sfid-20120720_081827_579520_245C05A1)
+Date: Fri, 20 Jul 2012 09:18:17 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: fix incorrect use of IEEE80211_NUM_BANDS
+References: <20120712091311.9751.60082.stgit@localhost6.localdomain6> <20120712134855.53d23fef@mj> <5007EABC.5050905@qca.qualcomm.com> <20120719171114.4d904006@mj>
+In-Reply-To: <20120719171114.4d904006@mj>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07/20/2012 12:11 AM, Pavel Roskin wrote:
+> On Thu, 19 Jul 2012 14:08:44 +0300
+> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> On 07/12/2012 08:48 PM, Pavel Roskin wrote:
+>>> On Thu, 12 Jul 2012 12:13:12 +0300
+>>> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>>
+>>>> +	/* only check 2.4 and 5 GHz bands, skip the rest */
+>>>> +	for (band = 0; band <= IEEE80211_BAND_5GHZ; band++) {
+>>>
+>>> There is something inelegant here.  The code is mixing an integer
+>>> and an enum.  I'd rather go with one or those:
+>>>
+>>> two enums:
+>>> for (band = IEEE80211_BAND_2GHZ; band <= IEEE80211_BAND_5GHZ;
+>>> band++) {
+>>
+>> I somewhat see your point. But IMHO zero is commonly used when
+>> iterating over an enum to denote the first value and I don't see how
+>> IEEE80211_BAND_2GHZ helps here.
 > 
-> I have the same problem with a rt73usb too and with the
-> kernel 3.4.4-2-ARCH (Archlinux). The solution was to recompile the
-> kernel with the option CONFIG_RFKILL unset (really unset not as a
-> module). Then everything works properly (exept you cannot disable it
-> with rfkill). I did not had this problem before the kernel 3.4 (but I
-> do not know if rfkill actually works, or if the wlan was always
-> enabled).
+> It's the lowest band we support.  What if the 900MHz band is added one
+> day?
 
-The strange thing is that after having disabled the CONFIG_RFKIL , the
-wireless works even if I physically put a physical switch in the off
-position. Anyway I prefer having a wireless card that works whgen it
-shouldn't than vice versa.
+Then that should be added to the end of the enum, not beginning. I think
+it would be bad if we change enum values on the fly.
 
-Olive
-
-
+Kalle
