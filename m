@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47786 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751798Ab2G3Hej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 03:34:39 -0400
-Date: Mon, 30 Jul 2012 09:33:28 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Matt Chen <machen@suse.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	kevin.chou@mediatek.com, woody.hung@mediatek.com
-Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
-Message-ID: <20120730073327.GB2395@redhat.com> (sfid-20120730_093443_672272_8700E570)
-References: <1343372634-19870-1-git-send-email-machen@suse.com>
- <20120727101840.GA2436@redhat.com>
- <CALx5=V_GSs8xv0-OnEC-2h82E9LWVpRjd1UDyPE3+=etX0z29A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CALx5=V_GSs8xv0-OnEC-2h82E9LWVpRjd1UDyPE3+=etX0z29A@mail.gmail.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:54267 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363Ab2GTSCC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jul 2012 14:02:02 -0400
+Date: Fri, 20 Jul 2012 11:02:01 -0700 (PDT)
+Message-Id: <20120720.110201.1827124161230050568.davem@davemloft.net> (sfid-20120720_200214_455005_47CC8680)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-07-20
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120720172014.GB23254@tuxdriver.com>
+References: <20120720172014.GB23254@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 20 Jul 2012 13:20:15 -0400
 
-On Fri, Jul 27, 2012 at 10:22:44PM +0800, Matt Chen wrote:
-> 2012/7/27 Stanislaw Gruszka <sgruszka@redhat.com>:
-> > On Fri, Jul 27, 2012 at 03:03:54PM +0800, Chen, Chien-Chia wrote:
-> >> This patch is going to fix the resuming failed from S3/S4
-> >> for rt3290 chip.
-> >>
-> >> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
-> >> CC-by: Kevin Chou <kevin.chou@mediatek.com>
-> >
-> > Could you please post patches that compile? Also you did not set true
-> Compile ? you mean the *.o files and *.ko ?
+> commit 90b90f60c4f8e3a8525dfeb4aec46a9c7a29c857
+> 
+> Dave,
+> 
+> Here is what I hope to be the last non-fix pull request for wireless
+> bits going into 3.6.  It's mostly normal stuff, including driver
+> updates to ath9k, mwifiex, libertas, iwlwifi, and a few other bits.
+> 
+> Also included is a bluetooth pull.  Gustavo says:
+> 
+> 	"This is my last pull towards 3.6, the biggest thing here is
+> 	the new 3-wire UART Bluetooth driver by Johan Hedberg. The
+> 	rest is just fixes and clean ups."
+> 
+> Finally, there is a pull of the wireless tree to pick-up a few minor
+> fixes I had queued that were not really worthy for this late in the
+> 3.5 cycle.
+> 
+> Please let me know if there are problems!
 
-Patch does not compile:
-
-drivers/net/wireless/rt2x00/rt2800lib.c:5163: error: static declaration of ‘rt2800_enable_wlan_rt3290’ follows non-static declaration
-drivers/net/wireless/rt2x00/rt2800lib.h:212: note: previous declaration of ‘rt2800_enable_wlan_rt3290’ was here
-make[1]: *** [drivers/net/wireless/rt2x00/rt2800lib.o] Error 1
-make: *** [drivers/net/wireless/rt2x00/] Error 2
-
-How did you tested the patch ?
-
-> > author of the patch. Additionally, since repost that patch with changes,
-> > you should mark version of the patch and provide information about
-> > changes, like for example here:
-> Hmm....I added the Author: Woody Hung <Woody.Hung@mediatek.com> but
-> don't know why it doesn't show here. :(
-
-So fix that. Post patch to yourself first to see if setting works.
-
-Stanislaw
+Pulled, thanks John.
