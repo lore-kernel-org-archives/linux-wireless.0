@@ -1,32 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:53367 "EHLO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754616Ab2GRPLg (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:50788 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227Ab2GTJxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 11:11:36 -0400
-Received: by bkwj4 with SMTP id j4so1559386bkw.26
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 08:11:33 -0700 (PDT)
-Message-ID: <1342624289.5363.45.camel@cumari.coelho.fi> (sfid-20120718_171139_981434_4689B7E5)
-Subject: wl12xx/master has been rebased (3.5-rc7)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 18 Jul 2012 18:11:29 +0300
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 20 Jul 2012 05:53:23 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20120720094748.GA16598@redhat.com>
+References: <CA+icZUWXire09owq2Q9bN=C+VKuzSG+48Cz3-Ex+ZaTtGrEmQA@mail.gmail.com>
+	<20120720094748.GA16598@redhat.com>
+Date: Fri, 20 Jul 2012 11:53:20 +0200
+Message-ID: <CA+icZUX5+3b1Hkqv1wT70iR=FuYBnf6NSn71PJ7Fjueb1HrOfw@mail.gmail.com> (sfid-20120720_115344_633731_E8C6945E)
+Subject: Re: linux-next: Tree for July 17 (debugobjects: bt | btusb | usb related?)
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-bluetooth@vger.kernel.org, linux-usb@vger.kernel.org,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Jul 20, 2012 at 11:47 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Wed, Jul 18, 2012 at 08:06:17PM +0200, Sedat Dilek wrote:
+>> On Tue, Jul 17, 2012 at 7:41 AM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+>> > Hi all,
+>> >
+>> > Changes since 20120716:
+>> >
+>>
+>> Not sure what the root cause of this issue is.
+>>
+>> I see the following call-trace in linux-next (next-20120717).
+>>
+>> [   23.431889] ------------[ cut here ]------------
+>> [   23.431896] WARNING: at lib/debugobjects.c:261 debug_print_object+0x8e/0xb0()
+>> [   23.431897] Hardware name: <HIDDEN>
+>> [   23.431901] ODEBUG: free active (active state 0) object type:
+>> timer_list hint: delayed_work_timer_fn+0x0/0x40
+> There are few delayed works on hci_dev structure, it's hard to say which
+> one is not stopped before kfree.
+>
+>> # CONFIG_DEBUG_OBJECTS_WORK is not set
+> If you enable that option, it should show which delayed work is causing trouble.
+>
 
-Last week John had to remove one patch from wireless-next.git, which I
-had already pulled, so I have now rebased wl12xx.git/master and
-wl12xx.git/wl12xx-next to reflect that.
+OK, thanks for the explanations & hints!
+I will activate that kconfig-option.
 
-Please update your local copies as appropriate.
+FYI: With yesterday's linux-next (next-20120719) I didn't trap into
+this regression (same kernel-config + several bootups).
 
--- 
-Cheers,
-Luca.
+- Sedat -
 
-
-
+> Stanislaw
