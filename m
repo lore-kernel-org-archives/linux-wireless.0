@@ -1,72 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:42037 "EHLO
-	mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755084Ab2GXHbU (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:41782 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab2GUJDm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 03:31:20 -0400
-From: =?big5?B?S2V2aW4gQ2hvdSAoqVCueKxSKQ==?= <kevin.chou@mediatek.com>
-To: Matt Chen <machen@suse.com>,
-	=?big5?B?V29vZHkgSHVuZyAorHis7qbLKQ==?= <woody.hung@mediatek.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Date: Tue, 24 Jul 2012 15:21:38 +0800
-Subject: RE: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
-Message-ID: <BF9D4B6C356E124DB592D36F28999C61097AD75BF8@MTKMBS03.mediatek.inc> (sfid-20120724_093124_909108_EF148A49)
-References: <1342667903-27314-1-git-send-email-machen@suse.com>
-	<20120719145430.GA4231@redhat.com>
-	<CALx5=V8Sz_CiqQvX-N1hscmpYa7GTO2YfukS8BJc1YChLFmd5Q@mail.gmail.com>
-	<20120723112359.GA2567@redhat.com>
- <CALx5=V_SgL0jU9gzWsQTTzuLwGCA7DoiRUH8hxGP2iTKiRdVag@mail.gmail.com>
-In-Reply-To: <CALx5=V_SgL0jU9gzWsQTTzuLwGCA7DoiRUH8hxGP2iTKiRdVag@mail.gmail.com>
-Content-Type: text/plain; charset="big5"
+	Sat, 21 Jul 2012 05:03:42 -0400
+Received: by wibhr14 with SMTP id hr14so1301818wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jul 2012 02:03:40 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4FFD7B06.4010401@broadcom.com>
+References: <4FFD7B06.4010401@broadcom.com>
+Date: Sat, 21 Jul 2012 11:03:40 +0200
+Message-ID: <CACna6rzGUUNzL-qcDk8gG0n=J9YdDH30VJumvi=YHU83kXVQmQ@mail.gmail.com> (sfid-20120721_110347_328563_FD71DBFA)
+Subject: Re: bcma-pci-bridge issue with bcm43224
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RGVhciBXb29keSwNCg0KQ291bGQgeW91IGhlbHAgdG8gYW5zd2VyIFN0YW5pc2xhdydzIHF1ZXN0
-aW9ucz8NClRoYW5rIHlvdS4NCg0KQmVzdCBXaXNoZXMNCg0KS2V2aW4gQ2hvdQ0KTWVkaWFUZWsg
-SW5jLg0KVEVMOiA4ODYtMy01NjAwODY4IGV4dDozMTU1NQ0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KRnJvbTogTWF0dCBDaGVuIFttYWlsdG86bWFjaGVuQHN1c2UuY29tXSANClNlbnQ6
-IFR1ZXNkYXksIEp1bHkgMjQsIDIwMTIgMjoyNSBQTQ0KVG86IEtldmluIENob3UgKKlQrnisUikN
-CkNjOiBTdGFuaXNsYXcgR3J1c3prYTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyB1
-c2Vyc0BydDJ4MDAuc2VyaWFsbW9ua2V5LmNvbQ0KU3ViamVjdDogUmU6IFtydDJ4MDAtdXNlcnNd
-IFtQQVRDSF0gcnQyeDAwIDogZml4IHJ0MzI5MCByZXN1bWluZyBmYWlsZWQuDQoNCkhpIEtldmlu
-LA0KDQoyMDEyLzcvMjMgU3RhbmlzbGF3IEdydXN6a2EgPHNncnVzemthQHJlZGhhdC5jb20+Og0K
-PiBIaQ0KPg0KPiBPbiBNb24sIEp1bCAyMywgMjAxMiBhdCAwMzowMTowOFBNICswODAwLCBNYXR0
-IENoZW4gd3JvdGU6DQo+PiA+PiArDQo+PiA+PiArICAgICAgICAgICAgICAgICAgICAgcnQyODAw
-X3JlZ2lzdGVyX3dyaXRlKHJ0MngwMGRldiwgMHg1OCwgMHgwMTgpOw0KPj4gPj4gKyAgICAgICAg
-ICAgICAgICAgICAgIHVkZWxheShSRUdJU1RFUl9CVVNZX0RFTEFZKTsNCj4+ID4+ICsgICAgICAg
-ICAgICAgICAgICAgICBydDI4MDBfcmVnaXN0ZXJfd3JpdGUocnQyeDAwZGV2LCAweDU4LCAweDQx
-OCk7DQo+PiA+PiArICAgICAgICAgICAgICAgICAgICAgdWRlbGF5KFJFR0lTVEVSX0JVU1lfREVM
-QVkpOw0KPj4gPj4gKyAgICAgICAgICAgICAgICAgICAgIHJ0MjgwMF9yZWdpc3Rlcl93cml0ZShy
-dDJ4MDBkZXYsIDB4NTgsIA0KPj4gPj4gKyAweDYxOCk7DQo+PiA+IFdlIHJlYWxseSBsaWtlIHRv
-IGtub3cgd2hhdCB0aG9zZSBibGFjayBtYWdpYyBudW1iZXJzIG1lYW4uDQo+PiBJIGhhdmUgbm8g
-aWRlYSwgUmFsaW5rIGdhdmUgaXQgdG8gbWUgZm9yIHRoZSBmaXhpbmcuDQpUaGlzIHVwcGVyIG1l
-YW5uaW5nIG9mIHJlZ2lzdGVyIHZhbHVlIHBhcnQgd291bGQgbmVlZCB5b3VyIGhlbHAgZm9yIGV4
-cGxhbmF0aW9uLg0KPiBTbyBwZXJoYXBzIHBhdGNoIHNob3VsZCBiZSBwb3N0ZWQgYnkgUmFsaW5r
-IGRldmVsb3Blciwgd2hvIGNhbiBmaXggDQo+IHRoYXQgYWNjb3JkaW5nbHk/DQo+DQo+IEFsc28g
-aXQncyBjbGVhciBub3cgdGhhdCB5b3UgYXJlIG5vdCB0aGUgYXV0aG9yIG9mIHRoZSBwYXRjaC4g
-V291bGQgYmUgDQo+IGdvb2QgdG8gaW5kaWNhdGUgdHJ1ZSBhdXRob3Igb2YgdGhlIHBhdGNoIGJ5
-IGFkZGluZyAiRnJvbToiIGFuZCANCj4gIlNpZ25lZC1vZmYtYnk6IiBsaW5lcy4NCj4NCj4gVGhh
-bmtzDQo+IFN0YW5pc2xhdw0KPg0KPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXw0KPiB1c2VycyBtYWlsaW5nIGxpc3QNCj4gdXNlcnNAcnQyeDAwLnNlcmlh
-bG1vbmtleS5jb20NCj4gaHR0cDovL3J0MngwMC5zZXJpYWxtb25rZXkuY29tL21haWxtYW4vbGlz
-dGluZm8vdXNlcnNfcnQyeDAwLnNlcmlhbG1vbg0KPiBrZXkuY29tDQo+DQoNCg0KDQotLQ0KVGhh
-bmsgeW91Lg0KCioqKioqKioqKioqKiogRW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAqKioq
-KioqKioqKioqKioqKioqKg0KVGhlIGluZm9ybWF0aW9uIGNvbnRhaW5lZCBpbiB0aGlzIGUtbWFp
-bCBtZXNzYWdlIChpbmNsdWRpbmcgYW55IA0KYXR0YWNobWVudHMpIG1heSBiZSBjb25maWRlbnRp
-YWwsIHByb3ByaWV0YXJ5LCBwcml2aWxlZ2VkLCBvciBvdGhlcndpc2UNCmV4ZW1wdCBmcm9tIGRp
-c2Nsb3N1cmUgdW5kZXIgYXBwbGljYWJsZSBsYXdzLiBJdCBpcyBpbnRlbmRlZCB0byBiZSANCmNv
-bnZleWVkIG9ubHkgdG8gdGhlIGRlc2lnbmF0ZWQgcmVjaXBpZW50KHMpLiBBbnkgdXNlLCBkaXNz
-ZW1pbmF0aW9uLCANCmRpc3RyaWJ1dGlvbiwgcHJpbnRpbmcsIHJldGFpbmluZyBvciBjb3B5aW5n
-IG9mIHRoaXMgZS1tYWlsIChpbmNsdWRpbmcgaXRzIA0KYXR0YWNobWVudHMpIGJ5IHVuaW50ZW5k
-ZWQgcmVjaXBpZW50KHMpIGlzIHN0cmljdGx5IHByb2hpYml0ZWQgYW5kIG1heSANCmJlIHVubGF3
-ZnVsLiBJZiB5b3UgYXJlIG5vdCBhbiBpbnRlbmRlZCByZWNpcGllbnQgb2YgdGhpcyBlLW1haWws
-IG9yIGJlbGlldmUgDQp0aGF0IHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgZS1tYWlsIGluIGVycm9y
-LCBwbGVhc2Ugbm90aWZ5IHRoZSBzZW5kZXIgDQppbW1lZGlhdGVseSAoYnkgcmVwbHlpbmcgdG8g
-dGhpcyBlLW1haWwpLCBkZWxldGUgYW55IGFuZCBhbGwgY29waWVzIG9mIA0KdGhpcyBlLW1haWwg
-KGluY2x1ZGluZyBhbnkgYXR0YWNobWVudHMpIGZyb20geW91ciBzeXN0ZW0sIGFuZCBkbyBub3QN
-CmRpc2Nsb3NlIHRoZSBjb250ZW50IG9mIHRoaXMgZS1tYWlsIHRvIGFueSBvdGhlciBwZXJzb24u
-IFRoYW5rIHlvdSE=
+2012/7/11 Arend van Spriel <arend@broadcom.com>:
+> Hi Rafal
+>
+> I am testing with BCM43224 in PCIe slot:
+> $ lspci -vns 03:00.0
+> 03:00.0 0280: 14e4:4353 (rev 01)
+>         Subsystem: 1028:000e
+>         Flags: bus master, fast devsel, latency 0, IRQ 17
+>         Memory at e6e00000 (64-bit, non-prefetchable) [size=16K]
+>         Capabilities: <access denied>
+>         Kernel driver in use: bcma-pci-bridge
+>
+> In the log the irq field in the bcma_device structure is printed in
+> brcmsmac probe function and the value seems invalid hence the
+> request_irq() failure. Any clues?
 
+Sorry for late reply, I couldn't setup my testing machine to work with
+openSUSE firewall and I couldn't debug that problem remotely :|
+
+I've plugged my BCM43225 and noticed it doesn't provide any RX
+(scanning results) for both: b43 and brcmsmac. I suspected it's indeed
+the regression you noticed and tried going back to other releases.
+After reaching 3.2.0 I noticed sth is wrong. Kernel 3.2.0 was working
+for me for sure.
+
+After playing with my machine a little more, I've figured out the
+problem. When I had my dedicated GPU card connected to the
+motherboard, Broadcom cards diddn't get any RX! I've confirmed that
+problem with "wl" driver as well.
+
+After removing my AMD GPU (and switching to the one on the
+motherboard) card started working correctly. Even with the latest
+wireless-testing, including both: b43 and brcmsmac.
+
+So I can't really debug that problem you're seeing :( Could you try
+bisecting this, please?
+
+-- 
+Rafał
