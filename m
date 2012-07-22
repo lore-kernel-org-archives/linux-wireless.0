@@ -1,81 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dd27218.kasserver.com ([85.13.142.250]:33304 "EHLO
-	dd27218.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139Ab2GXRdv (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:38766 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118Ab2GVQvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 13:33:51 -0400
-Received: from hermes.localnet (p4FD7952E.dip.t-dialin.net [79.215.149.46])
-	by dd27218.kasserver.com (Postfix) with ESMTPSA id 2B7162EA1831
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 19:33:49 +0200 (CEST)
-From: Andreas Messer <andi@bastelmap.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: rt73usb not working since linux 3.4
-Date: Tue, 24 Jul 2012 19:33:34 +0200
-Message-ID: <1994279.EoVfTdb8RL@hermes> (sfid-20120724_193355_407764_3CA77BA8)
-In-Reply-To: <20120626171835.GB32503@tuxdriver.com>
-References: <1364831.ftJE0YjeaD@proton> <20120626171835.GB32503@tuxdriver.com>
+	Sun, 22 Jul 2012 12:51:21 -0400
+Received: by weyx8 with SMTP id x8so3745193wey.19
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Jul 2012 09:51:20 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFT][PATCH 3/3] ssb: check for flash presentence
+Date: Sun, 22 Jul 2012 18:51:29 +0200
+Message-Id: <1342975889-32687-4-git-send-email-zajec5@gmail.com> (sfid-20120722_185125_944941_DD8D3C68)
+In-Reply-To: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
+References: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1778129.Mby04e7a8Q"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We can not assume parallel flash is always present, there are boards
+with *serial* flash and probably some without flash at all.
 
---nextPart1778129.Mby04e7a8Q
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/driver_mipscore.c |   28 ++++++++++++++++++++++------
+ 1 files changed, 22 insertions(+), 6 deletions(-)
 
-Hello Again,
-
-Am Dienstag, 26. Juni 2012, 13:18:35 schrieb John W. Linville:
-> On Tue, Jun 26, 2012 at 06:03:56PM +0200, Andreas Messer wrote:
-> > Dear all,
-> > 
-> > updating my pc from linux kernel 3.3 to linux kernel 3.4 broke my wlan.
-> > I'm
-> > using rt2571 based wlan module from qcom: LR802UKG, which is wired to an
-> > internal usb port of my media center pc. The rfkill switch is hardwired to
-> > make wlan active all the time. This setup is (almost) properly working
-> > since about three years now. (If i ignore the occasional
-> > vendor_request_error things)
-> > The wlan device now refuses to go
-> > online, saying that the kill switch is active, which of course can not be
-> > as it is working with linux kernel 3.3.
-> > [...]
-> > So, what can I do to track down the problem?
-> 
-> Andreas,
-> 
-> Hmmm...well, perhaps you can start by doing a git bisect to narrow-down
-> the commit that started this problem for you?  It may take serveral
-> iterations, if you can only narrow it down to 3.3 working and 3.4 not
-> working.  But, at least that should point us in the right direction.
-> 
-> John
-
-first of all, sorry for the long delay. After some hours of compiling and 
-checking, I have found the following things: The problem is introduced 
-somewhere between v3.3.8 and v3.4, actually the commit 7e29629 already shows 
-the problem. So range is v3.3.8...7e29629. I thing there is something wrong 
-with initialization of the chip because of the following behaviour: If I boot 
-from power-off into 7e29629 the kill switch reports to be in state 1 
-(/sys/../hard = 1). If I first boot into 3.3.8 and afterwards re-boot into 
-7e29629, the kill switch reports to be in state 0 and the WLAN connection 
-builds up properly.
-Hope that helps somehow.
-
-Cheers,
-Andreas
---nextPart1778129.Mby04e7a8Q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEABECAAYFAlAO3HUACgkQkLO6qowrr1GjTgCgmHBcqJVbD9auMjH9D1ePVhos
-JFEAn0dPCA0CcogSNhZvWhd1KaZaEcl/
-=ddCT
------END PGP SIGNATURE-----
-
---nextPart1778129.Mby04e7a8Q--
+diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
+index 873bc0a..266a4c8 100644
+--- a/drivers/ssb/driver_mipscore.c
++++ b/drivers/ssb/driver_mipscore.c
+@@ -190,16 +190,32 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
+ {
+ 	struct ssb_bus *bus = mcore->dev->bus;
+ 
+-	bus->chipco.pflash.buswidth = 2;
+-	if (bus->chipco.dev) {
++	/* When there is no chipcommon on the bus there is 4MB flash */
++	if (!bus->chipco.dev) {
++		bus->chipco.pflash.buswidth = 2;
++		bus->chipco.pflash.window = SSB_FLASH1;
++		bus->chipco.pflash.window_size = SSB_FLASH1_SZ;
++		return;
++	}
++
++	/* Read info about flash from the ChipCommon */
++	switch (bus->chipco.capabilities & SSB_CHIPCO_CAP_FLASHT) {
++	case SSB_CHIPCO_FLASHT_STSER:
++	case SSB_CHIPCO_FLASHT_ATSER:
++		pr_err("Serial flash not supported\n");
++		break;
++	case SSB_CHIPCO_FLASHT_PARA:
++		pr_info("Found parallel flash\n");
+ 		bus->chipco.pflash.window = SSB_FLASH2;
+ 		bus->chipco.pflash.window_size = SSB_FLASH2_SZ;
+ 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
+-		               & SSB_CHIPCO_CFG_DS16) == 0)
++		     & SSB_CHIPCO_CFG_DS16) == 0)
+ 			bus->chipco.pflash.buswidth = 1;
+-	} else {
+-		bus->chipco.pflash.window = SSB_FLASH1;
+-		bus->chipco.pflash.window_size = SSB_FLASH1_SZ;
++		else
++			bus->chipco.pflash.buswidth = 2;
++		break;
++	default:
++		pr_err("Flash type not supported\n");
+ 	}
+ }
+ 
+-- 
+1.7.7
 
