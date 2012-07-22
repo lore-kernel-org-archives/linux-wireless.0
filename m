@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:44427 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752648Ab2GSBt4 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:44735 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118Ab2GVQvQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 21:49:56 -0400
-Message-ID: <1342662593.11373.84.camel@deadeye.wl.decadent.org.uk> (sfid-20120719_035003_555441_BD915D07)
-Subject: Re: [PATCH] brcm: add bcm4334 firmware for brcmfmac
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>
-Date: Thu, 19 Jul 2012 02:49:53 +0100
-In-Reply-To: <1342552925-31076-1-git-send-email-frankyl@broadcom.com>
-References: <1342552925-31076-1-git-send-email-frankyl@broadcom.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-TOkdKXWGJHraRhOEbPeg"
-Mime-Version: 1.0
+	Sun, 22 Jul 2012 12:51:16 -0400
+Received: by wibhr14 with SMTP id hr14so2132100wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Jul 2012 09:51:15 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFT][PATCH 0/3] ssb: Flash memory improvements
+Date: Sun, 22 Jul 2012 18:51:26 +0200
+Message-Id: <1342975889-32687-1-git-send-email-zajec5@gmail.com> (sfid-20120722_185120_219614_54B7014D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patchset provides some minor improvements to the flash memory
+support. That is based on the OpenWRT tree, recent bcma changes and
+some bits from myself.
 
---=-TOkdKXWGJHraRhOEbPeg
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I don't have any SSB-based embedded device, so it's compile tested only.
+And to be honest, I didn't even compile bcm47xx after that changes.
 
-On Tue, 2012-07-17 at 12:22 -0700, Franky Lin wrote:
-> This is the initial version of bcm4334 SDIO interface firmware
-> for brcmfmac.
->=20
-> Signed-off-by: Franky Lin <frankyl@broadcom.com>
-[...]
+Hauke: I believe you have some SSB SoC, could you give this code a try,
+please? I'm doing my best to mainline some random stuff, but I don't
+have hardware to test everything.
 
-Applied, thanks.
+Rafał Miłecki (3):
+  ssb: update defines
+  ssb: move flash info to ChipCommon driver
+  ssb: check for flash presentence
 
-Ben.
+ arch/mips/bcm47xx/nvram.c                 |    8 +++---
+ arch/mips/bcm47xx/wgt634u.c               |   14 ++++++------
+ drivers/ssb/driver_mipscore.c             |   34 +++++++++++++++++++++-------
+ include/linux/ssb/ssb_driver_chipcommon.h |   15 ++++++++++++-
+ include/linux/ssb/ssb_driver_mips.h       |    4 ---
+ 5 files changed, 50 insertions(+), 25 deletions(-)
 
---=20
-Ben Hutchings
-DNRC Motto:  I can please only one person per day.
-Today is not your day.  Tomorrow isn't looking good either.
+-- 
+1.7.7
 
---=-TOkdKXWGJHraRhOEbPeg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUAdnwee/yOyVhhEJAQr7/w/+IOaaHtUhtCUwq7e9vHZYmZpbRHHlfAmj
-wUJX7HPrATVFGF/Uv+lfJDdkc9hokCWsnVsjjcKZ5iqTLCa+QXGVyfwsfQ0Snzum
-YXndmGoAnZ/Lpvbiqxw1gMErT6YZBBzp8Wr2POF+ySmtwEc1QeYJtwu2g6ZAJx6Z
-/dX1CcXx4v+0GucMZfaZq1j8jguPXwI8lH6sdcxQhQkO6awfDdBL7ohIPE/76WG8
-JodPgvJucIBbPoXVbsplH18X50u/1e/VLkf4JGGcX9XNNLs2DUrJX4mV+jBcQmPL
-kXlMKnW9WB+fTUTtGH1u0qq/ZaTRK2M2c6SEVgnb+JiIqYwRxg4Qp21UFl6XqBd1
-nn+ASXGD3E5S2MLf1rbSNKQqD9RpKppKvRR6/4C3torlr860A017DBOQezrx1Of6
-LGks9KkzxZ+cikJp2dVOH0BVVZI0cvHK2gTOwtYDja3tZM95+2GFZHP8Yvv9ClZc
-N3op82aOG/cvynk/79ETaEhEMWJWPZ/JvNXtscCtkA6i2iOPfGP/Xqq51DFcElUM
-7c3PUpMJbSKnvGmrwBKq2j7uLb4/w18NXwY0hU77Zbwq7W+A4It+Pa6plakEON8u
-A0kmy9EuoKYR4xNbOqmiJuXmeFMjWkuTmCyujx+1wzziKm73aEbSpnuvoIEsgoZR
-EOiSKBsncFA=
-=W9d5
------END PGP SIGNATURE-----
-
---=-TOkdKXWGJHraRhOEbPeg--
