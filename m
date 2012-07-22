@@ -1,81 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:49310 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754236Ab2GFHhV (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:37532 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118Ab2GVQvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 03:37:21 -0400
-Received: by yhmm54 with SMTP id m54so9091617yhm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2012 00:37:21 -0700 (PDT)
+	Sun, 22 Jul 2012 12:51:17 -0400
+Received: by wgbfm10 with SMTP id fm10so1852159wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Jul 2012 09:51:16 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFT][PATCH 1/3] ssb: update defines
+Date: Sun, 22 Jul 2012 18:51:27 +0200
+Message-Id: <1342975889-32687-2-git-send-email-zajec5@gmail.com> (sfid-20120722_185121_134921_A0180F7B)
+In-Reply-To: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
+References: <1342975889-32687-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1341557988.4462.6.camel@jlt3.sipsolutions.net>
-References: <1341417530-9062-1-git-send-email-arik@wizery.com>
- <1341417530-9062-3-git-send-email-arik@wizery.com> <1341473996.4455.2.camel@jlt3.sipsolutions.net>
- <CA+XVXfdwGAdxdmZTx+4pC4=6agM0SuvHV_xsF0gGCE_5NMB7YA@mail.gmail.com> <1341557988.4462.6.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Fri, 6 Jul 2012 10:30:43 +0300
-Message-ID: <CA+XVXff3_ugusQ=HPVeg3YSp3OBjWwpCVHTxd+Tnxg5Rf_5W3w@mail.gmail.com> (sfid-20120706_093725_517411_2A6253C1)
-Subject: Re: [RFC 2/4] cfg80211: support unused HT-cap-per-band configuration
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 6, 2012 at 9:59 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2012-07-05 at 14:25 +0300, Arik Nemtsov wrote:
->
->> > Yuck. Why use the union at all? You could just put the ht_cap_invalid
->> > into the ht_cap struct, and it wouldn't even take space, there's
->> > padding :-)
->>
->> The point is - we still want to use ht_cap.ht_supported, even when
->> ht_cap is invalid. I was afraid there would be some confusion, hence
->> one can set:
->> band.ht_supported = true;
->> band.ht_cap_invalid = false;
->>
->> And the union means we don't have to change old drivers.
->>
->> Also putting ht_cap_invalid inside the struct creates strange corner
->> cases. One could mark the vif ht_cap as invalid as well, but the code
->> would just ignore it.
->
-> Good point. But then let's just move it out and change drivers ...
-> that's much cleaner I think.
 
-You mean move out ht_supported?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/driver_mipscore.c             |    8 ++++----
+ include/linux/ssb/ssb_driver_chipcommon.h |    4 +++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
->
->
->> >> @@ -30,13 +31,16 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
->> >>                chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
->> >>               return NULL;
->> >>
->> >> -     ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
->> >> +     sband = rdev->wiphy.bands[chan->band];
->> >> +     ht_cap = &sband->ht_cap;
->> >>
->> >>       if (channel_type != NL80211_CHAN_NO_HT) {
->> >> -             if (!ht_cap->ht_supported)
->> >> +             if (!sband->ht_supported)
->> >>                       return NULL;
->> >>
->> >> -             if (channel_type != NL80211_CHAN_HT20 &&
->> >> +             /* this check is ignored when per-band HT caps are not used */
->> >> +             if (!sband->ht_cap_invalid &&
->> >> +                 channel_type != NL80211_CHAN_HT20 &&
->> >
->> > This is also major confusion, it seems you should roll 2/3 into one
->> > patch?
->>
->> I'm not sure that would help. rdev_freq_to_chan doesn't get the
->> net_device, so it can't get the HT caps. I guess I can add the
->> net_device as an optional argument where it is used and check the
->> caps. OTOH it seem like a sanity check we can do without?
->
-> I don't think we should do without that check? If you request say AP
-> operation on 40 MHz then you absolutely rely on that happening or
-> returning an error, not randomly operating in legacy mode!
+diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
+index 7e2ddc0..f8813f8 100644
+--- a/drivers/ssb/driver_mipscore.c
++++ b/drivers/ssb/driver_mipscore.c
+@@ -192,14 +192,14 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
+ 
+ 	mcore->flash_buswidth = 2;
+ 	if (bus->chipco.dev) {
+-		mcore->flash_window = 0x1c000000;
+-		mcore->flash_window_size = 0x02000000;
++		mcore->flash_window = SSB_FLASH2;
++		mcore->flash_window_size = SSB_FLASH2_SZ;
+ 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
+ 		               & SSB_CHIPCO_CFG_DS16) == 0)
+ 			mcore->flash_buswidth = 1;
+ 	} else {
+-		mcore->flash_window = 0x1fc00000;
+-		mcore->flash_window_size = 0x00400000;
++		mcore->flash_window = SSB_FLASH1;
++		mcore->flash_window_size = SSB_FLASH1_SZ;
+ 	}
+ }
+ 
+diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
+index 1a6b004..c2b02a5 100644
+--- a/include/linux/ssb/ssb_driver_chipcommon.h
++++ b/include/linux/ssb/ssb_driver_chipcommon.h
+@@ -504,7 +504,9 @@
+ #define SSB_CHIPCO_FLASHCTL_ST_SE	0x02D8		/* Sector Erase */
+ #define SSB_CHIPCO_FLASHCTL_ST_BE	0x00C7		/* Bulk Erase */
+ #define SSB_CHIPCO_FLASHCTL_ST_DP	0x00B9		/* Deep Power-down */
+-#define SSB_CHIPCO_FLASHCTL_ST_RSIG	0x03AB		/* Read Electronic Signature */
++#define SSB_CHIPCO_FLASHCTL_ST_RES	0x03AB		/* Read Electronic Signature */
++#define SSB_CHIPCO_FLASHCTL_ST_CSA	0x1000		/* Keep chip select asserted */
++#define SSB_CHIPCO_FLASHCTL_ST_SSE	0x0220		/* Sub-sector Erase */
+ 
+ /* Status register bits for ST flashes */
+ #define SSB_CHIPCO_FLASHSTA_ST_WIP	0x01		/* Write In Progress */
+-- 
+1.7.7
 
-Sure. I'll send the netdev to the function where possible (I think
-everywhere except the virtual monitor).
