@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:45201 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932362Ab2GMSwf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 14:52:35 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org, ilw@linux.intel.com,
-	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
-	buytenh@wantstofly.org, dsd@gentoo.org, coelho@ti.com,
-	johannes.berg@intel.com
-Subject: [PATCH 1/2] mac80211_hwsim: fix possible race condition in usage of info->control.sta & control.vif
-Date: Fri, 13 Jul 2012 20:52:24 +0200
-Message-Id: <1342205545-45382-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120713_205240_575446_3238342F)
-In-Reply-To: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Received: from victor.provo.novell.com ([137.65.250.26]:33717 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312Ab2GWHBO (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Mon, 23 Jul 2012 03:01:14 -0400
+Received: by bkwj10 with SMTP id j10so4837190bkw.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 00:01:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120719145430.GA4231@redhat.com>
+References: <1342667903-27314-1-git-send-email-machen@suse.com>
+	<20120719145430.GA4231@redhat.com>
+Date: Mon, 23 Jul 2012 15:01:08 +0800
+Message-ID: <CALx5=V8Sz_CiqQvX-N1hscmpYa7GTO2YfukS8BJc1YChLFmd5Q@mail.gmail.com> (sfid-20120723_090117_794484_7ABA0D71)
+Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
+From: Matt Chen <machen@suse.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: users@rt2x00.serialmonkey.com, kevin.chou@mediatek.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-info->control.sta and control.vif may only be dereferenced during the
-drv_tx call otherwise could lead to use-after-free bugs.
+Hi Stanislaw,
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 5 -----
- 1 file changed, 5 deletions(-)
+2012/7/19 Stanislaw Gruszka <sgruszka@redhat.com>:
+> On Thu, Jul 19, 2012 at 11:18:23AM +0800, Chen, Chien-Chia wrote:
+>> +     if (rt2x00_rt(rt2x00dev,RT3290)){
+> Please add space after a comma.
+>
+>> +             retval = rt2800_enable_wlan_rt3290(rt2x00dev);
+>> +             if (retval)
+>> +                     return -EBUSY;
+>> +     }
+> Since we enabling device here, it's probably not needed to do this on
+> rt2800pci_probe_hw, or I'm wrong?
+>
+>> +                     if ((rt2x00_get_field32(reg, PLL_LD) == 1) &&
+>> +                             (rt2x00_get_field32(reg, XTAL_RDY) == 1))
+>> +                                     break;
+> Use proper coding style here (see below). Seems you did not copy this
+> function from rt2800pci.c, but take it form other source, so it could
+> miss some other changes as well.
+will fix it.
+>> +
+>> +                     rt2800_register_write(rt2x00dev, 0x58, 0x018);
+>> +                     udelay(REGISTER_BUSY_DELAY);
+>> +                     rt2800_register_write(rt2x00dev, 0x58, 0x418);
+>> +                     udelay(REGISTER_BUSY_DELAY);
+>> +                     rt2800_register_write(rt2x00dev, 0x58, 0x618);
+> We really like to know what those black magic numbers mean.
+I have no idea, Ralink gave it to me for the fixing.
+>> -                     if (rt2x00_get_field32(reg, PLL_LD) &&
+>> -                         rt2x00_get_field32(reg, XTAL_RDY))
+>> -                             break;
+> Here is how above part should look like.
+Sounds good to me. :)
+> Stanislaw
+>
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 3f38d84..826ac7b 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1540,11 +1540,6 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	/* now send back TX status */
- 	txi = IEEE80211_SKB_CB(skb);
- 
--	if (txi->control.vif)
--		hwsim_check_magic(txi->control.vif);
--	if (txi->control.sta)
--		hwsim_check_sta_magic(txi->control.sta);
--
- 	ieee80211_tx_info_clear_status(txi);
- 
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+
+
 -- 
-1.7.11.1
-
+Thank you.
