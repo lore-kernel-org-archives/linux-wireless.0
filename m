@@ -1,51 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47178 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752504Ab2GZL5x (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:49056 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754663Ab2GWVHk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 07:57:53 -0400
-Message-ID: <1343303858.4477.1.camel@jlt3.sipsolutions.net> (sfid-20120726_135816_466230_90B9A1A0)
-Subject: Re: [PATCH v5] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: Luciano Coelho <coelho@ti.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	ath5k-devel@venema.h4ckr.net, ilw@linux.intel.com,
-	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
-	buytenh@wantstofly.org, dsd@gentoo.org, nbd@openwrt.org
-Date: Thu, 26 Jul 2012 13:57:38 +0200
-In-Reply-To: <50110D8C.3010705@net.t-labs.tu-berlin.de>
-References: <1343161108-6941-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	  (sfid-20120724_221843_511093_701FFAF2) <1343208990.4463.25.camel@jlt3.sipsolutions.net>
-	  (sfid-20120725_113644_599580_8AC4476F) <1343220625.4463.31.camel@jlt3.sipsolutions.net>
-	  <500FEDDD.206@net.t-labs.tu-berlin.de>
-	  <1343244302.3750.44.camel@cumari.coelho.fi>
-	 <1343283856.4611.1.camel@jlt3.sipsolutions.net>
-	 <50110D8C.3010705@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 23 Jul 2012 17:07:40 -0400
+Received: by ghrr11 with SMTP id r11so5977134ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 14:07:38 -0700 (PDT)
+Message-ID: <500DBD17.7070706@lwfinger.net> (sfid-20120723_230747_935735_CEF79BD7)
+Date: Mon, 23 Jul 2012 16:07:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Can't make RTL8188CE work with hostapd (rtl8192ce)
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com>
+In-Reply-To: <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-26 at 11:27 +0200, Thomas Huehn wrote:
+On 07/23/2012 03:31 PM, Xavier de Almeida wrote:
+> Hello,
+>
+> I am trying to setup a wireless hotspot with my xs36v barbone. Unfortunately when I start hostapd, I have got the following error:
+>
+> hostapd -dd /etc/hostapd/hostapd.conf
+> Configuration file: /etc/hostapd/hostapd.conf
+> nl80211: Add own interface ifindex 3
+> nl80211: Add own interface ifindex 4
+> nl80211: New interface mon.wlan0 created: ifindex=8
+> nl80211: Add own interface ifindex 8
+> Could not set interface mon.wlan0 flags: Operation not possible due to RF-kill
+> nl80211: Remove interface ifindex=8
+> nl80211: Failed to set interface wlan0 into AP mode
+> nl80211 driver initialization failed.
+> ELOOP: remaining socket: sock=4 eloop_data=0x842e900 user_data=0x842eeb0 handler=0x807c5e0
+> ELOOP: remaining socket: sock=6 eloop_data=0x8430cb8 user_data=(nil) handler=0x8086770
+>
+> I tried with different drivers like mac80211.
+>
+> I did install the drivers from Realtek website (rtl_92ce_92se_92de_linux_mac80211_0005.1230.2011) and the latest linux-firmware_1.84_all.deb
+>
+> But I can't make it work for any reason. Any help would be welcome. Do I need to move to a newest kernel to make it work?
+>
+> Thanks
+> XabiX
+>
+> lspci
+> 02:00.5 Ethernet controller: JMicron Technology Corp. JMC250 PCI Express Gigabit Ethernet Controller (rev 03)
+> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter (rev 01)
+>
+> lsmod
+> rtl8192ce              75491  0
+> rtl8192c_common        69519  1 rtl8192ce
+> rtlwifi                95804  1 rtl8192ce
+> mac80211              436455  3 rtl8192ce,rtl8192c_common,rtlwifi
+> cfg80211              178679  2 rtlwifi,mac80211
+>
+> modinfo rtl8192ce
+> filename:       /lib/modules/3.2.0-26-generic/kernel/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192ce.ko
+> firmware:       rtlwifi/rtl8192cfw.bin
+> description:    Realtek 8192C/8188C 802.11n PCI wireless
+> license:        GPL
+> author:         Larry Finger    <Larry.Finger@lwfinger.net>
+> author:         Realtek WlanFAE <wlanfae@realtek.com>
+> author:         lizhaoming      <chaoming_li@realsil.com.cn>
+> srcversion:     18B9D7DE9AA317668E0197D
+> alias:          pci:v000010ECd00008176sv*sd*bc*sc*i*
+> alias:          pci:v000010ECd00008177sv*sd*bc*sc*i*
+> alias:          pci:v000010ECd00008178sv*sd*bc*sc*i*
+> alias:          pci:v000010ECd00008191sv*sd*bc*sc*i*
+> depends:        rtlwifi,mac80211
+> vermagic:       3.2.0-26-generic SMP mod_unload modversions 686
+> parm:           swlps:bool
+> parm:           swenc:using hardware crypto (default 0 [hardware])
+> parm:           ips:using no link power save (default 1 is open)
+> parm:           fwlps:using linked fw control power save (default 1 is open)
 
-> (2)
-> url = git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
-> 
-> last commit e4cbd6542efdab97ed6d38e706b7cac51c68ced7
+Your main problem is that your kernel is too old. A lot of changes have been 
+made since 3.2.0. If you obtain the bleeding-edge compat-wireless package for 
+your system, you are likely to have more success. That will get the wireless 
+code that will not be released for about 3 months, rather than using what was 
+available 1 year ago.
 
-I'm on this commit + your patch.
-
-  CC [M]  drivers/net/wireless/ti/wlcore/main.o
-/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/main.c: In function ‘wl1271_op_tx’:
-/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/main.c:1202:39: error: ‘sta’ undeclared (first use in this function)
-/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/main.c:1202:39: note: each undeclared identifier is reported only once for each function it appears in
-/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/main.c:1202:2: error: too many arguments to function ‘wl12xx_tx_get_hlid’
-In file included from /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/main.c:43:0:
-/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.h:248:4: note: declared here
+Larry
 
 
-johannes
 
