@@ -1,84 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:46605 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754410Ab2GMFdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 01:33:39 -0400
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org, wimax@linuxwimax.org,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-s390@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	linux-kernel@vger.kernel.org, linux-c6x-dev@linux-c6x.org,
-	linux-mips@linux-mips.org,
-	user-mode-linux-devel@lists.sourceforge.net,
-	user-mode-linux-user@lists.sourceforge.net,
-	e1000-devel@lists.sourceforge.net
-Subject: [PATCH net-next 0/8] etherdevice: Rename random_ether_addr to eth_random_addr
-Date: Thu, 12 Jul 2012 22:33:04 -0700
-Message-Id: <cover.1342157022.git.joe@perches.com> (sfid-20120713_073647_256166_4F36B97A)
-In-Reply-To: <1341968967.13724.23.camel@joe2Laptop>
-References: <1341968967.13724.23.camel@joe2Laptop>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:56711 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754159Ab2GWQ06 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 12:26:58 -0400
+Received: by weyx8 with SMTP id x8so4384808wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 09:26:57 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: be more user friendly with PHY info
+Date: Mon, 23 Jul 2012 19:11:02 +0200
+Message-Id: <1343063462-3719-1-git-send-email-zajec5@gmail.com> (sfid-20120723_182705_731492_4158443B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net-next commit ad7eee98be ("etherdevice: introduce eth_broadcast_addr")
-added a new style API.  Rename random_ether_addr to eth_random_addr to
-create some API symmetry.
+First of all, use PHY names instead of magic numbers. It should make
+configuring kernel easier in case of not enabled PHY type support.
+Secondly, always print info about PHY. This is really basic info about
+hardware and quite important for the support level.
 
-Joe Perches (8):
-  etherdevice: Rename random_ether_addr to eth_random_addr
-  ethernet: Use eth_random_addr
-  net: usb: Use eth_random_addr
-  wireless: Use eth_random_addr
-  drivers/net: Use eth_random_addr
-  s390: Use eth_random_addr
-  usb: Use eth_random_addr
-  arch: Use eth_random_addr
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c |   36 +++++++++++++++++++++++++++++++-----
+ 1 files changed, 31 insertions(+), 5 deletions(-)
 
- arch/blackfin/mach-bf537/boards/stamp.c           |    2 +-
- arch/c6x/kernel/soc.c                             |    2 +-
- arch/mips/ar7/platform.c                          |    4 ++--
- arch/mips/powertv/powertv_setup.c                 |    6 +++---
- arch/um/drivers/net_kern.c                        |    2 +-
- drivers/net/ethernet/atheros/atl1c/atl1c_hw.c     |    2 +-
- drivers/net/ethernet/atheros/atlx/atl1.c          |    2 +-
- drivers/net/ethernet/atheros/atlx/atl2.c          |    2 +-
- drivers/net/ethernet/ethoc.c                      |    2 +-
- drivers/net/ethernet/intel/igb/igb_main.c         |    4 ++--
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c    |    2 +-
- drivers/net/ethernet/lantiq_etop.c                |    2 +-
- drivers/net/ethernet/micrel/ks8851.c              |    2 +-
- drivers/net/ethernet/micrel/ks8851_mll.c          |    2 +-
- drivers/net/ethernet/smsc/smsc911x.c              |    2 +-
- drivers/net/ethernet/ti/cpsw.c                    |    2 +-
- drivers/net/ethernet/tile/tilegx.c                |    2 +-
- drivers/net/ethernet/wiznet/w5100.c               |    2 +-
- drivers/net/ethernet/wiznet/w5300.c               |    2 +-
- drivers/net/ethernet/xilinx/xilinx_axienet_main.c |    2 +-
- drivers/net/tun.c                                 |    2 +-
- drivers/net/usb/smsc75xx.c                        |    2 +-
- drivers/net/usb/smsc95xx.c                        |    2 +-
- drivers/net/usb/usbnet.c                          |    2 +-
- drivers/net/wimax/i2400m/driver.c                 |    2 +-
- drivers/net/wireless/adm8211.c                    |    2 +-
- drivers/net/wireless/p54/eeprom.c                 |    2 +-
- drivers/net/wireless/rt2x00/rt2400pci.c           |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c           |    2 +-
- drivers/net/wireless/rt2x00/rt2500usb.c           |    2 +-
- drivers/net/wireless/rt2x00/rt2800lib.c           |    2 +-
- drivers/net/wireless/rt2x00/rt61pci.c             |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c             |    2 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c        |    2 +-
- drivers/net/wireless/rtl818x/rtl8187/dev.c        |    2 +-
- drivers/s390/net/qeth_l2_main.c                   |    2 +-
- drivers/s390/net/qeth_l3_main.c                   |    2 +-
- drivers/usb/atm/xusbatm.c                         |    4 ++--
- drivers/usb/gadget/u_ether.c                      |    2 +-
- include/linux/etherdevice.h                       |   14 ++++++++------
- 40 files changed, 52 insertions(+), 50 deletions(-)
-
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index b80352b..a56f182 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4277,6 +4277,33 @@ out:
+ 	return err;
+ }
+ 
++static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
++{
++	switch (phy_type) {
++	case B43_PHYTYPE_A:
++		return "A";
++	case B43_PHYTYPE_B:
++		return "B";
++	case B43_PHYTYPE_G:
++		return "G";
++	case B43_PHYTYPE_N:
++		return "N";
++	case B43_PHYTYPE_LP:
++		return "LP";
++	case B43_PHYTYPE_SSLPN:
++		return "SSLPN";
++	case B43_PHYTYPE_HT:
++		return "HT";
++	case B43_PHYTYPE_LCN:
++		return "LCN";
++	case B43_PHYTYPE_LCNXN:
++		return "LCNXN";
++	}
++
++	b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
++	return "UNKNOWN";
++}
++
+ /* Get PHY and RADIO versioning numbers */
+ static int b43_phy_versioning(struct b43_wldev *dev)
+ {
+@@ -4337,13 +4364,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+ 		unsupported = 1;
+ 	}
+ 	if (unsupported) {
+-		b43err(dev->wl, "FOUND UNSUPPORTED PHY "
+-		       "(Analog %u, Type %u, Revision %u)\n",
+-		       analog_type, phy_type, phy_rev);
++		b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
++		       analog_type, b43_phy_name(dev, phy_type), phy_rev);
+ 		return -EOPNOTSUPP;
+ 	}
+-	b43dbg(dev->wl, "Found PHY: Analog %u, Type %u, Revision %u\n",
+-	       analog_type, phy_type, phy_rev);
++	b43info(dev->wl, "Found PHY: Analog %u, Type %s, Revision %u\n",
++		analog_type, b43_phy_name(dev, phy_type), phy_rev);
+ 
+ 	/* Get RADIO versioning */
+ 	if (dev->dev->core_rev >= 24) {
 -- 
-1.7.8.111.gad25c.dirty
+1.7.7
 
