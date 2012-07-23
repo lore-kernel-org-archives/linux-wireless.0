@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:48981 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570Ab2GIQ5d (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:54144 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752231Ab2GWS3P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 12:57:33 -0400
-Received: by wgbdr13 with SMTP id dr13so11628296wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 09:57:32 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2] mac80211: fix invalid band deref building preq IEs
-Date: Mon,  9 Jul 2012 19:57:28 +0300
-Message-Id: <1341853048-12150-1-git-send-email-arik@wizery.com> (sfid-20120709_185747_490753_C028DCF1)
+	Mon, 23 Jul 2012 14:29:15 -0400
+Message-ID: <500D97F8.9070702@net.t-labs.tu-berlin.de> (sfid-20120723_202918_489546_903E612F)
+Date: Mon, 23 Jul 2012 20:29:12 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: jirislaby@gmail.com, johannes.berg@intel.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@nbd.name, rodrigue@qca.qualcomm.com,
+	c_manoha@qca.qualcomm.com
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
+ txpower changes
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <20120723164250.GA11893@localhost> <500D9716.10300@net.t-labs.tu-berlin.de>
+In-Reply-To: <500D9716.10300@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function building probe-request IEs does not validate the band is
-supported before dereferencing it. This can result in a panic when
-all bands are traversed, as done during sched-scan start.
+Hi all,
 
-Warn when this happens and return an empty probe request. Also fix
-sched-scan to not waste memory on unsupported bands.
+After applying this 2 patches I got the following eeprom read on an
+Wistron CM9:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
-better? :)
+[   38.880000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[0].freq
+= 4920, rate[0].target_power_6to24 = 36, rate[0].target_power_36 = 32,
+rate[0].target_power_48 = 28, rate[0].target_power_54 = 24
+[   38.896000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[1].freq
+= 5040, rate[1].target_power_6to24 = 36, rate[1].target_power_36 = 32,
+rate[1].target_power_48 = 28, rate[1].target_power_54 = 24
+[   38.916000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[2].freq
+= 5170, rate[2].target_power_6to24 = 36, rate[2].target_power_36 = 32,
+rate[2].target_power_48 = 30, rate[2].target_power_54 = 26
+[   38.936000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[3].freq
+= 5240, rate[3].target_power_6to24 = 38, rate[3].target_power_36 = 34,
+rate[3].target_power_48 = 30, rate[3].target_power_54 = 26
+[   38.952000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[4].freq
+= 5320, rate[4].target_power_6to24 = 38, rate[4].target_power_36 = 34,
+rate[4].target_power_48 = 30, rate[4].target_power_54 = 26
+[   38.972000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[5].freq
+= 5500, rate[5].target_power_6to24 = 38, rate[5].target_power_36 = 32,
+rate[5].target_power_48 = 28, rate[5].target_power_54 = 26
+[   38.992000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[6].freq
+= 5700, rate[6].target_power_6to24 = 36, rate[6].target_power_36 = 32,
+rate[6].target_power_48 = 28, rate[6].target_power_54 = 26
+[   39.012000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[7].freq
+= 5825, rate[7].target_power_6to24 = 34, rate[7].target_power_36 = 30,
+rate[7].target_power_48 = 26, rate[7].target_power_54 = 24
+[   39.036000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[0].freq
+= 2412, rate[0].target_power_6to24 = 39, rate[0].target_power_36 = 39,
+rate[0].target_power_48 = 39, rate[0].target_power_54 = 39
+[   39.056000] ath5k: phy0: [bluse ath5k_eeprom] rate_pcal_info[1].freq
+= 2484, rate[1].target_power_6to24 = 38, rate[1].target_power_36 = 38,
+rate[1].target_power_48 = 38, rate[1].target_power_54 = 38
 
- net/mac80211/scan.c |    3 +++
- net/mac80211/util.c |    2 ++
- 2 files changed, 5 insertions(+)
+The 5 GHz values look ok for me, but is the 2,4 GHz amp really that
+linear to support all powers at all rates ?
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 379f178..1ff04f6 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -928,6 +928,9 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		if (!local->hw.wiphy->bands[i])
-+			continue;
-+
- 		local->sched_scan_ies.ie[i] = kzalloc(2 +
- 						      IEEE80211_MAX_SSID_LEN +
- 						      local->scan_ies_len +
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 64493a7..596db0c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -999,6 +999,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 	int ext_rates_len;
- 
- 	sband = local->hw.wiphy->bands[band];
-+	if (WARN_ON_ONCE(!sband))
-+		return 0;
- 
- 	pos = buffer;
- 
--- 
-1.7.9.5
-
+Greetings Thomas
