@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:44024 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752043Ab2GZVHf (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:48050 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033Ab2GWRHX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 17:07:35 -0400
+	Mon, 23 Jul 2012 13:07:23 -0400
+Received: by bkwj10 with SMTP id j10so5519222bkw.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 10:07:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1343294151-5691-1-git-send-email-hauke@hauke-m.de>
-References: <1343294151-5691-1-git-send-email-hauke@hauke-m.de>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 26 Jul 2012 14:07:14 -0700
-Message-ID: <CA+55aFySBN=ajj=XKRzehw-_aVOOgLfoq9g5T9Wxht8nrQBSZA@mail.gmail.com> (sfid-20120726_230754_933837_6873C79C)
-Subject: Re: [PATCH] bcma: fix regression in pmu workaround reg masks
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	seth.forshee@canonical.com, pieterpg@broadcom.com,
-	brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+In-Reply-To: <1343016370-31163-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1343016370-31163-1-git-send-email-yeohchunyeow@gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 23 Jul 2012 10:07:01 -0700
+Message-ID: <CAG6hwVPjvSVWwR3LqRkL5_XvuQe=bK2QPL+niaYUK6hH3gbH4Q@mail.gmail.com> (sfid-20120723_190726_663155_2B546FF9)
+Subject: Re: [PATCH v2] mac80211: add extra checking for RC init upon
+ receiving mesh beacon
+To: devel@lists.open80211s.org
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oops. For some reason I didn't see this email this morning, and grew
-impatient and committed the patch without the sign-off and with a
-different changelog.
+Hi Chun-Yeow,
 
-My bad. Too much email.
+> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+> index 4256859..a73741c 100644
+> --- a/net/mac80211/mesh_plink.c
+> +++ b/net/mac80211/mesh_plink.c
+> @@ -359,6 +359,9 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
+>                 insert = true;
+>         }
+>
+> +       if (sta->plink_state == NL80211_PLINK_ESTAB)
+> +               return sta;
+> +
 
-Anyway, this is commit 1f03bf06e4e3 in my tree.
+Please keep updating sta->last_rx.
 
-              Linus
+>         spin_lock_bh(&sta->lock);
+>         sta->last_rx = jiffies;
+>         sta->sta.supp_rates[band] = rates;
 
-On Thu, Jul 26, 2012 at 2:15 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This fixes a regression introduced in:
-> commit b9562545ef0b13c0440ccd8d6dd4111fb77cb17a
-...
+Thomas
