@@ -1,90 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56711 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754159Ab2GWQ06 (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:54135 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754481Ab2GWSZ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 12:26:58 -0400
-Received: by weyx8 with SMTP id x8so4384808wey.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 09:26:57 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: be more user friendly with PHY info
-Date: Mon, 23 Jul 2012 19:11:02 +0200
-Message-Id: <1343063462-3719-1-git-send-email-zajec5@gmail.com> (sfid-20120723_182705_731492_4158443B)
+	Mon, 23 Jul 2012 14:25:28 -0400
+Message-ID: <500D9716.10300@net.t-labs.tu-berlin.de> (sfid-20120723_202531_618347_07A41264)
+Date: Mon, 23 Jul 2012 20:25:26 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Bob Copeland <me@bobcopeland.com>
+CC: jirislaby@gmail.com, johannes.berg@intel.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@nbd.name
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
+ txpower changes
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <20120723164250.GA11893@localhost>
+In-Reply-To: <20120723164250.GA11893@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First of all, use PHY names instead of magic numbers. It should make
-configuring kernel easier in case of not enabled PHY type support.
-Secondly, always print info about PHY. This is really basic info about
-hardware and quite important for the support level.
+Hi Bob,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |   36 +++++++++++++++++++++++++++++++-----
- 1 files changed, 31 insertions(+), 5 deletions(-)
+Bob Copeland schrieb:
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index b80352b..a56f182 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4277,6 +4277,33 @@ out:
- 	return err;
- }
- 
-+static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
-+{
-+	switch (phy_type) {
-+	case B43_PHYTYPE_A:
-+		return "A";
-+	case B43_PHYTYPE_B:
-+		return "B";
-+	case B43_PHYTYPE_G:
-+		return "G";
-+	case B43_PHYTYPE_N:
-+		return "N";
-+	case B43_PHYTYPE_LP:
-+		return "LP";
-+	case B43_PHYTYPE_SSLPN:
-+		return "SSLPN";
-+	case B43_PHYTYPE_HT:
-+		return "HT";
-+	case B43_PHYTYPE_LCN:
-+		return "LCN";
-+	case B43_PHYTYPE_LCNXN:
-+		return "LCNXN";
-+	}
-+
-+	b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
-+	return "UNKNOWN";
-+}
-+
- /* Get PHY and RADIO versioning numbers */
- static int b43_phy_versioning(struct b43_wldev *dev)
- {
-@@ -4337,13 +4364,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
- 		unsupported = 1;
- 	}
- 	if (unsupported) {
--		b43err(dev->wl, "FOUND UNSUPPORTED PHY "
--		       "(Analog %u, Type %u, Revision %u)\n",
--		       analog_type, phy_type, phy_rev);
-+		b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
-+		       analog_type, b43_phy_name(dev, phy_type), phy_rev);
- 		return -EOPNOTSUPP;
- 	}
--	b43dbg(dev->wl, "Found PHY: Analog %u, Type %u, Revision %u\n",
--	       analog_type, phy_type, phy_rev);
-+	b43info(dev->wl, "Found PHY: Analog %u, Type %s, Revision %u\n",
-+		analog_type, b43_phy_name(dev, phy_type), phy_rev);
- 
- 	/* Get RADIO versioning */
- 	if (dev->dev->core_rev >= 24) {
--- 
-1.7.7
+> On Mon, Jul 23, 2012 at 06:01:15PM +0200, Thomas Huehn wrote:
+>>  	/* Setup rate power table */
+>> -	ath5k_setup_rate_powertable(ah, txpower, &rate_info, ee_mode);
+>> +	ath5k_setup_rate_powertable(ah, ah->ah_txpower.txp_user_pwr, &rate_info, ee_mode);
+> 
+> txpower used to be .5 dB units -- is it still?
+
+ah->ah_txpower.txp_user_pwr is now in 1dB units, as it is triggered from
+mac802.11
+
+>> -	ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
+>> -			ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
+>> +	ret = ath5k_hw_txpower(ah, channel);
+>> +
+> 
+> Did this / 2 move elsewhere or was it wrong before?  Is txp_cur_pwr still
+> used for anything?
+
+the "/2" is not needed anymore as I also skipped the "*2" in
+ath5k_hw_set_txpower_limit .. so I avoid this calculations.
+
+Felix is goint to use txp_cur_pwr, so for now it is not used ... maybe
+he can explain where it will be needed.
+
+Greetings Thomas
+
 
