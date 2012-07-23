@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56456 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932810Ab2GLStp (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:54081 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754300Ab2GWQBX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 14:49:45 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so4121581pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 11:49:45 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH v5 4/5] cfg80211: make regulatory_update() static
-Date: Thu, 12 Jul 2012 11:49:20 -0700
-Message-Id: <1342118961-13008-5-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20120712_204948_358597_69F68360)
-In-Reply-To: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1342118961-13008-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Mon, 23 Jul 2012 12:01:23 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	johannes.berg@intel.com, thomas@net.t-labs.tu-berlin.de,
+	nbd@nbd.name
+Subject: [PATCH 0/2] ath5k: fixing broken power gain calibration at 5GHz and txpower handling 
+Date: Mon, 23 Jul 2012 18:01:13 +0200
+Message-Id: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120723_180129_448177_F10BDC75)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+This patch series fix a wrong power gain calibration in ath5k for
+entire 5GHz band and enables consistent usage of tx_power specified by
+the user.
 
-Now that we have wiphy_regulatory_register() we can
-tuck away the core's regulatory_update() call there
-and make it static.
+(1)
+Function ath5k_eeprom_read_target_rate_pwr_info() read 10 lines of
+rate_pcal_info[i].target_power which worngly produces e.g. from 
+Winstron CM9:
+[   38.988000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[0].freq = 4920, rate_pcal_info[0].target_power_6to24 = 36, rate_pcal_info[0].target_power_54 = 24
+[   39.004000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[1].freq = 5040, rate_pcal_info[1].target_power_6to24 = 36, rate_pcal_info[1].target_power_54 = 24
+[   39.020000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[2].freq = 5170, rate_pcal_info[2].target_power_6to24 = 36, rate_pcal_info[2].target_power_54 = 26
+[   39.040000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[3].freq = 5240, rate_pcal_info[3].target_power_6to24 = 38, rate_pcal_info[3].target_power_54 = 26
+[   39.056000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[4].freq = 5320, rate_pcal_info[4].target_power_6to24 = 38, rate_pcal_info[4].target_power_54 = 26
+[   39.076000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[5].freq = 5500, rate_pcal_info[5].target_power_6to24 = 38, rate_pcal_info[5].target_power_54 = 26
+[   39.092000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[6].freq = 5700, rate_pcal_info[6].target_power_6to24 = 36, rate_pcal_info[6].target_power_54 = 26
+[   39.112000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[7].freq = 5825, rate_pcal_info[7].target_power_6to24 = 34, rate_pcal_info[7].target_power_54 = 24
+[   39.128000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[8].freq = 5360, rate_pcal_info[8].target_power_6to24 = 39, rate_pcal_info[8].target_power_54 = 39
+[   39.144000] [ath5k_eeprom_read_target_rate_pwr_info] rate_pcal_info[9].freq = 5720, rate_pcal_info[9].target_power_6to24 = 38, rate_pcal_info[9].target_power_54 = 38
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- net/wireless/core.c |    1 -
- net/wireless/reg.c  |    6 ++++--
- net/wireless/reg.h  |    1 -
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Beside that both last 2 lines hold invalid power gain values the last
+line is responsible that subsequent interpolation functions apply
+full power gain to all rates at all frequencies greater
+rate_pcal_info[max].freq, i.e. > 5720 MHz. This leads to spectral
+distortion when then global tx_power is higher than the expected
+rate_pcal_info[xy].target_power_54 and therfore gives rates above
+24MBit a very poor performance in therms of throughput. The first
+patch reduces the eeprom calibration reads to 8. A validation
+against madwifi showed 8x eeprom reads at 5GHz as well.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 9a64b65..693819b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -543,7 +543,6 @@ int wiphy_register(struct wiphy *wiphy)
- 
- 	/* set up regulatory info */
- 	wiphy_regulatory_register(wiphy);
--	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
- 
- 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
- 	cfg80211_rdev_list_generation++;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 43b7750..b0a09b2 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1232,8 +1232,8 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
- 		wiphy->reg_notifier(wiphy, last_request);
- }
- 
--void regulatory_update(struct wiphy *wiphy,
--		       enum nl80211_reg_initiator setby)
-+static void regulatory_update(struct wiphy *wiphy,
-+			      enum nl80211_reg_initiator setby)
- {
- 	mutex_lock(&reg_mutex);
- 	wiphy_update_regulatory(wiphy, setby);
-@@ -2385,6 +2385,8 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
- 		reg_num_devs_support_basehint++;
- 
- 	mutex_unlock(&reg_mutex);
-+
-+	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
- }
- 
- /* Caller must hold cfg80211_mutex */
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index f36b15f..f023c8a 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -34,7 +34,6 @@ void regulatory_exit(void);
- 
- int set_regdom(const struct ieee80211_regdomain *rd);
- 
--void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
- bool reg_last_request_cell_base(void);
- 
- /**
--- 
-1.7.10.rc1.22.gf5241
+(2)
+Furthermore the tx_power specified by the user is not respected in
+cases where function phy_init() got called: tx_power is always
+set to ah->ah_txpower.txp_cur_pwr which is never updated with the
+txpower value specified by the user instead it equales max chan power
+and is even incremented. So this wrong behavior amplifies the
+occurrence of the performance problems coming from the wrong
+calibration in cases the user set a low power. The second patch
+fixes this by properly introduce and respect user tx_power.
+
+Greetings Thomas
 
