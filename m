@@ -1,216 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:53872 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab2GSEmX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:42:23 -0400
-Date: Wed, 18 Jul 2012 21:42:11 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH RESEND 6/9] x86: OLPC: switch over to using new EC driver on
- x86
-Message-ID: <20120718214211.67cff1f3@dev.queued.net> (sfid-20120719_064227_997729_D0A5CCED)
-In-Reply-To: <20120718213713.232e4161@dev.queued.net>
-References: <20120718213713.232e4161@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:20802
+	"EHLO HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751041Ab2GWJNy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 05:13:54 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: VHT (11ac) Association
+Date: Mon, 23 Jul 2012 09:13:53 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC5E31@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120723_111358_103111_ABDED144)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Partial changes to request VHT (11ac) association.
 
-This uses the new EC driver framework in drivers/platform/olpc.  The
-XO-1 and XO-1.5-specific code is still in arch/x86, but the generic stuff
-(including a new workqueue; no more running EC commands with IRQs disabled!)
-can be shared with other architectures.
-
-Signed-off-by: Andres Salomon <dilinger@queued.net>
+Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
 ---
- arch/x86/include/asm/olpc.h     |    5 ---
- arch/x86/platform/olpc/olpc.c   |   53 ++++++++++++++++++++-------------------
- drivers/platform/olpc/olpc-ec.c |    5 ---
- 3 files changed, 27 insertions(+), 36 deletions(-)
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   41 +++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 40 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/include/asm/olpc.h b/arch/x86/include/asm/olpc.h
-index 5b28f3e..72f9adf6 100644
---- a/arch/x86/include/asm/olpc.h
-+++ b/arch/x86/include/asm/olpc.h
-@@ -100,11 +100,6 @@ extern void olpc_xo1_pm_wakeup_clear(u16 value);
- 
- extern int pci_olpc_init(void);
- 
--/* EC related functions */
--
--extern int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf,
--		size_t inlen, unsigned char *outbuf, size_t outlen);
--
- /* SCI source values */
- 
- #define EC_SCI_SRC_EMPTY	0x00
-diff --git a/arch/x86/platform/olpc/olpc.c b/arch/x86/platform/olpc/olpc.c
-index a3fa180..4590096 100644
---- a/arch/x86/platform/olpc/olpc.c
-+++ b/arch/x86/platform/olpc/olpc.c
-@@ -14,7 +14,6 @@
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/delay.h>
--#include <linux/spinlock.h>
- #include <linux/io.h>
- #include <linux/string.h>
- #include <linux/platform_device.h>
-@@ -32,8 +31,6 @@
- struct olpc_platform_t olpc_platform_info;
- EXPORT_SYMBOL_GPL(olpc_platform_info);
- 
--static DEFINE_SPINLOCK(ec_lock);
--
- /* debugfs interface to EC commands */
- #define EC_MAX_CMD_ARGS (5 + 1)	/* cmd byte + 5 args */
- #define EC_MAX_CMD_REPLY (8)
-@@ -126,16 +123,13 @@ static int __wait_on_obf(unsigned int line, unsigned int port, int desired)
-  * <http://wiki.laptop.org/go/Ec_specification>.  Unfortunately, while
-  * OpenFirmware's source is available, the EC's is not.
-  */
--int olpc_ec_cmd_x86(unsigned char cmd, unsigned char *inbuf, size_t inlen,
--		unsigned char *outbuf,  size_t outlen)
-+static int olpc_xo1_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf,
-+		size_t outlen, void *arg)
- {
--	unsigned long flags;
- 	int ret = -EIO;
- 	int i;
- 	int restarts = 0;
- 
--	spin_lock_irqsave(&ec_lock, flags);
--
- 	/* Clear OBF */
- 	for (i = 0; i < 10 && (obf_status(0x6c) == 1); i++)
- 		inb(0x68);
-@@ -199,10 +193,8 @@ restart:
- 
- 	ret = 0;
- err:
--	spin_unlock_irqrestore(&ec_lock, flags);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(olpc_ec_cmd_x86);
- 
- void olpc_ec_wakeup_set(u16 value)
- {
-@@ -366,7 +358,7 @@ static void setup_debugfs(void)
- 			    &ec_debugfs_genops);
- }
- 
--static int olpc_ec_suspend(void)
-+static int olpc_ec_suspend(struct platform_device *pdev)
- {
- 	return olpc_ec_mask_write(ec_wakeup_mask);
- }
-@@ -425,8 +417,28 @@ static int __init add_xo1_platform_devices(void)
- 	return 0;
- }
- 
--static struct syscore_ops olpc_syscore_ops = {
-+static int olpc_xo1_ec_probe(struct platform_device *pdev)
-+{
-+	/* get the EC revision */
-+	olpc_ec_cmd(EC_FIRMWARE_REV, NULL, 0,
-+			(unsigned char *) &olpc_platform_info.ecver, 1);
-+
-+	/* EC version 0x5f adds support for wide SCI mask */
-+	if (olpc_platform_info.ecver >= 0x5f)
-+		olpc_platform_info.flags |= OLPC_F_EC_WIDE_SCI;
-+
-+	pr_info("OLPC board revision %s%X (EC=%x)\n",
-+			((olpc_platform_info.boardrev & 0xf) < 8) ? "pre" : "",
-+			olpc_platform_info.boardrev >> 4,
-+			olpc_platform_info.ecver);
-+
-+	return 0;
-+}
-+
-+static struct olpc_ec_driver ec_xo1_driver = {
- 	.suspend = olpc_ec_suspend,
-+	.probe = olpc_xo1_ec_probe,
-+	.ec_cmd = olpc_xo1_ec_cmd,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bb61f77..f0db2af 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -359,6 +359,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_NULLFUNC_ACKED	= BIT(8),
+ 	IEEE80211_STA_RESET_SIGNAL_AVE	= BIT(9),
+ 	IEEE80211_STA_DISABLE_40MHZ	= BIT(10),
++	IEEE80211_STA_DISABLE_11AC	= BIT(11),
  };
  
- static int __init olpc_init(void)
-@@ -436,16 +448,14 @@ static int __init olpc_init(void)
- 	if (!olpc_ofw_present() || !platform_detect())
- 		return 0;
+ struct ieee80211_mgd_auth_data {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7c0613c..80489e9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -326,6 +326,27 @@ static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_ie_build_ht_cap(pos, &ht_cap, cap);
+ }
  
--	spin_lock_init(&ec_lock);
-+	/* register the XO-1 and 1.5-specific EC handler */
-+	olpc_ec_driver_register(&ec_xo1_driver, NULL);
-+	platform_device_register_simple("olpc-ec", -1, NULL, 0);
++static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
++				 struct sk_buff *skb,
++				 struct ieee80211_supported_band *sband)
++{
++	u8 *pos;
++	u32 cap;
++	struct ieee80211_sta_vht_cap vht_cap;
++
++	BUILD_BUG_ON(sizeof(vht_cap) != sizeof(sband->vht_cap));
++
++	memcpy(&vht_cap, &sband->vht_cap, sizeof(vht_cap));
++	//ieee80211_apply_vhtcap_overrides(sdata, &ht_cap);
++
++	/* determine capability flags */
++	cap = vht_cap.cap;
++
++	/* reserve and fill IE */
++	pos = skb_put(skb, sizeof(struct ieee80211_vht_capabilities) + 2);
++	ieee80211_ie_build_vht_cap(pos, &vht_cap, cap);
++}
++
+ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+@@ -503,6 +524,10 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_add_ht_ie(sdata, skb, assoc_data->ap_ht_param,
+ 				    sband, local->oper_channel, ifmgd->ap_smps);
  
- 	/* assume B1 and above models always have a DCON */
- 	if (olpc_board_at_least(olpc_board(0xb1)))
- 		olpc_platform_info.flags |= OLPC_F_DCON;
++	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_11AC))
++		ieee80211_add_vht_ie(sdata, skb, sband);
++
++
+ 	/* if present, add any custom non-vendor IEs that go after HT */
+ 	if (assoc_data->ie_len && assoc_data->ie) {
+ 		noffset = ieee80211_ie_split_vendor(assoc_data->ie,
+@@ -3304,6 +3329,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
  
--	/* get the EC revision */
--	olpc_ec_cmd(EC_FIRMWARE_REV, NULL, 0,
--			(unsigned char *) &olpc_platform_info.ecver, 1);
--
- #ifdef CONFIG_PCI_OLPC
- 	/* If the VSA exists let it emulate PCI, if not emulate in kernel.
- 	 * XO-1 only. */
-@@ -453,14 +463,6 @@ static int __init olpc_init(void)
- 			!cs5535_has_vsa2())
- 		x86_init.pci.arch_init = pci_olpc_init;
- #endif
--	/* EC version 0x5f adds support for wide SCI mask */
--	if (olpc_platform_info.ecver >= 0x5f)
--		olpc_platform_info.flags |= OLPC_F_EC_WIDE_SCI;
--
--	printk(KERN_INFO "OLPC board revision %s%X (EC=%x)\n",
--			((olpc_platform_info.boardrev & 0xf) < 8) ? "pre" : "",
--			olpc_platform_info.boardrev >> 4,
--			olpc_platform_info.ecver);
+ 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
+ 	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
++	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11AC;
  
- 	if (olpc_platform_info.boardrev < olpc_board_pre(0xd0)) { /* XO-1 */
- 		r = add_xo1_platform_devices();
-@@ -468,7 +470,6 @@ static int __init olpc_init(void)
- 			return r;
+ 	ifmgd->beacon_crc_valid = false;
+ 
+@@ -3319,13 +3345,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
+ 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104) {
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++			ifmgd->flags |= IEEE80211_STA_DISABLE_11AC;
+ 			netdev_info(sdata->dev,
+-				    "disabling HT due to WEP/TKIP use\n");
++				    "disabling HT/VHT due to WEP/TKIP use\n");
+ 		}
  	}
  
--	register_syscore_ops(&olpc_syscore_ops);
- 	setup_debugfs();
+-	if (req->flags & ASSOC_REQ_DISABLE_HT)
++	if (req->flags & ASSOC_REQ_DISABLE_HT) {
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++		ifmgd->flags |= IEEE80211_STA_DISABLE_11AC;
++	}
  
- 	return 0;
-diff --git a/drivers/platform/olpc/olpc-ec.c b/drivers/platform/olpc/olpc-ec.c
-index cfba41f..a3d32c2 100644
---- a/drivers/platform/olpc/olpc-ec.c
-+++ b/drivers/platform/olpc/olpc-ec.c
-@@ -113,11 +113,6 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t outlen)
- 	struct olpc_ec_priv *ec = ec_priv;
- 	struct ec_cmd_desc desc;
+ 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
+ 	sband = local->hw.wiphy->bands[req->bss->channel->band];
+@@ -3336,6 +3365,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 			    "disabling HT as WMM/QoS is not supported\n");
+ 	}
  
--	/* XXX: this will be removed in later patches */
--	/* Are we using old-style callers? */
--	if (!ec_driver || !ec_driver->ec_cmd)
--		return olpc_ec_cmd_x86(cmd, inbuf, inlen, outbuf, outlen);
--
- 	/* Ensure a driver and ec hook have been registered */
- 	if (WARN_ON(!ec_driver || !ec_driver->ec_cmd))
- 		return -ENODEV;
--- 
-1.7.2.5
-
++	/* disable VHT if we don't support it or the AP doesn't use WMM */
++	if (!sband->vht_cap.vht_supported ||
++	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used) {
++		ifmgd->flags |= IEEE80211_STA_DISABLE_11AC;
++		netdev_info(sdata->dev,
++			    "disabling VHT as WMM/QoS is not supported\n");
++	}
++
+ 	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
+ 	memcpy(&ifmgd->ht_capa_mask, &req->ht_capa_mask,
+ 	       sizeof(ifmgd->ht_capa_mask));
