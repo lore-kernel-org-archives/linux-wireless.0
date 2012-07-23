@@ -1,66 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63602 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752885Ab2GILsh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 07:48:37 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RHEL6 PATCH] iwlwifi: remove spurious warning
-Date: Mon,  9 Jul 2012 13:48:29 +0200
-Message-Id: <1341834509-11601-1-git-send-email-sgruszka@redhat.com> (sfid-20120709_134840_393170_84B78296)
+Received: from he.sipsolutions.net ([78.46.109.217]:35102 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753327Ab2GWNaQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 09:30:16 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT 3/6] mac80211: use oper_channel in managed mlme
+Date: Mon, 23 Jul 2012 15:30:08 +0200
+Message-Id: <1343050211-499-4-git-send-email-johannes@sipsolutions.net> (sfid-20120723_153032_817367_18DC3D50)
+In-Reply-To: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
+References: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BZ#837754
+From: Johannes Berg <johannes.berg@intel.com>
 
-Description:
-Some devices do not set SEQ_RX_FRAME flags for few commands that should
-not be reclaimed. It was supposed to be fixed in firmware, but it was
-not.
+Using hw.conf.channel is wrong as it could be the
+temporary channel if any function like the beacon
+get function is called while scanning or during
+other temporary out-of-channel activities.
 
-Upstream change also add possibility to configure which commands should
-not be reclaimed, but that option is not used - only original 6 commands
-are configured. So I did not backport that part, because it make things
-somewhat (not necessarily) complex.
+Use oper_channel instead.
 
-Upstream:
-commit d663ee73f62903aed334eca25832a76c4a7e4c1c
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Sat Mar 10 13:00:07 2012 -0800
-
-    iwlwifi: abstract out missing SEQ_RX_FRAME workaround
-
-Testing:
-Compiled only.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   11 -----------
- 1 files changed, 0 insertions(+), 11 deletions(-)
+ net/mac80211/mlme.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 1daf01e..80e9328 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -449,17 +449,6 @@ static void iwl_rx_handle(struct iwl_trans *trans)
- 		else
- 			cmd = NULL;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index af1c5c3..81d7b86 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -185,15 +185,15 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ 	u16 ht_opmode;
+ 	bool disable_40 = false;
  
--		/* warn if this is cmd response / notification and the uCode
--		 * didn't set the SEQ_RX_FRAME for a frame that is
--		 * uCode-originated
--		 * If you saw this code after the second half of 2012, then
--		 * please remove it
--		 */
--		WARN(pkt->hdr.cmd != REPLY_TX && reclaim == false &&
--		     (!(pkt->hdr.sequence & SEQ_RX_FRAME)),
--		     "reclaim is false, SEQ_RX_FRAME unset: %s\n",
--		     get_cmd_string(pkt->hdr.cmd));
--
- 		err = iwl_rx_dispatch(priv(trans), rxb, cmd);
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	sband = local->hw.wiphy->bands[local->oper_channel->band];
  
- 		/*
+ 	switch (sdata->vif.bss_conf.channel_type) {
+ 	case NL80211_CHAN_HT40PLUS:
+-		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
++		if (local->oper_channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
+ 			disable_40 = true;
+ 		break;
+ 	case NL80211_CHAN_HT40MINUS:
+-		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
++		if (local->oper_channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
+ 			disable_40 = true;
+ 		break;
+ 	default:
+@@ -1242,7 +1242,7 @@ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
+-	if (sdata->local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
++	if (sdata->local->oper_channel->band == IEEE80211_BAND_5GHZ)
+ 		use_short_slot = true;
+ 
+ 	if (use_protection != bss_conf->use_cts_prot) {
+@@ -2330,7 +2330,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (baselen > len)
+ 		return;
+ 
+-	if (rx_status->freq != local->hw.conf.channel->center_freq)
++	if (rx_status->freq != local->oper_channel->center_freq)
+ 		return;
+ 
+ 	if (ifmgd->assoc_data && !ifmgd->assoc_data->have_beacon &&
+@@ -2494,7 +2494,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N)) {
+ 		struct ieee80211_supported_band *sband;
+ 
+-		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++		sband = local->hw.wiphy->bands[local->oper_channel->band];
+ 
+ 		changed |= ieee80211_config_ht_tx(sdata, elems.ht_operation,
+ 						  bssid, true);
 -- 
-1.7.1
+1.7.10.4
 
