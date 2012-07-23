@@ -1,72 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:50321 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932589Ab2GLOfb (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:63498 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754416Ab2GWQqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 10:35:31 -0400
-Received: by wibhr14 with SMTP id hr14so2330051wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2012 07:35:29 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: go out of PS before sending disassoc
-Date: Thu, 12 Jul 2012 17:35:33 +0300
-Message-Id: <1342103733-31835-1-git-send-email-eliad@wizery.com> (sfid-20120712_163535_380290_B9EF48E5)
+	Mon, 23 Jul 2012 12:46:33 -0400
+Received: by gglu4 with SMTP id u4so5665183ggl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 09:46:32 -0700 (PDT)
+Message-ID: <500D7FE4.1090100@lwfinger.net> (sfid-20120723_184637_252162_1EC8740B)
+Date: Mon, 23 Jul 2012 11:46:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: be more user friendly with PHY info
+References: <1343063462-3719-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1343063462-3719-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-on disassoc, ieee80211_set_disassoc() goes out of PS
-before indicating BSS_CHANGED_ASSOC (not sure why this
-is needed, but some drivers might count on the current
-behavior).
+On 07/23/2012 12:11 PM, Rafał Miłecki wrote:
+> First of all, use PHY names instead of magic numbers. It should make
+> configuring kernel easier in case of not enabled PHY type support.
+> Secondly, always print info about PHY. This is really basic info about
+> hardware and quite important for the support level.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>   drivers/net/wireless/b43/main.c |   36 +++++++++++++++++++++++++++++++-----
+>   1 files changed, 31 insertions(+), 5 deletions(-)
 
-However, it does it after sending the disassoc
-frame, which results in null-data frame being sent
-(in order to go out of ps) after we were already sent
-the disassoc, which is invalid.
+I like this change. It is worth the small increase in the size of b43.
 
-Fix it by going out of ps before sending the disassoc.
+Larry
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/mlme.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index b80352b..a56f182 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -4277,6 +4277,33 @@ out:
+>   	return err;
+>   }
+>
+> +static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
+> +{
+> +	switch (phy_type) {
+> +	case B43_PHYTYPE_A:
+> +		return "A";
+> +	case B43_PHYTYPE_B:
+> +		return "B";
+> +	case B43_PHYTYPE_G:
+> +		return "G";
+> +	case B43_PHYTYPE_N:
+> +		return "N";
+> +	case B43_PHYTYPE_LP:
+> +		return "LP";
+> +	case B43_PHYTYPE_SSLPN:
+> +		return "SSLPN";
+> +	case B43_PHYTYPE_HT:
+> +		return "HT";
+> +	case B43_PHYTYPE_LCN:
+> +		return "LCN";
+> +	case B43_PHYTYPE_LCNXN:
+> +		return "LCNXN";
+> +	}
+> +
+> +	b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
+> +	return "UNKNOWN";
+> +}
+> +
+>   /* Get PHY and RADIO versioning numbers */
+>   static int b43_phy_versioning(struct b43_wldev *dev)
+>   {
+> @@ -4337,13 +4364,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+>   		unsupported = 1;
+>   	}
+>   	if (unsupported) {
+> -		b43err(dev->wl, "FOUND UNSUPPORTED PHY "
+> -		       "(Analog %u, Type %u, Revision %u)\n",
+> -		       analog_type, phy_type, phy_rev);
+> +		b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
+> +		       analog_type, b43_phy_name(dev, phy_type), phy_rev);
+>   		return -EOPNOTSUPP;
+>   	}
+> -	b43dbg(dev->wl, "Found PHY: Analog %u, Type %u, Revision %u\n",
+> -	       analog_type, phy_type, phy_rev);
+> +	b43info(dev->wl, "Found PHY: Analog %u, Type %s, Revision %u\n",
+> +		analog_type, b43_phy_name(dev, phy_type), phy_rev);
+>
+>   	/* Get RADIO versioning */
+>   	if (dev->dev->core_rev >= 24) {
+>
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 671b9fd..9c74a1b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1365,6 +1365,17 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	}
- 	mutex_unlock(&local->sta_mtx);
- 
-+	/*
-+	 * if we want to get out of ps before disassoc (why?) we have
-+	 * to do it before sending disassoc, as otherwise the null-packet
-+	 * won't be valid.
-+	 */
-+	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-+		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	}
-+	local->ps_sdata = NULL;
-+
- 	/* flush out any pending frame (e.g. DELBA) before deauth/disassoc */
- 	if (tx)
- 		drv_flush(local, false);
-@@ -1400,12 +1411,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	del_timer_sync(&local->dynamic_ps_timer);
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 
--	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
--		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
--		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
--	}
--	local->ps_sdata = NULL;
--
- 	/* Disable ARP filtering */
- 	if (sdata->vif.bss_conf.arp_filter_enabled) {
- 		sdata->vif.bss_conf.arp_filter_enabled = false;
--- 
-1.7.6.401.g6a319
 
