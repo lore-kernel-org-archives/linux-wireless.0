@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10628 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238Ab2GHHVx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35104 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753337Ab2GWNaQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 03:21:53 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: remove debugging masks from AR_MCI_INTERRUPT_RX_MSG_DEFAULT
-Date: Sun, 8 Jul 2012 12:53:16 +0530
-Message-ID: <1341732196-2869-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120708_092234_517130_A7002362)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 23 Jul 2012 09:30:16 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT 2/6] mac80211: use oper_channel in ibss
+Date: Mon, 23 Jul 2012 15:30:07 +0200
+Message-Id: <1343050211-499-3-git-send-email-johannes@sipsolutions.net> (sfid-20120723_153034_200183_48313138)
+In-Reply-To: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
+References: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the CONT_* and LNA_* messages from
-AR_MCI_INTERRUPT_RX_MSG_DEFAULT. Those MCI rx messages only
-meant for debugging purpose. Including them in default rx_msg
-series could raise huge amount of MCI interrupts when BT traffic
-is going on. And also it increases power consumption when WLAN
-is scanning.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Using hw.conf.channel is wrong as it could be the
+temporary channel if any function like the beacon
+get function is called while scanning or during
+other temporary out-of-channel activities.
+
+Use oper_channel instead.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/reg.h | 6 ------
- 1 file changed, 6 deletions(-)
+ net/mac80211/ibss.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 22d2413..6592c07 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -2081,12 +2081,6 @@ enum {
- 					 AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET| \
- 					 AR_MCI_INTERRUPT_RX_MSG_SYS_WAKING  | \
- 					 AR_MCI_INTERRUPT_RX_MSG_SYS_SLEEPING| \
--					 AR_MCI_INTERRUPT_RX_MSG_SCHD_INFO   | \
--					 AR_MCI_INTERRUPT_RX_MSG_LNA_CONTROL | \
--					 AR_MCI_INTERRUPT_RX_MSG_LNA_INFO    | \
--					 AR_MCI_INTERRUPT_RX_MSG_CONT_NACK   | \
--					 AR_MCI_INTERRUPT_RX_MSG_CONT_INFO   | \
--					 AR_MCI_INTERRUPT_RX_MSG_CONT_RST    | \
- 					 AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 8628a20..1ebda2f 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -205,7 +205,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	mod_timer(&ifibss->timer,
+ 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
  
- #define AR_MCI_CPU_INT					0x1840
+-	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
++	bss = cfg80211_inform_bss_frame(local->hw.wiphy, chan,
+ 					mgmt, skb->len, 0, GFP_KERNEL);
+ 	cfg80211_put_bss(bss);
+ 	netif_carrier_on(sdata->dev);
+@@ -294,7 +294,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+-	int band = local->hw.conf.channel->band;
++	int band = local->oper_channel->band;
+ 
+ 	/*
+ 	 * XXX: Consider removing the least recently used entry and
+@@ -561,7 +561,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+-	int band = local->hw.conf.channel->band;
++	int band = local->oper_channel->band;
+ 
+ 	/*
+ 	 * XXX: Consider removing the least recently used entry and
+@@ -759,7 +759,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 				return;
+ 			}
+ 			sdata_info(sdata, "IBSS not allowed on %d MHz\n",
+-				   local->hw.conf.channel->center_freq);
++				   local->oper_channel->center_freq);
+ 
+ 			/* No IBSS found - decrease scan interval and continue
+ 			 * scanning. */
 -- 
-1.7.11.1
+1.7.10.4
 
