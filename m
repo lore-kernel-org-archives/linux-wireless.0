@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3530 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753397Ab2GNM4I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jul 2012 08:56:08 -0400
-Message-ID: <50016C4D.4050706@broadcom.com> (sfid-20120714_145613_415599_99D9D6B9)
-Date: Sat, 14 Jul 2012 14:55:41 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Felix Fietkau" <nbd@openwrt.org>
-cc: "Thomas Huehn" <thomas@net.t-labs.tu-berlin.de>, coelho@ti.com,
-	johannes.berg@intel.com, brcm80211-dev-list@broadcom.com,
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:54083 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754238Ab2GWQBW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 12:01:22 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
 	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
-	ilw@linux.intel.com, ath9k-devel@lists.ath9k.org,
-	b43-dev@lists.infradead.org, chunkeey@googlemail.com,
-	dsd@gentoo.org, buytenh@wantstofly.org
-Subject: Re: [ath9k-devel] [PATCH 2/2] mac80211: Remove control.sta from
- struct ieee80211_tx_info and restructure tx-path
-References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <50014580.7060702@broadcom.com> <50015B98.60705@openwrt.org>
-In-Reply-To: <50015B98.60705@openwrt.org>
-Content-Type: text/plain;
- charset=iso-8859-1
+	johannes.berg@intel.com, thomas@net.t-labs.tu-berlin.de,
+	nbd@nbd.name
+Subject: [PATCH 1/2] ath5k: fix wrong per rate target power eeprom reads for AR5K_EEPROM_MODE_11A
+Date: Mon, 23 Jul 2012 18:01:14 +0200
+Message-Id: <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120723_180127_132415_010FD643)
+In-Reply-To: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/14/2012 01:44 PM, Felix Fietkau wrote:
-> On 2012-07-14 12:10 PM, Arend van Spriel wrote:
->> On 07/13/2012 08:52 PM, Thomas Huehn wrote:
->>> The pointer control.sta is removed from ieee80211_tx_info to free up sufficient
->>> memory in SKB_CB on the tx-path to enable new annotations per data packet e.g.
->>> support of upcoming Transmit Power Control (TPC).
->>> Now the control.sta pointer is put on the stack where it is passed as function
->>> parameter to the .tx equivalent (ieee80211_ops) of each affected wireless
->>> driver. Therefore a new structure ieee80211_tx_control is added to mac80211.h
->>> which holds the sta structure instead.
->>>
->>> ---
->>>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  6 +++--
->>>
->>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
->>> index 9e79d47..a7be68d 100644
->>> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
->>> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
->>> @@ -264,7 +264,9 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
->>>  	}
->>>  }
->>>  
->>> -static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->>> +static void brcms_ops_tx(struct ieee80211_hw *hw,
->>> +			 struct ieee80211_tx_control *control,
->>> +			 struct sk_buff *skb)
->>
->> Fix indent here (if it is not a mailer issue).
-> Indentation looks correct to me. The + in front of the 'static' moves
-> the rest of the line one character further to the right, whereas in the
-> other lines it's compensated by the tabstop.
-> 
-> - Felix
-> 
+This patch reduces the per rate target power eeprom reads for
+AR5K_EEPROM_MODE_11A from 10 to 8, as there are only 8 valid
+power curve entries on the eeprom. The former 10 reads lead to
+wrong per rate power limits where rates above 24MBit could be
+amplified with to high distortion leading to bad performance.
+This was fix validated against the madwifi codebase and a new
+AR5K_EEPROM_N_5GHZ_RATE_CHAN 8 is defined.
 
-I see. I did not apply the patch to be sure.
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+madwifi cross validation check. Thx to Felix Fiethkau
+---
+ drivers/net/wireless/ath/ath5k/eeprom.c | 2 +-
+ drivers/net/wireless/ath/ath5k/eeprom.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-Gr. AvS
-
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index 4026c90..b7e0258 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -1482,7 +1482,7 @@ ath5k_eeprom_read_target_rate_pwr_info(struct ath5k_hw *ah, unsigned int mode)
+ 	case AR5K_EEPROM_MODE_11A:
+ 		offset += AR5K_EEPROM_TARGET_PWR_OFF_11A(ee->ee_version);
+ 		rate_pcal_info = ee->ee_rate_tpwr_a;
+-		ee->ee_rate_target_pwr_num[mode] = AR5K_EEPROM_N_5GHZ_CHAN;
++		ee->ee_rate_target_pwr_num[mode] = AR5K_EEPROM_N_5GHZ_RATE_CHAN;
+ 		break;
+ 	case AR5K_EEPROM_MODE_11B:
+ 		offset += AR5K_EEPROM_TARGET_PWR_OFF_11B(ee->ee_version);
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index dc2bcfe..94a9bbe 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -182,6 +182,7 @@
+ #define AR5K_EEPROM_EEP_DELTA		10
+ #define AR5K_EEPROM_N_MODES		3
+ #define AR5K_EEPROM_N_5GHZ_CHAN		10
++#define AR5K_EEPROM_N_5GHZ_RATE_CHAN	8
+ #define AR5K_EEPROM_N_2GHZ_CHAN		3
+ #define AR5K_EEPROM_N_2GHZ_CHAN_2413	4
+ #define	AR5K_EEPROM_N_2GHZ_CHAN_MAX	4
+-- 
+1.7.11.1
 
