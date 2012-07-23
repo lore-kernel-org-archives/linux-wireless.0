@@ -1,62 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39089 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756041Ab2GaLoE (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47317 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753813Ab2GWSEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 07:44:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 02/10] mac80211: remove almost unused local variable
-Date: Tue, 31 Jul 2012 13:43:50 +0200
-Message-Id: <1343735038-16030-3-git-send-email-johannes@sipsolutions.net> (sfid-20120731_134440_781235_4E2F4A60)
-In-Reply-To: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
-References: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 23 Jul 2012 14:04:22 -0400
+Received: by pbbrp8 with SMTP id rp8so11226960pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 11:04:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20492.53272.943747.11705@gargle.gargle.HOWL>
+References: <20492.53272.943747.11705@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 23 Jul 2012 11:04:02 -0700
+Message-ID: <CAB=NE6UneoaYZxnF20X_ac5sijx2nLcLtY_xcYfxhRQexDBesA@mail.gmail.com> (sfid-20120723_200426_949781_590940E1)
+Subject: Re: [PATCH] qca-swiss-army-knife: Add a tool to dump EEPROM
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Jul 22, 2012 at 9:16 PM, Sujith Manoharan
+<c_manoha@qca.qualcomm.com> wrote:
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-In ieee80211_beacon_get_tim() we can use the
-txrc.sband instead of a separate local variable.
+Wow, awesome, applied and pushed, thanks!
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5b81660..441572f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2300,12 +2300,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 	struct ieee80211_sub_if_data *sdata = NULL;
- 	struct ieee80211_if_ap *ap = NULL;
- 	struct beacon_data *beacon;
--	struct ieee80211_supported_band *sband;
- 	enum ieee80211_band band = local->oper_channel->band;
- 	struct ieee80211_tx_rate_control txrc;
- 
--	sband = local->hw.wiphy->bands[band];
--
- 	rcu_read_lock();
- 
- 	sdata = vif_to_sdata(vif);
-@@ -2452,12 +2449,12 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 
- 	memset(&txrc, 0, sizeof(txrc));
- 	txrc.hw = hw;
--	txrc.sband = sband;
-+	txrc.sband = local->hw.wiphy->bands[band];
- 	txrc.bss_conf = &sdata->vif.bss_conf;
- 	txrc.skb = skb;
- 	txrc.reported_rate.idx = -1;
- 	txrc.rate_idx_mask = sdata->rc_rateidx_mask[band];
--	if (txrc.rate_idx_mask == (1 << sband->n_bitrates) - 1)
-+	if (txrc.rate_idx_mask == (1 << txrc.sband->n_bitrates) - 1)
- 		txrc.max_rate_idx = -1;
- 	else
- 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
--- 
-1.7.10.4
-
+  Luis
