@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59777 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933199Ab2GKUdc (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:55322 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754750Ab2GXUHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 16:33:32 -0400
-Date: Wed, 11 Jul 2012 16:19:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-07-11
-Message-ID: <20120711201900.GE1937@tuxdriver.com> (sfid-20120711_223340_918166_2B0C1772)
-References: <20120711181721.GC1906@tuxdriver.com>
- <20120711183320.GB1937@tuxdriver.com>
- <CACna6rwN+tBu=BG0TR2udq3PH9qvPg44jJQPGc4G3jH_t2=GjQ@mail.gmail.com>
+	Tue, 24 Jul 2012 16:07:41 -0400
+Message-ID: <500F0088.6070408@net.t-labs.tu-berlin.de> (sfid-20120724_220744_194466_38810A86)
+Date: Tue, 24 Jul 2012 22:07:36 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rwN+tBu=BG0TR2udq3PH9qvPg44jJQPGc4G3jH_t2=GjQ@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: coelho@ti.com, brcm80211-dev-list@broadcom.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	ilw@linux.intel.com, ath9k-devel@lists.ath9k.org,
+	b43-dev@lists.infradead.org, chunkeey@googlemail.com,
+	dsd@gentoo.org, buytenh@wantstofly.org
+Subject: Re: [ath5k-devel] [PATCH v4] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
+References: <1343072022-1383-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120723_213356_862232_300A4FC5) <1343141251.4415.39.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1343141251.4415.39.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 09:00:50PM +0200, Rafał Miłecki wrote:
-> 2012/7/11 John W. Linville <linville@tuxdriver.com>:
-> > Ugh, forgot the signature again...
-> >
-> > On Wed, Jul 11, 2012 at 02:17:22PM -0400, John W. Linville wrote:
-> >> Rafał Miłecki (2):
-> >>       b43: N-PHY: fix RSSI calibration
-> >>       bcma: use custom printing functions
+Hi Johannes,
+
+Johannes Berg schrieb:
+
+> On Mon, 2012-07-23 at 21:33 +0200, Thomas Huehn wrote:
 > 
-> MIPS users: bcma patch breaks compilation for you (sorry!), please apply
-> bcma: fix CC driver compilation on MIPS
-> locally before it gets merged.
+>> --- a/net/mac80211/ieee80211_i.h
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -196,6 +196,8 @@ struct ieee80211_tx_data {
+>>  	struct ieee80211_channel *channel;
+>>  
+>>  	unsigned int flags;
+>> +
+>> +	struct ieee80211_tx_control control;
+> 
+> Why is this needed/useful?
 
-Ugh...
 
-Dave, I've got that patch queued-up now.  Disregard this request and
-I'll send you another one tomorrow or so.
+I used it just in tx.c to pass the control pointer as function
+parameter, but as I like your suggestion below it is gone in v5.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> 
+>>  		info->control.vif = vif;
+>> -		info->control.sta = sta;
+>> +		control->sta = sta;
+>>  
+>>  		__skb_unlink(skb, skbs);
+>> -		drv_tx(local, skb);
+>> +		drv_tx(local, control, skb);
+> 
+> You're assigning to it right before, and I don't see you using it any
+> time before, so why not just have the control struct on the stack of
+> this function?
+
+
+Good idea, v5 is coming.
+
+Greetings Thomas
+
