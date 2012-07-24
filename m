@@ -1,208 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:34400 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754963Ab2GIOya (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 10:54:30 -0400
-Received: by eeit10 with SMTP id t10so4356489eei.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 07:54:29 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [RFC] compat: Add ability to run as non-root
-Date: Mon,  9 Jul 2012 17:54:23 +0300
-Message-Id: <1341845663-24539-1-git-send-email-ozancag@gmail.com> (sfid-20120709_165443_699151_F07279E7)
+Received: from nm24-vm6.bullet.mail.ird.yahoo.com ([212.82.109.197]:46705 "HELO
+	nm24-vm6.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752616Ab2GXN4g convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jul 2012 09:56:36 -0400
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com>
+Message-ID: <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> (sfid-20120724_155640_887225_68300100)
+Date: Tue, 24 Jul 2012 14:56:33 +0100 (BST)
+From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Subject: Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the EUID of the process is not 0, assume that get-compat-kernels
-is run as a regular user and extract the downloaded *.deb files
-from debs/ into ksrcs/:
+Thanks Larry for your help.
+I tried 3.4.6 and 3.5.0 Quantal kernels but they didn't boot with my i8042 keyboard chip.
 
-ksrcs/
-â”œâ”€â”€ lib
-â”‚Â Â  â””â”€â”€ modules
-â”‚Â Â      â”œâ”€â”€ 2.6.24-020624-generic
-â”‚Â Â      â”œâ”€â”€ 2.6.25-020625-generic
-â”‚Â Â      â”œâ”€â”€ ...
-â”‚Â Â      â””â”€â”€ 3.4.4-030404-generic
-â””â”€â”€ usr
-    â””â”€â”€ src
-        â”œâ”€â”€ linux-headers-2.6.24-020624
-        â”œâ”€â”€ linux-headers-2.6.24-020624-generic
-        â”œâ”€â”€ linux-headers-2.6.25-020625
-        â”œâ”€â”€ linux-headers-2.6.25-020625-generic
-        â”œâ”€â”€ ...
-        â”œâ”€â”€ linux-headers-3.4.4-030404
-        â””â”€â”€ linux-headers-3.4.4-030404-generic
+So I have installed 3.2.23-030223 and it now starts OK.
 
-If you still want to use your kernel sources under /, run
-get-compat-kernels or ckmake with 'sudo'.
+FYI here is the new log (I ll have to investigate why the auth between the endpoint and the hotspot doesn't work)
 
-Adjust ckmake to look into ksrcs/lib/modules instead of
-/lib/modules in the EUID != 0.
+MERCI
+XabiX 
 
-Finally put ksrcs into .gitignore for not losing the source
-trees after a 'git clean'.
-
-Tested both as root and non-root, works fine.
-
-Signed-off-by: Ozan Ã‡aÄŸlayan <ozancag@gmail.com>
----
- .gitignore             |    1 +
- bin/ckmake             |    9 +++++++-
- bin/get-compat-kernels |   54 +++++++++++++++++++++++++++++++++++++-----------
- 3 files changed, 51 insertions(+), 13 deletions(-)
-
-diff --git a/.gitignore b/.gitignore
-index 1331796..d470753 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -14,3 +14,4 @@ modules.order
- modules
- *.patch
- debs/
-+ksrcs/
-diff --git a/bin/ckmake b/bin/ckmake
-index 2a0bb3d..6419249 100755
---- a/bin/ckmake
-+++ b/bin/ckmake
-@@ -34,7 +34,14 @@ RET_FILE="ret-tmp.txt"
- 
- RET=""
- 
--for i in $(find /lib/modules/ -type d -name \*generic\* | sort -n -r | grep -v -E '\-[[:alnum:]]{1,2}\-'); do
-+# Check whether we're running as root or not
-+# If not, search for kernels under ksrcs/ instead of system-wide.
-+KSRC_PREFIX=
-+if [[ "$EUID" != "0" ]]; then
-+	KSRC_PREFIX="ksrcs"
-+fi
-+
-+for i in $(find $KSRC_PREFIX/lib/modules/ -type d -name \*generic\* | sort -n -r | grep -v -E '\-[[:alnum:]]{1,2}\-'); do
- 	KLIBS="$KLIBS $i"
- done
- 
-diff --git a/bin/get-compat-kernels b/bin/get-compat-kernels
-index 6aab18c..f8bd29b 100755
---- a/bin/get-compat-kernels
-+++ b/bin/get-compat-kernels
-@@ -39,6 +39,14 @@ case $ARCH in
- 		;;
- esac
- 
-+KSRC_PREFIX=
-+# Check whether we're running as root or not
-+if [[ "$EUID" != "0" ]]; then
-+	KSRC_PREFIX="ksrcs"
-+fi
-+
-+# Create target directories if they doesn't exist
-+mkdir -p $KSRC_PREFIX/{usr/src,lib/modules}
- 
- KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624_2.6.24-020624_all.deb"
- KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624-generic_2.6.24-020624_${TARGET}.deb"
-@@ -113,7 +121,7 @@ function get_ubuntu_kernels() {
- 		PKG=$(echo $FILE | awk -F"_" '{print $1}')
- 
- 		# Do not download if installed or deb exists
--		if [[ ! -d /usr/src/$PKG && ! -f $FILE ]]; then
-+		if [[ ! -d $KSRC_PREFIX/usr/src/$PKG && ! -f $FILE ]]; then
- 			wget -c $i
- 		fi
- 	done
-@@ -123,27 +131,41 @@ function get_ubuntu_kernels() {
- 
- 	for deb in $(ls linux-*.deb); do
- 		DIR_NAME=$(echo $deb | awk -F"_" '{print $1}')
--		if [[ ! -d /usr/src/$DIR_NAME ]]; then
-+		if [[ ! -d $KSRC_PREFIX/usr/src/$DIR_NAME ]]; then
- 			echo "Extracting $deb..."
--			ar p $deb data.tar.gz | sudo tar xz --exclude=usr/share -C $TEMP_DIR
-+			ar p $deb data.tar.gz | tar xz --exclude=usr/share -C $TEMP_DIR
- 		fi
- 	done
- 
-+	cd ..
-+
- 	# Move the extracted folders into the system
- 	if [[ -d $TEMP_DIR/lib/modules ]]; then
--		sudo mv $TEMP_DIR/lib/modules/* /lib/modules
-+
-+		# Relink lib/modules/*/build/ directories relatively to make it work
-+		# for regular user based workflows
-+		if [[ -n $KSRC_PREFIX ]]; then
-+			echo "Adjusting build/ symlinks for non-root installation..."
-+
-+			for kernel in $(ls -d $TEMP_DIR/lib/modules/*generic); do
-+				unlink $kernel/build
-+				ln -s ../../../usr/src/linux-headers-`basename $kernel` $kernel/build
-+			done
-+		fi
-+
-+		mv $TEMP_DIR/lib/modules/* $KSRC_PREFIX/lib/modules
- 	fi
- 	if [[ -d $TEMP_DIR/usr/src ]]; then
- 		# Because of a bug in make < 3.82, mixed implicit and normal
- 		# rules do not cause harm. Since the bug is fixed in the new make
- 		# we have to adjust older kernel's Makefiles to fix the bug.
--		sudo sed -i 's#^/ %/:#%/:#' $TEMP_DIR/usr/src/linux-headers-2.6.2[45678]-0*/Makefile &>/dev/null
-+		sed -i 's#^/ %/:#%/:#' $TEMP_DIR/usr/src/linux-headers-2.6.2[45678]-0*/Makefile &>/dev/null
- 
--		sudo mv $TEMP_DIR/usr/src/* /usr/src
-+		mv $TEMP_DIR/usr/src/* $KSRC_PREFIX/usr/src
- 	fi
- 
- 	# Remove the temporary directory
--	sudo rm -rf $TEMP_DIR
-+	rm -rf $TEMP_DIR
- }
- 
- function usage() {
-@@ -163,19 +185,27 @@ if [[ $? -ne 0 ]]; then
- fi
- 
- NUM_KERNELS=$(for i in $KERNELS; do echo $i; done | awk -F"v" '{print $2}' | awk -F"/" '{print $1}'| sort| uniq | wc -l)
--# ~ 101 MiB for installed space on /usr/src/ and /lib/modules/
-+# ~ 101 MiB for installed space on $KSRC_PREFIX/usr/src/ and $KSRC_PREFIX/lib/modules/
- SPACE_PER_KERNEL="101"
- 
- # ~13 MiB of both deb files
- SPACE_PER_KERNEL_DEB="13"
- 
-+echo -e ""
-+
-+if [[ -n $KSRC_PREFIX ]]; then
-+	echo -e "** Running as a non-privileged user!"
-+	echo -e "** If you want to force using system-wide ${BLUE}/lib/modules${NORMAL} and ${BLUE}/usr/src${NORMAL}, you have to"
-+	echo -e "** run this script as root or using ${GREEN}sudo${NORMAL}."
-+	echo -e ""
-+fi
- echo -e "This will download ${YELLOW}${NUM_KERNELS}${NORMAL} kernel headers to allow you to"
- echo -e "cross compile any module over these kernels with ${GREEN}ckmake${NORMAL}."
- echo -e "The download payload is about ${YELLOW}~ $((${SPACE_PER_KERNEL_DEB} * ${NUM_KERNELS})) ${CYAN}MiB${NORMAL}, once uncompressed"
--echo -e "it will use ${GREEN}sudo${NORMAL} to stash kernel header files under ${BLUE}/usr/src/${NORMAL}"
--echo -e "and ${BLUE}/lib/modules/${NORMAL} and consume about ~ ${YELLOW}$((${NUM_KERNELS} * ${SPACE_PER_KERNEL})) ${RED}MiB${NORMAL} of space."
-+echo -e "it will stash kernel header files under ${BLUE}$KSRC_PREFIX/usr/src/${NORMAL}"
-+echo -e "and ${BLUE}$KSRC_PREFIX/lib/modules/${NORMAL} and consume about ~ ${YELLOW}$((${NUM_KERNELS} * ${SPACE_PER_KERNEL})) ${RED}MiB${NORMAL} of space."
- echo -e ""
--echo -e "Note: you will need ${CYAN}libc${NORMAL} > ${GREEN}2.14${NORMAL} otherwise compilation may"
-+echo -e "NOTE: you will need ${CYAN}libc${NORMAL} > ${GREEN}2.14${NORMAL} otherwise compilation may"
- echo -e "fail with Linux ${CYAN}3.4.4${NORMAL}"
- echo -e ""
- echo -e "The kernel headers used are from ${PURPLE}${UNDERLINE}Vanilla${NORMAL} kernels"
-@@ -187,7 +217,7 @@ echo -e ""
- 
- read -p "Do you still want to continue (y/N)? "
- if [[ "${REPLY}" != "y" ]]; then
--	echo -e "Bailing out !"
-+	echo -e "Bailing out!"
- 	exit 1
- fi
- 
--- 
-1.7.10.4
-
+Configuration file: /etc/hostapd/hostapd.conf
+nl80211: Register Action command failed: ret=-114 (Operation already in progress)
+nl80211: Register Action match - hexdump(len=1): 06
+nl80211: Failed to register Action frame processing - ignore for now
+nl80211: Interface wlan0 is in bridge br0
+nl80211: Add own interface ifindex 3
+nl80211: Add own interface ifindex 4
+nl80211: New interface mon.wlan0 created: ifindex=9
+nl80211: Add own interface ifindex 9
+BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
+nl80211: Added 802.11b mode based on 802.11g information
+Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=12 freq=2467 MHz max_tx_power=20 dBm
+Allowed channel: mode=1 chan=13 freq=2472 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=12 freq=2467 MHz max_tx_power=20 dBm
+Allowed channel: mode=0 chan=13 freq=2472 MHz max_tx_power=20 dBm
+RATE[0] rate=10 flags=0x1
+RATE[1] rate=20 flags=0x1
+RATE[2] rate=55 flags=0x1
+RATE[3] rate=110 flags=0x1
+RATE[4] rate=60 flags=0x0
+RATE[5] rate=90 flags=0x0
+RATE[6] rate=120 flags=0x0
+RATE[7] rate=180 flags=0x0
+RATE[8] rate=240 flags=0x0
+RATE[9] rate=360 flags=0x0
+RATE[10] rate=480 flags=0x0
+RATE[11] rate=540 flags=0x0
+Completing interface initialization
+Mode: IEEE 802.11g  Channel: 6  Frequency: 2437 MHz
+Flushing old station entries
+Deauthenticate all stations
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=0 set_tx=1 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=3 set_tx=0 seq_len=0 key_len=0
+Using interface wlan0 with hwaddr e0:91:53:6f:55:e7 and ssid 'myWIFI'
+Deriving WPA PSK based on passphrase
+SSID - hexdump_ascii(len=12):
+     53 77 65 65 74 20 48 6f 6d 65 20 32               myWIFI    
+PSK (ASCII passphrase) - hexdump_ascii(len=24): [REMOVED]
+PSK (from passphrase) - hexdump(len=32): [REMOVED]
+WPA: group state machine entering state GTK_INIT (VLAN-ID 0)
+GMK - hexdump(len=32): [REMOVED]
+GTK - hexdump(len=16): [REMOVED]
+WPA: group state machine entering state SETKEYSDONE (VLAN-ID 0)
+wpa_driver_nl80211_set_key: ifindex=4 alg=3 addr=(nil) key_idx=1 set_tx=1 seq_len=0 key_len=16
+nl80211: Set beacon (beacon_set=0)
+wlan0: Setup of interface done.
+RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+nl80211: Add ifindex 3 for bridge br0
+nl80211: Add own interface ifindex 3
+RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+nl80211: Add ifindex 3 for bridge br0
+nl80211: Add own interface ifindex 3
+RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
+RTM_NEWLINK, IFLA_IFNAME: Interface 'mon.wlan0' added
+Unknown event 5
+RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'mon.wlan0' added
+Unknown event 5
+RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+nl80211: Add ifindex 3 for bridge br0
+nl80211: Add own interface ifindex 3
+RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+nl80211: Add ifindex 3 for bridge br0
+nl80211: Add own interface ifindex 3
+RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+nl80211: Add ifindex 3 for bridge br0
+nl80211: Add own interface ifindex 3
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for broadcast SSID
+mgmt::proberesp cb
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for broadcast SSID
+mgmt::proberesp cb
+RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+Unknown event 5
+nl80211: Add ifindex 3 for bridge br0
+nl80211: Add own interface ifindex 3
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for our SSID
+mgmt::proberesp cb
+mgmt::auth
+authentication: STA=88:30:8a:52:ed:cd auth_alg=0 auth_transaction=1 status_code=0 wep=0
+  New STA
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authentication OK (open system)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-AUTHENTICATE.indication(88:30:8a:52:ed:cd, OPEN_SYSTEM)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-DELETEKEYS.request(88:30:8a:52:ed:cd)
+authentication reply: STA=88:30:8a:52:ed:cd auth_alg=0 auth_transaction=2 resp=0 (IE len=0)
+mgmt::auth cb
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authenticated
+mgmt::assoc_req
+association request: STA=88:30:8a:52:ed:cd capab_info=0x431 listen_interval=10
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+  new AID 1
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: association OK (aid 1)
+mgmt::assoc_resp cb
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: associated (aid 1)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-ASSOCIATE.indication(88:30:8a:52:ed:cd)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-DELETEKEYS.request(88:30:8a:52:ed:cd)
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=0x981cb48 key_idx=0 set_tx=1 seq_len=0 key_len=0
+   addr=88:30:8a:52:ed:cd
+wlan0: STA 88:30:8a:52:ed:cd WPA: event 1 notification
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=0x981cb48 key_idx=0 set_tx=1 seq_len=0 key_len=0
+   addr=88:30:8a:52:ed:cd
+wlan0: STA 88:30:8a:52:ed:cd WPA: start authentication
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state INITIALIZE
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=0x981cb48 key_idx=0 set_tx=1 seq_len=0 key_len=0
+   addr=88:30:8a:52:ed:cd
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.1X: unauthorizing port
+WPA: 88:30:8a:52:ed:cd WPA_PTK_GROUP entering state IDLE
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state AUTHENTICATION
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state AUTHENTICATION2
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state INITPSK
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state PTKSTART
+wlan0: STA 88:30:8a:52:ed:cd WPA: sending 1/4 msg of 4-Way Handshake
+WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8 kde_len=0 keyidx=0 encr=0)
+nl80211: Event message available
+nl80211: Ignored unknown event (cmd=19)
+IEEE 802.1X: 88:30:8a:52:ed:cd TX status - version=2 type=3 length=95 - ack=1
+wlan0: STA 88:30:8a:52:ed:cd WPA: EAPOL-Key timeout
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state PTKSTART
+wlan0: STA 88:30:8a:52:ed:cd WPA: sending 1/4 msg of 4-Way Handshake
+WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8 kde_len=0 keyidx=0 encr=0)
+IEEE 802.1X: 88:30:8a:52:ed:cd TX status - version=2 type=3 length=95 - ack=1
+wlan0: STA 88:30:8a:52:ed:cd WPA: EAPOL-Key timeout
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state PTKSTART
+wlan0: STA 88:30:8a:52:ed:cd WPA: sending 1/4 msg of 4-Way Handshake
+WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8 kde_len=0 keyidx=0 encr=0)
+IEEE 802.1X: 88:30:8a:52:ed:cd TX status - version=2 type=3 length=95 - ack=1
+wlan0: STA 88:30:8a:52:ed:cd WPA: EAPOL-Key timeout
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state PTKSTART
+wlan0: STA 88:30:8a:52:ed:cd WPA: sending 1/4 msg of 4-Way Handshake
+WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8 kde_len=0 keyidx=0 encr=0)
+IEEE 802.1X: 88:30:8a:52:ed:cd TX status - version=2 type=3 length=95 - ack=1
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for our SSID
+mgmt::proberesp cb
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for our SSID
+mgmt::proberesp cb
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for our SSID
+mgmt::proberesp cb
+wlan0: STA 88:30:8a:52:ed:cd WPA: EAPOL-Key timeout
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state PTKSTART
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state DISCONNECT
+hostapd_wpa_auth_disconnect: WPA authenticator requests disconnect: STA 88:30:8a:52:ed:cd reason 2
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state DISCONNECTED
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state INITIALIZE
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=0x981cb48 key_idx=0 set_tx=1 seq_len=0 key_len=0
+   addr=88:30:8a:52:ed:cd
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.1X: unauthorizing port
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: deauthenticated due to local deauth request
+nl80211: Event message available
+nl80211: Ignored unknown event (cmd=20)
+Data/PS-poll frame from not associated STA 88:30:8a:52:ed:cd
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for broadcast SSID
+mgmt::proberesp cb
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for broadcast SSID
+mgmt::proberesp cb
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for broadcast SSID
+mgmt::proberesp cb
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for broadcast SSID
+mgmt::proberesp cb
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+STA 88:30:8a:52:ed:cd sent probe request for our SSID
+mgmt::proberesp cb
+mgmt::auth
+authentication: STA=88:30:8a:52:ed:cd auth_alg=0 auth_transaction=1 status_code=0 wep=0
+  New STA
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authentication OK (open system)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-AUTHENTICATE.indication(88:30:8a:52:ed:cd, OPEN_SYSTEM)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-DELETEKEYS.request(88:30:8a:52:ed:cd)
+authentication reply: STA=88:30:8a:52:ed:cd auth_alg=0 auth_transaction=2 resp=0 (IE len=0)
+mgmt::auth cb
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: authenticated
+mgmt::assoc_req
+association request: STA=88:30:8a:52:ed:cd capab_info=0x431 listen_interval=10
+unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+  new AID 1
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: association OK (aid 1)
+mgmt::assoc_resp cb
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: associated (aid 1)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-ASSOCIATE.indication(88:30:8a:52:ed:cd)
+wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-DELETEKEYS.request(88:30:8a:52:ed:cd)
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=0x981cb48 key_idx=0 set_tx=1 seq_len=0 key_len=0
+   addr=88:30:8a:52:ed:cd
+wlan0: STA 88:30:8a:52:ed:cd WPA: event 1 notification
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=0x981cb48 key_idx=0 set_tx=1 seq_len=0 key_len=0
+   addr=88:30:8a:52:ed:cd
+wlan0: STA 88:30:8a:52:ed:cd WPA: start authentication
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state INITIALIZE
+wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=0x981cb48 key_idx=0 set_tx=1 seq_len=0 key_len=0
+   addr=88:30:8a:52:ed:cd
+wlan0: STA 88:30:8a:52:ed:cd IEEE 802.1X: unauthorizing port
+WPA: 88:30:8a:52:ed:cd WPA_PTK_GROUP entering state IDLE
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state AUTHENTICATION
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state AUTHENTICATION2
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state INITPSK
+WPA: 88:30:8a:52:ed:cd WPA_PTK entering state PTKSTART
+wlan0: STA 88:30:8a:52:ed:cd WPA: sending 1/4 msg of 4-Way Handshake
+WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8 kde_len=0 keyidx=0 encr=0)
