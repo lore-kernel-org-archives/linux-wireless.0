@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35102 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753327Ab2GWNaQ (ORCPT
+Received: from hotel311.server4you.de ([85.25.146.15]:40531 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566Ab2GXJVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 09:30:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC/RFT 3/6] mac80211: use oper_channel in managed mlme
-Date: Mon, 23 Jul 2012 15:30:08 +0200
-Message-Id: <1343050211-499-4-git-send-email-johannes@sipsolutions.net> (sfid-20120723_153032_817367_18DC3D50)
-In-Reply-To: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
-References: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 24 Jul 2012 05:21:04 -0400
+Message-ID: <500E68FD.60104@monom.org> (sfid-20120724_112111_168772_6F298826)
+Date: Tue, 24 Jul 2012 11:21:01 +0200
+From: Daniel Wagner <wagi@monom.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
+Subject: Re: 2nd CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
+ 2012 (Barcelona!)
+References: <20120322192406.GB2432@tuxdriver.com> <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com> <1332774906.1870.98.camel@aeonflux> <20120326152541.GH13806@tuxdriver.com> <20120427174439.GC16207@tuxdriver.com> <20120723192057.GE18589@tuxdriver.com>
+In-Reply-To: <20120723192057.GE18589@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi John,
 
-Using hw.conf.channel is wrong as it could be the
-temporary channel if any function like the beacon
-get function is called while scanning or during
-other temporary out-of-channel activities.
+On 23.07.2012 21:20, John W. Linville wrote:
+> On Fri, Apr 27, 2012 at 01:44:39PM -0400, John W. Linville wrote:
+>
+>> Just to keep the ball rolling...
+>>
+>> Angela has reserved space for us at the Hotel Fira
+>> Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
+>> Please note that this will overlap Yocto Dev Days, oVirt Summit and
+>> KVM Forum at the same venue.
+>>
+>> Now, we need some talk proposals!  Please post in this thread (or
+>> contact me or Marcel directly if necessary) to propose talks.  I would
+>> love to see any topics on any relevant technologies, as well as topics
+>> about how the projects are being managed, new sub-projects, etc.
+>> It seems like a long time away right now, but it is a good time to
+>> start thinking... :-)
+>
+> Still a while to go, but this event is getting closer.  I would love to
+> see some more concrete topic proposals for talks, both presentations
+> and discussions.
+>
+> Here is what I've seen so far:
+>
+> Speaker				Topic
+> -------				-----
+> Joao Paulo Rechi Vita		status and roadmap of Bluetooth LE
+> Andrei Emeltchenko		Virtual Bluetooth AMP Controller for mac80211
+> Alexander Smirnov		802.15.4 stack, 6lowpan
+>
+> Not bad, but I'd like to see some more!  Some ideas:
+>
+> 	-- "state of the union" for bluetooth, nfc, 802.11
+> 	-- wireless mesh networking status updates
+> 	-- cfg80211/mac80211 feature previews (what's coming?)
+> 	-- standards bodies reports (802.11, 802.15.x)
+> 	-- important or unusual use cases (e.g. Freifunk, Internet of Things)
+> 	-- userland wireless management apps (NetworkManager, connman)
 
-Use oper_channel instead.
+I could give a short overview what we do in ConnMan.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index af1c5c3..81d7b86 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -185,15 +185,15 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
- 	u16 ht_opmode;
- 	bool disable_40 = false;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[local->oper_channel->band];
- 
- 	switch (sdata->vif.bss_conf.channel_type) {
- 	case NL80211_CHAN_HT40PLUS:
--		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
-+		if (local->oper_channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
- 			disable_40 = true;
- 		break;
- 	case NL80211_CHAN_HT40MINUS:
--		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
-+		if (local->oper_channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
- 			disable_40 = true;
- 		break;
- 	default:
-@@ -1242,7 +1242,7 @@ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
--	if (sdata->local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
-+	if (sdata->local->oper_channel->band == IEEE80211_BAND_5GHZ)
- 		use_short_slot = true;
- 
- 	if (use_protection != bss_conf->use_cts_prot) {
-@@ -2330,7 +2330,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (baselen > len)
- 		return;
- 
--	if (rx_status->freq != local->hw.conf.channel->center_freq)
-+	if (rx_status->freq != local->oper_channel->center_freq)
- 		return;
- 
- 	if (ifmgd->assoc_data && !ifmgd->assoc_data->have_beacon &&
-@@ -2494,7 +2494,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N)) {
- 		struct ieee80211_supported_band *sband;
- 
--		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+		sband = local->hw.wiphy->bands[local->oper_channel->band];
- 
- 		changed |= ieee80211_config_ht_tx(sdata, elems.ht_operation,
- 						  bssid, true);
--- 
-1.7.10.4
-
+cheers,
+daniel
