@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61332 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460Ab2GBGc5 (ORCPT
+Received: from rcdn-iport-8.cisco.com ([173.37.86.79]:45303 "EHLO
+	rcdn-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754238Ab2GXTCM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 02:32:57 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 60g v2 2/5] wireless: rate check logic for 60g
-Date: Mon, 2 Jul 2012 09:32:33 +0300
-Message-ID: <1341210756-11054-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120702_083300_139436_F1DC44E4)
-In-Reply-To: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 24 Jul 2012 15:02:12 -0400
+Received: from xhc-rcd-x05.cisco.com (xhc-rcd-x05.cisco.com [173.37.183.79])
+	by rcdn-core-3.cisco.com (8.14.5/8.14.5) with ESMTP id q6OIqbfE030003
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 18:52:37 GMT
+From: "Balaji Ravindran (balravin)" <balravin@cisco.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Help requested troubleshooting compilation of rt3573 driver for
+ cisco ae3000
+Date: Tue, 24 Jul 2012 18:52:36 +0000
+Message-ID: <781BD600E733884C96CCDD5DF04A71C1023B3B@xmb-rcd-x14.cisco.com> (sfid-20120724_210216_181237_BA445F60)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the 60g band, there is no 'basic rates'. Only MCS used.
-Instead of mandatory basic rates, standard requires support for
-mandatory MCS 1..4
+Hi,
 
-Modify logic to comply with 60g requirements
+I request help to make my cisco AE3000 wireless usb work with my Ubuntu 12.04 64 bit server OS. I tried the following, and everything was in vain. So please pass me on some pointers.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+ 1.      Started off with ndiswrapper.
+
+	a.      Looked for Windows XP driver from CD packaging and tried load it with ndiswrapper 1.57, but it is not working because, cisco does not provide a 64 bit windows xp driver, so ndiswrapper complains saying 64 bit kernel detected.
+
+	b.      I did give a shot with using 64bit windows vista and windows 7 drivers included in the CD package even though I knew ndiswrapper will not support vista or win 7 drivers.
+
+2.      RT drivers are opensource (yay!) so identified the hardware Id for the product it was (13b1:003b) comes with rt3573 chipset (I confirm that). So I downloaded the latest RT3573 chipset driver from their RALINK website, and still no use.
+I successfully built and installed the rt3573sta.ko under /lib/modules/(shell $(uname -r))..... and was successfully able to modprobe the module. But still I did not see the device's model was recognized as a WiFi device. 
+Output of 'lsusb' still showed up 'Linksys'
+
+ 3.      Step further, under /common/rtusb_dev_id.c I waslooking for the USB device id, and I could'nt find a match for 13b1:003b., so created a new device id, and rebuilt the driver
+
+	a.      Make clean, make uninstall, make install.
+	b.      Driver built successfully, still did not detect the device
+
+4.      In vain tried the default included rt2800usb module., and did
+	a.      sudo depmod -a
+	b.      sudo modprobe -v rt2800usb
+	c.      Module loaded successfully, and still in vain, driver not detected.
+
+Any help here would be much appreciated? Anything I missed out or I could try., please help.
+
+Thanks
+
+ 
+Balaji R
+
 ---
- net/wireless/core.c |   10 ++++++++--
- net/wireless/util.c |    5 +++++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+Thanks 'n' Regards
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 907f62c..029db45 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -458,8 +458,14 @@ int wiphy_register(struct wiphy *wiphy)
- 			continue;
- 
- 		sband->band = band;
--
--		if (WARN_ON(!sband->n_channels || !sband->n_bitrates))
-+		if (WARN_ON(!sband->n_channels))
-+			return -EINVAL;
-+		/*
-+		 * on 60gHz band, there are no legacy rates, so
-+		 * n_bitrates is 0
-+		 */
-+		if (WARN_ON(band != IEEE80211_BAND_60GHZ &&
-+			    !sband->n_bitrates))
- 			return -EINVAL;
- 
- 		/*
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f3ce35b..11188c6 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -151,6 +151,11 @@ static void set_mandatory_flags_band(struct ieee80211_supported_band *sband,
- 		}
- 		WARN_ON(want != 0 && want != 3 && want != 6);
- 		break;
-+	case IEEE80211_BAND_60GHZ:
-+		/* check for mandatory HT MCS 1..4 */
-+		WARN_ON(!sband->ht_cap.ht_supported);
-+		WARN_ON((sband->ht_cap.mcs.rx_mask[0] & 0x1e) != 0x1e);
-+		break;
- 	case IEEE80211_NUM_BANDS:
- 		WARN_ON(1);
- 		break;
--- 
-1.7.9.5
+Balaji R
 
