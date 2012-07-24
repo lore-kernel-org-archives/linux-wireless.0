@@ -1,315 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49711 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756554Ab2GKR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 13:59:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 10/12] ath9k_hw: clean up AR9003 EEPROM code
-Date: Wed, 11 Jul 2012 19:59:13 +0200
-Message-Id: <1342029555-31618-10-git-send-email-nbd@openwrt.org> (sfid-20120711_195946_608508_8006AC04)
-In-Reply-To: <1342029555-31618-9-git-send-email-nbd@openwrt.org>
-References: <1342029555-31618-1-git-send-email-nbd@openwrt.org>
- <1342029555-31618-2-git-send-email-nbd@openwrt.org>
- <1342029555-31618-3-git-send-email-nbd@openwrt.org>
- <1342029555-31618-4-git-send-email-nbd@openwrt.org>
- <1342029555-31618-5-git-send-email-nbd@openwrt.org>
- <1342029555-31618-6-git-send-email-nbd@openwrt.org>
- <1342029555-31618-7-git-send-email-nbd@openwrt.org>
- <1342029555-31618-8-git-send-email-nbd@openwrt.org>
- <1342029555-31618-9-git-send-email-nbd@openwrt.org>
+Received: from mailgw01.mediatek.com ([210.61.82.183]:42037 "EHLO
+	mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755084Ab2GXHbU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jul 2012 03:31:20 -0400
+From: =?big5?B?S2V2aW4gQ2hvdSAoqVCueKxSKQ==?= <kevin.chou@mediatek.com>
+To: Matt Chen <machen@suse.com>,
+	=?big5?B?V29vZHkgSHVuZyAorHis7qbLKQ==?= <woody.hung@mediatek.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Date: Tue, 24 Jul 2012 15:21:38 +0800
+Subject: RE: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
+Message-ID: <BF9D4B6C356E124DB592D36F28999C61097AD75BF8@MTKMBS03.mediatek.inc> (sfid-20120724_093124_909108_EF148A49)
+References: <1342667903-27314-1-git-send-email-machen@suse.com>
+	<20120719145430.GA4231@redhat.com>
+	<CALx5=V8Sz_CiqQvX-N1hscmpYa7GTO2YfukS8BJc1YChLFmd5Q@mail.gmail.com>
+	<20120723112359.GA2567@redhat.com>
+ <CALx5=V_SgL0jU9gzWsQTTzuLwGCA7DoiRUH8hxGP2iTKiRdVag@mail.gmail.com>
+In-Reply-To: <CALx5=V_SgL0jU9gzWsQTTzuLwGCA7DoiRUH8hxGP2iTKiRdVag@mail.gmail.com>
+Content-Type: text/plain; charset="big5"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- add an inline function for getting the correct modal EEPROM struct
-- remove unnecessary indirection through ath9k_hw_ar9300_get_eeprom
-  access the relevant fields directly
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  116 +++++++-----------------
- drivers/net/wireless/ath/ath9k/eeprom.h        |    4 -
- 2 files changed, 35 insertions(+), 85 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 86e4be4..4d90265 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -2971,14 +2971,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 		return (pBase->txrxMask >> 4) & 0xf;
- 	case EEP_RX_MASK:
- 		return pBase->txrxMask & 0xf;
--	case EEP_DRIVE_STRENGTH:
--#define AR9300_EEP_BASE_DRIV_STRENGTH	0x1
--		return pBase->miscConfiguration & AR9300_EEP_BASE_DRIV_STRENGTH;
--	case EEP_INTERNAL_REGULATOR:
--		/* Bit 4 is internal regulator flag */
--		return (pBase->featureEnable & 0x10) >> 4;
--	case EEP_SWREG:
--		return le32_to_cpu(pBase->swreg);
- 	case EEP_PAPRD:
- 		return !!(pBase->featureEnable & BIT(5));
- 	case EEP_CHAIN_MASK_REDUCE:
-@@ -2989,8 +2981,6 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 		return eep->modalHeader5G.antennaGain;
- 	case EEP_ANTENNA_GAIN_2G:
- 		return eep->modalHeader2G.antennaGain;
--	case EEP_QUICK_DROP:
--		return pBase->miscConfiguration & BIT(1);
- 	default:
- 		return 0;
- 	}
-@@ -3503,19 +3493,20 @@ static int ath9k_hw_ar9300_get_eeprom_rev(struct ath_hw *ah)
- 	return 0;
- }
- 
--static s32 ar9003_hw_xpa_bias_level_get(struct ath_hw *ah, bool is2ghz)
-+static struct ar9300_modal_eep_header *ar9003_modal_header(struct ath_hw *ah,
-+							   bool is2ghz)
- {
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 
- 	if (is2ghz)
--		return eep->modalHeader2G.xpaBiasLvl;
-+		return &eep->modalHeader2G;
- 	else
--		return eep->modalHeader5G.xpaBiasLvl;
-+		return &eep->modalHeader5G;
- }
- 
- static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- {
--	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
-+	int bias = ar9003_modal_header(ah, is2ghz)->xpaBiasLvl;
- 
- 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
-@@ -3531,57 +3522,26 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- 	}
- }
- 
--static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is_2ghz)
-+static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is2ghz)
- {
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--	__le16 val;
--
--	if (is_2ghz)
--		val = eep->modalHeader2G.switchcomspdt;
--	else
--		val = eep->modalHeader5G.switchcomspdt;
--	return le16_to_cpu(val);
-+	return le16_to_cpu(ar9003_modal_header(ah, is2ghz)->switchcomspdt);
- }
- 
- 
- static u32 ar9003_hw_ant_ctrl_common_get(struct ath_hw *ah, bool is2ghz)
- {
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--	__le32 val;
--
--	if (is2ghz)
--		val = eep->modalHeader2G.antCtrlCommon;
--	else
--		val = eep->modalHeader5G.antCtrlCommon;
--	return le32_to_cpu(val);
-+	return le32_to_cpu(ar9003_modal_header(ah, is2ghz)->antCtrlCommon);
- }
- 
- static u32 ar9003_hw_ant_ctrl_common_2_get(struct ath_hw *ah, bool is2ghz)
- {
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--	__le32 val;
--
--	if (is2ghz)
--		val = eep->modalHeader2G.antCtrlCommon2;
--	else
--		val = eep->modalHeader5G.antCtrlCommon2;
--	return le32_to_cpu(val);
-+	return le32_to_cpu(ar9003_modal_header(ah, is2ghz)->antCtrlCommon2);
- }
- 
--static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah,
--					int chain,
-+static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah, int chain,
- 					bool is2ghz)
- {
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--	__le16 val = 0;
--
--	if (chain >= 0 && chain < AR9300_MAX_CHAINS) {
--		if (is2ghz)
--			val = eep->modalHeader2G.antCtrlChain[chain];
--		else
--			val = eep->modalHeader5G.antCtrlChain[chain];
--	}
--
-+	__le16 val = ar9003_modal_header(ah, is2ghz)->antCtrlChain[chain];
- 	return le16_to_cpu(val);
- }
- 
-@@ -3691,11 +3651,12 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 
- static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
- {
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
- 	int drive_strength;
- 	unsigned long reg;
- 
--	drive_strength = ath9k_hw_ar9300_get_eeprom(ah, EEP_DRIVE_STRENGTH);
--
-+	drive_strength = pBase->miscConfiguration & BIT(0);
- 	if (!drive_strength)
- 		return;
- 
-@@ -3825,11 +3786,11 @@ static bool is_pmu_set(struct ath_hw *ah, u32 pmu_reg, int pmu_set)
- 
- void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- {
--	int internal_regulator =
--		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
- 	u32 reg_val;
- 
--	if (internal_regulator) {
-+	if (pBase->featureEnable & BIT(4)) {
- 		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
- 			int reg_pmu_set;
- 
-@@ -3873,11 +3834,11 @@ void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
- 				return;
- 		} else if (AR_SREV_9462(ah)) {
--			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
-+			reg_val = le32_to_cpu(pBase->swreg);
- 			REG_WRITE(ah, AR_PHY_PMU1, reg_val);
- 		} else {
- 			/* Internal regulator is ON. Write swreg register. */
--			reg_val = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
-+			reg_val = le32_to_cpu(pBase->swreg);
- 			REG_WRITE(ah, AR_RTC_REG_CONTROL1,
- 				  REG_READ(ah, AR_RTC_REG_CONTROL1) &
- 				  (~AR_RTC_REG_CONTROL1_SWREG_PROGRAM));
-@@ -3931,10 +3892,11 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
- static void ar9003_hw_quick_drop_apply(struct ath_hw *ah, u16 freq)
- {
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--	int quick_drop = ath9k_hw_ar9300_get_eeprom(ah, EEP_QUICK_DROP);
-+	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
-+	int quick_drop;
- 	s32 t[3], f[3] = {5180, 5500, 5785};
- 
--	if (!quick_drop)
-+	if (!(pBase->miscConfiguration & BIT(1)))
- 		return;
- 
- 	if (freq < 4000)
-@@ -3948,13 +3910,11 @@ static void ar9003_hw_quick_drop_apply(struct ath_hw *ah, u16 freq)
- 	REG_RMW_FIELD(ah, AR_PHY_AGC, AR_PHY_AGC_QUICK_DROP, quick_drop);
- }
- 
--static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
-+static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, bool is2ghz)
- {
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	u32 value;
- 
--	value = (freq < 4000) ? eep->modalHeader2G.txEndToXpaOff :
--				eep->modalHeader5G.txEndToXpaOff;
-+	value = ar9003_modal_header(ah, is2ghz)->txEndToXpaOff;
- 
- 	REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
- 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAB_OFF, value);
-@@ -3962,7 +3922,7 @@ static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
- 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAA_OFF, value);
- }
- 
--static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
-+static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is2ghz)
- {
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	u8 xpa_ctl;
-@@ -3973,23 +3933,22 @@ static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
- 	if (!AR_SREV_9300(ah) && !AR_SREV_9340(ah) && !AR_SREV_9580(ah))
- 		return;
- 
--	if (is_2ghz) {
--		xpa_ctl = eep->modalHeader2G.txFrameToXpaOn;
-+	xpa_ctl = ar9003_modal_header(ah, is2ghz)->txFrameToXpaOn;
-+	if (is2ghz)
- 		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
- 			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAB_ON, xpa_ctl);
--	} else {
--		xpa_ctl = eep->modalHeader5G.txFrameToXpaOn;
-+	else
- 		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
- 			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAA_ON, xpa_ctl);
--	}
- }
- 
- static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 					     struct ath9k_channel *chan)
- {
--	ar9003_hw_xpa_timing_control_apply(ah, IS_CHAN_2GHZ(chan));
--	ar9003_hw_xpa_bias_level_apply(ah, IS_CHAN_2GHZ(chan));
--	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
-+	bool is2ghz = IS_CHAN_2GHZ(chan);
-+	ar9003_hw_xpa_timing_control_apply(ah, is2ghz);
-+	ar9003_hw_xpa_bias_level_apply(ah, is2ghz);
-+	ar9003_hw_ant_ctrl_apply(ah, is2ghz);
- 	ar9003_hw_drive_strength_apply(ah);
- 	ar9003_hw_atten_apply(ah, chan);
- 	ar9003_hw_quick_drop_apply(ah, chan->channel);
-@@ -3997,7 +3956,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 		ar9003_hw_internal_regulator_apply(ah);
- 	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
- 		ar9003_hw_apply_tuning_caps(ah);
--	ar9003_hw_txend_to_xpa_off_apply(ah, chan->channel);
-+	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
- }
- 
- static void ath9k_hw_ar9300_set_addac(struct ath_hw *ah,
-@@ -5133,14 +5092,9 @@ s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah)
- 	return (eep->baseEepHeader.txrxgain) & 0xf; /* bits 3:0 */
- }
- 
--u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz)
-+u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is2ghz)
- {
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--
--	if (is_2ghz)
--		return eep->modalHeader2G.spurChans;
--	else
--		return eep->modalHeader5G.spurChans;
-+	return ar9003_modal_header(ah, is2ghz)->spurChans;
- }
- 
- unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 33acb92..484b313 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -241,16 +241,12 @@ enum eeprom_param {
- 	EEP_TEMPSENSE_SLOPE,
- 	EEP_TEMPSENSE_SLOPE_PAL_ON,
- 	EEP_PWR_TABLE_OFFSET,
--	EEP_DRIVE_STRENGTH,
--	EEP_INTERNAL_REGULATOR,
--	EEP_SWREG,
- 	EEP_PAPRD,
- 	EEP_MODAL_VER,
- 	EEP_ANT_DIV_CTL1,
- 	EEP_CHAIN_MASK_REDUCE,
- 	EEP_ANTENNA_GAIN_2G,
- 	EEP_ANTENNA_GAIN_5G,
--	EEP_QUICK_DROP
- };
- 
- enum ar5416_rates {
--- 
-1.7.3.2
+RGVhciBXb29keSwNCg0KQ291bGQgeW91IGhlbHAgdG8gYW5zd2VyIFN0YW5pc2xhdydzIHF1ZXN0
+aW9ucz8NClRoYW5rIHlvdS4NCg0KQmVzdCBXaXNoZXMNCg0KS2V2aW4gQ2hvdQ0KTWVkaWFUZWsg
+SW5jLg0KVEVMOiA4ODYtMy01NjAwODY4IGV4dDozMTU1NQ0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
+Z2UtLS0tLQ0KRnJvbTogTWF0dCBDaGVuIFttYWlsdG86bWFjaGVuQHN1c2UuY29tXSANClNlbnQ6
+IFR1ZXNkYXksIEp1bHkgMjQsIDIwMTIgMjoyNSBQTQ0KVG86IEtldmluIENob3UgKKlQrnisUikN
+CkNjOiBTdGFuaXNsYXcgR3J1c3prYTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyB1
+c2Vyc0BydDJ4MDAuc2VyaWFsbW9ua2V5LmNvbQ0KU3ViamVjdDogUmU6IFtydDJ4MDAtdXNlcnNd
+IFtQQVRDSF0gcnQyeDAwIDogZml4IHJ0MzI5MCByZXN1bWluZyBmYWlsZWQuDQoNCkhpIEtldmlu
+LA0KDQoyMDEyLzcvMjMgU3RhbmlzbGF3IEdydXN6a2EgPHNncnVzemthQHJlZGhhdC5jb20+Og0K
+PiBIaQ0KPg0KPiBPbiBNb24sIEp1bCAyMywgMjAxMiBhdCAwMzowMTowOFBNICswODAwLCBNYXR0
+IENoZW4gd3JvdGU6DQo+PiA+PiArDQo+PiA+PiArICAgICAgICAgICAgICAgICAgICAgcnQyODAw
+X3JlZ2lzdGVyX3dyaXRlKHJ0MngwMGRldiwgMHg1OCwgMHgwMTgpOw0KPj4gPj4gKyAgICAgICAg
+ICAgICAgICAgICAgIHVkZWxheShSRUdJU1RFUl9CVVNZX0RFTEFZKTsNCj4+ID4+ICsgICAgICAg
+ICAgICAgICAgICAgICBydDI4MDBfcmVnaXN0ZXJfd3JpdGUocnQyeDAwZGV2LCAweDU4LCAweDQx
+OCk7DQo+PiA+PiArICAgICAgICAgICAgICAgICAgICAgdWRlbGF5KFJFR0lTVEVSX0JVU1lfREVM
+QVkpOw0KPj4gPj4gKyAgICAgICAgICAgICAgICAgICAgIHJ0MjgwMF9yZWdpc3Rlcl93cml0ZShy
+dDJ4MDBkZXYsIDB4NTgsIA0KPj4gPj4gKyAweDYxOCk7DQo+PiA+IFdlIHJlYWxseSBsaWtlIHRv
+IGtub3cgd2hhdCB0aG9zZSBibGFjayBtYWdpYyBudW1iZXJzIG1lYW4uDQo+PiBJIGhhdmUgbm8g
+aWRlYSwgUmFsaW5rIGdhdmUgaXQgdG8gbWUgZm9yIHRoZSBmaXhpbmcuDQpUaGlzIHVwcGVyIG1l
+YW5uaW5nIG9mIHJlZ2lzdGVyIHZhbHVlIHBhcnQgd291bGQgbmVlZCB5b3VyIGhlbHAgZm9yIGV4
+cGxhbmF0aW9uLg0KPiBTbyBwZXJoYXBzIHBhdGNoIHNob3VsZCBiZSBwb3N0ZWQgYnkgUmFsaW5r
+IGRldmVsb3Blciwgd2hvIGNhbiBmaXggDQo+IHRoYXQgYWNjb3JkaW5nbHk/DQo+DQo+IEFsc28g
+aXQncyBjbGVhciBub3cgdGhhdCB5b3UgYXJlIG5vdCB0aGUgYXV0aG9yIG9mIHRoZSBwYXRjaC4g
+V291bGQgYmUgDQo+IGdvb2QgdG8gaW5kaWNhdGUgdHJ1ZSBhdXRob3Igb2YgdGhlIHBhdGNoIGJ5
+IGFkZGluZyAiRnJvbToiIGFuZCANCj4gIlNpZ25lZC1vZmYtYnk6IiBsaW5lcy4NCj4NCj4gVGhh
+bmtzDQo+IFN0YW5pc2xhdw0KPg0KPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXw0KPiB1c2VycyBtYWlsaW5nIGxpc3QNCj4gdXNlcnNAcnQyeDAwLnNlcmlh
+bG1vbmtleS5jb20NCj4gaHR0cDovL3J0MngwMC5zZXJpYWxtb25rZXkuY29tL21haWxtYW4vbGlz
+dGluZm8vdXNlcnNfcnQyeDAwLnNlcmlhbG1vbg0KPiBrZXkuY29tDQo+DQoNCg0KDQotLQ0KVGhh
+bmsgeW91Lg0KCioqKioqKioqKioqKiogRW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAqKioq
+KioqKioqKioqKioqKioqKg0KVGhlIGluZm9ybWF0aW9uIGNvbnRhaW5lZCBpbiB0aGlzIGUtbWFp
+bCBtZXNzYWdlIChpbmNsdWRpbmcgYW55IA0KYXR0YWNobWVudHMpIG1heSBiZSBjb25maWRlbnRp
+YWwsIHByb3ByaWV0YXJ5LCBwcml2aWxlZ2VkLCBvciBvdGhlcndpc2UNCmV4ZW1wdCBmcm9tIGRp
+c2Nsb3N1cmUgdW5kZXIgYXBwbGljYWJsZSBsYXdzLiBJdCBpcyBpbnRlbmRlZCB0byBiZSANCmNv
+bnZleWVkIG9ubHkgdG8gdGhlIGRlc2lnbmF0ZWQgcmVjaXBpZW50KHMpLiBBbnkgdXNlLCBkaXNz
+ZW1pbmF0aW9uLCANCmRpc3RyaWJ1dGlvbiwgcHJpbnRpbmcsIHJldGFpbmluZyBvciBjb3B5aW5n
+IG9mIHRoaXMgZS1tYWlsIChpbmNsdWRpbmcgaXRzIA0KYXR0YWNobWVudHMpIGJ5IHVuaW50ZW5k
+ZWQgcmVjaXBpZW50KHMpIGlzIHN0cmljdGx5IHByb2hpYml0ZWQgYW5kIG1heSANCmJlIHVubGF3
+ZnVsLiBJZiB5b3UgYXJlIG5vdCBhbiBpbnRlbmRlZCByZWNpcGllbnQgb2YgdGhpcyBlLW1haWws
+IG9yIGJlbGlldmUgDQp0aGF0IHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgZS1tYWlsIGluIGVycm9y
+LCBwbGVhc2Ugbm90aWZ5IHRoZSBzZW5kZXIgDQppbW1lZGlhdGVseSAoYnkgcmVwbHlpbmcgdG8g
+dGhpcyBlLW1haWwpLCBkZWxldGUgYW55IGFuZCBhbGwgY29waWVzIG9mIA0KdGhpcyBlLW1haWwg
+KGluY2x1ZGluZyBhbnkgYXR0YWNobWVudHMpIGZyb20geW91ciBzeXN0ZW0sIGFuZCBkbyBub3QN
+CmRpc2Nsb3NlIHRoZSBjb250ZW50IG9mIHRoaXMgZS1tYWlsIHRvIGFueSBvdGhlciBwZXJzb24u
+IFRoYW5rIHlvdSE=
 
