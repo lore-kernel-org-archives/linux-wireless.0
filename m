@@ -1,67 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:56712 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752440Ab2GRMNu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:13:50 -0400
-Received: by lbom4 with SMTP id m4so2661484lbo.30
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:47 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 02/14] wlcore: don't re-configure wakeup conditions if not needed
-Date: Wed, 18 Jul 2012 15:13:21 +0300
-Message-Id: <1342613613-917-3-git-send-email-coelho@ti.com> (sfid-20120718_141358_489566_45439A46)
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+Received: from hub022-nj-1.exch022.serverdata.net ([206.225.164.184]:56240
+	"EHLO HUB022-nj-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753125Ab2GXDdM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 23:33:12 -0400
+From: Mahesh Palivela <maheshp@posedge.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: [PATCH v2] mac80211: VHT (11ac) Association
+Date: Tue, 24 Jul 2012 03:33:10 +0000
+Message-ID: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local> (sfid-20120724_053348_773444_67619F90)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+VHT (11ac) Association related change version 2. Incorporated Johannes review comments.
 
-suspend and resume callbacks configure wakeup conditions to the FW
-which may be different between suspend and resume.
-This feature is currently not utilized as both in suspend and resume
-FW wakeup every 1 DTIM. Avoid waking up the chip and doing the FW command
-unless there's an actual difference in the wakeup conditions.
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ti/wlcore/main.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   40 ++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 39 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 9f04b64..d486eea 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1585,6 +1585,12 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
- 	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
- 		goto out;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bb61f77..3e2f03b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -359,6 +359,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_NULLFUNC_ACKED	= BIT(8),
+ 	IEEE80211_STA_RESET_SIGNAL_AVE	= BIT(9),
+ 	IEEE80211_STA_DISABLE_40MHZ	= BIT(10),
++	IEEE80211_STA_DISABLE_VHT	= BIT(11),
+ };
  
-+	if ((wl->conf.conn.suspend_wake_up_event ==
-+	     wl->conf.conn.wake_up_event) &&
-+	    (wl->conf.conn.suspend_listen_interval ==
-+	     wl->conf.conn.listen_interval))
-+		goto out;
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		goto out;
-@@ -1648,6 +1654,13 @@ static void wl1271_configure_resume(struct wl1271 *wl,
- 	if ((!is_ap) && (!is_sta))
- 		return;
+ struct ieee80211_mgd_auth_data {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7c0613c..3d76c42 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -326,6 +326,26 @@ static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_ie_build_ht_cap(pos, &ht_cap, cap);
+ }
  
-+	if (is_sta &&
-+	    ((wl->conf.conn.suspend_wake_up_event ==
-+	      wl->conf.conn.wake_up_event) &&
-+	     (wl->conf.conn.suspend_listen_interval ==
-+	      wl->conf.conn.listen_interval)))
-+		return;
++static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
++				 struct sk_buff *skb,
++				 struct ieee80211_supported_band *sband)
++{
++	u8 *pos;
++	u32 cap;
++	struct ieee80211_sta_vht_cap vht_cap;
 +
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		return;
--- 
-1.7.10.4
-
++	BUILD_BUG_ON(sizeof(vht_cap) != sizeof(sband->vht_cap));
++
++	memcpy(&vht_cap, &sband->vht_cap, sizeof(vht_cap));
++
++	/* determine capability flags */
++	cap = vht_cap.cap;
++
++	/* reserve and fill IE */
++	pos = skb_put(skb, sizeof(struct ieee80211_vht_capabilities) + 2);
++	ieee80211_ie_build_vht_cap(pos, &vht_cap, cap);
++}
++
+ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+@@ -371,6 +391,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 			4 + /* power capability */
+ 			2 + 2 * sband->n_channels + /* supported channels */
+ 			2 + sizeof(struct ieee80211_ht_cap) + /* HT */
++			2 + sizeof(struct ieee80211_vht_capabilities) + /* VHT */
+ 			assoc_data->ie_len + /* extra IEs */
+ 			9, /* WMM */
+ 			GFP_KERNEL);
+@@ -503,6 +524,9 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_add_ht_ie(sdata, skb, assoc_data->ap_ht_param,
+ 				    sband, local->oper_channel, ifmgd->ap_smps);
+ 
++	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
++		ieee80211_add_vht_ie(sdata, skb, sband);
++
+ 	/* if present, add any custom non-vendor IEs that go after HT */
+ 	if (assoc_data->ie_len && assoc_data->ie) {
+ 		noffset = ieee80211_ie_split_vendor(assoc_data->ie,
+@@ -3304,6 +3328,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
+ 	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
++	ifmgd->flags &= ~IEEE80211_STA_DISABLE_VHT;
+ 
+ 	ifmgd->beacon_crc_valid = false;
+ 
+@@ -3319,13 +3344,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
+ 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104) {
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++			ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+ 			netdev_info(sdata->dev,
+-				    "disabling HT due to WEP/TKIP use\n");
++				    "disabling HT/VHT due to WEP/TKIP use\n");
+ 		}
+ 	}
+ 
+-	if (req->flags & ASSOC_REQ_DISABLE_HT)
++	if (req->flags & ASSOC_REQ_DISABLE_HT) {
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
++	}
+ 
+ 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
+ 	sband = local->hw.wiphy->bands[req->bss->channel->band];
+@@ -3336,6 +3364,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 			    "disabling HT as WMM/QoS is not supported\n");
+ 	}
+ 
++	/* disable VHT if we don't support it or the AP doesn't use WMM */
++	if (!sband->vht_cap.vht_supported ||
++	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used) {
++		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
++		netdev_info(sdata->dev,
++			    "disabling VHT as WMM/QoS is not supported\n");
++	}
++
+ 	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
+ 	memcpy(&ifmgd->ht_capa_mask, &req->ht_capa_mask,
+ 	       sizeof(ifmgd->ht_capa_mask));
