@@ -1,25 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34192 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753760Ab2GIMiH (ORCPT
+Received: from hub022-nj-4.exch022.serverdata.net ([206.225.164.187]:31716
+	"EHLO HUB022-nj-4.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754704Ab2GXOcl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 08:38:07 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SoDE5-00046H-Oi
-	for linux-wireless@vger.kernel.org; Mon, 09 Jul 2012 14:38:06 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/8] cfg80211: P2P Device preparations
-Date: Mon,  9 Jul 2012 14:37:55 +0200
-Message-Id: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net> (sfid-20120709_143817_636734_7547BD83)
+	Tue, 24 Jul 2012 10:32:41 -0400
+Message-ID: <500EB20E.2050706@posedge.com> (sfid-20120724_163244_892557_BF22DDEE)
+Date: Tue, 24 Jul 2012 20:02:46 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: VHT (11ac) Association
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local> <1343139049.4415.28.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1343139049.4415.28.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are pretty much standalone so I'm going to apply them
-before actually implementing the P2P Device abstraction,
-mostly to reduce conflicts.
-
-johannes
-
+On 7/24/2012 7:40 PM, Johannes Berg wrote:
+> On Tue, 2012-07-24 at 03:33 +0000, Mahesh Palivela wrote:
+>> VHT (11ac) Association related change version 2. Incorporated Johannes review comments.
+>>
+>> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+>> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+>
+> Applied, but I fixed up the commit message. Please review & make a
+> better one next time :)
+>
+> johannes
+>
+Sure. commited to mac80211-next? I couldn't find it there.
+-- 
+Thanks,
+Mahesh
