@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40089 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933261Ab2GCROH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:14:07 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 15/20] ath9k: disable SYNC_HOST1_FATAL interrupts for AR9550
-Date: Tue,  3 Jul 2012 19:13:29 +0200
-Message-Id: <1341335614-15419-16-git-send-email-juhosg@openwrt.org> (sfid-20120703_191413_743583_CB259817)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:41444 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755159Ab2GXBSA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 21:18:00 -0400
+Received: by yenl2 with SMTP id l2so6152204yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 18:17:59 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v3] mac80211: add extra checking for RC init upon receiving mesh beacon
+Date: Tue, 24 Jul 2012 09:15:54 +0800
+Message-Id: <1343092554-17734-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120724_031805_304161_AD9A3265)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  |    2 +-
- drivers/net/wireless/ath/ath9k/mac.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Rate control statistic is flushed whenever the mesh beacon
+is received. This may not optimizes the performance of rate
+control algorithm. This patch ensures that we return early
+from mesh_peer_init if the plink_state is ESTAB. Thus, avoid
+calling the rate_control_rate_init again for established mesh
+STA.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c16c59f..1ddec4b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -946,7 +946,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 		AR_IMR_RXORN |
- 		AR_IMR_BCNMISC;
- 
--	if (AR_SREV_9340(ah))
-+	if (AR_SREV_9340(ah) || AR_SREV_9550(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 04ef775..7990cd5 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -810,7 +810,7 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 		return;
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+v2: simplify the logic checking (Thomas Pedersen)
+v3: updating the sta last rx activity (Thomas Pedersen)
+
+ net/mac80211/mesh_plink.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 4256859..4f5740e 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -360,6 +360,12 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
  	}
  
--	if (AR_SREV_9340(ah))
-+	if (AR_SREV_9340(ah) || AR_SREV_9550(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
- 
- 	async_mask = AR_INTR_MAC_IRQ;
+ 	spin_lock_bh(&sta->lock);
++	if (sta->plink_state == NL80211_PLINK_ESTAB) {
++		sta->last_rx = jiffies;
++		spin_unlock_bh(&sta->lock);
++		return sta;
++	}
++
+ 	sta->last_rx = jiffies;
+ 	sta->sta.supp_rates[band] = rates;
+ 	if (elems->ht_cap_elem &&
 -- 
-1.7.2.1
+1.7.0.4
 
