@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33941 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751226Ab2GDLkl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 07:40:41 -0400
-Date: Wed, 4 Jul 2012 13:40:30 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH] iwlegacy: don't mess up the SCD when removing a key
-Message-ID: <20120704114029.GC2570@redhat.com> (sfid-20120704_134044_545233_507B2F5B)
-References: <1341228681-19358-1-git-send-email-emmanuel.grumbach@intel.com>
- <20120704112208.GB2570@redhat.com>
- <CANUX_P2gvyRejAmvW-BSxKaA7TG1s=KcRczwShb8+WtT9==L5w@mail.gmail.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:56258 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753426Ab2GXDkg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 23:40:36 -0400
+Received: by obbuo13 with SMTP id uo13so10493888obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 20:40:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P2gvyRejAmvW-BSxKaA7TG1s=KcRczwShb8+WtT9==L5w@mail.gmail.com>
+In-Reply-To: <CAG6hwVNnqTBi10vGsjYqYBOedtaThjyJuRt6o=XpZF_dRaqQsA@mail.gmail.com>
+References: <1343092554-17734-1-git-send-email-yeohchunyeow@gmail.com>
+	<CAG6hwVNnqTBi10vGsjYqYBOedtaThjyJuRt6o=XpZF_dRaqQsA@mail.gmail.com>
+Date: Tue, 24 Jul 2012 11:40:35 +0800
+Message-ID: <CAEFj986CjnbT=j_a7wHvMX9WshjtGD1wttad5iAPM_ViaQhqTg@mail.gmail.com> (sfid-20120724_054038_969597_BD1EC042)
+Subject: Re: [PATCH v3] mac80211: add extra checking for RC init upon
+ receiving mesh beacon
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 04, 2012 at 02:33:48PM +0300, Emmanuel Grumbach wrote:
-> > On Mon, Jul 02, 2012 at 02:31:21PM +0300, Emmanuel Grumbach wrote:
-> > > When we remove a key, we put a key index which was supposed
-> > > to tell the fw that we are actually removing the key. But
-> > > instead the fw took that index as a valid index and messed
-> > > up the SRAM of the device.
-> > >
-> > > This memory corruption on the device mangled the data of
-> > > the SCD. The impact on the user is that SCD queue 2 got
-> > > stuck after having removed keys.
-> > >
-> > > Change-Id: I721f71c1a3a0af6058abe1975cebd9b613c7ff2b
-> > > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > > ---
-> > > Paul, can you please test ?
-> > > If it solve the issues for you, I will send as a patch and Cc stable
-> > > Totally not tested
-> > > v2: first hunk of this patch thanks to Stanislaw's review
-> >
-> > I tested that patch and did not found any problem.
-> >
-> 
-> Ok, but doest it solve the bug ?
+Hi, Thomas
 
-CCing Poul.
+>>         sta->last_rx = jiffies;
+>
+> You should avoid duplicating this assignment.
 
-But even if not, we still probably need that patch, right? Or is
-possible that 4965 firmware do not corrupt memory when we provide
-wrong key offset to it? Or maybe for 4965 key offset 0xff is something
-that is expected and needed to invalidate the key?
+I think that we should also update the sta->last_rx if the
+sta->plink_state is not NL80211_PLINK_ESTAB, am I right?
 
-Stanislaw   
+Please advice. Thanks
+
+Regards,
+Chun-Yeow
