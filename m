@@ -1,229 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:60053 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751800Ab2GRMN6 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:46403 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755596Ab2GXTQ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:13:58 -0400
-Received: by lbbgj3 with SMTP id gj3so1861180lbb.25
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:56 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 10/14] wlcore/wl12xx: calibrator fem detect implementation
-Date: Wed, 18 Jul 2012 15:13:29 +0300
-Message-Id: <1342613613-917-11-git-send-email-coelho@ti.com> (sfid-20120718_141411_905514_B8DBA223)
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+	Tue, 24 Jul 2012 15:16:58 -0400
+Received: by bkwj10 with SMTP id j10so6601841bkw.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 12:16:56 -0700 (PDT)
+Subject: [PATCH] p54pci: convert driver to use asynchronous firmware loading
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+To: Larry Finger <Larry.Finger@lwfinger.net>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Tue, 24 Jul 2012 21:16:42 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201207242116.42794.chunkeey@googlemail.com> (sfid-20120724_211703_650275_F2D01D5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yair Shapira <yair.shapira@ti.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-this completes the calibrator based fem detect logic in driver:
-driver starts (by calibrator) in plt_mode PLT_FEM_DETECT
-wlcore inits and starts plt on wl12xx
-wl12xx fetches fem number from firmware and stores it in wl->fem_manuf
-wl12xx immediatly returns (doesn't start radio, etc...)
-wlcore returns the fem_manuf to calibrator using WL1271_TM_ATTR_DATA
-plt_mode is stopped
+Drivers that load firmware from their probe routine have problems with the
+latest versions of udev as they get timeouts while waiting for user
+space to start. The problem is fixed by using request_firmware_nowait()
+and delaying the start of mac80211 until the firmware is loaded.
 
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+To prevent the possibility of the driver being unloaded while the firmware
+loading callback is still active, a completion queue entry is used.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ti/wl12xx/cmd.c      |   34 +++++++++++++++++++++---
- drivers/net/wireless/ti/wl12xx/main.c     |   23 ++++++++++++++++
- drivers/net/wireless/ti/wlcore/testmode.c |   41 ++++++++++++++++++++++++++++-
- drivers/net/wireless/ti/wlcore/wlcore.h   |    1 +
- 4 files changed, 94 insertions(+), 5 deletions(-)
+Hi Larry,
 
-diff --git a/drivers/net/wireless/ti/wl12xx/cmd.c b/drivers/net/wireless/ti/wl12xx/cmd.c
-index 30be784..6222062 100644
---- a/drivers/net/wireless/ti/wl12xx/cmd.c
-+++ b/drivers/net/wireless/ti/wl12xx/cmd.c
-@@ -85,7 +85,11 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 
- 	memcpy(&gen_parms->general_params, gp, sizeof(*gp));
- 
--	if (gp->tx_bip_fem_auto_detect)
-+	/* If we started in PLT FEM_DETECT mode, force auto detect */
-+	if (wl->plt_mode == PLT_FEM_DETECT)
-+		gen_parms->general_params.tx_bip_fem_auto_detect = true;
-+
-+	if (gen_parms->general_params.tx_bip_fem_auto_detect)
- 		answer = true;
- 
- 	/* Override the REF CLK from the NVS with the one from platform data */
-@@ -106,8 +110,17 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 		goto out;
- 	}
- 
-+	/* If we are in calibrator based fem auto detect - save fem nr */
-+	if (wl->plt_mode == PLT_FEM_DETECT)
-+		wl->fem_manuf = gp->tx_bip_fem_manufacturer;
-+
- 	wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
--		     answer ? "auto" : "manual", gp->tx_bip_fem_manufacturer);
-+		answer == false ?
-+			"manual" :
-+		wl->plt_mode == PLT_FEM_DETECT ?
-+			"calibrator_fem_detect" :
-+			"auto",
-+		gp->tx_bip_fem_manufacturer);
- 
- out:
- 	kfree(gen_parms);
-@@ -139,7 +152,11 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
- 
- 	memcpy(&gen_parms->general_params, gp, sizeof(*gp));
- 
--	if (gp->tx_bip_fem_auto_detect)
-+	/* If we started in PLT FEM_DETECT mode, force auto detect */
-+	if (wl->plt_mode == PLT_FEM_DETECT)
-+		gen_parms->general_params.tx_bip_fem_auto_detect = true;
-+
-+	if (gen_parms->general_params.tx_bip_fem_auto_detect)
- 		answer = true;
- 
- 	/* Replace REF and TCXO CLKs with the ones from platform data */
-@@ -161,8 +178,17 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
- 		goto out;
- 	}
- 
-+	/* If we are in calibrator based fem auto detect - save fem nr */
-+	if (wl->plt_mode == PLT_FEM_DETECT)
-+		wl->fem_manuf = gp->tx_bip_fem_manufacturer;
-+
- 	wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
--		     answer ? "auto" : "manual", gp->tx_bip_fem_manufacturer);
-+		answer == false ?
-+			"manual" :
-+		wl->plt_mode == PLT_FEM_DETECT ?
-+			"calibrator_fem_detect" :
-+			"auto",
-+		gp->tx_bip_fem_manufacturer);
- 
- out:
- 	kfree(gen_parms);
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 3d6c71b..f429fc1 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1339,6 +1339,14 @@ static int wl12xx_hw_init(struct wl1271 *wl)
- 		ret = wl128x_cmd_general_parms(wl);
- 		if (ret < 0)
- 			goto out;
-+
-+		/*
-+		 * If we are in calibrator based auto detect then we got the FEM nr
-+		 * in wl->fem_manuf. No need to continue further
-+		 */
-+		if (wl->plt_mode == PLT_FEM_DETECT)
-+			goto out;
-+
- 		ret = wl128x_cmd_radio_parms(wl);
- 		if (ret < 0)
- 			goto out;
-@@ -1355,6 +1363,14 @@ static int wl12xx_hw_init(struct wl1271 *wl)
- 		ret = wl1271_cmd_general_parms(wl);
- 		if (ret < 0)
- 			goto out;
-+
-+		/*
-+		 * If we are in calibrator based auto detect then we got the FEM nr
-+		 * in wl->fem_manuf. No need to continue further
-+		 */
-+		if (wl->plt_mode == PLT_FEM_DETECT)
-+			goto out;
-+
- 		ret = wl1271_cmd_radio_parms(wl);
- 		if (ret < 0)
- 			goto out;
-@@ -1500,6 +1516,13 @@ static int wl12xx_plt_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out_irq_disable;
- 
-+	/*
-+	 * If we are in calibrator based auto detect then we got the FEM nr
-+	 * in wl->fem_manuf. No need to continue further
-+	 */
-+	if (wl->plt_mode == PLT_FEM_DETECT)
-+		goto out;
-+
- 	ret = wl1271_acx_init_mem_config(wl);
- 	if (ret < 0)
- 		goto out_irq_disable;
-diff --git a/drivers/net/wireless/ti/wlcore/testmode.c b/drivers/net/wireless/ti/wlcore/testmode.c
-index a204c93..081f175 100644
---- a/drivers/net/wireless/ti/wlcore/testmode.c
-+++ b/drivers/net/wireless/ti/wlcore/testmode.c
-@@ -245,6 +245,43 @@ static int wl1271_tm_cmd_configure(struct wl1271 *wl, struct nlattr *tb[])
+the last patch (pcmcia) is finally on its way...
+Since I haven't heard any complains, I'm sending
+this again (and hopefully for the last time).
+
+Regards,
+	Christian
+---
+ drivers/net/wireless/p54/p54pci.c |   88 ++++++++++++++++++++++++++-----------
+ drivers/net/wireless/p54/p54pci.h |    1 +
+ 2 files changed, 63 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index d4860ac..bc05bf3 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -488,6 +488,58 @@ static int p54p_open(struct ieee80211_hw *dev)
  	return 0;
  }
  
-+static int wl1271_tm_detect_fem(struct wl1271 *wl, struct nlattr *tb[])
++static void p54p_firmware_step2(const struct firmware *fw,
++				void *context)
 +{
-+	/* return FEM type */
-+	int ret, len;
-+	struct sk_buff *skb;
++	struct p54p_priv *priv = context;
++	struct ieee80211_hw *dev = priv->common.hw;
++	struct pci_dev *pdev = priv->pdev;
++	int err;
 +
-+	ret = wl1271_plt_start(wl, PLT_FEM_DETECT);
-+	if (ret < 0)
++	if (!fw) {
++		dev_err(&pdev->dev, "Cannot find firmware (isl3886pci)\n");
++		err = -ENOENT;
++		goto out;
++	}
++
++	priv->firmware = fw;
++
++	err = p54p_open(dev);
++	if (err)
++		goto out;
++	err = p54_read_eeprom(dev);
++	p54p_stop(dev);
++	if (err)
 +		goto out;
 +
-+	mutex_lock(&wl->mutex);
++	err = p54_register_common(dev, &pdev->dev);
++	if (err)
++		goto out;
 +
-+	len = nla_total_size(sizeof(wl->fem_manuf));
-+	skb = cfg80211_testmode_alloc_reply_skb(wl->hw->wiphy, len);
-+	if (!skb) {
-+		ret = -ENOMEM;
-+		goto out_mutex;
-+	}
-+
-+	if (nla_put(skb, WL1271_TM_ATTR_DATA, sizeof(wl->fem_manuf),
-+					      &wl->fem_manuf)) {
-+		kfree_skb(skb);
-+		ret = -EMSGSIZE;
-+		goto out_mutex;
-+	}
-+
-+	ret = cfg80211_testmode_reply(skb);
-+
-+out_mutex:
-+	mutex_unlock(&wl->mutex);
-+
-+	/* We always stop plt after DETECT mode */
-+	wl1271_plt_stop(wl);
 +out:
-+	return ret;
++
++	complete(&priv->fw_loaded);
++
++	if (err) {
++		struct device *parent = pdev->dev.parent;
++
++		if (parent)
++			device_lock(parent);
++
++		/*
++		 * This will indirectly result in a call to p54p_remove.
++		 * Hence, we don't need to bother with freeing any
++		 * allocated ressources at all.
++		 */
++		device_release_driver(&pdev->dev);
++
++		if (parent)
++			device_unlock(parent);
++	}
++
++	pci_dev_put(pdev);
 +}
 +
- static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
+ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *id)
  {
- 	u32 val;
-@@ -262,8 +299,10 @@ static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
- 		ret = wl1271_plt_stop(wl);
- 		break;
- 	case PLT_ON:
-+		ret = wl1271_plt_start(wl, PLT_ON);
-+		break;
- 	case PLT_FEM_DETECT:
--		ret = wl1271_plt_start(wl, val);
-+		ret = wl1271_tm_detect_fem(wl, tb);
- 		break;
- 	default:
- 		ret = -EINVAL;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 4f8b419..0ce7a8e 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -157,6 +157,7 @@ struct wl1271 {
- 	enum wl12xx_fw_type fw_type;
- 	bool plt;
- 	enum plt_mode plt_mode;
-+	u8 fem_manuf;
- 	u8 last_vif_count;
- 	struct mutex mutex;
+@@ -496,6 +548,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	unsigned long mem_addr, mem_len;
+ 	int err;
  
++	pci_dev_get(pdev);
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Cannot enable new PCI device\n");
+@@ -537,6 +590,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	priv = dev->priv;
+ 	priv->pdev = pdev;
+ 
++	init_completion(&priv->fw_loaded);
+ 	SET_IEEE80211_DEV(dev, &pdev->dev);
+ 	pci_set_drvdata(pdev, dev);
+ 
+@@ -561,32 +615,12 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	spin_lock_init(&priv->lock);
+ 	tasklet_init(&priv->tasklet, p54p_tasklet, (unsigned long)dev);
+ 
+-	err = request_firmware(&priv->firmware, "isl3886pci",
+-			       &priv->pdev->dev);
+-	if (err) {
+-		dev_err(&pdev->dev, "Cannot find firmware (isl3886pci)\n");
+-		err = request_firmware(&priv->firmware, "isl3886",
+-				       &priv->pdev->dev);
+-		if (err)
+-			goto err_free_common;
+-	}
+-
+-	err = p54p_open(dev);
+-	if (err)
+-		goto err_free_common;
+-	err = p54_read_eeprom(dev);
+-	p54p_stop(dev);
+-	if (err)
+-		goto err_free_common;
+-
+-	err = p54_register_common(dev, &pdev->dev);
+-	if (err)
+-		goto err_free_common;
+-
+-	return 0;
++	err = request_firmware_nowait(THIS_MODULE, 1, "isl3886pci",
++				      &priv->pdev->dev, GFP_KERNEL,
++				      priv, p54p_firmware_step2);
++	if (!err)
++		return 0;
+ 
+- err_free_common:
+-	release_firmware(priv->firmware);
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+ 
+@@ -601,6 +635,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	pci_release_regions(pdev);
+  err_disable_dev:
+ 	pci_disable_device(pdev);
++	pci_dev_put(pdev);
+ 	return err;
+ }
+ 
+@@ -612,8 +647,9 @@ static void __devexit p54p_remove(struct pci_dev *pdev)
+ 	if (!dev)
+ 		return;
+ 
+-	p54_unregister_common(dev);
+ 	priv = dev->priv;
++	wait_for_completion(&priv->fw_loaded);
++	p54_unregister_common(dev);
+ 	release_firmware(priv->firmware);
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+diff --git a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/p54/p54pci.h
+index 7aa509f..68405c1 100644
+--- a/drivers/net/wireless/p54/p54pci.h
++++ b/drivers/net/wireless/p54/p54pci.h
+@@ -105,6 +105,7 @@ struct p54p_priv {
+ 	struct sk_buff *tx_buf_data[32];
+ 	struct sk_buff *tx_buf_mgmt[4];
+ 	struct completion boot_comp;
++	struct completion fw_loaded;
+ };
+ 
+ #endif /* P54USB_H */
 -- 
-1.7.10.4
+1.7.9.1
 
