@@ -1,171 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:50930 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322Ab2GSE3e (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:44119 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674Ab2GXPqW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:29:34 -0400
-Date: Wed, 18 Jul 2012 21:29:11 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 8/9] Platform: OLPC: move global variables into priv struct
-Message-ID: <20120718212911.0ef38ad5@dev.queued.net> (sfid-20120719_063018_998455_9CF49EB7)
-In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
-References: <20120718182144.2d7b0b50@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 24 Jul 2012 11:46:22 -0400
+Received: by ghrr11 with SMTP id r11so6789920ghr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 08:46:21 -0700 (PDT)
+Message-ID: <500EC34A.7030300@lwfinger.net> (sfid-20120724_174630_815539_5976A13E)
+Date: Tue, 24 Jul 2012 10:46:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com>
+In-Reply-To: <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Populate olpc_ec_priv.
+On 07/24/2012 10:25 AM, Xavier de Almeida wrote:
+> great following this thread to make my own compat-wireless:
+> http://blog.securism.com/2009/01/how-to-cutting-edge-wireless-drivers-in-ubuntu/
+>
+>
+> I hope it's accurate
 
-Signed-off-by: Andres Salomon <dilinger@queued.net>
----
- drivers/platform/olpc/olpc-ec.c |   48
-++++++++++++++++++++++---------------- 1 files changed, 28
-insertions(+), 20 deletions(-)
+A quick read shows that they have you pulling the entire wireless-testing tree. 
+If you do that, then build that kernel and skip compat-wireless. I think the 
+URLs have changed since 2009.
 
-diff --git a/drivers/platform/olpc/olpc-ec.c
-b/drivers/platform/olpc/olpc-ec.c index 1a15a79..0f9f859 100644
---- a/drivers/platform/olpc/olpc-ec.c
-+++ b/drivers/platform/olpc/olpc-ec.c
-@@ -31,6 +31,12 @@ struct ec_cmd_desc {
- 
- struct olpc_ec_priv {
- 	struct olpc_ec_driver *drv;
-+	struct work_struct worker;
-+	struct mutex cmd_lock;
-+
-+	/* Pending EC commands */
-+	struct list_head cmd_q;
-+	spinlock_t cmd_q_lock;
- 
- 	struct dentry *dbgfs_dir;
- 
-@@ -46,16 +52,9 @@ struct olpc_ec_priv {
- 	bool suspended;
- };
- 
--static void olpc_ec_worker(struct work_struct *w);
--
--static DECLARE_WORK(ec_worker, olpc_ec_worker);
--static LIST_HEAD(ec_cmd_q);
--static DEFINE_SPINLOCK(ec_cmd_q_lock);
--
- static struct olpc_ec_driver *ec_driver;
- static struct olpc_ec_priv *ec_priv;
- static void *ec_cb_arg;
--static DEFINE_MUTEX(ec_cb_lock);
- 
- void olpc_ec_driver_register(struct olpc_ec_driver *drv, void *arg)
- {
-@@ -66,49 +65,51 @@ EXPORT_SYMBOL_GPL(olpc_ec_driver_register);
- 
- static void olpc_ec_worker(struct work_struct *w)
- {
-+	struct olpc_ec_priv *ec = container_of(w, struct olpc_ec_priv,
-worker); struct ec_cmd_desc *desc = NULL;
- 	unsigned long flags;
- 
- 	/* Grab the first pending command from the queue */
--	spin_lock_irqsave(&ec_cmd_q_lock, flags);
--	if (!list_empty(&ec_cmd_q)) {
--		desc = list_first_entry(&ec_cmd_q, struct ec_cmd_desc,
-node);
-+	spin_lock_irqsave(&ec->cmd_q_lock, flags);
-+	if (!list_empty(&ec->cmd_q)) {
-+		desc = list_first_entry(&ec->cmd_q, struct
-ec_cmd_desc, node); list_del(&desc->node);
- 	}
--	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
-+	spin_unlock_irqrestore(&ec->cmd_q_lock, flags);
- 
- 	/* Do we actually have anything to do? */
- 	if (!desc)
- 		return;
- 
- 	/* Protect the EC hw with a mutex; only run one cmd at a time
-*/
--	mutex_lock(&ec_cb_lock);
-+	mutex_lock(&ec->cmd_lock);
- 	desc->err = ec_driver->ec_cmd(desc->cmd, desc->inbuf,
-desc->inlen, desc->outbuf, desc->outlen, ec_cb_arg);
--	mutex_unlock(&ec_cb_lock);
-+	mutex_unlock(&ec->cmd_lock);
- 
- 	/* Finished, wake up olpc_ec_cmd() */
- 	complete(&desc->finished);
- 
- 	/* Run the worker thread again in case there are more cmds
-pending */
--	schedule_work(&ec_worker);
-+	schedule_work(&ec->worker);
- }
- 
- /*
-  * Throw a cmd descripter onto the list.  We now have SMP OLPC
-machines, so
-  * locking is pretty critical.
-  */
--static void queue_ec_descriptor(struct ec_cmd_desc *desc)
-+static void queue_ec_descriptor(struct ec_cmd_desc *desc,
-+		struct olpc_ec_priv *ec)
- {
- 	unsigned long flags;
- 
- 	INIT_LIST_HEAD(&desc->node);
- 
--	spin_lock_irqsave(&ec_cmd_q_lock, flags);
--	list_add_tail(&desc->node, &ec_cmd_q);
--	spin_unlock_irqrestore(&ec_cmd_q_lock, flags);
-+	spin_lock_irqsave(&ec->cmd_q_lock, flags);
-+	list_add_tail(&desc->node, &ec->cmd_q);
-+	spin_unlock_irqrestore(&ec->cmd_q_lock, flags);
- 
--	schedule_work(&ec_worker);
-+	schedule_work(&ec->worker);
- }
- 
- int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t inlen, u8 *outbuf, size_t
-outlen) @@ -137,7 +138,7 @@ int olpc_ec_cmd(u8 cmd, u8 *inbuf, size_t
-inlen, u8 *outbuf, size_t outlen) desc.err = 0;
- 	init_completion(&desc.finished);
- 
--	queue_ec_descriptor(&desc);
-+	queue_ec_descriptor(&desc, ec);
- 
- 	/* Timeouts must be handled in the platform-specific EC hook */
- 	wait_for_completion(&desc.finished);
-@@ -266,7 +267,14 @@ static int olpc_ec_probe(struct platform_device
-*pdev) ec = kzalloc(sizeof(*ec), GFP_KERNEL);
- 	if (!ec)
- 		return -ENOMEM;
-+
- 	ec->drv = ec_driver;
-+	INIT_WORK(&ec->worker, olpc_ec_worker);
-+	mutex_init(&ec->cmd_lock);
-+
-+	INIT_LIST_HEAD(&ec->cmd_q);
-+	spin_lock_init(&ec->cmd_q_lock);
-+
- 	ec_priv = ec;
- 	platform_set_drvdata(pdev, ec);
- 
--- 
-1.7.2.5
+If you have your kernel headers installed, and /lib/modules/`uname -r`/build is 
+a link to a directory containing directory include/ with those headers, then you 
+can built the compat-wireless package.
+
+Larry
+
+
+
+
 
