@@ -1,83 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51431 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801Ab2G0LRB (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:41348 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755242Ab2GXDiT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:01 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 03/20] mac80211: add drv_* wrappers for channel contexts
-Date: Fri, 27 Jul 2012 13:16:39 +0200
-Message-Id: <1343387816-9414-4-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131728_790707_47ADE4DB)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 23 Jul 2012 23:38:19 -0400
+Received: by lbbgm6 with SMTP id gm6so8683486lbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 20:38:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 24 Jul 2012 13:37:57 +1000
+Message-ID: <CAGRGNgVGfXxyPWPs=0gwFnWbAG5oLkrZ5jsO5Q_w1VOV1W2CPQ@mail.gmail.com> (sfid-20120724_053824_198903_B9A5A4B3)
+Subject: Re: [PATCH v2] mac80211: VHT (11ac) Association
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+Hi Mahesh,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/driver-ops.h |   46 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
+On Tue, Jul 24, 2012 at 1:33 PM, Mahesh Palivela <maheshp@posedge.com> wrote:
+> VHT (11ac) Association related change version 2. Incorporated Johannes review comments.
 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 597a474..b38f97d 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -866,4 +866,50 @@ static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
- 		local->ops->mgd_prepare_tx(&local->hw, &sdata->vif);
- 	trace_drv_return_void(local);
- }
-+
-+static inline void drv_add_chanctx(struct ieee80211_local *local,
-+				   struct ieee80211_chanctx *ctx)
-+{
-+	if (local->ops->add_chanctx)
-+		local->ops->add_chanctx(&local->hw, &ctx->conf);
-+}
-+
-+static inline void drv_remove_chanctx(struct ieee80211_local *local,
-+				      struct ieee80211_chanctx *ctx)
-+{
-+	if (local->ops->remove_chanctx)
-+		local->ops->remove_chanctx(&local->hw, &ctx->conf);
-+}
-+
-+static inline void drv_change_chantype(struct ieee80211_local *local,
-+				       struct ieee80211_chanctx *ctx)
-+{
-+	if (local->ops->change_chantype)
-+		local->ops->change_chantype(&local->hw, &ctx->conf);
-+}
-+
-+static inline void drv_assign_vif_chanctx(struct ieee80211_local *local,
-+					  struct ieee80211_sub_if_data *sdata,
-+					  struct ieee80211_chanctx *ctx)
-+{
-+	check_sdata_in_driver(sdata);
-+
-+	if (local->ops->assign_vif_chanctx)
-+		local->ops->assign_vif_chanctx(&local->hw,
-+					       &sdata->vif,
-+					       &ctx->conf);
-+}
-+
-+static inline void drv_unassign_vif_chanctx(struct ieee80211_local *local,
-+					    struct ieee80211_sub_if_data *sdata,
-+					    struct ieee80211_chanctx *ctx)
-+{
-+	check_sdata_in_driver(sdata);
-+
-+	if (local->ops->unassign_vif_chanctx)
-+		local->ops->unassign_vif_chanctx(&local->hw,
-+						 &sdata->vif,
-+						 &ctx->conf);
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
+The references to Johannes' review comments and version two shouldn't
+go in the changelog, they should go below the "---" line after the
+signoffs and stuff.
+
+> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+
+You can't just add a "Reviewed-by" line unless the person referenced
+has explicitly said you can (or provided it themselves)
+
+Thanks,
+
 -- 
-1.7.10.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
