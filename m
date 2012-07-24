@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8961 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932560Ab2GLPdP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39498 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754317Ab2GXO4m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 11:33:15 -0400
-Message-ID: <4FFEEE2F.9040104@qca.qualcomm.com> (sfid-20120712_173325_641998_2FF9F1B7)
-Date: Thu, 12 Jul 2012 21:03:03 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
-References: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>    <1341918365.4475.9.camel@jlt3.sipsolutions.net>    <4FFC0F22.6040906@qca.qualcomm.com>   <1341919201.4475.11.camel@jlt3.sipsolutions.net>   <4FFD1014.2000109@qca.qualcomm.com>  <1342103072.4531.26.camel@jlt3.sipsolutions.net>  <4FFEE9ED.6020906@qca.qualcomm.com> <1342106232.4531.31.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1342106232.4531.31.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Tue, 24 Jul 2012 10:56:42 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1StgXR-0006Tj-Rp
+	for linux-wireless@vger.kernel.org; Tue, 24 Jul 2012 16:56:42 +0200
+Message-ID: <1343141801.4415.42.camel@jlt3.sipsolutions.net> (sfid-20120724_165646_313684_3A95150F)
+Subject: Re: [PATCH] mac80211: don't react to beacon loss if HW monitoring
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 24 Jul 2012 16:56:41 +0200
+In-Reply-To: <1342636834-5166-1-git-send-email-johannes@sipsolutions.net> (sfid-20120718_204039_311363_FABADB0C)
+References: <1342636834-5166-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120718_204039_311363_FABADB0C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 12 July 2012 08:47 PM, Johannes Berg wrote:
-> Hi,
->
->>> Maybe something like this would make sense then?
->>>
->>> http://p.sipsolutions.net/2aac79bcfe3a9b8b.txt
->>
->> yeah this was the thing i am proposing
->> http://www.spinics.net/lists/linux-wireless/msg94023.html
->>
->> your patch is better optimized as it avoids a bool variable to check for
->> wow disable command, so this should be fine with the other iw
->> patch to check for empty triggers ?
->> http://www.spinics.net/lists/linux-wireless/msg94022.html
->
-> Well, my patch is different, it actually allows empty triggers to go
-> through as I had explained.
+On Wed, 2012-07-18 at 20:40 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> If the HW is monitoring connection loss (as advertised
+> by IEEE80211_HW_CONNECTION_MONITOR) but not filtering
+> beacons (IEEE80211_VIF_BEACON_FILTER) then mac80211 will
+> still start the beacon loss timer and if a few beacons
+> are lost, e.g. due to scanning, drop the connection.
+> 
+> If the hardware doesn't advertise connection monitoring,
+> then it won't drop the connection right away but probe
+> the AP, which is intended, but due to the logic in the
+> timer when connection monitoring is done it assumes the
+> connection was actually lost.
+> 
+> Fix this problem by not starting the timer when the HW
+> does connection monitoring.
 
-oops, sorry i misread it.
+Applied for -next
 
->
-> I'm just not sure which one makes more sense? I kinda feel that allowing
-> empty triggers might be a corner case but useful, while disallowing it
-> now would make it hard to ever support such a case?
-
-i am fine with your approach itself and don't want to break that use case.
-
-
->
-> johannes
->
-
-
--- 
-thanks,
-shafi
-
+johannes
 
