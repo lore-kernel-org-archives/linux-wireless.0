@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:62741 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753968Ab2GKOcQ convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:43662 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754810Ab2GXUDC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 10:32:16 -0400
-Received: by wibhm11 with SMTP id hm11so5781841wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 07:32:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FFD7B06.4010401@broadcom.com>
-References: <4FFD7B06.4010401@broadcom.com>
-Date: Wed, 11 Jul 2012 16:32:15 +0200
-Message-ID: <CACna6rxf2bmhEKqGPcgP50au=XxeRHUQUvMm1OSidp+oQ6ycuA@mail.gmail.com> (sfid-20120711_163221_207726_DEA2CC96)
-Subject: Re: bcma-pci-bridge issue with bcm43224
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 24 Jul 2012 16:03:02 -0400
+Received: by weyx8 with SMTP id x8so5379859wey.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 13:03:00 -0700 (PDT)
+References: <781BD600E733884C96CCDD5DF04A71C1023B3B@xmb-rcd-x14.cisco.com> <500EFC27.40409@lwfinger.net>
+In-Reply-To: <500EFC27.40409@lwfinger.net>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <175A8680-40E0-42A5-AE01-DA531C829C8C@gmail.com> (sfid-20120724_220307_577051_3EBFAC40)
+Cc: "Balaji Ravindran (balravin)" <balravin@cisco.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: Help requested troubleshooting compilation of rt3573 driver for cisco ae3000
+Date: Tue, 24 Jul 2012 22:02:59 +0200
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/11 Arend van Spriel <arend@broadcom.com>:
-> Hi Rafal
->
-> I am testing with BCM43224 in PCIe slot:
-> $ lspci -vns 03:00.0
-> 03:00.0 0280: 14e4:4353 (rev 01)
->         Subsystem: 1028:000e
->         Flags: bus master, fast devsel, latency 0, IRQ 17
->         Memory at e6e00000 (64-bit, non-prefetchable) [size=16K]
->         Capabilities: <access denied>
->         Kernel driver in use: bcma-pci-bridge
->
-> In the log the irq field in the bcma_device structure is printed in
-> brcmsmac probe function and the value seems invalid hence the
-> request_irq() failure. Any clues?
->
-> Gr. AvS
->
-> [86629.110723] bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and
-> package 0x0A
-> [86629.110783] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id
-> 0x800, rev 0x22, class 0x0)
-> [86629.110828] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id
-> 0x812, rev 0x17, class 0x0)
-> [86629.110939] bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820,
-> rev 0x0F, class 0x0)
-> [86629.144286] bcma: bus0: Bus registered
-> [86672.144812] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq
-> -421527552
-> [86672.150745] brcmsmac: Applying 43224B0+ WARs
-> [86672.153155] ieee80211 phy0: wl0: request_irq() failed
-> [86672.153169] brcmsmac: brcms_bcma_probe: brcms_attach failed!
+Balaji, Larry,
 
-No idea at the moment. I can setup my machine and give it a try. I'll
-need a day or rather two.
+On 24 jul. 2012, at 21:48, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Are you using wireless-testing?
+> On 07/24/2012 01:52 PM, Balaji Ravindran (balravin) wrote:
+>> Hi,
+>> 
+>> I request help to make my cisco AE3000 wireless usb work with my Ubuntu 12.04 64 bit server OS. I tried the following, and everything was in vain. So please pass me on some pointers.
+>> 
+>>  1.      Started off with ndiswrapper.
+>> 
+>>    a.      Looked for Windows XP driver from CD packaging and tried load it with ndiswrapper 1.57, but it is not working because, cisco does not provide a 64 bit windows xp driver, so ndiswrapper complains saying 64 bit kernel detected.
+>> 
+>>    b.      I did give a shot with using 64bit windows vista and windows 7 drivers included in the CD package even though I knew ndiswrapper will not support vista or win 7 drivers.
+>> 
+>> 2.      RT drivers are opensource (yay!) so identified the hardware Id for the product it was (13b1:003b) comes with rt3573 chipset (I confirm that). So I downloaded the latest RT3573 chipset driver from their RALINK website, and still no use.
+>> I successfully built and installed the rt3573sta.ko under /lib/modules/(shell $(uname -r))..... and was successfully able to modprobe the module. But still I did not see the device's model was recognized as a WiFi device.
+>> Output of 'lsusb' still showed up 'Linksys'
+>> 
+>>  3.      Step further, under /common/rtusb_dev_id.c I waslooking for the USB device id, and I could'nt find a match for 13b1:003b., so created a new device id, and rebuilt the driver
+>> 
+>>    a.      Make clean, make uninstall, make install.
+>>    b.      Driver built successfully, still did not detect the device
+>> 
+>> 4.      In vain tried the default included rt2800usb module., and did
+>>    a.      sudo depmod -a
+>>    b.      sudo modprobe -v rt2800usb
+>>    c.      Module loaded successfully, and still in vain, driver not detected.
+>> 
+>> Any help here would be much appreciated? Anything I missed out or I could try., please help.
+> 
+> A device with an RT3573 chip should be handled by rt2800usb; however, your particular ID is not in the device table.
+> 
+> What happens when you do the following:
+> 
+> su -
+> modprobe -v rt2800usb
+> echo "13b1 003b" > /sys/bus/usb/drivers/rt2800usb/new_id
+> exit
 
--- 
-Rafał
+Unfortunately rt2800usb is not able to handle the RT3573 chip. It is quite a different beast then the other chips that are supported ( for one it is the first 3T3R chip that we see from Ralink, and the EEPROM layout is quite different).
+
+So, you have to stick with the driver of the Ralink website, until we are able to add support for the chip in rt2800usb.
+Although I do own a device with that chip, my time is unfortunately very limited right now, so my progress is very slow.
+
+---
+Gertjan
