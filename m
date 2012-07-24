@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:60935 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752897Ab2GCAS0 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39398 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754846Ab2GXOec (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 20:18:26 -0400
-Received: by ghrr11 with SMTP id r11so4721630ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2012 17:18:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1341238934-30855-5-git-send-email-ozancag@gmail.com>
-References: <1341238934-30855-1-git-send-email-ozancag@gmail.com> <1341238934-30855-5-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 2 Jul 2012 17:18:04 -0700
-Message-ID: <CAB=NE6WHUC5bXx4Vj4vQFavzZDrdwztBC3QKvjLcUMsMysLGEA@mail.gmail.com> (sfid-20120703_021830_689996_77A165B0)
-Subject: Re: [PATCH 5/5] compat: Backport DIV_ROUND_UP_DLL macro
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 24 Jul 2012 10:34:32 -0400
+Message-ID: <1343140469.4415.36.camel@jlt3.sipsolutions.net> (sfid-20120724_163434_934756_497F099A)
+Subject: Re: [RFC] mac80211: add PS flag to bss_conf
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 24 Jul 2012 16:34:29 +0200
+In-Reply-To: <1342703465-26703-1-git-send-email-eliad@wizery.com> (sfid-20120719_151108_940433_38B3767C)
+References: <1342703465-26703-1-git-send-email-eliad@wizery.com>
+	 (sfid-20120719_151108_940433_38B3767C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 2, 2012 at 7:22 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> This backports:
->
-> commit 36a26c69b4c70396ef569c3452690fba0c1dec08
-> Author: Nicholas Bellinger <nab@linux-iscsi.org>
-> Date:   Tue Jul 26 00:35:26 2011 -0700
->
->     kernel.h: Add DIV_ROUND_UP_ULL and DIV_ROUND_UP_SECTOR_T macro usage
->
-> Trying kernel  3.4.0-030400-generic [OK]
-> Trying kernel  3.3.7-030307-generic [OK]
-> Trying kernel  3.2.2-030202-generic [OK]
-> Trying kernel  3.1.10-030110-generic [OK]
-> Trying kernel  3.0.18-030018-generic [OK]
-> Trying kernel  2.6.39-02063904-generic [OK]
-> Trying kernel  2.6.38-02063808-generic [OK]
-> Trying kernel  2.6.37-02063706-generic [OK]
-> Trying kernel  2.6.36-02063604-generic [OK]
-> Trying kernel  2.6.35-02063512-generic [OK]
-> Trying kernel  2.6.34-02063410-generic [OK]
-> Trying kernel  2.6.33-02063305-generic [OK]
-> Trying kernel  2.6.32-02063255-generic [OK]
-> Trying kernel  2.6.31-02063113-generic [OK]
-> Trying kernel  2.6.30-02063010-generic [OK]
-> Trying kernel  2.6.29-02062906-generic [OK]
-> Trying kernel  2.6.28-02062810-generic [OK]
-> Trying kernel  2.6.27-020627-generic [OK]
-> Trying kernel  2.6.26-020626-generic [OK]
-> Trying kernel  2.6.25-020625-generic [OK]
-> Trying kernel  2.6.24-020624-generic [OK]
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+On Thu, 2012-07-19 at 16:11 +0300, Eliad Peller wrote:
+> Currently, ps mode is indicated per device (rather than
+> per interface), which doesn't make a lot of sense.
+> 
+> Moreover, there are subtle bugs caused by the inability
+> to indicate ps change along with other changes
+> (e.g. when the AP deauth us, we'd like to indicate
+> CHANGED_PS | CHANGED_ASSOC, as changing PS before
+> notifying about disassociation will result in null-packets
+> being sent (if IEEE80211_HW_SUPPORTS_DYNAMIC_PS) while
+> the sta is already disconnected.)
+> 
+> Keep the current per-device notifications, and add
+> additional per-vif notifications. In order to keep it
+> simple, these notifications are NOT called due to
+> (temporary) dynamic_ps/offchannel operations.
 
-Applied and pushed all, thanks!
+So I think if we do this, it would make sense to not do it in recalc_ps,
+but like you did in disassoc:
 
-  Luis
+> @@ -1368,6 +1388,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+>  	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+>  		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+>  		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+> +		sdata->vif.bss_conf.ps = false;
+> +		changed |= BSS_CHANGED_PS;
+>  	}
+>  	local->ps_sdata = NULL;
+
+set it directly in the relevant code.
+
+
+However, I'm not sure that we really should toggle it with association?
+For the original CONF_PS semantics where mac80211 actually woke up for
+dynamic PS etc. this made sense, but for smarter devices I think the PS
+flag could be solely mirroring the combination of
+ a) broken AP => no PS
+ b) user enable/disable
+
+even when not associated?
+
+johannes
+
