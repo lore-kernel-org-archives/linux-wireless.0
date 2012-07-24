@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54115 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab2GPS3Y (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:53846 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753064Ab2GXDLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2012 14:29:24 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 23 Jul 2012 23:11:54 -0400
+Received: by bkwj10 with SMTP id j10so5883420bkw.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 20:11:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20484.23881.582002.607413@gargle.gargle.HOWL> (sfid-20120716_202933_234471_ECB02D9D)
-Date: Mon, 16 Jul 2012 23:58:25 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
- TXOP limit
-In-Reply-To: <5003EABD.5040506@openwrt.org>
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-2-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-3-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-4-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-5-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-6-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-7-git-send-email-nbd@openwrt.org>
-	<1342105451-42297-8-git-send-email-nbd@openwrt.org>
-	<20481.3065.540576.366365@gargle.gargle.HOWL>
-	<500143CA.1020804@openwrt.org>
-	<506697F5827BD842B7CB80D046EBE618995399@aphydexd01b>
-	<5002A7B2.409@openwrt.org>
-	<20483.52640.521243.418804@gargle.gargle.HOWL>
-	<5003EABD.5040506@openwrt.org>
+In-Reply-To: <1343092554-17734-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1343092554-17734-1-git-send-email-yeohchunyeow@gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 23 Jul 2012 20:11:32 -0700
+Message-ID: <CAG6hwVNnqTBi10vGsjYqYBOedtaThjyJuRt6o=XpZF_dRaqQsA@mail.gmail.com> (sfid-20120724_051157_664352_271B923E)
+Subject: Re: [PATCH v3] mac80211: add extra checking for RC init upon
+ receiving mesh beacon
+To: devel@lists.open80211s.org
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> The standard does not say anything specifically about A-MPDU, but it
-> does say this:
-> 
-> When the TXOP limit is nonzero, a STA shall fragment an individually
-> addressed MSDU so that the transmission of the first MPDU of the TXOP
-> does not cause the TXOP limit to be exceeded at the PHY rate selected
-> for the initial transmission attempt of that MPDU. The TXOP limit may be
-> exceeded, when using a lower PHY rate than selected for the initial
-> transmission attempt of the first MPDU, for a retransmission of an MPDU,
-> for the initial transmission of an MPDU if any previous MPDU in the
-> current MSDU has been retransmitted, or for group addressed MSDUs. When
-> the TXOP limit is exceeded due to the retransmission of an MPDU at a
-> reduced PHY rate, the STA shall not transmit more than one MPDU in the TXOP.
+Chun-Yeow,
 
-Um, am not sure how this passage relates to number of subframe calculation in an
-aggregate ?
+On Mon, Jul 23, 2012 at 6:15 PM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+> Rate control statistic is flushed whenever the mesh beacon
+> is received. This may not optimizes the performance of rate
+> control algorithm. This patch ensures that we return early
+> from mesh_peer_init if the plink_state is ESTAB. Thus, avoid
+> calling the rate_control_rate_init again for established mesh
+> STA.
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+> v2: simplify the logic checking (Thomas Pedersen)
+> v3: updating the sta last rx activity (Thomas Pedersen)
+>
+>  net/mac80211/mesh_plink.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+> index 4256859..4f5740e 100644
+> --- a/net/mac80211/mesh_plink.c
+> +++ b/net/mac80211/mesh_plink.c
+> @@ -360,6 +360,12 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
+>         }
+>
+>         spin_lock_bh(&sta->lock);
+> +       if (sta->plink_state == NL80211_PLINK_ESTAB) {
+> +               sta->last_rx = jiffies;
+> +               spin_unlock_bh(&sta->lock);
+> +               return sta;
+> +       }
+> +
+>         sta->last_rx = jiffies;
 
-Sujith
+You should avoid duplicating this assignment.
+
+Thomas
