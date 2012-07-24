@@ -1,64 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56531 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab2GZGTX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 02:19:23 -0400
-Received: by pbbrp8 with SMTP id rp8so2702757pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 23:19:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
-References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
-	<CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
-	<CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
-	<CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
-Date: Thu, 26 Jul 2012 14:19:23 +0800
-Message-ID: <CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com> (sfid-20120726_081952_204774_4781A1CB)
-Subject: Re: [PATCH] Revert "rfkill: remove dead code"
-From: AceLan Kao <acelan.kao@canonical.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mga02.intel.com ([134.134.136.20]:63542 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755521Ab2GXIHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jul 2012 04:07:25 -0400
+Date: Tue, 24 Jul 2012 11:07:29 +0300
+From: andrei.emeltchenko.news@gmail.com
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
 	linux-wireless@vger.kernel.org,
-	Corentin Chary <corentincj@iksaif.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	LKML <linux-kernel@vger.kernel.org>, joe@perches.com,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCHv3 1/3] lib: printf: update documentation to cover all of
+ %p[Mm][FR]
+Message-ID: <20120724080727.GA11502@aemeltch-MOBL1> (sfid-20120724_100818_208950_220DAD99)
+References: <1341341280.2012.3.camel@joe2Laptop>
+ <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1341391552-4842-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Julian,
+On Wed, Jul 04, 2012 at 11:45:50AM +0300, Andy Shevchenko wrote:
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Yes, I have said that the asus-wmi patch needs this commit
-and CC'd the asus-wmi maintainer, Corentin Chary, here in this rfkill patch.
+Acked-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com> 
 
-Best regards,
-AceLan Kao.
-
-2012/7/26 Julian Calaby <julian.calaby@gmail.com>:
-> Hi AceLan,
->
-> On Thu, Jul 26, 2012 at 3:55 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
->> Dear Julian,
->>
->> I just submitted a patch to platform-x86 for asus-wmi.
->> And the patch needs to use rfkill_set_led_trigger_name() function
->> to bind the wlan led to rfkill event.
->
-> That's what I wanted to know.
->
-> I assume that you've added a note to the ASUS-WMI patch so people know
-> that it needs this one first. (I can't see it here so I don't know)
->
-> Thanks,
->
+> ---
+>  Documentation/printk-formats.txt |    1 +
+>  lib/vsprintf.c                   |    5 ++++-
+>  2 files changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/printk-formats.txt b/Documentation/printk-formats.txt
+> index d8d168fa..90ff4d7 100644
+> --- a/Documentation/printk-formats.txt
+> +++ b/Documentation/printk-formats.txt
+> @@ -59,6 +59,7 @@ MAC/FDDI addresses:
+>  	%pMR	05:04:03:02:01:00
+>  	%pMF	00-01-02-03-04-05
+>  	%pm	000102030405
+> +	%pmR	050403020100
+>  
+>  	For printing 6-byte MAC/FDDI addresses in hex notation. The 'M' and 'm'
+>  	specifiers result in a printed address with ('M') or without ('m') byte
+> diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+> index a0b5f15..e500158 100644
+> --- a/lib/vsprintf.c
+> +++ b/lib/vsprintf.c
+> @@ -946,7 +946,7 @@ int kptr_restrict __read_mostly;
+>   * - 'm' For a 6-byte MAC address, it prints the hex address without colons
+>   * - 'MF' For a 6-byte MAC FDDI address, it prints the address
+>   *       with a dash-separated hex notation
+> - * - '[mM]R For a 6-byte MAC address, Reverse order (Bluetooth)
+> + * - '[mM]R' For a 6-byte MAC address, Reverse order (Bluetooth)
+>   * - 'I' [46] for IPv4/IPv6 addresses printed in the usual way
+>   *       IPv4 uses dot-separated decimal without leading 0's (1.2.3.4)
+>   *       IPv6 uses colon separated network-order 16 bit hex with leading 0's
+> @@ -1287,7 +1287,10 @@ qualifier:
+>   * %pR output the address range in a struct resource with decoded flags
+>   * %pr output the address range in a struct resource with raw flags
+>   * %pM output a 6-byte MAC address with colons
+> + * %pMR output a 6-byte MAC address with colons in reversed order
+> + * %pMF output a 6-byte MAC address with dashes
+>   * %pm output a 6-byte MAC address without colons
+> + * %pmR output a 6-byte MAC address without colons in reversed order
+>   * %pI4 print an IPv4 address without leading zeros
+>   * %pi4 print an IPv4 address with leading zeros
+>   * %pI6 print an IPv6 address with colons
+> -- 
+> 1.7.10
+> 
 > --
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
-
-
-
--- 
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
