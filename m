@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54359 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750803Ab2GDLKj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 07:10:39 -0400
-Date: Wed, 4 Jul 2012 13:10:02 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Franco Miceli <fmiceli@plan.ceibal.edu.uy>,
-	Tom Horsley <horsley1953@gmail.com>
-Subject: [PATCH 3.5] rt2x00usb: fix indexes ordering on RX queue kick
-Message-ID: <20120704111001.GA2570@redhat.com> (sfid-20120704_131042_932907_048DEB97)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38499 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235Ab2GXDpT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jul 2012 23:45:19 -0400
+Received: by lbbgm6 with SMTP id gm6so8686348lbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 20:45:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAEFj986CjnbT=j_a7wHvMX9WshjtGD1wttad5iAPM_ViaQhqTg@mail.gmail.com>
+References: <1343092554-17734-1-git-send-email-yeohchunyeow@gmail.com>
+ <CAG6hwVNnqTBi10vGsjYqYBOedtaThjyJuRt6o=XpZF_dRaqQsA@mail.gmail.com> <CAEFj986CjnbT=j_a7wHvMX9WshjtGD1wttad5iAPM_ViaQhqTg@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 24 Jul 2012 13:44:57 +1000
+Message-ID: <CAGRGNgX6dzeZKeZhECPniWTGoyOymwA9ZB1X7NmTD7pCtTyacg@mail.gmail.com> (sfid-20120724_054521_974867_ED27AA61)
+Subject: Re: [PATCH v3] mac80211: add extra checking for RC init upon
+ receiving mesh beacon
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On rt2x00_dmastart() we increase index specified by Q_INDEX and on
-rt2x00_dmadone() we increase index specified by Q_INDEX_DONE. So entries
-between Q_INDEX_DONE and Q_INDEX are those we currently process in the
-hardware. Entries between Q_INDEX and Q_INDEX_DONE are those we can
-submit to the hardware.
+Hi Chun-Yeow,
 
-According to that fix rt2x00usb_kick_queue(), as we need to submit RX
-entries that are not processed by the hardware. It worked before only
-for empty queue, otherwise was broken.
+On Tue, Jul 24, 2012 at 1:40 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> Hi, Thomas
+>
+>>>         sta->last_rx = jiffies;
+>>
+>> You should avoid duplicating this assignment.
+>
+> I think that we should also update the sta->last_rx if the
+> sta->plink_state is not NL80211_PLINK_ESTAB, am I right?
 
-Note that for TX queues indexes ordering are ok. We need to kick entries
-that have filled skb, but was not submitted to the hardware, i.e.
-started from Q_INDEX_DONE and have ENTRY_DATA_PENDING bit set.
+The point Thomas is making is that this assignment happens both when
+the if statement's condition is true and when it's false.
 
->From practical standpoint this fixes RX queue stall, usually reproducible
-in AP mode, like for example reported here:
-https://bugzilla.redhat.com/show_bug.cgi?id=828824
+So you could remove it from the if statement and move the one that's
+after the if statement above the if statement and the code would be
+functionally equivalent and cleaner.
 
-Reported-and-tested-by: Franco Miceli <fmiceli@plan.ceibal.edu.uy>
-Reported-and-tested-by: Tom Horsley <horsley1953@gmail.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index d357d1e..74ecc33 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -436,8 +436,8 @@ void rt2x00usb_kick_queue(struct data_queue *queue)
- 	case QID_RX:
- 		if (!rt2x00queue_full(queue))
- 			rt2x00queue_for_each_entry(queue,
--						   Q_INDEX_DONE,
- 						   Q_INDEX,
-+						   Q_INDEX_DONE,
- 						   NULL,
- 						   rt2x00usb_kick_rx_entry);
- 		break;
 -- 
-1.7.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
