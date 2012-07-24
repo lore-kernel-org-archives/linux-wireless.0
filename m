@@ -1,81 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:52225 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932066Ab2GBFhw (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:47571 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752162Ab2GXLaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 01:37:52 -0400
-Received: by eeit10 with SMTP id t10so1912834eei.19
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2012 22:37:51 -0700 (PDT)
-From: Mariusz Fik <fisiu82@jabster.pl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Intel N 1030 desn't connect to AP with WPA2 | Linux 3.4.2
-Date: Mon, 02 Jul 2012 07:37:46 +0200
-Message-ID: <121930535.dxfIfIrgZC@vostro> (sfid-20120702_073755_847598_59C626CC)
-In-Reply-To: <1340729582.4484.8.camel@jlt3.sipsolutions.net>
-References: <2073595.T30nNVXCf4@pendrak> <1340729582.4484.8.camel@jlt3.sipsolutions.net>
+	Tue, 24 Jul 2012 07:30:21 -0400
+Received: by qcro28 with SMTP id o28so3745075qcr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 04:30:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1390997.JLGRSxc5Cg"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+In-Reply-To: <500BEA08.6020406@allnet.de>
+References: <50082319.5060703@openwrt.org>
+	<500BEA08.6020406@allnet.de>
+Date: Tue, 24 Jul 2012 13:30:20 +0200
+Message-ID: <CAGXE3d_Kq-j7mrFffpcJhGt0Np0p96BeAY_5S2A3aEj2uUwRvw@mail.gmail.com> (sfid-20120724_133046_884960_C5257B92)
+Subject: Re: [rt2x00-users] rt2x00 and hostapd
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Daniel,
 
---nextPart1390997.JLGRSxc5Cg
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"
+On Sun, Jul 22, 2012 at 1:54 PM, Daniel Golle <dgolle@allnet.de> wrote:
+> rt2x00 doesn't work with hostapd, the driver seems to wrongly interpret the
+> carrier state and refuse to send beacons if there is no carrier.
+> there is a workaround out there to fix this (see below), but the right way
+> would be to have this done similar to other mac80211 driver which do not
+> require this workaround.
+> anyone got an idea what's wrong here?
 
-Dnia wtorek, 26 czerwca 2012 18:53:02 Johannes Berg pisze:
-> On Tue, 2012-06-26 at 18:27 +0200, Mariusz Fik wrote:
-> > Hi,
-> > 
-> > I installed openSUSE 12.2 Beta 2 with linux 3.4.2 recently and my wifi
-> > card
-> > 
-> > has problems with connecting to AP with WPA2. Hardware I have:
-> > | 02:00.0 Network controller [0280]: Intel Corporation Centrino Wireless-N
-> > 
-> > 1030 [8086:008a] (rev 34)
-> > 
-> > After boot I connected to my AP and wifi worked fine. After few seconds
-> > connection was disconnected and nm asked me again for password. Every try
-> > of connection was unsuccessful since now. `dmesg`, in the time of trying
-> > to> 
-> > connect, gives me:
-> > | [  434.134710] wlan0: authenticate with 00:22:15:0b:55:a3
-> > | [  434.143822] wlan0: direct probe to 00:22:15:0b:55:a3 (try 1/3)
-> > | [  434.344492] wlan0: direct probe to 00:22:15:0b:55:a3 (try 2/3)
-> > | [  434.545185] wlan0: send auth to 00:22:15:0b:55:a3 (try 3/3)
-> > | [  434.745882] wlan0: authentication with 00:22:15:0b:55:a3 timed out
-> 
-> You're probably running into the TX power issue, that is fixed in 3.4.4:
-> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdi
-> ff;h=75862961e9b445a9bfce25b9da70ef930a857762
-> > | [  434.747111] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active
-> > | station id> 
-> > 0 addr 00:22:15:0b:55:a3
-> 
-> I have a separate fix for this, but I think it's a red herring and
-> probably doesn't cause your problem.
-> 
-> johannes
+Oh, wow, I haven't tried any recent compat-wireless snapshots but this seems
+strange. The main question is if this is a hostapd issue or a rt2x00
+issue but since
+rt2x00 doesn't care about the carrier state AFAIK this seems odd to me ...
 
-I updated kernel to 3.4.4 and it fixed my issue.
-Thanks a lot.
--- 
-Pozdrawiam / Best regards,
-Mariusz Fik
-openSUSE Community Member
-GPG: 5FCE 7241 B3B9 32FD 455B C30E 42D6 6C88 9E83 7C3D
---nextPart1390997.JLGRSxc5Cg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
+However, while looking through the code there are at least a few issues with
+the current handling of configuration changes in rt2x00:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+>From rt2x00mac.c:
 
-iEYEABECAAYFAk/xM6oACgkQQtZsiJ6DfD3qcwCeM6d8NVUSwc+FkhyDZUNldPys
-jDoAn2aX+gJXgfhB4g8KRKj04hUvYG4L
-=NthZ
------END PGP SIGNATURE-----
+        if (changes & (BSS_CHANGED_ERP_CTS_PROT |
+BSS_CHANGED_ERP_PREAMBLE |
+                       BSS_CHANGED_ERP_SLOT | BSS_CHANGED_BASIC_RATES
+|
+                       BSS_CHANGED_BEACON_INT | BSS_CHANGED_HT))
+                rt2x00lib_config_erp(rt2x00dev, intf, bss_conf, changes);
 
---nextPart1390997.JLGRSxc5Cg--
+So, even if the beacon int hasn't changed we will still configure it
+to the device. This might
+cause all sorts of issues.
 
+So, it might make sense to split the rt2x00lib_config_erp call into
+several calls for each
+change-flag or to pass the changed flags to the necessary
+sub-functions to not commit
+false changes ...
+
+However, I'm not sure if this is related to your problem but might be
+an entry point for
+you to track the problem down.
+
+Helmut
+
+> -------- Original Message --------
+> Subject: Re: [OpenWrt-Devel] [PATCH] mac80211: import patch for rt2x00
+> Date: Thu, 19 Jul 2012 17:09:13 +0200
+> From: Felix Fietkau <nbd@openwrt.org>
+> To: OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+> CC: Daniel Golle <dgolle@allnet.de>
+>
+> On 2012-07-19 5:02 PM, Daniel Golle wrote:
+>> without this hostapd doesn't work on any of the RT3xxx systems I tested.
+>>
+>> Signed-off-by: Daniel Golle <dgolle@allnet.de> ---
+>> ...10-rt2x00-mac80211-manage-AP-netdev-carrier-state.patch | 14
+>> ++++++++++++++ 1 file changed, 14 insertions(+) create mode 100644
+>> package/mac80211/patches/610-rt2x00-mac80211-manage-AP-netdev-carrier-state.patch
+>>
+>>
+>>
+> diff --git
+>> a/package/mac80211/patches/610-rt2x00-mac80211-manage-AP-netdev-carrier-state.patch
+>>
+>>
+> b/package/mac80211/patches/610-rt2x00-mac80211-manage-AP-netdev-carrier-state.patch
+>>
+>>
+> new file mode 100644
+>> index 0000000..a1d9f06 --- /dev/null +++
+>> b/package/mac80211/patches/610-rt2x00-mac80211-manage-AP-netdev-carrier-state.patch
+>>
+>>
+>>
+> @@ -0,0 +1,14 @@
+>> +Index: compat-wireless-2012-04-17/net/mac80211/iface.c
+>> +=================================================================== +---
+>> compat-wireless-2012-04-17.orig/net/mac80211/iface.c  2012-05-09
+>> 01:00:39.197975402 +0200 ++++
+>> compat-wireless-2012-04-17/net/mac80211/iface.c       2012-05-09
+>> 01:02:32.514918371 +0200 +@@ -411,8 +407,7 @@ +
+>> ieee80211_bss_info_change_notify(sdata, changed); + +                 if
+>> (sdata->vif.type == NL80211_IFTYPE_STATION || +-                  sdata->vif.type ==
+>> NL80211_IFTYPE_ADHOC || +-                sdata->vif.type == NL80211_IFTYPE_AP) ++
+>> sdata->vif.type == NL80211_IFTYPE_ADHOC) +                    netif_carrier_off(dev); +
+>> else +                        netif_carrier_on(dev);
+> I think this needs to be sorted out upstream. As far as I know, nobody
+> so far has figured out yet why managing the netdev carrier state causes
+> the hostapd issues and why it appears to only happen on rt2x00.
+>
+> - Felix
+>
+>
+>
+>
+> _______________________________________________
+> users mailing list
+> users@rt2x00.serialmonkey.com
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
