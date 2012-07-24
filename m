@@ -1,98 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45544 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754404Ab2GEHrj (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53318 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755294Ab2GXUS6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 03:47:39 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: fix locking regression in monitor channel tracking
-Date: Thu,  5 Jul 2012 09:47:32 +0200
-Message-Id: <1341474452-5812-1-git-send-email-johannes@sipsolutions.net> (sfid-20120705_094742_766702_1D707C51)
+	Tue, 24 Jul 2012 16:18:58 -0400
+Received: by pbbrp8 with SMTP id rp8so124322pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 13:18:57 -0700 (PDT)
+From: "Balaji Ravindran" <opensrc@gameprotocol.com>
+To: <Larry.Finger@lwfinger.net>
+Cc: <gwingerde@gmail.com>, <linux-wireless@vger.kernel.org>
+References: <500F00F1.70700@cisco.com>
+In-Reply-To: <500F00F1.70700@cisco.com>
+Subject: RE: Help requested troubleshooting compilation of rt3573 driver for cisco ae3000
+Date: Tue, 24 Jul 2012 13:18:56 -0700
+Message-ID: <00c201cd69d9$8da71710$a8f54530$@gameprotocol.com> (sfid-20120724_221901_708098_6DB878C4)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Larry, Gertjan,
 
-Michal's monitor channel tracking introduce a locking problem
-as it locked the rdev lock inside the netdev notifier which
-isn't allowed as we might already hold it if we get there by
-removing an interface that is up.
+Thank you so much for the reply. I tried it, Yeap, rt2800usb is unable to
+handle this chipset.
 
-Fix this by relying only on the RTNL to protect the interface
-counters, the RTNL is always held in these code paths anyway.
+However, on the other hand, i tried to compile the driver once again from
+RT3573 source. Even their device table did not have an entry for this dev_id
+(13b1:003b), so I manually added the entry to the USB_DEVICE and compiled
+the driver. 
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+It now works in my other ubuntu 12.04 computer.
+
+I will head home and try it on my 64 bit OS though. I thought i did it
+correctly yesterday, maybe i skipped something while adding the dev_id while
+compiling the driver.
+
+root@balravin-lnx-server:~# modprobe -v rt2800usb insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2x00l
+ib.ko
+insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2x00u
+sb.ko
+insmod /lib/modules/3.2.0-25-generic-pae/kernel/lib/crc-ccitt.ko
+insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2800l
+ib.ko
+insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2800u
+sb.ko
+
+root@balravin-lnx-server:~# echo "13b1 003b" >
+/sys/bus/usb/drivers/rt2800usb/new_id
+root@balravin-lnx-server:~# lsusb
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub Bus 002
+Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub Bus 003 Device 001:
+ID 1d6b:0002 Linux Foundation 2.0 root hub Bus 004 Device 001: ID 1d6b:0003
+Linux Foundation 3.0 root hub Bus 001 Device 002: ID 8087:0024 Intel Corp.
+Integrated Rate Matching Hub Bus 002 Device 002: ID 8087:0024 Intel Corp.
+Integrated Rate Matching Hub Bus 003 Device 002: ID 05e3:0608 Genesys Logic,
+Inc. USB-2.0 4-Port HUB Bus 001 Device 003: ID 05ca:18c0 Ricoh Co., Ltd Bus
+002 Device 003: ID 13b1:003b Linksys Bus 003 Device 003: ID 10d5:5000 Uni
+Class Technology Co., Ltd Bus 001 Device 005: ID 0489:e00f Foxconn / Hon Hai
+Foxconn T77H114 BCM2070 [Single-Chip Bluetooth 2.1 + EDR Adapter]
+root@balravin-lnx-server:~# exit logout balravin@balravin-lnx-server:~$
+iwconfig
+
+wlan0     IEEE 802.11bgn  ESSID:"hurricane"
+          Bit Rate=144.4 Mb/s   Tx-Power=13 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality=66/70  Signal level=-44 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:699  Invalid misc:272   Missed beacon:0
+
+Thanks once again.
+
+Regards
+
+Balaji R
+
+
+-----Original Message-----
+From: Balaji Ravindran [mailto:balravin@cisco.com] 
+Sent: Tuesday, July 24, 2012 1:16 PM
+To: Larry Finger
+Cc: linux-wireless@vger.kernel.org; Gertjan van Wingerde
+Subject: Re: Help requested troubleshooting compilation of rt3573 driver for
+cisco ae3000
+
+Hi Larry, Gertjan,
+
+Thank you so much for the reply. I tried it, Yeap, rt2800usb is unable to
+handle this chipset.
+
+However, on the other hand, i tried to compile the driver again from RT3573
+source. Even their device table did not have an entry for this dev_id
+(13b1:003b), so I manually added the entry to the USB_DEVICE and compiled
+the driver. 
+
+It now works in my other ubuntu 12.04 computer.
+
+I will head home and try it on my 64 bit OS though. I thought i did it
+correctly yesterday, maybe i skipped something while adding the dev_id while
+compiling the driver.
+
+root@balravin-lnx-server:~# modprobe -v rt2800usb insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2x00l
+ib.ko
+insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2x00u
+sb.ko
+insmod /lib/modules/3.2.0-25-generic-pae/kernel/lib/crc-ccitt.ko
+insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2800l
+ib.ko
+insmod
+/lib/modules/3.2.0-25-generic-pae/kernel/drivers/net/wireless/rt2x00/rt2800u
+sb.ko
+
+root@balravin-lnx-server:~# echo "13b1 003b" >
+/sys/bus/usb/drivers/rt2800usb/new_id
+root@balravin-lnx-server:~# lsusb
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub Bus 002
+Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub Bus 003 Device 001:
+ID 1d6b:0002 Linux Foundation 2.0 root hub Bus 004 Device 001: ID 1d6b:0003
+Linux Foundation 3.0 root hub Bus 001 Device 002: ID 8087:0024 Intel Corp.
+Integrated Rate Matching Hub Bus 002 Device 002: ID 8087:0024 Intel Corp.
+Integrated Rate Matching Hub Bus 003 Device 002: ID 05e3:0608 Genesys Logic,
+Inc. USB-2.0 4-Port HUB Bus 001 Device 003: ID 05ca:18c0 Ricoh Co., Ltd Bus
+002 Device 003: ID 13b1:003b Linksys Bus 003 Device 003: ID 10d5:5000 Uni
+Class Technology Co., Ltd Bus 001 Device 005: ID 0489:e00f Foxconn / Hon Hai
+Foxconn T77H114 BCM2070 [Single-Chip Bluetooth 2.1 + EDR Adapter]
+root@balravin-lnx-server:~# exit logout balravin@balravin-lnx-server:~$
+iwconfig
+
+wlan0     IEEE 802.11bgn  ESSID:"hurricane"
+          Bit Rate=144.4 Mb/s   Tx-Power=13 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality=66/70  Signal level=-44 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:699  Invalid misc:272   Missed beacon:0
+
+Thanks once again.
+
+Regards
+
+Balaji R
+
+On 07/24/2012 01:02 PM, Gertjan van Wingerde wrote:
+Balaji, Larry,
+
+On 24 jul. 2012, at 21:48, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+On 07/24/2012 01:52 PM, Balaji Ravindran (balravin) wrote:
+Hi,
+
+I request help to make my cisco AE3000 wireless usb work with my Ubuntu
+12.04 64 bit server OS. I tried the following, and everything was in vain.
+So please pass me on some pointers.
+
+ 1.      Started off with ndiswrapper.
+
+   a.      Looked for Windows XP driver from CD packaging and tried load it
+with ndiswrapper 1.57, but it is not working because, cisco does not provide
+a 64 bit windows xp driver, so ndiswrapper complains saying 64 bit kernel
+detected.
+
+   b.      I did give a shot with using 64bit windows vista and windows 7
+drivers included in the CD package even though I knew ndiswrapper will not
+support vista or win 7 drivers.
+
+2.      RT drivers are opensource (yay!) so identified the hardware Id for
+the product it was (13b1:003b) comes with rt3573 chipset (I confirm that).
+So I downloaded the latest RT3573 chipset driver from their RALINK website,
+and still no use.
+I successfully built and installed the rt3573sta.ko under
+/lib/modules/(shell $(uname -r))..... and was successfully able to modprobe
+the module. But still I did not see the device's model was recognized as a
+WiFi device.
+Output of 'lsusb' still showed up 'Linksys'
+
+ 3.      Step further, under /common/rtusb_dev_id.c I waslooking for the USB
+device id, and I could'nt find a match for 13b1:003b., so created a new
+device id, and rebuilt the driver
+
+   a.      Make clean, make uninstall, make install.
+   b.      Driver built successfully, still did not detect the device
+
+4.      In vain tried the default included rt2800usb module., and did
+   a.      sudo depmod -a
+   b.      sudo modprobe -v rt2800usb
+   c.      Module loaded successfully, and still in vain, driver not
+detected.
+
+Any help here would be much appreciated? Anything I missed out or I could
+try., please help.
+
+A device with an RT3573 chip should be handled by rt2800usb; however, your
+particular ID is not in the device table.
+
+What happens when you do the following:
+
+su -
+modprobe -v rt2800usb
+echo "13b1 003b" > /sys/bus/usb/drivers/rt2800usb/new_id
+exit
+
+Unfortunately rt2800usb is not able to handle the RT3573 chip. It is quite a
+different beast then the other chips that are supported ( for one it is the
+first 3T3R chip that we see from Ralink, and the EEPROM layout is quite
+different).
+
+So, you have to stick with the driver of the Ralink website, until we are
+able to add support for the chip in rt2800usb.
+Although I do own a device with that chip, my time is unfortunately very
+limited right now, so my progress is very slow.
+
 ---
- net/wireless/core.c |    8 ++------
- net/wireless/core.h |    4 +++-
- 2 files changed, 5 insertions(+), 7 deletions(-)
+Gertjan
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index e13365f..eb60410 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -766,7 +766,7 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
- 	bool has_monitors_only_new;
- 
--	ASSERT_RDEV_LOCK(rdev);
-+	ASSERT_RTNL();
- 
- 	rdev->num_running_ifaces += num;
- 	if (iftype == NL80211_IFTYPE_MONITOR)
-@@ -888,10 +888,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		wdev->beacon_interval = 0;
- 		break;
- 	case NETDEV_DOWN:
--		dev_hold(dev);
--		cfg80211_lock_rdev(rdev);
- 		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
--		cfg80211_unlock_rdev(rdev);
-+		dev_hold(dev);
- 		queue_work(cfg80211_wq, &wdev->cleanup_work);
- 		break;
- 	case NETDEV_UP:
-@@ -1001,9 +999,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		mutex_unlock(&rdev->devlist_mtx);
- 		if (ret)
- 			return notifier_from_errno(ret);
--		cfg80211_lock_rdev(rdev);
- 		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
--		cfg80211_unlock_rdev(rdev);
- 		break;
- 	}
- 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 81fef3d..377dc39 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -13,6 +13,7 @@
- #include <linux/debugfs.h>
- #include <linux/rfkill.h>
- #include <linux/workqueue.h>
-+#include <linux/rtnetlink.h>
- #include <net/genetlink.h>
- #include <net/cfg80211.h>
- #include "reg.h"
-@@ -56,6 +57,7 @@ struct cfg80211_registered_device {
- 
- 	u32 ap_beacons_nlpid;
- 
-+	/* protected by RTNL only */
- 	int num_running_ifaces;
- 	int num_running_monitor_ifaces;
- 
-@@ -205,7 +207,7 @@ static inline void wdev_unlock(struct wireless_dev *wdev)
- 
- static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
- {
--	ASSERT_RDEV_LOCK(rdev);
-+	ASSERT_RTNL();
- 
- 	return rdev->num_running_ifaces == rdev->num_running_monitor_ifaces &&
- 	       rdev->num_running_ifaces > 0;
--- 
-1.7.10
 
