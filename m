@@ -1,124 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from storm.alittletooquiet.net ([67.23.28.199]:49497 "EHLO
-	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932690Ab2GLSRw (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50863 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753538Ab2GXDyg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 14:17:52 -0400
-Date: Thu, 12 Jul 2012 14:17:51 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Anyone using rtl8192de with 2.4GHz 802.11g?
-Message-ID: <20120712181751.GB9489@alittletooquiet.net> (sfid-20120712_201756_808068_59AD65B4)
-References: <20120712002149.GA14850@alittletooquiet.net>
- <4FFE211C.3020506@lwfinger.net>
- <20120712013216.GB14850@alittletooquiet.net>
- <4FFE2F38.7030604@lwfinger.net>
- <20120712152545.GA9489@alittletooquiet.net>
- <4FFEF9F8.5060106@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EuxKj2iCbKjpUGkD"
-In-Reply-To: <4FFEF9F8.5060106@lwfinger.net>
+	Mon, 23 Jul 2012 23:54:36 -0400
+Received: by pbbrp8 with SMTP id rp8so11971451pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2012 20:54:35 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v4] mac80211: add extra checking for RC init upon receiving mesh beacon
+Date: Tue, 24 Jul 2012 11:52:35 +0800
+Message-Id: <1343101955-16710-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120724_055511_707021_1B20E3D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Rate control statistic is flushed whenever the mesh beacon
+is received. This may not optimizes the performance of rate
+control algorithm. This patch ensures that we return early
+from mesh_peer_init if the plink_state is ESTAB. Thus, avoid
+calling the rate_control_rate_init again for established mesh
+STA.
 
---EuxKj2iCbKjpUGkD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+v2: simplify the logic checking (Thomas Pedersen)
+v3: updating the sta last rx activity (Thomas Pedersen)
+v4: avoid duplicate assignment (Thomas Pedersen)
 
-Hi Larry,
+ net/mac80211/mesh_plink.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-On Thu, Jul 12, 2012 at 11:23:20AM -0500, Larry Finger wrote:
-> On 07/12/2012 10:25 AM, Forest Bond wrote:
-> >On Wed, Jul 11, 2012 at 08:58:16PM -0500, Larry Finger wrote:
-> >>On 07/11/2012 08:32 PM, Forest Bond wrote:
-> >>>On Wed, Jul 11, 2012 at 07:58:04PM -0500, Larry Finger wrote:
-> >>>>On 07/11/2012 07:21 PM, Forest Bond wrote:
-> >>>>>The rtl8192de driver is working fine for me at 5GHz, but I am having=
- trouble
-> >>>>>getting scan results for 2.4GHz 802.11g networks.  I have been doing=
- a lot of
-> >>>>>debugging but am not making much progress.  I suspect the 802.11 b/g=
-/n phy is
-> >>>>>not being initialized correctly, but I'm pretty far outside my domai=
-n on this
-> >>>>>one.
-> >>>>>
-> >>>>>Is anyone successfully using this driver with a 2.4GHz 802.11g netwo=
-rk?
-> >>>>
-> >>>>I have several different models - some work better than others. What
-> >>>>is the PCI ID for yours?
-> >>>
-> >>>This is the one I have:
-> >>>
-> >>>02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. Dev=
-ice [10ec:8193]
-> >>>02:00.1 Network controller [0280]: Realtek Semiconductor Co., Ltd. Dev=
-ice [10ec:8193] (rev 01)
-> >>
-> >>It turns out that both kinds have the same ID. I think one of them
-> >>is a prototype, while the other is probably a production unit.
-> >>Obviously, bitrot has set in while I wasn't testing. With the kernel
-> >>driver, neither unit can even scan in the 2.4 GHz band. Using the
-> >>latest version of the vendor driver, the production version connects
-> >>with APs running WEP, WPA, or WPA2. The prototype can only handle
-> >>WEP.
-> >>
-> >>Obviously, I have some work to do. In the meantime, I will send you
-> >>a tarball containing the vendor driver - privately so as not to spam
-> >>the list.
-> >
-> >Thank you, I appreciate that.
-> >
-> >Of course, my preference would be to fix up the kernel driver.  I don't =
-mind
-> >doing some manual bisection with compat-wireless releases unless you thi=
-nk that
-> >would be a total waste of time.  Do you have any sense for what the last=
- working
-> >kernel version would have been?
-> >
-> >As you suggest, we may need to use the vendor driver in the meantime.  T=
-hanks
-> >again for sending it over (although I suspect it is the same version I
-> >downloaded from Realtek's web site).
->=20
-> It started with the Realtek version, but has some important bug
-> fixes that I wanted you to have.
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 4256859..dfeb243 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -361,6 +361,11 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
+ 
+ 	spin_lock_bh(&sta->lock);
+ 	sta->last_rx = jiffies;
++	if (sta->plink_state == NL80211_PLINK_ESTAB) {
++		spin_unlock_bh(&sta->lock);
++		return sta;
++	}
++
+ 	sta->sta.supp_rates[band] = rates;
+ 	if (elems->ht_cap_elem &&
+ 	    sdata->local->_oper_channel_type != NL80211_CHAN_NO_HT)
+-- 
+1.7.0.4
 
-Thanks, that's really helpful.
-
-> Of course, we want to fix the kernel version, but if you want to
-> bisect compat-wireless, that would be a big help. In the meantime, I
-> will try bisecting wireless-testing when I get a chance.
-
-I have begun disecting compat-wireless releases.  3.1.1-1 works, 3.2.5-1
-doesn't.  I'm going to try to identify the commit that broke things by appl=
-ying
-patches to 3.1.1-1.
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.rapidrollout.com
-
---EuxKj2iCbKjpUGkD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk//FM8ACgkQRO4fQQdv5AzAzQCcDxYjp8DisFgcETMsLg0Lu/qM
-ZpYAn20w2dSiQexWGa0SrC3Ycdaxz69E
-=WgtQ
------END PGP SIGNATURE-----
-
---EuxKj2iCbKjpUGkD--
