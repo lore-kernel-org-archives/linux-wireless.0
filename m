@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33986 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750752Ab2GTGSW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39622 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754696Ab2GXPmF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2012 02:18:22 -0400
-Message-ID: <5008F829.8020902@qca.qualcomm.com> (sfid-20120720_081827_579520_245C05A1)
-Date: Fri, 20 Jul 2012 09:18:17 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: fix incorrect use of IEEE80211_NUM_BANDS
-References: <20120712091311.9751.60082.stgit@localhost6.localdomain6> <20120712134855.53d23fef@mj> <5007EABC.5050905@qca.qualcomm.com> <20120719171114.4d904006@mj>
-In-Reply-To: <20120719171114.4d904006@mj>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 24 Jul 2012 11:42:05 -0400
+Message-ID: <1343144523.4415.44.camel@jlt3.sipsolutions.net> (sfid-20120724_174208_666126_F261F7A3)
+Subject: Re: [PATCH] brcmsmac: use ieee80211_channel_to_frequency
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: arend@broadcom.com, brcm80211-dev-list@broadcom.com
+Date: Tue, 24 Jul 2012 17:42:03 +0200
+In-Reply-To: <1343144157-8349-1-git-send-email-johannes@sipsolutions.net> (sfid-20120724_173614_692844_D7D2D8B0)
+References: <1343144157-8349-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120724_173614_692844_D7D2D8B0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/20/2012 12:11 AM, Pavel Roskin wrote:
-> On Thu, 19 Jul 2012 14:08:44 +0300
-> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> On 07/12/2012 08:48 PM, Pavel Roskin wrote:
->>> On Thu, 12 Jul 2012 12:13:12 +0300
->>> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>>
->>>> +	/* only check 2.4 and 5 GHz bands, skip the rest */
->>>> +	for (band = 0; band <= IEEE80211_BAND_5GHZ; band++) {
->>>
->>> There is something inelegant here.  The code is mixing an integer
->>> and an enum.  I'd rather go with one or those:
->>>
->>> two enums:
->>> for (band = IEEE80211_BAND_2GHZ; band <= IEEE80211_BAND_5GHZ;
->>> band++) {
->>
->> I somewhat see your point. But IMHO zero is commonly used when
->> iterating over an enum to denote the first value and I don't see how
->> IEEE80211_BAND_2GHZ helps here.
-> 
-> It's the lowest band we support.  What if the 900MHz band is added one
-> day?
+On Tue, 2012-07-24 at 17:35 +0200, Johannes Berg wrote:
 
-Then that should be added to the end of the enum, not beginning. I think
-it would be bad if we change enum values on the fly.
+> -	if (channel > 14) {
+> -		rx_status->band = IEEE80211_BAND_5GHZ;
+> -		rx_status->freq = ieee80211_ofdm_chan_to_freq(
+> -					WF_CHAN_FACTOR_5_G/2, channel);
+> -
+> -	} else {
+> -		rx_status->band = IEEE80211_BAND_2GHZ;
+> -		rx_status->freq = ieee80211_dsss_chan_to_freq(channel);
+> -	}
+> +	rx_status->band =
+> +		channel > 14 ? IEEE80211_BAND_5GHZ : IEEE80211_BAND_2GHZ;
 
-Kalle
+In case somebody is wondering -- this was and remains an assumption due
+to the hardware in question, it isn't true in general that channel
+numbers > 14 are for 5 GHz channels and others are 2.4 GHz.
+
+johannes
+
