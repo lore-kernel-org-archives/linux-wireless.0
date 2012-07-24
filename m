@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10811 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751196Ab2GFUAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 16:00:40 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 33/33] NFC: Check for llcp_sock and its device from llcp_sock_getname
-Date: Fri,  6 Jul 2012 22:09:53 +0200
-Message-Id: <1341605393-32056-34-git-send-email-sameo@linux.intel.com> (sfid-20120706_220534_723798_469558B5)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39316 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754241Ab2GXOKz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jul 2012 10:10:55 -0400
+Message-ID: <1343139049.4415.28.camel@jlt3.sipsolutions.net> (sfid-20120724_161058_959502_B789D760)
+Subject: Re: [PATCH v2] mac80211: VHT (11ac) Association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 24 Jul 2012 16:10:49 +0200
+In-Reply-To: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC6FCB@mbx022-e1-nj-10.exch022.domain.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They both can potentially be NULL.
+On Tue, 2012-07-24 at 03:33 +0000, Mahesh Palivela wrote:
+> VHT (11ac) Association related change version 2. Incorporated Johannes review comments.
+> 
+> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
+> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/sock.c |    3 +++
- 1 file changed, 3 insertions(+)
+Applied, but I fixed up the commit message. Please review & make a
+better one next time :)
 
-diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
-index 6152d05..ddeb9aa 100644
---- a/net/nfc/llcp/sock.c
-+++ b/net/nfc/llcp/sock.c
-@@ -294,6 +294,9 @@ static int llcp_sock_getname(struct socket *sock, struct sockaddr *uaddr,
- 	struct nfc_llcp_sock *llcp_sock = nfc_llcp_sock(sk);
- 	DECLARE_SOCKADDR(struct sockaddr_nfc_llcp *, llcp_addr, uaddr);
- 
-+	if (llcp_sock == NULL || llcp_sock->dev == NULL)
-+		return -EBADFD;
-+
- 	pr_debug("%p %d %d %d\n", sk, llcp_sock->target_idx,
- 		 llcp_sock->dsap, llcp_sock->ssap);
- 
--- 
-1.7.10
+johannes
 
