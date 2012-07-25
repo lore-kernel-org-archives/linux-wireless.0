@@ -1,71 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46381 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43090 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030292Ab2GLJ4o (ORCPT
+	with ESMTP id S932882Ab2GYLy0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 05:56:44 -0400
-Message-ID: <1342087000.4531.11.camel@jlt3.sipsolutions.net> (sfid-20120712_115658_371123_64E83BB6)
-Subject: Re: pull-request: mac80211-next 2012-07-10
+	Wed, 25 Jul 2012 07:54:26 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 12 Jul 2012 11:56:40 +0200
-In-Reply-To: <1342085261.4531.9.camel@jlt3.sipsolutions.net> (sfid-20120712_112748_417680_83E2626B)
-References: <1341946090.4475.31.camel@jlt3.sipsolutions.net>
-	 (sfid-20120710_204821_128762_BC016001) <1342085261.4531.9.camel@jlt3.sipsolutions.net>
-	 (sfid-20120712_112748_417680_83E2626B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: yeohchunyeow@gmail.com, thomas@cozybit.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: mesh: don't use global channel type
+Date: Wed, 25 Jul 2012 13:54:19 +0200
+Message-Id: <1343217259-10043-1-git-send-email-johannes@sipsolutions.net> (sfid-20120725_135445_910113_268C9BB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-12 at 11:27 +0200, Johannes Berg wrote:
-> On Tue, 2012-07-10 at 20:48 +0200, Johannes Berg wrote:
-> > John,
-> > 
-> > Please pull some more patches. I've included the first round of API
-> > additions/updates for the P2P Device abstraction, I don't know if we'll
-> > get the actual code done in time for 3.6 but I didn't want to hang on to
-> > these APIs for too long to avoid conflicts.
-> 
-> Ugh, I found a bug with this, please drop, I'll respin. Sorry!
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok the bug is this -- if we remove a wdev (that doesn't have a netdev),
-this change is obviously needed:
+Using local->_oper_channel_type in the mesh code is
+completely wrong as this value is the combination
+of the various interface channel types and can be
+a different value from the mesh interface in case
+there are multiple virtual interfaces.
 
+Use sdata->vif.bss_conf.channel_type instead as it
+tracks the per-vif channel type.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 27cd18e..70452aa 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6768,6 +6768,7 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
- 			info->user_ptr[1] = dev;
- 		} else {
- 			info->user_ptr[1] = wdev;
-+			info->user_ptr[2] = wdev->netdev;
- 		}
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mesh.c       |   11 ++++++-----
+ net/mac80211/mesh_plink.c |    7 ++++---
+ 2 files changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e6d1788..62d93ab 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -109,11 +109,11 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
  
- 		if (dev) {
-@@ -6799,10 +6800,8 @@ static void nl80211_post_doit(struct genl_ops *ops, struct sk_buff *skb,
- 		cfg80211_unlock_rdev(info->user_ptr[0]);
- 	if (info->user_ptr[1]) {
- 		if (ops->internal_flags & NL80211_FLAG_NEED_WDEV) {
--			struct wireless_dev *wdev = info->user_ptr[1];
--
--			if (wdev->netdev)
--				dev_put(wdev->netdev);
-+			if (info->user_ptr[2])
-+				dev_put(info->user_ptr[2]);
- 		} else {
- 			dev_put(info->user_ptr[1]);
- 		}
-
-
-I've rolled it into the patch that introduced the bug ("nl80211: add
-NL80211_FLAG_NEED_WDEV") and will send a new pull request. Obviously,
-I'm therefore rebasing my tree.
-
-Sorry for the inconvenience!
-
-johannes
+ 	/* Disallow HT40+/- mismatch */
+ 	if (ie->ht_operation &&
+-	    (local->_oper_channel_type == NL80211_CHAN_HT40MINUS ||
+-	    local->_oper_channel_type == NL80211_CHAN_HT40PLUS) &&
++	    (sdata->vif.bss_conf.channel_type == NL80211_CHAN_HT40MINUS ||
++	     sdata->vif.bss_conf.channel_type == NL80211_CHAN_HT40PLUS) &&
+ 	    (sta_channel_type == NL80211_CHAN_HT40MINUS ||
+ 	     sta_channel_type == NL80211_CHAN_HT40PLUS) &&
+-	    local->_oper_channel_type != sta_channel_type)
++	    sdata->vif.bss_conf.channel_type != sta_channel_type)
+ 		goto mismatch;
+ 
+ 	return true;
+@@ -375,7 +375,7 @@ int mesh_add_ht_cap_ie(struct sk_buff *skb,
+ 
+ 	sband = local->hw.wiphy->bands[local->oper_channel->band];
+ 	if (!sband->ht_cap.ht_supported ||
+-	    local->_oper_channel_type == NL80211_CHAN_NO_HT)
++	    sdata->vif.bss_conf.channel_type == NL80211_CHAN_NO_HT)
+ 		return 0;
+ 
+ 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
+@@ -392,7 +392,8 @@ int mesh_add_ht_oper_ie(struct sk_buff *skb,
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_channel *channel = local->oper_channel;
+-	enum nl80211_channel_type channel_type = local->_oper_channel_type;
++	enum nl80211_channel_type channel_type =
++				sdata->vif.bss_conf.channel_type;
+ 	struct ieee80211_supported_band *sband =
+ 				local->hw.wiphy->bands[channel->band];
+ 	struct ieee80211_sta_ht_cap *ht_cap = &sband->ht_cap;
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 6df9fc0..a203166 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -117,7 +117,7 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
+ 	u16 ht_opmode;
+ 	bool non_ht_sta = false, ht20_sta = false;
+ 
+-	if (local->_oper_channel_type == NL80211_CHAN_NO_HT)
++	if (sdata->vif.bss_conf.channel_type == NL80211_CHAN_NO_HT)
+ 		return 0;
+ 
+ 	rcu_read_lock();
+@@ -147,7 +147,8 @@ out:
+ 
+ 	if (non_ht_sta)
+ 		ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED;
+-	else if (ht20_sta && local->_oper_channel_type > NL80211_CHAN_HT20)
++	else if (ht20_sta &&
++		 sdata->vif.bss_conf.channel_type > NL80211_CHAN_HT20)
+ 		ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_20MHZ;
+ 	else
+ 		ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_NONE;
+@@ -370,7 +371,7 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sta->sta.supp_rates[band] = rates;
+ 	if (elems->ht_cap_elem &&
+-	    sdata->local->_oper_channel_type != NL80211_CHAN_NO_HT)
++	    sdata->vif.bss_conf.channel_type != NL80211_CHAN_NO_HT)
+ 		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
+ 						  elems->ht_cap_elem,
+ 						  &sta->sta.ht_cap);
+-- 
+1.7.10.4
 
