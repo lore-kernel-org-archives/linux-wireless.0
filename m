@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34079 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206Ab2GILuw (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:61938 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933089Ab2GYOWN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 07:50:52 -0400
-Message-ID: <1341834647.4455.32.camel@jlt3.sipsolutions.net> (sfid-20120709_135055_842002_F9E960E0)
-Subject: Re: [RHEL6 PATCH] iwlwifi: remove spurious warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 09 Jul 2012 13:50:47 +0200
-In-Reply-To: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
-References: <1341834509-11601-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 25 Jul 2012 10:22:13 -0400
+Received: by weyx8 with SMTP id x8so574093wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 07:22:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1343225435.1693.10.camel@joe2Laptop>
+References: <1343227629-14161-1-git-send-email-zajec5@gmail.com>
+	<1343225435.1693.10.camel@joe2Laptop>
+Date: Wed, 25 Jul 2012 16:22:11 +0200
+Message-ID: <CACna6rwDo=oW42mEwHXT0M5c56tWWtBqqb+Wv+L0iKzSasux8A@mail.gmail.com> (sfid-20120725_162217_028674_68A04243)
+Subject: Re: [PATCH V2] b43: be more user friendly with PHY info
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-09 at 13:48 +0200, Stanislaw Gruszka wrote:
-> BZ#837754
-> 
-> Description:
-> Some devices do not set SEQ_RX_FRAME flags for few commands that should
-> not be reclaimed. It was supposed to be fixed in firmware, but it was
-> not.
-> 
-> Upstream change also add possibility to configure which commands should
-> not be reclaimed, but that option is not used - only original 6 commands
-> are configured. So I did not backport that part, because it make things
-> somewhat (not necessarily) complex.
+2012/7/25 Joe Perches <joe@perches.com>:
+> On Wed, 2012-07-25 at 16:47 +0200, Rafał Miłecki wrote:
+>> use PHY names instead of magic numbers.
+> []
+>> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> []
+>> @@ -4277,6 +4277,37 @@ out:
+> []
+>> +static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
+>> +{
+>> +     switch (phy_type) {
+>> +     case B43_PHYTYPE_A:
+>> +             return "A";
+> []
+>> +     }
+>> +
+>> +     b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
+>> +     return "UNKNOWN";
+>
+> In general, it's a bad idea to emit error messages
+> in a generic call like this.
 
-Yeah, looks fine. I'd hoped it was fixed for iwlwifi drivers (we
-couldn't remember if it was 4965 only or not) but it turns out it wasn't
-so this is needed.
+This function is not supposed to be called anywhere else, it's only
+for a single user-friendly message.
 
-I don't know if there's anything I should do about this though?
 
-johannes
+>> @@ -4337,13 +4368,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+>>               unsupported = 1;
+>>       }
+>>       if (unsupported) {
+>> -             b43err(dev->wl, "FOUND UNSUPPORTED PHY "
+>> -                    "(Analog %u, Type %u, Revision %u)\n",
+>> -                    analog_type, phy_type, phy_rev);
+>> +             b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
+>> +                    analog_type, b43_phy_name(dev, phy_type), phy_rev);
+>
+> The extra message doesn't add much useful info
+> and can also cause errors in continued messages.
 
+By "extra message" do you mean the one from b43_phy_name? I wanted to
+print PHY type as digit somewhere (in case it is not recognized). I
+can't use simple
+return ("UNKNOWN %d", phy_type);
+, such a solution would require allocating memory for string and
+freeing it. It would complicate the function.
+
+Do you have any suggestion for better handling this?
+
+-- 
+Rafał
