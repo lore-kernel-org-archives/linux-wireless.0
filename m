@@ -1,163 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52065 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758265Ab2GFVFg (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:37214 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229Ab2GYWW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 17:05:36 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/3] mac80211: track scheduled scan virtual interface
-Date: Fri,  6 Jul 2012 23:05:32 +0200
-Message-Id: <1341608733-7503-3-git-send-email-johannes@sipsolutions.net> (sfid-20120706_230545_201404_86DBAD3F)
-In-Reply-To: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
-References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 25 Jul 2012 18:22:26 -0400
+Received: by obbuo13 with SMTP id uo13so1708195obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 15:22:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <50104135.1030105@openwrt.org>
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<CAFtRNNx+YgGgFp_owGQJcsQVqTuOeWk2J0MwjKMtcUgRq_DF0w@mail.gmail.com>
+	<50104135.1030105@openwrt.org>
+Date: Thu, 26 Jul 2012 01:22:25 +0300
+Message-ID: <CAFtRNNy3kgzbX7=No+YN=4nPZf=Mku6mRXcfXc_PdTbSKD3_SA@mail.gmail.com> (sfid-20120726_002230_307158_FF8DF527)
+Subject: Re: [PATCH 1/2] ath5k: fix wrong per rate target power eeprom reads
+ for AR5K_EEPROM_MODE_11A
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
+	linville@tuxdriver.com, jirislaby@gmail.com,
+	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, johannes.berg@intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2012/7/25 Felix Fietkau <nbd@openwrt.org>:
+> On 2012-07-25 8:42 PM, Nick Kossifidis wrote:
+>> 2012/7/23 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+>>> This patch reduces the per rate target power eeprom reads for
+>>> AR5K_EEPROM_MODE_11A from 10 to 8, as there are only 8 valid
+>>> power curve entries on the eeprom. The former 10 reads lead to
+>>> wrong per rate power limits where rates above 24MBit could be
+>>> amplified with to high distortion leading to bad performance.
+>>> This was fix validated against the madwifi codebase and a new
+>>> AR5K_EEPROM_N_5GHZ_RATE_CHAN 8 is defined.
+>>>
+>>> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+>>> ---
+>>> madwifi cross validation check. Thx to Felix Fiethkau
+>>> ---
+>>
+>>
+>> Thanks for catching this but the bug is elsewhere:
+>>
+>> I've tried to document hw code as much as I can, eeprom stuff is still
+>> missing and I'm sorry for that but here is what comments say on phy.c
+>> @ DOC: Per-rate tx power setting, that should give you an idea of
+>> what's happening...
+>>
+>> 3498  * Rate power table contains indices to PCDAC/PDADC table (0.5dB steps -
+>> 3499  * x values) and is indexed as follows:
+>> 3500  * rates[0] - rates[7] -> OFDM rates
+>> 3501  * rates[8] - rates[14] -> CCK rates
+>> 3502  * rates[15] -> XR rates (they all have the same power)
+>>
+>> So guess why the last 2 "invalid" power gain values have the same
+>> power levels for all rates ? They are for XR mode (they've put it
+>> there on the eeprom because XR mode also operates at 5GHz) and since
+>> XR stuff is stripped off Madwifi (at least the public HAL) that's why
+>> it only reads 8 of the piers.
+> It's not just stripped in the public HAL. Every driver that I've looked
+> at only reads 8 of the piers in the function that parses the EEPROM.
+>
+> - Felix
 
-Instead of tracking whether or not we're in a
-scheduled scan, track the virtual interface
-(sdata) in an RCU-protected pointer to make it
-usable from RX to check the MAC address.
+XR mode stuff is being stripped out from anything I got (docs etc) so
+in some cases I don't understand something I blame XR :P However I
+double checked this and it seems you are right:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/main.c        |    3 ++-
- net/mac80211/rx.c          |    4 ++--
- net/mac80211/scan.c        |   20 ++++++++++----------
- 4 files changed, 15 insertions(+), 14 deletions(-)
+a) 11a has 10 cal piers for the channel power table and 8 cal piers
+for the rate powertable, not only that but the 8 are optional and
+might not even cover the whole freq range.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index da66a73..2e7dc0c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -967,9 +967,9 @@ struct ieee80211_local {
- 	int scan_channel_idx;
- 	int scan_ies_len;
- 
--	bool sched_scanning;
- 	struct ieee80211_sched_scan_ies sched_scan_ies;
- 	struct work_struct sched_scan_stopped_work;
-+	struct ieee80211_sub_if_data __rcu *sched_scan_sdata;
- 
- 	unsigned long leave_oper_channel_time;
- 	enum mac80211_scan_state next_scan_state;
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 731681c..e706f9e 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -326,7 +326,8 @@ static void ieee80211_restart_work(struct work_struct *work)
- 
- 	mutex_lock(&local->mtx);
- 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
--	     local->sched_scanning,
-+	     rcu_dereference_protected(local->sched_scan_sdata,
-+				       lockdep_is_held(&local->mtx)),
- 		"%s called with hardware scan in progress\n", __func__);
- 	mutex_unlock(&local->mtx);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 14b5fb4..4e09b7f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -461,13 +461,13 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
- 	struct sk_buff *skb = rx->skb;
- 
- 	if (likely(!(status->rx_flags & IEEE80211_RX_IN_SCAN) &&
--		   !local->sched_scanning))
-+		   !rcu_access_pointer(local->sched_scan_sdata)))
- 		return RX_CONTINUE;
- 
- 	if (test_bit(SCAN_HW_SCANNING, &local->scanning) ||
- 	    test_bit(SCAN_SW_SCANNING, &local->scanning) ||
- 	    test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning) ||
--	    local->sched_scanning)
-+	    rcu_access_pointer(local->sched_scan_sdata))
- 		return ieee80211_scan_rx(rx->sdata, skb);
- 
- 	/* scanning finished during invoking of handlers */
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 48d3219..a5848d2 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -931,9 +931,9 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	int ret, i;
- 
--	mutex_lock(&sdata->local->mtx);
-+	mutex_lock(&local->mtx);
- 
--	if (local->sched_scanning) {
-+	if (rcu_access_pointer(local->sched_scan_sdata)) {
- 		ret = -EBUSY;
- 		goto out;
- 	}
-@@ -964,7 +964,7 @@ int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 	ret = drv_sched_scan_start(local, sdata, req,
- 				   &local->sched_scan_ies);
- 	if (ret == 0) {
--		local->sched_scanning = true;
-+		rcu_assign_pointer(local->sched_scan_sdata, sdata);
- 		goto out;
- 	}
- 
-@@ -972,7 +972,7 @@ out_free:
- 	while (i > 0)
- 		kfree(local->sched_scan_ies.ie[--i]);
- out:
--	mutex_unlock(&sdata->local->mtx);
-+	mutex_unlock(&local->mtx);
- 	return ret;
- }
- 
-@@ -981,22 +981,22 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 	int ret = 0, i;
- 
--	mutex_lock(&sdata->local->mtx);
-+	mutex_lock(&local->mtx);
- 
- 	if (!local->ops->sched_scan_stop) {
- 		ret = -ENOTSUPP;
- 		goto out;
- 	}
- 
--	if (local->sched_scanning) {
-+	if (rcu_access_pointer(local->sched_scan_sdata)) {
- 		for (i = 0; i < IEEE80211_NUM_BANDS; i++)
- 			kfree(local->sched_scan_ies.ie[i]);
- 
- 		drv_sched_scan_stop(local, sdata);
--		local->sched_scanning = false;
-+		rcu_assign_pointer(local->sched_scan_sdata, NULL);
- 	}
- out:
--	mutex_unlock(&sdata->local->mtx);
-+	mutex_unlock(&local->mtx);
- 
- 	return ret;
- }
-@@ -1020,7 +1020,7 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
- 
- 	mutex_lock(&local->mtx);
- 
--	if (!local->sched_scanning) {
-+	if (!rcu_access_pointer(local->sched_scan_sdata)) {
- 		mutex_unlock(&local->mtx);
- 		return;
- 	}
-@@ -1028,7 +1028,7 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
- 		kfree(local->sched_scan_ies.ie[i]);
- 
--	local->sched_scanning = false;
-+	rcu_assign_pointer(local->sched_scan_sdata, NULL);
- 
- 	mutex_unlock(&local->mtx);
- 
+b) I printed out the offsets and what happens it that the last 2
+measurements we got have the same format because they are the 802.11b
+cal piers and they have the same power levels because 11b is CCK so it
+makes sense.
+
+c) Something fishy is going on with ee->ee_xr_power[mode], is this the
+max rate power for all channels on XR mode ? Is that possible to have
+the same power index (and a high one) for all channels ? That's the
+main reason I suspected these two values have something to do with XR.
+If that's the case shouldn't we use that instead of rates[0] on
+ath5k_setup_rate_powertable for XR rates ? Does any of the drivers you
+'ve seen use ee->ee_xr_power[mode] ?
+
+Anyway I left the EEPROM code unmaintained for a long time, the
+related TODOs on wireless.kernel.org wiki are there too. Since I now
+have documentation on EEPROM I'll start working on it again and clean
+it up.
+
+
 -- 
-1.7.10.4
-
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
