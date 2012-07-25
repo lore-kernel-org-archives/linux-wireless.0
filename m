@@ -1,125 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49318 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753781Ab2GBRq1 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:39733 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932927Ab2GYODC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 13:46:27 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, chunkeey@googlemail.com,
-	johannes@sipsolutions.net, thomas@net.t-labs.tu-berlin.de,
-	nbd@openwrt.org
-Subject: [PATCH v2] mac80211: reduce IEEE80211_TX_MAX_RATES from 5 to 4 to enable upcoming TPC support
-Date: Mon,  2 Jul 2012 19:46:16 +0200
-Message-Id: <1341251176-31113-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120702_194630_687263_CFB2F5BB)
+	Wed, 25 Jul 2012 10:03:02 -0400
+Received: by weyx8 with SMTP id x8so557445wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 07:03:00 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] b43: be more user friendly with PHY info
+Date: Wed, 25 Jul 2012 16:47:09 +0200
+Message-Id: <1343227629-14161-1-git-send-email-zajec5@gmail.com> (sfid-20120725_160307_176993_1B080212)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE80211_TX_MAX_RATES are reduced from 5 to 4, as there is no current hardware
-supporting a rate chain with 5 multi rate stages (mrr), so 4 mrr stages are
-sufficient. The memory that is freed within the ieee80211_tx_info struct will
-be used to implement the upcoming Transmission Power Control (TPC). This patch
-is a pre-requisite to TPC.
+First of all, use PHY names instead of magic numbers. It should make
+configuring kernel easier in case of not enabled PHY type support.
+Secondly, always print info about PHY. This is really basic info about
+hardware and quite important for the support level.
 
-Suggested-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-refixing tx_info checks in driver P54 and carl as reported by Johannes Berg.
+V2: add new PHYTYPEs
 ---
- drivers/net/wireless/ath/carl9170/tx.c |    6 +++---
- drivers/net/wireless/p54/txrx.c        |    6 +++---
- include/net/mac80211.h                 |    8 ++++----
- net/mac80211/tx.c                      |    3 +--
- 4 files changed, 11 insertions(+), 12 deletions(-)
+ drivers/net/wireless/b43/b43.h  |    2 +
+ drivers/net/wireless/b43/main.c |   40 ++++++++++++++++++++++++++++++++++----
+ 2 files changed, 37 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index aed3051..ede0b57 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -277,11 +277,11 @@ static void carl9170_tx_release(struct kref *ref)
- 		return;
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 7c899fc..b0c7f47 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -415,6 +415,8 @@ enum {
+ #define B43_PHYTYPE_HT			0x07
+ #define B43_PHYTYPE_LCN			0x08
+ #define B43_PHYTYPE_LCNXN		0x09
++#define B43_PHYTYPE_LCN40		0x0a
++#define B43_PHYTYPE_AC			0x0b
  
- 	BUILD_BUG_ON(
--	    offsetof(struct ieee80211_tx_info, status.ampdu_ack_len) != 23);
-+	    offsetof(struct ieee80211_tx_info, status.ack_signal) != 20);
+ /* PHYRegisters */
+ #define B43_PHY_ILT_A_CTRL		0x0072
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index b80352b..5655c9c 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4277,6 +4277,37 @@ out:
+ 	return err;
+ }
  
--	memset(&txinfo->status.ampdu_ack_len, 0,
-+	memset(&txinfo->status.ack_signal, 0,
- 	       sizeof(struct ieee80211_tx_info) -
--	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
-+	       offsetof(struct ieee80211_tx_info, status.ack_signal));
++static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
++{
++	switch (phy_type) {
++	case B43_PHYTYPE_A:
++		return "A";
++	case B43_PHYTYPE_B:
++		return "B";
++	case B43_PHYTYPE_G:
++		return "G";
++	case B43_PHYTYPE_N:
++		return "N";
++	case B43_PHYTYPE_LP:
++		return "LP";
++	case B43_PHYTYPE_SSLPN:
++		return "SSLPN";
++	case B43_PHYTYPE_HT:
++		return "HT";
++	case B43_PHYTYPE_LCN:
++		return "LCN";
++	case B43_PHYTYPE_LCNXN:
++		return "LCNXN";
++	case B43_PHYTYPE_LCN40:
++		return "LCN40";
++	case B43_PHYTYPE_AC:
++		return "AC";
++	}
++
++	b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
++	return "UNKNOWN";
++}
++
+ /* Get PHY and RADIO versioning numbers */
+ static int b43_phy_versioning(struct b43_wldev *dev)
+ {
+@@ -4337,13 +4368,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+ 		unsupported = 1;
+ 	}
+ 	if (unsupported) {
+-		b43err(dev->wl, "FOUND UNSUPPORTED PHY "
+-		       "(Analog %u, Type %u, Revision %u)\n",
+-		       analog_type, phy_type, phy_rev);
++		b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
++		       analog_type, b43_phy_name(dev, phy_type), phy_rev);
+ 		return -EOPNOTSUPP;
+ 	}
+-	b43dbg(dev->wl, "Found PHY: Analog %u, Type %u, Revision %u\n",
+-	       analog_type, phy_type, phy_rev);
++	b43info(dev->wl, "Found PHY: Analog %u, Type %s, Revision %u\n",
++		analog_type, b43_phy_name(dev, phy_type), phy_rev);
  
- 	if (atomic_read(&ar->tx_total_queued))
- 		ar->tx_schedule = true;
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 82a1cac..f38786e 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -422,11 +422,11 @@ static void p54_rx_frame_sent(struct p54_common *priv, struct sk_buff *skb)
- 	 * Clear manually, ieee80211_tx_info_clear_status would
- 	 * clear the counts too and we need them.
- 	 */
--	memset(&info->status.ampdu_ack_len, 0,
-+	memset(&info->status.ack_signal, 0,
- 	       sizeof(struct ieee80211_tx_info) -
--	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
-+	       offsetof(struct ieee80211_tx_info, status.ack_signal));
- 	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info,
--			      status.ampdu_ack_len) != 23);
-+			      status.ack_signal) != 20);
- 
- 	if (entry_hdr->flags & cpu_to_le16(P54_HDR_FLAG_DATA_ALIGN))
- 		pad = entry_data->align[0];
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 670a58b..8662b79 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -475,7 +475,7 @@ enum mac80211_rate_control_flags {
- #define IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE 24
- 
- /* maximum number of rate stages */
--#define IEEE80211_TX_MAX_RATES	5
-+#define IEEE80211_TX_MAX_RATES	4
- 
- /**
-  * struct ieee80211_tx_rate - rate selection/status
-@@ -563,11 +563,11 @@ struct ieee80211_tx_info {
- 		} control;
- 		struct {
- 			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
--			u8 ampdu_ack_len;
- 			int ack_signal;
-+			u8 ampdu_ack_len;
- 			u8 ampdu_len;
- 			u8 antenna;
--			/* 14 bytes free */
-+			/* 21 bytes free */
- 		} status;
- 		struct {
- 			struct ieee80211_tx_rate driver_rates[
-@@ -634,7 +634,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
- 		info->status.rates[i].count = 0;
- 
- 	BUILD_BUG_ON(
--	    offsetof(struct ieee80211_tx_info, status.ampdu_ack_len) != 23);
-+	    offsetof(struct ieee80211_tx_info, status.ack_signal) != 20);
- 	memset(&info->status.ampdu_ack_len, 0,
- 	       sizeof(struct ieee80211_tx_info) -
- 	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ec8f5346..3bdfac3 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -957,8 +957,7 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
- 			info->control.rates[1].idx = -1;
- 			info->control.rates[2].idx = -1;
- 			info->control.rates[3].idx = -1;
--			info->control.rates[4].idx = -1;
--			BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 5);
-+			BUILD_BUG_ON(IEEE80211_TX_MAX_RATES != 4);
- 			info->flags &= ~IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 		} else {
- 			hdr->frame_control &= ~morefrags;
+ 	/* Get RADIO versioning */
+ 	if (dev->dev->core_rev >= 24) {
 -- 
-1.7.10.4
+1.7.7
 
