@@ -1,136 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51439 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003Ab2G0LRD (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:39488 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897Ab2GYVXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:17:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 07/20] mac80211: reuse channels for channel contexts
-Date: Fri, 27 Jul 2012 13:16:43 +0200
-Message-Id: <1343387816-9414-8-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131729_523363_783728AF)
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 25 Jul 2012 17:23:43 -0400
+Received: by wgbdr13 with SMTP id dr13so1159983wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 14:23:42 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] b43: add helper waiting for given value in radio reg
+Date: Thu, 26 Jul 2012 00:07:37 +0200
+Message-Id: <1343254059-4788-1-git-send-email-zajec5@gmail.com> (sfid-20120725_232347_319697_304D06EB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
-
-Reuse channels with compatible channel types. Some
-channel types are compatible and can be used
-concurrently.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/mac80211/chan.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 57 insertions(+), 1 deletion(-)
+ drivers/net/wireless/b43/phy_common.c |   15 +++++++++++++++
+ drivers/net/wireless/b43/phy_common.h |    6 ++++++
+ drivers/net/wireless/b43/phy_n.c      |   12 +-----------
+ 3 files changed, 22 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 90fef15..40e707c 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -167,7 +167,17 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 		sdata->vif.bss_conf.channel_type = chantype;
- 
- 	return true;
-+}
-+
-+static void ieee80211_change_chantype(struct ieee80211_local *local,
-+				      struct ieee80211_chanctx *ctx,
-+				      enum nl80211_channel_type chantype)
-+{
-+	if (chantype == ctx->conf.channel_type)
-+		return;
- 
-+	ctx->conf.channel_type = chantype;
-+	drv_change_chantype(local, ctx);
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index f627cef..f01676a 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -240,6 +240,21 @@ void b43_radio_maskset(struct b43_wldev *dev, u16 offset, u16 mask, u16 set)
+ 			  (b43_radio_read16(dev, offset) & mask) | set);
  }
  
- static struct ieee80211_chanctx *
-@@ -177,6 +187,7 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 		       enum ieee80211_chanctx_mode mode)
- {
- 	struct ieee80211_chanctx *ctx;
-+	enum nl80211_channel_type compat_type;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
-@@ -186,13 +197,19 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 		return NULL;
- 
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
-+		compat_type = ctx->conf.channel_type;
-+
- 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE)
- 			continue;
- 		if (ctx->conf.channel != channel)
- 			continue;
--		if (ctx->conf.channel_type != channel_type)
-+		if (!ieee80211_channel_types_are_compatible(ctx->conf.channel_type,
-+							    channel_type,
-+							    &compat_type))
- 			continue;
- 
-+		ieee80211_change_chantype(local, ctx, compat_type);
-+
- 		return ctx;
- 	}
- 
-@@ -251,6 +268,43 @@ static void ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 	drv_assign_vif_chanctx(local, sdata, ctx);
- }
- 
-+static enum nl80211_channel_type
-+ieee80211_calc_chantype(struct ieee80211_local *local,
-+			struct ieee80211_chanctx *ctx)
++bool b43_radio_wait_value(struct b43_wldev *dev, u16 offset, u16 mask,
++			  u16 value, int delay, int timeout)
 +{
-+	struct ieee80211_chanctx_conf *conf = &ctx->conf;
-+	struct ieee80211_sub_if_data *sdata;
-+	enum nl80211_channel_type result = NL80211_CHAN_NO_HT;
++	u16 val;
++	int i;
 +
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+		if (sdata->vif.chanctx_conf != conf)
-+			continue;
-+
-+		WARN_ON_ONCE(!ieee80211_channel_types_are_compatible(
-+					sdata->vif.bss_conf.channel_type,
-+					result, &result));
++	for (i = 0; i < timeout; i += delay) {
++		val = b43_radio_read(dev, offset);
++		if ((val & mask) == value)
++			return true;
++		udelay(delay);
 +	}
-+	rcu_read_unlock();
-+
-+	return result;
++	return false;
 +}
 +
-+static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
-+					      struct ieee80211_chanctx *ctx)
-+{
-+	enum nl80211_channel_type chantype;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+
-+	chantype = ieee80211_calc_chantype(local, ctx);
-+	ieee80211_change_chantype(local, ctx, chantype);
-+}
-+
- static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 					   struct ieee80211_chanctx *ctx)
+ u16 b43_phy_read(struct b43_wldev *dev, u16 reg)
  {
-@@ -262,6 +316,8 @@ static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	assert_mac_suspended(dev);
+diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
+index 9233b13..f1b9993 100644
+--- a/drivers/net/wireless/b43/phy_common.h
++++ b/drivers/net/wireless/b43/phy_common.h
+@@ -365,6 +365,12 @@ void b43_radio_set(struct b43_wldev *dev, u16 offset, u16 set);
+ void b43_radio_maskset(struct b43_wldev *dev, u16 offset, u16 mask, u16 set);
  
- 	ctx->refcount--;
- 	sdata->vif.chanctx_conf = NULL;
+ /**
++ * b43_radio_wait_value - Waits for a given value in masked register read
++ */
++bool b43_radio_wait_value(struct b43_wldev *dev, u16 offset, u16 mask,
++			  u16 value, int delay, int timeout);
 +
-+	ieee80211_recalc_chanctx_chantype(sdata->local, ctx);
- }
++/**
+  * b43_radio_lock - Lock firmware radio register access
+  */
+ void b43_radio_lock(struct b43_wldev *dev);
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index e49d847..0963d59 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -753,8 +753,6 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_n *nphy = dev->phy.n;
+ 	struct ssb_sprom *sprom = dev->dev->bus_sprom;
+-	int i;
+-	u16 val;
+ 	bool workaround = false;
  
- static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 	if (sprom->revision < 4)
+@@ -777,15 +775,7 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
+ 	b43_radio_set(dev, B2055_CAL_MISC, 0x1);
+ 	msleep(1);
+ 	b43_radio_set(dev, B2055_CAL_MISC, 0x40);
+-	for (i = 0; i < 200; i++) {
+-		val = b43_radio_read(dev, B2055_CAL_COUT2);
+-		if (val & 0x80) {
+-			i = 0;
+-			break;
+-		}
+-		udelay(10);
+-	}
+-	if (i)
++	if (!b43_radio_wait_value(dev, B2055_CAL_COUT2, 0x80, 0x80, 10, 2000))
+ 		b43err(dev->wl, "radio post init timeout\n");
+ 	b43_radio_mask(dev, B2055_CAL_LPOCTL, 0xFF7F);
+ 	b43_switch_channel(dev, dev->phy.channel);
 -- 
-1.7.10.4
+1.7.7
 
