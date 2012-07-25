@@ -1,142 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48249 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758842Ab2GLUfu (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:56444 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751141Ab2GYXkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 16:35:50 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: michal.kazior@tieto.com, mohammed@qca.qualcomm.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] Revert "mac80211: refactor virtual monitor code"
-Date: Thu, 12 Jul 2012 22:35:38 +0200
-Message-Id: <1342125340-6468-2-git-send-email-johannes@sipsolutions.net> (sfid-20120712_223557_968652_9977550D)
-In-Reply-To: <1342125340-6468-1-git-send-email-johannes@sipsolutions.net>
-References: <1342125340-6468-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 25 Jul 2012 19:40:40 -0400
+Message-ID: <501083F6.8060002@net.t-labs.tu-berlin.de> (sfid-20120726_014043_983373_A44E51A6)
+Date: Thu, 26 Jul 2012 01:40:38 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: jirislaby@gmail.com, johannes.berg@intel.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@nbd.name
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
+ txpower changes
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <CAFtRNNwY-1JLEJa_qZpUfsyQVdUQLO3CWcEB9xef-g5jPzndNQ@mail.gmail.com> <50107C35.9050807@net.t-labs.tu-berlin.de> <CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com>
+In-Reply-To: <CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Nick,
 
-This reverts commit 870d37fc22f3e40f9f23e06c581c8538fc16a2f0.
+Nick Kossifidis schrieb:
 
-This code doesn't work as cfg80211 will call
-set_monitor_enabled at the wrong time and it
-doesn't seem to be possible to fix this.
+> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         |   11 -----------
- net/mac80211/ieee80211_i.h |    4 ----
- net/mac80211/iface.c       |   16 ++++++++++++++--
- 3 files changed, 14 insertions(+), 17 deletions(-)
+> There is nothing in your patch that suggests that's related to this.
+> Anyway there's a simple way to fix this:
+> 
+> Just move this:
+> 
+> 3575         /* Min/max in 0.25dB units */
+> 3576         ah->ah_txpower.txp_min_pwr = 2 * rates[7];
+> 3577         ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
+> 3578         ah->ah_txpower.txp_ofdm = rates[7];
+> 
+> above the for loop and you are done.
+> 
+> Note rates[i] don't hold tx power values, they hold indices to the
+> channel powertable.
+> 
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index cfdc03f..e95f24e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2982,16 +2982,6 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
--static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
--{
--	struct ieee80211_local *local = wiphy_priv(wiphy);
--
--	if (enabled)
--		WARN_ON(ieee80211_add_virtual_monitor(local));
--	else
--		ieee80211_del_virtual_monitor(local);
--}
--
- #ifdef CONFIG_PM
- static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
- {
-@@ -3066,7 +3056,6 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.tdls_mgmt = ieee80211_tdls_mgmt,
- 	.probe_client = ieee80211_probe_client,
- 	.set_noack_map = ieee80211_set_noack_map,
--	.set_monitor_enabled = ieee80211_set_monitor_enabled,
- #ifdef CONFIG_PM
- 	.set_wakeup = ieee80211_set_wakeup,
- #endif
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 7998513..bb61f77 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1491,10 +1491,6 @@ int ieee80211_add_srates_ie(struct ieee80211_sub_if_data *sdata,
- int ieee80211_add_ext_srates_ie(struct ieee80211_sub_if_data *sdata,
- 				struct sk_buff *skb, bool need_basic);
- 
--/* virtual monitor */
--int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
--void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
--
- /* channel management */
- enum ieee80211_chan_mode {
- 	CHAN_MODE_UNDEFINED,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 334ee0f..bfb57dc 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -331,7 +331,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
- }
- 
--int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
-+static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int ret = 0;
-@@ -377,7 +377,7 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	return ret;
- }
- 
--void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
-+static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-@@ -497,6 +497,12 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 			break;
- 		}
- 
-+		if (local->monitors == 0 && local->open_count == 0) {
-+			res = ieee80211_add_virtual_monitor(local);
-+			if (res)
-+				goto err_stop;
-+		}
-+
- 		/* must be before the call to ieee80211_configure_filter */
- 		local->monitors++;
- 		if (local->monitors == 1) {
-@@ -511,6 +517,8 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 		break;
- 	default:
- 		if (coming_up) {
-+			ieee80211_del_virtual_monitor(local);
-+
- 			res = drv_add_interface(local, sdata);
- 			if (res)
- 				goto err_stop;
-@@ -745,6 +753,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		if (local->monitors == 0) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
- 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
-+			ieee80211_del_virtual_monitor(local);
- 		}
- 
- 		ieee80211_adjust_monitor_flags(sdata, -1);
-@@ -818,6 +827,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+
-+	if (local->monitors == local->open_count && local->monitors > 0)
-+		ieee80211_add_virtual_monitor(local);
- }
- 
- static int ieee80211_stop(struct net_device *dev)
--- 
-1.7.10.4
 
+Are you agreeing that current ath5k txpower handling set from user space
+is not working and we need to fix it ?
+Beside that, what about a channel switch and wrongly re-use txp_cur_pwr
+on a channel witch other max power levels ?
+
+Lets wait on Felix opinion what he has in mind.
+
+Greetings Thomas
