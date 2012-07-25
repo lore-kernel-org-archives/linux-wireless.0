@@ -1,288 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59957 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751202Ab2GKIaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 04:30:03 -0400
-Message-ID: <4FFD3983.7020108@hauke-m.de> (sfid-20120711_103023_176388_EC673B73)
-Date: Wed, 11 Jul 2012 10:29:55 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from nm22-vm3.bullet.mail.ird.yahoo.com ([212.82.109.253]:27011 "HELO
+	nm22-vm3.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932927Ab2GYN77 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jul 2012 09:59:59 -0400
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net>
+Message-ID: <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> (sfid-20120725_160011_822325_F7D2CB84)
+Date: Wed, 25 Jul 2012 14:54:23 +0100 (BST)
+From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <500EE086.6000304@lwfinger.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH V2] bcma: add trivial GBIT MAC COMMON driver
-References: <1341991423-1476-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1341991423-1476-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/2012 09:23 AM, Rafa≈Ç Mi≈Çecki wrote:
-> GMAC COMMON core is present on BCM4706 and is used for example to access
-> board PHYs (PHYs can not be accessed directly using GBIT MAC core).
-> 
-> Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
-> V2: Fix printing GMAC Common name. Core's manufacturer is ARM not BCM!
-This is strange.
-> ---
->  drivers/bcma/Kconfig                      |    9 +++
->  drivers/bcma/Makefile                     |    1 +
->  drivers/bcma/driver_gmac_cmn.c            |   14 ++++
->  drivers/bcma/main.c                       |    8 ++
->  drivers/bcma/scan.c                       |   16 +++--
->  include/linux/bcma/bcma.h                 |    2 +
->  include/linux/bcma/bcma_driver_gmac_cmn.h |  100 +++++++++++++++++++++++++++++
->  7 files changed, 144 insertions(+), 6 deletions(-)
->  create mode 100644 drivers/bcma/driver_gmac_cmn.c
->  create mode 100644 include/linux/bcma/bcma_driver_gmac_cmn.h
-> 
-> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> index 1c31433..d878e03 100644
-> --- a/drivers/bcma/Kconfig
-> +++ b/drivers/bcma/Kconfig
-> @@ -47,6 +47,15 @@ config BCMA_DRIVER_MIPS
->  
->  	  If unsure, say N
->  
-> +config BCMA_DRIVER_GMAC_CMN
-> +	bool "BCMA Broadcom GBIT MAC COMMON core driver"
-> +	depends on BCMA
-> +	help
-> +	  Driver for the Broadcom GBIT MAC COMMON core attached to Broadcom
-> +	  specific Advanced Microcontroller Bus.
-> +
-> +	  If unsure, say N
-> +
->  config BCMA_DEBUG
->  	bool "BCMA debugging"
->  	depends on BCMA
-> diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
-> index 82de24e..d13803f 100644
-> --- a/drivers/bcma/Makefile
-> +++ b/drivers/bcma/Makefile
-> @@ -3,6 +3,7 @@ bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
->  bcma-y					+= driver_pci.o
->  bcma-$(CONFIG_BCMA_DRIVER_PCI_HOSTMODE)	+= driver_pci_host.o
->  bcma-$(CONFIG_BCMA_DRIVER_MIPS)		+= driver_mips.o
-> +bcma-$(CONFIG_BCMA_DRIVER_GMAC_CMN)	+= driver_gmac_cmn.o
->  bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
->  bcma-$(CONFIG_BCMA_HOST_SOC)		+= host_soc.o
->  obj-$(CONFIG_BCMA)			+= bcma.o
-> diff --git a/drivers/bcma/driver_gmac_cmn.c b/drivers/bcma/driver_gmac_cmn.c
-> new file mode 100644
-> index 0000000..834225f
-> --- /dev/null
-> +++ b/drivers/bcma/driver_gmac_cmn.c
-> @@ -0,0 +1,14 @@
-> +/*
-> + * Broadcom specific AMBA
-> + * GBIT MAC COMMON Core
-> + *
-> + * Licensed under the GNU/GPL. See COPYING for details.
-> + */
-> +
-> +#include "bcma_private.h"
-> +#include <linux/bcma/bcma.h>
-> +
-> +void __devinit bcma_core_gmac_cmn_init(struct bcma_drv_gmac_cmn *gc)
-> +{
-> +	mutex_init(&gc->phy_mutex);
-> +}
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index 151bddc..758af9c 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -103,6 +103,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
->  		case BCMA_CORE_PCI:
->  		case BCMA_CORE_PCIE:
->  		case BCMA_CORE_MIPS_74K:
-> +		case BCMA_CORE_4706_MAC_GBIT_COMMON:
->  			continue;
->  		}
->  
-> @@ -185,6 +186,13 @@ int __devinit bcma_bus_register(struct bcma_bus *bus)
->  		bcma_core_pci_init(&bus->drv_pci);
->  	}
->  
-> +	/* Init GBIT MAC COMMON core */
-> +	core = bcma_find_core(bus, BCMA_CORE_4706_MAC_GBIT_COMMON);
-> +	if (core) {
-> +		bus->drv_gmac_cmn.core = core;
-> +		bcma_core_gmac_cmn_init(&bus->drv_gmac_cmn);
-> +	}
-> +
->  	/* Try to get SPROM */
->  	err = bcma_sprom_get(bus);
->  	if (err == -ENOENT) {
-> diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-> index a0272bb..3bc3ec2 100644
-> --- a/drivers/bcma/scan.c
-> +++ b/drivers/bcma/scan.c
-> @@ -21,6 +21,7 @@ struct bcma_device_id_name {
->  };
->  
->  static const struct bcma_device_id_name bcma_arm_device_names[] = {
-> +	{ BCMA_CORE_4706_MAC_GBIT_COMMON, "BCM4706 GBit MAC Common" },
->  	{ BCMA_CORE_ARM_1176, "ARM 1176" },
->  	{ BCMA_CORE_ARM_7TDMI, "ARM 7TDMI" },
->  	{ BCMA_CORE_ARM_CM3, "ARM CM3" },
-> @@ -33,7 +34,6 @@ static const struct bcma_device_id_name bcma_bcm_device_names[] = {
->  	{ BCMA_CORE_4706_MAC_GBIT, "BCM4706 GBit MAC" },
->  	{ BCMA_CORE_AMEMC, "AMEMC (DDR)" },
->  	{ BCMA_CORE_ALTA, "ALTA (I2S)" },
-> -	{ BCMA_CORE_4706_MAC_GBIT_COMMON, "BCM4706 GBit MAC Common" },
->  	{ BCMA_CORE_INVALID, "Invalid" },
->  	{ BCMA_CORE_CHIPCOMMON, "ChipCommon" },
->  	{ BCMA_CORE_ILINE20, "ILine 20" },
-> @@ -295,11 +295,15 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
->  
->  	/* check if component is a core at all */
->  	if (wrappers[0] + wrappers[1] == 0) {
-> -		/* we could save addrl of the router
-> -		if (cid == BCMA_CORE_OOB_ROUTER)
-> -		 */
-> -		bcma_erom_skip_component(bus, eromptr);
-> -		return -ENXIO;
-> +		/* Some specific cores don't need wrappers */
-> +		switch (core->id.id) {
-> +		case BCMA_CORE_4706_MAC_GBIT_COMMON:
-> +		/* Not used yet: case BCMA_CORE_OOB_ROUTER: */
-> +			break;
-> +		default:
-> +			bcma_erom_skip_component(bus, eromptr);
-> +			return -ENXIO;
-> +		}
->  	}
->  
->  	if (bcma_erom_is_bridge(bus, eromptr)) {
-> diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-> index 03b2f30..1954a4e 100644
-> --- a/include/linux/bcma/bcma.h
-> +++ b/include/linux/bcma/bcma.h
-> @@ -7,6 +7,7 @@
->  #include <linux/bcma/bcma_driver_chipcommon.h>
->  #include <linux/bcma/bcma_driver_pci.h>
->  #include <linux/bcma/bcma_driver_mips.h>
-> +#include <linux/bcma/bcma_driver_gmac_cmn.h>
->  #include <linux/ssb/ssb.h> /* SPROM sharing */
->  
->  #include "bcma_regs.h"
-> @@ -252,6 +253,7 @@ struct bcma_bus {
->  	struct bcma_drv_cc drv_cc;
->  	struct bcma_drv_pci drv_pci;
->  	struct bcma_drv_mips drv_mips;
-> +	struct bcma_drv_gmac_cmn drv_gmac_cmn;
->  
->  	/* We decided to share SPROM struct with SSB as long as we do not need
->  	 * any hacks for BCMA. This simplifies drivers code. */
-> diff --git a/include/linux/bcma/bcma_driver_gmac_cmn.h b/include/linux/bcma/bcma_driver_gmac_cmn.h
-> new file mode 100644
-> index 0000000..def894b
-> --- /dev/null
-> +++ b/include/linux/bcma/bcma_driver_gmac_cmn.h
-> @@ -0,0 +1,100 @@
-> +#ifndef LINUX_BCMA_DRIVER_GMAC_CMN_H_
-> +#define LINUX_BCMA_DRIVER_GMAC_CMN_H_
-> +
-> +#include <linux/types.h>
-> +
-> +#define BCMA_GMAC_CMN_STAG0		0x000
-> +#define BCMA_GMAC_CMN_STAG1		0x004
-> +#define BCMA_GMAC_CMN_STAG2		0x008
-> +#define BCMA_GMAC_CMN_STAG3		0x00C
-> +#define BCMA_GMAC_CMN_PARSER_CTL	0x020
-> +#define BCMA_GMAC_CMN_MIB_MAX_LEN	0x024
-> +#define BCMA_GMAC_CMN_PHY_ACCESS	0x100
-> +#define  BCMA_GMAC_CMN_PA_DATA_MASK	0x0000ffff
-> +#define  BCMA_GMAC_CMN_PA_ADDR_MASK	0x001f0000
-> +#define  BCMA_GMAC_CMN_PA_ADDR_SHIFT	16
-> +#define  BCMA_GMAC_CMN_PA_REG_MASK	0x1f000000
-> +#define  BCMA_GMAC_CMN_PA_REG_SHIFT	24
-> +#define  BCMA_GMAC_CMN_PA_WRITE		0x20000000
-> +#define  BCMA_GMAC_CMN_PA_START		0x40000000
-> +#define BCMA_GMAC_CMN_PHY_CTL		0x104
-> +#define  BCMA_GMAC_CMN_PC_EPA_MASK	0x0000001f
-> +#define  BCMA_GMAC_CMN_PC_MCT_MASK	0x007f0000
-> +#define  BCMA_GMAC_CMN_PC_MCT_SHIFT	16
-> +#define  BCMA_GMAC_CMN_PC_MTE		0x00800000
-> +#define BCMA_GMAC_CMN_GMAC0_RGMII_CTL	0x110
-> +#define BCMA_GMAC_CMN_CFP_ACCESS	0x200
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA0	0x210
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA1	0x214
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA2	0x218
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA3	0x21C
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA4	0x220
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA5	0x224
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA6	0x228
-> +#define BCMA_GMAC_CMN_CFP_TCAM_DATA7	0x22C
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK0	0x230
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK1	0x234
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK2	0x238
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK3	0x23C
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK4	0x240
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK5	0x244
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK6	0x248
-> +#define BCMA_GMAC_CMN_CFP_TCAM_MASK7	0x24C
-> +#define BCMA_GMAC_CMN_CFP_ACTION_DATA	0x250
-> +#define BCMA_GMAC_CMN_TCAM_BIST_CTL	0x2A0
-> +#define BCMA_GMAC_CMN_TCAM_BIST_STATUS	0x2A4
-> +#define BCMA_GMAC_CMN_TCAM_CMP_STATUS	0x2A8
-> +#define BCMA_GMAC_CMN_TCAM_DISABLE	0x2AC
-> +#define BCMA_GMAC_CMN_TCAM_TEST_CTL	0x2F0
-> +#define BCMA_GMAC_CMN_UDF_0_A3_A0	0x300
-> +#define BCMA_GMAC_CMN_UDF_0_A7_A4	0x304
-> +#define BCMA_GMAC_CMN_UDF_0_A8		0x308
-> +#define BCMA_GMAC_CMN_UDF_1_A3_A0	0x310
-> +#define BCMA_GMAC_CMN_UDF_1_A7_A4	0x314
-> +#define BCMA_GMAC_CMN_UDF_1_A8		0x318
-> +#define BCMA_GMAC_CMN_UDF_2_A3_A0	0x320
-> +#define BCMA_GMAC_CMN_UDF_2_A7_A4	0x324
-> +#define BCMA_GMAC_CMN_UDF_2_A8		0x328
-> +#define BCMA_GMAC_CMN_UDF_0_B3_B0	0x330
-> +#define BCMA_GMAC_CMN_UDF_0_B7_B4	0x334
-> +#define BCMA_GMAC_CMN_UDF_0_B8		0x338
-> +#define BCMA_GMAC_CMN_UDF_1_B3_B0	0x340
-> +#define BCMA_GMAC_CMN_UDF_1_B7_B4	0x344
-> +#define BCMA_GMAC_CMN_UDF_1_B8		0x348
-> +#define BCMA_GMAC_CMN_UDF_2_B3_B0	0x350
-> +#define BCMA_GMAC_CMN_UDF_2_B7_B4	0x354
-> +#define BCMA_GMAC_CMN_UDF_2_B8		0x358
-> +#define BCMA_GMAC_CMN_UDF_0_C3_C0	0x360
-> +#define BCMA_GMAC_CMN_UDF_0_C7_C4	0x364
-> +#define BCMA_GMAC_CMN_UDF_0_C8		0x368
-> +#define BCMA_GMAC_CMN_UDF_1_C3_C0	0x370
-> +#define BCMA_GMAC_CMN_UDF_1_C7_C4	0x374
-> +#define BCMA_GMAC_CMN_UDF_1_C8		0x378
-> +#define BCMA_GMAC_CMN_UDF_2_C3_C0	0x380
-> +#define BCMA_GMAC_CMN_UDF_2_C7_C4	0x384
-> +#define BCMA_GMAC_CMN_UDF_2_C8		0x388
-> +#define BCMA_GMAC_CMN_UDF_0_D3_D0	0x390
-> +#define BCMA_GMAC_CMN_UDF_0_D7_D4	0x394
-> +#define BCMA_GMAC_CMN_UDF_0_D11_D8	0x394
-> +
-> +struct bcma_drv_gmac_cmn {
-> +	struct bcma_device *core;
-> +
-> +	/* Drivers accessing BCMA_GMAC_CMN_PHY_ACCESS and
-> +	 * BCMA_GMAC_CMN_PHY_CTL need to take that mutex first. */
-> +	struct mutex phy_mutex;
-> +};
-> +
-> +/* Register access */
-> +#define gmac_cmn_read16(gc, offset)		bcma_read16((gc)->core, offset)
-> +#define gmac_cmn_read32(gc, offset)		bcma_read32((gc)->core, offset)
-> +#define gmac_cmn_write16(gc, offset, val)	bcma_write16((gc)->core, offset, val)
-> +#define gmac_cmn_write32(gc, offset, val)	bcma_write32((gc)->core, offset, val)
-> +
-> +#ifdef CONFIG_BCMA_DRIVER_GMAC_CMN
-> +extern void __devinit bcma_core_gmac_cmn_init(struct bcma_drv_gmac_cmn *gc);
-> +#else
-> +static inline void bcma_core_gmac_cmn_init(struct bcma_drv_gmac_cmn *gc) { }
-> +#endif
-> +
-> +#endif /* LINUX_BCMA_DRIVER_GMAC_CMN_H_ */
-> 
+For some reason my system has become unstable since the installation of the compat-wireless drivers. :-(
+
+I installed those drivers "compat-wireless-2012-07-03" by doing a make/ make install
+
+modinfo rtl8192ce
+filename: † † † /lib/modules/3.2.23-030223-generic/updates/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192ce.ko
+firmware: † † † rtlwifi/rtl8192cfwU_B.bin
+firmware: † † † rtlwifi/rtl8192cfwU.bin
+firmware: † † † rtlwifi/rtl8192cfw.bin
+description: † †Realtek 8192C/8188C 802.11n PCI wireless
+license: † † † †GPL
+author: † † † † Larry Finger<Larry.Finger@lwfinger.net>
+author: † † † † Realtek WlanFAE<wlanfae@realtek.com>
+author: † † † † lizhaoming<chaoming_li@realsil.com.cn>
+srcversion: † † DC0B6C089A8681E6916F078
+alias: † † † † †pci:v000010ECd00008176sv*sd*bc*sc*i*
+alias: † † † † †pci:v000010ECd00008177sv*sd*bc*sc*i*
+alias: † † † † †pci:v000010ECd00008178sv*sd*bc*sc*i*
+alias: † † † † †pci:v000010ECd00008191sv*sd*bc*sc*i*
+depends: † † † †rtlwifi,rtl8192c-common,compat,mac80211
+vermagic: † † † 3.2.23-030223-generic SMP mod_unload modversions 686†
+parm: † † † † † swenc:Set to 1 for software crypto (default 0)
+parm: † † † † † ips:Set to 0 to not use link power save (default 1)
+
+parm: † † † † † swlps:Set to 1 to use SW control power save (default 0)
+
+parm: † † † † † fwlps:Set to 1 to use FW control power save (default 1)
+
+parm: † † † † † debug:Set debug level (0-5) (default 0) (int)
 
 
+Remote VNC works ok but it s difficult to get a ssh session established.
+
+When I launch sudo hostpad, I can't do a ctrl C anymore to stop it.
+
+I see this in kernel:
+
+Jul 25 15:45:53 HTPC kernel: [ †409.493352] device wlan0 entered promiscuous mode
+Jul 25 15:45:53 HTPC kernel: [ †409.493979] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+Jul 25 15:45:53 HTPC kernel: [ †409.530751] cfg80211: Calling CRDA for country: FR
+Jul 25 15:45:53 HTPC kernel: [ †409.541016] cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541024] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541029] cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541035] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541039] cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541045] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541049] cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541055] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541059] cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541065] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541069] cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541075] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541079] cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541085] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541089] cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541095] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541099] cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541105] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541109] cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541115] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541119] cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541125] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541129] cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541135] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541139] cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width channel with reg
+ulatory rule:
+Jul 25 15:45:53 HTPC kernel: [ †409.541145] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A mBi, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541149] cfg80211: Disabling freq 2484 MHz
+Jul 25 15:45:53 HTPC kernel: [ †409.541155] cfg80211: Regulatory domain changed to country: FR
+Jul 25 15:45:53 HTPC kernel: [ †409.541158] cfg80211: † (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+Jul 25 15:45:53 HTPC kernel: [ †409.541164] cfg80211: † (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541168] cfg80211: † (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541173] cfg80211: † (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.541178] cfg80211: † (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
+Jul 25 15:45:53 HTPC kernel: [ †409.563665] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+Jul 25 15:45:53 HTPC kernel: [ †409.563758] br0: port 2(wlan0) entering forwarding state
+Jul 25 15:45:53 HTPC kernel: [ †409.563781] br0: port 2(wlan0) entering forwarding state
+Jul 25 15:46:04 HTPC kernel: [ †420.264454] wlan0: no IPv6 routers present
+Jul 25 15:46:08 HTPC kernel: [ †424.582630] br0: port 2(wlan0) entering forwarding state
+Jul 25 15:46:29 HTPC kernel: [ †445.538319] device wlan0 left promiscuous mode
+Jul 25 15:46:29 HTPC kernel: [ †445.538334] br0: port 2(wlan0) entering forwarding state
+Jul 25 15:49:05 HTPC kernel: [ †600.912155] INFO: task whoopsie:1394 blocked for more than 120 seconds.
+Jul 25 15:49:05 HTPC kernel: [ †600.912162] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Jul 25 15:49:05 HTPC kernel: [ †600.912167] whoopsie † † † †D 00000000 † † 0 †1394 † † †1 0x00000000
+Jul 25 15:49:05 HTPC kernel: [ †600.912176] †d51bfd00 00200082 00000067 00000000 00000000 f3908ca0 c18d5380 c18d5380
+Jul 25 15:49:05 HTPC kernel: [ †600.912189] †bc9d12b6 00000067 f77cb380 f2e81940 d489bf20 c146b95e f4d342a0 d43db540
+Jul 25 15:49:05 HTPC kernel: [ †600.912201] †d3ebb280 d51bfd08 c156f209 d3ebb280 c1811c88 d51be000 d3ebb280 00000000
+Jul 25 15:49:05 HTPC kernel: [ †600.912213] Call Trace:
+
+and then 120s after
+Jul 25 15:51:05 HTPC kernel: [ †720.861476] INFO: task whoopsie:1394 blocked for more than 120 seconds.
+Jul 25 15:51:05 HTPC kernel: [ †720.861482] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Jul 25 15:51:05 HTPC kernel: [ †720.861488] whoopsie † † † †D 00000000 † † 0 †1394 † † †1 0x00000000
+Jul 25 15:51:05 HTPC kernel: [ †720.861496] †d51bfd00 00200082 00000067 00000000 00000000 f3908ca0 c18d5380 c18d5380
+Jul 25 15:51:05 HTPC kernel: [ †720.861509] †bc9d12b6 00000067 f77cb380 f2e81940 d489bf20 c146b95e f4d342a0 d43db540
+Jul 25 15:51:05 HTPC kernel: [ †720.861521] †d3ebb280 d51bfd08 c156f209 d3ebb280 c1811c88 d51be000 d3ebb280 00000000
+Jul 25 15:51:05 HTPC kernel: [ †720.861533] Call Trace:
+Jul 25 15:51:05 HTPC kernel: [ †720.861546] †[<c146b95e>] ? kfree_skbmem+0x2e/0x80
+Jul 25 15:51:05 HTPC kernel: [ †720.861554] †[<c156f209>] ? apic_timer_interrupt+0x31/0x38
+Jul 25 15:51:05 HTPC kernel: [ †720.861561] †[<c156cfd5>] schedule+0x35/0x50
+Jul 25 15:51:05 HTPC kernel: [ †720.861567] †[<c156db76>] __mutex_lock_slowpath+0xc6/0x120
+Jul 25 15:51:05 HTPC kernel: [ †720.861573] †[<c156d824>] mutex_lock+0x24/0x40
+Jul 25 15:51:05 HTPC kernel: [ †720.861579] †[<c14844b2>] rtnl_lock+0x12/0x20
+Jul 25 15:51:05 HTPC kernel: [ †720.861585] †[<c14844d0>] rtnetlink_rcv+0x10/0x30
+Jul 25 15:51:05 HTPC kernel: [ †720.861592] †[<c149b189>] netlink_unicast+0x239/0x290
+Jul 25 15:51:05 HTPC kernel: [ †720.861598] †[<c149b3c8>] netlink_sendmsg+0x1e8/0x310
+Jul 25 15:51:05 HTPC kernel: [ †720.861605] †[<c14648f7>] sock_sendmsg+0xf7/0x120
+Jul 25 15:51:05 HTPC kernel: [ †720.861610] †[<c156ebdd>] ? _raw_spin_lock_irqsave+0x2d/0x40
+Jul 25 15:51:05 HTPC kernel: [ †720.861618] †[<c113aa50>] ? page_symlink+0x30/0x30
+Jul 25 15:51:05 HTPC kernel: [ †720.861624] †[<c114c1f8>] ? mntput+0x18/0x30
+Jul 25 15:51:05 HTPC kernel: [ †720.861629] †[<c113ab6a>] ? path_put+0x1a/0x20
+Jul 25 15:51:05 HTPC kernel: [ †720.861636] †[<c1031895>] ? __wake_up+0x45/0x60
+Jul 25 15:51:05 HTPC kernel: [ †720.861643] †[<c12a0b42>] ? _copy_from_user+0x42/0x60
+Jul 25 15:51:05 HTPC kernel: [ †720.861649] †[<c1465f7f>] ? move_addr_to_kernel+0x5f/0x70
+Jul 25 15:51:05 HTPC kernel: [ †720.861655] †[<c146694e>] sys_sendto+0x10e/0x150
+Jul 25 15:51:05 HTPC kernel: [ †720.861661] †[<c156e9ad>] ? _raw_spin_lock+0xd/0x10
+Jul 25 15:51:05 HTPC kernel: [ †720.861667] †[<c1144e54>] ? __d_instantiate+0xa4/0xe0
+Jul 25 15:51:05 HTPC kernel: [ †720.861673] †[<c1132bc0>] ? alloc_file+0x20/0xb0
+Jul 25 15:51:05 HTPC kernel: [ †720.861679] †[<c1464ad4>] ? sock_alloc_file+0x84/0xf0
+Jul 25 15:51:05 HTPC kernel: [ †720.861685] †[<c156e9ad>] ? _raw_spin_lock+0xd/0x10
+Jul 25 15:51:05 HTPC kernel: [ †720.861690] †[<c112f93c>] ? fd_install+0x4c/0x60
+Jul 25 15:51:05 HTPC kernel: [ †720.861696] †[<c12a09af>] ? __copy_from_user_ll+0x1f/0x40
+Jul 25 15:51:05 HTPC kernel: [ †720.861702] †[<c1467360>] sys_socketcall+0x1b0/0x2c0
+Jul 25 15:51:05 HTPC kernel: [ †720.861709] †[<c1575bdf>] sysenter_do_call+0x12/0x28
