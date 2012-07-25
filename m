@@ -1,94 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39719 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756337Ab2GFUig (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:61037 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089Ab2GYWz4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 16:38:36 -0400
-Received: by lbbgm6 with SMTP id gm6so15955498lbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2012 13:38:35 -0700 (PDT)
+	Wed, 25 Jul 2012 18:55:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <CANHD2=pEham5SZ6EguurMd9MBuyptyx5CGF1RDhU8Ow9CaRoXA@mail.gmail.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
- <20120313081235.GC15333@redhat.com> <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
- <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
- <20120528140448.GA22783@redhat.com> <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
- <20120529092154.GA2441@redhat.com> <CAErSpo6Xxq_kcEYACKUsuNDOJDhEDnxWgBUateOJEBcfqufhSg@mail.gmail.com>
- <CANHD2=o-eyd2JR7oK4gJgQi3Mi-a=R1RKuGsuWzzR_WosQaNEA@mail.gmail.com>
- <20120702053110.GA2500@redhat.com> <CANHD2=pEham5SZ6EguurMd9MBuyptyx5CGF1RDhU8Ow9CaRoXA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 6 Jul 2012 14:38:14 -0600
-Message-ID: <CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com> (sfid-20120706_223853_859350_A90CE8EF)
-Subject: Re: Initializing iwl3945 error
-To: Kamil Grzebien <ciptok@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120723192057.GE18589@tuxdriver.com>
+References: <20120322192406.GB2432@tuxdriver.com>
+	<1332698585.1870.88.camel@aeonflux>
+	<20120326145433.GE13806@tuxdriver.com>
+	<1332774906.1870.98.camel@aeonflux>
+	<20120326152541.GH13806@tuxdriver.com>
+	<20120427174439.GC16207@tuxdriver.com>
+	<20120723192057.GE18589@tuxdriver.com>
+Date: Thu, 26 Jul 2012 01:55:55 +0300
+Message-ID: <CAFtRNNzfbWkQnwnkiDjU3HvwbLynNkNyeTff=a4N7LWH6dhcmg@mail.gmail.com> (sfid-20120726_005602_155686_273C2AE9)
+Subject: Re: 2nd CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012 (Barcelona!)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 2, 2012 at 2:49 PM, Kamil Grzebien <ciptok@gmail.com> wrote:
-> On Mon, Jul 2, 2012 at 6:31 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Sun, Jul 01, 2012 at 07:01:58PM +0100, Kamil Grzebien wrote:
->>> I haven't tried your patch yet, but wanted to share with one thing.
->>> Currently I use new kernel 3.4.3, where the problem doesn't exist
->>> anymore. However I still would like to know what was the cause and
->>> which change brought the solution. Is there anything which comes to
->>> your mind in terms of recent changes in kernel? I also added logs from
->>> the newest kernel, so it might be easier for track it.
->>
->> Below is the diff from working kernel and non working kernel.
->> You are using PAE kernel what influence PCI mappings. Is this fixed also
->> on 3.4 non-PAE kernel?
+2012/7/23 John W. Linville <linville@tuxdriver.com>:
+> On Fri, Apr 27, 2012 at 01:44:39PM -0400, John W. Linville wrote:
 >
-> The problem is also fixed in non-PAE kernel. I've attached the logs
-> from that kernel also. Besides that currently I was comparing both PAE
-> kernels installed on my machine - kernel 3.3.7 (problem exist) and
-> kernel 3.4.3 (problem solved). There must be something that has
-> changed either in the code or maybe kernel configuration!?
+>> Just to keep the ball rolling...
+>>
+>> Angela has reserved space for us at the Hotel Fira
+>> Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
+>> Please note that this will overlap Yocto Dev Days, oVirt Summit and
+>> KVM Forum at the same venue.
+>>
+>> Now, we need some talk proposals!  Please post in this thread (or
+>> contact me or Marcel directly if necessary) to propose talks.  I would
+>> love to see any topics on any relevant technologies, as well as topics
+>> about how the projects are being managed, new sub-projects, etc.
+>> It seems like a long time away right now, but it is a good time to
+>> start thinking... :-)
+>
+> Still a while to go, but this event is getting closer.  I would love to
+> see some more concrete topic proposals for talks, both presentations
+> and discussions.
+>
+> Here is what I've seen so far:
+>
+> Speaker                         Topic
+> -------                         -----
+> Joao Paulo Rechi Vita           status and roadmap of Bluetooth LE
+> Andrei Emeltchenko              Virtual Bluetooth AMP Controller for mac80211
+> Alexander Smirnov               802.15.4 stack, 6lowpan
+>
+> Not bad, but I'd like to see some more!  Some ideas:
+>
+>         -- "state of the union" for bluetooth, nfc, 802.11
+>         -- wireless mesh networking status updates
+>         -- cfg80211/mac80211 feature previews (what's coming?)
+>         -- standards bodies reports (802.11, 802.15.x)
+>         -- important or unusual use cases (e.g. Freifunk, Internet of Things)
+>         -- userland wireless management apps (NetworkManager, connman)
+>         -- wireless-oriented (or wireless-specific) applications
+>         -- issues with managing a wireless networking sub-tree
+>         -- long-term support for legacy hardware (Intel?  Atheros?)
+>         -- driver projects without hardware vendor support?
+>         -- staging driver migration?  out-of-tree driver merging?
+>         -- ???
+>
+> I'm sure there are worthwhile topics that I didn't suggest yet --
+> feel free to suggest your own!  And if you can address one of those
+> topics or one of your own, please reply either to this thread or
+> directly to me.
+>
+> Please note -- you do not necessarily to be a kernel developer (or a
+> developer at all) to merit a speaking slot!  Anyone with a topic to
+> propose will receive appropriate consideration.
+>
+> So, let's hear it! :-)
+>
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I compared your 3.3.0 and 3.4.3 logs:
 
-    -Linux version 3.3.0-4.fc16.i686
-(mockbuild@x86-04.phx2.fedoraproject.org) gcc version 4.6.2 20111027
-(Red Hat 4.6.2-1) (GCC) ) #1 SMP Tue Mar 20 18:45:14 UTC 2012
-    +Linux version 3.4.3-1.fc17.i686
-(mockbuild@x86-04.phx2.fedoraproject.org) gcc
-version 4.7.0 20120507 (Red Hat 4.7.0-5) (GCC) ) #1 SMP Mon Jun 18
-20:52:37 UTC 2012
+Since this time the summit is in Europe I'll try to make it there, if
+I do I 'd like to give a talk on wireless community networks and the
+work we 've done so far. In Barcelona we have the largest wireless
+community network worldwide with over 10.000 nodes called Guifi.net
+(Athens comes next with awmn, check it out  @ wind.awmn.net -more than
+2.500 nodes, in 2002 I set up the first rooftop-pc there :P) so it'll
+be great if we could arrange a meeting or a tour or something.
 
-I don't see much that's different, except this:
+Anyway what I'd like to do is give you an idea on how our code is
+being used not only to create huge wireless community networks around
+the world (in 2009 we had the International Summit for Community
+Wireless Networks in Vienna and the next one is in Barcelona on
+October, more infos here -> http://wirelesssummit.org/) but also on
+research, activism etc.
 
-    -pci 0000:03:09.1: reg 10: [mem 0xf1bff400-0xf1bff4ff]
-    +pci 0000:03:09.1: reg 10: [mem 0xf1bff500-0xf1bff5ff]
+Also I'd like to give you some updates on how spectrum policies evolve
+and what we are trying to do on OSA (that's Open Spectrum Alliance
+http://www.openspectrum.eu/drupal6/) to get more free spectrum to play
+with.
 
-which hints that the BIOS configured that device (an SD Host
-controller) differently.  Is it possible that a BIOS setup change is
-what made the difference?  Can you reproduce the failure and success
-on the exact same hardware & BIOS setup?  I also notice the 3.3.0
-failure was apparently on battery power and the 3.4.3 success was with
-AC power.  Shouldn't matter, but obviously *something* that shouldn't
-matter does matter in this case.
 
-The problem device is 0000:0b:00.0, and the bridge 00:1c.1 leads to
-bus 0b.  There's a little bit more noise in 3.4.3 related to 1c.1
-bridge windows, but the ultimate configuration is the same except for
-the 64-bit pref window, which 0b:00.0 doesn't use anyway:
-
- pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
--pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0200000-0xf03fffff 64bit pref]
-+pci 0000:00:1c.1: bridge window [io  0x1000-0x0fff] to [bus 0b-0b]
-add_size 1000
-+pci 0000:00:1c.1: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus
-0b-0b] add_size 200000
-+pci 0000:00:1c.1: res[15]=[mem 0x00100000-0x000fffff 64bit pref]
-get_res_add_size add_size 200000
-+pci 0000:00:1c.1: res[13]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
-+pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0400000-0xf05fffff 64bit pref]
- pci_bus 0000:0b: resource 1 [mem 0xf1e00000-0xf1efffff]
--pci_bus 0000:0b: resource 2 [mem 0xf0200000-0xf03fffff 64bit pref]
-+pci_bus 0000:0b: resource 2 [mem 0xf0400000-0xf05fffff 64bit pref]
-
-Any ideas, Yinghai?
-
-Bjorn
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
