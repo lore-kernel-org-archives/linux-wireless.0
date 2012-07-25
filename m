@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:36259 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753365Ab2GRMNy (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:63349 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752924Ab2GYWbN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:13:54 -0400
-Received: by lbom4 with SMTP id m4so4559004lbo.16
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:49 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 04/14] wlcore: send EAPOLs using minimum basic rate for all roles
-Date: Wed, 18 Jul 2012 15:13:23 +0300
-Message-Id: <1342613613-917-5-git-send-email-coelho@ti.com> (sfid-20120718_141417_788771_B6AEAFAE)
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+	Wed, 25 Jul 2012 18:31:13 -0400
+Received: by obbuo13 with SMTP id uo13so1718575obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 15:31:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <50106C9F.3050504@net.t-labs.tu-berlin.de>
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<CAFtRNNx+YgGgFp_owGQJcsQVqTuOeWk2J0MwjKMtcUgRq_DF0w@mail.gmail.com>
+	<50106C9F.3050504@net.t-labs.tu-berlin.de>
+Date: Thu, 26 Jul 2012 01:31:12 +0300
+Message-ID: <CAFtRNNw-EuLRouL6dGnzSmc=paP=SAFUj3XqVo8-jLKBJZBBdw@mail.gmail.com> (sfid-20120726_003121_116095_EB0A497F)
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
+ eeprom reads for AR5K_EEPROM_MODE_11A
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: jirislaby@gmail.com, johannes.berg@intel.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@nbd.name
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igal Chernobelsky <igalc@ti.com>
+2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+> Hi Nick,
+>
+> [...]
+>
+> The calibration data for 802.11a in the standard conform mode should
+> only consider 8 reads from the eeprom, thats why I introduced this new
+> define... a "-3" is from my view of readability not as traceable.
+> Any other non standard mode as you mentioned XR as one of, could just
+> ready its necessary lines of the eeprom ones it get supported in ath5k.
+>
+> Greetings Thomas
 
-Send EAPOLs using minimum basic rate for AP, STA, p2p GO and Client.
-The patch fixes p2p connection issue with Realtek device in p2p
-certification test 5.1.13 (DEVUT reinvokes Persistent Group).
+Sorry for the mess Thomas, guess I should start trusting the docs etc
+I have and leave rev. engineering mode from now on :P
 
-Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/tx.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 6a28aee..0bdc950 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -310,10 +310,10 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		 * send them with AP rate policies (EAPOLs are an exception),
- 		 * otherwise use default basic rates
- 		 */
--		if (control->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
--			rate_idx = wlvif->sta.p2p_rate_idx;
--		else if (skb->protocol == cpu_to_be16(ETH_P_PAE))
-+		if (skb->protocol == cpu_to_be16(ETH_P_PAE))
- 			rate_idx = wlvif->sta.basic_rate_idx;
-+		else if (control->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
-+			rate_idx = wlvif->sta.p2p_rate_idx;
- 		else if (control->control.sta)
- 			rate_idx = wlvif->sta.ap_rate_idx;
- 		else
-@@ -321,7 +321,9 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	} else {
- 		if (hlid == wlvif->ap.global_hlid)
- 			rate_idx = wlvif->ap.mgmt_rate_idx;
--		else if (hlid == wlvif->ap.bcast_hlid)
-+		else if (hlid == wlvif->ap.bcast_hlid ||
-+			 skb->protocol == cpu_to_be16(ETH_P_PAE))
-+			/* send AP bcast and EAPOLs using the min basic rate */
- 			rate_idx = wlvif->ap.bcast_rate_idx;
- 		else
- 			rate_idx = wlvif->ap.ucast_rate_idx[ac];
 -- 
-1.7.10.4
-
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
