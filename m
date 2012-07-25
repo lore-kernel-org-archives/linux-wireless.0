@@ -1,95 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:41460 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753307Ab2GJVpz (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:56360 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751062Ab2GYWBG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 17:45:55 -0400
-Received: by weyx8 with SMTP id x8so383202wey.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2012 14:45:54 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: support alternative (BCM4706) ChipCommon core id
-Date: Tue, 10 Jul 2012 23:45:49 +0200
-Message-Id: <1341956749-14722-1-git-send-email-zajec5@gmail.com> (sfid-20120710_234559_440397_34645F4F)
+	Wed, 25 Jul 2012 18:01:06 -0400
+Message-ID: <50106C9F.3050504@net.t-labs.tu-berlin.de> (sfid-20120726_000111_306590_CA2E88AE)
+Date: Thu, 26 Jul 2012 00:01:03 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: jirislaby@gmail.com, johannes.berg@intel.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@nbd.name
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
+ eeprom reads for AR5K_EEPROM_MODE_11A
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de> <CAFtRNNx+YgGgFp_owGQJcsQVqTuOeWk2J0MwjKMtcUgRq_DF0w@mail.gmail.com>
+In-Reply-To: <CAFtRNNx+YgGgFp_owGQJcsQVqTuOeWk2J0MwjKMtcUgRq_DF0w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Nick,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-Final vs. RFC: improved bcma_bus_resume
----
- drivers/bcma/main.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
+Nick Kossifidis schrieb:
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 7ff4bac..151bddc 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -61,6 +61,13 @@ static struct bus_type bcma_bus_type = {
- 	.dev_attrs	= bcma_device_attrs,
- };
- 
-+static u16 bcma_cc_core_id(struct bcma_bus *bus)
-+{
-+	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
-+		return BCMA_CORE_4706_CHIPCOMMON;
-+	return BCMA_CORE_CHIPCOMMON;
-+}
-+
- struct bcma_device *bcma_find_core(struct bcma_bus *bus, u16 coreid)
- {
- 	struct bcma_device *core;
-@@ -91,6 +98,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 	list_for_each_entry(core, &bus->cores, list) {
- 		/* We support that cores ourself */
- 		switch (core->id.id) {
-+		case BCMA_CORE_4706_CHIPCOMMON:
- 		case BCMA_CORE_CHIPCOMMON:
- 		case BCMA_CORE_PCI:
- 		case BCMA_CORE_PCIE:
-@@ -157,7 +165,7 @@ int __devinit bcma_bus_register(struct bcma_bus *bus)
- 	}
- 
- 	/* Init CC core */
--	core = bcma_find_core(bus, BCMA_CORE_CHIPCOMMON);
-+	core = bcma_find_core(bus, bcma_cc_core_id(bus));
- 	if (core) {
- 		bus->drv_cc.core = core;
- 		bcma_core_chipcommon_init(&bus->drv_cc);
-@@ -208,7 +216,7 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 	bcma_init_bus(bus);
- 
- 	match.manuf = BCMA_MANUF_BCM;
--	match.id = BCMA_CORE_CHIPCOMMON;
-+	match.id = bcma_cc_core_id(bus);
- 	match.class = BCMA_CL_SIM;
- 	match.rev = BCMA_ANY_REV;
- 
-@@ -232,7 +240,7 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 	}
- 
- 	/* Init CC core */
--	core = bcma_find_core(bus, BCMA_CORE_CHIPCOMMON);
-+	core = bcma_find_core(bus, bcma_cc_core_id(bus));
- 	if (core) {
- 		bus->drv_cc.core = core;
- 		bcma_core_chipcommon_init(&bus->drv_cc);
-@@ -271,8 +279,7 @@ int bcma_bus_resume(struct bcma_bus *bus)
- 	struct bcma_device *core;
- 
- 	/* Init CC core */
--	core = bcma_find_core(bus, BCMA_CORE_CHIPCOMMON);
--	if (core) {
-+	if (bus->drv_cc.core) {
- 		bus->drv_cc.setup_done = false;
- 		bcma_core_chipcommon_init(&bus->drv_cc);
- 	}
--- 
-1.7.7
+> Thanks for catching this but the bug is elsewhere:
 
+> So guess why the last 2 "invalid" power gain values have the same
+> power levels for all rates ? They are for XR mode (they've put it
+> there on the eeprom because XR mode also operates at 5GHz) and since
+> XR stuff is stripped off Madwifi (at least the public HAL) that's why
+> it only reads 8 of the piers.
+> 
+> Now notice that the last 2 readings on your previous post start from a
+> different frequency and most important that 5360 < 5825  and that
+> makes sense since the idea is to have only 2 points to interpolate
+> between them for the whole XR range. So we have 2 frequency "ranges"
+> to search, the one  is the 11a mode from 4920 to 5825 and the other
+> one is for XR mode from 5360 to 5720. When the first range ends the
+> other starts.
+> 
+> The bug is here:
+> 
+> ath5k_get_rate_pcal_data:
+> 2704         max = ee->ee_rate_target_pwr_num[mode] - 1;
+> [...]
+> 2713         if (target > rpinfo[max].freq) {
+> 2714                 idx_l = idx_r = max;
+> 2715                 goto done;
+> 2716         }
+> 
+> So please instead of tweaking the EEPROM code just change
+> max = ee->ee_rate_target_pwr_num[mode] - 1;
+> to
+> max = ee->ee_rate_target_pwr_num[mode] - 3;
+> in case of AR5K_MODE_11A 
+
+
+The calibration data for 802.11a in the standard conform mode should
+only consider 8 reads from the eeprom, thats why I introduced this new
+define... a "-3" is from my view of readability not as traceable.
+Any other non standard mode as you mentioned XR as one of, could just
+ready its necessary lines of the eeprom ones it get supported in ath5k.
+
+Greetings Thomas
