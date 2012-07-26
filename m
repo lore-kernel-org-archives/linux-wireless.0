@@ -1,45 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29557 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754154Ab2GFT7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:59:42 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 17/33] NFC: Add netlink module alias for NFC
-Date: Fri,  6 Jul 2012 22:09:37 +0200
-Message-Id: <1341605393-32056-18-git-send-email-sameo@linux.intel.com> (sfid-20120706_220538_150639_545B6F6E)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:56676 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751067Ab2GZFRv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 01:17:51 -0400
+Received: by obbuo13 with SMTP id uo13so2169735obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 22:17:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn3z=Vp4UaJ23T_F5BqMgM7u6ATV3zOeAs1fQrBD+=KJqA@mail.gmail.com>
+References: <CAAT9HsjZ7wPbkRMH94HDNBS+vOhLigKLYULqfyQobh_Oyt9M4w@mail.gmail.com>
+	<501030E9.3090707@lwfinger.net>
+	<CAAT9Hshwb+iPMALGvP1P2UHzEQbyvYNM0_zz0dHp0mJuy6KwLA@mail.gmail.com>
+	<50103BE8.1020203@lwfinger.net>
+	<CAAT9HsjQ_tkm77NT_Rn5_Pi9BHGhY9Vz7jcVzkwdDUjUoKamtw@mail.gmail.com>
+	<501061C8.5010108@lwfinger.net>
+	<CA+XFjioVy_pmKxcJAe1U_M+zKNiiPEsb0bmkAfEWzmnnDBjLFw@mail.gmail.com>
+	<CAAT9HsgXHe-0qZ5vTvCuU8QZ006MrsCyu7Zc_PRFccz52TWcUw@mail.gmail.com>
+	<CAD2nsn3z=Vp4UaJ23T_F5BqMgM7u6ATV3zOeAs1fQrBD+=KJqA@mail.gmail.com>
+Date: Thu, 26 Jul 2012 10:47:48 +0530
+Message-ID: <CAD2nsn19Oa_mUc_D9hqUzxOOQkKXBgEpxhghsTw_9H9LHP=3xQ@mail.gmail.com> (sfid-20120726_071802_630542_26D71F6B)
+Subject: Re: New Laptop and Driver
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Tim and Alison Bentley <Home@trarbentley.net>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/core.c |    3 +++
- 1 file changed, 3 insertions(+)
+On Thu, Jul 26, 2012 at 10:34 AM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> On Thu, Jul 26, 2012 at 10:31 AM, Tim and Alison Bentley
+> <Home@trarbentley.net> wrote:
+>> On 26 July 2012 02:25, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
+>>> On Wed, Jul 25, 2012 at 11:14 PM, Larry Finger
+>>> <Larry.Finger@lwfinger.net> wrote:
+>>>> On 07/25/2012 01:54 PM, Tim and Alison Bentley wrote:
+>>>>>
+>>>>> On 25 July 2012 19:33, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>>>>>
+>>>>>> On 07/25/2012 01:00 PM, Tim and Alison Bentley wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>> 01:00.0 VGA compatible controller [0300]: nVidia Corporation Device
+>>>>>>> [10de:0de9] (rev a1)
+>>>>>>> 03:00.0 Network controller [0280]: Atheros Communications Inc. Device
+>>>>>>> [168c:0037] (rev 01)
+>>>>>>> 04:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+>>>>>>> RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
+>>>>>>> 07)
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> The Realtek device is the one used for your wired network.
+>>>>>>
+>>>>>> The Atheros device is not in the tables for the latest version of any
+>>>>>> wireless driver. Perhaps it will work if you do the following:
+>>>>>>
+>>>>>> su -
+>>>>>> modprobe -v ath9k
+>>>>>> echo "168c 0037" > /sys/bus/pci/drivers/ath9k/new_id
+>>>>>> exit
+>>>>>>
+>>>>>> The above will work if the driver handles the device, but it is not yet
+>>>>>> in
+>>>>>> the tables. Perhaps the Atheros developers will know the status of that
+>>>>>> device.
+>>>>>>
+>>>>>> When replying to E-mail in this list, and most other technical mailing
+>>>>>> lists, please do not top post. Always put your answer below the quoted
+>>>>>> material as I did here.
+>>>>>>
+>>>>>> Larry
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>> Sorry for top posting, bad habbit
+>>>>> No luck with the suggestion and I tried a reboot for luck with no success.
+>>>>
+>>>>
+>>>> The effect of those commands would have disappeared after a reboot. One last
+>>>> thing to do is to check /var/log/messages to see if it complained about
+>>>> missing firmware after you entered the new_id. There should be some kind of
+>>>> error messages at that point, but it is likely that no Linux driver handles
+>>>> this device.
+>>>>
+>>>> You might try ndiswrapper and the Windows driver, but if the system is
+>>>> 64-bit, then that might not work either.
+>>>>
+>>>> Larry
+>>>
+>>> 168c:0037 appears to be a chipset called "AR1111", based on Windows
+>>> drivers. However, I suspect this is a provisional/placeholder name.
+>>
+>> Re ran the commands and have the /var/log/messages output
+>>
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.876477] cfg80211: Calling CRDA
+>> to update world regulatory domain
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.916447] cfg80211: World
+>> regulatory domain updated:
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.916450] cfg80211:   (start_freq
+>> - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.916453] cfg80211:   (2402000
+>> KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.916455] cfg80211:   (2457000
+>> KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.916457] cfg80211:   (2474000
+>> KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.916459] cfg80211:   (5170000
+>> KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> Jul 26 05:58:23 tigger2 kernel: [ 1546.916461] cfg80211:   (5735000
+>> KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> Jul 26 05:58:30 tigger2 kernel: [ 1553.767939] ath: phy0: Hardware
+>> device ID 0x0037 not supported
+>
+> it wasn't there in the device ID table in pci.c of ath9k, lets see
+> this chip is actually
+> has h/w code support in ath9k.
 
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 8382fbc..ff74979 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -29,6 +29,8 @@
- #include <linux/slab.h>
- #include <linux/nfc.h>
- 
-+#include <net/genetlink.h>
-+
- #include "nfc.h"
- 
- #define VERSION "0.1"
-@@ -925,3 +927,4 @@ MODULE_DESCRIPTION("NFC Core ver " VERSION);
- MODULE_VERSION(VERSION);
- MODULE_LICENSE("GPL");
- MODULE_ALIAS_NETPROTO(PF_NFC);
-+MODULE_ALIAS_GENL_FAMILY(NFC_GENL_NAME);
+yes indeed its AR1111, seems like a AR9485 chip.
+
+>
+>
+>> Jul 26 05:58:30 tigger2 kernel: [ 1553.767948] ath9k 0000:03:00.0:
+>> Failed to initialize device
+>> Jul 26 05:58:30 tigger2 kernel: [ 1553.768137] ath9k: probe of
+>> 0000:03:00.0 failed with error -95
+>>
+>>
+>> --
+>> Tim and Alison Bentley
+>> Home@TRARBentley.net
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+> --
+> thanks,
+> shafi
+
+
+
 -- 
-1.7.10
-
+thanks,
+shafi
