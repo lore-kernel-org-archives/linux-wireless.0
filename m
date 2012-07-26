@@ -1,68 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:48270 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918Ab2G3XkG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jul 2012 19:40:06 -0400
-Received: by obbuo13 with SMTP id uo13so9711375obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2012 16:40:05 -0700 (PDT)
+Received: from nm10-vm0.bullet.mail.ird.yahoo.com ([77.238.189.90]:40817 "HELO
+	nm10-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751049Ab2GZJ6x convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 05:58:53 -0400
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net>
+Message-ID: <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> (sfid-20120726_115904_416149_A485991B)
+Date: Thu, 26 Jul 2012 10:58:52 +0100 (BST)
+From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <5010304E.6070005@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <201207272316.32411.chunkeey@googlemail.com>
-References: <1343332743-11845-1-git-send-email-jlopex@cozybit.com>
-	<201207271630.06025.chunkeey@googlemail.com>
-	<CAPjQAd_Ko_WFEoG6uXk7hYYAggL6jbGiuKWdp=f3Aa+JdXNNJg@mail.gmail.com>
-	<201207272316.32411.chunkeey@googlemail.com>
-Date: Mon, 30 Jul 2012 16:40:05 -0700
-Message-ID: <CAMr9ZPnJNwO-okEUXxjicu4iMViPYbhF6gMu96np0GNk5xRA5Q@mail.gmail.com> (sfid-20120731_014013_824300_D727DEE8)
-Subject: Re: [PATCH] carl9170: Add support for NL80211_IFTYPE_MESH_POINT interfaces
-From: Javier Lopez <jlopex@cozybit.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christian,
+Thanks Larry for your inputs.
 
-I just wanted to give you an update about the mesh support on
-carl9170. Today we've been testing the unique carl9170 card we have, a
-D-link DWA-160.
+>From this thread it looks like it's not a given piece of work to get the RTL8188CE stable.
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/902557 
 
-We tested on a mesh network with 5 nodes (1 carl9170 + 4 ath9k_htc
-cards) and we haven't seen any problem on this setup. All mesh
-functionalities seem to work correctly.
+Anyway I have started to compile the 3.4.6 kernel see how it goes. I hope I don't need to add the compat-wireless drivers on top?
 
-We are still waiting to receive more carl9170 cards, once we have them
-we'll run new tests on them.
+Will report in more than 4h after the make is completed :D
 
-Cheers,
-
-Jlo
-
-
-
-On Fri, Jul 27, 2012 at 2:16 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Friday 27 July 2012 17:12:32 Javier Cardona wrote:
->> On Fri, Jul 27, 2012 at 7:30 AM, Christian Lamparter wrote:
->> > BTW: Did you do any experiments? I.e.: Does it really
->> > work?
->>
->> Basic peering and pinging with ath9k_htc seems to work.
->> We only have one of these cards, so we cannot run our
->> full test suite.  Testing will continue when we
->> receive more cards.
->
-> Ok, thanks. I'll take care of updating the information
-> on the wiki now.
->
-> Regards,
->         Chr
-
-
-
--- 
-Javier Lopez
-Software Engineer
-cozybit Inc.
+Merci
