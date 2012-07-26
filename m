@@ -1,447 +1,323 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34203 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753776Ab2GIMiL (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:53528 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab2GZL2a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 08:38:11 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/8] cfg80211: use wireless_dev for interface management
-Date: Mon,  9 Jul 2012 14:38:01 +0200
-Message-Id: <1341837483-18001-7-git-send-email-johannes@sipsolutions.net> (sfid-20120709_143833_413092_D02653ED)
-In-Reply-To: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
-References: <1341837483-18001-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 26 Jul 2012 07:28:30 -0400
+Received: by ghrr11 with SMTP id r11so1822681ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 04:28:29 -0700 (PDT)
+Message-ID: <501129D9.4060407@lwfinger.net> (sfid-20120726_132834_515472_6EDC28A3)
+Date: Thu, 26 Jul 2012 06:28:25 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com>
+In-Reply-To: <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com>
+Content-Type: multipart/mixed;
+ boundary="------------040005080404020609040102"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is a multi-part message in MIME format.
+--------------040005080404020609040102
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-In order to be able to create P2P Device wdevs, move
-the virtual interface management over to wireless_dev
-structures.
+On 07/26/2012 06:01 AM, Xavier de Almeida wrote:
+> Cool let's get this sorted then.
+>
+> Here is the output now with the 3.4.6 kernel. If you prefer me to try with the 3.5, I can.
+>
+> thanks
+>
+> uname -r
+> 3.4.6-custom
+>
+> ifconfig
+>
+> br0       Link encap:Ethernet  HWaddr 80:ee:73:31:54:b2
+>            inet addr:192.168.0.40  Bcast:192.168.0.255  Mask:255.255.255.0
+>            inet6 addr: fe80::82ee:73ff:fe31:54b2/64 Scope:Link
+>            UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>            RX packets:426 errors:0 dropped:0 overruns:0 frame:0
+>            TX packets:548 errors:0 dropped:0 overruns:0 carrier:0
+>            collisions:0 txqueuelen:0
+>            RX bytes:30369 (30.3 KB)  TX bytes:79172 (79.1 KB)
+>
+> eth0      Link encap:Ethernet  HWaddr 80:ee:73:31:54:b2
+>            UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>            RX packets:510 errors:0 dropped:4 overruns:0 frame:0
+>            TX packets:546 errors:0 dropped:0 overruns:0 carrier:0
+>            collisions:0 txqueuelen:1000
+>            RX bytes:54044 (54.0 KB)  TX bytes:79000 (79.0 KB)
+>            Interrupt:45
+>
+> lo        Link encap:Local Loopback
+>            inet addr:127.0.0.1  Mask:255.0.0.0
+>            inet6 addr: ::1/128 Scope:Host
+>            UP LOOPBACK RUNNING  MTU:16436  Metric:1
+>            RX packets:968 errors:0 dropped:0 overruns:0 frame:0
+>            TX packets:968 errors:0 dropped:0 overruns:0 carrier:0
+>            collisions:0 txqueuelen:0
+>            RX bytes:72060 (72.0 KB)  TX bytes:72060 (72.0 KB)
+>
+> iwconfig
+> br0       no wireless extensions.
+>
+> wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.437 GHz  Tx-Power=20 dBm
+>            Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
+>            Power Management:on
+>
+> lo        no wireless extensions.
+>
+> eth0      no wireless extensions.
+>
+> sudo modinfo rtl8192ce
+> filename:       /lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192ce.ko
+> firmware:       rtlwifi/rtl8192cfwU_B.bin
+> firmware:       rtlwifi/rtl8192cfwU.bin
+> firmware:       rtlwifi/rtl8192cfw.bin
+> description:    Realtek 8192C/8188C 802.11n PCI wireless
+> license:        GPL
+> author:         Larry Finger    <Larry.Finger@lwfinger.net>
+> author:         Realtek WlanFAE <wlanfae@realtek.com>
+> author:         lizhaoming      <chaoming_li@realsil.com.cn>
+> srcversion:     AE758D5E662358264A4DB35
+> alias:          pci:v000010ECd00008176sv*sd*bc*sc*i*
+> alias:          pci:v000010ECd00008177sv*sd*bc*sc*i*
+> alias:          pci:v000010ECd00008178sv*sd*bc*sc*i*
+> alias:          pci:v000010ECd00008191sv*sd*bc*sc*i*
+> depends:        rtlwifi,rtl8192c-common,mac80211
+> intree:         Y
+> vermagic:       3.4.6-custom SMP mod_unload modversions 686
+> parm:           swenc:Set to 1 for software crypto (default 0)
+> parm:           ips:Set to 0 to not use link power save (default 1)
+>
+> parm:           swlps:Set to 1 to use SW control power save (default 0)
+>
+> parm:           fwlps:Set to 1 to use FW control power save (default 1)
+>
+> parm:           debug:Set debug level (0-5) (default 0) (int)
+>
+>
+>
+> sudo hostapd -dd /etc/hostapd/hostapd.conf
+> Configuration file: /etc/hostapd/hostapd.conf
+>
+> nl80211: Register Action command failed: ret=-114 (Operation already in progress)
+> nl80211: Register Action match - hexdump(len=1): 06
+> nl80211: Failed to register Action frame processing - ignore for now
+> nl80211: Interface wlan0 is in bridge br0
+> nl80211: Add own interface ifindex 3
+> nl80211: Add own interface ifindex 4
+> Failed to create interface mon.wlan0: -23 (Too many open files in system)
+> Try to remove and re-create mon.wlan0
+> nl80211: Remove interface ifindex=5
+> nl80211: New interface mon.wlan0 created: ifindex=6
+> nl80211: Add own interface ifindex 6
+> Could not set interface mon.wlan0 flags: Success
+> nl80211: Remove interface ifindex=6
+> nl80211: Failed to set interface wlan0 into AP mode
+> nl80211 driver initialization failed.
+> ELOOP: remaining socket: sock=4 eloop_data=0x8423900 user_data=0x8423eb0 handler=0x807c5e0
+> ELOOP: remaining socket: sock=6 eloop_data=0x8425cb8 user_data=(nil) handler=0x8086770
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   30 ++++++++++++++--------------
- drivers/net/wireless/ath/ath6kl/cfg80211.h |    6 +++---
- drivers/net/wireless/ath/ath6kl/core.c     |    8 ++++----
- drivers/net/wireless/mwifiex/cfg80211.c    |   24 +++++++++++-----------
- drivers/net/wireless/mwifiex/main.c        |    4 ++--
- drivers/net/wireless/mwifiex/main.h        |   10 ++++++----
- include/net/cfg80211.h                     |   19 +++++++++---------
- net/mac80211/cfg.c                         |   20 +++++++++----------
- net/mac80211/ieee80211_i.h                 |    2 +-
- net/mac80211/iface.c                       |    6 +++---
- net/wireless/nl80211.c                     |   16 +++++++--------
- 11 files changed, 73 insertions(+), 72 deletions(-)
+I'm not sure why you are getting that error -23 (too many open files). Is that 
+number set artificially low for some reason? What does
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 5f0c66b..88bed02 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1487,14 +1487,14 @@ static int ath6kl_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- 	return 0;
- }
- 
--static struct net_device *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
--						    char *name,
--						    enum nl80211_iftype type,
--						    u32 *flags,
--						    struct vif_params *params)
-+static struct wireless_dev *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
-+						      char *name,
-+						      enum nl80211_iftype type,
-+						      u32 *flags,
-+						      struct vif_params *params)
- {
- 	struct ath6kl *ar = wiphy_priv(wiphy);
--	struct net_device *ndev;
-+	struct wireless_dev *wdev;
- 	u8 if_idx, nw_type;
- 
- 	if (ar->num_vif == ar->vif_max) {
-@@ -1507,20 +1507,20 @@ static struct net_device *ath6kl_cfg80211_add_iface(struct wiphy *wiphy,
- 		return ERR_PTR(-EINVAL);
- 	}
- 
--	ndev = ath6kl_interface_add(ar, name, type, if_idx, nw_type);
--	if (!ndev)
-+	wdev = ath6kl_interface_add(ar, name, type, if_idx, nw_type);
-+	if (!wdev)
- 		return ERR_PTR(-ENOMEM);
- 
- 	ar->num_vif++;
- 
--	return ndev;
-+	return wdev;
- }
- 
- static int ath6kl_cfg80211_del_iface(struct wiphy *wiphy,
--				     struct net_device *ndev)
-+				     struct wireless_dev *wdev)
- {
- 	struct ath6kl *ar = wiphy_priv(wiphy);
--	struct ath6kl_vif *vif = netdev_priv(ndev);
-+	struct ath6kl_vif *vif = netdev_priv(wdev->netdev);
- 
- 	spin_lock_bh(&ar->list_lock);
- 	list_del(&vif->list);
-@@ -3477,9 +3477,9 @@ void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
- 	ar->num_vif--;
- }
- 
--struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
--					enum nl80211_iftype type, u8 fw_vif_idx,
--					u8 nw_type)
-+struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, char *name,
-+					  enum nl80211_iftype type,
-+					  u8 fw_vif_idx, u8 nw_type)
- {
- 	struct net_device *ndev;
- 	struct ath6kl_vif *vif;
-@@ -3533,7 +3533,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	list_add_tail(&vif->list, &ar->vif_list);
- 	spin_unlock_bh(&ar->list_lock);
- 
--	return ndev;
-+	return &vif->wdev;
- 
- err:
- 	aggr_module_destroy(vif->aggr_cntxt);
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index b992046..56b1ebe 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -25,9 +25,9 @@ enum ath6kl_cfg_suspend_mode {
- 	ATH6KL_CFG_SUSPEND_SCHED_SCAN,
- };
- 
--struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
--					enum nl80211_iftype type,
--					u8 fw_vif_idx, u8 nw_type);
-+struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, char *name,
-+					  enum nl80211_iftype type,
-+					  u8 fw_vif_idx, u8 nw_type);
- void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
- 				      enum wmi_phy_mode mode);
- void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index fdb3b1d..82c4dd2 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -56,7 +56,7 @@ EXPORT_SYMBOL(ath6kl_core_rx_complete);
- int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
- {
- 	struct ath6kl_bmi_target_info targ_info;
--	struct net_device *ndev;
-+	struct wireless_dev *wdev;
- 	int ret = 0, i;
- 
- 	switch (htc_type) {
-@@ -187,12 +187,12 @@ int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
- 	rtnl_lock();
- 
- 	/* Add an initial station interface */
--	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
-+	wdev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
- 				    INFRA_NETWORK);
- 
- 	rtnl_unlock();
- 
--	if (!ndev) {
-+	if (!wdev) {
- 		ath6kl_err("Failed to instantiate a network device\n");
- 		ret = -ENOMEM;
- 		wiphy_unregister(ar->wiphy);
-@@ -200,7 +200,7 @@ int ath6kl_core_init(struct ath6kl *ar, enum ath6kl_htc_type htc_type)
- 	}
- 
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: name=%s dev=0x%p, ar=0x%p\n",
--		   __func__, ndev->name, ndev, ar);
-+		   __func__, wdev->netdev->name, wdev->netdev, ar);
- 
- 	return ret;
- 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 9c2e08e..1e8024e 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1512,11 +1512,11 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
- /*
-  *  create a new virtual interface with the given name
-  */
--struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
--					    char *name,
--					    enum nl80211_iftype type,
--					    u32 *flags,
--					    struct vif_params *params)
-+struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
-+					      char *name,
-+					      enum nl80211_iftype type,
-+					      u32 *flags,
-+					      struct vif_params *params)
- {
- 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
- 	struct mwifiex_private *priv;
-@@ -1634,7 +1634,7 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- #ifdef CONFIG_DEBUG_FS
- 	mwifiex_dev_debugfs_init(priv);
- #endif
--	return dev;
-+	return wdev;
- error:
- 	if (dev && (dev->reg_state == NETREG_UNREGISTERED))
- 		free_netdev(dev);
-@@ -1647,9 +1647,9 @@ EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
- /*
-  * del_virtual_intf: remove the virtual interface determined by dev
-  */
--int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct net_device *dev)
-+int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- {
--	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
- 
- #ifdef CONFIG_DEBUG_FS
- 	mwifiex_dev_debugfs_remove(priv);
-@@ -1661,11 +1661,11 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct net_device *dev)
- 	if (netif_carrier_ok(priv->netdev))
- 		netif_carrier_off(priv->netdev);
- 
--	if (dev->reg_state == NETREG_REGISTERED)
--		unregister_netdevice(dev);
-+	if (wdev->netdev->reg_state == NETREG_REGISTERED)
-+		unregister_netdevice(wdev->netdev);
- 
--	if (dev->reg_state == NETREG_UNREGISTERED)
--		free_netdev(dev);
-+	if (wdev->netdev->reg_state == NETREG_UNREGISTERED)
-+		free_netdev(wdev->netdev);
- 
- 	/* Clear the priv in adapter */
- 	priv->netdev = NULL;
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index f0219efc..4680362 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -377,7 +377,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	goto done;
- 
- err_add_intf:
--	mwifiex_del_virtual_intf(adapter->wiphy, priv->netdev);
-+	mwifiex_del_virtual_intf(adapter->wiphy, priv->wdev);
- 	rtnl_unlock();
- err_init_fw:
- 	pr_debug("info: %s: unregister device\n", __func__);
-@@ -844,7 +844,7 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 
- 		rtnl_lock();
- 		if (priv->wdev && priv->netdev)
--			mwifiex_del_virtual_intf(adapter->wiphy, priv->netdev);
-+			mwifiex_del_virtual_intf(adapter->wiphy, priv->wdev);
- 		rtnl_unlock();
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 0b3b5aa..434a90e 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1005,10 +1005,12 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- 					struct mwifiex_bssdescriptor *bss_desc);
- 
--struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
--					char *name, enum nl80211_iftype type,
--					u32 *flags, struct vif_params *params);
--int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct net_device *dev);
-+struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
-+					      char *name,
-+					      enum nl80211_iftype type,
-+					      u32 *flags,
-+					      struct vif_params *params);
-+int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev);
- 
- void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config);
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7eaaee7..aaaa3a2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1435,10 +1435,10 @@ struct cfg80211_gtk_rekey_data {
-  *
-  * @add_virtual_intf: create a new virtual interface with the given name,
-  *	must set the struct wireless_dev's iftype. Beware: You must create
-- *	the new netdev in the wiphy's network namespace! Returns the netdev,
-- *	or an ERR_PTR.
-+ *	the new netdev in the wiphy's network namespace! Returns the struct
-+ *	wireless_dev, or an ERR_PTR.
-  *
-- * @del_virtual_intf: remove the virtual interface determined by ifindex.
-+ * @del_virtual_intf: remove the virtual interface
-  *
-  * @change_virtual_intf: change type/configuration of virtual interface,
-  *	keep the struct wireless_dev's iftype updated.
-@@ -1617,12 +1617,13 @@ struct cfg80211_ops {
- 	int	(*resume)(struct wiphy *wiphy);
- 	void	(*set_wakeup)(struct wiphy *wiphy, bool enabled);
- 
--	struct net_device * (*add_virtual_intf)(struct wiphy *wiphy,
--						char *name,
--						enum nl80211_iftype type,
--						u32 *flags,
--						struct vif_params *params);
--	int	(*del_virtual_intf)(struct wiphy *wiphy, struct net_device *dev);
-+	struct wireless_dev * (*add_virtual_intf)(struct wiphy *wiphy,
-+						  char *name,
-+						  enum nl80211_iftype type,
-+						  u32 *flags,
-+						  struct vif_params *params);
-+	int	(*del_virtual_intf)(struct wiphy *wiphy,
-+				    struct wireless_dev *wdev);
- 	int	(*change_virtual_intf)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       enum nl80211_iftype type, u32 *flags,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7d9abea3..a752c73 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -20,31 +20,31 @@
- #include "rate.h"
- #include "mesh.h"
- 
--static struct net_device *ieee80211_add_iface(struct wiphy *wiphy, char *name,
--					      enum nl80211_iftype type,
--					      u32 *flags,
--					      struct vif_params *params)
-+static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy, char *name,
-+						enum nl80211_iftype type,
-+						u32 *flags,
-+						struct vif_params *params)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
--	struct net_device *dev;
-+	struct wireless_dev *wdev;
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
--	err = ieee80211_if_add(local, name, &dev, type, params);
-+	err = ieee80211_if_add(local, name, &wdev, type, params);
- 	if (err)
- 		return ERR_PTR(err);
- 
- 	if (type == NL80211_IFTYPE_MONITOR && flags) {
--		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 		sdata->u.mntr_flags = *flags;
- 	}
- 
--	return dev;
-+	return wdev;
- }
- 
--static int ieee80211_del_iface(struct wiphy *wiphy, struct net_device *dev)
-+static int ieee80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
- {
--	ieee80211_if_remove(IEEE80211_DEV_TO_SUB_IF(dev));
-+	ieee80211_if_remove(IEEE80211_WDEV_TO_SUB_IF(wdev));
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8f8535e..c3241c3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1284,7 +1284,7 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
- int ieee80211_iface_init(void);
- void ieee80211_iface_exit(void);
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
--		     struct net_device **new_dev, enum nl80211_iftype type,
-+		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
- 		     struct vif_params *params);
- int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
- 			     enum nl80211_iftype type);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index fbef7a1..b1edf60 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1373,7 +1373,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- }
- 
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
--		     struct net_device **new_dev, enum nl80211_iftype type,
-+		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
- 		     struct vif_params *params)
- {
- 	struct net_device *ndev;
-@@ -1463,8 +1463,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	list_add_tail_rcu(&sdata->list, &local->interfaces);
- 	mutex_unlock(&local->iflist_mtx);
- 
--	if (new_dev)
--		*new_dev = ndev;
-+	if (new_wdev)
-+		*new_wdev = &sdata->wdev;
- 
- 	return 0;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0dc3356..2103327 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1971,7 +1971,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct vif_params params;
--	struct net_device *dev;
-+	struct wireless_dev *wdev;
- 	int err;
- 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
- 	u32 flags;
-@@ -2001,16 +2001,14 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 	err = parse_monitor_flags(type == NL80211_IFTYPE_MONITOR ?
- 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
- 				  &flags);
--	dev = rdev->ops->add_virtual_intf(&rdev->wiphy,
-+	wdev = rdev->ops->add_virtual_intf(&rdev->wiphy,
- 		nla_data(info->attrs[NL80211_ATTR_IFNAME]),
- 		type, err ? NULL : &flags, &params);
--	if (IS_ERR(dev))
--		return PTR_ERR(dev);
-+	if (IS_ERR(wdev))
-+		return PTR_ERR(wdev);
- 
- 	if (type == NL80211_IFTYPE_MESH_POINT &&
- 	    info->attrs[NL80211_ATTR_MESH_ID]) {
--		struct wireless_dev *wdev = dev->ieee80211_ptr;
--
- 		wdev_lock(wdev);
- 		BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN !=
- 			     IEEE80211_MAX_MESH_ID_LEN);
-@@ -2027,12 +2025,12 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
--	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = info->user_ptr[1];
- 
- 	if (!rdev->ops->del_virtual_intf)
- 		return -EOPNOTSUPP;
- 
--	return rdev->ops->del_virtual_intf(&rdev->wiphy, dev);
-+	return rdev->ops->del_virtual_intf(&rdev->wiphy, wdev);
- }
- 
- static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
-@@ -6874,7 +6872,7 @@ static struct genl_ops nl80211_ops[] = {
- 		.doit = nl80211_del_interface,
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
--		.internal_flags = NL80211_FLAG_NEED_NETDEV |
-+		.internal_flags = NL80211_FLAG_NEED_WDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
- 	{
--- 
-1.7.10.4
+cat /proc/sys/fs/file-max
 
+report? On my system, it is 300000.
+
+Attached is a script file that I use to start an AP on my system. Please try it 
+and see if it works differently. You mnay have to adjust the symbols for 
+different locations of hostapd, etc, and the address of the wireless network 
+that is currently set at 192.168.0.X. The script is run with
+
+sudo ./control_ap start <name_of_wireless_iface> <name_of_external_iface>
+
+or
+
+sudo ./control_ap stop
+
+For a normal configuration, the command would be "control_ap start wlan0 eth0".
+
+In addition, one of the attachments in 
+https://bugzilla.redhat.com/show_bug.cgi?id=797709 is a hostapd configuration 
+file that works. You might compare it with yours.
+
+Larry
+
+
+--------------040005080404020609040102
+Content-Type: text/plain; charset=UTF-8;
+ name="control_ap"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="control_ap"
+
+#!/bin/sh
+# Script to start/stop a hostapd-based access point
+#
+# Sample start call "control_ap start wlan0 eth0"
+# Stop with "control_ap stop"
+#
+
+case "$1" in
+start)
+	if [ $# -ne 3 ]
+	then
+	  echo "Usage: $0 start AP_iface NET_iface"
+	  exit 1
+	fi
+;;
+stop)
+	if [ $# -ne 1 ]
+	then
+	  echo "Usage: $0 stop"
+	  exit 1
+	fi
+;;
+*)
+        echo "Usage:"
+	echo "$0 start AP-iface net_iface"
+	echo "or"
+	echo "$0 stop"
+        exit 1
+        ;;
+esac
+
+# Symbols for needed programs
+
+IPTABLES=/usr/sbin/iptables
+IFCONFIG=/sbin/ifconfig
+DHCPD=/usr/sbin/dhcpd
+HOSTAPD=/usr/sbin/hostapd
+
+# Symbols for AP and external interfaces
+
+NET_AP=$2
+NET_EXT=$3
+
+# First 3 octets of IP address for the AP
+
+AP_ADDR=192.168.0
+
+# IP address for nameserver
+
+NAME_SERVER=8.8.8.8
+
+# AP Channel, SSID, Encryption method,  and Encryption secret
+
+AP_CHANNEL=11
+AP_SSID=RTL8192SE
+WPA_SECRET="\"s!will@be#hard$to%crack^\""
+ENCRYPT_MODE=2
+
+case "$1" in
+start)
+        echo "Starting AP mode for $NET_AP at address $AP_ADDR.1"
+        # Disable packet forwarding
+        echo 0 > /proc/sys/net/ipv4/ip_forward
+        # Stop any existing hostapd and dhcpd daemons
+        killproc hostapd
+        killproc dhcpd
+        #Set up forwarding
+        $IPTABLES -t nat -A POSTROUTING -o $NET_EXT -j MASQUERADE
+        $IPTABLES -A FORWARD -i $NET_EXT -o $NET_AP -m state \
+		--state RELATED,ESTABLISHED -j ACCEPT
+        $IPTABLES -A FORWARD -i $NET_AP -o $NET_EXT -j ACCEPT
+        # Enable packet forwarding
+        echo 1 > /proc/sys/net/ipv4/ip_forward
+        # Get the AP interface in the right state
+        $IFCONFIG $NET_AP down
+        $IFCONFIG $NET_AP up
+        $IFCONFIG $NET_AP $AP_ADDR.1
+        # dhcpd needs to have a leases file available - create it if needed
+        if [ ! -f /var/lib/dhcp/db/dhcpd.leases ]; then
+                touch /var/lib/dhcp/db/dhcpd.leases
+        fi
+	# Write the DHCP server configuration file
+	echo "option domain-name-servers $NAME_SERVER;" > ~/dhcpd.conf
+	echo "default-lease-time 600;" >> ~/dhcpd.conf
+	echo "max-lease-time 7200;" >> ~/dhcpd.conf
+	echo "ddns-update-style none; ddns-updates off;" >> ~/dhcpd.conf
+	echo "subnet $AP_ADDR.0 netmask 255.255.255.0 {" >> ~/dhcpd.conf
+	echo "        range $AP_ADDR.200 $AP_ADDR.229;" >> ~/dhcpd.conf
+	echo "        option subnet-mask 255.255.255.0;" >> ~/dhcpd.conf
+	echo "        option broadcast-address $AP_ADDR.255;" >> ~/dhcpd.conf
+	echo "        option routers $AP_ADDR.1;" >> ~/dhcpd.conf
+	echo "}" >> ~/dhcpd.conf
+        # Bring up the DHCP server
+        $DHCPD -cf ~/dhcpd.conf $NET_AP
+	# Write the hostapd configuration file
+	cat > ~/hostapd.conf << EOF
+auth_algs=1
+beacon_int=100
+#bridge=br0
+country_code=US
+ctrl_interface_group=0
+ctrl_interface=/var/run/hostapd
+dtim_period=2
+dump_file=/tmp/hostapd.dump
+fragm_threshold=2346
+ht_capab=[HT40-][SHORT-GI-20][SHORT-GI-40][MAX-AMSDU-7935][DSSS_CCK-40]
+ieee80211d=1
+ieee80211n=1
+ignore_broadcast_ssid=0
+logger_stdout=-1
+logger_stdout_level=2
+logger_syslog=-1
+logger_syslog_level=2
+macaddr_acl=0
+max_num_sta=255
+rts_threshold=2347
+wmm_ac_be_acm=0
+wmm_ac_be_aifs=3
+wmm_ac_be_cwmax=10
+wmm_ac_be_cwmin=4
+wmm_ac_be_txop_limit=0
+wmm_ac_bk_acm=0
+wmm_ac_bk_aifs=7
+wmm_ac_bk_cwmax=10
+wmm_ac_bk_cwmin=4
+wmm_ac_bk_txop_limit=0
+wmm_ac_vi_acm=0
+wmm_ac_vi_aifs=2
+wmm_ac_vi_cwmax=4
+wmm_ac_vi_cwmin=3
+wmm_ac_vi_txop_limit=94
+wmm_ac_vo_acm=0
+wmm_ac_vo_aifs=2
+wmm_ac_vo_cwmax=3
+wmm_ac_vo_cwmin=2
+wmm_ac_vo_txop_limit=47
+wmm_enabled=1
+EOF
+	echo "interface=$NET_AP" >> ~/hostapd.conf
+	echo "ssid=$AP_SSID" >> ~/hostapd.conf 
+	echo "driver=nl80211" >> ~/hostapd.conf 
+	echo "hw_mode=g" >> ~/hostapd.conf 
+	echo "channel=$AP_CHANNEL" >> ~/hostapd.conf 
+	echo "wpa=$ENCRYPT_MODE" >> ~/hostapd.conf 
+	echo "wpa_key_mgmt=WPA-PSK" >> ~/hostapd.conf 
+	echo "wpa_pairwise=TKIP CCMP" >> ~/hostapd.conf 
+	echo "rsn_pairwise=CCMP" >> ~/hostapd.conf
+	echo "wpa_passphrase=$WPA_SECRET" >> ~/hostapd.conf 
+        # Bring up hostapd
+        $HOSTAPD -B ~/hostapd.conf
+        ;;
+stop)
+        echo "Stopping AP mode"
+        # Stop hostapd and dhcpd daemons
+        killproc hostapd
+        killproc dhcpd
+	rm -f ~/hostapd.conf
+	rm -f ~/dhcpd.conf
+        ;;
+esac
+
+
+--------------040005080404020609040102--
