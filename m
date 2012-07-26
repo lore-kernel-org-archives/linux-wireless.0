@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:62659 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677Ab2GWA2S convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48184 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497Ab2GZQqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jul 2012 20:28:18 -0400
-Received: by yhmm54 with SMTP id m54so4983914yhm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jul 2012 17:28:17 -0700 (PDT)
-Date: Sun, 22 Jul 2012 19:28:08 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Roland Vossen <rvossen@broadcom.com>
-Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
-Message-ID: <20120723002808.GA3305@burratino> (sfid-20120723_022822_593736_9B524CAF)
-References: <CAKprTDHepfbCKquvnG8CQ2=-tSNbgOSkT6R0GQmEx9UyuiZyMQ@mail.gmail.com>
- <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
- <20120604084200.GA30645@tiikeri.vuoristo.local>
- <20120604173121.GA9238@stt008.linux.site>
- <20120605050620.GC3118@burratino>
- <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
- <20120611031544.GB3092@burratino>
- <4FE0CA49.3030909@broadcom.com>
- <20120716213122.GA3078@burratino>
- <50051A2F.3030206@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <50051A2F.3030206@broadcom.com>
+	Thu, 26 Jul 2012 12:46:09 -0400
+Message-ID: <1343321165.4477.4.camel@jlt3.sipsolutions.net> (sfid-20120726_184622_709807_E9B53370)
+Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	coelho <coelho@ti.com>
+Date: Thu, 26 Jul 2012 18:46:05 +0200
+In-Reply-To: <501170F2.3050300@net.t-labs.tu-berlin.de>
+References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	  (sfid-20120726_180930_993025_AB3D0B96) <1343319453.4477.2.camel@jlt3.sipsolutions.net>
+	  (sfid-20120726_181745_936314_D74A954D) <1343319579.4477.3.camel@jlt3.sipsolutions.net>
+	 <501170F2.3050300@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel wrote:
-> On 07/16/2012 11:31 PM, Jonathan Nieder wrote:
+On Thu, 2012-07-26 at 18:31 +0200, Thomas Huehn wrote:
 
->> With all the above patches applied on top of 3.2.21, Camaleón quickly
->> gets the reconnects and gnome-shell segfaults if she does not supply
->> the password to network-manager in time[1].  That means the patch that
->> prevents trouble is presumably one of the four listed below.
->>
->>>>   137dabed34a1 brcm80211: smac: remove smatch warnings from brcmsmac code
->>>>   2b0a53d51b5f brcm80211: smac: only print block-ack timeout message at
->>>>                trace level
->>>>   6b8da423315b brcm80211: smac: do not use US as fallback regulatory hint
->>>>   94a2ca311cf4 brcm80211: smac: only provide valid regulatory hint
->>
->> Thanks,
->> Jonathan
->>
->> [1] http://bugs.debian.org/cgi-bin/bugreport.cgi?msg=295;bug=664767
->
-> Thanks, Jonathan
->
-> I guess the behaviour improved due to the last two patches listed above,
-> but I also suspect that it is only an improvement and the root cause
-> still exists.
+> This is the call path
+> 
+> in main.c ... INIT_WORK(&wl->tx_work, wl1271_tx_work);
+>  jumps to tx.c...wl1271_tx_work(struct work_struct *work)
+>   calls wl1271_tx_work(struct work_struct *work)
+>    calls wlcore_tx_work_locked(struct wl1271 *wl)
+>     calls wl1271_skb_queue_head()
+>      calls wl12xx_tx_get_hlid()
+>       calls wl12xx_tx_get_hlid_ap() .... where sta is needed.
+> 
+> But I could not find any point in the call path where I could grab the
+> sta pointer and pass it through. I will move the rcu into
+> wl12xx_tx_get_hlid_ap(), but I do not see any cheaper way here as using rcu.
 
-I think you're right.  Camaleón tried with all patches except the last
-one and still got the unwanted reconnects.
+I don't know this driver, maybe it could determine the hlid before and
+store that.
 
-Would 6b8da423315b and 94a2ca311cf4 be good candidates for stable@ in
-the meantime (for symptom relief and saner regulatory code) until the
-root cause is found?
+johannes
 
-Thanks,
-Jonathan
