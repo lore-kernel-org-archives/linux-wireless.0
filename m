@@ -1,113 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754764Ab2GEIZE (ORCPT
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:32393
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750742Ab2GZGau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 04:25:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/9] iwlwifi: limit dwell time more strictly
-Date: Thu,  5 Jul 2012 10:24:50 +0200
-Message-Id: <1341476695-6889-5-git-send-email-johannes@sipsolutions.net> (sfid-20120705_102549_089919_154027A1)
-In-Reply-To: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
-References: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 26 Jul 2012 02:30:50 -0400
+Message-ID: <5010E413.9010502@posedge.com> (sfid-20120726_083054_791575_0FBF272A)
+Date: Thu, 26 Jul 2012 12:00:43 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: 80MHz (11ac) regulatory change
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC5E3B@mbx022-e1-nj-10.exch022.domain.local>   ,<1343048772.4584.18.camel@jlt3.sipsolutions.net>    <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCC704B@mbx022-e1-nj-10.exch022.domain.local>   <1343120184.4415.16.camel@jlt3.sipsolutions.net>   <500E7D76.9010205@posedge.com>  <1343128638.4415.17.camel@jlt3.sipsolutions.net>  <500F6F94.3070400@posedge.com> <1343209816.4463.28.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1343209816.4463.28.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 07/25/2012 03:20 PM, Johannes Berg wrote:
+> On Wed, 2012-07-25 at 09:31 +0530, Mahesh Palivela wrote:
+>
+>>>>> Ok so HT has primary channel and secondary, and VHT has secondary VHT
+>>>>> which can again be above/below? That would make sense, but you wouldn't
+>>>>> be covering it.
+>>>>>
+>>>>
+>>>> I am thinking no need of above/below convention as the center frequency
+>>>> value itself we know.
+>>>
+>>> But we don't use the center frequency of the overall Ht40/80/160
+>>> channel, we always use the center frequency of the control channel.
+>>>
+>>
+>> 11ac Draft3.0 section 22.3.14 says VHT channel is specified by
+>> dot11CurrentChannelBandwidth, dot11CurrentChannelCenterFrequencyIndex0,
+>> dot11CurrentChannelCenterFrequencyIndex1 and dot11CurrentPrimaryChannel
+>>
+>> primary channel comes from HT Op IE.
+>> chanBW, chanCenterFreq0, chanCenterFreq1 comes from VHT Op IE.
+>> So multiple secondary channels doesn't seem to be a valid?
+>
+> Hmm. But that means we have to specify the channel completely
+> differently? I think we should stick to our scheme of center freq of a
+> 20 MHz channel + surrounding bandwidth,
 
-The dwell time for scanning is currently limited
-so that it fits into the timings inside the ucode
-when that is tracking DTIM/beacon periods for the
-AP(s) it's connected to.
+ok. Let's stick to old way of channel config. Basically freq value and 
+channel type which kind of specifies channel widths. so how about for 
+VHT channel types as below. Its similar to what you proposed.
 
-However, when it's connected to two APs, those
-may be in lockstep, for example if they both have
-a DTIM interval of 100 TU, then one could be 50
-TU after the other, leaving only 50 TU free to
-be used by scanning.
+For 80 MHz:
 
-Since we can't know how far apart they are the
-only option is to restrict to 1/2 of the minium
-of the two APs.
+VHT80_3PLUS
+VHT80_MINUS_2PLUS
+VHT80_2MINUS_PLUS
+VHT80_3MINUS
 
-In theory, it would be possible to not use 1/2 of
-the minimum but take into account that if they
-have different intervals then there will be a bit
-more time since they can't be in lockstep, but as
-they will have 100 TU intervals in practice that
-complex calculation will probably just result in
-hard-to-find bugs.
+For 160 MHz:
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/scan.c |   37 ++++++++++++++++++++++---------
- 1 file changed, 27 insertions(+), 10 deletions(-)
+VHT160_7PLUS
+VHT160_MINUS_6PLUS
+VHT160_2MINUS_5PLUS
+VHT160_3MINUS_4PLUS
+VHT160_4MINUS_3PLUS
+VHT160_5MINUS_2PLUS
+VHT160_6MINUS_PLUS
+VHT160_7MINUS
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/scan.c b/drivers/net/wireless/iwlwifi/dvm/scan.c
-index 6633074..e3467fa 100644
---- a/drivers/net/wireless/iwlwifi/dvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/scan.c
-@@ -396,15 +396,21 @@ static u16 iwl_get_active_dwell_time(struct iwl_priv *priv,
- static u16 iwl_limit_dwell(struct iwl_priv *priv, u16 dwell_time)
- {
- 	struct iwl_rxon_context *ctx;
-+	int limits[NUM_IWL_RXON_CTX] = {};
-+	int n_active = 0;
-+	u16 limit;
-+
-+	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
- 
- 	/*
- 	 * If we're associated, we clamp the dwell time 98%
--	 * of the smallest beacon interval (minus 2 * channel
--	 * tune time)
-+	 * of the beacon interval (minus 2 * channel tune time)
-+	 * If both contexts are active, we have to restrict to
-+	 * 1/2 of the minimum of them, because they might be in
-+	 * lock-step with the time inbetween only half of what
-+	 * time we'd have in each of them.
- 	 */
- 	for_each_context(priv, ctx) {
--		u16 value;
--
- 		switch (ctx->staging.dev_type) {
- 		case RXON_DEV_TYPE_P2P:
- 			/* no timing constraints */
-@@ -424,14 +430,25 @@ static u16 iwl_limit_dwell(struct iwl_priv *priv, u16 dwell_time)
- 			break;
- 		}
- 
--		value = ctx->beacon_int;
--		if (!value)
--			value = IWL_PASSIVE_DWELL_BASE;
--		value = (value * 98) / 100 - IWL_CHANNEL_TUNE_TIME * 2;
--		dwell_time = min(value, dwell_time);
-+		limits[n_active++] = ctx->beacon_int ?: IWL_PASSIVE_DWELL_BASE;
- 	}
- 
--	return dwell_time;
-+	switch (n_active) {
-+	case 0:
-+		return dwell_time;
-+	case 2:
-+		limit = (limits[1] * 98) / 100 - IWL_CHANNEL_TUNE_TIME * 2;
-+		limit /= 2;
-+		dwell_time = min(limit, dwell_time);
-+		/* fall through to limit further */
-+	case 1:
-+		limit = (limits[0] * 98) / 100 - IWL_CHANNEL_TUNE_TIME * 2;
-+		limit /= n_active;
-+		return min(limit, dwell_time);
-+	default:
-+		WARN_ON_ONCE(1);
-+		return dwell_time;
-+	}
- }
- 
- static u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
--- 
-1.7.10
+ > though it obviously won't work for 80+80. The question will be where 
+ > we deviate from our previous scheme. I tend to think that HT80+80
+ > should deviate, I have a feeling it won't be implemented soon
+ > (or ever?) anyway.
+ >
 
+Yea, even I feel the channel config representation what we are proposing 
+is not really extendable to discrete bands. That's my only worry...
+
+>>> No, I mean all the bits that are part of CHAN_NO_VHT80.
+>>>
+>>
+>>
+>> CHAN_NO_VHT80 is actually 2 bits. NO_VHT80MINUS & NO_VHT80PLUS.
+>> Is that ok?
+>>
+>> +	IEEE80211_CHAN_NO_VHT80PLUS	= 1<<6,
+>> +	IEEE80211_CHAN_NO_VHT80MINUS	= 1<<7,
+>>
+>> +#define IEEE80211_CHAN_NO_VHT80 \
+>> +	(IEEE80211_CHAN_NO_VHT80PLUS | IEEE80211_CHAN_NO_VHT80MINUS)
+>
+> Right. But did you mean to check that all of them are set? What if one
+> of them is set but the other isn't?
+>
+
+If one of them is set, then we accept VHT80 for that channel.
+
+> johannes
+>
+
+- Mahesh
