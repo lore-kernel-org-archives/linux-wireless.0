@@ -1,84 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:38795 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752885Ab2GILsJ (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:44024 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752043Ab2GZVHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 07:48:09 -0400
-Received: by eeit10 with SMTP id t10so4281740eei.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 04:48:08 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH] compat: Fix setting $TARGET
-Date: Mon,  9 Jul 2012 14:48:01 +0300
-Message-Id: <1341834481-1831-1-git-send-email-ozancag@gmail.com> (sfid-20120709_134814_046576_51D4DAD8)
+	Thu, 26 Jul 2012 17:07:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1343294151-5691-1-git-send-email-hauke@hauke-m.de>
+References: <1343294151-5691-1-git-send-email-hauke@hauke-m.de>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 26 Jul 2012 14:07:14 -0700
+Message-ID: <CA+55aFySBN=ajj=XKRzehw-_aVOOgLfoq9g5T9Wxht8nrQBSZA@mail.gmail.com> (sfid-20120726_230754_933837_6873C79C)
+Subject: Re: [PATCH] bcma: fix regression in pmu workaround reg masks
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, pieterpg@broadcom.com,
+	brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 61077651424add644401b927b52681a191bbd7f1 moved the list of
-kernels above which broke the $TARGET substitutions in them.
+Oops. For some reason I didn't see this email this morning, and grew
+impatient and committed the patch without the sign-off and with a
+different changelog.
 
-Move the TARGET detection above of everything to fix this.
+My bad. Too much email.
 
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
----
- bin/get-compat-kernels |   33 +++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 16 deletions(-)
+Anyway, this is commit 1f03bf06e4e3 in my tree.
 
-diff --git a/bin/get-compat-kernels b/bin/get-compat-kernels
-index d80c0a7..99392b4 100755
---- a/bin/get-compat-kernels
-+++ b/bin/get-compat-kernels
-@@ -23,6 +23,23 @@ UNDERLINE="\033[02m"
- KERNELS=""
- KPATH="http://kernel.ubuntu.com/~kernel-ppa/mainline/"
- 
-+ARCH=$(uname -m)
-+TARGET=""
-+
-+case $ARCH in
-+	"x86_64")
-+		TARGET="amd64"
-+		;;
-+	"i686")
-+		TARGET="i386"
-+		;;
-+	*)
-+		echo -e "Unsupported architecture"
-+		exit
-+		;;
-+esac
-+
-+
- KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624_2.6.24-020624_all.deb"
- KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-headers-2.6.24-020624-generic_2.6.24-020624_${TARGET}.deb"
- KERNELS="$KERNELS ${KPATH}/v2.6.24/linux-image-2.6.24-020624-generic_2.6.24-020624_${TARGET}.deb"
-@@ -109,22 +126,6 @@ KERNELS="$KERNELS ${KPATH}/v3.4.4-quantal/linux-image-3.4.4-030404-generic_3.4.4
- 
- function get_ubuntu_kernels() {
- 
--	ARCH=$(uname -m)
--	TARGET=""
--
--	case $ARCH in
--	"x86_64")
--		TARGET="amd64"
--		;;
--	"i686")
--		TARGET="i386"
--		;;
--	*)
--		echo -e "Unsupported architecture"
--		exit
--		;;
--	esac
--
- 	mkdir -p debs
- 	cd debs
- 
--- 
-1.7.10.4
+              Linus
 
+On Thu, Jul 26, 2012 at 2:15 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This fixes a regression introduced in:
+> commit b9562545ef0b13c0440ccd8d6dd4111fb77cb17a
+...
