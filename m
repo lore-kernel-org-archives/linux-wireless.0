@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.u-psud.fr ([129.175.33.42]:64550 "EHLO smtp2.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753003Ab2GPQhG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2012 12:37:06 -0400
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix tx-mgmt cookie value being left uninitialized.
-Date: Mon, 16 Jul 2012 18:36:52 +0200
-Message-Id: <1342456612-11706-1-git-send-email-cavallar@lri.fr> (sfid-20120716_183711_123433_3F58AB44)
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57134 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751040Ab2GZOjz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 10:39:55 -0400
+Message-ID: <501156B9.6020201@net.t-labs.tu-berlin.de> (sfid-20120726_163959_017240_F7376B1D)
+Date: Thu, 26 Jul 2012 16:39:53 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5] mac80211: Remove control.sta from struct ieee80211_tx_info
+ and restructure tx-path
+References: <1343161108-6941-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343208990.4463.25.camel@jlt3.sipsolutions.net> <1343220625.4463.31.camel@jlt3.sipsolutions.net> <500FEDDD.206@net.t-labs.tu-berlin.de> <1343244302.3750.44.camel@cumari.coelho.fi> <1343283856.4611.1.camel@jlt3.sipsolutions.net> <50110D8C.3010705@net.t-labs.tu-berlin.de> <1343303858.4477.1.camel@jlt3.sipsolutions.net> <501147D3.2080606@net.t-labs.tu-berlin.de> <87hasu7g8v.fsf@purkki.adurom.net>
+In-Reply-To: <87hasu7g8v.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit "mac80211: unify SW/offload remain-on-channel"
-moved the cookie assignment from ieee80211_mgmt_tx()
-to ieee80211_start_roc_work().  But the latter is only
-called where offchannel is needed.  If offchannel isn't
-needed/used, a uninitialized cookie value would be returned
-to userspace.
 
-This patch sets the cookie value when offchannel isn't used.
 
-Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
----
-based on wireless-testing.
+Kalle Valo schrieb:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index cfdc03f..106f381 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2493,6 +2493,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	skb->dev = sdata->dev;
- 
- 	if (!need_offchan) {
-+		*cookie = (unsigned long) skb;
- 		ieee80211_tx_skb(sdata, skb);
- 		ret = 0;
- 		goto out_unlock;
--- 
-1.7.10.4
 
+> 'make allyesconfig' and 'make allmodconfig' are handy to catch problems
+> like this. Highly recommended when doing not so simple changes, but be
+> prepared for long compile times.
+> 
+
+
+Thx Kalle for that hint ... something like this I was really looking to
+find !
+
+Greetings Thomas
