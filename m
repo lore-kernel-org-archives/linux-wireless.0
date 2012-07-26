@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:50186 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756556Ab2GDAty convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 20:49:54 -0400
-Received: by yhmm54 with SMTP id m54so6747000yhm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 17:49:53 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:45954 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751040Ab2GZOYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 10:24:02 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5] mac80211: Remove control.sta from struct ieee80211_tx_info and restructure tx-path
+References: <1343161108-6941-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<1343208990.4463.25.camel@jlt3.sipsolutions.net>
+	<1343220625.4463.31.camel@jlt3.sipsolutions.net>
+	<500FEDDD.206@net.t-labs.tu-berlin.de>
+	<1343244302.3750.44.camel@cumari.coelho.fi>
+	<1343283856.4611.1.camel@jlt3.sipsolutions.net>
+	<50110D8C.3010705@net.t-labs.tu-berlin.de>
+	<1343303858.4477.1.camel@jlt3.sipsolutions.net>
+	<501147D3.2080606@net.t-labs.tu-berlin.de>
+Date: Thu, 26 Jul 2012 17:24:00 +0300
+In-Reply-To: <501147D3.2080606@net.t-labs.tu-berlin.de> (Thomas Huehn's
+	message of "Thu, 26 Jul 2012 15:36:19 +0200")
+Message-ID: <87hasu7g8v.fsf@purkki.adurom.net> (sfid-20120726_162407_186863_0E0299C0)
 MIME-Version: 1.0
-In-Reply-To: <1341362473-18747-1-git-send-email-xose.vazquez@gmail.com>
-References: <1341362473-18747-1-git-send-email-xose.vazquez@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 3 Jul 2012 17:49:33 -0700
-Message-ID: <CAB=NE6U=bk6RSXHouuHvJd0=GErYJp82jkgeNWGnPDooZ_SONQ@mail.gmail.com> (sfid-20120704_024957_780791_26B3D6C2)
-Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for ES (Spain)
- on 5GHz and 2.4GHz
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 3, 2012 at 5:41 PM, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> Spanish law was based on CEPT/EU rules:
-> http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000058.html
-> http://lists.infradead.org/pipermail/wireless-regdb/2012-June/000059.html
->
->
-> Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
-> nacional de atribución de frecuencias (CNAF):
-> https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
-> https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
->
-> search for:
->  UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
->  UN – 128 RLANs en 5 GHz (pag. 232)
->
-> more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
-> http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
->
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->
-> ---
->  db.txt |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/db.txt b/db.txt
-> index 4c54543..11409d6 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -239,10 +239,10 @@ country EG:
->         (5250 - 5330 @ 20), (N/A, 20), DFS
->
->  country ES: DFS-ETSI
-> -       (2402 - 2482 @ 40), (N/A, 20)
-> -       (5170 - 5250 @ 40), (N/A, 20)
-> -       (5250 - 5330 @ 40), (N/A, 20), DFS
-> -       (5490 - 5710 @ 40), (N/A, 27), DFS
-> +       (2400 - 2483.5 @ 40), (N/A, 100 mW)
-> +       (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
-> +       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
-> +       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+Thomas Huehn <thomas@net.t-labs.tu-berlin.de> writes:
 
-You are changing from dBm to mW directly... please do the unit change
-in one patch and *then* the actual change. This would make it easier
-to review....
+> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/main.c:43:0:
+>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.h:248:4:
+> note: declared here
+>>
+>
+> In my build env I missed the wl12xx tick under the TI submenu ... I will
+> fix that bug and send a v6.
 
-  Luis
+'make allyesconfig' and 'make allmodconfig' are handy to catch problems
+like this. Highly recommended when doing not so simple changes, but be
+prepared for long compile times.
+
+-- 
+Kalle Valo
