@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507Ab2GEHmW (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57233 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751601Ab2GZQby (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 03:42:22 -0400
-Message-ID: <1341474140.4455.4.camel@jlt3.sipsolutions.net> (sfid-20120705_094225_953865_87209E25)
-Subject: Re: [RFC 3/4] cfg80211: allow driver to implement HT capabilities
- per netdev
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 05 Jul 2012 09:42:20 +0200
-In-Reply-To: <1341417530-9062-4-git-send-email-arik@wizery.com> (sfid-20120704_175902_427790_A0A1D81C)
-References: <1341417530-9062-1-git-send-email-arik@wizery.com>
-	 <1341417530-9062-4-git-send-email-arik@wizery.com>
-	 (sfid-20120704_175902_427790_A0A1D81C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 26 Jul 2012 12:31:54 -0400
+Message-ID: <501170F2.3050300@net.t-labs.tu-berlin.de> (sfid-20120726_183157_075377_CF916324)
+Date: Thu, 26 Jul 2012 18:31:46 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
+	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
+	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
+	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
+	coelho@ti.com, nbd@openwrt.org
+Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct ieee80211_tx_info
+ and restructure tx-path
+References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>  (sfid-20120726_180930_993025_AB3D0B96) <1343319453.4477.2.camel@jlt3.sipsolutions.net>  (sfid-20120726_181745_936314_D74A954D) <1343319579.4477.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1343319579.4477.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-04 at 18:58 +0300, Arik Nemtsov wrote:
+Hi Johannes,
 
->  	void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
-> +	struct ieee80211_sta_ht_cap *(*get_ht_cap)(struct wiphy *wiphy,
-> +						   struct net_device *dev,
-> +						   enum ieee80211_band band);
+Johannes Berg schrieb:
 
-Ok so ... I really don't like this whole concept to start with, but you
-convinced me it was needed. This is just ugly though. Now you can
-suddenly change the HT caps randomly at runtime? That's ... distressing
-for userspace!
+>>
+>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c: In
+>> function ‘wl1271_skb_queue_head’:
+>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:622:48:
+>> warning: ‘hlid’ may be used uninitialized in this function
+>> [-Wuninitialized]
+> 
+> Those changes make no sense anyway -- you should be able to pass the
+> station pointer through if it previously used info->control.sta, instead
+> of doing an (expensive) lookup.
 
-Is there any chance this can just be a pointer inside the wdev struct?
-Then at least we can verify it in NETDEV_UP if you had invalid HT caps
-originally, etc.
 
-johannes
+This is the call path
+
+in main.c ... INIT_WORK(&wl->tx_work, wl1271_tx_work);
+ jumps to tx.c...wl1271_tx_work(struct work_struct *work)
+  calls wl1271_tx_work(struct work_struct *work)
+   calls wlcore_tx_work_locked(struct wl1271 *wl)
+    calls wl1271_skb_queue_head()
+     calls wl12xx_tx_get_hlid()
+      calls wl12xx_tx_get_hlid_ap() .... where sta is needed.
+
+But I could not find any point in the call path where I could grab the
+sta pointer and pass it through. I will move the rcu into
+wl12xx_tx_get_hlid_ap(), but I do not see any cheaper way here as using rcu.
+
+Greetings Thomas
+
 
