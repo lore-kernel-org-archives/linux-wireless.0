@@ -1,86 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:58335 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753833Ab2GYPzi convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:54462 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341Ab2GZKU4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 11:55:38 -0400
-Received: by weyx8 with SMTP id x8so651120wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 08:55:37 -0700 (PDT)
+	Thu, 26 Jul 2012 06:20:56 -0400
+Received: by obbuo13 with SMTP id uo13so2478855obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 03:20:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1343231325.1693.13.camel@joe2Laptop>
-References: <1343227629-14161-1-git-send-email-zajec5@gmail.com>
-	<1343225435.1693.10.camel@joe2Laptop>
-	<CACna6rwDo=oW42mEwHXT0M5c56tWWtBqqb+Wv+L0iKzSasux8A@mail.gmail.com>
-	<1343231325.1693.13.camel@joe2Laptop>
-Date: Wed, 25 Jul 2012 17:55:37 +0200
-Message-ID: <CACna6rzaRpk0ScqfzX4j8p7kJcRGhWtunuycMvmhaimmaiVN3w@mail.gmail.com> (sfid-20120725_175542_743677_906A3636)
-Subject: Re: [PATCH V2] b43: be more user friendly with PHY info
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
+In-Reply-To: <501083F6.8060002@net.t-labs.tu-berlin.de>
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<CAFtRNNwY-1JLEJa_qZpUfsyQVdUQLO3CWcEB9xef-g5jPzndNQ@mail.gmail.com>
+	<50107C35.9050807@net.t-labs.tu-berlin.de>
+	<CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com>
+	<501083F6.8060002@net.t-labs.tu-berlin.de>
+Date: Thu, 26 Jul 2012 13:20:55 +0300
+Message-ID: <CAFtRNNxEHaON-uBjgLyeJdgN6UKfed6fAeCYPpo6xToi3dixOw@mail.gmail.com> (sfid-20120726_122100_263179_561DCD6D)
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
+ txpower changes
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: jirislaby@gmail.com, johannes.berg@intel.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@nbd.name
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/7/25 Joe Perches <joe@perches.com>:
-> On Wed, 2012-07-25 at 16:22 +0200, Rafał Miłecki wrote:
->> 2012/7/25 Joe Perches <joe@perches.com>:
->> > On Wed, 2012-07-25 at 16:47 +0200, Rafał Miłecki wrote:
->> >> use PHY names instead of magic numbers.
->> > []
->> >> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
->> > []
->> >> @@ -4277,6 +4277,37 @@ out:
->> > []
->> >> +static char *b43_phy_name(struct b43_wldev *dev, u8 phy_type)
->> >> +{
->> >> +     switch (phy_type) {
->> >> +     case B43_PHYTYPE_A:
->> >> +             return "A";
->> > []
->> >> +     }
->> >> +
->> >> +     b43err(dev->wl, "Unknown PHY Type: %d\n", phy_type);
->> >> +     return "UNKNOWN";
->> >
->> > In general, it's a bad idea to emit error messages
->> > in a generic call like this.
+2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+> Hi Nick,
+>
+> Nick Kossifidis schrieb:
+>
+>> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+>
+>> There is nothing in your patch that suggests that's related to this.
+>> Anyway there's a simple way to fix this:
 >>
->> This function is not supposed to be called anywhere else, it's only
->> for a single user-friendly message.
+>> Just move this:
 >>
+>> 3575         /* Min/max in 0.25dB units */
+>> 3576         ah->ah_txpower.txp_min_pwr = 2 * rates[7];
+>> 3577         ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
+>> 3578         ah->ah_txpower.txp_ofdm = rates[7];
 >>
->> >> @@ -4337,13 +4368,12 @@ static int b43_phy_versioning(struct b43_wldev *dev)
->> >>               unsupported = 1;
->> >>       }
->> >>       if (unsupported) {
->> >> -             b43err(dev->wl, "FOUND UNSUPPORTED PHY "
->> >> -                    "(Analog %u, Type %u, Revision %u)\n",
->> >> -                    analog_type, phy_type, phy_rev);
->> >> +             b43err(dev->wl, "FOUND UNSUPPORTED PHY (Analog %u, Type %s, Revision %u)\n",
->> >> +                    analog_type, b43_phy_name(dev, phy_type), phy_rev);
->> >
->> > The extra message doesn't add much useful info
->> > and can also cause errors in continued messages.
+>> above the for loop and you are done.
 >>
->> By "extra message" do you mean the one from b43_phy_name? I wanted to
->> print PHY type as digit somewhere (in case it is not recognized). I
->> can't use simple
->> return ("UNKNOWN %d", phy_type);
->> , such a solution would require allocating memory for string and
->> freeing it. It would complicate the function.
->>
->> Do you have any suggestion for better handling this?
+>> Note rates[i] don't hold tx power values, they hold indices to the
+>> channel powertable.
 >>
 >
-> Change the UNSUPPORTED PHY message to
 >
->         "...Type: %d:(%s)...",
->         ..., phy_type, b43_phy_name(dev, phy_type), ...
+> Are you agreeing that current ath5k txpower handling set from user space
+> is not working and we need to fix it ?
 
-I think it should be fine :)
+Is that a rhetorical question ? Just check out the TODOs on wireless.kernel.org.
+
+The current code does not preserve the tx power value across resets,
+thats the problem and the change I mentioned above fixes it (patch on
+the way, it's just that where I am right now I don't have bw to
+download wireless-testing) but other than that when we set tx power
+without reseting at least it does what it's supposed to do (and the
+result is the same with madwifi, using a spectrum analyzer or another
+client/monitor interface you see some power levels supported or only
+the max txpower supported, it's really up to the vendor, not all of
+them follow Atheros's reference designs). Your patch passes 1dbm units
+on a function that expects 0.5dbm units, you fix the problem with
+preserving tx power but you break the tx power setting.
+
+The change I mentioned above fixes the problem without introducing new
+variables just because "Felix will use the other one", I don't
+understand why you have a problem with that and why you think I don't
+want this to get fixed...
+
+> Beside that, what about a channel switch and wrongly re-use txp_cur_pwr
+> on a channel witch other max power levels ?
+
+That won't be a problem, when channel changes we 'll call
+
+reset -> phy_init -> set_txpower -> (calibration) -> set rate target power
+
+and then it's going to get limited before it's written on hw here:
+
+max_pwr = min(max_pwr, (u16) ah->ah_txpower.txp_max_pwr) / 2;
+
+txp_max_pwr is initialized on calibration (the max power for this
+channel), then it gets limited by CTL edge information on EEPROM, then
+by max_pwr and then max_pwr is limited by rate_info->target_power_X
+from EEPROM to create rates[i]. We write rates[i] on hw, not
+txp_cur_pwr.
+
+> Lets wait on Felix opinion what he has in mind.
+>
+> Greetings Thomas
+
+I 'd rather wait for Felix's patches instead to understand what is he up to.
+
 
 -- 
-Rafał
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
