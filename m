@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:49903 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278Ab2GEQon (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48390 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751985Ab2GZRyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 12:44:43 -0400
-Received: by pbbrp8 with SMTP id rp8so13031768pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 09:44:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20469.16960.475409.87512@gargle.gargle.HOWL>
-References: <20469.16960.475409.87512@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 5 Jul 2012 09:44:22 -0700
-Message-ID: <CAB=NE6ViKjoL9ViLzpsHzQujYi4eFcQYRfVy+aky7g7nZcpGiw@mail.gmail.com> (sfid-20120705_184446_983572_746C78AF)
-Subject: Re: [PATCH] compat-wireless: Make target/compat branch check optional
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 26 Jul 2012 13:54:03 -0400
+Message-ID: <1343325238.4477.10.camel@jlt3.sipsolutions.net> (sfid-20120726_195408_388824_C070C846)
+Subject: Re: [PATCH v1] cfg80211: unify IE search
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 26 Jul 2012 19:53:58 +0200
+In-Reply-To: <1343213813-29568-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1343213813-29568-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 5, 2012 at 12:29 AM, Sujith Manoharan
-<c_manoha@qca.qualcomm.com> wrote:
-> The safety check to ensure that the target kernel and the
-> local compat-wireless branch are the same can be adjusted a
-> bit to allow users to generate stable releases from a temporary
-> branch.
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, 2012-07-25 at 13:56 +0300, Vladimir Kondratiev wrote:
+> Remove ah-hock IE search code found in the ieee80211_bss_get_ie()
+> Use cfg80211_find_ie() instead.
 
-Thanks, applied and pushed, I also propagated this to the linux-3.5.y branch.
+Applied, thanks.
 
-  Luis
+johannes
+
