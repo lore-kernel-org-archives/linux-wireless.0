@@ -1,40 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64946 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755240Ab2GEJzS convert rfc822-to-8bit (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:52781 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751338Ab2GZBvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 05:55:18 -0400
-Received: by yenl2 with SMTP id l2so7161139yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2012 02:55:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANOLnOPfO4Jcfs24tRDu=80bmJNYvFigLi2oKyu3ZUtP4Rz1mQ@mail.gmail.com>
-References: <1339874808-9991-1-git-send-email-notasas@gmail.com>
-	<CANOLnOPfO4Jcfs24tRDu=80bmJNYvFigLi2oKyu3ZUtP4Rz1mQ@mail.gmail.com>
-Date: Thu, 5 Jul 2012 12:55:17 +0300
-Message-ID: <CANOLnOMPSqaiNnsPcJ6hLWzK_+LreiBLXJ0w0t=k37XqdCYS8g@mail.gmail.com> (sfid-20120705_115523_042132_C88BAA99)
-Subject: Re: [PATCH 0/3] wl1251: maemo fixes
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 25 Jul 2012 21:51:14 -0400
+Received: by gglu4 with SMTP id u4so1430439ggl.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 18:51:14 -0700 (PDT)
+From: AceLan Kao <acelan.kao@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Corentin Chary <corentincj@iksaif.net>
+Subject: [PATCH] Revert "rfkill: remove dead code"
+Date: Thu, 26 Jul 2012 09:51:08 +0800
+Message-Id: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com> (sfid-20120726_035152_273520_D33FA452)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 5, 2012 at 12:45 PM, Grazvydas Ignotas <notasas@gmail.com> wrote:
-> On Sat, Jun 16, 2012 at 10:26 PM, Grazvydas Ignotas <notasas@gmail.com> wrote:
->> Here are a few old wl1251 patches found in maemo repositories that haven't
->> ever reached mainline. I did not keep 'From:' and s-o-b as the patches are
->> rebased and slightly modified, also most emails are probably dead due to
->> Nokia's reorganization, so original authors are just listed in commit
->> messages.
->
-> Anything wrong with these? There was a comment on 0001, but that was a
-> question unrelated to the patch itself.
+This reverts commit 2e48928d8a0f38c1b5c81eb3f1294de8a6382c68.
 
-Whoops, just noticed they went into -rc, I was expecting them in
-wireless-next :)
-Sorry for the noise.
+Those functions are needed and should not be removed, or
+there is no way to set the rfkill led trigger name.
 
+Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+---
+ include/linux/rfkill.h |   31 +++++++++++++++++++++++++++++++
+ net/rfkill/core.c      |   14 ++++++++++++++
+ 2 files changed, 45 insertions(+)
 
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index 6fdf027..0ec590b 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -354,6 +354,37 @@ static inline bool rfkill_blocked(struct rfkill *rfkill)
+ }
+ #endif /* RFKILL || RFKILL_MODULE */
+ 
++
++#ifdef CONFIG_RFKILL_LEDS
++/**
++ * rfkill_get_led_trigger_name - Get the LED trigger name for the button's LED.
++ * This function might return a NULL pointer if registering of the
++ * LED trigger failed. Use this as "default_trigger" for the LED.
++ */
++const char *rfkill_get_led_trigger_name(struct rfkill *rfkill);
++
++/**
++ * rfkill_set_led_trigger_name -- set the LED trigger name
++ * @rfkill: rfkill struct
++ * @name: LED trigger name
++ *
++ * This function sets the LED trigger name of the radio LED
++ * trigger that rfkill creates. It is optional, but if called
++ * must be called before rfkill_register() to be effective.
++ */
++void rfkill_set_led_trigger_name(struct rfkill *rfkill, const char *name);
++#else
++static inline const char *rfkill_get_led_trigger_name(struct rfkill *rfkill)
++{
++	return NULL;
++}
++
++static inline void
++rfkill_set_led_trigger_name(struct rfkill *rfkill, const char *name)
++{
++}
++#endif
++
+ #endif /* __KERNEL__ */
+ 
+ #endif /* RFKILL_H */
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index f974961..2364064 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -150,6 +150,20 @@ static void rfkill_led_trigger_activate(struct led_classdev *led)
+ 	rfkill_led_trigger_event(rfkill);
+ }
+ 
++const char *rfkill_get_led_trigger_name(struct rfkill *rfkill)
++{
++	return rfkill->led_trigger.name;
++}
++EXPORT_SYMBOL(rfkill_get_led_trigger_name);
++
++void rfkill_set_led_trigger_name(struct rfkill *rfkill, const char *name)
++{
++	BUG_ON(!rfkill);
++
++	rfkill->ledtrigname = name;
++}
++EXPORT_SYMBOL(rfkill_set_led_trigger_name);
++
+ static int rfkill_led_trigger_register(struct rfkill *rfkill)
+ {
+ 	rfkill->led_trigger.name = rfkill->ledtrigname
 -- 
-Gražvydas
+1.7.9.5
+
