@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51367 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968Ab2G0LIF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:08:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/6] mac80211: use oper_channel in ibss
-Date: Fri, 27 Jul 2012 13:07:57 +0200
-Message-Id: <1343387281-7252-3-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130812_562937_B28802F4)
-In-Reply-To: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
-References: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60163 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751024Ab2GZJRO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 05:17:14 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: torvalds@linux-foundation.org
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	seth.forshee@canonical.com, pieterpg@broadcom.com,
+	brudley@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: fix regression in pmu workaround reg masks
+Date: Thu, 26 Jul 2012 11:15:51 +0200
+Message-Id: <1343294151-5691-1-git-send-email-hauke@hauke-m.de> (sfid-20120726_111724_360135_D719C245)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This fixes a regression introduced in:
+commit b9562545ef0b13c0440ccd8d6dd4111fb77cb17a
+Author: Hauke Mehrtens <hauke@hauke-m.de>
+Date:   Sat Jun 30 01:44:41 2012 +0200
 
-Using hw.conf.channel is wrong as it could be the
-temporary channel if any function like the beacon
-get function is called while scanning or during
-other temporary out-of-channel activities.
+    bcma: complete workaround for BCMA43224 and BCM4313
 
-Use oper_channel instead.
+The regression broke reading of the sprom from the chip and seamed to
+cause a change of the pci id on a BCMA43224 device so that it is
+rejected by brcmsmac. If this problem occurred, after applying this
+patch, a cold boot is needed to make the device work again.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+In the original patch the workaround set the intended bits in the chip
+common core chip control registers, but the patch also unset all the
+other bits in that register, because of a wrong mask. The original
+patch was based on code from brcmsmac and there was an additional
+inversing of the mask in the code setting these regs which was missing
+here. Now the regs are set like brcmsmac did it before.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Tested-by: Seth Forshee <seth.forshee@canonical.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/mac80211/ibss.c |    8 ++++----
+ drivers/bcma/driver_chipcommon_pmu.c |    8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 5746d62..d062085 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -205,7 +205,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
- 
--	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
-+	bss = cfg80211_inform_bss_frame(local->hw.wiphy, chan,
- 					mgmt, skb->len, 0, GFP_KERNEL);
- 	cfg80211_put_bss(bss);
- 	netif_carrier_on(sdata->dev);
-@@ -294,7 +294,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
--	int band = local->hw.conf.channel->band;
-+	int band = local->oper_channel->band;
- 
- 	/*
- 	 * XXX: Consider removing the least recently used entry and
-@@ -561,7 +561,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
--	int band = local->hw.conf.channel->band;
-+	int band = local->oper_channel->band;
- 
- 	/*
- 	 * XXX: Consider removing the least recently used entry and
-@@ -759,7 +759,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 				return;
- 			}
- 			sdata_info(sdata, "IBSS not allowed on %d MHz\n",
--				   local->hw.conf.channel->center_freq);
-+				   local->oper_channel->center_freq);
- 
- 			/* No IBSS found - decrease scan interval and continue
- 			 * scanning. */
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 4432617..c9a4f46 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -110,7 +110,7 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 		/* enable 12 mA drive strenth for 4313 and set chipControl
+ 		   register bit 1 */
+ 		bcma_chipco_chipctl_maskset(cc, 0,
+-					    BCMA_CCTRL_4313_12MA_LED_DRIVE,
++					    ~BCMA_CCTRL_4313_12MA_LED_DRIVE,
+ 					    BCMA_CCTRL_4313_12MA_LED_DRIVE);
+ 		break;
+ 	case BCMA_CHIP_ID_BCM4331:
+@@ -124,14 +124,14 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 		   register bit 15 */
+ 		if (bus->chipinfo.rev == 0) {
+ 			bcma_cc_maskset32(cc, BCMA_CC_CHIPCTL,
+-					  BCMA_CCTRL_43224_GPIO_TOGGLE,
++					  ~BCMA_CCTRL_43224_GPIO_TOGGLE,
+ 					  BCMA_CCTRL_43224_GPIO_TOGGLE);
+ 			bcma_chipco_chipctl_maskset(cc, 0,
+-						    BCMA_CCTRL_43224A0_12MA_LED_DRIVE,
++						    ~BCMA_CCTRL_43224A0_12MA_LED_DRIVE,
+ 						    BCMA_CCTRL_43224A0_12MA_LED_DRIVE);
+ 		} else {
+ 			bcma_chipco_chipctl_maskset(cc, 0,
+-						    BCMA_CCTRL_43224B0_12MA_LED_DRIVE,
++						    ~BCMA_CCTRL_43224B0_12MA_LED_DRIVE,
+ 						    BCMA_CCTRL_43224B0_12MA_LED_DRIVE);
+ 		}
+ 		break;
 -- 
-1.7.10.4
+1.7.9.5
 
