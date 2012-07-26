@@ -1,94 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39556 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133Ab2GaOVQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jul 2012 10:21:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: use eth_broadcast_addr
-Date: Tue, 31 Jul 2012 16:21:11 +0200
-Message-Id: <1343744471-5910-1-git-send-email-johannes@sipsolutions.net> (sfid-20120731_162119_446571_FCF4993F)
+Received: from nbd.name ([46.4.11.11]:51617 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751350Ab2GZK2K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 06:28:10 -0400
+Message-ID: <50111BB3.9090802@openwrt.org> (sfid-20120726_122814_505705_D3CED753)
+Date: Thu, 26 Jul 2012 12:28:03 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>, jirislaby@gmail.com,
+	johannes.berg@intel.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
+ txpower changes
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <CAFtRNNwY-1JLEJa_qZpUfsyQVdUQLO3CWcEB9xef-g5jPzndNQ@mail.gmail.com> <50107C35.9050807@net.t-labs.tu-berlin.de> <CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com> <501083F6.8060002@net.t-labs.tu-berlin.de> <CAFtRNNxEHaON-uBjgLyeJdgN6UKfed6fAeCYPpo6xToi3dixOw@mail.gmail.com>
+In-Reply-To: <CAFtRNNxEHaON-uBjgLyeJdgN6UKfed6fAeCYPpo6xToi3dixOw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2012-07-26 12:20 PM, Nick Kossifidis wrote:
+> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+>> Hi Nick,
+>>
+>> Nick Kossifidis schrieb:
+>>
+>>> 2012/7/26 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+>>
+>>> There is nothing in your patch that suggests that's related to this.
+>>> Anyway there's a simple way to fix this:
+>>>
+>>> Just move this:
+>>>
+>>> 3575         /* Min/max in 0.25dB units */
+>>> 3576         ah->ah_txpower.txp_min_pwr = 2 * rates[7];
+>>> 3577         ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
+>>> 3578         ah->ah_txpower.txp_ofdm = rates[7];
+>>>
+>>> above the for loop and you are done.
+>>>
+>>> Note rates[i] don't hold tx power values, they hold indices to the
+>>> channel powertable.
+>>>
+>>
+>>
+>> Are you agreeing that current ath5k txpower handling set from user space
+>> is not working and we need to fix it ?
+> 
+> Is that a rhetorical question ? Just check out the TODOs on wireless.kernel.org.
+> 
+> The current code does not preserve the tx power value across resets,
+> thats the problem and the change I mentioned above fixes it (patch on
+> the way, it's just that where I am right now I don't have bw to
+> download wireless-testing) but other than that when we set tx power
+> without reseting at least it does what it's supposed to do (and the
+> result is the same with madwifi, using a spectrum analyzer or another
+> client/monitor interface you see some power levels supported or only
+> the max txpower supported, it's really up to the vendor, not all of
+> them follow Atheros's reference designs). Your patch passes 1dbm units
+> on a function that expects 0.5dbm units, you fix the problem with
+> preserving tx power but you break the tx power setting.
+> 
+> The change I mentioned above fixes the problem without introducing new
+> variables just because "Felix will use the other one", I don't
+> understand why you have a problem with that and why you think I don't
+> want this to get fixed...
+> 
+>> Beside that, what about a channel switch and wrongly re-use txp_cur_pwr
+>> on a channel witch other max power levels ?
+> 
+> That won't be a problem, when channel changes we 'll call
+> 
+> reset -> phy_init -> set_txpower -> (calibration) -> set rate target power
+> 
+> and then it's going to get limited before it's written on hw here:
+> 
+> max_pwr = min(max_pwr, (u16) ah->ah_txpower.txp_max_pwr) / 2;
+> 
+> txp_max_pwr is initialized on calibration (the max power for this
+> channel), then it gets limited by CTL edge information on EEPROM, then
+> by max_pwr and then max_pwr is limited by rate_info->target_power_X
+> from EEPROM to create rates[i]. We write rates[i] on hw, not
+> txp_cur_pwr.
+I think it's a bad idea to store the user's choice of txpower in a
+variable that internally gets reused to store the hw limit. Even when
+the offset isn't added to it, it's still fragile.
 
-Instead of memset().
+A problem with this is that different channels have different max power
+values, so if you switch to a channel with a lower power, and then
+switch back (without explicitly changing txpower inbetween), don't you
+then end up with less power than you configured?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c          |    2 +-
- net/mac80211/ibss.c         |    2 +-
- net/mac80211/mesh_pathtbl.c |    2 +-
- net/mac80211/tx.c           |    6 +++---
- 4 files changed, 6 insertions(+), 6 deletions(-)
+This can be easily avoided by storing the user's txpower choice
+separately from the actual hw limit...
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5583f5b..df64b45 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -950,7 +950,7 @@ static void ieee80211_send_layer2_update(struct sta_info *sta)
- 	/* 802.2 Type 1 Logical Link Control (LLC) Exchange Identifier (XID)
- 	 * Update response frame; IEEE Std 802.2-1998, 5.4.1.2.1 */
- 
--	memset(msg->da, 0xff, ETH_ALEN);
-+	eth_broadcast_addr(msg->da);
- 	memcpy(msg->sa, sta->sta.addr, ETH_ALEN);
- 	msg->len = htons(6);
- 	msg->dsap = 0;
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index d062085..1ebda2f 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -109,7 +109,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
- 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					  IEEE80211_STYPE_PROBE_RESP);
--	memset(mgmt->da, 0xff, ETH_ALEN);
-+	eth_broadcast_addr(mgmt->da);
- 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
- 	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
- 	mgmt->u.beacon.beacon_int = cpu_to_le16(beacon_int);
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 075bc53..bec7b28 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -531,7 +531,7 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 
- 	read_lock_bh(&pathtbl_resize_lock);
- 	memcpy(new_mpath->dst, dst, ETH_ALEN);
--	memset(new_mpath->rann_snd_addr, 0xff, ETH_ALEN);
-+	eth_broadcast_addr(new_mpath->rann_snd_addr);
- 	new_mpath->is_root = false;
- 	new_mpath->sdata = sdata;
- 	new_mpath->flags = 0;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5b81660..7dbcf29 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2415,7 +2415,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		memset(mgmt, 0, hdr_len);
- 		mgmt->frame_control =
- 		    cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
--		memset(mgmt->da, 0xff, ETH_ALEN);
-+		eth_broadcast_addr(mgmt->da);
- 		memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
- 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
- 		mgmt->u.beacon.beacon_int =
-@@ -2609,9 +2609,9 @@ struct sk_buff *ieee80211_probereq_get(struct ieee80211_hw *hw,
- 	memset(hdr, 0, sizeof(*hdr));
- 	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					 IEEE80211_STYPE_PROBE_REQ);
--	memset(hdr->addr1, 0xff, ETH_ALEN);
-+	eth_broadcast_addr(hdr->addr1);
- 	memcpy(hdr->addr2, vif->addr, ETH_ALEN);
--	memset(hdr->addr3, 0xff, ETH_ALEN);
-+	eth_broadcast_addr(hdr->addr3);
- 
- 	pos = skb_put(skb, ie_ssid_len);
- 	*pos++ = WLAN_EID_SSID;
--- 
-1.7.10.4
-
+- Felix
