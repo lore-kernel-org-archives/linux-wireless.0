@@ -1,176 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:49999 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753968Ab2GKO3A (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:57427 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752577Ab2GZU4r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 10:29:00 -0400
-Received: by obbuo13 with SMTP id uo13so1740360obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 07:29:00 -0700 (PDT)
+	Thu, 26 Jul 2012 16:56:47 -0400
+Message-ID: <5011AF0C.9080304@net.t-labs.tu-berlin.de> (sfid-20120726_225654_610205_1A5F1571)
+Date: Thu, 26 Jul 2012 22:56:44 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn2JrWd4qo_ELZbTmkU_EcL6YFL3x3rmssh_SrF88UXS_g@mail.gmail.com>
-References: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com>
-	<1342016326.4464.4.camel@jlt3.sipsolutions.net>
-	<CAD2nsn2JrWd4qo_ELZbTmkU_EcL6YFL3x3rmssh_SrF88UXS_g@mail.gmail.com>
-Date: Wed, 11 Jul 2012 19:59:00 +0530
-Message-ID: <CAD2nsn3j4TeopXJtsGACpie6oxo1U+8vYtdv8h65t9jdgqRk1Q@mail.gmail.com> (sfid-20120711_162906_112739_F10E83BB)
-Subject: Re: warning in iwlwifi on monitor mode in 3.5.0-rc6-wl
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: Felix Fietkau <nbd@openwrt.org>, jirislaby@gmail.com,
+	johannes.berg@intel.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix phy_init() to respect user
+ txpower changes
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <CAFtRNNwY-1JLEJa_qZpUfsyQVdUQLO3CWcEB9xef-g5jPzndNQ@mail.gmail.com> <50107C35.9050807@net.t-labs.tu-berlin.de> <CAFtRNNz2qG5Fsjd1WVfA-BOSPGZ=WvMzrMwyqn8d6tfiBpkSVw@mail.gmail.com> <501083F6.8060002@net.t-labs.tu-berlin.de> <CAFtRNNxEHaON-uBjgLyeJdgN6UKfed6fAeCYPpo6xToi3dixOw@mail.gmail.com> <50111BB3.9090802@openwrt.org> <CAFtRNNyk051oLGuZOMcthf_mO6sArQzp+yCDvLQR2b=mACe9tQ@mail.gmail.com> <50111ECF.1020706@openwrt.org> <CAFtRNNyP69cHcEscH8eeHcL9WW2-qrxKBa=5zmmmbnORTGFNXA@mail.gmail.com>
+In-Reply-To: <CAFtRNNyP69cHcEscH8eeHcL9WW2-qrxKBa=5zmmmbnORTGFNXA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 7:54 PM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> On Wed, Jul 11, 2012 at 7:48 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> This isn't really related to iwlwifi...
->>
->> Looks like this might be due to Michal's changes, maybe the monitor
->> callback is coming too early?
->
-> ath9k got bailed out of drv_add_interface as this flag
-> IEEE80211_HW_WANT_MONITOR_VIF
-> was not supported
+Hi Nick,
 
-Johannes, i had put few manual prints in mac80211 for something else, if you
-want i can a give fresh call trace with proper function offsets.
+Nick Kossifidis schrieb:
 
->
->
->>
->> johannes
->>
->>
->> On Wed, 2012-07-11 at 19:35 +0530, Mohammed Shafi wrote:
->>> Hi all,
->>>
->>> i got this warning in bringing up monitor mode with iwlwifi  in 3.5.0-rc6-wl
->>>
->>> [ 4788.914848] iwlwifi 0000:03:00.0: Try to add interface when device not ready
->>> [ 4788.914851] ------------[ cut here ]------------
->>> [ 4788.914870] WARNING: at
->>> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/iface.c:357
->>> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]()
->>> [ 4788.914872] Hardware name: 64756D6
->>> [ 4788.914874] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
->>> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
->>> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
->>> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
->>> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
->>> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
->>> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
->>> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
->>> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
->>> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
->>> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
->>> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
->>> [ 4788.914967] Pid: 7486, comm: ifconfig Tainted: G           O 3.5.0-rc6-wl #25
->>> [ 4788.914969] Call Trace:
->>> [ 4788.914976]  [<c0136322>] warn_slowpath_common+0x72/0xa0
->>> [ 4788.914991]  [<f98164b2>] ?
->>> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
->>> [ 4788.915005]  [<f98164b2>] ?
->>> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
->>> [ 4788.915008]  [<c0136372>] warn_slowpath_null+0x22/0x30
->>> [ 4788.915022]  [<f98164b2>] ieee80211_add_virtual_monitor+0x192/0x2b0
->>> [mac80211]
->>> [ 4788.915027]  [<c06bb3c6>] ? printk+0x4d/0x4f
->>> [ 4788.915041]  [<f98185ea>] ieee80211_set_monitor_enabled+0x1a/0x50 [mac80211]
->>> [ 4788.915050]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
->>> [ 4788.915058]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
->>> [cfg80211]
->>> [ 4788.915062]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
->>> [ 4788.915066]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
->>> [ 4788.915070]  [<c06c2982>] notifier_call_chain+0x42/0xf0
->>> [ 4788.915075]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
->>> [ 4788.915080]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
->>> [ 4788.915085]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
->>> [ 4788.915088]  [<c05b209c>] __dev_open+0x5c/0xf0
->>> [ 4788.915091]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
->>> [ 4788.915095]  [<c05b0e29>] __dev_change_flags+0x109/0x170
->>> [ 4788.915098]  [<c05b2003>] dev_change_flags+0x23/0x60
->>> [ 4788.915102]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
->>> [ 4788.915106]  [<c061f725>] inet_ioctl+0x95/0xb0
->>> [ 4788.915109]  [<c059d2b0>] sock_ioctl+0x70/0x270
->>> [ 4788.915113]  [<c059d240>] ? sock_fasync+0xc0/0xc0
->>> [ 4788.915117]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
->>> [ 4788.915121]  [<c016197b>] ? up_read+0x1b/0x30
->>> [ 4788.915124]  [<c06c2714>] ? do_page_fault+0x244/0x470
->>> [ 4788.915128]  [<c0255c75>] ? fget_light+0x355/0x410
->>> [ 4788.915131]  [<c0163314>] ? __put_cred+0x34/0x50
->>> [ 4788.915135]  [<c0265c37>] sys_ioctl+0x77/0x80
->>> [ 4788.915139]  [<c06c65e3>] sysenter_do_call+0x12/0x38
->>> [ 4788.915141] ---[ end trace 2b26c2a43fea3613 ]---
->>> [ 4788.915146] ------------[ cut here ]------------
->>> [ 4788.915160] WARNING: at
->>> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/cfg.c:2993
->>> ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]()
->>> [ 4788.915161] Hardware name: 64756D6
->>> [ 4788.915163] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
->>> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
->>> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
->>> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
->>> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
->>> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
->>> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
->>> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
->>> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
->>> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
->>> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
->>> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
->>> [ 4788.915231] Pid: 7486, comm: ifconfig Tainted: G        W  O 3.5.0-rc6-wl #25
->>> [ 4788.915233] Call Trace:
->>> [ 4788.915237]  [<c0136322>] warn_slowpath_common+0x72/0xa0
->>> [ 4788.915251]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
->>> [mac80211]
->>> [ 4788.915265]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
->>> [mac80211]
->>> [ 4788.915268]  [<c0136372>] warn_slowpath_null+0x22/0x30
->>> [ 4788.915282]  [<f981861c>] ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]
->>> [ 4788.915289]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
->>> [ 4788.915296]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
->>> [cfg80211]
->>> [ 4788.915299]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
->>> [ 4788.915303]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
->>> [ 4788.915307]  [<c06c2982>] notifier_call_chain+0x42/0xf0
->>> [ 4788.915311]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
->>> [ 4788.915314]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
->>> [ 4788.915317]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
->>> [ 4788.915321]  [<c05b209c>] __dev_open+0x5c/0xf0
->>> [ 4788.915324]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
->>> [ 4788.915327]  [<c05b0e29>] __dev_change_flags+0x109/0x170
->>> [ 4788.915331]  [<c05b2003>] dev_change_flags+0x23/0x60
->>> [ 4788.915334]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
->>> [ 4788.915338]  [<c061f725>] inet_ioctl+0x95/0xb0
->>> [ 4788.915341]  [<c059d2b0>] sock_ioctl+0x70/0x270
->>> [ 4788.915344]  [<c059d240>] ? sock_fasync+0xc0/0xc0
->>> [ 4788.915347]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
->>> [ 4788.915350]  [<c016197b>] ? up_read+0x1b/0x30
->>> [ 4788.915353]  [<c06c2714>] ? do_page_fault+0x244/0x470
->>> [ 4788.915357]  [<c0255c75>] ? fget_light+0x355/0x410
->>> [ 4788.915360]  [<c0163314>] ? __put_cred+0x34/0x50
->>> [ 4788.915363]  [<c0265c37>] sys_ioctl+0x77/0x80
->>> [ 4788.915367]  [<c06c65e3>] sysenter_do_call+0x12/0x38
->>> [ 4788.915368] ---[ end trace 2b26c2a43fea3614 ]---
->>> [ 4788.915371]
->>>
->>>
->>
->>
->
->
->
-> --
-> thanks,
-> shafi
+> I think this is a better approach (I'll prepare a proper patch as soon
+> as I have some bandwidth to work with wireless-testing, maybe
+> tomorrow)...
+> 
+> --- old/phy.c	2012-07-26 20:40:00.869150187 +0300
+> +++ new/phy.c	2012-07-26 20:43:25.074710577 +0300
+> @@ -3562,6 +3562,12 @@
+>  		for (i = 8; i <= 15; i++)
+>  			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
+> 
+> +
+> +	/* Min/max in 0.25dB units */
+> +	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
+> +	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
+> +	ah->ah_txpower.txp_ofdm = rates[7];
+> +
+>  	/* Now that we have all rates setup use table offset to
+>  	 * match the power range set by user with the power indices
+>  	 * on PCDAC/PDADC table */
+> @@ -3571,11 +3577,6 @@
+>  		if (rates[i] > 63)
+>  			rates[i] = 63;
+>  	}
+> -
+> -	/* Min/max in 0.25dB units */
+> -	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
+> -	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
+> -	ah->ah_txpower.txp_ofdm = rates[7];
+>  }
+> 
 
+> @@ -3789,8 +3790,8 @@
+>  	 * RF buffer settings on 5211/5212+ so that we
+>  	 * properly set curve indices.
+>  	 */
+> -	ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
+> -			ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
+> +	ret = ath5k_hw_txpower(ah, channel, ah->power_level ?
+> +			ah->power_level * 2 : AR5K_TUNE_MAX_TXPOWER);
+>  	if (ret)
+>  		return ret;
+> 
+> Works for you ?
 
+works as well.
 
--- 
-thanks,
-shafi
+There are now 2 unused variables as left over:
+ah->ah_txpower.txp_cur_pwr
+ah->ah_txpower.txp_min_pwr
+
+Do we need them anymore to check for hw chan limit ?
+
+> BTW is there a way to pass the actual tx power set back to
+> mac80211/cfg80211 so that user knows what power his card is actually
+> transmitting at ?
+ 
+
+I think that on point of the todo list.
+
+Greetings Thomas
