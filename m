@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59050 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750861Ab2GBSRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 14:17:05 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: julian.calaby@gmail.com, brcm80211-dev-list@broadcom.com,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 14/18] brcmsmac: extend xmtfifo_sz array
-Date: Mon,  2 Jul 2012 20:15:51 +0200
-Message-Id: <1341252951-6302-1-git-send-email-hauke@hauke-m.de> (sfid-20120702_201709_924912_2C4D11FD)
-In-Reply-To: <CAGRGNgU6SXLg5w88q6Lpg=kPnb-Q_ik0OJkhhWCXiw_VnVvczg@mail.gmail.com>
-References: <CAGRGNgU6SXLg5w88q6Lpg=kPnb-Q_ik0OJkhhWCXiw_VnVvczg@mail.gmail.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:46681 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401Ab2GZQ5b convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 12:57:31 -0400
+Received: by gglu4 with SMTP id u4so2180081ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 09:57:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <501170F2.3050300@net.t-labs.tu-berlin.de>
+References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+ <1343319453.4477.2.camel@jlt3.sipsolutions.net> <1343319579.4477.3.camel@jlt3.sipsolutions.net>
+ <501170F2.3050300@net.t-labs.tu-berlin.de>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 26 Jul 2012 19:57:14 +0300
+Message-ID: <CA+XVXfegYYwc=esyZmJHu1tEqQKcq+h+MnSyp9dXiiwqroG3tw@mail.gmail.com> (sfid-20120726_185734_527921_19DFEEFE)
+Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	ath5k-devel@lists.ath5k.org, ilw@linux.intel.com,
+	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
+	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
+	buytenh@wantstofly.org, dsd@gentoo.org, coelho@ti.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The xmtfifo_sz array contains the queue sizes for the different core
-revs. This array missed the sizes for the core rev 17 and 28. This
-patch extends the array to also include these sizes and adds a warning
-if no queue size is stored in the array for the given core rev.
+On Thu, Jul 26, 2012 at 7:31 PM, Thomas Huehn
+<thomas@net.t-labs.tu-berlin.de> wrote:
+> Hi Johannes,
+>
+> Johannes Berg schrieb:
+>
+>>>
+>>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c: In
+>>> function ‘wl1271_skb_queue_head’:
+>>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:622:48:
+>>> warning: ‘hlid’ may be used uninitialized in this function
+>>> [-Wuninitialized]
+>>
+>> Those changes make no sense anyway -- you should be able to pass the
+>> station pointer through if it previously used info->control.sta, instead
+>> of doing an (expensive) lookup.
+>
+>
+> This is the call path
+>
+> in main.c ... INIT_WORK(&wl->tx_work, wl1271_tx_work);
+>  jumps to tx.c...wl1271_tx_work(struct work_struct *work)
+>   calls wl1271_tx_work(struct work_struct *work)
+>    calls wlcore_tx_work_locked(struct wl1271 *wl)
+>     calls wl1271_skb_queue_head()
+>      calls wl12xx_tx_get_hlid()
+>       calls wl12xx_tx_get_hlid_ap() .... where sta is needed.
+>
+> But I could not find any point in the call path where I could grab the
+> sta pointer and pass it through. I will move the rcu into
+> wl12xx_tx_get_hlid_ap(), but I do not see any cheaper way here as using rcu.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+I agree with Johannes. The find_sta() in the Tx path is unacceptable.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 547ae5b..942ef99 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -269,7 +269,7 @@ struct brcms_c_bit_desc {
-  */
- 
- /* Starting corerev for the fifo size table */
--#define XMTFIFOTBL_STARTREV	20
-+#define XMTFIFOTBL_STARTREV	17
- 
- struct d11init {
- 	__le16 addr;
-@@ -333,6 +333,12 @@ const u8 wlc_prio2prec_map[] = {
- };
- 
- static const u16 xmtfifo_sz[][NFIFO] = {
-+	/* corerev 17: 5120, 49152, 49152, 5376, 4352, 1280 */
-+	{20, 192, 192, 21, 17, 5},
-+	/* corerev 18: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 19: */
-+	{0, 0, 0, 0, 0, 0},
- 	/* corerev 20: 5120, 49152, 49152, 5376, 4352, 1280 */
- 	{20, 192, 192, 21, 17, 5},
- 	/* corerev 21: 2304, 14848, 5632, 3584, 3584, 1280 */
-@@ -343,6 +349,14 @@ static const u16 xmtfifo_sz[][NFIFO] = {
- 	{20, 192, 192, 21, 17, 5},
- 	/* corerev 24: 2304, 14848, 5632, 3584, 3584, 1280 */
- 	{9, 58, 22, 14, 14, 5},
-+	/* corerev 25: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 26: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 27: */
-+	{0, 0, 0, 0, 0, 0},
-+	/* corerev 28: 2304, 14848, 5632, 3584, 3584, 1280 */
-+	{9, 58, 22, 14, 14, 5},
- };
- 
- #ifdef DEBUG
-@@ -4596,8 +4610,12 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 		wlc_hw->machwcap_backup = wlc_hw->machwcap;
- 
- 		/* init tx fifo size */
-+		WARN_ON((wlc_hw->corerev - XMTFIFOTBL_STARTREV) < 0 ||
-+			(wlc_hw->corerev - XMTFIFOTBL_STARTREV) >
-+				ARRAY_SIZE(xmtfifo_sz));
- 		wlc_hw->xmtfifo_sz =
- 		    xmtfifo_sz[(wlc_hw->corerev - XMTFIFOTBL_STARTREV)];
-+		WARN_ON(!wlc_hw->xmtfifo_sz[0]);
- 
- 		/* Get a phy for this band */
- 		wlc_hw->band->pi =
--- 
-1.7.9.5
-
+A relatively simple change here would be to put the sta pointer in the
+portion of the struct reserved for rate control during op_tx(). wlcore
+doesn't use software rate control anyway.
+This would avoid from changing the code too much.
