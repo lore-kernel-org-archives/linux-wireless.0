@@ -1,102 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8748 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754678Ab2GQGbx (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:60354 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113Ab2GZFEP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 02:31:53 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] ath6kl: Add support for AR6004 hardware version 1.3
-Date: Tue, 17 Jul 2012 12:01:55 +0530
-Message-ID: <1342506715-13168-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120717_083157_681542_2F3B91B2)
+	Thu, 26 Jul 2012 01:04:15 -0400
+Received: by yenl2 with SMTP id l2so1546592yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2012 22:04:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAAT9HsgXHe-0qZ5vTvCuU8QZ006MrsCyu7Zc_PRFccz52TWcUw@mail.gmail.com>
+References: <CAAT9HsjZ7wPbkRMH94HDNBS+vOhLigKLYULqfyQobh_Oyt9M4w@mail.gmail.com>
+	<501030E9.3090707@lwfinger.net>
+	<CAAT9Hshwb+iPMALGvP1P2UHzEQbyvYNM0_zz0dHp0mJuy6KwLA@mail.gmail.com>
+	<50103BE8.1020203@lwfinger.net>
+	<CAAT9HsjQ_tkm77NT_Rn5_Pi9BHGhY9Vz7jcVzkwdDUjUoKamtw@mail.gmail.com>
+	<501061C8.5010108@lwfinger.net>
+	<CA+XFjioVy_pmKxcJAe1U_M+zKNiiPEsb0bmkAfEWzmnnDBjLFw@mail.gmail.com>
+	<CAAT9HsgXHe-0qZ5vTvCuU8QZ006MrsCyu7Zc_PRFccz52TWcUw@mail.gmail.com>
+Date: Thu, 26 Jul 2012 10:34:14 +0530
+Message-ID: <CAD2nsn3z=Vp4UaJ23T_F5BqMgM7u6ATV3zOeAs1fQrBD+=KJqA@mail.gmail.com> (sfid-20120726_070419_374156_307006DE)
+Subject: Re: New Laptop and Driver
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Tim and Alison Bentley <Home@trarbentley.net>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for AR6004 hardware with version 1.3 and has
-id 0x31c8088a.
+On Thu, Jul 26, 2012 at 10:31 AM, Tim and Alison Bentley
+<Home@trarbentley.net> wrote:
+> On 26 July 2012 02:25, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
+>> On Wed, Jul 25, 2012 at 11:14 PM, Larry Finger
+>> <Larry.Finger@lwfinger.net> wrote:
+>>> On 07/25/2012 01:54 PM, Tim and Alison Bentley wrote:
+>>>>
+>>>> On 25 July 2012 19:33, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>>>>
+>>>>> On 07/25/2012 01:00 PM, Tim and Alison Bentley wrote:
+>>>>>>
+>>>>>>
+>>>>>> 01:00.0 VGA compatible controller [0300]: nVidia Corporation Device
+>>>>>> [10de:0de9] (rev a1)
+>>>>>> 03:00.0 Network controller [0280]: Atheros Communications Inc. Device
+>>>>>> [168c:0037] (rev 01)
+>>>>>> 04:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+>>>>>> RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
+>>>>>> 07)
+>>>>>
+>>>>>
+>>>>>
+>>>>> The Realtek device is the one used for your wired network.
+>>>>>
+>>>>> The Atheros device is not in the tables for the latest version of any
+>>>>> wireless driver. Perhaps it will work if you do the following:
+>>>>>
+>>>>> su -
+>>>>> modprobe -v ath9k
+>>>>> echo "168c 0037" > /sys/bus/pci/drivers/ath9k/new_id
+>>>>> exit
+>>>>>
+>>>>> The above will work if the driver handles the device, but it is not yet
+>>>>> in
+>>>>> the tables. Perhaps the Atheros developers will know the status of that
+>>>>> device.
+>>>>>
+>>>>> When replying to E-mail in this list, and most other technical mailing
+>>>>> lists, please do not top post. Always put your answer below the quoted
+>>>>> material as I did here.
+>>>>>
+>>>>> Larry
+>>>>>
+>>>>>
+>>>>>
+>>>> Sorry for top posting, bad habbit
+>>>> No luck with the suggestion and I tried a reboot for luck with no success.
+>>>
+>>>
+>>> The effect of those commands would have disappeared after a reboot. One last
+>>> thing to do is to check /var/log/messages to see if it complained about
+>>> missing firmware after you entered the new_id. There should be some kind of
+>>> error messages at that point, but it is likely that no Linux driver handles
+>>> this device.
+>>>
+>>> You might try ndiswrapper and the Windows driver, but if the system is
+>>> 64-bit, then that might not work either.
+>>>
+>>> Larry
+>>
+>> 168c:0037 appears to be a chipset called "AR1111", based on Windows
+>> drivers. However, I suspect this is a provisional/placeholder name.
+>
+> Re ran the commands and have the /var/log/messages output
+>
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.876477] cfg80211: Calling CRDA
+> to update world regulatory domain
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.916447] cfg80211: World
+> regulatory domain updated:
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.916450] cfg80211:   (start_freq
+> - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.916453] cfg80211:   (2402000
+> KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.916455] cfg80211:   (2457000
+> KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.916457] cfg80211:   (2474000
+> KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.916459] cfg80211:   (5170000
+> KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> Jul 26 05:58:23 tigger2 kernel: [ 1546.916461] cfg80211:   (5735000
+> KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> Jul 26 05:58:30 tigger2 kernel: [ 1553.767939] ath: phy0: Hardware
+> device ID 0x0037 not supported
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    7 +++++++
- drivers/net/wireless/ath/ath6kl/init.c |   20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/sdio.c |    3 +++
- drivers/net/wireless/ath/ath6kl/usb.c  |    3 +++
- 4 files changed, 33 insertions(+)
+it wasn't there in the device ID table in pci.c of ath9k, lets see
+this chip is actually
+has h/w code support in ath9k.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index c655438..2d1b8ac 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -192,6 +192,13 @@ enum ath6kl_hw_flags {
- #define AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE \
- 	AR6004_HW_1_2_FW_DIR "/bdata.bin"
- 
-+/* AR6004 1.3 definitions */
-+#define AR6004_HW_1_3_VERSION			0x31c8088a
-+#define AR6004_HW_1_3_FW_DIR			"ath6k/AR6004/hw1.3"
-+#define AR6004_HW_1_3_FIRMWARE_FILE		"fw.ram.bin"
-+#define AR6004_HW_1_3_BOARD_DATA_FILE		"ath6k/AR6004/hw1.3/bdata.bin"
-+#define AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE	"ath6k/AR6004/hw1.3/bdata.bin"
-+
- /* Per STA data, used in AP mode */
- #define STA_PS_AWAKE		BIT(0)
- #define	STA_PS_SLEEP		BIT(1)
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index f90b5db..8bd4299 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -142,6 +142,26 @@ static const struct ath6kl_hw hw_list[] = {
- 		.fw_board		= AR6004_HW_1_2_BOARD_DATA_FILE,
- 		.fw_default_board	= AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE,
- 	},
-+	{
-+		.id				= AR6004_HW_1_3_VERSION,
-+		.name				= "ar6004 hw 1.3",
-+		.dataset_patch_addr		= 0x437860,
-+		.app_load_addr			= 0x1234,
-+		.board_ext_data_addr		= 0x437000,
-+		.reserved_ram_size		= 7168,
-+		.board_addr			= 0x436400,
-+		.refclk_hz                      = 40000000,
-+		.uarttx_pin                     = 11,
-+		.flags                          = ATH6KL_HW_FLAG_64BIT_RATES,
-+
-+		.fw = {
-+			.dir            = AR6004_HW_1_3_FW_DIR,
-+			.fw             = AR6004_HW_1_3_FIRMWARE_FILE,
-+		},
-+
-+		.fw_board               = AR6004_HW_1_3_BOARD_DATA_FILE,
-+		.fw_default_board       = AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE,
-+	},
- };
- 
- /*
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 05b9540..65e9983 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1462,3 +1462,6 @@ MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_2_FW_DIR "/" AR6004_HW_1_2_FIRMWARE_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_2_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_3_FW_DIR "/" AR6004_HW_1_3_FIRMWARE_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_3_BOARD_DATA_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE);
-diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index 3740c3d..4aa97aa 100644
---- a/drivers/net/wireless/ath/ath6kl/usb.c
-+++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -1220,3 +1220,6 @@ MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_2_FIRMWARE_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_2_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_2_DEFAULT_BOARD_DATA_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_3_FW_DIR "/" AR6004_HW_1_3_FIRMWARE_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_3_BOARD_DATA_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_3_DEFAULT_BOARD_DATA_FILE);
+
+> Jul 26 05:58:30 tigger2 kernel: [ 1553.767948] ath9k 0000:03:00.0:
+> Failed to initialize device
+> Jul 26 05:58:30 tigger2 kernel: [ 1553.768137] ath9k: probe of
+> 0000:03:00.0 failed with error -95
+>
+>
+> --
+> Tim and Alison Bentley
+> Home@TRARBentley.net
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.9.5
-
+thanks,
+shafi
