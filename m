@@ -1,50 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:50750 "EHLO
-	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753404Ab2GRMN5 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:38085 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381Ab2GZT7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:13:57 -0400
-Received: by lbok6 with SMTP id k6so2322104lbo.4
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 05:13:55 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 09/14] wl18xx: disable calibrator based fem detect
-Date: Wed, 18 Jul 2012 15:13:28 +0300
-Message-Id: <1342613613-917-10-git-send-email-coelho@ti.com> (sfid-20120718_141413_380732_8F20F53D)
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+	Thu, 26 Jul 2012 15:59:44 -0400
+Received: by yhmm54 with SMTP id m54so2414616yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 12:59:43 -0700 (PDT)
+From: Javier Lopez <jlopex@cozybit.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chunkeey@googlemail.com,
+	Javier Lopez <jlopex@cozybit.com>
+Subject: [PATCH] carl9170: Add support for NL80211_IFTYPE_MESH_POINT interfaces
+Date: Thu, 26 Jul 2012 12:59:03 -0700
+Message-Id: <1343332743-11845-1-git-send-email-jlopex@cozybit.com> (sfid-20120726_215947_811094_49597AC4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yair Shapira <yair.shapira@ti.com>
+This patch contains following modifications:
 
-bip calibration is not required in wl18xx. Therefore we
-disable also auto fem (using calibrator fem detect) mode.
+- Add mesh capabilities on fw.c to permit creation of mesh
+  interfaces using this driver.
 
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+- Modify carl9170_set_operating_mode, to use AP-style beaconing
+  with mesh interfaces.
+
+- Allow beacon updates for NL80211_IFTYPE_MESH_POINT type in
+  carl9170_handle_command_response.
+
+Signed-off-by: Javier Lopez <jlopex@cozybit.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/ath/carl9170/fw.c  |    1 +
+ drivers/net/wireless/ath/carl9170/mac.c |    2 +-
+ drivers/net/wireless/ath/carl9170/rx.c  |    1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index fb284de..2b9398c 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1148,6 +1148,12 @@ static int wl18xx_plt_init(struct wl1271 *wl)
- {
- 	int ret;
+diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
+index cba9d04..b03d7bf 100644
+--- a/drivers/net/wireless/ath/carl9170/fw.c
++++ b/drivers/net/wireless/ath/carl9170/fw.c
+@@ -304,6 +304,7 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
+ 		if (SUPP(CARL9170FW_WLANTX_CAB)) {
+ 			if_comb_types |=
+ 				BIT(NL80211_IFTYPE_AP) |
++				BIT(NL80211_IFTYPE_MESH_POINT) |
+ 				BIT(NL80211_IFTYPE_P2P_GO);
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ath/carl9170/mac.c b/drivers/net/wireless/ath/carl9170/mac.c
+index dfda919..a5f5fa0 100644
+--- a/drivers/net/wireless/ath/carl9170/mac.c
++++ b/drivers/net/wireless/ath/carl9170/mac.c
+@@ -318,10 +318,10 @@ int carl9170_set_operating_mode(struct ar9170 *ar)
+ 		bssid = common->curbssid;
  
-+	/* calibrator based auto/fem detect not supported for 18xx */
-+	if (wl->plt_mode == PLT_FEM_DETECT) {
-+		wl1271_error("wl18xx_plt_init: PLT FEM_DETECT not supported");
-+		return -EINVAL;
-+	}
-+
- 	ret = wlcore_write32(wl, WL18XX_SCR_PAD8, WL18XX_SCR_PAD8_PLT);
- 	if (ret < 0)
- 		return ret;
+ 		switch (vif->type) {
+-		case NL80211_IFTYPE_MESH_POINT:
+ 		case NL80211_IFTYPE_ADHOC:
+ 			cam_mode |= AR9170_MAC_CAM_IBSS;
+ 			break;
++		case NL80211_IFTYPE_MESH_POINT:
+ 		case NL80211_IFTYPE_AP:
+ 			cam_mode |= AR9170_MAC_CAM_AP;
+ 
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index dc99030..3be2130 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -206,6 +206,7 @@ void carl9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len)
+ 
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_MESH_POINT:
+ 			carl9170_update_beacon(ar, true);
+ 			break;
+ 
 -- 
-1.7.10.4
+1.7.9.5
 
