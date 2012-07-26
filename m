@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47357 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:48058 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934032Ab2GLPRN (ORCPT
+	with ESMTP id S1751379Ab2GZQRm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 11:17:13 -0400
-Message-ID: <1342106232.4531.31.camel@jlt3.sipsolutions.net> (sfid-20120712_171719_653853_132B1DAB)
-Subject: Re: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
+	Thu, 26 Jul 2012 12:17:42 -0400
+Message-ID: <1343319453.4477.2.camel@jlt3.sipsolutions.net> (sfid-20120726_181745_936314_D74A954D)
+Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct
+ ieee80211_tx_info and restructure tx-path
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 12 Jul 2012 17:17:12 +0200
-In-Reply-To: <4FFEE9ED.6020906@qca.qualcomm.com>
-References: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>
-	   <1341918365.4475.9.camel@jlt3.sipsolutions.net>
-	   <4FFC0F22.6040906@qca.qualcomm.com>
-	  <1341919201.4475.11.camel@jlt3.sipsolutions.net>
-	  <4FFD1014.2000109@qca.qualcomm.com>
-	 <1342103072.4531.26.camel@jlt3.sipsolutions.net>
-	 <4FFEE9ED.6020906@qca.qualcomm.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
+	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
+	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
+	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
+	coelho@ti.com, nbd@openwrt.org
+Date: Thu, 26 Jul 2012 18:17:33 +0200
+In-Reply-To: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120726_180930_993025_AB3D0B96)
+References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 (sfid-20120726_180930_993025_AB3D0B96)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2012-07-26 at 18:09 +0200, Thomas Huehn wrote:
+> The pointer control.sta is removed from ieee80211_tx_info to free up
+> sufficient memory in SKB_CB on the tx-path to enable new annotations
+> per data packet e.g.support of upcoming Transmit Power Control (TPC).
+> Now the control.sta pointer is put on the stack where passed as
+> function parameter to the .tx equivalent (ieee80211_ops) of each
+> affected wireless driver.
+> Therefore a new structure ieee80211_tx_control is added to mac80211.h
+> which holds the sta structure instead. The tx-path of all affected
+> drivers is restructured to respect the chaneges.
 
-> > Maybe something like this would make sense then?
-> >
-> > http://p.sipsolutions.net/2aac79bcfe3a9b8b.txt
-> 
-> yeah this was the thing i am proposing
-> http://www.spinics.net/lists/linux-wireless/msg94023.html
-> 
-> your patch is better optimized as it avoids a bool variable to check for 
-> wow disable command, so this should be fine with the other iw
-> patch to check for empty triggers ?
-> http://www.spinics.net/lists/linux-wireless/msg94022.html
+*sigh*
 
-Well, my patch is different, it actually allows empty triggers to go
-through as I had explained.
+/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c: In
+function ‘wl1271_skb_queue_head’:
+/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:622:48:
+warning: ‘hlid’ may be used uninitialized in this function
+[-Wuninitialized]
+/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c: In
+function ‘wlcore_tx_work_locked’:
+/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:391:47:
+warning: ‘hlid’ may be used uninitialized in this function
+[-Wuninitialized]
+/home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:351:5:
+note: ‘hlid’ was declared here
 
-I'm just not sure which one makes more sense? I kinda feel that allowing
-empty triggers might be a corner case but useful, while disallowing it
-now would make it hard to ever support such a case?
 
 johannes
 
