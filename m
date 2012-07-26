@@ -1,40 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40035 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756886Ab2GCROC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:14:02 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 01/20] ath9k: define DEVID for QCA955x
-Date: Tue,  3 Jul 2012 19:13:15 +0200
-Message-Id: <1341335614-15419-2-git-send-email-juhosg@openwrt.org> (sfid-20120703_191408_579143_A8528C08)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60815 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752083Ab2GZPog (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jul 2012 11:44:36 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] bcma: fix regression in interrupt assignment on mips
+Date: Thu, 26 Jul 2012 17:44:12 +0200
+Message-Id: <1343317452-3826-1-git-send-email-hauke@hauke-m.de> (sfid-20120726_174500_299742_A8D1F296)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+The wrong interrupts where assigned to the cores in
+bcma_core_mips_init(). This caused at least my serial console not to
+response to any input.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9409660..97060c6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -48,6 +48,7 @@
- #define AR9300_DEVID_AR9580	0x0033
- #define AR9300_DEVID_AR9462	0x0034
- #define AR9300_DEVID_AR9330	0x0035
-+#define AR9300_DEVID_QCA955X	0x0038
+This was caused by this patch which changed the order of the cores in
+the list:
+commit c334e25c9f3a95f2bd6b79fedc5170f17245b1c7
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Wed Jul 11 12:37:00 2012 +0200
+
+    bcma: add new cores at the end of list
+
+This should be fixed properly later so that the correct interrupt
+numbers are assigned to the cores independently from the ordering of
+the list. This patch restores the old behavior again. I will look into
+the problem more deeply later.
+
+I also changed the order of the list with the cores and their assigned
+interrupt number which gets printed to the log. Now they are printed in
+the same order like all the other lists of cores and like it was done
+before the patch which changed the order.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_mips.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index ee06dcf..aa8506d 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -131,7 +131,7 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
+ 			/* backplane irq line is in use, find out who uses
+ 			 * it and set user to irq 0
+ 			 */
+-			list_for_each_entry_reverse(core, &bus->cores, list) {
++			list_for_each_entry(core, &bus->cores, list) {
+ 				if ((1 << bcma_core_mips_irqflag(core)) ==
+ 				    oldirqflag) {
+ 					bcma_core_mips_set_irq(core, 0);
+@@ -161,7 +161,7 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
+ {
+ 	struct bcma_device *core;
  
- #define AR5416_AR9100_DEVID	0x000b
+-	list_for_each_entry_reverse(core, &bus->cores, list) {
++	list_for_each_entry(core, &bus->cores, list) {
+ 		bcma_core_mips_print_irq(core, bcma_core_mips_irq(core));
+ 	}
+ }
+@@ -226,7 +226,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
+ 		mcore->assigned_irqs = 1;
  
+ 	/* Assign IRQs to all cores on the bus */
+-	list_for_each_entry_reverse(core, &bus->cores, list) {
++	list_for_each_entry(core, &bus->cores, list) {
+ 		int mips_irq;
+ 		if (core->irq)
+ 			continue;
 -- 
-1.7.2.1
+1.7.9.5
 
