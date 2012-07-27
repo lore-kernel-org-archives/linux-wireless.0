@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48536 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185Ab2GITD2 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:49060 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189Ab2G0MX2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 15:03:28 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1SoJF2-0001mp-5F
-	for linux-wireless@vger.kernel.org; Mon, 09 Jul 2012 15:03:28 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.5/8.14.4) with ESMTP id q69Ik8Qu013790
-	for <linux-wireless@vger.kernel.org>; Mon, 9 Jul 2012 14:46:08 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.5/8.14.5/Submit) id q69Ik7wM013789
-	for linux-wireless@vger.kernel.org; Mon, 9 Jul 2012 14:46:07 -0400
-Date: Mon, 9 Jul 2012 14:46:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless.git rebased from 0a08adeb773cb6ed79b482c12bd45e37c2fa583b
-Message-ID: <20120709184607.GC1348@tuxdriver.com> (sfid-20120709_210332_917561_BB559CD8)
+	Fri, 27 Jul 2012 08:23:28 -0400
+Received: by obbuo13 with SMTP id uo13so4201420obb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 05:23:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1343391506.4449.11.camel@jlt3.sipsolutions.net>
+References: <1343391506.4449.11.camel@jlt3.sipsolutions.net>
+Date: Fri, 27 Jul 2012 17:53:27 +0530
+Message-ID: <CAD2nsn2GDotMt8ts4uLsSYeHyddfvrkhNew+cq-ec9U_LztqhQ@mail.gmail.com> (sfid-20120727_142331_397975_945A1459)
+Subject: Re: driver sparse/smatch warnings
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I had to drop a patch.  Everything up to 0a08adeb stays the same, so if
-you don't already have that then you should still be able to just pull.
+Hi Johannes,
 
-Sorry for the inconvenience!
+On Fri, Jul 27, 2012 at 5:48 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Since I was just running sparse & smatch anyway I figured I'd post it in
+> case somebody is interested:
+>
+> http://p.sipsolutions.net/04cc4db35c4e5793.txt
 
-John
+thanks a lot! we will fix this up for ath9k.
+
+>
+> Drivers with seemingly relevant warnings are:
+>  * ath9k (bad spin_lock_bh)
+>  * b43 (some functions can be static)
+>  * iwlegacy (lots of functions can be static)
+>  * p54
+>  * rt2x00 maybe?
+>  * rtlwifi (null deref, endian warnings)
+>  * at76c (dma on stack)
+>
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+thanks,
+shafi
