@@ -1,42 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:49601 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754978Ab2GXOcx (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:49619 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303Ab2G0JSq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 10:32:53 -0400
-Received: by weyx8 with SMTP id x8so5117937wey.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2012 07:32:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1343139390.4415.31.camel@jlt3.sipsolutions.net>
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
- <1326621743.3448.1.camel@jlt3.sipsolutions.net> <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
- <1326704259.3510.3.camel@jlt3.sipsolutions.net> <CAPXgP12gM3_OVuxQAkRRarH_TpjVpbh5NpcTPWL0nEi4eoX+kw@mail.gmail.com>
- <1326716209.3510.7.camel@jlt3.sipsolutions.net> <CAPXgP13xJNx0v9waZx6m47Ye7q71GGz3A3DoQzb=qszHnOkArw@mail.gmail.com>
- <1343139390.4415.31.camel@jlt3.sipsolutions.net>
-From: Tom Gundersen <teg@jklm.no>
-Date: Tue, 24 Jul 2012 16:32:31 +0200
-Message-ID: <CAG-2HqV4w5eRdh7SzdiXe+LUWpD=jHH1C7sk4G-LiTwdLJbgwg@mail.gmail.com> (sfid-20120724_163310_864340_56BDF5C6)
-Subject: Re: calling request_firmware() from module init will not work with
- recent/future udev versions
+	Fri, 27 Jul 2012 05:18:46 -0400
+Received: by wibhm11 with SMTP id hm11so7275600wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 02:18:45 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kay Sievers <kay@vrfy.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Andy Whitcroft <apw@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: add PS flag to bss_conf
+Date: Fri, 27 Jul 2012 12:18:44 +0300
+Message-Id: <1343380724-4104-1-git-send-email-eliad@wizery.com> (sfid-20120727_111851_504536_6235AD3A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 24, 2012 at 4:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> The logic to tell udev that it runs in the initramfs could easily be
->> implemented by other initramfs tools than dracut, but they usually do
->> not really follow what we do here, so this might for now only work on
->> recent systems using dracut.
->
-> Ok, too bad there wasn't a generic way, but at least there's a way
-> now :-)
+Currently, ps mode is indicated per device (rather than
+per interface), which doesn't make a lot of sense.
 
-If I understand the code correctly, it should be enough to put a file
-/etc/initrd-release in the initramfs for udev to do the right thing.
-But please correct me if I'm wrong Kay.
+Moreover, there are subtle bugs caused by the inability
+to indicate ps change along with other changes
+(e.g. when the AP deauth us, we'd like to indicate
+CHANGED_PS | CHANGED_ASSOC, as changing PS before
+notifying about disassociation will result in null-packets
+being sent (if IEEE80211_HW_SUPPORTS_DYNAMIC_PS) while
+the sta is already disconnected.)
 
--t
+Keep the current per-device notifications, and add
+parallel per-vif notifications.
+
+In order to keep it simple, the per-device ps and
+the per-vif ps are orthogonal - the per-vif ps
+configuration is determined only by the user
+configuration (enable/disable) and the connection
+state, and is not affected by other vifs state and
+(temporary) dynamic_ps/offchannel operations
+(unlike per-device ps).
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: refactor and always check for actual ps change (thanks Johannes)
+
+ include/net/mac80211.h     |    5 +++++
+ net/mac80211/cfg.c         |    6 ++++--
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mlme.c        |   17 ++++++++++++++++-
+ net/mac80211/util.c        |    3 ++-
+ 5 files changed, 29 insertions(+), 4 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3a700fd..1fcb109 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -171,6 +171,7 @@ struct ieee80211_low_level_stats {
+  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
+  * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
+  * @BSS_CHANGED_AP_PROBE_RESP: Probe Response changed for this BSS (AP mode)
++ * @BSS_CHANGED_PS: PS changed for this BSS (STA mode)
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -190,6 +191,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_IDLE		= 1<<14,
+ 	BSS_CHANGED_SSID		= 1<<15,
+ 	BSS_CHANGED_AP_PROBE_RESP	= 1<<16,
++	BSS_CHANGED_PS			= 1<<17,
+ 
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+@@ -266,6 +268,8 @@ enum ieee80211_rssi_event {
+  * @idle: This interface is idle. There's also a global idle flag in the
+  *	hardware config which may be more appropriate depending on what
+  *	your driver/device needs to do.
++ * @ps: power-save mode (STA only). This flag is NOT affected by
++ *	offchannel/dynamic_ps operations.
+  * @ssid: The SSID of the current vif. Only valid in AP-mode.
+  * @ssid_len: Length of SSID given in @ssid.
+  * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
+@@ -296,6 +300,7 @@ struct ieee80211_bss_conf {
+ 	bool arp_filter_enabled;
+ 	bool qos;
+ 	bool idle;
++	bool ps;
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	size_t ssid_len;
+ 	bool hidden_ssid;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e81b4a5..72c9681 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1283,9 +1283,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	mutex_unlock(&local->sta_mtx);
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
++	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
+ 		ieee80211_recalc_ps(local, -1);
+-
++		ieee80211_recalc_ps_vif(sdata);
++	}
+ 	return 0;
+ }
+ 
+@@ -2084,6 +2085,7 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 
+ 	ieee80211_recalc_ps(local, -1);
++	ieee80211_recalc_ps_vif(sdata);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d08c547..8e8c07a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1207,6 +1207,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *sdata);
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
++void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata);
++bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata);
+ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
+ int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index bf3da5a..0f87709 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -892,7 +892,7 @@ static void ieee80211_change_ps(struct ieee80211_local *local)
+ 	}
+ }
+ 
+-static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
++bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *mgd = &sdata->u.mgd;
+ 	struct sta_info *sta = NULL;
+@@ -1007,6 +1007,16 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 	ieee80211_change_ps(local);
+ }
+ 
++void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata)
++{
++	bool ps_allowed = ieee80211_powersave_allowed(sdata);
++
++	if (sdata->vif.bss_conf.ps != ps_allowed) {
++		sdata->vif.bss_conf.ps = ps_allowed;
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_PS);
++	}
++}
++
+ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
+ {
+ 	struct ieee80211_local *local =
+@@ -1310,6 +1320,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_smps(local);
+ 	mutex_unlock(&local->iflist_mtx);
+ 
++	ieee80211_recalc_ps_vif(sdata);
++
+ 	netif_tx_start_all_queues(sdata->dev);
+ 	netif_carrier_on(sdata->dev);
+ }
+@@ -1371,6 +1383,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	local->ps_sdata = NULL;
+ 
++	/* disable per-vif ps */
++	ieee80211_recalc_ps_vif(sdata);
++
+ 	/* flush out any pending frame (e.g. DELBA) before deauth/disassoc */
+ 	if (tx)
+ 		drv_flush(local, false);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 39b82fe..037d148 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1359,7 +1359,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			changed |= BSS_CHANGED_ASSOC |
+-				   BSS_CHANGED_ARP_FILTER;
++				   BSS_CHANGED_ARP_FILTER |
++				   BSS_CHANGED_PS;
+ 			mutex_lock(&sdata->u.mgd.mtx);
+ 			ieee80211_bss_info_change_notify(sdata, changed);
+ 			mutex_unlock(&sdata->u.mgd.mtx);
+-- 
+1.7.6.401.g6a319
+
