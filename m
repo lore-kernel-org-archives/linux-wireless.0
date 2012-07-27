@@ -1,52 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:40381 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756865Ab2GCROi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 13:14:38 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	qca-developer-program@qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 10/20] ath9k: read spur frequency information from eeprom for AR9550
-Date: Tue,  3 Jul 2012 19:13:24 +0200
-Message-Id: <1341335614-15419-11-git-send-email-juhosg@openwrt.org> (sfid-20120703_192129_062265_605D440F)
-In-Reply-To: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
-References: <1341335614-15419-1-git-send-email-juhosg@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:51449 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab2G0LRt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2012 07:17:49 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 10/20] mac80211: remove freq/chantype from debugfs
+Date: Fri, 27 Jul 2012 13:16:46 +0200
+Message-Id: <1343387816-9414-11-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131822_976989_72DF54C2)
+In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 898ee14..70ada2e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -180,7 +180,8 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
- 	 * is out-of-band and can be ignored.
- 	 */
+You can now get these values through iw, and
+they conflict with multi-channel work.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs.c |   32 --------------------------------
+ 1 file changed, 32 deletions(-)
+
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index b8dfb44..97173f8 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -63,8 +63,6 @@ DEBUGFS_READONLY_FILE(user_power, "%d",
+ 		      local->user_power_level);
+ DEBUGFS_READONLY_FILE(power, "%d",
+ 		      local->hw.conf.power_level);
+-DEBUGFS_READONLY_FILE(frequency, "%d",
+-		      local->hw.conf.channel->center_freq);
+ DEBUGFS_READONLY_FILE(total_ps_buffered, "%d",
+ 		      local->total_ps_buffered);
+ DEBUGFS_READONLY_FILE(wep_iv, "%#08x",
+@@ -91,33 +89,6 @@ static const struct file_operations reset_ops = {
+ 	.llseek = noop_llseek,
+ };
  
--	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah)) {
-+	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
-+	    AR_SREV_9550(ah)) {
- 		if (spur_fbin_ptr[0] == 0) /* No spur */
- 			return;
- 		max_spur_cnts = 5;
-@@ -205,7 +206,8 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
- 		if (AR_SREV_9462(ah) && (i == 0 || i == 3))
- 			continue;
- 		negative = 0;
--		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah))
-+		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah) ||
-+		    AR_SREV_9550(ah))
- 			cur_bb_spur = ath9k_hw_fbin2freq(spur_fbin_ptr[i],
- 							 IS_CHAN_2GHZ(chan));
- 		else
+-static ssize_t channel_type_read(struct file *file, char __user *user_buf,
+-		       size_t count, loff_t *ppos)
+-{
+-	struct ieee80211_local *local = file->private_data;
+-	const char *buf;
+-
+-	switch (local->hw.conf.channel_type) {
+-	case NL80211_CHAN_NO_HT:
+-		buf = "no ht\n";
+-		break;
+-	case NL80211_CHAN_HT20:
+-		buf = "ht20\n";
+-		break;
+-	case NL80211_CHAN_HT40MINUS:
+-		buf = "ht40-\n";
+-		break;
+-	case NL80211_CHAN_HT40PLUS:
+-		buf = "ht40+\n";
+-		break;
+-	default:
+-		buf = "???";
+-		break;
+-	}
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+-}
+-
+ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+ 			    size_t count, loff_t *ppos)
+ {
+@@ -205,7 +176,6 @@ static ssize_t queues_read(struct file *file, char __user *user_buf,
+ }
+ 
+ DEBUGFS_READONLY_FILE_OPS(hwflags);
+-DEBUGFS_READONLY_FILE_OPS(channel_type);
+ DEBUGFS_READONLY_FILE_OPS(queues);
+ 
+ /* statistics stuff */
+@@ -272,12 +242,10 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 
+ 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
+ 
+-	DEBUGFS_ADD(frequency);
+ 	DEBUGFS_ADD(total_ps_buffered);
+ 	DEBUGFS_ADD(wep_iv);
+ 	DEBUGFS_ADD(queues);
+ 	DEBUGFS_ADD_MODE(reset, 0200);
+-	DEBUGFS_ADD(channel_type);
+ 	DEBUGFS_ADD(hwflags);
+ 	DEBUGFS_ADD(user_power);
+ 	DEBUGFS_ADD(power);
 -- 
-1.7.2.1
+1.7.10.4
 
