@@ -1,79 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36674 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832Ab2FYIZm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51502 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997Ab2G0Lmm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jun 2012 04:25:42 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20456.8246.840686.122930@gargle.gargle.HOWL> (sfid-20120625_102547_166789_C09F5DE1)
-Date: Mon, 25 Jun 2012 13:54:22 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Fix lockdep splat
+	Fri, 27 Jul 2012 07:42:42 -0400
+Message-ID: <1343389359.4449.3.camel@jlt3.sipsolutions.net> (sfid-20120727_134244_971598_F3A110F9)
+Subject: Re: [RFC 18/20] mac80211: allow drv_add_chanctx to fail
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 27 Jul 2012 13:42:39 +0200
+In-Reply-To: <50127E88.6020109@tieto.com>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	 <1343387816-9414-19-git-send-email-johannes@sipsolutions.net>
+	 <50127E88.6020109@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cancel the MCI work only when MCI is actually enabled.
-Fixes this:
+On Fri, 2012-07-27 at 13:42 +0200, Michal Kazior wrote:
+> On 27/07/12 13:16, Johannes Berg wrote:
+> > --- a/net/mac80211/chan.c
+> > +++ b/net/mac80211/chan.c
+> > @@ -237,7 +237,10 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+> >
+> >   	list_add(&ctx->list, &local->chanctx_list);
+> >
+> > -	drv_add_chanctx(local, ctx);
+> > +	if (drv_add_chanctx(local, ctx)) {
+> > +		kfree(ctx);
+> 
+> We should also do a list_del() here.
 
-[96833.124051] Call Trace:
-[96833.124060]  [<ffffffff810afaf8>] __lock_acquire+0x1518/0x1e40
-[96833.124065]  [<ffffffff810ad126>] ? mark_held_locks+0x86/0x110
-[96833.124069]  [<ffffffff810ad3ad>] ? trace_hardirqs_on+0xd/0x10
-[96833.124073]  [<ffffffff814464f0>] ? _raw_spin_unlock_irq+0x30/0x70
-[96833.124078]  [<ffffffff81072968>] ? wait_on_cpu_work+0x98/0xc0
-[96833.124082]  [<ffffffff810b0a11>] lock_acquire+0xa1/0x150
-[96833.124085]  [<ffffffff81072990>] ? wait_on_cpu_work+0xc0/0xc0
-[96833.124088]  [<ffffffff81072990>] ? wait_on_cpu_work+0xc0/0xc0
-[96833.124092]  [<ffffffff810729e2>] wait_on_work+0x52/0x120
-[96833.124095]  [<ffffffff81072990>] ? wait_on_cpu_work+0xc0/0xc0
-[96833.124099]  [<ffffffff81063b3f>] ? del_timer+0x7f/0x110
-[96833.124102]  [<ffffffff81072c13>] __cancel_work_timer+0x83/0x130
-[96833.124106]  [<ffffffff81072cf0>] cancel_work_sync+0x10/0x20
-[96833.124113]  [<ffffffffa065b5cd>] __ath_cancel_work+0x4d/0x60 [ath9k]
-[96833.124119]  [<ffffffffa065cf28>] ath9k_config+0x458/0x680 [ath9k]
-[96833.124125]  [<ffffffffa065dd1e>] ? ath9k_flush+0x6e/0x1d0 [ath9k]
-[96833.124129]  [<ffffffff8144394d>] ? __mutex_unlock_slowpath+0x10d/0x190
-[96833.124146]  [<ffffffffa056c7b5>] ieee80211_hw_config+0x135/0x2a0 [mac80211]
-[96833.124163]  [<ffffffffa057ebbb>] ieee80211_do_open+0x67b/0xc50 [mac80211]
-[96833.124178]  [<ffffffffa057f1fd>] ieee80211_open+0x6d/0x80 [mac80211]
-[96833.124183]  [<ffffffff8137a44f>] __dev_open+0x9f/0xf0
-[96833.124187]  [<ffffffff8137a701>] __dev_change_flags+0xa1/0x180
-[96833.124190]  [<ffffffff8137a898>] dev_change_flags+0x28/0x70
-[96833.124195]  [<ffffffff813e1179>] devinet_ioctl+0x659/0x780
-[96833.124199]  [<ffffffff8137aea0>] ? dev_ioctl+0x210/0x6d0
-[96833.124203]  [<ffffffff813e1db5>] inet_ioctl+0x75/0x90
-[96833.124208]  [<ffffffff8135e0e0>] sock_do_ioctl+0x30/0x70
-[96833.124211]  [<ffffffff8135e3dd>] sock_ioctl+0x7d/0x2c0
-[96833.124218]  [<ffffffff81193c39>] do_vfs_ioctl+0x99/0x580
-[96833.124222]  [<ffffffff81447415>] ? sysret_check+0x22/0x5d
-[96833.124226]  [<ffffffff811941b9>] sys_ioctl+0x99/0xa0
-[96833.124230]  [<ffffffff814473e9>] system_call_fastpath+0x16/0x1b
+Good catch. Or just move the list_add() later?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 85f9ab4..ea4ec25 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -150,9 +150,9 @@ static void __ath_cancel_work(struct ath_softc *sc)
- 	cancel_work_sync(&sc->hw_check_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
--#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
--	cancel_work_sync(&sc->mci_work);
--#endif
-+
-+	if (ath9k_hw_mci_is_enabled(sc->sc_ah))
-+		cancel_work_sync(&sc->mci_work);
- }
- 
- static void ath_cancel_work(struct ath_softc *sc)
--- 
-1.7.11
+johannes
 
