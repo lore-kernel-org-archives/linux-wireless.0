@@ -1,82 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:56516 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862Ab2GSBlG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51445 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082Ab2G0LRp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 21:41:06 -0400
-Received: by wgbdr13 with SMTP id dr13so1895071wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 18:41:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1342612598.5006a476022c6@mail.bluebottle.com>
-References: <1342612598.5006a476022c6@mail.bluebottle.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 19 Jul 2012 03:40:44 +0200
-Message-ID: <CA+XFjiqGXCdMYOnQz95biGYdR65x8dEAZzWnyAoWovEJ1tFQrw@mail.gmail.com> (sfid-20120719_034110_905937_F1EE6101)
-Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
-To: Bastian Bittorf <bittorf@bluebottle.com>
-Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	feint@lists.subsignal.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 27 Jul 2012 07:17:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 19/20] mac80211: return error code from ieee80211_vif_use_channel
+Date: Fri, 27 Jul 2012 13:16:55 +0200
+Message-Id: <1343387816-9414-20-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131748_696924_813E6B53)
+In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 18, 2012 at 1:56 PM, Bastian Bittorf <bittorf@bluebottle.com> wrote:
-> hi devs!
->
-> yesterday we had a breaktrough debugging b43 in our hackspace maschinenraum/m18[1,2]
-> at weimar.freifunk.net[3,4] - since a long time our darling wrt54g suffers from a
-> hanging wifi and bad performance[5], but the workaround is easy: now it's up to
-> you to fix the rootcause.
->
-> our testsetup, where we could _reproduce_ reliably a stopping TX is like this:
->
-> laptop ---lan--- "A"-wrt54g/adhoc ~~~   air  ~~~ "B"-anyrouter/adhoc
->
-> now make a testdownload with the laptop from B.
-> wireless will stop working after ~10 seconds.
->
-> wifi up will reanimate and our freifunk-cron.minutely-check
-> will do this automagically. (read further, this is not the solution)
->
-> we tried to limit the rateset to e.g. lower rates, but this does NOT change
-> the behaviour. what works is: define a rateset on BOTH router which makes
-> it impossible to change the band, e.g.:
->
-> iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
-> OR
-> iw dev $WIFIDEV set bitrates legacy-2.4 6 9 12 18 24 36 48 54
->
-> now we had a great performance, 10 Gigabytes of wireless transfer,
-> no stopping TX anymore and an empty box of beer. three things to do now:
->
-> 1) why does a band change (can be seen through minstrel) is a problem?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Because IIRC b43 doesn't support anything other than 2.4GHz at all.
+Instead of returning a bool successful value, return a
+regular error code that could come from the driver.
 
->
-> 2) we have to make in config-option to force a band, or a rateset:
->         e.g. uci set wireless.radio0.hwmode=11g
->         e.g. uci set wireless.radio0.bitrates='6 9 12 18 24 36 48 54'
->
-> 3) spread to word:
->    there is a great frustration in the community about b43,
->    but the old drivers _have_ to die, it's about time - really.
->
-> thanks for your work,
-> bye storchi, andi, bastian + m18 crew
->
-> [1] http://blog.maschinenraum.tk/
-> [2] http://blog.maschinenraum.tk/2012/07/15/bitcoin-vending-machine-exchange-euro-coins-for-bitcoin-wallets/
-> [3] http://wireless.subsignal.org
-> [4] http://wireless.subsignal.org/index.php?title=Main_Page_en
-> [5] https://dev.openwrt.org/ticket/7552
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/chan.c        |   22 ++++++++++++----------
+ net/mac80211/ieee80211_i.h |    8 ++++----
+ 2 files changed, 16 insertions(+), 14 deletions(-)
 
-
-
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 2c7c975..0542123 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -223,12 +223,13 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 		      enum ieee80211_chanctx_mode mode)
+ {
+ 	struct ieee80211_chanctx *ctx;
++	int err;
+ 
+ 	lockdep_assert_held(&local->chanctx_mtx);
+ 
+ 	ctx = kzalloc(sizeof(*ctx) + local->hw.chanctx_data_size, GFP_KERNEL);
+ 	if (!ctx)
+-		return NULL;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	ctx->conf.channel = channel;
+ 	ctx->conf.channel_type = channel_type;
+@@ -237,9 +238,10 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 
+ 	list_add(&ctx->list, &local->chanctx_list);
+ 
+-	if (drv_add_chanctx(local, ctx)) {
++	err = drv_add_chanctx(local, ctx);
++	if (err) {
+ 		kfree(ctx);
+-		return NULL;
++		return ERR_PTR(err);
+ 	}
+ 
+ 	return ctx;
+@@ -340,10 +342,10 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_free_chanctx(local, ctx);
+ }
+ 
+-bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+-			       struct ieee80211_channel *channel,
+-			       enum nl80211_channel_type channel_type,
+-			       enum ieee80211_chanctx_mode mode)
++int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
++			      struct ieee80211_channel *channel,
++			      enum nl80211_channel_type channel_type,
++			      enum ieee80211_chanctx_mode mode)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx *ctx;
+@@ -354,14 +356,14 @@ bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 	ctx = ieee80211_find_chanctx(local, channel, channel_type, mode);
+ 	if (!ctx)
+ 		ctx = ieee80211_new_chanctx(local, channel, channel_type, mode);
+-	if (!ctx) {
++	if (IS_ERR(ctx)) {
+ 		mutex_unlock(&local->chanctx_mtx);
+-		return false;
++		return PTR_ERR(ctx);
+ 	}
+ 
+ 	ieee80211_assign_vif_chanctx(sdata, ctx);
+ 	mutex_unlock(&local->chanctx_mtx);
+-	return true;
++	return 0;
+ }
+ 
+ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c52db65..f8cce7d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1543,10 +1543,10 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ enum nl80211_channel_type
+ ieee80211_ht_oper_to_channel_type(struct ieee80211_ht_operation *ht_oper);
+ 
+-bool ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+-			       struct ieee80211_channel *channel,
+-			       enum nl80211_channel_type channel_type,
+-			       enum ieee80211_chanctx_mode mode);
++int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
++			      struct ieee80211_channel *channel,
++			      enum nl80211_channel_type channel_type,
++			      enum ieee80211_chanctx_mode mode);
+ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
+ 
+ #ifdef CONFIG_MAC80211_NOINLINE
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.10.4
+
