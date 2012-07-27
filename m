@@ -1,53 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48074 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51382 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083Ab2GZQTn (ORCPT
+	with ESMTP id S1751344Ab2G0LJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 12:19:43 -0400
-Message-ID: <1343319579.4477.3.camel@jlt3.sipsolutions.net> (sfid-20120726_181946_227107_128040B2)
-Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
+	Fri, 27 Jul 2012 07:09:54 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
-	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
-	coelho@ti.com, nbd@openwrt.org
-Date: Thu, 26 Jul 2012 18:19:39 +0200
-In-Reply-To: <1343319453.4477.2.camel@jlt3.sipsolutions.net> (sfid-20120726_181745_936314_D74A954D)
-References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120726_180930_993025_AB3D0B96) <1343319453.4477.2.camel@jlt3.sipsolutions.net>
-	 (sfid-20120726_181745_936314_D74A954D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: set channel only once during auth/assoc
+Date: Fri, 27 Jul 2012 13:09:51 +0200
+Message-Id: <1343387391-7808-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130957_390197_DE3CA691)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-07-26 at 18:17 +0200, Johannes Berg wrote:
-> On Thu, 2012-07-26 at 18:09 +0200, Thomas Huehn wrote:
-> > The pointer control.sta is removed from ieee80211_tx_info to free up
-> > sufficient memory in SKB_CB on the tx-path to enable new annotations
-> > per data packet e.g.support of upcoming Transmit Power Control (TPC).
-> > Now the control.sta pointer is put on the stack where passed as
-> > function parameter to the .tx equivalent (ieee80211_ops) of each
-> > affected wireless driver.
-> > Therefore a new structure ieee80211_tx_control is added to mac80211.h
-> > which holds the sta structure instead. The tx-path of all affected
-> > drivers is restructured to respect the chaneges.
-> 
-> *sigh*
-> 
-> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c: In
-> function ‘wl1271_skb_queue_head’:
-> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:622:48:
-> warning: ‘hlid’ may be used uninitialized in this function
-> [-Wuninitialized]
+From: Johannes Berg <johannes.berg@intel.com>
 
-Those changes make no sense anyway -- you should be able to pass the
-station pointer through if it previously used info->control.sta, instead
-of doing an (expensive) lookup.
+There's no need to set up the channel during auth
+and again during assoc, just do it once. Currently
+this doesn't result in any changes since calling
+hw_config() with an unchanged channel will return
+early, but with the channel context work this has
+an impact on channel context assignment.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   69 ++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 43 insertions(+), 26 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 06bd450..1ff157e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3025,41 +3025,17 @@ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 	return 0;
+ }
+ 
+-static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+-				     struct cfg80211_bss *cbss, bool assoc)
++static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
++				  struct cfg80211_bss *cbss)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	struct ieee80211_bss *bss = (void *)cbss->priv;
+-	struct sta_info *new_sta = NULL;
+-	bool have_sta = false;
+-	int err;
+ 	int ht_cfreq;
+ 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
+ 	const u8 *ht_oper_ie;
+ 	const struct ieee80211_ht_operation *ht_oper = NULL;
+ 	struct ieee80211_supported_band *sband;
+ 
+-	if (WARN_ON(!ifmgd->auth_data && !ifmgd->assoc_data))
+-		return -EINVAL;
+-
+-	if (assoc) {
+-		rcu_read_lock();
+-		have_sta = sta_info_get(sdata, cbss->bssid);
+-		rcu_read_unlock();
+-	}
+-
+-	if (!have_sta) {
+-		new_sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
+-		if (!new_sta)
+-			return -ENOMEM;
+-	}
+-
+-	mutex_lock(&local->mtx);
+-	ieee80211_recalc_idle(sdata->local);
+-	mutex_unlock(&local->mtx);
+-
+-	/* switch to the right channel */
+ 	sband = local->hw.wiphy->bands[cbss->channel->band];
+ 
+ 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_40MHZ;
+@@ -3122,10 +3098,51 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 	local->oper_channel = cbss->channel;
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
++	return 0;
++}
++
++static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
++				     struct cfg80211_bss *cbss, bool assoc)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct ieee80211_bss *bss = (void *)cbss->priv;
++	struct sta_info *new_sta = NULL;
++	bool have_sta = false;
++	int err;
++
++	if (WARN_ON(!ifmgd->auth_data && !ifmgd->assoc_data))
++		return -EINVAL;
++
++	if (assoc) {
++		rcu_read_lock();
++		have_sta = sta_info_get(sdata, cbss->bssid);
++		rcu_read_unlock();
++	}
++
++	if (!have_sta) {
++		new_sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
++		if (!new_sta)
++			return -ENOMEM;
++	}
++
++	mutex_lock(&local->mtx);
++	ieee80211_recalc_idle(sdata->local);
++	mutex_unlock(&local->mtx);
++
+ 	if (new_sta) {
+ 		u32 rates = 0, basic_rates = 0;
+ 		bool have_higher_than_11mbit;
+ 		int min_rate = INT_MAX, min_rate_index = -1;
++		struct ieee80211_supported_band *sband;
++
++		sband = local->hw.wiphy->bands[cbss->channel->band];
++
++		err = ieee80211_prep_channel(sdata, cbss);
++		if (err) {
++			sta_info_free(local, new_sta);
++			return err;
++		}
+ 
+ 		ieee80211_get_rates(sband, bss->supp_rates,
+ 				    bss->supp_rates_len,
+-- 
+1.7.10.4
 
