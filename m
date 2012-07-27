@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33174 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202Ab2GEOwV (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53502 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082Ab2G0Lvb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 10:52:21 -0400
-Date: Mon, 2 Jul 2012 14:24:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: Prevent NULL deref when getting socket name
-Message-ID: <20120702182438.GB2010@tuxdriver.com> (sfid-20120705_165257_166277_F79443EE)
-References: <1341050207-13145-1-git-send-email-levinsasha928@gmail.com>
+	Fri, 27 Jul 2012 07:51:31 -0400
+Received: by yhmm54 with SMTP id m54so3051528yhm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 04:51:31 -0700 (PDT)
+Message-ID: <501280BF.4070409@lwfinger.net> (sfid-20120727_135135_558447_339005E3)
+Date: Fri, 27 Jul 2012 06:51:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1341050207-13145-1-git-send-email-levinsasha928@gmail.com>
+To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com>
+In-Reply-To: <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 30, 2012 at 11:56:47AM +0200, Sasha Levin wrote:
-> llcp_sock_getname can be called without a device attached to the nfc_llcp_sock.
-> 
-> This would lead to the following BUG:
-> 
-> [  362.341807] BUG: unable to handle kernel NULL pointer dereference at           (null)
-> [  362.341815] IP: [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-> [  362.341818] PGD 31b35067 PUD 30631067 PMD 0
-> [  362.341821] Oops: 0000 [#627] PREEMPT SMP DEBUG_PAGEALLOC
-> [  362.341826] CPU 3
-> [  362.341827] Pid: 7816, comm: trinity-child55 Tainted: G      D W    3.5.0-rc4-next-20120628-sasha-00005-g9f23eb7 #479
-> [  362.341831] RIP: 0010:[<ffffffff836258e5>]  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-> [  362.341832] RSP: 0018:ffff8800304fde88  EFLAGS: 00010286
-> [  362.341834] RAX: 0000000000000000 RBX: ffff880033cb8000 RCX: 0000000000000001
-> [  362.341835] RDX: ffff8800304fdec4 RSI: ffff8800304fdec8 RDI: ffff8800304fdeda
-> [  362.341836] RBP: ffff8800304fdea8 R08: 7ebcebcb772b7ffb R09: 5fbfcb9c35bdfd53
-> [  362.341838] R10: 4220020c54326244 R11: 0000000000000246 R12: ffff8800304fdec8
-> [  362.341839] R13: ffff8800304fdec4 R14: ffff8800304fdec8 R15: 0000000000000044
-> [  362.341841] FS:  00007effa376e700(0000) GS:ffff880035a00000(0000) knlGS:0000000000000000
-> [  362.341843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  362.341844] CR2: 0000000000000000 CR3: 0000000030438000 CR4: 00000000000406e0
-> [  362.341851] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [  362.341856] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> [  362.341858] Process trinity-child55 (pid: 7816, threadinfo ffff8800304fc000, task ffff880031270000)
-> [  362.341858] Stack:
-> [  362.341862]  ffff8800304fdea8 ffff880035156780 0000000000000000 0000000000001000
-> [  362.341865]  ffff8800304fdf78 ffffffff83183b40 00000000304fdec8 0000006000000000
-> [  362.341868]  ffff8800304f0027 ffffffff83729649 ffff8800304fdee8 ffff8800304fdf48
-> [  362.341869] Call Trace:
-> [  362.341874]  [<ffffffff83183b40>] sys_getpeername+0xa0/0x110
-> [  362.341877]  [<ffffffff83729649>] ? _raw_spin_unlock_irq+0x59/0x80
-> [  362.341882]  [<ffffffff810f342b>] ? do_setitimer+0x23b/0x290
-> [  362.341886]  [<ffffffff81985ede>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-> [  362.341889]  [<ffffffff8372a539>] system_call_fastpath+0x16/0x1b
-> [  362.341921] Code: 84 00 00 00 00 00 b8 b3 ff ff ff 48 85 db 74 54 66 41 c7 04 24 27 00 49 8d 7c 24 12 41 c7 45 00 60 00 00 00 48 8b 83 28 05 00 00 <8b> 00 41 89 44 24 04 0f b6 83 41 05 00 00 41 88 44 24 10 0f b6
-> [  362.341924] RIP  [<ffffffff836258e5>] llcp_sock_getname+0x75/0xc0
-> [  362.341925]  RSP <ffff8800304fde88>
-> [  362.341926] CR2: 0000000000000000
-> [  362.341928] ---[ end trace 6d450e935ee18bf3 ]---
-> 
-> Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
+On 07/27/2012 01:34 AM, Xavier de Almeida wrote:
+> Hi Larry,
+>
+> I am using hostapd v0.7.3 but I did not install the bleeding-edge compat-wireless drivers.
+>
+> What I noticed is that your script refers to module se while I have a ce. (I am not sure if this can impact or explain the differences between your setup and mine).
+>
+> When I download the drivers from http://wireless.kernel.org/en/users/Download#Where_to_download_bleeding_edge, I got this file "compat-wireless-2.6.tar.bz2" which contains maybe a too old version compat-wireless-2012-05-10.
+>
+> Should I install this version?
+> If I install kernel 3.5.0, will I still need to install the compat-wireless drivers?
 
-Samuel, I'm taking this one directly.
+The SE was in the ESSID. Do you think that matters?? The chip I used was an 
+RTL8188CE, the same as yours.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+You need to install the bleeding-edge compat wireless from 
+http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2. 
+That sounds like the version you got.
+
+Installing kernel 3.5 0 will get older drivers than compat-wireless. That is the 
+way that kernel development works. The ones in 3.5.0 should be OK, but 
+installing compat would be easier than generating a 3.5 kernel.
+
+Larry
+
+
+
