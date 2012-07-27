@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:40422 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701Ab2GOV7k (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:55209 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756Ab2G0G4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 17:59:40 -0400
-Date: Sun, 15 Jul 2012 14:59:35 -0700
-From: Marc MERLIN <marc@merlins.org>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: 3.4.4/amd64 full interrupt hangs under big nfs copies
-Message-ID: <20120715215935.GF24420@merlins.org> (sfid-20120716_000000_731178_3CE45A13)
-References: <20120409.143710.879746943062854492.davem@davemloft.net> <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop> <20120409.153452.1284163346306246866.davem@davemloft.net> <1334030180.13293.98.camel@edumazet-glaptop> <20120410051127.GA32048@merlins.org> <1334038263.2907.1.camel@edumazet-glaptop> <20120411052733.GA17352@merlins.org>
+	Fri, 27 Jul 2012 02:56:24 -0400
+Received: by obbuo13 with SMTP id uo13so3865799obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 23:56:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120411052733.GA17352@merlins.org>
+In-Reply-To: <1343324856.4477.9.camel@jlt3.sipsolutions.net>
+References: <1343231359-3024-1-git-send-email-eliad@wizery.com>
+	<1343324856.4477.9.camel@jlt3.sipsolutions.net>
+Date: Fri, 27 Jul 2012 09:56:23 +0300
+Message-ID: <CAB3XZEfJbfhaECrKTO1+zZ1RU=sJ7Pi54tL4q-B8Rif1YWr+Zg@mail.gmail.com> (sfid-20120727_085653_883695_56AA99BB)
+Subject: Re: [PATCH] mac80211: add PS flag to bss_conf
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 10, 2012 at 10:27:33PM -0700, Marc MERLIN wrote:
-> On Tue, Apr 10, 2012 at 08:11:03AM +0200, Eric Dumazet wrote:
-> > Please try following patch, as it solved the problem for me (no more
-> > order-1 allocations in tx path)
-> 
-> I applied our patch to 3.3.1 and cannot reproduce the problem anymore.
-> 
-> I'll leave a big wireless copy running overnight just in case, but I think
-> you fixed it.
+On Thu, Jul 26, 2012 at 8:47 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2012-07-25 at 18:49 +0300, Eliad Peller wrote:
+>
+>> @@ -2085,6 +2092,9 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+>>
+>>       ieee80211_recalc_ps(local, -1);
+>>
+>> +     sdata->vif.bss_conf.ps = ieee80211_powersave_allowed(sdata);
+>> +     ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_PS);
+>
+> It need not have changed, since the AP could be broken? We might also
+> not even be associated, so I don't think this is right.
+>
+sure i'll fix it.
+i think i'll just refactor this code to ieee80211_recalc_ps_vif() that
+will do the recalc-and-notify-if-changed instead of duplicating it
+each time.
 
-Mmmh, so I'm running 3.4.4 and I had another full machine hang while copying
-big files (gigabytes) over wireless via NFS.
-The laptop self recovered after 5mn or so (mouse cursor would not even
-move) and I was able to kill -9 the process (midnight commander).
-mc did not actually stop for another 4mn or so (i.e. it took that long for
-the process to come out of kernel hung state), but the machine was usable
-during that time.
-Note that copying the same data with scp works fine.
-NFS mount looks like this:
-gargamel:/mnt/dshelf2/ /net/gargamel/mnt/dshelf2 nfs4 rw,nosuid,nodev,relatime,vers=4.0,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.205.7,local_lock=none,addr=192.168.205.3 0 0
+>
+> I also wonder if ieee80211_recalc_ps() should use vif.bss_conf.ps
+> instead of calling powersave_allowed() itself?
+>
+i think we should better keep them decoupled. this way we can change
+the per-vif functionality without affecting the legacy per-device one.
 
-I didn't have anything like last time in the kernel logs, and more
-annoyingly, ps -elf does not show anything for any process in WCHAN,
-making pointing the finger a bit harder (procps-ng 3.3.3 does not show
-anything other than '-' in WCHAN for any process with 3.4.4).
-
-My understanding is that user space calling drivers that shut off all
-interrupts for extended periods of time (as least I think so since my mouse
-cursor would not move), is still a kernel bug.
-
-For what it's worth, copying 1GB of data in lots of small files does not
-cause problems, it seems that it's big files that cause a problem since they
-likely fill a buffer somewhere while interrupts are disabled.
-
-Do you have an idea of how I can find out where my mc process is stuck in
-the kernel?
-Should I reproduce with specific sysrq output?
-
-Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+Eliad.
