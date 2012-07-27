@@ -1,118 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39252 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751342Ab2GKIyj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 04:54:39 -0400
-Received: by wibhm11 with SMTP id hm11so5462578wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 01:54:38 -0700 (PDT)
+Received: from nm1.bullet.mail.ird.yahoo.com ([77.238.189.58]:43194 "HELO
+	nm1.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752158Ab2G0KcO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2012 06:32:14 -0400
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343376844.6746.YahooMailNeo@web28904.mail.ir2.yahoo.com>
+Message-ID: <1343385132.37480.YahooMailNeo@web28903.mail.ir2.yahoo.com> (sfid-20120727_123217_833802_8213001F)
+Date: Fri, 27 Jul 2012 11:32:12 +0100 (BST)
+From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1343376844.6746.YahooMailNeo@web28904.mail.ir2.yahoo.com>
 MIME-Version: 1.0
-In-Reply-To: <4FFD3983.7020108@hauke-m.de>
-References: <1341991423-1476-1-git-send-email-zajec5@gmail.com>
-	<4FFD3983.7020108@hauke-m.de>
-Date: Wed, 11 Jul 2012 10:54:38 +0200
-Message-ID: <CACna6ryFtzmN+b0RtGPW7zQKTpAL2pxHYs0HsiWUSfObZcY4mg@mail.gmail.com> (sfid-20120711_105445_361544_2613DBF7)
-Subject: Re: [PATCH V2] bcma: add trivial GBIT MAC COMMON driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: multipart/mixed; boundary=e0cb4e70044737d02b04c489ff39
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---e0cb4e70044737d02b04c489ff39
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hum the issue is now different as I don't have anymore the wlan0 interface:
 
-2012/7/11 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 07/11/2012 09:23 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
->> GMAC COMMON core is present on BCM4706 and is used for example to access
->> board PHYs (PHYs can not be accessed directly using GBIT MAC core).
->>
->> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
-> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->> V2: Fix printing GMAC Common name. Core's manufacturer is ARM not BCM!
-> This is strange.
+iwconfig 
+br0       no wireless extensions.
 
-Yup... but I'm really sure of that, look at this line:
-bcma: bus0: Core 10 found: BCM4706 GBit MAC Common (manuf 0x43B, id
-0x5DC, rev 0x00, class 0x0)
+lo        no wireless extensions.
 
-I also attach my WNDR4500 eprom if you wish to see it detailed.
+eth0      no wireless extensions.
 
---=20
-Rafa=C5=82
 
---e0cb4e70044737d02b04c489ff39
-Content-Type: text/plain; charset=US-ASCII; name="eprom-wndr450.txt"
-Content-Disposition: attachment; filename="eprom-wndr450.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h4i670m60
+xabix@HTPC:/var/log$ sudo modprobe rtl8192ce
+WARNING: Error inserting rtl8192c_common (/lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-common.ko): Invalid argument
+FATAL: Error inserting rtl8192ce (/lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192ce.ko): Invalid argument
 
-MHg0QkY1MDAwMQlUQUc9PUNJCQlDSUQ9PTB4NTAwPT00NzA2X0NISVBDT01NT04KMHgxRjA4NDQx
-MQlUQUc9PUNJCQlQT1JUUz09MSsyCVdSQVBQRVJTPT0xKzEKMHgwMDAwMDAwMwlUQUc9PU1TVF9Q
-T1JUCjB4MTgwMDAwMDUJVEFHPT1BRERSCjB4MUZDMDAxMzUJVEFHPT1BRERSCjB4MDA0MDAwMDAK
-MHgxQzAwMDEzNQlUQUc9PUFERFIKMHgwM0MwMDAwMAoweDIwMDAwMTM1CVRBRz09QUREUgoweDEw
-MDAwMDAwCjB4MTgxMDAwQzUJVEFHPT1BRERSCjB4MTgxMEExODUJVEFHPT1BRERSCgoweDRCRjUy
-RDAxCVRBRz09Q0kJCUNJRD09MHg1MkQ9PTQ3MDZfTUFDX0dCSVQKMHgwMDAwNDIxMQlUQUc9PUNJ
-CQlQT1JUUz09MSsxCVdSQVBQRVJTPT0xKzAKMHgwMDAwMDEwMwlUQUc9PU1TVF9QT1JUCjB4MTgw
-MDIwMDUJVEFHPT1BRERSCjB4MTgxMDIwQzUJVEFHPT1BRERSCgoweDRCRjUyRDAxCVRBRz09Q0kJ
-CUNJRD09MHg1MkQ9PTQ3MDZfTUFDX0dCSVQKMHgwMDAwNDIxMQlUQUc9PUNJCQlQT1JUUz09MSsx
-CVdSQVBQRVJTPT0xKzAKMHgwMDAwMDIwMwlUQUc9PU1TVF9QT1JUCjB4MTgwMEQwMDUJVEFHPT1B
-RERSCjB4MTgyMDAwQzUJVEFHPT1BRERSCgoweDRBNzgyQzAxCVRBRz09Q0kJCUNJRD09MHg4MkM9
-PU1JUFNfNzRLCjB4MDAwMDQyMTEJVEFHPT1DSQkJUE9SVFM9PTErMQlXUkFQUEVSUz09MSswCjB4
-MDAwMDAzMDMJVEFHPT1NU1RfUE9SVAoweDE4MDAzMDA1CVRBRz09QUREUgoweDE4MTAzMEM1CVRB
-Rz09QUREUgoKMHg0QkY4MTkwMQlUQUc9PUNJCQlDSUQ9PTB4ODE5PT1VU0IyMF9IT1NUCjB4MDQw
-MDQyMTEJVEFHPT1DSQkJUE9SVFM9PTErMQlXUkFQUEVSUz09MSswCjB4MDAwMDA0MDMJVEFHPT1N
-U1RfUE9SVAoweDE4MDA0MDA1CVRBRz09QUREUgoweDE4MDA5MDA1CVRBRz09QUREUgoweDE4MTA0
-MEM1CVRBRz09QUREUgoKMHg0QkY4MjAwMQlUQUc9PUNJCQlDSUQ9PTB4ODIwPT1VU0IyMF9ERVYK
-MHgwRTA4NDQxMQlUQUc9PUNJCQlQT1JUUz09MSsyCVdSQVBQRVJTPT0xKzEKMHgwMDAwMDUwMwlU
-QUc9PU1TVF9QT1JUCjB4MTgwMDUwMDUJVEFHPT1BRERSCjB4MDgwMDAxMzUJVEFHPT1BRERSCjB4
-MDgwMDAwMDAKMHgwMDAwMDEzRAoweDgwMDAwMDAwCjB4MDAwMDAwMDgKMHg0MDAwMDAwMAoweDE4
-MTA1MEM1CVRBRz09QUREUgoweDE4MTA5MTg1CVRBRz09QUREUgoKMHg0QkY4MjAwMQlUQUc9PUNJ
-CQlDSUQ9PTB4ODIwPT1VU0IyMF9ERVYKMHgwRTA4NDQxMQlUQUc9PUNJCQlQT1JUUz09MSsyCVdS
-QVBQRVJTPT0xKzEKMHgwMDAwMDYwMwlUQUc9PU1TVF9QT1JUCjB4MTgwMEUwMDUJVEFHPT1BRERS
-CjB4NDAwMDAxMzUJVEFHPT1BRERSCjB4MDgwMDAwMDAKMHgwMDAwMDEzRAoweEMwMDAwMDAwCjB4
-MDAwMDAwMDgKMHg0MDAwMDAwMAoweDE4MjAxMEM1CVRBRz09QUREUgoweDE4MjAyMTg1CVRBRz09
-QUREUgoKMHg0QkY1MkUwMQlUQUc9PUNJCQlDSUQ9PTB4NTJFPT1BTUVNQwoweDAwMDgwMjAxCVRB
-Rz09Q0kJCVBPUlRTPT0wKzEJV1JBUFBFUlM9PTArMQoweDE4MDA2MDA1CVRBRz09QUREUgoweDAw
-MDAwMDM1CVRBRz09QUREUgoweDA4MDAwMDAwCjB4MTAwMDAwMzUJVEFHPT1BRERSCjB4MDgwMDAw
-MDAKMHg4MDAwMDAzNQlUQUc9PUFERFIKMHg0MDAwMDAwMAoweDE4MTA2MDg1CVRBRz09QUREUgoK
-MHg0QkY1MEUwMQlUQUc9PUNJCQlDSUQ9PTB4NTBFPT00NzA2X1NPQ19SQU0KMHgwNTEwMDYwMQlU
-QUc9PUNJCQlQT1JUUz09MCszCVdSQVBQRVJTPT0wKzIKMHgxODAwNzAwNQlUQUc9PUFERFIKMHgx
-OTAwMDAzNQlUQUc9PUFERFIKMHgwMDA4MDAwMAoweDE5ODAwMDM1CVRBRz09QUREUgoweDAwMDgw
-MDAwCjB4MTkwMDAxMzUJVEFHPT1BRERSCjB4MDAwODAwMDAKMHgxOTgwMDEzNQlUQUc9PUFERFIK
-MHgwMDA4MDAwMAoweDE5MDAwMjM1CVRBRz09QUREUgoweDAwMDgwMDAwCjB4MTk4MDAyMzUJVEFH
-PT1BRERSCjB4MDAwODAwMDAKMHgxODEwNzE4NQlUQUc9PUFERFIKMHgxODIwNDI4NQlUQUc9PUFE
-RFIKCjB4NEJGNTM0MDEJVEFHPT1DSQkJQ0lEPT0weDUzND09QUxUQQoweDAwMDA0MjExCVRBRz09
-Q0kJCVBPUlRTPT0xKzEJV1JBUFBFUlM9PTErMAoweDAwMDAwNzAzCVRBRz09TVNUX1BPUlQKMHgx
-ODAwODAwNQlUQUc9PUFERFIKMHgxODEwODBDNQlUQUc9PUFERFIKCjB4NDNCMTM1MDEJVEFHPT1D
-SQkJQ0lEPT0weDEzNQlUQUc9PUFERFIKMHgwMDA4MDIwMQlUQUc9PUNJCQlQT1JUUz09MCsxCVdS
-QVBQRVJTPT0wKzEKMHgxODAwMDA3NQlUQUc9PUFERFIKMHgwMDAxMDAwMAoweDE4MTBCMDg1CVRB
-Rz09QUREUgoKMHg0M0IxMzUwMQlUQUc9PUNJCQlDSUQ9PTB4MTM1CVRBRz09QUREUgoweDAwMDgw
-MjAxCVRBRz09Q0kJCVBPUlRTPT0wKzEJV1JBUFBFUlM9PTArMQoweDE4MTAwMDc1CVRBRz09QURE
-UgoweDAwMDEwMDAwCjB4MTgxMEMwODUJVEFHPT1BRERSCgoweDQzQjEzNTAxCVRBRz09Q0kJCUNJ
-RD09MHgxMzUJVEFHPT1BRERSCjB4MDAwODAyMDEJVEFHPT1DSQkJUE9SVFM9PTArMQlXUkFQUEVS
-Uz09MCsxCjB4MTgyMDAwNzUJVEFHPT1BRERSCjB4MDAwMTAwMDAKMHgxODIwMzA4NQlUQUc9PUFE
-RFIKCjB4NDNCMzY3MDEJVEFHPT1DSQkJQ0lEPT0weDM2Nz09T09CX1JPVVRFUgoweDAwMDAwMjAx
-CVRBRz09Q0kJCVBPUlRTPT0wKzEJV1JBUFBFUlM9PTArMAoweDE4MTBEMDA1CVRBRz09QUREUgoK
-MHg0M0IzNjYwMQlUQUc9PUNJCQlDSUQ9PTB4MzY2CjB4MDAwMDAyMDEJVEFHPT1DSQkJUE9SVFM9
-PTArMQlXUkFQUEVSUz09MCswCjB4MTgxMEUwMDUJVEFHPT1BRERSCgoweDQzQjAxQTAxCVRBRz09
-Q0kJCUNJRD09MHgwMUEKMHgwMDAwMDIwMQlUQUc9PUNJCQlQT1JUUz09MCsxCVdSQVBQRVJTPT0w
-KzAKMHgxODAwQzAwNQlUQUc9PUFERFIKCjB4NDNCMDFCMDEJVEFHPT1DSQkJQ0lEPT0weDAxQgow
-eDAwMDAwMjAxCVRBRz09Q0kJCVBPUlRTPT0wKzEJV1JBUFBFUlM9PTArMAoweDE4MDBBMDA1CVRB
-Rz09QUREUgoKMHg0M0IwMUMwMQlUQUc9PUNJCQlDSUQ9PTB4MDFDCjB4MDAwMDAyMDEJVEFHPT1D
-SQkJUE9SVFM9PTArMQlXUkFQUEVSUz09MCswCjB4MTgwMEIwMDUJVEFHPT1BRERSCgoweDQzQkZG
-RjAxCVRBRz09Q0kJCUNJRD09MHhGRkYKMHgwMDA4MDIwMQlUQUc9PUNJCQlQT1JUUz09MCsxCVdS
-QVBQRVJTPT0wKzEKMHgxODExMDAzNQlUQUc9PUFERFIKMHgwMDBGMDAwMAoweDE4MjEwMDM1CVRB
-Rz09QUREUgoweDAwREYwMDAwCjB4MTkwODAwMzUJVEFHPT1BRERSCjB4MDA3ODAwMDAKMHgxOTg4
-MDAzNQlUQUc9PUFERFIKMHgwMjc4MDAwMAoweDMwMDAwMDM1CVRBRz09QUREUgoweDEwMDAwMDAw
-CjB4NDgwMDAwMzUJVEFHPT1BRERSCjB4MzgwMDAwMDAKMHhDMDAwMDAzNQlUQUc9PUFERFIKMHg0
-MDAwMDAwOAoweDdGRkZGRkZGCjB4MTgxMEYwODUJVEFHPT1BRERSCgoweDQzQjVEQzAxCVRBRz09
-Q0kJCUNJRD09MHg1REM9PTQ3MDZfTUFDX0dCSVRfQ09NTU9OCjB4MDAwMDAyMDEJVEFHPT1DSQkJ
-UE9SVFM9PTArMQlXUkFQUEVSUz09MCswCjB4MTgwMDEwMDUJVEFHPT1BRERSCgoweDQzQjVERDAx
-CVRBRz09Q0kJCUNJRD09MHg1REQ9PUREUjIzX1BIWQoweDAwMDAwMjAxCVRBRz09Q0kJCVBPUlRT
-PT0wKzEJV1JBUFBFUlM9PTArMAoweDE4MDBGMDA1CVRBRz09QUREUgoKMHgwMDAwMDAwRgo=
---e0cb4e70044737d02b04c489ff39--
+xabix@HTPC:/var/log$ ll /lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-common.ko
+-rw-r--r-- 1 root root 71208 Jul 26 12:28 /lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-common.ko
+
+modinfo rtl8192ce
+filename:       /lib/modules/3.4.6-custom/kernel/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192ce.ko
+firmware:       rtlwifi/rtl8192cfwU_B.bin
+firmware:       rtlwifi/rtl8192cfwU.bin
+firmware:       rtlwifi/rtl8192cfw.bin
+description:    Realtek 8192C/8188C 802.11n PCI wireless
+license:        GPL
+author:         Larry Finger    <Larry.Finger@lwfinger.net>
+author:         Realtek WlanFAE <wlanfae@realtek.com>
+author:         lizhaoming      <chaoming_li@realsil.com.cn>
+srcversion:     AE758D5E662358264A4DB35
+alias:          pci:v000010ECd00008176sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008177sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008178sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008191sv*sd*bc*sc*i*
+depends:        rtlwifi,rtl8192c-common,mac80211
+intree:         Y
+vermagic:       3.4.6-custom SMP mod_unload modversions 686 
+parm:           swenc:Set to 1 for software crypto (default 0)
+parm:           ips:Set to 0 to not use link power save (default 1)
+
+parm:           swlps:Set to 1 to use SW control power save (default 0)
+
+parm:           fwlps:Set to 1 to use FW control power save (default 1)
+
+parm:           debug:Set debug level (0-5) (default 0) (int)
+
+
+Merci
+XabiX
