@@ -1,85 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:43955 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752560Ab2GTMhW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51342 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668Ab2G0LC6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jul 2012 08:37:22 -0400
-Received: by ghrr11 with SMTP id r11so3893891ghr.19
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2012 05:37:22 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+	Fri, 27 Jul 2012 07:02:58 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: add extra checking for RC init upon receiving mesh beacon
-Date: Fri, 20 Jul 2012 20:36:04 +0800
-Message-Id: <1342787764-26858-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120720_143726_774447_7EECDF54)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] mac80211: add IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF
+Date: Fri, 27 Jul 2012 13:02:51 +0200
+Message-Id: <1343386972-5044-4-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130305_606764_CD8A1855)
+In-Reply-To: <1343386972-5044-1-git-send-email-johannes@sipsolutions.net>
+References: <1343386972-5044-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rate control statistic is flushed whenever the mesh beacon
-is received. This may not optimizes the performance of rate
-control algorithm. This patch ensures that <rate_control_
-rate_init> is called only if the peer's channel type is
-changed.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Some devices like the current iwlwifi implementation
+require that the P2P interface address match the P2P
+Device address (only one P2P interface is supported.)
+Add the HW flag IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF
+that allows drivers to request that P2P Interfaces
+added while a P2P Device is active get the same MAC
+address by default.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh_plink.c |   10 +++++++++-
- net/mac80211/sta_info.h   |    4 ++++
- 2 files changed, 13 insertions(+), 1 deletions(-)
+ include/net/mac80211.h |    5 +++++
+ net/mac80211/iface.c   |   15 ++++++++++++++-
+ 2 files changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4256859..a3fce28 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -357,6 +357,7 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
- 		if (!sta)
- 			return NULL;
- 		insert = true;
-+		sta->mesh_rate_init = false;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index bb86aa6..924b6c1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1203,6 +1203,10 @@ enum sta_notify_cmd {
+  *	queue mapping in order to use different queues (not just one per AC)
+  *	for different virtual interfaces. See the doc section on HW queue
+  *	control for more details.
++ *
++ * @IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF: Use the P2P Device address for any
++ *	P2P Interface. This will be honoured even if more than one interface
++ *	is supported.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1230,6 +1234,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
+ 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
+ 	IEEE80211_HW_SCAN_WHILE_IDLE			= 1<<24,
++	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
+ };
+ 
+ /**
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index aa985ea..f280e1f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1320,7 +1320,6 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 	    local->hw.wiphy->n_addresses <= 1)
+ 		return;
+ 
+-
+ 	mutex_lock(&local->iflist_mtx);
+ 
+ 	switch (type) {
+@@ -1338,6 +1337,19 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 		}
+ 		/* keep default if no AP interface present */
+ 		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_P2P_GO:
++		if (local->hw.flags & IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF) {
++			list_for_each_entry(sdata, &local->interfaces, list) {
++				if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
++					continue;
++				if (!ieee80211_sdata_running(sdata))
++					continue;
++				memcpy(perm_addr, sdata->vif.addr, ETH_ALEN);
++				goto out_unlock;
++			}
++		}
++		/* otherwise fall through */
+ 	default:
+ 		/* assign a new address if possible -- try n_addresses first */
+ 		for (i = 0; i < local->hw.wiphy->n_addresses; i++) {
+@@ -1412,6 +1424,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 		break;
  	}
  
- 	spin_lock_bh(&sta->lock);
-@@ -377,9 +378,16 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
- 					    ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 		sta->ch_type =
- 			ieee80211_ht_oper_to_channel_type(elems->ht_operation);
-+	} else {
-+		sta->ch_type = NL80211_CHAN_NO_HT;
-+	}
-+
-+	if (!sta->mesh_rate_init || sta->pre_ch_type != sta->ch_type) {
-+		rate_control_rate_init(sta);
-+		sta->mesh_rate_init = true;
-+		sta->pre_ch_type = sta->ch_type;
- 	}
++ out_unlock:
+ 	mutex_unlock(&local->iflist_mtx);
+ }
  
--	rate_control_rate_init(sta);
- 	spin_unlock_bh(&sta->lock);
- 
- 	if (insert && sta_info_insert(sta))
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index a470e11..ed10ee7 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -274,6 +274,8 @@ struct sta_ampdu_mlme {
-  * @t_offset_setpoint: reference timing offset of this sta to be used when
-  * 	calculating clockdrift
-  * @ch_type: peer's channel type
-+ * @pre_ch_type: previous peer's channel type
-+ * @mesh_rate_init: rate control initilization flag
-  * @debugfs: debug filesystem info
-  * @dead: set to true when sta is unlinked
-  * @uploaded: set to true when sta is uploaded to the driver
-@@ -368,6 +370,8 @@ struct sta_info {
- 	s64 t_offset;
- 	s64 t_offset_setpoint;
- 	enum nl80211_channel_type ch_type;
-+	enum nl80211_channel_type pre_ch_type;
-+	bool mesh_rate_init;
- #endif
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
 -- 
-1.7.0.4
+1.7.10.4
 
