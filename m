@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38038 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754925Ab2GQJpG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 05:45:06 -0400
-Message-ID: <1342518290.7427.9.camel@jlt3.sipsolutions.net> (sfid-20120717_114524_248477_D9AA8159)
-Subject: Re: [PATCH 2/2] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
-	ilw@linux.intel.com, users@rt2x00.serialmonkey.com,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	chunkeey@googlemail.com, buytenh@wantstofly.org, dsd@gentoo.org,
-	coelho@ti.com
-Date: Tue, 17 Jul 2012 11:44:50 +0200
-In-Reply-To: <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120713_205245_114771_49FF4AC7)
-References: <1342205545-45382-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1342205545-45382-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 (sfid-20120713_205245_114771_49FF4AC7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nm16-vm0.bullet.mail.ird.yahoo.com ([77.238.189.192]:39032 "HELO
+	nm16-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751735Ab2G0IOH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2012 04:14:07 -0400
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net>
+Message-ID: <1343376844.6746.YahooMailNeo@web28904.mail.ir2.yahoo.com> (sfid-20120727_101415_929753_4E6BA685)
+Date: Fri, 27 Jul 2012 09:14:04 +0100 (BST)
+From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <5011BC0A.8060600@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok first of all, please actually compile the tree after your changes. It
-doesn't. When it does, please fix
- 1) line length in the commit log should be < 72 chars
- 2) indentation in mac80211.h
- 3) removal of an important comment in mac80211.h that I pointed out in
-    previous review
+I have installed the (and rebooted)
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/compat/compat.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/compat/sch_codel.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/compat/sch_fq_codel.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/drivers/misc/eeprom/eeprom_93cx6.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/drivers/net/wireless/rtl818x/rtl8180/rtl8180.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/drivers/net/wireless/rtl818x/rtl8187/rtl8187.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/net/mac80211/mac80211.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/net/rfkill/rfkill-regulator.ko
+  INSTALL /home/xabix/tmp/compat-wireless-2012-07-03/net/wireless/cfg80211.ko
+  DEPMOD  3.4.6-custom
 
-> The tx-path of all affected drivers is restructured to respect the chaneged
-> layout of struct ieee80211_tx_info. List of modified drivers:
-> ath9k
+hostapd -dd /etc/hostapd/hostapd.conf
+Configuration file: /etc/hostapd/hostapd.conf
+ctrl_interface_group=0
+nl80211: Register Action command failed: ret=-19 (No such device)
+nl80211: Register Action match - hexdump(len=1): 06
+nl80211: Failed to register Action frame processing - ignore for now
+nl80211: Add own interface ifindex 3
+nl80211: Add own interface ifindex 0
+Could not read interface wlan0 flags: No such device
+nl80211 driver initialization failed.
+rmdir[ctrl_interface]: No such file or directory
+ELOOP: remaining socket: sock=4 eloop_data=0x8fe48f0 user_data=0x8fe6760 handler=0x807c5e0
+ELOOP: remaining socket: sock=6 eloop_data=0x8fe8548 user_data=(nil) handler=0x8086770
 
-Please also remove the driver list. git can tell you the modified files
-very easily.
+which is the same with your script:
+sudo ./control_ap.sh start wlan0 eth0
+Starting AP mode for wlan0 at address 192.168.0.200
+hostapd: no process found
+isc-dhcp-relay: no process found
+wlan0: ERROR while getting interface flags: No such device
+wlan0: ERROR while getting interface flags: No such device
+SIOCSIFADDR: No such device
+wlan0: ERROR while getting interface flags: No such device
+touch: cannot touch `/var/lib/dhcp/db/dhcpd.leases': No such file or directory
+Configuration file: /home/xabix/hostapd.conf
+Could not read interface wlan0 flags: No such device
+nl80211 driver initialization failed.
+rmdir[ctrl_interface]: No such file or directory
+ELOOP: remaining socket: sock=4 eloop_data=0x96d1910 user_data=0x96d3720 handler=0x807c5e0
+ELOOP: remaining socket: sock=6 eloop_data=0x96d5538 user_data=(nil) handler=0x8086770
 
-johannes
+What else can I try?
 
+Thanks
+XabiX
