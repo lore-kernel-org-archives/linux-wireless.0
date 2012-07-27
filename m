@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:38849 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753520Ab2GCSCM (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:40196 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820Ab2G0VgO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 14:02:12 -0400
-Received: by gglu4 with SMTP id u4so5586311ggl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2012 11:02:11 -0700 (PDT)
+	Fri, 27 Jul 2012 17:36:14 -0400
+Received: by weyx8 with SMTP id x8so2365272wey.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 14:36:13 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Subject: Re: [PATCH 2/2] mac80211: Add transmit power control support (TPC) for ACK packets
+Date: Fri, 27 Jul 2012 23:36:09 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes.berg@intel.com, nbd@openwrt.org
+References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-In-Reply-To: <1341316520.20124.0.camel@jlt3.sipsolutions.net>
-References: <1341304650-2593-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1341316520.20124.0.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Tue, 3 Jul 2012 11:01:47 -0700
-Message-ID: <CAB=NE6VMRKVpeKjNO1N3sR=bgb4LToNS_PiecxdsngWO6av_Qg@mail.gmail.com> (sfid-20120703_200215_539556_F3699882)
-Subject: Re: [PATCH 0/2] High bitrate support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201207272336.09898.chunkeey@googlemail.com> (sfid-20120727_233618_734042_775A3B17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 3, 2012 at 4:55 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2012-07-03 at 11:37 +0300, Vladimir Kondratiev wrote:
->> Proposed patches solve issue with high bitrates not fitting into u16.
->>
->> I split it into 2 patches: one introduces new u32 bitrate,
->> and 2-nd adds 60g specific calculations.
->>
->> Idea is to report (in nl80211) both old and new values,
->> or only new if it not fits into u16.
->> User space tools will migrate to the new bitrate, then old one
->> may be removed from kernel.
->>
->> There are few places where cfg80211_calculate_bitrate() used
->> besides nl80211.c; but these places are OK with bitrate changing
->> from u16 to u32.
->>
->> Vladimir Kondratiev (2):
->>   {nl,cfg}80211: support high bitrates
->>   cfg80211: bitrate calculation for 60g
->
-> I've applied this (but not yet pushed out in case somebody objects
-> still).
+On Friday 27 July 2012 18:00:09 Thomas Huehn wrote:
+> This patch adds support to annotate and change the power-level of ACK
+> packets. To map hardware specific ack power capabilities to mac80211
+> one new hw flag is defined:
+> 
+> @IEEE80211_HW_SUPPORTS_TPC_ACK_GLOBAL:
+> 	Power level of ack packets is adjustable and processed in a
+> 	global manner, per hw rather than per ack packet or link.
+> 
+> The struct hw_config is extended by ack_power a global power level in
+> dBm to be used for all acknowledgement_packets. A new config change
+> event IEEE80211_CONF_CHANGE_ACK_POWER is defined to reacte with driver
+> specific function calls to ack_power changes from the mac80211.
 
-In case it is missed, I did point out a few things with the first patch.
+I know this is kind of an odd. But as carl9170 has TPC settings
+for BlockACK, CF-End and QoS-Null frames, it wouldn't be possible
+to extend "ACK" to "response".
 
-  Luis
+NB: The HW has also TPC control registers for ERP(RTS/CTS)
+but that's sort of a different issue.
+
+Regards,
+	Chr
