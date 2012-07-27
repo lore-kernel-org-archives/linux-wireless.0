@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33185 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202Ab2GEOwa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab2G0LRx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 10:52:30 -0400
-Date: Mon, 2 Jul 2012 14:25:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: dan.carpenter@oracle.com, wfg@linux.intel.com,
-	linux-wireless@vger.kernel.org, franzschrober@yahoo.de,
-	julian.calaby@gmail.com, johannes@sipsolutions.net, nbd@openwrt.org
-Subject: Re: [PATCH] mac80211: fix kzalloc memory corruption introduced in
- minstrel_ht
-Message-ID: <20120702182517.GC2010@tuxdriver.com> (sfid-20120705_165239_998667_2708C6D6)
-References: <1341232792-6247-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1341232792-6247-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Fri, 27 Jul 2012 07:17:53 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 11/20] mac80211: use oper_channel in rate init
+Date: Fri, 27 Jul 2012 13:16:47 +0200
+Message-Id: <1343387816-9414-12-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131822_387617_C871E0A7)
+In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 02, 2012 at 02:39:52PM +0200, Thomas Huehn wrote:
-> The patch: "mac80211: correct size the argument to
-> kzalloc in minstrel_ht" (from Jun 29, 2012), leads to memory corruption.
-> "msp->ratelist" is a void pointer - therfore going back to the
-> expicit form: sizeof(struct minstrel_rate) which brings back correct
-> memory allocation.
-> 
-> Reported-by: Fengguang Wu <wfg@linux.intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> ---
->  net/mac80211/rc80211_minstrel_ht.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 1ca8f2b..f9e51ef 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -813,7 +813,7 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
->  	if (!msp)
->  		return NULL;
->  
-> -	msp->ratelist = kzalloc(sizeof(*msp->ratelist) * max_rates, gfp);
-> +	msp->ratelist = kzalloc(sizeof(struct minstrel_rate) * max_rates, gfp);
->  	if (!msp->ratelist)
->  		goto error;
->  
+From: Johannes Berg <johannes.berg@intel.com>
 
-Johannes, I'm grabbing this one now.
+Using hw.conf.channel is wrong as it could be the
+temporary channel if the station is added from the
+workqueue while the device is already on another
+channel. Use oper_channel instead.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rate.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 6e4fd32..10de668 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -56,7 +56,7 @@ static inline void rate_control_rate_init(struct sta_info *sta)
+ 	if (!ref)
+ 		return;
+ 
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	sband = local->hw.wiphy->bands[local->oper_channel->band];
+ 
+ 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
+ 	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.4
+
