@@ -1,78 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:44035 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782Ab2GIRqo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51369 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab2G0LIG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 13:46:44 -0400
-Received: by gglu4 with SMTP id u4so10351378ggl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 10:46:43 -0700 (PDT)
-Message-ID: <4FFB18FE.2040606@lwfinger.net> (sfid-20120709_194648_420106_C4966C9F)
-Date: Mon, 09 Jul 2012 12:46:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] MAINTAINERS: realtek drivers
-References: <1341855212-7151-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1341855212-7151-1-git-send-email-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 27 Jul 2012 07:08:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/6] mac80211: use oper_channel in managed mlme
+Date: Fri, 27 Jul 2012 13:07:58 +0200
+Message-Id: <1343387281-7252-4-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130817_819456_AA1F889F)
+In-Reply-To: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
+References: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2012 12:33 PM, Xose Vazquez Perez wrote:
-> s/RTL8192CE/RTLWIFI , add wiki pages and delete
-> "F:     drivers/net/wireless/rtlwifi/rtl8192ce/", it's redundant.
->
-> v2 s/RTL8192CE/RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE AND RTL8192DE
->
->
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> ---
->   MAINTAINERS |    9 ++++-----
->   1 file changed, 4 insertions(+), 5 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 03df1d1..27de053 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -5753,7 +5753,7 @@ F:	net/rose/
->   RTL8180 WIRELESS DRIVER
->   M:	"John W. Linville" <linville@tuxdriver.com>
->   L:	linux-wireless@vger.kernel.org
-> -W:	http://linuxwireless.org/
-> +W:	http://linuxwireless.org/en/users/Drivers/rtl8187
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->   S:	Maintained
->   F:	drivers/net/wireless/rtl818x/rtl8180/
-> @@ -5763,20 +5763,19 @@ M:	Herton Ronaldo Krzesinski <herton@canonical.com>
->   M:	Hin-Tak Leung <htl10@users.sourceforge.net>
->   M:	Larry Finger <Larry.Finger@lwfinger.net>
->   L:	linux-wireless@vger.kernel.org
-> -W:	http://linuxwireless.org/
-> +W:	http://linuxwireless.org/en/users/Drivers/rtl8187
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->   S:	Maintained
->   F:	drivers/net/wireless/rtl818x/rtl8187/
->
-> -RTL8192CE WIRELESS DRIVER
-> +RTLWIFI: RTL8192CE, RTL8192CU, RT8192SE AND RTL8192DE WIRELESS DRIVERS
->   M:	Larry Finger <Larry.Finger@lwfinger.net>
->   M:	Chaoming Li <chaoming_li@realsil.com.cn>
->   L:	linux-wireless@vger.kernel.org
-> -W:	http://linuxwireless.org/
-> +W:	http://linuxwireless.org/en/users/Drivers/rtl819x
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->   S:	Maintained
->   F:	drivers/net/wireless/rtlwifi/
-> -F:	drivers/net/wireless/rtlwifi/rtl8192ce/
->
->   S3 SAVAGE FRAMEBUFFER DRIVER
->   M:	Antonino Daplas <adaplas@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-ACK.
+Using hw.conf.channel is wrong as it could be the
+temporary channel if any function like the beacon
+get function is called while scanning or during
+other temporary out-of-channel activities.
 
-Larry
+Use oper_channel instead.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d068eea..e2c67cb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -185,15 +185,15 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ 	u16 ht_opmode;
+ 	bool disable_40 = false;
+ 
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	sband = local->hw.wiphy->bands[local->oper_channel->band];
+ 
+ 	switch (sdata->vif.bss_conf.channel_type) {
+ 	case NL80211_CHAN_HT40PLUS:
+-		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
++		if (local->oper_channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
+ 			disable_40 = true;
+ 		break;
+ 	case NL80211_CHAN_HT40MINUS:
+-		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
++		if (local->oper_channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
+ 			disable_40 = true;
+ 		break;
+ 	default:
+@@ -1264,7 +1264,7 @@ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
+-	if (sdata->local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
++	if (sdata->local->oper_channel->band == IEEE80211_BAND_5GHZ)
+ 		use_short_slot = true;
+ 
+ 	if (use_protection != bss_conf->use_cts_prot) {
+@@ -2349,7 +2349,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (baselen > len)
+ 		return;
+ 
+-	if (rx_status->freq != local->hw.conf.channel->center_freq)
++	if (rx_status->freq != local->oper_channel->center_freq)
+ 		return;
+ 
+ 	if (ifmgd->assoc_data && !ifmgd->assoc_data->have_beacon &&
+@@ -2513,7 +2513,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N)) {
+ 		struct ieee80211_supported_band *sband;
+ 
+-		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++		sband = local->hw.wiphy->bands[local->oper_channel->band];
+ 
+ 		changed |= ieee80211_config_ht_tx(sdata, elems.ht_operation,
+ 						  bssid, true);
+-- 
+1.7.10.4
+
