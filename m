@@ -1,72 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1872 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932104Ab2GCHN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 03:13:29 -0400
-Message-ID: <4FF29B89.3040300@broadcom.com> (sfid-20120703_091332_248555_455A08D2)
-Date: Tue, 3 Jul 2012 09:13:13 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, brcm80211-dev-list@broadcom.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 00/18] brcmsmac: update to get SoCs working
-References: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1341062181-28071-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:51375 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab2G0LII (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2012 07:08:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 6/6] mac80211: use correct channel in TX
+Date: Fri, 27 Jul 2012 13:08:01 +0200
+Message-Id: <1343387281-7252-7-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130818_831063_F34A0A7C)
+In-Reply-To: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
+References: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2012 03:16 PM, Hauke Mehrtens wrote:
-> This series contains some patches needed to get brcmsmac working on 
-> SoCs like the BCM4718.
-> The last part which adds core rev 17 (used in the BCM4718) to the list 
-> of supported cores is missing, because we do not have a firmware 
-> supporting this core yet, but I extended the b43 fwcutter to generate 
-> a firmware which brcmsmac accepts. With this firmware my BCM4718 
-> works. I would appreciate an official firmware release from Broadcom 
-> adding support for this core.
-> The final patch adding support for the BCM43224 is missing because 
-> the PCIe host controller on the BCM4718 still causes problems and I 
-> have to add some more read after writes into the code, for now it uses 
-> an ugly hack and sometimes the problems still occur.
-> 
-> The wifi is not stable on the BCM4718, I had no problems connecting to 
-> my ath9k driven access point but I have problems connecting to my 
-> BCM47186 based AP running the vendor firmware with the Broadcom 
-> proprietary driver.
-> I get 12MBit/s max with the BCM4718 connected to ath9k on the 2.4 GHz 
-> band and 35 MBit/s max with the BCM43224 on the 5Ghz band connected to 
-> a Broadcom based AP running the proprietary driver. This seams to be 
-> CPU bounced as I have over 50% sirq in both cases.
-> 
-> brcmsmac starts on the BCM47186 (id: 0x5357), but it does not tx or rx 
-> any traffic.
-> 
-> One patch extends the xmtfifo_sz array for more core revs, I just toke 
-> the values from the other phy-n cores and hope this is correct.
-> 
-> These patches are depending on: "[PATCH v2 0/9] bcma misc updates" and 
-> based on wireless-testing.
-> 
-> I will send a patch for bcma which converts the warning message when it 
-> found a PCI and not a PCIe card into a WARN.
-> 
-> v2:
->   - when something depends on a patch for bcma, which is not in 
->     wireless-testing yet, I add that to the commit comment.
->   - removed changes for BCM43421 and BCM6362 as I do not have a device
->     to test this.
->   - xmtfifo_sz now starts at core rev 17 and contains the correct values 
->     for core rev 28
->   - make brcms_c_chipmatch() also work for SoCs
->   - typos and format changes
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-I have acked all patches, but would like to do some sanity testing today.
+Since we only need the band, remove the channel
+pointer from struct ieee80211_tx_data and also
+assign it properly, depending on context, to the
+correct operating or current channel.
 
-Gr. AvS
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    2 --
+ net/mac80211/tx.c          |   17 +++++++----------
+ 2 files changed, 7 insertions(+), 12 deletions(-)
 
-
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0c85801..8608704 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -193,8 +193,6 @@ struct ieee80211_tx_data {
+ 	struct sta_info *sta;
+ 	struct ieee80211_key *key;
+ 
+-	struct ieee80211_channel *channel;
+-
+ 	unsigned int flags;
+ };
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8b01caf..385c280 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -55,7 +55,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 	if (WARN_ON_ONCE(info->control.rates[0].idx < 0))
+ 		return 0;
+ 
+-	sband = local->hw.wiphy->bands[tx->channel->band];
++	sband = local->hw.wiphy->bands[info->band];
+ 	txrate = &sband->bitrates[info->control.rates[0].idx];
+ 
+ 	erp = txrate->flags & IEEE80211_RATE_ERP_G;
+@@ -615,7 +615,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 
+ 	memset(&txrc, 0, sizeof(txrc));
+ 
+-	sband = tx->local->hw.wiphy->bands[tx->channel->band];
++	sband = tx->local->hw.wiphy->bands[info->band];
+ 
+ 	len = min_t(u32, tx->skb->len + FCS_LEN,
+ 			 tx->local->hw.wiphy->frag_threshold);
+@@ -626,13 +626,13 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	txrc.bss_conf = &tx->sdata->vif.bss_conf;
+ 	txrc.skb = tx->skb;
+ 	txrc.reported_rate.idx = -1;
+-	txrc.rate_idx_mask = tx->sdata->rc_rateidx_mask[tx->channel->band];
++	txrc.rate_idx_mask = tx->sdata->rc_rateidx_mask[info->band];
+ 	if (txrc.rate_idx_mask == (1 << sband->n_bitrates) - 1)
+ 		txrc.max_rate_idx = -1;
+ 	else
+ 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
+ 	memcpy(txrc.rate_idx_mcs_mask,
+-	       tx->sdata->rc_rateidx_mcs_mask[tx->channel->band],
++	       tx->sdata->rc_rateidx_mcs_mask[info->band],
+ 	       sizeof(txrc.rate_idx_mcs_mask));
+ 	txrc.bss = (tx->sdata->vif.type == NL80211_IFTYPE_AP ||
+ 		    tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
+@@ -667,7 +667,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 		 "scanning and associated. Target station: "
+ 		 "%pM on %d GHz band\n",
+ 		 tx->sdata->name, hdr->addr1,
+-		 tx->channel->band ? 5 : 2))
++		 info->band ? 5 : 2))
+ 		return TX_DROP;
+ 
+ 	/*
+@@ -1131,7 +1131,6 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	tx->skb = skb;
+ 	tx->local = local;
+ 	tx->sdata = sdata;
+-	tx->channel = local->hw.conf.channel;
+ 	__skb_queue_head_init(&tx->skbs);
+ 
+ 	/*
+@@ -1399,8 +1398,7 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 	}
+ 
+-	tx.channel = local->hw.conf.channel;
+-	info->band = tx.channel->band;
++	info->band = local->hw.conf.channel->band;
+ 
+ 	/* set up hw_queue value early */
+ 	if (!(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) ||
+@@ -2709,8 +2707,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+ 	tx.flags |= IEEE80211_TX_PS_BUFFERED;
+-	tx.channel = local->hw.conf.channel;
+-	info->band = tx.channel->band;
++	info->band = local->oper_channel->band;
+ 
+ 	if (invoke_tx_handlers(&tx))
+ 		skb = NULL;
+-- 
+1.7.10.4
 
