@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47193 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932580Ab2GLOYf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jul 2012 10:24:35 -0400
-Message-ID: <1342103072.4531.26.camel@jlt3.sipsolutions.net> (sfid-20120712_162438_925878_E22D0741)
-Subject: Re: [RFC] nl80211: Avoid checking for empty WoWLAN triggers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 12 Jul 2012 16:24:32 +0200
-In-Reply-To: <4FFD1014.2000109@qca.qualcomm.com>
-References: <1341914875-14647-1-git-send-email-mohammed@qca.qualcomm.com>
-	  <1341918365.4475.9.camel@jlt3.sipsolutions.net>
-	  <4FFC0F22.6040906@qca.qualcomm.com>
-	 <1341919201.4475.11.camel@jlt3.sipsolutions.net>
-	 <4FFD1014.2000109@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:49458 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752145Ab2G0PPM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2012 11:15:12 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SumFw-0004mz-23
+	for linux-wireless@vger.kernel.org; Fri, 27 Jul 2012 17:15:08 +0200
+Received: from 83.68.239.193 ([83.68.239.193])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 17:15:08 +0200
+Received: from netuse by 83.68.239.193 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 17:15:08 +0200
+To: linux-wireless@vger.kernel.org
+From: Marco <netuse@lavabit.com>
+Subject: RTL8187 in master mode with hostapd
+Date: Fri, 27 Jul 2012 17:11:37 +0200
+Message-ID: <20120727171137.4a1d1ce7@homerow> (sfid-20120727_171516_140532_CE69FA1A)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-11 at 11:03 +0530, Mohammed Shafi Shajakhan wrote:
+Hi,
 
-> > I don't know if there's any advantage. It could be useful for example to
-> > get a connection up quicker after resume. I just didn't want to preclude
-> > that use case.
-> >
-> 
-> sorry i just missed this thing. rdev->wowlan is made 'false' for empty 
+I own an Alfa AWUS036H network adapter using the rtl8187 driver on a
+Debian box running kernel 3.5.0. I want to use it with hostapd, which
+apparently requires master mode to be enabled in the driver.
 
-I think you mean "NULL"?
+The page http://linuxwireless.org/en/users/Drivers/rtl8187 states:
 
-Maybe something like this would make sense then? 
+  not working yet: AP/Master mode
 
-http://p.sipsolutions.net/2aac79bcfe3a9b8b.txt
+What means *yet*? Is it planned to add master mode support in the
+near future? Do you have other suggestions what I could do to get
+the driver to work together with hostap?
 
-johannes
+Disclaimer: I am not an expert in those things. I set up the access
+point some years ago, then the network adapter started to function
+unreliably. I then replaced it with a different one (the
+abovementioned 036H) and didn't manage to get my setup running
+again.
+
+
+Best regards
+
+Marco
+
 
