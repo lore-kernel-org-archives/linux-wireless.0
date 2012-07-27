@@ -1,45 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45647 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754683Ab2GEIZC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48773 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751974Ab2G0QAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 04:25:02 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/9] iwlwifi: bump trace message limit
-Date: Thu,  5 Jul 2012 10:24:48 +0200
-Message-Id: <1341476695-6889-3-git-send-email-johannes@sipsolutions.net> (sfid-20120705_102519_823912_B0B532C4)
-In-Reply-To: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
-References: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 27 Jul 2012 12:00:16 -0400
+Date: Fri, 27 Jul 2012 11:58:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2012-07-27
+Message-ID: <20120727155806.GB6110@tuxdriver.com> (sfid-20120727_180038_994821_589562E3)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6TrnltStXW4iwmi0"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-There's one message that goes just over the
-limit of 100 characters, so bump the limit to
-110 to get rid of the warning from that.
+--6TrnltStXW4iwmi0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+commit 28ea499ac5b90f6266a24b826c6d469fc503758c
+
+Dave,
+
+These fixes are intended for the 3.6 stream.
+
+Hauke Mehrtens provides a pair of bcma fixes, one to fix a build
+regression on mips and another to correct a pair of missing iounmap
+calls.
+
+Thomas Huehn offers a mac80211_hwsim fix to avoid a possible
+use-after-free bug.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/iwlwifi/iwl-devtrace.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-index 6536479..ad2dba8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-@@ -176,7 +176,7 @@ TRACE_EVENT(iwlwifi_dev_ucode_wrap_event,
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM iwlwifi_msg
- 
--#define MAX_MSG_LEN	100
-+#define MAX_MSG_LEN	110
- 
- DECLARE_EVENT_CLASS(iwlwifi_msg_event,
- 	TP_PROTO(struct va_format *vaf),
--- 
-1.7.10
+The following changes since commit 6ee127b7dd63afe4d6d0a58293786bf4bf336850:
 
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc (2012-07-=
+26 18:14:11 -0700)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
+avem
+
+for you to fetch changes up to 28ea499ac5b90f6266a24b826c6d469fc503758c:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless into for-davem (2012-07-27 11:15:03 -0400)
+
+----------------------------------------------------------------
+
+Hauke Mehrtens (2):
+      bcma: fix regression in interrupt assignment on mips
+      bcma: add missing iounmap on error path
+
+John W. Linville (1):
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
+nto for-davem
+
+Thomas Huehn (1):
+      mac80211_hwsim: fix possible race condition in usage of info->control=
+=2Esta & control.vif
+
+ drivers/bcma/driver_mips.c            |    6 +++---
+ drivers/bcma/scan.c                   |   15 ++++++++++-----
+ drivers/net/wireless/mac80211_hwsim.c |    5 -----
+ 3 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index b013b04..cc65b45 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -131,7 +131,7 @@ static void bcma_core_mips_set_irq(struct bcma_device *=
+dev, unsigned int irq)
+ 			/* backplane irq line is in use, find out who uses
+ 			 * it and set user to irq 0
+ 			 */
+-			list_for_each_entry_reverse(core, &bus->cores, list) {
++			list_for_each_entry(core, &bus->cores, list) {
+ 				if ((1 << bcma_core_mips_irqflag(core)) =3D=3D
+ 				    oldirqflag) {
+ 					bcma_core_mips_set_irq(core, 0);
+@@ -161,7 +161,7 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bu=
+s)
+ {
+ 	struct bcma_device *core;
+=20
+-	list_for_each_entry_reverse(core, &bus->cores, list) {
++	list_for_each_entry(core, &bus->cores, list) {
+ 		bcma_core_mips_print_irq(core, bcma_core_mips_irq(core));
+ 	}
+ }
+@@ -224,7 +224,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
+ 		mcore->assigned_irqs =3D 1;
+=20
+ 	/* Assign IRQs to all cores on the bus */
+-	list_for_each_entry_reverse(core, &bus->cores, list) {
++	list_for_each_entry(core, &bus->cores, list) {
+ 		int mips_irq;
+ 		if (core->irq)
+ 			continue;
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 5672b13..8d0b571 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -462,8 +462,10 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 	while (eromptr < eromend) {
+ 		struct bcma_device *other_core;
+ 		struct bcma_device *core =3D kzalloc(sizeof(*core), GFP_KERNEL);
+-		if (!core)
+-			return -ENOMEM;
++		if (!core) {
++			err =3D -ENOMEM;
++			goto out;
++		}
+ 		INIT_LIST_HEAD(&core->list);
+ 		core->bus =3D bus;
+=20
+@@ -478,7 +480,7 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 			} else if (err =3D=3D -ESPIPE) {
+ 				break;
+ 			}
+-			return err;
++			goto out;
+ 		}
+=20
+ 		core->core_index =3D core_num++;
+@@ -494,10 +496,12 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 		list_add_tail(&core->list, &bus->cores);
+ 	}
+=20
++	err =3D 0;
++out:
+ 	if (bus->hosttype =3D=3D BCMA_HOSTTYPE_SOC)
+ 		iounmap(eromptr);
+=20
+-	return 0;
++	return err;
+ }
+=20
+ int __init bcma_bus_scan_early(struct bcma_bus *bus,
+@@ -537,7 +541,7 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
+ 		else if (err =3D=3D -ESPIPE)
+ 			break;
+ 		else if (err < 0)
+-			return err;
++			goto out;
+=20
+ 		core->core_index =3D core_num++;
+ 		bus->nr_cores++;
+@@ -551,6 +555,7 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
+ 		break;
+ 	}
+=20
++out:
+ 	if (bus->hosttype =3D=3D BCMA_HOSTTYPE_SOC)
+ 		iounmap(eromptr);
+=20
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/m=
+ac80211_hwsim.c
+index 643f968..0083839 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -739,11 +739,6 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,=
+ struct sk_buff *skb)
+=20
+ 	txi =3D IEEE80211_SKB_CB(skb);
+=20
+-	if (txi->control.vif)
+-		hwsim_check_magic(txi->control.vif);
+-	if (txi->control.sta)
+-		hwsim_check_sta_magic(txi->control.sta);
+-
+ 	ieee80211_tx_info_clear_status(txi);
+=20
+ 	/* frame was transmitted at most favorable rate at first attempt */
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--6TrnltStXW4iwmi0
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQErqOAAoJEJctW/TcYTgGZpYP/Aui8yUW4Gq9VVTqxTFFW/2i
+5ck/cDj5SZJwIyj77zfDihnUZn/maZnrZuQ0ZmGfg7joObDVBuXsjrtPsI0B4aBT
+QXLrDqocX+Vc0qP5lPeQgmx9cEd2DGbnX3YxZKJ5+wLYgkAnC7iWEipSMr8fuh99
+TOFTJCnmPvG54YyL2W/W0JN/ndn255/XZVK+3TM1QxgqBxeI22eZukelRB+kzpPr
+9/WRQatJdea4RhZljQe/98nhM8N+pUukuEXzOQdzA8O+tZJem64qx6ytXnuJsqK1
+YYLPoKFyD34KoAKw3mkWMjeA1vqM9SypH1eHDmtqiYWx6R0mxJf6Ebrr/2WFjOlh
+ObkTG5nWsnj+c+/sfH4Fu+WQGylJiUwvK2EYqAI9zcTzD9m2qfECx5A0WBZHxNZr
+oJ2Ekjd73zH2MzTBktENErh7J6og78meECzomy7kHvMr2pFXIIcMuVc6ve4SqHUQ
+Z9khx1q1sHpukqvjn4eEsRHo80GNVK6ekfxctyaX6PfOzkD+7NvbMuOm4hB6lBf5
+mVgqPO8tqBZ+xGrAkDoOLiJ6FG3kBBkfhUwZ+hhltTqfkxGi69YaK2xcvHW2Igzu
+CWGUr3qzzafJgu01U7Txyl+mieOMCallXkh80ST87k/EZuc+ZWnPGG4hHdHUXO82
+SZd6sP5ewZXY7dnc9L4w
+=Ofhx
+-----END PGP SIGNATURE-----
+
+--6TrnltStXW4iwmi0--
