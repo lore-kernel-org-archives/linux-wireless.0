@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:37363 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751490Ab2GRPIX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53148 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639Ab2G0VDK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 11:08:23 -0400
-Received: by lbbgm6 with SMTP id gm6so2558751lbb.5
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jul 2012 08:08:21 -0700 (PDT)
-Message-ID: <1342624096.5363.42.camel@cumari.coelho.fi> (sfid-20120718_170827_362377_BDD220A8)
-Subject: Re: [PATCH 00/14] wlcore/wl12xx/wl18xx: more pathes for 3.6
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com
-Date: Wed, 18 Jul 2012 18:08:16 +0300
-In-Reply-To: <1342613613-917-1-git-send-email-coelho@ti.com>
-References: <1342613613-917-1-git-send-email-coelho@ti.com>
+	Fri, 27 Jul 2012 17:03:10 -0400
+Message-ID: <1343422984.5397.0.camel@jlt3.sipsolutions.net> (sfid-20120727_230313_935467_B27349C2)
+Subject: Re: [RFC 03/20] mac80211: add drv_* wrappers for channel contexts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 27 Jul 2012 23:03:04 +0200
+In-Reply-To: <1343412489.1982.10.camel@joe2Laptop>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	 <1343387816-9414-4-git-send-email-johannes@sipsolutions.net>
+	 <1343412489.1982.10.camel@joe2Laptop>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-18 at 15:13 +0300, Luciano Coelho wrote:
-> Hi,
-> 
-> This is one more batch of patches intended for 3.6.  It contains a
-> some patches by Yair related to interfaces with userspace (PLT,
-> calibrator and wlconf) and a few bugfixes by Eyal, Eliad and Arik.
-> Also a couple of my own patches to fix some out-of-sync issues with
-> the firmware.
-> 
-> Please review.
+On Fri, 2012-07-27 at 11:08 -0700, Joe Perches wrote:
 
-Applied and pushed this series.
+> > +static inline void drv_add_chanctx(struct ieee80211_local *local,
+> > +				   struct ieee80211_chanctx *ctx)
+> > +{
+> > +	if (local->ops->add_chanctx)
+> > +		local->ops->add_chanctx(&local->hw, &ctx->conf);
+> 
+> Perhaps these repeated function names should be some macro
+> to avoid typos or copy/paste errors.
+> 
+> Maybe something like:
+> 
+> #define local_op(func, ...)				\
+> do {							\
+> 	if (local->ops->func)				\
+> 		local->ops->func(##__VA_ARGS__);	\
+> } while (0)
+> 
+> So the uses become:
+> 
+> 	local_op(add_chanctx, &local->hw, &ctx->conf);
 
---
-Luca.
+Interesting idea, but no, it needs tracing -- look at the next patch in
+the series. (and yes, you could play with macros to add tracing, but
+that would certainly just obfuscate the code)
+
+johannes
 
