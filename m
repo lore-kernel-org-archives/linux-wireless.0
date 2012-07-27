@@ -1,92 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:60320 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072Ab2GPGSy (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:58279 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752707Ab2G0QA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jul 2012 02:18:54 -0400
-Subject: Re: 3.4.4/amd64 full interrupt hangs under big nfs copies
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Marc MERLIN <marc@merlins.org>
-Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20120715215935.GF24420@merlins.org>
-References: <20120409.143710.879746943062854492.davem@davemloft.net>
-	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org>  <20120715215935.GF24420@merlins.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Jul 2012 08:18:49 +0200
-Message-ID: <1342419529.3265.12217.camel@edumazet-glaptop> (sfid-20120716_081900_165779_B765A680)
-Mime-Version: 1.0
+	Fri, 27 Jul 2012 12:00:28 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org
+Subject: [PATCH 2/2] mac80211: Add transmit power control support (TPC) for ACK packets
+Date: Fri, 27 Jul 2012 18:00:09 +0200
+Message-Id: <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120727_180038_027363_C1B333FB)
+In-Reply-To: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-07-15 at 14:59 -0700, Marc MERLIN wrote:
-> On Tue, Apr 10, 2012 at 10:27:33PM -0700, Marc MERLIN wrote:
-> > On Tue, Apr 10, 2012 at 08:11:03AM +0200, Eric Dumazet wrote:
-> > > Please try following patch, as it solved the problem for me (no more
-> > > order-1 allocations in tx path)
-> > 
-> > I applied our patch to 3.3.1 and cannot reproduce the problem anymore.
-> > 
-> > I'll leave a big wireless copy running overnight just in case, but I think
-> > you fixed it.
-> 
-> Mmmh, so I'm running 3.4.4 and I had another full machine hang while copying
-> big files (gigabytes) over wireless via NFS.
-> The laptop self recovered after 5mn or so (mouse cursor would not even
-> move) and I was able to kill -9 the process (midnight commander).
-> mc did not actually stop for another 4mn or so (i.e. it took that long for
-> the process to come out of kernel hung state), but the machine was usable
-> during that time.
-> Note that copying the same data with scp works fine.
-> NFS mount looks like this:
-> gargamel:/mnt/dshelf2/ /net/gargamel/mnt/dshelf2 nfs4 rw,nosuid,nodev,relatime,vers=4.0,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.205.7,local_lock=none,addr=192.168.205.3 0 0
-> 
-> I didn't have anything like last time in the kernel logs, and more
-> annoyingly, ps -elf does not show anything for any process in WCHAN,
-> making pointing the finger a bit harder (procps-ng 3.3.3 does not show
-> anything other than '-' in WCHAN for any process with 3.4.4).
-> 
-> My understanding is that user space calling drivers that shut off all
-> interrupts for extended periods of time (as least I think so since my mouse
-> cursor would not move), is still a kernel bug.
-> 
-> For what it's worth, copying 1GB of data in lots of small files does not
-> cause problems, it seems that it's big files that cause a problem since they
-> likely fill a buffer somewhere while interrupts are disabled.
-> 
-> Do you have an idea of how I can find out where my mc process is stuck in
-> the kernel?
-> Should I reproduce with specific sysrq output?
+This patch adds support to annotate and change the power-level of ACK
+packets. To map hardware specific ack power capabilities to mac80211
+one new hw flag is defined:
 
-Just to clarify, you get this freeze when transferring a big file from a
-remote NFS server to your PC, (aka a download), not the reverse way ?
+@IEEE80211_HW_SUPPORTS_TPC_ACK_GLOBAL:
+	Power level of ack packets is adjustable and processed in a
+	global manner, per hw rather than per ack packet or link.
 
-If so, you might hit OOM condition because iwlwifi uses big/fat RX
-buffers, I never understood why...
+The struct hw_config is extended by ack_power a global power level in
+dBm to be used for all acknowledgement_packets. A new config change
+event IEEE80211_CONF_CHANGE_ACK_POWER is defined to reacte with driver
+specific function calls to ack_power changes from the mac80211.
 
-(amsdu_size_8K = 1)
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h | 11 +++++++++++
+ net/mac80211/rate.c    |  4 ++++
+ 2 files changed, 15 insertions(+)
 
-Storing an MTU=1500 frams in 8KB of memory sounds really bad.
-
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index cc41cfa..434b924 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1006,7 +1006,7 @@ void iwl_drv_stop(struct iwl_drv *drv)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 27ef037..bb0ac22a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -772,6 +772,7 @@ enum ieee80211_conf_flags {
+  * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
+  * @IEEE80211_CONF_CHANGE_IDLE: Idle flag changed
+  * @IEEE80211_CONF_CHANGE_SMPS: Spatial multiplexing powersave mode changed
++ * @IEEE80211_CONF_CHANGE_ACK_POWER: Global ACK power level (in dBm) changed
+  */
+ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_SMPS		= BIT(1),
+@@ -782,6 +783,7 @@ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+ 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+ 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
++	IEEE80211_CONF_CHANGE_ACK_POWER		= BIT(9),
+ };
  
- /* shared module parameters */
- struct iwl_mod_params iwlwifi_mod_params = {
--	.amsdu_size_8K = 1,
-+	.amsdu_size_8K = 0,
- 	.restart_fw = 1,
- 	.plcp_check = true,
- 	.bt_coex_active = true,
-
+ /**
+@@ -838,6 +840,8 @@ enum ieee80211_smps_mode {
+  * @smps_mode: spatial multiplexing powersave mode; note that
+  *	%IEEE80211_SMPS_STATIC is used when the device is not
+  *	configured for an HT channel
++ * @ack_power: global power level in dBm to use for all
++ * 	mac80211 acknowledgement_packets
+  */
+ struct ieee80211_conf {
+ 	u32 flags;
+@@ -852,6 +856,8 @@ struct ieee80211_conf {
+ 	struct ieee80211_channel *channel;
+ 	enum nl80211_channel_type channel_type;
+ 	enum ieee80211_smps_mode smps_mode;
++
++	u8 ack_power;
+ };
+ 
+ /**
+@@ -1227,6 +1233,10 @@ struct ieee80211_tx_control {
+  * @IEEE80211_HW_SUPPORTS_TPC_DATA_MRR: One power levels per multi-rate-retry
+  *	stage can be processed. Each retry stage of a data packet is send out
+  *	using its specified power level.
++ *
++ * @IEEE80211_HW_SUPPORTS_TPC_ACK_GLOBAL: Power level of ack packets is
++ *	adjustable and processed in a global setting, per hardware rather
++ *	than per ack packet and link.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1256,6 +1266,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SCAN_WHILE_IDLE			= 1<<24,
+ 	IEEE80211_HW_SUPPORTS_TPC_DATA_PACKET		= 1<<25,
+ 	IEEE80211_HW_SUPPORTS_TPC_DATA_MRR		= 1<<26,
++	IEEE80211_HW_SUPPORTS_TPC_ACK_GLOBAL            = 1<<27,
+ };
+ 
+ /**
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 98bde93..aab4333 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -260,6 +260,7 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
+ 	struct ieee80211_supported_band *sband = txrc->sband;
+ 	int mcast_rate;
++	int i;
+ 
+ 	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
+ 		if ((sband->band != IEEE80211_BAND_2GHZ) ||
+@@ -283,6 +284,9 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 					      txrc->bss_conf->basic_rates,
+ 					      sband);
+ 		}
++		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++			info->control.rates[i].tpc = txrc->hw->conf.power_level;
++		}
+ 		return true;
+ 	}
+ 	return false;
+-- 
+1.7.11.1
 
