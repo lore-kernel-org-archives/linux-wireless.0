@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65097 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754469Ab2GIWgq convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51364 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968Ab2G0LIE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 18:36:46 -0400
-Received: by pbbrp8 with SMTP id rp8so19908121pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 15:36:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1341841623-21800-1-git-send-email-ozancag@gmail.com>
-References: <1341841623-21800-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 9 Jul 2012 15:36:25 -0700
-Message-ID: <CAB=NE6UpauAVC6L0SGpf_PhEy6o00jcMaHWDPTv6y3nE0U1YTg@mail.gmail.com> (sfid-20120710_003649_524258_1D239670)
-Subject: Re: [PATCH] compat: Directly call perl instead of skip-colors
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 27 Jul 2012 07:08:04 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SuiOp-0005z9-5r
+	for linux-wireless@vger.kernel.org; Fri, 27 Jul 2012 13:08:03 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/6] mac80211: use correct operating channel
+Date: Fri, 27 Jul 2012 13:07:55 +0200
+Message-Id: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130808_918452_CA9F2092)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 9, 2012 at 6:47 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> Since we can now install ckmake with make, drop dependency
-> on scripts/skip-colors as it is a simple oneliner. Directly
-> call perl instead of using it.
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+A number of places in mac80211 are erroneously using the
+*current* channel (hw.conf.channel) rather than the current
+*operating* channel (oper_channel). This is wrong as the
+current channel can change during scan/roc and therefore
+doesn't point to the correct channel all the time so that
+due to races the wrong channel might be used.
 
-Applied and pushed, thanks!
+Address this and use the correct channel in all places.
+Some keep using hw.conf.channel, of course, since they
+really do need the current channel.
 
- Luis
+johannes
+
