@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54658 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753968Ab2GEHaZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51453 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752034Ab2G0LRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 03:30:25 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20469.16960.475409.87512@gargle.gargle.HOWL> (sfid-20120705_093032_144575_43334242)
-Date: Thu, 5 Jul 2012 12:59:04 +0530
-To: Luis Rodriguez <rodrigue@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat-wireless: Make target/compat branch check optional
+	Fri, 27 Jul 2012 07:17:51 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 15/20] mac80211: convert ops checks to WARN_ON
+Date: Fri, 27 Jul 2012 13:16:51 +0200
+Message-Id: <1343387816-9414-16-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131822_086563_DB7F5A73)
+In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The safety check to ensure that the target kernel and the
-local compat-wireless branch are the same can be adjusted a
-bit to allow users to generate stable releases from a temporary
-branch.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+There's no need to BUG_ON when a driver registers
+invalid operations, warn and return an error.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- scripts/gen-stable-release.sh | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ net/mac80211/main.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/scripts/gen-stable-release.sh b/scripts/gen-stable-release.sh
-index 6bfba03..5a7dc5f 100755
---- a/scripts/gen-stable-release.sh
-+++ b/scripts/gen-stable-release.sh
-@@ -145,7 +145,12 @@ if [[ $COMPAT_WIRELESS_BRANCH != $TARGET_KERNEL_RELEASE ]]; then
- 	echo -e "You are on the compat-wireless ${GREEN}${COMPAT_WIRELESS_BRANCH}${NORMAL} but are "
- 	echo -en "on the ${RED}${TARGET_KERNEL_RELEASE}${NORMAL} branch... "
- 	echo -e "try changing to that first."
--	exit
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index f74e52a..820f717 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -545,6 +545,11 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	int priv_size, i;
+ 	struct wiphy *wiphy;
+ 
++	if (WARN_ON(!ops->tx || !ops->start || !ops->stop || !ops->config ||
++		    !ops->add_interface || !ops->remove_interface ||
++		    !ops->configure_filter))
++		return NULL;
 +
-+	read -p "Do you still want to continue (y/N)? "
-+	if [[ "${REPLY}" != "y" ]]; then
-+	    echo -e "Bailing out !"
-+	    exit
-+	fi
- fi
+ 	if (WARN_ON(ops->sta_state && (ops->sta_add || ops->sta_remove)))
+ 		return NULL;
  
+@@ -597,13 +602,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
  
+ 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
+ 
+-	BUG_ON(!ops->tx);
+-	BUG_ON(!ops->start);
+-	BUG_ON(!ops->stop);
+-	BUG_ON(!ops->config);
+-	BUG_ON(!ops->add_interface);
+-	BUG_ON(!ops->remove_interface);
+-	BUG_ON(!ops->configure_filter);
+ 	local->ops = ops;
+ 
+ 	/* set up some defaults */
 -- 
-1.7.11.1
+1.7.10.4
 
