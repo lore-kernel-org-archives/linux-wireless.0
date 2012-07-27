@@ -1,29 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:49252 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258Ab2GSKD3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51056 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617Ab2G0JXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 06:03:29 -0400
-Date: Thu, 19 Jul 2012 12:03:26 +0200 (CEST)
-From: npl@npl.de
-To: Maschinenraum <feint@lists.subsignal.org>,
-	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: feint@lists.subsignal.org, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org,
-	Bastian Bittorf <bittorf@bluebottle.com>
-Message-ID: <33140980.10.1342692206075.JavaMail.root@tf> (sfid-20120719_120332_930652_9EAFD8F6)
-In-Reply-To: <982FBF04-5969-436D-9D3A-A6388C077667@andi95.de>
-Subject: Re: [maschinenraum] WRT54g / b43 / mac802.11 BREAKTHROUGH
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 27 Jul 2012 05:23:33 -0400
+Message-ID: <1343381009.4449.1.camel@jlt3.sipsolutions.net> (sfid-20120727_112336_508359_0679EC5D)
+Subject: Re: [PATCH v2] mac80211: add PS flag to bss_conf
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 27 Jul 2012 11:23:29 +0200
+In-Reply-To: <1343380724-4104-1-git-send-email-eliad@wizery.com> (sfid-20120727_111846_681009_6D59F38C)
+References: <1343380724-4104-1-git-send-email-eliad@wizery.com>
+	 (sfid-20120727_111846_681009_6D59F38C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It's not a change between 2.4 and 5 GHz. 
-> Wifi stops working if the bitrate changes between 11b (1, 2, 5.5, 11) and 11g (6, 9, 12, 18, 24, 36, 48, 54) rates 
->
-> So if we tell the system to only use 11g rates, wifi doesn't stop.
+Looks good, but please undo this change:
 
-Dann laufen aber 11b Karten nicht mehr.
+> +bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata);
 
-Thomas
+> -static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
+> +bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
+
+since I don't see that you need it now.
+
+johannes
+
