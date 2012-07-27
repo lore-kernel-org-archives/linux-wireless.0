@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34206 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793Ab2GBPML (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 11:12:11 -0400
-Message-ID: <1341241929.19642.17.camel@jlt3.sipsolutions.net> (sfid-20120702_171216_610875_D1E03C0A)
-Subject: Re: [PATCH 60g v2 1/5] wireless: add 802.11ad (60gHz band)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <anamtsov@gmail.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 02 Jul 2012 17:12:09 +0200
-In-Reply-To: <CA+XVXfduVieZEVF4eav+K+YHv=B+VoTjZmquMtOrg6XPKVVkOA@mail.gmail.com> (sfid-20120702_162228_232132_CBDCF6A4)
-References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1341210756-11054-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <CA+XVXfduVieZEVF4eav+K+YHv=B+VoTjZmquMtOrg6XPKVVkOA@mail.gmail.com>
-	 (sfid-20120702_162228_232132_CBDCF6A4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from victor.provo.novell.com ([137.65.250.26]:32779 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108Ab2G0OWy (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Fri, 27 Jul 2012 10:22:54 -0400
+Received: by bkwj10 with SMTP id j10so1940521bkw.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 07:22:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120727101840.GA2436@redhat.com>
+References: <1343372634-19870-1-git-send-email-machen@suse.com>
+	<20120727101840.GA2436@redhat.com>
+Date: Fri, 27 Jul 2012 22:22:44 +0800
+Message-ID: <CALx5=V_GSs8xv0-OnEC-2h82E9LWVpRjd1UDyPE3+=etX0z29A@mail.gmail.com> (sfid-20120727_162302_354233_B0D9C424)
+Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
+From: Matt Chen <machen@suse.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	kevin.chou@mediatek.com, woody.hung@mediatek.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-02 at 17:22 +0300, Arik Nemtsov wrote:
+Hi Stanislaw,
 
-> enum ieee80211_band {
-> 	IEEE80211_BAND_2GHZ = NL80211_BAND_2GHZ,
-> 	IEEE80211_BAND_5GHZ = NL80211_BAND_5GHZ,
-> 
-> 	/* keep last */
-> 	IEEE80211_NUM_BANDS
-> };
-> 
-> If the 60Ghz band goes here as well, IEEE80211_NUM_BANDS will be
-> incremented. 
+2012/7/27 Stanislaw Gruszka <sgruszka@redhat.com>:
+> On Fri, Jul 27, 2012 at 03:03:54PM +0800, Chen, Chien-Chia wrote:
+>> This patch is going to fix the resuming failed from S3/S4
+>> for rt3290 chip.
+>>
+>> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+>> CC-by: Kevin Chou <kevin.chou@mediatek.com>
+>
+> Could you please post patches that compile? Also you did not set true
+Compile ? you mean the *.o files and *.ko ?
+> author of the patch. Additionally, since repost that patch with changes,
+> you should mark version of the patch and provide information about
+> changes, like for example here:
+Hmm....I added the Author: Woody Hung <Woody.Hung@mediatek.com> but
+don't know why it doesn't show here. :(
 
-Yes, this happened.
+> http://marc.info/?l=linux-wireless&m=134338186523059&w=2
+It makes sense to me. I will repost it and mark version of the patch.
+> Still patch does not include registers/values names, but if providing
+> such information is not possible, we will accept that.
+Thanks, Ralink doesn't intend to give me the registers/values names.
+> Thanks
+> Stanislaw
+>
+>
 
-> I'm guessing this can be problematic for a lot of drivers
-> that use this value more or less blindly (and pass indices to FW etc).
-> At least the wlcore driver will be impacted.
-> 
-> So this probably should be added, but maybe keep IEEE80211_NUM_BANDS
-> the same for legacy reasons?
 
-Can't do that, it's used for array sizing etc.
 
-It looks like your driver may crash as it accesses bands[x] for all
-possible values of x ... might want to fix that soon as I've applied
-these patches :)
-
-johannes
-
+-- 
+Thank you.
