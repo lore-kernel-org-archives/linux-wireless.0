@@ -1,163 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:59715 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233Ab2GKOYc (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:46600 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509Ab2G0JdX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jul 2012 10:24:32 -0400
-Received: by obbuo13 with SMTP id uo13so1735065obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2012 07:24:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1342016326.4464.4.camel@jlt3.sipsolutions.net>
-References: <CAD2nsn2Yya-Xi5k55WZVHg6PU5ahRnKqzOPHit8BRNzgSE1vuQ@mail.gmail.com>
-	<1342016326.4464.4.camel@jlt3.sipsolutions.net>
-Date: Wed, 11 Jul 2012 19:54:31 +0530
-Message-ID: <CAD2nsn2JrWd4qo_ELZbTmkU_EcL6YFL3x3rmssh_SrF88UXS_g@mail.gmail.com> (sfid-20120711_162436_289018_DD3CE857)
-Subject: Re: warning in iwlwifi on monitor mode in 3.5.0-rc6-wl
-From: Mohammed Shafi <shafi.wireless@gmail.com>
+	Fri, 27 Jul 2012 05:33:23 -0400
+Received: by wgbdr13 with SMTP id dr13so2637895wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 02:33:22 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] mac80211: add PS flag to bss_conf
+Date: Fri, 27 Jul 2012 12:33:22 +0300
+Message-Id: <1343381602-10079-1-git-send-email-eliad@wizery.com> (sfid-20120727_113327_549863_526C635C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 7:48 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This isn't really related to iwlwifi...
->
-> Looks like this might be due to Michal's changes, maybe the monitor
-> callback is coming too early?
+Currently, ps mode is indicated per device (rather than
+per interface), which doesn't make a lot of sense.
 
-ath9k got bailed out of drv_add_interface as this flag
-IEEE80211_HW_WANT_MONITOR_VIF
-was not supported
+Moreover, there are subtle bugs caused by the inability
+to indicate ps change along with other changes
+(e.g. when the AP deauth us, we'd like to indicate
+CHANGED_PS | CHANGED_ASSOC, as changing PS before
+notifying about disassociation will result in null-packets
+being sent (if IEEE80211_HW_SUPPORTS_DYNAMIC_PS) while
+the sta is already disconnected.)
 
+Keep the current per-device notifications, and add
+parallel per-vif notifications.
 
->
-> johannes
->
->
-> On Wed, 2012-07-11 at 19:35 +0530, Mohammed Shafi wrote:
->> Hi all,
->>
->> i got this warning in bringing up monitor mode with iwlwifi  in 3.5.0-rc6-wl
->>
->> [ 4788.914848] iwlwifi 0000:03:00.0: Try to add interface when device not ready
->> [ 4788.914851] ------------[ cut here ]------------
->> [ 4788.914870] WARNING: at
->> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/iface.c:357
->> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]()
->> [ 4788.914872] Hardware name: 64756D6
->> [ 4788.914874] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
->> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
->> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
->> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
->> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
->> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
->> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
->> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
->> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
->> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
->> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
->> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
->> [ 4788.914967] Pid: 7486, comm: ifconfig Tainted: G           O 3.5.0-rc6-wl #25
->> [ 4788.914969] Call Trace:
->> [ 4788.914976]  [<c0136322>] warn_slowpath_common+0x72/0xa0
->> [ 4788.914991]  [<f98164b2>] ?
->> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
->> [ 4788.915005]  [<f98164b2>] ?
->> ieee80211_add_virtual_monitor+0x192/0x2b0 [mac80211]
->> [ 4788.915008]  [<c0136372>] warn_slowpath_null+0x22/0x30
->> [ 4788.915022]  [<f98164b2>] ieee80211_add_virtual_monitor+0x192/0x2b0
->> [mac80211]
->> [ 4788.915027]  [<c06bb3c6>] ? printk+0x4d/0x4f
->> [ 4788.915041]  [<f98185ea>] ieee80211_set_monitor_enabled+0x1a/0x50 [mac80211]
->> [ 4788.915050]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
->> [ 4788.915058]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
->> [cfg80211]
->> [ 4788.915062]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
->> [ 4788.915066]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
->> [ 4788.915070]  [<c06c2982>] notifier_call_chain+0x42/0xf0
->> [ 4788.915075]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
->> [ 4788.915080]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
->> [ 4788.915085]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
->> [ 4788.915088]  [<c05b209c>] __dev_open+0x5c/0xf0
->> [ 4788.915091]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
->> [ 4788.915095]  [<c05b0e29>] __dev_change_flags+0x109/0x170
->> [ 4788.915098]  [<c05b2003>] dev_change_flags+0x23/0x60
->> [ 4788.915102]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
->> [ 4788.915106]  [<c061f725>] inet_ioctl+0x95/0xb0
->> [ 4788.915109]  [<c059d2b0>] sock_ioctl+0x70/0x270
->> [ 4788.915113]  [<c059d240>] ? sock_fasync+0xc0/0xc0
->> [ 4788.915117]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
->> [ 4788.915121]  [<c016197b>] ? up_read+0x1b/0x30
->> [ 4788.915124]  [<c06c2714>] ? do_page_fault+0x244/0x470
->> [ 4788.915128]  [<c0255c75>] ? fget_light+0x355/0x410
->> [ 4788.915131]  [<c0163314>] ? __put_cred+0x34/0x50
->> [ 4788.915135]  [<c0265c37>] sys_ioctl+0x77/0x80
->> [ 4788.915139]  [<c06c65e3>] sysenter_do_call+0x12/0x38
->> [ 4788.915141] ---[ end trace 2b26c2a43fea3613 ]---
->> [ 4788.915146] ------------[ cut here ]------------
->> [ 4788.915160] WARNING: at
->> /home/shafi/new-wireless-testing/wireless-testing/net/mac80211/cfg.c:2993
->> ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]()
->> [ 4788.915161] Hardware name: 64756D6
->> [ 4788.915163] Modules linked in: iwldvm iwlwifi ath9k(O) mac80211(O)
->> ath9k_common(O) ath9k_hw(O) ath(O) cfg80211(O) binfmt_misc rfcomm
->> bridge stp llc bnep snd_hda_codec_conexant arc4 snd_hda_intel
->> snd_hda_codec i915 fbcon tileblit font bitblit snd_hwdep softcursor
->> snd_pcm_oss snd_mixer_oss snd_pcm drm_kms_helper snd_seq_dummy drm
->> coretemp thinkpad_acpi snd_seq_oss kvm pcmcia snd_seq_midi joydev
->> snd_rawmidi ath3k snd_seq_midi_event uvcvideo btusb snd_seq intel_agp
->> i2c_algo_bit videobuf2_core intel_gtt hid_generic bluetooth snd_timer
->> yenta_socket videodev pcmcia_rsrc psmouse snd_seq_device agpgart
->> usbhid pcmcia_core hid videobuf2_vmalloc videobuf2_memops lpc_ich snd
->> microcode tpm_tis snd_page_alloc serio_raw soundcore tpm lp video
->> nvram parport tpm_bios ahci libahci e1000e [last unloaded: cfg80211]
->> [ 4788.915231] Pid: 7486, comm: ifconfig Tainted: G        W  O 3.5.0-rc6-wl #25
->> [ 4788.915233] Call Trace:
->> [ 4788.915237]  [<c0136322>] warn_slowpath_common+0x72/0xa0
->> [ 4788.915251]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
->> [mac80211]
->> [ 4788.915265]  [<f981861c>] ? ieee80211_set_monitor_enabled+0x4c/0x50
->> [mac80211]
->> [ 4788.915268]  [<c0136372>] warn_slowpath_null+0x22/0x30
->> [ 4788.915282]  [<f981861c>] ieee80211_set_monitor_enabled+0x4c/0x50 [mac80211]
->> [ 4788.915289]  [<f8fa5688>] cfg80211_update_iface_num+0x108/0x270 [cfg80211]
->> [ 4788.915296]  [<f8fa5dee>] cfg80211_netdev_notifier_call+0x5fe/0x640
->> [cfg80211]
->> [ 4788.915299]  [<c0690142>] ? packet_notifier+0x1c2/0x2b0
->> [ 4788.915303]  [<c0690156>] ? packet_notifier+0x1d6/0x2b0
->> [ 4788.915307]  [<c06c2982>] notifier_call_chain+0x42/0xf0
->> [ 4788.915311]  [<c0162d4f>] raw_notifier_call_chain+0x1f/0x30
->> [ 4788.915314]  [<c05b156c>] call_netdevice_notifiers+0x2c/0x60
->> [ 4788.915317]  [<c019738b>] ? trace_hardirqs_on+0xb/0x10
->> [ 4788.915321]  [<c05b209c>] __dev_open+0x5c/0xf0
->> [ 4788.915324]  [<c06bee35>] ? _raw_spin_unlock_bh+0x35/0x40
->> [ 4788.915327]  [<c05b0e29>] __dev_change_flags+0x109/0x170
->> [ 4788.915331]  [<c05b2003>] dev_change_flags+0x23/0x60
->> [ 4788.915334]  [<c061cf10>] devinet_ioctl+0x6a0/0x770
->> [ 4788.915338]  [<c061f725>] inet_ioctl+0x95/0xb0
->> [ 4788.915341]  [<c059d2b0>] sock_ioctl+0x70/0x270
->> [ 4788.915344]  [<c059d240>] ? sock_fasync+0xc0/0xc0
->> [ 4788.915347]  [<c02656a6>] do_vfs_ioctl+0x86/0x5a0
->> [ 4788.915350]  [<c016197b>] ? up_read+0x1b/0x30
->> [ 4788.915353]  [<c06c2714>] ? do_page_fault+0x244/0x470
->> [ 4788.915357]  [<c0255c75>] ? fget_light+0x355/0x410
->> [ 4788.915360]  [<c0163314>] ? __put_cred+0x34/0x50
->> [ 4788.915363]  [<c0265c37>] sys_ioctl+0x77/0x80
->> [ 4788.915367]  [<c06c65e3>] sysenter_do_call+0x12/0x38
->> [ 4788.915368] ---[ end trace 2b26c2a43fea3614 ]---
->> [ 4788.915371]
->>
->>
->
->
+In order to keep it simple, the per-device ps and
+the per-vif ps are orthogonal - the per-vif ps
+configuration is determined only by the user
+configuration (enable/disable) and the connection
+state, and is not affected by other vifs state and
+(temporary) dynamic_ps/offchannel operations
+(unlike per-device ps).
 
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: refactor and always check for actual ps change (thanks Johannes)
+v3: remove redundant changes (thanks Johannes)
 
+ include/net/mac80211.h     |    5 +++++
+ net/mac80211/cfg.c         |    6 ++++--
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   15 +++++++++++++++
+ net/mac80211/util.c        |    3 ++-
+ 5 files changed, 27 insertions(+), 3 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3a700fd..1fcb109 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -171,6 +171,7 @@ struct ieee80211_low_level_stats {
+  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
+  * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
+  * @BSS_CHANGED_AP_PROBE_RESP: Probe Response changed for this BSS (AP mode)
++ * @BSS_CHANGED_PS: PS changed for this BSS (STA mode)
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -190,6 +191,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_IDLE		= 1<<14,
+ 	BSS_CHANGED_SSID		= 1<<15,
+ 	BSS_CHANGED_AP_PROBE_RESP	= 1<<16,
++	BSS_CHANGED_PS			= 1<<17,
+ 
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+@@ -266,6 +268,8 @@ enum ieee80211_rssi_event {
+  * @idle: This interface is idle. There's also a global idle flag in the
+  *	hardware config which may be more appropriate depending on what
+  *	your driver/device needs to do.
++ * @ps: power-save mode (STA only). This flag is NOT affected by
++ *	offchannel/dynamic_ps operations.
+  * @ssid: The SSID of the current vif. Only valid in AP-mode.
+  * @ssid_len: Length of SSID given in @ssid.
+  * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
+@@ -296,6 +300,7 @@ struct ieee80211_bss_conf {
+ 	bool arp_filter_enabled;
+ 	bool qos;
+ 	bool idle;
++	bool ps;
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	size_t ssid_len;
+ 	bool hidden_ssid;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e81b4a5..72c9681 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1283,9 +1283,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	mutex_unlock(&local->sta_mtx);
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
++	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
+ 		ieee80211_recalc_ps(local, -1);
+-
++		ieee80211_recalc_ps_vif(sdata);
++	}
+ 	return 0;
+ }
+ 
+@@ -2084,6 +2085,7 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 
+ 	ieee80211_recalc_ps(local, -1);
++	ieee80211_recalc_ps_vif(sdata);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d08c547..856d153 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1207,6 +1207,7 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *sdata);
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
++void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata);
+ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
+ int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index bf3da5a..e9c3f86 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1007,6 +1007,16 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 	ieee80211_change_ps(local);
+ }
+ 
++void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata)
++{
++	bool ps_allowed = ieee80211_powersave_allowed(sdata);
++
++	if (sdata->vif.bss_conf.ps != ps_allowed) {
++		sdata->vif.bss_conf.ps = ps_allowed;
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_PS);
++	}
++}
++
+ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
+ {
+ 	struct ieee80211_local *local =
+@@ -1310,6 +1320,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_smps(local);
+ 	mutex_unlock(&local->iflist_mtx);
+ 
++	ieee80211_recalc_ps_vif(sdata);
++
+ 	netif_tx_start_all_queues(sdata->dev);
+ 	netif_carrier_on(sdata->dev);
+ }
+@@ -1371,6 +1383,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	local->ps_sdata = NULL;
+ 
++	/* disable per-vif ps */
++	ieee80211_recalc_ps_vif(sdata);
++
+ 	/* flush out any pending frame (e.g. DELBA) before deauth/disassoc */
+ 	if (tx)
+ 		drv_flush(local, false);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 39b82fe..037d148 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1359,7 +1359,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			changed |= BSS_CHANGED_ASSOC |
+-				   BSS_CHANGED_ARP_FILTER;
++				   BSS_CHANGED_ARP_FILTER |
++				   BSS_CHANGED_PS;
+ 			mutex_lock(&sdata->u.mgd.mtx);
+ 			ieee80211_bss_info_change_notify(sdata, changed);
+ 			mutex_unlock(&sdata->u.mgd.mtx);
 -- 
-thanks,
-shafi
+1.7.6.401.g6a319
+
