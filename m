@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:36253 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab2GCTCz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51457 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab2G0LRy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 15:02:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <4FF2F109.2010300@lwfinger.net>
-References: <1341264199.10162.2.camel@joe2Laptop>
-	<1341310000-4082-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1341310000-4082-3-git-send-email-andriy.shevchenko@linux.intel.com>
-	<4FF2F109.2010300@lwfinger.net>
-Date: Tue, 3 Jul 2012 22:02:53 +0300
-Message-ID: <CAHp75Vfy15PfcVYSbF5QOjdU5CqZKVMH88Ct3FKM5U2+2sAvaA@mail.gmail.com> (sfid-20120703_210315_542613_37D32C1A)
-Subject: Re: [RFC][PATCHv2 3/3] wireless: at76c50x: eliminate hex2str()
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>, proski@gnu.org,
-	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	joe@perches.com
-Content-Type: text/plain; charset=UTF-8
+	Fri, 27 Jul 2012 07:17:54 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 12/20] mac80211: don't assume channel is set in tracing
+Date: Fri, 27 Jul 2012 13:16:48 +0200
+Message-Id: <1343387816-9414-13-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131831_238976_9E7D165D)
+In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 3, 2012 at 4:18 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 07/03/2012 05:06 AM, Andy Shevchenko wrote:
->>
->> The hex2str() is substituted by '%*pMF' specificator.
->>
->> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->> ---
->>   drivers/net/wireless/at76c50x-usb.c |   54
->> ++++++++---------------------------
->>   1 file changed, 12 insertions(+), 42 deletions(-)
->
->
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-Thanks for testing. Today I found in my mailbox (not gmail) your
-previous message about compilation warnings. Are they still present?
-(I guess so) Probably I need to update the patch (anyway it probably
-has to be updated because we discussed with Joe about different letter
-for the hex strings).
+From: Johannes Berg <johannes.berg@intel.com>
 
+With the move to multi-channel and away from
+drv_config(), hw.conf.channel will not always
+be set, only for devices using the current API
+instead of the new channel context APIs. Check
+the channel is set before adding its frequency
+to the trace data.
 
+Also break some overly long lines in the code.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/trace.h |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index a0cd3cb..6004ea7 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -274,9 +274,12 @@ TRACE_EVENT(drv_config,
+ 		__entry->dynamic_ps_timeout = local->hw.conf.dynamic_ps_timeout;
+ 		__entry->max_sleep_period = local->hw.conf.max_sleep_period;
+ 		__entry->listen_interval = local->hw.conf.listen_interval;
+-		__entry->long_frame_max_tx_count = local->hw.conf.long_frame_max_tx_count;
+-		__entry->short_frame_max_tx_count = local->hw.conf.short_frame_max_tx_count;
+-		__entry->center_freq = local->hw.conf.channel->center_freq;
++		__entry->long_frame_max_tx_count =
++			local->hw.conf.long_frame_max_tx_count;
++		__entry->short_frame_max_tx_count =
++			local->hw.conf.short_frame_max_tx_count;
++		__entry->center_freq = local->hw.conf.channel ?
++					local->hw.conf.channel->center_freq : 0;
+ 		__entry->channel_type = local->hw.conf.channel_type;
+ 		__entry->smps = local->hw.conf.smps_mode;
+ 	),
 -- 
-With Best Regards,
-Andy Shevchenko
+1.7.10.4
+
