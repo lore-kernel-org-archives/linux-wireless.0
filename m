@@ -1,221 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:43148 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756183Ab2GaMug (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Tue, 31 Jul 2012 08:50:36 -0400
-From: "Chen, Chien-Chia" <machen@suse.com>
-To: users@rt2x00.serialmonkey.com
-Cc: kevin.chou@mediatek.com, woody.hung@mediatek.com,
-	linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [rt2x00-users] [PATCH v3] rt2x00 : fix rt3290 resuming failed.
-Date: Tue, 31 Jul 2012 20:51:45 +0800
-Message-Id: <1343739105-19091-1-git-send-email-machen@suse.com> (sfid-20120731_145040_754329_1DDE9217)
+Received: from he.sipsolutions.net ([78.46.109.217]:51426 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968Ab2G0LRA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jul 2012 07:17:00 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SuiXS-0006Bc-Hp
+	for linux-wireless@vger.kernel.org; Fri, 27 Jul 2012 13:16:58 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 00/20] mac80211: multi-channel work
+Date: Fri, 27 Jul 2012 13:16:36 +0200
+Message-Id: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131724_863712_473E357A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Woody Hung <Woody.Hung@mediatek.com>
-Date: Mon, 30 Jul 2012 15:30:33 +0800
+Building on Michal's work for channel contexts, which I've
+kept as the first few patches (some of them modified for a
+few small fixes), this actually makes mac80211 support more
+than a single channel. How many channels is determined by
+the driver and verified by cfg80211, so mac80211 isn't much
+involved there.
 
-This patch is going to fix the resuming failed from S3/S4
-for rt3290 chip.
+Internally, mac80211 will exclusively use channel contexts.
+It then has some compatibility code that will call the old
+config() method of the driver, if the driver isn't updated
+to take advantage of channel contexts.
 
-Signed-off-by: Woody Hung <Woody.Hung@mediatek.com>
-CC-by: Kevin Chou <kevin.chou@mediatek.com>
-Signed-off-by: Chen, Chien-Chia <machen@suse.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   70 ++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.h |    1 +
- drivers/net/wireless/rt2x00/rt2800pci.c |   71 -------------------------------
- 3 files changed, 71 insertions(+), 71 deletions(-)
+In order to support multi-channel, drivers must:
+ * implement the five new channel context methods
+ * be able to offload scanning
+ * be able to offload remain-on-channel
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e76f03c..f24cabe 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -401,6 +401,14 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- 	unsigned int i;
- 	u32 reg;
- 
-+	int retval;
-+
-+	if (rt2x00_rt(rt2x00dev, RT3290)) {
-+		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
-+		if (retval)
-+			return -EBUSY;
-+	}
-+
- 	/*
- 	 * If driver doesn't wake up firmware here,
- 	 * rt2800_load_firmware will hang forever when interface is up again.
-@@ -5152,6 +5160,68 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- }
- EXPORT_SYMBOL_GPL(rt2800_get_survey);
- 
-+int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
-+{
-+	u32 reg;
-+	int i, count;
-+
-+	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+	if (rt2x00_get_field32(reg, WLAN_EN))
-+		return 0;
-+
-+	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
-+	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
-+	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
-+	rt2x00_set_field32(&reg, WLAN_EN, 1);
-+	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+
-+	udelay(REGISTER_BUSY_DELAY);
-+
-+	count = 0;
-+	do {
-+		/*
-+		 * Check PLL_LD & XTAL_RDY.
-+		 */
-+		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-+			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
-+			if (rt2x00_get_field32(reg, PLL_LD) &&
-+			    rt2x00_get_field32(reg, XTAL_RDY))
-+				break;
-+			udelay(REGISTER_BUSY_DELAY);
-+		}
-+
-+		if (i >= REGISTER_BUSY_COUNT) {
-+
-+			if (count >= 10)
-+				return -EIO;
-+
-+			rt2800_register_write(rt2x00dev, 0x58, 0x018);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x418);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x618);
-+			udelay(REGISTER_BUSY_DELAY);
-+			count++;
-+		} else {
-+			count = 0;
-+		}
-+
-+		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
-+		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 1);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 0);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
-+	} while (count != 0);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rt2800_enable_wlan_rt3290);
-+
- MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
- MODULE_VERSION(DRV_VERSION);
- MODULE_DESCRIPTION("Ralink RT2800 library");
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 18a0b67..2899181 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -210,4 +210,5 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- 		      struct survey_info *survey);
- void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
- 
-+int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev);
- #endif /* RT2800LIB_H */
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 235376e..98aa426 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -980,66 +980,6 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	return rt2800_validate_eeprom(rt2x00dev);
- }
- 
--static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
--{
--	u32 reg;
--	int i, count;
--
--	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
--	if (rt2x00_get_field32(reg, WLAN_EN))
--		return 0;
--
--	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
--	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
--	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
--	rt2x00_set_field32(&reg, WLAN_EN, 1);
--	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--
--	udelay(REGISTER_BUSY_DELAY);
--
--	count = 0;
--	do {
--		/*
--		 * Check PLL_LD & XTAL_RDY.
--		 */
--		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
--			if (rt2x00_get_field32(reg, PLL_LD) &&
--			    rt2x00_get_field32(reg, XTAL_RDY))
--				break;
--			udelay(REGISTER_BUSY_DELAY);
--		}
--
--		if (i >= REGISTER_BUSY_COUNT) {
--
--			if (count >= 10)
--				return -EIO;
--
--			rt2800_register_write(rt2x00dev, 0x58, 0x018);
--			udelay(REGISTER_BUSY_DELAY);
--			rt2800_register_write(rt2x00dev, 0x58, 0x418);
--			udelay(REGISTER_BUSY_DELAY);
--			rt2800_register_write(rt2x00dev, 0x58, 0x618);
--			udelay(REGISTER_BUSY_DELAY);
--			count++;
--		} else {
--			count = 0;
--		}
--
--		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
--		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
--		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
--		rt2x00_set_field32(&reg, WLAN_RESET, 1);
--		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--		udelay(10);
--		rt2x00_set_field32(&reg, WLAN_RESET, 0);
--		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--		udelay(10);
--		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
--	} while (count != 0);
--
--	return 0;
--}
- static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
-@@ -1063,17 +1003,6 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		return retval;
- 
- 	/*
--	 * In probe phase call rt2800_enable_wlan_rt3290 to enable wlan
--	 * clk for rt3290. That avoid the MCU fail in start phase.
--	 */
--	if (rt2x00_rt(rt2x00dev, RT3290)) {
--		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
--
--		if (retval)
--			return retval;
--	}
--
--	/*
- 	 * This device has multiple filters for control frames
- 	 * and has a separate filter for PS Poll frames.
- 	 */
--- 
-1.7.7
+Trying to advertise multiple channels without support for
+channel context methods is an error, advertising multiple
+channels without support for scan/roc causes all scan/roc
+operations to always fail.
+
+So far, I've only tested this with hwsim, and even then
+only the backward compatibility code to make sure that it
+won't break drivers that aren't updated. I've tested that
+channel contexts are added/removed properly and that the
+configuration is updated in the device. I've also tested
+with two virtual interfaces to see that compatible channel
+types are still possible and result in the desired driver
+methods being called.
+
+Comments welcome!
+
+johannes
 
