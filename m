@@ -1,55 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:28818 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752464Ab2GQRl4 convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45687 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751376Ab2G0PMx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jul 2012 13:41:56 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: David Miller <davem@davemloft.net>
-CC: "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-	"<netfilter-devel@vger.kernel.org>" <netfilter-devel@vger.kernel.org>
-Subject: Re: That's pretty much it for 3.5.0
-Date: Tue, 17 Jul 2012 17:41:55 +0000
-Message-ID: <997C449C-D599-4F46-A0A3-A2B869DEE36E@intel.com> (sfid-20120717_194205_800254_3D3440B9)
-References: <20120717.090142.125145009944045241.davem@davemloft.net>
-In-Reply-To: <20120717.090142.125145009944045241.davem@davemloft.net>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 27 Jul 2012 11:12:53 -0400
+Received: by obbuo13 with SMTP id uo13so4392513obb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2012 08:12:52 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <201207271630.06025.chunkeey@googlemail.com>
+References: <1343332743-11845-1-git-send-email-jlopex@cozybit.com>
+ <201207262212.06227.chunkeey@googlemail.com> <CAPjQAd_0sD69dunzyd4Bx9Ys_XgTA9-Zr5TJkfNweopJWNBTJQ@mail.gmail.com>
+ <201207271630.06025.chunkeey@googlemail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 27 Jul 2012 08:12:32 -0700
+Message-ID: <CAPjQAd_Ko_WFEoG6uXk7hYYAggL6jbGiuKWdp=f3Aa+JdXNNJg@mail.gmail.com> (sfid-20120727_171257_986031_B46C101F)
+Subject: Re: [PATCH] carl9170: Add support for NL80211_IFTYPE_MESH_POINT interfaces
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Javier Lopez <jlopex@cozybit.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jul 17, 2012, at 9:01 AM, David Miller wrote:
+On Fri, Jul 27, 2012 at 7:30 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Friday 27 July 2012 05:52:49 Javier Cardona wrote:
+>> On Thu, Jul 26, 2012 at 1:12 PM, Christian Lamparter
+>> <chunkeey@googlemail.com> wrote:
+>> > On Thursday 26 July 2012 21:59:03 Javier Lopez wrote:
+>> >> This patch contains following modifications:
+>> >>
+>> >> - Add mesh capabilities on fw.c to permit creation of mesh
+>> >>   interfaces using this driver.
+>> >>
+>> >> - Modify carl9170_set_operating_mode, to use AP-style beaconing
+>> >>   with mesh interfaces.
+>> >>
+>> >> - Allow beacon updates for NL80211_IFTYPE_MESH_POINT type in
+>> >>   carl9170_handle_command_response.
+>> >>
+>> >> Signed-off-by: Javier Lopez <jlopex@cozybit.com>
+>> > Hm, what about virtual interfaces?
+>> >
+>> > Do you think it's save to share a MESH node with
+>> > a STA, IBSS, AP interface on the same hardware?
+>>
+>> Does this hardware support multiple beacons?
+>> If not, we probably should limit the driver
+>> to only accept one beaconing vif at a time
+>> (e.g. one mesh vif + multiple STAs vifs ok).
+> oh yes. In fact, Due to your modifycations to fw.c
+> you have to update carl9170_op_add_interface as well.
+> As you are currently claiming any mesh/ap/sta
+> combination, even though it's not supported in the
+> code atm.
+>
+> Just add a case for NL80211_IFTYPE_MESH in the
+> switch (main_vif->type) block and to the
+> if ((vif->type == ...) below.
+>
+>> > On a side node: Can you tell me anything about
+>> > the crypto of mesh traffic? Because currently,
+>> > the code will disable any hardware crypto
+>> > offload for any mode other than STA and AP.
+>>
+>> The hardware crypto needs to support one tx/rx
+>> pairwise key per peer, a groupwise key for each
+>> peer and management frame protection.
+>> Not sure if this is the case for this hardware,
+>> so until we do, it seems reasonable to disable
+>> crypto offload.
+> ok, a groupwise key for each peer is not possible
+> with the hw. (no need to change anything, swcrypto
+> is selected in this case).
+>
+> Regards,
+>         Chr
+>
+> BTW: Did you do any experiments? I.e.: Does it really
+> work?
 
-> Linus was _extremely_ generous and took in all the stuff that was
-> pending in the net tree just now.
+Basic peering and pinging with ath9k_htc seems to work.  We only have
+one of these cards, so we cannot run our full test suite.  Testing
+will continue when we receive more cards.
 
-Maybe *too* generous. :-) I just updated and when I boot I get an early crash in update_netdev_tables which is in netprio_cgroup.c.
-
-> Besides very serious issues, I'm not willing to consider any more bug
-> fixes for the 'net' tree at this time.
-
-I think the above issue will have to be fixed, as it completely prevents booting for any kernel that includes the netprio_cgroup option.
-
-> Only one pending known bug qualifies, and that's the CIPSO ip option
-> processing OOPS'er.  And I'll work on that myself if Paul Moore
-> doesn't show a sign of life in the next day.
-> 
-> Thanks.
-
-
-I can start taking a look at this if you like, but I see that Gao feng has two patches in the last set of patches that may be related.
-
-To give you an idea how early the crash is, here are a few log messages leading up to it:
-
-[    0.003455] Dentry cache hash table entries: 262144 (order: 9, 2097152 bytes)
-[    0.005550] Inode-cache hash table entries: 131072 (order: 8, 1048576 bytes)
-[    0.007165] Mount-cache hash table entries: 256
-[    0.010289] Initializing cgroup subsys net_cls
-[    0.010947] Initializing cgroup subsys net_prio
-[    0.011039] BUG: unable to handle kernel NULL pointer dereference at 0000000000000828
-[    0.011998] IP: [<ffffffff814202c8>] update_netdev_tables+0x68/0xe0
-
--- 
-Mark Rustad, LAN Access Division, Intel Corporation
-
+Javier
