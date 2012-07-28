@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:41652 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545Ab2GZRE6 convert rfc822-to-8bit (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:59032 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752401Ab2G1Ogc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 13:04:58 -0400
-Received: by ghrr11 with SMTP id r11so2212829ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2012 10:04:58 -0700 (PDT)
+	Sat, 28 Jul 2012 10:36:32 -0400
+Message-ID: <5013F8EF.10404@net.t-labs.tu-berlin.de> (sfid-20120728_163635_578460_B11F462F)
+Date: Sat, 28 Jul 2012 16:36:31 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-In-Reply-To: <CA+XVXfegYYwc=esyZmJHu1tEqQKcq+h+MnSyp9dXiiwqroG3tw@mail.gmail.com>
-References: <1343318961-46933-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <1343319453.4477.2.camel@jlt3.sipsolutions.net> <1343319579.4477.3.camel@jlt3.sipsolutions.net>
- <501170F2.3050300@net.t-labs.tu-berlin.de> <CA+XVXfegYYwc=esyZmJHu1tEqQKcq+h+MnSyp9dXiiwqroG3tw@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 26 Jul 2012 20:04:42 +0300
-Message-ID: <CA+XVXfcrb9=XQauvbPzw2t_jMoQisrh5aSB1qwpLxXsKJKy2Yg@mail.gmail.com> (sfid-20120726_190502_989245_FD46E1AF)
-Subject: Re: [PATCH v6] mac80211: Remove control.sta from struct
- ieee80211_tx_info and restructure tx-path
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org, ilw@linux.intel.com,
-	users@rt2x00.serialmonkey.com, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com, chunkeey@googlemail.com,
-	buytenh@wantstofly.org, dsd@gentoo.org, coelho@ti.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=windows-1252
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes.berg@intel.com, nbd@openwrt.org
+Subject: Re: [PATCH 2/2] mac80211: Add transmit power control support (TPC)
+ for ACK packets
+References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343404809-70329-3-git-send-email-thomas@net.t-labs.tu-berlin.de> <201207272336.09898.chunkeey@googlemail.com>
+In-Reply-To: <201207272336.09898.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 7:57 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Thu, Jul 26, 2012 at 7:31 PM, Thomas Huehn
-> <thomas@net.t-labs.tu-berlin.de> wrote:
->> Hi Johannes,
->>
->> Johannes Berg schrieb:
->>
->>>>
->>>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c: In
->>>> function ‘wl1271_skb_queue_head’:
->>>> /home/johannes/sys/wireless/drivers/net/wireless/ti/wlcore/tx.c:622:48:
->>>> warning: ‘hlid’ may be used uninitialized in this function
->>>> [-Wuninitialized]
->>>
->>> Those changes make no sense anyway -- you should be able to pass the
->>> station pointer through if it previously used info->control.sta, instead
->>> of doing an (expensive) lookup.
->>
->>
->> This is the call path
->>
->> in main.c ... INIT_WORK(&wl->tx_work, wl1271_tx_work);
->>  jumps to tx.c...wl1271_tx_work(struct work_struct *work)
->>   calls wl1271_tx_work(struct work_struct *work)
->>    calls wlcore_tx_work_locked(struct wl1271 *wl)
->>     calls wl1271_skb_queue_head()
->>      calls wl12xx_tx_get_hlid()
->>       calls wl12xx_tx_get_hlid_ap() .... where sta is needed.
->>
->> But I could not find any point in the call path where I could grab the
->> sta pointer and pass it through. I will move the rcu into
->> wl12xx_tx_get_hlid_ap(), but I do not see any cheaper way here as using rcu.
->
-> I agree with Johannes. The find_sta() in the Tx path is unacceptable.
->
-> A relatively simple change here would be to put the sta pointer in the
-> portion of the struct reserved for rate control during op_tx(). wlcore
-> doesn't use software rate control anyway.
-> This would avoid from changing the code too much.
+Hi Christian,
 
-Johannes correctly pointed out that the sta may no longer be valid
-when the skb is dequeued (which is a bug today as well). It's best to
-just store the hlid in the rate control portion.
+Christian Lamparter schrieb:
+
+> On Friday 27 July 2012 18:00:09 Thomas Huehn wrote:
+>> This patch adds support to annotate and change the power-level of ACK
+>> packets. To map hardware specific ack power capabilities to mac80211
+>> one new hw flag is defined:
+>>
+>> @IEEE80211_HW_SUPPORTS_TPC_ACK_GLOBAL:
+>> 	Power level of ack packets is adjustable and processed in a
+>> 	global manner, per hw rather than per ack packet or link.
+>>
+>> The struct hw_config is extended by ack_power a global power level in
+>> dBm to be used for all acknowledgement_packets. A new config change
+>> event IEEE80211_CONF_CHANGE_ACK_POWER is defined to reacte with driver
+>> specific function calls to ack_power changes from the mac80211.
+> 
+> I know this is kind of an odd. But as carl9170 has TPC settings
+> for BlockACK, CF-End and QoS-Null frames, it wouldn't be possible
+> to extend "ACK" to "response".
+> 
+> NB: The HW has also TPC control registers for ERP(RTS/CTS)
+> but that's sort of a different issue.
+
+
+I just double checked with the registers for Atheros ath5k and ath9k
+chips and it is register at address offset: 0x80E8 and holds the
+transmit powers for self- generated response frames: ACK_PWR (ACK
+self-generated response frames), CTS_PWR (CTS self-generated response
+frames) and CHRIP_PWR (Chirp self-generated response frames). So at
+least for those chips, I can not see an separate TPC setting .. lets say
+for BlockACK. Maybe the Atheros Guys can help out here ?
+If my proposed FLAG is to generous we can introduce more hardware
+specific ones. My TPC algorithm does consider DATA and ACK packets at
+the moment as they are most relevant for interference management but
+could be extended to other types.
+
+
+Greetings Thomas
