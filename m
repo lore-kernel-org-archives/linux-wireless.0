@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42015 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495Ab2GDL1q (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:43025 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752699Ab2G1PcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jul 2012 07:27:46 -0400
-Message-ID: <1341401264.12432.7.camel@jlt3.sipsolutions.net> (sfid-20120704_132749_752933_DD7057D2)
-Subject: Re: [PATCH 06/13] cfg80211: track monitor interfaces count
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
-Date: Wed, 04 Jul 2012 13:27:44 +0200
-In-Reply-To: <1341401180.12432.6.camel@jlt3.sipsolutions.net> (sfid-20120704_132627_061268_46C684C8)
-References: <1340966828-22874-1-git-send-email-michal.kazior@tieto.com>
-	 <1340966828-22874-7-git-send-email-michal.kazior@tieto.com>
-	 <1341400378.12432.4.camel@jlt3.sipsolutions.net>
-	 (sfid-20120704_131306_010478_4A0DA490) <1341400632.12432.5.camel@jlt3.sipsolutions.net>
-	 (sfid-20120704_131718_037897_66E57863) <1341401180.12432.6.camel@jlt3.sipsolutions.net>
-	 (sfid-20120704_132627_061268_46C684C8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 28 Jul 2012 11:32:18 -0400
+Received: by qadb17 with SMTP id b17so263211qad.19
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jul 2012 08:32:17 -0700 (PDT)
+Message-ID: <501405FA.3070504@lwfinger.net> (sfid-20120728_173253_088439_E20F503E)
+Date: Sat, 28 Jul 2012 10:32:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Marco <netuse@lavabit.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8187 in master mode with hostapd
+References: <20120727171137.4a1d1ce7@homerow>
+In-Reply-To: <20120727171137.4a1d1ce7@homerow>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-07-04 at 13:26 +0200, Johannes Berg wrote:
-> On Wed, 2012-07-04 at 13:17 +0200, Johannes Berg wrote:
-> > On Wed, 2012-07-04 at 13:12 +0200, Johannes Berg wrote:
-> > > Hi Michal,
-> > > 
-> > > A few people noticed that these patches cause deadlocks. I think the
-> > > reason is that it's not allowed to lock the device here:
-> > > 
-> > > >  	case NETDEV_DOWN:
-> > > >  		dev_hold(dev);
-> > > > +		cfg80211_lock_rdev(rdev);
-> > > 
-> > > This causes a deadlock since the interface is set down inside mac80211
-> > > when inside a handler from cfg80211 already, or so.
-> > 
-> > I just reproduce it -- it's because we come from nl80211_del_interface()
-> 
-> Ok ... we don't really need to hold the rdev lock since it's all under
-> rtnl. Can you please confirm this is safe?
-> 
-> http://p.sipsolutions.net/bde4760671f3e250.txt
+On 07/27/2012 10:11 AM, Marco wrote:
+> Hi,
+>
+> I own an Alfa AWUS036H network adapter using the rtl8187 driver on a
+> Debian box running kernel 3.5.0. I want to use it with hostapd, which
+> apparently requires master mode to be enabled in the driver.
+>
+> The page http://linuxwireless.org/en/users/Drivers/rtl8187 states:
+>
+>    not working yet: AP/Master mode
+>
+> What means *yet*? Is it planned to add master mode support in the
+> near future? Do you have other suggestions what I could do to get
+> the driver to work together with hostap?
+>
+> Disclaimer: I am not an expert in those things. I set up the access
+> point some years ago, then the network adapter started to function
+> unreliably. I then replaced it with a different one (the
+> abovementioned 036H) and didn't manage to get my setup running
+> again.
 
-I guess we can remove more locking:
-http://p.sipsolutions.net/8a1b875a431e72a0.txt
+In the case of the RTL8187L, which is the chip in your Alfa device, it means 
+*never*. That chip only has a single hardware transmit queue and the work of 
+getting the high-priority traffic, such as beacons, transmitted at the correct 
+time would be much more than it would be worth.
 
-johannes
+Sorry,
+
+Larry
+
+
 
