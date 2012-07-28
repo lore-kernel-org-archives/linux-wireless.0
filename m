@@ -1,85 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51380 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751062Ab2G0LJk (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:62251 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387Ab2G1OdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 07:09:40 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: rename sta to new_sta
-Date: Fri, 27 Jul 2012 13:09:36 +0200
-Message-Id: <1343387377-7768-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130943_742391_03E0FF36)
+	Sat, 28 Jul 2012 10:33:12 -0400
+Received: by wibhm11 with SMTP id hm11so512965wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jul 2012 07:33:11 -0700 (PDT)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
+	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 1/4] ath5k: Use correct value for min_pwr and cur_pwr
+Date: Sat, 28 Jul 2012 17:32:48 +0300
+Message-Id: <1343485971-31360-1-git-send-email-mickflemm@gmail.com> (sfid-20120728_163350_169922_78350151)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Make sure we don't store the table offsets for min and cur power levels,
+store the 0.25dB values instead. This way we don't clamp the tx power level
+to max (because now cur_pwr holds the 0.25dB value, not the table offset) after
+re-using cur_pwr on reset.
 
-In ieee80211_prep_connection(), the station (if not NULL)
-is the new station (representing the AP) that needs to be
-added. Rename the variable to "new_sta" to clarify this.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- net/mac80211/mlme.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath5k/phy.c |   19 ++++++++++++++-----
+ 1 files changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b5ba74b..06bd450 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3031,7 +3031,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_bss *bss = (void *)cbss->priv;
--	struct sta_info *sta = NULL;
-+	struct sta_info *new_sta = NULL;
- 	bool have_sta = false;
- 	int err;
- 	int ht_cfreq;
-@@ -3050,8 +3050,8 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 8b71a2d..aa1a77d 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -3562,6 +3562,20 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+ 		for (i = 8; i <= 15; i++)
+ 			rates[i] -= ah->ah_txpower.txp_cck_ofdm_gainf_delta;
+ 
++	/* Save min/max and current tx power for this channel
++	 * in 0.25dB units.
++	 *
++	 * Note: We use rates[0] for current tx power because
++	 * it covers most of the rates, in most cases. It's our
++	 * tx power limit and what the user expects to see. */
++	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
++	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
++
++	/* Set max txpower for correct OFDM operation on all rates
++	 * -that is the txpower for 54Mbit-, it's used for the PAPD
++	 * gain probe and it's in 0.5dB units */
++	ah->ah_txpower.txp_ofdm = rates[7];
++
+ 	/* Now that we have all rates setup use table offset to
+ 	 * match the power range set by user with the power indices
+ 	 * on PCDAC/PDADC table */
+@@ -3571,11 +3585,6 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+ 		if (rates[i] > 63)
+ 			rates[i] = 63;
  	}
+-
+-	/* Min/max in 0.25dB units */
+-	ah->ah_txpower.txp_min_pwr = 2 * rates[7];
+-	ah->ah_txpower.txp_cur_pwr = 2 * rates[0];
+-	ah->ah_txpower.txp_ofdm = rates[7];
+ }
  
- 	if (!have_sta) {
--		sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
--		if (!sta)
-+		new_sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
-+		if (!new_sta)
- 			return -ENOMEM;
- 	}
  
-@@ -3122,7 +3122,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 	local->oper_channel = cbss->channel;
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- 
--	if (sta) {
-+	if (new_sta) {
- 		u32 rates = 0, basic_rates = 0;
- 		bool have_higher_than_11mbit;
- 		int min_rate = INT_MAX, min_rate_index = -1;
-@@ -3147,7 +3147,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 			basic_rates = BIT(min_rate_index);
- 		}
- 
--		sta->sta.supp_rates[cbss->channel->band] = rates;
-+		new_sta->sta.supp_rates[cbss->channel->band] = rates;
- 		sdata->vif.bss_conf.basic_rates = basic_rates;
- 
- 		/* cf. IEEE 802.11 9.2.12 */
-@@ -3170,10 +3170,10 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 			BSS_CHANGED_BEACON_INT);
- 
- 		if (assoc)
--			sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+			sta_info_pre_move_state(new_sta, IEEE80211_STA_AUTH);
- 
--		err = sta_info_insert(sta);
--		sta = NULL;
-+		err = sta_info_insert(new_sta);
-+		new_sta = NULL;
- 		if (err) {
- 			sdata_info(sdata,
- 				   "failed to insert STA entry for the AP (error %d)\n",
 -- 
-1.7.10.4
+1.7.3.4
 
