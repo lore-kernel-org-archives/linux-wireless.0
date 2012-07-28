@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:49210 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752976Ab2GIU0M (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:36149 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401Ab2G1PZ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 16:26:12 -0400
-Received: by eeit10 with SMTP id t10so4461869eei.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 13:26:11 -0700 (PDT)
-Message-ID: <4FFB3E60.9080001@gmail.com> (sfid-20120709_222616_758581_29FE2C67)
-Date: Mon, 09 Jul 2012 22:26:08 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Sat, 28 Jul 2012 11:25:26 -0400
+Received: by qcro28 with SMTP id o28so2315256qcr.19
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jul 2012 08:25:25 -0700 (PDT)
+Message-ID: <50140463.3080209@lwfinger.net> (sfid-20120728_172530_159784_BB53DC58)
+Date: Sat, 28 Jul 2012 10:25:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: thomas@net.t-labs.tu-berlin.de, x-alina@gmx.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Add transmit power control support (TPC)
-References: <4FFB2E78.9090402@gmail.com> <4FFB3469.4000003@openwrt.org>
-In-Reply-To: <4FFB3469.4000003@openwrt.org>
+To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com> <501280BF.4070409@lwfinger.net> <1343394581.87030.YahooMailNeo@web28902.mail.ir2.yahoo.com> <1343398356.19742.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343403507.54955.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343404770.91235.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343407089.96532.YahooMailNeo@web28901.mail.ir2.yahoo.com>
+In-Reply-To: <1343407089.96532.YahooMailNeo@web28901.mail.ir2.yahoo.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/09/2012 09:43 PM, Felix Fietkau wrote:
-> On 2012-07-09 9:18 PM, Xose Vazquez Perez wrote:
+On 07/27/2012 11:38 AM, Xavier de Almeida wrote:
+> Without touching anything it started to work:
+>
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: association OK (aid 1)
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.11: associated (aid 1)
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-ASSOCIATE.indication(88:30:8a:52:ed:cd)
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd MLME: MLME-DELETEKEYS.request(88:30:8a:52:ed:cd)
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd WPA: event 1 notification
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd WPA: start authentication
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.1X: unauthorizing port
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd WPA: sending 1/4 msg of 4-Way Handshake
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd WPA: received EAPOL-Key frame (2/4 Pairwise)
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd WPA: sending 3/4 msg of 4-Way Handshake
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd WPA: received EAPOL-Key frame (4/4 Pairwise)
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd IEEE 802.1X: authorizing port
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd RADIUS: starting accounting session 5012BD3F-00000000
+> Jul 27 18:34:27 HTPC hostapd: wlan0: STA 88:30:8a:52:ed:cd WPA: pairwise key handshake completed (RSN)
+>
+> but the signal is very weak so maybe that was one of the issues.
+>
+> I am looking fwd to remove the power mgt stuff and maybe find out how to increase the signal power. Maybe I should be a kind of antennat but not sure this will work with a barebone like the xs36v.
 
->> candidates:
->>
->> ath6kl
->> brcmfmac
->> iwmc3200wifi
->> mwifiex
->> rndis_wlan
+I run mine, when I test AP mode, without any options.
 
-> No. (fullmac, thus unaffected by the change)
+I'm glad you got it working. Now you know why I recommend spending 40 euro for 
+an AP rather than trying to use a 600 euro computer for that purpose. BTW, I own 
+4 AP/routers.
 
-orinoco is also fullmac.
+Larry
 
->> libertas_tf
->> rtlwifi
->> wl1251
->> wl12xx
 
-> Yes, those indeed look like they need to be added.
 
-adm8211 at76c50x-usb mac80211_hwsim ??
+
