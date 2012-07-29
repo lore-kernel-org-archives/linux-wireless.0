@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33652 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771Ab2GIKAP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 06:00:15 -0400
-Message-ID: <1341828012.4455.29.camel@jlt3.sipsolutions.net> (sfid-20120709_120018_980092_41125410)
-Subject: Re: [PATCH] mac80211: Add transmit power control support (TPC)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: thomas <thomas@net.t-labs.tu-berlin.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 09 Jul 2012 12:00:12 +0200
-In-Reply-To: <A02DA778-9263-46DC-A824-D1EAA9CFC51D@net.t-labs.tu-berlin.de>
-References: <1341766968-29570-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1341826631.4455.24.camel@jlt3.sipsolutions.net>
-	 <A02DA778-9263-46DC-A824-D1EAA9CFC51D@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37638 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753185Ab2G2PZf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jul 2012 11:25:35 -0400
+Message-ID: <501555E3.8080304@hauke-m.de> (sfid-20120729_172540_346281_4CBF7F0B)
+Date: Sun, 29 Jul 2012 17:25:23 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmsmac and BCM47186 (BCM5357) + brcmfmac and BCM43236 V2
+References: <4FB57C61.3090302@hauke-m.de> <CACna6rzO2579YdN_GdmP+=-+L308KjKhKsejevAzJ19dp6LxVg@mail.gmail.com>
+In-Reply-To: <CACna6rzO2579YdN_GdmP+=-+L308KjKhKsejevAzJ19dp6LxVg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-*sigh*. Please also don't top-post. If you can't make that work on your
-iPhone, don't use it.
+On 07/29/2012 01:34 PM, Rafał Miłecki wrote:
+> 2012/5/18 Hauke Mehrtens <hauke@hauke-m.de>:
+>> I got a new device, a Linksys E3200 with a BCM47186 (id: 0x5357) and a
+>> BCM43236 v2 for 5GHz wifi.
+>>
+>> The BCM47186 has a wifi core rev 28, a N-PHY rev 9 and a 2057 radio rev
+>> 5 and it does not work with brcmsmac or b43. :-(
+>>
+>> Are there plans to add support for such new N-PHY revs to brcmsmac and
+>> the firmware?
+>>
+>> Here are some parts of my log with brcmsamc with firmware from
+>> linux-firmware.
+>>
+>> bcma: Found chip with id 0x5357, rev 0x02 and package 0x0A
+>> ....
+>> bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x1C, class 0x0)
+>> ....
+>> [   14.776000] b43-phy0: Broadcom 5357 WLAN found (core revision 28)
+>> [   14.780000] b43-phy0 debug: Found PHY: Analog 9, Type 4, Revision 9
+> 
+> Hauke, is this 0x5357 a SoC bcma, or additional bcma connected via
+> PCIE to the main one? If it's the second case, could you provide pci
+> id, please?
+> 
+Hi Rafał,
 
-> That was my fault of miss-spelling johns email... sorry for that.
-> regardinf the long cc list, it is generated through the get_maintainer
-> script for all driver sources that I touched. what is the correct way
-> you would suggest instead ???
+0x5357 is a SoC with a ieee80211 core, but no PCIe core, just USB 2.0.
+Should I add all the SoC chips I know of to the b43 device list?
 
-Well, I guess there could be disagreement about that. I'd say
-maintainers should hang out on the relevant mailing list.
-
-johannes
-
+Hauke
