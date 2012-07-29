@@ -1,61 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26601 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755449Ab2GYK5I (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:48141 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753554Ab2G2Uvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jul 2012 06:57:08 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v1] cfg80211: unify IE search
-Date: Wed, 25 Jul 2012 13:56:53 +0300
-Message-ID: <1343213813-29568-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120725_125713_653916_A3D5DBE7)
+	Sun, 29 Jul 2012 16:51:43 -0400
+Received: by obbuo13 with SMTP id uo13so7882160obb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2012 13:51:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <50151A71.9010306@net.t-labs.tu-berlin.de>
+References: <1343485971-31360-1-git-send-email-mickflemm@gmail.com>
+	<1343485971-31360-3-git-send-email-mickflemm@gmail.com>
+	<501404BE.7040606@net.t-labs.tu-berlin.de>
+	<5014065B.7070909@net.t-labs.tu-berlin.de>
+	<CAFtRNNzPnh_C2JqC4WjKrChn=QPcC4UG-8PigyGp4WLXuCb5GQ@mail.gmail.com>
+	<50151A71.9010306@net.t-labs.tu-berlin.de>
+Date: Sun, 29 Jul 2012 23:51:43 +0300
+Message-ID: <CAFtRNNyG1hhw1+petgJaDSnSPNbO-iMPAwA+Vr8xKOj5xGeD5w@mail.gmail.com> (sfid-20120729_225147_436614_61CBBED3)
+Subject: Re: [ath5k-devel] [PATCH 3/4] ath5k: Preserve tx power level
+ requested from above on phy_init
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove ah-hock IE search code found in the ieee80211_bss_get_ie()
-Use cfg80211_find_ie() instead.
+2012/7/29 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+> Hi Nick,
+>
+>
+>> Anyway if readability is the issue we can just do something like
+>>
+>> int txpower_halfdb = 0;
+>>
+>> [...]
+>>
+>> if(ah->power_level) {
+>>  txpower_halfdb = ah->power_level * 2;
+>> } else {
+>>  txpower_halfdb = AR5K_TUNE_MAX_TXPOWER;
+>> }
+>>
+>> and then it'll look like this
+>>
+>> ret = ath5k_hw_txpower(ah, channel, txpower_halfdb);
+>
+>
+> I like this way you proposed here. But it is quite personal and compact
+> wise the other version is in lead.
+>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- net/wireless/util.c |   18 +++---------------
- 1 file changed, 3 insertions(+), 15 deletions(-)
+The thing is it doesn't initialize ah->ah_txpower.txp_requested, read below.
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 26f8cd3..ce393dd 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -684,22 +684,10 @@ EXPORT_SYMBOL(cfg80211_classify8021d);
- 
- const u8 *ieee80211_bss_get_ie(struct cfg80211_bss *bss, u8 ie)
- {
--	u8 *end, *pos;
--
--	pos = bss->information_elements;
--	if (pos == NULL)
-+	if (bss->information_elements == NULL)
- 		return NULL;
--	end = pos + bss->len_information_elements;
--
--	while (pos + 1 < end) {
--		if (pos + 2 + pos[1] > end)
--			break;
--		if (pos[0] == ie)
--			return pos;
--		pos += 2 + pos[1];
--	}
--
--	return NULL;
-+	return cfg80211_find_ie(ie, bss->information_elements,
-+				 bss->len_information_elements);
- }
- EXPORT_SYMBOL(ieee80211_bss_get_ie);
- 
+>> >
+>> (wouldn't it be weird if someone from above asked us
+>> what tx power was requested and we reply with max tx power ?).
+>
+> you mean in case someone from above did never requested something but
+> ask us what was requested and we tell him that nothing was requested
+> thats why we use max tx_power ... makes more sense ? :)
+>
+
+I mean that ah->ah_txpower.txp_requested or
+ah->ah_txpower.txp_user_pwr in your case, both implicate that they are
+initialized by the user. We shouldn't initialize them ourselves. Think
+of it like this: we don't have permission to write this variable, we
+only read it.
+
+If you didn't like my example and you think it doesn't make sense,
+here is another one:
+How will we distinguish the case when a user asks for the max power
+from the case where we have initialized ah->ah_txpower.txp_requested
+to max ?
+
+
+
 -- 
-1.7.9.5
-
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
