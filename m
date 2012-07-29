@@ -1,66 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750742Ab2GZHG2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 03:06:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from plane.gmane.org ([80.91.229.3]:43686 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751351Ab2G2Mb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jul 2012 08:31:29 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SvSed-0008LL-LB
+	for linux-wireless@vger.kernel.org; Sun, 29 Jul 2012 14:31:27 +0200
+Received: from 81-57.bbned.dsl.internl.net ([92.254.57.81])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2012 14:31:27 +0200
+Received: from Mijzelf by 81-57.bbned.dsl.internl.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2012 14:31:27 +0200
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: don't call mgd_prepare_tx when associated
-Date: Thu, 26 Jul 2012 09:06:22 +0200
-Message-Id: <1343286382-7239-1-git-send-email-johannes@sipsolutions.net> (sfid-20120726_090631_430791_F104D5CE)
+From: Mijzelf <Mijzelf@live.com>
+Subject: Re: Uknown symbols in =?utf-8?b?cmZraWxsX2JhY2twb3J0Lmtv?= on 2.6.25.17 on mips
+Date: Sun, 29 Jul 2012 12:31:16 +0000 (UTC)
+Message-ID: <loom.20120729T135851-141@post.gmane.org> (sfid-20120729_143133_239636_C07C97D6)
+References: <0621389a37a568a7ebd526b0adc87a48@fileserver.lan> <20120724175617.0a4206c4@mj> <loom.20120725T195215-756@post.gmane.org> <20120726172555.246a668c@mj>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Pavel Roskin <proski@...> writes:
+> 
+> My guess is that either it's a result of some clever macro expansion
+> (so that the source doesn't have "flush_cache") or gcc inserts that call
+> (perhaps hoping that libgcc has it) but the kernel doesn't satisfy it.
+> 
+> First of all, make sure that you are making a clean build and there are
+> no object files left from older builds.
+> 
+> Then find the object file that calls _flush_cache.  Recompile the
+> corresponding source file with "-save-temps".  Look for "flush_cache"
+> in the *.i and the *.s file.  Try to find out where it comes from.
+> 
+There are several objects which call _flush_cache, mesh_pathtbl, mac80211, agg-
+tx, work and cfg. Looking at the .i and .s files I found that by far the least 
+complex function was free_work() in work.c:
 
-This doesn't make any sense since we are expected to be on
-the medium or at least to Tx only when we are on the right
-channel and the AP/GO can hear us.
+void free_work(struct ieee80211_work *wk)
+{
+        kfree_rcu(wk, rcu_head);
+}
 
-Move the call to mgd_prepare_tx() for deauth to be only
-done in case we're sending a deauth while not associated.
+work.i:
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+void free_work(struct ieee80211_work *wk)
+{
+ do { void __kfree_rcu_fn(struct rcu_head *rcu_head) { void *___ptr; ___ptr = 
+({ const typeof( ((typeof(*(wk)) *)0)->rcu_head
+ ) *__mptr = (rcu_head); (typeof(*(wk)) *)( (char *)__mptr - ((size_t) &((typeof
+(*(wk)) *)0)->rcu_head) );}); kfree(___ptr);
+} call_rcu(&(wk)->rcu_head, __kfree_rcu_fn); } while (0);
+}
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 81b2269..f0d6fa2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -610,8 +610,6 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
- 			IEEE80211_SKB_CB(skb)->flags |=
- 				IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 
--		drv_mgd_prepare_tx(local, sdata);
--
- 		ieee80211_tx_skb(sdata, skb);
- 	}
- }
-@@ -3504,14 +3502,17 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 		   req->bssid, req->reason_code);
- 
- 	if (ifmgd->associated &&
--	    ether_addr_equal(ifmgd->associated->bssid, req->bssid))
-+	    ether_addr_equal(ifmgd->associated->bssid, req->bssid)) {
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       req->reason_code, true, frame_buf);
--	else
-+	} else {
-+		drv_mgd_prepare_tx(sdata->local, sdata);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
- 					       req->reason_code, true,
- 					       frame_buf);
-+	}
-+
- 	mutex_unlock(&ifmgd->mtx);
- 
- 	__cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
--- 
-1.7.10.4
+work.s:
+
+$LTRAMP0:
+        .word   0x03e00821              # move   $1,$31
+        .word   0x04110001              # bgezal $0,.+8
+        .word   0x00000000              # nop
+        .word   0x8fe30014              # lw     $3,20($31)
+        .word   0x8fe20018              # lw     $2,24($31)
+        .word   0x0060c821              # move   $25,$3 (abicalls)
+        .word   0x00600008              # jr     $3
+        .word   0x0020f821              # move   $31,$1
+        .word   0x00000000              # <function address>
+        .word   0x00000000              # <static chain value>
+        .globl  _flush_cache
+        .text
+        .align  2
+        .globl  free_work
+        .ent    free_work
+        .type   free_work, @function
+free_work:
+        .frame  $sp,80,$31              # vars= 48, regs= 3/0, args= 16, gp= 0
+        .mask   0x80030000,-8
+        .fmask  0x00000000,0
+        .set    noreorder
+        .set    nomacro
+        
+        addiu   $sp,$sp,-80
+        sw      $16,64($sp)
+        lui     $5,%hi($LTRAMP0)
+        addiu   $16,$sp,16
+        lui     $2,%hi(memcpy)
+        sw      $31,72($sp)
+        sw      $17,68($sp)
+        addiu   $5,$5,%lo($LTRAMP0)
+        move    $17,$4
+        li      $6,40                   # 0x28
+        addiu   $2,$2,%lo(memcpy)
+        jal     $2
+        move    $4,$16
+
+        lui     $2,%hi(__kfree_rcu_fn.0)
+        addiu   $2,$2,%lo(__kfree_rcu_fn.0)
+        addiu   $3,$sp,16
+        sw      $2,32($16)
+        lui     $2,%hi(_flush_cache)
+        move    $4,$16
+        sw      $3,36($16)
+        li      $5,40                   # 0x28
+        addiu   $2,$2,%lo(_flush_cache)
+        jal     $2
+<snip>
+
+Looking at this it seems to me it must be some compiler-inserted memory 
+barrier, or something like that. But that memcpy baffles me.
+
+I think I'll just add a dummy _flush_cache. My target system is single core, I 
+suppose it would be safe.
+
+
+
 
