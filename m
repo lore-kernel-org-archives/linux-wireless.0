@@ -1,100 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:40778 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763Ab2GJJ0E (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:59927 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753702Ab2G2WtG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 05:26:04 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<vadivel@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v4 06/10] ath9k_hw: INI changes for WoW for AR9002 chipsets
-Date: Tue, 10 Jul 2012 14:55:54 +0530
-Message-ID: <1341912354-12293-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120710_112608_827599_B571A44B)
+	Sun, 29 Jul 2012 18:49:06 -0400
+Received: by obbuo13 with SMTP id uo13so8013678obb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2012 15:49:06 -0700 (PDT)
+Date: Sun, 29 Jul 2012 17:48:57 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Roland Vossen <rvossen@broadcom.com>
+Subject: Re: [3.2.y] Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20120729224857.GA21285@burratino> (sfid-20120730_004911_994878_E0A113CE)
+References: <CAKprTDHQT8Oodh_YD5CWffSGJXAg-HgFMjR0STVgEZRxH4FaSQ@mail.gmail.com>
+ <20120604084200.GA30645@tiikeri.vuoristo.local>
+ <20120604173121.GA9238@stt008.linux.site>
+ <20120605050620.GC3118@burratino>
+ <CAKprTDHGqDpdZY4ErZmPEc7Ur81GeQoH8tiAL5hrfhAE0RtbvQ@mail.gmail.com>
+ <20120611031544.GB3092@burratino>
+ <4FE0CA49.3030909@broadcom.com>
+ <20120716213122.GA3078@burratino>
+ <50051A2F.3030206@broadcom.com>
+ <20120723002808.GA3305@burratino>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120723002808.GA3305@burratino>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Jonathan Nieder wrote:
+> Arend van Spriel wrote:
 
-for AR9002 family of chipsets and for WoW sleep, we reprogram
-the SerDes so that the PLL and CHK REQ are both enabled. this
-uses more power but in certain cases this is required as otherwise
-WoW sleep is unstable and chip may disappear.
+>> I guess the behaviour improved due to the last two patches listed above,
+>> but I also suspect that it is only an improvement and the root cause
+>> still exists.
+>
+> I think you're right.  Camaleón tried with all patches except the last
+> one and still got the unwanted reconnects.
+>
+> Would 6b8da423315b and 94a2ca311cf4 be good candidates for stable@ in
+> the meantime (for symptom relief and saner regulatory code) until the
+> root cause is found?
 
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: vadivel@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +++++
- drivers/net/wireless/ath/ath9k/ar9002_initvals.h |   14 ++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h              |    3 +++
- 3 files changed, 22 insertions(+), 0 deletions(-)
+To answer my own question: I guess not, at least not on the basis of
+Camaleón's experience.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index edf21ea..0e6ee60 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -43,6 +43,11 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
- 		INIT_INI_ARRAY(&ah->iniPcieSerdes,
- 			   ar9280PciePhy_clkreq_always_on_L1_9280,
- 			   ARRAY_SIZE(ar9280PciePhy_clkreq_always_on_L1_9280), 2);
-+#ifdef CONFIG_PM_SLEEP
-+		INIT_INI_ARRAY(&ah->iniPcieSerdesWow,
-+			       ar9280PciePhy_awow,
-+			       ARRAY_SIZE(ar9280PciePhy_awow), 2);
-+#endif
- 
- 	if (AR_SREV_9287_11_OR_LATER(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModes, ar9287Modes_9287_1_1,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
-index 4d18c66..beb6162 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
-@@ -925,6 +925,20 @@ static const u32 ar9280PciePhy_clkreq_always_on_L1_9280[][2] = {
- 	{0x00004044, 0x00000000},
- };
- 
-+static const u32 ar9280PciePhy_awow[][2] = {
-+	/* Addr      allmodes  */
-+	{0x00004040, 0x9248fd00},
-+	{0x00004040, 0x24924924},
-+	{0x00004040, 0xa8000019},
-+	{0x00004040, 0x13160820},
-+	{0x00004040, 0xe5980560},
-+	{0x00004040, 0xc01dcffd},
-+	{0x00004040, 0x1aaabe41},
-+	{0x00004040, 0xbe105554},
-+	{0x00004040, 0x00043007},
-+	{0x00004044, 0x00000000},
-+};
-+
- static const u32 ar9285Modes_9285_1_2[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 09f6c07..51589fd 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -860,6 +860,9 @@ struct ath_hw {
- 	struct ar5416IniArray iniBank7;
- 	struct ar5416IniArray iniAddac;
- 	struct ar5416IniArray iniPcieSerdes;
-+#ifdef CONFIG_PM_SLEEP
-+	struct ar5416IniArray iniPcieSerdesWow;
-+#endif
- 	struct ar5416IniArray iniPcieSerdesLowPower;
- 	struct ar5416IniArray iniModesFastClock;
- 	struct ar5416IniArray iniAdditional;
--- 
-1.7.0.4
+Results so far:
 
+ * mainline >= 3.4.y: seemed to be ok for a few days, never showed the
+   problem.
+ * 3.2.19 + the 23 patches discussed in this thread: worked fine for about
+   a week, never showed the problem.
+ * 3.2.18: failed quickly.
+ * 3.2.19 + first patch: failed quickly.
+ * 3.2.2: worked ok for a while, then acted up again.  Affected.
+ * 3.2.21 + 10 patches: failed quickly.
+ * 3.2.21 + all 23 patches: worked ok-ish (?) for a week ("only a
+   couple reconnects in 7 days, but when that happened gnome-shell was
+   not segfaulting at least...").  I should have paid more attention:
+   that meant it was affected!
+ * 3.2.21 + 17 patches: failed quickly.
+ * 3.2.21 + 19 patches: failed quickly.
+ * 3.2.22 + 22 patches: failed quickly.
+ * 3.2.21 + patch #23 alone: failed quickly.
+ * 3.2.21 + all 23 patches: failed quickly.
+
+Arend, you're very good at this guessing game. ;-)
+
+I imagine the problem is still present in mainline.  Camaleón, the
+next useful test would probably be mainline or wireless-testing, and
+we should probably stop being so lazy and try to figure out _what_ is
+happening when it reconnects and whether it is even a kernel bug.  It
+might be something normal (like rekeying) not being handled well by
+userspace.
+
+Whatever it is, it seems that the kernel can help, since the
+proprietary Broadcom wl driver works better if I have understood
+Camaleón correctly.
+
+Thanks,
+Jonathan
