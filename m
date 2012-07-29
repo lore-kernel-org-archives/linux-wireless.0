@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:65059 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349Ab2GIO2E (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:48550 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752382Ab2G2Ler convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 10:28:04 -0400
-Received: by weyx8 with SMTP id x8so1236269wey.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2012 07:28:02 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	xose.vazquez@gmail.com
-Subject: [PATCH] MAINTAINERS: realtek drivers
-Date: Mon,  9 Jul 2012 16:27:58 +0200
-Message-Id: <1341844078-2319-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120709_162809_440061_AE722613)
+	Sun, 29 Jul 2012 07:34:47 -0400
+Received: by wgbdr13 with SMTP id dr13so4030738wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jul 2012 04:34:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FB57C61.3090302@hauke-m.de>
+References: <4FB57C61.3090302@hauke-m.de>
+Date: Sun, 29 Jul 2012 13:34:46 +0200
+Message-ID: <CACna6rzO2579YdN_GdmP+=-+L308KjKhKsejevAzJ19dp6LxVg@mail.gmail.com> (sfid-20120729_133451_770680_D68CD8D4)
+Subject: Re: brcmsmac and BCM47186 (BCM5357) + brcmfmac and BCM43236 V2
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-s/RTL8192CE/RTLWIFI , add wiki pages and delete
-"F:     drivers/net/wireless/rtlwifi/rtl8192ce/", it's redundant.
+2012/5/18 Hauke Mehrtens <hauke@hauke-m.de>:
+> I got a new device, a Linksys E3200 with a BCM47186 (id: 0x5357) and a
+> BCM43236 v2 for 5GHz wifi.
+>
+> The BCM47186 has a wifi core rev 28, a N-PHY rev 9 and a 2057 radio rev
+> 5 and it does not work with brcmsmac or b43. :-(
+>
+> Are there plans to add support for such new N-PHY revs to brcmsmac and
+> the firmware?
+>
+> Here are some parts of my log with brcmsamc with firmware from
+> linux-firmware.
+>
+> bcma: Found chip with id 0x5357, rev 0x02 and package 0x0A
+> ....
+> bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x1C, class 0x0)
+> ....
+> [   14.776000] b43-phy0: Broadcom 5357 WLAN found (core revision 28)
+> [   14.780000] b43-phy0 debug: Found PHY: Analog 9, Type 4, Revision 9
 
----
- MAINTAINERS |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Hauke, is this 0x5357 a SoC bcma, or additional bcma connected via
+PCIE to the main one? If it's the second case, could you provide pci
+id, please?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 03df1d1..5c27b0c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5753,7 +5753,7 @@ F:	net/rose/
- RTL8180 WIRELESS DRIVER
- M:	"John W. Linville" <linville@tuxdriver.com>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://linuxwireless.org/en/users/Drivers/rtl8187
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
- F:	drivers/net/wireless/rtl818x/rtl8180/
-@@ -5763,20 +5763,19 @@ M:	Herton Ronaldo Krzesinski <herton@canonical.com>
- M:	Hin-Tak Leung <htl10@users.sourceforge.net>
- M:	Larry Finger <Larry.Finger@lwfinger.net>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://linuxwireless.org/en/users/Drivers/rtl8187
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
- F:	drivers/net/wireless/rtl818x/rtl8187/
- 
--RTL8192CE WIRELESS DRIVER
-+RTLWIFI WIRELESS DRIVERS
- M:	Larry Finger <Larry.Finger@lwfinger.net>
- M:	Chaoming Li <chaoming_li@realsil.com.cn>
- L:	linux-wireless@vger.kernel.org
--W:	http://linuxwireless.org/
-+W:	http://linuxwireless.org/en/users/Drivers/rtl819x
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
- F:	drivers/net/wireless/rtlwifi/
--F:	drivers/net/wireless/rtlwifi/rtl8192ce/
- 
- S3 SAVAGE FRAMEBUFFER DRIVER
- M:	Antonino Daplas <adaplas@gmail.com>
 -- 
-1.7.10.4
-
+Rafał
