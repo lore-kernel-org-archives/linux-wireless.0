@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48552 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751624Ab2GOLVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 07:21:30 -0400
-Message-ID: <5002A7B2.409@openwrt.org> (sfid-20120715_132134_094888_83DCD019)
-Date: Sun, 15 Jul 2012 13:21:22 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2 08/12] ath9k: fix aggregate size limit based on queue
- TXOP limit
-References: <1342105451-42297-1-git-send-email-nbd@openwrt.org> <1342105451-42297-2-git-send-email-nbd@openwrt.org> <1342105451-42297-3-git-send-email-nbd@openwrt.org> <1342105451-42297-4-git-send-email-nbd@openwrt.org> <1342105451-42297-5-git-send-email-nbd@openwrt.org> <1342105451-42297-6-git-send-email-nbd@openwrt.org> <1342105451-42297-7-git-send-email-nbd@openwrt.org> <1342105451-42297-8-git-send-email-nbd@openwrt.org> <20481.3065.540576.366365@gargle.gargle.HOWL>,<500143CA.1020804@openwrt.org> <506697F5827BD842B7CB80D046EBE618995399@aphydexd01b>
-In-Reply-To: <506697F5827BD842B7CB80D046EBE618995399@aphydexd01b>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:36157 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754808Ab2G3Roy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2012 13:44:54 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: manage carrier state in mesh
+Date: Mon, 30 Jul 2012 19:44:51 +0200
+Message-Id: <1343670291-7144-1-git-send-email-johannes@sipsolutions.net> (sfid-20120730_194459_424244_459C5C47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-07-15 4:21 AM, Manoharan, Sujith wrote:
-> I believe mac80211 has a per-VIF idea of queue parameters (tx_conf in struct ieee80211_sub_if_data).
-> And we end up overwriting the parameters of the main interface. For example,
-> 
-> * Bringing up an AP interface:
-> 
-> ath: phy0: Configure tx [queue/halq] [0/0], aifs: 1, cw_min: 3, cw_max: 7, txop: 47
-> ath: phy0: Configure tx [queue/halq] [1/1], aifs: 1, cw_min: 7, cw_max: 15, txop: 94
-> ath: phy0: Configure tx [queue/halq] [2/2], aifs: 3, cw_min: 15, cw_max: 63, txop: 0
-> ath: phy0: Configure tx [queue/halq] [3/3], aifs: 7, cw_min: 15, cw_max: 1023, txop: 0
-> 
-> * Adding a new station interface (but not associated yet):
-> 
-> ath: phy0: Attach a VIF of type: 2
-> 
-> ath: phy0: Configure tx [queue/halq] [0/0], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-> ath: phy0: Configure tx [queue/halq] [1/1], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-> ath: phy0: Configure tx [queue/halq] [2/2], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-> ath: phy0: Configure tx [queue/halq] [3/3], aifs: 2, cw_min: 31, cw_max: 1023, txop: 0
-Yes, but ath9k only has global queue settings, not per-vif ones, so I'm
-not sure what can be done about the issue of overwriting queue settings.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Either way, it's important for the aggregation limit to be in sync with
-the hardware queue TXOP limit, so I believe this patch is correct.
+Instead of assuming the carrier is on all
+the time in mesh manage it with joining
+and leaving the mesh.
 
-- Felix
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c |   12 ++++++++----
+ net/mac80211/mesh.c  |    4 ++++
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 12025dd..98e448a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -555,12 +555,16 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			changed |= ieee80211_reset_erp_info(sdata);
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
+-		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
+-		    sdata->vif.type == NL80211_IFTYPE_AP)
++		switch (sdata->vif.type) {
++		case NL80211_IFTYPE_STATION:
++		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_AP:
++		case NL80211_IFTYPE_MESH_POINT:
+ 			netif_carrier_off(dev);
+-		else if (dev)
++			break;
++		default:
+ 			netif_carrier_on(dev);
++		}
+ 
+ 		/*
+ 		 * set default queue parameters so drivers don't
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index db295e3..0c7d54d 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -634,6 +634,8 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 						BSS_CHANGED_HT |
+ 						BSS_CHANGED_BASIC_RATES |
+ 						BSS_CHANGED_BEACON_INT);
++
++	netif_carrier_on(sdata->dev);
+ }
+ 
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+@@ -641,6 +643,8 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
++	netif_carrier_off(sdata->dev);
++
+ 	ifmsh->mesh_id_len = 0;
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
+ 	sta_info_flush(local, NULL);
+-- 
+1.7.10.4
+
