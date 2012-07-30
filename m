@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36938 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329Ab2G0V0o (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732Ab2G3R7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jul 2012 17:26:44 -0400
-Date: Fri, 27 Jul 2012 14:26:41 -0700 (PDT)
-Message-Id: <20120727.142641.1758613016734325267.davem@davemloft.net> (sfid-20120727_232702_078550_B00E97E9)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-07-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120727155806.GB6110@tuxdriver.com>
-References: <20120727155806.GB6110@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 30 Jul 2012 13:59:33 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: enable WDS carrier only after adding station
+Date: Mon, 30 Jul 2012 19:59:31 +0200
+Message-Id: <1343671171-9768-1-git-send-email-johannes@sipsolutions.net> (sfid-20120730_195936_996417_3053D468)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 27 Jul 2012 11:58:06 -0400
+From: Johannes Berg <johannes.berg@intel.com>
 
-> These fixes are intended for the 3.6 stream.
-> 
-> Hauke Mehrtens provides a pair of bcma fixes, one to fix a build
-> regression on mips and another to correct a pair of missing iounmap
-> calls.
-> 
-> Thomas Huehn offers a mac80211_hwsim fix to avoid a possible
-> use-after-free bug.
-> 
-> Please let me know if there are problems!
+Enable the carrier on WDS type interfaces only
+after having added the station entry for the
+WDS peer so outgoing frames will find it.
 
-Pulled, thanks John.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 4787351..e3a2eb1 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -546,6 +546,8 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 			netif_carrier_off(dev);
+ 			break;
++		case NL80211_IFTYPE_WDS:
++			break;
+ 		default:
+ 			netif_carrier_on(dev);
+ 		}
+@@ -580,6 +582,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		}
+ 
+ 		rate_control_rate_init(sta);
++		netif_carrier_on(dev);
+ 	}
+ 
+ 	/*
+-- 
+1.7.10.4
+
