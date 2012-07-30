@@ -1,29 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35099 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:35387 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752904Ab2GWNaQ (ORCPT
+	with ESMTP id S1753999Ab2G3Ngf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 09:30:16 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	Mon, 30 Jul 2012 09:36:35 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1StIiE-0001Ig-6L
-	for linux-wireless@vger.kernel.org; Mon, 23 Jul 2012 15:30:14 +0200
+	id 1Svq9B-0005jj-Vn
+	for linux-wireless@vger.kernel.org; Mon, 30 Jul 2012 15:36:34 +0200
+Message-ID: <1343655393.4452.13.camel@jlt3.sipsolutions.net> (sfid-20120730_153639_738684_B6CA379C)
+Subject: WDS vs. multi-channel operation
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC/RFT 0/6] mac80211 oper_channel changes
-Date: Mon, 23 Jul 2012 15:30:05 +0200
-Message-Id: <1343050211-499-1-git-send-email-johannes@sipsolutions.net> (sfid-20120723_153037_143560_2570CDF2)
+Date: Mon, 30 Jul 2012 15:36:33 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When reviewing code for the multi-channel changes, I had
-noticed that a lot of places use hw.conf.channel when they
-should be using oper_channel instead. This patches changes
-most places, but we keep some that really need to be the
-*current* channel rather than the operating channel.
+Ok so I'm chipping away at multi-channel operation, but WDS is
+troubling. Which channel should it use? It doesn't even have channel
+configuration today, but relies on having a channel already, but that
+breaks when you have multi-channel since then it either has to have its
+own channel or be slaved to another channel...
 
-Please review/test :-)
+Anyone have any ideas?
 
 johannes
 
