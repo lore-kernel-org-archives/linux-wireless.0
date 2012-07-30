@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33474 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771Ab2GIJKF (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:59864 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752736Ab2G3L3u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jul 2012 05:10:05 -0400
-Message-ID: <1341825002.4455.10.camel@jlt3.sipsolutions.net> (sfid-20120709_111023_365233_A6334DD5)
-Subject: Re: [RFC 1/3] mac80211: make scan_sdata pointer usable with RCU
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Jul 2012 11:10:02 +0200
-In-Reply-To: <CA+XVXfeAhP9EjKJr6Ch1GAuT8u4CV_WsDQiCCt6b4YGjHzZwrQ@mail.gmail.com> (sfid-20120709_104823_940389_C5E8A146)
-References: <1341608733-7503-1-git-send-email-johannes@sipsolutions.net>
-	 <1341608733-7503-2-git-send-email-johannes@sipsolutions.net>
-	 <CA+XVXfdo7agXE9Osxzmda2ZWi-xQ6pvP66zktdiDJq3P6PULgg@mail.gmail.com>
-	 <1341820743.4455.1.camel@jlt3.sipsolutions.net>
-	 <CA+XVXfeAhP9EjKJr6Ch1GAuT8u4CV_WsDQiCCt6b4YGjHzZwrQ@mail.gmail.com>
-	 (sfid-20120709_104823_940389_C5E8A146)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 30 Jul 2012 07:29:50 -0400
+Message-ID: <5016702D.8000801@net.t-labs.tu-berlin.de> (sfid-20120730_133030_892593_B411BF3A)
+Date: Mon, 30 Jul 2012 13:29:49 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org
+Subject: Re: [PATCH 1/2] mac80211: Add support of transmit power control (TPC)
+ per data packet
+References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de>  <1343404809-70329-2-git-send-email-thomas@net.t-labs.tu-berlin.de>  (sfid-20120727_180037_367100_88493A5C) <1343633674.4452.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1343633674.4452.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-09 at 11:48 +0300, Arik Nemtsov wrote:
-> On Mon, Jul 9, 2012 at 10:59 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Sun, 2012-07-08 at 19:27 +0300, Arik Nemtsov wrote:
-> >> On Sat, Jul 7, 2012 at 12:05 AM, Johannes Berg
-> >> <johannes@sipsolutions.net> wrote:
-> >> > From: Johannes Berg <johannes.berg@intel.com>
-> >> >
-> >> > Making the scan_sdata pointer usable with RCU makes
-> >> > it possible to dereference it in the RX path to see
-> >> > if a received frame actually matches the interface
-> >> > that is scanning. This is just preparations, making
-> >> > the pointer __rcu.
-> >>
-> >> I noticed no synchronize_rcu() in the start/stop scan calls. Good/bad idea?
-> >
-> > Well, start() certainly wouldn't need it since you'd only get NULL :-)
-> >
-> > stop() in theory could use it, but it doesn't actually matter because as
-> > long as the interface still exists the pointer is valid. We don't free
-> > the interface in scan stop, so we don't need to make sure that the
-> > pointer is cleared before we continue. And in the case that we *do* in
-> > fact clear the interface (when it's going down) we have synchronize_rcu
-> > already in those code paths due to say the interface list with RCU
-> > protection.
-> 
-> I meant protecting these (in patch 2/3):
-> 
-> -            local->sched_scanning,
-> +            rcu_dereference_protected(local->sched_scan_sdata,
-> +                                      lockdep_is_held(&local->mtx)),
-> 
-> The check is obviously racy here, but it was racy before as well I guess.
-> I'm not sure why something line test_bit(SCHED_SCANNING) wasn't used
-> in these places.
+Hi Johannes
 
-I don't think I understand what you're trying to say ... why is this
-racy? We hold the mutex that we always hold when we assign the pointer.
+Johannes Berg schrieb:
 
-johannes
+> On Fri, 2012-07-27 at 18:00 +0200, Thomas Huehn wrote:
+> 
+>>   * &struct ieee80211_tx_info contains an array of these structs
+>> - * in the control information, and it will be filled by the rate
+>> - * control algorithm according to what should be sent. For example,
+>> - * if this array contains, in the format { <idx>, <count> } the
+>> + * in the control information, and it will be filled by the joint rate-
+>> + * power control algorithm according to what should be sent. For example,
+>> + * if this array contains, in the format { <idx>, <count>, <tpc> } the
+>>   * information
+>> - *    { 3, 2 }, { 2, 2 }, { 1, 4 }, { -1, 0 }, { -1, 0 }
+>> + *    { 3, 2, 16 }, { 2, 2, 10 }, { 1, 4, 5 }, { -1, 0, 0 }
+>>   * then this means that the frame should be transmitted
+>> - * up to twice at rate 3, up to twice at rate 2, and up to four
+>> - * times at rate 1 if it doesn't get acknowledged. Say it gets
+>> - * acknowledged by the peer after the fifth attempt, the status
+>> + * up to twice at rate 3 with 16 dBm, up to twice at rate 2 with 10 dBm,
+> 
+> You might want to consider using 1/2 or 1/4 dBm granularity? A lot of
+> hardware can do that.
+> 
 
+
+The choice of 1 dBm as step width was based on our experiments with
+Atheros chips that do support up to 0,5dBm step width. We concluded that
+1dBm is sufficient as it provides 20 steps from 1 till 100 mWatt as
+dynamic range of control. But there is no problem for my tpc algorithm
+to handle a granularity of 0.5 dBm as step size, or any other upcoming
+tpc controller. Should we gather some feedback about todays hardware
+specs in terms of tx_power abilities? Or should I just apply 0.5 dBm
+steps in v2 ?
+
+
+>>  struct ieee80211_tx_rate {
+>>  	s8 idx;
+>>  	u8 count;
+>>  	u8 flags;
+>> +	u8 tpc;
+> 
+> I'm not sure that should be named "tpc". Think about what that means --
+> "transmit power control", but it's really the power value, so it should
+> be "txpower" or so.
+> 
+
+
+I will change this to tx_power in v2, sounds reasonable.
+
+Greetings Thomas
