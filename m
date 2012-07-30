@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34028 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754636Ab2GEL0G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 07:26:06 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 0/2] High bitrate support
-Date: Thu, 5 Jul 2012 14:25:48 +0300
-Message-ID: <1341487550-11502-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120705_132609_877166_126E3988)
+Received: from mx1.redhat.com ([209.132.183.28]:47786 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751798Ab2G3Hej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2012 03:34:39 -0400
+Date: Mon, 30 Jul 2012 09:33:28 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Matt Chen <machen@suse.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	kevin.chou@mediatek.com, woody.hung@mediatek.com
+Subject: Re: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
+Message-ID: <20120730073327.GB2395@redhat.com> (sfid-20120730_093443_672272_8700E570)
+References: <1343372634-19870-1-git-send-email-machen@suse.com>
+ <20120727101840.GA2436@redhat.com>
+ <CALx5=V_GSs8xv0-OnEC-2h82E9LWVpRjd1UDyPE3+=etX0z29A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CALx5=V_GSs8xv0-OnEC-2h82E9LWVpRjd1UDyPE3+=etX0z29A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I like what Johannes suggested, thus name for new bitrate option
-changed to NL80211_RATE_INFO_BITRATE32
+Hi
 
-Patch for iw will follow shortly
+On Fri, Jul 27, 2012 at 10:22:44PM +0800, Matt Chen wrote:
+> 2012/7/27 Stanislaw Gruszka <sgruszka@redhat.com>:
+> > On Fri, Jul 27, 2012 at 03:03:54PM +0800, Chen, Chien-Chia wrote:
+> >> This patch is going to fix the resuming failed from S3/S4
+> >> for rt3290 chip.
+> >>
+> >> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+> >> CC-by: Kevin Chou <kevin.chou@mediatek.com>
+> >
+> > Could you please post patches that compile? Also you did not set true
+> Compile ? you mean the *.o files and *.ko ?
 
-Proposed patches solve issue with high bitrates not fitting into u16.                                                                                                              
-                                                                                                                                                                                   
-I split it into 2 patches: one introduces new u32 bitrate,                                                                                                                         
-and 2-nd adds 60g specific calculations.                                                                                                                                           
-                                                                                                                                                                                   
-Idea is to report (in nl80211) both old and new values,
-or only new if it not fits into u16.
-User space tools encouraged to migrate to the new bitrate.
+Patch does not compile:
 
-cfg80211_calculate_bitrate() changed to return u32
-There are few places where cfg80211_calculate_bitrate() used
-besides nl80211.c; but these places are OK with bitrate changing
-from u16 to u32.
+drivers/net/wireless/rt2x00/rt2800lib.c:5163: error: static declaration of ‘rt2800_enable_wlan_rt3290’ follows non-static declaration
+drivers/net/wireless/rt2x00/rt2800lib.h:212: note: previous declaration of ‘rt2800_enable_wlan_rt3290’ was here
+make[1]: *** [drivers/net/wireless/rt2x00/rt2800lib.o] Error 1
+make: *** [drivers/net/wireless/rt2x00/] Error 2
 
-Vladimir Kondratiev (2):
-  {nl,cfg}80211: support high bitrates
-  cfg80211: bitrate calculation for 60g
+How did you tested the patch ?
 
- include/linux/nl80211.h |    8 ++++++++
- include/net/cfg80211.h  |    4 +++-
- net/wireless/nl80211.c  |    9 +++++++--
- net/wireless/util.c     |   51 ++++++++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 68 insertions(+), 4 deletions(-)
+> > author of the patch. Additionally, since repost that patch with changes,
+> > you should mark version of the patch and provide information about
+> > changes, like for example here:
+> Hmm....I added the Author: Woody Hung <Woody.Hung@mediatek.com> but
+> don't know why it doesn't show here. :(
 
--- 
-1.7.9.5
+So fix that. Post patch to yourself first to see if setting works.
 
+Stanislaw
