@@ -1,143 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18369 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460Ab2GBGcw (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:64915 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754257Ab2G3Tvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jul 2012 02:32:52 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 60g v2 1/5] wireless: add 802.11ad (60gHz band)
-Date: Mon, 2 Jul 2012 09:32:32 +0300
-Message-ID: <1341210756-11054-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120702_083255_395735_A990EEEB)
-In-Reply-To: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341210756-11054-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 30 Jul 2012 15:51:45 -0400
+Received: by gglu4 with SMTP id u4so5256986ggl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2012 12:51:45 -0700 (PDT)
+Message-ID: <5016E5CD.2090100@lwfinger.net> (sfid-20120730_215148_950870_721961E2)
+Date: Mon, 30 Jul 2012 14:51:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
+References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <5010304E.6070005@lwfinger.net> <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> <501121B5.4010305@lwfinger.net> <1343300503.96939.YahooMailNeo@web28902.mail.ir2.yahoo.com> <501129D9.4060407@lwfinger.net> <1343314190.31952.YahooMailNeo@web28901.mail.ir2.yahoo.com> <5011BC0A.8060600@lwfinger.net> <1343370892.97699.YahooMailNeo@web28904.mail.ir2.yahoo.com> <501280BF.4070409@lwfinger.net> <1343394581.87030.YahooMailNeo@web28902.mail.ir2.yahoo.com> <1343398356.19742.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343403507.54955.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343404770.91235.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343407089.96532.YahooMailNeo@web28901.mail.ir2.yahoo.com> <50140463.3080209@lwfinger.net> <1343591834.22699.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5015A2DB.50106@lwfinger.net> <1343671587.79175.YahooMailNeo@web28901.mail.ir2.yahoo.com>
+In-Reply-To: <1343671587.79175.YahooMailNeo@web28901.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add enumerations for both cfg80211 and nl80211.
-This expands wiphy.bands etc. arrays.
+On 07/30/2012 01:06 PM, Xavier de Almeida wrote:
+>
+> (any cheap, good and working USB wifi device which has more power than an embedded chip as the rtl8188 ? it's a shame that we can't add just an antenna vs another wifi hw)
 
-Extend channel <-> frequency translation to cover 60g band
+One of the Alfa AWUS036 models has an RTL8188CU chip in it. I think it ends in 
+HR. Besides that, there are a number of devices that use the rt2800usb or ath9k 
+variants that have external antennas.
 
-Small fix for mac80211/tx.c required to fix compiler warning
+I cannot run my RTL8188CE as an internal device as it is not white listed by my 
+BIOS, thus I have no idea how well it works with standard laptop antennas.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- include/linux/nl80211.h |    2 ++
- include/net/cfg80211.h  |    2 ++
- net/mac80211/tx.c       |    2 ++
- net/wireless/util.c     |   30 ++++++++++++++++++++++--------
- 4 files changed, 28 insertions(+), 8 deletions(-)
+Larry
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index c0fc5d2..679831e 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -2539,10 +2539,12 @@ enum nl80211_tx_rate_attributes {
-  * enum nl80211_band - Frequency band
-  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
-  * @NL80211_BAND_5GHZ: around 5 GHz band (4.9 - 5.7 GHz)
-+ * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
-  */
- enum nl80211_band {
- 	NL80211_BAND_2GHZ,
- 	NL80211_BAND_5GHZ,
-+	NL80211_BAND_60GHZ,
- };
- 
- /**
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 061c019..56e840d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -70,11 +70,13 @@
-  *
-  * @IEEE80211_BAND_2GHZ: 2.4GHz ISM band
-  * @IEEE80211_BAND_5GHZ: around 5GHz band (4.9-5.7)
-+ * @IEEE80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
-  * @IEEE80211_NUM_BANDS: number of defined bands
-  */
- enum ieee80211_band {
- 	IEEE80211_BAND_2GHZ = NL80211_BAND_2GHZ,
- 	IEEE80211_BAND_5GHZ = NL80211_BAND_5GHZ,
-+	IEEE80211_BAND_60GHZ = NL80211_BAND_60GHZ,
- 
- 	/* keep last */
- 	IEEE80211_NUM_BANDS
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ec8f5346..eebd33a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -140,6 +140,8 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 			if (r->flags & IEEE80211_RATE_MANDATORY_A)
- 				mrate = r->bitrate;
- 			break;
-+		case IEEE80211_BAND_60GHZ:
-+			/* TODO, for now fall through */
- 		case IEEE80211_NUM_BANDS:
- 			WARN_ON(1);
- 			break;
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 316cfd0..f3ce35b 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -35,19 +35,29 @@ int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
- {
- 	/* see 802.11 17.3.8.3.2 and Annex J
- 	 * there are overlapping channel numbers in 5GHz and 2GHz bands */
--	if (band == IEEE80211_BAND_5GHZ) {
--		if (chan >= 182 && chan <= 196)
--			return 4000 + chan * 5;
--		else
--			return 5000 + chan * 5;
--	} else { /* IEEE80211_BAND_2GHZ */
-+	if (chan <= 0)
-+		return 0; /* not supported */
-+	switch (band) {
-+	case IEEE80211_BAND_2GHZ:
- 		if (chan == 14)
- 			return 2484;
- 		else if (chan < 14)
- 			return 2407 + chan * 5;
-+		break;
-+	case IEEE80211_BAND_5GHZ:
-+		if (chan >= 182 && chan <= 196)
-+			return 4000 + chan * 5;
- 		else
--			return 0; /* not supported */
-+			return 5000 + chan * 5;
-+		break;
-+	case IEEE80211_BAND_60GHZ:
-+		if (chan < 5)
-+			return 56160 + chan * 2160;
-+		break;
-+	default:
-+		;
- 	}
-+	return 0; /* not supported */
- }
- EXPORT_SYMBOL(ieee80211_channel_to_frequency);
- 
-@@ -60,8 +70,12 @@ int ieee80211_frequency_to_channel(int freq)
- 		return (freq - 2407) / 5;
- 	else if (freq >= 4910 && freq <= 4980)
- 		return (freq - 4000) / 5;
--	else
-+	else if (freq <= 45000) /* DMG band lower limit */
- 		return (freq - 5000) / 5;
-+	else if (freq >= 58320 && freq <= 64800)
-+		return (freq - 56160) / 2160;
-+	else
-+		return 0;
- }
- EXPORT_SYMBOL(ieee80211_frequency_to_channel);
- 
--- 
-1.7.9.5
 
