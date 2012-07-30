@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756721Ab2GMMux (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:57274 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754308Ab2G3PSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jul 2012 08:50:53 -0400
-Message-ID: <1342183848.4452.1.camel@jlt3.sipsolutions.net> (sfid-20120713_145120_606796_3C75BDA3)
-Subject: Re: [PATCH] cfg80211: fix set_regdom() to cancel requests with same
- alpha2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 13 Jul 2012 14:50:48 +0200
-In-Reply-To: <20120712123358.22054.62538.stgit@localhost6.localdomain6> (sfid-20120712_143407_357227_CA39EE4B)
-References: <20120712123358.22054.62538.stgit@localhost6.localdomain6>
-	 (sfid-20120712_143407_357227_CA39EE4B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 30 Jul 2012 11:18:47 -0400
+Received: by qadb17 with SMTP id b17so975835qad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2012 08:18:46 -0700 (PDT)
+Message-ID: <5016A5D3.10301@lwfinger.net> (sfid-20120730_171937_216808_C0BD1B51)
+Date: Mon, 30 Jul 2012 10:18:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Marco <netuse@lavabit.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8187 in master mode with hostapd
+References: <20120727171137.4a1d1ce7@homerow> <501405FA.3070504@lwfinger.net> <20120728211613.45ca10fa@homerow>
+In-Reply-To: <20120728211613.45ca10fa@homerow>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis?
+On 07/28/2012 02:16 PM, Marco wrote:
+> On 2012-07-28 Larry Finger
+> <Larry.Finger@lwfinger.net> wrote:
+>
+> Hi Larry,
+>
+>> In the case of the RTL8187L, which is the chip in your Alfa device, it means
+>> *never*.
+>
+> Thanks for this straightforward answer. In this case it makes sense
+> to change the point AP/Master mode on the driver description page
+>
+> http://linuxwireless.org/en/users/Drivers/rtl8187
+>
+> from “not working yet” to “not supported”.
+>
+>> That chip only has a single hardware transmit queue and the work of
+>> getting the high-priority traffic, such as beacons, transmitted at the correct
+>> time would be much more than it would be worth.
+>
+> I wasn't aware of that when I bought the device.
+>
+> It might be off-topic here, but what chip (or device) would you
+> recommend instead, for use in an AP? It has to be connected via USB,
+> support master mode and, only if possible, run without the need of
+> proprietary firmware.
+>
+>
+> Thanks for taking the time to deal with my issue.
 
->  		if (!regdom_changes(rd->alpha2))
-> -			return -EINVAL;
-> +			return -EALREADY;
->  	}
->  
->  	/*
-> @@ -2325,6 +2325,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
->  	/* Note that this doesn't update the wiphys, this is done below */
->  	r = __set_regdom(rd);
->  	if (r) {
-> +		if (r == -EALREADY)
-> +			reg_set_request_processed();
-> +
+As far as I know, there are no USB devices that meet all of your requirements. 
+If you relax the one about external firmware, then any of the USB devices that 
+run rt2800usb (Ralink) should support master mode. I'm not at home now and do 
+not have mine with me, thus I cannot give you a make/model. An older dual-band 
+model is the Dell 1450U. These are available new on E-bay for $10. Perhaps 
+someone else on this list can suggest other specific models. I am quite certain 
+that Atheros also has such devices.
 
-I'm not really sure I like the reliance on the error code ... would it
-make more sense to invent a status enum? Or just return 0 to start with?
-
-johannes
+Larry
 
