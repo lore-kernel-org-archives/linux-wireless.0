@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32484 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753703Ab2GXGf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jul 2012 02:35:59 -0400
-Date: Tue, 24 Jul 2012 08:35:39 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Hong Wu <Hong.Wu@dspg.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH] wireless: reg: restore previous behaviour of chan->max_power
- calculations
-Message-ID: <20120724063538.GB2265@redhat.com> (sfid-20120724_083604_696318_C141BD9E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:34291 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022Ab2G3Hej (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jul 2012 03:34:39 -0400
+Message-ID: <1343633674.4452.3.camel@jlt3.sipsolutions.net> (sfid-20120730_093442_981435_4BC9EB66)
+Subject: Re: [PATCH 1/2] mac80211: Add support of transmit power control
+ (TPC) per data packet
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org
+Date: Mon, 30 Jul 2012 09:34:34 +0200
+In-Reply-To: <1343404809-70329-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120727_180037_367100_88493A5C)
+References: <1343404809-70329-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <1343404809-70329-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 (sfid-20120727_180037_367100_88493A5C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit eccc068e8e84c8fe997115629925e0422a98e4de
-Author: Hong Wu <Hong.Wu@dspg.com>
-Date:   Wed Jan 11 20:33:39 2012 +0200
+On Fri, 2012-07-27 at 18:00 +0200, Thomas Huehn wrote:
 
-    wireless: Save original maximum regulatory transmission power for the calucation of the local maximum transmit pow
+>   * &struct ieee80211_tx_info contains an array of these structs
+> - * in the control information, and it will be filled by the rate
+> - * control algorithm according to what should be sent. For example,
+> - * if this array contains, in the format { <idx>, <count> } the
+> + * in the control information, and it will be filled by the joint rate-
+> + * power control algorithm according to what should be sent. For example,
+> + * if this array contains, in the format { <idx>, <count>, <tpc> } the
+>   * information
+> - *    { 3, 2 }, { 2, 2 }, { 1, 4 }, { -1, 0 }, { -1, 0 }
+> + *    { 3, 2, 16 }, { 2, 2, 10 }, { 1, 4, 5 }, { -1, 0, 0 }
+>   * then this means that the frame should be transmitted
+> - * up to twice at rate 3, up to twice at rate 2, and up to four
+> - * times at rate 1 if it doesn't get acknowledged. Say it gets
+> - * acknowledged by the peer after the fifth attempt, the status
+> + * up to twice at rate 3 with 16 dBm, up to twice at rate 2 with 10 dBm,
 
-changed the way we calculate chan->max_power as min(chan->max_power,
-chan->max_reg_power). That broke rt2x00 (and perhaps some other
-drivers) that do not set chan->max_power. It is not so easy to fix this
-problem correctly in rt2x00.
+You might want to consider using 1/2 or 1/4 dBm granularity? A lot of
+hardware can do that.
 
-According to commit eccc068e8 changelog, change claim only to save
-maximum regulatory power - changing setting of chan->max_power was side
-effect. This patch restore previous calculations of chan->max_power and
-do not touch chan->max_reg_power.
+>  struct ieee80211_tx_rate {
+>  	s8 idx;
+>  	u8 count;
+>  	u8 flags;
+> +	u8 tpc;
 
-Cc: stable@vger.kernel.org # 3.4+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/wireless/reg.c |   16 +++++++++++++++-
- 1 files changed, 15 insertions(+), 1 deletions(-)
+I'm not sure that should be named "tpc". Think about what that means --
+"transmit power control", but it's really the power value, so it should
+be "txpower" or so.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b2b3222..4a47878 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -894,7 +894,21 @@ static void handle_channel(struct wiphy *wiphy,
- 	chan->max_antenna_gain = min(chan->orig_mag,
- 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
- 	chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
--	chan->max_power = min(chan->max_power, chan->max_reg_power);
-+	if (chan->orig_mpwr) {
-+		/*
-+		 * Devices that have their own custom regulatory domain
-+		 * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
-+		 * passed country IE power settings.
-+		 */
-+		if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+		    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
-+		    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+			chan->max_power = chan->max_reg_power;
-+		else
-+			chan->max_power = min(chan->orig_mpwr,
-+					      chan->max_reg_power);
-+	} else
-+		chan->max_power = chan->max_reg_power;
- }
- 
- static void handle_band(struct wiphy *wiphy,
--- 
-1.7.1
+johannes
 
