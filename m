@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:48188 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751081Ab2GCPNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 11:13:23 -0400
-Message-ID: <1341328402.2164.3.camel@joe2Laptop> (sfid-20120703_171329_868078_E447F351)
-Subject: Re: [PATCH] etherdevice: introduce broadcast_ether_addr
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 03 Jul 2012 08:13:22 -0700
-In-Reply-To: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
-References: <1341310587.5131.2.camel@jlt3.sipsolutions.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:39995 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065Ab2GaREs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2012 13:04:48 -0400
+Message-ID: <1343754285.4474.8.camel@jlt3.sipsolutions.net> (sfid-20120731_190451_351748_49CB6995)
+Subject: Re: [PATCH 1/3] wireless: add radiotap A-MPDU status field
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 31 Jul 2012 19:04:45 +0200
+In-Reply-To: <01F94E3A-B132-46B2-9B4E-E2F78135458D@gmail.com> (sfid-20120731_190053_053151_A750B763)
+References: <1343734541-14934-1-git-send-email-johannes@sipsolutions.net>
+	 <1343734541-14934-2-git-send-email-johannes@sipsolutions.net>
+	 <01F94E3A-B132-46B2-9B4E-E2F78135458D@gmail.com>
+	 (sfid-20120731_190053_053151_A750B763)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-03 at 12:16 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2012-07-31 at 19:00 +0200, Gertjan van Wingerde wrote:
+
+> > + * IEEE80211_RADIOTAP_AMPDU_STATUS    u32, u16, u8, u8    unitlesss
 > 
-> A lot of code has either the memset or an
-> inefficient copy from a static array that
-> contains the all-ones broadcast address.
-> Introduce broadcast_ether_addr() to fill
-> an address with all ones, making the code
-> clearer and allowing us to get rid of the
-> various constant arrays.
-[]
-> diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-[]
-> +static inline void broadcast_ether_addr(u8 *addr)
-> +{
-> +	memset(addr, 0xff, ETH_ALEN);
-> +}
+> Just a minor nit, but there seems to be an 's' too many in unitlesss above.
 
-I think this sort of patch should come as the first
-patch in a series with some example conversions.
+Good catch, thanks. I fixed it, but I'm not going to repost the patches
+for it :-)
 
-It might be too easy to confuse is_broadcast_ether_addr
-with this function name too.  Maybe set_broadcast_ether_addr
-might be better.
-
-I really don't see an issue with using memset though.
-Everyone already knows what that does.
-
+johannes
 
