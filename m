@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:44341 "EHLO
-	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751301Ab2GHHXs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39093 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756046Ab2GaLoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jul 2012 03:23:48 -0400
-Received: by lbbgm6 with SMTP id gm6so7365845lbb.33
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jul 2012 00:23:45 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+	Tue, 31 Jul 2012 07:44:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, arik@wizery.com
-Subject: [PATCH 5/8] wl12xx/wl18xx: use a dynamic PS timeout of 1.5sec
-Date: Sun,  8 Jul 2012 10:23:28 +0300
-Message-Id: <1341732211-25871-6-git-send-email-coelho@ti.com> (sfid-20120708_092352_320936_8ADA98C7)
-In-Reply-To: <1341732211-25871-1-git-send-email-coelho@ti.com>
-References: <1341732211-25871-1-git-send-email-coelho@ti.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 04/10] mac80211: use oper_channel in rate init
+Date: Tue, 31 Jul 2012 13:43:52 +0200
+Message-Id: <1343735038-16030-5-git-send-email-johannes@sipsolutions.net> (sfid-20120731_134435_490172_98999FA8)
+In-Reply-To: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
+References: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-It seems some parties have bad user experience when smaller values
-are used. This should have little implications for power consumption,
-since traffic is bursty in nature.
+Using hw.conf.channel is wrong as it could be the
+temporary channel if the station is added from the
+workqueue while the device is already on another
+channel. Use oper_channel instead.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wl12xx/main.c |    2 +-
- drivers/net/wireless/ti/wl18xx/main.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/rate.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index da261cf..3d6c71b 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -242,7 +242,7 @@ static struct wlcore_conf wl12xx_conf = {
- 		.psm_entry_retries           = 8,
- 		.psm_exit_retries            = 16,
- 		.psm_entry_nullfunc_retries  = 3,
--		.dynamic_ps_timeout          = 200,
-+		.dynamic_ps_timeout          = 1500,
- 		.forced_ps                   = false,
- 		.keep_alive_interval         = 55000,
- 		.max_listen_interval         = 20,
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 341e878..23f100a3 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -369,7 +369,7 @@ static struct wlcore_conf wl18xx_conf = {
- 		.psm_entry_retries           = 8,
- 		.psm_exit_retries            = 16,
- 		.psm_entry_nullfunc_retries  = 3,
--		.dynamic_ps_timeout          = 200,
-+		.dynamic_ps_timeout          = 1500,
- 		.forced_ps                   = false,
- 		.keep_alive_interval         = 55000,
- 		.max_listen_interval         = 20,
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 6e4fd32..10de668 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -56,7 +56,7 @@ static inline void rate_control_rate_init(struct sta_info *sta)
+ 	if (!ref)
+ 		return;
+ 
+-	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	sband = local->hw.wiphy->bands[local->oper_channel->band];
+ 
+ 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
+ 	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
 -- 
-1.7.10
+1.7.10.4
 
