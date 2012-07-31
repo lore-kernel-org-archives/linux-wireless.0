@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm10-vm0.bullet.mail.ird.yahoo.com ([77.238.189.90]:40817 "HELO
-	nm10-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751049Ab2GZJ6x convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jul 2012 05:58:53 -0400
-References: <CAKjQTCesBzbjbv4T+RPRutrgTyJoXJciwsKqPAxZDDcvot=q5g@mail.gmail.com> <CAKjQTCex5oXLkPOZeoccT5a0CxMDpdpmSqcJy4SV7h1eaeo=pA@mail.gmail.com> <1343074978.66314.YahooMailNeo@web28904.mail.ir2.yahoo.com> <1343075460.1623.YahooMailNeo@web28905.mail.ir2.yahoo.com> <500DBD17.7070706@lwfinger.net> <1343138030.94415.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343138193.40429.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EBA0C.106@lwfinger.net> <1343143522.46747.YahooMailNeo@web28903.mail.ir2.yahoo.com> <1343149616.67668.YahooMailNeo@web28904.mail.ir2.yahoo.com> <500EE086.6000304@lwfinger.net> <1343224463.22151.YahooMailNeo@web28906.mail.ir2.yahoo.com> <1343236780.36289.YahooMailNeo@web28901.mail.ir2.yahoo.com> <1343237104.35808.YahooMailNeo@web28905.mail.ir2.yahoo.com> <5010304E.6070005@lwfinger.net>
-Message-ID: <1343296732.22680.YahooMailNeo@web28905.mail.ir2.yahoo.com> (sfid-20120726_115904_416149_A485991B)
-Date: Thu, 26 Jul 2012 10:58:52 +0100 (BST)
-From: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Reply-To: Xavier de Almeida <xavierdealmeida@yahoo.fr>
-Subject: Re: Tr : Tr : Can't make RTL8188CE work with hostapd (rtl8192ce)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <5010304E.6070005@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:39025 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755985Ab2GaLZy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2012 07:25:54 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SwAaH-0007HW-7j
+	for linux-wireless@vger.kernel.org; Tue, 31 Jul 2012 13:25:53 +0200
+Message-ID: <1343733951.4474.3.camel@jlt3.sipsolutions.net> (sfid-20120731_132557_988407_E7677364)
+Subject: Re: [PATCH 0/6] mac80211: use correct operating channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 31 Jul 2012 13:25:51 +0200
+In-Reply-To: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_130808_918452_CA9F2092)
+References: <1343387281-7252-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120727_130808_918452_CA9F2092)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Larry for your inputs.
+On Fri, 2012-07-27 at 13:07 +0200, Johannes Berg wrote:
+> A number of places in mac80211 are erroneously using the
+> *current* channel (hw.conf.channel) rather than the current
+> *operating* channel (oper_channel). This is wrong as the
+> current channel can change during scan/roc and therefore
+> doesn't point to the correct channel all the time so that
+> due to races the wrong channel might be used.
+> 
+> Address this and use the correct channel in all places.
+> Some keep using hw.conf.channel, of course, since they
+> really do need the current channel.
 
->From this thread it looks like it's not a given piece of work to get the RTL8188CE stable.
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/902557 
+All applied.
 
-Anyway I have started to compile the 3.4.6 kernel see how it goes. I hope I don't need to add the compat-wireless drivers on top?
+johannes
 
-Will report in more than 4h after the make is completed :D
-
-Merci
