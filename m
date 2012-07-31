@@ -1,69 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2039 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786Ab2GCQuw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jul 2012 12:50:52 -0400
-Message-ID: <4FF322DD.1050900@broadcom.com> (sfid-20120703_185056_349125_F07A751E)
-Date: Tue, 3 Jul 2012 18:50:37 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Brad Figg" <brad.figg@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Warning in brcms_c_wait_for_tx_completion
-References: <20120703134520.GB5626@thinkpad-t410>
-In-Reply-To: <20120703134520.GB5626@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:39106 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756058Ab2GaLoH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2012 07:44:07 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 09/10] mac80211: pass channel to ieee80211_send_probe_req
+Date: Tue, 31 Jul 2012 13:43:57 +0200
+Message-Id: <1343735038-16030-10-git-send-email-johannes@sipsolutions.net> (sfid-20120731_134432_943139_7387BEB6)
+In-Reply-To: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
+References: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/03/2012 03:45 PM, Seth Forshee wrote:
-> Hi Arend,
-> 
-> This message is off-list, only because I know it's been discussed
-> on-list in the past. Feel free to pull in any individuals or mailing
-> lists if you wish.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The issue is popping up regularly in Fedora 17. See [1]
+In multi-channel scenarios, the channel that we will
+transmit a probe request on isn't always the current
+channel (which will be NULL anyway) but will instead
+be the channel that the AP is on. Pass the channel
+to the ieee80211_send_probe_req() function so it can
+be used in the different scenarios. The scan code
+continues to pass the current channel, of course.
 
-> Brad (on Cc) just received a MacBook Air with BCM4313 wireless, and he's
-> able to very reliably trigger the WARN_ON_ONCE in
-> brcms_c_wait_for_tx_completion() in his environment. He also gets an
-> endless stream of these messages when wireless drops out.
-> 
->   ieee80211 phy0: brcms_c_prec_enq_head: No where to go, prec == 4
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    3 ++-
+ net/mac80211/mlme.c        |    6 ++++--
+ net/mac80211/scan.c        |    3 ++-
+ net/mac80211/util.c        |    6 +++---
+ 4 files changed, 11 insertions(+), 7 deletions(-)
 
-I only seen this regularly with Fedora 17. Ubuntu 11.04 with 3.5-rc4
-installed in our smoketest setups does not show it. Basically, it means
-that packet queue in our driver is full and packets are dropped. As we
-do not inform mac80211 that traffic is stalled this is expected to happen.
-
-> This is in the 3.5-rc kernels. We're carrying the regulatory patches, in
-> the Ubuntu kernel, but Brad tested an older rc without the patches and
-> still gets this.
-> 
-> We've done a little debugging and have found a couple of points. First,
-> all the stack traces I've seen from Brad's machine show that the warning
-> triggers during a scan. Second, we added debug to brcms_b_mute() to
-> check whether tx was somehow getting muted in the driver without being
-> unmuted, but this is not the case.
-
-I did a little debugging as well and also concluded a scan triggers it.
-I change the WARN_ON_ONCE to a WARN_ON and it seems to correlate with
-the duration between scan_start and scan_complete. When it is in 8-10
-sec. range the warning kicks in. I was going to add debugging for the tx
-mute.
-
-> I wanted to get in touch with you in case there was anything you wanted
-> Brad to try to help with identifying the cause of this issue. Also you
-> can find details of his AP setup below.
-
-The issue is either driver related or caused by firmware behaviour. I
-suspect the firmware, but I have not 100% certainty yet.
-
-Gr. AvS
-
-[1] https://bugzilla.redhat.com/show_bug.cgi?id=799168
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 412be9e..22d1e79 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1468,7 +1468,8 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len,
+-			      u32 ratemask, bool directed, bool no_cck);
++			      u32 ratemask, bool directed, bool no_cck,
++			      struct ieee80211_channel *channel);
+ 
+ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 				  const size_t supp_rates_len,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c416a08..84d12e2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1580,7 +1580,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 			ssid_len = ssid[1];
+ 
+ 		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid_len, NULL,
+-					 0, (u32) -1, true, false);
++					 0, (u32) -1, true, false,
++					 ifmgd->associated->channel);
+ 	}
+ 
+ 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
+@@ -2713,7 +2714,8 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
+ 		 * will not answer to direct packet in unassociated state.
+ 		 */
+ 		ieee80211_send_probe_req(sdata, NULL, ssidie + 2, ssidie[1],
+-					 NULL, 0, (u32) -1, true, false);
++					 NULL, 0, (u32) -1, true, false,
++					 auth_data->bss->channel);
+ 	}
+ 
+ 	auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 0045869..14bf0b5 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -417,7 +417,8 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 			local->scan_req->ssids[i].ssid_len,
+ 			local->scan_req->ie, local->scan_req->ie_len,
+ 			local->scan_req->rates[band], false,
+-			local->scan_req->no_cck);
++			local->scan_req->no_cck,
++			local->hw.conf.channel);
+ 
+ 	/*
+ 	 * After sending probe requests, wait for probe responses
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index a77ea17..73dc601 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1160,12 +1160,12 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len,
+-			      u32 ratemask, bool directed, bool no_cck)
++			      u32 ratemask, bool directed, bool no_cck,
++			      struct ieee80211_channel *channel)
+ {
+ 	struct sk_buff *skb;
+ 
+-	skb = ieee80211_build_probe_req(sdata, dst, ratemask,
+-					sdata->local->hw.conf.channel,
++	skb = ieee80211_build_probe_req(sdata, dst, ratemask, channel,
+ 					ssid, ssid_len,
+ 					ie, ie_len, directed);
+ 	if (skb) {
+-- 
+1.7.10.4
 
