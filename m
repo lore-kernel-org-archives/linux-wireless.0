@@ -1,192 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:33632 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073Ab2G0HCf (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Fri, 27 Jul 2012 03:02:35 -0400
-From: "Chen, Chien-Chia" <machen@suse.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org, kevin.chou@mediatek.com,
-	woody.hung@mediatek.com
-Subject: [rt2x00-users] [PATCH] rt2x00 : fix rt3290 resuming failed.
-Date: Fri, 27 Jul 2012 15:03:54 +0800
-Message-Id: <1343372634-19870-1-git-send-email-machen@suse.com> (sfid-20120727_090238_475789_F9F58ABE)
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:62194 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154Ab2GaUsS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2012 16:48:18 -0400
+MIME-Version: 1.0
+In-Reply-To: <1343765698.4474.10.camel@jlt3.sipsolutions.net>
+References: <CADKZ3FKDw78ac9JPXJuw0s7Mqg1RrVfonbjXZ6zHmtwF2i5HoQ@mail.gmail.com>
+	<1343765698.4474.10.camel@jlt3.sipsolutions.net>
+Date: Wed, 1 Aug 2012 00:48:17 +0400
+Message-ID: <CADKZ3FLs444RfLx=RyBPKs+Lza_mZHhT=zHauMt3BUnqAUtY0w@mail.gmail.com> (sfid-20120731_224848_592436_A0DA59C8)
+Subject: Re: wlcore: might_sleep operation in interrupt handler
+From: Denis Yefremov <yefremov.denis@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is going to fix the resuming failed from S3/S4
-for rt3290 chip.
+More precise (IRQF_ONESHOT flag may be used):
 
-Signed-off-by: Chen, Chien-Chia <machen@suse.com>
-CC-by: Kevin Chou <kevin.chou@mediatek.com>
-----
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e76f03c..ed756f4 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -401,6 +401,14 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- 	unsigned int i;
- 	u32 reg;
- 
-+	int retval;
-+
-+	if (rt2x00_rt(rt2x00dev, RT3290)) {
-+		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
-+		if (retval)
-+			return -EBUSY;
-+	}
-+
- 	/*
- 	 * If driver doesn't wake up firmware here,
- 	 * rt2800_load_firmware will hang forever when interface is up again.
-@@ -5152,6 +5160,68 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- }
- EXPORT_SYMBOL_GPL(rt2800_get_survey);
- 
-+static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
-+{
-+	u32 reg;
-+	int i, count;
-+
-+	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+	if (rt2x00_get_field32(reg, WLAN_EN))
-+		return 0;
-+
-+	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
-+	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
-+	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
-+	rt2x00_set_field32(&reg, WLAN_EN, 1);
-+	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+
-+	udelay(REGISTER_BUSY_DELAY);
-+
-+	count = 0;
-+	do {
-+		/*
-+		 * Check PLL_LD & XTAL_RDY.
-+		 */
-+		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-+			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
-+			if (rt2x00_get_field32(reg, PLL_LD) &&
-+			    rt2x00_get_field32(reg, XTAL_RDY))
-+				break;
-+			udelay(REGISTER_BUSY_DELAY);
-+		}
-+
-+		if (i >= REGISTER_BUSY_COUNT) {
-+
-+			if (count >= 10)
-+				return -EIO;
-+
-+			rt2800_register_write(rt2x00dev, 0x58, 0x018);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x418);
-+			udelay(REGISTER_BUSY_DELAY);
-+			rt2800_register_write(rt2x00dev, 0x58, 0x618);
-+			udelay(REGISTER_BUSY_DELAY);
-+			count++;
-+		} else {
-+			count = 0;
-+		}
-+
-+		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
-+		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
-+		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 1);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2x00_set_field32(&reg, WLAN_RESET, 0);
-+		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
-+		udelay(10);
-+		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
-+	} while (count != 0);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rt2800_enable_wlan_rt3290);
-+
- MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
- MODULE_VERSION(DRV_VERSION);
- MODULE_DESCRIPTION("Ralink RT2800 library");
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 18a0b67..0321fd8 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -209,5 +209,6 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- 		      struct survey_info *survey);
- void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
-+int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev);
- 
- #endif /* RT2800LIB_H */
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 235376e..b7a02bf 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -980,66 +980,6 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	return rt2800_validate_eeprom(rt2x00dev);
- }
- 
--static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
--{
--	u32 reg;
--	int i, count;
--
--	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
--	if (rt2x00_get_field32(reg, WLAN_EN))
--		return 0;
--
--	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
--	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
--	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
--	rt2x00_set_field32(&reg, WLAN_EN, 1);
--	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--
--	udelay(REGISTER_BUSY_DELAY);
--
--	count = 0;
--	do {
--		/*
--		 * Check PLL_LD & XTAL_RDY.
--		 */
--		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
--			if (rt2x00_get_field32(reg, PLL_LD) &&
--			    rt2x00_get_field32(reg, XTAL_RDY))
--				break;
--			udelay(REGISTER_BUSY_DELAY);
--		}
--
--		if (i >= REGISTER_BUSY_COUNT) {
--
--			if (count >= 10)
--				return -EIO;
--
--			rt2800_register_write(rt2x00dev, 0x58, 0x018);
--			udelay(REGISTER_BUSY_DELAY);
--			rt2800_register_write(rt2x00dev, 0x58, 0x418);
--			udelay(REGISTER_BUSY_DELAY);
--			rt2800_register_write(rt2x00dev, 0x58, 0x618);
--			udelay(REGISTER_BUSY_DELAY);
--			count++;
--		} else {
--			count = 0;
--		}
--
--		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
--		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
--		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
--		rt2x00_set_field32(&reg, WLAN_RESET, 1);
--		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--		udelay(10);
--		rt2x00_set_field32(&reg, WLAN_RESET, 0);
--		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
--		udelay(10);
--		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
--	} while (count != 0);
--
--	return 0;
--}
- static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
+int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+{
+...
+        if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
+                irqflags = IRQF_TRIGGER_RISING;
+        else
+                irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+
+        ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wlcore_irq,
+                                   irqflags,
+                                   pdev->name, wl);
+
+
+2012/8/1 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2012-07-31 at 22:28 +0400, Denis Yefremov wrote:
+>> Interrupt handler wlcore_irq in wlcore/main.c file
+>> invokes mutex_lock that is might sleep operation.
+>
+>> int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+>> {
+>> ...
+>>         ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wlcore_irq,
+>>                                    irqflags,
+>>                                    pdev->name, wl);
+>
+> Yes, umm, why do you think they're using a *threaded* IRQ? :-)
+>
+> johannes
+>
