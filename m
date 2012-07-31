@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38603 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699Ab2GRMlh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 08:41:37 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Luis Rodriguez <mcgrof@gmail.com>
-Subject: [PATCH] cfg80211: Fix mutex locking in reg_last_request_cell_base
-Date: Wed, 18 Jul 2012 18:11:29 +0530
-Message-ID: <1342615289-3088-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120718_144142_070626_4C7A6B9F)
+Received: from mms3.broadcom.com ([216.31.210.19]:3944 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755743Ab2GaKtk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2012 06:49:40 -0400
+Message-ID: <5017B83A.9000207@broadcom.com> (sfid-20120731_124945_527951_3E3AEE18)
+Date: Tue, 31 Jul 2012 12:49:30 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Paul Hackett" <paulfxhackett@gmail.com>
+cc: "brcm80211 development" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac (USB) driver for Linksys AE1200 donle in Ubuntu
+ 12.04
+References: <CAP5Eh2wSyXQ7sMu+W9KSTrjBUZqAucaUUSk=K67q8F9LL9Ag0Q@mail.gmail.com>
+In-Reply-To: <CAP5Eh2wSyXQ7sMu+W9KSTrjBUZqAucaUUSk=K67q8F9LL9Ag0Q@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 07/30/2012 05:02 PM, Paul Hackett wrote:
+> Hi
+> 
+> I'm writing to you from Ireland and taking you up on your kind offer to
+> "feel free to contact the developers listed below" in this
+> site<http://linuxwireless.org/en/users/Drivers/brcm80211?highlight=%28broadcom%29%7C%2843235%29>
+> .
 
-should fix the following issue
+I will try to be kind in my reply as well ;-)
 
-	[ 3229.815012] [ BUG: lock held when returning to user space! ]
-	[ 3229.815016] 3.5.0-rc7-wl #28 Tainted: G        W  O
-	[ 3229.815017]
-	------------------------------------------------
-	[ 3229.815019] wpa_supplicant/5783 is leaving the kernel with locks still held!
-	[ 3229.815022] 1 lock held by wpa_supplicant/5783:
-	[ 3229.815023]  #0: (reg_mutex){+.+.+.}, at: [<fa65834d>]
-	reg_last_request_cell_base+0x1d/0x60 [cfg80211]
+> I'm running Ubuntu 12.04 (kernel 3.2.0-23-generic-pae) on a Dell E520 (CPU
+> C2D 1,86 GHz)
+> 
+> I recently bought a Linksys AE1200 wifi dongle (Broadcom 43235 chipset) for
+> use on another machine (which I'll explain shortly).
+> 
+> In Ubuntu, the brcmfmac.ko driver is already present in
+> 
+> /lib/modules/3.2.0-23-generic-pae/kernel/drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.ko
+> 
 
-Cc: Luis Rodriguez <mcgrof@gmail.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/wireless/reg.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+For the 3.2 kernel the brcmfmac only supported SDIO devices. USB support
+was added in 3.4 kernel. However, the Linksys AE1200 needs a different
+driver model that is not supported. So the only option for x86 is using
+ndiswrapper.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index dbb01df..2303ee7 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -929,11 +929,13 @@ static bool reg_request_cell_base(struct regulatory_request *request)
- 
- bool reg_last_request_cell_base(void)
- {
-+	bool val;
- 	assert_cfg80211_lock();
- 
- 	mutex_lock(&reg_mutex);
--	return reg_request_cell_base(last_request);
-+	val = reg_request_cell_base(last_request);
- 	mutex_unlock(&reg_mutex);
-+	return val;
- }
- 
- #ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
--- 
-1.7.0.4
+> 
+> Two questions:
+> 
+> 1. Should I have been able to get the brcmfmac driver working in Ubuntu
+> 12.04 or is it still in development? If yes, what am I missing?
+
+So the answer is no for the two reasons above. The brcmfmac support
+BCM43235 only for chip revision 3 and higher. The Linksys AE1200 has an
+older revision that requires a driver model that is not supported.
+
+> 2. Are we likely to soon see an ARM version of a brcmfmac driver for the
+> Raspberry Pi with which I can running my RPi wirelessly using the Linksys
+> dongle?
+
+The brcmfmac driver is already working for ARM platforms. We have both
+SDIO and USB running on Pandaboard platform.
+
+> 
+> Thank you for reading this.
+> I hope you may have some time to respond.
+> 
+> Very many thanks and best wishes
+> 
+> Paul
+
+Sorry my response may be disappointing.
+
+Gr. AvS
+
 
