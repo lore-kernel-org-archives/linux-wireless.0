@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43571 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754868Ab2GELgo (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:40091 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755756Ab2GaS2Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 07:36:44 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v1 4/4] Fix print channel number for 60g
-Date: Thu, 5 Jul 2012 14:36:21 +0300
-Message-ID: <1341488181-12542-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120705_133719_250793_CE70C7F0)
-In-Reply-To: <1341488181-12542-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1341488181-12542-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 31 Jul 2012 14:28:16 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Tue, 31 Jul 2012 22:28:14 +0400
+Message-ID: <CADKZ3FKDw78ac9JPXJuw0s7Mqg1RrVfonbjXZ6zHmtwF2i5HoQ@mail.gmail.com> (sfid-20120731_202836_974056_A601A727)
+Subject: wlcore: might_sleep operation in interrupt handler
+From: Denis Yefremov <yefremov.denis@gmail.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-    Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- util.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Interrupt handler wlcore_irq in wlcore/main.c file
+invokes mutex_lock that is might sleep operation.
 
-diff --git a/util.c b/util.c
-index 26d27c3..20d3d06 100644
---- a/util.c
-+++ b/util.c
-@@ -269,7 +269,13 @@ int ieee80211_frequency_to_channel(int freq)
- 		return (freq - 2407) / 5;
- 
- 	/* FIXME: dot11ChannelStartingFactor (802.11-2007 17.3.8.3.2) */
--	return freq/5 - 1000;
-+	if (freq < 45000)
-+		return freq/5 - 1000;
-+
-+	if (freq >= 58320 && freq <= 64800)
-+		return (freq - 56160) / 2160;
-+
-+    return 0;
- }
- 
- void print_ssid_escaped(const uint8_t len, const uint8_t *data)
--- 
-1.7.9.5
+Found by Linux Driver Verification project (linuxtesting.org)
+within my participation in the GSoC 2012 program.
 
+drivers/net/wireless/ti/wlcore/main.c
+
+static irqreturn_t wlcore_irq(int irq, void *cookie)
+{
+        int ret;
+        unsigned long flags;
+        struct wl1271 *wl = cookie;
+
+        /* TX might be handled here, avoid redundant work */
+        set_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
+        cancel_work_sync(&wl->tx_work);
+
+        mutex_lock(&wl->mutex);
+...
+}
+
+int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+{
+...
+        ret = request_threaded_irq(wl->irq, wl12xx_hardirq, wlcore_irq,
+                                   irqflags,
+                                   pdev->name, wl);
+...
+}
