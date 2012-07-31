@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45657 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39101 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754949Ab2GEIZF (ORCPT
+	with ESMTP id S1756019Ab2GaLoG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jul 2012 04:25:05 -0400
+	Tue, 31 Jul 2012 07:44:06 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/9] iwlwifi: fix debug message level
-Date: Thu,  5 Jul 2012 10:24:53 +0200
-Message-Id: <1341476695-6889-8-git-send-email-johannes@sipsolutions.net> (sfid-20120705_102533_232626_797137BC)
-In-Reply-To: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
-References: <1341476695-6889-1-git-send-email-johannes@sipsolutions.net>
+Subject: [PATCH 07/10] mac80211: check operating channel in scan
+Date: Tue, 31 Jul 2012 13:43:55 +0200
+Message-Id: <1343735038-16030-8-git-send-email-johannes@sipsolutions.net> (sfid-20120731_134411_327572_3B45EAC6)
+In-Reply-To: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
+References: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Debug messages should be printed using dev_dbg() not
-dev_err() which requires DEBUG to be defined.
+The optimisation of scanning only on the current
+channel should check the operating channel. Also
+modify it to compare channel pointer rather than
+the frequency.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-debug.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ net/mac80211/scan.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.c b/drivers/net/wireless/iwlwifi/iwl-debug.c
-index 0f8fcd1..87535a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.c
-@@ -61,6 +61,9 @@
-  *
-  *****************************************************************************/
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index e80a8b6..0045869 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -480,11 +480,10 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	if (local->ops->hw_scan) {
+ 		__set_bit(SCAN_HW_SCANNING, &local->scanning);
+ 	} else if ((req->n_channels == 1) &&
+-		   (req->channels[0]->center_freq ==
+-		    local->hw.conf.channel->center_freq)) {
+-
+-		/* If we are scanning only on the current channel, then
+-		 * we do not need to stop normal activities
++		   (req->channels[0] == local->oper_channel)) {
++		/*
++		 * If we are scanning only on the operating channel
++		 * then we do not need to stop normal activities
+ 		 */
+ 		unsigned long next_delay;
  
-+#define DEBUG
-+
-+#include <linux/device.h>
- #include <linux/interrupt.h>
- #include <linux/export.h>
- #include "iwl-debug.h"
-@@ -124,7 +127,7 @@ void __iwl_dbg(struct device *dev,
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	if (iwl_have_debug_level(level) &&
- 	    (!limit || net_ratelimit()))
--		dev_err(dev, "%c %s %pV", in_interrupt() ? 'I' : 'U',
-+		dev_dbg(dev, "%c %s %pV", in_interrupt() ? 'I' : 'U',
- 			function, &vaf);
- #endif
- 	trace_iwlwifi_dbg(level, in_interrupt(), function, &vaf);
 -- 
-1.7.10
+1.7.10.4
 
