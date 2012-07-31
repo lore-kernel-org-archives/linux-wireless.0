@@ -1,159 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lunge.queued.net ([173.255.254.236]:50927 "EHLO
-	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287Ab2GSE3d (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39091 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756048Ab2GaLoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jul 2012 00:29:33 -0400
-Date: Wed, 18 Jul 2012 21:29:20 -0700
-From: Andres Salomon <dilinger@queued.net>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	"Richard A. Smith" <richard@laptop.org>,
-	linux-kernel@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, devel@driverdev.osuosl.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Anton Vorontsov <cbou@mail.ru>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Chris Ball <cjb@laptop.org>,
-	Jon Nettleton <jon.nettleton@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 9/9] x86: OLPC: move s/r-related EC cmds to EC driver
-Message-ID: <20120718212920.237566cb@dev.queued.net> (sfid-20120719_063013_249859_4E625877)
-In-Reply-To: <20120718182144.2d7b0b50@dev.queued.net>
-References: <20120718182144.2d7b0b50@dev.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 31 Jul 2012 07:44:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 03/10] mac80211: remove freq/chantype from debugfs
+Date: Tue, 31 Jul 2012 13:43:51 +0200
+Message-Id: <1343735038-16030-4-git-send-email-johannes@sipsolutions.net> (sfid-20120731_134439_557014_13A00164)
+In-Reply-To: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
+References: <1343735038-16030-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new EC driver calls platform-specific suspend and resume hooks; run
-XO-1-specific EC commands from there, rather than deep in s/r code.  If
-we attempt to run EC commands after the new EC driver has suspended, it
-is refused by the ec->suspended checks.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Andres Salomon <dilinger@queued.net>
+You can now get these values through iw, and
+they conflict with multi-channel work.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- arch/x86/platform/olpc/olpc-xo1-pm.c |   15 ------------
- arch/x86/platform/olpc/olpc.c        |   43
-++++++++++++++++++++++++++++----- 2 files changed, 36 insertions(+), 22
-deletions(-)
+ net/mac80211/debugfs.c |   32 --------------------------------
+ 1 file changed, 32 deletions(-)
 
-diff --git a/arch/x86/platform/olpc/olpc-xo1-pm.c
-b/arch/x86/platform/olpc/olpc-xo1-pm.c index 8054b64..d75582d 100644
---- a/arch/x86/platform/olpc/olpc-xo1-pm.c
-+++ b/arch/x86/platform/olpc/olpc-xo1-pm.c
-@@ -52,16 +52,11 @@ EXPORT_SYMBOL_GPL(olpc_xo1_pm_wakeup_clear);
- static int xo1_power_state_enter(suspend_state_t pm_state)
- {
- 	unsigned long saved_sci_mask;
--	int r;
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index b8dfb44..97173f8 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -63,8 +63,6 @@ DEBUGFS_READONLY_FILE(user_power, "%d",
+ 		      local->user_power_level);
+ DEBUGFS_READONLY_FILE(power, "%d",
+ 		      local->hw.conf.power_level);
+-DEBUGFS_READONLY_FILE(frequency, "%d",
+-		      local->hw.conf.channel->center_freq);
+ DEBUGFS_READONLY_FILE(total_ps_buffered, "%d",
+ 		      local->total_ps_buffered);
+ DEBUGFS_READONLY_FILE(wep_iv, "%#08x",
+@@ -91,33 +89,6 @@ static const struct file_operations reset_ops = {
+ 	.llseek = noop_llseek,
+ };
  
- 	/* Only STR is supported */
- 	if (pm_state != PM_SUSPEND_MEM)
- 		return -EINVAL;
- 
--	r = olpc_ec_cmd(EC_SET_SCI_INHIBIT, NULL, 0, NULL, 0);
--	if (r)
--		return r;
--
- 	/*
- 	 * Save SCI mask (this gets lost since PM1_EN is used as a
-mask for
- 	 * wakeup events, which is not necessarily the same event set)
-@@ -77,16 +72,6 @@ static int xo1_power_state_enter(suspend_state_t
-pm_state) /* Restore SCI mask (using dword access to CS5536_PM1_EN) */
- 	outl(saved_sci_mask, acpi_base + CS5536_PM1_STS);
- 
--	/* Tell the EC to stop inhibiting SCIs */
--	olpc_ec_cmd(EC_SET_SCI_INHIBIT_RELEASE, NULL, 0, NULL, 0);
--
--	/*
--	 * Tell the wireless module to restart USB communication.
--	 * Must be done twice.
--	 */
--	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
--	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
--
- 	return 0;
- }
- 
-diff --git a/arch/x86/platform/olpc/olpc.c
-b/arch/x86/platform/olpc/olpc.c index ed41b43..2737608 100644
---- a/arch/x86/platform/olpc/olpc.c
-+++ b/arch/x86/platform/olpc/olpc.c
-@@ -263,11 +263,6 @@ int olpc_ec_sci_query(u16 *sci_value)
- }
- EXPORT_SYMBOL_GPL(olpc_ec_sci_query);
- 
--static int olpc_ec_suspend(struct platform_device *pdev)
+-static ssize_t channel_type_read(struct file *file, char __user *user_buf,
+-		       size_t count, loff_t *ppos)
 -{
--	return olpc_ec_mask_write(ec_wakeup_mask);
+-	struct ieee80211_local *local = file->private_data;
+-	const char *buf;
+-
+-	switch (local->hw.conf.channel_type) {
+-	case NL80211_CHAN_NO_HT:
+-		buf = "no ht\n";
+-		break;
+-	case NL80211_CHAN_HT20:
+-		buf = "ht20\n";
+-		break;
+-	case NL80211_CHAN_HT40MINUS:
+-		buf = "ht40-\n";
+-		break;
+-	case NL80211_CHAN_HT40PLUS:
+-		buf = "ht40+\n";
+-		break;
+-	default:
+-		buf = "???";
+-		break;
+-	}
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
 -}
 -
- static bool __init check_ofw_architecture(struct device_node *root)
+ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+ 			    size_t count, loff_t *ppos)
  {
- 	const char *olpc_arch;
-@@ -339,9 +334,40 @@ static int olpc_xo1_ec_probe(struct
-platform_device *pdev) 
- 	return 0;
+@@ -205,7 +176,6 @@ static ssize_t queues_read(struct file *file, char __user *user_buf,
  }
-+static int olpc_xo1_ec_suspend(struct platform_device *pdev)
-+{
-+	olpc_ec_mask_write(ec_wakeup_mask);
-+
-+	/*
-+	 * Squelch SCIs while suspended.  This is a fix for
-+	 * <http://dev.laptop.org/ticket/1835>.
-+	 */
-+	return olpc_ec_cmd(EC_SET_SCI_INHIBIT, NULL, 0, NULL, 0);
-+}
-+
-+static int olpc_xo1_ec_resume(struct platform_device *pdev)
-+{
-+	/* Tell the EC to stop inhibiting SCIs */
-+	olpc_ec_cmd(EC_SET_SCI_INHIBIT_RELEASE, NULL, 0, NULL, 0);
-+
-+	/*
-+	 * Tell the wireless module to restart USB communication.
-+	 * Must be done twice.
-+	 */
-+	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
-+	olpc_ec_cmd(EC_WAKE_UP_WLAN, NULL, 0, NULL, 0);
-+
-+	return 0;
-+}
  
- static struct olpc_ec_driver ec_xo1_driver = {
--	.suspend = olpc_ec_suspend,
-+	.probe = olpc_xo1_ec_probe,
-+	.suspend = olpc_xo1_ec_suspend,
-+	.resume = olpc_xo1_ec_resume,
-+	.ec_cmd = olpc_xo1_ec_cmd,
-+};
-+
-+static struct olpc_ec_driver ec_xo1_5_driver = {
- 	.probe = olpc_xo1_ec_probe,
- 	.ec_cmd = olpc_xo1_ec_cmd,
- };
-@@ -354,7 +380,10 @@ static int __init olpc_init(void)
- 		return 0;
+ DEBUGFS_READONLY_FILE_OPS(hwflags);
+-DEBUGFS_READONLY_FILE_OPS(channel_type);
+ DEBUGFS_READONLY_FILE_OPS(queues);
  
- 	/* register the XO-1 and 1.5-specific EC handler */
--	olpc_ec_driver_register(&ec_xo1_driver, NULL);
-+	if (olpc_platform_info.boardrev <
-olpc_board_pre(0xd0))	/* XO-1 */
-+		olpc_ec_driver_register(&ec_xo1_driver, NULL);
-+	else
-+		olpc_ec_driver_register(&ec_xo1_5_driver, NULL);
- 	platform_device_register_simple("olpc-ec", -1, NULL, 0);
+ /* statistics stuff */
+@@ -272,12 +242,10 @@ void debugfs_hw_add(struct ieee80211_local *local)
  
- 	/* assume B1 and above models always have a DCON */
+ 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
+ 
+-	DEBUGFS_ADD(frequency);
+ 	DEBUGFS_ADD(total_ps_buffered);
+ 	DEBUGFS_ADD(wep_iv);
+ 	DEBUGFS_ADD(queues);
+ 	DEBUGFS_ADD_MODE(reset, 0200);
+-	DEBUGFS_ADD(channel_type);
+ 	DEBUGFS_ADD(hwflags);
+ 	DEBUGFS_ADD(user_power);
+ 	DEBUGFS_ADD(power);
 -- 
-1.7.2.5
+1.7.10.4
 
