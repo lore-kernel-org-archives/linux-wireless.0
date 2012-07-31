@@ -1,46 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39734 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876Ab2GJTWi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jul 2012 15:22:38 -0400
-Message-ID: <1341948158.4475.33.camel@jlt3.sipsolutions.net> (sfid-20120710_212242_062280_190AFB1B)
-Subject: Re: Can one program see another's scan-results?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 10 Jul 2012 21:22:38 +0200
-In-Reply-To: <4FFC805B.909@candelatech.com>
-References: <4FFC7C4F.9020804@candelatech.com>
-	  (sfid-20120710_210252_194820_A6A69A50) <1341947332.4475.32.camel@jlt3.sipsolutions.net>
-	 <4FFC805B.909@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from victor.provo.novell.com ([137.65.250.26]:43148 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756183Ab2GaMug (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Tue, 31 Jul 2012 08:50:36 -0400
+From: "Chen, Chien-Chia" <machen@suse.com>
+To: users@rt2x00.serialmonkey.com
+Cc: kevin.chou@mediatek.com, woody.hung@mediatek.com,
+	linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [rt2x00-users] [PATCH v3] rt2x00 : fix rt3290 resuming failed.
+Date: Tue, 31 Jul 2012 20:51:45 +0800
+Message-Id: <1343739105-19091-1-git-send-email-machen@suse.com> (sfid-20120731_145040_754329_1DDE9217)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-07-10 at 12:19 -0700, Ben Greear wrote:
-> On 07/10/2012 12:08 PM, Johannes Berg wrote:
-> > On Tue, 2012-07-10 at 12:02 -0700, Ben Greear wrote:
-> >> Is there a way to open a netlink socket and have it receive
-> >> all scan results (even those requested by other applications)?
-> >
-> > What do you mean by scan results? The results themselves? No, they are a
-> > dump and unicast to one application. The fact that a scan finished? Yes,
-> > of course.
-> 
-> I'd like the results themselves..for instance, just piggyback on whatever
-> supplicant is already doing to get periodic updates, and of course I'd
-> end up requesting some scans myself from time to time if a user wanted
-> an immediate update.
-> 
-> I was hoping it could be something like just listening for network-device
-> and route updates like netlink already supports.
-> 
-> Since scanning is relatively slow and expensive, it seems like a good
-> idea to allow re-using the results...
+From: Woody Hung <Woody.Hung@mediatek.com>
+Date: Mon, 30 Jul 2012 15:30:33 +0800
 
-Well, umm.. you can just request the results? A la "iw wlan0 scan dump"?
+This patch is going to fix the resuming failed from S3/S4
+for rt3290 chip.
 
-johannes
+Signed-off-by: Woody Hung <Woody.Hung@mediatek.com>
+CC-by: Kevin Chou <kevin.chou@mediatek.com>
+Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   70 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800lib.h |    1 +
+ drivers/net/wireless/rt2x00/rt2800pci.c |   71 -------------------------------
+ 3 files changed, 71 insertions(+), 71 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index e76f03c..f24cabe 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -401,6 +401,14 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+ 	unsigned int i;
+ 	u32 reg;
+ 
++	int retval;
++
++	if (rt2x00_rt(rt2x00dev, RT3290)) {
++		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
++		if (retval)
++			return -EBUSY;
++	}
++
+ 	/*
+ 	 * If driver doesn't wake up firmware here,
+ 	 * rt2800_load_firmware will hang forever when interface is up again.
+@@ -5152,6 +5160,68 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_get_survey);
+ 
++int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
++{
++	u32 reg;
++	int i, count;
++
++	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
++	if (rt2x00_get_field32(reg, WLAN_EN))
++		return 0;
++
++	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
++	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
++	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
++	rt2x00_set_field32(&reg, WLAN_EN, 1);
++	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
++
++	udelay(REGISTER_BUSY_DELAY);
++
++	count = 0;
++	do {
++		/*
++		 * Check PLL_LD & XTAL_RDY.
++		 */
++		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
++			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
++			if (rt2x00_get_field32(reg, PLL_LD) &&
++			    rt2x00_get_field32(reg, XTAL_RDY))
++				break;
++			udelay(REGISTER_BUSY_DELAY);
++		}
++
++		if (i >= REGISTER_BUSY_COUNT) {
++
++			if (count >= 10)
++				return -EIO;
++
++			rt2800_register_write(rt2x00dev, 0x58, 0x018);
++			udelay(REGISTER_BUSY_DELAY);
++			rt2800_register_write(rt2x00dev, 0x58, 0x418);
++			udelay(REGISTER_BUSY_DELAY);
++			rt2800_register_write(rt2x00dev, 0x58, 0x618);
++			udelay(REGISTER_BUSY_DELAY);
++			count++;
++		} else {
++			count = 0;
++		}
++
++		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
++		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
++		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
++		rt2x00_set_field32(&reg, WLAN_RESET, 1);
++		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
++		udelay(10);
++		rt2x00_set_field32(&reg, WLAN_RESET, 0);
++		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
++		udelay(10);
++		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
++	} while (count != 0);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(rt2800_enable_wlan_rt3290);
++
+ MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_DESCRIPTION("Ralink RT2800 library");
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index 18a0b67..2899181 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -210,4 +210,5 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
+ 		      struct survey_info *survey);
+ void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
+ 
++int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev);
+ #endif /* RT2800LIB_H */
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 235376e..98aa426 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -980,66 +980,6 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	return rt2800_validate_eeprom(rt2x00dev);
+ }
+ 
+-static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+-{
+-	u32 reg;
+-	int i, count;
+-
+-	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+-	if (rt2x00_get_field32(reg, WLAN_EN))
+-		return 0;
+-
+-	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
+-	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
+-	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
+-	rt2x00_set_field32(&reg, WLAN_EN, 1);
+-	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+-
+-	udelay(REGISTER_BUSY_DELAY);
+-
+-	count = 0;
+-	do {
+-		/*
+-		 * Check PLL_LD & XTAL_RDY.
+-		 */
+-		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+-			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
+-			if (rt2x00_get_field32(reg, PLL_LD) &&
+-			    rt2x00_get_field32(reg, XTAL_RDY))
+-				break;
+-			udelay(REGISTER_BUSY_DELAY);
+-		}
+-
+-		if (i >= REGISTER_BUSY_COUNT) {
+-
+-			if (count >= 10)
+-				return -EIO;
+-
+-			rt2800_register_write(rt2x00dev, 0x58, 0x018);
+-			udelay(REGISTER_BUSY_DELAY);
+-			rt2800_register_write(rt2x00dev, 0x58, 0x418);
+-			udelay(REGISTER_BUSY_DELAY);
+-			rt2800_register_write(rt2x00dev, 0x58, 0x618);
+-			udelay(REGISTER_BUSY_DELAY);
+-			count++;
+-		} else {
+-			count = 0;
+-		}
+-
+-		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+-		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
+-		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
+-		rt2x00_set_field32(&reg, WLAN_RESET, 1);
+-		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+-		udelay(10);
+-		rt2x00_set_field32(&reg, WLAN_RESET, 0);
+-		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+-		udelay(10);
+-		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
+-	} while (count != 0);
+-
+-	return 0;
+-}
+ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
+@@ -1063,17 +1003,6 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
+-	 * In probe phase call rt2800_enable_wlan_rt3290 to enable wlan
+-	 * clk for rt3290. That avoid the MCU fail in start phase.
+-	 */
+-	if (rt2x00_rt(rt2x00dev, RT3290)) {
+-		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
+-
+-		if (retval)
+-			return retval;
+-	}
+-
+-	/*
+ 	 * This device has multiple filters for control frames
+ 	 * and has a separate filter for PS Poll frames.
+ 	 */
+-- 
+1.7.7
 
