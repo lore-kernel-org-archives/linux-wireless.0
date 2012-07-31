@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:36587 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751387Ab2GRPYo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39558 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133Ab2GaOV5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jul 2012 11:24:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 18 Jul 2012 08:24:23 -0700
-Message-ID: <CAB=NE6VPHdY0oZUwQk5rc9t+XTajr3qDW3VF_FFa0C5kzJRx6Q@mail.gmail.com> (sfid-20120718_172448_990231_90D15EAE)
-Subject: Re: [PATCH] compat: fix system crash on 2.6.35 when flushing work
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: mcgrof@kernel.org, lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 31 Jul 2012 10:21:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] iwlegacy: use eth_broadcast_addr
+Date: Tue, 31 Jul 2012 16:21:53 +0200
+Message-Id: <1343744513-6003-1-git-send-email-johannes@sipsolutions.net> (sfid-20120731_162207_647621_FEE58320)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 13, 2012 at 1:38 AM, Zefir Kurtisi
-<zefir.kurtisi@neratec.com> wrote:
-> Ubuntu 10.10 stock kernel (2.6.35-22-generic) crashes in
-> compat_flush_scheduled_work(), that is called e.g. when
-> mac80211 module is unloaded.
->
-> The problem was introduced with 80bf8a83
-> compat: backport system work queues system_wq and system_long_wq
->
-> The crash happens in compat_flush_scheduled_work() where both
-> flush_workqueue() and flush_scheduled_work() are called successively.
-> Removing one of them resolves the issue.
->
-> All compat-wireless tarballs after 2012-03-18 are affected.
->
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks! Applied and pushed and I'll roll this into the stable series
-as well and make a new set of releases where this is applicable today.
+Instead of copying from a constant array
+(which is still needed for other purposes)
 
-  Luis
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlegacy/common.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 0370403..9c6c42b 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1586,9 +1586,9 @@ il_fill_probe_req(struct il_priv *il, struct ieee80211_mgmt *frame,
+ 		return 0;
+ 
+ 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
+-	memcpy(frame->da, il_bcast_addr, ETH_ALEN);
++	eth_broadcast_addr(frame->da);
+ 	memcpy(frame->sa, ta, ETH_ALEN);
+-	memcpy(frame->bssid, il_bcast_addr, ETH_ALEN);
++	eth_broadcast_addr(frame->bssid);
+ 	frame->seq_ctrl = 0;
+ 
+ 	len += 24;
+-- 
+1.7.10.4
+
