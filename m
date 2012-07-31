@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32976 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751994Ab2GFT7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jul 2012 15:59:05 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, Eric Lapuyade <eric.lapuyade@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 07/33] NFC: Driver failure API
-Date: Fri,  6 Jul 2012 22:09:27 +0200
-Message-Id: <1341605393-32056-8-git-send-email-sameo@linux.intel.com> (sfid-20120706_215909_269373_90B89226)
-In-Reply-To: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
-References: <1341605393-32056-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39041 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755987Ab2GaLcZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jul 2012 07:32:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 4/4] mac80211_hwsim: add support for P2P Device
+Date: Tue, 31 Jul 2012 13:32:18 +0200
+Message-Id: <1343734338-14772-5-git-send-email-johannes@sipsolutions.net> (sfid-20120731_133233_887830_ECF95C3C)
+In-Reply-To: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net>
+References: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Lapuyade <eric.lapuyade@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This API should be used by drivers, HCI, SHDLC or NCI stacks to report an
-unrecoverable error.
+Advertise support for P2P Device in hwsim
+to be able to test it.
 
-Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/nfc/nfc.h |    2 ++
- net/nfc/core.c        |   10 ++++++++++
- 2 files changed, 12 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 180964b..6431f5e 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -204,4 +204,6 @@ int nfc_tm_activated(struct nfc_dev *dev, u32 protocol, u8 comm_mode,
- int nfc_tm_deactivated(struct nfc_dev *dev);
- int nfc_tm_data_received(struct nfc_dev *dev, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ff20dbb..1d0b018 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1734,6 +1734,7 @@ static const struct ieee80211_iface_limit hwsim_if_limits[] = {
+ #endif
+ 				 BIT(NL80211_IFTYPE_AP) |
+ 				 BIT(NL80211_IFTYPE_P2P_GO) },
++	{ .max = 1, .types = BIT(NL80211_IFTYPE_P2P_DEVICE) },
+ };
  
-+void nfc_driver_failure(struct nfc_dev *dev, int err);
-+
- #endif /* __NET_NFC_H */
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 4177bb5..32f2832 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -651,6 +651,16 @@ int nfc_target_lost(struct nfc_dev *dev, u32 target_idx)
- }
- EXPORT_SYMBOL(nfc_target_lost);
+ static const struct ieee80211_iface_combination hwsim_if_comb = {
+@@ -1820,7 +1821,8 @@ static int __init init_mac80211_hwsim(void)
+ 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 			BIT(NL80211_IFTYPE_P2P_GO) |
+ 			BIT(NL80211_IFTYPE_ADHOC) |
+-			BIT(NL80211_IFTYPE_MESH_POINT);
++			BIT(NL80211_IFTYPE_MESH_POINT) |
++			BIT(NL80211_IFTYPE_P2P_DEVICE);
  
-+void nfc_driver_failure(struct nfc_dev *dev, int err)
-+{
-+	/*
-+	 * TODO: if polling is active, send empty target_found
-+	 * or else do whatever makes sense to let user space
-+	 * know this device needs to be closed and reinitialized.
-+	 */
-+}
-+EXPORT_SYMBOL(nfc_driver_failure);
-+
- static void nfc_release(struct device *d)
- {
- 	struct nfc_dev *dev = to_nfc_dev(d);
+ 		hw->flags = IEEE80211_HW_MFP_CAPABLE |
+ 			    IEEE80211_HW_SIGNAL_DBM |
 -- 
-1.7.10
+1.7.10.4
 
