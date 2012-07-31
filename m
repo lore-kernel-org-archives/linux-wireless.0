@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35104 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39390 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753337Ab2GWNaQ (ORCPT
+	with ESMTP id S1751876Ab2GaNVs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jul 2012 09:30:16 -0400
+	Tue, 31 Jul 2012 09:21:48 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SwCOQ-0000MS-GW
+	for linux-wireless@vger.kernel.org; Tue, 31 Jul 2012 15:21:46 +0200
+Message-ID: <1343740905.4474.4.camel@jlt3.sipsolutions.net> (sfid-20120731_152156_847107_A8C0BA4F)
+Subject: Re: [PATCH v2 1/4] cfg80211: add P2P Device abstraction
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC/RFT 2/6] mac80211: use oper_channel in ibss
-Date: Mon, 23 Jul 2012 15:30:07 +0200
-Message-Id: <1343050211-499-3-git-send-email-johannes@sipsolutions.net> (sfid-20120723_153034_200183_48313138)
-In-Reply-To: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
-References: <1343050211-499-1-git-send-email-johannes@sipsolutions.net>
+Date: Tue, 31 Jul 2012 15:21:45 +0200
+In-Reply-To: <1343734338-14772-2-git-send-email-johannes@sipsolutions.net> (sfid-20120731_133232_929766_E74C1A3D)
+References: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net>
+	 <1343734338-14772-2-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120731_133232_929766_E74C1A3D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2012-07-31 at 13:32 +0200, Johannes Berg wrote:
 
-Using hw.conf.channel is wrong as it could be the
-temporary channel if any function like the beacon
-get function is called while scanning or during
-other temporary out-of-channel activities.
+> +++ b/net/wireless/chan.c
+> @@ -143,6 +143,11 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+>  	case NL80211_IFTYPE_WDS:
 
-Use oper_channel instead.
+A little earlier in this function this change is also needed:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 8628a20..1ebda2f 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -205,7 +205,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
+@@ -105,7 +105,7 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
  
--	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
-+	bss = cfg80211_inform_bss_frame(local->hw.wiphy, chan,
- 					mgmt, skb->len, 0, GFP_KERNEL);
- 	cfg80211_put_bss(bss);
- 	netif_carrier_on(sdata->dev);
-@@ -294,7 +294,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
--	int band = local->hw.conf.channel->band;
-+	int band = local->oper_channel->band;
+        ASSERT_WDEV_LOCK(wdev);
  
- 	/*
- 	 * XXX: Consider removing the least recently used entry and
-@@ -561,7 +561,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
--	int band = local->hw.conf.channel->band;
-+	int band = local->oper_channel->band;
+-       if (!netif_running(wdev->netdev))
++       if (wdev->netdev && !netif_running(wdev->netdev))
+                return;
  
- 	/*
- 	 * XXX: Consider removing the least recently used entry and
-@@ -759,7 +759,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 				return;
- 			}
- 			sdata_info(sdata, "IBSS not allowed on %d MHz\n",
--				   local->hw.conf.channel->center_freq);
-+				   local->oper_channel->center_freq);
- 
- 			/* No IBSS found - decrease scan interval and continue
- 			 * scanning. */
--- 
-1.7.10.4
+        switch (wdev->iftype) {
+
+
+johannes
 
