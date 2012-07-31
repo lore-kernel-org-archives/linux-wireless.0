@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40175 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752152Ab2GORxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jul 2012 13:53:46 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 09/12] ath9k_hw: apply XPA timing control values from EEPROM
-Date: Sun, 15 Jul 2012 19:53:37 +0200
-Message-Id: <1342374820-92409-9-git-send-email-nbd@openwrt.org> (sfid-20120715_195352_891449_7526A764)
-In-Reply-To: <1342374820-92409-8-git-send-email-nbd@openwrt.org>
-References: <1342374820-92409-1-git-send-email-nbd@openwrt.org>
- <1342374820-92409-2-git-send-email-nbd@openwrt.org>
- <1342374820-92409-3-git-send-email-nbd@openwrt.org>
- <1342374820-92409-4-git-send-email-nbd@openwrt.org>
- <1342374820-92409-5-git-send-email-nbd@openwrt.org>
- <1342374820-92409-6-git-send-email-nbd@openwrt.org>
- <1342374820-92409-7-git-send-email-nbd@openwrt.org>
- <1342374820-92409-8-git-send-email-nbd@openwrt.org>
+Received: from victor.provo.novell.com ([137.65.250.26]:50531 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217Ab2GaHRv (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Tue, 31 Jul 2012 03:17:51 -0400
+Received: by vbbff1 with SMTP id ff1so5457990vbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2012 00:17:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120730114515.GA3722@redhat.com>
+References: <1343645143-10602-1-git-send-email-machen@suse.com>
+	<20120730114515.GA3722@redhat.com>
+Date: Tue, 31 Jul 2012 15:17:41 +0800
+Message-ID: <CALx5=V92rTav6rckZ7Q0XocOhnc6STjnFggmyojspCtmuePOeA@mail.gmail.com> (sfid-20120731_091824_394347_254D0BA4)
+Subject: Re: [rt2x00-users] [PATCH v2] rt2x00 : fix rt3290 resuming failed.
+From: Matt Chen <machen@suse.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: users@rt2x00.serialmonkey.com, kevin.chou@mediatek.com,
+	woody.hung@mediatek.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+Hi
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 3cddd78..86e4be4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3962,9 +3962,32 @@ static void ar9003_hw_txend_to_xpa_off_apply(struct ath_hw *ah, u16 freq)
- 		      AR_PHY_XPA_TIMING_CTL_TX_END_XPAA_OFF, value);
- }
- 
-+static void ar9003_hw_xpa_timing_control_apply(struct ath_hw *ah, bool is_2ghz)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	u8 xpa_ctl;
-+
-+	if (!(eep->baseEepHeader.featureEnable & 0x80))
-+		return;
-+
-+	if (!AR_SREV_9300(ah) && !AR_SREV_9340(ah) && !AR_SREV_9580(ah))
-+		return;
-+
-+	if (is_2ghz) {
-+		xpa_ctl = eep->modalHeader2G.txFrameToXpaOn;
-+		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
-+			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAB_ON, xpa_ctl);
-+	} else {
-+		xpa_ctl = eep->modalHeader5G.txFrameToXpaOn;
-+		REG_RMW_FIELD(ah, AR_PHY_XPA_TIMING_CTL,
-+			      AR_PHY_XPA_TIMING_CTL_FRAME_XPAA_ON, xpa_ctl);
-+	}
-+}
-+
- static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 					     struct ath9k_channel *chan)
- {
-+	ar9003_hw_xpa_timing_control_apply(ah, IS_CHAN_2GHZ(chan));
- 	ar9003_hw_xpa_bias_level_apply(ah, IS_CHAN_2GHZ(chan));
- 	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
- 	ar9003_hw_drive_strength_apply(ah);
+2012/7/30 Stanislaw Gruszka <sgruszka@redhat.com>:
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -400,6 +400,14 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+>>  {
+>>       unsigned int i;
+>>       u32 reg;
+>> +
+>> +     int retval;
+>> +
+>> +     if (rt2x00_rt(rt2x00dev, RT3290)) {
+>> +             retval = rt2800_enable_wlan_rt3290(rt2x00dev);
+>> +             if (retval)
+>> +                     return -EBUSY;
+>> +     }
+>
+> Since we call that here, why we need this also in rt2800pci_probe_hw() ?
+hmm....this is worth testing. I will remove it from
+rt2800pci_probe_hw(), see if it is working fine.
+> Stanislaw
+>
+
+
+
 -- 
-1.7.7.5 (Apple Git-26)
-
+Thank you.
