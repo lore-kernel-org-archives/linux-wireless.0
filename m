@@ -1,55 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58381 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281Ab2HBPtP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 11:49:15 -0400
-Message-ID: <501AA176.2050704@candelatech.com> (sfid-20120802_174919_128698_9A275FF8)
-Date: Thu, 02 Aug 2012 08:49:10 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3780 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753363Ab2HARZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 13:25:01 -0400
+Message-ID: <50196660.8090001@broadcom.com> (sfid-20120801_192509_639845_D0235378)
+Date: Wed, 1 Aug 2012 19:24:48 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: mac80211-wip preview
-References: <1343922290.4471.21.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1343922290.4471.21.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Josh Boyer" <jwboyer@redhat.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"Seth Forshee" <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
+References: <20120801131232.GA1785@zod.bos.redhat.com>
+ <20120801141810.GB27433@tuxdriver.com> <50194D7A.6060400@broadcom.com>
+ <5019506C.6020707@broadcom.com>
+ <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/02/2012 08:44 AM, Johannes Berg wrote:
-> Hi,
->
-> This is a more tentative preview, things are still subject to change.
->
-> The included patchsets and their status:
->   * P2P Device work
->     I posted this, I'll apply it when I get back unless I see any
->     objections then :-)
->   * some more cleanups, including the CSA cleanups
->     I posted most of these I believe, and will also apply most of it when
->     I get back
->   * a brcmsmac patch that I posted -- I'm not going to apply it but I
->     just wanted to do a random cleanup (the obsolete functions removal)
->   * and channel context code of course!
->     This is still WIP, I need to
->     - address SMPS -- I might just do passive/active # of chains per
->       channel context and let the driver sort out the rest, this gives it
->       more information and flexibility
->     - TX power -- I'm open to suggestions about how we should do this,
->       technically the user setting could be per virtual interface, but do
->       we care? I have a feeling it should be per channel since even 11h
->       TX power reduction is defined for the entire channel
++ Luis
 
-I would love for tx power to be per network device.  If nothing else,
-one could have two station interfaces talking on the same channel, to two different
-APs..one close by and one far away.  Could set the tx-power higher for
-the far-away one, for example.
+On 08/01/2012 05:53 PM, Johannes Berg wrote:
+> On Wed, 2012-08-01 at 17:51 +0200, Arend van Spriel wrote:
+>> On 08/01/2012 05:38 PM, Arend van Spriel wrote:
+>>>> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
+>>>>>
+>>>>> It looks like those calls were added in mid-June.
+>>>>>
+>>> I think mid-june sounds about right. We never observed the warning when
+>>> changes to use regulatory infrastructure were tested/reviewed. Should
+>>> this precondition be mentioned in cfg80211.h?
+>>>
+>>> Gr. AvS
+>>
+>> Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
+>> another solution is needed.
+> 
+> Yeah I was going to say -- how can it possibly access that? It seems
+> that in some patch the API got broken, it should be taking the lock or
+> whatever ... I'll leave it to Luis to sort out though :-P
+> 
+> johannes
+> 
 
-Thanks,
-Ben
+The assert was added by following commit:
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+commit ac46d48e00349c63650b3cc6f9460fcc183da6a6
+Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+Date:   Fri May 1 18:44:50 2009 -0400
+
+    cfg80211: fix race condition with wiphy_apply_custom_regulatory()
+
+    We forgot to lock using the cfg80211_mutex in
+    wiphy_apply_custom_regulatory(). Without the lock
+    there is possible race between processing a reply from CRDA
+    and a driver calling wiphy_apply_custom_regulatory(). During
+    the processing of the reply from CRDA we free last_request and
+    wiphy_apply_custom_regulatory() eventually accesses an
+    element from last_request in the through freq_reg_info_regd().
+
+    This is very difficult to reproduce (I haven't), it takes us
+    3 hours and you need to be banging hard, but the race is obvious
+    by looking at the code.
+
+    This should only affect those who use this caller, which currently
+    is ath5k, ath9k, and ar9170.
+
+    EIP: 0060:[<f8ebec50>] EFLAGS: 00210282 CPU: 1
+    EIP is at freq_reg_info_regd+0x24/0x121 [cfg80211]
+
+It seems the API was as it currently is when adding regulatory framework
+changes in brcmsmac so we should have seen this assert flying by. The
+problem is that freq_reg_info() is exposed in cfg80211.h, but as it is
+now it can only be used under the cfg80211_mutex lock, ie. in regulatory
+notify callback (as Seth indicated).
+
+Gr. AvS
 
