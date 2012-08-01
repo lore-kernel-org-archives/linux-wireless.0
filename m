@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:40962 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129Ab2HJTu0 (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:33900 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570Ab2HAT23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 15:50:26 -0400
-Received: by obbuo13 with SMTP id uo13so2683694obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 12:50:26 -0700 (PDT)
+	Wed, 1 Aug 2012 15:28:29 -0400
+Received: by ggnl2 with SMTP id l2so438334ggn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 12:28:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAHashqAQ9tD3qmzMRNfzLcGbD2A9gykFjUbOhqZA=uLJBnQ4Gw@mail.gmail.com>
-References: <2121451356.93690.1344518764022.JavaMail.root@neratec.com>
- <5025425A.2090207@hauke-m.de> <CAHashqAQ9tD3qmzMRNfzLcGbD2A9gykFjUbOhqZA=uLJBnQ4Gw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Fri, 10 Aug 2012 12:50:05 -0700
-Message-ID: <CAB=NE6VT+dxeN=BhWJrz+iS8GjS7o+phDJHRhuF2jRL_EEiGVA@mail.gmail.com> (sfid-20120810_215030_316434_B11B8512)
-Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
-To: Andy Gospodarek <andy@greyhouse.net>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	Phil Perry <phil@elrepo.org>,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
+References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net> <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 1 Aug 2012 22:28:13 +0300
+Message-ID: <CA+XVXfegwamdK3mzP5eiAUJM4eYrFRTXY4Mr2tKP7+VBYriF-w@mail.gmail.com> (sfid-20120801_212832_567935_B3991B62)
+Subject: Re: [RFC 7/8] mac80211: support extended channel switch
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 10, 2012 at 11:28 AM, Andy Gospodarek <andy@greyhouse.net> wrote:
-> Did you try the patch I posted last night that has the updated define
-> for no_printk()?  I saw the same error until I applied that patch.
+On Wed, Aug 1, 2012 at 6:21 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Support extended channel switch when the operating
+> class is one of the global operating classes as
+> defined in Annex E of 802.11-2012. If it isn't,
+> disconnect from the AP instead.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[...]
+> +static void
+> +ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+> +                                u8 new_chan_no, u8 count, u8 mode,
+> +                                enum ieee80211_band new_band,
+> +                                struct ieee80211_bss *bss, u64 timestamp)
+>  {
+>         struct cfg80211_bss *cbss =
+>                 container_of((void *)bss, struct cfg80211_bss, priv);
+>         struct ieee80211_channel *new_ch;
+>         struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
+> -                                                     cbss->channel->band);
+> +       int new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
 
-Andy, can you post a new patch on a new thread that is rebased on top
-of the latest compat.git master and without putting stuff above the
-patch ?
+I'm not sure a channel switch between bands should be allowed. Case in
+point - a device might have different HT capabilities between bands,
+so different rates might need to be programmed to FW. This would
+require a re-assoc..
 
-  Luis
+Arik
