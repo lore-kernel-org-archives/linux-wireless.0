@@ -1,35 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:31869 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754297Ab2HIG6T (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755474Ab2HAPVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 02:58:19 -0400
-Date: Thu, 9 Aug 2012 09:57:57 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mwifiex: use GFP_ATOMIC under spin lock
-Message-ID: <20120809065757.GB7925@elgon.mountain> (sfid-20120809_085823_111928_C24C40DE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 1 Aug 2012 11:21:35 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 8/8] mac80211: disconnect if channel switch fails
+Date: Wed,  1 Aug 2012 17:21:27 +0200
+Message-Id: <1343834487-23737-9-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172148_668361_04AE7BFD)
+In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're holding the sta_list_spinlock here so we can't sleep.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Disconnect from the AP if channel switching in the
+driver failed or if the new channel is unavailable.
 
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 14d4f04..ca4a1f3 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -63,7 +63,7 @@ mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
- 	if (node)
- 		goto done;
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cc76481..359ec2b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -730,16 +730,13 @@ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
  
--	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_KERNEL);
-+	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_ATOMIC);
- 	if (!node)
- 		goto done;
+ 	trace_api_chswitch_done(sdata, success);
+ 	if (!success) {
+-		/*
+-		 * If the channel switch was not successful, stay
+-		 * around on the old channel. We currently lack
+-		 * good handling of this situation, possibly we
+-		 * should just drop the association.
+-		 */
+-		sdata->local->csa_channel = sdata->local->oper_channel;
++		sdata_info(sdata,
++			   "driver channel switch failed, disconnecting\n");
++		ieee80211_queue_work(&sdata->local->hw,
++				     &ifmgd->csa_connection_drop_work);
++	} else {
++		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
+ 	}
+-
+-	ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
+ }
+ EXPORT_SYMBOL(ieee80211_chswitch_done);
  
+@@ -784,8 +781,14 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 
+ 	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
+-	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED)
++	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED) {
++		sdata_info(sdata,
++			   "AP %pM switches to unsupported channel %d, disconnecting\n",
++			   ifmgd->associated->bssid, new_chan_no);
++		ieee80211_queue_work(&sdata->local->hw,
++				     &ifmgd->csa_connection_drop_work);
+ 		return;
++	}
+ 
+ 	sdata->local->csa_channel = new_ch;
+ 
+@@ -1704,6 +1707,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+ 			       transmit_frame, frame_buf);
++	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+ 	/*
+@@ -1748,6 +1752,8 @@ static void ieee80211_csa_connection_drop_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_sub_if_data,
+ 			     u.mgd.csa_connection_drop_work);
+ 
++	ieee80211_wake_queues_by_reason(&sdata->local->hw,
++					IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	__ieee80211_disconnect(sdata, true);
+ }
+ 
+-- 
+1.7.10.4
+
