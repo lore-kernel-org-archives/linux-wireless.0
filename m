@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7830 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757055Ab2HGBPG (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:34201 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754663Ab2HAR4j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 21:15:06 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 1 Aug 2012 13:56:39 -0400
+Date: Wed, 1 Aug 2012 12:56:28 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Josh Boyer <jwboyer@redhat.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
+Message-ID: <20120801175628.GD22963@thinkpad-t410> (sfid-20120801_195648_278809_7A708617)
+References: <20120801131232.GA1785@zod.bos.redhat.com>
+ <20120801141810.GB27433@tuxdriver.com>
+ <50194D7A.6060400@broadcom.com>
+ <5019506C.6020707@broadcom.com>
+ <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+ <20120801161959.GC22963@thinkpad-t410>
+ <1343841285.4638.10.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20512.27593.328878.831452@gargle.gargle.HOWL> (sfid-20120807_031510_504238_10071DB0)
-Date: Tue, 7 Aug 2012 06:43:45 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC 04/14] ath9k: Cleanup ath_rc_setvalid_htrates
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1343841285.4638.10.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+On Wed, Aug 01, 2012 at 07:14:45PM +0200, Johannes Berg wrote:
+> On Wed, 2012-08-01 at 11:19 -0500, Seth Forshee wrote:
+> > On Wed, Aug 01, 2012 at 05:53:58PM +0200, Johannes Berg wrote:
+> > > On Wed, 2012-08-01 at 17:51 +0200, Arend van Spriel wrote:
+> > > > On 08/01/2012 05:38 PM, Arend van Spriel wrote:
+> > > > >> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
+> > > > >> > 
+> > > > >> > It looks like those calls were added in mid-June.
+> > > > >> > 
+> > > > > I think mid-june sounds about right. We never observed the warning when
+> > > > > changes to use regulatory infrastructure were tested/reviewed. Should
+> > > > > this precondition be mentioned in cfg80211.h?
+> > > > > 
+> > > > > Gr. AvS
+> > > > 
+> > > > Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
+> > > > another solution is needed.
+> > > 
+> > > Yeah I was going to say -- how can it possibly access that? It seems
+> > > that in some patch the API got broken, it should be taking the lock or
+> > > whatever ... I'll leave it to Luis to sort out though :-P
+> > 
+> > In other drivers freq_reg_info only seems to get used by the regulatory
+> > notifiers, which get called with the lock held. brcmsmac is wanting to
+> > know whether or not OFDM is allowed when setting the channel though, and
+> > I didn't find that information anywhere outside the regulatory
+> > information. If there's another way then calling freq_reg_info() could
+> > be avoided. Or maybe we could add an OFDM flag to the channel
+> > information?
+> 
+> Seems reasonable to add the flags (or some of them) to the channel
+> flags, yeah.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a34f678..69745ad 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -552,15 +552,16 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- {
- 	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	struct ath_rateset *rateset = &ath_rc_priv->neg_ht_rates;
--	u32 capflag = ath_rc_priv->ht_cap;
--	u8 i, j, hi = 0;
-+	u32 phy, capflag = ath_rc_priv->ht_cap;
-+	u16 rate_flags;
-+	u8 i, j, hi = 0, rate, dot11rate, valid_rate_count;
- 
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
--			u32 phy = rate_table->info[j].phy;
--			u16 rate_flags = rate_table->info[j].rate_flags;
--			u8 rate = rateset->rs_rates[i];
--			u8 dot11rate = rate_table->info[j].dot11rate;
-+			phy = rate_table->info[j].phy;
-+			rate_flags = rate_table->info[j].rate_flags;
-+			rate = rateset->rs_rates[i];
-+			dot11rate = rate_table->info[j].dot11rate;
- 
- 			if ((rate != dot11rate) || !WLAN_RC_PHY_HT(phy) ||
- 			    !(rate_flags & WLAN_RC_CAP_STREAM(capflag)) ||
-@@ -570,8 +571,8 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- 			if (!ath_rc_valid_phyrate(phy, capflag, 0))
- 				continue;
- 
--			ath_rc_priv->valid_phy_rateidx[phy]
--				[ath_rc_priv->valid_phy_ratecnt[phy]] = j;
-+			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
-+			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
- 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
- 			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
- 			hi = max(hi, j);
--- 
-1.7.11.4
+Great, I'll work something up.
 
+Seth
