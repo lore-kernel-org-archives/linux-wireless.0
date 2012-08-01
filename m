@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:45965 "EHLO ogre.sisk.pl"
+Received: from c60.cesmail.net ([216.154.195.49]:10671 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751766Ab2HGLrD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2012 07:47:03 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH]: Autosleep patch.
-Date: Tue, 7 Aug 2012 13:52:56 +0200
-Cc: Randy Dunlap <rdunlap@xenotime.net>,
-	Christopher Sacchi <chris.sacchi@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <CAGh4K3L_nY5B22g5oMBuoY=a1OB7U10yH1ZJvn0dG_O5TVz6+Q@mail.gmail.com> <501FE4E9.3080004@xenotime.net> <20120807110748.GA12534@roeck-us.net>
-In-Reply-To: <20120807110748.GA12534@roeck-us.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208071352.56786.rjw@sisk.pl> (sfid-20120807_134707_851089_669FC53D)
+	id S1755439Ab2HAWJj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 18:09:39 -0400
+Date: Wed, 1 Aug 2012 18:09:34 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Mijzelf <Mijzelf@live.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Uknown symbols in rfkill_backport.ko on 2.6.25.17 on mips
+Message-ID: <20120801180934.4dc2c9e3@mj> (sfid-20120802_000942_537504_AE8267C1)
+In-Reply-To: <loom.20120729T135851-141@post.gmane.org>
+References: <0621389a37a568a7ebd526b0adc87a48@fileserver.lan>
+	<20120724175617.0a4206c4@mj>
+	<loom.20120725T195215-756@post.gmane.org>
+	<20120726172555.246a668c@mj>
+	<loom.20120729T135851-141@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, August 07, 2012, Guenter Roeck wrote:
-> On Mon, Aug 06, 2012 at 08:38:17AM -0700, Randy Dunlap wrote:
-> > On 08/06/2012 08:13 AM, Christopher Sacchi wrote:
-> > 
-> > > This patch (listed below), changes an old function in autosleep.c in
-> > > kernel version 3.5. It's code is listed from the first -- line to the
-> > > 2nd to last -- line.
-> > > This patch was checked with checkpatch.pl with no errors:
-> > > --
-> > > --- power/autosleep.c	2012-07-21 20:58:29.000000000 +0000
-> > > +++ power/autosleepnew.c	2012-08-06 10:52:26.000000000 +0000
-> > 
-> > 
-> > The file names should include the full path from the top level of the
-> > kernel source tree.  E.g.:
-> > 
-> > --- linux.orig/kernel/power/autosleep.c
-> > +++ linux/kernel/power/autosleep.c
-> > 
-> > This patch uses the name autosleepnew.c, which is not what is
-> > required/expected.
-> > 
-> > Your previous patches were for wireless (mac80211) components, so they
-> > needed to go to the linux-wireless mailing list.  This patch is not
-> > about wireless, so don't send it to that mailing list, although you
-> > could send it to the linux-pm@vger.kernel.org mailing list.
-> > Please see the MAINTAINERS file for where to send patches.
-> > 
-> > 
-> > > @@ -30,7 +30,7 @@ static void try_to_suspend(struct work_s
-> > >  	if (!pm_get_wakeup_count(&initial_count, true))
-> > >  		goto out;
-> > > 
-> > > -	mutex_lock(&autosleep_lock);
-> > > +	mutex_lock_interruptable();
-> > > 
-> 
-> Plus, this code obviously never compiled. Nor does the submitter ever explain
-> what he actually tries to accomplish.
+On Sun, 29 Jul 2012 12:31:16 +0000 (UTC)
+Mijzelf <Mijzelf@live.com> wrote:
 
-We've discussed this offlist and as far as I can see it there is no bug and
-nothing needs to be fixed.
+> Looking at this it seems to me it must be some compiler-inserted
+> memory barrier, or something like that. But that memcpy baffles me.
 
-Thanks,
-Rafael
+You did a great job tracking down the problem.  I think the next step
+would be to ask in the mips mailing list.  The wireless subsystem has
+nothing to do with that problem.
+
+> I think I'll just add a dummy _flush_cache. My target system is
+> single core, I suppose it would be safe.
+
+I think it's worth trying.
+
+-- 
+Regards,
+Pavel Roskin
