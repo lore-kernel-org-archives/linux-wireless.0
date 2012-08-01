@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:43128 "EHLO
-	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751276Ab2HICY6 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:33777 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086Ab2HAQUM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 22:24:58 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: notify cfg80211 about MIC failures
-Date: Wed,  8 Aug 2012 19:02:56 -0700
-Message-Id: <1344477776-15874-1-git-send-email-bzhao@marvell.com> (sfid-20120809_042522_393661_4DD55336)
+	Wed, 1 Aug 2012 12:20:12 -0400
+Date: Wed, 1 Aug 2012 11:19:59 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Josh Boyer <jwboyer@redhat.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
+Message-ID: <20120801161959.GC22963@thinkpad-t410> (sfid-20120801_182024_890488_80C2F157)
+References: <20120801131232.GA1785@zod.bos.redhat.com>
+ <20120801141810.GB27433@tuxdriver.com>
+ <50194D7A.6060400@broadcom.com>
+ <5019506C.6020707@broadcom.com>
+ <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1343836438.4638.5.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, Aug 01, 2012 at 05:53:58PM +0200, Johannes Berg wrote:
+> On Wed, 2012-08-01 at 17:51 +0200, Arend van Spriel wrote:
+> > On 08/01/2012 05:38 PM, Arend van Spriel wrote:
+> > >> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
+> > >> > 
+> > >> > It looks like those calls were added in mid-June.
+> > >> > 
+> > > I think mid-june sounds about right. We never observed the warning when
+> > > changes to use regulatory infrastructure were tested/reviewed. Should
+> > > this precondition be mentioned in cfg80211.h?
+> > > 
+> > > Gr. AvS
+> > 
+> > Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
+> > another solution is needed.
+> 
+> Yeah I was going to say -- how can it possibly access that? It seems
+> that in some patch the API got broken, it should be taking the lock or
+> whatever ... I'll leave it to Luis to sort out though :-P
 
-Call cfg80211_michael_mic_failure() handler when there is a MIC error
-event from firmware.
+In other drivers freq_reg_info only seems to get used by the regulatory
+notifiers, which get called with the lock held. brcmsmac is wanting to
+know whether or not OFDM is allowed when setting the channel though, and
+I didn't find that information anywhere outside the regulatory
+information. If there's another way then calling freq_reg_info() could
+be avoided. Or maybe we could add an OFDM flag to the channel
+information?
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_event.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index 4758d30..dff51d5 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -278,10 +278,16 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 
- 	case EVENT_MIC_ERR_UNICAST:
- 		dev_dbg(adapter->dev, "event: UNICAST MIC ERROR\n");
-+		cfg80211_michael_mic_failure(priv->netdev, priv->cfg_bssid,
-+					     NL80211_KEYTYPE_PAIRWISE,
-+					     -1, NULL, GFP_KERNEL);
- 		break;
- 
- 	case EVENT_MIC_ERR_MULTICAST:
- 		dev_dbg(adapter->dev, "event: MULTICAST MIC ERROR\n");
-+		cfg80211_michael_mic_failure(priv->netdev, priv->cfg_bssid,
-+					     NL80211_KEYTYPE_GROUP,
-+					     -1, NULL, GFP_KERNEL);
- 		break;
- 	case EVENT_MIB_CHANGED:
- 	case EVENT_INIT_DONE:
--- 
-1.7.0.2
+Seth
 
