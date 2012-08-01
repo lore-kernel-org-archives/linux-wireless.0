@@ -1,52 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:61184 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755894Ab2HPRjM convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43882 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755516Ab2HAPVe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 13:39:12 -0400
-Received: by weyx8 with SMTP id x8so1901126wey.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 10:39:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1791263.5FQJJv4xHF@bender>
-References: <1345132801-8430-1-git-send-email-hauke@hauke-m.de>
-	<1345132801-8430-4-git-send-email-hauke@hauke-m.de>
-	<1791263.5FQJJv4xHF@bender>
-Date: Thu, 16 Aug 2012 19:39:10 +0200
-Message-ID: <CACna6rxVOFO-n5J_6J7HFSt+WnoX0=2ULjiRv3p9va47K2Edsw@mail.gmail.com> (sfid-20120816_193916_440859_5DF8D635)
-Subject: Re: [PATCH v2 3/3] MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, ralf@linux-mips.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	john@phrozen.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 1 Aug 2012 11:21:34 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 6/8] cfg80211: add ieee80211_operating_class_to_band
+Date: Wed,  1 Aug 2012 17:21:25 +0200
+Message-Id: <1343834487-23737-7-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172153_499393_C55084A0)
+In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/8/16 Florian Fainelli <florian@openwrt.org>:
->> +void __init bcm47xx_gpio_init(void)
->> +{
->> +     int err;
->> +
->> +     switch (bcm47xx_bus_type) {
->> +#ifdef CONFIG_BCM47XX_SSB
->> +     case BCM47XX_BUS_TYPE_SSB:
->> +             bcm47xx_gpio_count = ssb_gpio_count(&bcm47xx_bus.ssb);
->> +#endif
->> +#ifdef CONFIG_BCM47XX_BCMA
->> +     case BCM47XX_BUS_TYPE_BCMA:
->> +             bcm47xx_gpio_count = bcma_gpio_count(&bcm47xx_bus.bcma.bus);
->> +#endif
->> +     }
->
-> Is this exclusive? Cannot we have both SSB and BCMA on the same device?
+From: Johannes Berg <johannes.berg@intel.com>
 
-This applies to SoC only, so I believe it's fine. We don't have SoCs
-based on BCMA and SSB at the same time.
+This function converts a (global only!) operating
+class to an internal band identifier. This will
+be needed for extended channel switch support.
 
-You can find devices with multiple buses, but additional ones are
-connected via PCIE or USB interface (or some other I don't know
-about).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h |   11 +++++++++++
+ net/wireless/util.c    |   20 ++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 493fa0c..700232b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3520,6 +3520,17 @@ bool cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
+ void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
+ 			       enum nl80211_channel_type type);
+ 
++/**
++ * ieee80211_operating_class_to_band - convert operating class to band
++ *
++ * @operating_class: the operating class to convert
++ * @band: band pointer to fill
++ *
++ * Returns %true if the conversion was successful, %false otherwise.
++ */
++bool ieee80211_operating_class_to_band(u8 operating_class,
++				       enum ieee80211_band *band);
++
+ /*
+  * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
+  * @rate: given rate_info to calculate bitrate from
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index ce393dd..14d3c5e 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -971,6 +971,26 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
+ }
+ EXPORT_SYMBOL(cfg80211_calculate_bitrate);
+ 
++bool ieee80211_operating_class_to_band(u8 operating_class,
++				       enum ieee80211_band *band)
++{
++	switch (operating_class) {
++	case 112:
++	case 113:
++	case 115 ... 127:
++		*band = IEEE80211_BAND_5GHZ;
++		return true;
++	
++	case 83:
++	case 84:
++		*band = IEEE80211_BAND_2GHZ;
++		return true;
++	}
++
++	return false;
++}
++EXPORT_SYMBOL(ieee80211_operating_class_to_band);
++
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int)
+ {
 -- 
-Rafał
+1.7.10.4
+
