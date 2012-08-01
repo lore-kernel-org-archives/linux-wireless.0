@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:34764 "EHLO
-	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750964Ab2HICYh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 22:24:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ying Luo <luoy@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: fix 'smatch' warning in preparing key_material cmd
-Date: Wed,  8 Aug 2012 19:01:52 -0700
-Message-Id: <1344477712-15818-1-git-send-email-bzhao@marvell.com> (sfid-20120809_042512_465182_B2CCBCC2)
+Received: from mms3.broadcom.com ([216.31.210.19]:2659 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752368Ab2HAT3D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 15:29:03 -0400
+Message-ID: <50198370.20304@broadcom.com> (sfid-20120801_212906_348018_4BA77A10)
+Date: Wed, 1 Aug 2012 21:28:48 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Josh Boyer" <jwboyer@redhat.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"Seth Forshee" <seth.forshee@canonical.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
+References: <20120801131232.GA1785@zod.bos.redhat.com>
+ <20120801141810.GB27433@tuxdriver.com> <50194D7A.6060400@broadcom.com>
+ <5019506C.6020707@broadcom.com>
+ <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+ <50196660.8090001@broadcom.com>
+In-Reply-To: <50196660.8090001@broadcom.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The key length can be 32 bytes for TKIP and 16 bytes for AES_CMAC.
-'smatch' warns on memcpy using key_len variable to copy data to
-a 16 bytes buffer. Use fixed length to avoid the warning.
+On 08/01/2012 07:24 PM, Arend van Spriel wrote:
+> It seems the API was as it currently is when adding regulatory framework
+> changes in brcmsmac so we should have seen this assert flying by. The
+> problem is that freq_reg_info() is exposed in cfg80211.h, but as it is
+> now it can only be used under the cfg80211_mutex lock, ie. in regulatory
+> notify callback (as Seth indicated).
+> 
+> Gr. AvS
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_cmd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Ah, I see you need to run a LOCKDEP-enabled kernel to get this warning.
 
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index 9af9692..0cc3406 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -690,7 +690,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 
- 			memcpy(param->ipn, enc_key->pn, IGTK_PN_LEN);
- 			memcpy(param->key, enc_key->key_material,
--			       enc_key->key_len);
-+			       WLAN_KEY_LEN_AES_CMAC);
- 
- 			key_param_len = sizeof(struct mwifiex_cmac_param);
- 			key_material->key_param_set.key_len =
--- 
-1.7.0.2
+Gr. AvS
 
