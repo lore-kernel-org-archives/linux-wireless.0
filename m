@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:50417 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948Ab2HFLtB (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:34770 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753825Ab2HAVEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 07:49:01 -0400
+	Wed, 1 Aug 2012 17:04:40 -0400
+Received: by ggnl2 with SMTP id l2so553301ggn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 14:04:39 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 6 Aug 2012 11:49:00 +0000
-Message-ID: <CAGh4K3Lym9yETNbMutfjNuANrgwtvfrGes6emr3Mvhx47D3B2g@mail.gmail.com> (sfid-20120806_134930_253061_E886AC02)
-Subject: [PATCH]: Mac80211 driver and I checked the patch
-From: Christopher Sacchi <chris.sacchi@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <1343842772.4638.15.camel@jlt3.sipsolutions.net>
+References: <CAMLZHHQkv_fHzd89fP7bNow7eL3oX+Duzr5rS5NJfhffqwUv2g@mail.gmail.com>
+	<1343842772.4638.15.camel@jlt3.sipsolutions.net>
+Date: Wed, 1 Aug 2012 15:04:39 -0600
+Message-ID: <CAMLZHHQofS=s0E=zMsuRJLzXPWtkMHOJiN2rZy=41qRYmkw44A@mail.gmail.com> (sfid-20120801_230443_521893_E0F64A0D)
+Subject: Re: cfg80211_disconnected memory leak
+From: Daniel Drake <dsd@laptop.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The source file needed a change  that was told in the description to
-know that the #include needed to be fixed, and the function changed
-another value to 0 (yes) in the description (that said FIXME.) The
-patch fixes a typo-like error and has been checked with checkpatch.pl
-in the scripts directory.
-Here's the patch:
---
---- main.c	2012-07-21 20:58:29.000000000 +0000
-+++ mainnew.c	2012-08-05 20:00:37.000000000 +0000
-@@ -32,7 +32,7 @@
- #include "led.h"
- #include "cfg.h"
- #include "debugfs.h"
--
-+#include "net/rfkill/rfkill.h"
- static struct lock_class_key ieee80211_rx_skb_queue_class;
+On Wed, Aug 1, 2012 at 11:39 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> This is very odd. What version of the kernel is this?
 
- void ieee80211_configure_filter(struct ieee80211_local *local)
-@@ -183,6 +183,7 @@ int ieee80211_hw_config(struct ieee80211
- 		 *
- 		 */
- 		/* WARN_ON(ret); */
-+		WARN_ON(1)
- 	}
+3.3, and just reproduced on 3.5.
 
- 	return ret;
-Signed-off-by: Christopher P. Sacchi <chris.sacchi@gmail.com>
---
+I'll have a closer look later in the week.
 
--- 
-Christopher
+Thanks
+Daniel
