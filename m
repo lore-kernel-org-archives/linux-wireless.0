@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:34206 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932473Ab2HFT1Z convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44381 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754786Ab2HASWD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:27:25 -0400
-Received: by obbuo13 with SMTP id uo13so6306937obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:27:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1344278009-31784-1-git-send-email-ozancag@gmail.com>
-References: <1344278009-31784-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 6 Aug 2012 12:27:04 -0700
-Message-ID: <CAB=NE6U24f2KbR7yPgfNOn9uhoLss8UHEFiGcGGeM0Lb_aSFhg@mail.gmail.com> (sfid-20120806_212727_887219_09AF4AC3)
-Subject: Re: [PATCH] compat-wireless: Rename compat-wireless to compat-drivers
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org,
-	John Hawley <warthog19@eaglescrag.net>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 1 Aug 2012 14:22:03 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: reset station MLME flags upon new association
+Date: Wed,  1 Aug 2012 20:21:59 +0200
+Message-Id: <1343845319-22113-1-git-send-email-johannes@sipsolutions.net> (sfid-20120801_202208_640686_FADACD7B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 6, 2012 at 11:33 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> This first patch touches mostly cosmetic parts to change
-> compat-wireless -> compat-drivers.
->
-> GIT URL's describing compat-wireless.git are not changed
-> for now as the git repo in github is still compat-wireless.git.
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied and pushed, thanks! I'll change the github project name once
-we get the documentation up on the new wiki.
+When associating anew, the old station MLME flags should
+be cleared. The only exception is the 40 MHz disable
+flag as it might have been set while the channel was set
+in a previous authentication attempt so it needs to be
+kept intact.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c416a08..9d60b49 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3357,10 +3357,13 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	/* prepare assoc data */
+-
+-	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
+-	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+-	ifmgd->flags &= ~IEEE80211_STA_DISABLE_VHT;
++	
++	/*
++	 * keep only the 40 MHz disable bit set as it might have
++	 * been set during authentication already, all other bits
++	 * should be reset for a new connection
++	 */
++	ifmgd->flags &= IEEE80211_STA_DISABLE_40MHZ;
+ 
+ 	ifmgd->beacon_crc_valid = false;
+ 
+-- 
+1.7.10.4
+
