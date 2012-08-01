@@ -1,84 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49405 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43878 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758579Ab2HWNvS (ORCPT
+	with ESMTP id S1755501Ab2HAPVd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 09:51:18 -0400
-Message-ID: <1345729870.4534.1.camel@jlt3.sipsolutions.net> (sfid-20120823_155122_005790_3D3A09E4)
-Subject: pull-request: mac80211-next 2012-08-23
+	Wed, 1 Aug 2012 11:21:33 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 23 Aug 2012 15:51:10 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-Pyt6er4R/4lhoD0u3xRR"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 4/8] mac80211: check size of channel switch IE when parsing
+Date: Wed,  1 Aug 2012 17:21:23 +0200
+Message-Id: <1343834487-23737-5-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172154_224877_D259B8B1)
+In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---=-Pyt6er4R/4lhoD0u3xRR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The channel switch IE has a fixed size, so we can
+discard it in parsing if it's not the right size
+and use the right struct pointer.
 
-John,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    3 +--
+ net/mac80211/mlme.c        |   10 +++-------
+ net/mac80211/util.c        |    7 +++++--
+ 3 files changed, 9 insertions(+), 11 deletions(-)
 
-The last pull request introduced a bug so I have a fix, and as we
-discussed I'm also sending you the rfkill patch. Please pull.
-
-Thanks!
-johannes
-
------------
-
-The following changes since commit dcf33963c48e1959c83fda84e336dbb000eefa3f=
-:
-
-  mac80211: clean up ieee80211_subif_start_xmit (2012-08-20 14:13:46 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to aba4e6fff8de0c92e53f0e7ef077231e75f7d760:
-
-  mac80211: Fix AP mode regression (2012-08-22 10:55:04 +0200)
-
-----------------------------------------------------------------
-AceLan Kao (1):
-      Revert "rfkill: remove dead code"
-
-Sujith Manoharan (1):
-      mac80211: Fix AP mode regression
-
- include/linux/rfkill.h |   31 +++++++++++++++++++++++++++++++
- net/mac80211/cfg.c     |    2 +-
- net/rfkill/core.c      |   14 ++++++++++++++
- 3 files changed, 46 insertions(+), 1 deletion(-)
-
-
---=-Pyt6er4R/4lhoD0u3xRR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJQNjVOAAoJEDBSmw7B7bqr4zUP/Rrw2Kg1h0pamhbIJH3zn4j5
-v+sVJVRMJdn3fPq5/UUKYitHuuZfkL0xwhtN1iihjXVoh4+t207utVE9YJtl8YfF
-G9sOkbHla2wliSjFTIyOjrIANzNE4KcpDl1ULvq5+mldrGh0X/mRDngBp96fK46S
-/CKLteo6kkG44yNHD08F0+HE4LUCaXpROxgVM9KiejjCQ0GuEA252VXDwu2fZ8AT
-LVoqzOuWbCM0+MuXLnZF0Bk8P/1M5IF6k560x1yiKYaXMiCGo/SUL4HMSoRlAbIA
-LwW71RZVG7CmYpez6vT9P0kuOtFVWx5Nw8wotRtsdTVNflCo/pwuSZ12DMVmwSRd
-gLxiPdWckVogvPHR6tmBdfClBaWvAe5VtwiNSGp+40oL4/0OPgWvhQ1m/Fj1b9mw
-4A6i6BDqUzYXVO+usAk0cI0LsPctWtXw8CAjDD5geE6w7sTkYc8K20lxNt1Niuph
-qrYgDaJNm5UmjU3whAP2NZ4zAZIhXsaGNSbiSv8sS5p4Ni7oeNxHTiG7tPmefo9N
-HKrmPnCKb0D95FwnmioCpSYtrhtUSx5rvKyktxUGBFcLcGUIYT5ihf6kwCRyOgX/
-+0R23bUhVd6WqJtBUNydZuZJxJTBtuqEMtYGDXREUggeY6rW0d4cV7Ak2fiFaRbg
-Jaxv2u5s5W+ezrHZNMRs
-=IytO
------END PGP SIGNATURE-----
-
---=-Pyt6er4R/4lhoD0u3xRR--
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d1a7c58..a906cc0 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1130,7 +1130,7 @@ struct ieee802_11_elems {
+ 	u8 *prep;
+ 	u8 *perr;
+ 	struct ieee80211_rann_ie *rann;
+-	u8 *ch_switch_elem;
++	struct ieee80211_channel_sw_ie *ch_switch_ie;
+ 	u8 *country_elem;
+ 	u8 *pwr_constr_elem;
+ 	u8 *quiet_elem;	/* first quite element */
+@@ -1156,7 +1156,6 @@ struct ieee802_11_elems {
+ 	u8 preq_len;
+ 	u8 prep_len;
+ 	u8 perr_len;
+-	u8 ch_switch_elem_len;
+ 	u8 country_elem_len;
+ 	u8 pwr_constr_elem_len;
+ 	u8 quiet_elem_len;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5eef6bd..d963017 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2267,14 +2267,10 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		mutex_unlock(&local->iflist_mtx);
+ 	}
+ 
+-	if (elems->ch_switch_elem && (elems->ch_switch_elem_len == 3) &&
+-	    (memcmp(mgmt->bssid, sdata->u.mgd.associated->bssid,
+-							ETH_ALEN) == 0)) {
+-		struct ieee80211_channel_sw_ie *sw_elem =
+-			(struct ieee80211_channel_sw_ie *)elems->ch_switch_elem;
+-		ieee80211_sta_process_chanswitch(sdata, sw_elem,
++	if (elems->ch_switch_ie &&
++	    memcmp(mgmt->bssid, sdata->u.mgd.associated->bssid, ETH_ALEN) == 0)
++		ieee80211_sta_process_chanswitch(sdata, elems->ch_switch_ie,
+ 						 bss, rx_status->mactime);
+-	}
+ }
+ 
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 99e4258..7dff94e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -768,8 +768,11 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 				elem_parse_failed = true;
+ 			break;
+ 		case WLAN_EID_CHANNEL_SWITCH:
+-			elems->ch_switch_elem = pos;
+-			elems->ch_switch_elem_len = elen;
++			if (elen != sizeof(struct ieee80211_channel_sw_ie)) {
++				elem_parse_failed = true;
++				break;
++			}
++			elems->ch_switch_ie = (void *)pos;
+ 			break;
+ 		case WLAN_EID_QUIET:
+ 			if (!elems->quiet_elem) {
+-- 
+1.7.10.4
 
