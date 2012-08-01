@@ -1,94 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35935 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753745Ab2HXQ6Y (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44785 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692Ab2HAUpG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 12:58:24 -0400
-Message-ID: <5037B2AC.50704@lwfinger.net> (sfid-20120824_185841_064115_F08162FD)
-Date: Fri, 24 Aug 2012 11:58:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: David Miller <davem@davemloft.net>, ncardwell@google.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop> <1345825432.19483.20.camel@edumazet-glaptop>
-In-Reply-To: <1345825432.19483.20.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 1 Aug 2012 16:45:06 -0400
+Message-ID: <1343853904.20128.1.camel@jlt3.sipsolutions.net> (sfid-20120801_224511_619042_7B805A10)
+Subject: Re: [RFC 7/8] mac80211: support extended channel switch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 01 Aug 2012 22:45:04 +0200
+In-Reply-To: <CA+XVXfdwE5-vwF6=aFVU=qmNyGMwi3csPoQ569+O6BG-jc5g8g@mail.gmail.com> (sfid-20120801_215438_675862_3A910B60)
+References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+	 <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
+	 <CA+XVXfegwamdK3mzP5eiAUJM4eYrFRTXY4Mr2tKP7+VBYriF-w@mail.gmail.com>
+	 <1343849597.4638.20.camel@jlt3.sipsolutions.net>
+	 <CA+XVXfdwE5-vwF6=aFVU=qmNyGMwi3csPoQ569+O6BG-jc5g8g@mail.gmail.com>
+	 (sfid-20120801_215438_675862_3A910B60)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/24/2012 11:23 AM, Eric Dumazet wrote:
-> On Fri, 2012-08-24 at 18:18 +0200, Eric Dumazet wrote:
->> On Fri, 2012-08-24 at 10:58 -0500, Larry Finger wrote:
->>> On 08/24/2012 10:19 AM, David Miller wrote:
->>>>
->>>> This looks like full-on data corruption to me.
->>>
->>> I agree. The question is why does it happen with r8712u, and only after the
->>> commit in the subject. Drivers for other devices that I have are OK. Thus far, I
->>> have tested b43, rtl8187, ath9k_htc, and rtl8192cu. To my knowledge, there are
->>> no reports posted for this bug with any other device.
->>
->> bugs can sit unnoticed, and one change somewhere can uncover them.
->>
->> Really this driver must have a bug, if not half a dozen of bugs.
->>
->> For example this sequence of code is a clear bug :
->>
->> sub_skb = dev_alloc_skb(nSubframe_Length + 12);
->> skb_reserve(sub_skb, 12);
->>
->>
->> Also the free_recv_skb_queue looks really suspect to me
->>
->> What the hell is doing recv_tasklet() I really wonder.
->>
->> This code, combined with the skb_clone() in recvbuf2recvframe()
->> can clearly reuse an skb passed to upper stacks.
->>
->>
->> queueing one skb in free_recv_skb_queue should be done
->> only if no clone of this skb exist somewhere.
->>
->> Please someone fix this buggy driver.
->>
->
-> Try the following patch for a start
->
-> diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
-> index 8e82ce2..88e3ca6 100644
-> --- a/drivers/staging/rtl8712/rtl8712_recv.c
-> +++ b/drivers/staging/rtl8712/rtl8712_recv.c
-> @@ -1127,6 +1127,9 @@ static void recv_tasklet(void *priv)
->   		recvbuf2recvframe(padapter, pskb);
->   		skb_reset_tail_pointer(pskb);
->   		pskb->len = 0;
-> -		skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
-> +		if (!skb_cloned(pskb))
-> +			skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
-> +		else
-> +			consume_skb(pskb);
->   	}
->   }
+On Wed, 2012-08-01 at 22:54 +0300, Arik Nemtsov wrote:
+> On Wed, Aug 1, 2012 at 10:33 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2012-08-01 at 22:28 +0300, Arik Nemtsov wrote:
+> >
+> >> > +static void
+> >> > +ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+> >> > +                                u8 new_chan_no, u8 count, u8 mode,
+> >> > +                                enum ieee80211_band new_band,
+> >> > +                                struct ieee80211_bss *bss, u64 timestamp)
+> >> >  {
+> >> >         struct cfg80211_bss *cbss =
+> >> >                 container_of((void *)bss, struct cfg80211_bss, priv);
+> >> >         struct ieee80211_channel *new_ch;
+> >> >         struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> >> > -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
+> >> > -                                                     cbss->channel->band);
+> >> > +       int new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
+> >>
+> >> I'm not sure a channel switch between bands should be allowed. Case in
+> >> point - a device might have different HT capabilities between bands,
+> >> so different rates might need to be programmed to FW. This would
+> >> require a re-assoc..
+> >
+> > Hmm, that might require some new flags or something? I'm not even sure
+> > the extended chanswitch is allowed to switch bands, but by the look of
+> > it that must have been the intent?
+> 
+> Maybe the idea was to change the operating class while staying in the
+> same band? But now I'm thinking that even without different HT caps
+> per band, the change of class alone might impose new regulatory
+> restrictions. For instance HT40 may now be allowed/disallowed.
+> So we have to notify the driver about this somehow?
+> 
+> If it's too cumbersome, maybe we should just disconnect if the class
+> changes? wpa_s would reconnect anyway in most situations (non p2p).
 
-This one did not help. There is no doubt it is needed for the case where memory 
-is tight, an allocation fails, and the driver clones the skb. In the present 
-case, debug statements have shown that the skb_clone() call was not made.
+Yeah, maybe. I'm just going to drop patches 6 and 7 for now. The
+extended switch handling was just something I thought about, not
+actually necessary for what I'm doing (still multi-channel work)
 
-In the long term, this driver will be replaced with one that uses mac80211, but 
-in the short term, I am trying to fix it.
-
-As I said earlier, my skb skills are minimal. Could you explain what is wrong 
-with the following sequence?
-
-  sub_skb = dev_alloc_skb(nSubframe_Length + 12);
-  skb_reserve(sub_skb, 12);
-
-Thanks,
-
-Larry
-
+johannes
 
