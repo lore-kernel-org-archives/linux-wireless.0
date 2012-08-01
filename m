@@ -1,89 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:46632 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149Ab2H1Xsk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 19:48:40 -0400
-Received: by vbbff1 with SMTP id ff1so6449725vbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2012 16:48:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE3CJbmK4nF2gR56Rkrrd8qWoCuLot=XD-a9koWxCzcDeOrg8A@mail.gmail.com>
-References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
-	<50365AC8.7030503@lwfinger.net>
-	<CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
-	<5036660B.9020208@lwfinger.net>
-	<CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com>
-	<50381437.7040903@lwfinger.net>
-	<CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com>
-	<CAE3CJbmK4nF2gR56Rkrrd8qWoCuLot=XD-a9koWxCzcDeOrg8A@mail.gmail.com>
-Date: Tue, 28 Aug 2012 16:48:39 -0700
-Message-ID: <CAE3CJbmJ8JZzBKKJwYAL_6K_ossMK0HDCEkNLNfG-A4HzZSfzg@mail.gmail.com> (sfid-20120829_014920_416785_E9A340DF)
-Subject: Re: Question about ath9k/mac80211 Driver
-From: Patrick Connolly <patrickc@alumni.ucsd.edu>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43297 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751503Ab2HAXFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 19:05:08 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: add patch to make b44 work with < 2.6.36
+Date: Thu,  2 Aug 2012 01:04:37 +0200
+Message-Id: <1343862277-26004-1-git-send-email-hauke@hauke-m.de> (sfid-20120802_010513_748445_4E66D017)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Okay so using a compat-wireless build of 3.2.5-1, I get the command to
-succeed (ie: no more error message) but when I look at the advertised
-rates using "iwlist scanning" it certainly looks like the command does
-not take effect.
+The following commit made b44 use 64 bit stats which are not supported
+by kernel version < 2.6.36.
 
-COMMAND USED:
-# iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
+commit eeda8585522bcc173f91d6254dfa63e871087c54
+Author: Kevin Groeneveld <kgroeneveld@gmail.com>
+Date:   Tue Jul 17 17:46:01 2012 +0000
 
-RESULT OF "iwlist scanning":
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
-                              9 Mb/s; 12 Mb/s; 18 Mb/s
-                    Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
+    b44: add 64 bit stats
 
-  These Bit Rates are the same as they were before the "iw   set
-bitrates" command.  I haven't actually captured the packets in
-wireshark yet; I assume the output of "iwlist" is reliable enough.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/64-b44-32bit-stats.patch |   54 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+ create mode 100644 patches/64-b44-32bit-stats.patch
 
-  Can anyone comment on what is wrong?  Why don't the advertised rates change?
+diff --git a/patches/64-b44-32bit-stats.patch b/patches/64-b44-32bit-stats.patch
+new file mode 100644
+index 0000000..b3138f8
+--- /dev/null
++++ b/patches/64-b44-32bit-stats.patch
+@@ -0,0 +1,54 @@
++This patch requires a manual backport:
++
++commit eeda8585522bcc173f91d6254dfa63e871087c54
++Author: Kevin Groeneveld <kgroeneveld@gmail.com>
++Date:   Tue Jul 17 17:46:01 2012 +0000
++
++    b44: add 64 bit stats
++    
++    Add support for 64 bit stats to Broadcom b44 ethernet driver.
++    
++    Signed-off-by: Kevin Groeneveld <kgroeneveld@gmail.com>
++    Signed-off-by: Eric Dumazet <edumazet@google.com>
++    Signed-off-by: David S. Miller <davem@davemloft.net>
++
++--- a/drivers/net/ethernet/broadcom/b44.c
+++++ b/drivers/net/ethernet/broadcom/b44.c
++@@ -31,6 +31,7 @@
++ #include <linux/dma-mapping.h>
++ #include <linux/ssb/ssb.h>
++ #include <linux/slab.h>
+++#include <linux/u64_stats_sync.h>
++ 
++ #include <asm/uaccess.h>
++ #include <asm/io.h>
++@@ -1641,10 +1642,17 @@ static int b44_close(struct net_device *
++ 	return 0;
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
++ static struct rtnl_link_stats64 *b44_get_stats64(struct net_device *dev,
++ 					struct rtnl_link_stats64 *nstat)
+++#else
+++static struct net_device_stats *b44_get_stats(struct net_device *dev)
+++#endif
++ {
++ 	struct b44 *bp = netdev_priv(dev);
+++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36))
+++	struct net_device_stats *nstat = &dev->stats;
+++#endif
++ 	struct b44_hw_stats *hwstat = &bp->hw_stats;
++ 	unsigned int start;
++ 
++@@ -2135,7 +2143,11 @@ static const struct net_device_ops b44_n
++ 	.ndo_open		= b44_open,
++ 	.ndo_stop		= b44_close,
++ 	.ndo_start_xmit		= b44_start_xmit,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
++ 	.ndo_get_stats64	= b44_get_stats64,
+++#else
+++	.ndo_get_stats		= b44_get_stats,
+++#endif
++ 	.ndo_set_rx_mode	= b44_set_rx_mode,
++ 	.ndo_set_mac_address	= b44_set_mac_addr,
++ 	.ndo_validate_addr	= eth_validate_addr,
+-- 
+1.7.9.5
 
--Patrick
-
-
-On Mon, Aug 27, 2012 at 7:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 08/27/2012 08:50 AM, Patrick Connolly wrote:
->>
->> So can anybody comment on whether kernel 2.6.32 is recent enough to
->> support "iw" version 0.9.22 ?
->
->
-> It is not; however, you can build compat-wireless for that kernel and get
-> code that will.
->
-> Larry
->
->
-
-
-
->> On Fri, Aug 24, 2012 at 4:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>> On 08/24/2012 06:38 PM, Patrick Connolly wrote:
->>>>
->>>> Okay so I built "iw" version 0.9.22 successfully (after much grief).
->>>> The help page shows that "set bitrates" is now supported:
->>>>
->>>>          dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in
->>>> Mbps>*]
->>>>
->>>>
->>>>   but when I try to use it I get:
->>>>
->>>>         # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
->>>>         command failed: Operation not supported (-95)
->>>>
->>>> ...so what does this mean?  Is it "iw" or the driver that lacks the
->>>> support?
->>>
->>>
->>> I would think that your kernel is too old. What version are you running?
->>>
->>> Larry
->>>
->>>
