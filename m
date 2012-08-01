@@ -1,102 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56464 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751834Ab2HWF3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 01:29:43 -0400
-Message-ID: <5035BFC4.6020307@openwrt.org> (sfid-20120823_073031_283299_6103077A)
-Date: Thu, 23 Aug 2012 07:29:40 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Issue with ath9k and tx/rx chainmask:  3x3 doesn't work with
- mask of 0x1.
-References: <50329D11.9030405@candelatech.com> <5035414D.2080600@openwrt.org> <50355C21.2030508@candelatech.com> <503573C6.4000103@candelatech.com> <50357DCB.1000908@candelatech.com>
-In-Reply-To: <50357DCB.1000908@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:43874 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755492Ab2HAPVd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 11:21:33 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/8] mac80211: fix CSA handling timer
+Date: Wed,  1 Aug 2012 17:21:22 +0200
+Message-Id: <1343834487-23737-4-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172137_159670_AF8B8BE1)
+In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-08-23 2:48 AM, Ben Greear wrote:
-> On 08/22/2012 05:05 PM, Ben Greear wrote:
->> On 08/22/2012 03:24 PM, Ben Greear wrote:
->>> On 08/22/2012 01:30 PM, Felix Fietkau wrote:
->>>> On 2012-08-20 10:24 PM, Ben Greear wrote:
->>>>> I am trying to test out an attenuator.  For now, I have only a single attenuator,
->>>>> so I set tx and rx chainmask to 0x1 on both AP and Station machine.
->>>>>
->>>>> I then connected channel 0 on the two machines together through the
->>>>> attenuator.
->>>>>
->>>>> I have two station interfaces on the station machine.  They both
->>>>> seem to associate OK, but they cannot receive dhcp responses.
->>>>>
->>>>> It *seems* that broadcast packets may go through fine.
->>>>>
->>>>> If I force the rate down to 1x1 or 2x2 MIMO (or force disable /n
->>>>> and just use /a), then it appears to work fine.
->>>>>
->>>>> Nics are WPEA-127n (AR9380).  Kernel is 3.5.1+ on AP, 3.5.2+ on station
->>>>> machine.
->>>>>
->>>>> I can see why forcing it down to 1x1 might work around some issue,
->>>>> but I find it funny that 2x2 works while 3x3 does not.
->>>> Did you set the chainmask manually via debugfs? If so, don't do that!
->>>> Use the nl80211 antenna control API (e.g. via iw)
->>>
->>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1 1
->>> command failed: Operation not supported (-95)
->>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1
->>> command failed: Operation not supported (-95)
->>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 3
->>> command failed: Operation not supported (-95)
->>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7
->>> command failed: Operation not supported (-95)
->>> [root@lec2010-ath9k-1 lanforge]# uname -a
->>> Linux lec2010-ath9k-1 3.5.1+ #15 SMP PREEMPT Thu Aug 9 09:31:45 PDT 2012 i686 i686 i386 GNU/Linux
->>
->> I'm guessing it is because of this:
->>
->> static int ieee80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
->> {
->>      struct ieee80211_local *local = wiphy_priv(wiphy);
->>
->>      if (local->started)
->>          return -EOPNOTSUPP;
->>
->>      return drv_set_antenna(local, tx_ant, rx_ant);
->> }
-> 
-> Even when I manually admin down everything, I can still freeze the NIC
-> (WPEA-127n, AR9380).
-> 
-> To reproduce:
-> stop all VAP/STA interfaces on wiphy0
-> set tx and rx chainmask to 2 using 'iw'
-> start vap0
-> 
-> # Boom, fails to reset, and for whatever reason, local->started never
-> # goes false, so you can't even set the chainmask back using 'iw'.
-> 
-> 
-> Aug 22 17:41:34 localhost dhcpd: DHCPDISCOVER from 00:00:08:76:52:14 via rddVR17: network 99.88.77.0/24: no free leases
-> Aug 22 17:41:37 localhost kernel: [ 5575.474706] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
-> Aug 22 17:41:38 localhost kernel: [ 5576.116434] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
-> Aug 22 17:41:38 localhost kernel: [ 5576.476336] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
-> Aug 22 17:41:45 localhost kernel: [ 5582.653715] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
-> Aug 22 17:41:46 localhost dhclient[18218]: DHCPDISCOVER on rddVR18 to 255.255.255.255 port 67 interval 11
-> Aug 22 17:41:46 localhost dhcpd: DHCPDISCOVER from 26:0c:f3:49:95:16 via rddVR17: network 99.88.77.0/24: no free leases
-> Aug 22 17:41:47 localhost dhclient[18706]: DHCPDISCOVER on rddVR18#4 to 255.255.255.255 port 67 interval 14
-> Aug 22 17:41:47 localhost dhcpd: DHCPDISCOVER from 00:00:08:76:52:14 via rddVR17: network 99.88.77.0/24: no free leases
-> Aug 22 17:41:57 localhost dhclient[18218]: DHCPDISCOVER on rddVR18 to 255.255.255.255 port 67 interval 7
-> Aug 22 17:41:57 localhost dhcpd: DHCPDISCOVER from 26:0c:f3:49:95:16 via rddVR17: network 99.88.77.0/24: no free leases
-> Aug 22 17:41:59 localhost kernel: [ 5597.279989] in set_wiphy
-> Aug 22 17:41:59 localhost kernel: [ 5597.296604] in set_wiphy
-> Aug 22 17:41:59 localhost kernel: [ 5597.314646] in set_wiphy
-> Aug 22 17:41:59 localhost kernel: [ 5597.319479] set antenna failed, local->started
-> Aug 22 17:41:59 localhost kernel: [ 5597.326555] ops->set_antenna rv: -95
-Don't use 2 as antenna mask, the chip cannot handle it properly (I
-recently sent a patch to make setting such masks fail). Masks need to
-start at bit 0 and be contiguous.
+From: Johannes Berg <johannes.berg@intel.com>
 
-- Felix
+The time until the channel switch is in TU,
+not in milliseconds, so use TU_TO_EXP_TIME()
+to correctly program the timer.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dc1c84b..5eef6bd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -813,9 +813,8 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
+ 	else
+ 		mod_timer(&ifmgd->chswitch_timer,
+-			  jiffies +
+-			  msecs_to_jiffies(sw_elem->count *
+-					   cbss->beacon_interval));
++			  TU_TO_EXP_TIME(sw_elem->count *
++					 cbss->beacon_interval));
+ }
+ 
+ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+-- 
+1.7.10.4
+
