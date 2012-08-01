@@ -1,31 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:46412 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755071Ab2HITTd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 15:19:33 -0400
-Received: by wgbdr13 with SMTP id dr13so747254wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 12:19:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201208092026.03430.marex@denx.de>
-References: <CALSu_YrXF0iO0=+drmUzatGZUYkMxczF_J2Xw_CNqEY3fxJ5Bg@mail.gmail.com>
-	<201208092026.03430.marex@denx.de>
-Date: Thu, 9 Aug 2012 14:19:31 -0500
-Message-ID: <CALSu_Yq77ED4d1ZwzSKFfP9ze_FnYKErSHrB+1pwjFvu1rypLQ@mail.gmail.com> (sfid-20120809_211937_519920_C6E43372)
-Subject: Re: Palm T|X Libertas Wifi problems Kernel 3.4.7 stable
-From: Joseph Honold <mozzwald@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Marek Vasut <marex@denx.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from victor.provo.novell.com ([137.65.250.26]:58196 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737Ab2HAEB6 (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Wed, 1 Aug 2012 00:01:58 -0400
+From: "Chen, Chien-Chia" <machen@suse.com>
+To: users@rt2x00.serialmonkey.com
+Cc: kevin.chou@mediatek.com, woody.hung@mediatek.com,
+	linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [rt2x00-users] [PATCH v4] rt2x00 : fix rt3290 resuming failed.
+Date: Wed,  1 Aug 2012 12:03:14 +0800
+Message-Id: <1343793794-24176-1-git-send-email-machen@suse.com> (sfid-20120801_060201_968556_BB5E2C8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> There's official 5.x.x firmware for 88w8381 in linux-firmware, use that. V4 FW
-> supplied by Palm isn't supported properly.
+From: Woody Hung <Woody.Hung@mediatek.com>
+Date: Tue, 31 Jul 2012 21:53:33 +0800
 
-That did the trick. Thanks
+This patch is going to fix the resuming failed from S3/S4
+for rt3290 chip.
 
+Signed-off-by: Woody Hung <Woody.Hung@mediatek.com>
+CC-by: Kevin Chou <kevin.chou@mediatek.com>
+Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   68 +++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800pci.c |   71 -------------------------------
+ 2 files changed, 68 insertions(+), 71 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index e76f03c..7bc4768 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -221,6 +221,67 @@ static void rt2800_rf_write(struct rt2x00_dev *rt2x00dev,
+ 	mutex_unlock(&rt2x00dev->csr_mutex);
+ }
+ 
++static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
++{
++	u32 reg;
++	int i, count;
++
++	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
++	if (rt2x00_get_field32(reg, WLAN_EN))
++		return 0;
++
++	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
++	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
++	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
++	rt2x00_set_field32(&reg, WLAN_EN, 1);
++	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
++
++	udelay(REGISTER_BUSY_DELAY);
++
++	count = 0;
++	do {
++		/*
++		 * Check PLL_LD & XTAL_RDY.
++		 */
++		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
++			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
++			if (rt2x00_get_field32(reg, PLL_LD) &&
++			    rt2x00_get_field32(reg, XTAL_RDY))
++				break;
++			udelay(REGISTER_BUSY_DELAY);
++		}
++
++		if (i >= REGISTER_BUSY_COUNT) {
++
++			if (count >= 10)
++				return -EIO;
++
++			rt2800_register_write(rt2x00dev, 0x58, 0x018);
++			udelay(REGISTER_BUSY_DELAY);
++			rt2800_register_write(rt2x00dev, 0x58, 0x418);
++			udelay(REGISTER_BUSY_DELAY);
++			rt2800_register_write(rt2x00dev, 0x58, 0x618);
++			udelay(REGISTER_BUSY_DELAY);
++			count++;
++		} else {
++			count = 0;
++		}
++
++		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
++		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
++		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
++		rt2x00_set_field32(&reg, WLAN_RESET, 1);
++		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
++		udelay(10);
++		rt2x00_set_field32(&reg, WLAN_RESET, 0);
++		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
++		udelay(10);
++		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
++	} while (count != 0);
++
++	return 0;
++}
++
+ void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
+ 			const u8 command, const u8 token,
+ 			const u8 arg0, const u8 arg1)
+@@ -400,6 +461,13 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+ {
+ 	unsigned int i;
+ 	u32 reg;
++	int retval;
++
++	if (rt2x00_rt(rt2x00dev, RT3290)) {
++		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
++		if (retval)
++			return -EBUSY;
++	}
+ 
+ 	/*
+ 	 * If driver doesn't wake up firmware here,
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 235376e..98aa426 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -980,66 +980,6 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	return rt2800_validate_eeprom(rt2x00dev);
+ }
+ 
+-static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+-{
+-	u32 reg;
+-	int i, count;
+-
+-	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+-	if (rt2x00_get_field32(reg, WLAN_EN))
+-		return 0;
+-
+-	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
+-	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
+-	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
+-	rt2x00_set_field32(&reg, WLAN_EN, 1);
+-	rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+-
+-	udelay(REGISTER_BUSY_DELAY);
+-
+-	count = 0;
+-	do {
+-		/*
+-		 * Check PLL_LD & XTAL_RDY.
+-		 */
+-		for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+-			rt2800_register_read(rt2x00dev, CMB_CTRL, &reg);
+-			if (rt2x00_get_field32(reg, PLL_LD) &&
+-			    rt2x00_get_field32(reg, XTAL_RDY))
+-				break;
+-			udelay(REGISTER_BUSY_DELAY);
+-		}
+-
+-		if (i >= REGISTER_BUSY_COUNT) {
+-
+-			if (count >= 10)
+-				return -EIO;
+-
+-			rt2800_register_write(rt2x00dev, 0x58, 0x018);
+-			udelay(REGISTER_BUSY_DELAY);
+-			rt2800_register_write(rt2x00dev, 0x58, 0x418);
+-			udelay(REGISTER_BUSY_DELAY);
+-			rt2800_register_write(rt2x00dev, 0x58, 0x618);
+-			udelay(REGISTER_BUSY_DELAY);
+-			count++;
+-		} else {
+-			count = 0;
+-		}
+-
+-		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+-		rt2x00_set_field32(&reg, PCIE_APP0_CLK_REQ, 0);
+-		rt2x00_set_field32(&reg, WLAN_CLK_EN, 1);
+-		rt2x00_set_field32(&reg, WLAN_RESET, 1);
+-		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+-		udelay(10);
+-		rt2x00_set_field32(&reg, WLAN_RESET, 0);
+-		rt2800_register_write(rt2x00dev, WLAN_FUN_CTRL, reg);
+-		udelay(10);
+-		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, 0x7fffffff);
+-	} while (count != 0);
+-
+-	return 0;
+-}
+ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
+@@ -1063,17 +1003,6 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
+-	 * In probe phase call rt2800_enable_wlan_rt3290 to enable wlan
+-	 * clk for rt3290. That avoid the MCU fail in start phase.
+-	 */
+-	if (rt2x00_rt(rt2x00dev, RT3290)) {
+-		retval = rt2800_enable_wlan_rt3290(rt2x00dev);
+-
+-		if (retval)
+-			return retval;
+-	}
+-
+-	/*
+ 	 * This device has multiple filters for control frames
+ 	 * and has a separate filter for PS Poll frames.
+ 	 */
 -- 
-Joe Honold
-http://www.mozzwald.com
+1.7.7
+
