@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:61443 "EHLO
-	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753272Ab2HRV0X (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42750 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063Ab2HAJDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Aug 2012 17:26:23 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/5] drivers/net/wireless/ath/ath6kl/main.c: introduce missing initialization
-Date: Sat, 18 Aug 2012 23:25:58 +0200
-Message-Id: <1345325159-7365-4-git-send-email-Julia.Lawall@lip6.fr> (sfid-20120818_232830_729787_F90C336D)
+	Wed, 1 Aug 2012 05:03:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: use correct (original) max power
+Date: Wed,  1 Aug 2012 11:03:39 +0200
+Message-Id: <1343811819-15582-1-git-send-email-johannes@sipsolutions.net> (sfid-20120801_110350_289489_AA41BA81)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The result of one call to a function is tested, and then at the second call
-to the same function, the previous result, and not the current result, is
-tested again.
+When calculating the maximum TX power for a channel,
+the original maximum power should be restricted to
+the current regulatory TX power. Restricting the
+current maximum TX power has the effect that it'll
+never be possible to increase the power again when
+the regulatory requirement changes.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression ret;
-identifier f;
-statement S1,S2;
-@@
-
-*ret = f(...);
-if (\(ret != 0\|ret < 0\|ret == NULL\)) S1
-... when any
-*f(...);
-if (\(ret != 0\|ret < 0\|ret == NULL\)) S2
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/main.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/wireless/reg.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index c189e28..c312c61 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -322,7 +322,8 @@ int ath6kl_read_fwlogs(struct ath6kl *ar)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2303ee7..070b88c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -901,7 +901,7 @@ static void handle_channel(struct wiphy *wiphy,
+ 	chan->max_antenna_gain = min(chan->orig_mag,
+ 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
+ 	chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
+-	chan->max_power = min(chan->max_power, chan->max_reg_power);
++	chan->max_power = min(chan->orig_mpwr, chan->max_reg_power);
+ }
  
- 		address = TARG_VTOP(ar->target_type,
- 				    le32_to_cpu(debug_buf.next));
--		ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
-+		ret = ath6kl_diag_read(ar, address, &debug_buf,
-+				       sizeof(debug_buf));
- 		if (ret)
- 			goto out;
- 
+ static void handle_band(struct wiphy *wiphy,
+-- 
+1.7.10.4
 
