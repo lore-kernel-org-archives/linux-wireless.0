@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1827 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932153Ab2HIMKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 08:10:02 -0400
-Message-ID: <5023A88F.8040402@broadcom.com> (sfid-20120809_141007_084472_53133EEA)
-Date: Thu, 9 Aug 2012 14:09:51 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Wei Ni" <wni@nvidia.com>
-cc: "grant.likely@secretlab.ca" <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	frankyl@broadcom.com, devicetree-discuss@lists.ozlabs.org,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: How to get the irq flags from the dts file
-References: <1344509006.2295.148.camel@tegra-chromium-2>
-In-Reply-To: <1344509006.2295.148.camel@tegra-chromium-2>
-Content-Type: text/plain;
- charset=utf-8
+Received: from he.sipsolutions.net ([78.46.109.217]:43142 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736Ab2HALJ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 07:09:59 -0400
+Message-ID: <1343819395.4638.4.camel@jlt3.sipsolutions.net> (sfid-20120801_131002_820645_B45276F4)
+Subject: Re: [PATCH] cfg80211: use correct (original) max power
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Hong Wu <Hong.Wu@dspg.com>, "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 01 Aug 2012 13:09:55 +0200
+In-Reply-To: <1343812040.4638.3.camel@jlt3.sipsolutions.net> (sfid-20120801_110727_142881_01F13F13)
+References: <1343811819-15582-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120801_110350_289489_AA41BA81) <1343812040.4638.3.camel@jlt3.sipsolutions.net>
+	 (sfid-20120801_110727_142881_01F13F13)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2012 12:43 PM, Wei Ni wrote:
-> Hi, all
-> I'm working on tegra wlan upstream issue.
-> The tegra board use the Broadcom 4329 as wlan device, and the driver is
-> the brcmfmac. 
+On Wed, 2012-08-01 at 11:07 +0200, Johannes Berg wrote:
+> On Wed, 2012-08-01 at 11:03 +0200, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > When calculating the maximum TX power for a channel,
+> > the original maximum power should be restricted to
+> > the current regulatory TX power. Restricting the
+> > current maximum TX power has the effect that it'll
+> > never be possible to increase the power again when
+> > the regulatory requirement changes.
 > 
-> This wlan driver support out-band-interrupt (OOB), I want to add DT
-> support to use this OOB.
-> I can add following lines in the dts file to create platform device and
-> pass the interrupt resource to the driver.
 > 
-> wlan {
->         compatible = "broadcome, brcmf_sdio_pd";
+> No ... this isn't right either. Hong Wu, can you please fix this mess?
 
-I don't know the DT syntax, but I assume broadcome should be broadcom,
-right? ;-)
+Never mind. Stanislaw already did fix this, I just forgot about it
+because I was checking mac80211-next.git and had (of course) applied his
+fix to mac80211.git. Sorry!
 
->         interrupt-parten = <&gpio>;
->         interrupts = <144, 0x04>; /* IRQF_TRIGGER_HIGH */
-> };
-> 
-> In the wlan driver, it will use platform_get_resource() to get the
-> res->irq, res->flags, the irq number is right, but the flags will be
-> IORESOURCE_IRQ, not the 0x04 (IRQF_TRIGGER_HIGH).
-> The wlan driver wish this flags include the IRQF_TRGGER_* information,
-> and it will use this flags to configure other hw settings. If it is
-> wrong, the wlan can't work.
-> 
-> I checked drivers/of/irq.c, in function of_irq_to_resource(), it will
-> set r->flags = IORESOURCE_IRQ directly, not read the flags from the dtb
-> file. And I didn't find any of_xx api to get this flags.
-> 
-> How can I get this flags, does anyone has suggestion?
-
-I did a quick search in the kernel and there are a number of platform
-drivers that seem to expect the IRQF_TRIGGER_* info by using (res->flags
-& IRQF_TRIGGER_MASK) and to determine IRQF_SHARED as well.
-
-Gr. AvS
+johannes
 
