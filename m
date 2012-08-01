@@ -1,91 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na6sys009bog028.obsmtp.com ([74.125.150.102]:40408 "EHLO
-	na6sys009bog028.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752676Ab2HDBTk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44218 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753255Ab2HAROz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 21:19:40 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 07/16] mwifiex: update 11n status as per start_ap IE
-Date: Fri,  3 Aug 2012 18:06:05 -0700
-Message-Id: <1344042374-6892-8-git-send-email-bzhao@marvell.com> (sfid-20120804_031945_071396_E81C63DD)
-In-Reply-To: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
-References: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
+	Wed, 1 Aug 2012 13:14:55 -0400
+Message-ID: <1343841285.4638.10.camel@jlt3.sipsolutions.net> (sfid-20120801_191504_575593_DC74DEB5)
+Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Josh Boyer <jwboyer@redhat.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 01 Aug 2012 19:14:45 +0200
+In-Reply-To: <20120801161959.GC22963@thinkpad-t410>
+References: <20120801131232.GA1785@zod.bos.redhat.com>
+	 <20120801141810.GB27433@tuxdriver.com> <50194D7A.6060400@broadcom.com>
+	 <5019506C.6020707@broadcom.com>
+	 <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+	 <20120801161959.GC22963@thinkpad-t410>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Wed, 2012-08-01 at 11:19 -0500, Seth Forshee wrote:
+> On Wed, Aug 01, 2012 at 05:53:58PM +0200, Johannes Berg wrote:
+> > On Wed, 2012-08-01 at 17:51 +0200, Arend van Spriel wrote:
+> > > On 08/01/2012 05:38 PM, Arend van Spriel wrote:
+> > > >> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
+> > > >> > 
+> > > >> > It looks like those calls were added in mid-June.
+> > > >> > 
+> > > > I think mid-june sounds about right. We never observed the warning when
+> > > > changes to use regulatory infrastructure were tested/reviewed. Should
+> > > > this precondition be mentioned in cfg80211.h?
+> > > > 
+> > > > Gr. AvS
+> > > 
+> > > Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
+> > > another solution is needed.
+> > 
+> > Yeah I was going to say -- how can it possibly access that? It seems
+> > that in some patch the API got broken, it should be taking the lock or
+> > whatever ... I'll leave it to Luis to sort out though :-P
+> 
+> In other drivers freq_reg_info only seems to get used by the regulatory
+> notifiers, which get called with the lock held. brcmsmac is wanting to
+> know whether or not OFDM is allowed when setting the channel though, and
+> I didn't find that information anywhere outside the regulatory
+> information. If there's another way then calling freq_reg_info() could
+> be avoided. Or maybe we could add an OFDM flag to the channel
+> information?
 
-If HT IE is present in beacon_data of start_ap cfg80211 handler,
-enable 11n flag in AP. Disable 11n flag when stop_ap handler is
-called.
+Seems reasonable to add the flags (or some of them) to the channel
+flags, yeah.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    2 ++
- drivers/net/wireless/mwifiex/init.c     |    1 +
- drivers/net/wireless/mwifiex/main.h     |    1 +
- drivers/net/wireless/mwifiex/uap_cmd.c  |    1 +
- 4 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index fe42137..1f80f7e 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -906,6 +906,8 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	if (mwifiex_del_mgmt_ies(priv))
- 		wiphy_err(wiphy, "Failed to delete mgmt IEs!\n");
- 
-+	priv->ap_11n_enabled = 0;
-+
- 	if (mwifiex_send_cmd_sync(priv, HostCmd_CMD_UAP_BSS_STOP,
- 				  HostCmd_ACT_GEN_SET, 0, NULL)) {
- 		wiphy_err(wiphy, "Failed to stop the BSS\n");
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 81fc8ed..118a29f 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -208,6 +208,7 @@ static int mwifiex_init_priv(struct mwifiex_private *priv)
- 	priv->curr_bcn_size = 0;
- 	priv->wps_ie = NULL;
- 	priv->wps_ie_len = 0;
-+	priv->ap_11n_enabled = 0;
- 
- 	priv->scan_block = false;
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 16f046a..5eeb17c 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -487,6 +487,7 @@ struct mwifiex_private {
- 	u16 assocresp_idx;
- 	u16 rsn_idx;
- 	struct timer_list scan_delay_timer;
-+	u8 ap_11n_enabled;
- };
- 
- enum mwifiex_ba_status {
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index f40e93f..c10aac0 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -167,6 +167,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
- 	if (ht_ie) {
- 		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
- 		       sizeof(struct ieee80211_ht_cap));
-+		priv->ap_11n_enabled = 1;
- 	} else {
- 		memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
- 		bss_cfg->ht_cap.cap_info = cpu_to_le16(MWIFIEX_DEF_HT_CAP);
--- 
-1.7.0.2
+johannes
 
