@@ -1,93 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44266 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757128Ab2HHMAT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41550 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181Ab2HAOaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 08:00:19 -0400
-Received: by obhx4 with SMTP id x4so1347694obh.14
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:00:12 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v3 0/7] nl/cfg/mac80211: add DFS master ability 
-Date: Wed,  8 Aug 2012 14:53:36 +0300
-Message-Id: <1344426823-1795-1-git-send-email-victorg@ti.com> (sfid-20120808_140050_608658_4E573205)
+	Wed, 1 Aug 2012 10:30:21 -0400
+Date: Wed, 1 Aug 2012 10:18:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Josh Boyer <jwboyer@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
+Message-ID: <20120801141810.GB27433@tuxdriver.com> (sfid-20120801_163031_647682_2E3E5ED4)
+References: <20120801131232.GA1785@zod.bos.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120801131232.GA1785@zod.bos.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-v3:
-	
- Rebased to "wireless-testing".
+On Wed, Aug 01, 2012 at 09:12:33AM -0400, Josh Boyer wrote:
 
+> <snip a bunch of ALSA/input stuff>
+> 
+> [   21.762086] nf_conntrack version 0.5.0 (16384 buckets, 65536 max)
+> [   25.698788] Bridge firewalling registered
+> [   25.746690] device virbr0-nic entered promiscuous mode
+> [   26.573028] ------------[ cut here ]------------
+> [   26.573042] WARNING: at net/wireless/core.h:125 assert_cfg80211_lock.part.8+0x15/0x17 [cfg80211]()
+> [   26.573045] Hardware name: XPS 8300  
+> [   26.573046] Modules linked in: xt_CHECKSUM iptable_mangle bridge stp llc ip6t_REJECT nf_conntrack_ipv4 nf_conntrack_ipv6 nf_defrag_ipv6 nf_defrag_ipv4 xt_state nf_conntrack ib_iser rdma_cm ib_addr ip6table_filter tpm_bios ip6_tables iw_cm ib_cm ib_sa ib_mad ib_core iscsi_tcp snd_hda_codec_hdmi snd_hda_codec_realtek snd_hda_intel arc4 brcmsmac snd_hda_codec cordic brcmutil snd_hwdep mac80211 snd_pcm snd_page_alloc snd_timer cfg80211 snd coretemp rfkill serio_raw i2c_i801 soundcore lpc_ich bcma dcdbas microcode mfd_core mei vhost_net tun macvtap macvlan kvm_intel nfsd kvm auth_rpcgss nfs_acl lockd uinput crc32c_intel ghash_clmulni_intel broadcom tg3 usb_storage uas radeon i2c_algo_bit drm_kms_helper ttm drm i2c_core sunrpc be2iscsi bnx2i cnic uio cxgb4i cxgb4 cxgb3i cxgb3 mdio libcxgbi libiscsi_tcp qla4xxx iscsi_boot_sysfs libiscsi scsi_transport_iscsi
+> [   26.573143] Pid: 757, comm: NetworkManager Not tainted 3.6.0-0.rc0.git8.1.fc18.x86_64 #1
+> [   26.573145] Call Trace:
+> [   26.573153]  [<ffffffff8106782f>] warn_slowpath_common+0x7f/0xc0
+> [   26.573159]  [<ffffffff8106788a>] warn_slowpath_null+0x1a/0x20
+> [   26.573170]  [<ffffffffa04c730d>] assert_cfg80211_lock.part.8+0x15/0x17 [cfg80211]
+> [   26.573181]  [<ffffffffa04a8dcb>] freq_reg_info+0x6b/0x80 [cfg80211]
 
- nl80211/cfg80211: add radar detection command/event
-	Added units documentation to "radar_detect_timeout".
-	Added "cac_type" - which indicates that CAC is started for this channel type.
-	Added NL80211_ATTR_WIPHY_CHANNEL_TYPE. 
-	Fixed merge problem.
-	Removed "!!" in nl80211_start_radar_detection.
-	Return -EBUSY in start_radar_detection if detection already started for this specific channel.
-	
-	
- mac80211: add radar detection command/event
-	Added tracer to ieee80211_radar_detected().
-	Changed freq argument in ieee80211_radar_detected() to "struct ieee80211_channel *chan"
-	Reset CAC during interface down.
+brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
 
+It looks like those calls were added in mid-June.
 
- nl80211/cfg80211: add ability to enable TX on op-channel
-	Removed "!!" in nl80211_dfs_en_tx().
-	Typo fix in the documentation.
-	Added additional check to validate that we're on NL80211_CHAN_HT20 channel, otherwise return -EPERM.
-	
-	
- nl80211/cfg80211: add ap channel switch command/event
-	Moved struct ieee80211_ap_ch_switch from mac to cfg + pass it as argument in ap_channel_switch()
-	Add "if (ch_type != NL80211_CHAN_NO_HT) return -EOPNOTSUPP"
-	Changed freq argument in ap_ch_switch_complete_notify() to "struct ieee80211_channel *chan"
-
-
- mac80211: add ap channel switch command/event
-	Renamed ieee80211_ap_ch_switch_complete_notify to ieee80211_ap_ch_switch_done. 
-	Removed the freq argument in ieee80211_ap_ch_switch_done().
-	Save the target channel in new "local->next_ap_channel" and update the operational channel in ieee80211_ap_ch_switch_done.
-	Add tracer to ieee80211_ap_ch_switch_done().
-	Updated commit log message.
-	Added sanity checks in ap_channel_switch() + ieee80211_ap_ch_switch_complete
-
-
- mac80211: add DFS support to monitor interface
-	Removed "!!" in ieee80211_monitor_start_xmit().
-
-Victor Goldenshtein (7):
-  nl80211/cfg80211: add radar detection command/event
-  mac80211: add radar detection command/event
-  nl80211/cfg80211: add ability to enable TX on op-channel
-  mac80211: add ability to enable TX on op-channel
-  nl80211/cfg80211: add ap channel switch command
-  mac80211: add ap channel switch command/event
-  mac80211: add DFS support to monitor interface
-
- include/linux/nl80211.h   |   42 +++++++++++
- include/net/cfg80211.h    |   63 +++++++++++++++++
- include/net/mac80211.h    |   37 ++++++++++
- net/mac80211/cfg.c        |   50 +++++++++++++
- net/mac80211/driver-ops.h |   38 ++++++++++
- net/mac80211/iface.c      |    7 ++
- net/mac80211/main.c       |    3 +
- net/mac80211/mlme.c       |   32 +++++++++
- net/mac80211/trace.h      |   87 +++++++++++++++++++++++
- net/mac80211/tx.c         |   13 ++--
- net/wireless/core.h       |    4 +
- net/wireless/mlme.c       |   38 ++++++++++
- net/wireless/nl80211.c    |  171 +++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h    |    6 ++
- 14 files changed, 585 insertions(+), 6 deletions(-)
+> [   26.573193]  [<ffffffffa06b6c99>] brcms_c_channel_set_chanspec+0x2c9/0x350 [brcmsmac]
+> [   26.573204]  [<ffffffffa06b7330>] brcms_c_set_phy_chanspec+0x30/0x70 [brcmsmac]
+> [   26.573216]  [<ffffffffa06c1a45>] brcms_c_init+0xb25/0x12f0 [brcmsmac]
+> [   26.573225]  [<ffffffffa047e61c>] ? bcma_host_pci_write32+0x3c/0x50 [bcma]
+> [   26.573235]  [<ffffffffa06b322c>] brcms_init+0x5c/0x70 [brcmsmac]
+> [   26.573247]  [<ffffffffa06bff5e>] brcms_c_up+0x23e/0x520 [brcmsmac]
+> [   26.573290]  [<ffffffffa06b34a9>] brcms_up+0x29/0x30 [brcmsmac]
+> [   26.573299]  [<ffffffffa06b3d0d>] brcms_ops_start+0x6d/0xe0 [brcmsmac]
+> [   26.573324]  [<ffffffffa0626a01>] ieee80211_do_open+0x2e1/0x11b0 [mac80211]
+> [   26.573342]  [<ffffffffa062793d>] ieee80211_open+0x6d/0x80 [mac80211]
+> [   26.573349]  [<ffffffff8158fecf>] __dev_open+0x8f/0xf0
+> [   26.573357]  [<ffffffff81590191>] __dev_change_flags+0xa1/0x180
+> [   26.573363]  [<ffffffff81590328>] dev_change_flags+0x28/0x70
+> [   26.573371]  [<ffffffff8159e278>] do_setlink+0x378/0xa00
+> [   26.573380]  [<ffffffff810ac5a5>] ? sched_clock_cpu+0xc5/0x120
+> [   26.573386]  [<ffffffff81021db3>] ? native_sched_clock+0x13/0x80
+> [   26.573392]  [<ffffffff81359a51>] ? nla_parse+0x31/0xe0
+> [   26.573398]  [<ffffffff815a09ae>] rtnl_newlink+0x37e/0x560
+> [   26.573407]  [<ffffffff812d54a9>] ? selinux_capable+0x39/0x50
+> [   26.573412]  [<ffffffff812d1a58>] ? security_capable+0x18/0x20
+> [   26.573418]  [<ffffffff815a01d4>] rtnetlink_rcv_msg+0x114/0x2f0
+> [   26.573424]  [<ffffffff8159d047>] ? rtnl_lock+0x17/0x20
+> [   26.573431]  [<ffffffff8159d047>] ? rtnl_lock+0x17/0x20
+> [   26.573440]  [<ffffffff815a00c0>] ? __rtnl_unlock+0x20/0x20
+> [   26.573447]  [<ffffffff815bbf11>] netlink_rcv_skb+0xa1/0xb0
+> [   26.573454]  [<ffffffff8159d075>] rtnetlink_rcv+0x25/0x40
+> [   26.573460]  [<ffffffff815bb89d>] netlink_unicast+0x19d/0x220
+> [   26.573466]  [<ffffffff815bbbfb>] netlink_sendmsg+0x2db/0x360
+> [   26.573474]  [<ffffffff81576268>] ? sock_update_classid+0x148/0x2e0
+> [   26.573480]  [<ffffffff8156fd7c>] sock_sendmsg+0xbc/0xf0
+> [   26.573487]  [<ffffffff810ac66f>] ? local_clock+0x6f/0x80
+> [   26.573495]  [<ffffffff810d5a17>] ? lock_release_non_nested+0x2f7/0x330
+> [   26.573501]  [<ffffffff81570dec>] __sys_sendmsg+0x3ac/0x3c0
+> [   26.573504]  [<ffffffff81021db3>] ? native_sched_clock+0x13/0x80
+> [   26.573508]  [<ffffffff81021e29>] ? sched_clock+0x9/0x10
+> [   26.573511]  [<ffffffff810ac5a5>] ? sched_clock_cpu+0xc5/0x120
+> [   26.573515]  [<ffffffff810d05ad>] ? trace_hardirqs_off+0xd/0x10
+> [   26.573519]  [<ffffffff810ac66f>] ? local_clock+0x6f/0x80
+> [   26.573523]  [<ffffffff811c6939>] ? fget_light+0xf9/0x520
+> [   26.573526]  [<ffffffff811c687c>] ? fget_light+0x3c/0x520
+> [   26.573530]  [<ffffffff815737d9>] sys_sendmsg+0x49/0x90
+> [   26.573537]  [<ffffffff816d8429>] system_call_fastpath+0x16/0x1b
+> [   26.573541] ---[ end trace 9edc8e6bb8e18f3f ]---
 
 -- 
-1.7.5.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
