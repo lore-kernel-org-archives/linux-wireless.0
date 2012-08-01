@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37339 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752504Ab2HISnU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 14:43:20 -0400
-Message-ID: <502404BD.1030809@hauke-m.de> (sfid-20120809_204358_454721_9786C066)
-Date: Thu, 09 Aug 2012 20:43:09 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:42553 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121Ab2HATyh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 15:54:37 -0400
+Received: by ggnl2 with SMTP id l2so470296ggn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 12:54:36 -0700 (PDT)
 MIME-Version: 1.0
-To: sedat.dilek@gmail.com
-CC: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/13] Merge GSoC DRM changes to admin-update.sh
-References: <1344535292-4451-1-git-send-email-ozancag@gmail.com> <CA+icZUWTjKYQ5YZfx488=SJA-uYYoRvM5X=Gh0YOHn8SvUM2jg@mail.gmail.com> <CA+icZUU5SXppB1f3HRKGo3RaUfNF=yWXM=4sAyRJ92FcMi=2Ag@mail.gmail.com>
-In-Reply-To: <CA+icZUU5SXppB1f3HRKGo3RaUfNF=yWXM=4sAyRJ92FcMi=2Ag@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1343849597.4638.20.camel@jlt3.sipsolutions.net>
+References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+ <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
+ <CA+XVXfegwamdK3mzP5eiAUJM4eYrFRTXY4Mr2tKP7+VBYriF-w@mail.gmail.com> <1343849597.4638.20.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 1 Aug 2012 22:54:19 +0300
+Message-ID: <CA+XVXfdwE5-vwF6=aFVU=qmNyGMwi3csPoQ569+O6BG-jc5g8g@mail.gmail.com> (sfid-20120801_215441_998746_8AE24961)
+Subject: Re: [RFC 7/8] mac80211: support extended channel switch
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2012 08:36 PM, Sedat Dilek wrote:
-> On Thu, Aug 9, 2012 at 8:29 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
->> On Thu, Aug 9, 2012 at 8:01 PM, Ozan Çağlayan <ozancag@gmail.com> wrote:
->>> Hi,
->>>
->>> The patches below modifies the admin-update.sh script so that it
->>> accepts a variable-length last argument, namely network or/and drm,
->>> to selectively fetch specific subsystem codes into the tree.
->>>
->>> The last 2 patches constitutes the work done so far for the my
->>> GSoC project.
->>>
->>> This first attempt is mostly for getting some comments. For example,
->>> eventhough you fetch network and drm drivers, make will just build
->>> network drivers. I will either port the project to kconfig which
->>> will dynamically configure and build what's available or hack
->>> config.mk and Makefile to detect the availability of other drivers
->>> than the wireless ones.
->>>
->>> I thank Luis R. Rodriguez, my mentor, for his helpful and highly
->>> responsive mentorship :)
->>>
->>> Ozan Çağlayan (13):
->>>   compat-wireless: Clean up *.mod.c once after everything
->>>   compat-wireless: Isolate drivers into different groups
->>>   compat-wireless: List everything vertically without concatenating
->>>   compat-wireless: Add ability to enable/disable subsystems
->>>   compat-wireless: Add 2 convenience functions
->>>   compat-wireless: Conditionally build network drivers
->>>   compat-wireless: Put network patches into its directory
->>>   compat-wireless: No need to search for patches
->>>   compat-wireless: Fix cmdline parameter's name
->>>   compat-wireless: Selectively apply patches
->>>   compat-wireless: Move refresh logic into the loop
->>>   compat-wireless: Fetch in DRM drivers
->>>   compat-wireless: Add DRM patches
->>>
+On Wed, Aug 1, 2012 at 10:33 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2012-08-01 at 22:28 +0300, Arik Nemtsov wrote:
+>
+>> > +static void
+>> > +ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>> > +                                u8 new_chan_no, u8 count, u8 mode,
+>> > +                                enum ieee80211_band new_band,
+>> > +                                struct ieee80211_bss *bss, u64 timestamp)
+>> >  {
+>> >         struct cfg80211_bss *cbss =
+>> >                 container_of((void *)bss, struct cfg80211_bss, priv);
+>> >         struct ieee80211_channel *new_ch;
+>> >         struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+>> > -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
+>> > -                                                     cbss->channel->band);
+>> > +       int new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
 >>
->> Am I the only one missing 07/13 in series?
->> On [1] I do not see, too.
->>
->> - "Birinci" Sedat -
->>
->> [1] http://marc.info/?l=linux-wireless&r=1&b=201208&w=2
->>
-> 
-> Looks like "compat-wireless: Put network patches into its directory"
-> is the missing one.
-> 
-> - Sedat -
-The patch was probably too big for the mailing list. Ozan do you have a
-git tree to pull from or could you put it on some web server.
+>> I'm not sure a channel switch between bands should be allowed. Case in
+>> point - a device might have different HT capabilities between bands,
+>> so different rates might need to be programmed to FW. This would
+>> require a re-assoc..
+>
+> Hmm, that might require some new flags or something? I'm not even sure
+> the extended chanswitch is allowed to switch bands, but by the look of
+> it that must have been the intent?
 
-Hauke
+Maybe the idea was to change the operating class while staying in the
+same band? But now I'm thinking that even without different HT caps
+per band, the change of class alone might impose new regulatory
+restrictions. For instance HT40 may now be allowed/disallowed.
+So we have to notify the driver about this somehow?
 
+If it's too cumbersome, maybe we should just disconnect if the class
+changes? wpa_s would reconnect anyway in most situations (non p2p).
