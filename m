@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:36486 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934412Ab2HWVNI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46648 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303Ab2HBICk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 17:13:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAPgLHd_K=bbQ=zpKY8kW3HCGeuE3GwCCQOAg+gJoFdCv9SnVrg@mail.gmail.com>
-References: <CAPgLHd_K=bbQ=zpKY8kW3HCGeuE3GwCCQOAg+gJoFdCv9SnVrg@mail.gmail.com>
-Date: Fri, 24 Aug 2012 01:13:07 +0400
-Message-ID: <CA++WF2Nv_qb_jAnxhiR+WMjD4nwa3hAwMOSNqNtxc1LDX9ouXQ@mail.gmail.com> (sfid-20120823_231316_663705_EF249810)
-Subject: Re: [PATCH] ipw2200: use is_zero_ether_addr() and is_broadcast_ether_addr()
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 2 Aug 2012 04:02:40 -0400
+Message-ID: <1343894552.4458.4.camel@jlt3.sipsolutions.net> (sfid-20120802_100245_262316_95C56D8E)
+Subject: Re: cfg80211_disconnected memory leak
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 02 Aug 2012 10:02:32 +0200
+In-Reply-To: <CAMLZHHQdBHZa4NBQ3ygKJSHmKL11ERUWDAtMx0-Qh4OzSoN-SA@mail.gmail.com> (sfid-20120802_012245_707573_C86E060B)
+References: <CAMLZHHQkv_fHzd89fP7bNow7eL3oX+Duzr5rS5NJfhffqwUv2g@mail.gmail.com>
+	 <1343842772.4638.15.camel@jlt3.sipsolutions.net>
+	 <CAMLZHHQdBHZa4NBQ3ygKJSHmKL11ERUWDAtMx0-Qh4OzSoN-SA@mail.gmail.com>
+	 (sfid-20120802_012245_707573_C86E060B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2012-08-01 at 17:22 -0600, Daniel Drake wrote:
 
-On 23 August 2012 10:54, Wei Yongjun <weiyj.lk@gmail.com> wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> Using is_zero_ether_addr() and is_broadcast_ether_addr() instead of
-> directly use memcmp() to determine if the ethernet address is all zeros.
->
-> spatch with a semantic match is used to found this problem.
-> (http://coccinelle.lip6.fr/)
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  drivers/net/wireless/ipw2x00/ipw2200.c | 11 ++---------
->  1 file changed, 2 insertions(+), 9 deletions(-)
+> Here is what happens:
+> 
+> NETDEV_GOING_DOWN
+> cfg80211_disconnected() called, disconnect event work queued
+> NETDEV_DOWN
+> cleanup work queued
+> NETDEV_UNREGISTER
+> *** cfg80211_netdev_notifier_call now calls: list_del_rcu(&wdev->list);
+> disconnect even work runs, calls cfg80211_process_rdev_events() but
+> the wdev is already removed from rdev->netdev_list as above
+> cleanup work runs
+> 
+> The bit I marked with *** is what is causing the difficulties - it
+> runs before the work items do.
 
-Looks fine, thanks.
+Oh, hm. I didn't think it could unregister before we give up our
+reference, but I guess that makes sense after all.
 
-Stanislav.
+I'm not sure there's an easy way to fix it other than making the driver
+not call cfg80211_disconnected() in case the disconnect was requested by
+cfg80211 -- that call isn't needed and will not do anything at all, but
+I'm not sure how easy that would be in the driver?
+
+johannes
+
