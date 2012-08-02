@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8650 "EHLO mx1.redhat.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:38710 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754834Ab2HJU6f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 16:58:35 -0400
-From: Andy Gospodreak <andy@greyhouse.net>
-To: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] compat: fixup error in no_printk definition
-Date: Fri, 10 Aug 2012 16:57:16 -0400
-Message-Id: <1344632236-516-1-git-send-email-andy@greyhouse.net> (sfid-20120810_225839_418971_0028C2DB)
+	id S1751774Ab2HBOBI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Aug 2012 10:01:08 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/2] ath9k: optimize power level initialization for CTL_[25]GHT20
+Date: Thu,  2 Aug 2012 16:00:51 +0200
+Message-Id: <1343916052-3367-1-git-send-email-juhosg@openwrt.org> (sfid-20120802_160111_424891_3ACBC1A5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What initially looked like a valid definition for the #define for
-no_printk was not.  This corrects the problem and the change that was
-thought to correct it.
+The first part of the power array is initialized in a loop
+and the last two values are initialized separately. Extend
+the loop to cover the last two items, and remove the separate
+initialization.
 
-Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- include/linux/compat-2.6.36.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index b6757c3..cd5e37c 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -99,9 +99,9 @@ struct pm_qos_request_list {
-  * gcc's format and side-effect checking.
-  */
- /* mask no_printk as RHEL6 backports this */
--#define no_printk(...) compat_no_printk(...)
-+#define no_printk(a, ...) compat_no_printk(a, ##__VA_ARGS__)
- static inline __attribute__ ((format (printf, 1, 2)))
--int compat_no_printk(const char *s, ...) { return 0; }
-+int no_printk(const char *s, ...) { return 0; }
- 
- #ifndef alloc_workqueue
- #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index b5c8450..86bd756 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4963,16 +4963,10 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
+ 			case CTL_5GHT20:
+ 			case CTL_2GHT20:
+ 				for (i = ALL_TARGET_HT20_0_8_16;
+-				     i <= ALL_TARGET_HT20_21; i++)
++				     i <= ALL_TARGET_HT20_23; i++)
+ 					pPwrArray[i] =
+ 					  (u8)min((u16)pPwrArray[i],
+ 						  minCtlPower);
+-				pPwrArray[ALL_TARGET_HT20_22] =
+-				  (u8)min((u16)pPwrArray[ALL_TARGET_HT20_22],
+-					  minCtlPower);
+-				pPwrArray[ALL_TARGET_HT20_23] =
+-				  (u8)min((u16)pPwrArray[ALL_TARGET_HT20_23],
+-					   minCtlPower);
+ 				break;
+ 			case CTL_5GHT40:
+ 			case CTL_2GHT40:
 -- 
-1.7.1
+1.7.10
 
