@@ -1,166 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:37850 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743Ab2HISBv (ORCPT
+Received: from mail1.windriver.com ([147.11.146.13]:60574 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599Ab2HBW4P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 14:01:51 -0400
-Received: by mail-we0-f174.google.com with SMTP id x8so457945wey.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:01:51 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH 03/13] compat-wireless: List everything vertically without concatenating
-Date: Thu,  9 Aug 2012 21:01:22 +0300
-Message-Id: <1344535292-4451-4-git-send-email-ozancag@gmail.com> (sfid-20120809_200156_849467_076A09B0)
-In-Reply-To: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
-References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
+	Thu, 2 Aug 2012 18:56:15 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	Liang Li <liang.li@windriver.com>, <stable@vger.kernel.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: [PATCH stable] cfg80211: fix interface combinations check for ADHOC(IBSS)
+Date: Thu, 2 Aug 2012 18:55:41 -0400
+Message-ID: <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com> (sfid-20120803_005619_580384_689F159D)
+In-Reply-To: <20120801175816.GB13879@windriver.com>
+References: <20120801175816.GB13879@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-List everything vertically as it is much more readable. Also don't
-concat strings but list them sequentially in one variable.
+From: Liang Li <liang.li@windriver.com>
 
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+partial of commit 8e8b41f9d8c8e63fc92f899ace8da91a490ac573 upstream.
+
+As part of commit 463454b5dbd8 ("cfg80211: fix interface
+combinations check"), this extra check was introduced:
+
+       if ((all_iftypes & used_iftypes) != used_iftypes)
+               goto cont;
+
+However, most wireless NIC drivers did not advertise ADHOC in
+wiphy.iface_combinations[i].limits[] and hence we'll get -EBUSY
+when we bring up a ADHOC wlan with commands similar to:
+
+ # iwconfig wlan0 mode ad-hoc && ifconfig wlan0 up
+
+In commit 8e8b41f9d8c8e ("cfg80211: enforce lack of interface
+combinations"), the change below fixes the issue:
+
+       if (total == 1)
+               return 0;
+
+But it also introduces other dependencies for stable. For example,
+a full cherry pick of 8e8b41f9d8c8e would introduce additional
+regressions unless we also start cherry picking driver specific
+fixes like the following:
+
+  9b4760e  ath5k: add possible wiphy interface combinations
+  1ae2fc2  mac80211_hwsim: advertise interface combinations
+  20c8e8d  ath9k: add possible wiphy interface combinations
+
+And the purpose of the 'if (total == 1)' is to cover the specific
+use case (IBSS, adhoc) that was mentioned above. So we just pick
+the specific part out from 8e8b41f9d8c8e here.
+
+Doing so gives stable kernels a way to fix the change introduced
+by 463454b5dbd8, without having to make cherry picks specific to
+various NIC drivers.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Liang Li <liang.li@windriver.com>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- scripts/admin-update.sh | 116 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 67 insertions(+), 49 deletions(-)
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index df82ea3..6d7ca54 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -266,14 +266,32 @@ else
- fi
+3.0.35, 3.2.21 and 3.4.3 have CP of 463454b5dbd8 in them.
+
+ net/wireless/util.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b5b6890..88bd89e 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -974,6 +974,9 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+ 	}
+ 	mutex_unlock(&rdev->devlist_mtx);
  
- # Now define what files to copy from $GIT_URL
--INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h hci_mon.h mgmt.h sco.h smp.h a2mp.h"
--NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
--
--INCLUDE_LINUX="ieee80211.h nl80211.h"
--INCLUDE_LINUX="$INCLUDE_LINUX pci_ids.h eeprom_93cx6.h"
--INCLUDE_LINUX="$INCLUDE_LINUX ath9k_platform.h"
--INCLUDE_LINUX="$INCLUDE_LINUX wl12xx.h"
--INCLUDE_LINUX="$INCLUDE_LINUX rndis.h"
-+INCLUDE_NET_BT="hci_core.h
-+		l2cap.h
-+		bluetooth.h
-+		rfcomm.h
-+		hci.h
-+		hci_mon.h
-+		mgmt.h
-+		sco.h
-+		smp.h
-+		a2mp.h"
++	if (total == 1)
++		return 0;
 +
-+# Bluetooth related directories
-+NET_BT_DIRS="bluetooth
-+	     bluetooth/bnep
-+	     bluetooth/cmtp
-+	     bluetooth/rfcomm
-+	     bluetooth/hidp"
-+
-+# Required headers from include/linux
-+INCLUDE_LINUX="ieee80211.h
-+	       nl80211.h
-+	       pci_ids.h
-+	       eeprom_93cx6.h
-+	       ath9k_platform.h
-+	       wl12xx.h
-+	       rndis.h"
- 
- # For rndis_wext
- INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
-@@ -291,47 +309,47 @@ INCLUDE_NET="cfg80211.h
- NET_DIRS="wireless mac80211 rfkill"
- 
- # WLAN drivers that have their own directory
--DRIVERS_WLAN="drivers/bcma"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/carl9170"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath5k"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath6kl"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath9k"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/b43"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/b43legacy"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmfmac"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmsmac"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmsmac/phy"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmutil"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/include"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlegacy"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi/pcie"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi/dvm"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rt2x00"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/zd1211rw"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/libertas"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/p54"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x/rtl8180"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x/rtl8187"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192c"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192ce"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192cu"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192se"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192de"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/libertas_tf"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ipw2x00"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl12xx"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl1251"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wlcore"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl18xx"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/orinoco"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/mwifiex"
--DRIVERS_WLAN="$DRIVERS_WLAN drivers/ssb"
-+DRIVERS_WLAN="drivers/bcma
-+	      drivers/net/wireless/ath
-+	      drivers/net/wireless/ath/carl9170
-+	      drivers/net/wireless/ath/ath5k
-+	      drivers/net/wireless/ath/ath6kl
-+	      drivers/net/wireless/ath/ath9k
-+	      drivers/net/wireless/b43
-+	      drivers/net/wireless/b43legacy
-+	      drivers/net/wireless/brcm80211
-+	      drivers/net/wireless/brcm80211/brcmfmac
-+	      drivers/net/wireless/brcm80211/brcmsmac
-+	      drivers/net/wireless/brcm80211/brcmsmac/phy
-+	      drivers/net/wireless/brcm80211/brcmutil
-+	      drivers/net/wireless/brcm80211/include
-+	      drivers/net/wireless/iwlegacy
-+	      drivers/net/wireless/iwlwifi
-+	      drivers/net/wireless/iwlwifi/pcie
-+	      drivers/net/wireless/iwlwifi/dvm
-+	      drivers/net/wireless/rt2x00
-+	      drivers/net/wireless/zd1211rw
-+	      drivers/net/wireless/libertas
-+	      drivers/net/wireless/p54
-+	      drivers/net/wireless/rtl818x
-+	      drivers/net/wireless/rtl818x/rtl8180
-+	      drivers/net/wireless/rtl818x/rtl8187
-+	      drivers/net/wireless/rtlwifi
-+	      drivers/net/wireless/rtlwifi/rtl8192c
-+	      drivers/net/wireless/rtlwifi/rtl8192ce
-+	      drivers/net/wireless/rtlwifi/rtl8192cu
-+	      drivers/net/wireless/rtlwifi/rtl8192se
-+	      drivers/net/wireless/rtlwifi/rtl8192de
-+	      drivers/net/wireless/libertas_tf
-+	      drivers/net/wireless/ipw2x00
-+	      drivers/net/wireless/ti
-+	      drivers/net/wireless/ti/wl12xx
-+	      drivers/net/wireless/ti/wl1251
-+	      drivers/net/wireless/ti/wlcore
-+	      drivers/net/wireless/ti/wl18xx
-+	      drivers/net/wireless/orinoco
-+	      drivers/net/wireless/mwifiex
-+	      drivers/ssb"
- 
- # WLAN drivers not having dedicated directories
- DRIVERS_WLAN_FILES="adm8211.c
+ 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+ 		const struct ieee80211_iface_combination *c;
+ 		struct ieee80211_iface_limit *limits;
 -- 
-1.7.11.2
+1.7.12.rc1.1.gbce1580
 
