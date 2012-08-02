@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:51235 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664Ab2HIEqR (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:47478 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775Ab2HBScq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 00:46:17 -0400
-Received: by obbuo13 with SMTP id uo13so71681obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 21:46:17 -0700 (PDT)
+	Thu, 2 Aug 2012 14:32:46 -0400
+Received: by ggnl2 with SMTP id l2so1792435ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2012 11:32:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1344487215-24143-1-git-send-email-andy@greyhouse.net>
-References: <1344487215-24143-1-git-send-email-andy@greyhouse.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 8 Aug 2012 21:45:56 -0700
-Message-ID: <CAB=NE6URAD4Wj0EVBP770pcEkJ8vezWW+kV5kuDG3KrdKdU8Ow@mail.gmail.com> (sfid-20120809_064620_845334_AD7C526F)
-Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
-To: Andy Gospodarek <andy@greyhouse.net>
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Phil Perry <phil@elrepo.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1343889136.4458.2.camel@jlt3.sipsolutions.net>
+References: <1343855731-27920-1-git-send-email-thomas@cozybit.com> <1343889136.4458.2.camel@jlt3.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 2 Aug 2012 11:32:24 -0700
+Message-ID: <CAG6hwVNYeGCW_kseQhfu_pEYAM+xU1sGEQmaOiJeGQ30eioKJA@mail.gmail.com> (sfid-20120802_203249_727462_850E703A)
+Subject: Re: [PATCH] mac80211: improve cleanup when leaving mesh
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 8, 2012 at 9:40 PM, Andy Gospodarek <andy@greyhouse.net> wrote:
-> This patch allows me to compile and load the latest compat modules on
-> RHEL6.3.  Users of compat on RHEL6 should note that you should set
-> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
+On Wed, Aug 1, 2012 at 11:32 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2012-08-01 at 14:15 -0700, Thomas Pedersen wrote:
+>> A couple improvements to cleanup when stopping a mesh:
+>>
+>>  - flush mpath entries.
+>>  - flush sta entries per-sdata so we don't remove entries belonging to
+>>    other vifs on the same hw.
+>>
+>> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+>> ---
+>>  net/mac80211/mesh.c |    3 ++-
+>>  1 files changed, 2 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+>> index 764593d..21c02c6 100644
+>> --- a/net/mac80211/mesh.c
+>> +++ b/net/mac80211/mesh.c
+>> @@ -618,7 +618,8 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+>>
+>>       ifmsh->mesh_id_len = 0;
+>>       ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
+>> -     sta_info_flush(local, NULL);
+>> +     sta_info_flush(local, sdata);
+>> +     mesh_path_flush_by_iface(sdata);
 >
-> These changes seem to pass built-in tests on my system:
->
-> # ./bin/ckmake
+> We can remove ieee80211_clean_sdata() then, right?
 
-No need to run as root, in fact I encourage both
-bin/get-compat-kernels and bin/ckmake to be run as a regular user.
+Yes, looks like any mesh cleanup can happen in the netdev ops. Thanks!
 
-Thanks! Applied and pushed!
-
-  Luis
+Thomas
