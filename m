@@ -1,84 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:4270 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750913Ab2H3Tkg (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:62776 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752281Ab2HBRly (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 15:40:36 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 02/14] rt2x00: Align rt2400pci GPIOCSR definition with datasheet.
-Date: Thu, 30 Aug 2012 21:34:01 +0200
-Message-Id: <1346355248-5331-3-git-send-email-gwingerde@gmail.com> (sfid-20120830_214047_079637_4F07B6B3)
-In-Reply-To: <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
-References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
+	Thu, 2 Aug 2012 13:41:54 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: process pending events when unregistering net device
+Message-Id: <20120802174148.536A39D401E@zog.reactivated.net> (sfid-20120802_194157_794748_B5CEE72E)
+Date: Thu,  2 Aug 2012 18:41:48 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Datasheet indicates additional fields to set the GPIO direction.
-At the same time rename GPIOCSR_BIT<x> to GPIOCSR_VAL<x> to represent the
-actual meaning better.
+libertas currently calls cfg80211_disconnected() when it is being
+brought down. This causes an event to be allocated, but since the
+wdev is already removed from the rdev by the time that the event
+processing work executes, the event is never processed or freed.
+http://article.gmane.org/gmane.linux.kernel.wireless.general/95666
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: <stable@vger.kernel.org>
+Fix this leak, and other possible situations, by processing the event
+queue when a device is being unregistered. Thanks to Johannes Berg for
+the suggestion.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 8b9dbd7..94f9aa2 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -205,7 +205,7 @@ static int rt2400pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- 	u32 reg;
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+---
+ net/wireless/core.c | 5 +++++
+ net/wireless/core.h | 1 +
+ net/wireless/util.c | 2 +-
+ 3 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 31b40cc..dcd64d5 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -952,6 +952,11 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		 */
+ 		synchronize_rcu();
+ 		INIT_LIST_HEAD(&wdev->list);
++		/*
++		 * Ensure that all events have been processed and
++		 * freed.
++		 */
++		cfg80211_process_wdev_events(wdev);
+ 		break;
+ 	case NETDEV_PRE_UP:
+ 		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 5206c68..bc7430b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -426,6 +426,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev, enum nl80211_iftype ntype,
+ 			  u32 *flags, struct vif_params *params);
+ void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev);
++void cfg80211_process_wdev_events(struct wireless_dev *wdev);
  
- 	rt2x00pci_register_read(rt2x00dev, GPIOCSR, &reg);
--	return rt2x00_get_field32(reg, GPIOCSR_BIT0);
-+	return rt2x00_get_field32(reg, GPIOCSR_VAL0);
+ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 				 struct wireless_dev *wdev,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 26f8cd3..994e2f0 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -735,7 +735,7 @@ void cfg80211_upload_connect_keys(struct wireless_dev *wdev)
+ 	wdev->connect_keys = NULL;
  }
  
- #ifdef CONFIG_RT2X00_LIB_LEDS
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
-index d3a4a68..e4b07f0 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.h
-@@ -660,16 +660,26 @@
- 
- /*
-  * GPIOCSR: GPIO control register.
-+ *	GPIOCSR_VALx: Actual GPIO pin x value
-+ *	GPIOCSR_DIRx: GPIO direction: 0 = output; 1 = input
-  */
- #define GPIOCSR				0x0120
--#define GPIOCSR_BIT0			FIELD32(0x00000001)
--#define GPIOCSR_BIT1			FIELD32(0x00000002)
--#define GPIOCSR_BIT2			FIELD32(0x00000004)
--#define GPIOCSR_BIT3			FIELD32(0x00000008)
--#define GPIOCSR_BIT4			FIELD32(0x00000010)
--#define GPIOCSR_BIT5			FIELD32(0x00000020)
--#define GPIOCSR_BIT6			FIELD32(0x00000040)
--#define GPIOCSR_BIT7			FIELD32(0x00000080)
-+#define GPIOCSR_VAL0			FIELD32(0x00000001)
-+#define GPIOCSR_VAL1			FIELD32(0x00000002)
-+#define GPIOCSR_VAL2			FIELD32(0x00000004)
-+#define GPIOCSR_VAL3			FIELD32(0x00000008)
-+#define GPIOCSR_VAL4			FIELD32(0x00000010)
-+#define GPIOCSR_VAL5			FIELD32(0x00000020)
-+#define GPIOCSR_VAL6			FIELD32(0x00000040)
-+#define GPIOCSR_VAL7			FIELD32(0x00000080)
-+#define GPIOCSR_DIR0			FIELD32(0x00000100)
-+#define GPIOCSR_DIR1			FIELD32(0x00000200)
-+#define GPIOCSR_DIR2			FIELD32(0x00000400)
-+#define GPIOCSR_DIR3			FIELD32(0x00000800)
-+#define GPIOCSR_DIR4			FIELD32(0x00001000)
-+#define GPIOCSR_DIR5			FIELD32(0x00002000)
-+#define GPIOCSR_DIR6			FIELD32(0x00004000)
-+#define GPIOCSR_DIR7			FIELD32(0x00008000)
- 
- /*
-  * BBPPCSR: BBP Pin control register.
+-static void cfg80211_process_wdev_events(struct wireless_dev *wdev)
++void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ {
+ 	struct cfg80211_event *ev;
+ 	unsigned long flags;
 -- 
-1.7.11.1
+1.7.11.2
 
