@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:39876 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740Ab2H1XEe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 19:04:34 -0400
-Message-ID: <503D4E7F.9010205@wwwdotorg.org> (sfid-20120829_010437_079899_9D63F891)
-Date: Tue, 28 Aug 2012 16:04:31 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mout6.freenet.de ([195.4.92.96]:42795 "EHLO mout6.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751054Ab2HBTYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Aug 2012 15:24:03 -0400
+Message-ID: <501AD349.2010106@01019freenet.de> (sfid-20120802_212407_745302_DE839960)
+Date: Thu, 02 Aug 2012 21:21:45 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-To: Franky Lin <frankyl@broadcom.com>
-CC: Wei Ni <wni@nvidia.com>, Arend van Spriel <arend@broadcom.com>,
-	"rvossen@broadcom.com" <rvossen@broadcom.com>,
-	Rakesh Kumar <krakesh@nvidia.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR directly
- for non-OOB
-References: <1346063114-30361-1-git-send-email-wni@nvidia.com> <1346063114-30361-3-git-send-email-wni@nvidia.com> <503B9F31.5050502@broadcom.com> <503BD345.6030501@wwwdotorg.org> <1346152413.3516.211.camel@tegra-chromium-2> <503CF5B3.8040201@broadcom.com> <503D48AC.5040509@wwwdotorg.org> <503D4DD9.2060808@broadcom.com>
-In-Reply-To: <503D4DD9.2060808@broadcom.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: "Ch. Hanisch" <ch-hanisch@t-online.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: No WLAN on DELL XPS L702x with Ubuntu 12.04LTS (64Bit)
+References: <5016F03F.1020508@t-online.de> <5016F59E.9070101@01019freenet.de> <CANUX_P2CZW5ji--KkXoyBZUuZfOqkPk_A8Ui9tw4rNeuY=mebQ@mail.gmail.com> <5019EC7D.5030208@01019freenet.de> <CANUX_P10yfdy+d9txsp1RV9niKex_5WAr0VFsjsMiPosv6M+mA@mail.gmail.com> <20120802165429.29839020@dualc.maya.org> <CANUX_P1corc7rp_MRrV=MuDRXqqibmxL9MXwhE=zrkNSNfWqzg@mail.gmail.com>
+In-Reply-To: <CANUX_P1corc7rp_MRrV=MuDRXqqibmxL9MXwhE=zrkNSNfWqzg@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/28/2012 04:01 PM, Franky Lin wrote:
-> On 08/28/2012 03:39 PM, Stephen Warren wrote:
->> On 08/28/2012 09:45 AM, Franky Lin wrote:
->>> On 08/28/2012 04:13 AM, Wei Ni wrote:
->>>> On Tue, 2012-08-28 at 04:06 +0800, Stephen Warren wrote:
->>>>> On 08/27/2012 09:24 AM, Arend van Spriel wrote:
->>>>>> On 08/27/2012 12:25 PM, Wei Ni wrote:
->>>>>>> In case of inband interrupts, if we handle the interrupt in dpc
->>>>>>> thread,
->>>>>>> two level of thread switching takes place to process wifi
->>>>>>> interrupts.
->>>>>>> One in SDHCI driver and the other in Wifi driver. This may cause the
->>>>>>> system
->>>>>>> instability.
->> ...
->>>>>> Not sure if I can follow this explanation. The isr is called with
->>>>>> host
->>>>>> claimed (by sdio_irq_thread) and all it does is at a linked list
->>>>>> member
->>>>>> and signal the dpc thread. After doing this the host is released.
->>>>>
->>>>> Is the issue something like the ISR handler or first level of
->>>>> threading
->>>>> does:
->>>>>
->>>>> * Trigger DPC
->>>>> * Re-enable interrupt
->>>>>
->>>>> So that the interrupt then fires again before the triggered DPC can
->>>>> run
->>>>> to handle/clear it, thus causing an interrupt storm?
->>>>>
->>>>> Whereas handling the interrupt directly prevents this race condition?
+Emmanuel Grumbach wrote:
 >>>>
->>>> Above is my understanding.
+>>>> He wrote, too, that the installation of compat-wireless
+>>>> (unfortunately, he didn't told me which version), didn't changed the
+>>>> situation.
+>>>>
+>>>> I attached for him the output of
+>>>> options iwlwifi debug=0xffffffff
+>>>>
+>>>> The last part of it:
 >>>
->>> I understand the issue here and totally agree that we should treat
->>> in-band and out-band interrupts differently. But my concern is that the
->>> behavior of releasing the host before calling brcmf_sdbrcm_isr and grab
->>> it after is likely error prone. Also we are restructuring the dpc
->>> routine internally and it's almost done. I will find a better solution
->>> for in-band interrupt and get it the queue as well. So I suggest
->>> dropping this patch.
+>>> what about the logs *before* that?
 >>
->> Franky, do you know which kernel release the DPC restructuring will make
->> it into? I ask because I can't apply the rest of the patches in this
->> series without first resolving the stability issues with the Broadcom
->> WiFi enabled, since that'd de-stabilize the Tegra platform
->> significantly, and I'd like to plan when we can apply these patches to
->> Tegra. Thanks!
+>> What are you missing? The attachment contains of 1739 lines. It seems to
+>> be the complete output from dmesg from 0 to 675 seconds!
 >>
-> 
-> Hi Stephen,
-> 
-> Since we submit patches through linux-wireless tree, you may only be
-> able to pick it up at 3.7-rc1. It's quite a big change so I don't think
-> it will qualify as a bug fix to get into 3.6-rcX.
+> Sorry - I missed the attached file. Ok so you are using the latest fw
+> and you get a FW in INIT stage.
 
-That's as quick as I expected it to show up, so that's great. I don't
-suppose you could mail Wei and myself once the patch gets into the
-linux-wireless tree, so we can test it out on Tegra. If the patch could
-possibly go into a topic branch in the wireless tree so it can be merged
-into the Tegra tree before this series, that would be awesome. Thanks.
+Is there another firmware around? What's the filename / path of this
+firmware file? I can't find it in the debug log.
+
+@Christian:
+You wrote about another machine, which runs fine with the same hardware.
+Which firmware do you use in this case? Maybe, you could try to copy the
+firmware from the working machine to the broken one? Please do a copy of
+the new firmware file!
+
+
+> Please file a bug.
+> I thought it would be a quick and easy issue - but apparently it is not... Sorry
+
+
+Thanks Emmanuel,
+kind regards,
+Andreas
+
