@@ -1,127 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:48482 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754948Ab2HFBBH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 21:01:07 -0400
-Message-ID: <1344214853.13142.81.camel@deadeye.wl.decadent.org.uk> (sfid-20120806_030140_635512_6DADE5F2)
-Subject: Re: [PATCH stable] cfg80211: fix interface combinations check for
- ADHOC(IBSS)
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Liang Li <liang.li@windriver.com>, stable@vger.kernel.org
-Date: Mon, 06 Aug 2012 02:00:53 +0100
-In-Reply-To: <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com>
-References: <20120801175816.GB13879@windriver.com>
-	 <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-dOIg92ATsmk4h7QCvGOG"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:28850 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751013Ab2HBOpp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Aug 2012 10:45:45 -0400
+Date: Thu, 2 Aug 2012 10:45:29 -0400
+From: Josh Boyer <jwboyer@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 0/2] Fix lockdep warning in brcmsmac
+Message-ID: <20120802144529.GI1785@zod.bos.redhat.com> (sfid-20120802_164548_784390_C0261B18)
+References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
+ <20120802002353.GD1785@zod.bos.redhat.com>
+ <20120802015320.GA25933@thinkpad-t410>
+ <20120802120230.GE1785@zod.bos.redhat.com>
+ <20120802125102.GF1785@zod.bos.redhat.com>
+ <501A83AF.9060706@broadcom.com>
+ <20120802134512.GG1785@zod.bos.redhat.com>
+ <501A880A.6030000@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <501A880A.6030000@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 02, 2012 at 04:00:42PM +0200, Arend van Spriel wrote:
+> On 08/02/2012 03:45 PM, Josh Boyer wrote:
+> > #
+> > # Broadcom specific AMBA
+> > #
+> > CONFIG_BCMA=m
+> > CONFIG_BCMA_BLOCKIO=y
+> > CONFIG_BCMA_HOST_PCI_POSSIBLE=y
+> > CONFIG_BCMA_HOST_PCI=y
+> > CONFIG_BCMA_DRIVER_GMAC_CMN=y
+> > # CONFIG_BCMA_DEBUG is not set
+> 
+> As you indicated not seeing anything on the bcma bus (in kernel log, you
+> mean?) I was wondering about BCMA_HOST_PCI flag, but that looks fine.
+> Not sure why you have BCMA_DRIVER_GMAC_CMN enabled. Grabbing straws.
+> 
+> I actually had a similar behaviour and noticed a PCI bridge port was
+> missing. Do you see that also with lspci?
 
---=-dOIg92ATsmk4h7QCvGOG
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hm.  I can't recall the full lspci output before this problem showed up,
+but I do have dmesg output from before and now.  Comparing them, I see:
 
-On Thu, 2012-08-02 at 18:55 -0400, Paul Gortmaker wrote:
-> From: Liang Li <liang.li@windriver.com>
->=20
-> partial of commit 8e8b41f9d8c8e63fc92f899ace8da91a490ac573 upstream.
+[    0.639235] pci_bus 0000:02: busn_res: [bus 02] is inserted under [bus 00-ff]
+[    0.639284] pci 0000:02:00.0: [14e4:4727] type 00 class 0x028000
+[    0.639321] pci 0000:02:00.0: reg 10: [mem 0xfe500000-0xfe503fff 64bit]
+[    0.639550] pci 0000:02:00.0: supports D1 D2
+[    0.639551] pci 0000:02:00.0: PME# supported from D0 D3hot D3cold
+[    0.641078] pci 0000:00:1c.0: PCI bridge to [bus 02]
+[    0.641091] pci 0000:00:1c.0:   bridge window [mem 0xfe500000-0xfe5fffff]
 
-Added to the queue for 3.2, thanks.
+from before, and:
 
-Ben.
+[    0.636241] pci_bus 0000:02: busn_res: [bus 02] is inserted under [bus 00-ff]
+[    0.636244] pci 0000:00:1c.0: PCI bridge to [bus 02]
+[    0.636342] pci_bus 0000:03: busn_res: [bus 03] is inserted under [bus 00-ff]
 
-> As part of commit 463454b5dbd8 ("cfg80211: fix interface
-> combinations check"), this extra check was introduced:
->=20
->        if ((all_iftypes & used_iftypes) !=3D used_iftypes)
->                goto cont;
->=20
-> However, most wireless NIC drivers did not advertise ADHOC in
-> wiphy.iface_combinations[i].limits[] and hence we'll get -EBUSY
-> when we bring up a ADHOC wlan with commands similar to:
->=20
->  # iwconfig wlan0 mode ad-hoc && ifconfig wlan0 up
->=20
-> In commit 8e8b41f9d8c8e ("cfg80211: enforce lack of interface
-> combinations"), the change below fixes the issue:
->=20
->        if (total =3D=3D 1)
->                return 0;
->=20
-> But it also introduces other dependencies for stable. For example,
-> a full cherry pick of 8e8b41f9d8c8e would introduce additional
-> regressions unless we also start cherry picking driver specific
-> fixes like the following:
->=20
->   9b4760e  ath5k: add possible wiphy interface combinations
->   1ae2fc2  mac80211_hwsim: advertise interface combinations
->   20c8e8d  ath9k: add possible wiphy interface combinations
->=20
-> And the purpose of the 'if (total =3D=3D 1)' is to cover the specific
-> use case (IBSS, adhoc) that was mentioned above. So we just pick
-> the specific part out from 8e8b41f9d8c8e here.
->=20
-> Doing so gives stable kernels a way to fix the change introduced
-> by 463454b5dbd8, without having to make cherry picks specific to
-> various NIC drivers.
->=20
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Liang Li <liang.li@windriver.com>
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> ---
->=20
-> 3.0.35, 3.2.21 and 3.4.3 have CP of 463454b5dbd8 in them.
->=20
->  net/wireless/util.c | 3 +++
->  1 file changed, 3 insertions(+)
->=20
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index b5b6890..88bd89e 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -974,6 +974,9 @@ int cfg80211_can_change_interface(struct cfg80211_reg=
-istered_device *rdev,
->  	}
->  	mutex_unlock(&rdev->devlist_mtx);
-> =20
-> +	if (total =3D=3D 1)
-> +		return 0;
-> +
->  	for (i =3D 0; i < rdev->wiphy.n_iface_combinations; i++) {
->  		const struct ieee80211_iface_combination *c;
->  		struct ieee80211_iface_limit *limits;
+now.  So it seems 1434:4727 is missing now.  How very very odd.
 
---=20
-Ben Hutchings
-Theory and practice are closer in theory than in practice.
-                                - John Levine, moderator of comp.compilers
+<5 minutes later>
 
---=-dOIg92ATsmk4h7QCvGOG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+OK, so I physically unplugged the machine from the wall and let it sit
+for 5 minutes.  When I plugged it back in, that PCI bridge port magically
+reappeared.  I guess that's good news.  Thanks for suffering through
+with me.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+I'll go test Seth's patches now.  I hate computers.
 
-iQIVAwUAUB8XRue/yOyVhhEJAQqM6hAAtxR0MYgXLZRyE7s0BWpW3tU0vkYUMiTA
-EGPEyC030MUnFMwhcYy+M6VdYwbFLOJB9/XoWklsBWLq7inGrkVNLkIrVrC84vj6
-85j/ZA2QA5wcH3tUNoXbTej3froCDHg9GoAwXSkT8AY7mmS1p4CSkujOQ2tt+cft
-D1xvTzBjvF5mDjs5Nqu7dwZmsIgX0JwnKpqTRJq6TXS3HZpO4nYo1AQM4LQq9EsY
-db6H3k9b9eiFkn/6nLMabTGX5n4VYz3vWxaEjZ5o9KgrkLxcd+q2edBni9qm8e4G
-h8ofahilqSWc8iw3vj/NOo6Fwe1fwCmyokkPpPGkyLITdv5ZWX8Nb0GmlY1hkyVW
-/evkhp8CSoR8zY/m7OD7eKFL68nrGrQ0OSr900arUStkcNM79LnSVtUESnPpeQam
-DspwvCHGJtFgKh0NaoCYo6FmycNq0fCJAE9Rcgq95MpggDKt+uwkC5TlFUhxn7va
-DhbZUyygbAJjyZrXfAwD5PQJFzMqqiYDdnt+Y+YUwz7gEh5sLT+XK81dDD9KDU/l
-GmWzuAvn7rHJWaG2UP0LGn+FpNORqFidPitIXVBHK4vcjEIhbQQf8TkAXSefpTw8
-ag4wFE1qKanVQtaomTDKS4GM6X2S04bcm8mEsStYceMlHIC1dgfXIR/86mamsYEg
-rdDqosAgliA=
-=TDrI
------END PGP SIGNATURE-----
-
---=-dOIg92ATsmk4h7QCvGOG--
+josh
