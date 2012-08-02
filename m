@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.121.35]:12952 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753098Ab2H0K0U (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:53550 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752436Ab2HBSmo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 06:26:20 -0400
-From: Wei Ni <wni@nvidia.com>
-To: <swarren@wwwdotorg.org>, <brudley@broadcom.com>,
-	<rvossen@broadcom.com>
-CC: <krakesh@nvidia.com>, <ldewangan@nvidia.com>,
-	<linux-tegra@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, Wei Ni <wni@nvidia.com>
-Subject: [PATCH 1/6] ARM: tegra: set up wlan clocks for tegra dt
-Date: Mon, 27 Aug 2012 18:25:09 +0800
-Message-ID: <1346063114-30361-2-git-send-email-wni@nvidia.com> (sfid-20120827_122649_799691_1932188C)
-In-Reply-To: <1346063114-30361-1-git-send-email-wni@nvidia.com>
-References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+	Thu, 2 Aug 2012 14:42:44 -0400
+Received: by wibhr14 with SMTP id hr14so5417165wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2012 11:42:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20120802165429.29839020@dualc.maya.org>
+References: <5016F03F.1020508@t-online.de>
+	<5016F59E.9070101@01019freenet.de>
+	<CANUX_P2CZW5ji--KkXoyBZUuZfOqkPk_A8Ui9tw4rNeuY=mebQ@mail.gmail.com>
+	<5019EC7D.5030208@01019freenet.de>
+	<CANUX_P10yfdy+d9txsp1RV9niKex_5WAr0VFsjsMiPosv6M+mA@mail.gmail.com>
+	<20120802165429.29839020@dualc.maya.org>
+Date: Thu, 2 Aug 2012 21:42:43 +0300
+Message-ID: <CANUX_P1corc7rp_MRrV=MuDRXqqibmxL9MXwhE=zrkNSNfWqzg@mail.gmail.com> (sfid-20120802_204257_947679_07E2F0D5)
+Subject: Re: No WLAN on DELL XPS L702x with Ubuntu 12.04LTS (64Bit)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "Ch. Hanisch" <ch-hanisch@t-online.de>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set up the wlan clock tree for Tegra20 and Tegra30.
-
-Signed-off-by: Wei Ni <wni@nvidia.com>
----
- arch/arm/mach-tegra/board-dt-tegra20.c |    4 ++++
- arch/arm/mach-tegra/board-dt-tegra30.c |    4 ++++
- 2 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
-index d9eeae6..5efc219 100644
---- a/arch/arm/mach-tegra/board-dt-tegra20.c
-+++ b/arch/arm/mach-tegra/board-dt-tegra20.c
-@@ -79,8 +79,12 @@ static __initdata struct tegra_clk_init_table tegra_dt_clk_init_table[] = {
- 	{ "pll_a",      "pll_p_out1",   56448000,       true },
- 	{ "pll_a_out0", "pll_a",        11289600,       true },
- 	{ "cdev1",      NULL,           0,              true },
-+	{ "blink",      "clk_32k",      32768,          true },
- 	{ "i2s1",       "pll_a_out0",   11289600,       false},
- 	{ "i2s2",       "pll_a_out0",   11289600,       false},
-+	{ "sdmmc1",	"pll_p",	48000000,	false},
-+	{ "sdmmc3",	"pll_p",	48000000,	false},
-+	{ "sdmmc4",	"pll_p",	48000000,	false},
- 	{ NULL,		NULL,		0,		0},
- };
- 
-diff --git a/arch/arm/mach-tegra/board-dt-tegra30.c b/arch/arm/mach-tegra/board-dt-tegra30.c
-index 53bf60f..3277d1e 100644
---- a/arch/arm/mach-tegra/board-dt-tegra30.c
-+++ b/arch/arm/mach-tegra/board-dt-tegra30.c
-@@ -61,11 +61,15 @@ static __initdata struct tegra_clk_init_table tegra_dt_clk_init_table[] = {
- 	{ "pll_a_out0",	"pll_a",	11289600,	true },
- 	{ "extern1",	"pll_a_out0",	0,		true },
- 	{ "clk_out_1",	"extern1",	0,		true },
-+	{ "blink",	"clk_32k",	32768,		true },
- 	{ "i2s0",	"pll_a_out0",	11289600,	false},
- 	{ "i2s1",	"pll_a_out0",	11289600,	false},
- 	{ "i2s2",	"pll_a_out0",	11289600,	false},
- 	{ "i2s3",	"pll_a_out0",	11289600,	false},
- 	{ "i2s4",	"pll_a_out0",	11289600,	false},
-+	{ "sdmmc1",	"pll_p",	48000000,	false},
-+	{ "sdmmc3",	"pll_p",	48000000,	false},
-+	{ "sdmmc4",	"pll_p",	48000000,	false},
- 	{ NULL,		NULL,		0,		0},
- };
- 
--- 
-1.7.1
-
+>>>
+>>> He wrote, too, that the installation of compat-wireless
+>>> (unfortunately, he didn't told me which version), didn't changed the
+>>> situation.
+>>>
+>>> I attached for him the output of
+>>> options iwlwifi debug=0xffffffff
+>>>
+>>> The last part of it:
+>>
+>> what about the logs *before* that?
+>
+> What are you missing? The attachment contains of 1739 lines. It seems to
+> be the complete output from dmesg from 0 to 675 seconds!
+>
+Sorry - I missed the attached file. Ok so you are using the latest fw
+and you get a FW in INIT stage.
+Please file a bug.
+I thought it would be a quick and easy issue - but apparently it is not... Sorry
