@@ -1,135 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:44407 "EHLO
-	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757486Ab2HHMAc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 08:00:32 -0400
-Received: by obqv19 with SMTP id v19so1647499obq.30
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:00:31 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v3 4/7] mac80211: add ability to enable TX on op-channel
-Date: Wed,  8 Aug 2012 14:53:40 +0300
-Message-Id: <1344426823-1795-5-git-send-email-victorg@ti.com> (sfid-20120808_140052_550817_B9F7C7C6)
-In-Reply-To: <1344426823-1795-1-git-send-email-victorg@ti.com>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:38714 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753644Ab2HBOBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Aug 2012 10:01:09 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/2] ath9k: fix indentation in ar9003_hw_set_power_per_rate_table
+Date: Thu,  2 Aug 2012 16:00:52 +0200
+Message-Id: <1343916052-3367-2-git-send-email-juhosg@openwrt.org> (sfid-20120802_160113_935640_E8CBD8CA)
+In-Reply-To: <1343916052-3367-1-git-send-email-juhosg@openwrt.org>
+References: <1343916052-3367-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior starting tx on DFS channels, the DFS master
-device shall perform a Channel Availability Check
-to ensure that there is no radar interference on
-those channels. Once CAC done, the tx can be
-enabled with ieee80211_dfs_en_tx().
+The current indentation is off by one tab.
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- include/net/mac80211.h    |    4 ++++
- net/mac80211/cfg.c        |   15 +++++++++++++++
- net/mac80211/driver-ops.h |   14 ++++++++++++++
- net/mac80211/trace.h      |    6 ++++++
- 4 files changed, 39 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  143 ++++++++++++------------
+ 1 file changed, 69 insertions(+), 74 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d29c99a..ecdfb6a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2266,6 +2266,8 @@ enum ieee80211_rate_control_changed {
- * @start_radar_detection: Start radar detection on current operational
-  *	channel, once started it will continuously monitor for radars as long
-  *	as the channel active.
-+ * @dfs_en_tx: Once channel pass the DFS initial channel availability check,
-+ *	initiate the tx on the channel with this command.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -2412,6 +2414,8 @@ struct ieee80211_ops {
- 	int (*start_radar_detection)(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif,
- 				     struct ieee80211_channel *chan);
-+	int (*dfs_en_tx)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			 struct ieee80211_channel *chan);
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 86bd756..2d04791 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4901,84 +4901,79 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
+ 				i, cfgCtl, pCtlMode[ctlMode], ctlIndex[i],
+ 				chan->channel);
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 59b7ffe..eb18868 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2418,6 +2418,20 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	return ret;
+-				/*
+-				 * compare test group from regulatory
+-				 * channel list with test mode from pCtlMode
+-				 * list
+-				 */
+-				if ((((cfgCtl & ~CTL_MODE_M) |
+-				       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
+-					ctlIndex[i]) ||
+-				    (((cfgCtl & ~CTL_MODE_M) |
+-				       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
+-				     ((ctlIndex[i] & CTL_MODE_M) |
+-				       SD_NO_CTL))) {
+-					twiceMinEdgePower =
+-					  ar9003_hw_get_max_edge_power(pEepData,
+-								       freq, i,
+-								       is2ghz);
+-
+-					if ((cfgCtl & ~CTL_MODE_M) == SD_NO_CTL)
+-						/*
+-						 * Find the minimum of all CTL
+-						 * edge powers that apply to
+-						 * this channel
+-						 */
+-						twiceMaxEdgePower =
+-							min(twiceMaxEdgePower,
+-							    twiceMinEdgePower);
+-						else {
+-							/* specific */
+-							twiceMaxEdgePower =
+-							  twiceMinEdgePower;
+-							break;
+-						}
++			/*
++			 * compare test group from regulatory
++			 * channel list with test mode from pCtlMode
++			 * list
++			 */
++			if ((((cfgCtl & ~CTL_MODE_M) |
++			       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
++				ctlIndex[i]) ||
++			    (((cfgCtl & ~CTL_MODE_M) |
++			       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
++			     ((ctlIndex[i] & CTL_MODE_M) |
++			       SD_NO_CTL))) {
++				twiceMinEdgePower =
++				  ar9003_hw_get_max_edge_power(pEepData,
++							       freq, i,
++							       is2ghz);
++
++				if ((cfgCtl & ~CTL_MODE_M) == SD_NO_CTL)
++					/*
++					 * Find the minimum of all CTL
++					 * edge powers that apply to
++					 * this channel
++					 */
++					twiceMaxEdgePower =
++						min(twiceMaxEdgePower,
++						    twiceMinEdgePower);
++				else {
++					/* specific */
++					twiceMaxEdgePower = twiceMinEdgePower;
++					break;
+ 				}
+ 			}
++		}
+ 
+-			minCtlPower = (u8)min(twiceMaxEdgePower, scaledPower);
++		minCtlPower = (u8)min(twiceMaxEdgePower, scaledPower);
+ 
+-			ath_dbg(common, REGULATORY,
+-				"SEL-Min ctlMode %d pCtlMode %d 2xMaxEdge %d sP %d minCtlPwr %d\n",
+-				ctlMode, pCtlMode[ctlMode], twiceMaxEdgePower,
+-				scaledPower, minCtlPower);
+-
+-			/* Apply ctl mode to correct target power set */
+-			switch (pCtlMode[ctlMode]) {
+-			case CTL_11B:
+-				for (i = ALL_TARGET_LEGACY_1L_5L;
+-				     i <= ALL_TARGET_LEGACY_11S; i++)
+-					pPwrArray[i] =
+-					  (u8)min((u16)pPwrArray[i],
+-						  minCtlPower);
+-				break;
+-			case CTL_11A:
+-			case CTL_11G:
+-				for (i = ALL_TARGET_LEGACY_6_24;
+-				     i <= ALL_TARGET_LEGACY_54; i++)
+-					pPwrArray[i] =
+-					  (u8)min((u16)pPwrArray[i],
+-						  minCtlPower);
+-				break;
+-			case CTL_5GHT20:
+-			case CTL_2GHT20:
+-				for (i = ALL_TARGET_HT20_0_8_16;
+-				     i <= ALL_TARGET_HT20_23; i++)
+-					pPwrArray[i] =
+-					  (u8)min((u16)pPwrArray[i],
+-						  minCtlPower);
+-				break;
+-			case CTL_5GHT40:
+-			case CTL_2GHT40:
+-				for (i = ALL_TARGET_HT40_0_8_16;
+-				     i <= ALL_TARGET_HT40_23; i++)
+-					pPwrArray[i] =
+-					  (u8)min((u16)pPwrArray[i],
+-						  minCtlPower);
+-				break;
+-			default:
+-			    break;
+-			}
++		ath_dbg(common, REGULATORY,
++			"SEL-Min ctlMode %d pCtlMode %d 2xMaxEdge %d sP %d minCtlPwr %d\n",
++			ctlMode, pCtlMode[ctlMode], twiceMaxEdgePower,
++			scaledPower, minCtlPower);
++
++		/* Apply ctl mode to correct target power set */
++		switch (pCtlMode[ctlMode]) {
++		case CTL_11B:
++			for (i = ALL_TARGET_LEGACY_1L_5L;
++			     i <= ALL_TARGET_LEGACY_11S; i++)
++				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
++						       minCtlPower);
++			break;
++		case CTL_11A:
++		case CTL_11G:
++			for (i = ALL_TARGET_LEGACY_6_24;
++			     i <= ALL_TARGET_LEGACY_54; i++)
++				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
++						       minCtlPower);
++			break;
++		case CTL_5GHT20:
++		case CTL_2GHT20:
++			for (i = ALL_TARGET_HT20_0_8_16;
++			     i <= ALL_TARGET_HT20_23; i++)
++				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
++						       minCtlPower);
++			break;
++		case CTL_5GHT40:
++		case CTL_2GHT40:
++			for (i = ALL_TARGET_HT40_0_8_16;
++			     i <= ALL_TARGET_HT40_23; i++)
++				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
++						       minCtlPower);
++			break;
++		default:
++			break;
++		}
+ 	} /* end ctl mode checking */
  }
  
-+static int ieee80211_dfs_en_tx(struct wiphy *wiphy, struct net_device *dev,
-+			       struct ieee80211_channel *chan)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	int ret = -ENOENT;
-+
-+	if (!local->ops->dfs_en_tx)
-+		return -EOPNOTSUPP;
-+
-+	ret = drv_dfs_en_tx(local, sdata, chan);
-+	return ret;
-+}
-+
- static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			     struct ieee80211_channel *chan, bool offchan,
- 			     enum nl80211_channel_type channel_type,
-@@ -3091,4 +3105,5 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.get_et_strings = ieee80211_get_et_strings,
- 	.get_channel = ieee80211_cfg_get_channel,
- 	.start_radar_detection = ieee80211_start_radar_detection,
-+	.dfs_en_tx = ieee80211_dfs_en_tx,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 0f42502..04a9168 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -335,6 +335,20 @@ static inline int drv_start_radar_detection(struct ieee80211_local *local,
- 	return ret;
- }
- 
-+static inline int drv_dfs_en_tx(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				struct ieee80211_channel *chan)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	trace_drv_dfs_en_tx(local, sdata);
-+	ret = local->ops->dfs_en_tx(&local->hw, &sdata->vif, chan);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- static inline int
- drv_sched_scan_start(struct ieee80211_local *local,
- 		     struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index acc5b0a..2ef4731 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -492,6 +492,12 @@ DEFINE_EVENT(local_sdata_evt, drv_start_radar_detection,
- 	TP_ARGS(local, sdata)
- );
- 
-+DEFINE_EVENT(local_sdata_evt, drv_dfs_en_tx,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
-+);
-+
- DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata),
 -- 
-1.7.5.4
+1.7.10
 
