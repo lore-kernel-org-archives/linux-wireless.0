@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:46740 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737Ab2HAQOo (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:50936 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296Ab2HBXsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 12:14:44 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-	liang.li@windriver.com,
-	Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: [RFC/PATCH 0/1] Fix inability to configure adhoc in 3.4.x
-Date: Wed,  1 Aug 2012 12:14:22 -0400
-Message-Id: <1343837663-12645-1-git-send-email-paul.gortmaker@windriver.com> (sfid-20120801_181448_175333_E1A6DA81)
+	Thu, 2 Aug 2012 19:48:03 -0400
+Received: by ghrr11 with SMTP id r11so134556ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2012 16:48:03 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/4] mac80211: remove ieee80211_clean_sdata()
+Date: Thu,  2 Aug 2012 16:47:52 -0700
+Message-Id: <1343951274-24956-2-git-send-email-thomas@cozybit.com> (sfid-20120803_014846_538573_425D31F0)
+In-Reply-To: <1343951274-24956-1-git-send-email-thomas@cozybit.com>
+References: <1343951274-24956-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Normally a single patch doesn't warrant a 0/1, but Liang did some
-digging on this problem and came up with important background, and
-several possible solutions, so I wanted to capture what he'd learned.
+This function was only used by mesh, and not really needed since any
+interface-specific cleanup already happens in the netdev handlers.
 
-The issues with creating an ad-hoc network started in 3.4.3 with the
-cherry pick of 463454b5dbd ("cfg80211: fix interface combinations check")
-on intel hardware (iwl-mac80211.c) that doesn't support multi-function
-or virtual interfaces.  Specifically, it adds this:
-
-+               if ((all_iftypes & used_iftypes) != used_iftypes)
-+                       goto cont;
-
-and we have the case for Intel cards that all_iftypes equal to 0b1100
-but used_iftypes equal to 0b0010 hence we hit 'goto cont' to miss the
-'return 0' and now get EBUSY.
-
-Liang identified f8cdddb8d61d ("cfg80211: check iface combinations
-only when iface is running") as part of the fix (now in 3.4.6)
-
-However, things still weren't right unless he also cherry picked the
-8e8b41f9d8c8e6 ("cfg80211: enforce lack of interface combinations")
-to get the later mentioned "total == 1" check within, so that we
-avoid the EBUSY above.  But this commit causes other regressions
-(as described in the commit log of the attached patch) so we didn't
-think it best to go that route for 3.4.x.
-
-So, the options we considered (to fix 3.4.x stable) were:
-
-1) cherry pick 8e8b41f9d, and all the driver specific changes it requires
-
-2) make a sub-commit for stable that just takes the total==1 from #1.
-
-3) patch iwlwifi/iwl-mac80211.c and add ".types = BIT(NL80211_IFTYPE_ADHOC)"
-
-4) treat ADHOC as a universal feature that everyone has.
-
-The following patch does #4, and in theory it could be used in mainline
-and then cherry picked back to stable.  But we weren't 100% sure if that
-was the best solution, since neither of us are really wireless people,
-hence all the detail here.
-
-Thanks,
-Paul.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
+ net/mac80211/iface.c |   17 -----------------
+ 1 files changed, 0 insertions(+), 17 deletions(-)
 
-Liang Li (1):
-  cfg80211: fix combination check for ADHOC
-
- net/wireless/util.c | 2 ++
- 1 file changed, 2 insertions(+)
-
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 80e0765..844a83f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1152,18 +1152,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_debugfs_add_netdev(sdata);
+ }
+ 
+-static void ieee80211_clean_sdata(struct ieee80211_sub_if_data *sdata)
+-{
+-	switch (sdata->vif.type) {
+-	case NL80211_IFTYPE_MESH_POINT:
+-		mesh_path_flush_by_iface(sdata);
+-		break;
+-
+-	default:
+-		break;
+-	}
+-}
+-
+ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
+ 					   enum nl80211_iftype type)
+ {
+@@ -1499,9 +1487,6 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+ 	list_del_rcu(&sdata->list);
+ 	mutex_unlock(&sdata->local->iflist_mtx);
+ 
+-	/* clean up type-dependent data */
+-	ieee80211_clean_sdata(sdata);
+-
+ 	synchronize_rcu();
+ 	unregister_netdevice(sdata->dev);
+ }
+@@ -1521,8 +1506,6 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
+ 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
+ 		list_del(&sdata->list);
+ 
+-		ieee80211_clean_sdata(sdata);
+-
+ 		unregister_netdevice_queue(sdata->dev, &unreg_list);
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
 -- 
-1.7.11.1
+1.7.5.4
 
