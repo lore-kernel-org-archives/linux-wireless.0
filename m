@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2215 "EHLO mms3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59731 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752153Ab2HMNqv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 09:46:51 -0400
-Message-ID: <5029053F.1010207@broadcom.com> (sfid-20120813_154659_963570_F82C1D6C)
-Date: Mon, 13 Aug 2012 15:46:39 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1753116Ab2HBAYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Aug 2012 20:24:11 -0400
+Date: Wed, 1 Aug 2012 20:23:54 -0400
+From: Josh Boyer <jwboyer@redhat.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 0/2] Fix lockdep warning in brcmsmac
+Message-ID: <20120802002353.GD1785@zod.bos.redhat.com> (sfid-20120802_022415_132252_180DB806)
+References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
 MIME-Version: 1.0
-To: "Saul St. John" <saul.stjohn@gmail.com>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC] bcma: add cc core driver, expose sprom to sysfs
-References: <20120810002305.GA5966@eris.garyseven.net>
- <CACna6rz83DOTDYG1ehd-dvMoWrnduvJ44Lpi3vM0wMLMrC0-hA@mail.gmail.com>
- <20120810234202.GA8644@eris.garyseven.net>
-In-Reply-To: <20120810234202.GA8644@eris.garyseven.net>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2012 01:42 AM, Saul St. John wrote:
-> On Fri, Aug 10, 2012 at 06:55:22AM +0200, Rafał Miłecki wrote:
->> > 2012/8/10 Saul St. John <saul.stjohn@gmail.com>:
->>> > > Adds a driver for BCMA ChipCommon cores, registers the struct device
->>> > > bcma_bus.drv_cc->core->dev with device_register(), and exposes the SPROM
->>> > > in rev 31+ cc cores as a R/W sysfs attribute.
->> > 
->> > Well, that's a little messy. You change a few not strictly related
->> > things in a one patch, please provide patch-per-change. That changes
->> > are quite sensitive so we really need it.
-> Ok, v2 will be split over a couple of patches.
+On Wed, Aug 01, 2012 at 03:58:41PM -0500, Seth Forshee wrote:
+> As reported by Josh Boyer, brcmsmac is producing lockdep warnings by
+> calling freq_reg_info() without holding cfg80211_lock. Currently
+> freq_reg_info() is the only way for a wireless driver to tell whether
+> OFDM is allowed on the current channel, but cfg80211_lock is outside the
+> scope of the wireless drivers.
 > 
->> > I also wish to see some explanation on that changes. Why do you need
->> > CC to be registered as a bus core device? Why anyone may need
->> > overwriting SPROM? Did it work for you? Have you tested
->> > suspend&resume?
+> Since other regulatory restrictions are communicated in the channel
+> definition, it makes sense to do the same for OFDM. These patches add a
+> new flag, IEEE80211_CHAN_NO_OFDM, which is set by regulatory to
+> indicated OFDM operation is prohibited. brcmsmac is modifified to use
+> this flag instead of consuming the regulatory data directly.
+> 
+> Thanks,
+> Seth
+> 
+> 
+> Seth Forshee (2):
+>   cfg80211: add channel flag to restrict OFDM
+>   brcmsmac: use channel flags to restrict OFDM
 
-Hi Saul,
+I would love to test these, but at the moment I can't.  Oddly, the very
+same machine I hit the problem with originally is no longer presenting
+any devices on the bcma bus.  The driver is loaded, brcmsmac is loaded,
+but neither output the devices that showed up in my original email.
+This is with both the kernel I originally reported the problem with, and
+other kernels.  Nothing shows up for the BCM4313 in lspci either.
 
-I am really not in favor for adding write support. As Rafał noted there
-is no need for linux end-users to be modifying SPROM content. It is
-called Serial Programmable *Read-Only* Memory for a reason. The only
-parties that need write access are the chip manufacturer and OEM/ODM.
+I did power it off and then back on today after I hit the original
+problem, but I'd expect the hardware in the box to still show up on a
+power on...  Is there some specific module load order, or something
+else I can do to try and get the device to show up?
 
-Most information is rather device specific and sensitive to change. Also
-changing information like country code (as you indicated you did) can
-cause violations in the regulatory area.
+I did build a kernel with your patches applied, so at least I know they
+build.  If I can get this machine to probe the chip again, I'll be happy
+to test.
 
-Without a clear need of this functionality for the linux users I tend to
-discard this change, but I am not the bcma maintainer. Could you
-elaborate what your higher-level use is?
+At the moment, I'm just very confused and slightly afraid it's going to
+just refuse to work at all.
 
-If the reasons for having this patch accepted are clear and valid I
-would suggest to make it depend on CFG80211_CERTIFICATION_ONUS Kconfig
-option.
-
-Gr. AvS
-
+josh
