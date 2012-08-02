@@ -1,73 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:34604 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553Ab2HCTVl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47952 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752533Ab2HBPba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 15:21:41 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so1800271pbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2012 12:21:41 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 2/4] mac80211: remove ieee80211_clean_sdata()
-Date: Fri,  3 Aug 2012 12:21:33 -0700
-Message-Id: <1344021695-12859-2-git-send-email-thomas@cozybit.com> (sfid-20120803_212147_973168_A3A60CEC)
-In-Reply-To: <1344021695-12859-1-git-send-email-thomas@cozybit.com>
-References: <1344021695-12859-1-git-send-email-thomas@cozybit.com>
+	Thu, 2 Aug 2012 11:31:30 -0400
+Message-ID: <1343921481.4471.10.camel@jlt3.sipsolutions.net> (sfid-20120802_173133_643384_639F110D)
+Subject: pull-request: mac80211 2012-08-02
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 02 Aug 2012 17:31:21 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-sdGOjlp0e7XZVV5Upo5X"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function was only used by mesh, and not really needed since any
-interface-specific cleanup already happens in the netdev handlers.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/iface.c |   17 -----------------
- 1 files changed, 0 insertions(+), 17 deletions(-)
+--=-sdGOjlp0e7XZVV5Upo5X
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b6c5a92..22e2923 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1148,18 +1148,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_debugfs_add_netdev(sdata);
- }
- 
--static void ieee80211_clean_sdata(struct ieee80211_sub_if_data *sdata)
--{
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_MESH_POINT:
--		mesh_path_flush_by_iface(sdata);
--		break;
--
--	default:
--		break;
--	}
--}
--
- static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
- 					   enum nl80211_iftype type)
- {
-@@ -1495,9 +1483,6 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
- 	list_del_rcu(&sdata->list);
- 	mutex_unlock(&sdata->local->iflist_mtx);
- 
--	/* clean up type-dependent data */
--	ieee80211_clean_sdata(sdata);
--
- 	synchronize_rcu();
- 	unregister_netdevice(sdata->dev);
- }
-@@ -1517,8 +1502,6 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
- 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
- 		list_del(&sdata->list);
- 
--		ieee80211_clean_sdata(sdata);
--
- 		unregister_netdevice_queue(sdata->dev, &unreg_list);
- 	}
- 	mutex_unlock(&local->iflist_mtx);
--- 
-1.7.5.4
+John,
+
+Please pull these fixes for the 3.6 stream from my tree as below.
+Included are a few fixes for various things I found doing code
+inspection for my multi-channel work and a few fixes from others. I've
+included Seth's patch for the non-OFDM flag that's a requirement for the
+bcrmsmac locking fix so you can pick up that patch after you pull.
+
+I'm going to be on vacation next week and the week after, and though I
+won't be away from home for all the time, it'd be great if you could
+pick up urgent fixes for mac80211/cfg80211 for the 3.6 stream until I
+return.
+
+Since the merge window hasn't even closed yet I'm not going to send a
+pull request for my mac80211-next tree before I return, but it's there
+and has a bunch of work in it. I'll send a preview out in a bit though.
+
+johannes
+
+------
+
+The following changes since commit 9dbf5f55f8d35ff9aedc75267f4e4042aaf89755=
+:
+
+  bcma: add missing iounmap on error path (2012-07-26 15:37:57 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 899852af60c212bfe9a2fb71d4d9082d2622df5c:
+
+  cfg80211: Clear "beacon_found" on regulatory restore (2012-08-02 15:34:22=
+ +0200)
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      mac80211: don't clear sched_scan_sdata on sched scan stop request
+
+Johannes Berg (4):
+      mac80211: fix scan_sdata assignment
+      Merge remote-tracking branch 'wireless/master' into mac80211
+      mac80211: clear timer bits when disconnecting
+      mac80211: cancel mesh path timer
+
+Paul Stewart (1):
+      cfg80211: Clear "beacon_found" on regulatory restore
+
+Seth Forshee (1):
+      cfg80211: add channel flag to prohibit OFDM operation
+
+Stanislaw Gruszka (1):
+      wireless: reg: restore previous behaviour of chan->max_power calculat=
+ions
+
+ include/net/cfg80211.h |    2 ++
+ net/mac80211/mesh.c    |    3 +++
+ net/mac80211/mlme.c    |    2 ++
+ net/mac80211/scan.c    |    3 +--
+ net/wireless/reg.c     |   19 ++++++++++++++++++-
+ 5 files changed, 26 insertions(+), 3 deletions(-)
+
+
+--=-sdGOjlp0e7XZVV5Upo5X
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQGp1JAAoJEDBSmw7B7bqrei0P/228UUAAuivEchdq0Q0JD25q
+CldjW69woLCBncOn+0fH9hoQnoeEpqhGBKmGXC2uHnmwADae3kjeW4WcXLcg4GwK
+Let5/GadnnfWJ0zkxuu1e5ugfAIujejANrGvpwYosZra0xyk/uR4otQ0xcGsIuFr
+5HbxRscYPCZhR+sTXTViaQI48BsEcbCriU1HGvbZeztcdCQvoU/WaE+dCrDFgtSi
+547TPk2HFsKbsaSgcK9z16aFuBaz2G0IFVskuyJ4kFKVFZzt/y6SOjtal5vkmTow
+sf7uVRQPoKse7Ob5shzSV8bifOvDhjggxoNttIiuQkeezFcWEQbGgl+COJDGMqQQ
+vzOdVDN+kL4PSmoRlyT7UzBs0INh/9x/QGlF8HsUs9WtDUYk3bgFp1MOz7KAeUwi
+Z/Afy6vbgJ4Z61e4MjJTsFjds87NBsO/sp/nOSf1LzjOXw8PsPxnghX15TY3lon2
+TtvbxDHFFpiDuZrsELsZUHbJfXpEuX8TKcK13aTkAbSEOY+5Ixqut2Vm66LkdrNb
+yPLqiwyzUKJS77JDhpWzaUWpRZx8ve1A+QOlRYo9jUotdUCUlBK9rWdFJOo4pgX8
+Mkzi9OaDO/ccrc5cEdcXulsMIy5A7UDp5xT09Jau60VUEoSvmS4nZzytDD7CT95t
+v+awY1DlbP3meef95IMM
+=12cR
+-----END PGP SIGNATURE-----
+
+--=-sdGOjlp0e7XZVV5Upo5X--
 
