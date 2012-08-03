@@ -1,62 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:24003
-	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753430Ab2HQR4n (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50374 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843Ab2HCGn7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 13:56:43 -0400
-Message-ID: <502E85D9.5050301@posedge.com> (sfid-20120817_195647_536324_7DDEF7DF)
-Date: Fri, 17 Aug 2012 23:26:41 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCDD559@mbx022-e1-nj-10.exch022.domain.local> <20120816102211.GD17659@redhat.com> <502CF2D5.6020704@posedge.com> <20120817140657.GA1645@redhat.com>
-In-Reply-To: <20120817140657.GA1645@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 3 Aug 2012 02:43:59 -0400
+Message-ID: <1343976236.4482.4.camel@jlt3.sipsolutions.net> (sfid-20120803_084405_774112_05EE7547)
+Subject: Re: [PATCH 1/4] mac80211: leave mesh when stopping the netdev
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Fri, 03 Aug 2012 08:43:56 +0200
+In-Reply-To: <1343951274-24956-1-git-send-email-thomas@cozybit.com> (sfid-20120803_014803_594417_BCEC95E9)
+References: <1343951274-24956-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20120803_014803_594417_BCEC95E9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/17/2012 7:36 PM, Stanislaw Gruszka wrote:
-> On Thu, Aug 16, 2012 at 06:47:09PM +0530, Mahesh Palivela wrote:
->> On 8/16/2012 3:52 PM, Stanislaw Gruszka wrote:
->>> On Tue, Aug 14, 2012 at 03:55:26PM +0000, Mahesh Palivela wrote:
->>>> Handling of 80 MHz, 160 MHz channel bandwidths for VHT (11ac) Regulatory
->>>> and setting channel flags for allowed bandwidths.
->>>>
->>>> Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
->>>> ---
->>>>
->>>> Sending patch second time as Stanislaw Gruszka complained its malformed.
->>>
->>> And now complaining that patch is ugly. There is really on other,
->>> simpler way to handle that?
->>>
->>> Stanislaw
->>>
->> oh, you mean my implementation is ugly? Not a problem. Give me some
->> clue, I will work on it.
->
-> We can not extend channel, if regulatory disallow to use some
-> nearby channels or disallow HT at all.
->
-> So it's not possible that for particular channel that we can extend it
-> to let say -160|0+ and -0|160+, but can not extend it to -40|120+. So
-> we do not need zilion flags, but just specify left and right borders,
-> inside which we can extend channel.
->
-> For example: channel 36 (5180 MHz) is prohibited and all channels
-> above are allowed. For channel 52 (5260 MHz) left border will be
-> -60 and right border +160 (max). That will allow to support
-> VHT160: -60|100+, -40|120+, -20|140+, -0|160+ ;
-> VHT80: -60|20+, -40|40+, -20|60+, -0|80+ ;
-> HT40 :-40|0+, -0|40+
->
-> Stanislaw
->
-Thanks for the description. I will get back to you soon.
--- 
-Thanks,
-Mahesh
+On Thu, 2012-08-02 at 16:47 -0700, Thomas Pedersen wrote:
+> Previously, we would merely stop the beacon and fail to free any mesh
+> specific data structures on netdev down or unregister. Split mesh
+> beacon, data, timer, and work cancel steps into ieee80211_mesh_stop() to
+> avoid decrementing the filter counters twice, and call this in the
+> ndo_stop handler.
+
+Now you're going overboard a bit :-)
+
+This isn't needed, as cfg80211 will explicitly leave the mesh while the
+netdev is going down (NETDEV_GOING_DOWN notification handler) without
+mac80211 even knowing yet that it's be going down.
+
+> +++ b/net/mac80211/iface.c
+> @@ -689,6 +689,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>  		local->fif_probe_req--;
+>  	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
+>  		local->fif_probe_req--;
+> +	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+> +		local->fif_other_bss--;
+
+I think this may be wrong since it's only incremented when we join the
+mesh, so it will cause the number to become negative if we never join
+the mesh, or if we correctly leave it before going down (as we actually
+do)
+
+> @@ -733,6 +735,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>  		skb_queue_purge(&sdata->u.ap.ps_bc_buf);
+>  	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+>  		ieee80211_mgd_stop(sdata);
+> +	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+> +		ieee80211_mesh_stop(sdata);
+>  	}
+
+This isn't needed, since we already called stop_mesh from cfg.c via
+cfg80211.
+
+> @@ -771,14 +775,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>  		skb_queue_purge(&sdata->skb_queue);
+>  
+>  		/*
+> -		 * Disable beaconing here for mesh only, AP and IBSS
+> -		 * are already taken care of.
+> -		 */
+> -		if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+> -			ieee80211_bss_info_change_notify(sdata,
+> -				BSS_CHANGED_BEACON_ENABLED);
+
+This makes sense, it's already done anyway.
+
+
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -611,14 +611,17 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+>  						BSS_CHANGED_BEACON_INT);
+>  }
+>  
+> -void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+> +void ieee80211_mesh_stop(struct ieee80211_sub_if_data *sdata)
+>  {
+> -	struct ieee80211_local *local = sdata->local;
+>  	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>  
+> +	/* stop the beacon */
+>  	ifmsh->mesh_id_len = 0;
+>  	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
+> -	sta_info_flush(local, NULL);
+> +
+> +	/* flush STAs and mpaths on this iface */
+> +	sta_info_flush(sdata->local, sdata);
+> +	mesh_path_flush_by_iface(sdata);
+>  
+>  	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
+>  	del_timer_sync(&sdata->u.mesh.mesh_path_root_timer);
+
+This also makes sense, of course.
+
+> @@ -630,6 +633,13 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+>  	 * it no longer is.
+>  	 */
+>  	cancel_work_sync(&sdata->work);
+> +}
+> +
+> +void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +
+> +	ieee80211_mesh_stop(sdata);
+>  
+>  	local->fif_other_bss--;
+>  	atomic_dec(&local->iff_allmultis);
+
+Ok so you're trying to split it up, but I don't think that makes sense
+since we'll always call stop_mesh() before the interface goes down.
+
+johannes
+
