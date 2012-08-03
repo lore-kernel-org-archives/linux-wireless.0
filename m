@@ -1,80 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37271 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060Ab2HXQX6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52020 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890Ab2HCQaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 12:23:58 -0400
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: David Miller <davem@davemloft.net>, ncardwell@google.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Fri, 3 Aug 2012 12:30:25 -0400
+Message-ID: <1344011416.4482.11.camel@jlt3.sipsolutions.net> (sfid-20120803_183045_769431_1E1B5547)
+Subject: Re: [REGRESSION][v3.5] iwlwifi: include rssi as part of decision
+ making for reduce txpower
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linville@tuxdriver.com, emmanuel.grumbach@intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-In-Reply-To: <1345825095.19483.19.camel@edumazet-glaptop>
-References: <50369925.3050705@lwfinger.net>
-	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
-	 <20120824.111948.680531915905273128.davem@davemloft.net>
-	 <5037A4B0.3080208@lwfinger.net>
-	 <1345825095.19483.19.camel@edumazet-glaptop>
+Date: Fri, 03 Aug 2012 18:30:16 +0200
+In-Reply-To: <501BFB29.7010801@canonical.com> (sfid-20120803_182456_195468_6BBC5170)
+References: <501BFB29.7010801@canonical.com>
+	 (sfid-20120803_182456_195468_6BBC5170)
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Aug 2012 18:23:52 +0200
-Message-ID: <1345825432.19483.20.camel@edumazet-glaptop> (sfid-20120824_182422_763995_BC6EDCEF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-08-24 at 18:18 +0200, Eric Dumazet wrote:
-> On Fri, 2012-08-24 at 10:58 -0500, Larry Finger wrote:
-> > On 08/24/2012 10:19 AM, David Miller wrote:
-> > >
-> > > This looks like full-on data corruption to me.
-> > 
-> > I agree. The question is why does it happen with r8712u, and only after the 
-> > commit in the subject. Drivers for other devices that I have are OK. Thus far, I 
-> > have tested b43, rtl8187, ath9k_htc, and rtl8192cu. To my knowledge, there are 
-> > no reports posted for this bug with any other device.
-> 
-> bugs can sit unnoticed, and one change somewhere can uncover them.
-> 
-> Really this driver must have a bug, if not half a dozen of bugs.
-> 
-> For example this sequence of code is a clear bug :
-> 
-> sub_skb = dev_alloc_skb(nSubframe_Length + 12); 
-> skb_reserve(sub_skb, 12);
-> 
-> 
-> Also the free_recv_skb_queue looks really suspect to me
-> 
-> What the hell is doing recv_tasklet() I really wonder.
-> 
-> This code, combined with the skb_clone() in recvbuf2recvframe()
-> can clearly reuse an skb passed to upper stacks.
-> 
-> 
-> queueing one skb in free_recv_skb_queue should be done
-> only if no clone of this skb exist somewhere.
-> 
-> Please someone fix this buggy driver.
-> 
+On Fri, 2012-08-03 at 12:24 -0400, Joseph Salisbury wrote:
 
-Try the following patch for a start
+> A test kernel was created with this commit reverted, which stopped the 
+> kernel panic from occurring.
+> 
+> A bugzilla bug[1] has been opened.
 
-diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
-index 8e82ce2..88e3ca6 100644
---- a/drivers/staging/rtl8712/rtl8712_recv.c
-+++ b/drivers/staging/rtl8712/rtl8712_recv.c
-@@ -1127,6 +1127,9 @@ static void recv_tasklet(void *priv)
- 		recvbuf2recvframe(padapter, pskb);
- 		skb_reset_tail_pointer(pskb);
- 		pskb->len = 0;
--		skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
-+		if (!skb_cloned(pskb))
-+			skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
-+		else
-+			consume_skb(pskb);
- 	}
- }
+> [0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1029547
+> [1] https://bugzilla.kernel.org/show_bug.cgi?id=45491
 
+This is a duplicate of https://bugzilla.kernel.org/show_bug.cgi?id=45481
+which I've already commented on with the correct fix. I've also sent the
+fix to stable:
+
+http://www.mail-archive.com/stable@vger.kernel.org/msg12286.html
+
+Thanks,
+johannes
 
