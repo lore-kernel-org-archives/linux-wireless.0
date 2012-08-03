@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53127 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056Ab2HXMFe (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:43529 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676Ab2HCQnc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 08:05:34 -0400
-Message-ID: <1345809927.6991.0.camel@jlt3.sipsolutions.net> (sfid-20120824_140538_748161_656AABCA)
-Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Fri, 24 Aug 2012 14:05:27 +0200
-In-Reply-To: <50376671.7080007@posedge.com>
-References: <502E85D9.5050301@posedge.com>
-	 <1345480718.4459.37.camel@jlt3.sipsolutions.net>
-	 <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>
-	 <50338E84.3050709@posedge.com>
-	 <1345564421.10280.9.camel@jlt3.sipsolutions.net>
-	 <5033CE76.6040306@posedge.com>
-	 <1345619008.4635.3.camel@jlt3.sipsolutions.net>
-	 <20120822090104.GA4959@redhat.com>
-	 <1345626282.4635.8.camel@jlt3.sipsolutions.net>
-	 <20120822101252.GA6082@redhat.com> <50376671.7080007@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 3 Aug 2012 12:43:32 -0400
+Message-ID: <501BFFAC.2010705@canonical.com> (sfid-20120803_184354_413595_8EF482C5)
+Date: Fri, 03 Aug 2012 12:43:24 -0400
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linville@tuxdriver.com, emmanuel.grumbach@intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [REGRESSION][v3.5] iwlwifi: include rssi as part of decision
+ making for reduce txpower
+References: <501BFB29.7010801@canonical.com>  (sfid-20120803_182456_195468_6BBC5170) <1344011416.4482.11.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1344011416.4482.11.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-08-24 at 17:03 +0530, Mahesh Palivela wrote:
-
-> /**
->   * enum ieee80211_chan_width - channel bandwidths
->   *
->   * @IEEE80211_CHAN_WIDTH_20MHZ: 20 MHz chan bandwidth
->   * @IEEE80211_CHAN_WIDTH_40MHZ: 40 MHz chan bandwidth
->   * @IEEE80211_CHAN_WIDTH_80MHZ: 80 MHz chan bandwidth
->   * @IEEE80211_CHAN_WIDTH_160MHZ: 160 MHz chan bandwidth
->   */
-
-We might need 20MHZ_NOHT or something?
-
->          enum ieee80211_chan_width chan_width2;
->          u16 control_offset2;
-
-Those shouldn't be necessary, I think? The secondary 80 MHz channel
-can't have a control channel, it seems, and the width should be the same
-as well? Plus this is only allowed in 80+80 anyway.
-
-johannes
-
+On 08/03/2012 12:30 PM, Johannes Berg wrote:
+> On Fri, 2012-08-03 at 12:24 -0400, Joseph Salisbury wrote:
+>
+>> A test kernel was created with this commit reverted, which stopped the
+>> kernel panic from occurring.
+>>
+>> A bugzilla bug[1] has been opened.
+>> [0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1029547
+>> [1] https://bugzilla.kernel.org/show_bug.cgi?id=45491
+> This is a duplicate of https://bugzilla.kernel.org/show_bug.cgi?id=45481
+> which I've already commented on with the correct fix. I've also sent the
+> fix to stable:
+>
+> http://www.mail-archive.com/stable@vger.kernel.org/msg12286.html
+>
+> Thanks,
+> johannes
+>
+Great!  Thanks for the feedback, Johannes.
