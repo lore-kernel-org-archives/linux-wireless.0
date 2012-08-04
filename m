@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:46522 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744Ab2HJLoz convert rfc822-to-8bit (ORCPT
+Received: from na6sys009bog036.obsmtp.com ([74.125.150.110]:42143 "EHLO
+	na6sys009bog036.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753409Ab2HDBl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:44:55 -0400
-Received: by yenl14 with SMTP id l14so204239yen.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 04:44:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <502408EB.3020905@hauke-m.de>
-References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
-	<1344535292-4451-11-git-send-email-ozancag@gmail.com>
-	<502408EB.3020905@hauke-m.de>
-Date: Fri, 10 Aug 2012 14:44:54 +0300
-Message-ID: <CAFub=KSr6sa3PDfvX2K63BM_VrpgWd7KgL5T7oekcLGPxs3wZQ@mail.gmail.com> (sfid-20120810_134459_697648_E6450126)
-Subject: Re: [PATCH 10/13] compat-wireless: Selectively apply patches
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 3 Aug 2012 21:41:58 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 03/16] mwifiex: correction in MSDU padding logic
+Date: Fri,  3 Aug 2012 18:06:01 -0700
+Message-Id: <1344042374-6892-4-git-send-email-bzhao@marvell.com> (sfid-20120804_034201_526138_CBEE2228)
+In-Reply-To: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
+References: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 9, 2012 at 10:00 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-> The folder network does not exists in this patch, this will break git
-> bisect. Could you add the move of the patches from patches to network in
-> this commit.
+Padding arithmetic will always work for MSDUs provided first MSDU
+ends on 4-byte boundary. Fixing it by making sure that all MSDU ends
+on 4-byte boundary.
 
-Ah, Okay.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_aggr.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
->
-> I do not like the name network for the folder containing the patches,
-> because it could easily be to mixed up with the net folder. What about
-> patches-net as the folder name?
-
-It is already under patches/, e.g. patches/network and patches/drm.
-
-
-
-
-
-
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 04222f2..395f1bf 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -82,8 +82,8 @@ mwifiex_11n_form_amsdu_pkt(struct sk_buff *skb_aggr,
+ 	/* Add payload */
+ 	memcpy(skb_put(skb_aggr, skb_src->len), skb_src->data, skb_src->len);
+ 
+-	*pad = (((skb_src->len + LLC_SNAP_LEN) & 3)) ? (4 - (((skb_src->len +
+-						      LLC_SNAP_LEN)) & 3)) : 0;
++	/* Add padding for new MSDU to start from 4 byte boundary */
++	*pad = (4 - ((unsigned long)skb_aggr->tail & 0x3)) % 4;
+ 
+ 	return skb_aggr->len + *pad;
+ }
 -- 
-Ozan Çağlayan
+1.7.0.2
+
