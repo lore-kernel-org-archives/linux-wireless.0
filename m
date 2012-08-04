@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:4270 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751184Ab2H3Tki (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 15:40:38 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 09/14] rt2x00: Fix rt61pci rfkill polling prior to interface start.
-Date: Thu, 30 Aug 2012 21:34:08 +0200
-Message-Id: <1346355248-5331-10-git-send-email-gwingerde@gmail.com> (sfid-20120830_214058_643930_EC87C816)
-In-Reply-To: <1346355248-5331-9-git-send-email-gwingerde@gmail.com>
-References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-3-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-4-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-5-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-6-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-7-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-8-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-9-git-send-email-gwingerde@gmail.com>
+Received: from li271-223.members.linode.com ([178.79.152.223]:48333 "EHLO
+	mail.mleia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753453Ab2HDVjk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Aug 2012 17:39:40 -0400
+From: Vladimir Zapolskiy <vz@mleia.com>
+To: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Cc: Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH] brcm80211: smac: set interface down on reset
+Date: Sun,  5 Aug 2012 00:29:07 +0300
+Message-Id: <1344115747-25627-1-git-send-email-vz@mleia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to program the rfkill switch GPIO pin direction to input at
-device initialization time, not only when the interface is brought up.
-Doing this only when the interface is brought up could lead to rfkill
-detecting the switch is turned on erroneously and inability to create
-the interface and bringing it up.
+This change marks interface as down on reset, otherwise the driver can't
+reinitialize itself properly.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: <stable@vger.kernel.org>
+Without the change a transient problem turns out to be critical and leads
+to inavailability to reset the driver without brcmsmac module unload/load
+cycle:
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index d84b17f..2673e05 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2832,6 +2832,7 @@ static int rt61pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
-+	u32 reg;
+    ieee80211 phy0: wl0: PSM microcode watchdog fired at 5993 (seconds). Resetting.
+    brcms_c_dpc : PSM Watchdog, chipid 0xa8d9, chiprev 0x1
+    ieee80211 phy0: wl0: fatal error, reinitializing
+    ieee80211 phy0: Hardware restart was requested
+    ieee80211 phy0: brcms_ops_start: brcms_up() returned -19
+
+Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 192ad5c..a5edebe 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1233,6 +1233,9 @@ uint brcms_reset(struct brcms_info *wl)
+ 	/* dpc will not be rescheduled */
+ 	wl->resched = false;
  
- 	/*
- 	 * Disable power saving.
-@@ -2850,6 +2851,14 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		return retval;
- 
- 	/*
-+	 * Enable rfkill polling by setting GPIO direction of the
-+	 * rfkill switch GPIO pin correctly.
-+	 */
-+	rt2x00pci_register_read(rt2x00dev, MAC_CSR13, &reg);
-+	rt2x00_set_field32(&reg, MAC_CSR13_DIR5, 1);
-+	rt2x00pci_register_write(rt2x00dev, MAC_CSR13, reg);
++	/* inform publicly that interface is down */
++	wl->pub->up = false;
 +
-+	/*
- 	 * Initialize hw specifications.
- 	 */
- 	retval = rt61pci_probe_hw_mode(rt2x00dev);
+ 	return 0;
+ }
+ 
 -- 
-1.7.11.1
+1.7.10
 
