@@ -1,84 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:57613 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753387Ab2HJGFe (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36502 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752438Ab2HDIOo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 02:05:34 -0400
-Received: by ggdk6 with SMTP id k6so1286037ggd.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 23:05:33 -0700 (PDT)
+	Sat, 4 Aug 2012 04:14:44 -0400
+Message-ID: <501CD9F3.4000903@net.t-labs.tu-berlin.de> (sfid-20120804_101451_188224_7BE17246)
+Date: Sat, 04 Aug 2012 10:14:43 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-In-Reply-To: <20120810031323.GE2384@quad.redhat.com>
-References: <1344487215-24143-1-git-send-email-andy@greyhouse.net>
- <2121451356.93690.1344518764022.JavaMail.root@neratec.com>
- <CAB=NE6UNz2oXvCu3NpNVqQLg4pSsL5L-Dw==KGkqxS0CxQfjFg@mail.gmail.com> <20120810031323.GE2384@quad.redhat.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 9 Aug 2012 23:05:12 -0700
-Message-ID: <CAB=NE6V2ctKTT1+cfPGMNu5q6F07zdbZjDuzq9RUpjvDcz-bKQ@mail.gmail.com> (sfid-20120810_080602_821688_204D7A29)
-Subject: Re: [Lf_driver_backport] [PATCH v2] compat: support RHEL6.3 as a
- build target
-To: Andy Gospodarek <gospo@redhat.com>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	linux-wireless@vger.kernel.org,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>,
-	Andy Gospodarek <andy@greyhouse.net>
-Content-Type: text/plain; charset=UTF-8
+To: nbd@nbd.name, Nick Kossifidis <mickflemm@gmail.com>
+CC: jirislaby@gmail.com, linux-wireless@vger.kernel.org,
+	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
+ eeprom reads for AR5K_EEPROM_MODE_11A
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 9, 2012 at 8:13 PM, Andy Gospodarek <gospo@redhat.com> wrote:
-> On Thu, Aug 09, 2012 at 06:27:25PM -0700, Luis R. Rodriguez wrote:
->> On Thu, Aug 9, 2012 at 6:26 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->> > @@ -101,7 +101,7 @@ struct pm_qos_request_list {
->> >  /* mask no_printk as RHEL6 backports this */
->> >  #define no_printk(...) compat_no_printk(...)
->> >  static inline __attribute__ ((format (printf, 1, 2)))
->> > -int no_printk(const char *s, ...) { return 0; }
->> > +int compat_no_printk(const char *s, ...) { return 0; }
->>
->> I merged this in. Andy can you review your other changes as Zefir points out?
->>
->> mcgrof@frijol ~/compat (git::master)$ gcc --version
->> gcc (Debian 4.7.1-2) 4.7.1
->> Copyright (C) 2012 Free Software Foundation, Inc.
->> This is free software; see the source for copying conditions.  There is NO
->> warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
->>
->> I suppose we should get ckmake to spit out the version of gcc onto the report.
->>
->>   Luis
->
-> I did some more testing and I'm not sure I agree that the patch above is
-> the proper way to do this.  My impression was that what I did was
-> correct as the only function definitions that need to be renamed with
-> the 'compat_' string in front were those that were exported.  This is
-> what was done in both John Linville's initial patch for RHEL support and
-> the patch from Hauke Mehrtens for Debian Squeeze support.  I feel like
-> this is the proper patch to fixup my original error:
->
-> Subject: [PATCH] compat: fixup error in no_printk definition
->
-> What initially looked like a valid definition for the #define for
-> no_printk was not.  This corrects the problem.
->
-> Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
-> ---
->  include/linux/compat-2.6.36.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-> index 09e4b6f..cd5e37c 100644
-> --- a/include/linux/compat-2.6.36.h
-> +++ b/include/linux/compat-2.6.36.h
-> @@ -99,7 +99,7 @@ struct pm_qos_request_list {
->   * gcc's format and side-effect checking.
->   */
->  /* mask no_printk as RHEL6 backports this */
-> -#define no_printk(...) compat_no_printk(...)
-> +#define no_printk(a, ...) compat_no_printk(a, ##__VA_ARGS__)
->  static inline __attribute__ ((format (printf, 1, 2)))
->  int no_printk(const char *s, ...) { return 0; }
+Hi all,
 
-Thanks, can you git fetch ; git rebase and send a new patch?
+After several experiments on cm9 and dcma82 cards, I figured out that
+this patch does not solve the max_power calibration problem as intended.
 
-  Luis
+The partly reduction to 8 with this:
+#define AR5K_EEPROM_N_5GHZ_CHAN		10
+#define AR5K_EEPROM_N_5GHZ_RATE_CHAN	8
+
+... creates a wrong power curve on the card, as function
+ath5k_eeprom_read_freq_list() runs its while loop still 10 times, which
+results in wrong AR5K_EEPROM_READ(o++, val) readings, leading the card
+to use a very low power level over all.
+This should also be limited to 8, as I tested it.
+
+My suggestion is to just set:
+#define AR5K_EEPROM_N_5GHZ_CHAN		8
+
+.. without introducing a separate variable, it is not needed.
+I will send a v2.
+
+While I am browsing through /ath5k/eeprom.c there are several other
+suspicious places where 10 eeprom lines of chips like 5111, 5112, 2413
+depending on their EEPROM Version are read. I can not test this, as I
+have only CM9 and DCMA82 over here, but I guess those 10 line reads are
+also wrong. Can someone test this ?
+
+
+Greetings Thomas
+
+
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+> @@ -1482,7 +1482,7 @@ ath5k_eeprom_read_target_rate_pwr_info(struct ath5k_hw *ah, unsigned int mode)
+>  	case AR5K_EEPROM_MODE_11A:
+>  		offset += AR5K_EEPROM_TARGET_PWR_OFF_11A(ee->ee_version);
+>  		rate_pcal_info = ee->ee_rate_tpwr_a;
+> -		ee->ee_rate_target_pwr_num[mode] = AR5K_EEPROM_N_5GHZ_CHAN;
+> +		ee->ee_rate_target_pwr_num[mode] = AR5K_EEPROM_N_5GHZ_RATE_CHAN;
+>  		break;
+>  	case AR5K_EEPROM_MODE_11B:
+>  		offset += AR5K_EEPROM_TARGET_PWR_OFF_11B(ee->ee_version);
+> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+> index dc2bcfe..94a9bbe 100644
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.h
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+> @@ -182,6 +182,7 @@
+>  #define AR5K_EEPROM_EEP_DELTA		10
+>  #define AR5K_EEPROM_N_MODES		3
+>  #define AR5K_EEPROM_N_5GHZ_CHAN		10
+> +#define AR5K_EEPROM_N_5GHZ_RATE_CHAN	8
+>  #define AR5K_EEPROM_N_2GHZ_CHAN		3
+>  #define AR5K_EEPROM_N_2GHZ_CHAN_2413	4
+>  #define	AR5K_EEPROM_N_2GHZ_CHAN_MAX	4
+
