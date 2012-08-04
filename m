@@ -1,69 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:43170 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755292Ab2HTHVG (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45263 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000Ab2HDEDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 03:21:06 -0400
-Received: by obbta14 with SMTP id ta14so11705169obb.32
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2012 00:21:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120813073637.GB2272@redhat.com>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
-	<1344426823-1795-3-git-send-email-victorg@ti.com>
-	<20120810162810.GB17559@redhat.com>
-	<CAK80WHa1ae7jA6BxOA+1Xx0bTx2_0+0GuDa=UrJ+qsC9_sYZ7g@mail.gmail.com>
-	<20120813073637.GB2272@redhat.com>
-Date: Mon, 20 Aug 2012 10:21:04 +0300
-Message-ID: <CAK80WHb2Cu_3AfEt5cUa8uX=3FriCdbbTZfqmgaPU-jLrreNJg@mail.gmail.com> (sfid-20120820_092122_736892_05D59FB0)
-Subject: Re: [PATCH v3 2/7] mac80211: add radar detection command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Content-Type: text/plain; charset=UTF-8
+	Sat, 4 Aug 2012 00:03:30 -0400
+From: Ming Lei <ming.lei@canonical.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Borislav Petkov <borislav.petkov@amd.com>,
+	linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC PATCH v1 15/15] wireless: ath9k-htc: only load firmware in need
+Date: Sat,  4 Aug 2012 12:01:30 +0800
+Message-Id: <1344052890-31935-16-git-send-email-ming.lei@canonical.com> (sfid-20120804_060351_291398_A2223E08)
+In-Reply-To: <1344052890-31935-1-git-send-email-ming.lei@canonical.com>
+References: <1344052890-31935-1-git-send-email-ming.lei@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2012 at 10:36 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Sun, Aug 12, 2012 at 10:31:40AM +0300, Goldenshtein, Victor wrote:
->> On Fri, Aug 10, 2012 at 7:28 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> > On Wed, Aug 08, 2012 at 02:53:38PM +0300, Victor Goldenshtein wrote:
->> >> --- a/include/net/mac80211.h
->> >> +++ b/include/net/mac80211.h
->> >> @@ -2262,6 +2262,10 @@ enum ieee80211_rate_control_changed {
->> >>   *   The callback will be called before each transmission and upon return
->> >>   *   mac80211 will transmit the frame right away.
->> >>   *   The callback is optional and can (should!) sleep.
->> >> + *
->> >> +* @start_radar_detection: Start radar detection on current operational
->> >> + *   channel, once started it will continuously monitor for radars as long
->> >> + *   as the channel active.
->> >>   */
->> >>  struct ieee80211_ops {
->> >>       void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
->> >> @@ -2404,6 +2408,10 @@ struct ieee80211_ops {
->> >>
->> >>       void    (*mgd_prepare_tx)(struct ieee80211_hw *hw,
->> >>                                 struct ieee80211_vif *vif);
->> >> +
->> >> +     int (*start_radar_detection)(struct ieee80211_hw *hw,
->> >> +                                  struct ieee80211_vif *vif,
->> >> +                                  struct ieee80211_channel *chan);
->> >
->> > Why we need new callback? I.e. why this can be done by ->config ?
->> >
->>
->> See proposed RFC and previous threads.
->
-> I can not find mail where this is explained, could you please provide
-> link.
->
+It is not necessary to hold the firmware memory during the whole
+driver lifetime, and obviously it does waste memory. Suppose there
+are 4 ath9k-htc usb dongles working, kernel has to consume about
+4*50KBytes RAM to cache firmware for all dongles. After applying the
+patch, kernel only caches one single firmware image in RAM for
+all ath9k-htc devices just during system suspend/resume cycle.
 
-http://article.gmane.org/gmane.linux.kernel.wireless.general/83760/match=
+When system is ready for loading firmware, ath9k-htc can request
+the loading from usersapce. During system resume, ath9k-htc still
+can load the firmware which was cached in kernel memory before
+system suspend.
 
+Cc: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   34 ++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath9k/hif_usb.h |    4 +++-
+ 2 files changed, 26 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index aa327ad..d35a19c 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -973,8 +973,8 @@ static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
+ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ {
+ 	int transfer, err;
+-	const void *data = hif_dev->firmware->data;
+-	size_t len = hif_dev->firmware->size;
++	const void *data = hif_dev->fw_data;
++	size_t len = hif_dev->fw_size;
+ 	u32 addr = AR9271_FIRMWARE;
+ 	u8 *buf = kzalloc(4096, GFP_KERNEL);
+ 	u32 firm_offset;
+@@ -1017,7 +1017,7 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ 		return -EIO;
+ 
+ 	dev_info(&hif_dev->udev->dev, "ath9k_htc: Transferred FW: %s, size: %ld\n",
+-		 hif_dev->fw_name, (unsigned long) hif_dev->firmware->size);
++		 hif_dev->fw_name, (unsigned long) hif_dev->fw_size);
+ 
+ 	return 0;
+ }
+@@ -1099,11 +1099,11 @@ static void ath9k_hif_usb_firmware_cb(const struct firmware *fw, void *context)
+ 
+ 	hif_dev->htc_handle = ath9k_htc_hw_alloc(hif_dev, &hif_usb,
+ 						 &hif_dev->udev->dev);
+-	if (hif_dev->htc_handle == NULL) {
+-		goto err_fw;
+-	}
++	if (hif_dev->htc_handle == NULL)
++		goto err_dev_alloc;
+ 
+-	hif_dev->firmware = fw;
++	hif_dev->fw_data = fw->data;
++	hif_dev->fw_size = fw->size;
+ 
+ 	/* Proceed with initialization */
+ 
+@@ -1111,6 +1111,8 @@ static void ath9k_hif_usb_firmware_cb(const struct firmware *fw, void *context)
+ 	if (ret)
+ 		goto err_dev_init;
+ 
++	release_firmware(fw);
++
+ 	ret = ath9k_htc_hw_init(hif_dev->htc_handle,
+ 				&hif_dev->interface->dev,
+ 				hif_dev->usb_device_id->idProduct,
+@@ -1121,6 +1123,7 @@ static void ath9k_hif_usb_firmware_cb(const struct firmware *fw, void *context)
+ 		goto err_htc_hw_init;
+ 	}
+ 
++	hif_dev->flags |= HIF_USB_READY;
+ 	complete(&hif_dev->fw_done);
+ 
+ 	return;
+@@ -1129,8 +1132,8 @@ err_htc_hw_init:
+ 	ath9k_hif_usb_dev_deinit(hif_dev);
+ err_dev_init:
+ 	ath9k_htc_hw_free(hif_dev->htc_handle);
++err_dev_alloc:
+ 	release_firmware(fw);
+-	hif_dev->firmware = NULL;
+ err_fw:
+ 	ath9k_hif_usb_firmware_fail(hif_dev);
+ }
+@@ -1277,11 +1280,10 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
+ 
+ 	wait_for_completion(&hif_dev->fw_done);
+ 
+-	if (hif_dev->firmware) {
++	if (hif_dev->flags & HIF_USB_READY) {
+ 		ath9k_htc_hw_deinit(hif_dev->htc_handle, unplugged);
+ 		ath9k_htc_hw_free(hif_dev->htc_handle);
+ 		ath9k_hif_usb_dev_deinit(hif_dev);
+-		release_firmware(hif_dev->firmware);
+ 	}
+ 
+ 	usb_set_intfdata(interface, NULL);
+@@ -1317,13 +1319,23 @@ static int ath9k_hif_usb_resume(struct usb_interface *interface)
+ 	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
+ 	struct htc_target *htc_handle = hif_dev->htc_handle;
+ 	int ret;
++	const struct firmware *fw;
+ 
+ 	ret = ath9k_hif_usb_alloc_urbs(hif_dev);
+ 	if (ret)
+ 		return ret;
+ 
+-	if (hif_dev->firmware) {
++	if (hif_dev->flags & HIF_USB_READY) {
++		/* request cached firmware during suspend/resume cycle */
++		ret = request_firmware(&fw, hif_dev->fw_name,
++				       &hif_dev->udev->dev);
++		if (ret)
++			goto fail_resume;
++
++		hif_dev->fw_data = fw->data;
++		hif_dev->fw_size = fw->size;
+ 		ret = ath9k_hif_usb_download_fw(hif_dev);
++		release_firmware(fw);
+ 		if (ret)
+ 			goto fail_resume;
+ 	} else {
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 487ff65..51496e7 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -85,12 +85,14 @@ struct cmd_buf {
+ };
+ 
+ #define HIF_USB_START BIT(0)
++#define HIF_USB_READY BIT(1)
+ 
+ struct hif_device_usb {
+ 	struct usb_device *udev;
+ 	struct usb_interface *interface;
+ 	const struct usb_device_id *usb_device_id;
+-	const struct firmware *firmware;
++	const void *fw_data;
++	size_t fw_size;
+ 	struct completion fw_done;
+ 	struct htc_target *htc_handle;
+ 	struct hif_usb_tx tx;
 -- 
-Victor.
+1.7.9.5
+
