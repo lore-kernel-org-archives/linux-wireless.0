@@ -1,77 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:48265 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852Ab2HLRgu (ORCPT
+Received: from na6sys009bog028.obsmtp.com ([74.125.150.102]:57022 "EHLO
+	na6sys009bog028.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753007Ab2HDBTw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Aug 2012 13:36:50 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH] ath9k_htc: implement sta_rc_update() mac80211 callback
-Date: Sun, 12 Aug 2012 19:36:41 +0200
-Message-Id: <1344793001-27085-1-git-send-email-ordex@autistici.org> (sfid-20120812_193654_245030_C033F2D0)
+	Fri, 3 Aug 2012 21:19:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 11/16] mwifiex: support RX AMSDU aggregation for uAP
+Date: Fri,  3 Aug 2012 18:06:09 -0700
+Message-Id: <1344042374-6892-12-git-send-email-bzhao@marvell.com> (sfid-20120804_031955_293755_805B2854)
+In-Reply-To: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
+References: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of changes in the supported rates set for a given station, it is now
-possible to use this callback to update the current internal state of the
-station in the htc driver.
+From: Avinash Patil <patila@marvell.com>
 
-Reported-by: Gui Iribarren <gui@altermundi.net>
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+This patch adds support for reception and decoding of AMSDU
+aggregation frames for AP interface.
+Patch also adds support for handling AMSDU aggregation event.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   29 +++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   26 +++++++++---
+ drivers/net/wireless/mwifiex/11n_rxreorder.h |    2 +
+ drivers/net/wireless/mwifiex/uap_event.c     |   13 ++++++
+ drivers/net/wireless/mwifiex/uap_txrx.c      |   56 ++++++++++++++++++++++++-
+ 4 files changed, 88 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index c785129..2658d0a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1331,6 +1331,34 @@ static int ath9k_htc_sta_remove(struct ieee80211_hw *hw,
- 	return ret;
- }
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 591ccd3..20367fe 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -54,8 +54,13 @@ mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv,
+ 			tbl->rx_reorder_ptr[i] = NULL;
+ 		}
+ 		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+-		if (rx_tmp_ptr)
+-			mwifiex_process_rx_packet(priv->adapter, rx_tmp_ptr);
++		if (rx_tmp_ptr) {
++			if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
++				mwifiex_handle_uap_rx_forward(priv, rx_tmp_ptr);
++			else
++				mwifiex_process_rx_packet(priv->adapter,
++							  rx_tmp_ptr);
++		}
+ 	}
  
-+static void ath9k_htc_sta_rc_update(struct ieee80211_hw *hw,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_sta *sta, u32 changed)
-+{
-+	struct ath9k_htc_priv *priv = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_target_rate trate;
+ 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+@@ -97,7 +102,11 @@ mwifiex_11n_scan_and_dispatch(struct mwifiex_private *priv,
+ 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 		tbl->rx_reorder_ptr[i] = NULL;
+ 		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+-		mwifiex_process_rx_packet(priv->adapter, rx_tmp_ptr);
 +
-+	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
-+
-+	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
-+		memset(&trate, 0, sizeof(struct ath9k_htc_target_rate));
-+		ath9k_htc_setup_rate(priv, sta, &trate);
-+		if (!ath9k_htc_send_rate_cmd(priv, &trate))
-+			ath_dbg(common, CONFIG,
-+				"Supported rates for sta: %pM updated, rate caps: 0x%X\n",
-+				sta->addr, be32_to_cpu(trate.capflags));
++		if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
++			mwifiex_handle_uap_rx_forward(priv, rx_tmp_ptr);
 +		else
-+			ath_dbg(common, CONFIG,
-+				"Unable to update supported rates for sta: %pM\n",
-+				sta->addr);
++			mwifiex_process_rx_packet(priv->adapter, rx_tmp_ptr);
+ 	}
+ 
+ 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+@@ -148,7 +157,7 @@ mwifiex_del_rx_reorder_entry(struct mwifiex_private *priv,
+  * This function returns the pointer to an entry in Rx reordering
+  * table which matches the given TA/TID pair.
+  */
+-static struct mwifiex_rx_reorder_tbl *
++struct mwifiex_rx_reorder_tbl *
+ mwifiex_11n_get_rx_reorder_tbl(struct mwifiex_private *priv, int tid, u8 *ta)
+ {
+ 	struct mwifiex_rx_reorder_tbl *tbl;
+@@ -396,8 +405,13 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 
+ 	tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid, ta);
+ 	if (!tbl) {
+-		if (pkt_type != PKT_TYPE_BAR)
+-			mwifiex_process_rx_packet(priv->adapter, payload);
++		if (pkt_type != PKT_TYPE_BAR) {
++			if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
++				mwifiex_handle_uap_rx_forward(priv, payload);
++			else
++				mwifiex_process_rx_packet(priv->adapter,
++							  payload);
++		}
+ 		return 0;
+ 	}
+ 	start_win = tbl->start_win;
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+index 6c9815a..1cd51d8 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+@@ -68,5 +68,7 @@ struct mwifiex_rx_reorder_tbl *mwifiex_11n_get_rxreorder_tbl(struct
+ 							   mwifiex_private
+ 							   *priv, int tid,
+ 							   u8 *ta);
++struct mwifiex_rx_reorder_tbl *
++mwifiex_11n_get_rx_reorder_tbl(struct mwifiex_private *priv, int tid, u8 *ta);
+ 
+ #endif /* _MWIFIEX_11N_RXREORDER_H_ */
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 37cc642..6270c80 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -242,6 +242,19 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		/* For future development */
+ 		dev_dbg(adapter->dev, "AP EVENT: event id: %#x\n", eventcause);
+ 		break;
++	case EVENT_AMSDU_AGGR_CTRL:
++		dev_dbg(adapter->dev, "event:  AMSDU_AGGR_CTRL %d\n",
++			*(u16 *)adapter->event_body);
++
++		if (priv->media_connected) {
++			adapter->tx_buf_size =
++			       min(adapter->curr_tx_buf_size,
++				   le16_to_cpu(*(__le16 *)adapter->event_body));
++
++			dev_dbg(adapter->dev, "event: tx_buf_size %d\n",
++				adapter->tx_buf_size);
++		}
++		break;
+ 	default:
+ 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
+ 			eventcause);
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index f55c5ac..6d814f0 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -21,6 +21,8 @@
+ #include "ioctl.h"
+ #include "main.h"
+ #include "wmm.h"
++#include "11n_aggr.h"
++#include "11n_rxreorder.h"
+ 
+ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 					 struct sk_buff *skb)
+@@ -165,6 +167,9 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_adapter *adapter,
+ 	struct mwifiex_rxinfo *rx_info = MWIFIEX_SKB_RXCB(skb);
+ 	struct rx_packet_hdr *rx_pkt_hdr;
+ 	u16 rx_pkt_type;
++	u8 ta[ETH_ALEN], pkt_type;
++	struct mwifiex_sta_node *node;
++
+ 	struct mwifiex_private *priv =
+ 			mwifiex_get_priv_by_id(adapter, rx_info->bss_num,
+ 					       rx_info->bss_type);
+@@ -191,15 +196,60 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_adapter *adapter,
+ 
+ 		return 0;
+ 	}
+-	ret = mwifiex_handle_uap_rx_forward(priv, skb);
+ 
+-	if (ret) {
+-		priv->stats.rx_dropped++;
++	if (le16_to_cpu(uap_rx_pd->rx_pkt_type) == PKT_TYPE_AMSDU) {
++		struct sk_buff_head list;
++		struct sk_buff *rx_skb;
++
++		__skb_queue_head_init(&list);
++		skb_pull(skb, le16_to_cpu(uap_rx_pd->rx_pkt_offset));
++		skb_trim(skb, le16_to_cpu(uap_rx_pd->rx_pkt_length));
++
++		ieee80211_amsdu_to_8023s(skb, &list, priv->curr_addr,
++					 priv->wdev->iftype, 0, false);
++
++		while (!skb_queue_empty(&list)) {
++			rx_skb = __skb_dequeue(&list);
++			ret = mwifiex_recv_packet(adapter, rx_skb);
++			if (ret)
++				dev_err(adapter->dev,
++					"AP:Rx A-MSDU failed");
++		}
++
++		return 0;
 +	}
 +
-+	ath9k_htc_ps_restore(priv);
-+	mutex_unlock(&priv->mutex);
-+}
++	memcpy(ta, rx_pkt_hdr->eth803_hdr.h_source, ETH_ALEN);
 +
- static int ath9k_htc_conf_tx(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
-@@ -1758,6 +1786,7 @@ struct ieee80211_ops ath9k_htc_ops = {
- 	.sta_add            = ath9k_htc_sta_add,
- 	.sta_remove         = ath9k_htc_sta_remove,
- 	.conf_tx            = ath9k_htc_conf_tx,
-+	.sta_rc_update      = ath9k_htc_sta_rc_update,
- 	.bss_info_changed   = ath9k_htc_bss_info_changed,
- 	.set_key            = ath9k_htc_set_key,
- 	.get_tsf            = ath9k_htc_get_tsf,
++	if (rx_pkt_type != PKT_TYPE_BAR && uap_rx_pd->priority < MAX_NUM_TID) {
++		node = mwifiex_get_sta_entry(priv, ta);
++		if (node)
++			node->rx_seq[uap_rx_pd->priority] =
++						le16_to_cpu(uap_rx_pd->seq_num);
++	}
++
++	if (!priv->ap_11n_enabled ||
++	    (!mwifiex_11n_get_rx_reorder_tbl(priv, uap_rx_pd->priority, ta) &&
++	    (le16_to_cpu(uap_rx_pd->rx_pkt_type) != PKT_TYPE_AMSDU))) {
++		ret = mwifiex_handle_uap_rx_forward(priv, skb);
++		return ret;
++	}
++
++	/* Reorder and send to kernel */
++	pkt_type = (u8)le16_to_cpu(uap_rx_pd->rx_pkt_type);
++	ret = mwifiex_11n_rx_reorder_pkt(priv, le16_to_cpu(uap_rx_pd->seq_num),
++					 uap_rx_pd->priority, ta, pkt_type,
++					 skb);
++
++	if (ret || (rx_pkt_type == PKT_TYPE_BAR)) {
+ 		if (adapter->if_ops.data_complete)
+ 			adapter->if_ops.data_complete(adapter, skb);
+ 		else
+ 			dev_kfree_skb_any(skb);
+ 	}
+ 
++	if (ret)
++		priv->stats.rx_dropped++;
++
+ 	return ret;
+ }
 -- 
-1.7.9.4
+1.7.0.2
 
