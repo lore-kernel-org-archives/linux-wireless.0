@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2291 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754155Ab2HAPiu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 11:38:50 -0400
-Message-ID: <50194D7A.6060400@broadcom.com> (sfid-20120801_173859_264925_90BD068A)
-Date: Wed, 1 Aug 2012 17:38:34 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Josh Boyer" <jwboyer@redhat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
-References: <20120801131232.GA1785@zod.bos.redhat.com>
- <20120801141810.GB27433@tuxdriver.com>
-In-Reply-To: <20120801141810.GB27433@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:55794 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438Ab2HDP61 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Aug 2012 11:58:27 -0400
+Message-ID: <1344095900.5982.0.camel@jlt3.sipsolutions.net> (sfid-20120804_175853_265949_A1686538)
+Subject: [PATCH] compat: deal with backported codel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sat, 04 Aug 2012 17:58:20 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/01/2012 04:18 PM, John W. Linville wrote:
-> On Wed, Aug 01, 2012 at 09:12:33AM -0400, Josh Boyer wrote:
-> 
->> > [   26.573028] ------------[ cut here ]------------
->> > [   26.573042] WARNING: at net/wireless/core.h:125 assert_cfg80211_lock.part.8+0x15/0x17 [cfg80211]()
->> > [   26.573045] Hardware name: XPS 8300  
->> > [   26.573046] Modules linked in: xt_CHECKSUM iptable_mangle bridge stp llc ip6t_REJECT nf_conntrack_ipv4 nf_conntrack_ipv6 nf_defrag_ipv6 nf_defrag_ipv4 xt_state nf_conntrack ib_iser rdma_cm ib_addr ip6table_filter tpm_bios ip6_tables iw_cm ib_cm ib_sa ib_mad ib_core iscsi_tcp snd_hda_codec_hdmi snd_hda_codec_realtek snd_hda_intel arc4 brcmsmac snd_hda_codec cordic brcmutil snd_hwdep mac80211 snd_pcm snd_page_alloc snd_timer cfg80211 snd coretemp rfkill serio_raw i2c_i801 soundcore lpc_ich bcma dcdbas microcode mfd_core mei vhost_net tun macvtap macvlan kvm_intel nfsd kvm auth_rpcgss nfs_acl lockd uinput crc32c_intel ghash_clmulni_intel broadcom tg3 usb_storage uas radeon i2c_algo_bit drm_kms_helper ttm drm i2c_core sunrpc be2iscsi bnx2i cnic uio cxgb4i cxgb4 cxgb3i cxgb3 mdio libcxgbi libiscsi_tcp qla4xxx iscsi_boot_sysfs libiscsi scsi_transport_iscsi
->> > [   26.573143] Pid: 757, comm: NetworkManager Not tainted 3.6.0-0.rc0.git8.1.fc18.x86_64 #1
->> > [   26.573145] Call Trace:
->> > [   26.573153]  [<ffffffff8106782f>] warn_slowpath_common+0x7f/0xc0
->> > [   26.573159]  [<ffffffff8106788a>] warn_slowpath_null+0x1a/0x20
->> > [   26.573170]  [<ffffffffa04c730d>] assert_cfg80211_lock.part.8+0x15/0x17 [cfg80211]
->> > [   26.573181]  [<ffffffffa04a8dcb>] freq_reg_info+0x6b/0x80 [cfg80211]
-> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
-> 
-> It looks like those calls were added in mid-June.
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think mid-june sounds about right. We never observed the warning when
-changes to use regulatory infrastructure were tested/reviewed. Should
-this precondition be mentioned in cfg80211.h?
+Some distro kernels (in particular the Debian 3.2.0-3
+kernel I'm running) backport codel already, so trying
+to backport it again causes issues. Protect the compat
+backport with #ifdef TCA_CODEL_MAX.
 
-Gr. AvS
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/compat-3.5.h |    2 ++
+ include/net/codel.h        |    3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
+index 6bb450d..7fadbf2 100644
+--- a/include/linux/compat-3.5.h
++++ b/include/linux/compat-3.5.h
+@@ -147,6 +147,7 @@ static inline int compat_vga_switcheroo_register_client(struct pci_dev *dev,
+  *   Subject: [PATCH] codel: Controlled Delay AQM
+  */
+ 
++#ifndef TCA_CODEL_MAX
+ /* CODEL */
+ 
+ enum {
+@@ -234,6 +235,7 @@ struct tc_fq_codel_xstats {
+ 		struct tc_fq_codel_cl_stats class_stats;
+ 	};
+ };
++#endif /* TCA_CODEL_MAX */
+ 
+ 
+ /* Backports tty_lock: Localise the lock */
+diff --git a/include/net/codel.h b/include/net/codel.h
+index 128082e..ab901c5 100644
+--- a/include/net/codel.h
++++ b/include/net/codel.h
+@@ -1,6 +1,7 @@
+ #include <linux/version.h>
++#include <linux/pkt_sched.h>
+ 
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)) || defined(TCA_CODEL_MAX)
+ #include_next <net/codel.h>
+ #else
+ 
+-- 
+1.7.10.4
+
+
 
