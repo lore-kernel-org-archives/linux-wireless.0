@@ -1,114 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57605 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798Ab2HWFki (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46590 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053Ab2HDP2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 01:40:38 -0400
-Message-ID: <5035C24C.5070302@candelatech.com> (sfid-20120823_074100_795970_81A095B7)
-Date: Wed, 22 Aug 2012 22:40:28 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 4 Aug 2012 11:28:14 -0400
+Received: by obbuo13 with SMTP id uo13so2831132obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Aug 2012 08:28:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Issue with ath9k and tx/rx chainmask:  3x3 doesn't work with
- mask of 0x1.
-References: <50329D11.9030405@candelatech.com> <5035414D.2080600@openwrt.org> <50355C21.2030508@candelatech.com> <503573C6.4000103@candelatech.com> <50357DCB.1000908@candelatech.com> <5035BFC4.6020307@openwrt.org>
-In-Reply-To: <5035BFC4.6020307@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <501CD9F3.4000903@net.t-labs.tu-berlin.de>
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<501CD9F3.4000903@net.t-labs.tu-berlin.de>
+Date: Sat, 4 Aug 2012 18:28:13 +0300
+Message-ID: <CAFtRNNzV+vwCcg7APcjUUA4f7zhphH4=v4KshUq5XYKWHmBdhQ@mail.gmail.com> (sfid-20120804_172818_300561_CD9C54E4)
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
+ eeprom reads for AR5K_EEPROM_MODE_11A
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: nbd@nbd.name, jirislaby@gmail.com, linux-wireless@vger.kernel.org,
+	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/22/2012 10:29 PM, Felix Fietkau wrote:
-> On 2012-08-23 2:48 AM, Ben Greear wrote:
->> On 08/22/2012 05:05 PM, Ben Greear wrote:
->>> On 08/22/2012 03:24 PM, Ben Greear wrote:
->>>> On 08/22/2012 01:30 PM, Felix Fietkau wrote:
->>>>> On 2012-08-20 10:24 PM, Ben Greear wrote:
->>>>>> I am trying to test out an attenuator.  For now, I have only a single attenuator,
->>>>>> so I set tx and rx chainmask to 0x1 on both AP and Station machine.
->>>>>>
->>>>>> I then connected channel 0 on the two machines together through the
->>>>>> attenuator.
->>>>>>
->>>>>> I have two station interfaces on the station machine.  They both
->>>>>> seem to associate OK, but they cannot receive dhcp responses.
->>>>>>
->>>>>> It *seems* that broadcast packets may go through fine.
->>>>>>
->>>>>> If I force the rate down to 1x1 or 2x2 MIMO (or force disable /n
->>>>>> and just use /a), then it appears to work fine.
->>>>>>
->>>>>> Nics are WPEA-127n (AR9380).  Kernel is 3.5.1+ on AP, 3.5.2+ on station
->>>>>> machine.
->>>>>>
->>>>>> I can see why forcing it down to 1x1 might work around some issue,
->>>>>> but I find it funny that 2x2 works while 3x3 does not.
->>>>> Did you set the chainmask manually via debugfs? If so, don't do that!
->>>>> Use the nl80211 antenna control API (e.g. via iw)
->>>>
->>>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1 1
->>>> command failed: Operation not supported (-95)
->>>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1
->>>> command failed: Operation not supported (-95)
->>>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 3
->>>> command failed: Operation not supported (-95)
->>>> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7
->>>> command failed: Operation not supported (-95)
->>>> [root@lec2010-ath9k-1 lanforge]# uname -a
->>>> Linux lec2010-ath9k-1 3.5.1+ #15 SMP PREEMPT Thu Aug 9 09:31:45 PDT 2012 i686 i686 i386 GNU/Linux
->>>
->>> I'm guessing it is because of this:
->>>
->>> static int ieee80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
->>> {
->>>       struct ieee80211_local *local = wiphy_priv(wiphy);
->>>
->>>       if (local->started)
->>>           return -EOPNOTSUPP;
->>>
->>>       return drv_set_antenna(local, tx_ant, rx_ant);
->>> }
->>
->> Even when I manually admin down everything, I can still freeze the NIC
->> (WPEA-127n, AR9380).
->>
->> To reproduce:
->> stop all VAP/STA interfaces on wiphy0
->> set tx and rx chainmask to 2 using 'iw'
->> start vap0
->>
->> # Boom, fails to reset, and for whatever reason, local->started never
->> # goes false, so you can't even set the chainmask back using 'iw'.
->>
->>
->> Aug 22 17:41:34 localhost dhcpd: DHCPDISCOVER from 00:00:08:76:52:14 via rddVR17: network 99.88.77.0/24: no free leases
->> Aug 22 17:41:37 localhost kernel: [ 5575.474706] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
->> Aug 22 17:41:38 localhost kernel: [ 5576.116434] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
->> Aug 22 17:41:38 localhost kernel: [ 5576.476336] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
->> Aug 22 17:41:45 localhost kernel: [ 5582.653715] ath: wiphy0: Unable to reset hardware; reset status -5 (freq 5785 MHz)
->> Aug 22 17:41:46 localhost dhclient[18218]: DHCPDISCOVER on rddVR18 to 255.255.255.255 port 67 interval 11
->> Aug 22 17:41:46 localhost dhcpd: DHCPDISCOVER from 26:0c:f3:49:95:16 via rddVR17: network 99.88.77.0/24: no free leases
->> Aug 22 17:41:47 localhost dhclient[18706]: DHCPDISCOVER on rddVR18#4 to 255.255.255.255 port 67 interval 14
->> Aug 22 17:41:47 localhost dhcpd: DHCPDISCOVER from 00:00:08:76:52:14 via rddVR17: network 99.88.77.0/24: no free leases
->> Aug 22 17:41:57 localhost dhclient[18218]: DHCPDISCOVER on rddVR18 to 255.255.255.255 port 67 interval 7
->> Aug 22 17:41:57 localhost dhcpd: DHCPDISCOVER from 26:0c:f3:49:95:16 via rddVR17: network 99.88.77.0/24: no free leases
->> Aug 22 17:41:59 localhost kernel: [ 5597.279989] in set_wiphy
->> Aug 22 17:41:59 localhost kernel: [ 5597.296604] in set_wiphy
->> Aug 22 17:41:59 localhost kernel: [ 5597.314646] in set_wiphy
->> Aug 22 17:41:59 localhost kernel: [ 5597.319479] set antenna failed, local->started
->> Aug 22 17:41:59 localhost kernel: [ 5597.326555] ops->set_antenna rv: -95
-> Don't use 2 as antenna mask, the chip cannot handle it properly (I
-> recently sent a patch to make setting such masks fail). Masks need to
-> start at bit 0 and be contiguous.
+2012/8/4 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+> Hi all,
+>
+> After several experiments on cm9 and dcma82 cards, I figured out that
+> this patch does not solve the max_power calibration problem as intended.
+>
+> The partly reduction to 8 with this:
+> #define AR5K_EEPROM_N_5GHZ_CHAN         10
+> #define AR5K_EEPROM_N_5GHZ_RATE_CHAN    8
+>
+> ... creates a wrong power curve on the card, as function
+> ath5k_eeprom_read_freq_list() runs its while loop still 10 times, which
+> results in wrong AR5K_EEPROM_READ(o++, val) readings, leading the card
+> to use a very low power level over all.
+> This should also be limited to 8, as I tested it.
+>
+> My suggestion is to just set:
+> #define AR5K_EEPROM_N_5GHZ_CHAN         8
+>
+> .. without introducing a separate variable, it is not needed.
+> I will send a v2.
+>
+> While I am browsing through /ath5k/eeprom.c there are several other
+> suspicious places where 10 eeprom lines of chips like 5111, 5112, 2413
+> depending on their EEPROM Version are read. I can not test this, as I
+> have only CM9 and DCMA82 over here, but I guess those 10 line reads are
+> also wrong. Can someone test this ?
+>
+>
+> Greetings Thomas
+>
 
-Ok...I just finished making the same restriction in my user-space app, and
-that does seem to keep things properly under control.
+There is nothing suspicious about it, it's what EEPROM docs say:
 
-Thanks,
-Ben
+a) For 11a mode there are 10 calibration peers and for b/g there are 3
+for chips < 2413 and 4 on later chips.
+b) We first read the frequencies, if freq != 0 we use the calibration
+info, else we ignore it.
+c) We then read the power deltas for each calibration pier
+d) Then we store that info for use by the channel power table calibration
+
+Also what do you mean wrong curve and how did you actually test your
+card and measured the tx power ?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
-
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
