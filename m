@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35595 "EHLO
+Received: from mail-we0-f174.google.com ([74.125.82.174]:52849 "EHLO
 	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035Ab2HIEie (ORCPT
+	with ESMTP id S1754879Ab2HETgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 00:38:34 -0400
-Received: by weyx8 with SMTP id x8so20933wey.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 21:38:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XfyQSjWHrr97L29hRzRx-H4wsPHMQ7mG4n9D_e7p46=A@mail.gmail.com>
-References: <1344481126-15702-1-git-send-email-andy@greyhouse.net>
-	<CAB=NE6XfyQSjWHrr97L29hRzRx-H4wsPHMQ7mG4n9D_e7p46=A@mail.gmail.com>
-Date: Thu, 9 Aug 2012 00:38:32 -0400
-Message-ID: <CAHashqAFi=hnwiJHaajjv=WWDnD0jzcpLxrda9F3C8zb-HNGLA@mail.gmail.com> (sfid-20120809_063837_480379_4DAEA98B)
-Subject: Re: [PATCH] compat: support RHEL6.3 as a build target
-From: Andy Gospodarek <andy@greyhouse.net>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Phil Perry <phil@elrepo.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 5 Aug 2012 15:36:18 -0400
+Received: by mail-we0-f174.google.com with SMTP id x8so1488533wey.19
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 12:36:17 -0700 (PDT)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
+	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH v2 3/5] ath5k: Preserve tx power level requested from above on phy_init
+Date: Sun,  5 Aug 2012 22:35:35 +0300
+Message-Id: <1344195337-27461-4-git-send-email-mickflemm@gmail.com> (sfid-20120805_213620_805643_60EF0A90)
+In-Reply-To: <1344195337-27461-1-git-send-email-mickflemm@gmail.com>
+References: <1344195337-27461-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 8, 2012 at 11:37 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Wed, Aug 8, 2012 at 7:58 PM, Andy Gospodarek <andy@greyhouse.net> wrote:
->> This patch allows me to compile and load the latest compat modules on
->> RHEL6.3.  Users of compat on RHEL6 should note that you should set
->> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
->>
->> Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
->
-> Thanks! Any chance you can git fetch; git rebase; (ensuring you have
-> 42faf2dc8d8 at tip) and then try running:
->
-> ./bin/get-compat-kernels
->
-> This can take ~10 minutes
->
-> And then test compile your changes with:
->
-> ./bin/ckmake
->
-> And provide that as part of your commit log message?
+By using cur_pwr on phy_init we re-use the power level previously set by the
+driver, not the one we got from above.
 
-I just did this and will post a v2 patch right now.
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> We can likely add
-> the RHEL kernels to the ./bin/get-compat-kernels if you can figure out
-> a way to unpack them for any user out there on any Linux distribution.
-> This way I can gate future patches from being merged unless they also
-> give me a good set of results from ckmake.
->
-> Thoughts ?
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 84a9aaf..27ca993 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -3802,8 +3802,8 @@ ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 	 * RF buffer settings on 5211/5212+ so that we
+ 	 * properly set curve indices.
+ 	 */
+-	ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
+-			ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
++	ret = ath5k_hw_txpower(ah, channel, ah->power_level ?
++			ah->power_level * 2 : AR5K_TUNE_MAX_TXPOWER);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+1.7.3.4
 
-I like it.  I'll look into the guts of these scripts a bit more and
-see what we can get added.
