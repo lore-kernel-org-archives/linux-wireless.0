@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:49963 "EHLO
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:49832 "EHLO
 	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754513Ab2HBRZy (ORCPT
+	with ESMTP id S1754473Ab2HEM7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 13:25:54 -0400
-Received: by obbuo13 with SMTP id uo13so14112720obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2012 10:25:53 -0700 (PDT)
+	Sun, 5 Aug 2012 08:59:00 -0400
+Received: by obbuo13 with SMTP id uo13so4219322obb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 05:59:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1343924789.4471.26.camel@jlt3.sipsolutions.net>
-References: <CAMLZHHQkv_fHzd89fP7bNow7eL3oX+Duzr5rS5NJfhffqwUv2g@mail.gmail.com>
-	<1343842772.4638.15.camel@jlt3.sipsolutions.net>
-	<CAMLZHHQdBHZa4NBQ3ygKJSHmKL11ERUWDAtMx0-Qh4OzSoN-SA@mail.gmail.com>
-	<1343894552.4458.4.camel@jlt3.sipsolutions.net>
-	<CAMLZHHSVediwHaw3f8s1QYNoc_xV55CEUP7wBQu_on-p8WUQJg@mail.gmail.com>
-	<1343924789.4471.26.camel@jlt3.sipsolutions.net>
-Date: Thu, 2 Aug 2012 11:25:53 -0600
-Message-ID: <CAMLZHHR6xp0qxR4Z-BP195pV2XAKm=Q8quU_2dGz4L1_zrS8LA@mail.gmail.com> (sfid-20120802_192557_982333_20F14426)
-Subject: Re: cfg80211_disconnected memory leak
-From: Daniel Drake <dsd@laptop.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <501E68EE.1060000@net.t-labs.tu-berlin.de>
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	<501CD9F3.4000903@net.t-labs.tu-berlin.de>
+	<CAFtRNNzV+vwCcg7APcjUUA4f7zhphH4=v4KshUq5XYKWHmBdhQ@mail.gmail.com>
+	<501E539A.9060706@net.t-labs.tu-berlin.de>
+	<CAFtRNNyXgrzsB8Od+qqLgRSb3o_KkxD4sG3UOzu5C1Sz06-GkA@mail.gmail.com>
+	<501E68EE.1060000@net.t-labs.tu-berlin.de>
+Date: Sun, 5 Aug 2012 15:59:00 +0300
+Message-ID: <CAFtRNNyF4Hm=U2LiJqpb60m6yjp+Hf1bi_Cth39H4QAHYZrPsA@mail.gmail.com> (sfid-20120805_145912_980472_4F83F422)
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
+ eeprom reads for AR5K_EEPROM_MODE_11A
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: nbd@nbd.name, jirislaby@gmail.com, linux-wireless@vger.kernel.org,
+	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>,
+	Adrian Chadd <adrian@freebsd.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 2, 2012 at 10:26 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hmm. Then again, I think we can call cfg80211_process_wdev_events() from
-> case NETDEV_UNREGISTER though, probably after removing from the list.
-> Maybe you could try that?
+2012/8/5 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
+> Hi Nick
+>
+>> According to EEPROM docs there are 10 calibration piers on all chips
+>> after 5111 for 11a but some of them are not used and the way to test
+>> this is if frequency is zero. Now here is a bug in the EEPROM code
+>> that might result the wrong reads you get, check this out:
+>>
+>> on ath5k_eeprom_read_freq_list we do this
+>>
+>> if (!freq1)
+>>  break;
+>>
+>> instead of this
+>>
+>> if (!freq1)
+>>  continue;
+>
+>
+> That did the trick !
+> So reading 10 calibration piers and using the fix from above works in
+> terms of tx_power changes on CM9 and DCMA82 are properly used by the
+> hardware.
+>
+> I will send a patch for that.
+>
+>
+> Greetings Thomas
+>
 
-That solves the issue - confirmed that kmemleak now shuts up, and with
-some added printks to confirm event creation and freeing.
-Patch coming up, titled:    cfg80211: process pending events when
-unregistering net device
+CCing Adrian in case this bug is also present on newer HAL sources on
+FreeBSD etc...
 
-Even if libertas isn't quite doing the right thing here, I think this
-is the right thing to do. I guess there are other situations, perhaps
-more legitimate, where we can reach this point with events in the
-queue.
+Thanks for testing/patching Thomas, I 'll try to find some time to
+work on EEPROM code again, I know it's a mess :P
 
-> I'm not 100% sure about the API in this area right now though, it's been
-> a while and I never worked much with this API (rather than the mac80211
-> one with auth/assoc/disassoc/deauth.)
 
-I think we both feel that removing it is correct. I'll test this when
-I find some free time, and if things seem OK i'll post a libertas
-patch in addition to the cfg80211 fix.
-
-Thanks
-Daniel
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
