@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3390 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757095Ab2HXMnn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 08:43:43 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH] wext: include wireless event id when it has a size
- problem
-Date: Fri, 24 Aug 2012 14:43:31 +0200
-Message-ID: <1345812212-18778-1-git-send-email-arend@broadcom.com> (sfid-20120824_144347_019489_948E84F3)
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36983 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754243Ab2HELGE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2012 07:06:04 -0400
+Message-ID: <501E539A.9060706@net.t-labs.tu-berlin.de> (sfid-20120805_130646_562259_FFDB4BB0)
+Date: Sun, 05 Aug 2012 13:06:02 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: nbd@nbd.name, jirislaby@gmail.com, linux-wireless@vger.kernel.org,
+	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
+ eeprom reads for AR5K_EEPROM_MODE_11A
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de> <501CD9F3.4000903@net.t-labs.tu-berlin.de> <CAFtRNNzV+vwCcg7APcjUUA4f7zhphH4=v4KshUq5XYKWHmBdhQ@mail.gmail.com>
+In-Reply-To: <CAFtRNNzV+vwCcg7APcjUUA4f7zhphH4=v4KshUq5XYKWHmBdhQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wext code checks is the event data is within size limits.
-When this check fails a message is logged with violating size.
-This patch adds the event id to put us on the right track for
-resolving that violation.
+Hi Nick,
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Maybe wext is not popular, but I found the change helpful debugging
-so others may benefit from it. Still some wireless apps default to
-it, eg. wpa_supplicant.
-
-Gr. AvS
----
- net/wireless/wext-core.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index b0eb7aa..c8717c1 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -478,13 +478,13 @@ void wireless_send_event(struct net_device *	dev,
- 	if (descr->header_type == IW_HEADER_TYPE_POINT) {
- 		/* Check if number of token fits within bounds */
- 		if (wrqu->data.length > descr->max_tokens) {
--			netdev_err(dev, "(WE) : Wireless Event too big (%d)\n",
--				   wrqu->data.length);
-+			netdev_err(dev, "(WE) : Wireless Event (cmd=0x%04X) too big (%d)\n",
-+				   cmd, wrqu->data.length);
- 			return;
- 		}
- 		if (wrqu->data.length < descr->min_tokens) {
--			netdev_err(dev, "(WE) : Wireless Event too small (%d)\n",
--				   wrqu->data.length);
-+			netdev_err(dev, "(WE) : Wireless Event (cmd=0x%04X) too small (%d)\n",
-+				   cmd, wrqu->data.length);
- 			return;
- 		}
- 		/* Calculate extra_len - extra is NULL for restricted events */
--- 
-1.7.9.5
+> There is nothing suspicious about it, it's what EEPROM docs say:
+> 
+> a) For 11a mode there are 10 calibration peers 
 
 
+As I tested AR5413, AR5414 and AR5213 there are only 8 eeprom lines for
+802.11a that provide valid per rate target power levels. I am curious if
+this also holds for other chips.
+
+> Also what do you mean wrong curve and how did you actually test your
+> card and measured the tx power ?
+> 
+
+
+My first patch only changed the read iterations in function
+ath5k_eeprom_read_target_rate_pwr_info() from 10 reads to 8. Having only
+this, I measured received rssi values while changing the tx_power on a
+sender. I did not observe any changes in rssi, so I went back to the
+code to investigate.
+And the function ath5k_eeprom_init_11a_pcal_freq() (my hardware eeprom
+version is > 3.3) there is ath5k_eeprom_read_freq_list(..,10,..) called,
+and those 10 iterations produce 2 wrong frequency peer values. If there
+are only 8 iterations used, I am able to measure a 15 dB variation in
+rssi values at the receiver side, while changing the tx_power on the
+sender. For the chips I tested, ath5k_eeprom_read_freq_list() should
+only read 8 pears for 802.11a.
+
+With 'suspicious' I meant e.g. function
+ath5k_eeprom_init_11a_pcal_freq(), as it checks the eeprom version and
+if > 3.3 it calls
+ath5k_eeprom_init_11a_pcal_freq(..,AR5K_EEPROM_N_5GHZ_CHAN,..), in the
+else case, it reads 10 hardcoded freq.pears .. I am questioning if this
+is correct, so maybe someone has the chance to test this.
+
+
+Greetings Thomas
