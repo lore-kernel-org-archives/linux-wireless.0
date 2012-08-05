@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:47682 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753639Ab2HAKsT (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:37011 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754412Ab2HEMhG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 06:48:19 -0400
+	Sun, 5 Aug 2012 08:37:06 -0400
+Message-ID: <501E68EE.1060000@net.t-labs.tu-berlin.de> (sfid-20120805_143711_531141_B575853F)
+Date: Sun, 05 Aug 2012 14:37:02 +0200
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-In-Reply-To: <CADKZ3FLs444RfLx=RyBPKs+Lza_mZHhT=zHauMt3BUnqAUtY0w@mail.gmail.com>
-References: <CADKZ3FKDw78ac9JPXJuw0s7Mqg1RrVfonbjXZ6zHmtwF2i5HoQ@mail.gmail.com>
-	<1343765698.4474.10.camel@jlt3.sipsolutions.net>
-	<CADKZ3FLs444RfLx=RyBPKs+Lza_mZHhT=zHauMt3BUnqAUtY0w@mail.gmail.com>
-Date: Wed, 1 Aug 2012 14:48:18 +0400
-Message-ID: <CADKZ3FKTu7yT17EBHbHcgZhB-PZ-KECbGd2HZ-WfMb-t7qDwtg@mail.gmail.com> (sfid-20120801_124847_391733_28859E4A)
-Subject: Re: wlcore: might_sleep operation in interrupt handler
-From: Denis Yefremov <yefremov.denis@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
-Content-Type: text/plain; charset=ISO-8859-1
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: nbd@nbd.name, jirislaby@gmail.com, linux-wireless@vger.kernel.org,
+	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
+ eeprom reads for AR5K_EEPROM_MODE_11A
+References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de> <501CD9F3.4000903@net.t-labs.tu-berlin.de> <CAFtRNNzV+vwCcg7APcjUUA4f7zhphH4=v4KshUq5XYKWHmBdhQ@mail.gmail.com> <501E539A.9060706@net.t-labs.tu-berlin.de> <CAFtRNNyXgrzsB8Od+qqLgRSb3o_KkxD4sG3UOzu5C1Sz06-GkA@mail.gmail.com>
+In-Reply-To: <CAFtRNNyXgrzsB8Od+qqLgRSb3o_KkxD4sG3UOzu5C1Sz06-GkA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry. My mistake. In this case it seems that sleep functions can
-be called from thread_fn, since interrupt line is disabled globally.
-And nothing bad will happen if you know that device can be
-blocked for relatively long time.
+Hi Nick
+
+> According to EEPROM docs there are 10 calibration piers on all chips
+> after 5111 for 11a but some of them are not used and the way to test
+> this is if frequency is zero. Now here is a bug in the EEPROM code
+> that might result the wrong reads you get, check this out:
+> 
+> on ath5k_eeprom_read_freq_list we do this
+> 
+> if (!freq1)
+>  break;
+> 
+> instead of this
+> 
+> if (!freq1)
+>  continue;
+
+
+That did the trick !
+So reading 10 calibration piers and using the fix from above works in
+terms of tx_power changes on CM9 and DCMA82 are properly used by the
+hardware.
+
+I will send a patch for that.
+
+
+Greetings Thomas
+
