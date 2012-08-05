@@ -1,68 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:33084 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752229Ab2HIN0O convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:46299 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754991Ab2HETgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 09:26:14 -0400
-Date: Thu, 9 Aug 2012 15:26:04 +0200 (CEST)
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: Andy Gospodarek <andy@greyhouse.net>
-Cc: Phil Perry <phil@elrepo.org>, mcgrof@frijolero.org,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Message-ID: <2121451356.93690.1344518764022.JavaMail.root@neratec.com> (sfid-20120809_152618_209742_B24207D9)
-In-Reply-To: <1344487215-24143-1-git-send-email-andy@greyhouse.net>
-Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Sun, 5 Aug 2012 15:36:10 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so2122688wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 12:36:10 -0700 (PDT)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
+	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH v2 2/5] ath5k: Fix range scaling when setting rate power table
+Date: Sun,  5 Aug 2012 22:35:34 +0300
+Message-Id: <1344195337-27461-3-git-send-email-mickflemm@gmail.com> (sfid-20120805_213614_289721_74CCBF1F)
+In-Reply-To: <1344195337-27461-1-git-send-email-mickflemm@gmail.com>
+References: <1344195337-27461-1-git-send-email-mickflemm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2012 06:40 AM, Andy Gospodarek wrote:
-> This patch allows me to compile and load the latest compat modules on
-> RHEL6.3.  Users of compat on RHEL6 should note that you should set
-> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
-> 
-> [...]
-> 
-> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-> index 56d5961..09e4b6f 100644
-> --- a/include/linux/compat-2.6.36.h
-> +++ b/include/linux/compat-2.6.36.h
-> @@ -98,6 +98,8 @@ struct pm_qos_request_list {
->   * Dummy printk for disabled debugging statements to use whilst maintaining
->   * gcc's format and side-effect checking.
->   */
-> +/* mask no_printk as RHEL6 backports this */
-> +#define no_printk(...) compat_no_printk(...)
->  static inline __attribute__ ((format (printf, 1, 2)))
->  int no_printk(const char *s, ...) { return 0; }
->  
-> [...]
+rates[i] is unsigned but txp_offset can be negative for newer parts
+with PDADC table. We cover the case when rates[i] + txp_offset > 63
+but we must also cover the case when its < 0 or else rates[i] will overflow.
 
-This at least breaks compilation on 2.6.35-22 with gcc throwing a
-compat-2.6.36.h:104: error: ISO C requires a named argument before ‘...’
-
-It looks like no_printk() needs to be renamed to compat_no_printk()
-to make it work as intended.
-
-This is a systematic mistake at several sections of this patch, where
-the original function needs to be prefixed by 'compat_' to match the 
-related macro.
-
-
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 8b02260..b6757c3 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -101,7 +101,7 @@ struct pm_qos_request_list {
- /* mask no_printk as RHEL6 backports this */
- #define no_printk(...) compat_no_printk(...)
- static inline __attribute__ ((format (printf, 1, 2)))
--int no_printk(const char *s, ...) { return 0; }
-+int compat_no_printk(const char *s, ...) { return 0; }
+ drivers/net/wireless/ath/ath5k/phy.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index aa1a77d..84a9aaf 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -3516,6 +3516,7 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+ {
+ 	unsigned int i;
+ 	u16 *rates;
++	s16 rate_idx_scaled = 0;
  
- #ifndef alloc_workqueue
- #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
+ 	/* max_pwr is power level we got from driver/user in 0.5dB
+ 	 * units, switch to 0.25dB units so we can compare */
+@@ -3580,10 +3581,13 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+ 	 * match the power range set by user with the power indices
+ 	 * on PCDAC/PDADC table */
+ 	for (i = 0; i < 16; i++) {
+-		rates[i] += ah->ah_txpower.txp_offset;
++		rate_idx_scaled = rates[i] + ah->ah_txpower.txp_offset;
+ 		/* Don't get out of bounds */
+-		if (rates[i] > 63)
+-			rates[i] = 63;
++		if (rate_idx_scaled > 63)
++			rate_idx_scaled = 63;
++		if (rate_idx_scaled < 0)
++			rate_idx_scaled = 0;
++		rates[i] = rate_idx_scaled;
+ 	}
+ }
+ 
+-- 
+1.7.3.4
+
