@@ -1,32 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:34770 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753825Ab2HAVEk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 17:04:40 -0400
-Received: by ggnl2 with SMTP id l2so553301ggn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 14:04:39 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:41070 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754712Ab2HERMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2012 13:12:35 -0400
+Message-ID: <501EA97B.3010703@openwrt.org> (sfid-20120805_191238_582924_59C32460)
+Date: Sun, 05 Aug 2012 19:12:27 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1343842772.4638.15.camel@jlt3.sipsolutions.net>
-References: <CAMLZHHQkv_fHzd89fP7bNow7eL3oX+Duzr5rS5NJfhffqwUv2g@mail.gmail.com>
-	<1343842772.4638.15.camel@jlt3.sipsolutions.net>
-Date: Wed, 1 Aug 2012 15:04:39 -0600
-Message-ID: <CAMLZHHQofS=s0E=zMsuRJLzXPWtkMHOJiN2rZy=41qRYmkw44A@mail.gmail.com> (sfid-20120801_230443_521893_E0F64A0D)
-Subject: Re: cfg80211_disconnected memory leak
-From: Daniel Drake <dsd@laptop.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+CC: linux-wireless@vger.kernel.org
+Subject: Re: WDS vs. multi-channel operation
+References: <1343655393.4452.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1343655393.4452.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 1, 2012 at 11:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This is very odd. What version of the kernel is this?
+On 2012-07-30 3:36 PM, Johannes Berg wrote:
+> Ok so I'm chipping away at multi-channel operation, but WDS is
+> troubling. Which channel should it use? It doesn't even have channel
+> configuration today, but relies on having a channel already, but that
+> breaks when you have multi-channel since then it either has to have its
+> own channel or be slaved to another channel...
+> 
+> Anyone have any ideas?
+Let's bind WDS interfaces to AP VIFs, then they can be slave to the AP's
+channel context. This is necessary for my yet-to-be-resubmitted WDS
+fixes anyway.
 
-3.3, and just reproduced on 3.5.
+- Felix
 
-I'll have a closer look later in the week.
-
-Thanks
-Daniel
