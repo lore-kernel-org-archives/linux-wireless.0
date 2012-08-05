@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:41761 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029Ab2HQFEF (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:46299 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873Ab2HETf7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 01:04:05 -0400
-Received: by obbuo13 with SMTP id uo13so4745219obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 22:04:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <01f801cd7b91$41fee2b0$c5fca810$@acksys.fr>
-References: <773DB8A82AB6A046AE0195C68612A3190138F360@sbs2003.acksys.local>
- <CAG6hwVMir23S-v0p=r=vkDn5Cu7fOSSEXaAU5jtSrVsC-Bp4ow@mail.gmail.com> <01f801cd7b91$41fee2b0$c5fca810$@acksys.fr>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 16 Aug 2012 22:03:45 -0700
-Message-ID: <CAG6hwVOthC1of4HVfJ5SwJHgbWqFVPvr2v9p0HH2X2A+MQsTzQ@mail.gmail.com> (sfid-20120817_070435_531524_8F456BCD)
-Subject: Re: Mesh addressing issue
-To: voncken <cedric.voncken@acksys.fr>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 5 Aug 2012 15:35:59 -0400
+Received: by wgbdr13 with SMTP id dr13so2122688wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 12:35:58 -0700 (PDT)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
+	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH v2 0/5] ath5k: Various tx power fixes
+Date: Sun,  5 Aug 2012 22:35:32 +0300
+Message-Id: <1344195337-27461-1-git-send-email-mickflemm@gmail.com> (sfid-20120805_213603_146687_3CBF2A49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 16, 2012 at 2:26 AM, voncken <cedric.voncken@acksys.fr> wrote:
->         Computer.pcap : This capture show the ICMP request sent by the
-> computer. The MAC address destination is unicast.
->         Mp2_to_mp1.pcap : this capture show the ICMP request (frame 33)
-> from MP2 to MP1 in mesh network.  The MAC address destination is broadcast
+This series fixes a few bugs on tx power processing code. Some more fixes
+on EEPROM stuff are still pending.
 
-This is clearly wrong, thanks for reporting. Expect a patch fixing this shortly.
+Thanks to Thomas Huehn and Felix Fietkau for the feedback.
 
-Thomas
+Nick Kossifidis (5):
+  ath5k: Use correct value for min_pwr and cur_pwr
+  ath5k: Fix range scaling when setting rate power table
+  ath5k: Preserve tx power level requested from above on phy_init
+  ath5k: Put power_level where it belongs and rename it
+  ath5k: Return correct offset when reading frequencies
+
+ drivers/net/wireless/ath/ath5k/ath5k.h        |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c         |    5 ++-
+ drivers/net/wireless/ath/ath5k/eeprom.c       |    4 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    4 +-
+ drivers/net/wireless/ath/ath5k/phy.c          |   43 ++++++++++++++++++------
+ 5 files changed, 40 insertions(+), 18 deletions(-)
+
+-- 
+1.7.3.4
+
