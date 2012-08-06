@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43062 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938Ab2HNO3Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 10:29:25 -0400
-Message-ID: <502A60BB.7000106@qca.qualcomm.com> (sfid-20120814_162936_602813_68B73A4A)
-Date: Tue, 14 Aug 2012 17:29:15 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 1/2] ath6kl: Fix potential skb double free in ath6kl_wmi_sync_point()
-References: <1344919234-5012-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1344919234-5012-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59038 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756150Ab2HFWe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 18:34:56 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat-wireless: add missing part to tty-termios backport
+Date: Tue,  7 Aug 2012 00:34:45 +0200
+Message-Id: <1344292486-25736-2-git-send-email-hauke@hauke-m.de> (sfid-20120807_003500_838318_10408A89)
+In-Reply-To: <1344292486-25736-1-git-send-email-hauke@hauke-m.de>
+References: <1344292486-25736-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/14/2012 07:40 AM, Vasanthakumar Thiagarajan wrote:
-> skb given to ath6kl_control_tx() is owned by ath6kl_control_tx().
-> Calling function should not free the skb for error cases.
-> This is found during code review.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+This part was missing in the original patch
 
-Thanks, both applied. There was a checkpatch warning about parenthesis
-alignment in the first patch but I fixed it.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/63-tty-termios.patch |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Kalle
+diff --git a/patches/63-tty-termios.patch b/patches/63-tty-termios.patch
+index b868ae9..0841106 100644
+--- a/patches/63-tty-termios.patch
++++ b/patches/63-tty-termios.patch
+@@ -33,3 +33,17 @@ was not done through a static inline helper.
+  	ktermios.c_cflag &= ~CRTSCTS;
+  	tty_set_termios(tty, &ktermios);
+  
++--- a/net/bluetooth/rfcomm/tty.c
+++++ b/net/bluetooth/rfcomm/tty.c
++@@ -873,7 +873,11 @@ static int rfcomm_tty_ioctl(struct tty_s
++ 
++ static void rfcomm_tty_set_termios(struct tty_struct *tty, struct ktermios *old)
++ {
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0))
++ 	struct ktermios *new = &tty->termios;
+++#else
+++	struct ktermios *new = tty->termios;
+++#endif
++ 	int old_baud_rate = tty_termios_baud_rate(old);
++ 	int new_baud_rate = tty_termios_baud_rate(new);
++ 
+-- 
+1.7.9.5
+
