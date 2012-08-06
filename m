@@ -1,178 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:35421 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754878Ab2HaUjt (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:39818 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932380Ab2HFTEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2012 16:39:49 -0400
-Received: by ieje11 with SMTP id e11so2019210iej.19
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2012 13:39:48 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 6 Aug 2012 15:04:23 -0400
+Date: Mon, 6 Aug 2012 16:04:16 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/3 V2] rtlwifi: rtl8192c: rtl8192de: Fix typo in cursta_connectctate
-Date: Fri, 31 Aug 2012 15:38:59 -0500
-Message-Id: <1346445541-5251-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120831_223951_833841_903BFA94)
-In-Reply-To: <1346445541-5251-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1346445541-5251-1-git-send-email-Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2012-08-06
+Message-ID: <20120806190416.GE3146@joana> (sfid-20120806_210439_082072_56A2126E)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+--M9NhX3UHpAaciwkO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi John,=20
+
+Here goes some fixes for 3.6-rc1, there are a few fix to thte inquiry code =
+by
+Ram Malovany, support for 2 new devices, and few others fixes for NULL
+dereference, possible deadlock and a memory leak.
+
+Please pull, or let me know of any problems with this! Thanks.
+
+	Gustavo
+
 ---
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |   30 ++++++++++-----------
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |   10 +++----
- drivers/net/wireless/rtlwifi/wifi.h               |    2 +-
- 3 files changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index a45afda..2fd3b49 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -167,7 +167,7 @@ static void rtl92c_dm_diginit(struct ieee80211_hw *hw)
- 	dm_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
- 	dm_digtable->cur_igvalue = 0x20;
- 	dm_digtable->pre_igvalue = 0x0;
--	dm_digtable->cursta_connectctate = DIG_STA_DISCONNECT;
-+	dm_digtable->cursta_connectstate = DIG_STA_DISCONNECT;
- 	dm_digtable->presta_connectstate = DIG_STA_DISCONNECT;
- 	dm_digtable->curmultista_connectstate = DIG_MULTISTA_DISCONNECT;
- 	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
-@@ -190,7 +190,7 @@ static u8 rtl92c_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
- 	long rssi_val_min = 0;
- 
- 	if ((dm_digtable->curmultista_connectstate == DIG_MULTISTA_CONNECT) &&
--	    (dm_digtable->cursta_connectctate == DIG_STA_CONNECT)) {
-+	    (dm_digtable->cursta_connectstate == DIG_STA_CONNECT)) {
- 		if (rtlpriv->dm.entry_min_undecoratedsmoothed_pwdb != 0)
- 			rssi_val_min =
- 			    (rtlpriv->dm.entry_min_undecoratedsmoothed_pwdb >
-@@ -199,8 +199,8 @@ static u8 rtl92c_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
- 			    rtlpriv->dm.entry_min_undecoratedsmoothed_pwdb;
- 		else
- 			rssi_val_min = rtlpriv->dm.undecorated_smoothed_pwdb;
--	} else if (dm_digtable->cursta_connectctate == DIG_STA_CONNECT ||
--		   dm_digtable->cursta_connectctate == DIG_STA_BEFORE_CONNECT) {
-+	} else if (dm_digtable->cursta_connectstate == DIG_STA_CONNECT ||
-+		   dm_digtable->cursta_connectstate == DIG_STA_BEFORE_CONNECT) {
- 		rssi_val_min = rtlpriv->dm.undecorated_smoothed_pwdb;
- 	} else if (dm_digtable->curmultista_connectstate ==
- 		   DIG_MULTISTA_CONNECT) {
-@@ -334,7 +334,7 @@ static void rtl92c_dm_initial_gain_multi_sta(struct ieee80211_hw *hw)
- 		multi_sta = true;
- 
- 	if (!multi_sta ||
--	    dm_digtable->cursta_connectctate != DIG_STA_DISCONNECT) {
-+	    dm_digtable->cursta_connectstate != DIG_STA_DISCONNECT) {
- 		initialized = false;
- 		dm_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
- 		return;
-@@ -378,15 +378,15 @@ static void rtl92c_dm_initial_gain_sta(struct ieee80211_hw *hw)
- 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
- 
- 	RT_TRACE(rtlpriv, COMP_DIG, DBG_TRACE,
--		 "presta_connectstate = %x, cursta_connectctate = %x\n",
-+		 "presta_connectstate = %x, cursta_connectstate = %x\n",
- 		 dm_digtable->presta_connectstate,
--		 dm_digtable->cursta_connectctate);
-+		 dm_digtable->cursta_connectstate);
- 
--	if (dm_digtable->presta_connectstate == dm_digtable->cursta_connectctate
--	    || dm_digtable->cursta_connectctate == DIG_STA_BEFORE_CONNECT
--	    || dm_digtable->cursta_connectctate == DIG_STA_CONNECT) {
-+	if (dm_digtable->presta_connectstate == dm_digtable->cursta_connectstate
-+	    || dm_digtable->cursta_connectstate == DIG_STA_BEFORE_CONNECT
-+	    || dm_digtable->cursta_connectstate == DIG_STA_CONNECT) {
- 
--		if (dm_digtable->cursta_connectctate != DIG_STA_DISCONNECT) {
-+		if (dm_digtable->cursta_connectstate != DIG_STA_DISCONNECT) {
- 			dm_digtable->rssi_val_min =
- 			    rtl92c_dm_initial_gain_min_pwdb(hw);
- 			rtl92c_dm_ctrl_initgain_by_rssi(hw);
-@@ -407,7 +407,7 @@ static void rtl92c_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
- 
--	if (dm_digtable->cursta_connectctate == DIG_STA_CONNECT) {
-+	if (dm_digtable->cursta_connectstate == DIG_STA_CONNECT) {
- 		dm_digtable->rssi_val_min = rtl92c_dm_initial_gain_min_pwdb(hw);
- 
- 		if (dm_digtable->pre_cck_pd_state == CCK_PD_STAGE_LowRssi) {
-@@ -484,15 +484,15 @@ static void rtl92c_dm_ctrl_initgain_by_twoport(struct ieee80211_hw *hw)
- 		return;
- 
- 	if (mac->link_state >= MAC80211_LINKED)
--		dm_digtable->cursta_connectctate = DIG_STA_CONNECT;
-+		dm_digtable->cursta_connectstate = DIG_STA_CONNECT;
- 	else
--		dm_digtable->cursta_connectctate = DIG_STA_DISCONNECT;
-+		dm_digtable->cursta_connectstate = DIG_STA_DISCONNECT;
- 
- 	rtl92c_dm_initial_gain_sta(hw);
- 	rtl92c_dm_initial_gain_multi_sta(hw);
- 	rtl92c_dm_cck_packet_detection_thresh(hw);
- 
--	dm_digtable->presta_connectstate = dm_digtable->cursta_connectctate;
-+	dm_digtable->presta_connectstate = dm_digtable->cursta_connectstate;
- 
- }
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-index c0201ed..ed868c3 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-@@ -164,7 +164,7 @@ static void rtl92d_dm_diginit(struct ieee80211_hw *hw)
- 	de_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
- 	de_digtable->cur_igvalue = 0x20;
- 	de_digtable->pre_igvalue = 0x0;
--	de_digtable->cursta_connectctate = DIG_STA_DISCONNECT;
-+	de_digtable->cursta_connectstate = DIG_STA_DISCONNECT;
- 	de_digtable->presta_connectstate = DIG_STA_DISCONNECT;
- 	de_digtable->curmultista_connectstate = DIG_MULTISTA_DISCONNECT;
- 	de_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
-@@ -310,7 +310,7 @@ static void rtl92d_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
- 	struct dig_t *de_digtable = &rtlpriv->dm_digtable;
- 	unsigned long flag = 0;
- 
--	if (de_digtable->cursta_connectctate == DIG_STA_CONNECT) {
-+	if (de_digtable->cursta_connectstate == DIG_STA_CONNECT) {
- 		if (de_digtable->pre_cck_pd_state == CCK_PD_STAGE_LOWRSSI) {
- 			if (de_digtable->min_undecorated_pwdb_for_dm <= 25)
- 				de_digtable->cur_cck_pd_state =
-@@ -342,7 +342,7 @@ static void rtl92d_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
- 		de_digtable->pre_cck_pd_state = de_digtable->cur_cck_pd_state;
- 	}
- 	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "CurSTAConnectState=%s\n",
--		 de_digtable->cursta_connectctate == DIG_STA_CONNECT ?
-+		 de_digtable->cursta_connectstate == DIG_STA_CONNECT ?
- 		 "DIG_STA_CONNECT " : "DIG_STA_DISCONNECT");
- 	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "CCKPDStage=%s\n",
- 		 de_digtable->cur_cck_pd_state == CCK_PD_STAGE_LOWRSSI ?
-@@ -428,9 +428,9 @@ static void rtl92d_dm_dig(struct ieee80211_hw *hw)
- 	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "progress\n");
- 	/* Decide the current status and if modify initial gain or not */
- 	if (rtlpriv->mac80211.link_state >= MAC80211_LINKED)
--		de_digtable->cursta_connectctate = DIG_STA_CONNECT;
-+		de_digtable->cursta_connectstate = DIG_STA_CONNECT;
- 	else
--		de_digtable->cursta_connectctate = DIG_STA_DISCONNECT;
-+		de_digtable->cursta_connectstate = DIG_STA_DISCONNECT;
- 
- 	/* adjust initial gain according to false alarm counter */
- 	if (falsealm_cnt->cnt_all < DM_DIG_FA_TH0)
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 40153e7..a15c112 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1624,7 +1624,7 @@ struct dig_t {
- 	u8 dig_twoport_algorithm;
- 	u8 dig_dbgmode;
- 	u8 dig_slgorithm_switch;
--	u8 cursta_connectctate;
-+	u8 cursta_connectstate;
- 	u8 presta_connectstate;
- 	u8 curmultista_connectstate;
- 	char backoff_val;
--- 
-1.7.10.4
+The following changes since commit d4e5979c0da95791aa717c18e162540c7a596360:
 
+  ath9k: Add PID/VID support for AR1111 (2012-08-03 10:11:14 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to 2096ae6ca647302d50a68aa36cb66a00e7dfac70:
+
+  Bluetooth: add support for atheros 0489:e057 (2012-08-06 15:33:05 -0300)
+
+----------------------------------------------------------------
+Andrei Emeltchenko (1):
+      Bluetooth: smp: Fix possible NULL dereference
+
+Gustavo Padovan (1):
+      Bluetooth: Fix possible deadlock in SCO code
+
+Jaganath Kanakkassery (1):
+      Bluetooth: Fix socket not getting freed if l2cap channel create fails
+
+Manoj Iyer (1):
+      Bluetooth: btusb: Add vendor specific ID (0a5c:21f4) BCM20702A0
+
+Peng Chen (1):
+      Bluetooth: add support for atheros 0489:e057
+
+Ram Malovany (3):
+      Bluetooth: Fix using NULL inquiry entry
+      Bluetooth: Fix using a NULL inquiry cache entry
+      Bluetooth: Set name_state to unknown when entry name is empty
+
+Szymon Janc (1):
+      Bluetooth: Fix legacy pairing with some devices
+
+ drivers/bluetooth/ath3k.c  |  2 ++
+ drivers/bluetooth/btusb.c  |  2 ++
+ net/bluetooth/hci_event.c  | 28 ++++++++++++++++++++++------
+ net/bluetooth/l2cap_core.c |  1 +
+ net/bluetooth/l2cap_sock.c |  2 +-
+ net/bluetooth/sco.c        | 19 +++++++++----------
+ net/bluetooth/smp.c        |  5 ++++-
+ 7 files changed, 41 insertions(+), 18 deletions(-)
+
+--M9NhX3UHpAaciwkO
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQIBUwAAoJEPs3PUX4s20oV00P/jykZdeYqL6AD6relxw2B9Ew
+g2WqcfTjLZO7oQdufiRlKho7rD/WX2T5CHRFksQ+n1XUwcVve4ffFTKgeLrabEdN
+TK4xYw43ze+OcpT4nLn3gNxVu0QMGsr/TEIT6nQ6hQq9JNgPWTvKij+ysBbdsTpk
+3oiLdpXQjNNssIZdIQu0b87WjsFlDt1yeoLDT9gyHSZyBgUuj3H65jyC3jeXzHgt
+3bVlt7dizYEAghzJXxTokAFK6Ye+CflyKav2E82oe/qXOzuUHAjIKdOKWsdGi3IY
+k1PDhd7khGUROOQw/BZvl/mHBZWsks4+pWPeVApQuMiJfA5NufUt3lus+CxyZKGp
+f8jl3B6nsiEscXMuRr41XcLwoYDJ49u73uyLN8OiFbGFgbPXg903SPRLq352xIOB
+fvMB2dTO2T8ymAZ9KUGPlXWDg0S8OFQT4bY+FIhUtIqaWXNUqHtBqCVKk5kFbBIG
+X8HgZTxrv9KwVWclBCu9Iwh4MU1KpJJ09eaGx8/bOvPWuaiyJNMFvSFcohTlI0qN
+yzt/9qKERGj0FjBI0hFHz8Zo9byf2jxvjj3HtzHX/CM1wXZl1rc33SfJdCgltFTG
+tKpjwo6zZs25HOBR+MB8jVQHezBgsdF8GhZ7BEmR0t854K3KacxwbnCty4RdCvDq
+uhVj8qVsCGjk0tqYf6q+
+=3DRr
+-----END PGP SIGNATURE-----
+
+--M9NhX3UHpAaciwkO--
