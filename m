@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39227 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758871Ab2HISgb convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:61739 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756621Ab2HFSeJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 14:36:31 -0400
-Received: by lboi8 with SMTP id i8so452783lbo.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:36:30 -0700 (PDT)
+	Mon, 6 Aug 2012 14:34:09 -0400
+Received: by yenl2 with SMTP id l2so2826381yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 11:34:09 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CA+icZUWTjKYQ5YZfx488=SJA-uYYoRvM5X=Gh0YOHn8SvUM2jg@mail.gmail.com>
-References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
-	<CA+icZUWTjKYQ5YZfx488=SJA-uYYoRvM5X=Gh0YOHn8SvUM2jg@mail.gmail.com>
-Date: Thu, 9 Aug 2012 20:36:29 +0200
-Message-ID: <CA+icZUU5SXppB1f3HRKGo3RaUfNF=yWXM=4sAyRJ92FcMi=2Ag@mail.gmail.com> (sfid-20120809_203643_266514_4769A8A3)
-Subject: Re: [PATCH 00/13] Merge GSoC DRM changes to admin-update.sh
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1343924881-31418-1-git-send-email-hauke@hauke-m.de>
+References: <1343924881-31418-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 6 Aug 2012 11:33:47 -0700
+Message-ID: <CAB=NE6Wj3tFVUWNTE1dDk2VopeqPvc4g57hwaETQQR4vA=tcJA@mail.gmail.com> (sfid-20120806_203414_050160_92F6072A)
+Subject: Re: [PATCH 1/2] compat: remove backport of irq_modify_status
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 9, 2012 at 8:29 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> On Thu, Aug 9, 2012 at 8:01 PM, Ozan Çağlayan <ozancag@gmail.com> wrote:
->> Hi,
->>
->> The patches below modifies the admin-update.sh script so that it
->> accepts a variable-length last argument, namely network or/and drm,
->> to selectively fetch specific subsystem codes into the tree.
->>
->> The last 2 patches constitutes the work done so far for the my
->> GSoC project.
->>
->> This first attempt is mostly for getting some comments. For example,
->> eventhough you fetch network and drm drivers, make will just build
->> network drivers. I will either port the project to kconfig which
->> will dynamically configure and build what's available or hack
->> config.mk and Makefile to detect the availability of other drivers
->> than the wireless ones.
->>
->> I thank Luis R. Rodriguez, my mentor, for his helpful and highly
->> responsive mentorship :)
->>
->> Ozan Çağlayan (13):
->>   compat-wireless: Clean up *.mod.c once after everything
->>   compat-wireless: Isolate drivers into different groups
->>   compat-wireless: List everything vertically without concatenating
->>   compat-wireless: Add ability to enable/disable subsystems
->>   compat-wireless: Add 2 convenience functions
->>   compat-wireless: Conditionally build network drivers
->>   compat-wireless: Put network patches into its directory
->>   compat-wireless: No need to search for patches
->>   compat-wireless: Fix cmdline parameter's name
->>   compat-wireless: Selectively apply patches
->>   compat-wireless: Move refresh logic into the loop
->>   compat-wireless: Fetch in DRM drivers
->>   compat-wireless: Add DRM patches
->>
+On Thu, Aug 2, 2012 at 9:28 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Only kernel >= 2.6.39 irq_to_desc or irq_desc are exporting, so that
+> compat is not able to access this on the kernel versions where it is
+> needed. irq_to_desc and irq_desc are defined in the header files so
+> compilation works, but the module is not loadable because of the
+> missing exported symbol which make compat unusable on all these kernel
+> versions. Remove this function, no driver seams to need it.
 >
-> Am I the only one missing 07/13 in series?
-> On [1] I do not see, too.
->
-> - "Birinci" Sedat -
->
-> [1] http://marc.info/?l=linux-wireless&r=1&b=201208&w=2
->
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Looks like "compat-wireless: Put network patches into its directory"
-is the missing one.
+Thanks, if you look at my patch 3e3c23e042 on compat.git it says that
+I added this stuff due to the patch that is now merged on linux.git
+ee9c8a04 -- wl1251: fix oops on early interrupt. That patch was a
+stable fix merged down to v3.4.6. The implications of your tests are
+that wl1251 must be disabled on older kernel or another equivalent
+stable fix must be backported for that driver into
+compat-wireless.git.
 
-- Sedat -
+I frankly have too much patch catching up to so I cannot take care of
+this right now so what I will do is disable wl1251 on the updated
+stable releases for kernels older than v2.6.38 which require all this
+backport work. I welcome patches to properly backpor this though.
+
+I should point out too that this patch was a linux-next.git patch that
+got marked as stable and once merged onto v3.4.6 it required a *new*
+backport change that was not required on a release based on v3.4.5.
+This means that *any* stable fix on older kernels could potentially
+regress stable compat releases. The only way to not regress stable
+compat releases then is if there is no delta from the pulled upstream
+code as there is no gaurantee a stable fix did not implement usage of
+a feature implemented or available only on certain newer kernels.
+
+Luca, for what kernels do you guys really need wl1251 enabled for?
+
+  Luis
