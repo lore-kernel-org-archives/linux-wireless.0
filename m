@@ -1,84 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:41073 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932341Ab2HWRHx (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:41777 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932500Ab2HFTyF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 13:07:53 -0400
-Received: by vcbfk26 with SMTP id fk26so1068159vcb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2012 10:07:52 -0700 (PDT)
+	Mon, 6 Aug 2012 15:54:05 -0400
+Received: by yenl2 with SMTP id l2so2928034yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:54:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <50365AC8.7030503@lwfinger.net>
-References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
-	<50365AC8.7030503@lwfinger.net>
-Date: Thu, 23 Aug 2012 10:07:52 -0700
-Message-ID: <CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com> (sfid-20120823_190757_623484_5F3FAD99)
-Subject: Re: Question about ath9k/mac80211 Driver
-From: Patrick Connolly <pjc999@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1344162581.4513.1.camel@jlt3.sipsolutions.net>
+References: <1344095900.5982.0.camel@jlt3.sipsolutions.net> <1344162581.4513.1.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 6 Aug 2012 12:53:44 -0700
+Message-ID: <CAB=NE6XLMTwG65EhExSES-rPsKK7SDBx4+MgwqxuJL__ZtN=zw@mail.gmail.com> (sfid-20120806_215411_866981_15CD4590)
+Subject: Re: [PATCH v2] compat: deal with backported codel
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry,
-     Thanks for the response.  It appears that "set bitrates" is not
-possible with my version of iw (0.9.19) - I get a big long help screen
-when I try that command:
-
- "iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11"
-...the options printed out for "set" are:
-
-        phy <phyname> set distance <distance>
-        phy <phyname> set coverage <coverage class>
-        phy <phyname> set netns <pid>
-        phy <phyname> set rts <rts threshold|off>
-        phy <phyname> set frag <fragmentation threshold|off>
-        dev <devname> set channel <channel> [HT20|HT40+|HT40-]
-        phy <phyname> set channel <channel> [HT20|HT40+|HT40-]
-        dev <devname> set freq <freq> [HT20|HT40+|HT40-]
-        phy <phyname> set freq <freq> [HT20|HT40+|HT40-]
-        phy <phyname> set name <new name>
-        dev <devname> set type <type>
-        dev <devname> set meshid <meshid>
-        dev <devname> set monitor <flag>*
-        dev <devname> set mesh_param <param> <value>
-
- ...also there's the issue of "basic rates" and "supported rates" I
-would need the supported rates appropriate for the mode (such as 'b')
-to show in the beacon also.
-
-Thanks again for the response.
-
--Patrick
-
-
-On Thu, Aug 23, 2012 at 9:31 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 08/23/2012 11:19 AM, Patrick Connolly wrote:
->>
->> Mohammed,
->>       Thanks very much for the response.
->>
->>     Yes I get "Operation not supported":
->>
->> # iwconfig wlan0 modu 11b
->> Error for wireless request "Set Modulation" (8B2F) :
->>      SET failed on device wlan0 ; Operation not supported.
->>
->>     ...so what does this mean; what are my options here?  In view of
->> the fact that the capability of changing modes (from 'g' to 'b'
->> ...etc.) is an essential requirement, am I using the wrong driver
->> ...is there a different driver that supports this chip?  Or is it that
->> there's no driver that supports this chip so that I would have to put
->> this functionality into ath9k myself if I want it?
+On Sun, Aug 5, 2012 at 3:29 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
+> Some distro kernels (in particular the Debian 3.2.0-3
+> kernel I'm running) backport codel already, so trying
+> to backport it again causes issues. Protect the compat
+> backport with #ifdef TCA_CODEL_MAX.
 >
-> Adding that functionality should not be necessary. The simple command
+> Also link the flow_dissector code into the codel module
+> which then won't be loaded on kernels that already have
+> codel backported.
 >
-> iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
->
-> will restrict the device to 802.11b rates, which I think is what you want.
-> This command does not involve the device driver, but sets the appropriate
-> parameters in mac80211.
->
-> Larry
->
->
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+Applied and pushed, thanks!
+
+  Luis
