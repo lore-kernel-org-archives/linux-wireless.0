@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:47460 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158Ab2HNXAi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 19:00:38 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:37022 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932473Ab2HFTRe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 15:17:34 -0400
+Message-ID: <50201846.2000606@suse.com> (sfid-20120806_211737_514909_59079845)
+Date: Mon, 06 Aug 2012 15:17:26 -0400
+From: Jeff Mahoney <jeffm@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6Wad1yNhUrvJZn0p62gZHAhpTjYaf5qNjjkdOboOiQ=Xg@mail.gmail.com>
-References: <CAB=NE6W_SQUJmAXaLesyRShtQ=Urz=w5Ks5jEXq_50bRge+PWQ@mail.gmail.com>
- <CA+icZUU9qT9H2jy_H8_6Bk1XUbuV0N6_pGRoQbSJhnikewTc0Q@mail.gmail.com>
- <CAB=NE6V=4J7yKbPdb4gVT6BBjdewhYRNEwrNdMd4XE5Ocg4SeQ@mail.gmail.com> <CAB=NE6Wad1yNhUrvJZn0p62gZHAhpTjYaf5qNjjkdOboOiQ=Xg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 14 Aug 2012 16:00:17 -0700
-Message-ID: <CAB=NE6UztqzdJ20GV+bV3jZ-083h8NgX-+AXsyFYJ--V93_=_g@mail.gmail.com> (sfid-20120815_010054_781917_E5263B90)
-Subject: Re: Backports mailing list
-To: sedat.dilek@gmail.com
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	lf_driver_backport@lists.linux-foundation.org,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Jesper Andersen <jespera@diku.dk>,
-	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>
+Subject: [PATCH] brcmsmac: document firmware dependencies
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 14, 2012 at 9:33 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Tue, Aug 14, 2012 at 9:00 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
->> For more details please see:
->>
->> http://www.do-not-panic.com/2012/08/automatically-backporting-linux-kernel.html
->> http://www.do-not-panic.com/2012/08/optimizing-backporting-collateral.html
->>
->>   Luis
->
-> All that said, please use the shiny new mailing list:
-> backports@vger.kernel.org  for  patches for compat / compat-drivers.
+The brcmsmac driver requests firmware but doesn't document the
+dependency. This means that software that analyzes the modules to
+determine if firmware is needed won't detect it.
 
-Furthermore, the project git tree has changed to be renamed to
-compat-drivers as well now, and the new wiki page should be used
-moving forward:
+Specifically, (at least) openSUSE won't install the kernel-firmware
+package if no hardware requires it.
 
-https://backports.wiki.kernel.org
-git://github.com/mcgrof/compat-drivers.git
+This patch adds the MODULE_FIRMWARE directives.
 
-  Luis
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -86,7 +86,9 @@ MODULE_AUTHOR("Broadcom Corporation");
+ MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN driver.");
+ MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN cards");
+ MODULE_LICENSE("Dual BSD/GPL");
+-
++/* This needs to be adjusted when brcms_firmwares changes */
++MODULE_FIRMWARE("brcm/bcm43xx-0.fw");
++MODULE_FIRMWARE("brcm/bcm43xx_hdr-0.fw");
+  /* recognized BCMA Core IDs */
+ static struct bcma_device_id brcms_coreid_table[] = {
+
+-- 
+Jeff Mahoney
+SUSE Labs
