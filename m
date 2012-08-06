@@ -1,79 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:51001 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754867Ab2HFNwi (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:52633 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419Ab2HFHFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 09:52:38 -0400
-Received: by wibhr14 with SMTP id hr14so1725672wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 06:52:37 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: reconfigure channel contexts on ieee80211_reconfigure
-Date: Mon,  6 Aug 2012 16:52:49 +0300
-Message-Id: <1344261169-19962-1-git-send-email-eliad@wizery.com> (sfid-20120806_155242_159461_E647703A)
+	Mon, 6 Aug 2012 03:05:31 -0400
+Received: by obbuo13 with SMTP id uo13so5455311obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 00:05:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120803114116.GA4172@spatula.rz.uni-leipzig.de>
+References: <20120803114116.GA4172@spatula.rz.uni-leipzig.de>
+Date: Mon, 6 Aug 2012 12:35:30 +0530
+Message-ID: <CAD2nsn3aj=+b+4L_LOY6MAP49r4pORbc9nwJLOcc240dkRbJOg@mail.gmail.com> (sfid-20120806_090609_244781_06381B16)
+Subject: Re: MSDU aggregation with mac80211
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Benjamin Kiessling <mittagessen@l.unchti.me>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The channel contexts have to be re-added and re-assigned
-on device reconfiguration.
+On Fri, Aug 3, 2012 at 5:11 PM, Benjamin Kiessling
+<mittagessen@l.unchti.me> wrote:
+> Hi,
+>
+> is there any support for MSDU aggregation in drivers using mac80211 (in
+> my case ath9k)? I couldn't find any code in mac80211 itself or ath9k,
+> but I am not that familiar with the code base of either of them.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-this patch is based on the channel contexts patches
-in mac80211-next/wip branch.
+no its not yet there, but i am not sure about the status :)
 
-net/mac80211/util.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+>
+> Regards,
+> Ben
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 293e6fe..c254abc 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1255,6 +1255,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- {
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_chanctx *ctx;
- 	struct sta_info *sta;
- 	int res, i;
- 
-@@ -1327,6 +1328,12 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 			res = drv_add_interface(local, sdata);
- 	}
- 
-+	/* add channel contexts */
-+	mutex_lock(&local->chanctx_mtx);
-+	list_for_each_entry(ctx, &local->chanctx_list, list)
-+		WARN_ON(drv_add_chanctx(local, ctx));
-+	mutex_unlock(&local->chanctx_mtx);
-+
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry(sta, &local->sta_list, list) {
-@@ -1367,11 +1374,22 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 
- 	/* Finally also reconfigure all the BSS information */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-+		struct ieee80211_chanctx_conf *ctx_conf;
- 		u32 changed;
- 
- 		if (!ieee80211_sdata_running(sdata))
- 			continue;
- 
-+		mutex_lock(&local->chanctx_mtx);
-+		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+				lockdep_is_held(&local->chanctx_mtx));
-+		if (ctx_conf) {
-+			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
-+					   conf);
-+			drv_assign_vif_chanctx(local, sdata, ctx);
-+		}
-+		mutex_unlock(&local->chanctx_mtx);
-+
- 		/* common change flags for all interface types */
- 		changed = BSS_CHANGED_ERP_CTS_PROT |
- 			  BSS_CHANGED_ERP_PREAMBLE |
+
+
 -- 
-1.7.6.401.g6a319
-
+thanks,
+shafi
