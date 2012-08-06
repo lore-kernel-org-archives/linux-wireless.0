@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32353 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751989Ab2HKTJ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2012 15:09:56 -0400
-Date: Sat, 11 Aug 2012 21:09:53 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: David Herrmann <dh.herrmann@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt73usb: WARN(x) in check_sdata_in_driver()
-Message-ID: <20120811190951.GA2432@redhat.com> (sfid-20120811_211047_497109_B04A4886)
-References: <CANq1E4RFGq2M7uSOMZLGuZYSa7E5g6RoWfyLDLtgAdsORD_qWg@mail.gmail.com>
- <20120810222746.GA19779@redhat.com>
- <CANq1E4RH5fHM5LPddD+A_w-G7k0=0scP0jpmqHnygX6Q9_Xecw@mail.gmail.com>
- <20120811163406.GA10564@redhat.com>
- <CANq1E4T=ajt6yt6NMfdyM4mjNgVkevF_nS7tVC-UAs3YpgLYfQ@mail.gmail.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:53813 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932380Ab2HFTGX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 15:06:23 -0400
+Received: by obbuo13 with SMTP id uo13so6282559obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:06:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANq1E4T=ajt6yt6NMfdyM4mjNgVkevF_nS7tVC-UAs3YpgLYfQ@mail.gmail.com>
+In-Reply-To: <1344162581.4513.1.camel@jlt3.sipsolutions.net>
+References: <1344095900.5982.0.camel@jlt3.sipsolutions.net> <1344162581.4513.1.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 6 Aug 2012 12:06:03 -0700
+Message-ID: <CAB=NE6U8HiYaEem+LrULyvh+iL2t4OwUKwBJNqHeZEHQWSKaLA@mail.gmail.com> (sfid-20120806_210626_555069_2A09D4FC)
+Subject: Re: [PATCH v2] compat: deal with backported codel
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 11, 2012 at 08:46:47PM +0200, David Herrmann wrote:
-> Yes, I generated the wpa_supplicant.conf via netcfg (a network manager from
-> ArchLinux) and used it by hand. I often noticed doing everything by myself
-> works, but using netcfg or NetworkManager results in a timeout during
-> wlan-connection. Haven't debugged this, but it is not related to this bug
-> as it happens with other devices, too.
-> 
-> I now got everything running again, are you still interested in the
-> wpa_supplicant.conf? Sorry, for the noice.
-> Anyway, I haven't encountered the kernel-warnings, yet, but I will keep
-> looking. I haven't found a way to reliably reproduce them, but I saw them
-> quite often with linux-next a month ago and they seem to be gone now.
+On Sun, Aug 5, 2012 at 3:29 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> Have you pushed any patches regarding this bug or do you just assume that
-> this was some untested code in linux-next that should be fixed in the
-> stable series for now?
+> Some distro kernels (in particular the Debian 3.2.0-3
+> kernel I'm running) backport codel already, so trying
+> to backport it again causes issues. Protect the compat
+> backport with #ifdef TCA_CODEL_MAX.
+>
+> Also link the flow_dissector code into the codel module
+> which then won't be loaded on kernels that already have
+> codel backported.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-We have various mac80211 fixes that could be related with this problem,
-but I do not see any particular which address that directly. Perhaps
-warnings ware some side effect of other bug.
+Neat, thanks, only one comment below:
 
-> I will tell you if the bugs occur again, but as I said, they seem gone.
-> Anyway, thanks for your time!
+> diff --git a/compat/flow_dissector.c b/compat/flow_dissector.c
+> index 8affda0..7dd7ec1 100644
+> --- a/compat/flow_dissector.c
+> +++ b/compat/flow_dissector.c
+> @@ -141,4 +141,3 @@ ipv6:
+>
+>         return true;
+>  }
+> -EXPORT_SYMBOL_GPL(skb_flow_dissect);
 
-Yeh, if warnings come back, please post me wpa_supplicant.conf, and
-eventually some other informations important to reproduce the problem
-(except .config which you already provided).
+Why is this change required?
 
-Thanks
-Stanislaw
+  Luis
