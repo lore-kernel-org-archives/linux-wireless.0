@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3874 "EHLO mms1.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53226 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754332Ab2HBNmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 09:42:19 -0400
-Message-ID: <501A83AF.9060706@broadcom.com> (sfid-20120802_154222_982346_3D682349)
-Date: Thu, 2 Aug 2012 15:42:07 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Josh Boyer" <jwboyer@redhat.com>
-cc: "Seth Forshee" <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 0/2] Fix lockdep warning in brcmsmac
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
- <20120802002353.GD1785@zod.bos.redhat.com>
- <20120802015320.GA25933@thinkpad-t410>
- <20120802120230.GE1785@zod.bos.redhat.com>
- <20120802125102.GF1785@zod.bos.redhat.com>
-In-Reply-To: <20120802125102.GF1785@zod.bos.redhat.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+	id S932324Ab2HFSMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 14:12:53 -0400
+Message-ID: <1344271304.11053.17.camel@dcbw.foobar.com> (sfid-20120806_201327_284289_7861F285)
+Subject: Re: [PATCH]: Mac80211 driver and I checked the patch
+From: Dan Williams <dcbw@redhat.com>
+To: Christopher Sacchi <chris.sacchi@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Mon, 06 Aug 2012 11:41:44 -0500
+In-Reply-To: <CAGh4K3Lym9yETNbMutfjNuANrgwtvfrGes6emr3Mvhx47D3B2g@mail.gmail.com>
+References: <CAGh4K3Lym9yETNbMutfjNuANrgwtvfrGes6emr3Mvhx47D3B2g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/02/2012 02:51 PM, Josh Boyer wrote:
-> That didn't help.  I've tried multiple module load orderings without
-> anything being shown on the bcma bus.  The modules all load, but no
-> devices are created.  It's as if the hardware was removed or something.
-> Puzzling.
+On Mon, 2012-08-06 at 11:49 +0000, Christopher Sacchi wrote:
+> The source file needed a change  that was told in the description to
+> know that the #include needed to be fixed, and the function changed
+> another value to 0 (yes) in the description (that said FIXME.) The
+> patch fixes a typo-like error and has been checked with checkpatch.pl
+> in the scripts directory.
+> Here's the patch:
+
+It's great that you're sending patches, but it also helps the developers
+when the patches are correctly formatted.  See:
+
+http://linux.yyz.us/patch-format.html
+
+Here's a good example:
+
+http://lkml.org/lkml/2012/8/2/286
+
+1) the subject line starts with [PATCH] *and* the module being patches,
+then quickly describes the patch
+2) There's a Signed-off-by comes *before* the patch data
+3) The full path to the files being patched is in the patch header (ie,
+not just "main.c" but foo/bar/baz/main.c)
+
+Cheers,
+Dan
+
+> --- main.c	2012-07-21 20:58:29.000000000 +0000
+> +++ mainnew.c	2012-08-05 20:00:37.000000000 +0000
+> @@ -32,7 +32,7 @@
+>  #include "led.h"
+>  #include "cfg.h"
+>  #include "debugfs.h"
+> -
+> +#include "net/rfkill/rfkill.h"
+>  static struct lock_class_key ieee80211_rx_skb_queue_class;
 > 
-> josh
+>  void ieee80211_configure_filter(struct ieee80211_local *local)
+> @@ -183,6 +183,7 @@ int ieee80211_hw_config(struct ieee80211
+>  		 *
+>  		 */
+>  		/* WARN_ON(ret); */
+> +		WARN_ON(1)
+>  	}
+> 
+>  	return ret;
+> Signed-off-by: Christopher P. Sacchi <chris.sacchi@gmail.com>
+> --
+> 
 
-Can you share the kerne configuration?
-
-Gr. AvS
 
