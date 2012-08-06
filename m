@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932074Ab2HFPGr (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51195 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751907Ab2HFVPs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 11:06:47 -0400
-Message-ID: <1344265599.4807.2.camel@jlt3.sipsolutions.net> (sfid-20120806_170651_451597_7C344CE3)
-Subject: Re: WDS vs. multi-channel operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 06 Aug 2012 17:06:39 +0200
-In-Reply-To: <501FDC87.1000204@openwrt.org>
-References: <1343655393.4452.13.camel@jlt3.sipsolutions.net>
-	  <501EA97B.3010703@openwrt.org>
-	  <1344187264.5765.4.camel@jlt3.sipsolutions.net>
-	  (sfid-20120805_192133_648139_FC40F06B) <1344187324.5765.5.camel@jlt3.sipsolutions.net>
-	 <501FDC87.1000204@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 6 Aug 2012 17:15:48 -0400
+Received: by obbuo13 with SMTP id uo13so6435001obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 14:15:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <50202A06.7090308@hauke-m.de>
+References: <1344095900.5982.0.camel@jlt3.sipsolutions.net>
+ <1344162581.4513.1.camel@jlt3.sipsolutions.net> <CAB=NE6XLMTwG65EhExSES-rPsKK7SDBx4+MgwqxuJL__ZtN=zw@mail.gmail.com>
+ <50202A06.7090308@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 6 Aug 2012 14:15:27 -0700
+Message-ID: <CAB=NE6V+ze=1FOQj5F3AhdF94um+coMY3Y+V9QyFdSUUg_Sryw@mail.gmail.com> (sfid-20120806_231552_684023_C4DA362A)
+Subject: Re: [PATCH v2] compat: deal with backported codel
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-08-06 at 17:02 +0200, Felix Fietkau wrote:
+On Mon, Aug 6, 2012 at 1:33 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 08/06/2012 09:53 PM, Luis R. Rodriguez wrote:
+>> On Sun, Aug 5, 2012 at 3:29 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>> Some distro kernels (in particular the Debian 3.2.0-3
+>>> kernel I'm running) backport codel already, so trying
+>>> to backport it again causes issues. Protect the compat
+>>> backport with #ifdef TCA_CODEL_MAX.
+>>>
+>>> Also link the flow_dissector code into the codel module
+>>> which then won't be loaded on kernels that already have
+>>> codel backported.
+>>>
+>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>>
+>> Applied and pushed, thanks!
+>>
+>>   Luis
+>>
+> This breaks my build if net/codel.h is not in the kernel headers:
+>
+> In file included from
+> /home/hauke/compat-wireless/compat-wireless/compat/sch_fq_codel_core.c:27:0:
+> /home/hauke/compat-wireless/compat-wireless/include/net/codel.h:5:28:
+> fatal error: net/codel.h: No such file or directory
+> compilation terminated.
+>
+> TCA_CODEL_MAX is defined in include/linux/compat-3.5.h and this file is
+> included ever time, so the check around #include_next <net/codel.h> is
+> never false.
+>
+> You could define something like COMPAT_CODEL_BACKPORT in
+> include/linux/compat-3.5.h and extend the check in include/net/codel.h
+> that this has to be unset.
 
-> >> If you're going to require them to be bound to an AP though, where's the
-> >> difference to the current 4-addr AP_VLAN behaviour? It seems with that
-> >> you could actually implement a bound-to-AP-WDS entirely in userspace
-> >> since there's no requirement to actually go through the auth/assoc
-> >> sequence for hostapd to add the station entry?
-> > 
-> > Oh and if you actually do need WDS-type interfaces, maybe their role
-> > should change to be virtual like AP_VLAN-type interfaces?
+Dah, reverting for now, I need to get some compiles through.
 
-> The difference between WDS and 4-addr AP_VLAN is that WDS is AP<->AP,
-> not AP<->STA. I guess it would be possible to write some code to create
-> AP VLANs + station entries for remote APs based on cooked monitor mode
-> based discovery or some form of mgmt frame exchange.
-
-I was thinking just pre-configure it as you have to anyway now?
-
-johannes
-
+  Luis
