@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2187 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751275Ab2H3RnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 13:43:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 0/5] brcmfmac: add support for new fullmac devices
-Date: Thu, 30 Aug 2012 19:42:57 +0200
-Message-ID: <1346348582-20095-1-git-send-email-arend@broadcom.com> (sfid-20120830_194329_147306_0EFED785)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:41530 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932494Ab2HFTdB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 15:33:01 -0400
+Received: by obbuo13 with SMTP id uo13so6313883obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:33:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1344279307-2929-2-git-send-email-ozancag@gmail.com>
+References: <1344279307-2929-1-git-send-email-ozancag@gmail.com> <1344279307-2929-2-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 6 Aug 2012 12:32:39 -0700
+Message-ID: <CAB=NE6U-zqKi1UjE4pYcBx9ypUGU=Kixurs7D=oYaUyTh7QZ6w@mail.gmail.com> (sfid-20120806_213315_971989_9FDCF4E5)
+Subject: Re: [PATCH 2/2] compat-wireless: Small cosmetic changes
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series mainly contains support for new wireless devices. The
-fix for possible race was created during testing the driver on those
-devices. Finally, it has a patch that adds functionality to handle nl80211
-testmode command when CONFIG_NL80211_TESTMODE Kconfig item is set.
+On Mon, Aug 6, 2012 at 11:55 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> Change old tree names to reflect the new ones, continue to replace
+> occurences of compat-* with compat-drivers.
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-This series applies to the wireless-next tree.
+Applied and pushed, thanks!
 
-Arend van Spriel (1):
-  brcmfmac: add callback for nl80211 testmode command
-
-Franky Lin (1):
-  brcmfmac: add BCM43241 sdio interface driver support
-
-Hante Meuleman (3):
-  brcmfmac: prevent possible race condition on usb rx control.
-  brcmfmac: Add 43242 USB support.
-  brcmfmac: Add 43143 USB support.
-
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    1 +
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    8 +++++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 ++
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   17 +++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   31 ++++++++++++++++++--
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   25 +++++++++++++++-
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
- 8 files changed, 84 insertions(+), 3 deletions(-)
-
--- 
-1.7.9.5
-
-
+  Luis
