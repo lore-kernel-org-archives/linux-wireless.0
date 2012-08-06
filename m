@@ -1,78 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47965 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636Ab2HBPhP (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:57770 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836Ab2HFToz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 11:37:15 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SwxSc-0004jJ-J4
-	for linux-wireless@vger.kernel.org; Thu, 02 Aug 2012 17:37:14 +0200
-Message-ID: <1343921832.4471.14.camel@jlt3.sipsolutions.net> (sfid-20120802_173721_885221_C9412F4B)
-Subject: mac80211-next preview
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 02 Aug 2012 17:37:12 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 6 Aug 2012 15:44:55 -0400
+Received: by obbuo13 with SMTP id uo13so6327782obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:44:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20511.62502.380685.674021@gargle.gargle.HOWL>
+References: <20511.62502.380685.674021@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 6 Aug 2012 12:44:35 -0700
+Message-ID: <CAB=NE6Wz0FEcZd3qvDET=kst3gRK+wu=k3yuMt_D1mfkT3+k5Q@mail.gmail.com> (sfid-20120806_214459_688264_41CC95AA)
+Subject: Re: [PATCH 3.5.y 2/2] compat-wireless: Add new cherry-picked patches
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Aug 6, 2012 at 9:43 AM, Sujith Manoharan
+<c_manoha@qca.qualcomm.com> wrote:
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Here's a preview (in form of the shortlog) of what's to come for 3.7 in
-my tree right now:
- * I picked up the wlcore fixes, to be able to pick up
- * Thomas's patch to change the TX API
- * VHT association support from Mahesh
- * an improvement for PS in multi-vif scenarios from Eliad
- * a few cleanups/improvements/small fixes overall
- * my preparation work for multi-channel, using the correct channel
-   pointer throughout mac80211
+8 of the hunks were just version of git ouputs at the end of the patch
+files, we gotta find a way to ignore that from git format-patch. I
+didn't find anything yet.
 
-All of this is in the mac80211-next/master branch right now.
+Thanks so much for these patches! I've applied them and pushed them,
+I'll run a series of tests later and appropriately tag things after
+the test, and push new respective releases then.
 
-johannes
-
-
-
-Arik Nemtsov (2):
-      wlcore: don't get the hlid from a queued skb
-      wlcore: op_tx: pass sta explicitly when inferring frame hlid
-
-Chun-Yeow Yeoh (1):
-      mac80211: don't re-init rate control when receiving mesh beacon
-
-Eliad Peller (1):
-      mac80211: add PS flag to bss_conf
-
-Emmanuel Grumbach (1):
-      mac80211: don't call mgd_prepare_tx when associated
-
-Johannes Berg (14):
-      mac80211: don't react to beacon loss if HW monitoring
-      mac80211: supress HT/VHT disable if not supported
-      mac80211: rename sta to new_sta
-      mac80211: set channel only once during auth/assoc
-      mac80211: use oper_channel in mesh
-      mac80211: use oper_channel in ibss
-      mac80211: use oper_channel in managed mlme
-      mac80211: use oper_channel in utils and config
-      mac80211: fix current vs. operating channel in preq/beacon
-      mac80211: use correct channel in TX
-      mac80211: manage carrier state in mesh
-      mac80211: enable WDS carrier only after adding station
-      mac80211: use eth_broadcast_addr
-      mac80211: reset station MLME flags upon new association
-
-Mahesh Palivela (1):
-      mac80211: VHT (11ac) association
-
-Thomas Huehn (1):
-      mac80211: move TX station pointer and restructure TX
-
-Vladimir Kondratiev (1):
-      cfg80211: unify IE search
-
-
+  Luis
