@@ -1,71 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:37099 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122Ab2H0GqG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 02:46:06 -0400
-Received: by eaac11 with SMTP id c11so1075807eaa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 23:46:04 -0700 (PDT)
+Received: from li271-223.members.linode.com ([178.79.152.223]:40617 "EHLO
+	mail.mleia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755586Ab2HFTjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 15:39:17 -0400
+Message-ID: <50201D62.2020701@mleia.com>
+Date: Mon, 06 Aug 2012 22:39:14 +0300
+From: Vladimir Zapolskiy <vz@mleia.com>
 MIME-Version: 1.0
-In-Reply-To: <20120827064248.GA22073@ritirata.org>
-References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
- <1346014505-7554-2-git-send-email-ordex@autistici.org> <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com>
- <1346045881.3746.0.camel@jlt4.sipsolutions.net> <CAGRGNgXy3t5TJqY=VwKjPEH=K4XKR_Dm5qVKkmYxStYoAP3fvQ@mail.gmail.com>
- <20120827064248.GA22073@ritirata.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 27 Aug 2012 16:45:44 +1000
-Message-ID: <CAGRGNgUnC_A21zp8T35HZQkVtQxTWDY_1nymstPLAo5+zWqF+A@mail.gmail.com> (sfid-20120827_084610_475356_05B87476)
-Subject: Re: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH] brcm80211: smac: set interface down on reset
+References: <1344115747-25627-1-git-send-email-vz@mleia.com>
+In-Reply-To: <1344115747-25627-1-git-send-email-vz@mleia.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Antonio,
+Hi Arend,
 
-On Mon, Aug 27, 2012 at 4:42 PM, Antonio Quartulli <ordex@autistici.org> wrote:
-> On Mon, Aug 27, 2012 at 03:41:09 +1000, Julian Calaby wrote:
->> Hi Johannes,
->>
->> On Mon, Aug 27, 2012 at 3:38 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Mon, 2012-08-27 at 09:48 +1000, Julian Calaby wrote:
->> >> Antonio,
->> >>
->> >> On Mon, Aug 27, 2012 at 6:55 AM, Antonio Quartulli <ordex@autistici.org> wrote:
->> >> > This driver now advertises its allowed VIFs combinations to the mac80211
->> >> > sublayer.
->> >> >
->> >> > Other than that, practical tests shown that ath9k_htc devices allow an IBSS VIF
->> >> > to coexist with VIF set up on other modes. This patch removes the check which
->> >> > block the creation of any other VIF whenever an IBSS one is already present.
->> >>
->> >> These two patches should really be applied in the opposite order:
->> >>
->> >> You should add the interface combination data (this patch) then remove
->> >> the old checking code.
->> >>
->> >> This way there's not a window (admittedly only one patch) where the
->> >> interface combinations aren't enforced.
->> >
->> > FWIW, it's the other way around, in that window no combinations would be
->> > permitted at all...
->>
->> It's still a problem for bisection then =)
+what do you think about the proposed change? For me the problem is
+quite severe, for the last several months I had to patch the kernel
+to have functional BCM43225 on my laptop, hopefully the fix should go to the
+stable branches as well.
+
+On 05.08.2012 00:29, Vladimir Zapolskiy wrote:
+> This change marks interface as down on reset, otherwise the driver can't
+> reinitialize itself properly.
 >
-> Shall I merge the two patches and do both the changes in one shot?
+> Without the change a transient problem turns out to be critical and leads
+> to inavailability to reset the driver without brcmsmac module unload/load
+> cycle:
 
-You might as well, however you should address Mohammed's comment first.
+s/inavailability/unavailability/
 
-Thanks,
+>      ieee80211 phy0: wl0: PSM microcode watchdog fired at 5993 (seconds). Resetting.
+>      brcms_c_dpc : PSM Watchdog, chipid 0xa8d9, chiprev 0x1
+>      ieee80211 phy0: wl0: fatal error, reinitializing
+>      ieee80211 phy0: Hardware restart was requested
+>      ieee80211 phy0: brcms_ops_start: brcms_up() returned -19
+>
+> Signed-off-by: Vladimir Zapolskiy<vz@mleia.com>
+> Cc: Arend van Spriel<arend@broadcom.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    3 +++
+>   1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> index 192ad5c..a5edebe 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> @@ -1233,6 +1233,9 @@ uint brcms_reset(struct brcms_info *wl)
+>   	/* dpc will not be rescheduled */
+>   	wl->resched = false;
+>
+> +	/* inform publicly that interface is down */
+> +	wl->pub->up = false;
+> +
+>   	return 0;
+>   }
+>
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+With best wishes,
+Vladimir
