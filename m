@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44569 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352Ab2HATdS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 15:33:18 -0400
-Message-ID: <1343849597.4638.20.camel@jlt3.sipsolutions.net> (sfid-20120801_213322_205317_A7634767)
-Subject: Re: [RFC 7/8] mac80211: support extended channel switch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 01 Aug 2012 21:33:17 +0200
-In-Reply-To: <CA+XVXfegwamdK3mzP5eiAUJM4eYrFRTXY4Mr2tKP7+VBYriF-w@mail.gmail.com> (sfid-20120801_212830_973950_C3E35CD5)
-References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
-	 <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
-	 <CA+XVXfegwamdK3mzP5eiAUJM4eYrFRTXY4Mr2tKP7+VBYriF-w@mail.gmail.com>
-	 (sfid-20120801_212830_973950_C3E35CD5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1811 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753792Ab2HFIua (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 04:50:30 -0400
+Message-ID: <501F853F.9010904@broadcom.com> (sfid-20120806_105034_498518_02B002C5)
+Date: Mon, 6 Aug 2012 10:50:07 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Dan Carpenter" <dan.carpenter@oracle.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: net: wireless: add brcm80211 drivers
+References: <20120805195716.GA12400@elgon.mountain>
+In-Reply-To: <20120805195716.GA12400@elgon.mountain>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-01 at 22:28 +0300, Arik Nemtsov wrote:
-
-> > +static void
-> > +ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-> > +                                u8 new_chan_no, u8 count, u8 mode,
-> > +                                enum ieee80211_band new_band,
-> > +                                struct ieee80211_bss *bss, u64 timestamp)
-> >  {
-> >         struct cfg80211_bss *cbss =
-> >                 container_of((void *)bss, struct cfg80211_bss, priv);
-> >         struct ieee80211_channel *new_ch;
-> >         struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> > -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
-> > -                                                     cbss->channel->band);
-> > +       int new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
+On 08/05/2012 09:57 PM, Dan Carpenter wrote:
+> Hi Arend,
 > 
-> I'm not sure a channel switch between bands should be allowed. Case in
-> point - a device might have different HT capabilities between bands,
-> so different rates might need to be programmed to FW. This would
-> require a re-assoc..
+> The patch 5b435de0d786: "net: wireless: add brcm80211 drivers" from
+> Oct 5, 2011, leads to the following warning:
+> drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:1699 brcmf_sdbrcm_readframes()
+> 	 warn: is it ok to set 'rxseq' to -1?
+> 
+>   1697                          cnt = brcmf_sdbrcm_rxglom(bus, rxseq);
+>   1698                          brcmf_dbg(GLOM, "rxglom returned %d\n", cnt);
+>   1699                          rxseq += cnt - 1;
+>   1700                          rxleft = (rxleft > cnt) ? (rxleft - cnt) : 1;
+>   1701                          continue;
+> 
+> This isn't a warning, it's just one of the things I audit.
+> brcmf_sdbrcm_rxglom() can return 0 so it's weird that we do
+> "rxseq += 0 - 1;"  Was that intended?
+> 
+> regards,
+> dan carpenter
+> 
+> 
 
-Hmm, that might require some new flags or something? I'm not even sure
-the extended chanswitch is allowed to switch bands, but by the look of
-it that must have been the intent?
+Thanks, Dan
 
-johannes
+Probably it was not intended, but we need a closer look. At rxseq should
+never be -1.
+
+Gr. AvS
 
