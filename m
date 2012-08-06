@@ -1,50 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:33697 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791Ab2H3P7S (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:44712 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752782Ab2HFT63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 11:59:18 -0400
-Received: by mail-qc0-f174.google.com with SMTP id o28so1364316qcr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2012 08:59:18 -0700 (PDT)
+	Mon, 6 Aug 2012 15:58:29 -0400
+Date: Mon, 6 Aug 2012 16:58:22 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth-next 2012-08-06
+Message-ID: <20120806195821.GF3146@joana> (sfid-20120806_215845_777355_0E4A3EB3)
 MIME-Version: 1.0
-In-Reply-To: <20120807102208.GA12589@redhat.com>
-References: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com>
- <20120807102208.GA12589@redhat.com>
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Thu, 30 Aug 2012 16:58:58 +0100
-Message-ID: <CAJZjf_xVOKjVYYXxsWf6Z+KaTDi_3ZDqvBMyzMETfbkpWUgWFQ@mail.gmail.com> (sfid-20120830_175943_448519_E56D2A4A)
-Subject: Re: unloading WiFi modules is usually triggering kernel crash
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: ML linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CdrF4e02JqNVZeln"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 7, 2012 at 11:22 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Jul 31, 2012 at 01:54:52PM +0100, Pedro Francisco wrote:
->> I've noticed in the past few days a pattern: sometimes nm-applet
->> starts showing empty bars for the signal strength.
->
-> RSSI reporting problem or maybe NM issue. When you change kernel to
-> older or newer does this problem go away ?
->
->> Running the script:
->> sudo ifconfig wlan0 down; sleep 1
->> sudo rmmod hp_wmi; sudo rmmod iwl3945; sudo rmmod iwlegacy; sudo rmmod
->> mac80211; sudo rmmod cfg80211
->> sleep 2; sudo rmmod rfkill; sync
->> sudo modprobe rfkill; sudo modprobe cfg80211; sudo modprobe mac80211;
->> sudo modprobe iwlegacy
->> sudo modprobe iwl3945; sudo modprobe hp_wmi; sleep 1; sudo ifconfig wlan0 up
->
-> I run a bit modified script (I do not have hp_wmi.ko and rfkill.ko) for few
-> hours, and did not get any WARNING/crash. I used 3.5, can you check if that
-> problem is also fixed on your system on 3.5 or newer.
 
-On 3.5.2-3.fc17.i686.PAE everything seems stable. The problem I had
-described hasn't happened recently.
-I guess it got fixed in the meantime.
+--CdrF4e02JqNVZeln
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thank you for your time,
--- 
-Pedro
+Hi John,
+
+These are the changes I queued for 3.7. There are a many small
+fixes/improvements by Andre Guedes. A l2cap channel refcounting refactor by
+Jaganath. Bluetooth sockets now appears in /proc/net, by Masatake Yamato and
+Sachin Kamat changes ours drivers to use devm_kzalloc().
+
+Please pull, or let me know any concerns you have. Thanks.
+
+	Gustavo
+
+---
+The following changes since commit 173f8654746c138a08f51a8a0db7747763a896a2:
+
+  Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4 (2012-07-27 20:52:25 -0700)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next master
+
+for you to fetch changes up to cd17decbd9af41c9548bb108ccf156519f8253ec:
+
+  Bluetooth: Refactor in hci_le_conn_complete_evt (2012-08-06 15:08:41 -0300)
+
+----------------------------------------------------------------
+Andre Guedes (17):
+      Bluetooth: Remove missing code
+      Bluetooth: Use lmp_bredr_capable where applicable
+      Bluetooth: Use lmp_le_capable where applicable
+      Bluetooth: Use lmp_ssp_capable where applicable
+      Bluetooth: Use lmp_esco_capable where applicable
+      Bluetooth: Use lmp_rswitch_capable where applicable
+      Bluetooth: Use lmp_sniff_capable where applicable
+      Bluetooth: Use lmp_sniffsubr_capable where applicable
+      Bluetooth: Use lmp_no_flush_capable where applicable
+      Bluetooth: Remove locking in hci_user_passkey_request_evt
+      Bluetooth: Trivial refactoring
+      Bluetooth: Fix hci_le_conn_complete_evt
+      Bluetooth: Remove unneeded code
+      Bluetooth: Refactor hci_cs_le_create_conn
+      Bluetooth: Find hci_conn by BT_CONNECT state
+      Bluetooth: Lookup hci_conn in hci_le_conn_complete_evt
+      Bluetooth: Refactor in hci_le_conn_complete_evt
+
+      Bluetooth: Do not shadow hdr variable
+      Bluetooth: Fix processing A2MP chan in security_cfm
+      Bluetooth: Make connect / disconnect cfm functions return void
+
+Jaganath Kanakkassery (2):
+      Bluetooth: Move l2cap_chan_hold/put to l2cap_core.c
+      Bluetooth: Free the l2cap channel list only when refcount is zero
+
+Masatake YAMATO (8):
+      Bluetooth: /proc/net/ entries for bluetooth protocols
+      Bluetooth: Added /proc/net/bnep via bt_procfs_init()
+      Bluetooth: Added /proc/net/cmtp via bt_procfs_init()
+      Bluetooth: Added /proc/net/hci via bt_procfs_init()
+      Bluetooth: Added /proc/net/hidp via bt_procfs_init()
+      Bluetooth: Added /proc/net/l2cap via bt_procfs_init()
+      Bluetooth: Added /proc/net/rfcomm via bt_procfs_init()
+      Bluetooth: Added /proc/net/sco via bt_procfs_init()
+
+Sachin Kamat (11):
+      Bluetooth: Use devm_kzalloc in bcm203x.c file.
+      Bluetooth: Use devm_kzalloc in bfusb.c file
+      Bluetooth: Use devm_kzalloc in bluecard_cs.c file
+      Bluetooth: Use devm_kzalloc in bpa10x.c file
+      Bluetooth: Use devm_kzalloc in bt3c_cs.c file
+      Bluetooth: Use devm_kzalloc in btmrvl_sdio.c file
+      Bluetooth: Use devm_kzalloc in btsdio.c file
+      Bluetooth: Use devm_kzalloc in btuart_cs.c file
+      Bluetooth: Use devm_kzalloc in btusb.c file
+      Bluetooth: Use devm_kzalloc in btwilink.c file
+      Bluetooth: Use devm_kzalloc in dtl1_cs.c file
+
+ drivers/bluetooth/bcm203x.c       |   8 +--
+ drivers/bluetooth/bfusb.c         |  12 ++--
+ drivers/bluetooth/bluecard_cs.c   |   5 +-
+ drivers/bluetooth/bpa10x.c        |   8 +--
+ drivers/bluetooth/bt3c_cs.c       |   5 +-
+ drivers/bluetooth/btmrvl_sdio.c   |  15 ++---
+ drivers/bluetooth/btsdio.c        |   8 +--
+ drivers/bluetooth/btuart_cs.c     |   5 +-
+ drivers/bluetooth/btusb.c         |  13 +---
+ drivers/bluetooth/btwilink.c      |   8 +--
+ drivers/bluetooth/dtl1_cs.c       |   3 +-
+ include/net/bluetooth/bluetooth.h |  10 +++
+ include/net/bluetooth/hci.h       |  11 ++++
+ include/net/bluetooth/hci_core.h  |  22 ++-----
+ include/net/bluetooth/l2cap.h     |  17 +----
+ include/net/bluetooth/smp.h       |   8 +--
+ net/bluetooth/a2mp.c              |  16 +++--
+ net/bluetooth/af_bluetooth.c      | 141 ++++++++++++++++++++++++++++++++++++++++
+ net/bluetooth/bnep/sock.c         |  22 ++++++-
+ net/bluetooth/cmtp/sock.c         |  23 ++++++-
+ net/bluetooth/hci_core.c          |   6 +-
+ net/bluetooth/hci_event.c         |  93 +++++++++++---------------
+ net/bluetooth/hci_sock.c          |  13 +++-
+ net/bluetooth/hidp/sock.c         |  22 ++++++-
+ net/bluetooth/l2cap_core.c        |  32 +++++++--
+ net/bluetooth/l2cap_sock.c        |  22 ++++++-
+ net/bluetooth/mgmt.c              |  34 +++++++---
+ net/bluetooth/rfcomm/sock.c       |  14 +++-
+ net/bluetooth/sco.c               |  16 +++--
+ 29 files changed, 415 insertions(+), 197 deletions(-)
+
+--CdrF4e02JqNVZeln
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQICHdAAoJEPs3PUX4s20o4O0P/iNbNQ3pu0C5YdgxCzrswEry
+WfCF9YI/uVK4fyVIdBSoGxHMjPhk/DnrFU5x0zlFijjOC+f3GUUj4iXDKXWCAgf+
+QEvyO5P0DS7YndfB9XVr3UkmSsGghhxfxOvQzOezK7y+o9saOF455kW2pk421tX+
+CQg4lTTOxmNaZTeDte+RBJQ1ciBMrhC+Lbra3ruZEkQBRacsEIe2yJnvhHmsHNpg
+qnixzLTDBL1joTt4lGnqwqTNGD3LHMfv9S5Ooht6jh6+Q3eTQoc1Z6dCbFM5ISga
+JIxkaqw706LeLtMnIzncRnM0mcxTpyHFe6IedUfSQ+ayilTRKwm+rsBKRDv8gKql
+3YRjBHjUyIDk/XDyMCT+8kAcRtm3naxiAK+QMrfKbD+c6jA3L1ndi0GAbJ3RwVxY
+h7ycykLqfaGAEm3h02SIjN8N9rVTYSbr8s+0TdJxonDKyd5vuxwihWhxs1mv87XF
+89BpmyRI9Q5pf5NPqwtLUd6FwLN9pEoJ0ZbuZVtAH/OeFDA0jv9AHMYKzifxi+s3
+SFGeUQbqGzneqIzcBBTh6BeEzjdqaiJUxF4UVt6Mn2icEkC/9vxb2GqJ7p1bHpYT
+i55hx/v61ZIiw2ODOR1Xl9zZoQXXH2X34676ovQsLX6Myl51zMr7g+GkC7H7E77V
+/MTfkoc7+XbBhDDyU7JN
+=E2TO
+-----END PGP SIGNATURE-----
+
+--CdrF4e02JqNVZeln--
