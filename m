@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:35418 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753559Ab2HBBx2 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:62461 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755286Ab2HFBw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 21:53:28 -0400
-Date: Wed, 1 Aug 2012 20:53:20 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Josh Boyer <jwboyer@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 0/2] Fix lockdep warning in brcmsmac
-Message-ID: <20120802015320.GA25933@thinkpad-t410> (sfid-20120802_035331_998346_BC257402)
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
- <20120802002353.GD1785@zod.bos.redhat.com>
+	Sun, 5 Aug 2012 21:52:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120802002353.GD1785@zod.bos.redhat.com>
+In-Reply-To: <CAGh4K3LLy0fnFMJ-e+yqCM7cpONo41-cP_o7dQvsAesd-hdvuQ@mail.gmail.com>
+References: <CAGh4K3LLy0fnFMJ-e+yqCM7cpONo41-cP_o7dQvsAesd-hdvuQ@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 6 Aug 2012 11:52:36 +1000
+Message-ID: <CAGRGNgUrwCF6arte70Yrifeeq7wZB+hjGnwG4wBfT8zOgghZBg@mail.gmail.com> (sfid-20120806_035317_136860_992615EE)
+Subject: Re: [PATCH]: With no attatchment NOT SPAM, a REWRITE
+To: Christopher Sacchi <chris.sacchi@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 01, 2012 at 08:23:54PM -0400, Josh Boyer wrote:
-> On Wed, Aug 01, 2012 at 03:58:41PM -0500, Seth Forshee wrote:
-> > As reported by Josh Boyer, brcmsmac is producing lockdep warnings by
-> > calling freq_reg_info() without holding cfg80211_lock. Currently
-> > freq_reg_info() is the only way for a wireless driver to tell whether
-> > OFDM is allowed on the current channel, but cfg80211_lock is outside the
-> > scope of the wireless drivers.
-> > 
-> > Since other regulatory restrictions are communicated in the channel
-> > definition, it makes sense to do the same for OFDM. These patches add a
-> > new flag, IEEE80211_CHAN_NO_OFDM, which is set by regulatory to
-> > indicated OFDM operation is prohibited. brcmsmac is modifified to use
-> > this flag instead of consuming the regulatory data directly.
-> > 
-> > Thanks,
-> > Seth
-> > 
-> > 
-> > Seth Forshee (2):
-> >   cfg80211: add channel flag to restrict OFDM
-> >   brcmsmac: use channel flags to restrict OFDM
-> 
-> I would love to test these, but at the moment I can't.  Oddly, the very
-> same machine I hit the problem with originally is no longer presenting
-> any devices on the bcma bus.  The driver is loaded, brcmsmac is loaded,
-> but neither output the devices that showed up in my original email.
-> This is with both the kernel I originally reported the problem with, and
-> other kernels.  Nothing shows up for the BCM4313 in lspci either.
-> 
-> I did power it off and then back on today after I hit the original
-> problem, but I'd expect the hardware in the box to still show up on a
-> power on...  Is there some specific module load order, or something
-> else I can do to try and get the device to show up?
-> 
-> I did build a kernel with your patches applied, so at least I know they
-> build.  If I can get this machine to probe the chip again, I'll be happy
-> to test.
-> 
-> At the moment, I'm just very confused and slightly afraid it's going to
-> just refuse to work at all.
+Hi Christopher,
 
-Do you have 1f03bf06e4e3b8ed9a69e7fc4cdb1be4c6c6c819? That fixed a bug
-that had caused some very odd behavior, like changing PCI device ids.
-Recovering after booting a bad kernel required a cold boot to a kernel
-with the fix; a warm reboot wasn't enough.
+On Mon, Aug 6, 2012 at 11:01 AM, Christopher Sacchi
+<chris.sacchi@gmail.com> wrote:
+> Hey guys, this should work now.
 
-Seth
+I see the changes you made, however you're not going to get them
+accepted in this format.
 
+See Documentation/SubmittingPatches
+
+Online here: https://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=Documentation/SubmittingPatches;h=c379a2a6949f1c1cac04fb6f185c633512f37061;hb=HEAD
+
+
+
+> --
+> --- main.c      2012-07-21 20:58:29.000000000 +0000
+> +++ mainnew.c   2012-08-05 20:00:37.000000000 +0000
+> @@ -32,7 +32,7 @@
+>  #include "led.h"
+>  #include "cfg.h"
+>  #include "debugfs.h"
+> -
+
+Why are you removing the blank line - it's required as part of the
+kernel coding style.
+
+> +#include "net/rfkill/rfkill.h"
+
+You don't seem to actually be adding any code that uses anything in
+this header and don't explain why it's needed.
+
+>  static struct lock_class_key ieee80211_rx_skb_queue_class;
+>
+>  void ieee80211_configure_filter(struct ieee80211_local *local)
+> @@ -183,6 +183,7 @@
+>                  *
+>                  */
+>                 /* WARN_ON(ret); */
+> +               WARN_ON(1)
+
+What bug is this fixing? What problem is this solving?
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
