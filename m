@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:31942 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757011Ab2HTPN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 11:13:56 -0400
-Date: Mon, 20 Aug 2012 11:13:21 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Per sta interfaces in WDS (4-address) mode
-Message-ID: <20120820111321.71c6f07e@mj> (sfid-20120820_171404_008520_6E0C8191)
-In-Reply-To: <CAHNKnsRVh_BXqW0CLfxO5WZCJ8UH7O=cHN-zh7AuM_pQj0xUqg@mail.gmail.com>
-References: <CAHNKnsRVh_BXqW0CLfxO5WZCJ8UH7O=cHN-zh7AuM_pQj0xUqg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43526 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755364Ab2HFB4K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2012 21:56:10 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com>
+References: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 6 Aug 2012 11:55:48 +1000
+Message-ID: <CAGRGNgXLLr3fP19Bgwnk6phs_i8fbEsiyVh6W_SrKA0tJu0oKw@mail.gmail.com> (sfid-20120806_035614_999128_8A7225A1)
+Subject: Re: [PATCH]: Mac80211 Driver patch
+To: Christopher Sacchi <chris.sacchi@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 19 Aug 2012 21:51:27 +0400
-Sergey Ryazanov <ryazanov.s.a@gmail.com> wrote:
+Hi Christopher,
 
-> Hello dear all,
-> 
-> please tell me, why in the WDS mode, the stack creates a new interface
-> for each WDS station, and this interface hostapd adds to the parent AP
-> interface bridge? Why we couldn't simply pass this frames via AP
-> interface?
+On Mon, Aug 6, 2012 at 11:52 AM, Christopher Sacchi
+<chris.sacchi@gmail.com> wrote:
+> Patch for Mac80211, and no this is not spam, so do not ignore my
+> e-mails. This is a patch, so copy this into your favorite text editor
+> and save it as test.patch. Let the maintainers read and know! By the
+> way, it is under the first -- line and to the 2nd to last line. :)
 
-You may want to use a completely different IP address and netmask on the
-WDS interface.  Using the AP interface would take away that option.
+Again, this is not how you submit patches. Please read my previous email.
 
-hostapd is not a part of the kernel.  It should be possible not to add
-WDS interfaces to the bridge.
+Thanks,
 
 -- 
-Regards,
-Pavel Roskin
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
