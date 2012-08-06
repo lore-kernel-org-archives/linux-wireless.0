@@ -1,32 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44341 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312Ab2HVIZx (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:64233 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754594Ab2HFTUc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 04:25:53 -0400
-Message-ID: <1345621500.4635.4.camel@jlt3.sipsolutions.net> (sfid-20120822_102616_414384_7C6FEC5D)
-Subject: Re: [PATCH] mac80211: fix DS to MBSS address translation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	cedric.voncken@acksys.fr
-Date: Wed, 22 Aug 2012 09:45:00 +0200
-In-Reply-To: <1345487305-23759-1-git-send-email-thomas@cozybit.com> (sfid-20120820_202834_095293_ED62B34C)
-References: <1345487305-23759-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20120820_202834_095293_ED62B34C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 6 Aug 2012 15:20:32 -0400
+Received: by obbuo13 with SMTP id uo13so6299149obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:20:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1344251193-18733-1-git-send-email-ozancag@gmail.com>
+References: <1344251193-18733-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 6 Aug 2012 12:20:11 -0700
+Message-ID: <CAB=NE6WNRwahAXM8=XTFmkFMViBKVM7vXBj-oFYHdgzGo6919g@mail.gmail.com> (sfid-20120806_212035_222139_C829F3DE)
+Subject: Re: [PATCH] compat: backport PCIe register definitions
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-08-20 at 11:28 -0700, Thomas Pedersen wrote:
-> The destination address of unicast frames forwarded through a mesh gate
-> was being replaced with the broadcast address. Instead leave the
-> original destination address as the mesh DA. If the nexthop address is
-> not in the mpath table it will be resolved. If that fails, the frame
-> will be forwarded to known mesh gates.
+On Mon, Aug 6, 2012 at 4:06 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> New DRM core in 3.6 needs these in order to detect the maximum
+> link speed of the underlying bus.
+>
+> This backports:
+>
+>         commit cdcac9cd7741af2c2b9255cbf060f772596907bb
+>         Author: Dave Airlie <airlied@redhat.com>
+>         Date:   Wed Jun 27 08:35:52 2012 +0100
+>
+>             pci_regs: define LNKSTA2 pcie cap + bits.
+>
+>             We need these for detecting the max link speed for drm drivers.
+>
+>             Acked-by: Bjorn Helgaas <bhelgass@google.com>
+>             Signed-off-by: Dave Airlie <airlied@redhat.com>
+>
+> [root@ozan linux-2.6]# git describe --contains cdcac9cd
+> v3.6-rc1~83^2~26
+>
+> Trying kernel 3.5.0-030500-generic [OK]
+> Trying kernel 3.4.4-030404-generic [OK]
+> Trying kernel 3.3.7-030307-generic [OK]
+> Trying kernel 3.2.2-030202-generic [OK]
+> Trying kernel 3.1.10-030110-generic [OK]
+> Trying kernel 3.0.18-030018-generic [OK]
+> Trying kernel 2.6.39-02063904-generic [OK]
+> Trying kernel 2.6.38-02063808-generic [OK]
+> Trying kernel 2.6.37-02063706-generic [OK]
+> Trying kernel 2.6.36-02063604-generic [OK]
+> Trying kernel 2.6.35-02063512-generic [OK]
+> Trying kernel 2.6.34-02063410-generic [OK]
+> Trying kernel 2.6.33-02063305-generic [OK]
+> Trying kernel 2.6.32-02063255-generic [OK]
+> Trying kernel 2.6.31-02063113-generic [OK]
+> Trying kernel 2.6.30-02063010-generic [OK]
+> Trying kernel 2.6.29-02062906-generic [OK]
+> Trying kernel 2.6.28-02062810-generic [OK]
+> Trying kernel 2.6.27-020627-generic [OK]
+> Trying kernel 2.6.26-020626-generic [OK]
+> Trying kernel 2.6.25-020625-generic [OK]
+> Trying kernel 2.6.24-020624-generic [OK]
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-Applied. I'll send another pull request for 3.6 later this week.
+Applied and pushed, thanks!
 
-johannes
-
+  Luis
