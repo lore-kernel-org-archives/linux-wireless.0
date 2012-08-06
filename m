@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21397 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379Ab2HMPXY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35001 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932074Ab2HFPGr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 11:23:24 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 2/3] ath9k_htc: Advertise interface combinations supported
-Date: Mon, 13 Aug 2012 20:52:19 +0530
-Message-ID: <1344871339-6575-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120813_172339_351594_E855A14B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 6 Aug 2012 11:06:47 -0400
+Message-ID: <1344265599.4807.2.camel@jlt3.sipsolutions.net> (sfid-20120806_170651_451597_7C344CE3)
+Subject: Re: WDS vs. multi-channel operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 06 Aug 2012 17:06:39 +0200
+In-Reply-To: <501FDC87.1000204@openwrt.org>
+References: <1343655393.4452.13.camel@jlt3.sipsolutions.net>
+	  <501EA97B.3010703@openwrt.org>
+	  <1344187264.5765.4.camel@jlt3.sipsolutions.net>
+	  (sfid-20120805_192133_648139_FC40F06B) <1344187324.5765.5.camel@jlt3.sipsolutions.net>
+	 <501FDC87.1000204@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Mon, 2012-08-06 at 17:02 +0200, Felix Fietkau wrote:
 
-This will allow us to create the multivif the driver supports.
-Also this ensures the multivif support and limitation advertized
-by the driver is taken care in cfg80211 itself.
+> >> If you're going to require them to be bound to an AP though, where's the
+> >> difference to the current 4-addr AP_VLAN behaviour? It seems with that
+> >> you could actually implement a bound-to-AP-WDS entirely in userspace
+> >> since there's no requirement to actually go through the auth/assoc
+> >> sequence for hostapd to add the station entry?
+> > 
+> > Oh and if you actually do need WDS-type interfaces, maybe their role
+> > should change to be virtual like AP_VLAN-type interfaces?
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+> The difference between WDS and 4-addr AP_VLAN is that WDS is AP<->AP,
+> not AP<->STA. I guess it would be possible to write some code to create
+> AP VLANs + station entries for remote APs based on cooked monitor mode
+> based discovery or some form of mgmt frame exchange.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a035a38..5022141 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -689,6 +689,21 @@ err_hw:
- 	return ret;
- }
- 
-+static const struct ieee80211_iface_limit if_limits[] = {
-+	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
-+	{ .max = 2,	.types =
-+			BIT(NL80211_IFTYPE_AP) |
-+			BIT(NL80211_IFTYPE_P2P_GO) },
-+};
-+
-+static const struct ieee80211_iface_combination if_comb = {
-+	.limits = if_limits,
-+	.n_limits = ARRAY_SIZE(if_limits),
-+	.max_interfaces = 2,
-+	.num_different_channels = 1,
-+};
-+
- static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 			       struct ieee80211_hw *hw)
- {
-@@ -711,6 +726,9 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		BIT(NL80211_IFTYPE_P2P_GO) |
- 		BIT(NL80211_IFTYPE_P2P_CLIENT);
- 
-+	hw->wiphy->iface_combinations = &if_comb;
-+	hw->wiphy->n_iface_combinations = 1;
-+
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
--- 
-1.7.0.4
+I was thinking just pre-configure it as you have to anyway now?
+
+johannes
 
