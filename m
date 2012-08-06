@@ -1,90 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46407 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753808Ab2H2OKm (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11601 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752023Ab2HFFuT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2012 10:10:42 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 1/4] ath6kl: Refactor ath6kl_init_hw_start() and ath6kl_init_hw_stop()
-Date: Wed, 29 Aug 2012 19:40:25 +0530
-Message-ID: <1346249428-24741-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120829_161047_168772_0F7A7FA6)
+	Mon, 6 Aug 2012 01:50:19 -0400
+Message-ID: <501F5B11.3020406@qca.qualcomm.com> (sfid-20120806_075023_710421_7B9414EE)
+Date: Mon, 6 Aug 2012 11:20:09 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Tim and Alison Bentley <Home@TRARBentley.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
+	Felix Bitterli <felixb@qca.qualcomm.com>,
+	"Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH] ath9k: Add PID/VID support for AR1111
+References: <1343888930-353-1-git-send-email-mohammed@qca.qualcomm.com> <CAB=NE6WYGefu8vYrO05tq=5qnCcMqWtUQkTzisR2sfpTLMx8WQ@mail.gmail.com> <CAAT9HshKC9+YiP2YzVGO_nuRsyvbgBeUvj2+r2Wzj1wU-QV7-A@mail.gmail.com> <20120802181343.GA18293@tuxdriver.com> <CAAT9HsjQ9abXWEy4Jp86HH9HUEOhSbQG_jn2Hnwk8_QX=oqfag@mail.gmail.com>
+In-Reply-To: <CAAT9HsjQ9abXWEy4Jp86HH9HUEOhSbQG_jn2Hnwk8_QX=oqfag@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So that these functions will be used to re-initialize the fw
-upon detecting fw error. This refactoring moves ar->state
-setting out of core stop/start functionality.
+Hi Tim/Luis,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |   28 +++++++++++++++++++++++-----
- 1 files changed, 23 insertions(+), 5 deletions(-)
+On Friday 03 August 2012 12:20 AM, Tim and Alison Bentley wrote:
+> On 2 August 2012 19:13, John W. Linville <linville@tuxdriver.com> wrote:
+>
+>> On Thu, Aug 02, 2012 at 07:05:12PM +0100, Tim and Alison Bentley wrote:
+>>> On 2 August 2012 18:43, Luis R. Rodriguez <rodrigue@qca.qualcomm.com>
+>> wrote:
+>>>
+>>>> On Wed, Aug 1, 2012 at 11:28 PM, Mohammed Shafi Shajakhan
+>>>> <mohammed@qca.qualcomm.com> wrote:
+>>>>> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>>>>>
+>>>>> AR1111 is same as AR9485. The h/w
+>>>>> difference between them is quite insignificant,
+>>>>> Felix suggests only very few baseband features
+>>>>> may not be available in AR1111. The h/w code for
+>>>>> AR9485 is already present, so AR1111 should
+>>>>> work fine with the addition of its PID/VID.
+>>>>>
+>>>>> Cc: stable@vger.kernel.org [2.6.39+]
+>>>>> Cc: Felix Bitterli <felixb@qca.qualcomm.com>
+>>>>> Reported-by: Tim and Alison Bentley <Home@trarbentley.net>
+>>>>> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>>>>
+>>>> Nice! I'd be happy with this going in once we get a Tested-by: report.
+>>>> Dan, Tim?
+>>>>
+>>>>
+>>>
+>>> Will test tomorrow when I have time
+>>
+>> Hmmm...well, I just pushed it to wireless.git.  I won't push it to
+>> Dave until sometime tomorrow, to give a chance for some test.
+>>
+>> John
+>> --
+>> John W. Linville                Someday the world will need a hero, and you
+>> linville@tuxdriver.com                  might be all we have.  Be ready.
+>>
+>
+> Have tested patch and can confirm it is fine and works. (Connected now).
+> Can you amend the reported by and Tested by lines to
+> Tim Bentley <Tim.Bentley@Gmail.com>
+> instead of the family email address.
+> Sorry for any trouble.
+>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index eb3677b..be27ebe 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1546,7 +1546,7 @@ static const char *ath6kl_init_get_hif_name(enum ath6kl_hif_type type)
- 	return NULL;
- }
- 
--int ath6kl_init_hw_start(struct ath6kl *ar)
-+static int __ath6kl_init_hw_start(struct ath6kl *ar)
- {
- 	long timeleft;
- 	int ret, i;
-@@ -1642,8 +1642,6 @@ int ath6kl_init_hw_start(struct ath6kl *ar)
- 			goto err_htc_stop;
- 	}
- 
--	ar->state = ATH6KL_STATE_ON;
--
- 	return 0;
- 
- err_htc_stop:
-@@ -1656,7 +1654,18 @@ err_power_off:
- 	return ret;
- }
- 
--int ath6kl_init_hw_stop(struct ath6kl *ar)
-+int ath6kl_init_hw_start(struct ath6kl *ar)
-+{
-+	int err;
-+
-+	err = __ath6kl_init_hw_start(ar);
-+	if (err)
-+		return err;
-+	ar->state = ATH6KL_STATE_ON;
-+	return 0;
-+}
-+
-+static int __ath6kl_init_hw_stop(struct ath6kl *ar)
- {
- 	int ret;
- 
-@@ -1672,8 +1681,17 @@ int ath6kl_init_hw_stop(struct ath6kl *ar)
- 	if (ret)
- 		ath6kl_warn("failed to power off hif: %d\n", ret);
- 
--	ar->state = ATH6KL_STATE_OFF;
-+	return 0;
-+}
- 
-+int ath6kl_init_hw_stop(struct ath6kl *ar)
-+{
-+	int err;
-+
-+	err = __ath6kl_init_hw_stop(ar);
-+	if (err)
-+		return err;
-+	ar->state = ATH6KL_STATE_OFF;
- 	return 0;
- }
- 
+thanks for testing this.
+
+
 -- 
-1.7.0.4
+thanks,
+shafi
+
 
