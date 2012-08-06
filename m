@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59037 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756180Ab2HFWe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 18:34:56 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat-wireless: the tty termios change is not in 3.6-rc1
-Date: Tue,  7 Aug 2012 00:34:44 +0200
-Message-Id: <1344292486-25736-1-git-send-email-hauke@hauke-m.de> (sfid-20120807_003501_697074_46661C4B)
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:49400 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755133Ab2HFB7b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Aug 2012 21:59:31 -0400
+Message-ID: <501F24B5.5050600@xenotime.net> (sfid-20120806_035947_673813_73D312F2)
+Date: Sun, 05 Aug 2012 18:58:13 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+MIME-Version: 1.0
+To: Christopher Sacchi <chris.sacchi@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH]: Mac80211 Driver patch
+References: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com>
+In-Reply-To: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The api change this patch is needed for is not in kernel 3.6-rc1.
+On 08/05/2012 06:52 PM, Christopher Sacchi wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/63-tty-termios.patch |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Patch for Mac80211, and no this is not spam, so do not ignore my
+> e-mails. This is a patch, so copy this into your favorite text editor
+> and save it as test.patch. Let the maintainers read and know! By the
+> way, it is under the first -- line and to the 2nd to last line. :)
+> --
 
-diff --git a/patches/63-tty-termios.patch b/patches/63-tty-termios.patch
-index dd7c300..b868ae9 100644
---- a/patches/63-tty-termios.patch
-+++ b/patches/63-tty-termios.patch
-@@ -25,7 +25,7 @@ was not done through a static inline helper.
-  		return status;
-  
-  	/* Disable Automatic RTSCTS */
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0))
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0))
-  	ktermios = tty->termios;
- +#else
- +	memcpy(&ktermios, tty->termios, sizeof(ktermios));
+
+You won't need to say where the patch is if you will read and follow
+Documentation/SubmittingPatches .
+
+> --- main.c	2012-07-21 20:58:29.000000000 +0000
+> +++ mainnew.c	2012-08-05 20:00:37.000000000 +0000
+> @@ -32,7 +32,7 @@
+>  #include "led.h"
+>  #include "cfg.h"
+>  #include "debugfs.h"
+> -
+> +#include "net/rfkill/rfkill.h"
+>  static struct lock_class_key ieee80211_rx_skb_queue_class;
+> 
+>  void ieee80211_configure_filter(struct ieee80211_local *local)
+> @@ -183,6 +183,7 @@
+>  		 *
+>  		 */
+>  		/* WARN_ON(ret); */
+> +		WARN_ON(1)
+
+
+Does that build without a problem?
+or is it missing a ';' ??
+
+>  	}
+> 
+>  	return ret;
+> --
+
+
+
 -- 
-1.7.9.5
-
+~Randy
