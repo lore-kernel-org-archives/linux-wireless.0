@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57725 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab2HMPm1 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46185 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570Ab2HFTbV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 11:42:27 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 6 Aug 2012 15:31:21 -0400
+Received: by obbuo13 with SMTP id uo13so6311824obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:31:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20521.8077.412278.460752@gargle.gargle.HOWL> (sfid-20120813_174230_465101_5086A2E2)
-Date: Mon, 13 Aug 2012 21:08:53 +0530
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>
-Subject: [RFC 3/3] ath9k_htc: Remove interface combination specific checks
-In-Reply-To: <1344871392-6642-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1344871392-6642-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1344279307-2929-1-git-send-email-ozancag@gmail.com>
+References: <1344279307-2929-1-git-send-email-ozancag@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 6 Aug 2012 12:31:00 -0700
+Message-ID: <CAB=NE6VUDjOYGWBz=TbsgTV+FvGg0Z+T=vhPeLcfsOoiuzErfg@mail.gmail.com> (sfid-20120806_213124_455526_D25D1119)
+Subject: Re: [PATCH 1/2] compat-wireless: Minor cosmetic changes in admin-update.sh
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan wrote:
-> -	if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
-> -		mutex_unlock(&priv->mutex);
-> -		return -ENOBUFS;
-> -	}
-> -
-> -	if (priv->num_ibss_vif ||
-> -	    (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
-> -		ath_err(common, "IBSS coexistence with other modes is not allowed\n");
-> -		mutex_unlock(&priv->mutex);
-> -		return -ENOBUFS;
-> -	}
-> -
-> -	if (((vif->type == NL80211_IFTYPE_AP) ||
-> -	     (vif->type == NL80211_IFTYPE_ADHOC)) &&
-> -	    ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
-> -		ath_err(common, "Max. number of beaconing interfaces reached\n");
-> -		mutex_unlock(&priv->mutex);
-> -		return -ENOBUFS;
-> -	}
-> -
+On Mon, Aug 6, 2012 at 11:55 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+> - Move functions above everything,
+> - Use $HOME instead of /home/$USER which fails when run as root,
+> - Enhance comments
+> - Mention about compat/bin/get-compat-trees for fetching the trees.
+>
+> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 
-Looks okay.
+I've applied this, thanks! In the future though please break down the
+above changes into more atomic patches. This makes review and
+bisecting easier if ever needed.
 
-Sujith
+  Luis
