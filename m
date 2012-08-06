@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47444 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440Ab2HJBMT (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:51028 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755286Ab2HFBwW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 21:12:19 -0400
-Received: by pbbrr13 with SMTP id rr13so1803542pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 18:12:19 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 1/2] mac80211: use skb_queue_walk() in mesh_path_assign_nexthop
-Date: Thu,  9 Aug 2012 18:12:11 -0700
-Message-Id: <1344561132-31892-1-git-send-email-thomas@cozybit.com> (sfid-20120810_031326_926862_0AE6CCDA)
+	Sun, 5 Aug 2012 21:52:22 -0400
+MIME-Version: 1.0
+Date: Mon, 6 Aug 2012 01:52:20 +0000
+Message-ID: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com> (sfid-20120806_035245_036677_D8973F27)
+Subject: [PATCH]: Mac80211 Driver patch
+From: Christopher Sacchi <chris.sacchi@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since all we really want is just to iterate over all skbs, do just that
-and avoid (de)queueing to a clusmy tmpq.
-
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 075bc53..3ca1e17 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -203,23 +203,17 @@ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
- {
- 	struct sk_buff *skb;
- 	struct ieee80211_hdr *hdr;
--	struct sk_buff_head tmpq;
- 	unsigned long flags;
- 
- 	rcu_assign_pointer(mpath->next_hop, sta);
- 
--	__skb_queue_head_init(&tmpq);
+Patch for Mac80211, and no this is not spam, so do not ignore my
+e-mails. This is a patch, so copy this into your favorite text editor
+and save it as test.patch. Let the maintainers read and know! By the
+way, it is under the first -- line and to the 2nd to last line. :)
+--
+--- main.c	2012-07-21 20:58:29.000000000 +0000
++++ mainnew.c	2012-08-05 20:00:37.000000000 +0000
+@@ -32,7 +32,7 @@
+ #include "led.h"
+ #include "cfg.h"
+ #include "debugfs.h"
 -
- 	spin_lock_irqsave(&mpath->frame_queue.lock, flags);
--
--	while ((skb = __skb_dequeue(&mpath->frame_queue)) != NULL) {
-+	skb_queue_walk(&mpath->frame_queue, skb) {
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
- 		memcpy(hdr->addr2, mpath->sdata->vif.addr, ETH_ALEN);
--		__skb_queue_tail(&tmpq, skb);
++#include "net/rfkill/rfkill.h"
+ static struct lock_class_key ieee80211_rx_skb_queue_class;
+
+ void ieee80211_configure_filter(struct ieee80211_local *local)
+@@ -183,6 +183,7 @@
+ 		 *
+ 		 */
+ 		/* WARN_ON(ret); */
++		WARN_ON(1)
  	}
- 
--	skb_queue_splice(&tmpq, &mpath->frame_queue);
- 	spin_unlock_irqrestore(&mpath->frame_queue.lock, flags);
- }
- 
--- 
-1.7.5.4
 
+ 	return ret;
+--
+-- 
+Christopher
