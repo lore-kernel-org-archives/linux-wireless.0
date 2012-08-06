@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40795 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754241Ab2HKAaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 20:30:19 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/4] compat: generate CONFIG_COMPAT_KERNEL_3_7
-Date: Sat, 11 Aug 2012 02:30:05 +0200
-Message-Id: <1344645007-26757-3-git-send-email-hauke@hauke-m.de> (sfid-20120811_023024_717570_1DD19A8B)
-In-Reply-To: <1344645007-26757-1-git-send-email-hauke@hauke-m.de>
-References: <1344645007-26757-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:35830 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756404Ab2HFSjX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 14:39:23 -0400
+Message-ID: <1344270901.11053.12.camel@dcbw.foobar.com> (sfid-20120806_203928_297212_DC5594A6)
+Subject: Re: DHCP request timed out, iwlwifi
+From: Dan Williams <dcbw@redhat.com>
+To: Marco <netuse@lavabit.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 06 Aug 2012 11:35:01 -0500
+In-Reply-To: <20120806161443.35c71558@homerow>
+References: <20120806161443.35c71558@homerow>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2012-08-06 at 16:14 +0200, Marco wrote:
+> Hi,
+> 
+> I use a HP EliteBook equipped with an Intel Centrino Advanced-N 6205
+> network adapter, it uses the iwlwifi module, on Ubuntu 12.04.
+> 
+> I often cannot connect to my wireless network. Other computers
+> connect without problems. It is not reproducible, but it occurs, say
+> once per week. If it doesn't connect, nothing helps, not even a
+> reboot. I find the following messages in my syslog:
+> 
+> Aug  6 15:34:49 dejon NetworkManager[1042]: <warn> (wlan0): DHCPv4 request
+> timed out.
+> 
+> The more detailed syslog is attached. DHCP works for all other
+> computers. If I connect this computer via cable it also works
+> without problems. So it seems to be related to this particular
+> computer and its wireless configuration. But I have no clue how to
+> investigate further.
+> 
+> Any ideas what might be the cause?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/gen-compat-config.sh |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+What kernel version?  Is the network an 802.11n-enabled network?  If you
+have kernel version 3.2, try to disable 802.11n and see if that makes
+things happier.  I've had a number of iwlwifi bug reports with the 3.2
+kernel from 12.04 that seem to be 802.11n related.  Association happens
+correctly, but data frames do not work.
 
-diff --git a/scripts/gen-compat-config.sh b/scripts/gen-compat-config.sh
-index 3eba34e..391a75d 100755
---- a/scripts/gen-compat-config.sh
-+++ b/scripts/gen-compat-config.sh
-@@ -17,7 +17,7 @@ fi
- KERNEL_VERSION=$(${MAKE} -C ${KLIB_BUILD} kernelversion | sed -n 's/^\([0-9]\)\..*/\1/p')
- 
- # 3.0 kernel stuff
--COMPAT_LATEST_VERSION="5"
-+COMPAT_LATEST_VERSION="7"
- KERNEL_SUBLEVEL="-1"
- 
- # Note that this script will export all variables explicitly,
--- 
-1.7.9.5
+Do something like the following:
+
+rmmod iwlwifi
+modprobe iwlwifi 11n_disable=1
+(let it reconnect)
+
+If that works, it can be made more permanent by using modprobe config
+files to set the module options whenever it's loaded.  Or, better yet,
+upgrade your kernel version to 3.4 or later, but that's probably not
+something that Canonical will do in the near future with 12.04.
+
+Dan
 
