@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42714 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282Ab2HAIpu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 04:45:50 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SwUYu-0002sP-9W
-	for linux-wireless@vger.kernel.org; Wed, 01 Aug 2012 10:45:48 +0200
-Message-ID: <1343810743.4638.0.camel@jlt3.sipsolutions.net> (sfid-20120801_104556_493171_7DD88327)
-Subject: Re: [PATCH] mac80211: manage carrier state in mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 01 Aug 2012 10:45:43 +0200
-In-Reply-To: <1343670291-7144-1-git-send-email-johannes@sipsolutions.net> (sfid-20120730_194459_424244_459C5C47)
-References: <1343670291-7144-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120730_194459_424244_459C5C47)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3199 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756834Ab2HFSBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 14:01:31 -0400
+Message-ID: <50200660.3090607@broadcom.com> (sfid-20120806_200147_037690_B51AB915)
+Date: Mon, 6 Aug 2012 20:01:04 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Christopher Sacchi" <chris.sacchi@gmail.com>
+cc: linux-wireless@vger.kernel.org,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH]: Mac80211 driver and I checked the patch
+References: <CAGh4K3Lym9yETNbMutfjNuANrgwtvfrGes6emr3Mvhx47D3B2g@mail.gmail.com>
+ <502005FD.10102@broadcom.com>
+In-Reply-To: <502005FD.10102@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-07-30 at 19:44 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 08/06/2012 07:59 PM, Arend van Spriel wrote:
+> On 08/06/2012 01:49 PM, Christopher Sacchi wrote:
+>> > The source file needed a change  that was told in the description to
+>> > know that the #include needed to be fixed, and the function changed
+>> > another value to 0 (yes) in the description (that said FIXME.) The
+>> > patch fixes a typo-like error and has been checked with checkpatch.pl
+>> > in the scripts directory.
 > 
-> Instead of assuming the carrier is on all
-> the time in mesh manage it with joining
-> and leaving the mesh.
+>> > Here's the patch:
+> Do need a heads-up stating the obvious.
 
-Applied.
+I meant "Do not need" :-p
 
-johannes
+Gr. AvS
 
