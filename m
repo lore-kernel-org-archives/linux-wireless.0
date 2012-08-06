@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:43418 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398Ab2HCQYT (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:44398 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756409Ab2HFRxl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 12:24:19 -0400
-Message-ID: <501BFB29.7010801@canonical.com> (sfid-20120803_182456_195468_6BBC5170)
-Date: Fri, 03 Aug 2012 12:24:09 -0400
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
+	Mon, 6 Aug 2012 13:53:41 -0400
 MIME-Version: 1.0
-To: wey-yi.w.guy@intel.com, johannes.berg@intel.com,
-	ilw@linux.intel.com, linville@tuxdriver.com,
-	emmanuel.grumbach@intel.com
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [REGRESSION][v3.5] iwlwifi: include rssi as part of decision making
- for reduce txpower
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <decee2f9df27aefc9e57ac1a18855f874278ff53.1343885909.git.steven@steven676.net>
+References: <ab6d95605ad827f0c7f973d47656a897ffe17fb7.1343885909.git.steven@steven676.net>
+ <decee2f9df27aefc9e57ac1a18855f874278ff53.1343885909.git.steven@steven676.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 6 Aug 2012 10:53:21 -0700
+Message-ID: <CAB=NE6WH-32k8KNtxYx3=LN8WiZrEswX5UgBd2zyv4u6sz+Xiw@mail.gmail.com> (sfid-20120806_195346_380901_605F132F)
+Subject: Re: [PATCH 2/2] compat-wireless: driver-select: update after
+ introduction of CONFIG_WL_TI
+To: Steven Luo <steven@steven676.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, Aug 1, 2012 at 10:44 PM, Steven Luo <steven@steven676.net> wrote:
+> The introduction of CONFIG_WL_TI broke selecting the TI drivers using
+> driver-select.  Fix this, and while we're at it, teach the script about
+> wl18xx as well.
+>
+> Signed-off-by: Steven Luo <steven@steven676.net>
 
-A bug[0] was reported against Ubuntu that reports a kernel panic when 
-using the hotkey to disable then re-enable wifi on a Dell XPS 14z.  A 
-kernel bisect was performed, which indicated the following commit as the 
-source of the regression:
+Applied and pushed these two, thanks!
 
-
-commit dd551ab7b47ace14753b0d73f79437cc35adcf6b
-Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date:   Thu May 3 14:22:01 2012 -0700
-
-     iwlwifi: include rssi as part of decision making for reduce txpower
-
-     In bt coex, consider the average rssi as part of decision making 
-process
-
-     Change-Id: I8d11d7f177a6875e2a9d08f7539d42253226fd7a
-     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-     Reviewed-on: http://git-mwg.jer.intel.com/gerrit/1945
-     Tested-by: Jenkins
-     Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-A test kernel was created with this commit reverted, which stopped the 
-kernel panic from occurring.
-
-A bugzilla bug[1] has been opened.
-
-Thanks,
-
-Joe
-
-
-[0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1029547
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=45491
+ Luis
