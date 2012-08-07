@@ -1,78 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34768 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754021Ab2HAU6v (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7830 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757055Ab2HGBPG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 16:58:51 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: [PATCH 2/2] brcmsmac: use channel flags to restrict OFDM
-Date: Wed,  1 Aug 2012 15:58:43 -0500
-Message-Id: <1343854723-21987-3-git-send-email-seth.forshee@canonical.com> (sfid-20120801_225857_411213_C8B92258)
-In-Reply-To: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
+	Mon, 6 Aug 2012 21:15:06 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20512.27593.328878.831452@gargle.gargle.HOWL> (sfid-20120807_031510_504238_10071DB0)
+Date: Tue, 7 Aug 2012 06:43:45 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC 04/14] ath9k: Cleanup ath_rc_setvalid_htrates
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmsmac cannot call freq_reg_info() during channel changes as it does
-not hold cfg80211_lock, and as a result it generates a lockdep warning.
-freq_reg_info() is being used to determine whether OFDM is allowed on
-the current channel, so we can avoid the errant call by using the new
-IEEE80211_CHAN_NO_OFDM for this purpose instead.
-
-Reported-by: Josh Boyer <jwboyer@redhat.com>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/channel.c  |    5 +----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    3 ++-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 9a4c63f..7ed7d75 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -382,9 +382,7 @@ brcms_c_channel_set_chanspec(struct brcms_cm_info *wlc_cm, u16 chanspec,
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index a34f678..69745ad 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -552,15 +552,16 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
  {
- 	struct brcms_c_info *wlc = wlc_cm->wlc;
- 	struct ieee80211_channel *ch = wlc->pub->ieee_hw->conf.channel;
--	const struct ieee80211_reg_rule *reg_rule;
- 	struct txpwr_limits txpwr;
--	int ret;
+ 	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+ 	struct ath_rateset *rateset = &ath_rc_priv->neg_ht_rates;
+-	u32 capflag = ath_rc_priv->ht_cap;
+-	u8 i, j, hi = 0;
++	u32 phy, capflag = ath_rc_priv->ht_cap;
++	u16 rate_flags;
++	u8 i, j, hi = 0, rate, dot11rate, valid_rate_count;
  
- 	brcms_c_channel_reg_limits(wlc_cm, chanspec, &txpwr);
+ 	for (i = 0; i < rateset->rs_nrates; i++) {
+ 		for (j = 0; j < rate_table->rate_cnt; j++) {
+-			u32 phy = rate_table->info[j].phy;
+-			u16 rate_flags = rate_table->info[j].rate_flags;
+-			u8 rate = rateset->rs_rates[i];
+-			u8 dot11rate = rate_table->info[j].dot11rate;
++			phy = rate_table->info[j].phy;
++			rate_flags = rate_table->info[j].rate_flags;
++			rate = rateset->rs_rates[i];
++			dot11rate = rate_table->info[j].dot11rate;
  
-@@ -393,8 +391,7 @@ brcms_c_channel_set_chanspec(struct brcms_cm_info *wlc_cm, u16 chanspec,
- 	);
+ 			if ((rate != dot11rate) || !WLAN_RC_PHY_HT(phy) ||
+ 			    !(rate_flags & WLAN_RC_CAP_STREAM(capflag)) ||
+@@ -570,8 +571,8 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
+ 			if (!ath_rc_valid_phyrate(phy, capflag, 0))
+ 				continue;
  
- 	/* set or restore gmode as required by regulatory */
--	ret = freq_reg_info(wlc->wiphy, ch->center_freq, 0, &reg_rule);
--	if (!ret && (reg_rule->flags & NL80211_RRF_NO_OFDM))
-+	if (ch->flags & IEEE80211_CHAN_NO_OFDM)
- 		brcms_c_set_gmode(wlc, GMODE_LEGACY_B, false);
- 	else
- 		brcms_c_set_gmode(wlc, wlc->protection->gmode_user, false);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 9e79d47..192ad5c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -121,7 +121,8 @@ static struct ieee80211_channel brcms_2ghz_chantable[] = {
- 		 IEEE80211_CHAN_NO_HT40PLUS),
- 	CHAN2GHZ(14, 2484,
- 		 IEEE80211_CHAN_PASSIVE_SCAN | IEEE80211_CHAN_NO_IBSS |
--		 IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS)
-+		 IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS |
-+		 IEEE80211_CHAN_NO_OFDM)
- };
- 
- static struct ieee80211_channel brcms_5ghz_nphy_chantable[] = {
+-			ath_rc_priv->valid_phy_rateidx[phy]
+-				[ath_rc_priv->valid_phy_ratecnt[phy]] = j;
++			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
++			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
+ 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
+ 			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
+ 			hi = max(hi, j);
 -- 
-1.7.9.5
+1.7.11.4
 
