@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4742 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754503Ab2H2TKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2012 15:10:11 -0400
-From: Tim Gardner <tim.gardner@canonical.com>
-To: linux-kernel@vger.kernel.org
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH 3.6-rc3 v2] wlcore: Declare MODULE_FIRMWARE usage
-Date: Wed, 29 Aug 2012 13:09:33 -0600
-Message-Id: <1346267373-19591-1-git-send-email-tim.gardner@canonical.com> (sfid-20120829_211035_794012_DA4FC21A)
-In-Reply-To: <1346266668.3935.23.camel@cumari.coelho.fi>
-References: <1346266668.3935.23.camel@cumari.coelho.fi>
+Received: from he.sipsolutions.net ([78.46.109.217]:39746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab2HGSYb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2012 14:24:31 -0400
+Message-ID: <1344363868.4766.2.camel@jlt3.sipsolutions.net> (sfid-20120807_202435_066114_3D3D3816)
+Subject: Re: [PATCH] compat: handle pci suspend/resume on kernel 2.6.29
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 07 Aug 2012 20:24:28 +0200
+In-Reply-To: <1344362732.4766.1.camel@jlt3.sipsolutions.net> (sfid-20120807_200542_628002_964015C7)
+References: <1343938505.4471.31.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6UUCVUDAn75UNX1uH=BMPkmjCtWr16iYBrGifkESCv=sA@mail.gmail.com>
+	 <CAB=NE6VUre2eDdszhw3wCq7mrWvZW1uB7n5yp+hOTRTChZNRBQ@mail.gmail.com>
+	 (sfid-20120807_200133_412545_A1FB50E7) <1344362732.4766.1.camel@jlt3.sipsolutions.net>
+	 (sfid-20120807_200542_628002_964015C7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Declare any firmware that might be used by this driver.
-If all drivers declare their firmware usage, then a sufficiently
-complete list of firmware files can then be used to pare down
-the external linux-firmware package to just the files in actual use.
+On Tue, 2012-08-07 at 20:05 +0200, Johannes Berg wrote:
+> On Tue, 2012-08-07 at 10:55 -0700, Luis R. Rodriguez wrote:
+> 
+> > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:4922:1:
+> > error: conflicting type qualifiers for ‘il_pm_ops’
+> > In file included from
+> > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:43:0:
+> > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.h:1854:32:
+> > note: previous declaration of ‘il_pm_ops’ was here
+> > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:
+> > In function ‘il_isr’:
+> > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:5415:12:
+> > warning: variable ‘inta_mask’ set but not used
+> > [-Wunused-but-set-variable]
+> >   CC [M]  /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/ath/ath6kl/sdio.o
+> > make[4]: *** [/home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.o]
+> > Error 1
+> > make[3]: *** [/home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy]
+> > Error 2
+> 
+> Gee, fun, that's because of the static ... more hackery required then I
+> guess :-(
 
-Cc: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    1 +
- 1 file changed, 1 insertion(+)
+Not static, of course, the "const"
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 7254860..a55ace6 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5663,3 +5663,4 @@ MODULE_PARM_DESC(no_recovery, "Prevent HW recovery. FW will remain stuck.");
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
-+MODULE_FIRMWARE(WL12XX_NVS_NAME);
--- 
-1.7.9.5
+johannes
 
