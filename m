@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12048 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754039Ab2HNOVZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 10:21:25 -0400
-Message-ID: <502A5EDC.6070704@qca.qualcomm.com> (sfid-20120814_162129_784782_5932F9C7)
-Date: Tue, 14 Aug 2012 17:21:16 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30186 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750878Ab2HGKWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2012 06:22:13 -0400
+Date: Tue, 7 Aug 2012 12:22:09 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Pedro Francisco <pedrogfrancisco@gmail.com>
+Cc: ML linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: unloading WiFi modules is usually triggering kernel crash
+Message-ID: <20120807102208.GA12589@redhat.com> (sfid-20120807_122251_638707_C726E9B9)
+References: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com>
 MIME-Version: 1.0
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: configure wow filters per-vif
-References: <1344558753-20253-1-git-send-email-c_tpeder@qca.qualcomm.com>
-In-Reply-To: <1344558753-20253-1-git-send-email-c_tpeder@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZjf_wv=+HKLwnH-=rvx9h=0jEGzoCrd-a8GOW-QnXfOVgc_g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/10/2012 03:32 AM, Thomas Pedersen wrote:
-> Only WoW filters for the first vif were being set, causing failures to
-> wake up on any concurrent connected vifs. Handle all per-vif suspend
-> and resume tasks.
-> 
-> Since cfg80211 issues user wow filters on a per-wiphy basis, set any
-> custom filters on all connected vifs.
-> 
-> Starting WoW in firmware and setting host sleep mode is still handled on
-> a global per-phy level. The first vif is always used for bookkeeping
-> regardless of whether it is connected or not.
-> 
-> WoW is cancelled if no connected vifs are found.
-> 
-> No firmware capability bits or API bump is needed for this patch, as
-> setting filters for vifs with index > 0 will simply overwrite the index
-> 0 filters in the current implementation. While not correct, this is
-> identical to the existing behavior.
-> 
-> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+On Tue, Jul 31, 2012 at 01:54:52PM +0100, Pedro Francisco wrote:
+> I've noticed in the past few days a pattern: sometimes nm-applet
+> starts showing empty bars for the signal strength.
 
-Thanks, applied.
+RSSI reporting problem or maybe NM issue. When you change kernel to
+older or newer does this problem go away ?
 
-Kalle
+> Running the script:
+> sudo ifconfig wlan0 down; sleep 1
+> sudo rmmod hp_wmi; sudo rmmod iwl3945; sudo rmmod iwlegacy; sudo rmmod
+> mac80211; sudo rmmod cfg80211
+> sleep 2; sudo rmmod rfkill; sync
+> sudo modprobe rfkill; sudo modprobe cfg80211; sudo modprobe mac80211;
+> sudo modprobe iwlegacy
+> sudo modprobe iwl3945; sudo modprobe hp_wmi; sleep 1; sudo ifconfig wlan0 up
 
+I run a bit modified script (I do not have hp_wmi.ko and rfkill.ko) for few
+hours, and did not get any WARNING/crash. I used 3.5, can you check if that
+problem is also fixed on your system on 3.5 or newer.
+
+Stanislaw
