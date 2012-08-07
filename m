@@ -1,40 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34510 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752689Ab2HXXyf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7916 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757097Ab2HGBP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 19:54:35 -0400
-Received: by ialo24 with SMTP id o24so4453026ial.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2012 16:54:35 -0700 (PDT)
-Message-ID: <50381437.7040903@lwfinger.net> (sfid-20120825_015455_105311_9B603245)
-Date: Fri, 24 Aug 2012 18:54:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 6 Aug 2012 21:15:26 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Patrick Connolly <pjc999@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Question about ath9k/mac80211 Driver
-References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com> <50365AC8.7030503@lwfinger.net> <CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com> <5036660B.9020208@lwfinger.net> <CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com>
-In-Reply-To: <CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20512.27613.902697.494654@gargle.gargle.HOWL> (sfid-20120807_031530_322967_3600E0C1)
+Date: Tue, 7 Aug 2012 06:44:05 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC 07/14] ath9k: Remove ath_rc_set_valid_rate_idx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/24/2012 06:38 PM, Patrick Connolly wrote:
-> Okay so I built "iw" version 0.9.22 successfully (after much grief).
-> The help page shows that "set bitrates" is now supported:
->
->          dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in Mbps>*]
->
->
->   but when I try to use it I get:
->
->         # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
->         command failed: Operation not supported (-95)
->
-> ...so what does this mean?  Is it "iw" or the driver that lacks the support?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-I would think that your kernel is too old. What version are you running?
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index e8f8e3d..8a5fc62 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -424,13 +424,6 @@ static void ath_rc_sort_validrates(struct ath_rate_priv *ath_rc_priv)
+ 	}
+ }
+ 
+-static inline void ath_rc_set_valid_rate_idx(struct ath_rate_priv *ath_rc_priv,
+-					   u8 index, int valid_tx_rate)
+-{
+-	BUG_ON(index > ath_rc_priv->rate_table_size);
+-	ath_rc_priv->valid_rate_index[index] = !!valid_tx_rate;
+-}
+-
+ static inline
+ int ath_rc_get_nextvalid_txrate(const struct ath_rate_table *rate_table,
+ 				struct ath_rate_priv *ath_rc_priv,
+@@ -503,7 +496,7 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv)
+ 
+ 			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = i;
+ 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
+-			ath_rc_set_valid_rate_idx(ath_rc_priv, i, 1);
++			ath_rc_priv->valid_rate_index[i] = true;
+ 			hi = i;
+ 		}
+ 	}
+@@ -539,7 +532,7 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv)
+ 			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
+ 			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
+ 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
+-			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
++			ath_rc_priv->valid_rate_index[j] = true;
+ 			hi = max(hi, j);
+ 		}
+ 	}
+@@ -573,7 +566,7 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
+ 			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
+ 			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
+ 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
+-			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
++			ath_rc_priv->valid_rate_index[j] = true;
+ 			hi = max(hi, j);
+ 		}
+ 	}
+-- 
+1.7.11.4
 
