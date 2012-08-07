@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:38075 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751973Ab2HISTq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 14:19:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Date: Thu, 9 Aug 2012 11:19:36 -0700
-Subject: RE: [patch] mwifiex: use GFP_ATOMIC under spin lock
-Message-ID: <477F20668A386D41ADCC57781B1F7043083AF361C0@SC-VEXCH1.marvell.com> (sfid-20120809_201951_659636_8D4D5162)
-References: <20120809065757.GB7925@elgon.mountain>
-In-Reply-To: <20120809065757.GB7925@elgon.mountain>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:37643 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752099Ab2HGHSp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2012 03:18:45 -0400
+Message-ID: <5020BF4F.2090304@posedge.com> (sfid-20120807_091900_916311_F7A0B90E)
+Date: Tue, 07 Aug 2012 12:40:07 +0530
+From: Srinivasan B <srinivasanb@posedge.com>
 MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: [PATCH] cfg80211: Fix for crash in cfg80211
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Patch Description:
+                     cfg80211 module crashes when cfg80211 & mac80211 
+loaded and unloading lmac driver.
 
-Thanks for the patch.
+Scenario Explanation:
+                     (Step 1) : cfg80211, mac80211 and lmac driver 
+modules are loaded initially.
+                     (Step 2) : unload the lmac driver.
+                                     then any dev calls to stack causes 
+the crash.
+Code Changes:
+                     dev->ethtools_ops is assigned during 
+NETDEV_REGISTER and the same can be cleared during NETDEV_UNREGISTER.
 
-> We're holding the sta_list_spinlock here so we can't sleep.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Srinivasan Chandrasekaran <srinivasb@posedge.com>
+---
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Regards,
-Bing
-
-> 
-> diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-> index 14d4f04..ca4a1f3 100644
-> --- a/drivers/net/wireless/mwifiex/uap_event.c
-> +++ b/drivers/net/wireless/mwifiex/uap_event.c
-> @@ -63,7 +63,7 @@ mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
->  	if (node)
->  		goto done;
-> 
-> -	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_KERNEL);
-> +	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_ATOMIC);
->  	if (!node)
->  		goto done;
-> 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index dcd64d5..74bb7c4 100755
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -944,6 +944,10 @@ static int cfg80211_netdev_notifier_call(struct 
+notifier_block *nb,
+  #endif
+          }
+          mutex_unlock(&rdev->devlist_mtx);
++
++        if (dev->ethtool_ops)
++            dev->ethtool_ops = NULL;
++
+          /*
+           * synchronise (so that we won't find this netdev
+           * from other code any more) and then clear the list
