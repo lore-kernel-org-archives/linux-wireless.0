@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.multi.fi ([85.134.37.151]:51619 "EHLO smtp.multi.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638Ab2HSLk4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2012 07:40:56 -0400
-Message-ID: <5030CD6D.9010002@mageia.org> (sfid-20120819_134059_651851_A4332495)
-Date: Sun, 19 Aug 2012 14:26:37 +0300
-From: Thomas Backlund <tmb@mageia.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13664 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757140Ab2HGBQI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Aug 2012 21:16:08 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Missing firmware iwlwifi-2030-5.ucode
-References: <502D0C72.2050207@lwfinger.net>
-In-Reply-To: <502D0C72.2050207@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20512.27655.51108.298733@gargle.gargle.HOWL> (sfid-20120807_032551_914601_7388627E)
+Date: Tue, 7 Aug 2012 06:44:47 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC 13/14] ath9k: Remove MIMO-PS specific code
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-16.08.2012 18:06, Larry Finger skrev:
-> Hi,
->
-> I am trying to help an openSUSE 12.1 user who is running kernel 3.1.9,
-> who has an Intel 802.11 b/g/n card with Bluetooth mounted in an HP
-> dvdt-7000 Quad Edition Series computer.
->
-> The driver is asking for firmware named "iwlwifi-2030-5.ucode"; however,
-> that particular file does not exist in /lib/firmware, nor is in the
-> linux-firmware git repo where only the version 6 firmware exists.
->
-> I could find no record of the firmware ever being in the git repo, nor
-> could I find it using a Google search. For users of kernel 3.1, I
-> request that this firmware file be submitted to linux-firmware. In
-> addition, if you send me a copy of the file, I will see that the OP on
-> the openSUSE Forum gets a copy.
->
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-You need atleast:
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdiff;h=37273f55830f0919d543250d191e1633ff53841c
-
-
-If this is a distro kernel, you probably need theese too:
-
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdiff;h=13cb8e3a067538c5aacc846a032985d2b608bccd
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdiff;h=20d6f19dca576a671ab61403c366c7154f802b36
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdiff;h=9e8ed57850a9d5157430fb09161a2456171d8684
-
---
-Thomas
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 2051fac..cce0c51 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1120,15 +1120,6 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+ 						 rates[i].count);
+ 			}
+ 		}
+-	} else {
+-		/*
+-		 * Handle the special case of MIMO PS burst, where the second
+-		 * aggregate is sent out with only one rate and one try.
+-		 * Treating it as an excessive retry penalizes the rate
+-		 * inordinately.
+-		 */
+-		if (rates[0].count == 1 && xretries == 1)
+-			xretries = 2;
+ 	}
+ 
+ 	flags = rates[final_ts_idx].flags;
+-- 
+1.7.11.4
 
