@@ -1,31 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49738 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756326Ab2HQODK (ORCPT
+Received: from mail.active-venture.com ([67.228.131.205]:54698 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753523Ab2HGLHk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 10:03:10 -0400
-Message-ID: <502E4F16.9070104@qca.qualcomm.com> (sfid-20120817_160325_023516_F730288C)
-Date: Fri, 17 Aug 2012 17:03:02 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 7 Aug 2012 07:07:40 -0400
+Date: Tue, 7 Aug 2012 04:07:48 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Christopher Sacchi <chris.sacchi@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH]: Autosleep patch.
+Message-ID: <20120807110748.GA12534@roeck-us.net> (sfid-20120807_130803_154390_92139B9A)
+References: <CAGh4K3L_nY5B22g5oMBuoY=a1OB7U10yH1ZJvn0dG_O5TVz6+Q@mail.gmail.com>
+ <501FE4E9.3080004@xenotime.net>
 MIME-Version: 1.0
-To: Jonathan Bagg <drwho@infidigm.net>
-CC: <bkamatch@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: ath6kl: Add support for AR6004 hardware version 1.3
-References: <43a66e0f20b45e9cc461272e83f2c4e4.squirrel@www.infidigm.net>    <4FFC08C5.2050606@qca.qualcomm.com>    <71781241c331fcbb5687068ddc6bbb06.squirrel@www.infidigm.net>    <4FFD7621.5020207@qca.qualcomm.com>    <19811dfd94388fb6406373822974cee7.squirrel@www.infidigm.net>    <5005956F.3010300@qca.qualcomm.com>    <5007D509.4050809@qca.qualcomm.com> <5cf4071422583bd246540992af9f7582.squirrel@www.infidigm.net> <502DF458.8080900@qca.qualcomm.com> <502E32F5.3010205@infidigm.net>
-In-Reply-To: <502E32F5.3010205@infidigm.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <501FE4E9.3080004@xenotime.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/17/2012 03:03 PM, Jonathan Bagg wrote:
-> Also, I was only able to get a max of 65Mbps / MCS7.  I think the 9374 
-> is capable of faster? I've never used a 2-stream device....not sure if I 
-> need to configure it to use the 2-streams, or if the ath6kl driver only 
-> supports up to MCS7?
+On Mon, Aug 06, 2012 at 08:38:17AM -0700, Randy Dunlap wrote:
+> On 08/06/2012 08:13 AM, Christopher Sacchi wrote:
+> 
+> > This patch (listed below), changes an old function in autosleep.c in
+> > kernel version 3.5. It's code is listed from the first -- line to the
+> > 2nd to last -- line.
+> > This patch was checked with checkpatch.pl with no errors:
+> > --
+> > --- power/autosleep.c	2012-07-21 20:58:29.000000000 +0000
+> > +++ power/autosleepnew.c	2012-08-06 10:52:26.000000000 +0000
+> 
+> 
+> The file names should include the full path from the top level of the
+> kernel source tree.  E.g.:
+> 
+> --- linux.orig/kernel/power/autosleep.c
+> +++ linux/kernel/power/autosleep.c
+> 
+> This patch uses the name autosleepnew.c, which is not what is
+> required/expected.
+> 
+> Your previous patches were for wireless (mac80211) components, so they
+> needed to go to the linux-wireless mailing list.  This patch is not
+> about wireless, so don't send it to that mailing list, although you
+> could send it to the linux-pm@vger.kernel.org mailing list.
+> Please see the MAINTAINERS file for where to send patches.
+> 
+> 
+> > @@ -30,7 +30,7 @@ static void try_to_suspend(struct work_s
+> >  	if (!pm_get_wakeup_count(&initial_count, true))
+> >  		goto out;
+> > 
+> > -	mutex_lock(&autosleep_lock);
+> > +	mutex_lock_interruptable();
+> > 
 
-I don't actually know. I need to find out from the team who added ar6004
-support to ath6kl and I will get back to you (or preferably someone from
-that team will).
+Plus, this code obviously never compiled. Nor does the submitter ever explain
+what he actually tries to accomplish.
 
-Kalle
+Guenter
+
+> >  	if (!pm_save_wakeup_count(initial_count)) {
+> >  		mutex_unlock(&autosleep_lock);
+> > Signed-off-by: Christopher P. Sacchi <chris.sacchi@gmail.com>
+> > --
+> 
+> Signed-off-by: line is not part of the patch.  It should be near the
+> end of the patch description, before the actual patch.
+> 
+> Again, please read and follow Documentation/SubmittingPatches.
+> 
+> thanks.
+> 
+> -- 
+> ~Randy
+> 
