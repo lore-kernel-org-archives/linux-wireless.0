@@ -1,70 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:57296 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979Ab2HIWSJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28231 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755741Ab2HGRrX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 18:18:09 -0400
-Received: by obbuo13 with SMTP id uo13so1260090obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 15:18:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <50238158.2000809@neratec.com>
-References: <1343924881-31418-1-git-send-email-hauke@hauke-m.de>
- <1343924881-31418-2-git-send-email-hauke@hauke-m.de> <CAB=NE6UTm9WyHZX-Ve5TZcKVfWf52caGhBWY_3q9RQuD8KcnZQ@mail.gmail.com>
- <50238158.2000809@neratec.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 9 Aug 2012 15:17:47 -0700
-Message-ID: <CAB=NE6XmC4x_uNwFNTcGtxYHFNoc1L3n9m9fa+m5Kf2za7VN6A@mail.gmail.com> (sfid-20120810_001813_349787_9FA1DF9D)
-Subject: Re: [PATCH 2/2] compat: fix endless recursion in flush_scheduled_work
+	Tue, 7 Aug 2012 13:47:23 -0400
+Date: Tue, 7 Aug 2012 10:47:28 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
 To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+CC: <mcgrof@kernel.org>,
+	<lf_driver_backport@lists.linux-foundation.org>,
+	<linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
+Subject: Re: [PATCH] compat: fix system crash on 2.6.35 when flushing work
+Message-ID: <20120807174728.GF3745@lenteja.do-not-panic.com> (sfid-20120807_194736_675427_F95BE578)
+References: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 9, 2012 at 2:22 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
-> On 08/06/2012 08:52 PM, Luis R. Rodriguez wrote:
->> On Thu, Aug 2, 2012 at 9:28 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>> The hader file defines flush_scheduled_work(a)
->>> compat_flush_scheduled_work(a), which causes flush_scheduled_work() and
->>> compat_flush_scheduled_work() to be the same function.
->>>
->>> With this patch it calls the actual function in the kernel.
->>>
->>> This fixes problems when unloading mac80211 from compat-wireless.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>>  compat/compat-2.6.36.c |    1 +
->>>  1 file changed, 1 insertion(+)
->>>
->>> diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
->>> index 8f25be0..05b41c2 100644
->>> --- a/compat/compat-2.6.36.c
->>> +++ b/compat/compat-2.6.36.c
->>> @@ -133,6 +133,7 @@ int compat_schedule_delayed_work_on(int cpu,
->>>  }
->>>  EXPORT_SYMBOL_GPL(compat_schedule_delayed_work_on);
->>>
->>> +#undef flush_scheduled_work(a)
->>>  void compat_flush_scheduled_work(void)
->>
->> Hah! Nice. I'll add this and push... Zefir can you see if after
->> getting today's compat.git and then by reverting your patch
->> 3da0495cf863288b on compat.git if the unloading issues still happens.
->> Likely this was the *real* cause, although it is odd to me you ended
->> up removing the flush_workqueue() and not the flush_scheduled_work().
->>
->>   Luis
->>
-> Yep, works. Thanks Hauke for the proper fix.
->
-> As for why I removed the wrong line, I got the macro mapping wrong,
-> assuming it ended in calling flush_workqueue() - and chose to remove the
-> wrong one.
->
-> Still curious why it is not crashing with my quick hack, that remained
-> recursion intact...
+On Fri, Jul 13, 2012 at 10:38:34AM +0200, Zefir Kurtisi wrote:
+> Ubuntu 10.10 stock kernel (2.6.35-22-generic) crashes in
+> compat_flush_scheduled_work(), that is called e.g. when
+> mac80211 module is unloaded.
+> 
+> The problem was introduced with 80bf8a83
+> compat: backport system work queues system_wq and system_long_wq
+> 
+> The crash happens in compat_flush_scheduled_work() where both
+> flush_workqueue() and flush_scheduled_work() are called successively.
+> Removing one of them resolves the issue.
+> 
+> All compat-wireless tarballs after 2012-03-18 are affected.
+> 
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> ---
+>  compat/compat-2.6.36.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
+> index 9190ecd..8f25be0 100644
+> --- a/compat/compat-2.6.36.c
+> +++ b/compat/compat-2.6.36.c
+> @@ -140,7 +140,6 @@ void compat_flush_scheduled_work(void)
+>  	 * go with the old kernel's one first for now (keventd_wq) and
+>  	 * if think its reasonable later we can flip this around.
+>  	 */
+> -	flush_workqueue(system_wq);
+>  	flush_scheduled_work();
+>  }
+>  EXPORT_SYMBOL_GPL(compat_flush_scheduled_work);
 
-You tell me! Vodooo!
+I've reverted this in favor for Hauke's fix. Although he did not revert
+your patch after inspecing his change it was apparant that the endless
+loop was really the issue. The backported fix is on the linux-3.5.y
+branch and the backported patch does a bit more justice to review
+the fix. I've load / unload tested this on v2.6.35.
 
-  Luis
+I kicked out a new v3.5 release based on this, the -3 release.
+
+>From 5ea4da5f1e96fc1aba89b62290f0aaab0e943b0a Mon Sep 17 00:00:00 2001
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 7 Aug 2012 09:19:08 -0700
+Subject: [PATCH] compat: revert 4595ae7579bf17 (upstream 3da0495c)
+
+This reverts the commit:
+
+commit 4595ae7579bf177150d7a661644c852f7d549bfa
+Author: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Date:   Fri Jul 13 10:38:34 2012 +0200
+
+    compat: fix system crash on 2.6.35 when flushing work
+
+    Upstream commit 3da0495cf863288b6798e121ccf93c4453c6c768
+
+    Ubuntu 10.10 stock kernel (2.6.35-22-generic) crashes in
+    compat_flush_scheduled_work(), that is called e.g. when
+    mac80211 module is unloaded.
+
+    The problem was introduced with 80bf8a83
+    compat: backport system work queues system_wq and system_long_wq
+
+    The crash happens in compat_flush_scheduled_work() where both
+    flush_workqueue() and flush_scheduled_work() are called successively.
+    Removing one of them resolves the issue.
+
+    All compat-wireless tarballs after 2012-03-18 are affected.
+
+    Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+    Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+
+And then applies the 2 upstream commits:
+
+>From 78fda91b330657f1d66afc32d18cae99f4783f21 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Thu, 2 Aug 2012 18:28:01 +0200
+
+    compat: fix endless recursion in flush_scheduled_work
+
+    The hader file defines flush_scheduled_work(a)
+    compat_flush_scheduled_work(a), which causes flush_scheduled_work() and
+    compat_flush_scheduled_work() to be the same function.
+
+    With this patch it calls the actual function in the kernel.
+
+    This fixes problems when unloading mac80211 from compat-wireless.
+
+    Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+    Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+
+>From 19041dd7befe97f476c187bc15442cd738c67f37 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Tue, 7 Aug 2012 00:36:20 +0200
+
+    compat: fix undef syntax
+
+   Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+   Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+
+The real fix was to avoid the recursive call to
+flush_scheduled_work() by undef'ing it on the c
+file.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ compat/compat-2.6.36.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
+index 8f25be0..72ada4a 100644
+--- a/compat/compat-2.6.36.c
++++ b/compat/compat-2.6.36.c
+@@ -133,6 +133,7 @@ int compat_schedule_delayed_work_on(int cpu,
+ }
+ EXPORT_SYMBOL_GPL(compat_schedule_delayed_work_on);
+ 
++#undef flush_scheduled_work
+ void compat_flush_scheduled_work(void)
+ {
+ 	/*
+@@ -140,6 +141,7 @@ void compat_flush_scheduled_work(void)
+ 	 * go with the old kernel's one first for now (keventd_wq) and
+ 	 * if think its reasonable later we can flip this around.
+ 	 */
++	flush_workqueue(system_wq);
+ 	flush_scheduled_work();
+ }
+ EXPORT_SYMBOL_GPL(compat_flush_scheduled_work);
+-- 
+1.7.10.4
+
