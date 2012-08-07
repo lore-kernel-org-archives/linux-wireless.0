@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38236 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754366Ab2HPSG2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39374 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755225Ab2HGQUg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 14:06:28 -0400
-Received: by yhmm54 with SMTP id m54so3202777yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 11:06:27 -0700 (PDT)
-Message-ID: <502D36A0.2040400@lwfinger.net> (sfid-20120816_200634_058358_E5E8C459)
-Date: Thu, 16 Aug 2012 13:06:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Richie Gress <searchfgold67899@live.com>
-CC: linux-wireless@vger.kernel.org, 1030858@bugs.launchpad.net
-Subject: Re: 0bda:8176 RTL8188CUS does not connect to wireless networks
-References: <BLU0-SMTP344F6F7B3E1F2CD39D5B52CF2B50@phx.gbl>
-In-Reply-To: <BLU0-SMTP344F6F7B3E1F2CD39D5B52CF2B50@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 7 Aug 2012 12:20:36 -0400
+Message-ID: <1344356425.4766.0.camel@jlt3.sipsolutions.net> (sfid-20120807_182047_993111_3B7FBF42)
+Subject: Re: [PATCH] cfg80211: Fix for crash in cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: Srinivasan B <srinivasanb@posedge.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Date: Tue, 07 Aug 2012 18:20:25 +0200
+In-Reply-To: <50211696.40607@posedge.com>
+References: <5020BF4F.2090304@posedge.com>
+	 <1344339753.15172.0.camel@jlt3.sipsolutions.net>
+	 <50211696.40607@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/15/2012 10:22 PM, Richie Gress wrote:
-> [1] Summary of Problem.
-> 0bda:8176 RTL8188CUS does not connect to wireless networks
->
-> [2] Full description of the Problem.
-> The RTL8188CUS USB wireless card will not connect to wireless networks. The connection is attempted over and over again, and the password prompt reappears each time if the network has one, but a connection is never established.
-> There is a workaround for this bug: Drivers can be obtained from the Realtek website. But they are required in order for the hardware to function properly.
+On Tue, 2012-08-07 at 18:52 +0530, Mahesh Palivela wrote:
 
-You gave quite a complete report, but you missed some important factors. What 
-kind of wireless connection are you trying to make (802.11n, 802.11g, etc)? What 
-kind of encryption? What is the make/model of the AP?
+> >>                       dev->ethtools_ops is assigned during
+> >> NETDEV_REGISTER and the same can be cleared during NETDEV_UNREGISTER.
+> >
+> > This doesn't make any sense to me at all.
+> >
+> cleanup of ethtools_ops pointer is required upon netdev_unreg 
+> notification. we are assigning this pointer to cfg80211_ethtool_ops on 
+> netdev_reg notification. Is it not required?
+> 
+> we have seen crash when keeping cfg80211 and mac80211 loaded and lmac 
+> driver unloaded. With this fix, we didn't see crash. Crash doesn't 
+> happen right away. Only when some operation trying to access ethtool_ops.
 
-My tests show that rtl8192cu can make a connection for 802.11n and 802.11g, as 
-long as the encryption is WPA2. With WPA or WEP encryption, an 802.11g 
-connection fails as you describe.
+I don't see how anything could access ethtool_ops after the netdev is
+unregistered.
 
-I am now checking to see where this regression occurred. Please fill out a 
-kernel bugzilla on this regression, and assign it to me.
-
-Thanks,
-
-Larry
+johannes
 
