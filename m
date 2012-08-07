@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55723 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296Ab2HBSPc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39763 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751933Ab2HGScF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 14:15:32 -0400
-Date: Thu, 2 Aug 2012 14:13:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tim and Alison Bentley <Home@TRARBentley.net>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Felix Bitterli <felixb@qca.qualcomm.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] ath9k: Add PID/VID support for AR1111
-Message-ID: <20120802181343.GA18293@tuxdriver.com> (sfid-20120802_201535_729853_410CDBB2)
-References: <1343888930-353-1-git-send-email-mohammed@qca.qualcomm.com>
- <CAB=NE6WYGefu8vYrO05tq=5qnCcMqWtUQkTzisR2sfpTLMx8WQ@mail.gmail.com>
- <CAAT9HshKC9+YiP2YzVGO_nuRsyvbgBeUvj2+r2Wzj1wU-QV7-A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAAT9HshKC9+YiP2YzVGO_nuRsyvbgBeUvj2+r2Wzj1wU-QV7-A@mail.gmail.com>
+	Tue, 7 Aug 2012 14:32:05 -0400
+Message-ID: <1344364321.4766.3.camel@jlt3.sipsolutions.net> (sfid-20120807_203210_164073_E7091A02)
+Subject: Re: [PATCH] compat: handle pci suspend/resume on kernel 2.6.29
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 07 Aug 2012 20:32:01 +0200
+In-Reply-To: <1344363868.4766.2.camel@jlt3.sipsolutions.net> (sfid-20120807_202435_066114_3D3D3816)
+References: <1343938505.4471.31.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6UUCVUDAn75UNX1uH=BMPkmjCtWr16iYBrGifkESCv=sA@mail.gmail.com>
+	 <CAB=NE6VUre2eDdszhw3wCq7mrWvZW1uB7n5yp+hOTRTChZNRBQ@mail.gmail.com>
+	 (sfid-20120807_200133_412545_A1FB50E7) <1344362732.4766.1.camel@jlt3.sipsolutions.net>
+	 (sfid-20120807_200542_628002_964015C7) <1344363868.4766.2.camel@jlt3.sipsolutions.net>
+	 (sfid-20120807_202435_066114_3D3D3816)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 02, 2012 at 07:05:12PM +0100, Tim and Alison Bentley wrote:
-> On 2 August 2012 18:43, Luis R. Rodriguez <rodrigue@qca.qualcomm.com> wrote:
+On Tue, 2012-08-07 at 20:24 +0200, Johannes Berg wrote:
+> On Tue, 2012-08-07 at 20:05 +0200, Johannes Berg wrote:
+> > On Tue, 2012-08-07 at 10:55 -0700, Luis R. Rodriguez wrote:
+> > 
+> > > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:4922:1:
+> > > error: conflicting type qualifiers for ‘il_pm_ops’
+> > > In file included from
+> > > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:43:0:
+> > > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.h:1854:32:
+> > > note: previous declaration of ‘il_pm_ops’ was here
+> > > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:
+> > > In function ‘il_isr’:
+> > > /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.c:5415:12:
+> > > warning: variable ‘inta_mask’ set but not used
+> > > [-Wunused-but-set-variable]
+> > >   CC [M]  /home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/ath/ath6kl/sdio.o
+> > > make[4]: *** [/home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy/common.o]
+> > > Error 1
+> > > make[3]: *** [/home/mcgrof/staging/2/compat-wireless-3.5-3-snpc/drivers/net/wireless/iwlegacy]
+> > > Error 2
+> > 
+> > Gee, fun, that's because of the static ... more hackery required then I
+> > guess :-(
 > 
-> > On Wed, Aug 1, 2012 at 11:28 PM, Mohammed Shafi Shajakhan
-> > <mohammed@qca.qualcomm.com> wrote:
-> > > From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> > >
-> > > AR1111 is same as AR9485. The h/w
-> > > difference between them is quite insignificant,
-> > > Felix suggests only very few baseband features
-> > > may not be available in AR1111. The h/w code for
-> > > AR9485 is already present, so AR1111 should
-> > > work fine with the addition of its PID/VID.
-> > >
-> > > Cc: stable@vger.kernel.org [2.6.39+]
-> > > Cc: Felix Bitterli <felixb@qca.qualcomm.com>
-> > > Reported-by: Tim and Alison Bentley <Home@trarbentley.net>
-> > > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> >
-> > Nice! I'd be happy with this going in once we get a Tested-by: report.
-> > Dan, Tim?
-> >
-> >
-> 
-> Will test tomorrow when I have time
+> Not static, of course, the "const"
 
-Hmmm...well, I just pushed it to wireless.git.  I won't push it to
-Dave until sometime tomorrow, to give a chance for some test.
+This should work, but I didn't test it:
+http://p.sipsolutions.net/448a4a1fe8f98b30.txt
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
