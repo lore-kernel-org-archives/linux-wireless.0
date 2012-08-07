@@ -1,113 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:64983 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752307Ab2HMTBS (ORCPT
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:57762 "EHLO
+	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757508Ab2HGXTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 15:01:18 -0400
-Received: by qaas11 with SMTP id s11so1176354qaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2012 12:01:18 -0700 (PDT)
-Subject: Patch "cfg80211: fix interface combinations check for ADHOC(IBSS)" has been added to the 3.0-stable tree
-To: paul.gortmaker@windriver.com, gregkh@linuxfoundation.org,
-	johannes@sipsolutions.net, liang.li@windriver.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	stable@vger.kernel.org
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Mon, 13 Aug 2012 12:00:11 -0700
-In-Reply-To: <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com>
-Message-ID: <13448844112924@kroah.org> (sfid-20120813_210121_575088_4BC37E3B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ASCII
+	Tue, 7 Aug 2012 19:19:13 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Fengguang Wu <fengguang.wu@intel.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix powerpc64-linux- compilation warnings
+Date: Tue,  7 Aug 2012 16:08:08 -0700
+Message-Id: <1344380888-13731-1-git-send-email-bzhao@marvell.com> (sfid-20120808_011922_991124_FABA578D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+These warnings can be detected by using powerpc64-linux toolchain
+(gcc-4.6.3-nolibc).
 
-This is a note to let you know that I've just added the patch titled
+  CC [M]  drivers/net/wireless/mwifiex/sta_event.o
+drivers/net/wireless/mwifiex/sta_event.c: In function 'mwifiex_process_sta_event':
+drivers/net/wireless/mwifiex/sta_event.c:388:4: warning: comparison of distinct pointer types lacks a cast [enabled by default]
+  CC [M]  drivers/net/wireless/mwifiex/uap_event.o
+drivers/net/wireless/mwifiex/uap_event.c: In function 'mwifiex_process_uap_event':
+drivers/net/wireless/mwifiex/uap_event.c:258:11: warning: comparison of distinct pointer types lacks a cast [enabled by default]
 
-    cfg80211: fix interface combinations check for ADHOC(IBSS)
+Use min_t() instead of min() to fix the warnings.
 
-to the 3.0-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-The filename of the patch is:
-     cfg80211-fix-interface-combinations-check-for-adhoc-ibss.patch
-and it can be found in the queue-3.0 subdirectory.
-
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From paul.gortmaker@windriver.com  Mon Aug 13 11:39:55 2012
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Date: Thu, 2 Aug 2012 18:55:41 -0400
-Subject: cfg80211: fix interface combinations check for ADHOC(IBSS)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>, Liang Li <liang.li@windriver.com>, <stable@vger.kernel.org>, Paul Gortmaker <paul.gortmaker@windriver.com>
-Message-ID: <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com>
-
-
-From: Liang Li <liang.li@windriver.com>
-
-partial of commit 8e8b41f9d8c8e63fc92f899ace8da91a490ac573 upstream.
-
-As part of commit 463454b5dbd8 ("cfg80211: fix interface
-combinations check"), this extra check was introduced:
-
-       if ((all_iftypes & used_iftypes) != used_iftypes)
-               goto cont;
-
-However, most wireless NIC drivers did not advertise ADHOC in
-wiphy.iface_combinations[i].limits[] and hence we'll get -EBUSY
-when we bring up a ADHOC wlan with commands similar to:
-
- # iwconfig wlan0 mode ad-hoc && ifconfig wlan0 up
-
-In commit 8e8b41f9d8c8e ("cfg80211: enforce lack of interface
-combinations"), the change below fixes the issue:
-
-       if (total == 1)
-               return 0;
-
-But it also introduces other dependencies for stable. For example,
-a full cherry pick of 8e8b41f9d8c8e would introduce additional
-regressions unless we also start cherry picking driver specific
-fixes like the following:
-
-  9b4760e  ath5k: add possible wiphy interface combinations
-  1ae2fc2  mac80211_hwsim: advertise interface combinations
-  20c8e8d  ath9k: add possible wiphy interface combinations
-
-And the purpose of the 'if (total == 1)' is to cover the specific
-use case (IBSS, adhoc) that was mentioned above. So we just pick
-the specific part out from 8e8b41f9d8c8e here.
-
-Doing so gives stable kernels a way to fix the change introduced
-by 463454b5dbd8, without having to make cherry picks specific to
-various NIC drivers.
-
-Signed-off-by: Liang Li <liang.li@windriver.com>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/wireless/util.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/mwifiex/sta_event.c |    9 +++++----
+ drivers/net/wireless/mwifiex/uap_event.c |    9 ++++-----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -975,6 +975,9 @@ int cfg80211_can_change_interface(struct
- 	}
- 	mutex_unlock(&rdev->devlist_mtx);
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 2aad148..4758d30 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -186,6 +186,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	int ret = 0;
+ 	u32 eventcause = adapter->event_cause;
++	u16 ctrl;
  
-+	if (total == 1)
-+		return 0;
+ 	switch (eventcause) {
+ 	case EVENT_DUMMY_HOST_WAKEUP_SIGNAL:
+@@ -382,11 +383,11 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 					      adapter->event_body);
+ 		break;
+ 	case EVENT_AMSDU_AGGR_CTRL:
+-		dev_dbg(adapter->dev, "event:  AMSDU_AGGR_CTRL %d\n",
+-			*(u16 *) adapter->event_body);
++		ctrl = le16_to_cpu(*(__le16 *)adapter->event_body);
++		dev_dbg(adapter->dev, "event: AMSDU_AGGR_CTRL %d\n", ctrl);
 +
- 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
- 		const struct ieee80211_iface_combination *c;
- 		struct ieee80211_iface_limit *limits;
+ 		adapter->tx_buf_size =
+-			min(adapter->curr_tx_buf_size,
+-			    le16_to_cpu(*(__le16 *) adapter->event_body));
++				min_t(u16, adapter->curr_tx_buf_size, ctrl);
+ 		dev_dbg(adapter->dev, "event: tx_buf_size %d\n",
+ 			adapter->tx_buf_size);
+ 		break;
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 14d4f04..1703abf 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -170,6 +170,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 	struct mwifiex_sta_node *node;
+ 	u8 *deauth_mac;
+ 	struct host_cmd_ds_11n_batimeout *ba_timeout;
++	u16 ctrl;
+ 
+ 	switch (eventcause) {
+ 	case EVENT_UAP_STA_ASSOC:
+@@ -250,14 +251,12 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		dev_dbg(adapter->dev, "AP EVENT: event id: %#x\n", eventcause);
+ 		break;
+ 	case EVENT_AMSDU_AGGR_CTRL:
+-		dev_dbg(adapter->dev, "event:  AMSDU_AGGR_CTRL %d\n",
+-			*(u16 *)adapter->event_body);
++		ctrl = le16_to_cpu(*(__le16 *)adapter->event_body);
++		dev_dbg(adapter->dev, "event: AMSDU_AGGR_CTRL %d\n", ctrl);
+ 
+ 		if (priv->media_connected) {
+ 			adapter->tx_buf_size =
+-			       min(adapter->curr_tx_buf_size,
+-				   le16_to_cpu(*(__le16 *)adapter->event_body));
+-
++				min_t(u16, adapter->curr_tx_buf_size, ctrl);
+ 			dev_dbg(adapter->dev, "event: tx_buf_size %d\n",
+ 				adapter->tx_buf_size);
+ 		}
+-- 
+1.7.0.2
 
-
-Patches currently in stable-queue which might be from paul.gortmaker@windriver.com are
-
-queue-3.0/mm-mmu_notifier-fix-freed-page-still-mapped-in-secondary-mmu.patch
-queue-3.0/cfg80211-fix-interface-combinations-check-for-adhoc-ibss.patch
