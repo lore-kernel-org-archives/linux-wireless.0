@@ -1,31 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57275 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879Ab2H3J1x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 05:27:53 -0400
-Message-ID: <503F3214.6050507@qca.qualcomm.com> (sfid-20120830_112757_286856_F8F308B9)
-Date: Thu, 30 Aug 2012 12:27:48 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 1/4] ath6kl: Refactor ath6kl_init_hw_start() and ath6kl_init_hw_stop()
-References: <1346249428-24741-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1346249428-24741-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from nbd.name ([46.4.11.11]:48877 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758270Ab2HHN47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2012 09:56:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.6 2/4] ath9k_hw: clear the AM2PM predistortion mask on AR933x
+Date: Tue,  7 Aug 2012 15:06:10 +0200
+Message-Id: <1344344772-49459-2-git-send-email-nbd@openwrt.org> (sfid-20120808_155706_495161_34C13214)
+In-Reply-To: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
+References: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2012 05:10 PM, Vasanthakumar Thiagarajan wrote:
-> So that these functions will be used to re-initialize the fw
-> upon detecting fw error. This refactoring moves ar->state
-> setting out of core stop/start functionality.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+That predistortion type is not supported
 
-Thanks, all four patches applied.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-I had to fix one parenthesis alignment in patch 3, but that was easy to do.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 2c9f7d7..2173bd7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -142,6 +142,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 	};
+ 	int training_power;
+ 	int i, val;
++	u32 am2pm_mask = ah->paprd_ratemask;
+ 
+ 	if (IS_CHAN_2GHZ(ah->curchan))
+ 		training_power = ar9003_get_training_power_2g(ah);
+@@ -158,10 +159,13 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 	}
+ 	ah->paprd_training_power = training_power;
+ 
++	if (AR_SREV_9330(ah))
++		am2pm_mask = 0;
++
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK,
+ 		      ah->paprd_ratemask);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK,
+-		      ah->paprd_ratemask);
++		      am2pm_mask);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
+ 		      ah->paprd_ratemask_ht40);
+ 
+-- 
+1.7.9.6 (Apple Git-31.1)
 
-Kalle
