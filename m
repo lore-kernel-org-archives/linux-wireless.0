@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50708 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757700Ab2HXORl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7959 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757114Ab2HGBPk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 10:17:41 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC 1/3] ath9k: Fix BTCOEX timer triggering comparision
-Date: Fri, 24 Aug 2012 19:47:29 +0530
-Message-ID: <1345817851-8700-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120824_161748_576037_1707203A)
+	Mon, 6 Aug 2012 21:15:40 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20512.27627.335105.160676@gargle.gargle.HOWL> (sfid-20120807_031542_910299_776235EC)
+Date: Tue, 7 Aug 2012 06:44:19 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC 09/14] ath9k: Do not set IEEE80211_TX_RC_USE_SHORT_PREAMBLE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+mac80211 does it for us.
 
-Its safer to convert btcoex_period to 'us' while
-comparing with btcoex_no_stomp which is in 'us'.
-Did not find any functionality issues being fixed,
-as the generic hardware timer triggers are usually
-refreshed with the newer duty cycle.
-
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/gpio.c  |    7 ++++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7373e4b..2bb89b1 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -473,7 +473,7 @@ struct ath_btcoex {
- 	unsigned long op_flags;
- 	int bt_stomp_type; /* Types of BT stomping */
- 	u32 btcoex_no_stomp; /* in usec */
--	u32 btcoex_period; /* in usec */
-+	u32 btcoex_period; /* in msec */
- 	u32 btscan_no_stomp; /* in usec */
- 	u32 duty_cycle;
- 	u32 bt_wait_time;
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index bacdb8f..273eb67 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -228,7 +228,12 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	ath9k_hw_btcoex_enable(ah);
- 	spin_unlock_bh(&btcoex->btcoex_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index ed48d3d..78192c1 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -682,8 +682,6 @@ static void ath_rc_rate_set_series(const struct ath_rate_table *rate_table,
+ 	rate->count = tries;
+ 	rate->idx = rate_table->info[rix].ratecode;
  
--	if (btcoex->btcoex_period != btcoex->btcoex_no_stomp) {
-+	/*
-+	 * btcoex_period is in msec while (btocex/btscan_)no_stomp are in usec,
-+	 * ensure that we properly convert btcoex_period to usec
-+	 * for any comparision with (btcoex/btscan_)no_stomp.
-+	 */
-+	if (btcoex->btcoex_period * 1000 != btcoex->btcoex_no_stomp) {
- 		if (btcoex->hw_timer_enabled)
- 			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
+-	if (txrc->short_preamble)
+-		rate->flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
+ 	if (txrc->rts || rtsctsenable)
+ 		rate->flags |= IEEE80211_TX_RC_USE_RTS_CTS;
  
 -- 
-1.7.0.4
+1.7.11.4
 
