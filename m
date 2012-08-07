@@ -1,165 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51052 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932993Ab2HWNYH (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43909 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751933Ab2HGRKD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 09:24:07 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 1/6] ath9k: Cleanup add/change_interface callbacks
-Date: Thu, 23 Aug 2012 18:53:53 +0530
-Message-ID: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152413_213405_CDEFFED3)
+	Tue, 7 Aug 2012 13:10:03 -0400
+Received: by yenl2 with SMTP id l2so3917839yen.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2012 10:10:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <50203B17.9010606@hauke-m.de>
+References: <1344095900.5982.0.camel@jlt3.sipsolutions.net>
+ <1344162581.4513.1.camel@jlt3.sipsolutions.net> <CAB=NE6XLMTwG65EhExSES-rPsKK7SDBx4+MgwqxuJL__ZtN=zw@mail.gmail.com>
+ <50202A06.7090308@hauke-m.de> <50203B17.9010606@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 7 Aug 2012 10:09:42 -0700
+Message-ID: <CAB=NE6UYq5g-Jg+O3UX9zpRwt0-QhK5CeJ4G+ke0ov0wCR42wQ@mail.gmail.com> (sfid-20120807_191021_596591_719CF8C5)
+Subject: Re: [PATCH v2] compat: deal with backported codel
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Mon, Aug 6, 2012 at 2:45 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 08/06/2012 10:33 PM, Hauke Mehrtens wrote:
+>> On 08/06/2012 09:53 PM, Luis R. Rodriguez wrote:
+>>> On Sun, Aug 5, 2012 at 3:29 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>>
+>>>> Some distro kernels (in particular the Debian 3.2.0-3
+>>>> kernel I'm running) backport codel already, so trying
+>>>> to backport it again causes issues. Protect the compat
+>>>> backport with #ifdef TCA_CODEL_MAX.
+>>>>
+>>>> Also link the flow_dissector code into the codel module
+>>>> which then won't be loaded on kernels that already have
+>>>> codel backported.
+>>>>
+>>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>> Applied and pushed, thanks!
+>>>
+>>>   Luis
+>>>
+>> This breaks my build if net/codel.h is not in the kernel headers:
+>>
+>> In file included from
+>> /home/hauke/compat-wireless/compat-wireless/compat/sch_fq_codel_core.c:27:0:
+>> /home/hauke/compat-wireless/compat-wireless/include/net/codel.h:5:28:
+>> fatal error: net/codel.h: No such file or directory
+>> compilation terminated.
+>>
+>> TCA_CODEL_MAX is defined in include/linux/compat-3.5.h and this file is
+>> included ever time, so the check around #include_next <net/codel.h> is
+>> never false.
+>>
+>> You could define something like COMPAT_CODEL_BACKPORT in
+>> include/linux/compat-3.5.h and extend the check in include/net/codel.h
+>> that this has to be unset.
+>>
+>> Hauke
+>
+> With the attached patch in addition to Johannes' patch it works for me.
+> Anyone feel free to integrate it or use it in any other way.
 
-*Remove all the checks that will be handled by cfg80211
-based on the interface combination advertised. For instance,
-driver supports at the maximum 8 beaconing interface, while
-we advertise maximum 8 beaconing interface in the interface
-combination support.
+I've merged the two patches together and applied, thanks! Also
+throwing this into the linux-3.5.y branch.
 
-*cfg80211 will take care of not allowing
-us to add an interface that is not supported by the
-driver, further if the change_interface changes the
-old interface to a beaconing interface while we had
-reached the max limit of 8 beaconing interface, again
-cfg80211 takes care of this stuff!
-So remove all these checks.
-
-*Beautify placing PS wrappers in the appropriate
-position.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   57 ++++++---------------------------
- 1 files changed, 10 insertions(+), 47 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 8a2b04d..d308b44 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -986,47 +986,21 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	int ret = 0;
- 
--	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
- 
--	switch (vif->type) {
--	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_WDS:
--	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_MESH_POINT:
--		break;
--	default:
--		ath_err(common, "Interface type %d not yet supported\n",
--			vif->type);
--		ret = -EOPNOTSUPP;
--		goto out;
--	}
--
--	if (ath9k_uses_beacons(vif->type)) {
--		if (sc->nbcnvifs >= ATH_BCBUF) {
--			ath_err(common, "Not enough beacon buffers when adding"
--				" new interface of type: %i\n",
--				vif->type);
--			ret = -ENOBUFS;
--			goto out;
--		}
--	}
--
- 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
--
- 	sc->nvifs++;
- 
-+	ath9k_ps_wakeup(sc);
- 	ath9k_calculate_summary_state(hw, vif);
-+	ath9k_ps_restore(sc);
-+
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_assign_slot(sc, vif);
- 
--out:
- 	mutex_unlock(&sc->mutex);
--	ath9k_ps_restore(sc);
--	return ret;
-+	return 0;
- }
- 
- static int ath9k_change_interface(struct ieee80211_hw *hw,
-@@ -1036,21 +1010,9 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	int ret = 0;
- 
- 	ath_dbg(common, CONFIG, "Change Interface\n");
--
- 	mutex_lock(&sc->mutex);
--	ath9k_ps_wakeup(sc);
--
--	if (ath9k_uses_beacons(new_type) &&
--	    !ath9k_uses_beacons(vif->type)) {
--		if (sc->nbcnvifs >= ATH_BCBUF) {
--			ath_err(common, "No beacon slot available\n");
--			ret = -ENOBUFS;
--			goto out;
--		}
--	}
- 
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_remove_slot(sc, vif);
-@@ -1058,14 +1020,15 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	vif->type = new_type;
- 	vif->p2p = p2p;
- 
-+	ath9k_ps_wakeup(sc);
- 	ath9k_calculate_summary_state(hw, vif);
-+	ath9k_ps_restore(sc);
-+
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_assign_slot(sc, vif);
- 
--out:
--	ath9k_ps_restore(sc);
- 	mutex_unlock(&sc->mutex);
--	return ret;
-+	return 0;
- }
- 
- static void ath9k_remove_interface(struct ieee80211_hw *hw,
-@@ -1076,7 +1039,6 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 
- 	ath_dbg(common, CONFIG, "Detach Interface\n");
- 
--	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
- 
- 	sc->nvifs--;
-@@ -1084,10 +1046,11 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_remove_slot(sc, vif);
- 
-+	ath9k_ps_wakeup(sc);
- 	ath9k_calculate_summary_state(hw, NULL);
-+	ath9k_ps_restore(sc);
- 
- 	mutex_unlock(&sc->mutex);
--	ath9k_ps_restore(sc);
- }
- 
- static void ath9k_enable_ps(struct ath_softc *sc)
--- 
-1.7.0.4
-
+  Luis
