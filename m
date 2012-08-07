@@ -1,170 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:3102 "EHLO
-	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752541Ab2H3VEg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 17:04:36 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 12/14] rt2x00: Align rt2800 GPIO_CTRL definition with datasheet.
-Date: Thu, 30 Aug 2012 23:04:22 +0200
-Message-Id: <1346360670-6498-5-git-send-email-gwingerde@gmail.com> (sfid-20120830_230459_435764_93940BFA)
-In-Reply-To: <1346360670-6498-4-git-send-email-gwingerde@gmail.com>
-References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-2-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-3-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-4-git-send-email-gwingerde@gmail.com>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:37681 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750721Ab2HGG6k convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Aug 2012 02:58:40 -0400
+From: Avinash Patil <patila@marvell.com>
+To: Fengguang Wu <fengguang.wu@intel.com>,
+	Bing Zhao <bzhao@marvell.com>
+CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 6 Aug 2012 23:56:07 -0700
+Subject: RE: [wireless-testing:master 53/59]
+ drivers/net/wireless/mwifiex/uap_event.c:251:11: warning: comparison of
+ distinct pointer types lacks a cast
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC1CC7BCF199@SC-VEXCH2.marvell.com> (sfid-20120807_085846_002795_4EA3935F)
+References: <20120807005524.GD9903@localhost>
+ <477F20668A386D41ADCC57781B1F7043083AE3DA2C@SC-VEXCH1.marvell.com>
+ <20120807024707.GA21890@localhost>
+In-Reply-To: <20120807024707.GA21890@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename GPIO_CTRL_CFG to GPIO_CTRL as that is the name according to
-the datasheet.
-Rename GPIO_CTRL_CFG_BIT<x> to GPIO_CTRL_VAL<x> and
-GPIO_CTRL_CFG_GPIOD_BIT<x> to GPIO_CTRL_DIR<x> to represent the actual
-meanings better.
-Clean up list to mention all the active GPIO pins, not just a subset.
+Hi Fengguang,
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: <stable@vger.kernel.org>
+Thanks for toolchain URL.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index e252e9b..e13916f 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -439,26 +439,33 @@
- #define WMM_TXOP1_CFG_AC3TXOP		FIELD32(0xffff0000)
- 
- /*
-- * GPIO_CTRL_CFG:
-- * GPIOD: GPIO direction, 0: Output, 1: Input
-- */
--#define GPIO_CTRL_CFG			0x0228
--#define GPIO_CTRL_CFG_BIT0		FIELD32(0x00000001)
--#define GPIO_CTRL_CFG_BIT1		FIELD32(0x00000002)
--#define GPIO_CTRL_CFG_BIT2		FIELD32(0x00000004)
--#define GPIO_CTRL_CFG_BIT3		FIELD32(0x00000008)
--#define GPIO_CTRL_CFG_BIT4		FIELD32(0x00000010)
--#define GPIO_CTRL_CFG_BIT5		FIELD32(0x00000020)
--#define GPIO_CTRL_CFG_BIT6		FIELD32(0x00000040)
--#define GPIO_CTRL_CFG_BIT7		FIELD32(0x00000080)
--#define GPIO_CTRL_CFG_GPIOD_BIT0	FIELD32(0x00000100)
--#define GPIO_CTRL_CFG_GPIOD_BIT1	FIELD32(0x00000200)
--#define GPIO_CTRL_CFG_GPIOD_BIT2	FIELD32(0x00000400)
--#define GPIO_CTRL_CFG_GPIOD_BIT3	FIELD32(0x00000800)
--#define GPIO_CTRL_CFG_GPIOD_BIT4	FIELD32(0x00001000)
--#define GPIO_CTRL_CFG_GPIOD_BIT5	FIELD32(0x00002000)
--#define GPIO_CTRL_CFG_GPIOD_BIT6	FIELD32(0x00004000)
--#define GPIO_CTRL_CFG_GPIOD_BIT7	FIELD32(0x00008000)
-+ * GPIO_CTRL:
-+ *	GPIO_CTRL_VALx: GPIO value
-+ *	GPIO_CTRL_DIRx: GPIO direction: 0 = output; 1 = input
-+ */
-+#define GPIO_CTRL			0x0228
-+#define GPIO_CTRL_VAL0			FIELD32(0x00000001)
-+#define GPIO_CTRL_VAL1			FIELD32(0x00000002)
-+#define GPIO_CTRL_VAL2			FIELD32(0x00000004)
-+#define GPIO_CTRL_VAL3			FIELD32(0x00000008)
-+#define GPIO_CTRL_VAL4			FIELD32(0x00000010)
-+#define GPIO_CTRL_VAL5			FIELD32(0x00000020)
-+#define GPIO_CTRL_VAL6			FIELD32(0x00000040)
-+#define GPIO_CTRL_VAL7			FIELD32(0x00000080)
-+#define GPIO_CTRL_DIR0			FIELD32(0x00000100)
-+#define GPIO_CTRL_DIR1			FIELD32(0x00000200)
-+#define GPIO_CTRL_DIR2			FIELD32(0x00000400)
-+#define GPIO_CTRL_DIR3			FIELD32(0x00000800)
-+#define GPIO_CTRL_DIR4			FIELD32(0x00001000)
-+#define GPIO_CTRL_DIR5			FIELD32(0x00002000)
-+#define GPIO_CTRL_DIR6			FIELD32(0x00004000)
-+#define GPIO_CTRL_DIR7			FIELD32(0x00008000)
-+#define GPIO_CTRL_VAL8			FIELD32(0x00010000)
-+#define GPIO_CTRL_VAL9			FIELD32(0x00020000)
-+#define GPIO_CTRL_VAL10			FIELD32(0x00040000)
-+#define GPIO_CTRL_DIR8			FIELD32(0x01000000)
-+#define GPIO_CTRL_DIR9			FIELD32(0x02000000)
-+#define GPIO_CTRL_DIR10			FIELD32(0x04000000)
- 
- /*
-  * MCU_CMD_CFG
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index cb8c2ac..c3cae1d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -923,8 +923,8 @@ int rt2800_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- 		rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
- 		return rt2x00_get_field32(reg, WLAN_GPIO_IN_BIT0);
- 	} else {
--		rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
--		return rt2x00_get_field32(reg, GPIO_CTRL_CFG_BIT2);
-+		rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+		return rt2x00_get_field32(reg, GPIO_CTRL_VAL2);
- 	}
- }
- EXPORT_SYMBOL_GPL(rt2800_rfkill_poll);
-@@ -1570,10 +1570,10 @@ static void rt2800_set_ant_diversity(struct rt2x00_dev *rt2x00dev,
- 		rt2800_mcu_request(rt2x00dev, MCU_ANT_SELECT, 0xff,
- 				   eesk_pin, 0);
- 
--	rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
--	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT3, 0);
--	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT3, gpio_bit3);
--	rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
-+	rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+	rt2x00_set_field32(&reg, GPIO_CTRL_DIR3, 0);
-+	rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, gpio_bit3);
-+	rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
- }
- 
- void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
-@@ -1995,13 +1995,13 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
- 		rt2800_rfcsr_write(rt2x00dev, 29, 0x9f);
- 	}
- 
--	rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
--	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT7, 0);
-+	rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+	rt2x00_set_field32(&reg, GPIO_CTRL_DIR7, 0);
- 	if (rf->channel <= 14)
--		rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT7, 1);
-+		rt2x00_set_field32(&reg, GPIO_CTRL_VAL7, 1);
- 	else
--		rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT7, 0);
--	rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
-+		rt2x00_set_field32(&reg, GPIO_CTRL_VAL7, 0);
-+	rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
- 
- 	rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
-@@ -3587,16 +3587,16 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
- 			u32 reg;
- 
--			rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
--			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT3, 0);
--			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD_BIT6, 0);
--			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT3, 0);
--			rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT6, 0);
-+			rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+			rt2x00_set_field32(&reg, GPIO_CTRL_DIR3, 0);
-+			rt2x00_set_field32(&reg, GPIO_CTRL_DIR6, 0);
-+			rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 0);
-+			rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 0);
- 			if (ant == 0)
--				rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT3, 1);
-+				rt2x00_set_field32(&reg, GPIO_CTRL_VAL3, 1);
- 			else if (ant == 1)
--				rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT6, 1);
--			rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
-+				rt2x00_set_field32(&reg, GPIO_CTRL_VAL6, 1);
-+			rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
- 		}
- 
- 		/* This chip has hardware antenna diversity*/
--- 
-1.7.11.1
+I will fix this warning and send a patch to mailing list.
 
+Regards,
+Avinash Patil
+
+
+-----Original Message-----
+From: Fengguang Wu [mailto:fengguang.wu@intel.com] 
+Sent: Tuesday, August 07, 2012 8:17 AM
+To: Bing Zhao
+Cc: Avinash Patil; kernel-janitors@vger.kernel.org; John W. Linville; Kiran Divekar; linux-wireless@vger.kernel.org
+Subject: Re: [wireless-testing:master 53/59] drivers/net/wireless/mwifiex/uap_event.c:251:11: warning: comparison of distinct pointer types lacks a cast
+
+On Mon, Aug 06, 2012 at 07:33:37PM -0700, Bing Zhao wrote:
+> Hi Fengguang,
+> 
+> > drivers/net/wireless/mwifiex/uap_event.c: In function 'mwifiex_process_uap_event':
+> > drivers/net/wireless/mwifiex/uap_event.c:251:11: warning: comparison of distinct pointer types lacks
+> > a cast [enabled by default]
+> 
+> Thanks for reporting this warning.
+> Could you please share your gcc version (or ppc toolchain version) with me?
+
+Bing, the toolchain is downloaded from
+
+https://www.kernel.org/pub/tools/crosstool/files/bin/x86_64/4.6.3/
+
+Just unpack the powerpc package to /usr/local and run this:
+
+/usr/bin/make ARCH=powerpc CROSS_COMPILE=/usr/local/gcc-4.6.3-nolibc/powerpc64-linux/bin/powerpc64-linux- allmodconfig
+
+The gcc version is:
+
+% /usr/local/gcc-4.6.3-nolibc/powerpc64-linux/bin/powerpc64-linux-gcc -v
+Using built-in specs.
+COLLECT_GCC=/usr/local/gcc-4.6.3-nolibc/powerpc64-linux/bin/powerpc64-linux-gcc
+COLLECT_LTO_WRAPPER=/usr/local/gcc-4.6.3-nolibc/powerpc64-linux/bin/../libexec/gcc/powerpc64-linux/4.6.3/lto-wrapper
+Target: powerpc64-linux
+Configured with: /home/tony/buildall/src/gcc/configure --target=powerpc64-linux --host=x86_64-linux-gnu --build=x86_64-linux-gnu --enable-targets=all --prefix=/opt/cross/gcc-4.6.3-nolibc/powerpc64-linux/ --enable-languages=c --with-newlib --without-headers --enable-sjlj-exceptions --with-system-libunwind --disable-nls --disable-threads --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp --disable-decimal-float --enable-checking=release --with-mpfr=/home/tony/buildall/src/sys-x86_64 --with-gmp=/home/tony/buildall/src/sys-x86_64 --disable-bootstrap --disable-libquadmath
+Thread model: single
+gcc version 4.6.3 (GCC) 
+
+Thanks,
+Fengguang
