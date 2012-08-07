@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13040 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933010Ab2HWNYR (ORCPT
+Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:51708
+	"EHLO HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754911Ab2HGNWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 09:24:17 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 2/6] ath9k_htc: Advertise interface combinations supported
-Date: Thu, 23 Aug 2012 18:53:54 +0530
-Message-ID: <1345728238-5313-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152419_629198_A866916A)
-In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
+	Tue, 7 Aug 2012 09:22:38 -0400
+Message-ID: <50211696.40607@posedge.com> (sfid-20120807_152251_749651_9DCFEDA4)
+Date: Tue, 7 Aug 2012 18:52:30 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Srinivasan B <srinivasanb@posedge.com>, <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Fix for crash in cfg80211
+References: <5020BF4F.2090304@posedge.com> <1344339753.15172.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1344339753.15172.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 8/7/2012 5:12 PM, Johannes Berg wrote:
+> On Tue, 2012-08-07 at 12:40 +0530, Srinivasan B wrote:
+>> Patch Description:
+>>                       cfg80211 module crashes when cfg80211 & mac80211
+>> loaded and unloading lmac driver.
+>>
+>> Scenario Explanation:
+>>                       (Step 1) : cfg80211, mac80211 and lmac driver
+>> modules are loaded initially.
+>>                       (Step 2) : unload the lmac driver.
+>>                                       then any dev calls to stack causes
+>> the crash.
+>> Code Changes:
+>>                       dev->ethtools_ops is assigned during
+>> NETDEV_REGISTER and the same can be cleared during NETDEV_UNREGISTER.
+>
+> This doesn't make any sense to me at all.
+>
+cleanup of ethtools_ops pointer is required upon netdev_unreg 
+notification. we are assigning this pointer to cfg80211_ethtool_ops on 
+netdev_reg notification. Is it not required?
 
-This will allow us to create virtual interface the driver supports.
-Also this ensures multivif support and limitation advertised
-by the driver is taken care in cfg80211 itself.
+we have seen crash when keeping cfg80211 and mac80211 loaded and lmac 
+driver unloaded. With this fix, we didn't see crash. Crash doesn't 
+happen right away. Only when some operation trying to access ethtool_ops.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a035a38..b6a824e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -689,6 +689,20 @@ err_hw:
- 	return ret;
- }
- 
-+static const struct ieee80211_iface_limit if_limits[] = {
-+	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
-+	{ .max = 2,	.types = BIT(NL80211_IFTYPE_AP) |
-+				 BIT(NL80211_IFTYPE_P2P_GO) },
-+};
-+
-+static const struct ieee80211_iface_combination if_comb = {
-+	.limits = if_limits,
-+	.n_limits = ARRAY_SIZE(if_limits),
-+	.max_interfaces = 2,
-+	.num_different_channels = 1,
-+};
-+
- static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 			       struct ieee80211_hw *hw)
- {
-@@ -711,6 +725,9 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		BIT(NL80211_IFTYPE_P2P_GO) |
- 		BIT(NL80211_IFTYPE_P2P_CLIENT);
- 
-+	hw->wiphy->iface_combinations = &if_comb;
-+	hw->wiphy->n_iface_combinations = 1;
-+
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
--- 
-1.7.0.4
-
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
