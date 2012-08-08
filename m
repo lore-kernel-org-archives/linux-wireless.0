@@ -1,194 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from quad.pendre.co.uk ([195.137.4.79]:46844 "EHLO quad.pendre.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759951Ab2HIWYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 18:24:09 -0400
-Message-ID: <5024364E.6030502@elrepo.org> (sfid-20120810_002416_626250_3720618B)
-Date: Thu, 09 Aug 2012 23:14:38 +0100
-From: Phil Perry <phil@elrepo.org>
-MIME-Version: 1.0
-To: Andy Gospodarek <andy@greyhouse.net>
-CC: Zefir Kurtisi <zefir.kurtisi@neratec.com>, mcgrof@frijolero.org,
-	linux-wireless@vger.kernel.org,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>
-Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
-References: <1344487215-24143-1-git-send-email-andy@greyhouse.net> <2121451356.93690.1344518764022.JavaMail.root@neratec.com> <CAHashqCmcgXXDyyqwEYefTMXFDVFKm9GKydfbS14UCY_L443Vg@mail.gmail.com>
-In-Reply-To: <CAHashqCmcgXXDyyqwEYefTMXFDVFKm9GKydfbS14UCY_L443Vg@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:39295 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755967Ab2HHMCZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2012 08:02:25 -0400
+Received: by ggnf4 with SMTP id f4so645497ggn.28
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:02:24 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v3 4/7] hostapd: add dfs support into interface init flow
+Date: Wed,  8 Aug 2012 14:55:35 +0300
+Message-Id: <1344426938-1883-5-git-send-email-victorg@ti.com> (sfid-20120808_140228_806794_2E28D85B)
+In-Reply-To: <1344426938-1883-1-git-send-email-victorg@ti.com>
+References: <1344426938-1883-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/08/12 22:59, Andy Gospodarek wrote:
-> On Aug 9, 2012 9:26 AM, "Zefir Kurtisi"<zefir.kurtisi@neratec.com>  wrote:
->>
->> On 08/09/2012 06:40 AM, Andy Gospodarek wrote:
->>> This patch allows me to compile and load the latest compat modules on
->>> RHEL6.3.  Users of compat on RHEL6 should note that you should set
->>> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
->>>
->>> [...]
->>>
->>> diff --git a/include/linux/compat-2.6.36.h
-> b/include/linux/compat-2.6.36.h
->>> index 56d5961..09e4b6f 100644
->>> --- a/include/linux/compat-2.6.36.h
->>> +++ b/include/linux/compat-2.6.36.h
->>> @@ -98,6 +98,8 @@ struct pm_qos_request_list {
->>>    * Dummy printk for disabled debugging statements to use whilst
-> maintaining
->>>    * gcc's format and side-effect checking.
->>>    */
->>> +/* mask no_printk as RHEL6 backports this */
->>> +#define no_printk(...) compat_no_printk(...)
->>>   static inline __attribute__ ((format (printf, 1, 2)))
->>>   int no_printk(const char *s, ...) { return 0; }
->>>
->>> [...]
->>
->> This at least breaks compilation on 2.6.35-22 with gcc throwing a
->> compat-2.6.36.h:104: error: ISO C requires a named argument before ‘...’
->>
->
-> Actually that might be due to the fact that I chose to use no_printk(...)
-> rather than no_printk(a,...).
->
-> What version of gcc are you using?
->
->> It looks like no_printk() needs to be renamed to compat_no_printk()
->> to make it work as intended.
->>
->> This is a systematic mistake at several sections of this patch, where
->> the original function needs to be prefixed by 'compat_' to match the
->> related macro.
->>
->>
->> ---
->> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
->> index 8b02260..b6757c3 100644
->> --- a/include/linux/compat-2.6.36.h
->> +++ b/include/linux/compat-2.6.36.h
->> @@ -101,7 +101,7 @@ struct pm_qos_request_list {
->>   /* mask no_printk as RHEL6 backports this */
->>   #define no_printk(...) compat_no_printk(...)
->>   static inline __attribute__ ((format (printf, 1, 2)))
->> -int no_printk(const char *s, ...) { return 0; }
->> +int compat_no_printk(const char *s, ...) { return 0; }
->>
->>   #ifndef alloc_workqueue
->>   #define alloc_workqueue(name, flags, max_active)
-> __create_workqueue(name, flags, max_active, 0)
->
+Implement Channel Availability Check (CAC) during initialization
+phase. According to DFS requirements the AP should monitor 'radar
+channels' for potential radar interference for a minimum CAC time
+prior enabling the transmissions.
 
-Hi Andy, Zefir,
+Add dfs support into hw features, allow the usage of the radar
+channels if ieee80211h is enabled in the hostapd.conf and the
+driver supports radar detection with AP channel switch ability.
 
-Thanks for these patches, this certainly moves us forward (the compat 
-components do now compile on RHEL6.3); my build then errors out on 
-drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc (I should apologise and 
-state I'm trying to build the 3.5-3 stable tarball on RHEL6.3).
+Signed-hostap: Boris Presman <boris.presman@ti.com>
+Signed-hostap: Victor Goldenshtein <victorg@ti.com>
+---
+ src/ap/hostapd.c             |   16 ++++++++++------
+ src/ap/hw_features.c         |   30 ++++++++++++++++++++----------
+ src/ap/hw_features.h         |    9 +++++++++
+ src/drivers/driver.h         |    5 +++++
+ src/drivers/driver_nl80211.c |    9 +++++++++
+ src/utils/eloop.c            |    1 +
+ 6 files changed, 54 insertions(+), 16 deletions(-)
 
-Here are the errors, which I believe are related to the above 
-no_printk() issue:
-
-
-   CC [M] 
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.o
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_cdc_msg':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:114: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_cdc_cmplt':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:134: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_cdc_query_dcmd':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:157: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:158: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:186: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:203: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_cdc_set_dcmd':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:238: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:239: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:265: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_dcmd':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:290: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:295: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:301: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:306: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_hdrpush':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:367: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_hdrpull':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:392: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:397: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:406: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:412: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:418: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:390: 
-warning: unused variable 'drvr'
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_attach':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:441: 
-error: expected expression before '...' token
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
-In function 'brcmf_proto_init':
-/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:468: 
-error: expected expression before '...' token
-make[5]: *** 
-[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.o] 
-Error 1
-make[4]: *** 
-[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac] 
-Error 2
-make[3]: *** 
-[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211] 
-Error 2
-make[2]: *** 
-[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless] 
-Error 2
-make[1]: *** [_module_/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3] 
-Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.32-279.el6.x86_64'
-make: *** [modules] Error 2
-
-The only way I have found to work around this at the moment is to block 
-out the offending no_printk() for RHEL6.3:
-
-/*
-  * Dummy printk for disabled debugging statements to use whilst maintaining
-  * gcc's format and side-effect checking.
-  */
-/* mask no_printk as RHEL6.3 backports this */
-#if (RHEL_MINOR < 3)
-static inline __attribute__ ((format (printf, 1, 2)))
-int no_printk(const char *s, ...) { return 0; }
-#endif /* (RHEL_MINOR < 3) */
-
-Not a very elegant solution but at least the code does now compile for 
-me on RHEL6.3, so it's progress of sorts.
-
-Regards,
-
-Phil
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index 2fbc6ef..24a5384 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -857,6 +857,12 @@ static int setup_interface(struct hostapd_iface *iface)
+ 				   "be completed in a callback");
+ 			return 0;
+ 		}
++
++		if (iface->current_mode->dfs_supported &&
++		    iface->conf->ieee80211h) {
++			wpa_printf(MSG_DEBUG, "DFS support is enabled");
++			iface->dfs_state |= DFS_ENABLED;
++		}
+ 	}
+ 	return hostapd_setup_interface_complete(iface, 0);
+ }
+@@ -882,14 +888,12 @@ int hostapd_setup_interface_complete(struct hostapd_iface *iface, int err)
+ 			   hostapd_hw_mode_txt(hapd->iconf->hw_mode),
+ 			   hapd->iconf->channel, iface->freq);
+ 
+-		if (hostapd_set_freq(hapd, hapd->iconf->hw_mode, iface->freq,
+-				     hapd->iconf->channel,
+-				     hapd->iconf->ieee80211n,
+-				     hapd->iconf->secondary_channel)) {
+-			wpa_printf(MSG_ERROR, "Could not set channel for "
+-				   "kernel driver");
++		if (hostapd_check_set_freq(hapd)) {
++			wpa_printf(MSG_ERROR, "Couldn't check/set freq");
+ 			return -1;
+ 		}
++
++		wpa_printf(MSG_DEBUG, "Continuing with init flow");
+ 	}
+ 
+ 	if (iface->current_mode) {
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index bbd2b03..3fc43eb 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -70,26 +70,36 @@ int hostapd_get_hw_features(struct hostapd_iface *iface)
+ 
+ 	for (i = 0; i < num_modes; i++) {
+ 		struct hostapd_hw_modes *feature = &modes[i];
++		u8 dfs_enabled = (hapd->iconf->ieee80211h &&
++				  feature->dfs_supported);
+ 		/* set flag for channels we can use in current regulatory
+ 		 * domain */
+ 		for (j = 0; j < feature->num_channels; j++) {
++			u8 dfs = FALSE;
+ 			/*
+ 			 * Disable all channels that are marked not to allow
+-			 * IBSS operation or active scanning. In addition,
+-			 * disable all channels that require radar detection,
+-			 * since that (in addition to full DFS) is not yet
+-			 * supported.
++			 * IBSS operation or active scanning.
++			 * Use radar channels only if the driver supports
++			 * DFS.
+ 			 */
+-			if (feature->channels[j].flag &
+-			    (HOSTAPD_CHAN_NO_IBSS |
+-			     HOSTAPD_CHAN_PASSIVE_SCAN |
+-			     HOSTAPD_CHAN_RADAR))
++			if ((feature->channels[j].flag &
++			    HOSTAPD_CHAN_RADAR) && dfs_enabled) {
++				dfs = TRUE;
++			} else if (feature->channels[j].flag &
++				   (HOSTAPD_CHAN_NO_IBSS |
++				   HOSTAPD_CHAN_PASSIVE_SCAN |
++				   HOSTAPD_CHAN_DISABLED)) {
+ 				feature->channels[j].flag |=
+ 					HOSTAPD_CHAN_DISABLED;
+-			if (feature->channels[j].flag & HOSTAPD_CHAN_DISABLED)
++			}
++
++			if (feature->channels[j].flag & HOSTAPD_CHAN_DISABLED) {
+ 				continue;
+-			wpa_printf(MSG_MSGDUMP, "Allowed channel: mode=%d "
++			}
++
++			wpa_printf(MSG_WARNING, "Allowed %schannel: mode=%d "
+ 				   "chan=%d freq=%d MHz max_tx_power=%d dBm",
++				   dfs ? "(DFS) " : "",
+ 				   feature->mode,
+ 				   feature->channels[j].chan,
+ 				   feature->channels[j].freq,
+diff --git a/src/ap/hw_features.h b/src/ap/hw_features.h
+index b8e287b..67bab44 100644
+--- a/src/ap/hw_features.h
++++ b/src/ap/hw_features.h
+@@ -46,6 +46,11 @@ static inline int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ 	return -100;
+ }
+ 
++static inline int hostapd_select_radar_detector(struct hostapd_iface *iface)
++{
++	return -1;
++}
++
+ static inline const char * hostapd_hw_mode_txt(int mode)
+ {
+ 	return NULL;
+@@ -67,6 +72,10 @@ static inline int hostapd_prepare_rates(struct hostapd_iface *iface,
+ 	return 0;
+ }
+ 
++static inline int hostapd_get_channel_flag(struct hostapd_data *hapd, int chan)
++{
++	return 0;
++}
+ #endif /* NEED_AP_MLME */
+ 
+ #endif /* HW_FEATURES_H */
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 5b031a8..ed032b9 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -140,6 +140,11 @@ struct hostapd_hw_modes {
+ 	u8 vht_mcs_set[8];
+ 
+ 	unsigned int flags; /* HOSTAPD_MODE_FLAG_* */
++
++	/**
++	 * dfs_supported - DFS radar detection is supported in driver/HW.
++	 */
++	u8 dfs_supported;
+ };
+ 
+ 
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 36cdbc8..3ac485c 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -4786,6 +4786,15 @@ static int phy_info_handler(struct nl_msg *msg, void *arg)
+ 		mode->flags = HOSTAPD_MODE_FLAG_HT_INFO_KNOWN;
+ 		*(phy_info->num_modes) += 1;
+ 
++		if (tb_msg[NL80211_ATTR_FEATURE_FLAGS]) {
++			u32 drv_feature_flags =
++				nla_get_u32(tb_msg[NL80211_ATTR_FEATURE_FLAGS]);
++			mode->dfs_supported = ((drv_feature_flags &
++						NL80211_FEATURE_DFS) &&
++						(drv_feature_flags &
++						NL80211_FEATURE_AP_CH_SWITCH));
++		}
++
+ 		nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band),
+ 			  nla_len(nl_band), NULL);
+ 
+diff --git a/src/utils/eloop.c b/src/utils/eloop.c
+index bb32401..8cb34dc 100644
+--- a/src/utils/eloop.c
++++ b/src/utils/eloop.c
+@@ -775,6 +775,7 @@ void eloop_run(void)
+ 	}
+ 
+ out:
++	eloop.terminate = 0;
+ #ifndef CONFIG_ELOOP_POLL
+ 	os_free(rfds);
+ 	os_free(wfds);
+-- 
+1.7.5.4
 
