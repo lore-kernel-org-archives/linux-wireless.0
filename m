@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:61907 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753793Ab2HBGBl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34549 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932217Ab2HHP1h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 02:01:41 -0400
-Received: by wgbdr13 with SMTP id dr13so7617838wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 23:01:39 -0700 (PDT)
+	Wed, 8 Aug 2012 11:27:37 -0400
+Date: Wed, 8 Aug 2012 20:59:15 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH 3.6 4/4] ath9k_hw: enable PA linearization
+Message-ID: <20120808152911.GD2041@vmraj-lnx.qualcomm.com> (sfid-20120808_172751_175324_DA0E8060)
+References: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-2-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-3-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-4-git-send-email-nbd@openwrt.org>
+ <20120808145531.GB2041@vmraj-lnx.qualcomm.com>
+ <502281D9.4030109@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <5019EC7D.5030208@01019freenet.de>
-References: <5016F03F.1020508@t-online.de>
-	<5016F59E.9070101@01019freenet.de>
-	<CANUX_P2CZW5ji--KkXoyBZUuZfOqkPk_A8Ui9tw4rNeuY=mebQ@mail.gmail.com>
-	<5019EC7D.5030208@01019freenet.de>
-Date: Thu, 2 Aug 2012 09:01:39 +0300
-Message-ID: <CANUX_P10yfdy+d9txsp1RV9niKex_5WAr0VFsjsMiPosv6M+mA@mail.gmail.com> (sfid-20120802_080212_682804_8C7574D2)
-Subject: Re: No WLAN on DELL XPS L702x with Ubuntu 12.04LTS (64Bit)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "Ch. Hanisch" <ch-hanisch@t-online.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <502281D9.4030109@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 08, 2012 at 05:12:25PM +0200, Felix Fietkau wrote:
+> On 2012-08-08 4:55 PM, Rajkumar Manoharan wrote:
+> > On Tue, Aug 07, 2012 at 03:06:12PM +0200, Felix Fietkau wrote:
+> >> This feature had been disabled in ath9k because the code to support
+> >> it was incomplete, but now the code is in sync with the internal QCA
+> >> codebase, so it's time to enable it.
+> >> 
+> >> On many newer devices, the calibration is assumed to be done with PA
+> >> linearization enabled.
+> >> 
+> >> Tests with a particular AR933x device showed that the signal emitted
+> >> at full power was highly distorted and unreliable with PA linearization
+> >> disabled. With this patch, the signal becomes clear and stability
+> >> is improved.
+> >> 
+> > We faced stability issues with 938x chipsets when paprd is enabled. The commit
+> > 6f4810101a629b31b5427872a09ea092cfc5c4bd states one of the issue. Even if it
+> > helps for AR933x, let us enable it only for that chip alone.
+> That was in January 2011, lots of bugs have been fixed since then,
+> initvals have been updated, EEPROM code has changed, ...
+> 
+> The internal QCA codebase enables PAPRD for all AR93xx devices that
+> support it, meaning non-PAPRD tx receives much less test coverage there.
+> 
+> While this issue has only been visible on a particular AR933x device, I
+> believe this is not the only one that's going to be affected, as the
+> EEPROM of any new device is calibrated for PAPRD-enabled operation.
+> 
+> If you don't want to enable it now, when do you think would be the right
+> time to enable it? Before I sent this patch, I did a detailed code
+> review to make sure that any obvious code discrepancies in PAPRD between
+> the internal codebase and ath9k are dealt with.
+> 
+> What else is needed to get this issue sorted out?
 >
-> He wrote, too, that the installation of compat-wireless (unfortunately,
-> he didn't told me which version), didn't changed the situation.
->
-> I attached for him the output of
-> options iwlwifi debug=0xffffffff
->
-> The last part of it:
+Yes. it was disabled a long time back. Im completely fine with enabling the
+feature. I want to make sure that we should not endup again with the same issues.
+Atleast we should validite the one mentioned in the commit
+6f4810101a629b31b5427872a09ea092cfc5c4bd
 
-what about the logs *before* that?
-
->
-> [  675.594758] iwlwifi 0000:03:00.0: Failed to run INIT ucode: -5
-> [  675.594863] iwlwifi 0000:03:00.0: Unable to initialize device.
->
-> I hope this debug output can help you to find the problem!
-
-Sorry, it can't
+-Rajkumar
