@@ -1,94 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43878 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755501Ab2HAPVd (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:61011 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756548Ab2HHORQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 11:21:33 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 4/8] mac80211: check size of channel switch IE when parsing
-Date: Wed,  1 Aug 2012 17:21:23 +0200
-Message-Id: <1343834487-23737-5-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172154_224877_D259B8B1)
-In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
-References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 8 Aug 2012 10:17:16 -0400
+Received: by obbuo13 with SMTP id uo13so1178049obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 07:17:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1344344772-49459-4-git-send-email-nbd@openwrt.org>
+References: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
+	<1344344772-49459-2-git-send-email-nbd@openwrt.org>
+	<1344344772-49459-3-git-send-email-nbd@openwrt.org>
+	<1344344772-49459-4-git-send-email-nbd@openwrt.org>
+Date: Wed, 8 Aug 2012 19:47:15 +0530
+Message-ID: <CAD2nsn3wMOpVSJ+_man8cNwVF-jGAX6r1cWsx+H_TpQjzyKzKg@mail.gmail.com> (sfid-20120808_161722_074514_A0D0AFB5)
+Subject: Re: [PATCH 3.6 4/4] ath9k_hw: enable PA linearization
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Felix!
 
-The channel switch IE has a fixed size, so we can
-discard it in parsing if it's not the right size
-and use the right struct pointer.
+On Tue, Aug 7, 2012 at 6:36 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> This feature had been disabled in ath9k because the code to support
+> it was incomplete, but now the code is in sync with the internal QCA
+> codebase, so it's time to enable it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |    3 +--
- net/mac80211/mlme.c        |   10 +++-------
- net/mac80211/util.c        |    7 +++++--
- 3 files changed, 9 insertions(+), 11 deletions(-)
+is it enabled for all AR9300 based chipsets ?
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d1a7c58..a906cc0 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1130,7 +1130,7 @@ struct ieee802_11_elems {
- 	u8 *prep;
- 	u8 *perr;
- 	struct ieee80211_rann_ie *rann;
--	u8 *ch_switch_elem;
-+	struct ieee80211_channel_sw_ie *ch_switch_ie;
- 	u8 *country_elem;
- 	u8 *pwr_constr_elem;
- 	u8 *quiet_elem;	/* first quite element */
-@@ -1156,7 +1156,6 @@ struct ieee802_11_elems {
- 	u8 preq_len;
- 	u8 prep_len;
- 	u8 perr_len;
--	u8 ch_switch_elem_len;
- 	u8 country_elem_len;
- 	u8 pwr_constr_elem_len;
- 	u8 quiet_elem_len;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5eef6bd..d963017 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2267,14 +2267,10 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		mutex_unlock(&local->iflist_mtx);
- 	}
- 
--	if (elems->ch_switch_elem && (elems->ch_switch_elem_len == 3) &&
--	    (memcmp(mgmt->bssid, sdata->u.mgd.associated->bssid,
--							ETH_ALEN) == 0)) {
--		struct ieee80211_channel_sw_ie *sw_elem =
--			(struct ieee80211_channel_sw_ie *)elems->ch_switch_elem;
--		ieee80211_sta_process_chanswitch(sdata, sw_elem,
-+	if (elems->ch_switch_ie &&
-+	    memcmp(mgmt->bssid, sdata->u.mgd.associated->bssid, ETH_ALEN) == 0)
-+		ieee80211_sta_process_chanswitch(sdata, elems->ch_switch_ie,
- 						 bss, rx_status->mactime);
--	}
- }
- 
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 99e4258..7dff94e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -768,8 +768,11 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 				elem_parse_failed = true;
- 			break;
- 		case WLAN_EID_CHANNEL_SWITCH:
--			elems->ch_switch_elem = pos;
--			elems->ch_switch_elem_len = elen;
-+			if (elen != sizeof(struct ieee80211_channel_sw_ie)) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			elems->ch_switch_ie = (void *)pos;
- 			break;
- 		case WLAN_EID_QUIET:
- 			if (!elems->quiet_elem) {
+>
+> On many newer devices, the calibration is assumed to be done with PA
+> linearization enabled.
+>
+> Tests with a particular AR933x device showed that the signal emitted
+> at full power was highly distorted and unreliable with PA linearization
+> disabled. With this patch, the signal becomes clear and stability
+> is improved.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/hw.c |    3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index d95474e..bea864f 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -463,9 +463,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+>                 ah->config.spurchans[i][1] = AR_NO_SPUR;
+>         }
+>
+> -       /* PAPRD needs some more work to be enabled */
+> -       ah->config.paprd_disable = 1;
+> -
+>         ah->config.rx_intr_mitigation = true;
+>         ah->config.pcieSerDesWrite = true;
+>
+> --
+> 1.7.9.6 (Apple Git-31.1)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.10.4
-
+thanks,
+shafi
