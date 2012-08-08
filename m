@@ -1,52 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4948 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754153Ab2H2ROA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2012 13:14:00 -0400
-Message-ID: <503E4DBB.4030606@canonical.com> (sfid-20120829_191439_434268_957533DD)
-Date: Wed, 29 Aug 2012 11:13:31 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 3.6-rc3] wlcore: Declare MODULE_FIRMWARE usage
-References: <1346251689-37023-1-git-send-email-tim.gardner@canonical.com> <1346259706.3935.2.camel@cumari.coelho.fi>
-In-Reply-To: <1346259706.3935.2.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44266 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757128Ab2HHMAT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2012 08:00:19 -0400
+Received: by obhx4 with SMTP id x4so1347694obh.14
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:00:12 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v3 0/7] nl/cfg/mac80211: add DFS master ability 
+Date: Wed,  8 Aug 2012 14:53:36 +0300
+Message-Id: <1344426823-1795-1-git-send-email-victorg@ti.com> (sfid-20120808_140050_608658_4E573205)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2012 11:01 AM, Luciano Coelho wrote:
-> On Wed, 2012-08-29 at 08:48 -0600, Tim Gardner wrote:
->> Cc: Luciano Coelho <coelho@ti.com>
->> Cc: "John W. Linville" <linville@tuxdriver.com>
->> Cc: Eliad Peller <eliad@wizery.com>
->> Cc: Arik Nemtsov <arik@wizery.com>
->> Cc: Eyal Shapira <eyal@wizery.com>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: netdev@vger.kernel.org
->> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
->> ---
-> 
-> Please add a proper commit message.  And there's no need to put all
-> these people in Cc: in the commit log.  CC'ing when sending the patch is
-> enough (even though for such small patch, the linux-wireless mailing
-> list and myself is enough).
-> 
-> --
-> Luca.
-> 
+v3:
+	
+ Rebased to "wireless-testing".
 
-What more would you like covered in the commit message that isn't
-obvious from the subject?
 
-The Cc list comes from scripts/get_maintainers.pl as suggested by
-Documentation/SubmittingPatches: "5) Select e-mail destination."
+ nl80211/cfg80211: add radar detection command/event
+	Added units documentation to "radar_detect_timeout".
+	Added "cac_type" - which indicates that CAC is started for this channel type.
+	Added NL80211_ATTR_WIPHY_CHANNEL_TYPE. 
+	Fixed merge problem.
+	Removed "!!" in nl80211_start_radar_detection.
+	Return -EBUSY in start_radar_detection if detection already started for this specific channel.
+	
+	
+ mac80211: add radar detection command/event
+	Added tracer to ieee80211_radar_detected().
+	Changed freq argument in ieee80211_radar_detected() to "struct ieee80211_channel *chan"
+	Reset CAC during interface down.
 
-rtg
+
+ nl80211/cfg80211: add ability to enable TX on op-channel
+	Removed "!!" in nl80211_dfs_en_tx().
+	Typo fix in the documentation.
+	Added additional check to validate that we're on NL80211_CHAN_HT20 channel, otherwise return -EPERM.
+	
+	
+ nl80211/cfg80211: add ap channel switch command/event
+	Moved struct ieee80211_ap_ch_switch from mac to cfg + pass it as argument in ap_channel_switch()
+	Add "if (ch_type != NL80211_CHAN_NO_HT) return -EOPNOTSUPP"
+	Changed freq argument in ap_ch_switch_complete_notify() to "struct ieee80211_channel *chan"
+
+
+ mac80211: add ap channel switch command/event
+	Renamed ieee80211_ap_ch_switch_complete_notify to ieee80211_ap_ch_switch_done. 
+	Removed the freq argument in ieee80211_ap_ch_switch_done().
+	Save the target channel in new "local->next_ap_channel" and update the operational channel in ieee80211_ap_ch_switch_done.
+	Add tracer to ieee80211_ap_ch_switch_done().
+	Updated commit log message.
+	Added sanity checks in ap_channel_switch() + ieee80211_ap_ch_switch_complete
+
+
+ mac80211: add DFS support to monitor interface
+	Removed "!!" in ieee80211_monitor_start_xmit().
+
+Victor Goldenshtein (7):
+  nl80211/cfg80211: add radar detection command/event
+  mac80211: add radar detection command/event
+  nl80211/cfg80211: add ability to enable TX on op-channel
+  mac80211: add ability to enable TX on op-channel
+  nl80211/cfg80211: add ap channel switch command
+  mac80211: add ap channel switch command/event
+  mac80211: add DFS support to monitor interface
+
+ include/linux/nl80211.h   |   42 +++++++++++
+ include/net/cfg80211.h    |   63 +++++++++++++++++
+ include/net/mac80211.h    |   37 ++++++++++
+ net/mac80211/cfg.c        |   50 +++++++++++++
+ net/mac80211/driver-ops.h |   38 ++++++++++
+ net/mac80211/iface.c      |    7 ++
+ net/mac80211/main.c       |    3 +
+ net/mac80211/mlme.c       |   32 +++++++++
+ net/mac80211/trace.h      |   87 +++++++++++++++++++++++
+ net/mac80211/tx.c         |   13 ++--
+ net/wireless/core.h       |    4 +
+ net/wireless/mlme.c       |   38 ++++++++++
+ net/wireless/nl80211.c    |  171 +++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h    |    6 ++
+ 14 files changed, 585 insertions(+), 6 deletions(-)
+
 -- 
-Tim Gardner tim.gardner@canonical.com
+1.7.5.4
+
