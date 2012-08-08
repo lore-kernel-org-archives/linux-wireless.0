@@ -1,127 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40521 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755860Ab2HJBPx (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:54097 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757128Ab2HHMA1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 21:15:53 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr13so1807450pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 18:15:53 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 2/2] mac80211: clean up mpath_move_to_queue()
-Date: Thu,  9 Aug 2012 18:15:40 -0700
-Message-Id: <1344561340-32409-2-git-send-email-thomas@cozybit.com> (sfid-20120810_031607_460940_BC2A4CC9)
-In-Reply-To: <1344561340-32409-1-git-send-email-thomas@cozybit.com>
-References: <1344561340-32409-1-git-send-email-thomas@cozybit.com>
+	Wed, 8 Aug 2012 08:00:27 -0400
+Received: by obbwc20 with SMTP id wc20so1277570obb.31
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:00:26 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v3 3/7] nl80211/cfg80211: add ability to enable TX on op-channel
+Date: Wed,  8 Aug 2012 14:53:39 +0300
+Message-Id: <1344426823-1795-4-git-send-email-victorg@ti.com> (sfid-20120808_140057_194118_1D9CABE0)
+In-Reply-To: <1344426823-1795-1-git-send-email-victorg@ti.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use skb_queue_walk_safe instead, and fix a few issues:
+The dfs master device should monitor radar channels
+for potential radar interference for a minimum of
+CAC (channel availability check) time, during this
+period no tx can occur. If no radar interference
+is detected the dfs master may initiate the tx with
+new NL80211_CMD_DFS_ENABLE_TX command.
 
-	- didn't free old skbs on moving
-	- didn't react to failed skb alloc
-	- needlessly held a local pointer to the destination frame queue
-	- didn't check destination queue length before adding skb
+If this command is invoked prior performing a CAC or
+the time passed since the beginning of the CAC is
+less than min CAC time (60 sec), -EPERM is returned.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- net/mac80211/mesh.h         |    3 +++
- net/mac80211/mesh_hwmp.c    |    2 --
- net/mac80211/mesh_pathtbl.c |   34 ++++++++++++++++++----------------
- 3 files changed, 21 insertions(+), 18 deletions(-)
+ include/linux/nl80211.h |   11 +++++++++++
+ include/net/cfg80211.h  |    5 +++++
+ net/wireless/nl80211.c  |   36 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 52 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index faaa39b..e4d911f 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -215,6 +215,9 @@ struct mesh_rmc {
- /* Maximum number of paths per interface */
- #define MESH_MAX_MPATHS		1024
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 773ba68..6c2884c 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -568,6 +568,15 @@
+  * @NL80211_CMD_RADAR_DETECT: Start radar detection in the driver/HW. Once
+  *	radar detected usermode notified with this event.
+  *
++ * @NL80211_CMD_DFS_ENABLE_TX: Initiate tx after verifying radar clearness on
++ *	dfs channel. The dfs master device should monitor radar channels
++ *	for potential radar interference for a minimum of CAC (channel
++ *	availability check) time, during this period no tx can occur. If no
++ *	radar interference is detected during this period the dfs master may
++ *	initiate the tx. If this command is invoked prior performing a CAC or
++ *	the time passed since the beginning of the CAC is less than
++ *	NL80211_DFS_MIN_CAC_TIME_MS, -EPERM is returned.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -713,6 +722,8 @@ enum nl80211_commands {
  
-+/* Number of frames buffered per destination for unresolved destinations */
-+#define MESH_FRAME_QUEUE_LEN	10
+ 	NL80211_CMD_RADAR_DETECT,
+ 
++	NL80211_CMD_DFS_ENABLE_TX,
 +
- /* Public interfaces */
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 494bc39..47aeee2 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -17,8 +17,6 @@
- #define MAX_METRIC	0xffffffff
- #define ARITH_SHIFT	8
+ 	/* add new commands above here */
  
--/* Number of frames buffered per destination for unresolved destinations */
--#define MESH_FRAME_QUEUE_LEN	10
- #define MAX_PREQ_QUEUE_LEN	64
- 
- /* Destination only */
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 3ca1e17..7f9630d 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -279,40 +279,42 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
- 				    struct mesh_path *from_mpath,
- 				    bool copy)
- {
--	struct sk_buff *skb, *cp_skb = NULL;
--	struct sk_buff_head gateq, failq;
-+	struct sk_buff *skb, *fskb, *tmp;
-+	struct sk_buff_head failq;
- 	unsigned long flags;
--	int num_skbs;
- 
- 	BUG_ON(gate_mpath == from_mpath);
- 	BUG_ON(!gate_mpath->next_hop);
- 
--	__skb_queue_head_init(&gateq);
- 	__skb_queue_head_init(&failq);
- 
- 	spin_lock_irqsave(&from_mpath->frame_queue.lock, flags);
- 	skb_queue_splice_init(&from_mpath->frame_queue, &failq);
- 	spin_unlock_irqrestore(&from_mpath->frame_queue.lock, flags);
- 
--	num_skbs = skb_queue_len(&failq);
--
--	while (num_skbs--) {
--		skb = __skb_dequeue(&failq);
--		if (copy) {
--			cp_skb = skb_copy(skb, GFP_ATOMIC);
--			if (cp_skb)
--				__skb_queue_tail(&failq, cp_skb);
-+	skb_queue_walk_safe(&failq, fskb, tmp) {
-+		if (skb_queue_len(&gate_mpath->frame_queue) >=
-+				  MESH_FRAME_QUEUE_LEN) {
-+			mpath_dbg(gate_mpath->sdata, "mpath queue full!\n");
-+			break;
- 		}
- 
-+		skb = skb_copy(fskb, GFP_ATOMIC);
-+		if (WARN_ON(!skb))
-+			break;
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c40a05d..3a56601 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1627,6 +1627,8 @@ struct cfg80211_gtk_rekey_data {
+  *	current monitoring channel.
+  *
+  * @start_radar_detection: Start radar detection in the driver.
++ *
++ * @dfs_en_tx: Enable tx after radar interference check.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1847,6 +1849,9 @@ struct cfg80211_ops {
+ 	int	(*start_radar_detection)(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+ 					 struct ieee80211_channel *chan);
 +
- 		prepare_for_gate(skb, gate_mpath->dst, gate_mpath);
--		__skb_queue_tail(&gateq, skb);
-+		skb_queue_tail(&gate_mpath->frame_queue, skb);
-+
-+		if (copy)
-+			continue;
-+
-+		__skb_unlink(fskb, &failq);
-+		kfree_skb(fskb);
- 	}
++	int	(*dfs_en_tx)(struct wiphy *wiphy, struct net_device *dev,
++			     struct ieee80211_channel *chan);
+ };
  
--	spin_lock_irqsave(&gate_mpath->frame_queue.lock, flags);
--	skb_queue_splice(&gateq, &gate_mpath->frame_queue);
- 	mpath_dbg(gate_mpath->sdata, "Mpath queue for gate %pM has %d frames\n",
- 		  gate_mpath->dst, skb_queue_len(&gate_mpath->frame_queue));
--	spin_unlock_irqrestore(&gate_mpath->frame_queue.lock, flags);
+ /*
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 74e65d7..869d271 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4616,6 +4616,34 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	return cfg80211_start_radar_detection(rdev, dev, chan);
+ }
  
- 	if (!copy)
- 		return;
++static int nl80211_dfs_en_tx(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	bool dfs_supported = (rdev->wiphy.features & NL80211_FEATURE_DFS);
++	struct ieee80211_channel *chan;
++	int freq;
++
++	if (!rdev->ops->dfs_en_tx || !dfs_supported)
++		return -EOPNOTSUPP;
++
++	if (info->attrs[NL80211_ATTR_WIPHY_FREQ])
++		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
++	else
++		return -EINVAL;
++
++	chan = ieee80211_get_channel(&rdev->wiphy, freq);
++	if (!chan)
++		return -EINVAL;
++
++	if (((chan->cac_type != NL80211_CHAN_HT20) ||
++	     time_is_after_jiffies(chan->radar_detect_timeout)) &&
++	    (chan->flags & IEEE80211_CHAN_RADAR))
++		return -EPERM;
++
++	return rdev->ops->dfs_en_tx(&rdev->wiphy, dev, chan);
++}
++
+ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			    u32 seq, int flags,
+ 			    struct cfg80211_registered_device *rdev,
+@@ -7482,6 +7510,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_DFS_ENABLE_TX,
++		.doit = nl80211_dfs_en_tx,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ 
+ };
+ 
 -- 
 1.7.5.4
 
