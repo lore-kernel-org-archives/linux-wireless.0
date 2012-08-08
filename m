@@ -1,62 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2900 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751601Ab2HMN6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 09:58:50 -0400
-Message-ID: <5029080C.3060503@broadcom.com> (sfid-20120813_155853_711794_A5640B44)
-Date: Mon, 13 Aug 2012 15:58:36 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-cc: linux-wireless@vger.kernel.org, dquan@qca.qualcomm.com
-Subject: Re: [RFT 2/2] cfg80211: add 5 GHz UNII band regulatory hints
-References: <1344644750-14000-1-git-send-email-mcgrof@do-not-panic.com>
- <1344644750-14000-3-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1344644750-14000-3-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:34561 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757632Ab2HHMC3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2012 08:02:29 -0400
+Received: by obbwd18 with SMTP id wd18so2479888obb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:02:28 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v3 5/7] nl80211: add support to enable TX on oper-channel
+Date: Wed,  8 Aug 2012 14:55:36 +0300
+Message-Id: <1344426938-1883-6-git-send-email-victorg@ti.com> (sfid-20120808_140234_946959_95B632AF)
+In-Reply-To: <1344426938-1883-1-git-send-email-victorg@ti.com>
+References: <1344426938-1883-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2012 02:25 AM, Luis R. Rodriguez wrote:
-> +static void reg_unii_5ghz_beacon_hint_unii(struct wiphy *wiphy,
-> +					   struct ieee80211_channel *chan,
-> +					   enum reg_5ghz_unii_band unii_band)
-> +{
-> +	struct ieee80211_supported_band *sband;
-> +	unsigned int i;
-> +
-> +	assert_cfg80211_lock();
-> +
-> +	sband = wiphy->bands[chan->band];
-> +
-> +	/*
-> +	 * Only process UNII 1 hints for UNII 1 channels
-> +	 * Only process UNII 3 hints for UNII 3 channels
-> +	 */
-> +	for (i = 0; i < sband->n_channels; i++) {
-> +		struct ieee80211_channel *c = &sband->channels[i];
-> +
-> +		switch (unii_band) {
-> +		case REG_5GHZ_UNII_1:
-> +			if (!reg_is_5ghz_unii_1(c))
-> +				continue;
-> +			break;
-> +		case REG_5GHZ_UNII_3:
-> +			if (!reg_is_5ghz_unii_3(c))
-> +				continue;
-> +			break;
-> +		default:
-> +			WARN_ONCE(1, "unexpected regulatory unii hint\n");
-> +			continue;
-> +		}
-> +
-> +		reg_chan_process_beacon_hint(wiphy, chan);
+Once a channel has been passes the channel availability
+check (CAC) the ap may start the tx with
+wpa_driver_nl80211_enable_dfs_tx().
 
-Not sure, but reading the description I think variable 'c' should be
-passed here instead of 'chan'.
+Add wpa_driver_nl80211_enable_dfs_tx() + init drv_ops.
 
-> +	}
+Signed-hostap: Boris Presman <boris.presman@ti.com>
+Signed-hostap: Victor Goldenshtein <victorg@ti.com>
+---
+ src/drivers/driver_nl80211.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-Gr. AvS
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 3ac485c..fadd4cb 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -8849,6 +8849,33 @@ static int nl80211_set_p2p_powersave(void *priv, int legacy_ps, int opp_ps,
+ }
+ 
+ 
++static int nl80211_enable_dfs_tx(void *priv, int freq)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nl_msg *msg;
++	int ret;
++
++	wpa_printf(MSG_DEBUG, "nl80211: Enable DFS tx");
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		return -1;
++
++	nl80211_cmd(bss->drv, msg, 0, NL80211_CMD_DFS_ENABLE_TX);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++
++	ret = send_and_recv_msgs(drv, msg, NULL, NULL);
++	if (ret == 0)
++		return 0;
++	wpa_printf(MSG_DEBUG, "nl80211: Failed to enable DFS tx: "
++		   "%d (%s)", ret, strerror(-ret));
++nla_put_failure:
++	return -1;
++}
++
++
+ #ifdef CONFIG_TDLS
+ 
+ static int nl80211_send_tdls_mgmt(void *priv, const u8 *dst, u8 action_code,
+@@ -9143,6 +9170,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.set_rekey_info = nl80211_set_rekey_info,
+ 	.poll_client = nl80211_poll_client,
+ 	.set_p2p_powersave = nl80211_set_p2p_powersave,
++	.enable_tx = nl80211_enable_dfs_tx,
+ #ifdef CONFIG_TDLS
+ 	.send_tdls_mgmt = nl80211_send_tdls_mgmt,
+ 	.tdls_oper = nl80211_tdls_oper,
+-- 
+1.7.5.4
 
