@@ -1,93 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:34604 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753237Ab2HCTVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 15:21:43 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so1800271pbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2012 12:21:43 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 4/4] mac80211: skb leak in mesh_plink_frame_tx()
-Date: Fri,  3 Aug 2012 12:21:35 -0700
-Message-Id: <1344021695-12859-4-git-send-email-thomas@cozybit.com> (sfid-20120803_212150_439255_DDD99154)
-In-Reply-To: <1344021695-12859-1-git-send-email-thomas@cozybit.com>
-References: <1344021695-12859-1-git-send-email-thomas@cozybit.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1440 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932217Ab2HHPa1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Aug 2012 11:30:27 -0400
+Message-ID: <502285F7.8080501@broadcom.com> (sfid-20120808_173030_315451_6E3135CC)
+Date: Wed, 8 Aug 2012 17:29:59 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Arliton Rocha" <arliton@gmail.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Problem: BCM 4313 (brcmsmac) always hard blocked
+References: <CANZ_KY5-EZ2n54G3P3wnjUdTdVknarnXFK2cj9WobnQemAr5kA@mail.gmail.com>
+ <CANZ_KY5yLJrHKQ4c30sNpVXPBRRTzwjyUYREcOaX8YP=OAB=Ew@mail.gmail.com>
+In-Reply-To: <CANZ_KY5yLJrHKQ4c30sNpVXPBRRTzwjyUYREcOaX8YP=OAB=Ew@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although adding an IE is almost guaranteed to succeed since we already
-accounted for its length while allocating the skb, we should still free
-the skb in case of failure.
+On 08/08/2012 01:14 PM, Arliton Rocha wrote:
+> Hi devs,
+> 
+> The following card does not work (remains always 'hard blocked'):
+>     02:00.0 Network controller [0280]: Broadcom Corporation BCM4313
+> 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
+> 
+> There is no a physical lock on the notebook in question.
+> I know windows can change only by software.
+> When i do this, wireless net (and bluetooth) works fine on linux.
+> Ok, install windows, unblock... But, why linux can't do this?
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_plink.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+Good question and no clear answer. Sorry. Some notebooks have this issue
+and it seems dependent on BIOS setting. Maybe you can try your luck at
+the notebook manufacturer.
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index a5300ef..7e1c924 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -224,6 +224,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	u8 *pos, ie_len = 4;
- 	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.self_prot) +
- 		      sizeof(mgmt->u.action.u.self_prot);
-+	int err = -ENOMEM;
- 
- 	skb = dev_alloc_skb(local->tx_headroom +
- 			    hdr_len +
-@@ -265,11 +266,11 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata))
--			return -1;
-+			goto free;
- 	} else {	/* WLAN_SP_MESH_PEERING_CLOSE */
- 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 		if (mesh_add_meshid_ie(skb, sdata))
--			return -1;
-+			goto free;
- 	}
- 
- 	/* Add Mesh Peering Management element */
-@@ -288,11 +289,12 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		ie_len += 2;	/* reason code */
- 		break;
- 	default:
--		return -EINVAL;
-+		err = -EINVAL;
-+		goto free;
- 	}
- 
- 	if (WARN_ON(skb_tailroom(skb) < 2 + ie_len))
--		return -ENOMEM;
-+		goto free;
- 
- 	pos = skb_put(skb, 2 + ie_len);
- 	*pos++ = WLAN_EID_PEER_MGMT;
-@@ -313,14 +315,17 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
- 		if (mesh_add_ht_cap_ie(skb, sdata) ||
- 		    mesh_add_ht_oper_ie(skb, sdata))
--			return -1;
-+			goto free;
- 	}
- 
- 	if (mesh_add_vendor_ies(skb, sdata))
--		return -1;
-+		goto free;
- 
- 	ieee80211_tx_skb(sdata, skb);
- 	return 0;
-+free:
-+	kfree_skb(skb);
-+	return err;
- }
- 
- /**
--- 
-1.7.5.4
+> I have trying a lot of tips about rfkill (unblock all, ...) but
+> nothing, remains hard blocked.
+> Also i tried, unsuccessfully, map Fn + F12 keys...
+> 
+> Someone have an idea?
+> 
+> Hardware information in attachment.
+> 
+> Thanks in advance.
+> Best regards.
+> 
+> --
+> Arliton Rocha
+> 
+
+Gr. AvS
 
