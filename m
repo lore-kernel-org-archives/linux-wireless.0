@@ -1,545 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:39545 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757997Ab2HHMCQ (ORCPT
+Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:35602 "EHLO
+	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757505Ab2HHMAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 08:02:16 -0400
-Received: by ghrr11 with SMTP id r11so704288ghr.33
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:02:15 -0700 (PDT)
+	Wed, 8 Aug 2012 08:00:37 -0400
+Received: by yhjj56 with SMTP id j56so590153yhj.6
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:00:36 -0700 (PDT)
 From: Victor Goldenshtein <victorg@ti.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
-	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v3 2/7] hostapd: add channel switch ability
-Date: Wed,  8 Aug 2012 14:55:33 +0300
-Message-Id: <1344426938-1883-3-git-send-email-victorg@ti.com> (sfid-20120808_140220_885327_67B4A25C)
-In-Reply-To: <1344426938-1883-1-git-send-email-victorg@ti.com>
-References: <1344426938-1883-1-git-send-email-victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v3 5/7] nl80211/cfg80211: add ap channel switch command
+Date: Wed,  8 Aug 2012 14:53:41 +0300
+Message-Id: <1344426823-1795-6-git-send-email-victorg@ti.com> (sfid-20120808_140055_853664_95174EAE)
+In-Reply-To: <1344426823-1795-1-git-send-email-victorg@ti.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add channel switch command and handle channel switch
-complete event.
+Add NL80211_CMD_AP_CH_SWITCH command which
+triggers an AP channel switch process.
 
-New hostapd_eid_csa() which builds the channel switch
-announcement IE. Add this CSA to the beacon frame prior
-performing a channel switch and remove it once it's
-completed.
+Usermode notified about channel switch complete
+event with NL80211_CMD_CH_SWITCH_NOTIFY.
 
-Set WLAN_CAPABILITY_SPECTRUM_MGMT bit in the capability
-information field in beacon frames and probe response
-frames.
+Usermode (hostapd) is responsible to update the
+channel switch announcement IE in the beacon
+prior and after the channel switch operation.
 
-Signed-hostap: Boris Presman <boris.presman@ti.com>
-Signed-hostap: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- hostapd/config_file.c |   10 ++++
- src/ap/ap_config.h    |    1 +
- src/ap/beacon.c       |   16 ++++++
- src/ap/hostapd.c      |  145 +++++++++++++++++++++++++++++++++++++++++++++++++
- src/ap/hostapd.h      |    7 +++
- src/ap/hw_features.c  |   18 ++++++
- src/ap/hw_features.h  |    1 +
- src/ap/ieee802_11.c   |  117 +++++++++++++++++++++++++++++++++++++++
- src/ap/ieee802_11.h   |    4 ++
- src/drivers/driver.h  |   16 ++++++
- 10 files changed, 335 insertions(+), 0 deletions(-)
+ include/linux/nl80211.h |   24 ++++++++++++++++++++
+ include/net/cfg80211.h  |   34 +++++++++++++++++++++++++++++
+ net/wireless/nl80211.c  |   55 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 113 insertions(+), 0 deletions(-)
 
-diff --git a/hostapd/config_file.c b/hostapd/config_file.c
-index 03f29ad..2f28375 100644
---- a/hostapd/config_file.c
-+++ b/hostapd/config_file.c
-@@ -1304,6 +1304,12 @@ static int hostapd_config_check(struct hostapd_config *conf)
- 		return -1;
- 	}
- 
-+	if (conf->ieee80211h && (!conf->ieee80211d)) {
-+		wpa_printf(MSG_ERROR, "Cannot enable IEEE 802.11h without "
-+			   "IEEE 802.11d enabled");
-+		return -1;
-+	}
-+
- 	for (i = 0; i < conf->num_bss; i++) {
- 		if (hostapd_config_check_bss(&conf->bss[i], conf))
- 			return -1;
-@@ -1526,6 +1532,10 @@ static int hostapd_config_fill(struct hostapd_config *conf,
- 			conf->country[2] = ' ';
- 		} else if (os_strcmp(buf, "ieee80211d") == 0) {
- 			conf->ieee80211d = atoi(pos);
-+		} else if (os_strcmp(buf, "ieee80211h") == 0) {
-+			conf->ieee80211h = atoi(pos);
-+		} else if (os_strcmp(buf, "channel_switch_count") == 0) {
-+			conf->channel_switch_count = atoi(pos);
- 		} else if (os_strcmp(buf, "ieee8021x") == 0) {
- 			bss->ieee802_1x = atoi(pos);
- 		} else if (os_strcmp(buf, "eapol_version") == 0) {
-diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
-index c21a7a8..2b88546 100644
---- a/src/ap/ap_config.h
-+++ b/src/ap/ap_config.h
-@@ -456,6 +456,7 @@ struct hostapd_config {
- 
- 	/* DFS */
- 	int channel_switch_count;
-+	int ieee80211h;
- 
- 	struct hostapd_tx_queue_params tx_queue[NUM_TX_QUEUES];
- 
-diff --git a/src/ap/beacon.c b/src/ap/beacon.c
-index ca3f054..9455d2b 100644
---- a/src/ap/beacon.c
-+++ b/src/ap/beacon.c
-@@ -172,6 +172,19 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
- 	return pos;
- }
- 
-+static u8 *hostapd_eid_csa(struct hostapd_data *hapd, u8 *eid)
-+{
-+	if (!(hapd->iconf->ieee80211h) || !(hapd->next_channel))
-+		return eid;
-+
-+	*eid++ = WLAN_EID_CHANNEL_SWITCH;
-+	*eid++ = 3; /* IE length */
-+	*eid++ = 1; /* STAs should cease transmit */
-+	*eid++ = (u8)hapd->next_channel->chan;
-+	*eid++ = (u8)hapd->iconf->channel_switch_count;
-+	return eid;
-+}
-+
- 
- static u8 * hostapd_eid_wpa(struct hostapd_data *hapd, u8 *eid, size_t len)
- {
-@@ -578,6 +591,9 @@ void ieee802_11_set_beacon(struct hostapd_data *hapd)
- 	tailpos = hostapd_eid_country(hapd, tailpos,
- 				      tail + BEACON_TAIL_BUF_SIZE - tailpos);
- 
-+	/* Channel Switch Announcement */
-+	tailpos = hostapd_eid_csa(hapd, tailpos);
-+
- 	/* ERP Information element */
- 	tailpos = hostapd_eid_erp_info(hapd, tailpos);
- 
-diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
-index ba8d832..2fbc6ef 100644
---- a/src/ap/hostapd.c
-+++ b/src/ap/hostapd.c
-@@ -1103,3 +1103,148 @@ void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
- 	eloop_register_timeout(hapd->conf->ap_max_inactivity, 0,
- 			       ap_handle_timer, hapd, sta);
- }
-+
-+struct hostapd_channel_data *hostapd_dfs_get_valid_channel(struct hostapd_data
-+							   *hapd)
-+{
-+	struct hostapd_hw_modes *mode;
-+	struct hostapd_channel_data *chan;
-+	int i, channel_idx = 0, new_channel_idx;
-+	struct os_time now;
-+	u32 rand;
-+
-+	wpa_printf(MSG_DEBUG, "Selecting next channel");
-+
-+	if (hapd->iface->current_mode == NULL)
-+		return NULL;
-+
-+	mode = hapd->iface->current_mode;
-+	if (mode->mode != HOSTAPD_MODE_IEEE80211A)
-+		return NULL;
-+
-+	os_get_time(&now);
-+
-+	for (i = 0; i < mode->num_channels; i++) {
-+		chan = &mode->channels[i];
-+
-+		if (chan->flag & HOSTAPD_CHAN_DISABLED)
-+			continue;
-+
-+		/*
-+		 * Reactivate the disabled channels after
-+		 * Non-Occupancy Period.
-+		 */
-+		if (chan->flag & HOSTAPD_CHAN_RADAR_DETECTED) {
-+			if ((chan->last_radar_detection.sec +
-+			    DFS_MIN_NON_OCC_TIME_SEC) < now.sec) {
-+				wpa_printf(MSG_DEBUG, "Activating channel %d.",
-+					   chan->chan);
-+				chan->flag &= ~HOSTAPD_CHAN_RADAR_DETECTED;
-+				chan->last_radar_detection.sec = 0;
-+				chan->last_radar_detection.usec = 0;
-+			} else
-+				continue;
-+		}
-+		channel_idx++;
-+	}
-+
-+	os_get_random((u8 *)&rand, sizeof(rand));
-+	new_channel_idx = rand % channel_idx;
-+
-+	for (i = 0, channel_idx = 0; i < mode->num_channels; i++) {
-+		chan = &mode->channels[i];
-+		if (chan->flag & (HOSTAPD_CHAN_DISABLED |
-+		    HOSTAPD_CHAN_RADAR_DETECTED))
-+			continue;
-+		if (channel_idx == new_channel_idx) {
-+			wpa_printf(MSG_DEBUG, "Selected ch. #%d", chan->chan);
-+			return chan;
-+		}
-+		channel_idx++;
-+	}
-+
-+	return NULL;
-+}
-+
-+void hostapd_resume_dfs_cac(void *eloop_ctx, void *timeout_ctx)
-+{
-+	struct hostapd_data *hapd = eloop_ctx;
-+	int flag;
-+
-+	wpa_printf(MSG_DEBUG, "Resuming DFS channel availability check");
-+
-+	flag = hostapd_hw_get_channel_flag(hapd, hapd->iconf->channel);
-+
-+	/*
-+	 * We get here after successful CAC (channel availability check) during:
-+	 * 1. Initialization: in this case we continue with the init flow.
-+	 * 2. Operational mode: system switched to a DFS channel (probably due
-+	 * to radar event), which requires to perform a CAC prior enabling the
-+	 * tx on the new channel.
-+	 */
-+
-+	if (hapd->iface->dfs_state & DFS_INIT_PHASE_CAC) {
-+		eloop_terminate();
-+		hapd->iface->dfs_state &= ~DFS_INIT_PHASE_CAC;
-+	}
-+
-+	/* Enable TX on operational channel */
-+	hostapd_enable_tx(hapd, hapd->iface->freq, flag);
-+}
-+
-+int hostapd_check_set_freq(struct hostapd_data *hapd)
-+{
-+	int flag;
-+
-+	wpa_printf(MSG_DEBUG, "Check and set freq %d, channel %d",
-+		   hapd->iface->freq, hapd->iconf->channel);
-+
-+	flag = hostapd_hw_get_channel_flag(hapd, hapd->iconf->channel);
-+
-+	if ((flag & HOSTAPD_CHAN_RADAR) &&
-+	    !(hapd->iface->dfs_state & DFS_ENABLED)) {
-+		wpa_printf(MSG_ERROR, "Can't set DFS frequency, "
-+			   "DFS functionality is not enabled/supported");
-+		return -1;
-+	}
-+
-+	if (hostapd_set_freq(hapd, hapd->iconf->hw_mode,
-+				   hapd->iface->freq,
-+				   hapd->iconf->channel,
-+				   hapd->iconf->ieee80211n,
-+				   hapd->iconf->secondary_channel)) {
-+		wpa_printf(MSG_ERROR, "Could not set channel for "
-+			   "kernel driver");
-+		return -1;
-+	}
-+
-+	if (flag & HOSTAPD_CHAN_RADAR) {
-+		if (hostapd_start_radar_detection(hapd, hapd->iface->freq,
-+						  flag)) {
-+			wpa_printf(MSG_ERROR, "Could not start "
-+				   "radar detection for kernel driver");
-+			return -1;
-+		}
-+		wpa_printf(MSG_DEBUG, "CAC, listen %d seconds for radar "
-+			   "interference", DFS_MIN_CAC_TIME_SEC);
-+
-+		eloop_register_timeout(DFS_MIN_CAC_TIME_SEC, 0,
-+				       hostapd_resume_dfs_cac, hapd, NULL);
-+
-+		/*
-+		 * Listen for radar interference for CAC period, eloop_run()
-+		 * will be terminated after CAC timeout.
-+		 */
-+		if (!(hapd->iface->dfs_state & DFS_INIT_PHASE_CAC)) {
-+			hapd->iface->dfs_state |= DFS_INIT_PHASE_CAC;
-+			eloop_run();
-+		}
-+
-+	} else if (hapd->iface->dfs_state & DFS_INIT_PHASE_CAC) {
-+		wpa_printf(MSG_DEBUG, "moved to non-DFS channel");
-+		hapd->iface->dfs_state &= ~DFS_INIT_PHASE_CAC;
-+		hostapd_enable_tx(hapd, hapd->iface->freq, flag);
-+		eloop_terminate();
-+	}
-+	return 0;
-+}
-diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
-index cdd7556..4465e82 100644
---- a/src/ap/hostapd.h
-+++ b/src/ap/hostapd.h
-@@ -156,6 +156,8 @@ struct hostapd_data {
- 	void (*setup_complete_cb)(void *ctx);
- 	void *setup_complete_cb_ctx;
- 
-+	struct hostapd_channel_data *next_channel;
-+
- #ifdef CONFIG_P2P
- 	struct p2p_data *p2p;
- 	struct p2p_group *p2p_group;
-@@ -271,6 +273,8 @@ void hostapd_interface_deinit(struct hostapd_iface *iface);
- void hostapd_interface_free(struct hostapd_iface *iface);
- void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
- 			   int reassoc);
-+struct hostapd_channel_data *hostapd_dfs_get_valid_channel(struct hostapd_data
-+							   *hapd);
- 
- /* utils.c */
- int hostapd_register_probereq_cb(struct hostapd_data *hapd,
-@@ -291,5 +295,8 @@ int hostapd_probe_req_rx(struct hostapd_data *hapd, const u8 *sa, const u8 *da,
- 			 int ssi_signal);
- void hostapd_event_ch_switch(struct hostapd_data *hapd, int freq, int ht,
- 			     int offset);
-+void hostapd_resume_dfs_cac(void *eloop_ctx, void *timeout_ctx);
-+int hostapd_check_set_freq(struct hostapd_data *hapd);
-+
- 
- #endif /* HOSTAPD_H */
-diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
-index 76c4211..bbd2b03 100644
---- a/src/ap/hw_features.c
-+++ b/src/ap/hw_features.c
-@@ -794,3 +794,21 @@ int hostapd_hw_get_channel(struct hostapd_data *hapd, int freq)
- 
- 	return 0;
- }
-+
-+
-+int hostapd_hw_get_channel_flag(struct hostapd_data *hapd, int chan)
-+{
-+	int i;
-+
-+	if (!hapd->iface->current_mode)
-+		return 0;
-+
-+	for (i = 0; i < hapd->iface->current_mode->num_channels; i++) {
-+		struct hostapd_channel_data *ch =
-+			&hapd->iface->current_mode->channels[i];
-+		if (ch->chan == chan)
-+			return ch->flag;
-+	}
-+
-+	return 0;
-+}
-diff --git a/src/ap/hw_features.h b/src/ap/hw_features.h
-index abadcd1..b8e287b 100644
---- a/src/ap/hw_features.h
-+++ b/src/ap/hw_features.h
-@@ -28,6 +28,7 @@ int hostapd_hw_get_channel(struct hostapd_data *hapd, int freq);
- int hostapd_check_ht_capab(struct hostapd_iface *iface);
- int hostapd_prepare_rates(struct hostapd_iface *iface,
- 			  struct hostapd_hw_modes *mode);
-+int hostapd_hw_get_channel_flag(struct hostapd_data *hapd, int chan);
- #else /* NEED_AP_MLME */
- static inline void
- hostapd_free_hw_features(struct hostapd_hw_modes *hw_features,
-diff --git a/src/ap/ieee802_11.c b/src/ap/ieee802_11.c
-index 3996c90..2269cd5 100644
---- a/src/ap/ieee802_11.c
-+++ b/src/ap/ieee802_11.c
-@@ -153,6 +153,9 @@ u16 hostapd_own_capab_info(struct hostapd_data *hapd, struct sta_info *sta,
- 	    hapd->iface->num_sta_no_short_slot_time == 0)
- 		capab |= WLAN_CAPABILITY_SHORT_SLOT_TIME;
- 
-+	if (hapd->iconf->ieee80211h)
-+		capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
-+
- 	return capab;
- }
- 
-@@ -1849,4 +1852,118 @@ void ieee802_11_rx_from_unknown(struct hostapd_data *hapd, const u8 *src,
- }
- 
- 
-+int ieee802_11_radar_detected(struct hostapd_data *hapd)
-+{
-+	struct hostapd_hw_modes *mode;
-+	struct hostapd_channel_data *chan = NULL;
-+	struct os_time now;
-+	int i;
-+
-+	eloop_cancel_timeout(hostapd_resume_dfs_cac, hapd, NULL);
-+
-+	if (hapd->iface->current_mode == NULL)
-+		return 0;
-+
-+	mode = hapd->iface->current_mode;
-+	if (mode->mode != HOSTAPD_MODE_IEEE80211A) {
-+		wpa_printf(MSG_WARNING, "current_mode != IEEE80211A");
-+		return 0;
-+	}
-+
-+	for (i = 0; i < hapd->iface->current_mode->num_channels; i++) {
-+		chan = &hapd->iface->current_mode->channels[i];
-+		if (chan->freq == hapd->iface->freq) {
-+			if (chan->flag & HOSTAPD_CHAN_RADAR) {
-+				chan->flag |= HOSTAPD_CHAN_RADAR_DETECTED;
-+				os_get_time(&now);
-+				chan->last_radar_detection.sec = now.sec;
-+				wpa_printf(MSG_DEBUG, "Disabling channel %d, "
-+					   "for %d seconds", chan->chan,
-+					   DFS_MIN_NON_OCC_TIME_SEC);
-+				return 1; /* Channel found */
-+			}
-+		}
-+	}
-+	wpa_printf(MSG_WARNING, "Should'n get a radar event on "
-+		   "the current freq (%d)", hapd->iface->freq);
-+	return 0;
-+}
-+
-+int ieee802_11_start_channel_switch(struct hostapd_data *hapd,
-+				    u8 radar_detected)
-+{
-+	struct hostapd_channel_data *next_channel;
-+
-+	next_channel = hostapd_dfs_get_valid_channel(hapd);
-+
-+	if (!next_channel)
-+		return -1;
-+
-+	if (!(hapd->iface->dfs_state & DFS_INIT_PHASE_CAC)) {
-+		hapd->next_channel = next_channel;
-+		u8 radar_on_next_channel =
-+			(next_channel->flag & HOSTAPD_CHAN_RADAR) ? 1 : 0;
-+		wpa_printf(MSG_DEBUG, "switching to %sch. #%d, freq %d",
-+			   radar_on_next_channel ? "(DFS) " : "",
-+			   next_channel->chan, next_channel->freq);
-+
-+		/* Add CSA */
-+		ieee802_11_set_beacon(hapd);
-+
-+		if (hostapd_channel_switch(hapd, next_channel->freq,
-+					   next_channel->flag,
-+					   radar_detected,
-+					   radar_on_next_channel)) {
-+			wpa_printf(MSG_ERROR, "Channel switch failed");
-+			return -1;
-+		}
-+	} else {
-+		hapd->iconf->channel = next_channel->chan;
-+		hapd->iface->freq = next_channel->freq;
-+
-+		if (hostapd_check_set_freq(hapd)) {
-+			wpa_printf(MSG_ERROR, "Couldn't check/set freq, "
-+				   "terminating");
-+			eloop_terminate();
-+			return -1;
-+		}
-+	}
-+	return 0;
-+}
-+
-+int ieee802_11_complete_channel_switch(struct hostapd_data *hapd)
-+{
-+
-+	wpa_printf(MSG_DEBUG, "Completing channel switch");
-+
-+	if (hapd->next_channel == NULL) {
-+		wpa_printf(MSG_WARNING, "next_channel is not defined");
-+		return 0;
-+	}
-+
-+	hapd->iconf->channel = (u8)hapd->next_channel->chan;
-+	hapd->iface->freq = hapd->next_channel->freq;
-+
-+	if (hapd->next_channel->flag & HOSTAPD_CHAN_RADAR) {
-+		if (hostapd_start_radar_detection(hapd, hapd->iface->freq,
-+						  hapd->next_channel->flag)) {
-+			wpa_printf(MSG_ERROR, "Could not start radar "
-+				   "detection for kernel driver");
-+		    return -1;
-+		}
-+		eloop_register_timeout(DFS_MIN_CAC_TIME_SEC, 0,
-+				       hostapd_resume_dfs_cac, hapd, NULL);
-+		wpa_printf(MSG_DEBUG, "listen %d seconds for radar "
-+			   "interference prior enabling the tx",
-+			   DFS_MIN_CAC_TIME_SEC);
-+	}
-+
-+	hapd->next_channel = NULL;
-+	/* Remove CSA */
-+	ieee802_11_set_beacon(hapd);
-+
-+	return 0;
-+}
-+
-+
- #endif /* CONFIG_NATIVE_WINDOWS */
-diff --git a/src/ap/ieee802_11.h b/src/ap/ieee802_11.h
-index 9993bee..1539045 100644
---- a/src/ap/ieee802_11.h
-+++ b/src/ap/ieee802_11.h
-@@ -75,5 +75,9 @@ u8 * hostapd_eid_time_zone(struct hostapd_data *hapd, u8 *eid);
- int hostapd_update_time_adv(struct hostapd_data *hapd);
- void hostapd_client_poll_ok(struct hostapd_data *hapd, const u8 *addr);
- u8 * hostapd_eid_bss_max_idle_period(struct hostapd_data *hapd, u8 *eid);
-+int ieee802_11_radar_detected(struct hostapd_data *hapd);
-+int ieee802_11_start_channel_switch(struct hostapd_data *hapd,
-+				    u8 radar_detected);
-+int ieee802_11_complete_channel_switch(struct hostapd_data *hapd);
- 
- #endif /* IEEE802_11_H */
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index bc714e8..047a5aa 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -28,6 +28,7 @@
- #define HOSTAPD_CHAN_HT40PLUS 0x00000010
- #define HOSTAPD_CHAN_HT40MINUS 0x00000020
- #define HOSTAPD_CHAN_HT40 0x00000040
-+#define HOSTAPD_CHAN_RADAR_DETECTED 0x00000080
- 
- /*
-  * DFS functionality is enabled.
-@@ -35,6 +36,11 @@
- #define DFS_ENABLED			BIT(0)
- 
- /*
-+ * DFS channel availability check during initialization.
-+ */
-+#define DFS_INIT_PHASE_CAC		BIT(1)
-+
-+/*
-  * DFS Channel Availability Check Time - the time a system shall monitor a
-  * 'radar channel' for presence of radar prior to initiating a TX, spec defines
-  * it as 60 seconds.
-@@ -42,6 +48,14 @@
-  */
- #define DFS_MIN_CAC_TIME_SEC		60
- 
-+/*
-+ * DFS Non-Occupancy Time - a period of time after radar is detected on a
-+ * channel that the channel may not be used.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 6c2884c..5a193b3 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -565,6 +565,14 @@
+  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
+  *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
+  *
++ * @NL80211_CMD_AP_CH_SWITCH: Perform a channel switch in the driver (for
++ *	AP/GO).
++ *	%NL80211_ATTR_WIPHY_FREQ: new channel frequency.
++ *	%NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel.
++ *	%NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel.
++ *	%NL80211_FREQ_ATTR_CH_SWITCH_COUNT: number of TBTT's until the channel
++ *	switch event.
 + *
-+ */
-+#define DFS_MIN_NON_OCC_TIME_SEC	1800
+  * @NL80211_CMD_RADAR_DETECT: Start radar detection in the driver/HW. Once
+  *	radar detected usermode notified with this event.
+  *
+@@ -720,6 +728,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_CH_SWITCH_NOTIFY,
+ 
++	NL80211_CMD_AP_CH_SWITCH,
 +
-+
- /**
-  * struct hostapd_channel_data - Channel information
+ 	NL80211_CMD_RADAR_DETECT,
+ 
+ 	NL80211_CMD_DFS_ENABLE_TX,
+@@ -1267,6 +1277,14 @@ enum nl80211_commands {
+  *	was used to provide the hint. For the different types of
+  *	allowed user regulatory hints see nl80211_user_reg_hint_type.
+  *
++ * @NL80211_ATTR_CH_SWITCH_COUNT: the number of TBTT's until the channel
++ *	switch event
++ * @NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel before the
++ *	channel switch operation.
++ * @NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel after
++ *	the channel switch operation, should be set if the target channel is
++ *	DFS channel.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
   */
-@@ -65,6 +79,8 @@ struct hostapd_channel_data {
- 	 * max_tx_power - maximum transmit power in dBm
- 	 */
- 	u8 max_tx_power;
+@@ -1522,6 +1540,10 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_USER_REG_HINT_TYPE,
+ 
++	NL80211_ATTR_CH_SWITCH_COUNT,
++	NL80211_ATTR_CH_SWITCH_BLOCK_TX,
++	NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX,
 +
-+	struct os_time last_radar_detection;
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3011,6 +3033,7 @@ enum nl80211_ap_sme_features {
+  *	to work properly to suppport receiving regulatory hints from
+  *	cellular base stations.
+  * @NL80211_FEATURE_DFS: Radar detection is supported in the HW/driver.
++ * @NL80211_FEATURE_AP_CH_SWITCH: This driver supports AP channel switch.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
+@@ -3018,6 +3041,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_INACTIVITY_TIMER = 1 << 2,
+ 	NL80211_FEATURE_CELL_BASE_REG_HINTS = 1 << 3,
+ 	NL80211_FEATURE_DFS		= 1 << 4,
++	NL80211_FEATURE_AP_CH_SWITCH	= 1 << 5,
  };
  
- #define HOSTAPD_MODE_FLAG_HT_INFO_KNOWN BIT(0)
+ /**
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3a56601..66c8c9b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -153,6 +153,34 @@ struct ieee80211_channel {
+ };
+ 
+ /**
++ * struct ieee80211_ap_ch_switch - holds the ap channel switch data
++ *
++ * The information provided in this structure is required for the ap channel
++ * switch operation.
++ *
++ * @timestamp: value in microseconds of the 64-bit Time Synchronization
++ *	Function (TSF) timer when the frame containing the channel switch
++ *	announcement was received. This is simply the rx.mactime parameter
++ *	the driver passed into mac80211.
++ * @block_tx: Indicates whether transmission must be blocked before the
++ *	scheduled channel switch, as indicated by the AP.
++ * @post_switch_block_tx: Indicates whether transmission must be blocked after
++ *	the scheduled channel switch, this should be set if the target channel
++ *	is DFS channel.
++ * @channel: the new channel to switch to
++ * @channel_type: the type of the new channel
++ * @count: the number of TBTT's until the channel switch event
++ */
++struct ieee80211_ap_ch_switch {
++	u64 timestamp;
++	bool block_tx;
++	bool post_switch_block_tx;
++	struct ieee80211_channel *channel;
++	enum nl80211_channel_type channel_type;
++	u8 count;
++};
++
++/**
+  * enum ieee80211_rate_flags - rate flags
+  *
+  * Hardware/specification flags for rates. These are structured
+@@ -1629,6 +1657,8 @@ struct cfg80211_gtk_rekey_data {
+  * @start_radar_detection: Start radar detection in the driver.
+  *
+  * @dfs_en_tx: Enable tx after radar interference check.
++ *
++ * @ap_channel_switch: Perform AP channel switch.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1852,6 +1882,10 @@ struct cfg80211_ops {
+ 
+ 	int	(*dfs_en_tx)(struct wiphy *wiphy, struct net_device *dev,
+ 			     struct ieee80211_channel *chan);
++
++	int	(*ap_channel_switch)(struct wiphy *wiphy,
++				     struct net_device *dev,
++				     struct ieee80211_ap_ch_switch *ap_ch_sw);
+ };
+ 
+ /*
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 869d271..14d05d0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -355,6 +355,9 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
+ 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
++	[NL80211_ATTR_CH_SWITCH_COUNT] = { .type = NLA_U32 },
++	[NL80211_ATTR_CH_SWITCH_BLOCK_TX] = { .type = NLA_FLAG },
++	[NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4644,6 +4647,50 @@ static int nl80211_dfs_en_tx(struct sk_buff *skb, struct genl_info *info)
+ 	return rdev->ops->dfs_en_tx(&rdev->wiphy, dev, chan);
+ }
+ 
++static int nl80211_ap_channel_switch(struct sk_buff *skb,
++				     struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	u32 freq = 0;
++	struct ieee80211_ap_ch_switch ap_ch_sw;
++
++	if (!rdev->ops->ap_channel_switch)
++		return -EOPNOTSUPP;
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++		return -EOPNOTSUPP;
++
++	if (!info->attrs[NL80211_ATTR_CH_SWITCH_COUNT] ||
++	    !info->attrs[NL80211_ATTR_WIPHY_FREQ] ||
++	    !info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE])
++		return -EINVAL;
++
++	memset(&ap_ch_sw, 0, sizeof(ap_ch_sw));
++
++	ap_ch_sw.channel_type =
++		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
++	if (ap_ch_sw.channel_type != NL80211_CHAN_HT20)
++		return -EOPNOTSUPP;
++
++	ap_ch_sw.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
++	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
++
++	ap_ch_sw.channel = ieee80211_get_channel(&rdev->wiphy, freq);
++	if (!ap_ch_sw.channel ||
++	    ap_ch_sw.channel->flags & IEEE80211_CHAN_DISABLED)
++		return -EINVAL;
++
++	if (info->attrs[NL80211_ATTR_CH_SWITCH_BLOCK_TX])
++		ap_ch_sw.block_tx = true;
++
++	if (info->attrs[NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX])
++		ap_ch_sw.post_switch_block_tx = true;
++
++	return rdev->ops->ap_channel_switch(&rdev->wiphy, dev, &ap_ch_sw);
++}
++
+ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			    u32 seq, int flags,
+ 			    struct cfg80211_registered_device *rdev,
+@@ -7518,6 +7565,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_AP_CH_SWITCH,
++		.doit = nl80211_ap_channel_switch,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ 
+ };
+ 
 -- 
 1.7.5.4
 
