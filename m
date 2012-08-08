@@ -1,98 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43872 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755474Ab2HAPVd (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:39743 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758084Ab2HHTdj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 11:21:33 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/8] mac80211: clean up CSA handling code
-Date: Wed,  1 Aug 2012 17:21:21 +0200
-Message-Id: <1343834487-23737-3-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172147_310405_CCF9D877)
-In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
-References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 8 Aug 2012 15:33:39 -0400
+Message-ID: <20120808222306.133742ltgk7j9tic@www.81.fi> (sfid-20120808_213400_089651_86CD78C2)
+Date: Wed, 08 Aug 2012 22:23:06 +0300
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+Subject: Re: [PATCH] rndis_wlan: Fix potential memory leak in
+ update_pmkid()
+References: <1344440661-32322-1-git-send-email-khoroshilov@ispras.ru>
+In-Reply-To: <1344440661-32322-1-git-send-email-khoroshilov@ispras.ru>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Quoting Alexey Khoroshilov <khoroshilov@ispras.ru>:
 
-Clean up the CSA handling code by moving some
-of it out of the if and using a C99 initializer
-for the struct passed to the driver method.
+> Do not leak memory by updating pointer with potentially NULL realloc  
+> return value.
+>
+> Found by Linux Driver Verification project (linuxtesting.org).
+>
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 
-While at it, also add a comment that we should
-wait for a beacon after switching the channel.
+Thanks!
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |   34 ++++++++++++++++------------------
- 1 file changed, 16 insertions(+), 18 deletions(-)
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 55cf04c..dc1c84b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -712,6 +712,7 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 	/* XXX: shouldn't really modify cfg80211-owned data! */
- 	ifmgd->associated->channel = sdata->local->oper_channel;
- 
-+	/* XXX: wait for a beacon first? */
- 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_CSA);
-  out:
-@@ -788,36 +789,33 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata->local->csa_channel = new_ch;
- 
-+	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
-+
-+	if (sw_elem->mode)
-+		ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_CSA);
-+
- 	if (sdata->local->ops->channel_switch) {
- 		/* use driver's channel switch callback */
--		struct ieee80211_channel_switch ch_switch;
--		memset(&ch_switch, 0, sizeof(ch_switch));
--		ch_switch.timestamp = timestamp;
--		if (sw_elem->mode) {
--			ch_switch.block_tx = true;
--			ieee80211_stop_queues_by_reason(&sdata->local->hw,
--					IEEE80211_QUEUE_STOP_REASON_CSA);
--		}
--		ch_switch.channel = new_ch;
--		ch_switch.count = sw_elem->count;
--		ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
-+		struct ieee80211_channel_switch ch_switch = {
-+			.timestamp = timestamp,
-+			.block_tx = sw_elem->mode,
-+			.channel = new_ch,
-+			.count = sw_elem->count,
-+		};
-+
- 		drv_channel_switch(sdata->local, &ch_switch);
- 		return;
- 	}
- 
- 	/* channel switch handled in software */
--	if (sw_elem->count <= 1) {
-+	if (sw_elem->count <= 1)
- 		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
--	} else {
--		if (sw_elem->mode)
--			ieee80211_stop_queues_by_reason(&sdata->local->hw,
--					IEEE80211_QUEUE_STOP_REASON_CSA);
--		ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
-+	else
- 		mod_timer(&ifmgd->chswitch_timer,
- 			  jiffies +
- 			  msecs_to_jiffies(sw_elem->count *
- 					   cbss->beacon_interval));
--	}
- }
- 
- static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
--- 
-1.7.10.4
+> ---
+>  drivers/net/wireless/rndis_wlan.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rndis_wlan.c  
+> b/drivers/net/wireless/rndis_wlan.c
+> index 241162e..7a4ae9e 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -1803,6 +1803,7 @@ static struct ndis_80211_pmkid  
+> *update_pmkid(struct usbnet *usbdev,
+>  						struct cfg80211_pmksa *pmksa,
+>  						int max_pmkids)
+>  {
+> +	struct ndis_80211_pmkid *new_pmkids;
+>  	int i, err, newlen;
+>  	unsigned int count;
+>
+> @@ -1833,11 +1834,12 @@ static struct ndis_80211_pmkid  
+> *update_pmkid(struct usbnet *usbdev,
+>  	/* add new pmkid */
+>  	newlen = sizeof(*pmkids) + (count + 1) * sizeof(pmkids->bssid_info[0]);
+>
+> -	pmkids = krealloc(pmkids, newlen, GFP_KERNEL);
+> -	if (!pmkids) {
+> +	new_pmkids = krealloc(pmkids, newlen, GFP_KERNEL);
+> +	if (!new_pmkids) {
+>  		err = -ENOMEM;
+>  		goto error;
+>  	}
+> +	pmkids = new_pmkids;
+>
+>  	pmkids->length = cpu_to_le32(newlen);
+>  	pmkids->bssid_info_count = cpu_to_le32(count + 1);
+> --
+> 1.7.9.5
+>
+>
+>
+
+
 
