@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:38309 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104Ab2HWQTX (ORCPT
+Received: from investici.nine.ch ([217.150.252.179]:59107 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753297Ab2HHTe3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 12:19:23 -0400
-Received: by vbbff1 with SMTP id ff1so978624vbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2012 09:19:22 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 23 Aug 2012 09:19:22 -0700
-Message-ID: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com> (sfid-20120823_182011_893904_98301877)
-Subject: Re: Question about ath9k/mac80211 Driver
-From: Patrick Connolly <pjc999@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 8 Aug 2012 15:34:29 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH] mac80211: do not reply to AUTH frame if sta allocation fails
+Date: Wed,  8 Aug 2012 21:34:12 +0200
+Message-Id: <1344454452-19480-1-git-send-email-ordex@autistici.org> (sfid-20120808_213434_455471_DB86ECF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed,
-     Thanks very much for the response.
+Whenever we get an AUTH frame we first allocate a new station and then we reply
+with another AUTH frame. However, if sta allocations fails we have to do not
+reply so that the other hand do not think we have correctly set everything up
 
-   Yes I get "Operation not supported":
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ net/mac80211/ibss.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-# iwconfig wlan0 modu 11b
-Error for wireless request "Set Modulation" (8B2F) :
-    SET failed on device wlan0 ; Operation not supported.
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 5746d62..37e71a3 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -337,6 +337,7 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 					size_t len)
+ {
+ 	u16 auth_alg, auth_transaction;
++	struct sta_info *sta;
+ 
+ 	lockdep_assert_held(&sdata->u.ibss.mtx);
+ 
+@@ -352,10 +353,17 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 		 "RX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=%d)\n",
+ 		 mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
+ 	sta_info_destroy_addr(sdata, mgmt->sa);
+-	ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
++	sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
+ 	rcu_read_unlock();
+ 
+ 	/*
++	 * if we have any problem in allocating the new station, we do not reply
++	 * with the AUTH frame
++	 */
++	if (!sta)
++		return;
++
++	/*
+ 	 * IEEE 802.11 standard does not require authentication in IBSS
+ 	 * networks and most implementations do not seem to use it.
+ 	 * However, try to reply to authentication attempts if someone
+-- 
+1.7.9.4
 
-   ...so what does this mean; what are my options here?  In view of
-the fact that the capability of changing modes (from 'g' to 'b'
-...etc.) is an essential requirement, am I using the wrong driver
-...is there a different driver that supports this chip?  Or is it that
-there's no driver that supports this chip so that I would have to put
-this functionality into ath9k myself if I want it?
-
-   Thanks again for the help.
-
--Patrick
-
->
->Hi,
->
->On Thu, Aug 23, 2012 at 2:26 AM, Patrick Connolly <pjc999@gmail.com> wrote:
->> Hello,
->>       I'm new to ath9k and in need of some basic/rudimentary help.
->>       I'm working with an Access Point that uses the ath9k/mac80211
->> driver combination to talk to an Atheros AR9285.  The firmware is
->> OpenWrt.
->>
->>     What is the best command line tool to use to get the driver to
->> switch the chip's mode between 'b', 'g', or 'bg' (mixed) mode?  The
->> OpenWrt Tools we're currently using ("uci" "wifi") are not talking to
->> the driver at all and when we switch settings (between b,g,bg), the
->> beacons go out advertising the same rates regardless of the mode.
->
->i don't think ath9k supports this
->regarding  commands
->
->   iwconfig eth0 modu 11g
->   iwconfig eth0 modu CCK OFDMa
->   iwconfig eth0 modu auto
