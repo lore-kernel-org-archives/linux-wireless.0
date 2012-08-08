@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:47996 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754209Ab2H0UGc (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:33882 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754763Ab2HHOMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 16:06:32 -0400
-Message-ID: <503BD345.6030501@wwwdotorg.org> (sfid-20120827_220648_991365_DFE038F8)
-Date: Mon, 27 Aug 2012 13:06:29 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+	Wed, 8 Aug 2012 10:12:25 -0400
+Date: Wed, 8 Aug 2012 17:12:14 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: luoy@marvell.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: mwifiex: add AES_CMAC support in key_material cmd
+Message-ID: <20120808141213.GA28142@elgon.mountain> (sfid-20120808_161229_196629_E95D014B)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Wei Ni <wni@nvidia.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	rvossen@broadcom.com, krakesh@nvidia.com, ldewangan@nvidia.com,
-	linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR directly
- for non-OOB
-References: <1346063114-30361-1-git-send-email-wni@nvidia.com> <1346063114-30361-3-git-send-email-wni@nvidia.com> <503B9F31.5050502@broadcom.com>
-In-Reply-To: <503B9F31.5050502@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/27/2012 09:24 AM, Arend van Spriel wrote:
-> On 08/27/2012 12:25 PM, Wei Ni wrote:
->> In case of inband interrupts, if we handle the interrupt in dpc thread,
->> two level of thread switching takes place to process wifi interrupts.
->> One in SDHCI driver and the other in Wifi driver. This may cause the
->> system
->> instability.
-> 
-> Looking into the sdhci/mmc code indeed shows that the brcmfmac irq
-> handler is not called in true IRQ context. So the dpc thread may add
-> unnecessary complexity, but to me there is not indication that there is
-> a stability issue.
-> 
->> Because the SDHCI calls sdio_irq_thread() to handle the irq, this
->> thread locks
->> mmc host and calls wifi handler. It expects WiFi handler to be quick and
->> enables sdio interrupt from card at end. If wifi handler defers this
->> work for
->> a different thread, sdio_irq_thread() will be stuck on next wifi
->> interrupt
->> since mmc lock is not freed.
-> 
-> Not sure if I can follow this explanation. The isr is called with host
-> claimed (by sdio_irq_thread) and all it does is at a linked list member
-> and signal the dpc thread. After doing this the host is released.
+Hello Ying Luo,
 
-Is the issue something like the ISR handler or first level of threading
-does:
+The patch b877f4cf5af8: "mwifiex: add AES_CMAC support in 
+key_material cmd" from Aug 3, 2012, leads to the following warning:
+drivers/net/wireless/mwifiex/sta_cmd.c:692 
+mwifiex_cmd_802_11_key_material()
+	 error: memcpy() 'param->key' too small (16 vs 32)
 
-* Trigger DPC
-* Re-enable interrupt
+   656          } else if (enc_key->key_len == WLAN_KEY_LEN_TKIP) {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-So that the interrupt then fires again before the triggered DPC can run
-to handle/clear it, thus causing an interrupt storm?
+We assume a 32 byte key_len here.
 
-Whereas handling the interrupt directly prevents this race condition?
+   657                  dev_dbg(priv->adapter->dev, "cmd: WPA_TKIP\n");
+   658                  key_material->key_param_set.key_type_id =
+   659                                                  cpu_to_le16(KEY_TYPE_ID_TKIP);
+   660                  key_material->key_param_set.key_info =
+   661                                                  cpu_to_le16(KEY_ENABLED);
+
+[snip]
+
+   686                  if (le16_to_cpu(key_material->key_param_set.key_type_id) ==
+   687                                                          KEY_TYPE_ID_AES_CMAC) {
+   688                          struct mwifiex_cmac_param *param =
+   689                                          (void *)key_material->key_param_set.key;
+   690  
+   691                          memcpy(param->ipn, enc_key->pn, IGTK_PN_LEN);
+   692                          memcpy(param->key, enc_key->key_material,
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   693                                 enc_key->key_len);
+                                       ^^^^^^^^^^^^^^^^
+"param->key" only has space for 16 bytes.
+
+   694  
+
+regards,
+dan carpenter
+
