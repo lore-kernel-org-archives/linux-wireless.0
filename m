@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59903 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753051Ab2HVS5F (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47200 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449Ab2HHOxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 14:57:05 -0400
-Received: by pbbrr13 with SMTP id rr13so1896916pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2012 11:57:05 -0700 (PDT)
+	Wed, 8 Aug 2012 10:53:55 -0400
+Date: Wed, 8 Aug 2012 20:25:33 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH 3.6 4/4] ath9k_hw: enable PA linearization
+Message-ID: <20120808145531.GB2041@vmraj-lnx.qualcomm.com> (sfid-20120808_165359_637483_B4556486)
+References: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-2-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-3-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-4-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn0O+dfJLnKroRUJF6TEVWUmgwvriF7M+Oy4YL2ug0gSNA@mail.gmail.com>
-References: <20120813165340.GA10044@pandem0nium>
-	<20120819220436.GA9899@pandem0nium>
-	<CAD2nsn0O+dfJLnKroRUJF6TEVWUmgwvriF7M+Oy4YL2ug0gSNA@mail.gmail.com>
-Date: Wed, 22 Aug 2012 11:57:04 -0700
-Message-ID: <CAJ-VmokN_2PHZinfE8zfx6-8VZ+KenccymfSs+JFWtDtmjExVg@mail.gmail.com> (sfid-20120822_205712_567547_34913774)
-Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
-From: Adrian Chadd <adrian.chadd@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	openwrt-devel@lists.openwrt.org,
-	Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1344344772-49459-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeah. The deadbeef means "something's turned off."
+On Tue, Aug 07, 2012 at 03:06:12PM +0200, Felix Fietkau wrote:
+> This feature had been disabled in ath9k because the code to support
+> it was incomplete, but now the code is in sync with the internal QCA
+> codebase, so it's time to enable it.
+> 
+> On many newer devices, the calibration is assumed to be done with PA
+> linearization enabled.
+> 
+> Tests with a particular AR933x device showed that the signal emitted
+> at full power was highly distorted and unreliable with PA linearization
+> disabled. With this patch, the signal becomes clear and stability
+> is improved.
+> 
+We faced stability issues with 938x chipsets when paprd is enabled. The commit
+6f4810101a629b31b5427872a09ea092cfc5c4bd states one of the issue. Even if it
+helps for AR933x, let us enable it only for that chip alone.
 
-I'd start with the SoC reset register and see if the MAC/WMAC bits are
-correctly set. Ie, that something hasn't gone and reset the wireless
-bits behind your back.
-
-You could try hacking up a work around that does a full MAC/WMAC reset
-when you reset the driver.
-
-Ie, when ath9k does a full reset, actually _do_ a full reset by
-resetting the mac/wmac via the SoC lines.
-
-It could also be the RTC state. Maybe it's found its way into network
-sleep (ie, the force wake bits aren't set right.) Or something PLL
-related isn't programmed correctly. Dumping the RTC registers would be
-helpful.
-
-Thanks,
-
-
-
-Adrian
+-Rajkumar
