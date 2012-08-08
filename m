@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:36188 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002Ab2H0JnL (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:56550 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757976Ab2HHMCI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 05:43:11 -0400
-Date: Mon, 27 Aug 2012 11:42:56 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 1/2] ath9k_htc: remove driver specific checks for
- interfaces combinations
-Message-ID: <20120827094256.GC22073@ritirata.org> (sfid-20120827_114315_128676_0E31D842)
-References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
- <CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
- <20120827065419.GB22073@ritirata.org>
- <CAD2nsn2CYYP2+VRX0Ph=6Vw2kTqmwRvMn+FVeS3FwMd=jvwy8Q@mail.gmail.com>
+	Wed, 8 Aug 2012 08:02:08 -0400
+Received: by yenq13 with SMTP id q13so847602yen.26
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:02:06 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>,
+	<simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: [PATCH v3 0/7] hostap: add DFS master ability
+Date: Wed,  8 Aug 2012 14:55:31 +0300
+Message-Id: <1344426938-1883-1-git-send-email-victorg@ti.com> (sfid-20120808_140211_485589_5ABF54F5)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZmUaFz6apKcXQszQ"
-In-Reply-To: <CAD2nsn2CYYP2+VRX0Ph=6Vw2kTqmwRvMn+FVeS3FwMd=jvwy8Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+v3:
 
---ZmUaFz6apKcXQszQ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Rebased to latest.
 
-Hi Mohammed,
+0001-hostapd-implement-dfs-drv-ops-functions.patch
+1. added HT40 check in hostapd_channel_switch() & hostapd_start_radar_detection().
 
-On Mon, Aug 27, 2012 at 02:45:36 +0530, Mohammed Shafi wrote:
-> Hi Antonio,
->=20
-> > Your patch is ok. But, at this point, should patch 2/6 and 3/6 be merged
-> > together?
->=20
-> an order of interface combinations advertisement(2/6), followed by
-> removing specific
-> checks should be fine right ?
+0003-hostapd-add-dfs-events.patch
+1. removed "channel_switch_complete" in wpa_event_data union.
+2. renamed "EVENT_CHANNEL_SWITCH_COMPLETE" to "EVENT_AP_CH_SWITCH_COMPLETE".
+3. renamed "hostapd_event_complete_channel_switch()" to hostapd_event_ap_ch_switch().
 
-In my opinion this is correct. But maybe Johannes has some arguments agains=
-t this
-order?
+0006-nl80211-add-channel-switch-command-event.patch
+1. reuse "NL80211_CMD_CH_SWITCH_NOTIFY" event also for AP.
+2. set also the NL80211_ATTR_WIPHY_CHANNEL_TYPE in nl80211_ap_channel_switch().
+3. update the "bss->freq" only if the channel switch command succeeded.
 
->=20
-> >
-> > Other than that, patch 2/6 should be modified to take into account IBSS=
- mode.
->=20
-> yeah saw your patch, that in ath9k_htc IBSS interface can coexist with
-> one more interface.
-> The standalone limitation exists in ath9k too, not sure this is a
-> limitation to beacon config
-> for ath9k & ath9k_htc, I will just confirm. If its fine i will resend
-> the v2 version signing off both
-> of our names accounting IBSS mode too.
+0007-nl80211-add-start-radar-detection-command-event.patch
+1. set also the NL80211_ATTR_WIPHY_CHANNEL_TYPE in nl80211_start_radar_detection().
 
+Victor Goldenshtein (7):
+  hostapd: implement dfs drv ops functions
+  hostapd: add channel switch ability
+  hostapd: add dfs events
+  hostapd: add dfs support into interface init flow
+  nl80211: add support to enable TX on oper-channel
+  nl80211: add channel switch command/event
+  nl80211: add start radar detection command/event
 
-fine with me :) Thank you!
+ hostapd/config_file.c        |   10 +++
+ src/ap/ap_config.h           |    4 +
+ src/ap/ap_drv_ops.c          |   95 +++++++++++++++++++++++++
+ src/ap/ap_drv_ops.h          |    5 ++
+ src/ap/beacon.c              |   16 ++++
+ src/ap/drv_callbacks.c       |   45 ++++++++++++
+ src/ap/hostapd.c             |  161 ++++++++++++++++++++++++++++++++++++++++--
+ src/ap/hostapd.h             |   13 ++++
+ src/ap/hw_features.c         |   48 ++++++++++---
+ src/ap/hw_features.h         |   10 +++
+ src/ap/ieee802_11.c          |  117 ++++++++++++++++++++++++++++++
+ src/ap/ieee802_11.h          |    4 +
+ src/drivers/driver.h         |   89 +++++++++++++++++++++++-
+ src/drivers/driver_common.c  |    2 +
+ src/drivers/driver_nl80211.c |  152 ++++++++++++++++++++++++++++++++++++++-
+ src/utils/eloop.c            |    1 +
+ 16 files changed, 751 insertions(+), 21 deletions(-)
 
+-- 
+1.7.5.4
 
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---ZmUaFz6apKcXQszQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iEYEARECAAYFAlA7QSAACgkQpGgxIkP9cwfxdQCePZWsy/J7W/Mxo0WLtZDPeVxm
-ZdMAn3nfCewdXsqNjKLPO6y9e5UtxuvH
-=j7uQ
------END PGP SIGNATURE-----
-
---ZmUaFz6apKcXQszQ--
