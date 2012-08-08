@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48118 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013Ab2HBQ0d (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:42255 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757535Ab2HHHxO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 12:26:33 -0400
-Message-ID: <1343924789.4471.26.camel@jlt3.sipsolutions.net> (sfid-20120802_182637_091996_D5FFE5F5)
-Subject: Re: cfg80211_disconnected memory leak
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 02 Aug 2012 18:26:29 +0200
-In-Reply-To: <CAMLZHHSVediwHaw3f8s1QYNoc_xV55CEUP7wBQu_on-p8WUQJg@mail.gmail.com> (sfid-20120802_181111_388647_3D9BB914)
-References: <CAMLZHHQkv_fHzd89fP7bNow7eL3oX+Duzr5rS5NJfhffqwUv2g@mail.gmail.com>
-	 <1343842772.4638.15.camel@jlt3.sipsolutions.net>
-	 <CAMLZHHQdBHZa4NBQ3ygKJSHmKL11ERUWDAtMx0-Qh4OzSoN-SA@mail.gmail.com>
-	 <1343894552.4458.4.camel@jlt3.sipsolutions.net>
-	 <CAMLZHHSVediwHaw3f8s1QYNoc_xV55CEUP7wBQu_on-p8WUQJg@mail.gmail.com>
-	 (sfid-20120802_181111_388647_3D9BB914)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 8 Aug 2012 03:53:14 -0400
+Received: by vcbfk26 with SMTP id fk26so468516vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 00:53:14 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 8 Aug 2012 00:53:13 -0700
+Message-ID: <CAEOSq-Nac1-6SbfQTLCO7bkQVWgLxZE4x0oNbviyyyToPZzo5w@mail.gmail.com> (sfid-20120808_095318_123669_C3330217)
+Subject: Problems with rtl8192cu driver in Access Point mode
+From: Mike Thompson <mpthompson@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-08-02 at 10:11 -0600, Daniel Drake wrote:
-> On Thu, Aug 2, 2012 at 2:02 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > Oh, hm. I didn't think it could unregister before we give up our
-> > reference, but I guess that makes sense after all.
-> >
-> > I'm not sure there's an easy way to fix it other than making the driver
-> > not call cfg80211_disconnected() in case the disconnect was requested by
-> > cfg80211 -- that call isn't needed and will not do anything at all, but
-> > I'm not sure how easy that would be in the driver?
-> 
-> I guess you've considered clearing all the pending work before
-> removing a netdev from the rdev's list?
+Hello,
 
-Yes, but we can't just try to flush the workqueue because of locking
-concerns in this area.
+I'm attempting to use an rtl8192cu based USB wifi adapter in Access
+Point mode with the hostapd software on a very small 3-chip iMX233 ARM
+system.  I can run the adapter fine using the driver in station mode
+and I'm able to connect to wifi network.  However, I'm not having much
+luck running the adapter in Access Point mode.  I've seen hints in the
+Linux Wireless email archives that there seems to be issues with the
+rtlwifi/rtl8192cu driver in access point mode.  Has anyone had success
+with this driver in access point mode?
 
-Hmm. Then again, I think we can call cfg80211_process_wdev_events() from
-case NETDEV_UNREGISTER though, probably after removing from the list.
-Maybe you could try that?
+Basically, a remote station (a Windows laptop in this case) can
+connect to the rtl8192cu based access point configured as an open
+network.  However, I'm unable to ping from the laptop to the access
+point or back the other way.  Using tcpdump on the access point, I can
+see the ARP requests from the laptop arriving on the access point and
+the response being sent, but the laptop never seems to receive the ARP
+response.  Likewise, the ARP requests from the access point never seem
+to arrive at laptop.  However, if I manually create entries in the ARP
+tables for each device, I can then ping and other traffic will begin
+to flow over the wireless connection without apparent problems -- even
+subsquent ARP requests are passed.  It's almost as if regular IP
+packets can be transmitted from the station, but ARP type packets
+won't flow until IP packets have proceeded the ARP packets which won't
+occur until the ethernet/IP addressing has been resolved.
 
-> I think a driver modification would be easy, if it is the right solution.
-> 
-> lbs_disconnect() is the function that calls cfg80211_disconnected().
-> We only ever call this in 2 contexts:
-> 
-> 1. From our cfg80211_ops.disconnect handler - you say this isn't needed
-> 2. From the netdev ndo_stop handler - I guess it is also not necessary
-> to inform cfg80211 that we have disconnected at this point, it is kind
-> of obvious..?
+I'm currently using a very recent compat-wireless driver from
+2012-07-03 with an older 2.6.35 kernel.  I've tried at least three
+prior versions of the rtlwifi/rtl8192cu driver (between 2.6.35 to
+3.5), but they all exhibit the same symptom.
 
-In fact, you won't get to ndo_stop without cfg80211 calling
-disconnect(), because it does that from NETDEV_GOING_DOWN.
+Any hints on where I can begin debugging the issue?
 
-> So completely removing the call to cfg80211_disconnected() may be the
-> right option here, is that what you recommend?
+Thanks,
 
-I'm not 100% sure about the API in this area right now though, it's been
-a while and I never worked much with this API (rather than the mac80211
-one with auth/assoc/disassoc/deauth.)
-
-johannes
-
+Mike Thompson
