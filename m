@@ -1,106 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61726 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab2HaG6k (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53887 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757995Ab2HHMnP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2012 02:58:40 -0400
-Received: by pbbrr13 with SMTP id rr13so4367823pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2012 23:58:40 -0700 (PDT)
+	Wed, 8 Aug 2012 08:43:15 -0400
 MIME-Version: 1.0
-In-Reply-To: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com>
-Date: Thu, 30 Aug 2012 23:58:40 -0700
-Message-ID: <CAJ-Vmo=kzUW=PTRMDpxVf-pQVdozC5U_g-GPyFQ+vkRTFhe1dw@mail.gmail.com> (sfid-20120831_085856_943054_42B40792)
-Subject: Re: [PATCH] ath5k: add support of HW encryption in management frames
-From: Adrian Chadd <adrian@freebsd.org>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAB=NE6WZWEO=b5Usx4RKDLC--TvLWnOom0P+HmXsxh7QZQQXQA@mail.gmail.com>
+References: <CAB=NE6WZWEO=b5Usx4RKDLC--TvLWnOom0P+HmXsxh7QZQQXQA@mail.gmail.com>
+Date: Wed, 8 Aug 2012 15:43:14 +0300
+Message-ID: <CAFub=KRtuTDn1DnHP0aKZT6RBeA2kNkLm6ud-4Z=1ESPs==h0g@mail.gmail.com> (sfid-20120808_144401_072187_8780BCD0)
+Subject: Re: Using vanilla kernels headers to do backport testing -- issues
+ with memcpy()
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hiya,
-
-This is cool stuff - but as I don't think MFP is enabled in any
-hardware pre-AR9280, I think it's worth doing a lot more testing
-before flipping this on.
-
-But very cool indeed. I'll see what it'll take to get it enabled in
-the FreeBSD atheros HAL for these chips.
-
-
-
-Adrian
-
-On 28 August 2012 02:34, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
-> This patch provides the support of hardware encyrption for
-> management frame, including the support of AES CMAC. This
-> patch is tested with the following chipsets:
-> - AR5213A
-> - AR5413
-> - AR2413/AR2414
+On Tue, Aug 7, 2012 at 10:28 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> A while ago we reviewed the idea of whether or not to use a set of
+> distribution vanilla kernels to allow us to do compilation testing of
+> modules on the compat backport project [0] with the benefit being that
+> at least one Linux distribution was doing this work already and given
+> that this work was using plain vanilla kernels directly from
+> kernel.org, with no modifications. The other option that existed was
+> that each distro could provide their own set of kernel packages along
+> with their own kernel headers but it didn't seem like other Linux
+> distributions were doing this and the information was not easy to
+> gather. So we went with the Ubuntu vanilla kernels and Ozan later
+> figured out a way to extract deb packages in a distribution agnostic
+> manner [1] and later added an option to enable a way to install and
+> use this for ckmake which test compiles against 21 kernels without
+> requiring root [2].
 >
-> Beside, this patch also extends the IBSS RSN to mesh.
+> This works swell as it allows anyone on any Linux distribution to test
+> compile against a series of older kernels, today 21 older kernels and
+> all vanilla kernels which means we get to focus and prioritize
+> upstream.
 >
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c         |    4 +++-
->  drivers/net/wireless/ath/ath5k/mac80211-ops.c |    7 +++++--
->  2 files changed, 8 insertions(+), 3 deletions(-)
+> This has started working well except for the fact that as of the >=
+> v3.4 vanilla kernel releases, there are a few files which are binary
+> in the kernel headers which use dynamic libraries. Of interest to us
+> here are the ones required to build external modules. An example:
 >
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index a0a202d..084162e 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -2446,7 +2446,9 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
->         hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
->                         IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
->                         IEEE80211_HW_SIGNAL_DBM |
-> -                       IEEE80211_HW_REPORTS_TX_ACK_STATUS;
-> +                       IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-> +                       IEEE80211_HW_MFP_CAPABLE |
-> +                       IEEE80211_HW_SUPPORTS_PER_STA_GTK;
+> /lib/modules/3.4.4-030404-generic/build/scripts/genksyms/genksyms
 >
->         hw->wiphy->interface_modes =
->                 BIT(NL80211_IFTYPE_AP) |
-> diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-> index df61a09..7f78caa 100644
-> --- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-> +++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-> @@ -489,7 +489,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->         if (ath5k_modparam_nohwcrypt)
->                 return -EOPNOTSUPP;
+> It just so happens to be that the folks building these packages are
+> using a glibc >= 2.14 and although the *only* symbol I see being
+> required from glibc >= 2.14 being memcpy():
 >
-> -       if (vif->type == NL80211_IFTYPE_ADHOC &&
-> +       if ((vif->type == NL80211_IFTYPE_ADHOC ||
-> +            vif->type == NL80211_IFTYPE_MESH_POINT) &&
->             (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
->              key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
->             !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-> @@ -502,6 +503,7 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->         case WLAN_CIPHER_SUITE_WEP104:
->         case WLAN_CIPHER_SUITE_TKIP:
->                 break;
-> +       case WLAN_CIPHER_SUITE_AES_CMAC:
->         case WLAN_CIPHER_SUITE_CCMP:
->                 if (common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM)
->                         break;
-> @@ -522,7 +524,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->                         key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
->                         if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
->                                 key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-> -                       if (key->cipher == WLAN_CIPHER_SUITE_CCMP)
-> +                       if (key->cipher == WLAN_CIPHER_SUITE_CCMP &&
-> +                           !(common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM))
->                                 key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
->                         ret = 0;
->                 }
-> --
-> 1.7.0.4
+> mcgrof@garbanzo ~/compat (git::master)$ objdump -T
+> /home/mcgrof/compat-ksrc/lib/modules/3.4.4-030404-generic/build/scripts/genksyms/genksyms
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> /home/mcgrof/compat-ksrc/lib/modules/3.4.4-030404-generic/build/scripts/genksyms/genksyms:
+>     file format elf64-x86-64
+>
+> DYNAMIC SYMBOL TABLE:
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __snprintf_chk
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 free
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __vfprintf_chk
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 __errno_location
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 ferror
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 isatty
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fread
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fclose
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strlen
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.4   __stack_chk_fail
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 getopt_long
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strchr
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 _IO_putc
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fputs
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fgetc
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fputc
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 __strdup
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 __libc_start_main
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strcmp
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 feof
+> 0000000000000000  w   D  *UND*  0000000000000000              __gmon_start__
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strtol
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 clearerr
+>
+>
+> Bleh:
+>
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.14  memcpy
+>
+>
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fileno
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 malloc
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 _IO_getc
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 ungetc
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 realloc
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __printf_chk
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fopen
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 perror
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 exit
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fwrite
+> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __fprintf_chk
+> 000000000060b160 g    DO .bss   0000000000000008  GLIBC_2.2.5 stdout
+> 000000000060b168 g    DO .bss   0000000000000008  GLIBC_2.2.5 stdin
+> 000000000060b178 g    DO .bss   0000000000000008  GLIBC_2.2.5 stderr
+> 000000000060b170 g    DO .bss   0000000000000008  GLIBC_2.2.5 optarg
+>
+> It would be reasonable to simply require the users of ckmake to update
+> their libc version but even Debian sid does not yet seem to have libc
+>>= 2.14, not sure of others. The gains for requiring a glibc >= 2.14
+> only for memcpy() would seem rather small for this particular case so
+> I wanted to review the options to fix this.
+
+Can't we just rebuild genksyms in compat? I already have glibc 2.15 on
+my system so I can't test this but normally this should adapt to the
+build environment as it rebuilds and relinks the binary.
+
+[root@ozzyfedora compat]# make -C
+/lib/modules/2.6.36-02063604-generic/build M=scripts/genksyms
+make: Entering directory `/usr/src/linux-headers-2.6.36-02063604-generic'
+  HOSTCC  scripts/genksyms/genksyms.o
+  HOSTCC  scripts/genksyms/lex.o
+  HOSTCC  scripts/genksyms/parse.o
+  HOSTLD  scripts/genksyms/genksyms
+  Building modules, stage 2.
+  MODPOST 0 modules
+make: Leaving directory `/usr/src/linux-headers-2.6.36-02063604-generic'
+
+One other thing that I have found is to force linking memcpy to a
+hard-coded (namely GLIBC_2.2.5) memcpy() symbol. I didn't know about
+this so I'm posting this as a reference:
+
+make HOSTCFLAGS="-Wa,--defsym,memcpy=memcpy@GLIBC_2.2.5" -C
+/lib/modules/2.6.36-02063604-generic/build M=scripts/genksyms
