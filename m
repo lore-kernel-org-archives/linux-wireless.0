@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:3108 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758012Ab2HJJMJ (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:31869 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754297Ab2HIG6T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 05:12:09 -0400
-Subject: Re: How to get the irq flags from the dts file
-From: Wei Ni <wni@nvidia.com>
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	"frankyl@broadcom.com" <frankyl@broadcom.com>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-In-Reply-To: <20120809120530.GC8474@sirena.org.uk>
-References: <1344509006.2295.148.camel@tegra-chromium-2>
-	 <201208091148.42748.arnd@arndb.de>  <20120809120530.GC8474@sirena.org.uk>
-Date: Fri, 10 Aug 2012 17:11:56 +0800
-Message-ID: <1344589916.21467.1.camel@tegra-chromium-2> (sfid-20120810_111216_533709_3BFD503C)
+	Thu, 9 Aug 2012 02:58:19 -0400
+Date: Thu, 9 Aug 2012 09:57:57 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] mwifiex: use GFP_ATOMIC under spin lock
+Message-ID: <20120809065757.GB7925@elgon.mountain> (sfid-20120809_085823_111928_C24C40DE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-08-09 at 20:05 +0800, Mark Brown wrote:
-> On Thu, Aug 09, 2012 at 11:48:42AM +0000, Arnd Bergmann wrote:
-> > On Thursday 09 August 2012, Wei Ni wrote:
-> 
-> > > The wlan driver wish this flags include the IRQF_TRGGER_* information,
-> > > and it will use this flags to configure other hw settings. If it is
-> > > wrong, the wlan can't work.
-> 
-> You can read the configuration with irqd_get_trigger_type() - see the OF
-> code in sound/soc/codecs/wm8903.c for an example.
+We're holding the sta_list_spinlock here so we can't sleep.
 
-I tried it, it worked fine. thanks for your help.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> 
-> > The driver should not need to know about thie flag. It gets read
-> > by irq_create_of_mapping when calling teh xlate function and
-> > gets set using irq_set_irq_type from there too.
-> 
-> That only helps the interrupt controller, it doesn't help the interrupt
-> source.  A good proportion of embedded devices have a great deal of
-> flexibility in how they signal interrupts so they need to know what mode
-> to pick.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 14d4f04..ca4a1f3 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -63,7 +63,7 @@ mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
+ 	if (node)
+ 		goto done;
+ 
+-	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_KERNEL);
++	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_ATOMIC);
+ 	if (!node)
+ 		goto done;
+ 
