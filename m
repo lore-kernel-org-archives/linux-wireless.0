@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44860 "EHLO mx1.redhat.com"
+Received: from mail.neratec.com ([80.75.119.105]:33084 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751738Ab2HMHhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 03:37:00 -0400
-Date: Mon, 13 Aug 2012 09:36:38 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Goldenshtein, Victor" <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH v3 2/7] mac80211: add radar detection command/event
-Message-ID: <20120813073637.GB2272@redhat.com> (sfid-20120813_093704_725201_90D97E6C)
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
- <1344426823-1795-3-git-send-email-victorg@ti.com>
- <20120810162810.GB17559@redhat.com>
- <CAK80WHa1ae7jA6BxOA+1Xx0bTx2_0+0GuDa=UrJ+qsC9_sYZ7g@mail.gmail.com>
+	id S1752229Ab2HIN0O convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 09:26:14 -0400
+Date: Thu, 9 Aug 2012 15:26:04 +0200 (CEST)
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: Andy Gospodarek <andy@greyhouse.net>
+Cc: Phil Perry <phil@elrepo.org>, mcgrof@frijolero.org,
+	lf driver backport
+	<lf_driver_backport@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Message-ID: <2121451356.93690.1344518764022.JavaMail.root@neratec.com> (sfid-20120809_152618_209742_B24207D9)
+In-Reply-To: <1344487215-24143-1-git-send-email-andy@greyhouse.net>
+Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK80WHa1ae7jA6BxOA+1Xx0bTx2_0+0GuDa=UrJ+qsC9_sYZ7g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 12, 2012 at 10:31:40AM +0300, Goldenshtein, Victor wrote:
-> On Fri, Aug 10, 2012 at 7:28 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > On Wed, Aug 08, 2012 at 02:53:38PM +0300, Victor Goldenshtein wrote:
-> >> --- a/include/net/mac80211.h
-> >> +++ b/include/net/mac80211.h
-> >> @@ -2262,6 +2262,10 @@ enum ieee80211_rate_control_changed {
-> >>   *   The callback will be called before each transmission and upon return
-> >>   *   mac80211 will transmit the frame right away.
-> >>   *   The callback is optional and can (should!) sleep.
-> >> + *
-> >> +* @start_radar_detection: Start radar detection on current operational
-> >> + *   channel, once started it will continuously monitor for radars as long
-> >> + *   as the channel active.
-> >>   */
-> >>  struct ieee80211_ops {
-> >>       void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-> >> @@ -2404,6 +2408,10 @@ struct ieee80211_ops {
-> >>
-> >>       void    (*mgd_prepare_tx)(struct ieee80211_hw *hw,
-> >>                                 struct ieee80211_vif *vif);
-> >> +
-> >> +     int (*start_radar_detection)(struct ieee80211_hw *hw,
-> >> +                                  struct ieee80211_vif *vif,
-> >> +                                  struct ieee80211_channel *chan);
-> >
-> > Why we need new callback? I.e. why this can be done by ->config ?
-> >
+On 08/09/2012 06:40 AM, Andy Gospodarek wrote:
+> This patch allows me to compile and load the latest compat modules on
+> RHEL6.3.  Users of compat on RHEL6 should note that you should set
+> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
 > 
-> See proposed RFC and previous threads.
+> [...]
+> 
+> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+> index 56d5961..09e4b6f 100644
+> --- a/include/linux/compat-2.6.36.h
+> +++ b/include/linux/compat-2.6.36.h
+> @@ -98,6 +98,8 @@ struct pm_qos_request_list {
+>   * Dummy printk for disabled debugging statements to use whilst maintaining
+>   * gcc's format and side-effect checking.
+>   */
+> +/* mask no_printk as RHEL6 backports this */
+> +#define no_printk(...) compat_no_printk(...)
+>  static inline __attribute__ ((format (printf, 1, 2)))
+>  int no_printk(const char *s, ...) { return 0; }
+>  
+> [...]
 
-I can not find mail where this is explained, could you please provide
-link.
+This at least breaks compilation on 2.6.35-22 with gcc throwing a
+compat-2.6.36.h:104: error: ISO C requires a named argument before ‘...’
 
-Stanislaw
+It looks like no_printk() needs to be renamed to compat_no_printk()
+to make it work as intended.
+
+This is a systematic mistake at several sections of this patch, where
+the original function needs to be prefixed by 'compat_' to match the 
+related macro.
+
+
+---
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 8b02260..b6757c3 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -101,7 +101,7 @@ struct pm_qos_request_list {
+ /* mask no_printk as RHEL6 backports this */
+ #define no_printk(...) compat_no_printk(...)
+ static inline __attribute__ ((format (printf, 1, 2)))
+-int no_printk(const char *s, ...) { return 0; }
++int compat_no_printk(const char *s, ...) { return 0; }
+ 
+ #ifndef alloc_workqueue
+ #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
