@@ -1,120 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58261 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932126Ab2HVUaR (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38454 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755651Ab2HIHo1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 16:30:17 -0400
-Date: Wed, 22 Aug 2012 16:19:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com
-Subject: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
- (Barcelona!)
-Message-ID: <20120822201930.GC14913@tuxdriver.com> (sfid-20120822_223021_705167_DDBC53BF)
+	Thu, 9 Aug 2012 03:44:27 -0400
+Received: by pbbrr13 with SMTP id rr13so487653pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 00:44:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50227EBF.9030400@lwfinger.net>
+References: <CAEOSq-Nac1-6SbfQTLCO7bkQVWgLxZE4x0oNbviyyyToPZzo5w@mail.gmail.com>
+	<50227EBF.9030400@lwfinger.net>
+Date: Thu, 9 Aug 2012 00:44:27 -0700
+Message-ID: <CAEOSq-NsO5u9CbhtLAUk3s0Yw_cMkSw2UVoPahSO0QhCAFMRcQ@mail.gmail.com> (sfid-20120809_094431_342831_6279D838)
+Subject: Re: Problems with rtl8192cu driver in Access Point mode
+From: Mike Thompson <mpthompson@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+On Wed, Aug 8, 2012 at 7:59 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Do you have a 3rd system that can use wireshark or kismet to capture the
+> data on the air? That way we would know if the ARP responses are being lost
+> inside rtl8192cu, or if they are just being badly formatted and being
+> rejected by the laptop's receiver.
+>
+> Larry
 
-The time for our meeting in Barcelona is drawing near.  I think it
-is time that we start nailing-down the agenda.
+I spent quite a while today getting a third system setup with kismet
+(to capture wifi packets) and wireshark (to parse the captured data)
+to try and understand what is happening to ARP packets after a station
+connects with an rtl8192cu access point.
 
-We have one room on the first day, and three rooms on the second day.
-I figure that the Bluetooth and 802.11 groups should each get a
-break-out room for their own in-depth discussons on the second day and
-the third room can be used for more general topics and presentations.
+As best I can tell, I believe the ARP responses are getting lost in
+the rtl8192cu driver (or higher level driver).  With kismet, I can see
+the ARP request wifi packets and the same packets in tcpdump on the
+access point.  In tcpdump I also see the ARP reply, but looking at the
+kismet data I never to see the ARP replies as wifi packets.
 
-With that said, there are still a number of slots available for
-presentations or discussion topics.  This is especially true for the
-802.11 group...  Please step-up with some suggested topics!
+Below is what the tcpdump output on the access point looks like with
+the request and reply:
 
-Below is my strawman agenda proposal.  Please make suggestions for
-improvements!
+192.168.2.1 is the access point
+192.168.2.12 is the laptop
 
-Day 1
------
+06:37:54.692374 ARP, Request who-has 192.168.2.1 tell 192.168.2.12, length 28
+06:37:54.692343 ARP, Request who-has 192.168.2.1 tell 192.168.2.12, length 28
+06:37:54.692937 ARP, Reply 192.168.2.1 is-at 48:02:2a:87:de:80 (oui
+Unknown), length 28
+06:37:56.053595 ARP, Request who-has 192.168.2.1 tell 192.168.2.12, length 28
+06:37:56.053595 ARP, Request who-has 192.168.2.1 tell 192.168.2.12, length 28
+06:37:56.054158 ARP, Reply 192.168.2.1 is-at 48:02:2a:87:de:80 (oui
+Unknown), length 28
 
-Everyone together in a single room...
+The wifi traffic at the same time from kismet is below:
 
-Time	Topic						Speaker
-----	-----						-------
-0930	Welcome/Intro/Agenda				John Linville
+"56","40.857513","Hewlett-_59:0b:c5","Broadcast","ARP","92","Who has
+192.168.2.1?  Tell 192.168.2.12"
+"57","40.859533","","Hewlett-_59:0b:c5
+(RA)","802.11","42","Acknowledgement, Flags=........"
+"58","40.861631","Hewlett-_59:0b:c5","Broadcast","ARP","92","Who has
+192.168.2.1?  Tell 192.168.2.12"
+"59","41.858298","","Hewlett-_59:0b:c5
+(RA)","802.11","42","Acknowledgement, Flags=........"
+"60","41.860352","Hewlett-_59:0b:c5","Broadcast","ARP","92","Who has
+192.168.2.1?  Tell 192.168.2.12"
+"61","42.856317","","Hewlett-_59:0b:c5
+(RA)","802.11","42","Acknowledgement, Flags=........"
+"62","42.858489","Hewlett-_59:0b:c5","Broadcast","ARP","92","Who has
+192.168.2.1?  Tell 192.168.2.12"
+"63","44.515521","Hewlett-_59:0b:c5","Broadcast","ARP","92","Who has
+192.168.2.1?  Tell 192.168.2.12"
+"64","44.516703","Hewlett-_59:0b:c5","Broadcast","ARP","92","Who has
+192.168.2.1?  Tell 192.168.2.12"
+"65","44.519614","Hewlett-_59:0b:c5","Broadcast","ARP","92","Who has
+192.168.2.1?  Tell 192.168.2.12"
 
-1000	802.15.4 stack, 6lowpan				Alexander Smirnov
+I've put the kismet logs at the following URLs:
 
-1100	Break
+http://home.comcast.net/~michael.p.thompson/rtl8192cu/kismet_packet_dump.csv
+http://home.comcast.net/~michael.p.thompson/rtl8192cu/kismet_packet_dump.pcapdump
 
-1130	Virtual Bluetooth AMP Controller for mac80211	Andrei Emeltchenko
+I guess the next step is to put tracing breadcrumbs in the rtl8192cu
+driver code where packets are sent out and make sure the ARP responses
+are getting to the driver and perhaps see where they might be getting
+tossed.
 
-1230	Lunch
+BTW, something I find curious in the rtlwifi drivers is that in file
+ps.c in functions rtl_ips_nic_on() and rtl_ips_nic_off_wq_callback()
+there is the following code:
 
-1400	NFC "state of the union", etc.			Ortiz / Elias / Chlad
+        if (mac->opmode != NL80211_IFTYPE_STATION)
+                return;
 
-1500	Break
+Does this imply that if the driver is in access point or adhoc mode
+that the nic will not be turned on and off?  I'm wondering if the
+packets are flowing, but the transmitter is not being turned on when
+it should when driver is in access point mode.  I did try to remove
+this test, but it didn't seem to impact the symptoms.
 
-...
-
-1800	Adjourn
-
-
-Day 2
------
-
-802.11 break-out room...
-
-Time	Topic						Speaker
-----	-----						-------
-1000	Regulatory updates				Luis Rodriguez
-
-1100	Break
-
-...
-
-1800	Adjourn
-
-
-Bluetooth break-out room...
-
-Time	Topic						Speaker
-----	-----						-------
-1000	Bluetooth: state of the union			Marcel Holtmann
-
-1100	Break
-
-1130	status and roadmap of Bluetooth LE		Joao Paulo Rechi Vita
-
-1230	Lunch
-
-...
-
-1800	Adjourn
-
-
-Presentation room...
-
-Time	Topic						Speaker
-----	-----						-------
-1000	wireless community networks			Nick Kossifidis
-
-1100	Break
-
-1130	"a short overview what we do in ConnMan"	Wagner / Flykt
-
-1230	Lunch
-
-1400	oFono / mobile wireless				Denis Kenzior
-
-1500	Break
-
-...
-
-1800	Adjourn
-
-
-So...suggestions??
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Mike
