@@ -1,91 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-nj-6.exch022.serverdata.net ([206.225.164.189]:1986 "EHLO
-	HUB022-nj-6.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754161Ab2HUSH4 (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:39227 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758871Ab2HISgb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 14:07:56 -0400
-Message-ID: <5033CE76.6040306@posedge.com> (sfid-20120821_200800_148170_1F5CA79C)
-Date: Tue, 21 Aug 2012 23:37:50 +0530
-From: Mahesh Palivela <maheshp@posedge.com>
+	Thu, 9 Aug 2012 14:36:31 -0400
+Received: by lboi8 with SMTP id i8so452783lbo.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:36:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCDD559@mbx022-e1-nj-10.exch022.domain.local>  <20120816102211.GD17659@redhat.com> <502CF2D5.6020704@posedge.com>  <20120817140657.GA1645@redhat.com> <502E85D9.5050301@posedge.com>  <1345480718.4459.37.camel@jlt3.sipsolutions.net>  <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>  <50338E84.3050709@posedge.com> <1345564421.10280.9.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1345564421.10280.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUWTjKYQ5YZfx488=SJA-uYYoRvM5X=Gh0YOHn8SvUM2jg@mail.gmail.com>
+References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
+	<CA+icZUWTjKYQ5YZfx488=SJA-uYYoRvM5X=Gh0YOHn8SvUM2jg@mail.gmail.com>
+Date: Thu, 9 Aug 2012 20:36:29 +0200
+Message-ID: <CA+icZUU5SXppB1f3HRKGo3RaUfNF=yWXM=4sAyRJ92FcMi=2Ag@mail.gmail.com> (sfid-20120809_203643_266514_4769A8A3)
+Subject: Re: [PATCH 00/13] Merge GSoC DRM changes to admin-update.sh
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 8/21/2012 9:23 PM, Johannes Berg wrote:
-> On Tue, 2012-08-21 at 19:05 +0530, Mahesh Palivela wrote:
->
->> so we are talking about how to specify channel info to cfg/mac80211 from
->> upper layers.
->
-> Correct
->
->> But regulatory tells if that channel config is allowed or not.
->
-> Correct.
->
->> so derive channel type from center freq, width and control chan offset.
->> Then determine if that channel type is allowed from regulatory flags?
+On Thu, Aug 9, 2012 at 8:29 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Thu, Aug 9, 2012 at 8:01 PM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+>> Hi,
 >>
->> In short we have scaled approach on specifying channel info but not
->> regulatory. Please comment.
+>> The patches below modifies the admin-update.sh script so that it
+>> accepts a variable-length last argument, namely network or/and drm,
+>> to selectively fetch specific subsystem codes into the tree.
+>>
+>> The last 2 patches constitutes the work done so far for the my
+>> GSoC project.
+>>
+>> This first attempt is mostly for getting some comments. For example,
+>> eventhough you fetch network and drm drivers, make will just build
+>> network drivers. I will either port the project to kconfig which
+>> will dynamically configure and build what's available or hack
+>> config.mk and Makefile to detect the availability of other drivers
+>> than the wireless ones.
+>>
+>> I thank Luis R. Rodriguez, my mentor, for his helpful and highly
+>> responsive mentorship :)
+>>
+>> Ozan Çağlayan (13):
+>>   compat-wireless: Clean up *.mod.c once after everything
+>>   compat-wireless: Isolate drivers into different groups
+>>   compat-wireless: List everything vertically without concatenating
+>>   compat-wireless: Add ability to enable/disable subsystems
+>>   compat-wireless: Add 2 convenience functions
+>>   compat-wireless: Conditionally build network drivers
+>>   compat-wireless: Put network patches into its directory
+>>   compat-wireless: No need to search for patches
+>>   compat-wireless: Fix cmdline parameter's name
+>>   compat-wireless: Selectively apply patches
+>>   compat-wireless: Move refresh logic into the loop
+>>   compat-wireless: Fetch in DRM drivers
+>>   compat-wireless: Add DRM patches
+>>
 >
-> Well, we don't really have it yet :-)
+> Am I the only one missing 07/13 in series?
+> On [1] I do not see, too.
 >
-> I think the question really is whether or not we actually need the
-> flags. Sometimes, but very rarely really, we need to answer the question
+> - "Birinci" Sedat -
 >
->          Is this set of parameters allowed with the current regulatory
->          rules?
->
-> There's nothing that says this needs to be a flag. It could just as well
-> be a function
->
-> bool regulatory_chan_use_permitted(...);
->
-> where the ... gives all the necessary parameters or maybe some structure
-> holding all these.
->
-> If this was a function, it could go back to the regulatory definitions
-> (that we hopefully keep track of in the kernel) and actually use the
-> algorithm that today we use to determine the flags to determine the
-> answer.
->
-> Today, with the flags, we basically pre-determine the answers to all
-> possible such questions, and encode the answers in the flags for each
-> channel. If we don't pre-determine the answers, then we can get away
-> without any flags at all.
->
-> Does that make sense?
->
-Yes it does. Basically we want to retire look up table approach and 
-compute everytime as its not scalable. Fine. In that case, even we need 
-to cover HT20, HT40-, HT40+ as well right?
-
-> Still doesn't solve the problems we saw with how to configure the
-> channel with considerations such as
->    - bandwidth
->    - center frequency
->    - primary subchannel
->    - 80 + 80 (which is basically two such channels?)
->
-Yes It does. From center freq, width, control chan offset we know the 
-secondary chans. That's all we want. For 80+80 configuration, we will 
-get two center freq values.
-
-> johannes
+> [1] http://marc.info/?l=linux-wireless&r=1&b=201208&w=2
 >
 
--- 
-Thanks,
-Mahesh
+Looks like "compat-wireless: Put network patches into its directory"
+is the missing one.
+
+- Sedat -
