@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jubileegroup.co.uk ([217.147.177.250]:54943 "EHLO
-	mail.jubileegroup.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932992Ab2HVREB (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:31690 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754297Ab2HIG5u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 13:04:01 -0400
-Date: Wed, 22 Aug 2012 18:00:32 +0100 (BST)
-From: "G.W. Haywood" <ged@jubileegroup.co.uk>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-cc: Bastian Bittorf <bittorf@bluebottle.com>,
-	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	feint@lists.subsignal.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
-In-Reply-To: <50350706.609@hauke-m.de>
-Message-ID: <Pine.LNX.4.64.1208221728500.31425@mail5.jubileegroup.co.uk> (sfid-20120822_190418_516108_A83B365F)
-References: <1342612598.5006a476022c6@mail.bluebottle.com> <50350706.609@hauke-m.de>
+	Thu, 9 Aug 2012 02:57:50 -0400
+Date: Thu, 9 Aug 2012 09:57:30 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] wireless: at76c50x: signedness bug in at76_dfu_get_state()
+Message-ID: <20120809065730.GA7925@elgon.mountain> (sfid-20120809_085755_743305_EAB40B14)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there,
+This return holds the number of bytes transfered (1 byte) or a negative
+error code.  The type should be int instead of u8.
 
-On Wed, 22 Aug 2012, Hauke Mehrtens wrote:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> ...  If the Access Points sends the traffic the
-> problem occurs, if it is just receiving there is not problem.
-
-Interesting.  I have not specifically tested my Linksys devices by
-sending files from client to access point and vice-versa, but I can
-say that the problem exists (well at least, a problem exists) when the
-two stations are in ad-hoc mode, and so neither of them is acting as
-an access point.  The symptoms are the same: at high loads (megabits
-per second), the wireless communication quickly fails (a few seconds)
-and manual intervention is then required to recover the wireless link
-by reconfiguring one or other of the interfaces.  To recap, this is
-OpenWRT built last week from trunk runing on Linksys WRT54GSv1.1.
-
-The same equipment appears to function perfectly well at high loads
-when using other firmware (Tomato version 1.28).
-
-Unfortunately I do not have Broadcom devices which I can test on x86
-but if someone can suggest suitable cards I will consider a purchase.
-There are x86 boxes here which I can use for testing.  It is certain
-that I would need a few pointers to build a system which will perform
-tests likely to provide useful information about the problem but I am
-very familiar with the "./configure/make/make install" routine.
-
---
-
-73,
-Ged.
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index efc162e..88b8d64 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -342,7 +342,7 @@ static int at76_dfu_get_status(struct usb_device *udev,
+ 	return ret;
+ }
+ 
+-static u8 at76_dfu_get_state(struct usb_device *udev, u8 *state)
++static int at76_dfu_get_state(struct usb_device *udev, u8 *state)
+ {
+ 	int ret;
+ 
