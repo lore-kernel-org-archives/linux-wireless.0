@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:43529 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753676Ab2HCQnc (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.9]:40626 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757557Ab2HIS0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 12:43:32 -0400
-Message-ID: <501BFFAC.2010705@canonical.com> (sfid-20120803_184354_413595_8EF482C5)
-Date: Fri, 03 Aug 2012 12:43:24 -0400
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
+	Thu, 9 Aug 2012 14:26:08 -0400
+From: Marek Vasut <marex@denx.de>
+To: Joseph Honold <mozzwald@gmail.com>
+Subject: Re: Palm T|X Libertas Wifi problems Kernel 3.4.7 stable
+Date: Thu, 9 Aug 2012 20:26:03 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <CALSu_YrXF0iO0=+drmUzatGZUYkMxczF_J2Xw_CNqEY3fxJ5Bg@mail.gmail.com>
+In-Reply-To: <CALSu_YrXF0iO0=+drmUzatGZUYkMxczF_J2Xw_CNqEY3fxJ5Bg@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linville@tuxdriver.com, emmanuel.grumbach@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [REGRESSION][v3.5] iwlwifi: include rssi as part of decision
- making for reduce txpower
-References: <501BFB29.7010801@canonical.com>  (sfid-20120803_182456_195468_6BBC5170) <1344011416.4482.11.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1344011416.4482.11.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201208092026.03430.marex@denx.de> (sfid-20120809_202613_860014_F76632FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/03/2012 12:30 PM, Johannes Berg wrote:
-> On Fri, 2012-08-03 at 12:24 -0400, Joseph Salisbury wrote:
->
->> A test kernel was created with this commit reverted, which stopped the
->> kernel panic from occurring.
->>
->> A bugzilla bug[1] has been opened.
->> [0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1029547
->> [1] https://bugzilla.kernel.org/show_bug.cgi?id=45491
-> This is a duplicate of https://bugzilla.kernel.org/show_bug.cgi?id=45481
-> which I've already commented on with the correct fix. I've also sent the
-> fix to stable:
->
-> http://www.mail-archive.com/stable@vger.kernel.org/msg12286.html
->
-> Thanks,
-> johannes
->
-Great!  Thanks for the feedback, Johannes.
+Dear Joseph Honold,
+
+> I am trying to get wirless working on the Palm T|X (arm pxa270 cpu) with
+> the 3.4.7 stable kernel using the cocoboot bootloader app for PalmOS. I
+> have extracted the Libertas firmware with cocoboot
+
+There's official 5.x.x firmware for 88w8381 in linux-firmware, use that. V4 FW 
+supplied by Palm isn't supported properly.
+
+> and placed it in the
+> /lib/firmware dir.The kernel is booting fine to a debian squeeze rootfs,
+> the pxa2xx_pcmcia, libertas, and libertas_cs modules load with no errors
+> (as long as I do a wifi scan in PalmOS before booting linux). When I scan
+> with iwlist I get no results. Here is a snippet of libertas debug messages.
+> Does anyone have a suggestion of what I could try to get it working? I can
+> provide more info if needed.
+[...]
+
+Best regards,
+Marek Vasut
