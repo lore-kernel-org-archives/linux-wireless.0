@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:35845 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073Ab2HSJgu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2012 05:36:50 -0400
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:46301 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755695Ab2HIH1a convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 03:27:30 -0400
 MIME-Version: 1.0
-In-Reply-To: <1345325159-7365-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1345325159-7365-1-git-send-email-Julia.Lawall@lip6.fr>
-Date: Sun, 19 Aug 2012 13:36:49 +0400
-Message-ID: <CA++WF2MmTe6WP6MQRV-v1VwkpcUrw4hU6yh79NdG-K4snzQkbg@mail.gmail.com> (sfid-20120819_113709_521063_41D617A4)
-Subject: Re: [PATCH 1/5] drivers/net/wireless/ipw2x00/ipw2100.c: introduce
- missing initialization
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CAB=NE6V7Tx1ioDafPmOprwzd0Q61dDe8XK5gBghXHVROXOBA=Q@mail.gmail.com>
+References: <CAB=NE6WZWEO=b5Usx4RKDLC--TvLWnOom0P+HmXsxh7QZQQXQA@mail.gmail.com>
+	<CAFub=KRtuTDn1DnHP0aKZT6RBeA2kNkLm6ud-4Z=1ESPs==h0g@mail.gmail.com>
+	<CAB=NE6V7Tx1ioDafPmOprwzd0Q61dDe8XK5gBghXHVROXOBA=Q@mail.gmail.com>
+Date: Thu, 9 Aug 2012 09:27:29 +0200
+Message-ID: <CA+icZUV51Bk=jxnfrGL4xo6MQXnVdhUCago_RPZM-iL+twpF1A@mail.gmail.com> (sfid-20120809_092803_915782_07C62D37)
+Subject: Re: Using vanilla kernels headers to do backport testing -- issues
+ with memcpy()
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
+	Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"H. Peter Anvin" <hpa@zytor.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Julia,
+On Thu, Aug 9, 2012 at 5:30 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Wed, Aug 8, 2012 at 5:43 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
+>> On Tue, Aug 7, 2012 at 10:28 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+>
+>>> mcgrof@garbanzo ~/compat (git::master)$ objdump -T
+>>> /home/mcgrof/compat-ksrc/lib/modules/3.4.4-030404-generic/build/scripts/genksyms/genksyms
+>
+> <-- snip -->
+>
+>>> Bleh:
+>>>
+>>> 0000000000000000      DF *UND*  0000000000000000  GLIBC_2.14  memcpy
+>
+> <-- snip -->
+>
+>> Can't we just rebuild genksyms in compat? I already have glibc 2.15 on
+>> my system so I can't test this but normally this should adapt to the
+>> build environment as it rebuilds and relinks the binary.
+>
+> Indeed! Implemented and pushed upstream:
+>
+> https://github.com/mcgrof/compat/commit/42faf2dc8d8bbbdc5b8913183fcd021a27e953c9
+>
 
-On 19 August 2012 01:25, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
-> -       ipw2100_get_ordinal(priv, IPW_ORD_STAT_ASSN_AP_BSSID, &bssid, &len);
-> +       ret = ipw2100_get_ordinal(priv, IPW_ORD_STAT_ASSN_AP_BSSID, &bssid,
-> +                                 &len);
+I am not an English native but this sentence sounds a bit strange to
+me ("used" followed by "require" and double "Linux"?).
+I can imagine what you want to express but have no better wording right now.
 
-This is correct, but this line has one more typo. It should be
+180 +  echo -e "   This was added since kernels >= 3.4 used require"
+181 +  echo -e "   a glibc >= 2.14 for memcpy(), and not all Linux"
+182 +  echo -e "   Linux distributions have such glibc.
 
--&bssid
-+bssid
+- Sedat -
 
-according to the bssid definition in the beginning of the function:
-
-u8 bssid[ETH_ALEN];
-
-Could you fix this as well?
-
-Thanks!
-Stanislav.
+> So if you run into this issue all you have to do now is run:
+>
+> ./bin/get-compat-kernels -r
+>
+> New users of the script will automatically have this run after it
+> downloads and installs the kernel headers.
+>
+> Case closed, thanks :)
+>
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
