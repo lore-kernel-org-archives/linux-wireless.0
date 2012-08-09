@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19954 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792Ab2HLFaI (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:34256 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893Ab2HIDh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Aug 2012 01:30:08 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 8 Aug 2012 23:37:57 -0400
+Received: by obbuo13 with SMTP id uo13so8699obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 20:37:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20519.15997.154761.163636@gargle.gargle.HOWL> (sfid-20120812_073054_212217_4CC99520)
-Date: Sun, 12 Aug 2012 10:56:21 +0530
-To: Antonio Quartulli <ordex@autistici.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH 1/2] mac80211: add sta_update_rates callback
-In-Reply-To: <20120809093245.GG6767@ritirata.org>
-References: <1344474712-22561-1-git-send-email-ordex@autistici.org>
-	<1344492897.4494.1.camel@jlt3.sipsolutions.net>
-	<20120809093245.GG6767@ritirata.org>
+In-Reply-To: <1344481126-15702-1-git-send-email-andy@greyhouse.net>
+References: <1344481126-15702-1-git-send-email-andy@greyhouse.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Wed, 8 Aug 2012 20:37:36 -0700
+Message-ID: <CAB=NE6XfyQSjWHrr97L29hRzRx-H4wsPHMQ7mG4n9D_e7p46=A@mail.gmail.com> (sfid-20120809_053833_049316_D7CCC427)
+Subject: Re: [PATCH] compat: support RHEL6.3 as a build target
+To: Andy Gospodarek <andy@greyhouse.net>
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Phil Perry <phil@elrepo.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Antonio Quartulli wrote:
-> mh, at the very beginning I thought it was not correct what you said, but indeed
-> we should be able to do the job in sta_rc_update().
-> 
-> But then why does the ath9k_htc driver implement ath9k_htc_update_rate() to
-> update the rate used to talk to the AP? Should it use sta_rc_update() as well?
+On Wed, Aug 8, 2012 at 7:58 PM, Andy Gospodarek <andy@greyhouse.net> wrote:
+> This patch allows me to compile and load the latest compat modules on
+> RHEL6.3.  Users of compat on RHEL6 should note that you should set
+> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
+>
+> Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
 
-We didn't have this new callback back then, and sta_rc_update() is sufficient to
-fix this. Maybe with a new flag - IEEE80211_RC_BASIC_RATES_CHANGED.
+Thanks! Any chance you can git fetch; git rebase; (ensuring you have
+42faf2dc8d8 at tip) and then try running:
 
-Sujith
+./bin/get-compat-kernels
+
+This can take ~10 minutes
+
+And then test compile your changes with:
+
+./bin/ckmake
+
+And provide that as part of your commit log message? We can likely add
+the RHEL kernels to the ./bin/get-compat-kernels if you can figure out
+a way to unpack them for any user out there on any Linux distribution.
+This way I can gate future patches from being merged unless they also
+give me a good set of results from ckmake.
+
+Thoughts ?
+
+  Luis
