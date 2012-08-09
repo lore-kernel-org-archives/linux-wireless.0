@@ -1,103 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63176 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064Ab2HJLRp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:17:45 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:37638 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753447Ab2HIV2j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 17:28:39 -0400
+Message-ID: <50242B80.4060509@openwrt.org> (sfid-20120809_232842_695507_CBB60F33)
+Date: Thu, 09 Aug 2012 23:28:32 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60815.538160.711789@gargle.gargle.HOWL> (sfid-20120810_131748_483239_DE49802D)
-Date: Fri, 10 Aug 2012 16:46:31 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/15] ath9k: Change rateset calculation
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: Pavel Roskin <proski@gnu.org>,
+	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath9k: decrypt_error flag issue
+References: <CAA2SeNJmaHs5fMHrG65HWbe5Y-ytz2qvuzNGKvhBKgvZ15KoVw@mail.gmail.com> <20120809173435.GQ3745@lenteja.do-not-panic.com> <CAA2SeNKbBCxPbJmXMyo4-nK2SXL-WcOFQaKDrEM-cxbVrzt7Ew@mail.gmail.com> <CAB=NE6V6T0RMSiMZCsUdr85vWMgs4VfJ6HTYHwf+kDQUwQ-mhg@mail.gmail.com> <20120809170757.748b68bf@mj> <CAB=NE6UracUuvGhQcnkfDsi1peNMgvagS0jyYgSvamim4tiLWA@mail.gmail.com>
+In-Reply-To: <CAB=NE6UracUuvGhQcnkfDsi1peNMgvagS0jyYgSvamim4tiLWA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit "ath9k: Change rate control to use legacy rate as last MRR"
-resulted in the mixing of HT/legacy rates in a single rateset,
-which is undesirable. Revert this behavior.
+On 2012-08-09 11:21 PM, Luis R. Rodriguez wrote:
+> On Thu, Aug 9, 2012 at 2:07 PM, Pavel Roskin <proski@gnu.org> wrote:
+>> On Thu, 9 Aug 2012 11:10:38 -0700
+>> "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> wrote:
+>>
+>>> And this would lead to .. what? How did you realize this? Can you
+>>> please resend and add all this information to the commit log message?
+>>
+>> Also please use a better subject.  For example:
+>>
+>> ath9k: fix decrypt_error initialization in ath_rx_tasklet()
+>>
+>> "issue" is too vague.
+> 
+> Also -- what I was getting at is to evaluate whether or not this is an
+> important fix or critical. To determine if its critical it helps to
+> understand exactly what negative behavior was observed. If its
+> critical it can go to stable but I have a feeling this is not
+> critical. If its not critical and only important although it won't go
+> to stable I'll still cherry pick it for the stable compat-wireless
+> releases.
+I think it's critical enough for stable. I think when using CCMP
+encryption, high CPU load can get the connection stuck (because of CCMP
+PN corruption when the issue occurs).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 35 +++++++++--------------------------
- 1 file changed, 9 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 2e517c0..e8f8e3d 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -582,8 +582,7 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- }
- 
- static u8 ath_rc_get_highest_rix(struct ath_rate_priv *ath_rc_priv,
--				 int *is_probing,
--				 bool legacy)
-+				 int *is_probing)
- {
- 	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	u32 best_thruput, this_thruput, now_msec;
-@@ -605,8 +604,6 @@ static u8 ath_rc_get_highest_rix(struct ath_rate_priv *ath_rc_priv,
- 		u8 per_thres;
- 
- 		rate = ath_rc_priv->valid_rate_index[index];
--		if (legacy && !(rate_table->info[rate].rate_flags & RC_LEGACY))
--			continue;
- 		if (rate > ath_rc_priv->rate_max_phy)
- 			continue;
- 
-@@ -770,7 +767,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	try_per_rate = 4;
- 
- 	rate_table = ath_rc_priv->rate_table;
--	rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, false);
-+	rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe);
- 
- 	if (conf_is_ht(&sc->hw->conf) &&
- 	    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
-@@ -804,7 +801,13 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 				       try_per_rate, rix, 0);
- 	}
- 
--	for ( ; i < 3; i++) {
-+	for ( ; i < 4; i++) {
-+		/*
-+		 * Use twice the number of tries for the last MRR segment.
-+		 */
-+		if (i + 1 == 4)
-+			try_per_rate = 8;
-+
- 		ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
- 
- 		/*
-@@ -815,26 +818,6 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	}
- 
- 	/*
--	 * Use twice the number of tries for the last MRR segment.
--	 */
--	try_per_rate = 8;
--
--	/*
--	 * If the last rate in the rate series is MCS and has
--	 * more than 80% of per thresh, then use a legacy rate
--	 * as last retry to ensure that the frame is tried in both
--	 * MCS and legacy rate.
--	 */
--	ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
--
--	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy) &&
--	    (ath_rc_priv->per[rix] > 45))
--		rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, true);
--
--	/* All other rates in the series have RTS enabled */
--	ath_rc_rate_set_series(rate_table, &rates[i], txrc,
--			       try_per_rate, rix, 1);
--	/*
- 	 * NB:Change rate series to enable aggregation when operating
- 	 * at lower MCS rates. When first rate in series is MCS2
- 	 * in HT40 @ 2.4GHz, series should look like:
--- 
-1.7.11.4
+- Felix
 
