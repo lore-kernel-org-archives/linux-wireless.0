@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46648 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303Ab2HBICk (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:61112 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743Ab2HISCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 04:02:40 -0400
-Message-ID: <1343894552.4458.4.camel@jlt3.sipsolutions.net> (sfid-20120802_100245_262316_95C56D8E)
-Subject: Re: cfg80211_disconnected memory leak
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 02 Aug 2012 10:02:32 +0200
-In-Reply-To: <CAMLZHHQdBHZa4NBQ3ygKJSHmKL11ERUWDAtMx0-Qh4OzSoN-SA@mail.gmail.com> (sfid-20120802_012245_707573_C86E060B)
-References: <CAMLZHHQkv_fHzd89fP7bNow7eL3oX+Duzr5rS5NJfhffqwUv2g@mail.gmail.com>
-	 <1343842772.4638.15.camel@jlt3.sipsolutions.net>
-	 <CAMLZHHQdBHZa4NBQ3ygKJSHmKL11ERUWDAtMx0-Qh4OzSoN-SA@mail.gmail.com>
-	 (sfid-20120802_012245_707573_C86E060B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 Aug 2012 14:02:24 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hm11so601987wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:02:24 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH 08/13] compat-wireless: No need to search for patches
+Date: Thu,  9 Aug 2012 21:01:27 +0300
+Message-Id: <1344535292-4451-9-git-send-email-ozancag@gmail.com> (sfid-20120809_200228_307936_F508A311)
+In-Reply-To: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
+References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-01 at 17:22 -0600, Daniel Drake wrote:
+Don't search for patches with find. Just silent ls errors.
 
-> Here is what happens:
-> 
-> NETDEV_GOING_DOWN
-> cfg80211_disconnected() called, disconnect event work queued
-> NETDEV_DOWN
-> cleanup work queued
-> NETDEV_UNREGISTER
-> *** cfg80211_netdev_notifier_call now calls: list_del_rcu(&wdev->list);
-> disconnect even work runs, calls cfg80211_process_rdev_events() but
-> the wdev is already removed from rdev->netdev_list as above
-> cleanup work runs
-> 
-> The bit I marked with *** is what is causing the difficulties - it
-> runs before the work items do.
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+---
+ scripts/admin-update.sh | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Oh, hm. I didn't think it could unregister before we give up our
-reference, but I guess that makes sense after all.
-
-I'm not sure there's an easy way to fix it other than making the driver
-not call cfg80211_disconnected() in case the disconnect was requested by
-cfg80211 -- that call isn't needed and will not do anything at all, but
-I'm not sure how easy that would be in the driver?
-
-johannes
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 05ec449..555b61b 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -613,11 +613,7 @@ for dir in $EXTRA_PATCHES; do
+ 		patchRefresh $dir
+ 	fi
+ 
+-	FOUND=$(find $dir/ -maxdepth 1 -name \*.patch | wc -l)
+-	if [ $FOUND -eq 0 ]; then
+-		continue
+-	fi
+-	for i in $(ls -v $dir/*.patch); do
++	for i in $(ls -v $dir/*.patch &> /dev/null); do
+ 		echo -e "${GREEN}Applying backport patch${NORMAL}: ${BLUE}$i${NORMAL}"
+ 		patch -p1 -N -t < $i
+ 		RET=$?
+-- 
+1.7.11.2
 
