@@ -1,93 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34755 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932935Ab2HVQVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 12:21:45 -0400
-Message-ID: <50350706.609@hauke-m.de> (sfid-20120822_182159_927698_EF1999E0)
-Date: Wed, 22 Aug 2012 18:21:26 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55556 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759376Ab2HITnn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 15:43:43 -0400
+Received: by bkwj10 with SMTP id j10so324940bkw.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 12:43:41 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Marco Fonseca <marco@tampabay.rr.com>
+Subject: Re: carl9170: Unintentional transmission in monitor mode?
+Date: Thu, 9 Aug 2012 21:43:28 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <20120809165434.GA13409@192.168.1.10>
+In-Reply-To: <20120809165434.GA13409@192.168.1.10>
 MIME-Version: 1.0
-To: Bastian Bittorf <bittorf@bluebottle.com>
-CC: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	feint@lists.subsignal.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
-References: <1342612598.5006a476022c6@mail.bluebottle.com>
-In-Reply-To: <1342612598.5006a476022c6@mail.bluebottle.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208092143.28506.chunkeey@googlemail.com> (sfid-20120809_214346_909325_DCA204F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/18/2012 01:56 PM, Bastian Bittorf wrote:
-> hi devs!
+On Thursday, August 09, 2012 06:54:34 PM Marco Fonseca wrote:
+> Hello All,
 > 
-> yesterday we had a breaktrough debugging b43 in our hackspace maschinenraum/m18[1,2]
-> at weimar.freifunk.net[3,4] - since a long time our darling wrt54g suffers from a
-> hanging wifi and bad performance[5], but the workaround is easy: now it's up to
-> you to fix the rootcause.
+> I've noticed unexpected transmissions from the AR9170 while in monitor mode
+> and using tcpdump (and sometimes without tcpdump running).  These
+> transmissions degrade (pretty significantly) performance of other STA/AP on
+> the channel (as seen by iperf going from 60mbit/s to almost nill).  As best I
+> can tell these transmissions never coalesces into an actual frame in the air
+> (at least not one I'm able to pick up with a second different adapter in
+> monitor mode).
 > 
-> our testsetup, where we could _reproduce_ reliably a stopping TX is like this:
+> Are there any known reasons/bugs on this?  Is there anyway to completely
+> silence the transmitter of the AR9170 while still allowing reception?
 > 
-> laptop ---lan--- "A"-wrt54g/adhoc ~~~   air  ~~~ "B"-anyrouter/adhoc
-> 
-> now make a testdownload with the laptop from B.
-> wireless will stop working after ~10 seconds.
-> 
-> wifi up will reanimate and our freifunk-cron.minutely-check
-> will do this automagically. (read further, this is not the solution)
-> 
-> we tried to limit the rateset to e.g. lower rates, but this does NOT change
-> the behaviour. what works is: define a rateset on BOTH router which makes
-> it impossible to change the band, e.g.:
-> 
-> iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
-> OR
-> iw dev $WIFIDEV set bitrates legacy-2.4 6 9 12 18 24 36 48 54
-> 
-> now we had a great performance, 10 Gigabytes of wireless transfer,
-> no stopping TX anymore and an empty box of beer. three things to do now:
-> 
-> 1) why does a band change (can be seen through minstrel) is a problem?
-> 
-> 2) we have to make in config-option to force a band, or a rateset:
-> 	e.g. uci set wireless.radio0.hwmode=11g
-> 	e.g. uci set wireless.radio0.bitrates='6 9 12 18 24 36 48 54'
-> 
-> 3) spread to word:
->    there is a great frustration in the community about b43,
->    but the old drivers _have_ to die, it's about time - really.
-> 
-> thanks for your work,
-> bye storchi, andi, bastian + m18 crew
-> 
-> [1] http://blog.maschinenraum.tk/
-> [2] http://blog.maschinenraum.tk/2012/07/15/bitcoin-vending-machine-exchange-euro-coins-for-bitcoin-wallets/
-> [3] http://wireless.subsignal.org
-> [4] http://wireless.subsignal.org/index.php?title=Main_Page_en
-> [5] https://dev.openwrt.org/ticket/7552
+yes. <http://www.spinics.net/lists/linux-wireless/msg88896.html>
 
-I tried this on some of my devices (BCM4318 G-PHY and BCM4322 N-PHY) and
-it is easily reproducible on all tested devices when restricting the
-rates to 11 and 12 MBit/s.
+a solution is described in:
+<http://www.spinics.net/lists/linux-wireless/msg89279.html>
 
-I have the Broadcom device working as an Access point (on a MIPS SoC)
-and a Laptop with an Intel Wifi device is connected to it. I generated
-the traffic with iperf. If the Access Points sends the traffic the
-problem occurs, if it is just receiving there is not problem.
+(iw dev wlanX set monitor none - if I'm not mistaken)
 
-After the problem occurred b43_generate_txhdr is called rarely ( every
-~10 seconds) and I am not able to stay connected or connect to the
-network any more. I am not familiar with the internal flow in b43 or
-mac80211 could someone give me a hint where to look.
-
-I can not see any special changes between CCK and OFDM rates before it
-goes down there are many changes without a problem before it goes down.
-
-Currently I do not have a Broadcom wifi card running in a x86 device
-just mips devices could someone try to reproduce the problem on a x86
-device.
-
-I added the b43 mailing list and Rafał.
-
-Hauke
+Regards,
+	Chr
