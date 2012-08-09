@@ -1,300 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na6sys009bog027.obsmtp.com ([74.125.150.94]:50655 "EHLO
-	na6sys009bog027.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753085Ab2HDBT4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 21:19:56 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 12/16] mwifiex: add 11n Block Ack support for uAP
-Date: Fri,  3 Aug 2012 18:06:10 -0700
-Message-Id: <1344042374-6892-13-git-send-email-bzhao@marvell.com> (sfid-20120804_031959_446637_77CCEE93)
-In-Reply-To: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
-References: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
+Received: from quad.pendre.co.uk ([195.137.4.79]:46844 "EHLO quad.pendre.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759951Ab2HIWYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 18:24:09 -0400
+Message-ID: <5024364E.6030502@elrepo.org> (sfid-20120810_002416_626250_3720618B)
+Date: Thu, 09 Aug 2012 23:14:38 +0100
+From: Phil Perry <phil@elrepo.org>
+MIME-Version: 1.0
+To: Andy Gospodarek <andy@greyhouse.net>
+CC: Zefir Kurtisi <zefir.kurtisi@neratec.com>, mcgrof@frijolero.org,
+	linux-wireless@vger.kernel.org,
+	lf driver backport
+	<lf_driver_backport@lists.linux-foundation.org>
+Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
+References: <1344487215-24143-1-git-send-email-andy@greyhouse.net> <2121451356.93690.1344518764022.JavaMail.root@neratec.com> <CAHashqCmcgXXDyyqwEYefTMXFDVFKm9GKydfbS14UCY_L443Vg@mail.gmail.com>
+In-Reply-To: <CAHashqCmcgXXDyyqwEYefTMXFDVFKm9GKydfbS14UCY_L443Vg@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On 09/08/12 22:59, Andy Gospodarek wrote:
+> On Aug 9, 2012 9:26 AM, "Zefir Kurtisi"<zefir.kurtisi@neratec.com>  wrote:
+>>
+>> On 08/09/2012 06:40 AM, Andy Gospodarek wrote:
+>>> This patch allows me to compile and load the latest compat modules on
+>>> RHEL6.3.  Users of compat on RHEL6 should note that you should set
+>>> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
+>>>
+>>> [...]
+>>>
+>>> diff --git a/include/linux/compat-2.6.36.h
+> b/include/linux/compat-2.6.36.h
+>>> index 56d5961..09e4b6f 100644
+>>> --- a/include/linux/compat-2.6.36.h
+>>> +++ b/include/linux/compat-2.6.36.h
+>>> @@ -98,6 +98,8 @@ struct pm_qos_request_list {
+>>>    * Dummy printk for disabled debugging statements to use whilst
+> maintaining
+>>>    * gcc's format and side-effect checking.
+>>>    */
+>>> +/* mask no_printk as RHEL6 backports this */
+>>> +#define no_printk(...) compat_no_printk(...)
+>>>   static inline __attribute__ ((format (printf, 1, 2)))
+>>>   int no_printk(const char *s, ...) { return 0; }
+>>>
+>>> [...]
+>>
+>> This at least breaks compilation on 2.6.35-22 with gcc throwing a
+>> compat-2.6.36.h:104: error: ISO C requires a named argument before ‘...’
+>>
+>
+> Actually that might be due to the fact that I chose to use no_printk(...)
+> rather than no_printk(a,...).
+>
+> What version of gcc are you using?
+>
+>> It looks like no_printk() needs to be renamed to compat_no_printk()
+>> to make it work as intended.
+>>
+>> This is a systematic mistake at several sections of this patch, where
+>> the original function needs to be prefixed by 'compat_' to match the
+>> related macro.
+>>
+>>
+>> ---
+>> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+>> index 8b02260..b6757c3 100644
+>> --- a/include/linux/compat-2.6.36.h
+>> +++ b/include/linux/compat-2.6.36.h
+>> @@ -101,7 +101,7 @@ struct pm_qos_request_list {
+>>   /* mask no_printk as RHEL6 backports this */
+>>   #define no_printk(...) compat_no_printk(...)
+>>   static inline __attribute__ ((format (printf, 1, 2)))
+>> -int no_printk(const char *s, ...) { return 0; }
+>> +int compat_no_printk(const char *s, ...) { return 0; }
+>>
+>>   #ifndef alloc_workqueue
+>>   #define alloc_workqueue(name, flags, max_active)
+> __create_workqueue(name, flags, max_active, 0)
+>
 
-This patch adds support for handling BA request and BA setup
-events for AP interface.
+Hi Andy, Zefir,
 
-RA list is marked as either 11n enabled or disabled from station's
-capabilities in association request. BA setup is initiated only
-after some specific number of packets for particular RA list are
-transmitted.
+Thanks for these patches, this certainly moves us forward (the compat 
+components do now compile on RHEL6.3); my build then errors out on 
+drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc (I should apologise and 
+state I'm trying to build the 3.5-3 stable tarball on RHEL6.3).
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.h           |   14 ++++++
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   15 +++++--
- drivers/net/wireless/mwifiex/11n_rxreorder.h |    2 +
- drivers/net/wireless/mwifiex/main.h          |    3 +
- drivers/net/wireless/mwifiex/uap_event.c     |   21 +++++++++
- drivers/net/wireless/mwifiex/wmm.c           |   59 +++++++++++++++++++++++--
- 6 files changed, 105 insertions(+), 9 deletions(-)
+Here are the errors, which I believe are related to the above 
+no_printk() issue:
 
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index 28366e9..6d2edb4 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -157,4 +157,18 @@ mwifiex_is_ba_stream_setup(struct mwifiex_private *priv,
- 
- 	return false;
- }
-+
-+/*
-+ * This function checks whether associated station is 11n enabled
-+ */
-+static inline int mwifiex_is_sta_11n_enabled(struct mwifiex_private *priv,
-+					     struct mwifiex_sta_node *node)
-+{
-+
-+	if (!node || (priv->bss_role != MWIFIEX_BSS_ROLE_UAP) ||
-+	    !priv->ap_11n_enabled)
-+		return 0;
-+
-+	return node->is_11n_enabled;
-+}
- #endif /* !_MWIFIEX_11N_H_ */
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 20367fe..e43d27d 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -235,6 +235,7 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
- 	struct mwifiex_rx_reorder_tbl *tbl, *new_node;
- 	u16 last_seq = 0;
- 	unsigned long flags;
-+	struct mwifiex_sta_node *node;
- 
- 	/*
- 	 * If we get a TID, ta pair which is already present dispatch all the
-@@ -257,13 +258,19 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
- 	new_node->tid = tid;
- 	memcpy(new_node->ta, ta, ETH_ALEN);
- 	new_node->start_win = seq_num;
--	if (mwifiex_queuing_ra_based(priv))
--		/* TODO for adhoc */
-+
-+	if (mwifiex_queuing_ra_based(priv)) {
- 		dev_dbg(priv->adapter->dev,
--			"info: ADHOC:last_seq=%d start_win=%d\n",
-+			"info: AP/ADHOC:last_seq=%d start_win=%d\n",
- 			last_seq, new_node->start_win);
--	else
-+		if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP) {
-+			node = mwifiex_get_sta_entry(priv, ta);
-+			if (node)
-+				last_seq = node->rx_seq[tid];
-+		}
-+	} else {
- 		last_seq = priv->rx_seq[tid];
-+	}
- 
- 	if (last_seq != MWIFIEX_DEF_11N_RX_SEQ_NUM &&
- 	    last_seq >= new_node->start_win)
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-index 1cd51d8..13ecb61 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-@@ -38,6 +38,8 @@
- #define ADDBA_RSP_STATUS_ACCEPT 0
- 
- #define MWIFIEX_DEF_11N_RX_SEQ_NUM	0xffff
-+#define BA_SETUP_MAX_PACKET_THRESHOLD	16
-+#define BA_SETUP_PACKET_OFFSET		16
- 
- static inline void mwifiex_reset_11n_rx_seq_num(struct mwifiex_private *priv)
- {
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 014fe9a..c39cd8e 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -200,6 +200,9 @@ struct mwifiex_ra_list_tbl {
- 	u8 ra[ETH_ALEN];
- 	u32 total_pkts_size;
- 	u32 is_11n_enabled;
-+	u16 max_amsdu;
-+	u16 pkt_count;
-+	u8 ba_packet_thr;
- };
- 
- struct mwifiex_tid_tbl {
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 6270c80..a10bd95 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -19,6 +19,7 @@
- 
- #include "decl.h"
- #include "main.h"
-+#include "11n.h"
- 
- /*
-  * This function will return the pointer to station entry in station list
-@@ -168,6 +169,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 	struct mwifiex_assoc_event *event;
- 	struct mwifiex_sta_node *node;
- 	u8 *deauth_mac;
-+	struct host_cmd_ds_11n_batimeout *ba_timeout;
- 
- 	switch (eventcause) {
- 	case EVENT_UAP_STA_ASSOC:
-@@ -255,6 +257,25 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 				adapter->tx_buf_size);
- 		}
- 		break;
-+	case EVENT_ADDBA:
-+		dev_dbg(adapter->dev, "event: ADDBA Request\n");
-+		if (priv->media_connected)
-+			mwifiex_send_cmd_async(priv, HostCmd_CMD_11N_ADDBA_RSP,
-+					       HostCmd_ACT_GEN_SET, 0,
-+					       adapter->event_body);
-+		break;
-+	case EVENT_DELBA:
-+		dev_dbg(adapter->dev, "event: DELBA Request\n");
-+		if (priv->media_connected)
-+			mwifiex_11n_delete_ba_stream(priv, adapter->event_body);
-+		break;
-+	case EVENT_BA_STREAM_TIEMOUT:
-+		dev_dbg(adapter->dev, "event:  BA Stream timeout\n");
-+		if (priv->media_connected) {
-+			ba_timeout = (void *)adapter->event_body;
-+			mwifiex_11n_ba_stream_timeout(priv, ba_timeout);
-+		}
-+		break;
- 	default:
- 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
- 			eventcause);
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 3fa4d41..8ccd699 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -127,6 +127,29 @@ mwifiex_wmm_allocate_ralist_node(struct mwifiex_adapter *adapter, u8 *ra)
- 	return ra_list;
- }
- 
-+/* This function returns random no between 16 and 32 to be used as threshold
-+ * for no of packets after which BA setup is initiated.
-+ */
-+static u8 mwifiex_get_random_ba_threshold(void)
-+{
-+	u32 sec, usec;
-+	struct timeval ba_tstamp;
-+	u8 ba_threshold;
-+
-+	/* setup ba_packet_threshold here random number between
-+	 * [BA_SETUP_PACKET_OFFSET,
-+	 * BA_SETUP_PACKET_OFFSET+BA_SETUP_MAX_PACKET_THRESHOLD-1]
-+	 */
-+
-+	do_gettimeofday(&ba_tstamp);
-+	sec = (ba_tstamp.tv_sec & 0xFFFF) + (ba_tstamp.tv_sec >> 16);
-+	usec = (ba_tstamp.tv_usec & 0xFFFF) + (ba_tstamp.tv_usec >> 16);
-+	ba_threshold = (((sec << 16) + usec) % BA_SETUP_MAX_PACKET_THRESHOLD)
-+						      + BA_SETUP_PACKET_OFFSET;
-+
-+	return ba_threshold;
-+}
-+
- /*
-  * This function allocates and adds a RA list for all TIDs
-  * with the given RA.
-@@ -137,6 +160,12 @@ mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra)
- 	int i;
- 	struct mwifiex_ra_list_tbl *ra_list;
- 	struct mwifiex_adapter *adapter = priv->adapter;
-+	struct mwifiex_sta_node *node;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
-+	node = mwifiex_get_sta_entry(priv, ra);
-+	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
- 
- 	for (i = 0; i < MAX_NUM_TID; ++i) {
- 		ra_list = mwifiex_wmm_allocate_ralist_node(adapter, ra);
-@@ -145,14 +174,24 @@ mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra)
- 		if (!ra_list)
- 			break;
- 
--		if (!mwifiex_queuing_ra_based(priv))
-+		ra_list->is_11n_enabled = 0;
-+		if (!mwifiex_queuing_ra_based(priv)) {
- 			ra_list->is_11n_enabled = IS_11N_ENABLED(priv);
--		else
--			ra_list->is_11n_enabled = false;
-+		} else {
-+			ra_list->is_11n_enabled =
-+				      mwifiex_is_sta_11n_enabled(priv, node);
-+			if (ra_list->is_11n_enabled)
-+				ra_list->max_amsdu = node->max_amsdu;
-+		}
- 
- 		dev_dbg(adapter->dev, "data: ralist %p: is_11n_enabled=%d\n",
- 			ra_list, ra_list->is_11n_enabled);
- 
-+		if (ra_list->is_11n_enabled) {
-+			ra_list->pkt_count = 0;
-+			ra_list->ba_packet_thr =
-+					      mwifiex_get_random_ba_threshold();
-+		}
- 		list_add_tail(&ra_list->list,
- 			      &priv->wmm.tid_tbl_ptr[i].ra_list);
- 
-@@ -647,6 +686,7 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 	skb_queue_tail(&ra_list->skb_head, skb);
- 
- 	ra_list->total_pkts_size += skb->len;
-+	ra_list->pkt_count++;
- 
- 	atomic_inc(&priv->wmm.tx_pkts_queued);
- 
-@@ -986,10 +1026,17 @@ mwifiex_is_11n_aggragation_possible(struct mwifiex_private *priv,
- {
- 	int count = 0, total_size = 0;
- 	struct sk_buff *skb, *tmp;
-+	int max_amsdu_size;
-+
-+	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP && priv->ap_11n_enabled &&
-+	    ptr->is_11n_enabled)
-+		max_amsdu_size = min_t(int, ptr->max_amsdu, max_buf_size);
-+	else
-+		max_amsdu_size = max_buf_size;
- 
- 	skb_queue_walk_safe(&ptr->skb_head, skb, tmp) {
- 		total_size += skb->len;
--		if (total_size >= max_buf_size)
-+		if (total_size >= max_amsdu_size)
- 			break;
- 		if (++count >= MIN_NUM_AMSDU)
- 			return true;
-@@ -1050,6 +1097,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
- 		skb_queue_tail(&ptr->skb_head, skb);
- 
- 		ptr->total_pkts_size += skb->len;
-+		ptr->pkt_count++;
- 		tx_info->flags |= MWIFIEX_BUF_FLAG_REQUEUED_PKT;
- 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
- 				       ra_list_flags);
-@@ -1231,7 +1279,8 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
- 		/* ra_list_spinlock has been freed in
- 		   mwifiex_send_single_packet() */
- 	} else {
--		if (mwifiex_is_ampdu_allowed(priv, tid)) {
-+		if (mwifiex_is_ampdu_allowed(priv, tid) &&
-+		    ptr->pkt_count > ptr->ba_packet_thr) {
- 			if (mwifiex_space_avail_for_new_ba_stream(adapter)) {
- 				mwifiex_create_ba_tbl(priv, ptr->ra, tid,
- 						      BA_SETUP_INPROGRESS);
--- 
-1.7.0.2
+
+   CC [M] 
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.o
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_cdc_msg':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:114: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_cdc_cmplt':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:134: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_cdc_query_dcmd':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:157: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:158: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:186: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:203: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_cdc_set_dcmd':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:238: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:239: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:265: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_dcmd':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:290: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:295: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:301: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:306: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_hdrpush':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:367: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_hdrpull':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:392: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:397: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:406: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:412: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:418: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:390: 
+warning: unused variable 'drvr'
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_attach':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:441: 
+error: expected expression before '...' token
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c: 
+In function 'brcmf_proto_init':
+/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c:468: 
+error: expected expression before '...' token
+make[5]: *** 
+[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.o] 
+Error 1
+make[4]: *** 
+[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211/brcmfmac] 
+Error 2
+make[3]: *** 
+[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless/brcm80211] 
+Error 2
+make[2]: *** 
+[/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3/drivers/net/wireless] 
+Error 2
+make[1]: *** [_module_/home/phil/rpmbuild/BUILD/compat-wireless-3.5-3] 
+Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.32-279.el6.x86_64'
+make: *** [modules] Error 2
+
+The only way I have found to work around this at the moment is to block 
+out the offending no_printk() for RHEL6.3:
+
+/*
+  * Dummy printk for disabled debugging statements to use whilst maintaining
+  * gcc's format and side-effect checking.
+  */
+/* mask no_printk as RHEL6.3 backports this */
+#if (RHEL_MINOR < 3)
+static inline __attribute__ ((format (printf, 1, 2)))
+int no_printk(const char *s, ...) { return 0; }
+#endif /* (RHEL_MINOR < 3) */
+
+Not a very elegant solution but at least the code does now compile for 
+me on RHEL6.3, so it's progress of sorts.
+
+Regards,
+
+Phil
 
