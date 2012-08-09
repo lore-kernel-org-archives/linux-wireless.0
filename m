@@ -1,86 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12734 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673Ab2HMNtD (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:42290 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754632Ab2HISBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 09:49:03 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: Fix potential memory leak in ath6kl_tx_complete()
-Date: Mon, 13 Aug 2012 19:18:58 +0530
-Message-ID: <1344865738-2416-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120813_154923_296722_DD9285E1)
-In-Reply-To: <1344865738-2416-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1344865738-2416-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Thu, 9 Aug 2012 14:01:50 -0400
+Received: by wibhq12 with SMTP id hq12so549871wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:01:49 -0700 (PDT)
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+Subject: [PATCH 02/13] compat-wireless: Isolate drivers into different groups
+Date: Thu,  9 Aug 2012 21:01:21 +0300
+Message-Id: <1344535292-4451-3-git-send-email-ozancag@gmail.com> (sfid-20120809_200157_637297_C6AAB7AA)
+In-Reply-To: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
+References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We bail out from ath6kl_tx_complete() if any of the sanity
-checks on skb and ath6kl_cookie fails. By doing this we
-potentially leak few remaining buffers in packet_queue.
-Make sure to proceed processing the remaining buffers
-as well. This issue is found during code review.
+Start isolating wlan, bt, eth drivers into different variables
+for being able to selectively bring them in the near future.
 
-Reported-by: Wang yufeng <yufengw@qca.qualcomm.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |   25 ++++++++++++++-----------
- 1 files changed, 14 insertions(+), 11 deletions(-)
+ scripts/admin-update.sh | 133 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 71 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index aab8251..4b26ba0 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -698,21 +698,29 @@ void ath6kl_tx_complete(struct htc_target *target,
- 		list_del(&packet->list);
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 0b09708..df82ea3 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -280,79 +280,88 @@ INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
  
- 		ath6kl_cookie = (struct ath6kl_cookie *)packet->pkt_cntxt;
--		if (!ath6kl_cookie)
--			goto fatal;
-+		if (!ath6kl_cookie) {
-+			WARN_ON(1);
-+			continue;
-+		}
+ INCLUDE_LINUX_SPI="libertas_spi.h"
  
- 		status = packet->status;
- 		skb = ath6kl_cookie->skb;
- 		eid = packet->endpoint;
- 		map_no = ath6kl_cookie->map_no;
+-# The good new yummy stuff
+-INCLUDE_NET="cfg80211.h ieee80211_radiotap.h cfg80211-wext.h"
+-INCLUDE_NET="$INCLUDE_NET mac80211.h lib80211.h regulatory.h"
++# 802.11 related headers
++INCLUDE_NET="cfg80211.h
++	     cfg80211-wext.h
++	     ieee80211_radiotap.h
++	     lib80211.h
++	     mac80211.h
++	     regulatory.h"
  
--		if (!skb || !skb->data)
--			goto fatal;
-+		if (!skb || !skb->data) {
-+			WARN_ON(1);
-+			dev_kfree_skb(skb);
-+			ath6kl_free_cookie(ar, ath6kl_cookie);
-+			continue;
-+		}
+ NET_DIRS="wireless mac80211 rfkill"
  
- 		__skb_queue_tail(&skb_queue, skb);
- 
--		if (!status && (packet->act_len != skb->len))
--			goto fatal;
-+		if (!status && (packet->act_len != skb->len)) {
-+			ath6kl_free_cookie(ar, ath6kl_cookie);
-+			continue;
-+		}
- 
- 		ar->tx_pending[eid]--;
- 
-@@ -794,11 +802,6 @@ void ath6kl_tx_complete(struct htc_target *target,
- 		wake_up(&ar->event_wq);
- 
- 	return;
+-# Drivers that have their own directory
+-DRIVERS="drivers/net/wireless/ath"
+-DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
+-DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
+-DRIVERS="$DRIVERS drivers/net/wireless/ath/ath6kl"
+-DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
+-DRIVERS="$DRIVERS drivers/ssb"
+-DRIVERS="$DRIVERS drivers/bcma"
+-DRIVERS="$DRIVERS drivers/net/wireless/b43"
+-DRIVERS="$DRIVERS drivers/net/wireless/b43legacy"
+-DRIVERS="$DRIVERS drivers/net/wireless/brcm80211"
+-DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmfmac"
+-DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmsmac"
+-DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmsmac/phy"
+-DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmutil"
+-DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/include"
+-DRIVERS="$DRIVERS drivers/net/wireless/iwlegacy"
+-DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi"
+-DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi/pcie"
+-DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi/dvm"
+-DRIVERS="$DRIVERS drivers/net/wireless/rt2x00"
+-DRIVERS="$DRIVERS drivers/net/wireless/zd1211rw"
+-DRIVERS="$DRIVERS drivers/net/wireless/libertas"
+-DRIVERS="$DRIVERS drivers/net/wireless/p54"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtl818x"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtl818x/rtl8180"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtl818x/rtl8187"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192c"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192ce"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192cu"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192se"
+-DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192de"
+-DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
+-DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
+-DRIVERS="$DRIVERS drivers/net/wireless/ti"
+-DRIVERS="$DRIVERS drivers/net/wireless/ti/wl12xx"
+-DRIVERS="$DRIVERS drivers/net/wireless/ti/wl1251"
+-DRIVERS="$DRIVERS drivers/net/wireless/ti/wlcore"
+-DRIVERS="$DRIVERS drivers/net/wireless/ti/wl18xx"
+-DRIVERS="$DRIVERS drivers/net/wireless/orinoco"
+-DRIVERS="$DRIVERS drivers/net/wireless/mwifiex"
 -
--fatal:
--	WARN_ON(1);
--	spin_unlock_bh(&ar->lock);
--	return;
- }
+-# Staging drivers
+-STAGING_DRIVERS=""
++# WLAN drivers that have their own directory
++DRIVERS_WLAN="drivers/bcma"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/carl9170"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath5k"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath6kl"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath9k"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/b43"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/b43legacy"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmfmac"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmsmac"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmsmac/phy"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmutil"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/include"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlegacy"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi/pcie"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi/dvm"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rt2x00"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/zd1211rw"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/libertas"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/p54"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x/rtl8180"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x/rtl8187"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192c"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192ce"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192cu"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192se"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192de"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/libertas_tf"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ipw2x00"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl12xx"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl1251"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wlcore"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl18xx"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/orinoco"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/mwifiex"
++DRIVERS_WLAN="$DRIVERS_WLAN drivers/ssb"
++
++# WLAN drivers not having dedicated directories
++DRIVERS_WLAN_FILES="adm8211.c
++		    adm8211.h
++		    at76c50x-usb.c
++		    at76c50x-usb.h
++		    mac80211_hwsim.c
++		    mac80211_hwsim.h
++		    mwl8k.c
++		    rndis_wlan.c"
  
- void ath6kl_tx_data_cleanup(struct ath6kl *ar)
+ # Ethernet drivers
+-DRIVERS="$DRIVERS drivers/net/ethernet/atheros"
+-DRIVERS="$DRIVERS drivers/net/ethernet/atheros/atl1c"
+-DRIVERS="$DRIVERS drivers/net/ethernet/atheros/atl1e"
+-DRIVERS="$DRIVERS drivers/net/ethernet/atheros/atlx"
+-DRIVERS="$DRIVERS drivers/net/ethernet/atheros/alx"
++DRIVERS_ETH="drivers/net/ethernet/atheros
++	     drivers/net/ethernet/atheros/atl1c
++	     drivers/net/ethernet/atheros/atl1e
++	     drivers/net/ethernet/atheros/atlx
++	     drivers/net/ethernet/atheros/alx"
+ 
+ # Bluetooth drivers
+ DRIVERS_BT="drivers/bluetooth"
+ 
+-# Drivers that belong the the wireless directory
+-DRIVER_FILES="adm8211.c  adm8211.h"
+-DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
+-DRIVER_FILES="$DRIVER_FILES mac80211_hwsim.c mac80211_hwsim.h"
+-DRIVER_FILES="$DRIVER_FILES at76c50x-usb.c at76c50x-usb.h"
+-DRIVER_FILES="$DRIVER_FILES mwl8k.c"
++# Staging drivers if any
++STAGING_DRIVERS=""
++
++# Select which drivers to build
++DRIVERS="$DRIVERS_WLAN $DRIVERS_ETH"
+ 
+ rm -rf drivers/
+ 
+-mkdir -p include/linux/ \
+-	include/net/ \
++mkdir -p \
+ 	include/net/bluetooth \
+ 	include/linux/usb \
+ 	include/linux/unaligned \
+@@ -489,7 +498,7 @@ cp $GIT_TREE/drivers/misc/eeprom/Makefile drivers/misc/eeprom/
+ 
+ DIR="drivers/net/wireless"
+ # Drivers part of the wireless directory
+-for i in $DRIVER_FILES; do
++for i in $DRIVERS_WLAN_FILES; do
+ 	cp $GIT_TREE/$DIR/$i $DIR/
+ done
+ 
 -- 
-1.7.0.4
+1.7.11.2
 
