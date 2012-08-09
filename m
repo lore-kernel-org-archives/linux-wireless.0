@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48680 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502Ab2HBT5S (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:33459 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505Ab2HISK7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 15:57:18 -0400
-Message-ID: <1343937435.4471.27.camel@jlt3.sipsolutions.net> (sfid-20120802_215721_574701_A5FC912C)
-Subject: Re: cfg80211_disconnected memory leak
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Drake <dsd@laptop.org>
+	Thu, 9 Aug 2012 14:10:59 -0400
+Received: by obbuo13 with SMTP id uo13so959782obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:10:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAA2SeNKbBCxPbJmXMyo4-nK2SXL-WcOFQaKDrEM-cxbVrzt7Ew@mail.gmail.com>
+References: <CAA2SeNJmaHs5fMHrG65HWbe5Y-ytz2qvuzNGKvhBKgvZ15KoVw@mail.gmail.com>
+ <20120809173435.GQ3745@lenteja.do-not-panic.com> <CAA2SeNKbBCxPbJmXMyo4-nK2SXL-WcOFQaKDrEM-cxbVrzt7Ew@mail.gmail.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 9 Aug 2012 11:10:38 -0700
+Message-ID: <CAB=NE6V6T0RMSiMZCsUdr85vWMgs4VfJ6HTYHwf+kDQUwQ-mhg@mail.gmail.com> (sfid-20120809_201104_949117_99BA0F3E)
+Subject: Re: [PATCH v2] ath9k: decrypt_error flag issue
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Thu, 02 Aug 2012 21:57:15 +0200
-In-Reply-To: <CAMLZHHR6xp0qxR4Z-BP195pV2XAKm=Q8quU_2dGz4L1_zrS8LA@mail.gmail.com> (sfid-20120802_192555_814702_A04D8096)
-References: <CAMLZHHQkv_fHzd89fP7bNow7eL3oX+Duzr5rS5NJfhffqwUv2g@mail.gmail.com>
-	 <1343842772.4638.15.camel@jlt3.sipsolutions.net>
-	 <CAMLZHHQdBHZa4NBQ3ygKJSHmKL11ERUWDAtMx0-Qh4OzSoN-SA@mail.gmail.com>
-	 <1343894552.4458.4.camel@jlt3.sipsolutions.net>
-	 <CAMLZHHSVediwHaw3f8s1QYNoc_xV55CEUP7wBQu_on-p8WUQJg@mail.gmail.com>
-	 <1343924789.4471.26.camel@jlt3.sipsolutions.net>
-	 <CAMLZHHR6xp0qxR4Z-BP195pV2XAKm=Q8quU_2dGz4L1_zrS8LA@mail.gmail.com>
-	 (sfid-20120802_192555_814702_A04D8096)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-08-02 at 11:25 -0600, Daniel Drake wrote:
-> On Thu, Aug 2, 2012 at 10:26 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > Hmm. Then again, I think we can call cfg80211_process_wdev_events() from
-> > case NETDEV_UNREGISTER though, probably after removing from the list.
-> > Maybe you could try that?
-> 
-> That solves the issue - confirmed that kmemleak now shuts up, and with
-> some added printks to confirm event creation and freeing.
-> Patch coming up, titled:    cfg80211: process pending events when
-> unregistering net device
+On Thu, Aug 9, 2012 at 11:06 AM, Lorenzo Bianconi
+<lorenzo.bianconi83@gmail.com> wrote:
+>> On Thu, Aug 09, 2012 at 05:47:47PM +0200, Lorenzo Bianconi wrote:
+>>> From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>>>
+>>> After the hw reports a decryption error, the flag decrypt_error is set to
+>>> true in ath9k_rx_accept.
+>>> Since this flag is initialized to false just outside ath_rx_tasklet while cycle,
+>>> all subsequent frames are marked as corrupted until ath_rx_tasklet ends.
+>>> Fix the issue initializing decrypt_error flag at the begging of the cycle.
+>>>
+>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>>
+>> Thanks! In practice what issues did you see ?
+>>
+>>   Luis
+>
+> If the decrypt_error flag is set to true for correctly decrypted
+> packets, the ieee80211_rx_status flag is not marked with
+> RX_FLAG_DECRYPTED in ath9k_rx_skb_postprocess.
+> This behavior causes some issues. For example mac80211 attempts to
+> decrypt the frame in software even if the packet is already decrypted
+> in hw.
 
-Nice, thanks!
+And this would lead to .. what? How did you realize this? Can you
+please resend and add all this information to the commit log message?
 
-> Even if libertas isn't quite doing the right thing here, I think this
-> is the right thing to do. I guess there are other situations, perhaps
-> more legitimate, where we can reach this point with events in the
-> queue.
-
-Yes, I agree. I just wasn't completely sure this would be OK when I
-looked first, and then started wondering why it didn't happen with
-mac80211, but that doesn't send the event.
-
-> > I'm not 100% sure about the API in this area right now though, it's been
-> > a while and I never worked much with this API (rather than the mac80211
-> > one with auth/assoc/disassoc/deauth.)
-> 
-> I think we both feel that removing it is correct. I'll test this when
-> I find some free time, and if things seem OK i'll post a libertas
-> patch in addition to the cfg80211 fix.
-
-It shouldn't hurt either way, since if the event is there but we're
-already disconnected we'll just ignore it, afaict.
-
-johannes
-
+  Luis
