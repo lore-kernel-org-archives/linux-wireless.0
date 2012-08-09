@@ -1,123 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:50156 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756491Ab2HVOka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 10:40:30 -0400
-Date: Wed, 22 Aug 2012 16:40:27 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: rtl8192se hanging completely
-Message-ID: <20120822144027.GA6981@x1.osrc.amd.com> (sfid-20120822_164037_690768_95306369)
-References: <20120822140733.GA1266@gamma.logic.tuwien.ac.at>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:50326 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525Ab2HIWOo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 18:14:44 -0400
+Received: by obbuo13 with SMTP id uo13so1255512obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 15:14:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120822140733.GA1266@gamma.logic.tuwien.ac.at>
+In-Reply-To: <CAA2SeNJ_+ajhcfF1Zdh77W6qNZHXZwgBaQ7psP7zgmkaQW5_0Q@mail.gmail.com>
+References: <CAA2SeNJmaHs5fMHrG65HWbe5Y-ytz2qvuzNGKvhBKgvZ15KoVw@mail.gmail.com>
+ <20120809173435.GQ3745@lenteja.do-not-panic.com> <CAA2SeNKbBCxPbJmXMyo4-nK2SXL-WcOFQaKDrEM-cxbVrzt7Ew@mail.gmail.com>
+ <CAB=NE6V6T0RMSiMZCsUdr85vWMgs4VfJ6HTYHwf+kDQUwQ-mhg@mail.gmail.com>
+ <20120809170757.748b68bf@mj> <CAB=NE6UracUuvGhQcnkfDsi1peNMgvagS0jyYgSvamim4tiLWA@mail.gmail.com>
+ <50242B80.4060509@openwrt.org> <CAA2SeNJ_+ajhcfF1Zdh77W6qNZHXZwgBaQ7psP7zgmkaQW5_0Q@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 9 Aug 2012 15:14:23 -0700
+Message-ID: <CAB=NE6UsqwuF2ZHSfSXaug=nRcKkzKbDuz7LU3v=TyOaf8vgZg@mail.gmail.com> (sfid-20120810_001449_908874_77FAFFCC)
+Subject: Re: [PATCH v2] ath9k: decrypt_error flag issue
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	Pavel Roskin <proski@gnu.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Larry.
+On Thu, Aug 9, 2012 at 3:06 PM, Lorenzo Bianconi
+<lorenzo.bianconi83@gmail.com> wrote:
+>> On 2012-08-09 11:21 PM, Luis R. Rodriguez wrote:
+>>> On Thu, Aug 9, 2012 at 2:07 PM, Pavel Roskin <proski@gnu.org> wrote:
+>>>> On Thu, 9 Aug 2012 11:10:38 -0700
+>>>> "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> wrote:
+>>>>
+>>>>> And this would lead to .. what? How did you realize this? Can you
+>>>>> please resend and add all this information to the commit log message?
+>>>>
+>>>> Also please use a better subject.  For example:
+>>>>
+>>>> ath9k: fix decrypt_error initialization in ath_rx_tasklet()
+>>>>
+>>>> "issue" is too vague.
+>>>
+>>> Also -- what I was getting at is to evaluate whether or not this is an
+>>> important fix or critical. To determine if its critical it helps to
+>>> understand exactly what negative behavior was observed. If its
+>>> critical it can go to stable but I have a feeling this is not
+>>> critical. If its not critical and only important although it won't go
+>>> to stable I'll still cherry pick it for the stable compat-wireless
+>>> releases.
+>> I think it's critical enough for stable. I think when using CCMP
+>> encryption, high CPU load can get the connection stuck (because of CCMP
+>> PN corruption when the issue occurs).
+>>
+>> - Felix
+>>
+>
+>  I was using a two hop network encrypted with AES CCMP.
+>
+> STA <---f0---> Node A <---f0---> Node B   f0=2412GHz
+>
+> Node A and node B were running latest OpenWRT trunk, AR9280 chipset.
+> I was injecting 30Mbps of UDP iperf traffic from STA to Node B.
+> I was facing a connection stuck issue on Node B side because it
+> reports a lot of decrypt errors
+> and since decrypt_error flag sets to true, it tries to decrypt an
+> already decrypted frame with ieee80211_aes_ccm_decrypt. Setting
+> decrypt_error to false at beginning of ath_rx_tasklet cycle
+> the connection is definitely more stable avoiding waste of CPU time.
 
-On Wed, Aug 22, 2012 at 11:07:33PM +0900, Norbert Preining wrote:
-> Dear all,
-> 
-> (please cc)
-> 
-> I am having serious troubles with my rtl8192se card:
-> 
-> kernel: 3.6.0-rc2+, compiled from git today, same with rc1
-> rtl8192se in kernel driver, loaded with debug=3
-> Debian sid
-> Lenovo Thinkpad Edge
-> 
-> When starting from cold boot, the driver associates, but no packet
-> whatsoever leaves the computer it seems, pinging the gateway
-> does not return anything, and ns lookups are not working.
-> 
-> In the logs I see many instances of:
-> rtlwifi:rtl_tx_agg_start():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6 seq:39
-> rtlwifi:rtl_action_proc():<200-1> Tx ACT_ADDBAREQ From :88:9f:fa:f9:07:28
-> rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6
-> rtlwifi:rtl_action_proc():<400-1> ACT_ADDBADEL From :88:9f:fa:f9:07:28
-> rtlwifi:rtl_action_proc():<10000-1> Rx ACT_ADDBARSP From :00:0a:79:eb:56:10
-> in various orders.
-> 
-> 
-> trying to remove the module gave me:
-> [  649.459652] wlan0: deauthenticating from 00:0a:79:eb:56:10 by local choice (reason=3)
-> [  649.459701] rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 0
-> [  659.094654] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 0, mac: 00:0a:79:eb:56:10
-> [  659.094659] rtlwifi:rtl_op_set_key():<0-0> alg:CCMP
-> [  659.094663] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:4(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
-> [  659.094667] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
-> [  659.094670] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:0
-> [  659.094673] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
-> [  659.094676] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010000
-> [  659.094719] rtlwifi:rtl_op_sta_remove():<0-0> Remove sta addr is 00:0a:79:eb:56:10
-> [  659.142712] rtlwifi:rtl_op_bss_info_changed():<0-0> BSS_CHANGED_UN_ASSOC
-> [  659.142725] rtlwifi:rtl_op_bss_info_changed():<0-0> 00:00:00:00:00:00
-> [  659.190740] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
-> [  659.190744] rtlwifi:rtl_op_set_key():<0-0> alg:TKIP
-> [  659.190747] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:2(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
-> [  659.190750] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
-> [  659.190753] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:1
-> [  659.190756] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
-> [  659.190759] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010008
-> 
-> 
-> After that I reloaded the module and then it is getting worse:
-> rtl8192se 0000:03:00.0: Refused to change power state, currently in D3
-> rtl8192se:_rtl92se_read_adapter_info():<0-0> RTL819X Not boot from eeprom, check it !!
-> tl8192se: FW Power Save off (module option)
-> rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE
-> Loading firmware rtlwifi/rtl8192sefw.bin
-> ...
-> rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-0> OK
-> rtl8192se:rtl92s_phy_bb_config():<0-0> RF_Type(0) does not match RF_Num(4)!!
-> rtl8192se:rtl92s_phy_bb_config():<0-0> path1 0xf, path2 0xf, pathmap 0xf
-> rtlwifi:rtl_pci_start():<0-0> OK
-> rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
-> rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
-> rtl8192se:rtl92s_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
-> 
-> rtl8192se:rtl92s_phy_set_rf_power_state():<0-1> IPS Set eRf nic enable
-> rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-1> OK
-> 
-> ...
-> rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
-> rtlwifi:rtl_pci_tx():<200-1> No more TX desc@6, ring->idx = 0, idx = 0, skb_queue_len = 0x0
-> 
-> etc etc.
-> 
-> That is the end, no connection at all, and no way (AFAIS) to get
-> it back.
-> 
-> Are there any suggestions, patches, ideas to fix and track that down?
-> 
-> THanks a lot
-> 
-> Norbert
-> (please cc)
-> 
-> ------------------------------------------------------------------------
-> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-> JAIST, Japan                                 TeX Live & Debian Developer
-> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-> ------------------------------------------------------------------------
-> MOTSPUR (n.)
-> The fourth wheel of a supermarket trolley which looks identical to the
-> other tree but renders the trolley completely uncontrollable.
-> MO I RANA Imagine being on a vacation, and it's raining all the time,
-> you are driving and the kids are making you a nervous wreck. Well you
-> are definitive in Mo i Rana.
-> 			--- Douglas Adams, The Meaning of Liff
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Can you resubmit with all this information and also what Felix
+mentioned and also also add:
 
--- 
-Regards/Gruss,
-Boris.
+Cc: stable@vger.kernel.org
+
+as part of your commit log message (note: commit log, not e-mail).
+
+  Luis
