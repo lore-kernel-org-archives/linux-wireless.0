@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:56720 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750Ab2HZIgg (ORCPT
+Received: from cassiel.sirena.org.uk ([80.68.93.111]:54993 "EHLO
+	cassiel.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755980Ab2HIMFo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Aug 2012 04:36:36 -0400
-Received: by obbuo13 with SMTP id uo13so6647238obb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 01:36:35 -0700 (PDT)
+	Thu, 9 Aug 2012 08:05:44 -0400
+Date: Thu, 9 Aug 2012 13:05:30 +0100
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, Wei Ni <wni@nvidia.com>,
+	linux-wireless@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	brcm80211-dev-list@broadcom.com, linux-kernel@vger.kernel.org,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	frankyl@broadcom.com, linux-tegra@vger.kernel.org
+Subject: Re: How to get the irq flags from the dts file
+Message-ID: <20120809120530.GC8474@sirena.org.uk> (sfid-20120809_140607_751552_F60D37EE)
+References: <1344509006.2295.148.camel@tegra-chromium-2>
+ <201208091148.42748.arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <1345969836.3622.4.camel@jlt4.sipsolutions.net>
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-	<1345800585.4503.8.camel@jlt3.sipsolutions.net>
-	<CAB3XZEcnVxiBkSz4ZMYSqWF55BYBcDgF7tZsRRXoD91unVrAww@mail.gmail.com>
-	<1345968623.3622.3.camel@jlt4.sipsolutions.net>
-	<CAB3XZEfTEz5U0Tu7H-S0ZzDZvUMBdfMgjx6+oS3yF+LaudznjA@mail.gmail.com>
-	<1345969836.3622.4.camel@jlt4.sipsolutions.net>
-Date: Sun, 26 Aug 2012 11:36:35 +0300
-Message-ID: <CAB3XZEf-pVXEC+QF61ZNHjt=XSkyGPdNG6egjVoJ-MVymTye=w@mail.gmail.com> (sfid-20120826_103737_546147_B1D1B332)
-Subject: Re: [RFC 00/20] mac80211: multi-channel work
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201208091148.42748.arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 26, 2012 at 11:30 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2012-08-26 at 11:28 +0300, Eliad Peller wrote:
->
->> >> this scenario (deauth after disassoc) also sounds pretty unlikely...
->> >
->> > It seems that it happens when you ask the supplicant to "disconnect" via
->> > the CLI.
->> >
->> at least in my setup issuing a "disconnect" via the CLI ends only with
->> a deauth (as the respective code in wpa_supplicant/ctrl_iface.c seems
->> to call only wpa_supplicant_deauthenticate())
->
-> Hm. Maybe it was removing the interface then, or something. I don't
-> remember, but Ilan said he had a way to trigger this.
->
-> In any case, it seems we should handle it in some way?
->
-well, it sounds rare enough to me.
-maybe we can/should just drop it in this case (if there is no channel
-context attached)?
+On Thu, Aug 09, 2012 at 11:48:42AM +0000, Arnd Bergmann wrote:
+> On Thursday 09 August 2012, Wei Ni wrote:
 
-Eliad.
+> > The wlan driver wish this flags include the IRQF_TRGGER_* information,
+> > and it will use this flags to configure other hw settings. If it is
+> > wrong, the wlan can't work.
+
+You can read the configuration with irqd_get_trigger_type() - see the OF
+code in sound/soc/codecs/wm8903.c for an example.
+
+> The driver should not need to know about thie flag. It gets read
+> by irq_create_of_mapping when calling teh xlate function and
+> gets set using irq_set_irq_type from there too.
+
+That only helps the interrupt controller, it doesn't help the interrupt
+source.  A good proportion of embedded devices have a great deal of
+flexibility in how they signal interrupts so they need to know what mode
+to pick.
