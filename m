@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:54554 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034Ab2HGPiy (ORCPT
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:34764 "EHLO
+	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750964Ab2HICYh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2012 11:38:54 -0400
-Received: by obbuo13 with SMTP id uo13so7649099obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2012 08:38:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120807190140.4796a045@emcraft.com>
-References: <20120719133452.2fb375ae@emcraft.com>
-	<CAOZOX0V=npQuQ03kur0mo7PtkdGVYiFO5B3OKhB7CMibLk50Ew@mail.gmail.com>
-	<20120807190140.4796a045@emcraft.com>
-Date: Tue, 7 Aug 2012 17:38:53 +0200
-Message-ID: <CAOZOX0V1_zA3iTXhz7J4_t-BxNQ6k6V_-A_jky2B=fpbya-Lqg@mail.gmail.com> (sfid-20120807_173857_698586_18B64C2A)
-Subject: Re: Access Point Mode for Ralink RT5370?
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Sergei Poselenov <sposelenov@emcraft.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 8 Aug 2012 22:24:37 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ying Luo <luoy@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix 'smatch' warning in preparing key_material cmd
+Date: Wed,  8 Aug 2012 19:01:52 -0700
+Message-Id: <1344477712-15818-1-git-send-email-bzhao@marvell.com> (sfid-20120809_042512_465182_B2CCBCC2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The key length can be 32 bytes for TKIP and 16 bytes for AES_CMAC.
+'smatch' warns on memcpy using key_len variable to copy data to
+a 16 bytes buffer. Use fixed length to avoid the warning.
 
->> On Thu, Jul 19, 2012 at 11:34 AM, Sergei Poselenov
->> <sposelenov@emcraft.com> wrote:
->> > Hello,
->> >
->> > Does compat-wireless support the Access Point mode for the Ralink
->> > RT5370 chip? The driver source pack from the Ralink site only
->> > supports Managed and Ad-Hoc modes.
->>
->> Yes, the rt2x00-based drivers as found in the compat-wireless package
->> are working in AP mode.
->>
->
-> I'm trying to set the master mode and it fails:
-> ~ # iwconfig wlan0 mode Master
-> Error for wireless request "Set Mode" (8B06) :
->     SET failed on device wlan0 ; Invalid argument.
-> ~ #
->
-> The Linux Wireless FAQ here
-> http://linuxwireless.org/en/users/Documentation/FAQ#Q:_iwconfig_wlan0_mode_master_does_not_work
-> tells me that I should use hostapd instead of iwconfig to configure the
-> master mode.
->
-> However, for my project the WiFi security is not required. Also, I'm
-> working on a custom ARM board with Linux 2.6.33 running.
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_cmd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-But the FAQ doesn't say you need hostapd for WiFi Security, it says if you want
-master mode, you must use hostapd..
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 9af9692..0cc3406 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -690,7 +690,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+ 
+ 			memcpy(param->ipn, enc_key->pn, IGTK_PN_LEN);
+ 			memcpy(param->key, enc_key->key_material,
+-			       enc_key->key_len);
++			       WLAN_KEY_LEN_AES_CMAC);
+ 
+ 			key_param_len = sizeof(struct mwifiex_cmac_param);
+ 			key_material->key_param_set.key_len =
+-- 
+1.7.0.2
 
-> Could you please confirm I should really port hostapd to my target to
-> configure my USB WiFi as Access Point?
-
-Yes, you _must_ use hostapd.
-
-Ivo
