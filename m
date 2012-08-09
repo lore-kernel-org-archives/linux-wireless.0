@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:46484 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753781Ab2HXGCM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 02:02:12 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Thu, 23 Aug 2012 23:01:57 -0700
-Subject: RE: [PATCH v2] mwifiex: use is_broadcast_ether_addr() instead of
- memcmp()
-Message-ID: <477F20668A386D41ADCC57781B1F7043083B0BBBB6@SC-VEXCH1.marvell.com> (sfid-20120824_080217_370128_C49B78DF)
-References: <CAPgLHd81cZS4K-wzcLycRTVF3pGy-S6=YR9UZ++Ot=6OXZp-5Q@mail.gmail.com>
-In-Reply-To: <CAPgLHd81cZS4K-wzcLycRTVF3pGy-S6=YR9UZ++Ot=6OXZp-5Q@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mms2.broadcom.com ([216.31.210.18]:1827 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932153Ab2HIMKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 08:10:02 -0400
+Message-ID: <5023A88F.8040402@broadcom.com> (sfid-20120809_141007_084472_53133EEA)
+Date: Thu, 9 Aug 2012 14:09:51 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Wei Ni" <wni@nvidia.com>
+cc: "grant.likely@secretlab.ca" <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	frankyl@broadcom.com, devicetree-discuss@lists.ozlabs.org,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: How to get the irq flags from the dts file
+References: <1344509006.2295.148.camel@tegra-chromium-2>
+In-Reply-To: <1344509006.2295.148.camel@tegra-chromium-2>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 08/09/2012 12:43 PM, Wei Ni wrote:
+> Hi, all
+> I'm working on tegra wlan upstream issue.
+> The tegra board use the Broadcom 4329 as wlan device, and the driver is
+> the brcmfmac. 
 > 
-> Using is_broadcast_ether_addr() instead of directly use
-> memcmp() to determine if the ethernet address is broadcast
-> address.
+> This wlan driver support out-band-interrupt (OOB), I want to add DT
+> support to use this OOB.
+> I can add following lines in the dts file to create platform device and
+> pass the interrupt resource to the driver.
 > 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> wlan {
+>         compatible = "broadcome, brcmf_sdio_pd";
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+I don't know the DT syntax, but I assume broadcome should be broadcom,
+right? ;-)
 
-Thanks,
-Bing
+>         interrupt-parten = <&gpio>;
+>         interrupts = <144, 0x04>; /* IRQF_TRIGGER_HIGH */
+> };
+> 
+> In the wlan driver, it will use platform_get_resource() to get the
+> res->irq, res->flags, the irq number is right, but the flags will be
+> IORESOURCE_IRQ, not the 0x04 (IRQF_TRIGGER_HIGH).
+> The wlan driver wish this flags include the IRQF_TRGGER_* information,
+> and it will use this flags to configure other hw settings. If it is
+> wrong, the wlan can't work.
+> 
+> I checked drivers/of/irq.c, in function of_irq_to_resource(), it will
+> set r->flags = IORESOURCE_IRQ directly, not read the flags from the dtb
+> file. And I didn't find any of_xx api to get this flags.
+> 
+> How can I get this flags, does anyone has suggestion?
 
-> ---
->  drivers/net/wireless/mwifiex/sta_cmd.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-> index df3a33c..323b91b 100644
-> --- a/drivers/net/wireless/mwifiex/sta_cmd.c
-> +++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-> @@ -551,7 +551,6 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
->  	struct host_cmd_tlv_mac_addr *tlv_mac;
->  	u16 key_param_len = 0, cmd_size;
->  	int ret = 0;
-> -	const u8 bc_mac[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-> 
->  	cmd->command = cpu_to_le16(HostCmd_CMD_802_11_KEY_MATERIAL);
->  	key_material->action = cpu_to_le16(cmd_action);
-> @@ -593,7 +592,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
->  			/* set 0 when re-key */
->  			key_material->key_param_set.key[1] = 0;
-> 
-> -		if (0 != memcmp(enc_key->mac_addr, bc_mac, sizeof(bc_mac))) {
-> +		if (!is_broadcast_ether_addr(enc_key->mac_addr)) {
->  			/* WAPI pairwise key: unicast */
->  			key_material->key_param_set.key_info |=
->  				cpu_to_le16(KEY_UNICAST);
-> 
+I did a quick search in the kernel and there are a number of platform
+drivers that seem to expect the IRQF_TRIGGER_* info by using (res->flags
+& IRQF_TRIGGER_MASK) and to determine IRQF_SHARED as well.
+
+Gr. AvS
 
