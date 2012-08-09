@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:57770 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752836Ab2HFToz (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:49579 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030897Ab2HIPWV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:44:55 -0400
-Received: by obbuo13 with SMTP id uo13so6327782obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:44:55 -0700 (PDT)
+	Thu, 9 Aug 2012 11:22:21 -0400
+Received: by eeil10 with SMTP id l10so205264eei.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 08:22:20 -0700 (PDT)
+Date: Thu, 9 Aug 2012 19:22:17 +0400
+From: Paul Fertser <fercerpav@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] [PATCHv2] rt2x00: specify iface_combinations to allow
+	for multi-bss operation
+Message-ID: <20120809152217.GR28444@home.lan> (sfid-20120809_172230_610443_85237E66)
+References: <CAL1gcdM4-mbdDTmopEhZhHysVioxP5+E=DuMRDU_nLxmebN8Nw@mail.gmail.com> <1344243790-30164-1-git-send-email-fercerpav@gmail.com> <20120807103433.GB12589@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20511.62502.380685.674021@gargle.gargle.HOWL>
-References: <20511.62502.380685.674021@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 6 Aug 2012 12:44:35 -0700
-Message-ID: <CAB=NE6Wz0FEcZd3qvDET=kst3gRK+wu=k3yuMt_D1mfkT3+k5Q@mail.gmail.com> (sfid-20120806_214459_688264_41CC95AA)
-Subject: Re: [PATCH 3.5.y 2/2] compat-wireless: Add new cherry-picked patches
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120807103433.GB12589@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 6, 2012 at 9:43 AM, Sujith Manoharan
-<c_manoha@qca.qualcomm.com> wrote:
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Aug 07, 2012 at 12:34:34PM +0200, Stanislaw Gruszka wrote:
+> On Mon, Aug 06, 2012 at 01:03:10PM +0400, Paul Fertser wrote:
+> > However, real-life testing on RT3052F SoC showed that neither WPA-PSK +
+> > Open nor 2 WPA-PSK APs work properly (though both APs beacon properly).
+> > No other tests were performed.
+> 
+> You can try to use nohwcrypt option. If you configure 2 open APs, does
+> this work?
 
-8 of the hunks were just version of git ouputs at the end of the patch
-files, we gotta find a way to ignore that from git format-patch. I
-didn't find anything yet.
+Should have tried that indeed, silly me. But, heh, surprise, neither
+of that works for me, i always get
+"wlan0: STA 6c:62:6d:17:b9:3a IEEE 802.11: did not acknowledge
+authentication response" in the log on the AP side.
 
-Thanks so much for these patches! I've applied them and pushed them,
-I'll run a series of tests later and appropriately tag things after
-the test, and push new respective releases then.
+I can try to capture over-the-air log, but i'm not sure if that's
+needed since i can't fix the driver myself and the issue looks like an
+easily reproducible one.
 
-  Luis
+TIA
+-- 
+Be free, use free (http://www.gnu.org/philosophy/free-sw.html) software!
+mailto:fercerpav@gmail.com
