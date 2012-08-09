@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51238 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933010Ab2HWNYr (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.10]:58938 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759376Ab2HITmK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 09:24:47 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 5/6] ath9k: Make use of ath_stop_ani wrapper
-Date: Thu, 23 Aug 2012 18:53:57 +0530
-Message-ID: <1345728238-5313-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152450_277665_BEFA0961)
-In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
+	Thu, 9 Aug 2012 15:42:10 -0400
+From: Marek Vasut <marex@denx.de>
+To: Joseph Honold <mozzwald@gmail.com>
+Subject: Re: Palm T|X Libertas Wifi problems Kernel 3.4.7 stable
+Date: Thu, 9 Aug 2012 21:42:03 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <CALSu_YrXF0iO0=+drmUzatGZUYkMxczF_J2Xw_CNqEY3fxJ5Bg@mail.gmail.com> <201208092026.03430.marex@denx.de> <CALSu_Yq77ED4d1ZwzSKFfP9ze_FnYKErSHrB+1pwjFvu1rypLQ@mail.gmail.com>
+In-Reply-To: <CALSu_Yq77ED4d1ZwzSKFfP9ze_FnYKErSHrB+1pwjFvu1rypLQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201208092142.04033.marex@denx.de> (sfid-20120809_214214_282919_5070CC97)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Dear Joseph Honold,
 
-Additionally it has a neat debug message informing us
-that we are stopping the ANI algorithm.
+> > There's official 5.x.x firmware for 88w8381 in linux-firmware, use that.
+> > V4 FW supplied by Palm isn't supported properly.
+> 
+> That did the trick. Thanks
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+You're welcome :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d308b44..3923ad9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2223,7 +2223,7 @@ static int ath9k_suspend(struct ieee80211_hw *hw,
- 	mutex_lock(&sc->mutex);
- 
- 	ath_cancel_work(sc);
--	del_timer_sync(&common->ani.timer);
-+	ath_stop_ani(sc);
- 	del_timer_sync(&sc->rx_poll_timer);
- 
- 	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
--- 
-1.7.0.4
+So the V4 firmware support for 8381 is completely broken now? I think I'll 
+submit a patch that removes the support for it altogether later on (and 
+complains if you try to load V4 firmware). I recall I added some piece of code 
+that tolerated the V4 FW, but it was maybe a code for tolerating V3 firmware on 
+8305 even ... I'll have to check.
 
+Best regards,
+Marek Vasut
