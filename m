@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:54067 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753696Ab2H0RSM (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:54904 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753979Ab2HIWRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 13:18:12 -0400
-Received: by pbbrr13 with SMTP id rr13so7781659pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 10:18:12 -0700 (PDT)
+	Thu, 9 Aug 2012 18:17:50 -0400
+Received: by wibhq12 with SMTP id hq12so704169wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 15:17:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAEFj984VD6VmnX5nP0bCV7-pb-YPQ55eX2Gusg4G4jwRV7O9ng@mail.gmail.com>
-References: <1346063887-29078-1-git-send-email-yeohchunyeow@gmail.com>
- <CAG6hwVMQckH9KYp=OZorb2Q__91VrC-V5MNqE+zXsCTN4B5=dg@mail.gmail.com> <CAEFj984VD6VmnX5nP0bCV7-pb-YPQ55eX2Gusg4G4jwRV7O9ng@mail.gmail.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Mon, 27 Aug 2012 10:17:51 -0700
-Message-ID: <CAG6hwVNZYM6hQe9BvhP2eyFCMWTk7-HbZBx9hqikwQNkdF_6cQ@mail.gmail.com> (sfid-20120827_191816_871984_BE4D4B09)
-Subject: Re: [PATCH] cfg80211: allow software encryption of aes cmac in mesh
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	devel@lists.open80211s.org
+Date: Fri, 10 Aug 2012 00:17:49 +0200
+Message-ID: <CACRof1UCCB1v0a1Zscr5pjCoWz1m4aJXyeHvVnZ1SmOyFc+W3w@mail.gmail.com> (sfid-20120810_001753_104401_8388ECD6)
+Subject: ath5k interrupt storm with linux 3.4.7 on IBM Thinkpad X31
+From: Manuel Jander <manuel.jander@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 27, 2012 at 8:24 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> Hi, Thomas
->
->> So what does this patch fix, exactly? mac80211 already advertises
->> support for AES CMAC if the hardware is MFP capable.
->
-> I think that ath5k is not hardware MFP capable, but actually could do
-> AES CMAC in software. But key installation using AES CMAC of authsae
-> on the multicast management frame are failed due to the checking of
-> cfg80211_supported_cipher_suit which is based on
-> IEEE80211_HW_MFP_CAPABLE. So the only way is bypass this checking.
-> What do you think?
+Hi,
 
-But this is ugly. I liked your ath5k patch better and am not really
-sure what Johannes' problem with it was?
+Linux 3.4.7 ath5k driver is unusable on a Thinkpad X31, the machine
+uses almost 100% CPU handling interrupts, barely responding to
+anything. Using the old version of the function ath5k_hw_get_isr() in
+drivers/net/wireless/ath/ath5k/dma.c of Linux 3.1.6 patched into Linux
+3.4.7 works again. My guess: some interrupt flags (0x400 and 0x80) are
+not cleared correctly or retriggered artificially by some unlucky
+register manipulations.
 
-Thomas
+Enabling interrupt debug (debug=0x4 if a recall correctly) shows that
+the interrupt status is stuck to 0x480 with Linux 3.4.7.
+
+Is this a known problem ? Is there any detailed behaviour
+description/documentation availabe of this chip ?
+
+Cheers,
+Manuel
