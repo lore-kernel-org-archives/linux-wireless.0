@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36284 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753412Ab2HTLVX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 07:21:23 -0400
-Message-ID: <1345461679.4459.11.camel@jlt3.sipsolutions.net> (sfid-20120820_132126_709578_56E6FB97)
-Subject: Re: [PATCH v2] mac80211: avoid using synchronize_rcu in
- ieee80211_set_probe_resp
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>
-Date: Mon, 20 Aug 2012 13:21:19 +0200
-In-Reply-To: <1344252376-20971-1-git-send-email-arik@wizery.com> (sfid-20120806_132621_600765_F616ABEB)
-References: <1344252376-20971-1-git-send-email-arik@wizery.com>
-	 (sfid-20120806_132621_600765_F616ABEB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:38075 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751973Ab2HISTq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Aug 2012 14:19:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Thu, 9 Aug 2012 11:19:36 -0700
+Subject: RE: [patch] mwifiex: use GFP_ATOMIC under spin lock
+Message-ID: <477F20668A386D41ADCC57781B1F7043083AF361C0@SC-VEXCH1.marvell.com> (sfid-20120809_201951_659636_8D4D5162)
+References: <20120809065757.GB7925@elgon.mountain>
+In-Reply-To: <20120809065757.GB7925@elgon.mountain>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-08-06 at 14:26 +0300, Arik Nemtsov wrote:
-> From: Eyal Shapira <eyal@wizery.com>
+Hi Dan,
+
+Thanks for the patch.
+
+> We're holding the sta_list_spinlock here so we can't sleep.
 > 
-> This could take a while (100ms+) and may delay sending assoc resp
-> in AP mode with WPS or P2P GO (as setting the probe resp takes place
-> there). We've encountered situations where the delay was big enough
-> to cause connection problems with devices like Galaxy Nexus.
-> Switch to using call_rcu with a free handler.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Applied, thanks.
+Acked-by: Bing Zhao <bzhao@marvell.com>
 
-johannes
+Regards,
+Bing
 
+> 
+> diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+> index 14d4f04..ca4a1f3 100644
+> --- a/drivers/net/wireless/mwifiex/uap_event.c
+> +++ b/drivers/net/wireless/mwifiex/uap_event.c
+> @@ -63,7 +63,7 @@ mwifiex_add_sta_entry(struct mwifiex_private *priv, u8 *mac)
+>  	if (node)
+>  		goto done;
+> 
+> -	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_KERNEL);
+> +	node = kzalloc(sizeof(struct mwifiex_sta_node), GFP_ATOMIC);
+>  	if (!node)
+>  		goto done;
+> 
