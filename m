@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5925 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab2HJLSo (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.187]:49563 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757551Ab2HILsx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:18:44 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Thu, 9 Aug 2012 07:48:53 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: How to get the irq flags from the dts file
+Date: Thu, 9 Aug 2012 11:48:42 +0000
+Cc: Wei Ni <wni@nvidia.com>,
+	"grant.likely@secretlab.ca" <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	frankyl@broadcom.com, brcm80211-dev-list@broadcom.com,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+References: <1344509006.2295.148.camel@tegra-chromium-2>
+In-Reply-To: <1344509006.2295.148.camel@tegra-chromium-2>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60874.416293.305770@gargle.gargle.HOWL> (sfid-20120810_132551_561720_826B82B8)
-Date: Fri, 10 Aug 2012 16:47:30 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 15/15] ath9k: tune rc_stats to display only valid rates
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208091148.42748.arnd@arndb.de> (sfid-20120809_134919_134090_3B1FB0FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+On Thursday 09 August 2012, Wei Ni wrote:
+> In the wlan driver, it will use platform_get_resource() to get the
+> res->irq, res->flags, the irq number is right, but the flags will be
+> IORESOURCE_IRQ, not the 0x04 (IRQF_TRIGGER_HIGH).
+> The wlan driver wish this flags include the IRQF_TRGGER_* information,
+> and it will use this flags to configure other hw settings. If it is
+> wrong, the wlan can't work.
+> 
+> I checked drivers/of/irq.c, in function of_irq_to_resource(), it will
+> set r->flags = IORESOURCE_IRQ directly, not read the flags from the dtb
+> file. And I didn't find any of_xx api to get this flags.
+> 
+> How can I get this flags, does anyone has suggestion?
 
-This could make rc_stats more simpler and ease the debugging.
+The driver should not need to know about thie flag. It gets read
+by irq_create_of_mapping when calling teh xlate function and
+gets set using irq_set_irq_type from there too.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 4a04fff..4b12c34 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1355,7 +1355,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 	struct ath_rate_priv *rc = file->private_data;
- 	char *buf;
- 	unsigned int len = 0, max;
--	int i = 0;
-+	int rix;
- 	ssize_t retval;
- 
- 	if (rc->rate_table == NULL)
-@@ -1371,7 +1371,8 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 		       "HT", "MCS", "Rate",
- 		       "Success", "Retries", "XRetries", "PER");
- 
--	for (i = 0; i < rc->rate_table_size; i++) {
-+	for (rix = 0; rix < rc->max_valid_rate; rix++) {
-+		u8 i = rc->valid_rate_index[rix];
- 		u32 ratekbps = rc->rate_table->info[i].ratekbps;
- 		struct ath_rc_stats *stats = &rc->rcstats[i];
- 		char mcs[5];
--- 
-1.7.11.4
-
+	Arnd
