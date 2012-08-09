@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46563 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754114Ab2HJGH2 convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35595 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035Ab2HIEie (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 02:07:28 -0400
-Received: by pbbrr13 with SMTP id rr13so2175920pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 23:07:28 -0700 (PDT)
+	Thu, 9 Aug 2012 00:38:34 -0400
+Received: by weyx8 with SMTP id x8so20933wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 21:38:32 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 10 Aug 2012 11:37:27 +0530
-Message-ID: <CAJwzM1nGny-JBD8hwKXsrERko0cGvuJB_nD2dbPrPmzF-T49Tg@mail.gmail.com> (sfid-20120810_080731_101463_8799AA08)
-Subject: [cfg80211] Issue with simultaneous AP-STA operation in mwifiex/cfg80211
-From: Avinash Patil <avinashapatil@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avinash Patil <patila@marvell.com>, Bing Zhao <bzhao@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CAB=NE6XfyQSjWHrr97L29hRzRx-H4wsPHMQ7mG4n9D_e7p46=A@mail.gmail.com>
+References: <1344481126-15702-1-git-send-email-andy@greyhouse.net>
+	<CAB=NE6XfyQSjWHrr97L29hRzRx-H4wsPHMQ7mG4n9D_e7p46=A@mail.gmail.com>
+Date: Thu, 9 Aug 2012 00:38:32 -0400
+Message-ID: <CAHashqAFi=hnwiJHaajjv=WWDnD0jzcpLxrda9F3C8zb-HNGLA@mail.gmail.com> (sfid-20120809_063837_480379_4DAEA98B)
+Subject: Re: [PATCH] compat: support RHEL6.3 as a build target
+From: Andy Gospodarek <andy@greyhouse.net>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Phil Perry <phil@elrepo.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Wed, Aug 8, 2012 at 11:37 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Wed, Aug 8, 2012 at 7:58 PM, Andy Gospodarek <andy@greyhouse.net> wrote:
+>> This patch allows me to compile and load the latest compat modules on
+>> RHEL6.3.  Users of compat on RHEL6 should note that you should set
+>> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
+>>
+>> Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
+>
+> Thanks! Any chance you can git fetch; git rebase; (ensuring you have
+> 42faf2dc8d8 at tip) and then try running:
+>
+> ./bin/get-compat-kernels
+>
+> This can take ~10 minutes
+>
+> And then test compile your changes with:
+>
+> ./bin/ckmake
+>
+> And provide that as part of your commit log message?
 
-Lately simultaneous AP-STA functionality in mwifiex driver is not
-working. I feel this has something to do with recent changes in
-cfg80211.
+I just did this and will post a v2 patch right now.
 
-If we associate mwifiex STA to external AP first and then try to start
-mwifiex AP using hostapd(on different channel), we get –EBUSY error
-from cfg80211. This happens from path
-nl80211_start_ap->cfg80211_can_use_chan.  cfg80211_can_use_chan
-returns EBUSY error. In our design if mwifiex STA is already
-associated on some different channel, AP follows this channel and BSS
-is started using STA channel settings. If we start hostapd on same
-channel, BSS is successfully started, but association requests from
-external station result in failure.
+> We can likely add
+> the RHEL kernels to the ./bin/get-compat-kernels if you can figure out
+> a way to unpack them for any user out there on any Linux distribution.
+> This way I can gate future patches from being merged unless they also
+> give me a good set of results from ckmake.
+>
+> Thoughts ?
 
-Please let me know if we are missing something while registering
-n_iface and iface combinations. num_different_channels in
-ieee80211_iface_combination has been advertised as 1.
-
-Regards,
-Avinash.
+I like it.  I'll look into the guts of these scripts a bit more and
+see what we can get added.
