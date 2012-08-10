@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37153 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755191Ab2HVJB3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 05:01:29 -0400
-Date: Wed, 22 Aug 2012 11:01:05 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mahesh Palivela <maheshp@posedge.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
-Message-ID: <20120822090104.GA4959@redhat.com> (sfid-20120822_110134_928819_77778748)
-References: <502CF2D5.6020704@posedge.com>
- <20120817140657.GA1645@redhat.com>
- <502E85D9.5050301@posedge.com>
- <1345480718.4459.37.camel@jlt3.sipsolutions.net>
- <87d32k7kga.fsf@purkki.adurom.net>
- <20120821081839.GA2380@redhat.com>
- <50338E84.3050709@posedge.com>
- <1345564421.10280.9.camel@jlt3.sipsolutions.net>
- <5033CE76.6040306@posedge.com>
- <1345619008.4635.3.camel@jlt3.sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40687 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759767Ab2HJXs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 19:48:57 -0400
+Message-ID: <50259DE2.4030209@hauke-m.de> (sfid-20120811_014939_431617_180F5C70)
+Date: Sat, 11 Aug 2012 01:48:50 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1345619008.4635.3.camel@jlt3.sipsolutions.net>
+To: Andy Gospodarek <andy@greyhouse.net>
+CC: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Phil Perry <phil@elrepo.org>,
+	lf driver backport
+	<lf_driver_backport@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
+References: <2121451356.93690.1344518764022.JavaMail.root@neratec.com> <5025425A.2090207@hauke-m.de> <CAHashqAQ9tD3qmzMRNfzLcGbD2A9gykFjUbOhqZA=uLJBnQ4Gw@mail.gmail.com> <CAB=NE6VT+dxeN=BhWJrz+iS8GjS7o+phDJHRhuF2jRL_EEiGVA@mail.gmail.com> <CAHashqAGiBYAYNAGvDJw3-kurt1SZCFmpgqCnrLLux7Ek+oJYA@mail.gmail.com>
+In-Reply-To: <CAHashqAGiBYAYNAGvDJw3-kurt1SZCFmpgqCnrLLux7Ek+oJYA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 22, 2012 at 09:03:28AM +0200, Johannes Berg wrote:
-> On Tue, 2012-08-21 at 23:37 +0530, Mahesh Palivela wrote:
-> > Yes it does. Basically we want to retire look up table approach and 
-> > compute everytime as its not scalable. Fine. In that case, even we need 
-> > to cover HT20, HT40-, HT40+ as well right?
+On 08/10/2012 09:51 PM, Andy Gospodarek wrote:
+> On Fri, Aug 10, 2012 at 3:50 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+>> On Fri, Aug 10, 2012 at 11:28 AM, Andy Gospodarek <andy@greyhouse.net> wrote:
+>>> Did you try the patch I posted last night that has the updated define
+>>> for no_printk()?  I saw the same error until I applied that patch.
+>>
+>> Andy, can you post a new patch on a new thread that is rebased on top
+>> of the latest compat.git master and without putting stuff above the
+>> patch ?
+>>
+>>   Luis
 > 
-> I think we should, yeah. Might even just start with that to make the
-> transition.
+> Yes I can.  You caught me at just the right time as my test build of
+> compat-wireless-3.5-3 just finished.
 
-[snip]
+I just tried "[PATCH] compat: fixup error in no_printk definition" and
+now this error does not occur in my tests any more.
 
-> > > Still doesn't solve the problems we saw with how to configure the
-> > > channel with considerations such as
-> > >    - bandwidth
-> > >    - center frequency
-> > >    - primary subchannel
-> > >    - 80 + 80 (which is basically two such channels?)
-> > >
-> > Yes It does. From center freq, width, control chan offset we know the 
-> > secondary chans. That's all we want. For 80+80 configuration, we will 
-> > get two center freq values.
-> 
-> Yeah but we don't have that yet. We could do it that way, sure, but it
-> has wide-spread implications, since we'll need to
->  - use this new form of specifying channels all over mac80211 and all
->    drivers,
->  - define new nl80211 attributes for it,
->  - write new code in nl80211 to handle all this,
->  - and parse the old attributes into the new data structure(s) so
->    drivers use the new API but userspace can continue to use the old
-> 
-> None of that is done yet.
+Thanks for the patch.
 
-For starters (for regulatory purpose only) would be sufficient to
-implement
-
-regulatory_chan_use_permitted(center freq, bandwidth, whatever else),
-
-and use it where currently IEEE80211_CHAN_NO_HT_X flags are used.
-
-Stanislaw
+Hauke
