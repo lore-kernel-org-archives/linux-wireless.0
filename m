@@ -1,49 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:38811 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903Ab2HZXsx (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47444 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756278Ab2HJBMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Aug 2012 19:48:53 -0400
-Received: by eekc1 with SMTP id c1so731476eek.19
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 16:48:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1346014505-7554-2-git-send-email-ordex@autistici.org>
-References: <1346014505-7554-1-git-send-email-ordex@autistici.org> <1346014505-7554-2-git-send-email-ordex@autistici.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 27 Aug 2012 09:48:31 +1000
-Message-ID: <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com> (sfid-20120827_014933_243805_D149F43D)
-Subject: Re: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 9 Aug 2012 21:12:20 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr13so1803542pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 18:12:20 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/2] mac80211: clean up mpath_move_to_queue()
+Date: Thu,  9 Aug 2012 18:12:12 -0700
+Message-Id: <1344561132-31892-2-git-send-email-thomas@cozybit.com> (sfid-20120810_031332_867351_06A87583)
+In-Reply-To: <1344561132-31892-1-git-send-email-thomas@cozybit.com>
+References: <1344561132-31892-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Antonio,
+Use skb_queue_walk_safe instead, and fix a few issues:
 
-On Mon, Aug 27, 2012 at 6:55 AM, Antonio Quartulli <ordex@autistici.org> wrote:
-> This driver now advertises its allowed VIFs combinations to the mac80211
-> sublayer.
->
-> Other than that, practical tests shown that ath9k_htc devices allow an IBSS VIF
-> to coexist with VIF set up on other modes. This patch removes the check which
-> block the creation of any other VIF whenever an IBSS one is already present.
+	- didn't free old skbs on moving
+	- didn't react to failed skb alloc
+	- needlessly held a local pointer to the destination frame queue
+	- didn't check destination queue length before adding skb
 
-These two patches should really be applied in the opposite order:
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh.h         |    3 +++
+ net/mac80211/mesh_hwmp.c    |    2 --
+ net/mac80211/mesh_pathtbl.c |   36 ++++++++++++++++++++----------------
+ 3 files changed, 23 insertions(+), 18 deletions(-)
 
-You should add the interface combination data (this patch) then remove
-the old checking code.
-
-This way there's not a window (admittedly only one patch) where the
-interface combinations aren't enforced.
-
-Thanks,
-
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index faaa39b..e4d911f 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -215,6 +215,9 @@ struct mesh_rmc {
+ /* Maximum number of paths per interface */
+ #define MESH_MAX_MPATHS		1024
+ 
++/* Number of frames buffered per destination for unresolved destinations */
++#define MESH_FRAME_QUEUE_LEN	10
++
+ /* Public interfaces */
+ /* Various */
+ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 494bc39..47aeee2 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -17,8 +17,6 @@
+ #define MAX_METRIC	0xffffffff
+ #define ARITH_SHIFT	8
+ 
+-/* Number of frames buffered per destination for unresolved destinations */
+-#define MESH_FRAME_QUEUE_LEN	10
+ #define MAX_PREQ_QUEUE_LEN	64
+ 
+ /* Destination only */
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 3ca1e17..57faaa6 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -279,40 +279,44 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
+ 				    struct mesh_path *from_mpath,
+ 				    bool copy)
+ {
+-	struct sk_buff *skb, *cp_skb = NULL;
+-	struct sk_buff_head gateq, failq;
++	struct sk_buff *skb, *fskb, *tmp;
++	struct sk_buff_head failq;
+ 	unsigned long flags;
+-	int num_skbs;
+ 
+ 	BUG_ON(gate_mpath == from_mpath);
+ 	BUG_ON(!gate_mpath->next_hop);
+ 
+-	__skb_queue_head_init(&gateq);
+ 	__skb_queue_head_init(&failq);
+ 
+ 	spin_lock_irqsave(&from_mpath->frame_queue.lock, flags);
+ 	skb_queue_splice_init(&from_mpath->frame_queue, &failq);
+ 	spin_unlock_irqrestore(&from_mpath->frame_queue.lock, flags);
+ 
+-	num_skbs = skb_queue_len(&failq);
+-
+-	while (num_skbs--) {
+-		skb = __skb_dequeue(&failq);
+-		if (copy) {
+-			cp_skb = skb_copy(skb, GFP_ATOMIC);
+-			if (cp_skb)
+-				__skb_queue_tail(&failq, cp_skb);
++	skb_queue_walk_safe(&failq, fskb, tmp) {
++		if (skb_queue_len(&gate_mpath->frame_queue) >=
++				  MESH_FRAME_QUEUE_LEN) {
++			/* XXX: the approach in mesh_hwmp.c is to pop an skb
++			 * instead, which should we do here? */
++			mpath_dbg(gate_mpath->sdata, "mpath queue full!\n");
++			break;
+ 		}
+ 
++		skb = skb_copy(fskb, GFP_ATOMIC);
++		if (WARN_ON(!skb))
++			break;
++
+ 		prepare_for_gate(skb, gate_mpath->dst, gate_mpath);
+-		__skb_queue_tail(&gateq, skb);
++		skb_queue_tail(&gate_mpath->frame_queue, skb);
++
++		if (copy)
++			continue;
++
++		__skb_unlink(fskb, &failq);
++		kfree_skb(fskb);
+ 	}
+ 
+-	spin_lock_irqsave(&gate_mpath->frame_queue.lock, flags);
+-	skb_queue_splice(&gateq, &gate_mpath->frame_queue);
+ 	mpath_dbg(gate_mpath->sdata, "Mpath queue for gate %pM has %d frames\n",
+ 		  gate_mpath->dst, skb_queue_len(&gate_mpath->frame_queue));
+-	spin_unlock_irqrestore(&gate_mpath->frame_queue.lock, flags);
+ 
+ 	if (!copy)
+ 		return;
 -- 
-Julian Calaby
+1.7.5.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
