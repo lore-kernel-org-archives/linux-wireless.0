@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1113 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932860Ab2HPRyz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 13:54:55 -0400
-Message-ID: <502D33E6.4050106@broadcom.com> (sfid-20120816_195459_786157_EF422AFF)
-Date: Thu, 16 Aug 2012 10:54:46 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:46522 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744Ab2HJLoz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 07:44:55 -0400
+Received: by yenl14 with SMTP id l14so204239yen.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 04:44:54 -0700 (PDT)
 MIME-Version: 1.0
-To: "Dani Camps" <danicamps81@yahoo.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Forcing wi-fi chipset to sleep from bcm4329 driver
-References: <1345115328.54417.YahooMailNeo@web29702.mail.ird.yahoo.com>
-In-Reply-To: <1345115328.54417.YahooMailNeo@web29702.mail.ird.yahoo.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <502408EB.3020905@hauke-m.de>
+References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
+	<1344535292-4451-11-git-send-email-ozancag@gmail.com>
+	<502408EB.3020905@hauke-m.de>
+Date: Fri, 10 Aug 2012 14:44:54 +0300
+Message-ID: <CAFub=KSr6sa3PDfvX2K63BM_VrpgWd7KgL5T7oekcLGPxs3wZQ@mail.gmail.com> (sfid-20120810_134459_697648_E6450126)
+Subject: Re: [PATCH 10/13] compat-wireless: Selectively apply patches
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2012 04:08 AM, Dani Camps wrote:
-> Dear all,
+On Thu, Aug 9, 2012 at 10:00 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+
+> The folder network does not exists in this patch, this will break git
+> bisect. Could you add the move of the patches from patches to network in
+> this commit.
+
+Ah, Okay.
+
 >
-> I would like to be able to control the power state (i.e. sleep/awake) of a broadcom wi-fi chipset controlled by the bcm4329 driver. My understanding of sleep/awake is the following: wi-fi chipsets support power saving protocols that allow them to enter into a low power state in order to save energy, this is what I understand as the sleep state. On the other hand when the chipset is fully powered and can directly receive data from the AP, this is what I understand as the chipset being in awake state.
->
-> Now, in the bcm4329 driver I have seen that the power mode of the wi-fi chipset can be configured with the parameters PM_MAX, PM_FAST and PM_OFF. My understanding though is that these are simply parameters to configure an internal power saving algorithm that is implemented in the chipset itself, e.g. if I configure PM_MAX it does not mean that the chipset will enter sleep mode immediately, but it will only do it according to a certain particular algorithm that I cannot conttol. Therefore, my question is whether it is possible to control the power state (sleep/awake) of the wi-fi chipset directly from within bcm4329.
->
+> I do not like the name network for the folder containing the patches,
+> because it could easily be to mixed up with the net folder. What about
+> patches-net as the folder name?
 
-Hi Dani,
+It is already under patches/, e.g. patches/network and patches/drm.
 
-By bcm4329 I assume you are referring to the host driver could be found 
-in Android's tree.
 
-Anyway, bcm4329 and brcmfmac don't provide the capability to fully 
-control the chip. As a fullmac mechanism the chip firmware handles the 
-MAC stuff and knows the best timing of power management. Current PM 
-implementation does quiet a good job. You can adjust some settings to 
-further reduce the wake up frequency of the chip. But if you want 
-anything better than that I am afraid cutting off the power supply is 
-the only option.
 
-Regards,
-Franky
 
+
+
+-- 
+Ozan Çağlayan
