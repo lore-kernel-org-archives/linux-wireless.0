@@ -1,78 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18883 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757429Ab2HJDOY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 23:14:24 -0400
-Date: Thu, 9 Aug 2012 23:13:23 -0400
-From: Andy Gospodarek <gospo@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	linux-wireless@vger.kernel.org,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>,
-	Andy Gospodarek <andy@greyhouse.net>
-Subject: Re: [Lf_driver_backport] [PATCH v2] compat: support RHEL6.3 as a
- build target
-Message-ID: <20120810031323.GE2384@quad.redhat.com> (sfid-20120810_051428_390453_340BFA13)
-References: <1344487215-24143-1-git-send-email-andy@greyhouse.net>
- <2121451356.93690.1344518764022.JavaMail.root@neratec.com>
- <CAB=NE6UNz2oXvCu3NpNVqQLg4pSsL5L-Dw==KGkqxS0CxQfjFg@mail.gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63219 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151Ab2HJLR6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 07:17:58 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6UNz2oXvCu3NpNVqQLg4pSsL5L-Dw==KGkqxS0CxQfjFg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20516.60828.201025.657272@gargle.gargle.HOWL> (sfid-20120810_131800_988165_9D4977FF)
+Date: Fri, 10 Aug 2012 16:46:44 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/15] ath9k: Unify valid rate calculation routines
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 09, 2012 at 06:27:25PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Aug 9, 2012 at 6:26 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
-> > @@ -101,7 +101,7 @@ struct pm_qos_request_list {
-> >  /* mask no_printk as RHEL6 backports this */
-> >  #define no_printk(...) compat_no_printk(...)
-> >  static inline __attribute__ ((format (printf, 1, 2)))
-> > -int no_printk(const char *s, ...) { return 0; }
-> > +int compat_no_printk(const char *s, ...) { return 0; }
-> 
-> I merged this in. Andy can you review your other changes as Zefir points out?
-> 
-> mcgrof@frijol ~/compat (git::master)$ gcc --version
-> gcc (Debian 4.7.1-2) 4.7.1
-> Copyright (C) 2012 Free Software Foundation, Inc.
-> This is free software; see the source for copying conditions.  There is NO
-> warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-> 
-> I suppose we should get ckmake to spit out the version of gcc onto the report.
-> 
->   Luis
-
-I did some more testing and I'm not sure I agree that the patch above is
-the proper way to do this.  My impression was that what I did was
-correct as the only function definitions that need to be renamed with
-the 'compat_' string in front were those that were exported.  This is
-what was done in both John Linville's initial patch for RHEL support and
-the patch from Hauke Mehrtens for Debian Squeeze support.  I feel like
-this is the proper patch to fixup my original error:
-
-Subject: [PATCH] compat: fixup error in no_printk definition
-
-What initially looked like a valid definition for the #define for
-no_printk was not.  This corrects the problem.
-
-Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- include/linux/compat-2.6.36.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c | 74 +++++++++++++++++++------------------
+ 1 file changed, 39 insertions(+), 35 deletions(-)
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 09e4b6f..cd5e37c 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -99,7 +99,7 @@ struct pm_qos_request_list {
-  * gcc's format and side-effect checking.
-  */
- /* mask no_printk as RHEL6 backports this */
--#define no_printk(...) compat_no_printk(...)
-+#define no_printk(a, ...) compat_no_printk(a, ##__VA_ARGS__)
- static inline __attribute__ ((format (printf, 1, 2)))
- int no_printk(const char *s, ...) { return 0; }
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 8a5fc62..ed48d3d 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -504,50 +504,49 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv)
+ 	return hi;
+ }
  
+-static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv)
++static inline bool ath_rc_check_legacy(u8 rate, u8 dot11rate, u16 rate_flags,
++				       u32 phy, u32 capflag)
+ {
+-	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+-	struct ath_rateset *rateset = &ath_rc_priv->neg_rates;
+-	u32 phy, capflag = ath_rc_priv->ht_cap;
+-	u16 rate_flags;
+-	u8 i, j, hi = 0, rate, dot11rate, valid_rate_count;
++	if (rate != dot11rate || WLAN_RC_PHY_HT(phy))
++		return false;
+ 
+-	for (i = 0; i < rateset->rs_nrates; i++) {
+-		for (j = 0; j < rate_table->rate_cnt; j++) {
+-			phy = rate_table->info[j].phy;
+-			rate_flags = rate_table->info[j].rate_flags;
+-			rate = rateset->rs_rates[i];
+-			dot11rate = rate_table->info[j].dot11rate;
++	if ((rate_flags & WLAN_RC_CAP_MODE(capflag)) != WLAN_RC_CAP_MODE(capflag))
++		return false;
+ 
+-			if (rate != dot11rate
+-			    || ((rate_flags & WLAN_RC_CAP_MODE(capflag)) !=
+-				WLAN_RC_CAP_MODE(capflag))
+-			    || !(rate_flags & WLAN_RC_CAP_STREAM(capflag))
+-			    || WLAN_RC_PHY_HT(phy))
+-				continue;
++	if (!(rate_flags & WLAN_RC_CAP_STREAM(capflag)))
++		return false;
+ 
+-			if (!ath_rc_valid_phyrate(phy, capflag, 0))
+-				continue;
++	return true;
++}
+ 
+-			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
+-			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
+-			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
+-			ath_rc_priv->valid_rate_index[j] = true;
+-			hi = max(hi, j);
+-		}
+-	}
++static inline bool ath_rc_check_ht(u8 rate, u8 dot11rate, u16 rate_flags,
++				   u32 phy, u32 capflag)
++{
++	if (rate != dot11rate || !WLAN_RC_PHY_HT(phy))
++		return false;
+ 
+-	return hi;
++	if (!WLAN_RC_PHY_HT_VALID(rate_flags, capflag))
++		return false;
++
++	if (!(rate_flags & WLAN_RC_CAP_STREAM(capflag)))
++		return false;
++
++	return true;
+ }
+ 
+-static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
++static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv, bool legacy)
+ {
+ 	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+-	struct ath_rateset *rateset = &ath_rc_priv->neg_ht_rates;
++	struct ath_rateset *rateset;
+ 	u32 phy, capflag = ath_rc_priv->ht_cap;
+ 	u16 rate_flags;
+ 	u8 i, j, hi = 0, rate, dot11rate, valid_rate_count;
+ 
++	if (legacy)
++		rateset = &ath_rc_priv->neg_rates;
++	else
++		rateset = &ath_rc_priv->neg_ht_rates;
++
+ 	for (i = 0; i < rateset->rs_nrates; i++) {
+ 		for (j = 0; j < rate_table->rate_cnt; j++) {
+ 			phy = rate_table->info[j].phy;
+@@ -555,9 +554,14 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
+ 			rate = rateset->rs_rates[i];
+ 			dot11rate = rate_table->info[j].dot11rate;
+ 
+-			if ((rate != dot11rate) || !WLAN_RC_PHY_HT(phy) ||
+-			    !(rate_flags & WLAN_RC_CAP_STREAM(capflag)) ||
+-			    !WLAN_RC_PHY_HT_VALID(rate_flags, capflag))
++			if (legacy &&
++			    !ath_rc_check_legacy(rate, dot11rate,
++						 rate_flags, phy, capflag))
++				continue;
++
++			if (!legacy &&
++			    !ath_rc_check_ht(rate, dot11rate,
++					     rate_flags, phy, capflag))
+ 				continue;
+ 
+ 			if (!ath_rc_valid_phyrate(phy, capflag, 0))
+@@ -1181,10 +1185,10 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	if (!rateset->rs_nrates) {
+ 		hi = ath_rc_init_validrates(ath_rc_priv);
+ 	} else {
+-		hi = ath_rc_setvalid_rates(ath_rc_priv);
++		hi = ath_rc_setvalid_rates(ath_rc_priv, true);
+ 
+ 		if (ath_rc_priv->ht_cap & WLAN_RC_HT_FLAG)
+-			hthi = ath_rc_setvalid_htrates(ath_rc_priv);
++			hthi = ath_rc_setvalid_rates(ath_rc_priv, false);
+ 
+ 		hi = max(hi, hthi);
+ 	}
+-- 
+1.7.11.4
 
