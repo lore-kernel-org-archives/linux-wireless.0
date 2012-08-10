@@ -1,85 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36712 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750828Ab2HPCoY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63100 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020Ab2HJLRW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Aug 2012 22:44:24 -0400
-Message-ID: <1345085046.824.240.camel@deadeye.wl.decadent.org.uk> (sfid-20120816_044503_698225_44E41E9C)
-Subject: Re: [PATCH] iwlwifi: update firmware for 6205
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 16 Aug 2012 03:44:06 +0100
-In-Reply-To: <1344011998.4482.13.camel@jlt3.sipsolutions.net>
-References: <1344011998.4482.13.camel@jlt3.sipsolutions.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-+zgPUPUo0WhDssC6XZho"
-Mime-Version: 1.0
+	Fri, 10 Aug 2012 07:17:22 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20516.60788.707542.2560@gargle.gargle.HOWL> (sfid-20120810_131724_723656_87FED5AF)
+Date: Fri, 10 Aug 2012 16:46:04 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/15] ath9k: Cleanup RC init API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A reference to the rate table is stored inside the
+private structure, so there is no need to pass "rate_table"
+around.
 
---=-+zgPUPUo0WhDssC6XZho
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 99 +++++++++++++------------------------
+ 1 file changed, 35 insertions(+), 64 deletions(-)
 
-On Fri, 2012-08-03 at 18:39 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->=20
-> version 18.168.6.1
->=20
-> This adds support for WoWLAN and P2P, both of
-> which are still experimental in the driver.
->=20
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  WHENCE                  |    4 ++--
->  iwlwifi-6000g2a-5.ucode |  Bin 444128 -> 0 bytes
->  iwlwifi-6000g2a-6.ucode |  Bin 0 -> 677296 bytes
->  3 files changed, 2 insertions(+), 2 deletions(-)
->  delete mode 100644 iwlwifi-6000g2a-5.ucode
->  create mode 100644 iwlwifi-6000g2a-6.ucode
-[...]
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 2188d1b..49c71da 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -405,9 +405,9 @@ static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
+ 	return rix;
+ }
+ 
+-static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
+-				   struct ath_rate_priv *ath_rc_priv)
++static void ath_rc_sort_validrates(struct ath_rate_priv *ath_rc_priv)
+ {
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+ 	u8 i, j, idx, idx_next;
+ 
+ 	for (i = ath_rc_priv->max_valid_rate - 1; i > 0; i--) {
+@@ -424,14 +424,6 @@ static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
+ 	}
+ }
+ 
+-static void ath_rc_init_valid_rate_idx(struct ath_rate_priv *ath_rc_priv)
+-{
+-	u8 i;
+-
+-	for (i = 0; i < ath_rc_priv->rate_table_size; i++)
+-		ath_rc_priv->valid_rate_index[i] = 0;
+-}
+-
+ static inline void ath_rc_set_valid_rate_idx(struct ath_rate_priv *ath_rc_priv,
+ 					   u8 index, int valid_tx_rate)
+ {
+@@ -495,10 +487,9 @@ ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
+ 	return 0;
+ }
+ 
+-static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
+-				 const struct ath_rate_table *rate_table,
+-				 u32 capflag)
++static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv)
+ {
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+ 	u8 i, hi = 0;
+ 
+ 	for (i = 0; i < rate_table->rate_cnt; i++) {
+@@ -506,7 +497,7 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
+ 			u32 phy = rate_table->info[i].phy;
+ 			u8 valid_rate_count = 0;
+ 
+-			if (!ath_rc_valid_phyrate(phy, capflag, 0))
++			if (!ath_rc_valid_phyrate(phy, ath_rc_priv->ht_cap, 0))
+ 				continue;
+ 
+ 			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
+@@ -521,14 +512,13 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
+ 	return hi;
+ }
+ 
+-static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
+-				const struct ath_rate_table *rate_table,
+-				struct ath_rateset *rateset,
+-				u32 capflag)
++static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv)
+ {
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
++	struct ath_rateset *rateset = &ath_rc_priv->neg_rates;
++	u32 capflag = ath_rc_priv->ht_cap;
+ 	u8 i, j, hi = 0;
+ 
+-	/* Use intersection of working rates and valid rates */
+ 	for (i = 0; i < rateset->rs_nrates; i++) {
+ 		for (j = 0; j < rate_table->rate_cnt; j++) {
+ 			u32 phy = rate_table->info[j].phy;
+@@ -565,13 +555,13 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
+ 	return hi;
+ }
+ 
+-static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
+-				  const struct ath_rate_table *rate_table,
+-				  struct ath_rateset *rateset, u32 capflag)
++static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
+ {
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
++	struct ath_rateset *rateset = &ath_rc_priv->neg_ht_rates;
++	u32 capflag = ath_rc_priv->ht_cap;
+ 	u8 i, j, hi = 0;
+ 
+-	/* Use intersection of working rates and valid rates */
+ 	for (i = 0; i < rateset->rs_nrates; i++) {
+ 		for (j = 0; j < rate_table->rate_cnt; j++) {
+ 			u32 phy = rate_table->info[j].phy;
+@@ -1200,28 +1190,20 @@ struct ath_rate_table *ath_choose_rate_table(struct ath_softc *sc,
+ }
+ 
+ static void ath_rc_init(struct ath_softc *sc,
+-			struct ath_rate_priv *ath_rc_priv,
+-			struct ieee80211_supported_band *sband,
+-			struct ieee80211_sta *sta,
+-			const struct ath_rate_table *rate_table)
++			struct ath_rate_priv *ath_rc_priv)
+ {
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+ 	struct ath_rateset *rateset = &ath_rc_priv->neg_rates;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ath_rateset *ht_mcs = &ath_rc_priv->neg_ht_rates;
+ 	u8 i, j, k, hi = 0, hthi = 0;
+ 
+-	/* Initial rate table size. Will change depending
+-	 * on the working rate set */
+ 	ath_rc_priv->rate_table_size = RATE_TABLE_SIZE;
+ 
+-	/* Initialize thresholds according to the global rate table */
+ 	for (i = 0 ; i < ath_rc_priv->rate_table_size; i++) {
+ 		ath_rc_priv->per[i] = 0;
++		ath_rc_priv->valid_rate_index[i] = 0;
+ 	}
+ 
+-	/* Determine the valid rates */
+-	ath_rc_init_valid_rate_idx(ath_rc_priv);
+-
+ 	for (i = 0; i < WLAN_RC_PHY_MAX; i++) {
+ 		for (j = 0; j < RATE_TABLE_SIZE; j++)
+ 			ath_rc_priv->valid_phy_rateidx[i][j] = 0;
+@@ -1229,25 +1211,19 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	}
+ 
+ 	if (!rateset->rs_nrates) {
+-		/* No working rate, just initialize valid rates */
+-		hi = ath_rc_init_validrates(ath_rc_priv, rate_table,
+-					    ath_rc_priv->ht_cap);
++		hi = ath_rc_init_validrates(ath_rc_priv);
+ 	} else {
+-		/* Use intersection of working rates and valid rates */
+-		hi = ath_rc_setvalid_rates(ath_rc_priv, rate_table,
+-					   rateset, ath_rc_priv->ht_cap);
+-		if (ath_rc_priv->ht_cap & WLAN_RC_HT_FLAG) {
+-			hthi = ath_rc_setvalid_htrates(ath_rc_priv,
+-						       rate_table,
+-						       ht_mcs,
+-						       ath_rc_priv->ht_cap);
+-		}
++		hi = ath_rc_setvalid_rates(ath_rc_priv);
++
++		if (ath_rc_priv->ht_cap & WLAN_RC_HT_FLAG)
++			hthi = ath_rc_setvalid_htrates(ath_rc_priv);
++
+ 		hi = max(hi, hthi);
+ 	}
+ 
+ 	ath_rc_priv->rate_table_size = hi + 1;
+ 	ath_rc_priv->rate_max_phy = 0;
+-	BUG_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
++	WARN_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
+ 
+ 	for (i = 0, k = 0; i < WLAN_RC_PHY_MAX; i++) {
+ 		for (j = 0; j < ath_rc_priv->valid_phy_ratecnt[i]; j++) {
+@@ -1255,21 +1231,20 @@ static void ath_rc_init(struct ath_softc *sc,
+ 				ath_rc_priv->valid_phy_rateidx[i][j];
+ 		}
+ 
+-		if (!ath_rc_valid_phyrate(i, rate_table->initial_ratemax, 1)
+-		    || !ath_rc_priv->valid_phy_ratecnt[i])
++		if (!ath_rc_valid_phyrate(i, rate_table->initial_ratemax, 1) ||
++		    !ath_rc_priv->valid_phy_ratecnt[i])
+ 			continue;
+ 
+ 		ath_rc_priv->rate_max_phy = ath_rc_priv->valid_phy_rateidx[i][j-1];
+ 	}
+-	BUG_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
+-	BUG_ON(k > RATE_TABLE_SIZE);
++	WARN_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
++	WARN_ON(k > RATE_TABLE_SIZE);
+ 
+ 	ath_rc_priv->max_valid_rate = k;
+-	ath_rc_sort_validrates(rate_table, ath_rc_priv);
++	ath_rc_sort_validrates(ath_rc_priv);
+ 	ath_rc_priv->rate_max_phy = (k > 4) ?
+-					ath_rc_priv->valid_rate_index[k-4] :
+-					ath_rc_priv->valid_rate_index[k-1];
+-	ath_rc_priv->rate_table = rate_table;
++		ath_rc_priv->valid_rate_index[k-4] :
++		ath_rc_priv->valid_rate_index[k-1];
+ 
+ 	ath_dbg(common, CONFIG, "RC Initialized with capabilities: 0x%x\n",
+ 		ath_rc_priv->ht_cap);
+@@ -1392,7 +1367,6 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ath_softc *sc = priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_rate_priv *ath_rc_priv = priv_sta;
+-	const struct ath_rate_table *rate_table;
+ 	int i, j = 0;
+ 
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+@@ -1414,15 +1388,15 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 		ath_rc_priv->neg_ht_rates.rs_nrates = j;
+ 	}
+ 
+-	rate_table = ath_choose_rate_table(sc, sband->band,
+-					   sta->ht_cap.ht_supported);
+-	if (!rate_table) {
++	ath_rc_priv->rate_table = ath_choose_rate_table(sc, sband->band,
++							sta->ht_cap.ht_supported);
++	if (!ath_rc_priv->rate_table) {
+ 		ath_err(common, "No rate table chosen\n");
+ 		return;
+ 	}
+ 
+ 	ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta);
+-	ath_rc_init(sc, priv_sta, sband, sta, rate_table);
++	ath_rc_init(sc, priv_sta);
+ }
+ 
+ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+@@ -1431,13 +1405,10 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+ {
+ 	struct ath_softc *sc = priv;
+ 	struct ath_rate_priv *ath_rc_priv = priv_sta;
+-	const struct ath_rate_table *rate_table = NULL;
+ 
+ 	if (changed & IEEE80211_RC_BW_CHANGED) {
+-		rate_table = ath_choose_rate_table(sc, sband->band,
+-						   sta->ht_cap.ht_supported);
+ 		ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta);
+-		ath_rc_init(sc, priv_sta, sband, sta, rate_table);
++		ath_rc_init(sc, priv_sta);
+ 
+ 		ath_dbg(ath9k_hw_common(sc->sc_ah), CONFIG,
+ 			"Operating HT Bandwidth changed to: %d\n",
+-- 
+1.7.11.4
 
-linux-firmware.git is supposed to support all released kernel versions,
-as the directory-per-version scheme doesn't work that well (you need a
-new directory/package for every stable update and every different
-flavour installed).  You may notice we don't even have tags indicating
-addition of support for new kernel versions; we never really have the
-complete set anyway.
-
-So we must *not* remove old files unless there are no released kernel
-versions that refer to them.  In this case I backed out the deletion
-when applying this.  Please only add files in future, unless you're sure
-the old files are unreferenced.
-
-Ben.
-
---=20
-Ben Hutchings
-I say we take off; nuke the site from orbit.  It's the only way to be sure.
-
---=-+zgPUPUo0WhDssC6XZho
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUCxedue/yOyVhhEJAQo67w/+K08r/Xy1WAdDvB7PJTvRXcPuwU3TgH4D
-GxH4MtceElqPYHGEe881XrV3gGunOc3SQqA3oXEPE443D2y9/vi44AMihBwGKCGX
-JkSnnNt17LBWebuRVHlAUyZJ+hufww58B69Ya6kSlwycO0Jhz3TN8rQ7+H055OcN
-huiqASubaRmrHv0ih3gHoB4NsXAGl2zz21iSXdiisghvSNP4A68pM/e5gkBDOME3
-cJ3fJdzrgRa5S+faAO5UphTRaHZ+eAVKI0xb0caO6tS3KTFkmWCNdgMW7ZwwBKVZ
-4hDHA9fIjkfH1UJnfBkhCfRjgb99Fxw4Lolr7t02Uke5alXVj3En98vESEshCaH4
-BkicbXzuiasHvboCoFT5gva8Bev5v8xAcYh+lqaynougDFs5QryqdSwIEaXlG4UV
-7Cd7/mrlbYNNSvSi3YZo3B3DSYqk3Np3JCQks4DwLtsYIIjHpiiNb2mFg40XIbYW
-NSSfcfbdv6ENLBZblSlg9AScSnN9VD/jd3aF+Zt7MBuq7UWrjbZNHxn8By7MBiut
-O8g2nS4Jr8GWbJj3FIXIxB4LUyDtA1gxOhmU1a/DyXvcjXwe4N7IUe0FIFDoTSS7
-79vvqWRPlXS7vxwpqm90QcYSpS74IaQVQ5AehjgZ6tDmiLWJYzBNvRnYt8CbECIV
-j2l8yehPkKM=
-=O72v
------END PGP SIGNATURE-----
-
---=-+zgPUPUo0WhDssC6XZho--
