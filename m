@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:51028 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755286Ab2HFBwW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 21:52:22 -0400
-MIME-Version: 1.0
-Date: Mon, 6 Aug 2012 01:52:20 +0000
-Message-ID: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com> (sfid-20120806_035245_036677_D8973F27)
-Subject: [PATCH]: Mac80211 Driver patch
-From: Christopher Sacchi <chris.sacchi@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:8650 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754834Ab2HJU6f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 16:58:35 -0400
+From: Andy Gospodreak <andy@greyhouse.net>
+To: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] compat: fixup error in no_printk definition
+Date: Fri, 10 Aug 2012 16:57:16 -0400
+Message-Id: <1344632236-516-1-git-send-email-andy@greyhouse.net> (sfid-20120810_225839_418971_0028C2DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch for Mac80211, and no this is not spam, so do not ignore my
-e-mails. This is a patch, so copy this into your favorite text editor
-and save it as test.patch. Let the maintainers read and know! By the
-way, it is under the first -- line and to the 2nd to last line. :)
---
---- main.c	2012-07-21 20:58:29.000000000 +0000
-+++ mainnew.c	2012-08-05 20:00:37.000000000 +0000
-@@ -32,7 +32,7 @@
- #include "led.h"
- #include "cfg.h"
- #include "debugfs.h"
--
-+#include "net/rfkill/rfkill.h"
- static struct lock_class_key ieee80211_rx_skb_queue_class;
+What initially looked like a valid definition for the #define for
+no_printk was not.  This corrects the problem and the change that was
+thought to correct it.
 
- void ieee80211_configure_filter(struct ieee80211_local *local)
-@@ -183,6 +183,7 @@
- 		 *
- 		 */
- 		/* WARN_ON(ret); */
-+		WARN_ON(1)
- 	}
+Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
+---
+ include/linux/compat-2.6.36.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
- 	return ret;
---
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index b6757c3..cd5e37c 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -99,9 +99,9 @@ struct pm_qos_request_list {
+  * gcc's format and side-effect checking.
+  */
+ /* mask no_printk as RHEL6 backports this */
+-#define no_printk(...) compat_no_printk(...)
++#define no_printk(a, ...) compat_no_printk(a, ##__VA_ARGS__)
+ static inline __attribute__ ((format (printf, 1, 2)))
+-int compat_no_printk(const char *s, ...) { return 0; }
++int no_printk(const char *s, ...) { return 0; }
+ 
+ #ifndef alloc_workqueue
+ #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
 -- 
-Christopher
+1.7.1
+
