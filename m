@@ -1,77 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:50905 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752993Ab2HNREa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 13:04:30 -0400
-Received: by ggdk6 with SMTP id k6so687013ggd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2012 10:04:30 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:46662 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750876Ab2HJQg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 12:36:59 -0400
+Date: Fri, 10 Aug 2012 18:36:36 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Subject: Re: [PATCH v3 6/7] mac80211: add ap channel switch command/event
+Message-ID: <20120810163635.GC17559@redhat.com> (sfid-20120810_183703_069570_605EAF16)
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+ <1344426823-1795-7-git-send-email-victorg@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1344961225-28231-1-git-send-email-ozancag@gmail.com>
-References: <1344961225-28231-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 14 Aug 2012 10:04:09 -0700
-Message-ID: <CAB=NE6WQ7SGy=jXFH9-2m9bq2oDcUHesMG6MKXbGTThGRie7dA@mail.gmail.com> (sfid-20120814_190434_880065_8DCAE099)
-Subject: Re: [PATCH] compat: Backport __wake_up_all_locked()
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1344426823-1795-7-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 14, 2012 at 9:20 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> This backports:
->
-> commit 63b2001169e75cd71e917ec953fdab572e3f944a
-> Author: Thomas Gleixner <tglx@linutronix.de>
-> Date:   Thu Dec 1 00:04:00 2011 +0100
->
->         sched/wait: Add __wake_up_all_locked() API
->
-> $ git describe --contains 63b2001169e75cd71e917ec953fdab572e3f944a
-> v3.4-rc1~3^2~24
->
-> This is used by the 3.6-rcX radeon DRM driver (radeon_sa.c) and will
-> probably be used by other drivers in the near future.
->
-> __wake_up_all_locked() is a preprocessor macro around __wake_up_locked()
-> which gained a 3rd parameter in 3.4.
->
-> That's why I backported the new __wake_up_locked() as
-> compat_wake_up_locked() to avoid name conflicts.
->
-> This new function uses the internal __wake_up_common() function
-> which needed a backport too. I backported it as
-> compat_wake_up_common() as __wake_up_common() was made available
-> in kernels between 2.6.28 <= x <= 2.6.30 through wait.h and
-> dropped after 2.6.30. Renaming fixes build problems of compat
-> for those kernels.
->
-> Trying kernel 3.5.0-030500-generic [OK]
-> Trying kernel 3.4.4-030404-generic [OK]
-> Trying kernel 3.3.7-030307-generic [OK]
-> Trying kernel 3.2.2-030202-generic [OK]
-> Trying kernel 3.1.10-030110-generic [OK]
-> Trying kernel 3.0.18-030018-generic [OK]
-> Trying kernel 2.6.39-02063904-generic [OK]
-> Trying kernel 2.6.38-02063808-generic [OK]
-> Trying kernel 2.6.37-02063706-generic [OK]
-> Trying kernel 2.6.36-02063604-generic [OK]
-> Trying kernel 2.6.35-02063512-generic [OK]
-> Trying kernel 2.6.34-02063410-generic [OK]
-> Trying kernel 2.6.33-02063305-generic [OK]
-> Trying kernel 2.6.32-02063255-generic [OK]
-> Trying kernel 2.6.31-02063113-generic [OK]
-> Trying kernel 2.6.30-02063010-generic [OK]
-> Trying kernel 2.6.29-02062906-generic [OK]
-> Trying kernel 2.6.28-02062810-generic [OK]
-> Trying kernel 2.6.27-020627-generic [OK]
-> Trying kernel 2.6.26-020626-generic [OK]
-> Trying kernel 2.6.25-020625-generic [OK]
-> Trying kernel 2.6.24-020624-generic [OK]
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+On Wed, Aug 08, 2012 at 02:53:42PM +0300, Victor Goldenshtein wrote:
+>  	void (*channel_switch)(struct ieee80211_hw *hw,
+>  			       struct ieee80211_channel_switch *ch_switch);
+> +	void (*ap_channel_switch)(struct ieee80211_hw *hw,
+> +				  struct ieee80211_ap_ch_switch *ap_ch_switch);
 
-Applied and pushed, thanks!
+Why we can not use ->channel_switch calback for this purpose (merge
+ieee80211_channel_switch and ieee80211_ap_ch_switch)?
 
-  Luis
+> +static int
+> +ieee80211_ap_process_chanswitch(struct wiphy *wiphy,
+> +				struct net_device *dev,
+> +				struct ieee80211_ap_ch_switch *ap_ch_switch)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	struct ieee80211_local *local = sdata->local;
+> +
+> +	if (!local->ops->channel_switch)
+> +		return -EOPNOTSUPP;
+
+Probably you want to check local->ops->ap_channel_switch.
+
+Stanislaw
