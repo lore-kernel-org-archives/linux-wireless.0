@@ -1,90 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:61453 "EHLO
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:50829 "EHLO
 	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932126Ab2HVUls convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1754786Ab2HJS2L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 16:41:48 -0400
-Received: by wgbdr13 with SMTP id dr13so15501wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2012 13:41:46 -0700 (PDT)
-References: <20120820205355.7ccc0450@emcraft.com> <20120821114343.GB2380@redhat.com> <CAOZOX0V5ehfSZKQ=tPpowH35ct230nBXk6wSBiTcb10UUbieCA@mail.gmail.com> <20120821141842.GF2380@redhat.com> <A1D107E0-1E78-4123-88C1-9550064DC9AC@gmail.com> <20120822092715.GC4959@redhat.com>
-In-Reply-To: <20120822092715.GC4959@redhat.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <70A1AEFB-59F7-4947-B2A0-A89C29C3108B@gmail.com> (sfid-20120822_224151_563226_A1DF4864)
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	Sergei Poselenov <sposelenov@emcraft.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [rt2x00-users] [PATCH] compat-wireless:rt2800usb: Added rx packet length validity check
-Date: Wed, 22 Aug 2012 22:41:42 +0200
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+	Fri, 10 Aug 2012 14:28:11 -0400
+Received: by wgbdr13 with SMTP id dr13so1718668wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 11:28:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5025425A.2090207@hauke-m.de>
+References: <2121451356.93690.1344518764022.JavaMail.root@neratec.com>
+	<5025425A.2090207@hauke-m.de>
+Date: Fri, 10 Aug 2012 14:28:09 -0400
+Message-ID: <CAHashqAQ9tD3qmzMRNfzLcGbD2A9gykFjUbOhqZA=uLJBnQ4Gw@mail.gmail.com> (sfid-20120810_202815_228024_C2097769)
+Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
+From: Andy Gospodarek <andy@greyhouse.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Phil Perry <phil@elrepo.org>, mcgrof@frijolero.org,
+	lf driver backport
+	<lf_driver_backport@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On Fri, Aug 10, 2012 at 1:18 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 08/09/2012 03:26 PM, Zefir Kurtisi wrote:
+>> On 08/09/2012 06:40 AM, Andy Gospodarek wrote:
+>>> This patch allows me to compile and load the latest compat modules on
+>>> RHEL6.3.  Users of compat on RHEL6 should note that you should set
+>>> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
+>>>
+>>> [...]
+>>>
+>>> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+>>> index 56d5961..09e4b6f 100644
+>>> --- a/include/linux/compat-2.6.36.h
+>>> +++ b/include/linux/compat-2.6.36.h
+>>> @@ -98,6 +98,8 @@ struct pm_qos_request_list {
+>>>   * Dummy printk for disabled debugging statements to use whilst maintaining
+>>>   * gcc's format and side-effect checking.
+>>>   */
+>>> +/* mask no_printk as RHEL6 backports this */
+>>> +#define no_printk(...) compat_no_printk(...)
+>>>  static inline __attribute__ ((format (printf, 1, 2)))
+>>>  int no_printk(const char *s, ...) { return 0; }
+>>>
+>>> [...]
+>>
+>> This at least breaks compilation on 2.6.35-22 with gcc throwing a
+>> compat-2.6.36.h:104: error: ISO C requires a named argument before ‘...’
+>>
+>> It looks like no_printk() needs to be renamed to compat_no_printk()
+>> to make it work as intended.
+>>
+>> This is a systematic mistake at several sections of this patch, where
+>> the original function needs to be prefixed by 'compat_' to match the
+>> related macro.
+>>
+>>
+>> ---
+>> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+>> index 8b02260..b6757c3 100644
+>> --- a/include/linux/compat-2.6.36.h
+>> +++ b/include/linux/compat-2.6.36.h
+>> @@ -101,7 +101,7 @@ struct pm_qos_request_list {
+>>  /* mask no_printk as RHEL6 backports this */
+>>  #define no_printk(...) compat_no_printk(...)
+>>  static inline __attribute__ ((format (printf, 1, 2)))
+>> -int no_printk(const char *s, ...) { return 0; }
+>> +int compat_no_printk(const char *s, ...) { return 0; }
+>>
+>>  #ifndef alloc_workqueue
+>>  #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
+>
+> With this patch applied it works better, but I still get this error in
+> drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c.
+>
+> brcmfmac has this line:
+>
+> #define brcmf_dbg(level, fmt, ...) no_printk(fmt, ##__VA_ARGS__)
+>
+> so brcmf_dbg gets no_printk and not compat_no_printk.
+>
+> Why isn't "ifndef CONFIG_COMPAT_RHEL_6_3" put around the declaration of
+> no_printk()?
+>
+> Hauke
 
-On 22 aug. 2012, at 11:27, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-
-> On Tue, Aug 21, 2012 at 10:07:03PM +0200, Gertjan van Wingerde wrote:
->>>>>> +     if (rx_pkt_len > entry->skb->len) {
->>>>>> +             rxdesc->flags |= RX_FLAG_FAILED_FCS_CRC;
->>>>>> +             goto procrxwi;
->>>>> 
->>>>> I would rather prefer something like
->>>>> 
->>>>> if (unlikely(rx_pkt_len == 0 || rx_pkt_len > entry->queue->data_size)) {
->>>>>       /* Process error in rt2x00lib_rxdone() */
->>>>>       rxdesc->size = rx_pkt_len;
->>>>>       return;
->>>>> }
->>>> 
->>>> But how do you know the packet is correct then?
->>> Non zero rx_pkt_len smaller than data_size indicate correct package.
->> 
->> To be honest, I think the original approach of Sergei is better. Not touching rxdesc beyond setting the flag will ensure that rt2x00lib_rxdone will simply bounce the skb without handing an invalid packet over to mac80211. That said, it isn't necessary to set the flag. Just returning from the function is good enough.
->> 
->> However, the check that Sergei does is not correct either. The real check that should be done is checking whether the skb has enough data to hold both rx_pkt_len bytes + the size of the rxd, which is 1 word (4 bytes). If only rx_pkt_len are left we don't have an rxd, and is the usb packet invalid as well.
-> 
-> Yes, but there is also usb alignment on skb->len, so is better to use
-> queue->data_size to validate rx_pkt (data) length IMHO.
-
-Oh, well it's an (almost) equivalent test anyway, so I guess I don't care.
-
-> 
->>>> Obviously something is wrong,
->>>> so just resetting the rxdesc->size wouldn't be a solution right?
->>> 
->>> rt2x00lib_rxdone has rxdesc->size check too, if ->size is bad it 
->>> prints warning, and requeue skb. 
->>> 
->>> Perhaps this could be coded in some cleaner way (avoid double check),
->>> but basically this should do the job. 
->> 
->> As I mentioned above, simply bailing out if rt2800usb_fill_rxdone without doing anything (not even setting a flag) should do the trick and IMHO is the cleanest approach.
-> 
-> IIRC this is basically what I proposed, except without setting
-> rxdesc->size, unlikely() and rx_pkt_len == 0 check. It will work as
-> rxdesc->size will be 0. But I think it would be better, if WARNING on
-> rt2x00lib_rxdone() will print actual corrupted size instead of 0.
-> Having unlikely is good too - this must be unlikely situation.
-
-OK, I agree with the use of unlikely(). An rx_pkt_len of 0 doesn't seem to happen in practice, so testing for it seems superfluous, but may be providing some extra safety. Don't really care about that. I really don't think we should set rxdesc->size, as we cannot determine it. If we want to print the value, then do it in this function. Adding a hack to having it printed somewhere else doesn't seem right to me.
-Also, it should be an error log message, not a WARNING. There's no need to have a stack trace as the buffer is filled by HW, not by some other function. So, the use of WARNING, with its stack dumping functionality is overkill.
-
-
-> 
-> BTW: would be good to fix reason of that corruption if possible
-> (as long this is not a H/W or F/W bug). But for now, let just
-> stop kernel crashing. Printing WARNING on this situation will
-> help to identify there is something wrong if someone will observe
-> performance problems or similar.
-
-I think this is a HW issue. As mentioned above, I believe a WARNING here is overkill, as we don't need the stack trace.
-
-Anyway, Sergei, would you be able to modify the patch along the lines of the discussion?
-
----
-Gertjan
+Did you try the patch I posted last night that has the updated define
+for no_printk()?  I saw the same error until I applied that patch.
