@@ -1,280 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:61051 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663Ab2HUPBl (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47444 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440Ab2HJBMT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 11:01:41 -0400
-Received: by ghrr11 with SMTP id r11so5894483ghr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2012 08:01:40 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+	Thu, 9 Aug 2012 21:12:19 -0400
+Received: by pbbrr13 with SMTP id rr13so1803542pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 18:12:19 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 3/6] rtlwifi: Update header file
-Date: Tue, 21 Aug 2012 10:00:52 -0500
-Message-Id: <1345561255-10349-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120821_170157_178600_7F38C196)
-In-Reply-To: <1345561255-10349-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1345561255-10349-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 1/2] mac80211: use skb_queue_walk() in mesh_path_assign_nexthop
+Date: Thu,  9 Aug 2012 18:12:11 -0700
+Message-Id: <1344561132-31892-1-git-send-email-thomas@cozybit.com> (sfid-20120810_031326_926862_0AE6CCDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The latest version of the vendor driver for the rtlwifi family
-includes many changes. This patch incorporates the difference
-in the main header file. Many of the changes are in preparation
-for adding a new driver for the RTL8723AE device.
+Since all we really want is just to iterate over all skbs, do just that
+and avoid (de)queueing to a clusmy tmpq.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/rtlwifi/wifi.h |   92 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 91 insertions(+), 1 deletion(-)
+ net/mac80211/mesh_pathtbl.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 51da6de..ec33cde 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -135,7 +135,7 @@ enum hardware_type {
- 	HARDWARE_TYPE_RTL8192CU,
- 	HARDWARE_TYPE_RTL8192DE,
- 	HARDWARE_TYPE_RTL8192DU,
--	HARDWARE_TYPE_RTL8723E,
-+	HARDWARE_TYPE_RTL8723AE,
- 	HARDWARE_TYPE_RTL8723U,
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 075bc53..3ca1e17 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -203,23 +203,17 @@ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
+ {
+ 	struct sk_buff *skb;
+ 	struct ieee80211_hdr *hdr;
+-	struct sk_buff_head tmpq;
+ 	unsigned long flags;
  
- 	/* keep it last */
-@@ -389,6 +389,7 @@ enum rt_enc_alg {
- 	RSERVED_ENCRYPTION = 3,
- 	AESCCMP_ENCRYPTION = 4,
- 	WEP104_ENCRYPTION = 5,
-+	AESCMAC_ENCRYPTION = 6,	/*IEEE802.11w */
- };
+ 	rcu_assign_pointer(mpath->next_hop, sta);
  
- enum rtl_hal_state {
-@@ -873,6 +874,7 @@ struct rtl_phy {
- 	u32 adda_backup[16];
- 	u32 iqk_mac_backup[IQK_MAC_REG_NUM];
- 	u32 iqk_bb_backup[10];
-+	bool iqk_initialized;
+-	__skb_queue_head_init(&tmpq);
+-
+ 	spin_lock_irqsave(&mpath->frame_queue.lock, flags);
+-
+-	while ((skb = __skb_dequeue(&mpath->frame_queue)) != NULL) {
++	skb_queue_walk(&mpath->frame_queue, skb) {
+ 		hdr = (struct ieee80211_hdr *) skb->data;
+ 		memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
+ 		memcpy(hdr->addr2, mpath->sdata->vif.addr, ETH_ALEN);
+-		__skb_queue_tail(&tmpq, skb);
+ 	}
  
- 	/* Dual mac */
- 	bool need_iqk;
-@@ -910,6 +912,8 @@ struct rtl_phy {
- #define RTL_AGG_OPERATIONAL			3
- #define RTL_AGG_OFF				0
- #define RTL_AGG_ON				1
-+#define RTL_RX_AGG_START			1
-+#define RTL_RX_AGG_STOP				0
- #define RTL_AGG_EMPTYING_HW_QUEUE_ADDBA		2
- #define RTL_AGG_EMPTYING_HW_QUEUE_DELBA		3
- 
-@@ -920,6 +924,7 @@ struct rtl_ht_agg {
- 	u64 bitmap;
- 	u32 rate_n_flags;
- 	u8 agg_state;
-+	u8 rx_agg_state;
- };
- 
- struct rtl_tid_data {
-@@ -927,11 +932,19 @@ struct rtl_tid_data {
- 	struct rtl_ht_agg agg;
- };
- 
-+struct rssi_sta {
-+	long undecorated_smoothed_pwdb;
-+};
-+
- struct rtl_sta_info {
-+	struct list_head list;
- 	u8 ratr_index;
- 	u8 wireless_mode;
- 	u8 mimo_ps;
- 	struct rtl_tid_data tids[MAX_TID_COUNT];
-+
-+	/* just used for ap adhoc or mesh*/
-+	struct rssi_sta rssi_stat;
- } __packed;
- 
- struct rtl_priv;
-@@ -1034,6 +1047,11 @@ struct rtl_mac {
- struct rtl_hal {
- 	struct ieee80211_hw *hw;
- 
-+	bool up_first_time;
-+	bool first_init;
-+	bool being_init_adapter;
-+	bool bbrf_ready;
-+
- 	enum intf_type interface;
- 	u16 hw_type;		/*92c or 92d or 92s and so on */
- 	u8 ic_class;
-@@ -1048,6 +1066,7 @@ struct rtl_hal {
- 	u16 fw_subversion;
- 	bool h2c_setinprogress;
- 	u8 last_hmeboxnum;
-+	bool fw_ready;
- 	/*Reserve page start offset except beacon in TxQ. */
- 	u8 fw_rsvdpage_startoffset;
- 	u8 h2c_txcmd_seq;
-@@ -1083,6 +1102,8 @@ struct rtl_hal {
- 	bool load_imrandiqk_setting_for2g;
- 
- 	bool disable_amsdu_8k;
-+	bool master_of_dmsp;
-+	bool slave_of_dmsp;
- };
- 
- struct rtl_security {
-@@ -1144,6 +1165,9 @@ struct rtl_dm {
- 	bool disable_tx_int;
- 	char ofdm_index[2];
- 	char cck_index;
-+
-+	/* DMSP */
-+	bool supp_phymode_switch;
- };
- 
- #define	EFUSE_MAX_LOGICAL_SIZE			256
-@@ -1337,6 +1361,10 @@ struct rtl_stats {
- };
- 
- struct rt_link_detect {
-+	/* count for roaming */
-+	u32 bcn_rx_inperiod;
-+	u32 roam_times;
-+
- 	u32 num_tx_in4period[4];
- 	u32 num_rx_in4period[4];
- 
-@@ -1344,6 +1372,8 @@ struct rt_link_detect {
- 	u32 num_rx_inperiod;
- 
- 	bool busytraffic;
-+	bool tx_busy_traffic;
-+	bool rx_busy_traffic;
- 	bool higher_busytraffic;
- 	bool higher_busyrxtraffic;
- 
-@@ -1454,7 +1484,12 @@ struct rtl_hal_ops {
- 			  u32 regaddr, u32 bitmask);
- 	void (*set_rfreg) (struct ieee80211_hw *hw, enum radio_path rfpath,
- 			   u32 regaddr, u32 bitmask, u32 data);
-+	void (*allow_all_destaddr)(struct ieee80211_hw *hw,
-+		bool allow_all_da, bool write_into_reg);
- 	void (*linked_set_reg) (struct ieee80211_hw *hw);
-+	void (*check_switch_to_dmdp) (struct ieee80211_hw *hw);
-+	void (*dualmac_easy_concurrent) (struct ieee80211_hw *hw);
-+	void (*dualmac_switch_to_dmdp) (struct ieee80211_hw *hw);
- 	bool (*phy_rf6052_config) (struct ieee80211_hw *hw);
- 	void (*phy_rf6052_set_cck_txpower) (struct ieee80211_hw *hw,
- 					    u8 *powerlevel);
-@@ -1474,6 +1509,8 @@ struct rtl_intf_ops {
- 	void (*read_efuse_byte)(struct ieee80211_hw *hw, u16 _offset, u8 *pbuf);
- 	int (*adapter_start) (struct ieee80211_hw *hw);
- 	void (*adapter_stop) (struct ieee80211_hw *hw);
-+	bool (*check_buddy_priv)(struct ieee80211_hw *hw,
-+				 struct rtl_priv **buddy_priv);
- 
- 	int (*adapter_tx) (struct ieee80211_hw *hw, struct sk_buff *skb,
- 			struct rtl_tcb_desc *ptcb_desc);
-@@ -1554,11 +1591,16 @@ struct rtl_locks {
- 	spinlock_t h2c_lock;
- 	spinlock_t rf_ps_lock;
- 	spinlock_t rf_lock;
-+	spinlock_t lps_lock;
- 	spinlock_t waitq_lock;
-+	spinlock_t entry_list_lock;
- 	spinlock_t usb_lock;
- 
- 	/*Dual mac*/
- 	spinlock_t cck_and_rw_pagea_lock;
-+
-+	/*Easy concurrent*/
-+	spinlock_t check_sendpkt_lock;
- };
- 
- struct rtl_works {
-@@ -1566,6 +1608,7 @@ struct rtl_works {
- 
- 	/*timer */
- 	struct timer_list watchdog_timer;
-+	struct timer_list dualmac_easyconcurrent_retrytimer;
- 
- 	/*task */
- 	struct tasklet_struct irq_tasklet;
-@@ -1593,6 +1636,31 @@ struct rtl_debug {
- 	char proc_name[20];
- };
- 
-+#define MIMO_PS_STATIC			0
-+#define MIMO_PS_DYNAMIC			1
-+#define MIMO_PS_NOLIMIT			3
-+
-+struct rtl_dualmac_easy_concurrent_ctl {
-+	enum band_type currentbandtype_backfordmdp;
-+	bool close_bbandrf_for_dmsp;
-+	bool change_to_dmdp;
-+	bool change_to_dmsp;
-+	bool switch_in_process;
-+};
-+
-+struct rtl_dmsp_ctl {
-+	bool activescan_for_slaveofdmsp;
-+	bool scan_for_anothermac_fordmsp;
-+	bool scan_for_itself_fordmsp;
-+	bool writedig_for_anothermacofdmsp;
-+	u32 curdigvalue_for_anothermacofdmsp;
-+	bool changecckpdstate_for_anothermacofdmsp;
-+	u8 curcckpdstate_for_anothermacofdmsp;
-+	bool changetxhighpowerlvl_for_anothermacofdmsp;
-+	u8 curtxhighlvl_for_anothermacofdmsp;
-+	long rssivalmin_for_anothermacofdmsp;
-+};
-+
- struct ps_t {
- 	u8 pre_ccastate;
- 	u8 cur_ccasate;
-@@ -1652,8 +1720,20 @@ struct dig_t {
- 	char backoffval_range_min;
- };
- 
-+struct rtl_global_var {
-+	/* from this list we can get
-+	 * other adapter's rtl_priv */
-+	struct list_head glb_priv_list;
-+	spinlock_t glb_list_lock;
-+};
-+
- struct rtl_priv {
- 	struct completion firmware_loading_complete;
-+	struct list_head list;
-+	struct rtl_priv *buddy_priv;
-+	struct rtl_global_var *glb_var;
-+	struct rtl_dualmac_easy_concurrent_ctl easy_concurrent_ctl;
-+	struct rtl_dmsp_ctl dmsp_ctl;
- 	struct rtl_locks locks;
- 	struct rtl_works works;
- 	struct rtl_mac mac80211;
-@@ -1674,6 +1754,9 @@ struct rtl_priv {
- 
- 	struct rtl_rate_priv *rate_priv;
- 
-+	/* sta entry list for ap adhoc or mesh */
-+	struct list_head entry_list;
-+
- 	struct rtl_debug dbg;
- 	int max_fw_size;
- 
-@@ -2100,4 +2183,11 @@ static inline struct ieee80211_sta *get_sta(struct ieee80211_hw *hw,
- 	return ieee80211_find_sta(vif, bssid);
+-	skb_queue_splice(&tmpq, &mpath->frame_queue);
+ 	spin_unlock_irqrestore(&mpath->frame_queue.lock, flags);
  }
  
-+static inline struct ieee80211_sta *rtl_find_sta(struct ieee80211_hw *hw,
-+		u8 *mac_addr)
-+{
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	return ieee80211_find_sta(mac->vif, mac_addr);
-+}
-+
- #endif
 -- 
-1.7.10.4
+1.7.5.4
 
