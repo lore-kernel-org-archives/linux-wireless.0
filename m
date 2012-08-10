@@ -1,38 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:44762 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755831Ab2HXQBj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11903 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020Ab2HJLRj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 12:01:39 -0400
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <5037A292.1020801@lwfinger.net>
-References: <50345B12.1050600@lwfinger.net>
-	 <1345612503.5158.566.camel@edumazet-glaptop>
-	 <50355021.7000408@lwfinger.net> <1345694593.5904.87.camel@edumazet-glaptop>
-	 <50369925.3050705@lwfinger.net>
-	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
-	 <1345820142.4824.1.camel@edumazet-laptop> <5037A292.1020801@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Aug 2012 18:01:34 +0200
-Message-ID: <1345824094.19483.9.camel@edumazet-glaptop> (sfid-20120824_180145_793457_5BC4EC3C)
-Mime-Version: 1.0
+	Fri, 10 Aug 2012 07:17:39 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20516.60808.853966.705163@gargle.gargle.HOWL> (sfid-20120810_131742_542810_AF22D6A1)
+Date: Fri, 10 Aug 2012 16:46:24 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/15] ath9k: Cleanup index retrieval routines
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-08-24 at 10:49 -0500, Larry Finger wrote:
+Trim API and remove unused variables.
 
-> There is nothing in kernel log when it happens. The file STRACE is attached.
-> 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 56 ++++++++++++++++++-------------------
+ 1 file changed, 27 insertions(+), 29 deletions(-)
 
-So there is indeed a corruption. What was the driver you used in this
-case ?
-
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 69745ad..2e517c0 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -471,8 +471,7 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
+ }
+ 
+ static inline int
+-ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
+-		     struct ath_rate_priv *ath_rc_priv,
++ath_rc_get_lower_rix(struct ath_rate_priv *ath_rc_priv,
+ 		     u8 cur_valid_txrate, u8 *next_idx)
+ {
+ 	int8_t i;
+@@ -582,13 +581,11 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
+ 	return hi;
+ }
+ 
+-/* Finds the highest rate index we can use */
+-static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
+-			         struct ath_rate_priv *ath_rc_priv,
+-				 const struct ath_rate_table *rate_table,
++static u8 ath_rc_get_highest_rix(struct ath_rate_priv *ath_rc_priv,
+ 				 int *is_probing,
+ 				 bool legacy)
+ {
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+ 	u32 best_thruput, this_thruput, now_msec;
+ 	u8 rate, next_rate, best_rate, maxindex, minindex;
+ 	int8_t index = 0;
+@@ -773,14 +770,8 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	try_per_rate = 4;
+ 
+ 	rate_table = ath_rc_priv->rate_table;
+-	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
+-				     &is_probe, false);
++	rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, false);
+ 
+-	/*
+-	 * If we're in HT mode and both us and our peer supports LDPC.
+-	 * We don't need to check our own device's capabilities as our own
+-	 * ht capabilities would have already been intersected with our peer's.
+-	 */
+ 	if (conf_is_ht(&sc->hw->conf) &&
+ 	    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
+ 		tx_info->flags |= IEEE80211_TX_CTL_LDPC;
+@@ -790,35 +781,42 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 		tx_info->flags |= (1 << IEEE80211_TX_CTL_STBC_SHIFT);
+ 
+ 	if (is_probe) {
+-		/* set one try for probe rates. For the
+-		 * probes don't enable rts */
++		/*
++		 * Set one try for probe rates. For the
++		 * probes don't enable RTS.
++		 */
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       1, rix, 0);
+-
+-		/* Get the next tried/allowed rate. No RTS for the next series
+-		 * after the probe rate
++		/*
++		 * Get the next tried/allowed rate.
++		 * No RTS for the next series after the probe rate.
+ 		 */
+-		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
++		ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, rix, 0);
+ 
+ 		tx_info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+ 	} else {
+-		/* Set the chosen rate. No RTS for first series entry. */
++		/*
++		 * Set the chosen rate. No RTS for first series entry.
++		 */
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, rix, 0);
+ 	}
+ 
+-	/* Fill in the other rates for multirate retry */
+ 	for ( ; i < 3; i++) {
++		ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
+ 
+-		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
+-		/* All other rates in the series have RTS enabled */
++		/*
++		 * All other rates in the series have RTS enabled.
++		 */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, rix, 1);
+ 	}
+ 
+-	/* Use twice the number of tries for the last MRR segment. */
++	/*
++	 * Use twice the number of tries for the last MRR segment.
++	 */
+ 	try_per_rate = 8;
+ 
+ 	/*
+@@ -827,11 +825,11 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	 * as last retry to ensure that the frame is tried in both
+ 	 * MCS and legacy rate.
+ 	 */
+-	ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
++	ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
++
+ 	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy) &&
+ 	    (ath_rc_priv->per[rix] > 45))
+-		rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
+-				&is_probe, true);
++		rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, true);
+ 
+ 	/* All other rates in the series have RTS enabled */
+ 	ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+@@ -1061,8 +1059,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	if (ath_rc_priv->per[tx_rate] >= 55 && tx_rate > 0 &&
+ 	    rate_table->info[tx_rate].ratekbps <=
+ 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
+-		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
+-				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
++		ath_rc_get_lower_rix(ath_rc_priv, (u8)tx_rate,
++				     &ath_rc_priv->rate_max_phy);
+ 
+ 		/* Don't probe for a little while. */
+ 		ath_rc_priv->probe_time = now_msec;
+-- 
+1.7.11.4
 
