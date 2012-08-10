@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:33777 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086Ab2HAQUM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5925 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab2HJLSo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 12:20:12 -0400
-Date: Wed, 1 Aug 2012 11:19:59 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
-Message-ID: <20120801161959.GC22963@thinkpad-t410> (sfid-20120801_182024_890488_80C2F157)
-References: <20120801131232.GA1785@zod.bos.redhat.com>
- <20120801141810.GB27433@tuxdriver.com>
- <50194D7A.6060400@broadcom.com>
- <5019506C.6020707@broadcom.com>
- <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+	Fri, 10 Aug 2012 07:18:44 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343836438.4638.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20516.60874.416293.305770@gargle.gargle.HOWL> (sfid-20120810_132551_561720_826B82B8)
+Date: Fri, 10 Aug 2012 16:47:30 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 15/15] ath9k: tune rc_stats to display only valid rates
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 01, 2012 at 05:53:58PM +0200, Johannes Berg wrote:
-> On Wed, 2012-08-01 at 17:51 +0200, Arend van Spriel wrote:
-> > On 08/01/2012 05:38 PM, Arend van Spriel wrote:
-> > >> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
-> > >> > 
-> > >> > It looks like those calls were added in mid-June.
-> > >> > 
-> > > I think mid-june sounds about right. We never observed the warning when
-> > > changes to use regulatory infrastructure were tested/reviewed. Should
-> > > this precondition be mentioned in cfg80211.h?
-> > > 
-> > > Gr. AvS
-> > 
-> > Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
-> > another solution is needed.
-> 
-> Yeah I was going to say -- how can it possibly access that? It seems
-> that in some patch the API got broken, it should be taking the lock or
-> whatever ... I'll leave it to Luis to sort out though :-P
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-In other drivers freq_reg_info only seems to get used by the regulatory
-notifiers, which get called with the lock held. brcmsmac is wanting to
-know whether or not OFDM is allowed when setting the channel though, and
-I didn't find that information anywhere outside the regulatory
-information. If there's another way then calling freq_reg_info() could
-be avoided. Or maybe we could add an OFDM flag to the channel
-information?
+This could make rc_stats more simpler and ease the debugging.
 
-Seth
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 4a04fff..4b12c34 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1355,7 +1355,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ 	struct ath_rate_priv *rc = file->private_data;
+ 	char *buf;
+ 	unsigned int len = 0, max;
+-	int i = 0;
++	int rix;
+ 	ssize_t retval;
+ 
+ 	if (rc->rate_table == NULL)
+@@ -1371,7 +1371,8 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ 		       "HT", "MCS", "Rate",
+ 		       "Success", "Retries", "XRetries", "PER");
+ 
+-	for (i = 0; i < rc->rate_table_size; i++) {
++	for (rix = 0; rix < rc->max_valid_rate; rix++) {
++		u8 i = rc->valid_rate_index[rix];
+ 		u32 ratekbps = rc->rate_table->info[i].ratekbps;
+ 		struct ath_rc_stats *stats = &rc->rcstats[i];
+ 		char mcs[5];
+-- 
+1.7.11.4
 
