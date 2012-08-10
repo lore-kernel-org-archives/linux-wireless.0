@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31792 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756450Ab2HGBOg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 21:14:36 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42328 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753344Ab2HJQ21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 12:28:27 -0400
+Date: Fri, 10 Aug 2012 18:28:10 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Subject: Re: [PATCH v3 2/7] mac80211: add radar detection command/event
+Message-ID: <20120810162810.GB17559@redhat.com> (sfid-20120810_182830_697782_8E8E63DF)
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+ <1344426823-1795-3-git-send-email-victorg@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20512.27555.477724.284749@gargle.gargle.HOWL> (sfid-20120807_031443_083005_D3EC3ADC)
-Date: Tue, 7 Aug 2012 06:43:07 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC 00/14] ath9k RC cleanup
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1344426823-1795-3-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches have been festering in my queue for some time now.
-It's a work-in-progress and a little incomplete.
+On Wed, Aug 08, 2012 at 02:53:38PM +0300, Victor Goldenshtein wrote:
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -2262,6 +2262,10 @@ enum ieee80211_rate_control_changed {
+>   *	The callback will be called before each transmission and upon return
+>   *	mac80211 will transmit the frame right away.
+>   *	The callback is optional and can (should!) sleep.
+> + *
+> +* @start_radar_detection: Start radar detection on current operational
+> + *	channel, once started it will continuously monitor for radars as long
+> + *	as the channel active.
+>   */
+>  struct ieee80211_ops {
+>  	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+> @@ -2404,6 +2408,10 @@ struct ieee80211_ops {
+>  
+>  	void	(*mgd_prepare_tx)(struct ieee80211_hw *hw,
+>  				  struct ieee80211_vif *vif);
+> +
+> +	int (*start_radar_detection)(struct ieee80211_hw *hw,
+> +				     struct ieee80211_vif *vif,
+> +				     struct ieee80211_channel *chan);
 
-Please review !
+Why we need new callback? I.e. why this can be done by ->config ?
 
-Sujith
-
-Sujith Manoharan (14):
-  ath9k: Simplify rate table initialization
-  ath9k: Cleanup RC init API
-  ath9k: Cleanup ath_rc_setvalid_rates
-  ath9k: Cleanup ath_rc_setvalid_htrates
-  ath9k: Cleanup index retrieval routines
-  ath9k: Change rateset calculation
-  ath9k: Remove ath_rc_set_valid_rate_idx
-  ath9k: Unify valid rate calculation routines
-  ath9k: Do not set IEEE80211_TX_RC_USE_SHORT_PREAMBLE
-  ath9k: Fix RTS/CTS rate selection
-  ath9k: Bail out properly before calculating rate index
-  ath9k: Cleanup TX status API
-  ath9k: Remove MIMO-PS specific code
-  ath9k: Trim rate table
-
- drivers/net/wireless/ath/ath9k/rc.c | 807 +++++++++++++++---------------------
- drivers/net/wireless/ath/ath9k/rc.h |   4 -
- 2 files changed, 339 insertions(+), 472 deletions(-)
-
--- 
-1.7.11.4
-
+Stanislaw
