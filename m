@@ -1,48 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41480 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750Ab2HUSpR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63293 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781Ab2HJLSY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 14:45:17 -0400
-Date: Tue, 21 Aug 2012 14:35:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: AceLan Kao <acelan.kao@canonical.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Corentin Chary <corentincj@iksaif.net>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] Revert "rfkill: remove dead code"
-Message-ID: <20120821183531.GA2733@tuxdriver.com> (sfid-20120821_204521_491250_C27CBB0E)
-References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
- <CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
- <CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
- <CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
- <CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
- <20120813184749.GC10529@tuxdriver.com>
- <CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com>
- <CAMz9Wg8DdBbWXUv5gQKr6TJmxQqXHn_DEA4UyyuNPzNwsa4Deg@mail.gmail.com>
- <1345458836.4459.2.camel@jlt3.sipsolutions.net>
+	Fri, 10 Aug 2012 07:18:24 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1345458836.4459.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20516.60853.935619.159171@gargle.gargle.HOWL> (sfid-20120810_132552_022462_121FE005)
+Date: Fri, 10 Aug 2012 16:47:09 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/15] ath9k: Cleanup TX status API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 12:33:56PM +0200, Johannes Berg wrote:
-> On Mon, 2012-08-20 at 10:11 +0800, AceLan Kao wrote:
-> > Hi,
-> > 
-> > I didn't see this patch in linux-next nor in Linville's tree,and this
-> > patch is needed by the asus-wmi driver.
-> > Please help to merge this patch earlier, so that platform-x86 can get
-> > rid of the compiling error.
-> > Thank you very much.
-> 
-> I have no objections to this -- should I pick it up, John?
+Calculate the final rate index inside ath_rc_tx_status().
 
-Sure, that sounds great.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 71 +++++++++++++++----------------------
+ 1 file changed, 29 insertions(+), 42 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 0e3d20a..2051fac 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -993,9 +993,6 @@ static void ath_debug_stat_retries(struct ath_rate_priv *rc, int rix,
+ 	stats->per = per;
+ }
+ 
+-/* Update PER, RSSI and whatever else that the code thinks it is doing.
+-   If you can make sense of all this, you really need to go out more. */
+-
+ static void ath_rc_update_ht(struct ath_softc *sc,
+ 			     struct ath_rate_priv *ath_rc_priv,
+ 			     struct ieee80211_tx_info *tx_info,
+@@ -1069,25 +1066,43 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 
+ }
+ 
++static void ath_debug_stat_rc(struct ath_rate_priv *rc, int final_rate)
++{
++	struct ath_rc_stats *stats;
++
++	stats = &rc->rcstats[final_rate];
++	stats->success++;
++}
+ 
+ static void ath_rc_tx_status(struct ath_softc *sc,
+ 			     struct ath_rate_priv *ath_rc_priv,
+-			     struct ieee80211_tx_info *tx_info,
+-			     int final_ts_idx, int xretries, int long_retry)
++			     struct sk_buff *skb)
+ {
+-	const struct ath_rate_table *rate_table;
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_tx_rate *rates = tx_info->status.rates;
++	struct ieee80211_tx_rate *rate;
++	int final_ts_idx = 0, xretries = 0, long_retry = 0;
+ 	u8 flags;
+ 	u32 i = 0, rix;
+ 
+-	rate_table = ath_rc_priv->rate_table;
++	for (i = 0; i < sc->hw->max_rates; i++) {
++		rate = &tx_info->status.rates[i];
++		if (rate->idx < 0 || !rate->count)
++			break;
++
++		final_ts_idx = i;
++		long_retry = rate->count - 1;
++	}
++
++	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
++		xretries = 1;
+ 
+ 	/*
+ 	 * If the first rate is not the final index, there
+ 	 * are intermediate rate failures to be processed.
+ 	 */
+ 	if (final_ts_idx != 0) {
+-		/* Process intermediate rates that failed.*/
+ 		for (i = 0; i < final_ts_idx ; i++) {
+ 			if (rates[i].count != 0 && (rates[i].idx >= 0)) {
+ 				flags = rates[i].flags;
+@@ -1101,8 +1116,8 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+ 
+ 				rix = ath_rc_get_rateindex(rate_table, &rates[i]);
+ 				ath_rc_update_ht(sc, ath_rc_priv, tx_info,
+-						rix, xretries ? 1 : 2,
+-						rates[i].count);
++						 rix, xretries ? 1 : 2,
++						 rates[i].count);
+ 			}
+ 		}
+ 	} else {
+@@ -1116,15 +1131,16 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+ 			xretries = 2;
+ 	}
+ 
+-	flags = rates[i].flags;
++	flags = rates[final_ts_idx].flags;
+ 
+ 	/* If HT40 and we have switched mode from 40 to 20 => don't update */
+ 	if ((flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
+ 	    !(ath_rc_priv->ht_cap & WLAN_RC_40_FLAG))
+ 		return;
+ 
+-	rix = ath_rc_get_rateindex(rate_table, &rates[i]);
++	rix = ath_rc_get_rateindex(rate_table, &rates[final_ts_idx]);
+ 	ath_rc_update_ht(sc, ath_rc_priv, tx_info, rix, xretries, long_retry);
++	ath_debug_stat_rc(ath_rc_priv, rix);
+ }
+ 
+ static const
+@@ -1248,15 +1264,6 @@ static bool ath_tx_aggr_check(struct ath_softc *sc, struct ieee80211_sta *sta,
+ /* mac80211 Rate Control callbacks */
+ /***********************************/
+ 
+-static void ath_debug_stat_rc(struct ath_rate_priv *rc, int final_rate)
+-{
+-	struct ath_rc_stats *stats;
+-
+-	stats = &rc->rcstats[final_rate];
+-	stats->success++;
+-}
+-
+-
+ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 			  struct ieee80211_sta *sta, void *priv_sta,
+ 			  struct sk_buff *skb)
+@@ -1265,10 +1272,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ath_rate_priv *ath_rc_priv = priv_sta;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	int final_ts_idx = 0, tx_status = 0;
+-	int long_retry = 0;
+ 	__le16 fc = hdr->frame_control;
+-	int i;
+ 
+ 	if (!priv_sta || !ieee80211_is_data(fc))
+ 		return;
+@@ -1281,20 +1285,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
+ 		return;
+ 
+-	for (i = 0; i < sc->hw->max_rates; i++) {
+-		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
+-		if (rate->idx < 0 || !rate->count)
+-			break;
+-
+-		final_ts_idx = i;
+-		long_retry = rate->count - 1;
+-	}
+-
+-	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
+-		tx_status = 1;
+-
+-	ath_rc_tx_status(sc, ath_rc_priv, tx_info, final_ts_idx, tx_status,
+-			 long_retry);
++	ath_rc_tx_status(sc, ath_rc_priv, skb);
+ 
+ 	/* Check if aggregation has to be enabled for this tid */
+ 	if (conf_is_ht(&sc->hw->conf) &&
+@@ -1310,10 +1301,6 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 				ieee80211_start_tx_ba_session(sta, tid, 0);
+ 		}
+ 	}
+-
+-	ath_debug_stat_rc(ath_rc_priv,
+-		ath_rc_get_rateindex(ath_rc_priv->rate_table,
+-			&tx_info->status.rates[final_ts_idx]));
+ }
+ 
+ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.11.4
+
