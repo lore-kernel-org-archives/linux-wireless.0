@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38332 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756022Ab2HQXF4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63244 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151Ab2HJLSE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 19:05:56 -0400
-Received: by yhmm54 with SMTP id m54so4442653yhm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Aug 2012 16:05:56 -0700 (PDT)
-Date: Fri, 17 Aug 2012 18:05:51 -0500
-From: "Saul St. John" <saul.stjohn@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/2] bcma: expose cc sprom to sysfs
-Message-ID: <20120817230551.GA6814@eris.garyseven.net> (sfid-20120818_010600_653353_FD837BC2)
-References: <20120816190616.GE6726@eris.garyseven.net>
- <502E4B70.5090900@broadcom.com>
- <20120817225406.GA6510@eris.garyseven.net>
+	Fri, 10 Aug 2012 07:18:04 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120817225406.GA6510@eris.garyseven.net>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20516.60834.610230.197582@gargle.gargle.HOWL> (sfid-20120810_131810_018959_EC20F991)
+Date: Fri, 10 Aug 2012 16:46:50 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/15] ath9k: Do not set IEEE80211_TX_RC_USE_SHORT_PREAMBLE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 17, 2012 at 05:54:06PM -0500, Saul St. John wrote:
-> [2] http://www.tonymacx86.com/network/25669-rebranding-bcm94322mc-based-prasys-guide-what-device-id-8.html#post291328
-> [3] http://www.tonymacx86.com/network/26904-help-rebrand-broadcom-bcm94322-5.html
+mac80211 does it for us.
 
-Sorry, these two references are not actually on point. Please ignore them, my 
-grep-fu is off today.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index ed48d3d..78192c1 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -682,8 +682,6 @@ static void ath_rc_rate_set_series(const struct ath_rate_table *rate_table,
+ 	rate->count = tries;
+ 	rate->idx = rate_table->info[rix].ratecode;
+ 
+-	if (txrc->short_preamble)
+-		rate->flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
+ 	if (txrc->rts || rtsctsenable)
+ 		rate->flags |= IEEE80211_TX_RC_USE_RTS_CTS;
+ 
+-- 
+1.7.11.4
+
