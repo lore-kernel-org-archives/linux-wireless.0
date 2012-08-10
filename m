@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:46299 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754873Ab2HETf7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 15:35:59 -0400
-Received: by wgbdr13 with SMTP id dr13so2122688wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 12:35:58 -0700 (PDT)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
-	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH v2 0/5] ath5k: Various tx power fixes
-Date: Sun,  5 Aug 2012 22:35:32 +0300
-Message-Id: <1344195337-27461-1-git-send-email-mickflemm@gmail.com> (sfid-20120805_213603_146687_3CBF2A49)
+Received: from mx1.redhat.com ([209.132.183.28]:60469 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752770Ab2HJQ0G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 12:26:06 -0400
+Date: Fri, 10 Aug 2012 18:25:33 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Subject: Re: [PATCH v3 1/7] nl80211/cfg80211: add radar detection
+ command/event
+Message-ID: <20120810162532.GA17559@redhat.com> (sfid-20120810_182611_153256_09F81595)
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+ <1344426823-1795-2-git-send-email-victorg@ti.com>
+ <20120809115109.GB3516@redhat.com>
+ <CAK80WHYjhBbE5Y2Q_-QhbNmxu76BMRCa9=vFyMXwQJQqsGiPUQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK80WHYjhBbE5Y2Q_-QhbNmxu76BMRCa9=vFyMXwQJQqsGiPUQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series fixes a few bugs on tx power processing code. Some more fixes
-on EEPROM stuff are still pending.
+On Thu, Aug 09, 2012 at 03:08:59PM +0300, Goldenshtein, Victor wrote:
+> On Thu, Aug 9, 2012 at 2:51 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > On Wed, Aug 08, 2012 at 02:53:37PM +0300, Victor Goldenshtein wrote:
+> >> +     cac_type = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
+> >> +     if (cac_type != NL80211_CHAN_HT20)
+> >> +             return -EOPNOTSUPP;
+> > Since only HT20 is supported, what for we have this variable?
+> >
+> 
+> Security measures and preparation for future HT40.
 
-Thanks to Thomas Huehn and Felix Fietkau for the feedback.
+I dislike "preparation for future" thing. We have lot of stuff like
+that in kernel, which never get implemented, and only mess up the code.
 
-Nick Kossifidis (5):
-  ath5k: Use correct value for min_pwr and cur_pwr
-  ath5k: Fix range scaling when setting rate power table
-  ath5k: Preserve tx power level requested from above on phy_init
-  ath5k: Put power_level where it belongs and rename it
-  ath5k: Return correct offset when reading frequencies
+How near future is that?
 
- drivers/net/wireless/ath/ath5k/ath5k.h        |    2 +-
- drivers/net/wireless/ath/ath5k/base.c         |    5 ++-
- drivers/net/wireless/ath/ath5k/eeprom.c       |    4 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    4 +-
- drivers/net/wireless/ath/ath5k/phy.c          |   43 ++++++++++++++++++------
- 5 files changed, 40 insertions(+), 18 deletions(-)
+Also what about pure, non HT, channels?
 
--- 
-1.7.3.4
-
+Stanislaw
