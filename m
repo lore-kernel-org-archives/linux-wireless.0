@@ -1,47 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46662 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750876Ab2HJQg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 12:36:59 -0400
-Date: Fri, 10 Aug 2012 18:36:36 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Victor Goldenshtein <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH v3 6/7] mac80211: add ap channel switch command/event
-Message-ID: <20120810163635.GC17559@redhat.com> (sfid-20120810_183703_069570_605EAF16)
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
- <1344426823-1795-7-git-send-email-victorg@ti.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44708 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932210Ab2HJStW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 14:49:22 -0400
+Date: Fri, 10 Aug 2012 14:44:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH 3.6 4/4] ath9k_hw: enable PA linearization
+Message-ID: <20120810184444.GE1950@tuxdriver.com> (sfid-20120810_205005_616441_F382B61D)
+References: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-2-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-3-git-send-email-nbd@openwrt.org>
+ <1344344772-49459-4-git-send-email-nbd@openwrt.org>
+ <20120808145531.GB2041@vmraj-lnx.qualcomm.com>
+ <502281D9.4030109@openwrt.org>
+ <20120808152911.GD2041@vmraj-lnx.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1344426823-1795-7-git-send-email-victorg@ti.com>
+In-Reply-To: <20120808152911.GD2041@vmraj-lnx.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 08, 2012 at 02:53:42PM +0300, Victor Goldenshtein wrote:
->  	void (*channel_switch)(struct ieee80211_hw *hw,
->  			       struct ieee80211_channel_switch *ch_switch);
-> +	void (*ap_channel_switch)(struct ieee80211_hw *hw,
-> +				  struct ieee80211_ap_ch_switch *ap_ch_switch);
+On Wed, Aug 08, 2012 at 08:59:15PM +0530, Rajkumar Manoharan wrote:
+> On Wed, Aug 08, 2012 at 05:12:25PM +0200, Felix Fietkau wrote:
+> > On 2012-08-08 4:55 PM, Rajkumar Manoharan wrote:
+> > > On Tue, Aug 07, 2012 at 03:06:12PM +0200, Felix Fietkau wrote:
+> > >> This feature had been disabled in ath9k because the code to support
+> > >> it was incomplete, but now the code is in sync with the internal QCA
+> > >> codebase, so it's time to enable it.
+> > >> 
+> > >> On many newer devices, the calibration is assumed to be done with PA
+> > >> linearization enabled.
+> > >> 
+> > >> Tests with a particular AR933x device showed that the signal emitted
+> > >> at full power was highly distorted and unreliable with PA linearization
+> > >> disabled. With this patch, the signal becomes clear and stability
+> > >> is improved.
+> > >> 
+> > > We faced stability issues with 938x chipsets when paprd is enabled. The commit
+> > > 6f4810101a629b31b5427872a09ea092cfc5c4bd states one of the issue. Even if it
+> > > helps for AR933x, let us enable it only for that chip alone.
+> > That was in January 2011, lots of bugs have been fixed since then,
+> > initvals have been updated, EEPROM code has changed, ...
+> > 
+> > The internal QCA codebase enables PAPRD for all AR93xx devices that
+> > support it, meaning non-PAPRD tx receives much less test coverage there.
+> > 
+> > While this issue has only been visible on a particular AR933x device, I
+> > believe this is not the only one that's going to be affected, as the
+> > EEPROM of any new device is calibrated for PAPRD-enabled operation.
+> > 
+> > If you don't want to enable it now, when do you think would be the right
+> > time to enable it? Before I sent this patch, I did a detailed code
+> > review to make sure that any obvious code discrepancies in PAPRD between
+> > the internal codebase and ath9k are dealt with.
+> > 
+> > What else is needed to get this issue sorted out?
+> >
+> Yes. it was disabled a long time back. Im completely fine with enabling the
+> feature. I want to make sure that we should not endup again with the same issues.
+> Atleast we should validite the one mentioned in the commit
+> 6f4810101a629b31b5427872a09ea092cfc5c4bd
 
-Why we can not use ->channel_switch calback for this purpose (merge
-ieee80211_channel_switch and ieee80211_ap_ch_switch)?
+Any word on this validation?
 
-> +static int
-> +ieee80211_ap_process_chanswitch(struct wiphy *wiphy,
-> +				struct net_device *dev,
-> +				struct ieee80211_ap_ch_switch *ap_ch_switch)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct ieee80211_local *local = sdata->local;
-> +
-> +	if (!local->ops->channel_switch)
-> +		return -EOPNOTSUPP;
-
-Probably you want to check local->ops->ap_channel_switch.
-
-Stanislaw
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
