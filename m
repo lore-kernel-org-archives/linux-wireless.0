@@ -1,35 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:38880 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750924Ab2HXDdO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 23:33:14 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Thu, 23 Aug 2012 20:30:54 -0700
-Subject: RE: [PATCH] mwifiex: use is_zero_ether_addr() instead of memcmp()
-Message-ID: <477F20668A386D41ADCC57781B1F7043083B0BBB71@SC-VEXCH1.marvell.com> (sfid-20120824_053323_307135_0D68A088)
-References: <CAPgLHd--KY+zNjUwOHKgEJuTfJuoA=7vKR3JMBUgUc+BtjC9Ng@mail.gmail.com>
-In-Reply-To: <CAPgLHd--KY+zNjUwOHKgEJuTfJuoA=7vKR3JMBUgUc+BtjC9Ng@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63277 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781Ab2HJLSR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 07:18:17 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20516.60847.547871.63036@gargle.gargle.HOWL> (sfid-20120810_132552_245017_95F1F16E)
+Date: Fri, 10 Aug 2012 16:47:03 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/15] ath9k: Bail out properly before calculating rate index
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Apparently there are two more occurrences of zero_mac (scan.c:843)
-> 
-> This is part is special:
-> 
-> memcmp(scan_cfg_out->specific_bssid, &zero_mac, sizeof(zero_mac)))
-> 
-> &zero_mac equal zero_mac, but it missing to spatch.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
 
-I will take care of this then.
-
-Thanks,
-Bing
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index a94c52b..0e3d20a 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1264,23 +1264,12 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ath_softc *sc = priv;
+ 	struct ath_rate_priv *ath_rc_priv = priv_sta;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hdr *hdr;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	int final_ts_idx = 0, tx_status = 0;
+ 	int long_retry = 0;
+-	__le16 fc;
++	__le16 fc = hdr->frame_control;
+ 	int i;
+ 
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	fc = hdr->frame_control;
+-	for (i = 0; i < sc->hw->max_rates; i++) {
+-		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
+-		if (rate->idx < 0 || !rate->count)
+-			break;
+-
+-		final_ts_idx = i;
+-		long_retry = rate->count - 1;
+-	}
+-
+ 	if (!priv_sta || !ieee80211_is_data(fc))
+ 		return;
+ 
+@@ -1292,6 +1281,15 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
+ 		return;
+ 
++	for (i = 0; i < sc->hw->max_rates; i++) {
++		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
++		if (rate->idx < 0 || !rate->count)
++			break;
++
++		final_ts_idx = i;
++		long_retry = rate->count - 1;
++	}
++
+ 	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
+ 		tx_status = 1;
+ 
+-- 
+1.7.11.4
 
