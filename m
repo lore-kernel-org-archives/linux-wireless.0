@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hetz2.bluebottle.com ([176.9.57.138]:35177 "EHLO
-	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754155Ab2HXRSo (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:40333 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758067Ab2HJJcK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 13:18:44 -0400
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Bastian Bittorf <bittorf@bluebottle.com>,
-	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	feint@lists.subsignal.org,
-	=?iso-8859-1?b?UmFmYcWCIA==?= =?iso-8859-1?b?TWnFgmVja2k=?=
-	<zajec5@gmail.com>, b43-dev <b43-dev@lists.infradead.org>
-Message-ID: <1345828723.5037b773e4dfc@mail.bluebottle.com> (sfid-20120824_191848_359059_45EA5687)
-Date: Fri, 24 Aug 2012 18:18:43 +0100
-From: Bastian Bittorf <bittorf@bluebottle.com>
-Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
-References: <1342612598.5006a476022c6@mail.bluebottle.com> <50350706.609@hauke-m.de> <503528BD.2020302@lwfinger.net> <503549B2.7030900@hauke-m.de>
-In-Reply-To: <503549B2.7030900@hauke-m.de>
+	Fri, 10 Aug 2012 05:32:10 -0400
+Received: by weyx8 with SMTP id x8so868578wey.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 02:32:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <5024CE29.5030500@broadcom.com>
+References: <1344544690-11280-1-git-send-email-zajec5@gmail.com>
+	<5024CE29.5030500@broadcom.com>
+Date: Fri, 10 Aug 2012 11:32:08 +0200
+Message-ID: <CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com> (sfid-20120810_113214_625242_AD0BE49A)
+Subject: Re: [PATCH wireless?] bcma: keep info about parallel flash presentence
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> How do I monitor this particular channel with an other wifi card to
-> get
-> most of the packages, with aircrack I am unable to set the
-> channel?
+2012/8/10 Arend van Spriel <arend@broadcom.com>:
+> On 08/09/2012 10:38 PM, Rafał Miłecki wrote:
+>> This allows drivers to access flash conditionally and stop crashing some
+>> devices.
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>> John: I suggest taking it for wirelesss, AKA fix
+>
+> Maybe you could mentioned devices and/or drivers crashes without this patch?
 
-the simple approach is installing horst on another router
-or your pc. ofcourse you get a full dump with wireshark
-sniffing on your monitor-interface.
+Yes, sure! The problematic one for me is arch/mips/bcm47xx/nvram.c.
+Right now it assumes every BCMA board has pflash. I'll submit fix for
+mips tree when this patch hits it.
 
-bye, bastian
+-- 
+Rafał
