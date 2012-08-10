@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48186 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759830Ab2HXQ30 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:36456 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757952Ab2HJJcz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 12:29:26 -0400
-Message-ID: <5037ABE2.2020407@lwfinger.net> (sfid-20120824_182946_087349_5C5E2316)
-Date: Fri, 24 Aug 2012 11:29:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 10 Aug 2012 05:32:55 -0400
+Received: by wibhr14 with SMTP id hr14so1191014wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 02:32:54 -0700 (PDT)
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: Neal Cardwell <ncardwell@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-References: <50345B12.1050600@lwfinger.net>  <1345612503.5158.566.camel@edumazet-glaptop>  <50355021.7000408@lwfinger.net> <1345694593.5904.87.camel@edumazet-glaptop>  <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <1345820142.4824.1.camel@edumazet-laptop> <5037A292.1020801@lwfinger.net> <1345824094.19483.9.camel@edumazet-glaptop>
-In-Reply-To: <1345824094.19483.9.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com>
+References: <1344544690-11280-1-git-send-email-zajec5@gmail.com>
+	<5024CE29.5030500@broadcom.com>
+	<CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com>
+Date: Fri, 10 Aug 2012 11:32:54 +0200
+Message-ID: <CACna6rw=-PV0w4T9S=3uGrORAUp_BbGHbg9QHRWYuRT9GwpM8A@mail.gmail.com> (sfid-20120810_113258_394535_11E6ACC7)
+Subject: Re: [PATCH wireless?] bcma: keep info about parallel flash presentence
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/24/2012 11:01 AM, Eric Dumazet wrote:
-> On Fri, 2012-08-24 at 10:49 -0500, Larry Finger wrote:
->
->> There is nothing in kernel log when it happens. The file STRACE is attached.
+2012/8/10 Rafał Miłecki <zajec5@gmail.com>:
+> 2012/8/10 Arend van Spriel <arend@broadcom.com>:
+>> On 08/09/2012 10:38 PM, Rafał Miłecki wrote:
+>>> This allows drivers to access flash conditionally and stop crashing some
+>>> devices.
+>>>
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>> ---
+>>> John: I suggest taking it for wirelesss, AKA fix
 >>
+>> Maybe you could mentioned devices and/or drivers crashes without this patch?
 >
-> So there is indeed a corruption. What was the driver you used in this
-> case ?
+> Yes, sure! The problematic one for me is arch/mips/bcm47xx/nvram.c.
+> Right now it assumes every BCMA board has pflash. I'll submit fix for
+> mips tree when this patch hits it.
 
-The only driver that shows this problem is r8712u. One thought that I just had 
-is that this driver does not use mac80211, which is why it is in staging. 
-Instead it uses a Realtek soft MAC layer derived from the obsolete softmac 
-driver that was in the kernel in the 2.6.20 time frame. That means that none of 
-the skbs have ever been cloned by any part of the wireless code.
+Ah, and device. My Netgear WNDR4500 has serial flash and NAND flash.
+It doesn't have parallel one, so this code crashes my device.
 
-Larry
-
-
+-- 
+Rafał
