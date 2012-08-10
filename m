@@ -1,38 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:51995 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878Ab2HPPGb (ORCPT
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:3335 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120Ab2HJJPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 11:06:31 -0400
-Received: by wgbdr13 with SMTP id dr13so2499167wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 08:06:30 -0700 (PDT)
-Message-ID: <502D0C72.2050207@lwfinger.net> (sfid-20120816_170635_404509_F239FBF6)
-Date: Thu, 16 Aug 2012 10:06:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 10 Aug 2012 05:15:10 -0400
+Subject: Re: How to get the irq flags from the dts file
+From: Wei Ni <wni@nvidia.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: "grant.likely@secretlab.ca" <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"frankyl@broadcom.com" <frankyl@broadcom.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <5023A88F.8040402@broadcom.com>
+References: <1344509006.2295.148.camel@tegra-chromium-2>
+	 <5023A88F.8040402@broadcom.com>
+Date: Fri, 10 Aug 2012 17:14:58 +0800
+Message-ID: <1344590098.21467.4.camel@tegra-chromium-2> (sfid-20120810_111531_760118_0E4DD21F)
 MIME-Version: 1.0
-To: Intel Linux Wireless <ilw@linux.intel.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ben Hutchings <ben@decadent.org.uk>
-Subject: Missing firmware iwlwifi-2030-5.ucode
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2012-08-09 at 20:09 +0800, Arend van Spriel wrote:
+> On 08/09/2012 12:43 PM, Wei Ni wrote:
+> > Hi, all
+> > I'm working on tegra wlan upstream issue.
+> > The tegra board use the Broadcom 4329 as wlan device, and the driver is
+> > the brcmfmac. 
+> > 
+> > This wlan driver support out-band-interrupt (OOB), I want to add DT
+> > support to use this OOB.
+> > I can add following lines in the dts file to create platform device and
+> > pass the interrupt resource to the driver.
+> > 
+> > wlan {
+> >         compatible = "broadcome, brcmf_sdio_pd";
+> 
+> I don't know the DT syntax, but I assume broadcome should be broadcom,
+> right? ;-)
 
-I am trying to help an openSUSE 12.1 user who is running kernel 3.1.9, who has 
-an Intel 802.11 b/g/n card with Bluetooth mounted in an HP dvdt-7000 Quad 
-Edition Series computer.
+Sorry, it's my typo, it should be broadcom.
 
-The driver is asking for firmware named "iwlwifi-2030-5.ucode"; however, that 
-particular file does not exist in /lib/firmware, nor is in the linux-firmware 
-git repo where only the version 6 firmware exists.
+> 
+> >         interrupt-parten = <&gpio>;
+> >         interrupts = <144, 0x04>; /* IRQF_TRIGGER_HIGH */
+> > };
+> > 
+> > In the wlan driver, it will use platform_get_resource() to get the
+> > res->irq, res->flags, the irq number is right, but the flags will be
+> > IORESOURCE_IRQ, not the 0x04 (IRQF_TRIGGER_HIGH).
+> > The wlan driver wish this flags include the IRQF_TRGGER_* information,
+> > and it will use this flags to configure other hw settings. If it is
+> > wrong, the wlan can't work.
+> > 
+> > I checked drivers/of/irq.c, in function of_irq_to_resource(), it will
+> > set r->flags = IORESOURCE_IRQ directly, not read the flags from the dtb
+> > file. And I didn't find any of_xx api to get this flags.
+> > 
+> > How can I get this flags, does anyone has suggestion?
+> 
+> I did a quick search in the kernel and there are a number of platform
+> drivers that seem to expect the IRQF_TRIGGER_* info by using (res->flags
+> & IRQF_TRIGGER_MASK) and to determine IRQF_SHARED as well.
+> 
+> Gr. AvS
+> 
 
-I could find no record of the firmware ever being in the git repo, nor could I 
-find it using a Google search. For users of kernel 3.1, I request that this 
-firmware file be submitted to linux-firmware. In addition, if you send me a copy 
-of the file, I will see that the OP on the openSUSE Forum gets a copy.
 
-Thanks,
-
-Larry
