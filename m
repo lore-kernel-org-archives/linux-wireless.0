@@ -1,92 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:50829 "EHLO
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:42757 "EHLO
 	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754786Ab2HJS2L convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1751246Ab2HJTX5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 14:28:11 -0400
-Received: by wgbdr13 with SMTP id dr13so1718668wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 11:28:09 -0700 (PDT)
+	Fri, 10 Aug 2012 15:23:57 -0400
+Received: by wgbdr13 with SMTP id dr13so1753325wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 12:23:56 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] bcma: detect and register serial flash device
+Date: Fri, 10 Aug 2012 21:23:53 +0200
+Message-Id: <1344626633-16609-1-git-send-email-zajec5@gmail.com> (sfid-20120810_212401_704785_D7306123)
 MIME-Version: 1.0
-In-Reply-To: <5025425A.2090207@hauke-m.de>
-References: <2121451356.93690.1344518764022.JavaMail.root@neratec.com>
-	<5025425A.2090207@hauke-m.de>
-Date: Fri, 10 Aug 2012 14:28:09 -0400
-Message-ID: <CAHashqAQ9tD3qmzMRNfzLcGbD2A9gykFjUbOhqZA=uLJBnQ4Gw@mail.gmail.com> (sfid-20120810_202815_228024_C2097769)
-Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
-From: Andy Gospodarek <andy@greyhouse.net>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	Phil Perry <phil@elrepo.org>, mcgrof@frijolero.org,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 10, 2012 at 1:18 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 08/09/2012 03:26 PM, Zefir Kurtisi wrote:
->> On 08/09/2012 06:40 AM, Andy Gospodarek wrote:
->>> This patch allows me to compile and load the latest compat modules on
->>> RHEL6.3.  Users of compat on RHEL6 should note that you should set
->>> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
->>>
->>> [...]
->>>
->>> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
->>> index 56d5961..09e4b6f 100644
->>> --- a/include/linux/compat-2.6.36.h
->>> +++ b/include/linux/compat-2.6.36.h
->>> @@ -98,6 +98,8 @@ struct pm_qos_request_list {
->>>   * Dummy printk for disabled debugging statements to use whilst maintaining
->>>   * gcc's format and side-effect checking.
->>>   */
->>> +/* mask no_printk as RHEL6 backports this */
->>> +#define no_printk(...) compat_no_printk(...)
->>>  static inline __attribute__ ((format (printf, 1, 2)))
->>>  int no_printk(const char *s, ...) { return 0; }
->>>
->>> [...]
->>
->> This at least breaks compilation on 2.6.35-22 with gcc throwing a
->> compat-2.6.36.h:104: error: ISO C requires a named argument before ë...í
->>
->> It looks like no_printk() needs to be renamed to compat_no_printk()
->> to make it work as intended.
->>
->> This is a systematic mistake at several sections of this patch, where
->> the original function needs to be prefixed by 'compat_' to match the
->> related macro.
->>
->>
->> ---
->> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
->> index 8b02260..b6757c3 100644
->> --- a/include/linux/compat-2.6.36.h
->> +++ b/include/linux/compat-2.6.36.h
->> @@ -101,7 +101,7 @@ struct pm_qos_request_list {
->>  /* mask no_printk as RHEL6 backports this */
->>  #define no_printk(...) compat_no_printk(...)
->>  static inline __attribute__ ((format (printf, 1, 2)))
->> -int no_printk(const char *s, ...) { return 0; }
->> +int compat_no_printk(const char *s, ...) { return 0; }
->>
->>  #ifndef alloc_workqueue
->>  #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
->
-> With this patch applied it works better, but I still get this error in
-> drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c.
->
-> brcmfmac has this line:
->
-> #define brcmf_dbg(level, fmt, ...) no_printk(fmt, ##__VA_ARGS__)
->
-> so brcmf_dbg gets no_printk and not compat_no_printk.
->
-> Why isn't "ifndef CONFIG_COMPAT_RHEL_6_3" put around the declaration of
-> no_printk()?
->
-> Hauke
 
-Did you try the patch I posted last night that has the updated define
-for no_printk()?  I saw the same error until I applied that patch.
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
+V2: add "u32 window" in sflash struct. It's needed for early boot when
+    we have to access flash but we don't have platform device yet.
+---
+ drivers/bcma/Kconfig                        |    2 +-
+ drivers/bcma/bcma_private.h                 |    1 +
+ drivers/bcma/driver_chipcommon_sflash.c     |  123 ++++++++++++++++++++++++++-
+ drivers/bcma/main.c                         |    9 ++
+ include/linux/bcma/bcma_driver_chipcommon.h |   13 +++
+ include/linux/bcma/bcma_regs.h              |    2 +
+ 6 files changed, 146 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 8d1f777..c4252c4 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -49,7 +49,7 @@ config BCMA_DRIVER_MIPS
+ 
+ config BCMA_SFLASH
+ 	bool
+-	depends on BCMA_DRIVER_MIPS && BROKEN
++	depends on BCMA_DRIVER_MIPS
+ 	default y
+ 
+ config BCMA_NFLASH
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 3cf9cc9..94bf07c 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -54,6 +54,7 @@ u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc);
+ #ifdef CONFIG_BCMA_SFLASH
+ /* driver_chipcommon_sflash.c */
+ int bcma_sflash_init(struct bcma_drv_cc *cc);
++extern struct platform_device bcma_sflash_dev;
+ #else
+ static inline int bcma_sflash_init(struct bcma_drv_cc *cc)
+ {
+diff --git a/drivers/bcma/driver_chipcommon_sflash.c b/drivers/bcma/driver_chipcommon_sflash.c
+index 6e157a5..2c4eec2 100644
+--- a/drivers/bcma/driver_chipcommon_sflash.c
++++ b/drivers/bcma/driver_chipcommon_sflash.c
+@@ -5,15 +5,132 @@
+  * Licensed under the GNU/GPL. See COPYING for details.
+  */
+ 
++#include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+-#include <linux/bcma/bcma_driver_chipcommon.h>
+-#include <linux/delay.h>
+ 
+ #include "bcma_private.h"
+ 
++static struct resource bcma_sflash_resource = {
++	.name	= "bcma_sflash",
++	.start	= BCMA_SFLASH,
++	.end	= 0,
++	.flags  = IORESOURCE_MEM | IORESOURCE_READONLY,
++};
++
++struct platform_device bcma_sflash_dev = {
++	.name		= "bcma_sflash",
++	.resource	= &bcma_sflash_resource,
++	.num_resources	= 1,
++};
++
++struct bcma_sflash_tbl_e {
++	char *name;
++	u32 id;
++	u32 blocksize;
++	u16 numblocks;
++};
++
++static struct bcma_sflash_tbl_e bcma_sflash_st_tbl[] = {
++	{ "", 0x14, 0x10000, 32, },
++	{ 0 },
++};
++
++static struct bcma_sflash_tbl_e bcma_sflash_sst_tbl[] = {
++	{ 0 },
++};
++
++static struct bcma_sflash_tbl_e bcma_sflash_at_tbl[] = {
++	{ 0 },
++};
++
++static void bcma_sflash_cmd(struct bcma_drv_cc *cc, u32 opcode)
++{
++	int i;
++	bcma_cc_write32(cc, BCMA_CC_FLASHCTL,
++			BCMA_CC_FLASHCTL_START | opcode);
++	for (i = 0; i < 1000; i++) {
++		if (!(bcma_cc_read32(cc, BCMA_CC_FLASHCTL) &
++		      BCMA_CC_FLASHCTL_BUSY))
++			return;
++		cpu_relax();
++	}
++	bcma_err(cc->core->bus, "SFLASH control command failed (timeout)!\n");
++}
++
+ /* Initialize serial flash access */
+ int bcma_sflash_init(struct bcma_drv_cc *cc)
+ {
+-	bcma_err(cc->core->bus, "Serial flash support is broken\n");
++	struct bcma_bus *bus = cc->core->bus;
++	struct bcma_sflash *sflash = &cc->sflash;
++	struct bcma_sflash_tbl_e *e;
++	u32 id, id2;
++
++	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
++	case BCMA_CC_FLASHT_STSER:
++		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_ST_DP);
++
++		bcma_cc_write32(cc, BCMA_CC_FLASHADDR, 0);
++		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_ST_RES);
++		id = bcma_cc_read32(cc, BCMA_CC_FLASHDATA);
++
++		bcma_cc_write32(cc, BCMA_CC_FLASHADDR, 1);
++		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_ST_RES);
++		id2 = bcma_cc_read32(cc, BCMA_CC_FLASHDATA);
++
++		switch (id) {
++		case 0xbf:
++			for (e = bcma_sflash_sst_tbl; e->name; e++) {
++				if (e->id == id2)
++					break;
++			}
++			break;
++		default:
++			for (e = bcma_sflash_st_tbl; e->name; e++) {
++				if (e->id == id)
++					break;
++			}
++			break;
++		}
++		if (!e->name) {
++			bcma_err(bus, "Unsupported ST serial flash (id: 0x%X, id2: 0x%X)\n", id, id2);
++			return -ENOTSUPP;
++		}
++
++		break;
++	case BCMA_CC_FLASHT_ATSER:
++		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_AT_STATUS);
++		id = bcma_cc_read32(cc, BCMA_CC_FLASHDATA) & 0x3c;
++
++		for (e = bcma_sflash_at_tbl; e->name; e++) {
++			if (e->id == id)
++				break;
++		}
++		if (!e->name) {
++			bcma_err(bus, "Unsupported Atmel serial flash (id: 0x%X)\n", id);
++			return -ENOTSUPP;
++		}
++
++		break;
++	default:
++		bcma_err(bus, "Unsupported flash type\n");
++		return -ENOTSUPP;
++	}
++
++	sflash->window = BCMA_SFLASH;
++	sflash->blocksize = e->blocksize;
++	sflash->numblocks = e->numblocks;
++	sflash->size = sflash->blocksize * sflash->numblocks;
++	sflash->present = true;
++
++	bcma_info(bus, "Found %s serial flash (size: %dKiB, blocksize: 0x%X, blocks: %d)\n",
++		  e->name, sflash->size / 1024, sflash->blocksize,
++		  sflash->numblocks);
++
++	/* Prepare platform device, but don't register it yet. It's too early,
++	 * malloc (required by device_private_init) is not available yet. */
++	bcma_sflash_dev.resource[0].end = bcma_sflash_dev.resource[0].start +
++					  sflash->size;
++	bcma_sflash_dev.dev.platform_data = sflash;
++
+ 	return 0;
+ }
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 10904aa4..648688a 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -7,6 +7,7 @@
+ 
+ #include "bcma_private.h"
+ #include <linux/module.h>
++#include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/slab.h>
+ 
+@@ -136,6 +137,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 		dev_id++;
+ 	}
+ 
++#ifdef CONFIG_BCMA_SFLASH
++	if (bus->drv_cc.sflash.present) {
++		err = platform_device_register(&bcma_sflash_dev);
++		if (err)
++			bcma_err(bus, "Error registering serial flash\n");
++	}
++#endif
++
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 16c266c..799e4200 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -516,6 +516,16 @@ struct bcma_pflash {
+ 	u32 window_size;
+ };
+ 
++#ifdef CONFIG_BCMA_SFLASH
++struct bcma_sflash {
++	bool present;
++	u32 window;
++	u32 blocksize;
++	u16 numblocks;
++	u32 size;
++};
++#endif
++
+ struct bcma_serial_port {
+ 	void *regs;
+ 	unsigned long clockspeed;
+@@ -536,6 +546,9 @@ struct bcma_drv_cc {
+ 	struct bcma_chipcommon_pmu pmu;
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+ 	struct bcma_pflash pflash;
++#ifdef CONFIG_BCMA_SFLASH
++	struct bcma_sflash sflash;
++#endif
+ 
+ 	int nr_serial_ports;
+ 	struct bcma_serial_port serial_ports[4];
+diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
+index a393e82..6c9cb93 100644
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -85,4 +85,6 @@
+ 							 * (2 ZettaBytes), high 32 bits
+ 							 */
+ 
++#define BCMA_SFLASH			0x1c000000
++
+ #endif /* LINUX_BCMA_REGS_H_ */
+-- 
+1.7.7
+
