@@ -1,43 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3980 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951Ab2HQNrk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 09:47:40 -0400
-Message-ID: <502E4B70.5090900@broadcom.com> (sfid-20120817_154744_843787_4D6BEC9C)
-Date: Fri, 17 Aug 2012 15:47:28 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40034 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752421Ab2HJRS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 13:18:27 -0400
+Message-ID: <5025425A.2090207@hauke-m.de> (sfid-20120810_191830_971101_DB952582)
+Date: Fri, 10 Aug 2012 19:18:18 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: "Saul St. John" <saul.stjohn@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/2] bcma: expose cc sprom to sysfs
-References: <20120816190616.GE6726@eris.garyseven.net>
-In-Reply-To: <20120816190616.GE6726@eris.garyseven.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+CC: Andy Gospodarek <andy@greyhouse.net>, Phil Perry <phil@elrepo.org>,
+	mcgrof@frijolero.org,
+	lf driver backport
+	<lf_driver_backport@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
+References: <2121451356.93690.1344518764022.JavaMail.root@neratec.com>
+In-Reply-To: <2121451356.93690.1344518764022.JavaMail.root@neratec.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2012 09:06 PM, Saul St. John wrote:
-> On BCMA devices with a ChipCommon core of revision 31 or higher, the device
-> SPROM can be accessed through CC core registers. This patch exposes the
-> SPROM on such devices for read/write access as a sysfs attribute.
->
-> Tested on a MacBookPro8,2 with BCM4331.
->
-> Cc: Rafał Miłecki <zajec5@gmail.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
+On 08/09/2012 03:26 PM, Zefir Kurtisi wrote:
+> On 08/09/2012 06:40 AM, Andy Gospodarek wrote:
+>> This patch allows me to compile and load the latest compat modules on
+>> RHEL6.3.  Users of compat on RHEL6 should note that you should set
+>> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
+>>
+>> [...]
+>>
+>> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+>> index 56d5961..09e4b6f 100644
+>> --- a/include/linux/compat-2.6.36.h
+>> +++ b/include/linux/compat-2.6.36.h
+>> @@ -98,6 +98,8 @@ struct pm_qos_request_list {
+>>   * Dummy printk for disabled debugging statements to use whilst maintaining
+>>   * gcc's format and side-effect checking.
+>>   */
+>> +/* mask no_printk as RHEL6 backports this */
+>> +#define no_printk(...) compat_no_printk(...)
+>>  static inline __attribute__ ((format (printf, 1, 2)))
+>>  int no_printk(const char *s, ...) { return 0; }
+>>  
+>> [...]
+> 
+> This at least breaks compilation on 2.6.35-22 with gcc throwing a
+> compat-2.6.36.h:104: error: ISO C requires a named argument before ‘...’
+> 
+> It looks like no_printk() needs to be renamed to compat_no_printk()
+> to make it work as intended.
+> 
+> This is a systematic mistake at several sections of this patch, where
+> the original function needs to be prefixed by 'compat_' to match the 
+> related macro.
+> 
+> 
+> ---
+> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+> index 8b02260..b6757c3 100644
+> --- a/include/linux/compat-2.6.36.h
+> +++ b/include/linux/compat-2.6.36.h
+> @@ -101,7 +101,7 @@ struct pm_qos_request_list {
+>  /* mask no_printk as RHEL6 backports this */
+>  #define no_printk(...) compat_no_printk(...)
+>  static inline __attribute__ ((format (printf, 1, 2)))
+> -int no_printk(const char *s, ...) { return 0; }
+> +int compat_no_printk(const char *s, ...) { return 0; }
+>  
+>  #ifndef alloc_workqueue
+>  #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
 
-Hi Saul,
+With this patch applied it works better, but I still get this error in
+drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c.
 
-I was still planning to come back to your reply on August 14. Just 
-wanted to reply to this patch as I still feel it is a bad thing to open 
-up the sprom as a whole. I can see the use-cases you mentioned as 
-useful, but maybe we can get a specific solution for that.
+brcmfmac has this line:
 
-Gr. AvS
+#define brcmf_dbg(level, fmt, ...) no_printk(fmt, ##__VA_ARGS__)
 
+so brcmf_dbg gets no_printk and not compat_no_printk.
+
+Why isn't "ifndef CONFIG_COMPAT_RHEL_6_3" put around the declaration of
+no_printk()?
+
+Hauke
