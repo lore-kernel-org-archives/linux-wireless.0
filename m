@@ -1,52 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52685 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758518Ab2HXJ3t (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:40365 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326Ab2HKA0C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 05:29:49 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1T4qD5-0004jH-RJ
-	for linux-wireless@vger.kernel.org; Fri, 24 Aug 2012 11:29:48 +0200
-Message-ID: <1345800585.4503.8.camel@jlt3.sipsolutions.net> (sfid-20120824_113044_356303_14951AEB)
-Subject: Re: [RFC 00/20] mac80211: multi-channel work
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 10 Aug 2012 20:26:02 -0400
+Received: by yenl14 with SMTP id l14so961596yen.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 17:26:01 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linux-wireless@vger.kernel.org
-Date: Fri, 24 Aug 2012 11:29:45 +0200
-In-Reply-To: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net> (sfid-20120727_131724_863712_473E357A)
-References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120727_131724_863712_473E357A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: dquan@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFT 1/2] cfg80211: add a helper for processing 5 GHz beacon hints
+Date: Fri, 10 Aug 2012 17:25:49 -0700
+Message-Id: <1344644750-14000-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20120811_022606_555323_2818B304)
+In-Reply-To: <1344644750-14000-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1344644750-14000-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-07-27 at 13:16 +0200, Johannes Berg wrote:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> Comments welcome!
+Add a helper for doing the work required for processing
+a beacon hint. This allows us to re-use the code if
+we later want to do the same processing.
 
-Ilan pointed me to a problem here yesterday.
+This commit has no functional change, it only introduces
+a helper.
 
-Say we authenticate, then at that time we'll bind the virtual interface
-into an appropriate channel context. Now we associate, and keep that
-channel context. So far, so good.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c |   45 +++++++++++++++++++++++++++++----------------
+ 1 file changed, 29 insertions(+), 16 deletions(-)
 
-Now say we disassociate. At this point, the connection is gone, so we
-remove the channel context.
-
-Now if the supplicant wants to deauthenticate as well, we have no
-channel context to use for it. We could use remain-on-channel? Or we
-could create a new channel context? Or just ignore the deauth? I haven't
-found a good solution yet... We also can't rely on the supplicant always
-doing a deauth, so we don't want to keep the channel context around
-until the deauth either.
-
-Obviously the same can also happen if the supplicant just asks us to
-deauthenticate without ever having connected at all, but that's a rather
-unlikely case.
-
-Anyone have any idea? :)
-
-johannes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2ded3c7..8525ece 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1028,30 +1028,19 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	return false;
+ }
+ 
+-static void handle_reg_beacon(struct wiphy *wiphy,
+-			      unsigned int chan_idx,
+-			      struct reg_beacon *reg_beacon)
++static bool reg_chan_process_beacon_hint(struct wiphy *wiphy,
++					 struct ieee80211_channel *chan)
+ {
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *chan;
+-	bool channel_changed = false;
+ 	struct ieee80211_channel chan_before;
+-
+-	assert_cfg80211_lock();
+-
+-	sband = wiphy->bands[reg_beacon->chan.band];
+-	chan = &sband->channels[chan_idx];
+-
+-	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
+-		return;
++	bool channel_changed = false;
+ 
+ 	if (chan->beacon_found)
+-		return;
++		return false;
+ 
+ 	chan->beacon_found = true;
+ 
+ 	if (wiphy->flags & WIPHY_FLAG_DISABLE_BEACON_HINTS)
+-		return;
++		return false;
+ 
+ 	chan_before.center_freq = chan->center_freq;
+ 	chan_before.flags = chan->flags;
+@@ -1068,6 +1057,30 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+ 
+ 	if (channel_changed)
+ 		nl80211_send_beacon_hint_event(wiphy, &chan_before, chan);
++
++	return channel_changed;
++}
++
++static void handle_reg_beacon(struct wiphy *wiphy,
++			      unsigned int chan_idx,
++			      struct reg_beacon *reg_beacon)
++{
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *chan;
++	bool channel_changed = false;
++
++	assert_cfg80211_lock();
++
++	sband = wiphy->bands[reg_beacon->chan.band];
++	chan = &sband->channels[chan_idx];
++
++	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
++		return;
++
++	channel_changed = reg_chan_process_beacon_hint(wiphy, chan);
++
++	if (channel_changed)
++		return; /* some band hint could potenially go here */
+ }
+ 
+ /*
+-- 
+1.7.10.4
 
