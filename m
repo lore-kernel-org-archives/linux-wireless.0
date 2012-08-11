@@ -1,28 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52419 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755292Ab2HTHJf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 03:09:35 -0400
-Message-ID: <5031E2AA.5050605@qca.qualcomm.com> (sfid-20120820_090938_856727_DD090420)
-Date: Mon, 20 Aug 2012 10:09:30 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: protect firmware from excessive WoW pattern length
-References: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com>
-In-Reply-To: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40841 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755596Ab2HKAaq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 20:30:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: adapt changes in cfg80211.h in wil6210
+Date: Sat, 11 Aug 2012 02:30:24 +0200
+Message-Id: <1344645025-26796-1-git-send-email-hauke@hauke-m.de> (sfid-20120811_023049_094718_8D20B0C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2012 03:15 AM, Thomas Pedersen wrote:
-> Don't accept WoW patterns longer than supported by firmware.
-> 
-> Reported-by: Haijun Jin <nhjin@qca.qualcomm.com>
-> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+struct cfg80211_ops changed and this patches changes wil6210 to use the
+correct parameter types in the callback functions.
 
-Thanks, applied.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ ...s-adds-the-802.11ad-60-GHz-wil6210-driver.patch |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Kalle
+diff --git a/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch b/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch
+index 32ee1fc..d3406de 100644
+--- a/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch
++++ b/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch
+@@ -323,7 +323,7 @@ Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+ +	return 0;
+ +}
+ +
+-+static int wil_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+++static int wil_cfg80211_scan(struct wiphy *wiphy,
+ +			     struct cfg80211_scan_request *request)
+ +{
+ +#if 0
+@@ -601,7 +601,7 @@ Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+ +	return 0;
+ +}
+ +
+-+static int wil_mgmt_tx(struct wiphy *wiphy, struct net_device *ndev,
+++static int wil_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ +		struct ieee80211_channel *chan, bool offchan,
+ +		enum nl80211_channel_type channel_type,
+ +		bool channel_type_valid, unsigned int wait,
+@@ -617,7 +617,7 @@ Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+ +}
+ +
+ +static void wil_mgmt_frame_register(struct wiphy *wiphy,
+-+		struct net_device *ndev, u16 frame_type, bool reg)
+++		struct wireless_dev *wdev, u16 frame_type, bool reg)
+ +{
+ +	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+ +	wil_info(wil, "%s()\n", __func__);
+-- 
+1.7.9.5
+
