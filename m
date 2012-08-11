@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34201 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754663Ab2HAR4j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 13:56:39 -0400
-Date: Wed, 1 Aug 2012 12:56:28 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
-Message-ID: <20120801175628.GD22963@thinkpad-t410> (sfid-20120801_195648_278809_7A708617)
-References: <20120801131232.GA1785@zod.bos.redhat.com>
- <20120801141810.GB27433@tuxdriver.com>
- <50194D7A.6060400@broadcom.com>
- <5019506C.6020707@broadcom.com>
- <1343836438.4638.5.camel@jlt3.sipsolutions.net>
- <20120801161959.GC22963@thinkpad-t410>
- <1343841285.4638.10.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343841285.4638.10.camel@jlt3.sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40778 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751661Ab2HKAaP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 20:30:15 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/4] compat: some fixes
+Date: Sat, 11 Aug 2012 02:30:03 +0200
+Message-Id: <1344645007-26757-1-git-send-email-hauke@hauke-m.de> (sfid-20120811_023019_305648_86DA0047)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 01, 2012 at 07:14:45PM +0200, Johannes Berg wrote:
-> On Wed, 2012-08-01 at 11:19 -0500, Seth Forshee wrote:
-> > On Wed, Aug 01, 2012 at 05:53:58PM +0200, Johannes Berg wrote:
-> > > On Wed, 2012-08-01 at 17:51 +0200, Arend van Spriel wrote:
-> > > > On 08/01/2012 05:38 PM, Arend van Spriel wrote:
-> > > > >> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
-> > > > >> > 
-> > > > >> > It looks like those calls were added in mid-June.
-> > > > >> > 
-> > > > > I think mid-june sounds about right. We never observed the warning when
-> > > > > changes to use regulatory infrastructure were tested/reviewed. Should
-> > > > > this precondition be mentioned in cfg80211.h?
-> > > > > 
-> > > > > Gr. AvS
-> > > > 
-> > > > Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
-> > > > another solution is needed.
-> > > 
-> > > Yeah I was going to say -- how can it possibly access that? It seems
-> > > that in some patch the API got broken, it should be taking the lock or
-> > > whatever ... I'll leave it to Luis to sort out though :-P
-> > 
-> > In other drivers freq_reg_info only seems to get used by the regulatory
-> > notifiers, which get called with the lock held. brcmsmac is wanting to
-> > know whether or not OFDM is allowed when setting the channel though, and
-> > I didn't find that information anywhere outside the regulatory
-> > information. If there's another way then calling freq_reg_info() could
-> > be avoided. Or maybe we could add an OFDM flag to the channel
-> > information?
-> 
-> Seems reasonable to add the flags (or some of them) to the channel
-> flags, yeah.
+With these patches and "compat: fixup error in no_printk definition" by 
+Andy Gospodarek <andy@greyhouse.net> compat and compat-wireless are 
+building for me on all supported kernel versions. There is also a patch 
+for compat-wireless needed.
 
-Great, I'll work something up.
+Results of ckmake on compat and compat-wireless:
+Trying kernel 3.6.0-030600rc1-generic [OK]
+Trying kernel 3.5.0-030500-generic [OK]
+Trying kernel 3.4.7-030407-generic [OK]
+Trying kernel 3.3.8-030308-generic [OK]
+Trying kernel 3.2.26-030226-generic [OK]
+Trying kernel 3.1.10-030110-generic [OK]
+Trying kernel 3.0.39-030039-generic [OK]
+Trying kernel 2.6.39-02063904-generic [OK]
+Trying kernel 2.6.38-02063808-generic [OK]
+Trying kernel 2.6.37-02063706-generic [OK]
+Trying kernel 2.6.36-02063604-generic [OK]
+Trying kernel 2.6.35-02063513-generic [OK]
+Trying kernel 2.6.34-02063410-generic [OK]
+Trying kernel 2.6.33-02063307-generic [OK]
+Trying kernel 2.6.32-02063254-generic [OK]
+Trying kernel 2.6.31-02063113-generic [OK]
+Trying kernel 2.6.30-02063010-generic [OK]
+Trying kernel 2.6.29-02062906-generic [OK]
+Trying kernel 2.6.28-02062810-generic [OK]
+Trying kernel 2.6.27-02062731-generic [OK]
+Trying kernel 2.6.26-020626-generic [OK]
+Trying kernel 2.6.25-020625-generic [OK]
+Trying kernel 2.6.24-02062407-generic [OK]
 
-Seth
+Hauke Mehrtens (4):
+  compat: fix SIMPLE_DEV_PM_OPS() on kernel 2.6.29
+  compat: generate CONFIG_COMPAT_KERNEL_3_7
+  compat: fix mod_delayed_work
+  compat: move RHEL mask for qdisc_cb_private_validate
+
+ compat/compat-3.7.c           |    2 ++
+ include/linux/compat-2.6.29.h |   80 +++++++++++++++++++++++++++++------------
+ include/linux/compat-2.6.32.h |   44 ++++-------------------
+ include/linux/compat-2.6.33.h |   13 +++++++
+ include/linux/compat-3.3.h    |    6 ++--
+ scripts/gen-compat-config.sh  |    2 +-
+ 6 files changed, 83 insertions(+), 64 deletions(-)
+
+-- 
+1.7.9.5
+
