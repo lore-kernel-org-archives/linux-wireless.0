@@ -1,256 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63100 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020Ab2HJLRW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:17:22 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:32353 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751989Ab2HKTJ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Aug 2012 15:09:56 -0400
+Date: Sat, 11 Aug 2012 21:09:53 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: David Herrmann <dh.herrmann@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt73usb: WARN(x) in check_sdata_in_driver()
+Message-ID: <20120811190951.GA2432@redhat.com> (sfid-20120811_211047_497109_B04A4886)
+References: <CANq1E4RFGq2M7uSOMZLGuZYSa7E5g6RoWfyLDLtgAdsORD_qWg@mail.gmail.com>
+ <20120810222746.GA19779@redhat.com>
+ <CANq1E4RH5fHM5LPddD+A_w-G7k0=0scP0jpmqHnygX6Q9_Xecw@mail.gmail.com>
+ <20120811163406.GA10564@redhat.com>
+ <CANq1E4T=ajt6yt6NMfdyM4mjNgVkevF_nS7tVC-UAs3YpgLYfQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60788.707542.2560@gargle.gargle.HOWL> (sfid-20120810_131724_723656_87FED5AF)
-Date: Fri, 10 Aug 2012 16:46:04 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/15] ath9k: Cleanup RC init API
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANq1E4T=ajt6yt6NMfdyM4mjNgVkevF_nS7tVC-UAs3YpgLYfQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A reference to the rate table is stored inside the
-private structure, so there is no need to pass "rate_table"
-around.
+On Sat, Aug 11, 2012 at 08:46:47PM +0200, David Herrmann wrote:
+> Yes, I generated the wpa_supplicant.conf via netcfg (a network manager from
+> ArchLinux) and used it by hand. I often noticed doing everything by myself
+> works, but using netcfg or NetworkManager results in a timeout during
+> wlan-connection. Haven't debugged this, but it is not related to this bug
+> as it happens with other devices, too.
+> 
+> I now got everything running again, are you still interested in the
+> wpa_supplicant.conf? Sorry, for the noice.
+> Anyway, I haven't encountered the kernel-warnings, yet, but I will keep
+> looking. I haven't found a way to reliably reproduce them, but I saw them
+> quite often with linux-next a month ago and they seem to be gone now.
+>
+> Have you pushed any patches regarding this bug or do you just assume that
+> this was some untested code in linux-next that should be fixed in the
+> stable series for now?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 99 +++++++++++++------------------------
- 1 file changed, 35 insertions(+), 64 deletions(-)
+We have various mac80211 fixes that could be related with this problem,
+but I do not see any particular which address that directly. Perhaps
+warnings ware some side effect of other bug.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 2188d1b..49c71da 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -405,9 +405,9 @@ static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
- 	return rix;
- }
- 
--static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
--				   struct ath_rate_priv *ath_rc_priv)
-+static void ath_rc_sort_validrates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	u8 i, j, idx, idx_next;
- 
- 	for (i = ath_rc_priv->max_valid_rate - 1; i > 0; i--) {
-@@ -424,14 +424,6 @@ static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
- 	}
- }
- 
--static void ath_rc_init_valid_rate_idx(struct ath_rate_priv *ath_rc_priv)
--{
--	u8 i;
--
--	for (i = 0; i < ath_rc_priv->rate_table_size; i++)
--		ath_rc_priv->valid_rate_index[i] = 0;
--}
--
- static inline void ath_rc_set_valid_rate_idx(struct ath_rate_priv *ath_rc_priv,
- 					   u8 index, int valid_tx_rate)
- {
-@@ -495,10 +487,9 @@ ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
- 	return 0;
- }
- 
--static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
--				 const struct ath_rate_table *rate_table,
--				 u32 capflag)
-+static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	u8 i, hi = 0;
- 
- 	for (i = 0; i < rate_table->rate_cnt; i++) {
-@@ -506,7 +497,7 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
- 			u32 phy = rate_table->info[i].phy;
- 			u8 valid_rate_count = 0;
- 
--			if (!ath_rc_valid_phyrate(phy, capflag, 0))
-+			if (!ath_rc_valid_phyrate(phy, ath_rc_priv->ht_cap, 0))
- 				continue;
- 
- 			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
-@@ -521,14 +512,13 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
- 	return hi;
- }
- 
--static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
--				const struct ath_rate_table *rate_table,
--				struct ath_rateset *rateset,
--				u32 capflag)
-+static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
-+	struct ath_rateset *rateset = &ath_rc_priv->neg_rates;
-+	u32 capflag = ath_rc_priv->ht_cap;
- 	u8 i, j, hi = 0;
- 
--	/* Use intersection of working rates and valid rates */
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
-@@ -565,13 +555,13 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
- 	return hi;
- }
- 
--static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
--				  const struct ath_rate_table *rate_table,
--				  struct ath_rateset *rateset, u32 capflag)
-+static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
-+	struct ath_rateset *rateset = &ath_rc_priv->neg_ht_rates;
-+	u32 capflag = ath_rc_priv->ht_cap;
- 	u8 i, j, hi = 0;
- 
--	/* Use intersection of working rates and valid rates */
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
-@@ -1200,28 +1190,20 @@ struct ath_rate_table *ath_choose_rate_table(struct ath_softc *sc,
- }
- 
- static void ath_rc_init(struct ath_softc *sc,
--			struct ath_rate_priv *ath_rc_priv,
--			struct ieee80211_supported_band *sband,
--			struct ieee80211_sta *sta,
--			const struct ath_rate_table *rate_table)
-+			struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	struct ath_rateset *rateset = &ath_rc_priv->neg_rates;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_rateset *ht_mcs = &ath_rc_priv->neg_ht_rates;
- 	u8 i, j, k, hi = 0, hthi = 0;
- 
--	/* Initial rate table size. Will change depending
--	 * on the working rate set */
- 	ath_rc_priv->rate_table_size = RATE_TABLE_SIZE;
- 
--	/* Initialize thresholds according to the global rate table */
- 	for (i = 0 ; i < ath_rc_priv->rate_table_size; i++) {
- 		ath_rc_priv->per[i] = 0;
-+		ath_rc_priv->valid_rate_index[i] = 0;
- 	}
- 
--	/* Determine the valid rates */
--	ath_rc_init_valid_rate_idx(ath_rc_priv);
--
- 	for (i = 0; i < WLAN_RC_PHY_MAX; i++) {
- 		for (j = 0; j < RATE_TABLE_SIZE; j++)
- 			ath_rc_priv->valid_phy_rateidx[i][j] = 0;
-@@ -1229,25 +1211,19 @@ static void ath_rc_init(struct ath_softc *sc,
- 	}
- 
- 	if (!rateset->rs_nrates) {
--		/* No working rate, just initialize valid rates */
--		hi = ath_rc_init_validrates(ath_rc_priv, rate_table,
--					    ath_rc_priv->ht_cap);
-+		hi = ath_rc_init_validrates(ath_rc_priv);
- 	} else {
--		/* Use intersection of working rates and valid rates */
--		hi = ath_rc_setvalid_rates(ath_rc_priv, rate_table,
--					   rateset, ath_rc_priv->ht_cap);
--		if (ath_rc_priv->ht_cap & WLAN_RC_HT_FLAG) {
--			hthi = ath_rc_setvalid_htrates(ath_rc_priv,
--						       rate_table,
--						       ht_mcs,
--						       ath_rc_priv->ht_cap);
--		}
-+		hi = ath_rc_setvalid_rates(ath_rc_priv);
-+
-+		if (ath_rc_priv->ht_cap & WLAN_RC_HT_FLAG)
-+			hthi = ath_rc_setvalid_htrates(ath_rc_priv);
-+
- 		hi = max(hi, hthi);
- 	}
- 
- 	ath_rc_priv->rate_table_size = hi + 1;
- 	ath_rc_priv->rate_max_phy = 0;
--	BUG_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
-+	WARN_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
- 
- 	for (i = 0, k = 0; i < WLAN_RC_PHY_MAX; i++) {
- 		for (j = 0; j < ath_rc_priv->valid_phy_ratecnt[i]; j++) {
-@@ -1255,21 +1231,20 @@ static void ath_rc_init(struct ath_softc *sc,
- 				ath_rc_priv->valid_phy_rateidx[i][j];
- 		}
- 
--		if (!ath_rc_valid_phyrate(i, rate_table->initial_ratemax, 1)
--		    || !ath_rc_priv->valid_phy_ratecnt[i])
-+		if (!ath_rc_valid_phyrate(i, rate_table->initial_ratemax, 1) ||
-+		    !ath_rc_priv->valid_phy_ratecnt[i])
- 			continue;
- 
- 		ath_rc_priv->rate_max_phy = ath_rc_priv->valid_phy_rateidx[i][j-1];
- 	}
--	BUG_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
--	BUG_ON(k > RATE_TABLE_SIZE);
-+	WARN_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
-+	WARN_ON(k > RATE_TABLE_SIZE);
- 
- 	ath_rc_priv->max_valid_rate = k;
--	ath_rc_sort_validrates(rate_table, ath_rc_priv);
-+	ath_rc_sort_validrates(ath_rc_priv);
- 	ath_rc_priv->rate_max_phy = (k > 4) ?
--					ath_rc_priv->valid_rate_index[k-4] :
--					ath_rc_priv->valid_rate_index[k-1];
--	ath_rc_priv->rate_table = rate_table;
-+		ath_rc_priv->valid_rate_index[k-4] :
-+		ath_rc_priv->valid_rate_index[k-1];
- 
- 	ath_dbg(common, CONFIG, "RC Initialized with capabilities: 0x%x\n",
- 		ath_rc_priv->ht_cap);
-@@ -1392,7 +1367,6 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	struct ath_softc *sc = priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
--	const struct ath_rate_table *rate_table;
- 	int i, j = 0;
- 
- 	for (i = 0; i < sband->n_bitrates; i++) {
-@@ -1414,15 +1388,15 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 		ath_rc_priv->neg_ht_rates.rs_nrates = j;
- 	}
- 
--	rate_table = ath_choose_rate_table(sc, sband->band,
--					   sta->ht_cap.ht_supported);
--	if (!rate_table) {
-+	ath_rc_priv->rate_table = ath_choose_rate_table(sc, sband->band,
-+							sta->ht_cap.ht_supported);
-+	if (!ath_rc_priv->rate_table) {
- 		ath_err(common, "No rate table chosen\n");
- 		return;
- 	}
- 
- 	ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta);
--	ath_rc_init(sc, priv_sta, sband, sta, rate_table);
-+	ath_rc_init(sc, priv_sta);
- }
- 
- static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
-@@ -1431,13 +1405,10 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
- {
- 	struct ath_softc *sc = priv;
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
--	const struct ath_rate_table *rate_table = NULL;
- 
- 	if (changed & IEEE80211_RC_BW_CHANGED) {
--		rate_table = ath_choose_rate_table(sc, sband->band,
--						   sta->ht_cap.ht_supported);
- 		ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta);
--		ath_rc_init(sc, priv_sta, sband, sta, rate_table);
-+		ath_rc_init(sc, priv_sta);
- 
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), CONFIG,
- 			"Operating HT Bandwidth changed to: %d\n",
--- 
-1.7.11.4
+> I will tell you if the bugs occur again, but as I said, they seem gone.
+> Anyway, thanks for your time!
 
+Yeh, if warnings come back, please post me wpa_supplicant.conf, and
+eventually some other informations important to reproduce the problem
+(except .config which you already provided).
+
+Thanks
+Stanislaw
