@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55131 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40805 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754087Ab2HaPiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2012 11:38:18 -0400
+	id S1754241Ab2HKAaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Aug 2012 20:30:23 -0400
 From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, john@phrozen.org
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	florian@openwrt.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 0/3] MIPS: BCM47xx: use gpiolib
-Date: Fri, 31 Aug 2012 17:38:02 +0200
-Message-Id: <1346427485-12801-1-git-send-email-hauke@hauke-m.de> (sfid-20120831_173840_596045_8EB7EC93)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/4] compat: fix mod_delayed_work
+Date: Sat, 11 Aug 2012 02:30:06 +0200
+Message-Id: <1344645007-26757-4-git-send-email-hauke@hauke-m.de> (sfid-20120811_023026_734859_553343F4)
+In-Reply-To: <1344645007-26757-1-git-send-email-hauke@hauke-m.de>
+References: <1344645007-26757-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original code implemented the GPIO interface itself and this caused
-some problems. With this patch gpiolib is used.
+ * Add return value to function
+ * make EXPORT_SYMBOL_GPL work by including the needed header file
 
-This is based on mips/master.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-3.7.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-This should go through linux-mips, John W. Linville approved that 
-for the bcma and ssb changes normally maintained in wireless-testing.
-
-v3:
- - add missing break after setting bcm47xx_gpio_count in bcm47xx_gpio_init()
-
-v2:
- - use use gpio_chip.to_irq() instead of directly declare gpio_to_irq
-
-Hauke Mehrtens (3):
-  ssb: add function to return number of gpio lines
-  bcma: add GPIO driver for SoCs
-  MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
-
- arch/mips/Kconfig                            |    2 +-
- arch/mips/bcm47xx/gpio.c                     |  208 ++++++++++++++++++++------
- arch/mips/bcm47xx/setup.c                    |    2 +
- arch/mips/bcm47xx/wgt634u.c                  |    7 +
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    2 +
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |  148 +++---------------
- drivers/bcma/Kconfig                         |    5 +
- drivers/bcma/Makefile                        |    1 +
- drivers/bcma/driver_gpio.c                   |   90 +++++++++++
- drivers/bcma/scan.c                          |    4 +
- drivers/ssb/embedded.c                       |   12 ++
- include/linux/bcma/bcma.h                    |    5 +
- include/linux/bcma/bcma_driver_gpio.h        |   21 +++
- include/linux/ssb/ssb_embedded.h             |    4 +
- 14 files changed, 336 insertions(+), 175 deletions(-)
- create mode 100644 drivers/bcma/driver_gpio.c
- create mode 100644 include/linux/bcma/bcma_driver_gpio.h
-
+diff --git a/compat/compat-3.7.c b/compat/compat-3.7.c
+index 8fd07ff..f251788 100644
+--- a/compat/compat-3.7.c
++++ b/compat/compat-3.7.c
+@@ -9,11 +9,13 @@
+  */
+ 
+ #include <linux/workqueue.h>
++#include <linux/export.h>
+ 
+ bool mod_delayed_work(struct workqueue_struct *wq, struct delayed_work *dwork,
+ 		      unsigned long delay)
+ {
+ 	cancel_delayed_work(dwork);
+ 	queue_delayed_work(wq, dwork, delay);
++	return false;
+ }
+ EXPORT_SYMBOL_GPL(mod_delayed_work);
 -- 
 1.7.9.5
 
