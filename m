@@ -1,153 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7880 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757021Ab2HGBPN (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:37485 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995Ab2HKK5c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 21:15:13 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Sat, 11 Aug 2012 06:57:32 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [wireless-testing:master 68/100] drivers/net/wireless/p54/eeprom.c:291:15: warning: comparison of distinct pointer types lacks a cast
+Date: Sat, 11 Aug 2012 12:57:26 +0200
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20120811084404.GA7755@localhost> <201208111229.35167.chunkeey@googlemail.com> <20120811104133.GA9132@localhost>
+In-Reply-To: <20120811104133.GA9132@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20512.27600.1927.944141@gargle.gargle.HOWL> (sfid-20120807_031517_020026_12B492EC)
-Date: Tue, 7 Aug 2012 06:43:52 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC 05/14] ath9k: Cleanup index retrieval routines
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208111257.26417.chunkeey@googlemail.com> (sfid-20120811_125813_323854_ED063FD0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trim API and remove unused variables.
+On Saturday 11 August 2012 12:41:33 Fengguang Wu wrote:
+> On Sat, Aug 11, 2012 at 12:29:34PM +0200, Christian Lamparter wrote:
+> > On Saturday 11 August 2012 11:59:51 Fengguang Wu wrote:
+> > > On Sat, Aug 11, 2012 at 11:49:47AM +0200, Christian Lamparter wrote:
+> > >   CC [M]  drivers/net/wireless/p54/eeprom.o
+> > [...]
+> > >   LD [M]  drivers/net/wireless/p54/p54common.o
+> > > make: Leaving directory `/c/wfg/tip'
+> > > wfg@bee ~/tip/obj-compiletest% ..
+> > > wfg@bee ~/tip% q pop
+> > > Removing patch patches/mutt-wfg-t420-1000-8534-5234451332105763812
+> > > Restoring drivers/net/wireless/p54/eeprom.c
+> > > 
+> > Is this patch 1, or patch 2... or both?
+> 
+> It's the only applied patch (and is from you).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Ok, either I'm confusing, or I confused myself.
+
+In the original response I sent you two patches.
+take a look: There's "patch 1: make rawpower __u16"
+
+and the other one is:
+
+"patch2: use max_t"
+
+what I want to know: Which patch fixed the warning as
+it looks like from your response that you have applied
+both on the same time on that try:
+> Removing patch patches/mutt-wfg-t420-1000-8534-5234451332105763812
+
+I have the suspicion that "patch1" actually
+doesn't do anything in this regard, but you
+never know.
+
+Regards,
+	Chr
+
+BTW: I've attached just one patch (patch2 - this time)
+So, you don't need to extract it from the other mail
+and can just apply this one. Thanks!
 ---
- drivers/net/wireless/ath/ath9k/rc.c | 56 ++++++++++++++++++-------------------
- 1 file changed, 27 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 69745ad..2e517c0 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -471,8 +471,7 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
- }
- 
- static inline int
--ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
--		     struct ath_rate_priv *ath_rc_priv,
-+ath_rc_get_lower_rix(struct ath_rate_priv *ath_rc_priv,
- 		     u8 cur_valid_txrate, u8 *next_idx)
- {
- 	int8_t i;
-@@ -582,13 +581,11 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- 	return hi;
- }
- 
--/* Finds the highest rate index we can use */
--static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
--			         struct ath_rate_priv *ath_rc_priv,
--				 const struct ath_rate_table *rate_table,
-+static u8 ath_rc_get_highest_rix(struct ath_rate_priv *ath_rc_priv,
- 				 int *is_probing,
- 				 bool legacy)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	u32 best_thruput, this_thruput, now_msec;
- 	u8 rate, next_rate, best_rate, maxindex, minindex;
- 	int8_t index = 0;
-@@ -773,14 +770,8 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	try_per_rate = 4;
- 
- 	rate_table = ath_rc_priv->rate_table;
--	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
--				     &is_probe, false);
-+	rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, false);
- 
--	/*
--	 * If we're in HT mode and both us and our peer supports LDPC.
--	 * We don't need to check our own device's capabilities as our own
--	 * ht capabilities would have already been intersected with our peer's.
--	 */
- 	if (conf_is_ht(&sc->hw->conf) &&
- 	    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
- 		tx_info->flags |= IEEE80211_TX_CTL_LDPC;
-@@ -790,35 +781,42 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 		tx_info->flags |= (1 << IEEE80211_TX_CTL_STBC_SHIFT);
- 
- 	if (is_probe) {
--		/* set one try for probe rates. For the
--		 * probes don't enable rts */
-+		/*
-+		 * Set one try for probe rates. For the
-+		 * probes don't enable RTS.
-+		 */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       1, rix, 0);
--
--		/* Get the next tried/allowed rate. No RTS for the next series
--		 * after the probe rate
-+		/*
-+		 * Get the next tried/allowed rate.
-+		 * No RTS for the next series after the probe rate.
- 		 */
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
-+		ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, rix, 0);
- 
- 		tx_info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 	} else {
--		/* Set the chosen rate. No RTS for first series entry. */
-+		/*
-+		 * Set the chosen rate. No RTS for first series entry.
-+		 */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, rix, 0);
- 	}
- 
--	/* Fill in the other rates for multirate retry */
- 	for ( ; i < 3; i++) {
-+		ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
- 
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
--		/* All other rates in the series have RTS enabled */
-+		/*
-+		 * All other rates in the series have RTS enabled.
-+		 */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, rix, 1);
- 	}
- 
--	/* Use twice the number of tries for the last MRR segment. */
-+	/*
-+	 * Use twice the number of tries for the last MRR segment.
-+	 */
- 	try_per_rate = 8;
- 
- 	/*
-@@ -827,11 +825,11 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	 * as last retry to ensure that the frame is tried in both
- 	 * MCS and legacy rate.
- 	 */
--	ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
-+	ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
-+
- 	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy) &&
- 	    (ath_rc_priv->per[rix] > 45))
--		rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
--				&is_probe, true);
-+		rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, true);
- 
- 	/* All other rates in the series have RTS enabled */
- 	ath_rc_rate_set_series(rate_table, &rates[i], txrc,
-@@ -1061,8 +1059,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	if (ath_rc_priv->per[tx_rate] >= 55 && tx_rate > 0 &&
- 	    rate_table->info[tx_rate].ratekbps <=
- 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
--				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
-+		ath_rc_get_lower_rix(ath_rc_priv, (u8)tx_rate,
-+				     &ath_rc_priv->rate_max_phy);
- 
- 		/* Don't probe for a little while. */
- 		ath_rc_priv->probe_time = now_msec;
--- 
-1.7.11.4
-
+diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
+index d4d8610..0a9a3e7 100644
+--- a/drivers/net/wireless/p54/eeprom.c
++++ b/drivers/net/wireless/p54/eeprom.c
+@@ -288,10 +288,10 @@ static int p54_get_maxpower(struct p54_common *priv, void *data)
+ 		for (j = 0; j < ARRAY_SIZE(pda->point); j++) {
+ 			struct pda_channel_output_limit_point_longbow *point =
+ 				&pda->point[j];
+-			rawpower = max(rawpower, le16_to_cpu(point->val_qpsk));
+-			rawpower = max(rawpower, le16_to_cpu(point->val_bpsk));
+-			rawpower = max(rawpower, le16_to_cpu(point->val_16qam));
+-			rawpower = max(rawpower, le16_to_cpu(point->val_64qam));
++			rawpower = max_t(u16, rawpower, le16_to_cpu(point->val_qpsk));
++			rawpower = max_t(u16, rawpower, le16_to_cpu(point->val_bpsk));
++			rawpower = max_t(u16, rawpower, le16_to_cpu(point->val_16qam));
++			rawpower = max_t(u16, rawpower, le16_to_cpu(point->val_64qam));
+ 		}
+ 		/* longbow seems to use 1/16 dBm units */
+ 		return rawpower / 16;
