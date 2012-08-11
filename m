@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59426 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255Ab2HTUYu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 16:24:50 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q7KKOnP2006902
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2012 13:24:49 -0700
-Message-ID: <50329D11.9030405@candelatech.com> (sfid-20120820_222455_020257_42082CDF)
-Date: Mon, 20 Aug 2012 13:24:49 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4758 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751998Ab2HKSVh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Aug 2012 14:21:37 -0400
+Date: Sat, 11 Aug 2012 18:34:07 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: David Herrmann <dh.herrmann@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt73usb: WARN(x) in check_sdata_in_driver()
+Message-ID: <20120811163406.GA10564@redhat.com> (sfid-20120811_202140_978762_01FDA5C9)
+References: <CANq1E4RFGq2M7uSOMZLGuZYSa7E5g6RoWfyLDLtgAdsORD_qWg@mail.gmail.com>
+ <20120810222746.GA19779@redhat.com>
+ <CANq1E4RH5fHM5LPddD+A_w-G7k0=0scP0jpmqHnygX6Q9_Xecw@mail.gmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Issue with ath9k and tx/rx chainmask:  3x3 doesn't work with mask
- of 0x1.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANq1E4RH5fHM5LPddD+A_w-G7k0=0scP0jpmqHnygX6Q9_Xecw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am trying to test out an attenuator.  For now, I have only a single attenuator,
-so I set tx and rx chainmask to 0x1 on both AP and Station machine.
+On Sat, Aug 11, 2012 at 03:47:55PM +0200, David Herrmann wrote:
+> Hi Stanislaw
+> 
+> On Sat, Aug 11, 2012 at 12:27 AM, Stanislaw Gruszka <sgruszka@redhat.com>wrote:
+> 
+> > Hi
+> >
+> > On Sun, Jul 15, 2012 at 07:34:58PM +0200, David Herrmann wrote:
+> > > I use an ASUStek WL-167g USB wlan adapter (quite old) using rt73usb.ko
+> > > (Ralink). After resuming from suspend I get:
+> > >
+> > > [152743.736783] ------------[ cut here ]------------
+> > > [152743.736798] WARNING: at net/mac80211/driver-ops.h:12
+> > > ieee80211_send_deauth_disassoc+0x1a8/0x1b0()
+> > > [152743.736801] Hardware name: N150P/N210P/N220P
+> > > [152743.736804] wlan0:  Failed check-sdata-in-driver check, flags: 0x4
+> >
+> > Does it still happen on 3.5.1 ?
+> >
+> 
+> Thanks for asking. With 3.5.1 I get "phy0 -> rt2x00lib_request_firmware:
+> Error - Failed to request Firmware."
+> But:
+> $ wc /lib/firmware/rt73.bin
+>   5 44 2048 /lib/firmware/rt73.bin
+> So I wonder were that comes from. udevd segfaults twice while hotplugging
+> the device. And finally I get "link becomes ready" but I get ENODEV when
+> starting wpa_supplicant. It all seems a bit weird and I have no idea how to
+> debug this.
+>
+> I will try putting the firmware blob into the kernel binary.
+Looks like some change broke udev, but how? Do you have the same thing with
+3.5.0 ? Perhaps updating udev could help.
 
-I then connected channel 0 on the two machines together through the
-attenuator.
+You do not use NetworkManager or similar only pure wpa_supplicant? That would
+explain why I'm not seeing the problem on my setup. Could you provide me 
+your wpa_supplicant.conf (after removing psk and ssid entries) ? 
+What wpa_supplicant version you are using?
 
-I have two station interfaces on the station machine.  They both
-seem to associate OK, but they cannot receive dhcp responses.
-
-It *seems* that broadcast packets may go through fine.
-
-If I force the rate down to 1x1 or 2x2 MIMO (or force disable /n
-and just use /a), then it appears to work fine.
-
-Nics are WPEA-127n (AR9380).  Kernel is 3.5.1+ on AP, 3.5.2+ on station
-machine.
-
-I can see why forcing it down to 1x1 might work around some issue,
-but I find it funny that 2x2 works while 3x3 does not.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thanks
+Stanislaw
