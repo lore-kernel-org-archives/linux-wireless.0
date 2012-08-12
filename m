@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:33900 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570Ab2HAT23 (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:53528 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab2HLQZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 15:28:29 -0400
-Received: by ggnl2 with SMTP id l2so438334ggn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 12:28:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
-References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net> <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 1 Aug 2012 22:28:13 +0300
-Message-ID: <CA+XVXfegwamdK3mzP5eiAUJM4eYrFRTXY4Mr2tKP7+VBYriF-w@mail.gmail.com> (sfid-20120801_212832_567935_B3991B62)
-Subject: Re: [RFC 7/8] mac80211: support extended channel switch
+	Sun, 12 Aug 2012 12:25:20 -0400
+From: Antonio Quartulli <ordex@autistici.org>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH] mac80211: add supported rates change notification in IBSS
+Date: Sun, 12 Aug 2012 18:24:55 +0200
+Message-Id: <1344788695-1458-1-git-send-email-ordex@autistici.org> (sfid-20120812_182557_605132_7EDE9818)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 1, 2012 at 6:21 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Support extended channel switch when the operating
-> class is one of the global operating classes as
-> defined in Annex E of 802.11-2012. If it isn't,
-> disconnect from the AP instead.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-[...]
-> +static void
-> +ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-> +                                u8 new_chan_no, u8 count, u8 mode,
-> +                                enum ieee80211_band new_band,
-> +                                struct ieee80211_bss *bss, u64 timestamp)
->  {
->         struct cfg80211_bss *cbss =
->                 container_of((void *)bss, struct cfg80211_bss, priv);
->         struct ieee80211_channel *new_ch;
->         struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
-> -                                                     cbss->channel->band);
-> +       int new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
+In IBSS it is possible that the supported rates set for a station changes over
+time (e.g. it gets first initialised as an empty set because of no available
+information about rates and updated later). In this case the driver has to be
+notified about the change in order to update its internal table accordingly (if
+needed).
 
-I'm not sure a channel switch between bands should be allowed. Case in
-point - a device might have different HT capabilities between bands,
-so different rates might need to be programmed to FW. This would
-require a re-assoc..
+This behaviour is needed by all those drivers that handle rc internally but
+leave stations management to mac80211
 
-Arik
+Reported-by: Gui Iribarren <gui@altermundi.net>
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ include/net/mac80211.h |    1 +
+ net/mac80211/ibss.c    |    5 ++++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index bb86aa6..9b0f71f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1888,6 +1888,7 @@ enum ieee80211_frame_release_type {
+ enum ieee80211_rate_control_changed {
+ 	IEEE80211_RC_BW_CHANGED		= BIT(0),
+ 	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
++	IEEE80211_RC_SUPP_RATES_CHANGED	= BIT(2),
+ };
+ 
+ /**
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 37e71a3..590cf19 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -467,8 +467,11 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			}
+ 		}
+ 
+-		if (sta && rates_updated)
++		if (sta && rates_updated) {
++			drv_sta_rc_update(&local->hw, &sdata->vif, &sta->sta,
++					  IEEE80211_RC_SUPP_RATES_CHANGED);
+ 			rate_control_rate_init(sta);
++		}
+ 
+ 		rcu_read_unlock();
+ 	}
+-- 
+1.7.9.4
+
