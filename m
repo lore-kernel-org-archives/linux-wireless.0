@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:33301 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757040Ab2HXKHa (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:50060 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750833Ab2HLHbZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 06:07:30 -0400
-Received: by obbuo13 with SMTP id uo13so3802175obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2012 03:07:30 -0700 (PDT)
+	Sun, 12 Aug 2012 03:31:25 -0400
+Received: by obbup19 with SMTP id up19so5531762obb.12
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Aug 2012 00:31:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1345791322.4503.0.camel@jlt3.sipsolutions.net>
-References: <1345778993-23033-1-git-send-email-yeohchunyeow@gmail.com>
-	<1345791322.4503.0.camel@jlt3.sipsolutions.net>
-Date: Fri, 24 Aug 2012 18:07:29 +0800
-Message-ID: <CAEFj985DUnjrLG5xoJxrmxF7Geueh7uJkaN+fz1KjtV_3VPAaA@mail.gmail.com> (sfid-20120824_120735_255206_0BFF0F6B)
-Subject: Re: [PATCH] ath5k: set hw mfp capable flag for secured mesh
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120810162532.GA17559@redhat.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	<1344426823-1795-2-git-send-email-victorg@ti.com>
+	<20120809115109.GB3516@redhat.com>
+	<CAK80WHYjhBbE5Y2Q_-QhbNmxu76BMRCa9=vFyMXwQJQqsGiPUQ@mail.gmail.com>
+	<20120810162532.GA17559@redhat.com>
+Date: Sun, 12 Aug 2012 10:31:24 +0300
+Message-ID: <CAK80WHaN01uGhzj=_mk3C6zNYhaAiQbESxDF6MOKZWdPNb6qDQ@mail.gmail.com> (sfid-20120812_093203_590155_7B2F95D6)
+Subject: Re: [PATCH v3 1/7] nl80211/cfg80211: add radar detection command/event
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> You shouldn't blindly set the flag though because it "is required". You
-> really need to test that management frames aren't decrypted by the
-> hardware erroneously.
+> Also what about pure, non HT, channels?
+>
 
-Noted. Will take a look on alternative solution for this.
+Can't think on any reason why we can't support the non HT channels,
+the whole point here is the bandwidth.
+So, will add them too.
 
---
-Chun-Yeow
+-- 
+Thanks,
+Victor.
