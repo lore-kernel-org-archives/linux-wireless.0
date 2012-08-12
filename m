@@ -1,64 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:43534 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757927Ab2HWGya (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:42371 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab2HLLJa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 02:54:30 -0400
+	Sun, 12 Aug 2012 07:09:30 -0400
+Received: by obbuo13 with SMTP id uo13so5182095obb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Aug 2012 04:09:29 -0700 (PDT)
 MIME-Version: 1.0
-Date: Thu, 23 Aug 2012 14:54:29 +0800
-Message-ID: <CAPgLHd9iXQf3_W5b4kO1Mv68udqnmfFO8n+R-0ZqzCrhg1Z_WQ@mail.gmail.com> (sfid-20120823_085437_697218_C6E810B2)
-Subject: [PATCH] mwifiex: use is_zero_ether_addr() instead of memcmp()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: bzhao@marvell.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1344769686-3541-1-git-send-email-zajec5@gmail.com>
+References: <1344769686-3541-1-git-send-email-zajec5@gmail.com>
+Date: Sun, 12 Aug 2012 13:09:29 +0200
+Message-ID: <CACna6rxqBfVQzMpG4KqTHnT6Q8ibfwM-wCFejpGgDe8KHOJGsQ@mail.gmail.com> (sfid-20120812_130932_624520_29A8BCEF)
+Subject: Re: [READY][PATCH 1/2] bcma: detect and register NAND flash device
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+2012/8/12 Rafał Miłecki <zajec5@gmail.com>:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Using is_zero_ether_addr() instead of directly use
-memcmp() to determine if the ethernet address is all
-zeros.
+This will apply cleanly on top of:
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
+[PATCH V2] bcma: detect and register serial flash device
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 0b09004..a2a33dc 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -17,6 +17,8 @@
-  * this warranty disclaimer.
-  */
- 
-+#include <linux/etherdevice.h>
-+
- #include "decl.h"
- #include "ioctl.h"
- #include "util.h"
-@@ -736,7 +738,6 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
- {
- 	struct host_cmd_ds_802_11_ibss_status *ibss_coal_resp =
- 					&(resp->params.ibss_coalescing);
--	u8 zero_mac[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
- 
- 	if (le16_to_cpu(ibss_coal_resp->action) == HostCmd_ACT_GEN_SET)
- 		return 0;
-@@ -745,7 +746,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
- 		"info: new BSSID %pM\n", ibss_coal_resp->bssid);
- 
- 	/* If rsp has NULL BSSID, Just return..... No Action */
--	if (!memcmp(ibss_coal_resp->bssid, zero_mac, ETH_ALEN)) {
-+	if (is_zero_ether_addr(ibss_coal_resp->bssid)) {
- 		dev_warn(priv->adapter->dev, "new BSSID is NULL\n");
- 		return 0;
- 	}
-
-
+-- 
+Rafał
