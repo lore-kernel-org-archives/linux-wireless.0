@@ -1,59 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:61371 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386Ab2HTGoa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19954 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750792Ab2HLFaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 02:44:30 -0400
+	Sun, 12 Aug 2012 01:30:08 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120820161146.8961b8d9151f11a27b2fb48f@canb.auug.org.au>
-References: <20120820161146.8961b8d9151f11a27b2fb48f@canb.auug.org.au>
-Date: Mon, 20 Aug 2012 14:44:29 +0800
-Message-ID: <CAMz9Wg9cFU_fya0oCcwSotTrp24nbkafzL7QA=MYLvXmEy8jJQ@mail.gmail.com> (sfid-20120820_084438_010336_DBE76CBD)
-Subject: Re: linux-next: build failure after merge of the drivers-x86 tree
-From: AceLan Kao <acelan.kao@canonical.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, linux-next@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville\"" <linville@tuxdriver.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20519.15997.154761.163636@gargle.gargle.HOWL> (sfid-20120812_073054_212217_4CC99520)
+Date: Sun, 12 Aug 2012 10:56:21 +0530
+To: Antonio Quartulli <ordex@autistici.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH 1/2] mac80211: add sta_update_rates callback
+In-Reply-To: <20120809093245.GG6767@ritirata.org>
+References: <1344474712-22561-1-git-send-email-ordex@autistici.org>
+	<1344492897.4494.1.camel@jlt3.sipsolutions.net>
+	<20120809093245.GG6767@ritirata.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Antonio Quartulli wrote:
+> mh, at the very beginning I thought it was not correct what you said, but indeed
+> we should be able to do the job in sta_rc_update().
+> 
+> But then why does the ath9k_htc driver implement ath9k_htc_update_rate() to
+> update the rate used to talk to the AP? Should it use sta_rc_update() as well?
 
-The commit 154a7a7b2234 ("asus-wmi: update wlan LED through rfkill led trigger")
-needs another patch which was submitted to rfkill, but still not be merged yet.
-see https://patchwork.kernel.org/patch/1240091/
+We didn't have this new callback back then, and sta_rc_update() is sufficient to
+fix this. Maybe with a new flag - IEEE80211_RC_BASIC_RATES_CHANGED.
 
-Sorry for leading to the problem.
-
-Best regards,
-AceLan Kao.
-
-2012/8/20 Stephen Rothwell <sfr@canb.auug.org.au>:
-> Hi Matthew,
->
-> After merging the drivers-x86 tree, today's linux-next build (x86_64
-> allmodconfig) failed like this:
->
-> drivers/platform/x86/asus-wmi.c: In function 'asus_new_rfkill':
-> drivers/platform/x86/asus-wmi.c:892:3: error: implicit declaration of function 'rfkill_set_led_trigger_name' [-Werror=implicit-function-declaration]
->
-> Caused by commit 154a7a7b2234 ("asus-wmi: update wlan LED through rfkill
-> led trigger").  Please build test this stuff ... according to the bug
-> report, this patch depends on another rfkill patch.
->
-> I have used the drivers-x86 tree from next-20120817 for today.
-> --
-> Cheers,
-> Stephen Rothwell                    sfr@canb.auug.org.au
-
-
-
--- 
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+Sujith
