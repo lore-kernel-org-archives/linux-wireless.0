@@ -1,98 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:60042 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350Ab2H2VJP (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63442 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750792Ab2HLFfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2012 17:09:15 -0400
-Received: by vbbff1 with SMTP id ff1so1140991vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 14:09:15 -0700 (PDT)
+	Sun, 12 Aug 2012 01:35:06 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE3CJbmJ8JZzBKKJwYAL_6K_ossMK0HDCEkNLNfG-A4HzZSfzg@mail.gmail.com>
-References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
-	<50365AC8.7030503@lwfinger.net>
-	<CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
-	<5036660B.9020208@lwfinger.net>
-	<CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com>
-	<50381437.7040903@lwfinger.net>
-	<CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com>
-	<CAE3CJbmK4nF2gR56Rkrrd8qWoCuLot=XD-a9koWxCzcDeOrg8A@mail.gmail.com>
-	<CAE3CJbmJ8JZzBKKJwYAL_6K_ossMK0HDCEkNLNfG-A4HzZSfzg@mail.gmail.com>
-Date: Wed, 29 Aug 2012 14:09:14 -0700
-Message-ID: <CAE3CJbm++cjK0Mf8JOsRk8vCkvKF97iw1SnJdySjc7vXUz1Qgg@mail.gmail.com> (sfid-20120829_230937_427485_152679A2)
-Subject: Re: Question about ath9k/mac80211 Driver
-From: Patrick Connolly <pjc999@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20519.16305.788311.804773@gargle.gargle.HOWL> (sfid-20120812_073510_802910_BC443B0B)
+Date: Sun, 12 Aug 2012 11:01:29 +0530
+To: Antonio Quartulli <ordex@autistici.org>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH 1/2] mac80211: add sta_update_rates
+	callback
+In-Reply-To: <20519.15997.154761.163636@gargle.gargle.HOWL>
+References: <1344474712-22561-1-git-send-email-ordex@autistici.org>
+	<1344492897.4494.1.camel@jlt3.sipsolutions.net>
+	<20120809093245.GG6767@ritirata.org>
+	<20519.15997.154761.163636@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can anyone comment on whether "iw set bitrates" should be fully
-functional using compat-wireless version 3.2.5-1 ?
-   ( if not, what do I have to do to get this to work? )
+Sujith Manoharan wrote:
+> We didn't have this new callback back then, and sta_rc_update() is sufficient to
+> fix this. Maybe with a new flag - IEEE80211_RC_BASIC_RATES_CHANGED.
 
--Patrick
+Um, IEEE80211_RC_SUPP_RATES_CHANGED or something.
 
-On Tue, Aug 28, 2012 at 4:48 PM, Patrick Connolly
-<patrickc@alumni.ucsd.edu> wrote:
-> Okay so using a compat-wireless build of 3.2.5-1, I get the command to
-> succeed (ie: no more error message) but when I look at the advertised
-> rates using "iwlist scanning" it certainly looks like the command does
-> not take effect.
->
-> COMMAND USED:
-> # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
->
-> RESULT OF "iwlist scanning":
->                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
->                               9 Mb/s; 12 Mb/s; 18 Mb/s
->                     Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
->
->   These Bit Rates are the same as they were before the "iw   set
-> bitrates" command.  I haven't actually captured the packets in
-> wireshark yet; I assume the output of "iwlist" is reliable enough.
->
->   Can anyone comment on what is wrong?  Why don't the advertised rates change?
->
-> -Patrick
->
->
-> On Mon, Aug 27, 2012 at 7:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 08/27/2012 08:50 AM, Patrick Connolly wrote:
->>>
->>> So can anybody comment on whether kernel 2.6.32 is recent enough to
->>> support "iw" version 0.9.22 ?
->>
->>
->> It is not; however, you can build compat-wireless for that kernel and get
->> code that will.
->>
->> Larry
->>
->>
->
->
->
->>> On Fri, Aug 24, 2012 at 4:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>>> On 08/24/2012 06:38 PM, Patrick Connolly wrote:
->>>>>
->>>>> Okay so I built "iw" version 0.9.22 successfully (after much grief).
->>>>> The help page shows that "set bitrates" is now supported:
->>>>>
->>>>>          dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in
->>>>> Mbps>*]
->>>>>
->>>>>
->>>>>   but when I try to use it I get:
->>>>>
->>>>>         # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
->>>>>         command failed: Operation not supported (-95)
->>>>>
->>>>> ...so what does this mean?  Is it "iw" or the driver that lacks the
->>>>> support?
->>>>
->>>>
->>>> I would think that your kernel is too old. What version are you running?
->>>>
->>>> Larry
->>>>
->>>>
+Sujith
