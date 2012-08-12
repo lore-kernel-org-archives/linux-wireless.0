@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43333 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751814Ab2HAXFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 19:05:53 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat: add sk_wmem_alloc_get and sk_has_allocations
-Date: Thu,  2 Aug 2012 01:05:24 +0200
-Message-Id: <1343862324-26057-3-git-send-email-hauke@hauke-m.de> (sfid-20120802_010555_786245_85DF40F0)
-In-Reply-To: <1343862324-26057-1-git-send-email-hauke@hauke-m.de>
-References: <1343862324-26057-1-git-send-email-hauke@hauke-m.de>
+Received: from vms173009pub.verizon.net ([206.46.173.9]:27985 "EHLO
+	vms173009pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752014Ab2HLRUD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Aug 2012 13:20:03 -0400
+Message-id: <5027D79E.9050607@verizon.net> (sfid-20120812_192009_539490_FFA9A7C3)
+Date: Sun, 12 Aug 2012 12:19:42 -0400
+From: "C. McPherson" <ccmcphe@verizon.net>
+MIME-version: 1.0
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: mcgrof@kernel.org, lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH] compat: fix system crash on 2.6.35 when flushing work
+References: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
+In-reply-to: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions are copied from the kernel.
+Zefir:
+Thanks a lot for this reference. All my systems are running Ubuntu 
+10.04/10.10. I was updating our compat-wireless with the stable 
+compat-wireless 3.5
+and came across this crash in our testing lab. I added your patch and 
+the stable compat-wireless 3.5 is now working with our Ubuntu.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.31.h |   34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+-Tex
 
-diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
-index 25db973..347ae26 100644
---- a/include/linux/compat-2.6.31.h
-+++ b/include/linux/compat-2.6.31.h
-@@ -11,6 +11,7 @@
- #include <net/dst.h>
- #include <net/genetlink.h>
- #include <linux/ethtool.h>
-+#include <net/sock.h>
- 
- /*
-  * These macros allow us to backport rfkill without any
-@@ -215,6 +216,39 @@ extern long long atomic64_add_return(long long a, atomic64_t *v);
- 
- #endif
- 
-+/**
-+ * sk_rmem_alloc_get - returns read allocations
-+ * @sk: socket
-+ *
-+ * Returns sk_rmem_alloc
-+ */
-+static inline int sk_rmem_alloc_get(const struct sock *sk)
-+{
-+	return atomic_read(&sk->sk_rmem_alloc);
-+}
-+
-+/**
-+ * sk_wmem_alloc_get - returns write allocations
-+ * @sk: socket
-+ *
-+ * Returns sk_wmem_alloc minus initial offset of one
-+ */
-+static inline int sk_wmem_alloc_get(const struct sock *sk)
-+{
-+	return atomic_read(&sk->sk_wmem_alloc) - 1;
-+}
-+
-+/**
-+ * sk_has_allocations - check if allocations are outstanding
-+ * @sk: socket
-+ *
-+ * Returns true if socket has write or read allocations
-+ */
-+static inline bool sk_has_allocations(const struct sock *sk)
-+{
-+	return sk_wmem_alloc_get(sk) || sk_rmem_alloc_get(sk);
-+}
-+
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) */
- 
--- 
-1.7.9.5
+
+On 07/13/2012 04:38 AM, Zefir Kurtisi wrote:
+> Ubuntu 10.10 stock kernel (2.6.35-22-generic) crashes in
+> compat_flush_scheduled_work(), that is called e.g. when
+> mac80211 module is unloaded.
+>
+> The problem was introduced with 80bf8a83
+> compat: backport system work queues system_wq and system_long_wq
+>
+> The crash happens in compat_flush_scheduled_work() where both
+> flush_workqueue() and flush_scheduled_work() are called successively.
+> Removing one of them resolves the issue.
+>
+> All compat-wireless tarballs after 2012-03-18 are affected.
+>
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> ---
+>   compat/compat-2.6.36.c |    1 -
+>   1 files changed, 0 insertions(+), 1 deletions(-)
+>
+> diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
+> index 9190ecd..8f25be0 100644
+> --- a/compat/compat-2.6.36.c
+> +++ b/compat/compat-2.6.36.c
+> @@ -140,7 +140,6 @@ void compat_flush_scheduled_work(void)
+>   	 * go with the old kernel's one first for now (keventd_wq) and
+>   	 * if think its reasonable later we can flip this around.
+>   	 */
+> -	flush_workqueue(system_wq);
+>   	flush_scheduled_work();
+>   }
+>   EXPORT_SYMBOL_GPL(compat_flush_scheduled_work);
 
