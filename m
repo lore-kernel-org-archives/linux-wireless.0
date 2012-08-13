@@ -1,90 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43886 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755474Ab2HAPVf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21397 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379Ab2HMPXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 11:21:35 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 8/8] mac80211: disconnect if channel switch fails
-Date: Wed,  1 Aug 2012 17:21:27 +0200
-Message-Id: <1343834487-23737-9-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172148_668361_04AE7BFD)
-In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
-References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 13 Aug 2012 11:23:24 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 2/3] ath9k_htc: Advertise interface combinations supported
+Date: Mon, 13 Aug 2012 20:52:19 +0530
+Message-ID: <1344871339-6575-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120813_172339_351594_E855A14B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Disconnect from the AP if channel switching in the
-driver failed or if the new channel is unavailable.
+This will allow us to create the multivif the driver supports.
+Also this ensures the multivif support and limitation advertized
+by the driver is taken care in cfg80211 itself.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- net/mac80211/mlme.c |   26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cc76481..359ec2b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -730,16 +730,13 @@ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
- 
- 	trace_api_chswitch_done(sdata, success);
- 	if (!success) {
--		/*
--		 * If the channel switch was not successful, stay
--		 * around on the old channel. We currently lack
--		 * good handling of this situation, possibly we
--		 * should just drop the association.
--		 */
--		sdata->local->csa_channel = sdata->local->oper_channel;
-+		sdata_info(sdata,
-+			   "driver channel switch failed, disconnecting\n");
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &ifmgd->csa_connection_drop_work);
-+	} else {
-+		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
- 	}
--
--	ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
- }
- EXPORT_SYMBOL(ieee80211_chswitch_done);
- 
-@@ -784,8 +781,14 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
--	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED)
-+	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED) {
-+		sdata_info(sdata,
-+			   "AP %pM switches to unsupported channel %d, disconnecting\n",
-+			   ifmgd->associated->bssid, new_chan_no);
-+		ieee80211_queue_work(&sdata->local->hw,
-+				     &ifmgd->csa_connection_drop_work);
- 		return;
-+	}
- 
- 	sdata->local->csa_channel = new_ch;
- 
-@@ -1704,6 +1707,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
- 			       transmit_frame, frame_buf);
-+	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
- 	mutex_unlock(&ifmgd->mtx);
- 
- 	/*
-@@ -1748,6 +1752,8 @@ static void ieee80211_csa_connection_drop_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_sub_if_data,
- 			     u.mgd.csa_connection_drop_work);
- 
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_QUEUE_STOP_REASON_CSA);
- 	__ieee80211_disconnect(sdata, true);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a035a38..5022141 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -689,6 +689,21 @@ err_hw:
+ 	return ret;
  }
  
++static const struct ieee80211_iface_limit if_limits[] = {
++	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
++	{ .max = 2,	.types =
++			BIT(NL80211_IFTYPE_AP) |
++			BIT(NL80211_IFTYPE_P2P_GO) },
++};
++
++static const struct ieee80211_iface_combination if_comb = {
++	.limits = if_limits,
++	.n_limits = ARRAY_SIZE(if_limits),
++	.max_interfaces = 2,
++	.num_different_channels = 1,
++};
++
+ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 			       struct ieee80211_hw *hw)
+ {
+@@ -711,6 +726,9 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 		BIT(NL80211_IFTYPE_P2P_GO) |
+ 		BIT(NL80211_IFTYPE_P2P_CLIENT);
+ 
++	hw->wiphy->iface_combinations = &if_comb;
++	hw->wiphy->n_iface_combinations = 1;
++
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
 -- 
-1.7.10.4
+1.7.0.4
 
