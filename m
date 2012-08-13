@@ -1,58 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2025 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12734 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575Ab2H2Dyj (ORCPT
+	with ESMTP id S1751673Ab2HMNtD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 23:54:39 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 13 Aug 2012 09:49:03 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/2] ath6kl: Fix potential memory leak in ath6kl_tx_complete()
+Date: Mon, 13 Aug 2012 19:18:58 +0530
+Message-ID: <1344865738-2416-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120813_154923_296722_DD9285E1)
+In-Reply-To: <1344865738-2416-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1344865738-2416-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20541.37266.533608.571099@gargle.gargle.HOWL> (sfid-20120829_055520_793707_FC62695D)
-Date: Wed, 29 Aug 2012 09:20:42 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Fix TX filter usage
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TX filter bit for a station would be set by the HW
-when a frame is not acked. A frame would be completed with
-ATH9K_TXERR_FILT status only when the corresponding filter bit
-for the destination station is already set.
+We bail out from ath6kl_tx_complete() if any of the sanity
+checks on skb and ath6kl_cookie fails. By doing this we
+potentially leak few remaining buffers in packet_queue.
+Make sure to proceed processing the remaining buffers
+as well. This issue is found during code review.
 
-Currently, un-acknowledged  packets are added to the pending queue
-and retried, but the "clear_dest_mask" bit in the descriptor is
-set only when the TX status has been ATH9K_TXERR_FILT. This results
-in packet loss and the log shows:
-
-wlan0: dropped TX filtered frame, queue_len=0 PS=0 @4309746071
-wlan0: dropped TX filtered frame, queue_len=0 PS=0 @4309746076
-wlan0: dropped TX filtered frame, queue_len=0 PS=0 @4309746377
-...
-...
-
-This issue can be resolved by making sure that the destination
-mask is cleared when the packet is being retried and the earlier
-TX status is ATH9K_TXERR_XRETRY.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reported-by: Wang yufeng <yufengw@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/txrx.c |   25 ++++++++++++++-----------
+ 1 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index ef91f6c..b074c3a 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -568,7 +568,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		if (!an->sleeping) {
- 			ath_tx_queue_tid(txq, tid);
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index aab8251..4b26ba0 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -698,21 +698,29 @@ void ath6kl_tx_complete(struct htc_target *target,
+ 		list_del(&packet->list);
  
--			if (ts->ts_status & ATH9K_TXERR_FILT)
-+			if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
- 				tid->ac->clear_ps_filter = true;
- 		}
- 	}
+ 		ath6kl_cookie = (struct ath6kl_cookie *)packet->pkt_cntxt;
+-		if (!ath6kl_cookie)
+-			goto fatal;
++		if (!ath6kl_cookie) {
++			WARN_ON(1);
++			continue;
++		}
+ 
+ 		status = packet->status;
+ 		skb = ath6kl_cookie->skb;
+ 		eid = packet->endpoint;
+ 		map_no = ath6kl_cookie->map_no;
+ 
+-		if (!skb || !skb->data)
+-			goto fatal;
++		if (!skb || !skb->data) {
++			WARN_ON(1);
++			dev_kfree_skb(skb);
++			ath6kl_free_cookie(ar, ath6kl_cookie);
++			continue;
++		}
+ 
+ 		__skb_queue_tail(&skb_queue, skb);
+ 
+-		if (!status && (packet->act_len != skb->len))
+-			goto fatal;
++		if (!status && (packet->act_len != skb->len)) {
++			ath6kl_free_cookie(ar, ath6kl_cookie);
++			continue;
++		}
+ 
+ 		ar->tx_pending[eid]--;
+ 
+@@ -794,11 +802,6 @@ void ath6kl_tx_complete(struct htc_target *target,
+ 		wake_up(&ar->event_wq);
+ 
+ 	return;
+-
+-fatal:
+-	WARN_ON(1);
+-	spin_unlock_bh(&ar->lock);
+-	return;
+ }
+ 
+ void ath6kl_tx_data_cleanup(struct ath6kl *ar)
 -- 
-1.7.12
+1.7.0.4
 
