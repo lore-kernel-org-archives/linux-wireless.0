@@ -1,78 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:54211 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab2H0Gya (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40813 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434Ab2HMRYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 02:54:30 -0400
-Date: Mon, 27 Aug 2012 08:54:19 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 1/2] ath9k_htc: remove driver specific checks for
- interfaces combinations
-Message-ID: <20120827065419.GB22073@ritirata.org> (sfid-20120827_085434_600693_C795223F)
-References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
- <CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
+	Mon, 13 Aug 2012 13:24:25 -0400
+Date: Mon, 13 Aug 2012 18:53:40 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	openwrt-devel@lists.openwrt.org
+Cc: Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
+Message-ID: <20120813165340.GA10044@pandem0nium> (sfid-20120813_192429_741687_45B57920)
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="hHWLQfXTYDoKhP50"
-In-Reply-To: <CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
+	protocol="application/pgp-signature"; boundary="cNdxnHkX5QqsyA0e"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---hHWLQfXTYDoKhP50
+--cNdxnHkX5QqsyA0e
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi Mohammed,
+Hello ath9k fellows,
 
-On Mon, Aug 27, 2012 at 10:47:29 +0530, Mohammed Shafi wrote:
-> Hi,
->=20
-> On Mon, Aug 27, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> =
-wrote:
-> > Thanks to the new interface combinations code we can safely remove all =
-the
-> > driver specific checks for unsupported modes.
->=20
-> i had just sent this some time back
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/96443.
->=20
-> please review if something had to be changed.
->=20
+I'm using a pretty new AR9330 rev1/hornet based AP at home. After some
+days (5 days this time), it suddenly stops beaconing. dmesg shows nothing,
+hostapd is still running, but what I can see is:
 
-Sorry, but I hadn't seen your patch. Otherwise I would have not sent mine.
+cat /sys/kernel/debug/ieee80211/phy0/ath9k/regdump
+0x000000 0xdeadbeef
+0x000004 0xdeadbeef
+0x000008 0xdeadbeef
+0x00000c 0xdeadbeef
+0x000010 0xdeadbeef
+0x000014 0xdeadbeef
+[...]
+0x001ff4 0xdeadbeef
+0x001ff8 0xdeadbeef
+0x001ffc 0xdeadbeef
+0x002000 0xbadc0ffe
+0x002004 0xbadc0ffe
+0x002008 0xbadc0ffe
+0x00200c 0xbadc0ffe
+0x002010 0xbadc0ffe
+[...]
+0x003ff0 0xbadc0ffe
+0x003ff4 0xbadc0ffe
+0x003ff8 0xbadc0ffe
+0x003ffc 0xbadc0ffe
+0x004000 0x00000000
+0x004004 0x0102420b
+0x004008 0x00000000
+0x00400c 0x00000000
+[...] (some more sane looking registers here, and then zeros)
+0x004ef8 0x00000000
+0x004efc 0x00000000
+0x004f00 0xdeadbeef
+0x004f04 0xdeadbeef
+0x004f08 0xdeadbeef
+[...] (and the rest is mostly deadbeef)
 
-Your patch is ok. But, at this point, should patch 2/6 and 3/6 be merged
-together?
+Also /sys/kernel/debug/ieee80211/phy0/ath9k/dma shows a lot of deadbeef.
 
-Other than that, patch 2/6 should be modified to take into account IBSS mod=
-e.
+I'm using OpenWRT r31729, a single AP bridged with Ethernet. It is normal
+home usage, i.e. a few laptops and android phones doing not so much traffic.
+The box stops working out of the blue after a few days without any outside
+event (at least none I'm aware of). Sometimes this problem does not occur for
+2 weeks, sometimes after 12 hours, I couldn't find an easy way to reproduce it
+yet. As said, the box is perfectly reachable via SSH, no errors in syslog or
+anywhere else. Also an ifconfig wlan0 down and up seems to fix the problem.
 
+I'll try a new firmware with more debugging turned on, but have any of you
+seen this problem? Any input would be very much appreciated. I have a complete
+/sys/kernel/debug log from a working and a non-working system, along with
+more info (brctl, ip config, etc) which I'd love to share with anyone interested
+- it's too much to post on a public ml.
 
+Thank you very much
 Cheers,
+	Simon
 
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---hHWLQfXTYDoKhP50
+--cNdxnHkX5QqsyA0e
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAlA7GZsACgkQpGgxIkP9cwdZyACgkMrhvvYaYhslCxyYskNUHIOG
-4m4An2m3uGN4VMebyWQ0Mi1KCoB0rLQV
-=9KLw
+iEYEARECAAYFAlApMRQACgkQrzg/fFk7axZiPwCgyRsBFZAKobNnozwBq5yQPxP4
+uC4AoNRF/5HyJ5uORe3/S3+8tzuQDF+Q
+=R2wg
 -----END PGP SIGNATURE-----
 
---hHWLQfXTYDoKhP50--
+--cNdxnHkX5QqsyA0e--
