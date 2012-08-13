@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52020 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890Ab2HCQaZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 12:30:25 -0400
-Message-ID: <1344011416.4482.11.camel@jlt3.sipsolutions.net> (sfid-20120803_183045_769431_1E1B5547)
-Subject: Re: [REGRESSION][v3.5] iwlwifi: include rssi as part of decision
- making for reduce txpower
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linville@tuxdriver.com, emmanuel.grumbach@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 03 Aug 2012 18:30:16 +0200
-In-Reply-To: <501BFB29.7010801@canonical.com> (sfid-20120803_182456_195468_6BBC5170)
-References: <501BFB29.7010801@canonical.com>
-	 (sfid-20120803_182456_195468_6BBC5170)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3974 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752373Ab2HMUGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2012 16:06:04 -0400
+Message-ID: <50295E22.2010705@broadcom.com> (sfid-20120813_220608_302434_DDDB5F47)
+Date: Mon, 13 Aug 2012 22:05:54 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Vladimir Zapolskiy" <vz@mleia.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH] brcm80211: smac: set interface down on reset
+References: <1344115747-25627-1-git-send-email-vz@mleia.com>
+ <50201D62.2020701@mleia.com> <50201EDD.30408@broadcom.com>
+ <20120813185042.GD10529@tuxdriver.com>
+In-Reply-To: <20120813185042.GD10529@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-08-03 at 12:24 -0400, Joseph Salisbury wrote:
-
-> A test kernel was created with this commit reverted, which stopped the 
-> kernel panic from occurring.
+On 08/13/2012 08:50 PM, John W. Linville wrote:
+> On Mon, Aug 06, 2012 at 09:45:33PM +0200, Arend van Spriel wrote:
+>> On 08/06/2012 09:39 PM, Vladimir Zapolskiy wrote:
+>>> Hi Arend,
+>>>
+>>> what do you think about the proposed change? For me the problem is
+>>> quite severe, for the last several months I had to patch the kernel
+>>> to have functional BCM43225 on my laptop, hopefully the fix should go to
+>>> the
+>>> stable branches as well.
+>>>
+>>
+>> I have forwarded it to my colleagues. I may want to revise the fix  a
+>> little and have it applied to stable as well. I was not aware that this
+>> scenario occurs frequently. Thanks for addressing your issue so
+>> proactively ;-)
 > 
-> A bugzilla bug[1] has been opened.
+> Any word on the state of this fix?
+> 
+> John
+> 
 
-> [0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1029547
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=45491
+Hi John,
 
-This is a duplicate of https://bugzilla.kernel.org/show_bug.cgi?id=45481
-which I've already commented on with the correct fix. I've also sent the
-fix to stable:
+This change was briefly discussed internally. The patch will
+reinitialize the entire driver and device. While this probably works it
+may be overkill. OTOH it is better that than no solution. I suggest to
+apply this and have us come up with a more definite fix later at which
+we can move both patches to stable.
 
-http://www.mail-archive.com/stable@vger.kernel.org/msg12286.html
+Gr. AvS
 
-Thanks,
-johannes
 
