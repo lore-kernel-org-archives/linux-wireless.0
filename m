@@ -1,150 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:54097 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757128Ab2HHMA1 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:40545 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299Ab2HMTAo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 08:00:27 -0400
-Received: by obbwc20 with SMTP id wc20so1277570obb.31
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:00:26 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v3 3/7] nl80211/cfg80211: add ability to enable TX on op-channel
-Date: Wed,  8 Aug 2012 14:53:39 +0300
-Message-Id: <1344426823-1795-4-git-send-email-victorg@ti.com> (sfid-20120808_140057_194118_1D9CABE0)
-In-Reply-To: <1344426823-1795-1-git-send-email-victorg@ti.com>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	Mon, 13 Aug 2012 15:00:44 -0400
+Received: by yenl14 with SMTP id l14so2308505yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2012 12:00:43 -0700 (PDT)
+Subject: Patch "cfg80211: fix interface combinations check for ADHOC(IBSS)" has been added to the 3.4-stable tree
+To: paul.gortmaker@windriver.com, gregkh@linuxfoundation.org,
+	johannes@sipsolutions.net, liang.li@windriver.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	stable@vger.kernel.org
+Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
+From: <gregkh@linuxfoundation.org>
+Date: Mon, 13 Aug 2012 11:59:58 -0700
+In-Reply-To: <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com>
+Message-ID: <13448843982254@kroah.org> (sfid-20120813_210047_496209_7E51BAF7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The dfs master device should monitor radar channels
-for potential radar interference for a minimum of
-CAC (channel availability check) time, during this
-period no tx can occur. If no radar interference
-is detected the dfs master may initiate the tx with
-new NL80211_CMD_DFS_ENABLE_TX command.
 
-If this command is invoked prior performing a CAC or
-the time passed since the beginning of the CAC is
-less than min CAC time (60 sec), -EPERM is returned.
+This is a note to let you know that I've just added the patch titled
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+    cfg80211: fix interface combinations check for ADHOC(IBSS)
+
+to the 3.4-stable tree which can be found at:
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+
+The filename of the patch is:
+     cfg80211-fix-interface-combinations-check-for-adhoc-ibss.patch
+and it can be found in the queue-3.4 subdirectory.
+
+If you, or anyone else, feels it should not be added to the stable tree,
+please let <stable@vger.kernel.org> know about it.
+
+
+>From paul.gortmaker@windriver.com  Mon Aug 13 11:39:55 2012
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Date: Thu, 2 Aug 2012 18:55:41 -0400
+Subject: cfg80211: fix interface combinations check for ADHOC(IBSS)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>, Liang Li <liang.li@windriver.com>, <stable@vger.kernel.org>, Paul Gortmaker <paul.gortmaker@windriver.com>
+Message-ID: <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com>
+
+
+From: Liang Li <liang.li@windriver.com>
+
+partial of commit 8e8b41f9d8c8e63fc92f899ace8da91a490ac573 upstream.
+
+As part of commit 463454b5dbd8 ("cfg80211: fix interface
+combinations check"), this extra check was introduced:
+
+       if ((all_iftypes & used_iftypes) != used_iftypes)
+               goto cont;
+
+However, most wireless NIC drivers did not advertise ADHOC in
+wiphy.iface_combinations[i].limits[] and hence we'll get -EBUSY
+when we bring up a ADHOC wlan with commands similar to:
+
+ # iwconfig wlan0 mode ad-hoc && ifconfig wlan0 up
+
+In commit 8e8b41f9d8c8e ("cfg80211: enforce lack of interface
+combinations"), the change below fixes the issue:
+
+       if (total == 1)
+               return 0;
+
+But it also introduces other dependencies for stable. For example,
+a full cherry pick of 8e8b41f9d8c8e would introduce additional
+regressions unless we also start cherry picking driver specific
+fixes like the following:
+
+  9b4760e  ath5k: add possible wiphy interface combinations
+  1ae2fc2  mac80211_hwsim: advertise interface combinations
+  20c8e8d  ath9k: add possible wiphy interface combinations
+
+And the purpose of the 'if (total == 1)' is to cover the specific
+use case (IBSS, adhoc) that was mentioned above. So we just pick
+the specific part out from 8e8b41f9d8c8e here.
+
+Doing so gives stable kernels a way to fix the change introduced
+by 463454b5dbd8, without having to make cherry picks specific to
+various NIC drivers.
+
+Signed-off-by: Liang Li <liang.li@windriver.com>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- include/linux/nl80211.h |   11 +++++++++++
- include/net/cfg80211.h  |    5 +++++
- net/wireless/nl80211.c  |   36 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 52 insertions(+), 0 deletions(-)
+ net/wireless/util.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 773ba68..6c2884c 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -568,6 +568,15 @@
-  * @NL80211_CMD_RADAR_DETECT: Start radar detection in the driver/HW. Once
-  *	radar detected usermode notified with this event.
-  *
-+ * @NL80211_CMD_DFS_ENABLE_TX: Initiate tx after verifying radar clearness on
-+ *	dfs channel. The dfs master device should monitor radar channels
-+ *	for potential radar interference for a minimum of CAC (channel
-+ *	availability check) time, during this period no tx can occur. If no
-+ *	radar interference is detected during this period the dfs master may
-+ *	initiate the tx. If this command is invoked prior performing a CAC or
-+ *	the time passed since the beginning of the CAC is less than
-+ *	NL80211_DFS_MIN_CAC_TIME_MS, -EPERM is returned.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -713,6 +722,8 @@ enum nl80211_commands {
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -974,6 +974,9 @@ int cfg80211_can_change_interface(struct
+ 	}
+ 	mutex_unlock(&rdev->devlist_mtx);
  
- 	NL80211_CMD_RADAR_DETECT,
- 
-+	NL80211_CMD_DFS_ENABLE_TX,
++	if (total == 1)
++		return 0;
 +
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c40a05d..3a56601 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1627,6 +1627,8 @@ struct cfg80211_gtk_rekey_data {
-  *	current monitoring channel.
-  *
-  * @start_radar_detection: Start radar detection in the driver.
-+ *
-+ * @dfs_en_tx: Enable tx after radar interference check.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1847,6 +1849,9 @@ struct cfg80211_ops {
- 	int	(*start_radar_detection)(struct wiphy *wiphy,
- 					 struct net_device *dev,
- 					 struct ieee80211_channel *chan);
-+
-+	int	(*dfs_en_tx)(struct wiphy *wiphy, struct net_device *dev,
-+			     struct ieee80211_channel *chan);
- };
- 
- /*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 74e65d7..869d271 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4616,6 +4616,34 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	return cfg80211_start_radar_detection(rdev, dev, chan);
- }
- 
-+static int nl80211_dfs_en_tx(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	bool dfs_supported = (rdev->wiphy.features & NL80211_FEATURE_DFS);
-+	struct ieee80211_channel *chan;
-+	int freq;
-+
-+	if (!rdev->ops->dfs_en_tx || !dfs_supported)
-+		return -EOPNOTSUPP;
-+
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ])
-+		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	else
-+		return -EINVAL;
-+
-+	chan = ieee80211_get_channel(&rdev->wiphy, freq);
-+	if (!chan)
-+		return -EINVAL;
-+
-+	if (((chan->cac_type != NL80211_CHAN_HT20) ||
-+	     time_is_after_jiffies(chan->radar_detect_timeout)) &&
-+	    (chan->flags & IEEE80211_CHAN_RADAR))
-+		return -EPERM;
-+
-+	return rdev->ops->dfs_en_tx(&rdev->wiphy, dev, chan);
-+}
-+
- static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 			    u32 seq, int flags,
- 			    struct cfg80211_registered_device *rdev,
-@@ -7482,6 +7510,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_DFS_ENABLE_TX,
-+		.doit = nl80211_dfs_en_tx,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- 
- };
- 
--- 
-1.7.5.4
+ 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+ 		const struct ieee80211_iface_combination *c;
+ 		struct ieee80211_iface_limit *limits;
 
+
+Patches currently in stable-queue which might be from paul.gortmaker@windriver.com are
+
+queue-3.4/mm-mmu_notifier-fix-freed-page-still-mapped-in-secondary-mmu.patch
+queue-3.4/cfg80211-fix-interface-combinations-check-for-adhoc-ibss.patch
