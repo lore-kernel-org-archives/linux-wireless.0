@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from elasmtp-galgo.atl.sa.earthlink.net ([209.86.89.61]:33921 "EHLO
-	elasmtp-galgo.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752874Ab2HIRIF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 13:08:05 -0400
-Received: from [72.40.65.195] (helo=192.168.1.10)
-	by elasmtp-galgo.atl.sa.earthlink.net with esmtpsa (TLSv1:AES128-SHA:128)
-	(Exim 4.67)
-	(envelope-from <marco@tampabay.rr.com>)
-	id 1SzW0H-0006uS-QQ
-	for linux-wireless@vger.kernel.org; Thu, 09 Aug 2012 12:54:33 -0400
-Date: Thu, 9 Aug 2012 12:54:34 -0400
-From: Marco Fonseca <marco@tampabay.rr.com>
-To: linux-wireless@vger.kernel.org
-Subject: carl9170: Unintentional transmission in monitor mode?
-Message-ID: <20120809165434.GA13409@192.168.1.10> (sfid-20120809_190810_334694_53BADD01)
+Received: from mx1.redhat.com ([209.132.183.28]:44860 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751738Ab2HMHhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Aug 2012 03:37:00 -0400
+Date: Mon, 13 Aug 2012 09:36:38 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Subject: Re: [PATCH v3 2/7] mac80211: add radar detection command/event
+Message-ID: <20120813073637.GB2272@redhat.com> (sfid-20120813_093704_725201_90D97E6C)
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+ <1344426823-1795-3-git-send-email-victorg@ti.com>
+ <20120810162810.GB17559@redhat.com>
+ <CAK80WHa1ae7jA6BxOA+1Xx0bTx2_0+0GuDa=UrJ+qsC9_sYZ7g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK80WHa1ae7jA6BxOA+1Xx0bTx2_0+0GuDa=UrJ+qsC9_sYZ7g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello All,
+On Sun, Aug 12, 2012 at 10:31:40AM +0300, Goldenshtein, Victor wrote:
+> On Fri, Aug 10, 2012 at 7:28 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > On Wed, Aug 08, 2012 at 02:53:38PM +0300, Victor Goldenshtein wrote:
+> >> --- a/include/net/mac80211.h
+> >> +++ b/include/net/mac80211.h
+> >> @@ -2262,6 +2262,10 @@ enum ieee80211_rate_control_changed {
+> >>   *   The callback will be called before each transmission and upon return
+> >>   *   mac80211 will transmit the frame right away.
+> >>   *   The callback is optional and can (should!) sleep.
+> >> + *
+> >> +* @start_radar_detection: Start radar detection on current operational
+> >> + *   channel, once started it will continuously monitor for radars as long
+> >> + *   as the channel active.
+> >>   */
+> >>  struct ieee80211_ops {
+> >>       void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+> >> @@ -2404,6 +2408,10 @@ struct ieee80211_ops {
+> >>
+> >>       void    (*mgd_prepare_tx)(struct ieee80211_hw *hw,
+> >>                                 struct ieee80211_vif *vif);
+> >> +
+> >> +     int (*start_radar_detection)(struct ieee80211_hw *hw,
+> >> +                                  struct ieee80211_vif *vif,
+> >> +                                  struct ieee80211_channel *chan);
+> >
+> > Why we need new callback? I.e. why this can be done by ->config ?
+> >
+> 
+> See proposed RFC and previous threads.
 
-I've noticed unexpected transmissions from the AR9170 while in monitor mode
-and using tcpdump (and sometimes without tcpdump running).  These
-transmissions degrade (pretty significantly) performance of other STA/AP on
-the channel (as seen by iperf going from 60mbit/s to almost nill).  As best I
-can tell these transmissions never coalesces into an actual frame in the air
-(at least not one I'm able to pick up with a second different adapter in
-monitor mode).
+I can not find mail where this is explained, could you please provide
+link.
 
-Are there any known reasons/bugs on this?  Is there anyway to completely
-silence the transmitter of the AR9170 while still allowing reception?
-
-
-
-
-Some additional information that may give some context:
-- This seems to happen over a wide range of releases of compat wireless I've
-  tried, I've tested between compat wireless 2.6.39-rc6-1 and 2012-7-03,
-  various drivers and firmware (the latest being driver 1.9.4 and firmware
-  1.9.5).  I've also seen the problem across multiple AR9170 adapters, as well
-  as different linux hosts.
-
-- I've put a few printk's in the carl driver & stubbed out (somewhat blindly)
-  some of the tx functions in wlan.c in the firmware to see if I could silence
-  or get a clue on whats going on, with not much success.  The problem still
-  occurred (No prink's told me the kernel wasn't actively generating any
-  pkts).
-
-- Seems like the transmissions only occur when monitoring 802.11n speeds.
-  (That is if I manual configure the AP to 54mbit/s, I don't see the
-  issue).  Happens in both 2.4 or 5ghz band.
-
-- I was able to also observe this behavior with a single ping.  Only seemed to
-  occur with larger ICMP pings (would occur with -s 2000 pings, but not a
-  standard (56 byte) ping).
-
-- Along with iperf degradation, I've verified transmissions with a spectrum
-  analyzer.
-
-
-Thank you,
-
-Marco Fonseca
+Stanislaw
