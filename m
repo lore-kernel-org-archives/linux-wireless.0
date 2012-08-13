@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35464 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755313Ab2HTHNR (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:2215 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752153Ab2HMNqv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 03:13:17 -0400
-Message-ID: <1345446793.4504.0.camel@jlt3.sipsolutions.net> (sfid-20120820_091321_572127_9AFB458C)
-Subject: Re: [PATCH] ath6kl: protect firmware from excessive WoW pattern
- length
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Cc: kvalo@qca.qualcomm.com, ath6kl-devel@qualcomm.com,
-	linux-wireless@vger.kernel.org
-Date: Mon, 20 Aug 2012 09:13:13 +0200
-In-Reply-To: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120816_021530_554431_E3CCD682)
-References: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com>
-	 (sfid-20120816_021530_554431_E3CCD682)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 13 Aug 2012 09:46:51 -0400
+Message-ID: <5029053F.1010207@broadcom.com> (sfid-20120813_154659_963570_F82C1D6C)
+Date: Mon, 13 Aug 2012 15:46:39 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Saul St. John" <saul.stjohn@gmail.com>
+cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC] bcma: add cc core driver, expose sprom to sysfs
+References: <20120810002305.GA5966@eris.garyseven.net>
+ <CACna6rz83DOTDYG1ehd-dvMoWrnduvJ44Lpi3vM0wMLMrC0-hA@mail.gmail.com>
+ <20120810234202.GA8644@eris.garyseven.net>
+In-Reply-To: <20120810234202.GA8644@eris.garyseven.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-15 at 17:15 -0700, Thomas Pedersen wrote:
-> Don't accept WoW patterns longer than supported by firmware.
+On 08/11/2012 01:42 AM, Saul St. John wrote:
+> On Fri, Aug 10, 2012 at 06:55:22AM +0200, Rafał Miłecki wrote:
+>> > 2012/8/10 Saul St. John <saul.stjohn@gmail.com>:
+>>> > > Adds a driver for BCMA ChipCommon cores, registers the struct device
+>>> > > bcma_bus.drv_cc->core->dev with device_register(), and exposes the SPROM
+>>> > > in rev 31+ cc cores as a R/W sysfs attribute.
+>> > 
+>> > Well, that's a little messy. You change a few not strictly related
+>> > things in a one patch, please provide patch-per-change. That changes
+>> > are quite sensitive so we really need it.
+> Ok, v2 will be split over a couple of patches.
 > 
-> Reported-by: Haijun Jin <nhjin@qca.qualcomm.com>
-> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> index bd003fe..ffa18f3 100644
-> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> @@ -1876,6 +1876,9 @@ static int ath6kl_wow_usr(struct ath6kl *ar, struct ath6kl_vif *vif,
->  	/* Configure the patterns that we received from the user. */
->  	for (i = 0; i < wow->n_patterns; i++) {
->  
-> +		if (wow->patterns[i].pattern_len > WOW_MASK_SIZE)
-> +			return -EINVAL;
-> +
+>> > I also wish to see some explanation on that changes. Why do you need
+>> > CC to be registered as a bus core device? Why anyone may need
+>> > overwriting SPROM? Did it work for you? Have you tested
+>> > suspend&resume?
 
-No objection, but doesn't nl80211 already validate that (assuming you
-give the right pattern_max_len, of course)?
+Hi Saul,
 
-johannes
+I am really not in favor for adding write support. As Rafał noted there
+is no need for linux end-users to be modifying SPROM content. It is
+called Serial Programmable *Read-Only* Memory for a reason. The only
+parties that need write access are the chip manufacturer and OEM/ODM.
+
+Most information is rather device specific and sensitive to change. Also
+changing information like country code (as you indicated you did) can
+cause violations in the regulatory area.
+
+Without a clear need of this functionality for the linux users I tend to
+discard this change, but I am not the bcma maintainer. Could you
+elaborate what your higher-level use is?
+
+If the reasons for having this patch accepted are clear and valid I
+would suggest to make it depend on CFG80211_CERTIFICATION_ONUS Kconfig
+option.
+
+Gr. AvS
 
