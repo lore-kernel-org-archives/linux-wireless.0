@@ -1,195 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:42290 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754632Ab2HISBu (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53285 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507Ab2HMPir (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 14:01:50 -0400
-Received: by wibhq12 with SMTP id hq12so549871wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:01:49 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH 02/13] compat-wireless: Isolate drivers into different groups
-Date: Thu,  9 Aug 2012 21:01:21 +0300
-Message-Id: <1344535292-4451-3-git-send-email-ozancag@gmail.com> (sfid-20120809_200157_637297_C6AAB7AA)
-In-Reply-To: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
-References: <1344535292-4451-1-git-send-email-ozancag@gmail.com>
+	Mon, 13 Aug 2012 11:38:47 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20521.7840.420228.712856@gargle.gargle.HOWL> (sfid-20120813_173851_326790_2A8CD9CC)
+Date: Mon, 13 Aug 2012 21:04:56 +0530
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: [RFC 1/3] ath9k: cleanup add_iterface/change_interface
+In-Reply-To: <1344871278-6499-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1344871278-6499-1-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Start isolating wlan, bt, eth drivers into different variables
-for being able to selectively bring them in the near future.
+Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> 
+> All these checks will be handled by cfg80211 based on
+> the interface combination advertized. For instance
+> we support 8 beacon while we advertize maximum 8
+> beaconing interface in the interface combination
+> support, also cfg80211 will take care of not allowing
+> us to add an interface that is not supported by the
+> driver, so as if the change_interface changes the
+> old interface to a beaconing interface where we had
+> reached the maximum number of beacoing interface
 
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
----
- scripts/admin-update.sh | 133 ++++++++++++++++++++++++++----------------------
- 1 file changed, 71 insertions(+), 62 deletions(-)
+This looks good.
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 0b09708..df82ea3 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -280,79 +280,88 @@ INCLUDE_LINUX_USB="usbnet.h rndis_host.h"
- 
- INCLUDE_LINUX_SPI="libertas_spi.h"
- 
--# The good new yummy stuff
--INCLUDE_NET="cfg80211.h ieee80211_radiotap.h cfg80211-wext.h"
--INCLUDE_NET="$INCLUDE_NET mac80211.h lib80211.h regulatory.h"
-+# 802.11 related headers
-+INCLUDE_NET="cfg80211.h
-+	     cfg80211-wext.h
-+	     ieee80211_radiotap.h
-+	     lib80211.h
-+	     mac80211.h
-+	     regulatory.h"
- 
- NET_DIRS="wireless mac80211 rfkill"
- 
--# Drivers that have their own directory
--DRIVERS="drivers/net/wireless/ath"
--DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
--DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
--DRIVERS="$DRIVERS drivers/net/wireless/ath/ath6kl"
--DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
--DRIVERS="$DRIVERS drivers/ssb"
--DRIVERS="$DRIVERS drivers/bcma"
--DRIVERS="$DRIVERS drivers/net/wireless/b43"
--DRIVERS="$DRIVERS drivers/net/wireless/b43legacy"
--DRIVERS="$DRIVERS drivers/net/wireless/brcm80211"
--DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmfmac"
--DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmsmac"
--DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmsmac/phy"
--DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/brcmutil"
--DRIVERS="$DRIVERS drivers/net/wireless/brcm80211/include"
--DRIVERS="$DRIVERS drivers/net/wireless/iwlegacy"
--DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi"
--DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi/pcie"
--DRIVERS="$DRIVERS drivers/net/wireless/iwlwifi/dvm"
--DRIVERS="$DRIVERS drivers/net/wireless/rt2x00"
--DRIVERS="$DRIVERS drivers/net/wireless/zd1211rw"
--DRIVERS="$DRIVERS drivers/net/wireless/libertas"
--DRIVERS="$DRIVERS drivers/net/wireless/p54"
--DRIVERS="$DRIVERS drivers/net/wireless/rtl818x"
--DRIVERS="$DRIVERS drivers/net/wireless/rtl818x/rtl8180"
--DRIVERS="$DRIVERS drivers/net/wireless/rtl818x/rtl8187"
--DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi"
--DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192c"
--DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192ce"
--DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192cu"
--DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192se"
--DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192de"
--DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
--DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
--DRIVERS="$DRIVERS drivers/net/wireless/ti"
--DRIVERS="$DRIVERS drivers/net/wireless/ti/wl12xx"
--DRIVERS="$DRIVERS drivers/net/wireless/ti/wl1251"
--DRIVERS="$DRIVERS drivers/net/wireless/ti/wlcore"
--DRIVERS="$DRIVERS drivers/net/wireless/ti/wl18xx"
--DRIVERS="$DRIVERS drivers/net/wireless/orinoco"
--DRIVERS="$DRIVERS drivers/net/wireless/mwifiex"
--
--# Staging drivers
--STAGING_DRIVERS=""
-+# WLAN drivers that have their own directory
-+DRIVERS_WLAN="drivers/bcma"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/carl9170"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath5k"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath6kl"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ath/ath9k"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/b43"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/b43legacy"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmfmac"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmsmac"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmsmac/phy"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/brcmutil"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/brcm80211/include"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlegacy"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi/pcie"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/iwlwifi/dvm"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rt2x00"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/zd1211rw"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/libertas"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/p54"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x/rtl8180"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtl818x/rtl8187"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192c"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192ce"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192cu"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192se"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/rtlwifi/rtl8192de"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/libertas_tf"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ipw2x00"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl12xx"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl1251"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wlcore"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/ti/wl18xx"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/orinoco"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/net/wireless/mwifiex"
-+DRIVERS_WLAN="$DRIVERS_WLAN drivers/ssb"
-+
-+# WLAN drivers not having dedicated directories
-+DRIVERS_WLAN_FILES="adm8211.c
-+		    adm8211.h
-+		    at76c50x-usb.c
-+		    at76c50x-usb.h
-+		    mac80211_hwsim.c
-+		    mac80211_hwsim.h
-+		    mwl8k.c
-+		    rndis_wlan.c"
- 
- # Ethernet drivers
--DRIVERS="$DRIVERS drivers/net/ethernet/atheros"
--DRIVERS="$DRIVERS drivers/net/ethernet/atheros/atl1c"
--DRIVERS="$DRIVERS drivers/net/ethernet/atheros/atl1e"
--DRIVERS="$DRIVERS drivers/net/ethernet/atheros/atlx"
--DRIVERS="$DRIVERS drivers/net/ethernet/atheros/alx"
-+DRIVERS_ETH="drivers/net/ethernet/atheros
-+	     drivers/net/ethernet/atheros/atl1c
-+	     drivers/net/ethernet/atheros/atl1e
-+	     drivers/net/ethernet/atheros/atlx
-+	     drivers/net/ethernet/atheros/alx"
- 
- # Bluetooth drivers
- DRIVERS_BT="drivers/bluetooth"
- 
--# Drivers that belong the the wireless directory
--DRIVER_FILES="adm8211.c  adm8211.h"
--DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
--DRIVER_FILES="$DRIVER_FILES mac80211_hwsim.c mac80211_hwsim.h"
--DRIVER_FILES="$DRIVER_FILES at76c50x-usb.c at76c50x-usb.h"
--DRIVER_FILES="$DRIVER_FILES mwl8k.c"
-+# Staging drivers if any
-+STAGING_DRIVERS=""
-+
-+# Select which drivers to build
-+DRIVERS="$DRIVERS_WLAN $DRIVERS_ETH"
- 
- rm -rf drivers/
- 
--mkdir -p include/linux/ \
--	include/net/ \
-+mkdir -p \
- 	include/net/bluetooth \
- 	include/linux/usb \
- 	include/linux/unaligned \
-@@ -489,7 +498,7 @@ cp $GIT_TREE/drivers/misc/eeprom/Makefile drivers/misc/eeprom/
- 
- DIR="drivers/net/wireless"
- # Drivers part of the wireless directory
--for i in $DRIVER_FILES; do
-+for i in $DRIVERS_WLAN_FILES; do
- 	cp $GIT_TREE/$DIR/$i $DIR/
- done
- 
--- 
-1.7.11.2
-
+Sujith
