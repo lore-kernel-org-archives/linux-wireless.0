@@ -1,273 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:42757 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246Ab2HJTX5 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59516 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753768Ab2HMUnO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 15:23:57 -0400
-Received: by wgbdr13 with SMTP id dr13so1753325wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 12:23:56 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] bcma: detect and register serial flash device
-Date: Fri, 10 Aug 2012 21:23:53 +0200
-Message-Id: <1344626633-16609-1-git-send-email-zajec5@gmail.com> (sfid-20120810_212401_704785_D7306123)
+	Mon, 13 Aug 2012 16:43:14 -0400
 MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 13 Aug 2012 13:42:53 -0700
+Message-ID: <CAB=NE6W_SQUJmAXaLesyRShtQ=Urz=w5Ks5jEXq_50bRge+PWQ@mail.gmail.com> (sfid-20120813_224335_883517_9E3E121D)
+Subject: Backports mailing list
+To: David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Jesper Andersen <jespera@diku.dk>,
+	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+David,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: add "u32 window" in sflash struct. It's needed for early boot when
-    we have to access flash but we don't have platform device yet.
----
- drivers/bcma/Kconfig                        |    2 +-
- drivers/bcma/bcma_private.h                 |    1 +
- drivers/bcma/driver_chipcommon_sflash.c     |  123 ++++++++++++++++++++++++++-
- drivers/bcma/main.c                         |    9 ++
- include/linux/bcma/bcma_driver_chipcommon.h |   13 +++
- include/linux/bcma/bcma_regs.h              |    2 +
- 6 files changed, 146 insertions(+), 4 deletions(-)
+The compat [0] / compat-wireless [1] [2] projects have received quite
+a bit of love of the years to the point we now have 3 subsystems
+backported: Ethernet, Bluetooth and 802.11. Ozan Çağlayan, a Linux
+Foundation Google Summer of Code student is folding in right now drm
+driver support. At the request of the community, specifically those
+part of the Linux Foundation driver working group [3], we are going to
+be renaming the project to compat-drivers soon after drm is integrated
+and will be housing documentation under the kernel.org infrastructure
+[4] under this new name. It'll take some time for us to migrate the
+documentation / releases but do not see major issues with that, it
+will just take a bit of time but hope to have it done for the next
+stable release based on the next kernel stable release. At this time
+for patches we do have a Linux Foundation mailing list but have had
+issues with it for a while now so we keep using linux-wireless for
+patches. Given that our focus is to always prioritize upstream and
+always try to work with solutions that ensure vendors are focusing on
+upstream solutions and prioritizing upstream [5] I was hoping we can
+get a mailing list set up on vger for the project, perhaps
+backports@vger.kernel.org, so we don't flood the other mailing lists
+with random kernel backport junk. Please let me know if this is
+reasonable.
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 8d1f777..c4252c4 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -49,7 +49,7 @@ config BCMA_DRIVER_MIPS
- 
- config BCMA_SFLASH
- 	bool
--	depends on BCMA_DRIVER_MIPS && BROKEN
-+	depends on BCMA_DRIVER_MIPS
- 	default y
- 
- config BCMA_NFLASH
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 3cf9cc9..94bf07c 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -54,6 +54,7 @@ u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc);
- #ifdef CONFIG_BCMA_SFLASH
- /* driver_chipcommon_sflash.c */
- int bcma_sflash_init(struct bcma_drv_cc *cc);
-+extern struct platform_device bcma_sflash_dev;
- #else
- static inline int bcma_sflash_init(struct bcma_drv_cc *cc)
- {
-diff --git a/drivers/bcma/driver_chipcommon_sflash.c b/drivers/bcma/driver_chipcommon_sflash.c
-index 6e157a5..2c4eec2 100644
---- a/drivers/bcma/driver_chipcommon_sflash.c
-+++ b/drivers/bcma/driver_chipcommon_sflash.c
-@@ -5,15 +5,132 @@
-  * Licensed under the GNU/GPL. See COPYING for details.
-  */
- 
-+#include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
--#include <linux/bcma/bcma_driver_chipcommon.h>
--#include <linux/delay.h>
- 
- #include "bcma_private.h"
- 
-+static struct resource bcma_sflash_resource = {
-+	.name	= "bcma_sflash",
-+	.start	= BCMA_SFLASH,
-+	.end	= 0,
-+	.flags  = IORESOURCE_MEM | IORESOURCE_READONLY,
-+};
-+
-+struct platform_device bcma_sflash_dev = {
-+	.name		= "bcma_sflash",
-+	.resource	= &bcma_sflash_resource,
-+	.num_resources	= 1,
-+};
-+
-+struct bcma_sflash_tbl_e {
-+	char *name;
-+	u32 id;
-+	u32 blocksize;
-+	u16 numblocks;
-+};
-+
-+static struct bcma_sflash_tbl_e bcma_sflash_st_tbl[] = {
-+	{ "", 0x14, 0x10000, 32, },
-+	{ 0 },
-+};
-+
-+static struct bcma_sflash_tbl_e bcma_sflash_sst_tbl[] = {
-+	{ 0 },
-+};
-+
-+static struct bcma_sflash_tbl_e bcma_sflash_at_tbl[] = {
-+	{ 0 },
-+};
-+
-+static void bcma_sflash_cmd(struct bcma_drv_cc *cc, u32 opcode)
-+{
-+	int i;
-+	bcma_cc_write32(cc, BCMA_CC_FLASHCTL,
-+			BCMA_CC_FLASHCTL_START | opcode);
-+	for (i = 0; i < 1000; i++) {
-+		if (!(bcma_cc_read32(cc, BCMA_CC_FLASHCTL) &
-+		      BCMA_CC_FLASHCTL_BUSY))
-+			return;
-+		cpu_relax();
-+	}
-+	bcma_err(cc->core->bus, "SFLASH control command failed (timeout)!\n");
-+}
-+
- /* Initialize serial flash access */
- int bcma_sflash_init(struct bcma_drv_cc *cc)
- {
--	bcma_err(cc->core->bus, "Serial flash support is broken\n");
-+	struct bcma_bus *bus = cc->core->bus;
-+	struct bcma_sflash *sflash = &cc->sflash;
-+	struct bcma_sflash_tbl_e *e;
-+	u32 id, id2;
-+
-+	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
-+	case BCMA_CC_FLASHT_STSER:
-+		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_ST_DP);
-+
-+		bcma_cc_write32(cc, BCMA_CC_FLASHADDR, 0);
-+		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_ST_RES);
-+		id = bcma_cc_read32(cc, BCMA_CC_FLASHDATA);
-+
-+		bcma_cc_write32(cc, BCMA_CC_FLASHADDR, 1);
-+		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_ST_RES);
-+		id2 = bcma_cc_read32(cc, BCMA_CC_FLASHDATA);
-+
-+		switch (id) {
-+		case 0xbf:
-+			for (e = bcma_sflash_sst_tbl; e->name; e++) {
-+				if (e->id == id2)
-+					break;
-+			}
-+			break;
-+		default:
-+			for (e = bcma_sflash_st_tbl; e->name; e++) {
-+				if (e->id == id)
-+					break;
-+			}
-+			break;
-+		}
-+		if (!e->name) {
-+			bcma_err(bus, "Unsupported ST serial flash (id: 0x%X, id2: 0x%X)\n", id, id2);
-+			return -ENOTSUPP;
-+		}
-+
-+		break;
-+	case BCMA_CC_FLASHT_ATSER:
-+		bcma_sflash_cmd(cc, BCMA_CC_FLASHCTL_AT_STATUS);
-+		id = bcma_cc_read32(cc, BCMA_CC_FLASHDATA) & 0x3c;
-+
-+		for (e = bcma_sflash_at_tbl; e->name; e++) {
-+			if (e->id == id)
-+				break;
-+		}
-+		if (!e->name) {
-+			bcma_err(bus, "Unsupported Atmel serial flash (id: 0x%X)\n", id);
-+			return -ENOTSUPP;
-+		}
-+
-+		break;
-+	default:
-+		bcma_err(bus, "Unsupported flash type\n");
-+		return -ENOTSUPP;
-+	}
-+
-+	sflash->window = BCMA_SFLASH;
-+	sflash->blocksize = e->blocksize;
-+	sflash->numblocks = e->numblocks;
-+	sflash->size = sflash->blocksize * sflash->numblocks;
-+	sflash->present = true;
-+
-+	bcma_info(bus, "Found %s serial flash (size: %dKiB, blocksize: 0x%X, blocks: %d)\n",
-+		  e->name, sflash->size / 1024, sflash->blocksize,
-+		  sflash->numblocks);
-+
-+	/* Prepare platform device, but don't register it yet. It's too early,
-+	 * malloc (required by device_private_init) is not available yet. */
-+	bcma_sflash_dev.resource[0].end = bcma_sflash_dev.resource[0].start +
-+					  sflash->size;
-+	bcma_sflash_dev.dev.platform_data = sflash;
-+
- 	return 0;
- }
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 10904aa4..648688a 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -7,6 +7,7 @@
- 
- #include "bcma_private.h"
- #include <linux/module.h>
-+#include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- #include <linux/slab.h>
- 
-@@ -136,6 +137,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 		dev_id++;
- 	}
- 
-+#ifdef CONFIG_BCMA_SFLASH
-+	if (bus->drv_cc.sflash.present) {
-+		err = platform_device_register(&bcma_sflash_dev);
-+		if (err)
-+			bcma_err(bus, "Error registering serial flash\n");
-+	}
-+#endif
-+
- 	return 0;
- }
- 
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 16c266c..799e4200 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -516,6 +516,16 @@ struct bcma_pflash {
- 	u32 window_size;
- };
- 
-+#ifdef CONFIG_BCMA_SFLASH
-+struct bcma_sflash {
-+	bool present;
-+	u32 window;
-+	u32 blocksize;
-+	u16 numblocks;
-+	u32 size;
-+};
-+#endif
-+
- struct bcma_serial_port {
- 	void *regs;
- 	unsigned long clockspeed;
-@@ -536,6 +546,9 @@ struct bcma_drv_cc {
- 	struct bcma_chipcommon_pmu pmu;
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- 	struct bcma_pflash pflash;
-+#ifdef CONFIG_BCMA_SFLASH
-+	struct bcma_sflash sflash;
-+#endif
- 
- 	int nr_serial_ports;
- 	struct bcma_serial_port serial_ports[4];
-diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
-index a393e82..6c9cb93 100644
---- a/include/linux/bcma/bcma_regs.h
-+++ b/include/linux/bcma/bcma_regs.h
-@@ -85,4 +85,6 @@
- 							 * (2 ZettaBytes), high 32 bits
- 							 */
- 
-+#define BCMA_SFLASH			0x1c000000
-+
- #endif /* LINUX_BCMA_REGS_H_ */
--- 
-1.7.7
+[0] https://github.com/mcgrof/compat
+[1] http://wireless.kernel.org/en/users/Download/
+[2] http://wireless.kernel.org/en/users/Download/stable/
+[3] http://www.linuxfoundation.org/collaborate/workgroups/driver-backport/group
+[4] https://backports.wiki.kernel.org
+[5] http://wireless.kernel.org/en/users/Download/stable/#Additional_patches_to_stable_releases
 
+  Luis
