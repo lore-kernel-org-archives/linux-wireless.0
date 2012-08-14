@@ -1,78 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:36044 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755272Ab2HFUU6 convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43685 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551Ab2HNQdr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 16:20:58 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SyTnN-0003Lr-Fv
-	for linux-wireless@vger.kernel.org; Mon, 06 Aug 2012 22:20:57 +0200
-Received: from 83.68.239.193 ([83.68.239.193])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 22:20:57 +0200
-Received: from netuse by 83.68.239.193 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 22:20:57 +0200
-To: linux-wireless@vger.kernel.org
-From: Marco <netuse@lavabit.com>
-Subject: Re: DHCP request timed out, iwlwifi
-Date: Mon, 6 Aug 2012 22:20:46 +0200
-Message-ID: <20120806222046.5f0a583f@homerow> (sfid-20120806_222101_599128_85C132EC)
-References: <20120806161443.35c71558@homerow>
-	<20120806192836.369a3737@homerow>
-	<1344282454.11053.33.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	Tue, 14 Aug 2012 12:33:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6V=4J7yKbPdb4gVT6BBjdewhYRNEwrNdMd4XE5Ocg4SeQ@mail.gmail.com>
+References: <CAB=NE6W_SQUJmAXaLesyRShtQ=Urz=w5Ks5jEXq_50bRge+PWQ@mail.gmail.com>
+ <CA+icZUU9qT9H2jy_H8_6Bk1XUbuV0N6_pGRoQbSJhnikewTc0Q@mail.gmail.com> <CAB=NE6V=4J7yKbPdb4gVT6BBjdewhYRNEwrNdMd4XE5Ocg4SeQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 14 Aug 2012 09:33:26 -0700
+Message-ID: <CAB=NE6Wad1yNhUrvJZn0p62gZHAhpTjYaf5qNjjkdOboOiQ=Xg@mail.gmail.com> (sfid-20120814_183422_656151_CC25351F)
+Subject: Re: Backports mailing list
+To: sedat.dilek@gmail.com
+Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Jesper Andersen <jespera@diku.dk>,
+	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-08-06 Dan Williams <dcbw@redhat.com>
-wrote:
+On Tue, Aug 14, 2012 at 9:00 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> For more details please see:
+>
+> http://www.do-not-panic.com/2012/08/automatically-backporting-linux-kernel.html
+> http://www.do-not-panic.com/2012/08/optimizing-backporting-collateral.html
+>
+>   Luis
 
-> At this point, either the wifi driver isn't cooperating, or there
-> isn't a DHCP server listening.
+All that said, please use the shiny new mailing list:
+backports@vger.kernel.org  for  patches for compat / compat-drivers.
 
-Not a single other computer on the network has DHCP problems. If I
-plug in an external USB network adapter (which uses a different
-driver) the computer connects instantly. However, other computers on
-the network also use the iwlwifi driver without problems (but with
-different hardware).
-
-> I'd rule out the firewall because typically they let DHCPv4
-> through by default.
-
-I think so, too. And if it would be the firewall, it wouldn't
-connect with a different network adapter, I guess.
-
-> One other thing you could do is set the connection to "manual"
-> (ie, static) IPv4 addressing, enter an address that you know is on
-> the router's subnet, and try to ping the default router.If that
-> works, then clearly something is wrong with DHCP.  If that doesn't
-> work and you're sure the address/netmask you set is correct, then
-> there's something wrong in the driver.
-
-Now it works again and I cannot test it any more. That's what I
-meant with “it's not really reproducible”. I'll have to wait a
-couple of days until it occurs again.
-
-> Yet another alternative is to do the static IP thing and then run
-> a wireshark packet capture and see if the wifi card sees any
-> traffic at all.
-
-I will report back on this issue when the connection fails again and
-I can test.
-
-> If the 4-way handshake works, that indicates your WPA passphrase
-> is correct.
-
-It's saved in the NetworkManager. I would be surprised if the
-passphrase would, out of a sudden, be wrong.
-
-Thanks for taking the time to help tracing down this issue.
-
-
-Marco
-
-
+  Luis
