@@ -1,50 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:5000 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752267Ab2H3IGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 04:06:05 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 2/4] brcmfmac: dont use ZERO flag for usb IN
-Date: Thu, 30 Aug 2012 10:05:35 +0200
-Message-ID: <1346313937-3605-3-git-send-email-arend@broadcom.com> (sfid-20120830_100614_392123_5DC175FF)
-In-Reply-To: <1346313937-3605-1-git-send-email-arend@broadcom.com>
-References: <1346313937-3605-1-git-send-email-arend@broadcom.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:42923 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519Ab2HNJeU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Aug 2012 05:34:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CAB=NE6W_SQUJmAXaLesyRShtQ=Urz=w5Ks5jEXq_50bRge+PWQ@mail.gmail.com>
+References: <CAB=NE6W_SQUJmAXaLesyRShtQ=Urz=w5Ks5jEXq_50bRge+PWQ@mail.gmail.com>
+Date: Tue, 14 Aug 2012 11:34:18 +0200
+Message-ID: <CA+icZUU9qT9H2jy_H8_6Bk1XUbuV0N6_pGRoQbSJhnikewTc0Q@mail.gmail.com> (sfid-20120814_113437_896556_73F713BB)
+Subject: Re: Backports mailing list
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Jesper Andersen <jespera@diku.dk>,
+	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Mon, Aug 13, 2012 at 10:42 PM, Luis R. Rodriguez
+<mcgrof@frijolero.org> wrote:
+> David,
+>
+> The compat [0] / compat-wireless [1] [2] projects have received quite
+> a bit of love of the years to the point we now have 3 subsystems
+> backported: Ethernet, Bluetooth and 802.11. Ozan Çağlayan, a Linux
+> Foundation Google Summer of Code student is folding in right now drm
+> driver support. At the request of the community, specifically those
+> part of the Linux Foundation driver working group [3], we are going to
+> be renaming the project to compat-drivers soon after drm is integrated
+> and will be housing documentation under the kernel.org infrastructure
+> [4] under this new name. It'll take some time for us to migrate the
+> documentation / releases but do not see major issues with that, it
+> will just take a bit of time but hope to have it done for the next
+> stable release based on the next kernel stable release. At this time
+> for patches we do have a Linux Foundation mailing list but have had
+> issues with it for a while now so we keep using linux-wireless for
+> patches. Given that our focus is to always prioritize upstream and
+> always try to work with solutions that ensure vendors are focusing on
+> upstream solutions and prioritizing upstream [5] I was hoping we can
+> get a mailing list set up on vger for the project, perhaps
+> backports@vger.kernel.org, so we don't flood the other mailing lists
+> with random kernel backport junk. Please let me know if this is
+> reasonable.
+>
+> [0] https://github.com/mcgrof/compat
+> [1] http://wireless.kernel.org/en/users/Download/
+> [2] http://wireless.kernel.org/en/users/Download/stable/
+> [3] http://www.linuxfoundation.org/collaborate/workgroups/driver-backport/group
+> [4] https://backports.wiki.kernel.org
+> [5] http://wireless.kernel.org/en/users/Download/stable/#Additional_patches_to_stable_releases
+>
 
-URB_ZERO_PACKET should only be set or bulk OUT and this condition
-is checked with a WARN_ON in usb_submit_urb(). This patch fixes
-brcmfmac to get rid of this warning filling the logs.
+Hi,
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |    1 -
- 1 file changed, 1 deletion(-)
+I am wondering why people are not consistent in naming - here again a
+good example.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index f72dfb7..8ea2db7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -581,7 +581,6 @@ static void brcmf_usb_rx_refill(struct brcmf_usbdev_info *devinfo,
- 	usb_fill_bulk_urb(req->urb, devinfo->usbdev, devinfo->rx_pipe,
- 			  skb->data, skb_tailroom(skb), brcmf_usb_rx_complete,
- 			  req);
--	req->urb->transfer_flags |= URB_ZERO_PACKET;
- 	req->devinfo = devinfo;
- 
- 	ret = usb_submit_urb(req->urb, GFP_ATOMIC);
--- 
-1.7.9.5
+The workgroup at Linux Foundation is called "driver-backport".
+You (Luis) are talking about a rename to "compat-drivers".
+And then the ML and wiki have the name "backports".
 
+So "backports" is for me is a bit confusing!
+That reminds me when I first read about "AAArgh64!!!" stuff which was
+in the end called mips64 to keep consistency to other existing arches.
 
+So, just to fool the world a bit more:
+What about "linux-backports" or why didn't you keep the "driver-backport" name?
+
+Just my 0.02EUR.
+
+Regards,
+- Sedat -
+
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
