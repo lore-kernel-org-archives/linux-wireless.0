@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35900 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755831Ab2HXP6v (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31233 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756321Ab2HNOYT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 11:58:51 -0400
-Message-ID: <5037A4B0.3080208@lwfinger.net> (sfid-20120824_175909_504059_49A63365)
-Date: Fri, 24 Aug 2012 10:58:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 14 Aug 2012 10:24:19 -0400
+Message-ID: <502A5F8B.4000303@qca.qualcomm.com> (sfid-20120814_162428_761031_E3225DBB)
+Date: Tue, 14 Aug 2012 17:24:11 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: eric.dumazet@gmail.com, ncardwell@google.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-References: <50369925.3050705@lwfinger.net> <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net> <20120824.111948.680531915905273128.davem@davemloft.net>
-In-Reply-To: <20120824.111948.680531915905273128.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: reconfigure RSN capabilities when restarting
+ AP
+References: <1343438007-5252-1-git-send-email-c_tpeder@qca.qualcomm.com>
+In-Reply-To: <1343438007-5252-1-git-send-email-c_tpeder@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/24/2012 10:19 AM, David Miller wrote:
->
-> This looks like full-on data corruption to me.
+On 07/28/2012 04:13 AM, Thomas Pedersen wrote:
+> If the firmware decides to initiate a channel switch on an AP vif
+> running an RSN BSS, reconfigure the saved RSN IE capabilities as well.
+> 
+> Fixes a bug where the beacon and 4-way handshake would have a capability
+> mismatch after a channel switch, since the firmware apparently clears
+> these on an AP disconnect.
+> 
+> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-I agree. The question is why does it happen with r8712u, and only after the 
-commit in the subject. Drivers for other devices that I have are OK. Thus far, I 
-have tested b43, rtl8187, ath9k_htc, and rtl8192cu. To my knowledge, there are 
-no reports posted for this bug with any other device.
+Thanks, applied.
 
-Larry
-
-
-
-
+Kalle
