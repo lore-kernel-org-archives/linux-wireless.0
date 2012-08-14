@@ -1,187 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:37148 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711Ab2HISRJ (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:59413 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192Ab2HNAds (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 14:17:09 -0400
-Received: by wibhm11 with SMTP id hm11so613239wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 11:17:08 -0700 (PDT)
+	Mon, 13 Aug 2012 20:33:48 -0400
+Received: by ghrr11 with SMTP id r11so3745372ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2012 17:33:47 -0700 (PDT)
 MIME-Version: 1.0
-Date: Thu, 9 Aug 2012 13:17:08 -0500
-Message-ID: <CALSu_Yo4Nm9WTXXG3ywFci0hvE+A=MLyQkbreZqNK-=tu_f3RQ@mail.gmail.com> (sfid-20120809_201715_972405_FA3C5956)
-Subject: Palm T|X Libertas Wifi problems Kernel 3.4.7 stable
-From: Joseph Honold <mozzwald@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Marek Vasut <marek.vasut@gmail.com>
+In-Reply-To: <20120813184749.GC10529@tuxdriver.com>
+References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
+	<CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
+	<CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
+	<CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
+	<CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
+	<20120813184749.GC10529@tuxdriver.com>
+Date: Tue, 14 Aug 2012 08:33:47 +0800
+Message-ID: <CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com> (sfid-20120814_023356_536443_8C8BDAB9)
+Subject: Re: [PATCH] Revert "rfkill: remove dead code"
+From: AceLan Kao <acelan.kao@canonical.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Corentin Chary <corentincj@iksaif.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am trying to get wirless working on the Palm T|X (arm pxa270 cpu)
-with the 3.4.7 stable kernel using the cocoboot bootloader app for
-PalmOS. I have extracted the Libertas firmware with cocoboot and
-placed it in the /lib/firmware dir.The kernel is booting fine to a
-debian squeeze rootfs, the pxa2xx_pcmcia, libertas, and libertas_cs
-modules load with no errors (as long as I do a wifi scan in PalmOS
-before booting linux). When I scan with iwlist I get no results. Here
-is a snippet of libertas debug messages. Does anyone have a suggestion
-of what I could try to get it working? I can provide more info if
-needed.
+No, I only submit the patch here, and the asus-wmi patch for platform is waiting
+this patch into kernel first.
 
-Aug  9 17:20:01 mozzwald kernel: libertas_cs enter: if_cs_init()
-Aug  9 17:20:01 mozzwald kernel: libertas_cs leave: if_cs_init()
-Aug  9 17:20:02 mozzwald kernel: libertas_cs enter: if_cs_probe()
-Aug  9 17:20:02 mozzwald kernel: libertas_cs cs: irq 212, io [io
-0xc2860000-0xc286007f]
-Aug  9 17:20:02 mozzwald kernel: libertas_cs enter: if_cs_prog_helper()
-Aug  9 17:20:02 mozzwald kernel: libertas_cs cs: helper size 2064
-Aug  9 17:20:02 mozzwald kernel: libertas_cs leave: if_cs_prog_helper(), ret 0
-Aug  9 17:20:02 mozzwald kernel: libertas_cs enter: if_cs_prog_real()
-Aug  9 17:20:02 mozzwald kernel: libertas_cs cs: fw size 82876
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave: if_cs_prog_real(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_add_card()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_cfg_alloc()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_cfg_alloc()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_init_adapter()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_allocate_cmd_buffer()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cleanup_and_insert_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: __lbs_cleanup_and_insert_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave:
-lbs_allocate_cmd_buffer(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_init_adapter(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: Starting main thread...
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_thread()
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 1: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: sleeping,
-connect_status 1, psmode 0, psstate 0
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_add_card(), priv c0694280
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter: if_cs_enable_ints()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_start_card()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_setup_firmware()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_update_hw_spec()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cmd_async()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_get_free_cmd_node()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_get_free_cmd_node()
-Aug  9 17:20:03 mozzwald kernel: libertas host: PREP_CMD: command 0x0003
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_queue_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas host: QUEUE_CMD: inserted
-command 0x0003 into cmdpendingq
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_queue_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: __lbs_cmd_async(), ret c1bf5600
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 2: currenttxskb
-(null), dnld_send 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 3: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 4: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_execute_next_command()
-Aug  9 17:20:03 mozzwald kernel: libertas host: EXEC_NEXT_CMD: sending
-command 0x0003
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_submit_command()
-Aug  9 17:20:03 mozzwald kernel: libertas cmd: DNLD_CMD: command
-0x0003, seq 1, size 46
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter:
-if_cs_host_to_card(type 1, bytes 46)
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter: if_cs_send_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter: if_cs_disable_ints()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter: if_cs_enable_ints()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave: if_cs_send_cmd(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave: if_cs_host_to_card(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_submit_command()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_execute_next_command()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter (INT): if_cs_interrupt()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs cs (INT): cause 0x0008
-Aug  9 17:20:03 mozzwald kernel: libertas_cs cs (INT): cmd resp
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter (INT): if_cs_receive_cmdres()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave (INT):
-if_cs_receive_cmdres(), ret 0, len 46
-Aug  9 17:20:03 mozzwald kernel: libertas enter (INT):
-lbs_notify_command_response()
-Aug  9 17:20:03 mozzwald kernel: libertas leave (INT):
-lbs_notify_command_response()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave (INT): if_cs_interrupt()
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 1: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 2: currenttxskb
-(null), dnld_send 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 3: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 4: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_process_command_response()
-Aug  9 17:20:03 mozzwald kernel: libertas cmd: CMD_RESP: response
-0x8003, seq 1, size 46
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cleanup_and_insert_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: __lbs_cleanup_and_insert_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: __lbs_cmd(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas cmd: GET_HW_SPEC: hardware
-interface 0x2, hardware spec 0x0004
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_update_hw_spec()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_get_tx_power()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cmd_async()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_get_free_cmd_node()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_get_free_cmd_node()
-Aug  9 17:20:03 mozzwald kernel: libertas host: PREP_CMD: command 0x001e
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_queue_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas host: QUEUE_CMD: inserted
-command 0x001e into cmdpendingq
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_queue_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: __lbs_cmd_async(), ret c1bf5624
-Aug  9 17:20:03 mozzwald kernel: libertas leave:
-lbs_process_command_response(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_execute_next_command()
-Aug  9 17:20:03 mozzwald kernel: libertas host: EXEC_NEXT_CMD: sending
-command 0x001e
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_submit_command()
-Aug  9 17:20:03 mozzwald kernel: libertas cmd: DNLD_CMD: command
-0x001e, seq 2, size 14
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter:
-if_cs_host_to_card(type 1, bytes 14)
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter: if_cs_send_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter: if_cs_disable_ints()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter: if_cs_enable_ints()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave: if_cs_send_cmd(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave: if_cs_host_to_card(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_submit_command()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_execute_next_command()
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 1: currenttxskb
-(null), dnld_sent 2
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter (INT): if_cs_interrupt()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs cs (INT): cause 0x0008
-Aug  9 17:20:03 mozzwald kernel: libertas_cs cs (INT): cmd resp
-Aug  9 17:20:03 mozzwald kernel: libertas_cs enter (INT): if_cs_receive_cmdres()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave (INT):
-if_cs_receive_cmdres(), ret 0, len 14
-Aug  9 17:20:03 mozzwald kernel: libertas enter (INT):
-lbs_notify_command_response()
-Aug  9 17:20:03 mozzwald kernel: libertas leave (INT):
-lbs_notify_command_response()
-Aug  9 17:20:03 mozzwald kernel: libertas_cs leave (INT): if_cs_interrupt()
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 2: currenttxskb
-(null), dnld_send 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 3: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas thread: 4: currenttxskb
-(null), dnld_sent 0
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_process_command_response()
-Aug  9 17:20:03 mozzwald kernel: libertas cmd: CMD_RESP: response
-0x801e, seq 2, size 14
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cleanup_and_insert_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: __lbs_cleanup_and_insert_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: __lbs_cmd(), ret 0
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_get_tx_power()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_set_snmp_mib()
-Aug  9 17:20:03 mozzwald kernel: libertas cmd: SNMP_CMD: (set) oid
-0x9, oid size 0x2, value 0x1
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cmd()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: __lbs_cmd_async()
-Aug  9 17:20:03 mozzwald kernel: libertas enter: lbs_get_free_cmd_node()
-Aug  9 17:20:03 mozzwald kernel: libertas leave: lbs_get_free_cmd_node()
-Aug  9 17:20:03 mozzwald kernel: libertas host: PREP_CMD: command 0x0016
+2012/8/14 John W. Linville <linville@tuxdriver.com>:
+> Is this all sorted?  Is this patch going through the platform tree?
+>
+> On Thu, Jul 26, 2012 at 02:19:23PM +0800, AceLan Kao wrote:
+>> Dear Julian,
+>>
+>> Yes, I have said that the asus-wmi patch needs this commit
+>> and CC'd the asus-wmi maintainer, Corentin Chary, here in this rfkill patch.
+>>
+>> Best regards,
+>> AceLan Kao.
+>>
+>> 2012/7/26 Julian Calaby <julian.calaby@gmail.com>:
+>> > Hi AceLan,
+>> >
+>> > On Thu, Jul 26, 2012 at 3:55 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
+>> >> Dear Julian,
+>> >>
+>> >> I just submitted a patch to platform-x86 for asus-wmi.
+>> >> And the patch needs to use rfkill_set_led_trigger_name() function
+>> >> to bind the wlan led to rfkill event.
+>> >
+>> > That's what I wanted to know.
+>> >
+>> > I assume that you've added a note to the ASUS-WMI patch so people know
+>> > that it needs this one first. (I can't see it here so I don't know)
+>> >
+>> > Thanks,
+>> >
+>> > --
+>> > Julian Calaby
+>> >
+>> > Email: julian.calaby@gmail.com
+>> > Profile: http://www.google.com/profiles/julian.calaby/
+>> > .Plan: http://sites.google.com/site/juliancalaby/
+>>
+>>
+>>
+>> --
+>> Chia-Lin Kao(AceLan)
+>> http://blog.acelan.idv.tw/
+>> E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
 
---
-Joe Honold
-http://www.mozzwald.com
+
+
+-- 
+Chia-Lin Kao(AceLan)
+http://blog.acelan.idv.tw/
+E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
