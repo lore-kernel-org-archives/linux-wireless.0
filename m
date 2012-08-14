@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53418 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757228Ab2HXPTu (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11653 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035Ab2HNEw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 11:19:50 -0400
-Date: Fri, 24 Aug 2012 11:19:48 -0400 (EDT)
-Message-Id: <20120824.111948.680531915905273128.davem@davemloft.net> (sfid-20120824_172011_090282_58BD43AB)
-To: Larry.Finger@lwfinger.net
-Cc: eric.dumazet@gmail.com, ncardwell@google.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <50378B35.80307@lwfinger.net>
-References: <50369925.3050705@lwfinger.net>
-	<1345757200.5904.1890.camel@edumazet-glaptop>
-	<50378B35.80307@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 14 Aug 2012 00:52:57 -0400
+Date: Tue, 14 Aug 2012 10:23:03 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/2] ath6kl: Fix potential memory leak in
+ ath6kl_tx_complete()
+Message-ID: <20120814045302.GA4335@vasanth-laptop> (sfid-20120814_065300_901108_CC92C3C2)
+References: <1344865738-2416-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1344865738-2416-2-git-send-email-vthiagar@qca.qualcomm.com>
+ <502915C5.30503@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <502915C5.30503@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Fri, 24 Aug 2012 09:09:57 -0500
-
-> I usually get failures on the first or second try. A kernel built from
-> "git checkout c862815" gets the following wget output:
+On Mon, Aug 13, 2012 at 05:57:09PM +0300, Kalle Valo wrote:
+> On 08/13/2012 04:48 PM, Vasanthakumar Thiagarajan wrote:
+> > We bail out from ath6kl_tx_complete() if any of the sanity
+> > checks on skb and ath6kl_cookie fails. By doing this we
+> > potentially leak few remaining buffers in packet_queue.
+> > Make sure to proceed processing the remaining buffers
+> > as well. This issue is found during code review.
+> > 
+> > Reported-by: Wang yufeng <yufengw@qca.qualcomm.com>
+> > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> > ---
+> >  drivers/net/wireless/ath/ath6kl/txrx.c |   25 ++++++++++++++-----------
+> >  1 files changed, 14 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+> > index aab8251..4b26ba0 100644
+> > --- a/drivers/net/wireless/ath/ath6kl/txrx.c
+> > +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+> > @@ -698,21 +698,29 @@ void ath6kl_tx_complete(struct htc_target *target,
+> >  		list_del(&packet->list);
+> >  
+> >  		ath6kl_cookie = (struct ath6kl_cookie *)packet->pkt_cntxt;
+> > -		if (!ath6kl_cookie)
+> > -			goto fatal;
+> > +		if (!ath6kl_cookie) {
+> > +			WARN_ON(1);
+> > +			continue;
+> > +		}
 > 
-> ============================================================================
-> --2012-08-23 21:50:32--
-> --https://bugzilla.redhat.com/show_bug.cgi?id=847525
-> Resolving bugzilla.redhat.com (bugzilla.redhat.com)... 209.132.183.69
-> Connecting to bugzilla.redhat.com
-> (bugzilla.redhat.com)|209.132.183.69|:443... connected.
-> OpenSSL: error:0D0680A8:asn1 encoding routines:ASN1_CHECK_TLEN:wrong
-> tag
-> OpenSSL: error:0D07803A:asn1 encoding routines:ASN1_ITEM_EX_D2I:nested
-> asn1 error
-> OpenSSL: error:0D08303A:asn1 encoding
-> routines:ASN1_TEMPLATE_NOEXP_D2I:nested asn1 error
-> OpenSSL: error:0D08303A:asn1 encoding
-> routines:ASN1_TEMPLATE_NOEXP_D2I:nested asn1 error
-> OpenSSL: error:1409000D:SSL routines:SSL3_GET_SERVER_CERTIFICATE:ASN1
-> lib
-> Unable to establish SSL connection.
-> ============================================================================
+> Please use WARN_ON_ONCE() to avoid excess log messages (as this is in
+> data path) and put the WARN_ON() inside if:
+> 
+> if (WARN_ON_ONCE(!ath6kl_cookie))
+> 	continue;
 
-This looks like full-on data corruption to me.
+Sure, thanks!.
+
+> 
+> > +		if (!skb || !skb->data) {
+> > +			WARN_ON(1);
+> > +			dev_kfree_skb(skb);
+> > +			ath6kl_free_cookie(ar, ath6kl_cookie);
+> > +			continue;
+> > +		}
+> 
+> Same here.
+
+Sure.
+
+Vasanth
