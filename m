@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48878 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758246Ab2HHN47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 09:56:59 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.6 4/4] ath9k_hw: enable PA linearization
-Date: Tue,  7 Aug 2012 15:06:12 +0200
-Message-Id: <1344344772-49459-4-git-send-email-nbd@openwrt.org> (sfid-20120808_155708_643915_FCD8CA15)
-In-Reply-To: <1344344772-49459-3-git-send-email-nbd@openwrt.org>
-References: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
- <1344344772-49459-2-git-send-email-nbd@openwrt.org>
- <1344344772-49459-3-git-send-email-nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41719 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788Ab2HNOeN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Aug 2012 10:34:13 -0400
+Message-ID: <502A61DC.6070902@qca.qualcomm.com> (sfid-20120814_163435_482122_62A38EAF)
+Date: Tue, 14 Aug 2012 17:34:04 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Marina Makienko <makienko@ispras.ru>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ldv-project@ispras.ru>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] net: Checking usb_register() return value
+References: <1344931890-15763-1-git-send-email-makienko@ispras.ru>
+In-Reply-To: <1344931890-15763-1-git-send-email-makienko@ispras.ru>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This feature had been disabled in ath9k because the code to support
-it was incomplete, but now the code is in sync with the internal QCA
-codebase, so it's time to enable it.
+On 08/14/2012 11:11 AM, Marina Makienko wrote:
+> ath6kl_usb_init() does not check usb_register() return value.
+> As a result it may incorrectly report success of driver initialization.
+> 
+> Found by Linux Driver Verification project (linuxtesting.org).
+> 
+> Signed-off-by: Marina Makienko <makienko@ispras.ru>
 
-On many newer devices, the calibration is assumed to be done with PA
-linearization enabled.
+Thanks, applied to ath6kl.git. But I changed the title to use "ath6kl:"
+and made some cosmetic changes to the code.
 
-Tests with a particular AR933x device showed that the signal emitted
-at full power was highly distorted and unreliable with PA linearization
-disabled. With this patch, the signal becomes clear and stability
-is improved.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index d95474e..bea864f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -463,9 +463,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 		ah->config.spurchans[i][1] = AR_NO_SPUR;
- 	}
- 
--	/* PAPRD needs some more work to be enabled */
--	ah->config.paprd_disable = 1;
--
- 	ah->config.rx_intr_mitigation = true;
- 	ah->config.pcieSerDesWrite = true;
- 
--- 
-1.7.9.6 (Apple Git-31.1)
-
+Kalle
