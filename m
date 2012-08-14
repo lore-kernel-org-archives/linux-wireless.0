@@ -1,82 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:50224 "EHLO
-	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932555Ab2HWS3V convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 14:29:21 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Thu, 23 Aug 2012 11:28:14 -0700
-Subject: RE: [PATCH] mwifiex: use is_zero_ether_addr() instead of memcmp()
-Message-ID: <477F20668A386D41ADCC57781B1F7043083B0BB9B4@SC-VEXCH1.marvell.com> (sfid-20120823_202931_731503_315BC1D6)
-References: <CAPgLHd9iXQf3_W5b4kO1Mv68udqnmfFO8n+R-0ZqzCrhg1Z_WQ@mail.gmail.com>
-In-Reply-To: <CAPgLHd9iXQf3_W5b4kO1Mv68udqnmfFO8n+R-0ZqzCrhg1Z_WQ@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36882 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035Ab2HNElH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Aug 2012 00:41:07 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2 2/2] ath6kl: Fix potential memory leak in ath6kl_tx_complete()
+Date: Tue, 14 Aug 2012 10:10:34 +0530
+Message-ID: <1344919234-5012-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120814_064111_829071_0870BA1C)
+In-Reply-To: <1344919234-5012-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1344919234-5012-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wei,
+We bail out from ath6kl_tx_complete() if any of the sanity
+checks on skb and ath6kl_cookie fails. By doing this we
+potentially leak few remaining buffers in packet_queue.
+Make sure to proceed processing the remaining buffers
+as well. This issue is found during code review.
 
-Thanks for the patch.
+Reported-by: Wang yufeng <yufengw@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
 
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> Using is_zero_ether_addr() instead of directly use
-> memcmp() to determine if the ethernet address is all
-> zeros.
-> 
-> spatch with a semantic match is used to found this problem.
-> (http://coccinelle.lip6.fr/)
+V2 - Change WARN_ON() to WARN_ON_ONCE().
 
-Apparently there are two more occurrences of zero_mac (scan.c:843) and bc_mac (sta_cmd.c:596).
-But I can fix them when I get the chance.
+ drivers/net/wireless/ath/ath6kl/txrx.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Thanks,
-Bing
-
-> ---
->  drivers/net/wireless/mwifiex/sta_cmdresp.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-> index 0b09004..a2a33dc 100644
-> --- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-> +++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-> @@ -17,6 +17,8 @@
->   * this warranty disclaimer.
->   */
-> 
-> +#include <linux/etherdevice.h>
-> +
->  #include "decl.h"
->  #include "ioctl.h"
->  #include "util.h"
-> @@ -736,7 +738,6 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
->  {
->  	struct host_cmd_ds_802_11_ibss_status *ibss_coal_resp =
->  					&(resp->params.ibss_coalescing);
-> -	u8 zero_mac[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
-> 
->  	if (le16_to_cpu(ibss_coal_resp->action) == HostCmd_ACT_GEN_SET)
->  		return 0;
-> @@ -745,7 +746,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
->  		"info: new BSSID %pM\n", ibss_coal_resp->bssid);
-> 
->  	/* If rsp has NULL BSSID, Just return..... No Action */
-> -	if (!memcmp(ibss_coal_resp->bssid, zero_mac, ETH_ALEN)) {
-> +	if (is_zero_ether_addr(ibss_coal_resp->bssid)) {
->  		dev_warn(priv->adapter->dev, "new BSSID is NULL\n");
->  		return 0;
->  	}
-> 
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index aab8251..740a488 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -698,21 +698,26 @@ void ath6kl_tx_complete(struct htc_target *target,
+ 		list_del(&packet->list);
+ 
+ 		ath6kl_cookie = (struct ath6kl_cookie *)packet->pkt_cntxt;
+-		if (!ath6kl_cookie)
+-			goto fatal;
++		if (WARN_ON_ONCE(!ath6kl_cookie))
++			continue;
+ 
+ 		status = packet->status;
+ 		skb = ath6kl_cookie->skb;
+ 		eid = packet->endpoint;
+ 		map_no = ath6kl_cookie->map_no;
+ 
+-		if (!skb || !skb->data)
+-			goto fatal;
++		if (WARN_ON_ONCE(!skb || !skb->data)) {
++			dev_kfree_skb(skb);
++			ath6kl_free_cookie(ar, ath6kl_cookie);
++			continue;
++		}
+ 
+ 		__skb_queue_tail(&skb_queue, skb);
+ 
+-		if (!status && (packet->act_len != skb->len))
+-			goto fatal;
++		if (WARN_ON_ONCE(!status && (packet->act_len != skb->len))) {
++			ath6kl_free_cookie(ar, ath6kl_cookie);
++			continue;
++		}
+ 
+ 		ar->tx_pending[eid]--;
+ 
+@@ -794,11 +799,6 @@ void ath6kl_tx_complete(struct htc_target *target,
+ 		wake_up(&ar->event_wq);
+ 
+ 	return;
+-
+-fatal:
+-	WARN_ON(1);
+-	spin_unlock_bh(&ar->lock);
+-	return;
+ }
+ 
+ void ath6kl_tx_data_cleanup(struct ath6kl *ar)
+-- 
+1.7.0.4
 
