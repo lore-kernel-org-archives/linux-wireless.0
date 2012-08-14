@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:34479 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318Ab2HZW0t (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46998 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756319Ab2HNOXP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Aug 2012 18:26:49 -0400
-From: Marc Kleine-Budde <mkl@blackshift.org>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marc Kleine-Budde <mkl@blackshift.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: fix votage setting for RT3572/RT3592
-Date: Mon, 27 Aug 2012 00:26:37 +0200
-Message-Id: <1346019997-14487-1-git-send-email-mkl@blackshift.org> (sfid-20120827_002654_144840_0AC0AE4A)
+	Tue, 14 Aug 2012 10:23:15 -0400
+Message-ID: <502A5F4C.7040002@qca.qualcomm.com> (sfid-20120814_162557_023973_0AFD4C3C)
+Date: Tue, 14 Aug 2012 17:23:08 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: restart concurrent vifs on failed connect
+References: <1343351471-2800-1-git-send-email-c_tpeder@qca.qualcomm.com>
+In-Reply-To: <1343351471-2800-1-git-send-email-c_tpeder@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the vendor driver v2.6.0.1, during the rf register init the SRAM
-voltage should be increased to 1.35V and after 1ms decreased back to 1.2V. This
-patch adds the field setting of LDO_CFG0_LDO_CORE_VLEVEL accordingly.
+On 07/27/2012 04:11 AM, Thomas Pedersen wrote:
+> When an ath6kl STA vif is issued a connect command, the firmware will
+> disconnect all other beaconing vifs in preparation for a potential
+> channel switch. The case where the connect fails is currently unhandled,
+> so if a connection attempt on a STA vif fails and any vifs were waiting
+> for a new channel, simply restart the concurrent vifs on their previous
+> channel.
+> 
+> Requires that we start tracking the last issued channel in ar->last_ch,
+> which is valid since ath6kl only supports 1 channel at a time.
+> 
+> Also clear the beaconing vif's want_ch_switch bit regardless of whether
+> channel switch succeeds, to stop recommitting the same failed profile.
+> 
+> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
----
-Hello,
+Thanks, applied.
 
-I don't have the hardware to test, just stumbled over this while hacking on the
-rt3593.
-
-regards,  Marc
-
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index cb8c2ac..b93516d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4089,6 +4089,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
- 		msleep(1);
- 		rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
-+		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
- 		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
- 		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
- 	}
--- 
-1.7.10
-
+Kalle
