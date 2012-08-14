@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:61380 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808Ab2HTSF3 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:53972 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab2HNEMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 14:05:29 -0400
-Received: by dady13 with SMTP id y13so2345686dad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2012 11:05:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1345461929.4459.15.camel@jlt3.sipsolutions.net>
-References: <1344561340-32409-1-git-send-email-thomas@cozybit.com> <1345461929.4459.15.camel@jlt3.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Mon, 20 Aug 2012 11:05:08 -0700
-Message-ID: <CAG6hwVOmr-a0KNDqiGGNJy=nDJvDFZ4TJ93uzzbbHnTn=TRxEQ@mail.gmail.com> (sfid-20120820_200532_987572_57CDF6C5)
-Subject: Re: [PATCH v2 1/2] mac80211: use skb_queue_walk() in mesh_path_assign_nexthop
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 14 Aug 2012 00:12:50 -0400
+Date: Mon, 13 Aug 2012 21:12:48 -0700 (PDT)
+Message-Id: <20120813.211248.127125657316651796.davem@davemloft.net> (sfid-20120814_061316_212261_2FBC1373)
+To: mcgrof@frijolero.org
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	julia.lawall@lip6.fr, jespera@diku.dk, ozancag@gmail.com,
+	hauke@hauke-m.de
+Subject: Re: Backports mailing list
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAB=NE6W_SQUJmAXaLesyRShtQ=Urz=w5Ks5jEXq_50bRge+PWQ@mail.gmail.com>
+References: <CAB=NE6W_SQUJmAXaLesyRShtQ=Urz=w5Ks5jEXq_50bRge+PWQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 4:25 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-08-09 at 18:15 -0700, Thomas Pedersen wrote:
->> Since all we really want is just to iterate over all skbs, do just that
->> and avoid (de)queueing to a clusmy tmpq.
->
-> Ok ... replaced with these, what was the difference anyway? :)
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 13 Aug 2012 13:42:53 -0700
 
-Accidentally left in an XXX :)
+> I was hoping we can get a mailing list set up on vger for the
+> project, perhaps backports@vger.kernel.org, so we don't flood the
+> other mailing lists with random kernel backport junk. Please let me
+> know if this is reasonable.
 
-Thanks,
-Thomas
+It would have been so much easier if you simply just asked for this
+instead of giving me a life story of all of these projects to read.
+
+backports@vger.kernel.org has been created
