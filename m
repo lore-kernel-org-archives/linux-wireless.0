@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34073 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932217Ab2HHP0Z (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:43507 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934Ab2HNBas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 11:26:25 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 13 Aug 2012 21:30:48 -0400
+Received: by ggdk6 with SMTP id k6so3976224ggd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2012 18:30:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20514.33999.490474.57680@gargle.gargle.HOWL> (sfid-20120808_172628_949652_25E5C187)
-Date: Wed, 8 Aug 2012 20:55:03 +0530
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: Felix Fietkau <nbd@openwrt.org>, <linux-wireless@vger.kernel.org>,
-	<linville@tuxdriver.com>, <rodrigue@qca.qualcomm.com>,
-	<c_manoha@qca.qualcomm.com>
-Subject: Re: [PATCH v2 3.6] ath9k: fix interrupt storms on queued hardware
- reset
-In-Reply-To: <20120808144340.GA2041@vmraj-lnx.qualcomm.com>
-References: <1344435903-70536-1-git-send-email-nbd@openwrt.org>
-	<20120808144340.GA2041@vmraj-lnx.qualcomm.com>
+In-Reply-To: <1344886886-17983-1-git-send-email-hauke@hauke-m.de>
+References: <1344886886-17983-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 13 Aug 2012 18:30:27 -0700
+Message-ID: <CAB=NE6Uoe5D04BrAN_CJTHzkaT4Bj9ygDo_BVKecNqUP-vdWEg@mail.gmail.com> (sfid-20120814_033051_697085_7F433BEA)
+Subject: Re: [PATCH] compat-wireless: make patches apply again
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> It is safer not to re-enable interrupts on FATAL errors rather than enabling
-> it and then checking it on irq for bailing out. It would be better if you kill
-> the interrupts on processing fatal interrupts.
+On Mon, Aug 13, 2012 at 12:41 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Some parts of 11-dev-pm-ops.patch for iwlegacy went upstream in:
+> commit 450e9038ee65e3246b2a942669fc79001466f9be
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Tue Aug 7 21:46:44 2012 +0200
+>
+>     iwlegacy: clean up suspend/resume
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-I am not sure I understand.
+applied and pushed, thanks!!
 
-The original issue was the race between reset-work and the ISR which resulted in
-frequent disconnects when a BB-WATCHDOG interrupt occurred or TX hung, which was
-fixed by introducing the SC_OP_HW_RESET flag. Later, the work_pending() race was
-fixed. Still, this is a race that can happen and I think fixing it by bypassing
-the ref-count maintenance and disabling interrupts is okay.
-
-Sujith
+  Luis
