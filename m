@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:65216 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242Ab2HSKHr (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:57501 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759Ab2HNTNZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2012 06:07:47 -0400
+	Tue, 14 Aug 2012 15:13:25 -0400
+Received: by ggdk6 with SMTP id k6so847642ggd.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2012 12:13:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1208191149400.2031@localhost6.localdomain6>
-References: <1345325159-7365-1-git-send-email-Julia.Lawall@lip6.fr>
-	<CA++WF2MmTe6WP6MQRV-v1VwkpcUrw4hU6yh79NdG-K4snzQkbg@mail.gmail.com>
-	<alpine.DEB.2.02.1208191149400.2031@localhost6.localdomain6>
-Date: Sun, 19 Aug 2012 14:07:46 +0400
-Message-ID: <CA++WF2Np75wKXV-2C-FR2vhzcPvMu+z5MixcPy4ajOdHM0K88Q@mail.gmail.com> (sfid-20120819_120907_966963_BB801C6B)
-Subject: Re: [PATCH 1/5] drivers/net/wireless/ipw2x00/ipw2100.c: introduce
- missing initialization
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190138F360@sbs2003.acksys.local>
+References: <773DB8A82AB6A046AE0195C68612A3190138F360@sbs2003.acksys.local>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 14 Aug 2012 12:13:03 -0700
+Message-ID: <CAG6hwVMir23S-v0p=r=vkDn5Cu7fOSSEXaAU5jtSrVsC-Bp4ow@mail.gmail.com> (sfid-20120814_211328_788803_E42C9EBA)
+Subject: Re: Mesh addressing issue
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 August 2012 13:49, Julia Lawall <julia.lawall@lip6.fr> wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> The result of one call to a function is tested, and then at the second call
-> to the same function, the previous result, and not the current result, is
-> tested again.
->
-> Also changed &bssid to bssid, at the suggestion of Stanislav Yakovlev.
->
-> The semantic match that finds the first problem is as follows:
->
-> (http://coccinelle.lip6.fr/)
->
-> // <smpl>
-> @@
-> expression ret;
-> identifier f;
-> statement S1,S2;
-> @@
->
-> *ret = f(...);
-> if (\(ret != 0\|ret < 0\|ret == NULL\)) S1
-> ... when any
-> *f(...);
-> if (\(ret != 0\|ret < 0\|ret == NULL\)) S2
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> ---
-> v2: changed &bssid to bssid
->
+Hi Cedric,
 
-Thank you, Julia.
+On Tue, Aug 14, 2012 at 9:25 AM, Cedric VONCKEN
+<cedric.voncken@acksys.fr> wrote:
+> I think I found an issue in mesh addressing.
+> I used the compat-2012-06-14.
+>
+> My network topology for the test is :
+> -----------------      -------------------   Wired LAN       -----------------
+> |MP1              |   |MP2                   |------------------| Computer      |
+> |192.168.4.1|    |192.168.4.253|                            |192.168.4.90 |
+> -----------------     -------------------                               ---------------
+>
+> The MP1 is not bridged with any wired interface (The ip address is set directly on WLAN0 interface)
+> The MP2 is bridged with eth0 to offer link with a wired network (My computer is connected with the wired network).
+>
+> If I try to ping from Computer to MP1.
+>       The ICMP request sent on WiFi (from MP2 to MP1) is a broadcast frame using a strange address format (3 address in 802.11 header + 1 address in mesh extension) .
+>       The ICMP reply sent on wifi (from MP1 to MP2) is unicast frame using 6 addresses format.
+>
+> Why the ICMP request is sent with address 1 set to broadcast (It was not the case for older compat-2011-08-25)?
+>
+> If in MP1 I move the WLAN0 to a bridge with brctl (with no other interface), ICMP request are still sent with broadcast,
+> But
+>  If I change the mac address of bridge interface, the ICMP request is now sent in unicast  format (using the 6 addresses formats) !
 
-Stanislav.
+Based on the information you've provided, none of this immediately
+sounds wrong. Can you please link to a capture file we can
+investigate?
+
+Thanks,
+Thomas
