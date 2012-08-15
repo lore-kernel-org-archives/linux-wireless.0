@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:47060 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091Ab2HXED4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 00:03:56 -0400
-Message-ID: <20120824000355.arwj9wgtnwowkc08-cebfxv@webmail.spamcop.net> (sfid-20120824_060400_630840_3178CFE2)
-Date: Fri, 24 Aug 2012 00:03:55 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: "J. C. Jones" <jaibuduvin@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Which Mailing List Should I Use?
-References: <CAPgLHd--KY+zNjUwOHKgEJuTfJuoA=7vKR3JMBUgUc+BtjC9Ng@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F7043083B0BBB71@SC-VEXCH1.marvell.com>
-	<004501cd81ac$d766f7e0$8634e7a0$@com>
-In-Reply-To: <004501cd81ac$d766f7e0$8634e7a0$@com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Received: from shards.monkeyblade.net ([149.20.54.216]:39939 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754325Ab2HOAEI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Aug 2012 20:04:08 -0400
+Date: Tue, 14 Aug 2012 17:04:06 -0700 (PDT)
+Message-Id: <20120814.170406.477984164150450996.davem@davemloft.net> (sfid-20120815_020428_112290_66056923)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-08-14
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120814190245.GA22136@tuxdriver.com>
+References: <20120814190245.GA22136@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "J. C. Jones" <jaibuduvin@gmail.com>:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 14 Aug 2012 15:02:46 -0400
 
-> Hi All,
-> I sent a message to ath9k-devel@lists.ath9k.org a few days ago (fragment of
-> message below), and it was rejected multiple times. I have not received any
-> messages from that list since.
+> Alexey Khoroshilov provides a potential memory leak in rndis_wlan.
+> 
+> Bob Copeland gives us an ath5k fix for a lockdep problem.
+> 
+> Dan Carpenter fixes a signedness mismatch in at76c50x.
+> 
+> Felix Fietkau corrects a regression caused by an earlier commit that can
+> lead to an IRQ storm.
+> 
+> Lorenzo Bianconi offers a fix for a bad variable initialization in ath9k
+> that can cause it to improperly mark decrypted frames.
+> 
+> Rajkumar Manoharan fixes ath9k to prevent the btcoex time from running
+> when the hardware is asleep.
+> 
+> The remainder are Bluetooth fixes, about which Gustavo says:
+> 
+> 	"Here goes some fixes for 3.6-rc1, there are a few fix to
+> 	thte inquiry code by Ram Malovany, support for 2 new devices,
+> 	and few others fixes for NULL dereference, possible deadlock
+> 	and a memory leak."
+> 
+> Please let me know if there are problems!
 
-The ath5k and ath9k mailing lists are currently down.  Their  
-administrator is on vacation now and cannot fix the server remotely.
-
-Sorry for the inconvenience.  Please use this list for now.
-
--- 
-Regards,
-Pavel Roskin
+Pulled, thanks John.
