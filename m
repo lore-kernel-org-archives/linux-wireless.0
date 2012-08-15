@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53761 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752845Ab2H0PAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 11:00:17 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 3.6 2/6] ath9k_hw: clear the AM2PM predistortion mask on AR933x
-Date: Mon, 27 Aug 2012 17:00:04 +0200
-Message-Id: <1346079608-40944-2-git-send-email-nbd@openwrt.org> (sfid-20120827_170120_128142_1B7D3F7D)
-In-Reply-To: <1346079608-40944-1-git-send-email-nbd@openwrt.org>
-References: <1346079608-40944-1-git-send-email-nbd@openwrt.org>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:44672 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753321Ab2HOIlV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Aug 2012 04:41:21 -0400
+Received: by ghrr11 with SMTP id r11so1510307ghr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Aug 2012 01:41:21 -0700 (PDT)
+From: Syam Sidhardhan <syamsidhardh@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com
+Subject: [PATCH] NFC: use module_platform_driver macro for nfcwilink.c
+Date: Wed, 15 Aug 2012 14:04:10 +0530
+Message-Id: <1345019650-5030-1-git-send-email-s.syam@samsung.com> (sfid-20120815_104128_419559_691FCBF7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That predistortion type is not supported
+Simplify the code by make use of module_platform_driver macro.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/nfc/nfcwilink.c |   16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 2c9f7d7..2173bd7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -142,6 +142,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	};
- 	int training_power;
- 	int i, val;
-+	u32 am2pm_mask = ah->paprd_ratemask;
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+index e7fd493..827f039 100644
+--- a/drivers/nfc/nfcwilink.c
++++ b/drivers/nfc/nfcwilink.c
+@@ -604,21 +604,7 @@ static struct platform_driver nfcwilink_driver = {
+ 	},
+ };
  
- 	if (IS_CHAN_2GHZ(ah->curchan))
- 		training_power = ar9003_get_training_power_2g(ah);
-@@ -158,10 +159,13 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	}
- 	ah->paprd_training_power = training_power;
+-/* ------- Module Init/Exit interfaces ------ */
+-static int __init nfcwilink_init(void)
+-{
+-	printk(KERN_INFO "NFC Driver for TI WiLink");
+-
+-	return platform_driver_register(&nfcwilink_driver);
+-}
+-
+-static void __exit nfcwilink_exit(void)
+-{
+-	platform_driver_unregister(&nfcwilink_driver);
+-}
+-
+-module_init(nfcwilink_init);
+-module_exit(nfcwilink_exit);
++module_platform_driver(nfcwilink_driver);
  
-+	if (AR_SREV_9330(ah))
-+		am2pm_mask = 0;
-+
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK,
- 		      ah->paprd_ratemask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK,
--		      ah->paprd_ratemask);
-+		      am2pm_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
- 		      ah->paprd_ratemask_ht40);
+ /* ------ Module Info ------ */
  
 -- 
-1.7.9.6 (Apple Git-31.1)
+1.7.9.5
 
