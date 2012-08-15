@@ -1,91 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:5900 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab2H0K0U (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42723 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755013Ab2HOUsm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 06:26:20 -0400
-From: Wei Ni <wni@nvidia.com>
-To: <swarren@wwwdotorg.org>, <brudley@broadcom.com>,
-	<rvossen@broadcom.com>
-CC: <krakesh@nvidia.com>, <ldewangan@nvidia.com>,
-	<linux-tegra@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, Wei Ni <wni@nvidia.com>
-Subject: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR directly for non-OOB
-Date: Mon, 27 Aug 2012 18:25:10 +0800
-Message-ID: <1346063114-30361-3-git-send-email-wni@nvidia.com> (sfid-20120827_122738_891002_93ED1051)
-In-Reply-To: <1346063114-30361-1-git-send-email-wni@nvidia.com>
-References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 15 Aug 2012 16:48:42 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	ath5k-devel@lists.ath5k.org, mickflemm@gmail.com,
+	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
+	adrian@freebsd.org
+Subject: [PATCH v2] ath5k: fix wrong max power per rate eeprom reads for 802.11a
+Date: Wed, 15 Aug 2012 22:48:35 +0200
+Message-Id: <1345063715-13471-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20120815_224846_299756_C8BA654C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of inband interrupts, if we handle the interrupt in dpc thread,
-two level of thread switching takes place to process wifi interrupts.
-One in SDHCI driver and the other in Wifi driver. This may cause the system
-instability.
-Because the SDHCI calls sdio_irq_thread() to handle the irq, this thread locks
-mmc host and calls wifi handler. It expects WiFi handler to be quick and
-enables sdio interrupt from card at end. If wifi handler defers this work for
-a different thread, sdio_irq_thread() will be stuck on next wifi interrupt
-since mmc lock is not freed.
+This patch reduces the per rate target power eeprom reads for
+AR5K_EEPROM_MODE_11A from 10 to 8, as there are only 8 valid
+power curve entries on the eeprom. The former 10 reads lead to
+equal max power limits per rate and this causes an increasing
+distortion for all rates above 24 MBit and leads to a needless
+poor performance in 802.11a mode.
 
-Handling the interrupt in ISR directly will prevent thread context switching in
-wifi driver. It can fix the instability problems.
-
-Signed-off-by: Wei Ni <wni@nvidia.com>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    2 ++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +++++++-
- 2 files changed, 9 insertions(+), 1 deletions(-)
+madwifi cross validation check. Thx to Felix Fiethkau
+reworked former patch series. Thx to Nick Kossifidis
+---
+ drivers/net/wireless/ath/ath5k/eeprom.c | 2 +-
+ drivers/net/wireless/ath/ath5k/eeprom.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 8e7e692..5cf6c3b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -121,7 +121,9 @@ static void brcmf_sdio_irqhandler(struct sdio_func *func)
- 
- 	brcmf_dbg(INTR, "ib intr triggered\n");
- 
-+	sdio_release_host(sdiodev->func[1]);
- 	brcmf_sdbrcm_isr(sdiodev->bus);
-+	sdio_claim_host(sdiodev->func[1]);
- }
- 
- /* dummy handler for SDIO function 2 interrupt */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 472f2ef..4576d59 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2347,7 +2347,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 	uint framecnt = 0;	/* Temporary counter of tx/rx frames */
- 	bool rxdone = true;	/* Flag for no more read data */
- 	bool resched = false;	/* Flag indicating resched wanted */
--	int err;
-+	int err = 0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -3786,11 +3786,17 @@ void brcmf_sdbrcm_isr(void *arg)
- 	if (!bus->intr)
- 		brcmf_dbg(ERROR, "isr w/o interrupt configured!\n");
- 
-+
-+#ifndef CONFIG_BRCMFMAC_SDIO_OOB
-+	while (brcmf_sdbrcm_dpc(bus))
-+		;
-+#else
- 	bus->dpc_sched = true;
- 	if (bus->dpc_tsk) {
- 		brcmf_sdbrcm_adddpctsk(bus);
- 		complete(&bus->dpc_wait);
- 	}
-+#endif
- }
- 
- static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index 4026c90..b7e0258 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -1482,7 +1482,7 @@ ath5k_eeprom_read_target_rate_pwr_info(struct ath5k_hw *ah, unsigned int mode)
+ 	case AR5K_EEPROM_MODE_11A:
+ 		offset += AR5K_EEPROM_TARGET_PWR_OFF_11A(ee->ee_version);
+ 		rate_pcal_info = ee->ee_rate_tpwr_a;
+-		ee->ee_rate_target_pwr_num[mode] = AR5K_EEPROM_N_5GHZ_CHAN;
++		ee->ee_rate_target_pwr_num[mode] = AR5K_EEPROM_N_5GHZ_RATE_CHAN;
+ 		break;
+ 	case AR5K_EEPROM_MODE_11B:
+ 		offset += AR5K_EEPROM_TARGET_PWR_OFF_11B(ee->ee_version);
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index dc2bcfe..94a9bbe 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -182,6 +182,7 @@
+ #define AR5K_EEPROM_EEP_DELTA		10
+ #define AR5K_EEPROM_N_MODES		3
+ #define AR5K_EEPROM_N_5GHZ_CHAN		10
++#define AR5K_EEPROM_N_5GHZ_RATE_CHAN	8
+ #define AR5K_EEPROM_N_2GHZ_CHAN		3
+ #define AR5K_EEPROM_N_2GHZ_CHAN_2413	4
+ #define	AR5K_EEPROM_N_2GHZ_CHAN_MAX	4
 -- 
-1.7.1
+1.7.11.1
 
