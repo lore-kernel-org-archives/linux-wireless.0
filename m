@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:52633 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419Ab2HFHFb (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:52821 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805Ab2HOWwL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 03:05:31 -0400
-Received: by obbuo13 with SMTP id uo13so5455311obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 00:05:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120803114116.GA4172@spatula.rz.uni-leipzig.de>
-References: <20120803114116.GA4172@spatula.rz.uni-leipzig.de>
-Date: Mon, 6 Aug 2012 12:35:30 +0530
-Message-ID: <CAD2nsn3aj=+b+4L_LOY6MAP49r4pORbc9nwJLOcc240dkRbJOg@mail.gmail.com> (sfid-20120806_090609_244781_06381B16)
-Subject: Re: MSDU aggregation with mac80211
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Benjamin Kiessling <mittagessen@l.unchti.me>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 15 Aug 2012 18:52:11 -0400
+Date: Wed, 15 Aug 2012 15:52:06 -0700 (PDT)
+Message-Id: <20120815.155206.172710419448408328.davem@davemloft.net> (sfid-20120816_005218_323414_707331A4)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-08-15
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120815185409.GA2137@tuxdriver.com>
+References: <20120815185409.GA2137@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 3, 2012 at 5:11 PM, Benjamin Kiessling
-<mittagessen@l.unchti.me> wrote:
-> Hi,
->
-> is there any support for MSDU aggregation in drivers using mac80211 (in
-> my case ath9k)? I couldn't find any code in mac80211 itself or ath9k,
-> but I am not that familiar with the code base of either of them.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 15 Aug 2012 14:54:10 -0400
 
-no its not yet there, but i am not sure about the status :)
+> This is a batch of updates intended for 3.7.  The ath9k, mwifiex,
+> and b43 drivers get the bulk of the commits this time, with a handful
+> of other driver bits thrown-in.  It is mostly just minor fixes and
+> cleanups, etc.
+> 
+> Also included is a Bluetooth pull, with a lot of refactoring.
+> Gustavo says:
+> 
+> 	"These are the changes I queued for 3.7. There are a many
+> 	small fixes/improvements by Andre Guedes. A l2cap channel
+> 	refcounting refactor by Jaganath. Bluetooth sockets now
+> 	appears in /proc/net, by Masatake Yamato and Sachin Kamat
+> 	changes ours drivers to use devm_kzalloc()."
+> 
+> Please let me know if there are problems!
 
->
-> Regards,
-> Ben
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-thanks,
-shafi
+Pulled, thanks John.
