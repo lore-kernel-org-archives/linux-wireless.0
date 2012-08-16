@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41771 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756555Ab2HURCJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 13:02:09 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Subject: [PATCH 2/8] iwlwifi: clean up properly when registration with mac80211 fails
-Date: Tue, 21 Aug 2012 19:01:50 +0200
-Message-Id: <1345568516-20822-2-git-send-email-johannes@sipsolutions.net> (sfid-20120821_190213_500011_F7AA929C)
-In-Reply-To: <1345568516-20822-1-git-send-email-johannes@sipsolutions.net>
-References: <1345568455.10280.11.camel@jlt3.sipsolutions.net>
- <1345568516-20822-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53127 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932521Ab2HPWd6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Aug 2012 18:33:58 -0400
+Message-ID: <502D754F.9090908@hauke-m.de> (sfid-20120817_003401_826673_0121034A)
+Date: Fri, 17 Aug 2012 00:33:51 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: John Crispin <john@phrozen.org>
+CC: ralf@linux-mips.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
+References: <1345132801-8430-1-git-send-email-hauke@hauke-m.de> <1345132801-8430-4-git-send-email-hauke@hauke-m.de> <502D4B70.4010509@phrozen.org>
+In-Reply-To: <502D4B70.4010509@phrozen.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+On 08/16/2012 09:35 PM, John Crispin wrote:
+> On 16/08/12 18:00, Hauke Mehrtens wrote:
+>> int gpio_get_value(unsigned gpio)
+>> +{
+>> +	if (gpio < bcm47xx_gpio_count)
+>> +		return bcm47xx_gpio_in(1 << gpio);
+>> +
+>> +	return __gpio_get_value(gpio);
+>> +}
+>> +EXPORT_SYMBOL(gpio_get_value);
+> 
+> Hi,
+> 
+> You are using a gpio_chip. simply doing this
+> 
+> #define gpio_get_value __gpio_get_value
+> 
+> inside your arch/mips/include/asm/mach-bcm47xx/gpio.h will be enough.
+> __gpio_get_value() will then automatically find and use
+> bcm47xx_gpio_get_value() via the gpio_chip.
 
-If registration with mac80211 fails, stop the thermal
-throttling and testmode work that were previously started.
+With this code gpio_get_value() is faster as the hole gpiolib is not
+called for the get and set methods. I assume then these gpios are the
+first being registered and all calls to these gpios are directly handled
+by this methods and are not going through the gpiolib code.
+This is based on the way it is done for ath79.
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/main.c |    3 +++
- 1 file changed, 3 insertions(+)
+Hauke
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index 84d3db5..e8ffbe4 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -1473,6 +1473,9 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	return op_mode;
- 
- out_destroy_workqueue:
-+	iwl_tt_exit(priv);
-+	iwl_testmode_free(priv);
-+	iwl_cancel_deferred_work(priv);
- 	destroy_workqueue(priv->workqueue);
- 	priv->workqueue = NULL;
- 	iwl_uninit_drv(priv);
--- 
-1.7.10.4
 
