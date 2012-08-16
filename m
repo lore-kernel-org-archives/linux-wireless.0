@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36402 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416Ab2HTMEG (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:61184 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894Ab2HPRjM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 08:04:06 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: simplify buffers in aes_128_cmac_vector
-Date: Mon, 20 Aug 2012 14:04:01 +0200
-Message-Id: <1345464241-16608-1-git-send-email-johannes@sipsolutions.net> (sfid-20120820_140410_617145_FC7ED3F0)
+	Thu, 16 Aug 2012 13:39:12 -0400
+Received: by weyx8 with SMTP id x8so1901126wey.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 10:39:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1791263.5FQJJv4xHF@bender>
+References: <1345132801-8430-1-git-send-email-hauke@hauke-m.de>
+	<1345132801-8430-4-git-send-email-hauke@hauke-m.de>
+	<1791263.5FQJJv4xHF@bender>
+Date: Thu, 16 Aug 2012 19:39:10 +0200
+Message-ID: <CACna6rxVOFO-n5J_6J7HFSt+WnoX0=2ULjiRv3p9va47K2Edsw@mail.gmail.com> (sfid-20120816_193916_440859_5DF8D635)
+Subject: Re: [PATCH v2 3/3] MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Florian Fainelli <florian@openwrt.org>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, ralf@linux-mips.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	john@phrozen.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2012/8/16 Florian Fainelli <florian@openwrt.org>:
+>> +void __init bcm47xx_gpio_init(void)
+>> +{
+>> +     int err;
+>> +
+>> +     switch (bcm47xx_bus_type) {
+>> +#ifdef CONFIG_BCM47XX_SSB
+>> +     case BCM47XX_BUS_TYPE_SSB:
+>> +             bcm47xx_gpio_count = ssb_gpio_count(&bcm47xx_bus.ssb);
+>> +#endif
+>> +#ifdef CONFIG_BCM47XX_BCMA
+>> +     case BCM47XX_BUS_TYPE_BCMA:
+>> +             bcm47xx_gpio_count = bcma_gpio_count(&bcm47xx_bus.bcma.bus);
+>> +#endif
+>> +     }
+>
+> Is this exclusive? Cannot we have both SSB and BCMA on the same device?
 
-There's no need to use a single scratch buffer and
-calculate offsets into it, just use two separate
-buffers for the separate variables.
+This applies to SoC only, so I believe it's fine. We don't have SoCs
+based on BCMA and SSB at the same time.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/aes_cmac.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+You can find devices with multiple buses, but additional ones are
+connected via PCIE or USB interface (or some other I don't know
+about).
 
-diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
-index 8dfd70d..a04752e 100644
---- a/net/mac80211/aes_cmac.c
-+++ b/net/mac80211/aes_cmac.c
-@@ -38,14 +38,10 @@ static void gf_mulx(u8 *pad)
- static void aes_128_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
- 				const u8 *addr[], const size_t *len, u8 *mac)
- {
--	u8 scratch[2 * AES_BLOCK_SIZE];
--	u8 *cbc, *pad;
-+	u8 cbc[AES_BLOCK_SIZE], pad[AES_BLOCK_SIZE];
- 	const u8 *pos, *end;
- 	size_t i, e, left, total_len;
- 
--	cbc = scratch;
--	pad = scratch + AES_BLOCK_SIZE;
--
- 	memset(cbc, 0, AES_BLOCK_SIZE);
- 
- 	total_len = 0;
 -- 
-1.7.10.4
-
+Rafał
