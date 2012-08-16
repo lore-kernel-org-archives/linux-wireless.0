@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7916 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757097Ab2HGBP0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932106Ab2HPTTm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 21:15:26 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20512.27613.902697.494654@gargle.gargle.HOWL> (sfid-20120807_031530_322967_3600E0C1)
-Date: Tue, 7 Aug 2012 06:44:05 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC 07/14] ath9k: Remove ath_rc_set_valid_rate_idx
+	Thu, 16 Aug 2012 15:19:42 -0400
+Message-ID: <1345144775.4665.2.camel@jlt3.sipsolutions.net> (sfid-20120816_211955_424062_89EC3657)
+Subject: Re: [PATCH 1/4] compat: fix SIMPLE_DEV_PM_OPS() on kernel 2.6.29
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Date: Thu, 16 Aug 2012 21:19:35 +0200
+In-Reply-To: <1344645007-26757-2-git-send-email-hauke@hauke-m.de> (sfid-20120811_023023_267459_29EC29DD)
+References: <1344645007-26757-1-git-send-email-hauke@hauke-m.de>
+	 <1344645007-26757-2-git-send-email-hauke@hauke-m.de>
+	 (sfid-20120811_023023_267459_29EC29DD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+On Sat, 2012-08-11 at 02:30 +0200, Hauke Mehrtens wrote:
+> This patch reworks this commit:
+> commit 8e661d67b1965afcfd9d3672803e2fc37765f6ef
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Thu Aug 2 22:15:05 2012 +0200
+> 
+>     compat: handle pci suspend/resume on kernel 2.6.29
+> 
+> The functions for pci suspend and resume are now created by
+> compat_pci_suspend and compat_pci_resume and then used by
+> SIMPLE_DEV_PM_OPS. This way attributes like static, const and so on are
+> forwarded in the struct dev_pm_ops define on all kernel versions.
+> 
+> In addition this patch adds an own SIMPLE_DEV_PM_OPS() for kernel
+> 2.6.32 overwriting the original, because in kernel 2.6.32 const is
+> needed for struct dev_pm_ops in pci drivers.
+> 
+> This is based on work done by Johannes Berg.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index e8f8e3d..8a5fc62 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -424,13 +424,6 @@ static void ath_rc_sort_validrates(struct ath_rate_priv *ath_rc_priv)
- 	}
- }
- 
--static inline void ath_rc_set_valid_rate_idx(struct ath_rate_priv *ath_rc_priv,
--					   u8 index, int valid_tx_rate)
--{
--	BUG_ON(index > ath_rc_priv->rate_table_size);
--	ath_rc_priv->valid_rate_index[index] = !!valid_tx_rate;
--}
--
- static inline
- int ath_rc_get_nextvalid_txrate(const struct ath_rate_table *rate_table,
- 				struct ath_rate_priv *ath_rc_priv,
-@@ -503,7 +496,7 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv)
- 
- 			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = i;
- 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
--			ath_rc_set_valid_rate_idx(ath_rc_priv, i, 1);
-+			ath_rc_priv->valid_rate_index[i] = true;
- 			hi = i;
- 		}
- 	}
-@@ -539,7 +532,7 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv)
- 			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
- 			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
- 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
--			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
-+			ath_rc_priv->valid_rate_index[j] = true;
- 			hi = max(hi, j);
- 		}
- 	}
-@@ -573,7 +566,7 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- 			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
- 			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
- 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
--			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
-+			ath_rc_priv->valid_rate_index[j] = true;
- 			hi = max(hi, j);
- 		}
- 	}
--- 
-1.7.11.4
+Thanks!
+
+johannes
 
