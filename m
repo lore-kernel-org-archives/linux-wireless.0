@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29656 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932552Ab2HGC05 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 22:26:57 -0400
-Date: Tue, 7 Aug 2012 10:26:53 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] mwifiex: fix code mis-alignment after the if statement
-Message-ID: <20120807022653.GA21014@localhost> (sfid-20120807_042714_050905_27286061)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52327 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932890Ab2HPQAc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Aug 2012 12:00:32 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	john@phrozen.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 0/3] MIPS: BCM47xx: use gpiolib
+Date: Thu, 16 Aug 2012 17:59:58 +0200
+Message-Id: <1345132801-8430-1-git-send-email-hauke@hauke-m.de> (sfid-20120816_180045_965219_9F9DBDCF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- drivers/net/wireless/mwifiex/scan.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The original code implemented the GPIO interface itself and this caused
+some problems. With this patch gpiolib is used.
 
---- linux.orig/drivers/net/wireless/mwifiex/scan.c	2012-07-25 19:09:37.939358714 +0800
-+++ linux/drivers/net/wireless/mwifiex/scan.c	2012-08-07 10:21:20.303090255 +0800
-@@ -1433,9 +1433,9 @@ int mwifiex_check_network_compatibility(
- 			if (ret)
- 				dev_err(priv->adapter->dev, "cannot find ssid "
- 					"%s\n", bss_desc->ssid.ssid);
--				break;
-+			break;
- 		default:
--				ret = 0;
-+			ret = 0;
- 		}
- 	}
- 
+This is based on mips/master.
+
+This should go through linux-mips, John W. Linville approved that 
+for the bcma and ssb changes normally maintained in wireless-testing.
+
+v2:
+ - use use gpio_chip.to_irq() instead of directly declare gpio_to_irq
+
+Hauke Mehrtens (3):
+  ssb: add function to return number of gpio lines
+  bcma: add GPIO driver for SoCs
+  MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
+
+ arch/mips/Kconfig                            |    2 +-
+ arch/mips/bcm47xx/gpio.c                     |  206 ++++++++++++++++++++------
+ arch/mips/bcm47xx/setup.c                    |    2 +
+ arch/mips/bcm47xx/wgt634u.c                  |    7 +
+ arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    2 +
+ arch/mips/include/asm/mach-bcm47xx/gpio.h    |  148 +++---------------
+ drivers/bcma/Kconfig                         |    5 +
+ drivers/bcma/Makefile                        |    1 +
+ drivers/bcma/driver_gpio.c                   |   90 +++++++++++
+ drivers/bcma/scan.c                          |    4 +
+ drivers/ssb/embedded.c                       |   12 ++
+ include/linux/bcma/bcma.h                    |    5 +
+ include/linux/bcma/bcma_driver_gpio.h        |   21 +++
+ include/linux/ssb/ssb_embedded.h             |    4 +
+ 14 files changed, 334 insertions(+), 175 deletions(-)
+ create mode 100644 drivers/bcma/driver_gpio.c
+ create mode 100644 include/linux/bcma/bcma_driver_gpio.h
+
+-- 
+1.7.9.5
+
