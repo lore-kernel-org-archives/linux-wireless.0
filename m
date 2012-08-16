@@ -1,32 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61786 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756469Ab2HNUCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 16:02:20 -0400
-Received: from mj (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by smtprelay1.cesmail.net (Postfix) with ESMTPSA id 26F5134C8A
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2012 16:03:51 -0400 (EDT)
-Date: Tue, 14 Aug 2012 16:02:10 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless@vger.kernel.org
-Subject: ath5k.org and ath9k.org are down
-Message-ID: <20120814160210.7068dd72@mj> (sfid-20120814_220223_641964_EDB7A201)
+Received: from ocean.emcraft.com ([213.221.7.182]:47562 "EHLO
+	ocean.emcraft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964860Ab2HPP2m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Aug 2012 11:28:42 -0400
+Date: Thu, 16 Aug 2012 19:28:39 +0400
+From: Sergei Poselenov <sposelenov@emcraft.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Access Point Mode for Ralink RT5370? - Success
+Message-ID: <20120816192839.1e595e4b@emcraft.com> (sfid-20120816_172854_450336_913995C9)
+In-Reply-To: <CAOZOX0V1_zA3iTXhz7J4_t-BxNQ6k6V_-A_jky2B=fpbya-Lqg@mail.gmail.com>
+References: <20120719133452.2fb375ae@emcraft.com>
+	<CAOZOX0V=npQuQ03kur0mo7PtkdGVYiFO5B3OKhB7CMibLk50Ew@mail.gmail.com>
+	<20120807190140.4796a045@emcraft.com>
+	<CAOZOX0V1_zA3iTXhz7J4_t-BxNQ6k6V_-A_jky2B=fpbya-Lqg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Hello Ivo, all,
 
-I've got a word from Michael Renzmann, the maintainer of MadWifi and
-several sites, including ath5k.org, ath9k.org and madwifi-project.org.
-He wrote me that the server hosting those sites is down and is unlikely
-to be fixed until August 27.
+I just want to report that we successfully built and configured DWA-140
+(rev B3, RT5370 chip) USB-WiFi in access point mode. For this, we built
+vcompat-wireless modules and hostapd and lbnl (required by hostapd).
 
-That means that the mailing lists for ath5k and ath9k are not working.
-This list (linux-wireless) should be used for those drivers until the
-server is fixed.
+Our target is the LPC1788 (ARM Cortex-M3 SOC) running Linux 2.6.33,
+with USB support.
 
--- 
+Our toolchain combo is CodeSourcery arm-2010q1, with uClibc modified to
+support clone() and linuxthreads.
+
+Thank you for your comments.
+
 Regards,
-Pavel Roskin
+Sergei Poselenov, Emcraft Systems
+
+On Tue, 7 Aug 2012 17:38:53 +0200
+Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+
+> Hi,
+> 
+> >> On Thu, Jul 19, 2012 at 11:34 AM, Sergei Poselenov
+> >> <sposelenov@emcraft.com> wrote:
+> >> > Hello,
+> >> >
+> >> > Does compat-wireless support the Access Point mode for the Ralink
+> >> > RT5370 chip? The driver source pack from the Ralink site only
+> >> > supports Managed and Ad-Hoc modes.
+> >>
+> >> Yes, the rt2x00-based drivers as found in the compat-wireless
+> >> package are working in AP mode.
+> >>
+> >
+> > I'm trying to set the master mode and it fails:
+> > ~ # iwconfig wlan0 mode Master
+> > Error for wireless request "Set Mode" (8B06) :
+> >     SET failed on device wlan0 ; Invalid argument.
+> > ~ #
+> >
+> > The Linux Wireless FAQ here
+> > http://linuxwireless.org/en/users/Documentation/FAQ#Q:_iwconfig_wlan0_mode_master_does_not_work
+> > tells me that I should use hostapd instead of iwconfig to configure
+> > the master mode.
+> >
+> > However, for my project the WiFi security is not required. Also, I'm
+> > working on a custom ARM board with Linux 2.6.33 running.
+> 
+> But the FAQ doesn't say you need hostapd for WiFi Security, it says
+> if you want master mode, you must use hostapd..
+> 
+> > Could you please confirm I should really port hostapd to my target
+> > to configure my USB WiFi as Access Point?
+> 
+> Yes, you _must_ use hostapd.
+> 
+> Ivo
+
