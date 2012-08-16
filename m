@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100Ab2HTLdC (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53242 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752590Ab2HPTEf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 07:33:02 -0400
-Message-ID: <1345462378.4459.17.camel@jlt3.sipsolutions.net> (sfid-20120820_133306_238916_52280F9A)
-Subject: Re: [PATCH] mac80211: add supported rates change notification in
- IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 20 Aug 2012 13:32:58 +0200
-In-Reply-To: <1344788695-1458-1-git-send-email-ordex@autistici.org>
-References: <1344788695-1458-1-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 16 Aug 2012 15:04:35 -0400
+Received: by ialo24 with SMTP id o24so489044ial.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 12:04:35 -0700 (PDT)
+Date: Thu, 16 Aug 2012 13:59:05 -0500
+From: "Saul St. John" <saul.stjohn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Saul St. John" <saul.stjohn@gmail.com>
+Subject: [PATCH 0/2] bcma: expose cc sprom for read/write in sysfs
+Message-ID: <20120816185905.GA6726@eris.garyseven.net> (sfid-20120816_210440_517664_67816F0F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-08-12 at 18:24 +0200, Antonio Quartulli wrote:
-> In IBSS it is possible that the supported rates set for a station changes over
-> time (e.g. it gets first initialised as an empty set because of no available
-> information about rates and updated later). In this case the driver has to be
-> notified about the change in order to update its internal table accordingly (if
-> needed).
-> 
-> This behaviour is needed by all those drivers that handle rc internally but
-> leave stations management to mac80211
+The ssb driver exposes the device SPROM to sysfs, which allows users to
+modify various device settings using ssb-sprom from the b43-tools package.
 
-Applied ... with a bunch of fixes
+These patches implement similar functionality in bcma, so that ssb-sprom
+can be used with newer Broadcom devices.
 
-johannes
+Saul St. John (2):
+  bcma: register cc core driver, device
+  bcma: expose cc sprom to sysfs
+
+ drivers/bcma/bcma_private.h                 |    5 +
+ drivers/bcma/driver_chipcommon.c            |  212 ++++++++++++++++++++++++---
+ drivers/bcma/main.c                         |   79 +++++-----
+ drivers/bcma/sprom.c                        |   47 +++++-
+ include/linux/bcma/bcma_driver_chipcommon.h |    4 +-
+ 5 files changed, 287 insertions(+), 60 deletions(-)
+
+-- 
+1.7.10.4
 
