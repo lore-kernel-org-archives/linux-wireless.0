@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59491 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754212Ab2H2RdK (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:65234 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308Ab2HPTer (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2012 13:33:10 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr13so1592856pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 10:33:10 -0700 (PDT)
-From: Devendra Naga <devendra.aaru@gmail.com>
-To: Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>, Ido Reis <idor@ti.com>,
-	linux-wireless@vger.kernel.org
-Cc: Devendra Naga <devendra.aaru@gmail.com>
-Subject: [PATCH] wl18xx: use module_platform_driver
-Date: Wed, 29 Aug 2012 23:03:01 +0530
-Message-Id: <1346261581-21613-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120829_193315_065672_4F59F9B6)
+	Thu, 16 Aug 2012 15:34:47 -0400
+Received: by bkwj10 with SMTP id j10so1050559bkw.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 12:34:45 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: carl9170: Unintentional transmission in monitor mode?
+Date: Thu, 16 Aug 2012 21:34:31 +0200
+Cc: Marco Fonseca <marco@tampabay.rr.com>,
+	linux-wireless@vger.kernel.org,
+	"Chen, Stephen" <scchen@qca.qualcomm.com>
+References: <20120809165434.GA13409@192.168.1.10> <201208092143.28506.chunkeey@googlemail.com> <1345144855.4665.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1345144855.4665.3.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201208162134.32152.chunkeey@googlemail.com> (sfid-20120816_213452_050595_D42C7EAF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the driver's init and exit routines can be implemented with the
-module_platform_driver, as the init and exit code is same as
-that of the module_platform_driver
+On Thursday, August 16, 2012 09:20:55 PM Johannes Berg wrote:
+> On Thu, 2012-08-09 at 21:43 +0200, Christian Lamparter wrote:
+> > On Thursday, August 09, 2012 06:54:34 PM Marco Fonseca wrote:
+> > > Hello All,
+> > > 
+> > > I've noticed unexpected transmissions from the AR9170 while in monitor mode
+> > > and using tcpdump (and sometimes without tcpdump running).  These
+> > > transmissions degrade (pretty significantly) performance of other STA/AP on
+> > > the channel (as seen by iperf going from 60mbit/s to almost nill).  As best I
+> > > can tell these transmissions never coalesces into an actual frame in the air
+> > > (at least not one I'm able to pick up with a second different adapter in
+> > > monitor mode).
+> > > 
+> > > Are there any known reasons/bugs on this?  Is there anyway to completely
+> > > silence the transmitter of the AR9170 while still allowing reception?
+> > > 
+> > yes. <http://www.spinics.net/lists/linux-wireless/msg88896.html>
+> > 
+> > a solution is described in:
+> > <http://www.spinics.net/lists/linux-wireless/msg89279.html>
+> > 
+> > (iw dev wlanX set monitor none - if I'm not mistaken)
+> 
+> I've seen this before too -- what flag causes the issue, and why?
+Well that would be:
+FIF_OTHER_BSS or FIF_PROMISC_IN_BSS
 
-Signed-off-by: Devendra Naga <devendra.aaru@gmail.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |   13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+either one of these will set following flags
+for the hardware:
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 69042bb..0b3e21b 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1539,18 +1539,7 @@ static struct platform_driver wl18xx_driver = {
- 	}
- };
- 
--static int __init wl18xx_init(void)
--{
--	return platform_driver_register(&wl18xx_driver);
--}
--module_init(wl18xx_init);
--
--static void __exit wl18xx_exit(void)
--{
--	platform_driver_unregister(&wl18xx_driver);
--}
--module_exit(wl18xx_exit);
--
-+module_platform_driver(wl18xx_driver);
- module_param_named(ht_mode, ht_mode_param, charp, S_IRUSR);
- MODULE_PARM_DESC(ht_mode, "Force HT mode: wide or siso20");
- 
--- 
-1.7.9.5
+AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER
+AR9170_MAC_SNIFFER_ENABLE_PROMISC
 
+About the issue, I'm really can't tell w/o schematics
+of the hardware. It could be that ACK_IN_SNIFFER is
+more of a debug/test flag than a real feature?
+
+(Anyway, I cc'd Stephen. Maybe he knows more)
+
+Regards,
+	Chr
