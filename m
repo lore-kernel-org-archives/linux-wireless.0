@@ -1,96 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:43993 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219Ab2HMFfz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 01:35:55 -0400
-Received: by obbuo13 with SMTP id uo13so6355381obb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Aug 2012 22:35:54 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52333 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932929Ab2HPQAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Aug 2012 12:00:37 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	john@phrozen.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH v2 2/3] bcma: add GPIO driver for SoCs
+Date: Thu, 16 Aug 2012 18:00:00 +0200
+Message-Id: <1345132801-8430-3-git-send-email-hauke@hauke-m.de> (sfid-20120816_180046_683944_08F8013E)
+In-Reply-To: <1345132801-8430-1-git-send-email-hauke@hauke-m.de>
+References: <1345132801-8430-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <CAJwzM1nGny-JBD8hwKXsrERko0cGvuJB_nD2dbPrPmzF-T49Tg@mail.gmail.com>
-References: <CAJwzM1nGny-JBD8hwKXsrERko0cGvuJB_nD2dbPrPmzF-T49Tg@mail.gmail.com>
-Date: Mon, 13 Aug 2012 11:05:54 +0530
-Message-ID: <CAD2nsn11JdqNueAjhGxxvkAJ_BTex5Sropqo93odiOmj1bzpLQ@mail.gmail.com> (sfid-20120813_073637_223558_36263D82)
-Subject: Re: [cfg80211] Issue with simultaneous AP-STA operation in mwifiex/cfg80211
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Avinash Patil <avinashapatil@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Avinash Patil <patila@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The GPIOs are access through some registers in the chip common core.
+We need locking around these GPIO accesses, all GPIOs are accessed
+through the same registers and parallel writes will cause problems.
 
+CC: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/Kconfig                  |    5 ++
+ drivers/bcma/Makefile                 |    1 +
+ drivers/bcma/driver_gpio.c            |   90 +++++++++++++++++++++++++++++++++
+ drivers/bcma/scan.c                   |    4 ++
+ include/linux/bcma/bcma.h             |    5 ++
+ include/linux/bcma/bcma_driver_gpio.h |   21 ++++++++
+ 6 files changed, 126 insertions(+)
+ create mode 100644 drivers/bcma/driver_gpio.c
+ create mode 100644 include/linux/bcma/bcma_driver_gpio.h
 
-On Fri, Aug 10, 2012 at 11:37 AM, Avinash Patil <avinashapatil@gmail.com> wrote:
-> Hi All,
->
-> Lately simultaneous AP-STA functionality in mwifiex driver is not
-> working. I feel this has something to do with recent changes in
-> cfg80211.
->
-> If we associate mwifiex STA to external AP first and then try to start
-> mwifiex AP using hostapd(on different channel), we get �EBUSY error
-> from cfg80211. This happens from path
-> nl80211_start_ap->cfg80211_can_use_chan.  cfg80211_can_use_chan
-> returns EBUSY error. In our design if mwifiex STA is already
-> associated on some different channel, AP follows this channel and BSS
-> is started using STA channel settings. If we start hostapd on same
-> channel, BSS is successfully started, but association requests from
-> external station result in failure.
-
-
-i got the same EBUSY error when i tried to start a P2P-GO in a different
-channel when my other concurrent STA is associated to some other channel.
-first cfg80211_can_use_chan ->  cfg80211_can_use_iftype_chan
-when driver advertises num_different_channels as 1
-it seems to be caught under the following logic
-
-  case CHAN_MODE_SHARED:
-1077                         for (i = 0; i <
-CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
-1078                                 if (!used_channels[i] ||
-used_channels[i] == ch)
-1079                                         break;
-1080
-1081                         if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS)
-1082                                 return -EBUSY;
-1083
-1084                         if (used_channels[i] == NULL) {
-1085                                 used_channels[i] = ch;
-1086                                 num_different_channels++;
-1087                         }
-1088                         break;
-
-used_channels[1] is NULL
-num_different_channels becomes '2' when STA vifs is already in some
-other channel
-
-the following check in interface_combination for loop seems to cause
-the EBUSY error
-
-1111                 if (num_different_channels > c->num_different_channels)
-1112                         continue;
-
-not sure why assoc req from external STA fails.
-
-
->
-> Please let me know if we are missing something while registering
-> n_iface and iface combinations. num_different_channels in
-> ieee80211_iface_combination has been advertised as 1.
->
-> Regards,
-> Avinash.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 06b3207..49a0899 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -46,6 +46,11 @@ config BCMA_DRIVER_MIPS
+ 
+ 	  If unsure, say N
+ 
++config BCMA_DRIVER_GPIO
++	bool
++	depends on BCMA_DRIVER_MIPS
++	default y
++
+ config BCMA_SFLASH
+ 	bool
+ 	depends on BCMA_DRIVER_MIPS && BROKEN
+diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
+index 8ad42d4..734b32f 100644
+--- a/drivers/bcma/Makefile
++++ b/drivers/bcma/Makefile
+@@ -6,6 +6,7 @@ bcma-y					+= driver_pci.o
+ bcma-$(CONFIG_BCMA_DRIVER_PCI_HOSTMODE)	+= driver_pci_host.o
+ bcma-$(CONFIG_BCMA_DRIVER_MIPS)		+= driver_mips.o
+ bcma-$(CONFIG_BCMA_DRIVER_GMAC_CMN)	+= driver_gmac_cmn.o
++bcma-$(CONFIG_BCMA_DRIVER_GPIO)		+= driver_gpio.o
+ bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
+ bcma-$(CONFIG_BCMA_HOST_SOC)		+= host_soc.o
+ obj-$(CONFIG_BCMA)			+= bcma.o
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+new file mode 100644
+index 0000000..59436f2
+--- /dev/null
++++ b/drivers/bcma/driver_gpio.c
+@@ -0,0 +1,90 @@
++/*
++ * Broadcom specific AMBA
++ * GPIO driver for SoCs
++ *
++ * Copyright 2012, Hauke Mehrtens <hauke@hauke-m.de>
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++
++#include <linux/export.h>
++#include <linux/bcma/bcma.h>
++#include <linux/bcma/bcma_driver_gpio.h>
++
++u32 bcma_gpio_in(struct bcma_bus *bus, u32 mask)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	res = bcma_chipco_gpio_in(&bus->drv_cc, mask);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(bcma_gpio_in);
++
++u32 bcma_gpio_out(struct bcma_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	res = bcma_chipco_gpio_out(&bus->drv_cc, mask, value);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(bcma_gpio_out);
++
++u32 bcma_gpio_outen(struct bcma_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	res = bcma_chipco_gpio_outen(&bus->drv_cc, mask, value);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(bcma_gpio_outen);
++
++u32 bcma_gpio_control(struct bcma_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	res = bcma_chipco_gpio_control(&bus->drv_cc, mask, value);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(bcma_gpio_control);
++
++u32 bcma_gpio_intmask(struct bcma_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	res = bcma_chipco_gpio_intmask(&bus->drv_cc, mask, value);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(bcma_gpio_intmask);
++
++u32 bcma_gpio_polarity(struct bcma_bus *bus, u32 mask, u32 value)
++{
++	unsigned long flags;
++	u32 res = 0;
++
++	spin_lock_irqsave(&bus->gpio_lock, flags);
++	res = bcma_chipco_gpio_polarity(&bus->drv_cc, mask, value);
++	spin_unlock_irqrestore(&bus->gpio_lock, flags);
++
++	return res;
++}
++EXPORT_SYMBOL(bcma_gpio_polarity);
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 8d0b571..e4e444e 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -422,6 +422,10 @@ void bcma_init_bus(struct bcma_bus *bus)
+ 	if (bus->init_done)
+ 		return;
+ 
++#ifdef CONFIG_BCMA_DRIVER_GPIO
++	spin_lock_init(&bus->gpio_lock);
++#endif
++
+ 	INIT_LIST_HEAD(&bus->cores);
+ 	bus->nr_cores = 0;
+ 
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 1954a4e..2b535c9 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -255,6 +255,11 @@ struct bcma_bus {
+ 	struct bcma_drv_mips drv_mips;
+ 	struct bcma_drv_gmac_cmn drv_gmac_cmn;
+ 
++#ifdef CONFIG_BCMA_DRIVER_GPIO
++	/* Lock for GPIO register access. */
++	spinlock_t gpio_lock;
++#endif /* CONFIG_BCMA_DRIVER_GPIO */
++
+ 	/* We decided to share SPROM struct with SSB as long as we do not need
+ 	 * any hacks for BCMA. This simplifies drivers code. */
+ 	struct ssb_sprom sprom;
+diff --git a/include/linux/bcma/bcma_driver_gpio.h b/include/linux/bcma/bcma_driver_gpio.h
+new file mode 100644
+index 0000000..1c99d6e
+--- /dev/null
++++ b/include/linux/bcma/bcma_driver_gpio.h
+@@ -0,0 +1,21 @@
++#ifndef LINUX_BCMA_DRIVER_GPIO_H_
++#define LINUX_BCMA_DRIVER_GPIO_H_
++
++#include <linux/types.h>
++#include <linux/bcma/bcma.h>
++
++#define BCMA_GPIO_CC_LINES	16
++
++u32 bcma_gpio_in(struct bcma_bus *bus, u32 mask);
++u32 bcma_gpio_out(struct bcma_bus *bus, u32 mask, u32 value);
++u32 bcma_gpio_outen(struct bcma_bus *bus, u32 mask, u32 value);
++u32 bcma_gpio_control(struct bcma_bus *bus, u32 mask, u32 value);
++u32 bcma_gpio_intmask(struct bcma_bus *bus, u32 mask, u32 value);
++u32 bcma_gpio_polarity(struct bcma_bus *bus, u32 mask, u32 value);
++
++static inline int bcma_gpio_count(struct bcma_bus *bus)
++{
++	return BCMA_GPIO_CC_LINES;
++}
++
++#endif /* LINUX_BCMA_DRIVER_GPIO_H_ */
 -- 
-thanks,
-shafi
+1.7.9.5
+
