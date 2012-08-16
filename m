@@ -1,46 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41757 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756555Ab2HUQ5S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 12:57:18 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.6 2/2] iwlwifi: protect SRAM debugfs
-Date: Tue, 21 Aug 2012 18:57:11 +0200
-Message-Id: <1345568231-20584-3-git-send-email-johannes@sipsolutions.net> (sfid-20120821_185725_108048_580DC130)
-In-Reply-To: <1345568231-20584-1-git-send-email-johannes@sipsolutions.net>
-References: <1345568231-20584-1-git-send-email-johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:57890 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756175Ab2HPJXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Aug 2012 05:23:42 -0400
+Message-ID: <502CBC15.6090804@openwrt.org> (sfid-20120816_112346_258862_1996DADA)
+Date: Thu, 16 Aug 2012 11:23:33 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: stop btcoex on device suspend
+References: <1344496046-2177-1-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1344496046-2177-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2012-08-09 9:07 AM, Rajkumar Manoharan wrote:
+> During suspend, the device will be moved to FULLSLEEP state.
+> As btcoex is never been stopped, the btcoex timer is running
+> and tries to access hw on fullsleep state. Fix that.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Why put ath9k_stop_btcoex here? mac80211 calls drv_stop on suspend, and
+ath9k_stop_btcoex is called early in ath9k_stop().
 
-If the device is not started, we can't read its
-SRAM and attempting to do so will cause issues.
-Protect the debugfs read.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/debugfs.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-index 46782f1..a47b306 100644
---- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-@@ -124,6 +124,9 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
- 	const struct fw_img *img;
- 	size_t bufsz;
- 
-+	if (!iwl_is_ready_rf(priv))
-+		return -EAGAIN;
-+
- 	/* default is to dump the entire data segment */
- 	if (!priv->dbgfs_sram_offset && !priv->dbgfs_sram_len) {
- 		priv->dbgfs_sram_offset = 0x800000;
--- 
-1.7.10.4
-
+- Felix
