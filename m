@@ -1,78 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.active-venture.com ([67.228.131.205]:54698 "EHLO
-	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753523Ab2HGLHk (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:41761 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029Ab2HQFEF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2012 07:07:40 -0400
-Date: Tue, 7 Aug 2012 04:07:48 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Christopher Sacchi <chris.sacchi@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH]: Autosleep patch.
-Message-ID: <20120807110748.GA12534@roeck-us.net> (sfid-20120807_130803_154390_92139B9A)
-References: <CAGh4K3L_nY5B22g5oMBuoY=a1OB7U10yH1ZJvn0dG_O5TVz6+Q@mail.gmail.com>
- <501FE4E9.3080004@xenotime.net>
+	Fri, 17 Aug 2012 01:04:05 -0400
+Received: by obbuo13 with SMTP id uo13so4745219obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 22:04:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <501FE4E9.3080004@xenotime.net>
+In-Reply-To: <01f801cd7b91$41fee2b0$c5fca810$@acksys.fr>
+References: <773DB8A82AB6A046AE0195C68612A3190138F360@sbs2003.acksys.local>
+ <CAG6hwVMir23S-v0p=r=vkDn5Cu7fOSSEXaAU5jtSrVsC-Bp4ow@mail.gmail.com> <01f801cd7b91$41fee2b0$c5fca810$@acksys.fr>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 16 Aug 2012 22:03:45 -0700
+Message-ID: <CAG6hwVOthC1of4HVfJ5SwJHgbWqFVPvr2v9p0HH2X2A+MQsTzQ@mail.gmail.com> (sfid-20120817_070435_531524_8F456BCD)
+Subject: Re: Mesh addressing issue
+To: voncken <cedric.voncken@acksys.fr>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 06, 2012 at 08:38:17AM -0700, Randy Dunlap wrote:
-> On 08/06/2012 08:13 AM, Christopher Sacchi wrote:
-> 
-> > This patch (listed below), changes an old function in autosleep.c in
-> > kernel version 3.5. It's code is listed from the first -- line to the
-> > 2nd to last -- line.
-> > This patch was checked with checkpatch.pl with no errors:
-> > --
-> > --- power/autosleep.c	2012-07-21 20:58:29.000000000 +0000
-> > +++ power/autosleepnew.c	2012-08-06 10:52:26.000000000 +0000
-> 
-> 
-> The file names should include the full path from the top level of the
-> kernel source tree.  E.g.:
-> 
-> --- linux.orig/kernel/power/autosleep.c
-> +++ linux/kernel/power/autosleep.c
-> 
-> This patch uses the name autosleepnew.c, which is not what is
-> required/expected.
-> 
-> Your previous patches were for wireless (mac80211) components, so they
-> needed to go to the linux-wireless mailing list.  This patch is not
-> about wireless, so don't send it to that mailing list, although you
-> could send it to the linux-pm@vger.kernel.org mailing list.
-> Please see the MAINTAINERS file for where to send patches.
-> 
-> 
-> > @@ -30,7 +30,7 @@ static void try_to_suspend(struct work_s
-> >  	if (!pm_get_wakeup_count(&initial_count, true))
-> >  		goto out;
-> > 
-> > -	mutex_lock(&autosleep_lock);
-> > +	mutex_lock_interruptable();
-> > 
+On Thu, Aug 16, 2012 at 2:26 AM, voncken <cedric.voncken@acksys.fr> wrote:
+>         Computer.pcap : This capture show the ICMP request sent by the
+> computer. The MAC address destination is unicast.
+>         Mp2_to_mp1.pcap : this capture show the ICMP request (frame 33)
+> from MP2 to MP1 in mesh network.  The MAC address destination is broadcast
 
-Plus, this code obviously never compiled. Nor does the submitter ever explain
-what he actually tries to accomplish.
+This is clearly wrong, thanks for reporting. Expect a patch fixing this shortly.
 
-Guenter
-
-> >  	if (!pm_save_wakeup_count(initial_count)) {
-> >  		mutex_unlock(&autosleep_lock);
-> > Signed-off-by: Christopher P. Sacchi <chris.sacchi@gmail.com>
-> > --
-> 
-> Signed-off-by: line is not part of the patch.  It should be near the
-> end of the patch description, before the actual patch.
-> 
-> Again, please read and follow Documentation/SubmittingPatches.
-> 
-> thanks.
-> 
-> -- 
-> ~Randy
-> 
+Thomas
