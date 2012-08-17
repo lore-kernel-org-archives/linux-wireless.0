@@ -1,77 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:2612 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750964Ab2H3Tkg (ORCPT
+Received: from [206.248.154.182] ([206.248.154.182]:38078 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757958Ab2HQMDw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 15:40:36 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 04/14] rt2x00: Align rt2500pci GPIOCSR definition with datasheet.
-Date: Thu, 30 Aug 2012 21:34:03 +0200
-Message-Id: <1346355248-5331-5-git-send-email-gwingerde@gmail.com> (sfid-20120830_214105_332558_60C39C23)
-In-Reply-To: <1346355248-5331-4-git-send-email-gwingerde@gmail.com>
-References: <1346355248-5331-1-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-2-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-3-git-send-email-gwingerde@gmail.com>
- <1346355248-5331-4-git-send-email-gwingerde@gmail.com>
+	Fri, 17 Aug 2012 08:03:52 -0400
+Message-ID: <502E32F5.3010205@infidigm.net> (sfid-20120817_140414_446069_3B0C85F7)
+Date: Fri, 17 Aug 2012 08:03:01 -0400
+From: Jonathan Bagg <drwho@infidigm.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: bkamatch@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: ath6kl: Add support for AR6004 hardware version 1.3
+References: <43a66e0f20b45e9cc461272e83f2c4e4.squirrel@www.infidigm.net>    <4FFC08C5.2050606@qca.qualcomm.com>    <71781241c331fcbb5687068ddc6bbb06.squirrel@www.infidigm.net>    <4FFD7621.5020207@qca.qualcomm.com>    <19811dfd94388fb6406373822974cee7.squirrel@www.infidigm.net>    <5005956F.3010300@qca.qualcomm.com>    <5007D509.4050809@qca.qualcomm.com> <5cf4071422583bd246540992af9f7582.squirrel@www.infidigm.net> <502DF458.8080900@qca.qualcomm.com>
+In-Reply-To: <502DF458.8080900@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename GPIOCSR_BIT<x> to GPIOCSR_VAL<x> to represent the actual
-meaning better.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: <stable@vger.kernel.org>
+> Hi Jon,
+>
+> sorry for the late answer, I was again on vacation.
+No worries.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index d2cf8a4..959d565 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -205,7 +205,7 @@ static int rt2500pci_rfkill_poll(struct rt2x00_dev *rt2x00dev)
- 	u32 reg;
- 
- 	rt2x00pci_register_read(rt2x00dev, GPIOCSR, &reg);
--	return rt2x00_get_field32(reg, GPIOCSR_BIT0);
-+	return rt2x00_get_field32(reg, GPIOCSR_VAL0);
- }
- 
- #ifdef CONFIG_RT2X00_LIB_LEDS
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/rt2x00/rt2500pci.h
-index 2aad7ba..9c10068 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.h
-@@ -789,16 +789,18 @@
- 
- /*
-  * GPIOCSR: GPIO control register.
-+ *	GPIOCSR_VALx: GPIO value
-+ *	GPIOCSR_DIRx: GPIO direction: 0 = output; 1 = input
-  */
- #define GPIOCSR				0x0120
--#define GPIOCSR_BIT0			FIELD32(0x00000001)
--#define GPIOCSR_BIT1			FIELD32(0x00000002)
--#define GPIOCSR_BIT2			FIELD32(0x00000004)
--#define GPIOCSR_BIT3			FIELD32(0x00000008)
--#define GPIOCSR_BIT4			FIELD32(0x00000010)
--#define GPIOCSR_BIT5			FIELD32(0x00000020)
--#define GPIOCSR_BIT6			FIELD32(0x00000040)
--#define GPIOCSR_BIT7			FIELD32(0x00000080)
-+#define GPIOCSR_VAL0			FIELD32(0x00000001)
-+#define GPIOCSR_VAL1			FIELD32(0x00000002)
-+#define GPIOCSR_VAL2			FIELD32(0x00000004)
-+#define GPIOCSR_VAL3			FIELD32(0x00000008)
-+#define GPIOCSR_VAL4			FIELD32(0x00000010)
-+#define GPIOCSR_VAL5			FIELD32(0x00000020)
-+#define GPIOCSR_VAL6			FIELD32(0x00000040)
-+#define GPIOCSR_VAL7			FIELD32(0x00000080)
- #define GPIOCSR_DIR0			FIELD32(0x00000100)
- #define GPIOCSR_DIR1			FIELD32(0x00000200)
- #define GPIOCSR_DIR2			FIELD32(0x00000400)
--- 
-1.7.11.1
+Also, I was only able to get a max of 65Mbps / MCS7.  I think the 9374 
+is capable of faster? I've never used a 2-stream device....not sure if I 
+need to configure it to use the 2-streams, or if the ath6kl driver only 
+supports up to MCS7?
 
+Jon
