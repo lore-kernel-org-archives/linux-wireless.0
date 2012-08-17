@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li271-223.members.linode.com ([178.79.152.223]:40617 "EHLO
-	mail.mleia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755586Ab2HFTjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:39:17 -0400
-Message-ID: <50201D62.2020701@mleia.com>
-Date: Mon, 06 Aug 2012 22:39:14 +0300
-From: Vladimir Zapolskiy <vz@mleia.com>
-MIME-Version: 1.0
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:38332 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756022Ab2HQXF4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Aug 2012 19:05:56 -0400
+Received: by yhmm54 with SMTP id m54so4442653yhm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Aug 2012 16:05:56 -0700 (PDT)
+Date: Fri, 17 Aug 2012 18:05:51 -0500
+From: "Saul St. John" <saul.stjohn@gmail.com>
 To: Arend van Spriel <arend@broadcom.com>
-CC: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH] brcm80211: smac: set interface down on reset
-References: <1344115747-25627-1-git-send-email-vz@mleia.com>
-In-Reply-To: <1344115747-25627-1-git-send-email-vz@mleia.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: linux-wireless@vger.kernel.org,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/2] bcma: expose cc sprom to sysfs
+Message-ID: <20120817230551.GA6814@eris.garyseven.net> (sfid-20120818_010600_653353_FD837BC2)
+References: <20120816190616.GE6726@eris.garyseven.net>
+ <502E4B70.5090900@broadcom.com>
+ <20120817225406.GA6510@eris.garyseven.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120817225406.GA6510@eris.garyseven.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On Fri, Aug 17, 2012 at 05:54:06PM -0500, Saul St. John wrote:
+> [2] http://www.tonymacx86.com/network/25669-rebranding-bcm94322mc-based-prasys-guide-what-device-id-8.html#post291328
+> [3] http://www.tonymacx86.com/network/26904-help-rebrand-broadcom-bcm94322-5.html
 
-what do you think about the proposed change? For me the problem is
-quite severe, for the last several months I had to patch the kernel
-to have functional BCM43225 on my laptop, hopefully the fix should go to the
-stable branches as well.
-
-On 05.08.2012 00:29, Vladimir Zapolskiy wrote:
-> This change marks interface as down on reset, otherwise the driver can't
-> reinitialize itself properly.
->
-> Without the change a transient problem turns out to be critical and leads
-> to inavailability to reset the driver without brcmsmac module unload/load
-> cycle:
-
-s/inavailability/unavailability/
-
->      ieee80211 phy0: wl0: PSM microcode watchdog fired at 5993 (seconds). Resetting.
->      brcms_c_dpc : PSM Watchdog, chipid 0xa8d9, chiprev 0x1
->      ieee80211 phy0: wl0: fatal error, reinitializing
->      ieee80211 phy0: Hardware restart was requested
->      ieee80211 phy0: brcms_ops_start: brcms_up() returned -19
->
-> Signed-off-by: Vladimir Zapolskiy<vz@mleia.com>
-> Cc: Arend van Spriel<arend@broadcom.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    3 +++
->   1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> index 192ad5c..a5edebe 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> @@ -1233,6 +1233,9 @@ uint brcms_reset(struct brcms_info *wl)
->   	/* dpc will not be rescheduled */
->   	wl->resched = false;
->
-> +	/* inform publicly that interface is down */
-> +	wl->pub->up = false;
-> +
->   	return 0;
->   }
->
-
--- 
-With best wishes,
-Vladimir
+Sorry, these two references are not actually on point. Please ignore them, my 
+grep-fu is off today.
