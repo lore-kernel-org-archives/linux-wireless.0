@@ -1,180 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43805 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab2HFJMN convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45492 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964787Ab2HQC7m convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 05:12:13 -0400
-Received: by eaac11 with SMTP id c11so742626eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 02:12:12 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH V2] bcma: add basic NAND flash driver
-Date: Mon, 06 Aug 2012 11:12:06 +0200
-Message-ID: <2659000.qYqUYD2ChA@flexo> (sfid-20120806_111217_933385_E9F2BE4B)
-In-Reply-To: <1344196987-32041-1-git-send-email-zajec5@gmail.com>
-References: <1344196987-32041-1-git-send-email-zajec5@gmail.com>
+	Thu, 16 Aug 2012 22:59:42 -0400
+From: "Chen, Stephen" <scchen@qca.qualcomm.com>
+To: Marco Fonseca <marco@tampabay.rr.com>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: carl9170: Unintentional transmission in monitor mode?
+Date: Fri, 17 Aug 2012 02:59:40 +0000
+Message-ID: <124AAE9739743843BE54ED9463A8330D012F052D@NASANEXD02D.na.qualcomm.com> (sfid-20120817_045947_073438_2037491C)
+References: <20120809165434.GA13409@192.168.1.10>
+ <201208092143.28506.chunkeey@googlemail.com>
+ <1345144855.4665.3.camel@jlt3.sipsolutions.net>
+ <201208162134.32152.chunkeey@googlemail.com>
+ <124AAE9739743843BE54ED9463A8330D012EFF15@NASANEXD02D.na.qualcomm.com>
+ <20120817023016.GA7823@192.168.1.10>
+In-Reply-To: <20120817023016.GA7823@192.168.1.10>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Rafal,
+To be honest, I have no idea why the device was transmitting invalid frame.
+If the device is not in monitor mode, will it still transmit invalid frame in your setup?
 
-Some minor comments below.
 
-On Sunday 05 August 2012 22:03:07 Rafał Miłecki wrote:
-> This is basic driver for NAND flash memory that allows reading it's
-> content. It was succesfully tested on Netgear WNDR4500 which is BCM4706
-> based router.
+Thank you.
+Stephen
+
+
+-----Original Message-----
+From: Marco Fonseca [mailto:marco@tampabay.rr.com] 
+Sent: Friday, August 17, 2012 10:30 AM
+To: Chen, Stephen
+Cc: Christian Lamparter; Johannes Berg; linux-wireless@vger.kernel.org
+Subject: Re: carl9170: Unintentional transmission in monitor mode?
+
+In my setup I had used a secondary sniffer in order to see what was going on.
+I was able to reproduce the problem with a single ping with a payload of 2000 (less to look at in wireshark), but I was never able to capture a valid frame from the AR9170.  I do know it was transmitting though, as I could see it on the spectrum analyzer.  I just assumed whatever was going out wasn't a valid
+frame...(?)
+
+Marco
+
+
+On Fri, Aug 17, 2012 at 02:03:00AM +0000, Chen, Stephen wrote:
+> Can we tell what kind of unexpected frame are been transmitted? (Data 
+> frame or which kind of control frame?) That may give us a clue.
 > 
-> This driver has been written using specs at:
-> http://bcm-v4.sipsolutions.net/NAND_Flash
 > 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> CC: Larry Finger <Larry.Finger@lwfinger.net>
-> CC: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
-> V2: Split bcma_nflash_read into three functions as suggested by Hauke
->     Use bcma_* for printing
-> ---
->  drivers/bcma/Kconfig                        |    4 +-
->  drivers/bcma/bcma_private.h                 |    2 +-
->  drivers/bcma/driver_chipcommon_nflash.c     |  402 
-++++++++++++++++++++++++++-
->  drivers/bcma/driver_chipcommon_pmu.c        |    2 +-
->  include/linux/bcma/bcma_driver_chipcommon.h |   88 ++++++
->  5 files changed, 490 insertions(+), 8 deletions(-)
+> Thank you.
+> Stephen
 > 
-> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> index 8d1f777..a58d7a9 100644
-> --- a/drivers/bcma/Kconfig
-> +++ b/drivers/bcma/Kconfig
-> @@ -53,8 +53,8 @@ config BCMA_SFLASH
->  	default y
->  
->  config BCMA_NFLASH
-> -	bool
-> -	depends on BCMA_DRIVER_MIPS && BROKEN
-> +	bool "Support for NAND flash"
-> +	depends on BCMA_DRIVER_MIPS
->  	default y
->  
->  config BCMA_DRIVER_GMAC_CMN
-> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-> index 3cf9cc9..9895c7e 100644
-> --- a/drivers/bcma/bcma_private.h
-> +++ b/drivers/bcma/bcma_private.h
-> @@ -68,7 +68,7 @@ int bcma_nflash_init(struct bcma_drv_cc *cc);
->  #else
->  static inline int bcma_nflash_init(struct bcma_drv_cc *cc)
->  {
-> -	bcma_err(cc->core->bus, "NAND flash not supported\n");
-> +	bcma_err(cc->core->bus, "NAND flash support not enabled\n");
->  	return 0;
->  }
->  #endif /* CONFIG_BCMA_NFLASH */
-> diff --git a/drivers/bcma/driver_chipcommon_nflash.c 
-b/drivers/bcma/driver_chipcommon_nflash.c
-> index 574d624..0d11e6f 100644
-> --- a/drivers/bcma/driver_chipcommon_nflash.c
-> +++ b/drivers/bcma/driver_chipcommon_nflash.c
-> @@ -2,18 +2,412 @@
->   * Broadcom specific AMBA
->   * ChipCommon NAND flash interface
->   *
-> + * Copyright 2012, Rafał Miłecki <zajec5@gmail.com>
-> + *
->   * Licensed under the GNU/GPL. See COPYING for details.
->   */
->  
-> +#include "bcma_private.h"
->  #include <linux/bcma/bcma.h>
->  #include <linux/bcma/bcma_driver_chipcommon.h>
->  #include <linux/delay.h>
->  
-> -#include "bcma_private.h"
-> +/* Broadcom uses 1'000'000 but it seems to be too many. Tests on WNDR4500 
-has
-> + * shown 6 retries were enough. */
-> +#define NFLASH_READY_RETRIES		100
->  
-> -/* Initialize NAND flash access */
-> -int bcma_nflash_init(struct bcma_drv_cc *cc)
-> +/**************************************************
-> + * Various helpers
-> + **************************************************/
-> +
-> +static inline u8 bcma_nflash_ns_to_cycle(u16 ns, u16 clock)
-> +{
-> +	return ((ns * 1000 * clock) / 1000000) + 1;
-> +}
-> +
-> +static void bcma_nflash_enable(struct bcma_drv_cc *cc, bool enable)
-> +{
-> +	if (cc->core->id.rev == 38) {
-> +		if (cc->status & BCMA_CC_CHIPST_REV38_NAND_BOOT)
-> +			return;
-> +		if (enable)
-> +			bcma_chipco_chipctl_maskset(cc, 1, ~0, 0x10000);
-> +		else
-> +			bcma_chipco_chipctl_maskset(cc, 1, ~0x10000, 0);
-> +	}
-> +}
-
-Can you define a constant for this bit?
-
-> +
-> +static int bcma_nflash_ctl_cmd(struct bcma_drv_cc *cc, u32 code)
-> +{
-> +	int i = 0;
-> +
-> +	bcma_cc_write32(cc, BCMA_CC_NFLASH_CTL, 0x80000000 | code);
-> +	for (i = 0; i < NFLASH_READY_RETRIES; i++) {
-> +		if (!(bcma_cc_read32(cc, BCMA_CC_NFLASH_CTL) & 0x80000000)) {
-> +			i = 0;
-> +			break;
-> +		}
-> +	}
-> +	if (i) {
-> +		bcma_err(cc->core->bus, "NFLASH control command not ready!\n");
-> +		return -EBUSY;
-> +	}
-> +	return 0;
-
-Would not it be simple to check for i == NFLASH_READY_RETRIES instead of 
-setting the value of i in the for loop? That sounds more natural. You might 
-also want to add a cpu_relax() right after reading the NFLASH_CTL register.
-
-> +}
-> +
-> +int bcma_nflash_poll(struct bcma_drv_cc *cc)
-> +{
-> +	int i;
-> +	u32 tmp;
-> +
-> +	if (cc->core->bus->chipinfo.id == BCMA_CHIP_ID_BCM4706) {
-> +		for (i = 0; i < NFLASH_READY_RETRIES; i++) {
-> +			if (bcma_cc_read32(cc, BCMA_CC_NFLASH_CTL) &
-> +			    0x04000000) {
-> +				if (bcma_cc_read32(cc, BCMA_CC_NFLASH_CTL) &
-> +				    BCMA_CC_NFLASH_CTL_ERR) {
-> +					bcma_err(cc->core->bus, "Error on polling\n");
-> +					return -EBUSY;
-> +				} else {
-> +					return 0;
-> +				}
-> +			}
-> +		}
-> +	} else {
-> +		for (i = 0; i < NFLASH_READY_RETRIES; i++) {
-> +			tmp = bcma_cc_read32(cc, BCMA_CC_NAND_INTFC_STATUS);
-> +			if ((tmp & 0xC0000000) == 0xC0000000)
-> +				return 0;
-> +		}
-> +	}
-
-Use constants here too.
+> -----Original Message-----
+> From: Christian Lamparter [mailto:chunkeey@googlemail.com]
+> Sent: Friday, August 17, 2012 3:35 AM
+> To: Johannes Berg
+> Cc: Marco Fonseca; linux-wireless@vger.kernel.org; Chen, Stephen
+> Subject: Re: carl9170: Unintentional transmission in monitor mode?
+> 
+> On Thursday, August 16, 2012 09:20:55 PM Johannes Berg wrote:
+> > On Thu, 2012-08-09 at 21:43 +0200, Christian Lamparter wrote:
+> > > On Thursday, August 09, 2012 06:54:34 PM Marco Fonseca wrote:
+> > > > Hello All,
+> > > > 
+> > > > I've noticed unexpected transmissions from the AR9170 while in 
+> > > > monitor mode and using tcpdump (and sometimes without tcpdump 
+> > > > running).  These transmissions degrade (pretty significantly) 
+> > > > performance of other STA/AP on the channel (as seen by iperf 
+> > > > going from 60mbit/s to almost nill).  As best I can tell these 
+> > > > transmissions never coalesces into an actual frame in the air 
+> > > > (at least not one I'm able to pick up with a second different adapter in monitor mode).
+> > > > 
+> > > > Are there any known reasons/bugs on this?  Is there anyway to 
+> > > > completely silence the transmitter of the AR9170 while still allowing reception?
+> > > > 
+> > > yes. <http://www.spinics.net/lists/linux-wireless/msg88896.html>
+> > > 
+> > > a solution is described in:
+> > > <http://www.spinics.net/lists/linux-wireless/msg89279.html>
+> > > 
+> > > (iw dev wlanX set monitor none - if I'm not mistaken)
+> > 
+> > I've seen this before too -- what flag causes the issue, and why?
+> Well that would be:
+> FIF_OTHER_BSS or FIF_PROMISC_IN_BSS
+> 
+> either one of these will set following flags for the hardware:
+> 
+> AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER
+> AR9170_MAC_SNIFFER_ENABLE_PROMISC
+> 
+> About the issue, I'm really can't tell w/o schematics of the hardware. It could be that ACK_IN_SNIFFER is more of a debug/test flag than a real feature?
+> 
+> (Anyway, I cc'd Stephen. Maybe he knows more)
+> 
+> Regards,
+> 	Chr
