@@ -1,36 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6290 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838Ab2HNOLl (ORCPT
+Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:56290 "EHLO
+	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932106Ab2HQCaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 10:11:41 -0400
-Message-ID: <502A5C97.8070107@qca.qualcomm.com> (sfid-20120814_161146_197123_E9911553)
-Date: Tue, 14 Aug 2012 17:11:35 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 16 Aug 2012 22:30:19 -0400
+Date: Thu, 16 Aug 2012 22:30:16 -0400
+From: Marco Fonseca <marco@tampabay.rr.com>
+To: "Chen, Stephen" <scchen@qca.qualcomm.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: carl9170: Unintentional transmission in monitor mode?
+Message-ID: <20120817023016.GA7823@192.168.1.10> (sfid-20120817_043058_581703_1B158658)
+References: <20120809165434.GA13409@192.168.1.10>
+ <201208092143.28506.chunkeey@googlemail.com>
+ <1345144855.4665.3.camel@jlt3.sipsolutions.net>
+ <201208162134.32152.chunkeey@googlemail.com>
+ <124AAE9739743843BE54ED9463A8330D012EFF15@NASANEXD02D.na.qualcomm.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: fix incorrect use of IEEE80211_NUM_BANDS
-References: <20120712091311.9751.60082.stgit@localhost6.localdomain6>
-In-Reply-To: <20120712091311.9751.60082.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <124AAE9739743843BE54ED9463A8330D012EFF15@NASANEXD02D.na.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/12/2012 12:13 PM, Kalle Valo wrote:
-> ath6kl was incorrectly assuming that IEEE80211_NUM_BANDS will always be 2
-> and used that also in the firmware WMI interface definitions. But after
-> the support for 60 GHz was added to cfg80211 IEEE80211_NUM_BANDS changed to 3
-> and this can cause all sort of problems, possibly even memory corruption.
-> I only found this during code review and didn't notice any bugs, but I'm
-> sure there are a few lurking somewhere.
+In my setup I had used a secondary sniffer in order to see what was going on.
+I was able to reproduce the problem with a single ping with a payload of 2000
+(less to look at in wireshark), but I was never able to capture a valid frame
+from the AR9170.  I do know it was transmitting though, as I could see it on
+the spectrum analyzer.  I just assumed whatever was going out wasn't a valid
+frame...(?)
+
+Marco
+
+
+On Fri, Aug 17, 2012 at 02:03:00AM +0000, Chen, Stephen wrote:
+> Can we tell what kind of unexpected frame are been transmitted? (Data frame or which kind of control frame?)
+> That may give us a clue.
 > 
-> To fix this rename unused A_NUM_BANDS to ATH6KL_NUM_BANDS, which is
-> always defined to be 2, and use that in WMI.
 > 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-Applied to ath6kl.git.
-
-Kalle
-
+> Thank you.
+> Stephen
+> 
+> -----Original Message-----
+> From: Christian Lamparter [mailto:chunkeey@googlemail.com] 
+> Sent: Friday, August 17, 2012 3:35 AM
+> To: Johannes Berg
+> Cc: Marco Fonseca; linux-wireless@vger.kernel.org; Chen, Stephen
+> Subject: Re: carl9170: Unintentional transmission in monitor mode?
+> 
+> On Thursday, August 16, 2012 09:20:55 PM Johannes Berg wrote:
+> > On Thu, 2012-08-09 at 21:43 +0200, Christian Lamparter wrote:
+> > > On Thursday, August 09, 2012 06:54:34 PM Marco Fonseca wrote:
+> > > > Hello All,
+> > > > 
+> > > > I've noticed unexpected transmissions from the AR9170 while in 
+> > > > monitor mode and using tcpdump (and sometimes without tcpdump 
+> > > > running).  These transmissions degrade (pretty significantly) 
+> > > > performance of other STA/AP on the channel (as seen by iperf going 
+> > > > from 60mbit/s to almost nill).  As best I can tell these 
+> > > > transmissions never coalesces into an actual frame in the air (at 
+> > > > least not one I'm able to pick up with a second different adapter in monitor mode).
+> > > > 
+> > > > Are there any known reasons/bugs on this?  Is there anyway to 
+> > > > completely silence the transmitter of the AR9170 while still allowing reception?
+> > > > 
+> > > yes. <http://www.spinics.net/lists/linux-wireless/msg88896.html>
+> > > 
+> > > a solution is described in:
+> > > <http://www.spinics.net/lists/linux-wireless/msg89279.html>
+> > > 
+> > > (iw dev wlanX set monitor none - if I'm not mistaken)
+> > 
+> > I've seen this before too -- what flag causes the issue, and why?
+> Well that would be:
+> FIF_OTHER_BSS or FIF_PROMISC_IN_BSS
+> 
+> either one of these will set following flags for the hardware:
+> 
+> AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER
+> AR9170_MAC_SNIFFER_ENABLE_PROMISC
+> 
+> About the issue, I'm really can't tell w/o schematics of the hardware. It could be that ACK_IN_SNIFFER is more of a debug/test flag than a real feature?
+> 
+> (Anyway, I cc'd Stephen. Maybe he knows more)
+> 
+> Regards,
+> 	Chr
