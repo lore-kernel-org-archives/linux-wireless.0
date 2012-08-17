@@ -1,156 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na6sys009bog029.obsmtp.com ([74.125.150.103]:41640 "EHLO
-	na6sys009bog029.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753007Ab2HDBUB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58045 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933514Ab2HQCDC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 21:20:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 13/16] mwifiex: cleanup TX/RX BA tables for uAP
-Date: Fri,  3 Aug 2012 18:06:11 -0700
-Message-Id: <1344042374-6892-14-git-send-email-bzhao@marvell.com> (sfid-20120804_032005_995394_38C47349)
-In-Reply-To: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
-References: <1344042374-6892-1-git-send-email-bzhao@marvell.com>
+	Thu, 16 Aug 2012 22:03:02 -0400
+From: "Chen, Stephen" <scchen@qca.qualcomm.com>
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Marco Fonseca <marco@tampabay.rr.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: carl9170: Unintentional transmission in monitor mode?
+Date: Fri, 17 Aug 2012 02:03:00 +0000
+Message-ID: <124AAE9739743843BE54ED9463A8330D012EFF15@NASANEXD02D.na.qualcomm.com> (sfid-20120817_040308_295270_BA486E39)
+References: <20120809165434.GA13409@192.168.1.10>
+ <201208092143.28506.chunkeey@googlemail.com>
+ <1345144855.4665.3.camel@jlt3.sipsolutions.net>
+ <201208162134.32152.chunkeey@googlemail.com>
+In-Reply-To: <201208162134.32152.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
-
-Cleanup TX/RX BA tables when AP receives deauthentication from
-associated station. During BSS_IDLE event, all wmm queues, BA
-streams created for AP interface are deleted.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.c           |   26 ++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/11n.h           |    1 +
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   25 +++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/11n_rxreorder.h |    1 +
- drivers/net/wireless/mwifiex/uap_event.c     |    5 +++++
- 5 files changed, 58 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index e535c93..d273273 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -726,3 +726,29 @@ int mwifiex_get_tx_ba_stream_tbl(struct mwifiex_private *priv,
- 
- 	return count;
- }
-+
-+/*
-+ * This function retrieves the entry for specific tx BA stream table by RA and
-+ * deletes it.
-+ */
-+void mwifiex_del_tx_ba_stream_tbl_by_ra(struct mwifiex_private *priv, u8 *ra)
-+{
-+	struct mwifiex_tx_ba_stream_tbl *tbl, *tmp;
-+	unsigned long flags;
-+
-+	if (!ra)
-+		return;
-+
-+	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
-+	list_for_each_entry_safe(tbl, tmp, &priv->tx_ba_stream_tbl_ptr, list) {
-+		if (!memcmp(tbl->ra, ra, ETH_ALEN)) {
-+			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
-+					       flags);
-+			mwifiex_11n_delete_tx_ba_stream_tbl_entry(priv, tbl);
-+			spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
-+		}
-+	}
-+	spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
-+
-+	return;
-+}
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index 6d2edb4..67c087c 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -69,6 +69,7 @@ int mwifiex_cmd_recfg_tx_buf(struct mwifiex_private *priv,
- int mwifiex_cmd_amsdu_aggr_ctrl(struct host_cmd_ds_command *cmd,
- 				int cmd_action,
- 				struct mwifiex_ds_11n_amsdu_aggr_ctrl *aa_ctrl);
-+void mwifiex_del_tx_ba_stream_tbl_by_ra(struct mwifiex_private *priv, u8 *ra);
- 
- /*
-  * This function checks whether AMPDU is allowed or not for a particular TID.
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index e43d27d..24e2582 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -176,6 +176,31 @@ mwifiex_11n_get_rx_reorder_tbl(struct mwifiex_private *priv, int tid, u8 *ta)
- 	return NULL;
- }
- 
-+/* This function retrieves the pointer to an entry in Rx reordering
-+ * table which matches the given TA and deletes it.
-+ */
-+void mwifiex_11n_del_rx_reorder_tbl_by_ta(struct mwifiex_private *priv, u8 *ta)
-+{
-+	struct mwifiex_rx_reorder_tbl *tbl, *tmp;
-+	unsigned long flags;
-+
-+	if (!ta)
-+		return;
-+
-+	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
-+	list_for_each_entry_safe(tbl, tmp, &priv->rx_reorder_tbl_ptr, list) {
-+		if (!memcmp(tbl->ta, ta, ETH_ALEN)) {
-+			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
-+					       flags);
-+			mwifiex_del_rx_reorder_entry(priv, tbl);
-+			spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
-+		}
-+	}
-+	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
-+
-+	return;
-+}
-+
- /*
-  * This function finds the last sequence number used in the packets
-  * buffered in Rx reordering table.
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-index 13ecb61..7284859 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-@@ -72,5 +72,6 @@ struct mwifiex_rx_reorder_tbl *mwifiex_11n_get_rxreorder_tbl(struct
- 							   u8 *ta);
- struct mwifiex_rx_reorder_tbl *
- mwifiex_11n_get_rx_reorder_tbl(struct mwifiex_private *priv, int tid, u8 *ta);
-+void mwifiex_11n_del_rx_reorder_tbl_by_ta(struct mwifiex_private *priv, u8 *ta);
- 
- #endif /* _MWIFIEX_11N_RXREORDER_H_ */
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index a10bd95..14d4f04 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -226,10 +226,15 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 			     MWIFIEX_UAP_EVENT_EXTRA_HEADER;
- 		cfg80211_del_sta(priv->netdev, deauth_mac, GFP_KERNEL);
- 
-+		if (priv->ap_11n_enabled) {
-+			mwifiex_11n_del_rx_reorder_tbl_by_ta(priv, deauth_mac);
-+			mwifiex_del_tx_ba_stream_tbl_by_ra(priv, deauth_mac);
-+		}
- 		mwifiex_del_sta_entry(priv, deauth_mac);
- 		break;
- 	case EVENT_UAP_BSS_IDLE:
- 		priv->media_connected = false;
-+		mwifiex_clean_txrx(priv);
- 		mwifiex_del_all_sta_list(priv);
- 		break;
- 	case EVENT_UAP_BSS_ACTIVE:
--- 
-1.7.0.2
-
+Q2FuIHdlIHRlbGwgd2hhdCBraW5kIG9mIHVuZXhwZWN0ZWQgZnJhbWUgYXJlIGJlZW4gdHJhbnNt
+aXR0ZWQ/IChEYXRhIGZyYW1lIG9yIHdoaWNoIGtpbmQgb2YgY29udHJvbCBmcmFtZT8pDQpUaGF0
+IG1heSBnaXZlIHVzIGEgY2x1ZS4NCg0KDQpUaGFuayB5b3UuDQpTdGVwaGVuDQoNCi0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDaHJpc3RpYW4gTGFtcGFydGVyIFttYWlsdG86Y2h1
+bmtlZXlAZ29vZ2xlbWFpbC5jb21dIA0KU2VudDogRnJpZGF5LCBBdWd1c3QgMTcsIDIwMTIgMzoz
+NSBBTQ0KVG86IEpvaGFubmVzIEJlcmcNCkNjOiBNYXJjbyBGb25zZWNhOyBsaW51eC13aXJlbGVz
+c0B2Z2VyLmtlcm5lbC5vcmc7IENoZW4sIFN0ZXBoZW4NClN1YmplY3Q6IFJlOiBjYXJsOTE3MDog
+VW5pbnRlbnRpb25hbCB0cmFuc21pc3Npb24gaW4gbW9uaXRvciBtb2RlPw0KDQpPbiBUaHVyc2Rh
+eSwgQXVndXN0IDE2LCAyMDEyIDA5OjIwOjU1IFBNIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+IE9u
+IFRodSwgMjAxMi0wOC0wOSBhdCAyMTo0MyArMDIwMCwgQ2hyaXN0aWFuIExhbXBhcnRlciB3cm90
+ZToNCj4gPiBPbiBUaHVyc2RheSwgQXVndXN0IDA5LCAyMDEyIDA2OjU0OjM0IFBNIE1hcmNvIEZv
+bnNlY2Egd3JvdGU6DQo+ID4gPiBIZWxsbyBBbGwsDQo+ID4gPiANCj4gPiA+IEkndmUgbm90aWNl
+ZCB1bmV4cGVjdGVkIHRyYW5zbWlzc2lvbnMgZnJvbSB0aGUgQVI5MTcwIHdoaWxlIGluIA0KPiA+
+ID4gbW9uaXRvciBtb2RlIGFuZCB1c2luZyB0Y3BkdW1wIChhbmQgc29tZXRpbWVzIHdpdGhvdXQg
+dGNwZHVtcCANCj4gPiA+IHJ1bm5pbmcpLiAgVGhlc2UgdHJhbnNtaXNzaW9ucyBkZWdyYWRlIChw
+cmV0dHkgc2lnbmlmaWNhbnRseSkgDQo+ID4gPiBwZXJmb3JtYW5jZSBvZiBvdGhlciBTVEEvQVAg
+b24gdGhlIGNoYW5uZWwgKGFzIHNlZW4gYnkgaXBlcmYgZ29pbmcgDQo+ID4gPiBmcm9tIDYwbWJp
+dC9zIHRvIGFsbW9zdCBuaWxsKS4gIEFzIGJlc3QgSSBjYW4gdGVsbCB0aGVzZSANCj4gPiA+IHRy
+YW5zbWlzc2lvbnMgbmV2ZXIgY29hbGVzY2VzIGludG8gYW4gYWN0dWFsIGZyYW1lIGluIHRoZSBh
+aXIgKGF0IA0KPiA+ID4gbGVhc3Qgbm90IG9uZSBJJ20gYWJsZSB0byBwaWNrIHVwIHdpdGggYSBz
+ZWNvbmQgZGlmZmVyZW50IGFkYXB0ZXIgaW4gbW9uaXRvciBtb2RlKS4NCj4gPiA+IA0KPiA+ID4g
+QXJlIHRoZXJlIGFueSBrbm93biByZWFzb25zL2J1Z3Mgb24gdGhpcz8gIElzIHRoZXJlIGFueXdh
+eSB0byANCj4gPiA+IGNvbXBsZXRlbHkgc2lsZW5jZSB0aGUgdHJhbnNtaXR0ZXIgb2YgdGhlIEFS
+OTE3MCB3aGlsZSBzdGlsbCBhbGxvd2luZyByZWNlcHRpb24/DQo+ID4gPiANCj4gPiB5ZXMuIDxo
+dHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21zZzg4ODk2Lmh0bWw+
+DQo+ID4gDQo+ID4gYSBzb2x1dGlvbiBpcyBkZXNjcmliZWQgaW46DQo+ID4gPGh0dHA6Ly93d3cu
+c3Bpbmljcy5uZXQvbGlzdHMvbGludXgtd2lyZWxlc3MvbXNnODkyNzkuaHRtbD4NCj4gPiANCj4g
+PiAoaXcgZGV2IHdsYW5YIHNldCBtb25pdG9yIG5vbmUgLSBpZiBJJ20gbm90IG1pc3Rha2VuKQ0K
+PiANCj4gSSd2ZSBzZWVuIHRoaXMgYmVmb3JlIHRvbyAtLSB3aGF0IGZsYWcgY2F1c2VzIHRoZSBp
+c3N1ZSwgYW5kIHdoeT8NCldlbGwgdGhhdCB3b3VsZCBiZToNCkZJRl9PVEhFUl9CU1Mgb3IgRklG
+X1BST01JU0NfSU5fQlNTDQoNCmVpdGhlciBvbmUgb2YgdGhlc2Ugd2lsbCBzZXQgZm9sbG93aW5n
+IGZsYWdzIGZvciB0aGUgaGFyZHdhcmU6DQoNCkFSOTE3MF9NQUNfUlhfQ1RSTF9BQ0tfSU5fU05J
+RkZFUg0KQVI5MTcwX01BQ19TTklGRkVSX0VOQUJMRV9QUk9NSVNDDQoNCkFib3V0IHRoZSBpc3N1
+ZSwgSSdtIHJlYWxseSBjYW4ndCB0ZWxsIHcvbyBzY2hlbWF0aWNzIG9mIHRoZSBoYXJkd2FyZS4g
+SXQgY291bGQgYmUgdGhhdCBBQ0tfSU5fU05JRkZFUiBpcyBtb3JlIG9mIGEgZGVidWcvdGVzdCBm
+bGFnIHRoYW4gYSByZWFsIGZlYXR1cmU/DQoNCihBbnl3YXksIEkgY2MnZCBTdGVwaGVuLiBNYXli
+ZSBoZSBrbm93cyBtb3JlKQ0KDQpSZWdhcmRzLA0KCUNocg0K
