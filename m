@@ -1,77 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34766 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753825Ab2HAU6u (ORCPT
+Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:58908 "EHLO
+	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752374Ab2HQMzy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 16:58:50 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Fri, 17 Aug 2012 08:55:54 -0400
+Date: Fri, 17 Aug 2012 08:55:47 -0400
+From: marco <marco@tampabay.rr.com>
+To: "Chen, Stephen" <scchen@qca.qualcomm.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: [PATCH 1/2] cfg80211: add channel flag to prohibit OFDM operation
-Date: Wed,  1 Aug 2012 15:58:42 -0500
-Message-Id: <1343854723-21987-2-git-send-email-seth.forshee@canonical.com> (sfid-20120801_225855_504212_023729E9)
-In-Reply-To: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: carl9170: Unintentional transmission in monitor mode?
+Message-ID: <20120817125547.GD7823@192.168.1.10> (sfid-20120817_145558_011528_2EF45A1E)
+References: <20120809165434.GA13409@192.168.1.10>
+ <201208092143.28506.chunkeey@googlemail.com>
+ <1345144855.4665.3.camel@jlt3.sipsolutions.net>
+ <201208162134.32152.chunkeey@googlemail.com>
+ <124AAE9739743843BE54ED9463A8330D012EFF15@NASANEXD02D.na.qualcomm.com>
+ <20120817023016.GA7823@192.168.1.10>
+ <124AAE9739743843BE54ED9463A8330D012F052D@NASANEXD02D.na.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <124AAE9739743843BE54ED9463A8330D012F052D@NASANEXD02D.na.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the only way for wireless drivers to tell whether or not OFDM
-is allowed on the current channel is to check the regulatory
-information. However, this requires hodling cfg80211_mutex, which is not
-visible to the drivers.
+No, I don't believe so.  I didn't do much testing in managed mode but when I
+did try it, it didn't exhibit the issue.
 
-Other regulatory restrictions are provided as flags in the channel
-definition, so let's do similarly with OFDM. This patch adds a new flag,
-IEEE80211_CHAN_NO_OFDM, to tell drivers that OFDM on a channel is not
-allowed. This flag is set on any channels for which regulatory indicates
-that OFDM is prohibited.
+Marco
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- include/net/cfg80211.h |    2 ++
- net/wireless/reg.c     |    2 ++
- 2 files changed, 4 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 493fa0c..3d254e1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -96,6 +96,7 @@ enum ieee80211_band {
-  * 	is not permitted.
-  * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
-  * 	is not permitted.
-+ * @IEEE80211_CHAN_NO_OFDM: OFDM is not allowed on this channel.
-  */
- enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_DISABLED		= 1<<0,
-@@ -104,6 +105,7 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_RADAR		= 1<<3,
- 	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
- 	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
-+	IEEE80211_CHAN_NO_OFDM		= 1<<6,
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2303ee7..0f3a8a1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -680,6 +680,8 @@ static u32 map_regdom_flags(u32 rd_flags)
- 		channel_flags |= IEEE80211_CHAN_NO_IBSS;
- 	if (rd_flags & NL80211_RRF_DFS)
- 		channel_flags |= IEEE80211_CHAN_RADAR;
-+	if (rd_flags & NL80211_RRF_NO_OFDM)
-+		channel_flags |= IEEE80211_CHAN_NO_OFDM;
- 	return channel_flags;
- }
- 
--- 
-1.7.9.5
-
+On Fri, Aug 17, 2012 at 02:59:40AM +0000, Chen, Stephen wrote:
+> To be honest, I have no idea why the device was transmitting invalid frame.
+> If the device is not in monitor mode, will it still transmit invalid frame in your setup?
+> 
+> 
+> Thank you.
+> Stephen
+> 
+> 
