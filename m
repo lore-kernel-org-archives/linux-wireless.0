@@ -1,30 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17560 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753471Ab2HNBFT (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:65216 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242Ab2HSKHr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 21:05:19 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Sun, 19 Aug 2012 06:07:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20521.41830.874571.640990@gargle.gargle.HOWL> (sfid-20120814_030556_458516_CFB03741)
-Date: Tue, 14 Aug 2012 06:31:26 +0530
-To: Antonio Quartulli <ordex@autistici.org>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k_htc: implement sta_rc_update() mac80211 callback
-In-Reply-To: <1344793001-27085-1-git-send-email-ordex@autistici.org>
-References: <1344793001-27085-1-git-send-email-ordex@autistici.org>
+In-Reply-To: <alpine.DEB.2.02.1208191149400.2031@localhost6.localdomain6>
+References: <1345325159-7365-1-git-send-email-Julia.Lawall@lip6.fr>
+	<CA++WF2MmTe6WP6MQRV-v1VwkpcUrw4hU6yh79NdG-K4snzQkbg@mail.gmail.com>
+	<alpine.DEB.2.02.1208191149400.2031@localhost6.localdomain6>
+Date: Sun, 19 Aug 2012 14:07:46 +0400
+Message-ID: <CA++WF2Np75wKXV-2C-FR2vhzcPvMu+z5MixcPy4ajOdHM0K88Q@mail.gmail.com> (sfid-20120819_120907_966963_BB801C6B)
+Subject: Re: [PATCH 1/5] drivers/net/wireless/ipw2x00/ipw2100.c: introduce
+ missing initialization
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Antonio Quartulli wrote:
-> In case of changes in the supported rates set for a given station, it is now
-> possible to use this callback to update the current internal state of the
-> station in the htc driver.
+On 19 August 2012 13:49, Julia Lawall <julia.lawall@lip6.fr> wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> The result of one call to a function is tested, and then at the second call
+> to the same function, the previous result, and not the current result, is
+> tested again.
+>
+> Also changed &bssid to bssid, at the suggestion of Stanislav Yakovlev.
+>
+> The semantic match that finds the first problem is as follows:
+>
+> (http://coccinelle.lip6.fr/)
+>
+> // <smpl>
+> @@
+> expression ret;
+> identifier f;
+> statement S1,S2;
+> @@
+>
+> *ret = f(...);
+> if (\(ret != 0\|ret < 0\|ret == NULL\)) S1
+> ... when any
+> *f(...);
+> if (\(ret != 0\|ret < 0\|ret == NULL\)) S2
+> // </smpl>
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> ---
+> v2: changed &bssid to bssid
+>
 
-The driver changes are okay, there are now multiple calls to update_rate()
-inside ath9k_htc, but we can clean that later.
+Thank you, Julia.
 
-Sujith
+Stanislav.
