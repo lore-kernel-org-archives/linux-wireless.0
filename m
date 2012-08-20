@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53120 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755422Ab2HIHFz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 03:05:55 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] ath9k: stop btcoex on device suspend
-Date: Thu, 9 Aug 2012 12:37:26 +0530
-Message-ID: <1344496046-2177-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120809_090600_213369_27F56A1D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from c60.cesmail.net ([216.154.195.49]:31942 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757011Ab2HTPN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2012 11:13:56 -0400
+Date: Mon, 20 Aug 2012 11:13:21 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Per sta interfaces in WDS (4-address) mode
+Message-ID: <20120820111321.71c6f07e@mj> (sfid-20120820_171404_008520_6E0C8191)
+In-Reply-To: <CAHNKnsRVh_BXqW0CLfxO5WZCJ8UH7O=cHN-zh7AuM_pQj0xUqg@mail.gmail.com>
+References: <CAHNKnsRVh_BXqW0CLfxO5WZCJ8UH7O=cHN-zh7AuM_pQj0xUqg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During suspend, the device will be moved to FULLSLEEP state.
-As btcoex is never been stopped, the btcoex timer is running
-and tries to access hw on fullsleep state. Fix that.
+On Sun, 19 Aug 2012 21:51:27 +0400
+Sergey Ryazanov <ryazanov.s.a@gmail.com> wrote:
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/pci.c | 1 +
- 1 file changed, 1 insertion(+)
+> Hello dear all,
+> 
+> please tell me, why in the WDS mode, the stack creates a new interface
+> for each WDS station, and this interface hostapd adds to the parent AP
+> interface bridge? Why we couldn't simply pass this frames via AP
+> interface?
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index d455de9..a978984 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -321,6 +321,7 @@ static int ath_pci_suspend(struct device *device)
- 	 * Otherwise the chip never moved to full sleep,
- 	 * when no interface is up.
- 	 */
-+	ath9k_stop_btcoex(sc);
- 	ath9k_hw_disable(sc->sc_ah);
- 	ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_FULL_SLEEP);
- 
+You may want to use a completely different IP address and netmask on the
+WDS interface.  Using the AP interface would take away that option.
+
+hostapd is not a part of the kernel.  It should be possible not to add
+WDS interfaces to the bridge.
+
 -- 
-1.7.11.4
-
+Regards,
+Pavel Roskin
