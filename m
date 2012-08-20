@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:50612 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121Ab2H3ULV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27568 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052Ab2HTUdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 16:11:21 -0400
-Received: by iahk25 with SMTP id k25so63067iah.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2012 13:11:20 -0700 (PDT)
+	Mon, 20 Aug 2012 16:33:36 -0400
+Date: Mon, 20 Aug 2012 13:33:32 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: protect firmware from excessive WoW pattern
+ length
+Message-ID: <20120820203331.GA31777@pista> (sfid-20120820_223341_556688_24E968B1)
+References: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1345446793.4504.0.camel@jlt3.sipsolutions.net>
+ <5031E74F.4010104@qca.qualcomm.com>
+ <20120820181837.GA4695@pista>
+ <50328B3F.3070206@qca.qualcomm.com>
 MIME-Version: 1.0
-Date: Thu, 30 Aug 2012 23:11:20 +0300
-Message-ID: <CAK678xgwEwjoxciyNe5qv0N_+Bxi8EmUjzf9E07dLPt2nf-wHg@mail.gmail.com> (sfid-20120830_221125_000236_FBD7F3D9)
-Subject: rtl8192cu: no beacon transmission in AP mode with Asus USB-N13
-From: coekbe <coekbe@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <50328B3F.3070206@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Mon, Aug 20, 2012 at 10:08:47PM +0300, Kalle Valo wrote:
+> > Can you revert this patch? Otherwise the followup will just do the same.
+> 
+> I can revert the patch. But IMHO the check isn't that bad, and even
+> cfg80211 can be buggy sometimes ;)
+> 
 
-I created an Access Point using hostapd and the following USB stick:
+Well it's probably better not to cover any cfg80211 bugs up in the
+driver anyway.
 
-ID 0b05:17ab ASUSTek Computer, Inc. USB-N13 802.11n Network Adapter
-(rev. B1) [Realtek RTL8192CU]
+> >> And ath6kl even uses different define pattern_max_len:
+> >>
+> >> 	wiphy->wowlan.pattern_max_len = WOW_PATTERN_SIZE;
+> >>
+> >> But the value is still same:
+> >>
+> >> #define WOW_PATTERN_SIZE	 64
+> >> #define WOW_MASK_SIZE		 64
+> >>
+> >> Thomas, can you please check this? Do we really need two different
+> >> defines? And which one is the correct one here?
+> > 
+> > No AFAICT there is no reason to have two different defines. I can submit
+> > a small patch consolidating these, but it would remove the above hunk
+> > anyway so I need to know whether you'll revert or not.
+> 
+> Thanks. I'll revert the patch so please prepare your patch without the
+> check.
 
-The problem is that I cannot see any beacon frames in data captured
-from the air. I cannot see beacon frames in the hostapd created
-mon.wlan0 interface on the AP either.
+OK.
 
-I believe this is why my (power saving) phone doesn't work properly
-with the AP. When the AP is trying to send IP packets to the phone, I
-can see the packets on the AP's wlan0 interface using tcpdump, but the
-packets are not being transmitted over the air. The packets are only
-aired when the phone sends some packet to the AP. Then all of AP's
-packets go at once, so they must have been just queued. For example, I
-cannot successfully (ICMP) ping my phone from the AP. The echo
-requests are not leaving the AP. A workaround in this case is to ARP
-(broadcast) ping the phone from the AP. This causes the phone to wake
-up to respond with an ARP reply, which in turn makes the AP send all
-the queued ICMP echo requests at one go. Actually, if I leave arping
-running I can browse the web and use internet on the phone without
-much trouble. If I stop ARP pinging, it all stops working.
-
-The following post suggests that rtl8192cu has beaconed in the past:
-
-http://marc.info/?l=linux-wireless&m=132207376529915&w=2
-
-I've tried kernel 3.2.23, as it currently comes in Debian Wheezy, with
-the stable compat-wireless-3.5.1-1-snpc.tar.bz2, and
-compat-wireless-2012-08-29-p.tar.bz2. Makes no difference. Wheezy's
-hostapd version is 1.0.
-
-(In Windows, the USB stick does work properly in AP mode and I can
-also capture beacon frames from the air. No trouble with the phone
-either.)
-
-Regards,
-Colin
+Thomas
