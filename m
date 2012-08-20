@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11880 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020Ab2HJLRc (ORCPT
+Received: from ocean.emcraft.com ([213.221.7.182]:42332 "EHLO
+	ocean.emcraft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757458Ab2HTQyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:17:32 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60802.276890.378030@gargle.gargle.HOWL> (sfid-20120810_131735_399417_A9B7ACC8)
-Date: Fri, 10 Aug 2012 16:46:18 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/15] ath9k: Cleanup ath_rc_setvalid_htrates
+	Mon, 20 Aug 2012 12:54:06 -0400
+Date: Mon, 20 Aug 2012 20:53:55 +0400
+From: Sergei Poselenov <sposelenov@emcraft.com>
+To: users@rt2x00.serialmonkey.com
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] compat-wireless:rt2800usb: Added rx packet length validity
+ check
+Message-ID: <20120820205355.7ccc0450@emcraft.com> (sfid-20120820_185423_193652_D2AAC31A)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On our system (ARM Cortex-M3 SOC running linux-2.6.33 with
+compat-wireless-3.4-rc3-1 modules configured for rt2x00) frequent
+crashes were observed in rt2800usb module because of the invalid
+length of the received packet (3392, 46920...). This patch adds
+the sanity check on the packet legth. In case of the bad length,
+mark the packet as with CRC error.
+
+The fix was also tested on the latest
+compat-wireless-3.5.1-1-snpc.tar.bz2, applies cleanly.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Sergei Poselenov <sposelenov@emcraft.com>
 ---
- drivers/net/wireless/ath/ath9k/rc.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a34f678..69745ad 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -552,15 +552,16 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- {
- 	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	struct ath_rateset *rateset = &ath_rc_priv->neg_ht_rates;
--	u32 capflag = ath_rc_priv->ht_cap;
--	u8 i, j, hi = 0;
-+	u32 phy, capflag = ath_rc_priv->ht_cap;
-+	u16 rate_flags;
-+	u8 i, j, hi = 0, rate, dot11rate, valid_rate_count;
+diff --git a/usbwifi/compat-wireless-3.4-rc3-1/drivers/net/wireless/rt2x00/rt2800usb.c b/usbwifi/compat-wireless-3.4-rc3-1/drivers/net/wireless/rt2x00/rt2800usb.c
+index 001735f..6776ec8 100644
+--- a/usbwifi/compat-wireless-3.4-rc3-1/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/usbwifi/compat-wireless-3.4-rc3-1/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -662,13 +662,18 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 	rx_pkt_len = rt2x00_get_field32(word, RXINFO_W0_USB_DMA_RX_PKT_LEN);
  
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
--			u32 phy = rate_table->info[j].phy;
--			u16 rate_flags = rate_table->info[j].rate_flags;
--			u8 rate = rateset->rs_rates[i];
--			u8 dot11rate = rate_table->info[j].dot11rate;
-+			phy = rate_table->info[j].phy;
-+			rate_flags = rate_table->info[j].rate_flags;
-+			rate = rateset->rs_rates[i];
-+			dot11rate = rate_table->info[j].dot11rate;
+ 	/*
+-	 * Remove the RXINFO structure from the sbk.
++	 * Remove the RXINFO structure from the skb.
+ 	 */
+ 	skb_pull(entry->skb, RXINFO_DESC_SIZE);
  
- 			if ((rate != dot11rate) || !WLAN_RC_PHY_HT(phy) ||
- 			    !(rate_flags & WLAN_RC_CAP_STREAM(capflag)) ||
-@@ -570,8 +571,8 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- 			if (!ath_rc_valid_phyrate(phy, capflag, 0))
- 				continue;
+ 	/*
+-	 * FIXME: we need to check for rx_pkt_len validity
++	 * Check for rx_pkt_len validity, mark as failed.
+ 	 */
++	if (rx_pkt_len > entry->skb->len) {
++		rxdesc->flags |= RX_FLAG_FAILED_FCS_CRC;
++		goto procrxwi;
++	}
++
+ 	rxd = (__le32 *)(entry->skb->data + rx_pkt_len);
  
--			ath_rc_priv->valid_phy_rateidx[phy]
--				[ath_rc_priv->valid_phy_ratecnt[phy]] = j;
-+			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
-+			ath_rc_priv->valid_phy_rateidx[phy][valid_rate_count] = j;
- 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
- 			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
- 			hi = max(hi, j);
--- 
-1.7.11.4
-
+ 	/*
+@@ -713,6 +718,7 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 	 */
+ 	skb_trim(entry->skb, rx_pkt_len);
+ 
++procrxwi:
+ 	/*
+ 	 * Process the RXWI structure.
+ 	 */
