@@ -1,48 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1943 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752247Ab2HBLdV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36293 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753359Ab2HTLY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 07:33:21 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v1] 4-way handshake offloading
-Date: Thu, 2 Aug 2012 14:33:06 +0300
-Message-ID: <1343907187-6686-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120802_133324_994345_AE7B9ED3)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 20 Aug 2012 07:24:27 -0400
+Message-ID: <1345461864.4459.14.camel@jlt3.sipsolutions.net> (sfid-20120820_132430_471689_1CBC0B8F)
+Subject: Re: [PATCH 1/2] mac80211: use skb_queue_walk() in
+ mesh_path_assign_nexthop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 20 Aug 2012 13:24:24 +0200
+In-Reply-To: <1344561132-31892-1-git-send-email-thomas@cozybit.com> (sfid-20120810_031222_496929_955E2F5E)
+References: <1344561132-31892-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20120810_031222_496929_955E2F5E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding 4-way handshake offload support.
+On Thu, 2012-08-09 at 18:12 -0700, Thomas Pedersen wrote:
+> Since all we really want is just to iterate over all skbs, do just that
+> and avoid (de)queueing to a clusmy tmpq.
 
-Intention is to support "smart" devices in P2P flow - they tend to
-offload as much as possible.
+Applied both, thanks.
 
-This patch address WPA2-Personal - this is what P2P uses.
-WPA2-Enterprise not supported yet.
-
-Currently, ath6kl driver can use this feature (patch in works),
-and wil6210 (60g) driver can work only in the offload mode - 
-working on security flow right now.
-
-Corresponding patch for WPA supplicant almost ready (by Jouni).
-for WPA supplicant, STA part verified; AP not finalized yet.
-
-Vladimir Kondratiev (1):
-  cfg80211: Support for 4-way handshake offloading for WPA2-Personal
-
- include/linux/ieee80211.h |    2 ++
- include/linux/nl80211.h   |   19 +++++++++++++++++++
- include/net/cfg80211.h    |    7 +++++++
- net/wireless/nl80211.c    |   16 ++++++++++++++++
- 4 files changed, 44 insertions(+)
-
--- 
-1.7.9.5
+johannes
 
