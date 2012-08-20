@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46185 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570Ab2HFTbV convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36086 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243Ab2HTKc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:31:21 -0400
-Received: by obbuo13 with SMTP id uo13so6311824obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:31:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1344279307-2929-1-git-send-email-ozancag@gmail.com>
-References: <1344279307-2929-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 6 Aug 2012 12:31:00 -0700
-Message-ID: <CAB=NE6VUDjOYGWBz=TbsgTV+FvGg0Z+T=vhPeLcfsOoiuzErfg@mail.gmail.com> (sfid-20120806_213124_455526_D25D1119)
-Subject: Re: [PATCH 1/2] compat-wireless: Minor cosmetic changes in admin-update.sh
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 20 Aug 2012 06:32:29 -0400
+Message-ID: <1345458739.4459.0.camel@jlt3.sipsolutions.net> (sfid-20120820_123233_336477_B2748C3B)
+Subject: Re: [PATCH v3 6/7] mac80211: add ap channel switch command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Goldenshtein, Victor" <victorg@ti.com>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name, simon.wunderlich@s2003.tu-chemnitz.de
+Date: Mon, 20 Aug 2012 12:32:19 +0200
+In-Reply-To: <20120813073444.GA2272@redhat.com>
+References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+	 <1344426823-1795-7-git-send-email-victorg@ti.com>
+	 <20120810163635.GC17559@redhat.com>
+	 <CAK80WHbVcXtZ0on2Nsfkmj+qQ3jAaPLSc9TvGvuaCoN6P4gAOQ@mail.gmail.com>
+	 <20120813073444.GA2272@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 6, 2012 at 11:55 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> - Move functions above everything,
-> - Use $HOME instead of /home/$USER which fails when run as root,
-> - Enhance comments
-> - Mention about compat/bin/get-compat-trees for fetching the trees.
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+On Mon, 2012-08-13 at 09:34 +0200, Stanislaw Gruszka wrote:
+> On Sun, Aug 12, 2012 at 10:31:29AM +0300, Goldenshtein, Victor wrote:
+> > > Why we can not use ->channel_switch calback for this purpose (merge
+> > > ieee80211_channel_switch and ieee80211_ap_ch_switch)?
+> > >
+> > 
+> > Well at first (see previous threads) it was a single channel switch
+> > for both AP/STA, but later after community reviews it was decided to
+> > split these two.
+> 
+> Ah, ok. Although I do not see the point of creating almost two identical
+> structures and two identical callbacks, this is up to Johannes.
 
-I've applied this, thanks! In the future though please break down the
-above changes into more atomic patches. This makes review and
-bisecting easier if ever needed.
+Mostly the point is that the behaviour is really different in terms of
+who control it and how. E.g. the timing is not synchronised, etc. In
+fact I'm not even sure the timing here is done by the device? Although
+it really should be I guess.
 
-  Luis
+johannes
+
