@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40805 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754241Ab2HKAaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 20:30:23 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/4] compat: fix mod_delayed_work
-Date: Sat, 11 Aug 2012 02:30:06 +0200
-Message-Id: <1344645007-26757-4-git-send-email-hauke@hauke-m.de> (sfid-20120811_023026_734859_553343F4)
-In-Reply-To: <1344645007-26757-1-git-send-email-hauke@hauke-m.de>
-References: <1344645007-26757-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:36178 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752663Ab2HTKpP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2012 06:45:15 -0400
+Message-ID: <1345459509.4459.5.camel@jlt3.sipsolutions.net> (sfid-20120820_124520_308700_CFC673E8)
+Subject: Re: Missing firmware iwlwifi-2030-5.ucode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Hutchings <ben@decadent.org.uk>
+Date: Mon, 20 Aug 2012 12:45:09 +0200
+In-Reply-To: <502D0C72.2050207@lwfinger.net> (sfid-20120816_170635_404509_F239FBF6)
+References: <502D0C72.2050207@lwfinger.net>
+	 (sfid-20120816_170635_404509_F239FBF6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Add return value to function
- * make EXPORT_SYMBOL_GPL work by including the needed header file
+Hi Larry,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-3.7.c |    2 ++
- 1 file changed, 2 insertions(+)
+> I am trying to help an openSUSE 12.1 user who is running kernel 3.1.9, who has 
+> an Intel 802.11 b/g/n card with Bluetooth mounted in an HP dvdt-7000 Quad 
+> Edition Series computer.
+> 
+> The driver is asking for firmware named "iwlwifi-2030-5.ucode"; however, that 
+> particular file does not exist in /lib/firmware, nor is in the linux-firmware 
+> git repo where only the version 6 firmware exists.
+> 
+> I could find no record of the firmware ever being in the git repo, nor could I 
+> find it using a Google search. For users of kernel 3.1, I request that this 
+> firmware file be submitted to linux-firmware. In addition, if you send me a copy 
+> of the file, I will see that the OP on the openSUSE Forum gets a copy.
 
-diff --git a/compat/compat-3.7.c b/compat/compat-3.7.c
-index 8fd07ff..f251788 100644
---- a/compat/compat-3.7.c
-+++ b/compat/compat-3.7.c
-@@ -9,11 +9,13 @@
-  */
- 
- #include <linux/workqueue.h>
-+#include <linux/export.h>
- 
- bool mod_delayed_work(struct workqueue_struct *wq, struct delayed_work *dwork,
- 		      unsigned long delay)
- {
- 	cancel_delayed_work(dwork);
- 	queue_delayed_work(wq, dwork, delay);
-+	return false;
- }
- EXPORT_SYMBOL_GPL(mod_delayed_work);
--- 
-1.7.9.5
+Unfortunately, I can't just release this firmware, it was mostly
+internal experimental builds, we released the -6 version later. However,
+as Thomas pointed out, it should be possible to backport some patches to
+make the driver in 3.1.9 work with the device, that simply wasn't a
+concern for us and it's not entirely clear to me that such patches are
+candidates for stable.
+
+johannes
 
