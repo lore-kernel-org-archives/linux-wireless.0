@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754786Ab2HASWD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3823 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775Ab2HTSSn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 14:22:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: reset station MLME flags upon new association
-Date: Wed,  1 Aug 2012 20:21:59 +0200
-Message-Id: <1343845319-22113-1-git-send-email-johannes@sipsolutions.net> (sfid-20120801_202208_640686_FADACD7B)
+	Mon, 20 Aug 2012 14:18:43 -0400
+Date: Mon, 20 Aug 2012 11:18:38 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: protect firmware from excessive WoW pattern
+ length
+Message-ID: <20120820181837.GA4695@pista> (sfid-20120820_201846_801051_E9B76E6E)
+References: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1345446793.4504.0.camel@jlt3.sipsolutions.net>
+ <5031E74F.4010104@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <5031E74F.4010104@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Aug 20, 2012 at 10:29:19AM +0300, Kalle Valo wrote:
+> On 08/20/2012 10:13 AM, Johannes Berg wrote:
+> > On Wed, 2012-08-15 at 17:15 -0700, Thomas Pedersen wrote:
+> >> Don't accept WoW patterns longer than supported by firmware.
+> >>
+> >> Reported-by: Haijun Jin <nhjin@qca.qualcomm.com>
+> >> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+> >> ---
+> >>  drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +++
+> >>  1 files changed, 3 insertions(+), 0 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> >> index bd003fe..ffa18f3 100644
+> >> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> >> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> >> @@ -1876,6 +1876,9 @@ static int ath6kl_wow_usr(struct ath6kl *ar, struct ath6kl_vif *vif,
+> >>  	/* Configure the patterns that we received from the user. */
+> >>  	for (i = 0; i < wow->n_patterns; i++) {
+> >>  
+> >> +		if (wow->patterns[i].pattern_len > WOW_MASK_SIZE)
+> >> +			return -EINVAL;
+> >> +
+> > 
+> > No objection, but doesn't nl80211 already validate that (assuming you
+> > give the right pattern_max_len, of course)?
 
-When associating anew, the old station MLME flags should
-be cleared. The only exception is the 40 MHz disable
-flag as it might have been set while the channel was set
-in a previous authentication attempt so it needs to be
-kept intact.
+Thanks for pointing that out. That check would be completely redundant
+then.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Kalle,
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c416a08..9d60b49 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3357,10 +3357,13 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	/* prepare assoc data */
--
--	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
--	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
--	ifmgd->flags &= ~IEEE80211_STA_DISABLE_VHT;
-+	
-+	/*
-+	 * keep only the 40 MHz disable bit set as it might have
-+	 * been set during authentication already, all other bits
-+	 * should be reset for a new connection
-+	 */
-+	ifmgd->flags &= IEEE80211_STA_DISABLE_40MHZ;
- 
- 	ifmgd->beacon_crc_valid = false;
- 
--- 
-1.7.10.4
+Can you revert this patch? Otherwise the followup will just do the same.
 
+> And ath6kl even uses different define pattern_max_len:
+> 
+> 	wiphy->wowlan.pattern_max_len = WOW_PATTERN_SIZE;
+> 
+> But the value is still same:
+> 
+> #define WOW_PATTERN_SIZE	 64
+> #define WOW_MASK_SIZE		 64
+> 
+> Thomas, can you please check this? Do we really need two different
+> defines? And which one is the correct one here?
+
+No AFAICT there is no reason to have two different defines. I can submit
+a small patch consolidating these, but it would remove the above hunk
+anyway so I need to know whether you'll revert or not.
+
+Thanks,
+Thomas
