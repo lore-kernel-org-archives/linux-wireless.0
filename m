@@ -1,100 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49687 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754554Ab2HEOyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 10:54:53 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2] bcma: make some functions static
-Date: Sun,  5 Aug 2012 16:54:41 +0200
-Message-Id: <1344178481-24023-1-git-send-email-hauke@hauke-m.de> (sfid-20120805_165459_164095_C8955B51)
+Received: from he.sipsolutions.net ([78.46.109.217]:36268 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753284Ab2HTLQg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2012 07:16:36 -0400
+Message-ID: <1345461391.4459.7.camel@jlt3.sipsolutions.net> (sfid-20120820_131640_056372_48F52C80)
+Subject: Re: [cfg80211] Issue with simultaneous AP-STA operation in
+ mwifiex/cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <avinashapatil@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Avinash Patil <patila@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>
+Date: Mon, 20 Aug 2012 13:16:31 +0200
+In-Reply-To: <CAJwzM1nGny-JBD8hwKXsrERko0cGvuJB_nD2dbPrPmzF-T49Tg@mail.gmail.com> (sfid-20120810_080731_101463_8799AA08)
+References: <CAJwzM1nGny-JBD8hwKXsrERko0cGvuJB_nD2dbPrPmzF-T49Tg@mail.gmail.com>
+	 (sfid-20120810_080731_101463_8799AA08)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions and structs are not used in an other file and the
-prototypes are in no header file, just make them static so the compiler
-is able to optimize them better.
+On Fri, 2012-08-10 at 11:37 +0530, Avinash Patil wrote:
+> Hi All,
+> 
+> Lately simultaneous AP-STA functionality in mwifiex driver is not
+> working. I feel this has something to do with recent changes in
+> cfg80211.
+> 
+> If we associate mwifiex STA to external AP first and then try to start
+> mwifiex AP using hostapd(on different channel), we get –EBUSY error
+> from cfg80211. This happens from path
+> nl80211_start_ap->cfg80211_can_use_chan.  cfg80211_can_use_chan
+> returns EBUSY error. In our design if mwifiex STA is already
+> associated on some different channel, AP follows this channel and BSS
+> is started using STA channel settings. If we start hostapd on same
+> channel, BSS is successfully started, but association requests from
+> external station result in failure.
+> 
+> Please let me know if we are missing something while registering
+> n_iface and iface combinations. num_different_channels in
+> ieee80211_iface_combination has been advertised as 1.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon_pmu.c |    4 ++--
- drivers/bcma/host_pci.c              |   11 ++++++-----
- drivers/bcma/host_soc.c              |    2 +-
- 3 files changed, 9 insertions(+), 8 deletions(-)
+Well, if the number of different channels is 1, why would you expect to
+be able to start an AP on a different channel than the STA is currently
+using? Hostapd should know (needs to, I think) what channel is actually
+being used, so you should start it on the right channel I think?
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index c9a4f46..8b8f2f3 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -101,7 +101,7 @@ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
- 	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
- }
- 
--void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
-+static void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- {
- 	struct bcma_bus *bus = cc->core->bus;
- 
-@@ -257,7 +257,7 @@ static u32 bcma_pmu_clock_bcm4706(struct bcma_drv_cc *cc, u32 pll0, u32 m)
- }
- 
- /* query bus clock frequency for PMU-enabled chipcommon */
--u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
-+static u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
- {
- 	struct bcma_bus *bus = cc->core->bus;
- 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index a6e5672..f7b0af7 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -77,8 +77,8 @@ static void bcma_host_pci_write32(struct bcma_device *core, u16 offset,
- }
- 
- #ifdef CONFIG_BCMA_BLOCKIO
--void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
--			      size_t count, u16 offset, u8 reg_width)
-+static void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
-+				     size_t count, u16 offset, u8 reg_width)
- {
- 	void __iomem *addr = core->bus->mmio + offset;
- 	if (core->bus->mapped_core != core)
-@@ -100,8 +100,9 @@ void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
- 	}
- }
- 
--void bcma_host_pci_block_write(struct bcma_device *core, const void *buffer,
--			       size_t count, u16 offset, u8 reg_width)
-+static void bcma_host_pci_block_write(struct bcma_device *core,
-+				      const void *buffer, size_t count,
-+				      u16 offset, u8 reg_width)
- {
- 	void __iomem *addr = core->bus->mmio + offset;
- 	if (core->bus->mapped_core != core)
-@@ -139,7 +140,7 @@ static void bcma_host_pci_awrite32(struct bcma_device *core, u16 offset,
- 	iowrite32(value, core->bus->mmio + (1 * BCMA_CORE_SIZE) + offset);
- }
- 
--const struct bcma_host_ops bcma_host_pci_ops = {
-+static const struct bcma_host_ops bcma_host_pci_ops = {
- 	.read8		= bcma_host_pci_read8,
- 	.read16		= bcma_host_pci_read16,
- 	.read32		= bcma_host_pci_read32,
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index 3c381fb..3475e60 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -143,7 +143,7 @@ static void bcma_host_soc_awrite32(struct bcma_device *core, u16 offset,
- 	writel(value, core->io_wrap + offset);
- }
- 
--const struct bcma_host_ops bcma_host_soc_ops = {
-+static const struct bcma_host_ops bcma_host_soc_ops = {
- 	.read8		= bcma_host_soc_read8,
- 	.read16		= bcma_host_soc_read16,
- 	.read32		= bcma_host_soc_read32,
--- 
-1.7.9.5
+I don't know why association requests would fail.
+
+johannes
 
