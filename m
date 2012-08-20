@@ -1,94 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:59388 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751514Ab2HBXsG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36305 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751189Ab2HTL17 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 19:48:06 -0400
-Received: by yhmm54 with SMTP id m54so127918yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2012 16:48:05 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 4/4] mac80211: skb leak in mesh_plink_frame_tx()
-Date: Thu,  2 Aug 2012 16:47:54 -0700
-Message-Id: <1343951274-24956-4-git-send-email-thomas@cozybit.com> (sfid-20120803_014858_740410_4FD88567)
-In-Reply-To: <1343951274-24956-1-git-send-email-thomas@cozybit.com>
-References: <1343951274-24956-1-git-send-email-thomas@cozybit.com>
+	Mon, 20 Aug 2012 07:27:59 -0400
+Message-ID: <1345462075.4459.16.camel@jlt3.sipsolutions.net> (sfid-20120820_132803_113168_E4658471)
+Subject: Re: [PATCH 1/2] mac80211: add sta_update_rates callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Date: Mon, 20 Aug 2012 13:27:55 +0200
+In-Reply-To: <20120809094455.GH6767@ritirata.org>
+References: <1344474712-22561-1-git-send-email-ordex@autistici.org>
+	 <1344492897.4494.1.camel@jlt3.sipsolutions.net>
+	 <20120809093245.GG6767@ritirata.org> <20120809094455.GH6767@ritirata.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although adding an IE is almost guaranteed to succeed since we already
-accounted for its length while allocating the skb, we should still free
-the skb in case of failure.
+On Thu, 2012-08-09 at 11:44 +0200, Antonio Quartulli wrote:
+> On Thu, Aug 09, 2012 at 11:32:46AM +0200, Antonio Quartulli wrote:
+> > On Thu, Aug 09, 2012 at 08:14:57AM +0200, Johannes Berg wrote:
+> > > Also there's already an update call sta_rc_update() so I think you
+> > > should just define a new change flag for that?
+> > 
+> > mh, at the very beginning I thought it was not correct what you said, but indeed
+> > we should be able to do the job in sta_rc_update().
+> > 
+> > But then why does the ath9k_htc driver implement ath9k_htc_update_rate() to
+> > update the rate used to talk to the AP? Should it use sta_rc_update() as well?
+> 
+> Well, I am digging into the driver a bit more and I realised that the supported
+> rate set does not touch the RC at all. The supported rates are only stored in
+> the device (this is why there is another function for doing that in case of STA
+> mode) and then the RC will play its game from a different point.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_plink.c |   18 ++++++++++++------
- 1 files changed, 12 insertions(+), 6 deletions(-)
+That's strange, why would the device care about the supported rateset of
+an IBSS peer? or does it have some rate control in the device?
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index fba8d86..5a68097 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -224,6 +224,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	u8 *pos, ie_len = 4;
- 	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.self_prot) +
- 		      sizeof(mgmt->u.action.u.self_prot);
-+	int err = -ENOMEM;
- 
- 	skb = dev_alloc_skb(local->tx_headroom +
- 			    hdr_len +
-@@ -265,11 +266,11 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata))
--			return -1;
-+			goto free;
- 	} else {	/* WLAN_SP_MESH_PEERING_CLOSE */
- 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 		if (mesh_add_meshid_ie(skb, sdata))
--			return -1;
-+			goto free;
- 	}
- 
- 	/* Add Mesh Peering Management element */
-@@ -288,11 +289,12 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		ie_len += 2;	/* reason code */
- 		break;
- 	default:
--		return -EINVAL;
-+		err = -EINVAL;
-+		goto free;
- 	}
- 
- 	if (WARN_ON(skb_tailroom(skb) < 2 + ie_len))
--		return -ENOMEM;
-+		goto free;
- 
- 	pos = skb_put(skb, 2 + ie_len);
- 	*pos++ = WLAN_EID_PEER_MGMT;
-@@ -313,14 +315,18 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
- 		if (mesh_add_ht_cap_ie(skb, sdata) ||
- 		    mesh_add_ht_oper_ie(skb, sdata))
--			return -1;
-+			goto free;
- 	}
- 
- 	if (mesh_add_vendor_ies(skb, sdata))
--		return -1;
-+		goto free;
- 
- 	ieee80211_tx_skb(sdata, skb);
- 	return 0;
-+
-+free:
-+	kfree_skb(skb);
-+	return err;
- }
- 
- /* mesh_peer_init - initialize new mesh peer and return resulting sta_info
--- 
-1.7.5.4
+> For the reason above sta_rc_update() can't do what we want. At this point I
+> think we have two options:
+> 1) mac80211 forces this change to be done by sta_rc_update() => ath9k has to
+> adapt it's implementation to follow the API
+> 2) mac80211 uses another callback (sta_update_rates()) to refresh the supported
+> rates set.
+> 
+> I think that option 2) is probably the way to go, because the RC stuff is
+> usually not strictly related to the real device (e.g. ath9k has its own rc
+> routines shared among ath9k and ath9k_htc but they have different routins to set
+> the supported_rates set for a station.)
+
+But the rate control algorithm is re-inited in this case or something?
+
+johannes
 
