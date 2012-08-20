@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53127 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932521Ab2HPWd6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 18:33:58 -0400
-Message-ID: <502D754F.9090908@hauke-m.de> (sfid-20120817_003401_826673_0121034A)
-Date: Fri, 17 Aug 2012 00:33:51 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: John Crispin <john@phrozen.org>
-CC: ralf@linux-mips.org, linux-mips@linux-mips.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 3/3] MIPS: BCM47xx: rewrite GPIO handling and use gpiolib
-References: <1345132801-8430-1-git-send-email-hauke@hauke-m.de> <1345132801-8430-4-git-send-email-hauke@hauke-m.de> <502D4B70.4010509@phrozen.org>
-In-Reply-To: <502D4B70.4010509@phrozen.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:36402 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754416Ab2HTMEG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2012 08:04:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: simplify buffers in aes_128_cmac_vector
+Date: Mon, 20 Aug 2012 14:04:01 +0200
+Message-Id: <1345464241-16608-1-git-send-email-johannes@sipsolutions.net> (sfid-20120820_140410_617145_FC7ED3F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2012 09:35 PM, John Crispin wrote:
-> On 16/08/12 18:00, Hauke Mehrtens wrote:
->> int gpio_get_value(unsigned gpio)
->> +{
->> +	if (gpio < bcm47xx_gpio_count)
->> +		return bcm47xx_gpio_in(1 << gpio);
->> +
->> +	return __gpio_get_value(gpio);
->> +}
->> +EXPORT_SYMBOL(gpio_get_value);
-> 
-> Hi,
-> 
-> You are using a gpio_chip. simply doing this
-> 
-> #define gpio_get_value __gpio_get_value
-> 
-> inside your arch/mips/include/asm/mach-bcm47xx/gpio.h will be enough.
-> __gpio_get_value() will then automatically find and use
-> bcm47xx_gpio_get_value() via the gpio_chip.
+From: Johannes Berg <johannes.berg@intel.com>
 
-With this code gpio_get_value() is faster as the hole gpiolib is not
-called for the get and set methods. I assume then these gpios are the
-first being registered and all calls to these gpios are directly handled
-by this methods and are not going through the gpiolib code.
-This is based on the way it is done for ath79.
+There's no need to use a single scratch buffer and
+calculate offsets into it, just use two separate
+buffers for the separate variables.
 
-Hauke
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/aes_cmac.c |    6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
+diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
+index 8dfd70d..a04752e 100644
+--- a/net/mac80211/aes_cmac.c
++++ b/net/mac80211/aes_cmac.c
+@@ -38,14 +38,10 @@ static void gf_mulx(u8 *pad)
+ static void aes_128_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
+ 				const u8 *addr[], const size_t *len, u8 *mac)
+ {
+-	u8 scratch[2 * AES_BLOCK_SIZE];
+-	u8 *cbc, *pad;
++	u8 cbc[AES_BLOCK_SIZE], pad[AES_BLOCK_SIZE];
+ 	const u8 *pos, *end;
+ 	size_t i, e, left, total_len;
+ 
+-	cbc = scratch;
+-	pad = scratch + AES_BLOCK_SIZE;
+-
+ 	memset(cbc, 0, AES_BLOCK_SIZE);
+ 
+ 	total_len = 0;
+-- 
+1.7.10.4
 
