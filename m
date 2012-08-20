@@ -1,39 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25546 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751702Ab2HMHf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 03:35:26 -0400
-Date: Mon, 13 Aug 2012 09:34:46 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Goldenshtein, Victor" <victorg@ti.com>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [PATCH v3 6/7] mac80211: add ap channel switch command/event
-Message-ID: <20120813073444.GA2272@redhat.com> (sfid-20120813_093529_824992_F71009D8)
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
- <1344426823-1795-7-git-send-email-victorg@ti.com>
- <20120810163635.GC17559@redhat.com>
- <CAK80WHbVcXtZ0on2Nsfkmj+qQ3jAaPLSc9TvGvuaCoN6P4gAOQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK80WHbVcXtZ0on2Nsfkmj+qQ3jAaPLSc9TvGvuaCoN6P4gAOQ@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:36396 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754569Ab2HTMAy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2012 08:00:54 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1T3Qf7-0005cK-Nj
+	for linux-wireless@vger.kernel.org; Mon, 20 Aug 2012 14:00:53 +0200
+Message-ID: <1345464051.4459.21.camel@jlt3.sipsolutions.net> (sfid-20120820_140108_474850_1E868FB1)
+Subject: Re: P2P Device abstraction
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 20 Aug 2012 14:00:51 +0200
+In-Reply-To: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net> (sfid-20120731_133229_357665_AB4AC533)
+References: <1343734338-14772-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120731_133229_357665_AB4AC533)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 12, 2012 at 10:31:29AM +0300, Goldenshtein, Victor wrote:
-> > Why we can not use ->channel_switch calback for this purpose (merge
-> > ieee80211_channel_switch and ieee80211_ap_ch_switch)?
-> >
-> 
-> Well at first (see previous threads) it was a single channel switch
-> for both AP/STA, but later after community reviews it was decided to
-> split these two.
+On Tue, 2012-07-31 at 13:32 +0200, Johannes Berg wrote:
+> We ran into a few more small issues that I've fixed now,
+> I intend to apply these patches soon.
 
-Ah, ok. Although I do not see the point of creating almost two identical
-structures and two identical callbacks, this is up to Johannes.
+Applied.
 
-Stanislaw
+johannes
+
