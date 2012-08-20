@@ -1,87 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:60574 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599Ab2HBW4P (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:44527 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab2HTCLn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 18:56:15 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	Liang Li <liang.li@windriver.com>, <stable@vger.kernel.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: [PATCH stable] cfg80211: fix interface combinations check for ADHOC(IBSS)
-Date: Thu, 2 Aug 2012 18:55:41 -0400
-Message-ID: <1343948141-25005-1-git-send-email-paul.gortmaker@windriver.com> (sfid-20120803_005619_580384_689F159D)
-In-Reply-To: <20120801175816.GB13879@windriver.com>
-References: <20120801175816.GB13879@windriver.com>
+	Sun, 19 Aug 2012 22:11:43 -0400
+Received: by vcbfk26 with SMTP id fk26so4515533vcb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2012 19:11:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com>
+References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
+	<CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
+	<CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
+	<CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
+	<CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
+	<20120813184749.GC10529@tuxdriver.com>
+	<CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com>
+Date: Mon, 20 Aug 2012 10:11:41 +0800
+Message-ID: <CAMz9Wg8DdBbWXUv5gQKr6TJmxQqXHn_DEA4UyyuNPzNwsa4Deg@mail.gmail.com> (sfid-20120820_041202_243202_18550FB4)
+Subject: Re: [PATCH] Revert "rfkill: remove dead code"
+From: AceLan Kao <acelan.kao@canonical.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Corentin Chary <corentincj@iksaif.net>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liang Li <liang.li@windriver.com>
+Hi,
 
-partial of commit 8e8b41f9d8c8e63fc92f899ace8da91a490ac573 upstream.
+I didn't see this patch in linux-next nor in Linville's tree,and this
+patch is needed by the asus-wmi driver.
+Please help to merge this patch earlier, so that platform-x86 can get
+rid of the compiling error.
+Thank you very much.
 
-As part of commit 463454b5dbd8 ("cfg80211: fix interface
-combinations check"), this extra check was introduced:
+Best regards,
+AceLan Kao.
 
-       if ((all_iftypes & used_iftypes) != used_iftypes)
-               goto cont;
+2012/8/14 AceLan Kao <acelan.kao@canonical.com>:
+> No, I only submit the patch here, and the asus-wmi patch for platform is waiting
+> this patch into kernel first.
+>
+> 2012/8/14 John W. Linville <linville@tuxdriver.com>:
+>> Is this all sorted?  Is this patch going through the platform tree?
+>>
+>> On Thu, Jul 26, 2012 at 02:19:23PM +0800, AceLan Kao wrote:
+>>> Dear Julian,
+>>>
+>>> Yes, I have said that the asus-wmi patch needs this commit
+>>> and CC'd the asus-wmi maintainer, Corentin Chary, here in this rfkill patch.
+>>>
+>>> Best regards,
+>>> AceLan Kao.
+>>>
+>>> 2012/7/26 Julian Calaby <julian.calaby@gmail.com>:
+>>> > Hi AceLan,
+>>> >
+>>> > On Thu, Jul 26, 2012 at 3:55 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
+>>> >> Dear Julian,
+>>> >>
+>>> >> I just submitted a patch to platform-x86 for asus-wmi.
+>>> >> And the patch needs to use rfkill_set_led_trigger_name() function
+>>> >> to bind the wlan led to rfkill event.
+>>> >
+>>> > That's what I wanted to know.
+>>> >
+>>> > I assume that you've added a note to the ASUS-WMI patch so people know
+>>> > that it needs this one first. (I can't see it here so I don't know)
+>>> >
+>>> > Thanks,
+>>> >
+>>> > --
+>>> > Julian Calaby
+>>> >
+>>> > Email: julian.calaby@gmail.com
+>>> > Profile: http://www.google.com/profiles/julian.calaby/
+>>> > .Plan: http://sites.google.com/site/juliancalaby/
+>>>
+>>>
+>>>
+>>> --
+>>> Chia-Lin Kao(AceLan)
+>>> http://blog.acelan.idv.tw/
+>>> E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> --
+>> John W. Linville                Someday the world will need a hero, and you
+>> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
+>
+>
+> --
+> Chia-Lin Kao(AceLan)
+> http://blog.acelan.idv.tw/
+> E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
 
-However, most wireless NIC drivers did not advertise ADHOC in
-wiphy.iface_combinations[i].limits[] and hence we'll get -EBUSY
-when we bring up a ADHOC wlan with commands similar to:
 
- # iwconfig wlan0 mode ad-hoc && ifconfig wlan0 up
 
-In commit 8e8b41f9d8c8e ("cfg80211: enforce lack of interface
-combinations"), the change below fixes the issue:
-
-       if (total == 1)
-               return 0;
-
-But it also introduces other dependencies for stable. For example,
-a full cherry pick of 8e8b41f9d8c8e would introduce additional
-regressions unless we also start cherry picking driver specific
-fixes like the following:
-
-  9b4760e  ath5k: add possible wiphy interface combinations
-  1ae2fc2  mac80211_hwsim: advertise interface combinations
-  20c8e8d  ath9k: add possible wiphy interface combinations
-
-And the purpose of the 'if (total == 1)' is to cover the specific
-use case (IBSS, adhoc) that was mentioned above. So we just pick
-the specific part out from 8e8b41f9d8c8e here.
-
-Doing so gives stable kernels a way to fix the change introduced
-by 463454b5dbd8, without having to make cherry picks specific to
-various NIC drivers.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Liang Li <liang.li@windriver.com>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
-
-3.0.35, 3.2.21 and 3.4.3 have CP of 463454b5dbd8 in them.
-
- net/wireless/util.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b5b6890..88bd89e 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -974,6 +974,9 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 	}
- 	mutex_unlock(&rdev->devlist_mtx);
- 
-+	if (total == 1)
-+		return 0;
-+
- 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
- 		const struct ieee80211_iface_combination *c;
- 		struct ieee80211_iface_limit *limits;
 -- 
-1.7.12.rc1.1.gbce1580
-
+Chia-Lin Kao(AceLan)
+http://blog.acelan.idv.tw/
+E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
