@@ -1,124 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60537 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484Ab2HZGEY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54326 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755292Ab2HTH3Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Aug 2012 02:04:24 -0400
-Date: Sun, 26 Aug 2012 11:35:52 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sherwin Soltani <sherwin@wybc.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k: AR9462 btcoex doesn't appear to work
-Message-ID: <20120826060550.GA6979@vmraj-lnx.qca.qualcomm.com> (sfid-20120826_080509_658445_5C8BE791)
-References: <50394BE4.3000508@wybc.com>
- <20537.33465.256314.716102@gargle.gargle.HOWL>
- <5039B192.3000206@wybc.com>
+	Mon, 20 Aug 2012 03:29:25 -0400
+Message-ID: <5031E74F.4010104@qca.qualcomm.com> (sfid-20120820_092929_074425_2DA0295D)
+Date: Mon, 20 Aug 2012 10:29:19 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <5039B192.3000206@wybc.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
+	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: protect firmware from excessive WoW pattern length
+References: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com>  (sfid-20120816_021530_554431_E3CCD682) <1345446793.4504.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1345446793.4504.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 26, 2012 at 01:18:10AM -0400, Sherwin Soltani wrote:
-> On 08/25/2012 09:58 PM, Sujith Manoharan wrote:
-> >Sherwin Soltani wrote:
-> >>I have an Acer Aspire V5-571 which contains the AR9462 chipset (PCI ID
-> >>168c:0034), supported by the ath9k driver. This chipset claims to
-> >>support Bluetooth coexistence. However, after booting up, my kernel does
-> >>not register any Bluetooth devices.
-> >>
-> >>I am using kernel version 3.6.0-999-generic (apw@gomeisa) (gcc version
-> >>4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)). I also tried 3.4 and 3.2 kernels
-> >>without success. Additionally, I can try to do
-> >>
-> >>rmmod ath9k && modprobe ath9k btcoex_enable=1
-> >>
-> >>In the message log, I can see this:
-> >>
-> >>[ 1204.643120] ath9k: ath9k: Driver unloaded
-> >>[ 1214.203099] ath: phy1: Disabling ASPM since BTCOEX is enabled
-> >>[ 1214.203105] ath: EEPROM regdomain: 0x6a
-> >>[ 1214.203106] ath: EEPROM indicates we should expect a direct regpair map
-> >>[ 1214.203108] ath: Country alpha2 being used: 00
-> >>[ 1214.203109] ath: Regpair used: 0x6a
-> >>
-> >>However 'hcitool dev' shows no devices after this operation.
-> >What does lsusb -v show ?
->
-I hope it is lspci's output not lsusb?
-> It shows:
+On 08/20/2012 10:13 AM, Johannes Berg wrote:
+> On Wed, 2012-08-15 at 17:15 -0700, Thomas Pedersen wrote:
+>> Don't accept WoW patterns longer than supported by firmware.
+>>
+>> Reported-by: Haijun Jin <nhjin@qca.qualcomm.com>
+>> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+>> ---
+>>  drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +++
+>>  1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>> index bd003fe..ffa18f3 100644
+>> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>> @@ -1876,6 +1876,9 @@ static int ath6kl_wow_usr(struct ath6kl *ar, struct ath6kl_vif *vif,
+>>  	/* Configure the patterns that we received from the user. */
+>>  	for (i = 0; i < wow->n_patterns; i++) {
+>>  
+>> +		if (wow->patterns[i].pattern_len > WOW_MASK_SIZE)
+>> +			return -EINVAL;
+>> +
 > 
-> 03:00.0 Network controller: Atheros Communications Inc. AR9462
-> Wireless Network Adapter (rev 01)
->     Subsystem: Lite-On Communications Inc Device 6621
->     Flags: bus master, fast devsel, latency 0, IRQ 19
->     Memory at f0500000 (64-bit, non-prefetchable) [size=512K]
->     Expansion ROM at dfa00000 [disabled] [size=64K]
->     Capabilities: [40] Power Management version 2
->     Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
->     Capabilities: [70] Express Endpoint, MSI 00
->     Capabilities: [100] Advanced Error Reporting
->     Capabilities: [140] Virtual Channel
->     Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
->     Kernel driver in use: ath9k
->     Kernel modules: ath9k
-> 
-> >...
-> >
-> >Reload ath3k and something like this should be seen:
-> >
-> >root@linux-test ~# hciconfig hci1 up
-> >root@linux-test ~# hcitool dev
-> >Devices:
-> >         hci1    00:03:7F:44:84:8A
-> 
-> By ath3k, I assume you meant ath9k since that is the driver I was
-> using. After loading up the new firmware, I still have no devices
-> shown (and 'hciconfig hci1 up' replies with 'No such device').
-> Rebooting doesn't help.
-> 
-No. ath3k is BT firmware downloader that loads BT firmware into the target.
-Can you please confirm whether you have ath3k driver or not? BT device will be
-enumerated as usb device. Can you you share lsusb list and complete kernel log?
+> No objection, but doesn't nl80211 already validate that (assuming you
+> give the right pattern_max_len, of course)?
 
---
-Rajkumar
-> Here is what I see in the message buffer after re-inserting ath9k:
-> [19157.961388] ath9k: ath9k: Driver unloaded
-> [19178.196366] ath: phy2: ASPM enabled: 0x43
-> [19178.196371] ath: EEPROM regdomain: 0x6a
-> [19178.196372] ath: EEPROM indicates we should expect a direct regpair map
-> [19178.196375] ath: Country alpha2 being used: 00
-> [19178.196376] ath: Regpair used: 0x6a
-> 
-> ... lots of cfg80211 info ...
-> 
-> [19178.197491] Registered led device: ath9k-phy2
-> [19178.197500] ieee80211 phy2: Atheros AR9462 Rev:2
-> mem=0xffffc90016300000, irq=19
-> [19178.211376] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [19186.703984] wlan0: authenticate with 2c:b0:5d:45:33:58
-> [19186.708760] wlan0: send auth to 2c:b0:5d:45:33:58 (try 1/3)
-> [19186.759145] wlan0: authenticated
-> [19186.765888] wlan0: associate with 2c:b0:5d:45:33:58 (try 1/3)
-> [19186.863455] wlan0: RX AssocResp from 2c:b0:5d:45:33:58
-> (capab=0x411 status=0 aid=2)
-> [19186.863561] wlan0: associated
-> 
-> >Coexistence testing is ongoing and bugs are still being ironed out,
-> >but basic support is mostly done.
-> >
-> >>Aside from the Bluetooth problems, there are also problems with
-> >>frequently dropping signals (even when I am very close to the access
-> >>point), but right now that's a secondary concern to Bluetooth for me.
-> >Can you try with the latest driver (using compat-wireless) and see if the
-> >problem persists ? If it does, please post the kernel log with driver
-> >debugging set to 0x8f49.
-> 
-> I will take a look at what happens with compat-wireless.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And ath6kl even uses different define pattern_max_len:
+
+	wiphy->wowlan.pattern_max_len = WOW_PATTERN_SIZE;
+
+But the value is still same:
+
+#define WOW_PATTERN_SIZE	 64
+#define WOW_MASK_SIZE		 64
+
+Thomas, can you please check this? Do we really need two different
+defines? And which one is the correct one here?
+
+I'll keep the patch applied but I'm happy to take followup patches to
+clarify this part.
+
+Kalle
