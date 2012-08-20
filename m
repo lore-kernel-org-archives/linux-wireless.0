@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:49563 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757551Ab2HILsx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37173 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755953Ab2HTQBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 07:48:53 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: How to get the irq flags from the dts file
-Date: Thu, 9 Aug 2012 11:48:42 +0000
-Cc: Wei Ni <wni@nvidia.com>,
-	"grant.likely@secretlab.ca" <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	frankyl@broadcom.com, brcm80211-dev-list@broadcom.com,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-References: <1344509006.2295.148.camel@tegra-chromium-2>
-In-Reply-To: <1344509006.2295.148.camel@tegra-chromium-2>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208091148.42748.arnd@arndb.de> (sfid-20120809_134919_134090_3B1FB0FF)
+	Mon, 20 Aug 2012 12:01:39 -0400
+Message-ID: <1345478494.4459.30.camel@jlt3.sipsolutions.net> (sfid-20120820_180155_448403_48417B1D)
+Subject: Re: Missing firmware iwlwifi-2030-5.ucode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Hutchings <ben@decadent.org.uk>
+Date: Mon, 20 Aug 2012 18:01:34 +0200
+In-Reply-To: <50325D89.9080209@lwfinger.net> (sfid-20120820_175351_872841_14CD8D92)
+References: <502D0C72.2050207@lwfinger.net>
+	  (sfid-20120816_170635_404509_F239FBF6) <1345459509.4459.5.camel@jlt3.sipsolutions.net>
+	 <50325D89.9080209@lwfinger.net> (sfid-20120820_175351_872841_14CD8D92)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 09 August 2012, Wei Ni wrote:
-> In the wlan driver, it will use platform_get_resource() to get the
-> res->irq, res->flags, the irq number is right, but the flags will be
-> IORESOURCE_IRQ, not the 0x04 (IRQF_TRIGGER_HIGH).
-> The wlan driver wish this flags include the IRQF_TRGGER_* information,
-> and it will use this flags to configure other hw settings. If it is
-> wrong, the wlan can't work.
-> 
-> I checked drivers/of/irq.c, in function of_irq_to_resource(), it will
-> set r->flags = IORESOURCE_IRQ directly, not read the flags from the dtb
-> file. And I didn't find any of_xx api to get this flags.
-> 
-> How can I get this flags, does anyone has suggestion?
+On Mon, 2012-08-20 at 10:53 -0500, Larry Finger wrote:
 
-The driver should not need to know about thie flag. It gets read
-by irq_create_of_mapping when calling teh xlate function and
-gets set using irq_set_irq_type from there too.
+> I'm still concerned about the bigger picture. I can understand that the -5 
+> version was experimental, but why was a driver released that needed a firmware 
+> version that could never be obtained? If any driver version needs a particular 
+> firmware, the fw must be available as long as anyone might be using that driver. 
+> To me, that means forever.
 
-	Arnd
+Well, yes. That firmware, however, never was never available publicly.
+The fact that the driver was released anyway is due to us working on the
+driver upstream while working with the experimental internal firmware.
+
+johannes
+
