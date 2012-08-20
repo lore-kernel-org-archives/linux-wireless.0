@@ -1,89 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37028 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754506Ab2HFTSB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:18:01 -0400
-Message-ID: <50201862.3050909@suse.de> (sfid-20120806_211804_617222_96990787)
-Date: Mon, 06 Aug 2012 15:17:54 -0400
-From: Jeff Mahoney <jeffm@suse.de>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>
-Subject: Re: [PATCH] brcmsmac: document firmware dependencies
-References: <501079BC.6050607@suse.de> <20120806190135.GA26210@tuxdriver.com>
-In-Reply-To: <20120806190135.GA26210@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from ocean.emcraft.com ([213.221.7.182]:49855 "EHLO
+	ocean.emcraft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753359Ab2HTLkX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Aug 2012 07:40:23 -0400
+Date: Mon, 20 Aug 2012 15:40:16 +0400
+From: Sergei Poselenov <sposelenov@emcraft.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	backports@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH] compat-wireless:rt2800usb: Added rx packet length
+ validity check
+Message-ID: <20120820154016.3f0a587a@emcraft.com> (sfid-20120820_134032_019553_613BBBF4)
+In-Reply-To: <CAB=NE6WRP3eZQ6ZZTGy_9=v1hf05evH4fAEjPMMWAkcNEXt0yg@mail.gmail.com>
+References: <20120817212007.6a77cbb8@emcraft.com>
+	<CAB=NE6WRP3eZQ6ZZTGy_9=v1hf05evH4fAEjPMMWAkcNEXt0yg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello Luis,
 
-On 8/6/12 3:01 PM, John W. Linville wrote:
-> Could you repost this in a fashion that is consumable by 'git am'?
+Thanks for the feedback. One simple question below.
 
-Apologies. I forgot to turn off signing. I've resent.
+On Mon, 20 Aug 2012 11:35:06 +0500
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
 
-- -Jeff
-
-> On Wed, Jul 25, 2012 at 06:57:00PM -0400, Jeff Mahoney wrote: The
-> brcmsmac driver requests firmware but doesn't document the 
-> dependency. This means that software that analyzes the modules to 
-> determine if firmware is needed won't detect it.
+> On Fri, Aug 17, 2012 at 9:20 PM, Sergei Poselenov
+> <sposelenov@emcraft.com> wrote:
+> >
+> > On our system (ARM Cortex-M3 SOC running linux-2.6.33 with
+> > compat-wireless-3.4-rc3-1 modules configured for rt2x00) frequent
+> > crashes were observed in rt2800usb module because of the invalid
+> > length of the received packet (3392, 46920...). This patch adds
+> > the sanity check on the packet legth. In case of the bad length,
+> > mark the packet as with CRC error.
 > 
-> Specifically, (at least) openSUSE won't install the
-> kernel-firmware package if no hardware requires it.
-> 
-> This patch adds the MODULE_FIRMWARE directives.
-> 
-> Signed-off-by: Jeff Mahoney <jeffm@suse.com> --- 
-> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 +++- 1
-> file changed, 3 insertions(+), 1 deletion(-)
-> 
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c +++
-> b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c @@ -86,7
-> +86,9 @@ MODULE_AUTHOR("Broadcom Corporation"); 
-> MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN driver."); 
-> MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN cards"); 
-> MODULE_LICENSE("Dual BSD/GPL"); - +/* This needs to be adjusted
-> when brcms_firmwares changes */ 
-> +MODULE_FIRMWARE("brcm/bcm43xx-0.fw"); 
-> +MODULE_FIRMWARE("brcm/bcm43xx_hdr-0.fw");
-> 
-> /* recognized BCMA Core IDs */ static struct bcma_device_id
-> brcms_coreid_table[] = {
-> 
->> -- To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in the body of a message to
->> majordomo@vger.kernel.org More majordomo info at
->> http://vger.kernel.org/majordomo-info.html
->> 
+> Nice find! However this is a *real* patch that must go upstream, so
+> you should submit it to the rt2800usb maintainers and also mark the
+> patch as a stable fix. You mark the patch as a stable fix by appending
+> at the bottom of the commit log message: Cc: stable@vger.kernel.org.
+> For example:
 > 
 
-- -- 
-Jeff Mahoney
-SUSE Labs
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.18 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+Before I did something stupid with my patch, here is what I'm going to
+do to make it reviewed in upsteam:
 
-iQIcBAEBAgAGBQJQIBhiAAoJEB57S2MheeWy8GQP/RS/v1buCVfYTkkzp5DGb6Fe
-w4gtRvGmSbPj8iOIbCqC1VhzoGXntJbL9KVlE0RDqc9A3nriEC+DPx11t4VFx8KP
-8JI9ai25tIy40FOMb3HlaZ4AeVCu3eooEU7lxIfdy+hognXj9LIw2GohDVwmlTG3
-0XLsOJoYax0RRQe7lhRIPASDjbl5lne+djrCJODZN1kSNJguKKyo7p5+1VqfVszi
-pEcs6NZWw7YbyoJ9g+px4turX4A9dEqWqw1qCL48gWL/iCLPETN72xj6O+oumZ5G
-NJeuLn0Mz+uNOd7wh8gAAJVrAAcnIPVVWrWbJtcAJKaPW5lQnf8sSB1XDvVZAmlM
-syNfJm9c0JSVquD/SS73awCOMQwMP5Zx7jK09pmgAQwrPATpoMwbUDlGG97UI24O
-36PqA1u5iNaPfK1EJ9Q0e/12hD+OyLgo9gC6zSVKz0soxfuQIONou1Ju/6yyjX/3
-SqTckKELkM1TY9HDqLIvYrCNPbWI73QVEKdKcdBojBbrtCBGV6PvS+6ZnPBJNbPg
-4V1VjHO/gG8o99kYM0mCtBNq8fiL1UNmmBZFPM/uAEumZA9z4+EzFA1bUJg3YYzD
-TO2Q9FL7hYTp2BUrJJBk5V7tzG8EMah6M+oWpam+5zNtQbq3QopNZAlvJlCvg9sv
-XDGL9pMHB+2qbZTYvVmq
-=wqxy
------END PGP SIGNATURE-----
+ - Reapply and retest on compat-wireless-3.5.1-1-snpc.tar.bz2
+ - According to the http://linuxwireless.org/en/developers/maintainers
+   send the patch to
+M:	Ivo van Doorn <IvDoorn@gmail.com>
+M:	Gertjan van Wingerde <gwingerde@gmail.com>
+M:	Helmut Schaa <helmut.schaa@googlemail.com>
+and CC to linux-wireless@vger.kernel.org
+
+ - Add the "Cc: stable@vger.kernel.org" before my "Signed-off-by" tag,
+   as suggested in the example below.
+
+Is that correct?
+
+Thanks is advance.
+
+After I will submit it to the mainline, I will try to provide the patch
+to the linux-next-pending.
+
+Regards,
+Sergei Poselenov, Emcraft Systems
+
+
+> commit e19f15ac6437624b6214b2f0ec0d69fb7eb205fa
+> Author: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Date:   Thu Aug 9 12:37:26 2012 +0530
+> 
+>     ath9k: stop btcoex on device suspend
+> 
+>     During suspend, the device will be moved to FULLSLEEP state.
+>     As btcoex is never been stopped, the btcoex timer is running
+>     and tries to access hw on fullsleep state. Fix that.
+> 
+>     Cc: stable@vger.kernel.org
+>     Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> Once you submit if you want it merged into a stable compat-wireless
+> release even before Greg Kroah-Hartman can apply it and make a new
+> 3.4.10 release (by the time you submit maybe 3.4.11 maybe) you can
+> send the patch to be applied to the driver in compat-wirelss by
+> submitting it to be part of the linux-next-pending/ directory. In
+> there are patches that are at least posted publicly. The format of the
+> patch there is to be in a full patch. If you have doubts check out the
+> compat-wireless-3.5.1-1-snpc.tar.bz2 release which has patches in all
+> of these directories:
+> 
+>   * pending-stable/
+>   * linux-next-pending/
+>   * linux-next-cherry-picks/
+>   * crap/
+> 
+> At this point you may also want to consider upgrading to
+> compat-wireless-3.5.1-1-snpc.tar.bz2. I should note that to send
+> patches for the 3.4 stable release of compat-wireless you should use
+> the linux-3.4.y branch. The same applies to the 3.5 release, you'd use
+> the linux-3.5.y branch. Except for patches for files in the above
+> directories I also require all patches merged into the stable branches
+> to be in the master branch first -- this follows the kernel's on
+> policy on stable releases.
+> 
+> The compat-wireless project is also now renamed to "compat-drivers"
+> and we have a new mailing list and home page for the project. New
+> releases based under the new name will start as of the v3.7 releases.
+> For more details please see:
+> 
+> https://backports.wiki.kernel.org
+> 
+> Please have a read here with regards for documentation of the
+> additional patches for compat-drivers.
+> 
+> https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/additional-patches
+> 
+>   Luis
+
