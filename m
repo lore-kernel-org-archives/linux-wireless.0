@@ -1,96 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:59089 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807Ab2H1PCR (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:50174 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902Ab2HUE4H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 11:02:17 -0400
-Received: by eaac11 with SMTP id c11so1578845eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2012 08:02:16 -0700 (PDT)
-Subject: Re: ath9k AR9287 freeze linux system
-From: =?ISO-8859-1?Q?Lu=EDs_D=EDaz_Gonz=E1lez?= <luis.hlodwig@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAD2nsn0cyiFj-obgtZt1JDt7f9o_+Yk0i3uZAt8DweLKKPxeRQ@mail.gmail.com>
-References: <1346146736.3087.12.camel@inferno>
-	 <CAD2nsn0uis8_GnNnR2p84TkDmphPoHe9LGTn2TNNZ18tCBxkog@mail.gmail.com>
-	 <1346161526.3808.5.camel@inferno>
-	 <CAD2nsn0cyiFj-obgtZt1JDt7f9o_+Yk0i3uZAt8DweLKKPxeRQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Aug 2012 17:01:52 +0200
-Message-ID: <1346166112.3412.14.camel@inferno> (sfid-20120828_170252_166747_CA7FC0D4)
-Mime-Version: 1.0
+	Tue, 21 Aug 2012 00:56:07 -0400
+Received: by eeil10 with SMTP id l10so2021067eei.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2012 21:56:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1345478494.4459.30.camel@jlt3.sipsolutions.net>
+References: <502D0C72.2050207@lwfinger.net> <1345459509.4459.5.camel@jlt3.sipsolutions.net>
+ <50325D89.9080209@lwfinger.net> <1345478494.4459.30.camel@jlt3.sipsolutions.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 21 Aug 2012 06:55:46 +0200
+Message-ID: <CA+XFjiqyqAiZGcBZB6u13FquBbkgBLDbDFAMLnHRMiK6P0Heww@mail.gmail.com> (sfid-20120821_065646_151608_E8EE2C8C)
+Subject: Re: Missing firmware iwlwifi-2030-5.ucode
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Hutchings <ben@decadent.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I tested the patch, great job, thanks a lot. All works great.
-I think that coexistence between wifi and bluetooth never worked
-better. :-)
+On Mon, Aug 20, 2012 at 6:01 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-08-20 at 10:53 -0500, Larry Finger wrote:
+>
+>> I'm still concerned about the bigger picture. I can understand that the -5
+>> version was experimental, but why was a driver released that needed a firmware
+>> version that could never be obtained? If any driver version needs a particular
+>> firmware, the fw must be available as long as anyone might be using that driver.
+>> To me, that means forever.
+>
+> Well, yes. That firmware, however, never was never available publicly.
+> The fact that the driver was released anyway is due to us working on the
+> driver upstream while working with the experimental internal firmware.
+>
+> johannes
 
-luis
-
-
-El mar, 28-08-2012 a las 19:28 +0530, Mohammed Shafi escribió:
-> On Tue, Aug 28, 2012 at 7:15 PM, Luís Díaz González
-> <luis.hlodwig@gmail.com> wrote:
-> > El mar, 28-08-2012 a las 19:08 +0530, Mohammed Shafi escribió:
-> >> Hi,
-> >>
-> >> On Tue, Aug 28, 2012 at 3:08 PM, Luís Díaz González
-> >> <luis.hlodwig@gmail.com> wrote:
-> >> > The last two releases compat-wireless (2012-08-26 and 2012-08-27) freeze
-> >> > my linux system.
-> >>
-> >> thanks for reporting.
-> >> *Please provide some information/call trace if you can get(you can
-> >> attach a photograph of the trace :) )
-> >> *like what did you do(sending traffic, suspend resume, keep the
-> >> station idle?) to see the freeze.
-> >> *I would try to recreate in my ubuntu 2.6.32.. kernel.
-> >> *are you using btcoex in the driver sudo modprobe ath9k btcoex_enable=1  ?
-> >
-> > Yes, I'm using btcoex, when I disabled it, all works again.
-> 
-> please try the attached patch sent today,
-> http://comments.gmane.org/gmane.linux.kernel.wireless.general/96629
-> you have go to your compat-wireless folder
-> cd compat-wireless...
-> then do patch -p1 <  /home/myname/fix-bt.patch
-> 
-> assuming the patch is in /home/myname/fix-bt.patch
-> 
-> do
-> make clean && make && sudo make install
-> 
-> sudo make unload
-> sudo modprobe -v ath9k btcoex_enable=1
-> 
-> 
-> 
-> >
-> >>
-> >>
-> >> >
-> >> > I'm not a developer, I'm a simple user
-> >> >
-> >> > Debian Squeeze 2.6.32
-> >> > wireless card  AR9287
-> >> >
-> >> >
-> >> > thanks,
-> >> > luis
-> >> >
-> >> >
-> >> > --
-> >> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >> > the body of a message to majordomo@vger.kernel.org
-> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >>
-> >>
-> >
-> >
-> 
-> 
-> 
-
-
+Perhaps we should add a Kconfig option to disable internal development
+hardware - with that option unchecked, support for hardware that is
+not on the market is disabled, with a printk warning to upgrade the
+driver in case a user tries to use a driver with a card that it thinks
+is internal-only. This way, users will get a meaningful error message,
+rather than a misleading "missing firmware" one.
+The Kconfig option should also come with a big warning of "Say N
+unless you are an Intel employee". Maybe it should even be marked
+BROKEN, like N-PHY was in b43 before it became usable.
