@@ -1,53 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:44712 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757986Ab2HWHRK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41767 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756555Ab2HURBA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 03:17:10 -0400
-MIME-Version: 1.0
-Date: Thu, 23 Aug 2012 15:17:09 +0800
-Message-ID: <CAPgLHd8MssMFM7G8SpAQQAr-i6nbgtHEPEPKC3ggGLAegpeRGw@mail.gmail.com> (sfid-20120823_091757_776825_A5B92748)
-Subject: [PATCH] airo: use is_zero_ether_addr() and is_broadcast_ether_addr()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 21 Aug 2012 13:01:00 -0400
+Message-ID: <1345568455.10280.11.camel@jlt3.sipsolutions.net> (sfid-20120821_190103_862898_7F152300)
+Subject: pull-request: iwlwifi-next 2012-08-21
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 21 Aug 2012 19:00:55 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-1uhuYWSLGapOwsiSgLar"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Using is_zero_ether_addr() and is_broadcast_ether_addr() instead of
-directly use memcmp() to determine if the ethernet address is all zeros.
+--=-1uhuYWSLGapOwsiSgLar
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
+Hi John,
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/airo.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Please pull (per below) to get a few iwlwifi updates. Nothing much
+interesting as we're continuing work on a new driver piece, just a few
+misc fixes that didn't seem important enough for 3.6 and very minor code
+cleanups.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index f9f15bb..17c599d 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -5976,13 +5976,11 @@ static int airo_set_wap(struct net_device *dev,
- 	Cmd cmd;
- 	Resp rsp;
- 	APListRid APList_rid;
--	static const u8 any[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
--	static const u8 off[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
- 
- 	if (awrq->sa_family != ARPHRD_ETHER)
- 		return -EINVAL;
--	else if (!memcmp(any, awrq->sa_data, ETH_ALEN) ||
--	         !memcmp(off, awrq->sa_data, ETH_ALEN)) {
-+	else if (is_broadcast_ether_addr(awrq->sa_data) ||
-+		 is_zero_ether_addr(awrq->sa_data)) {
- 		memset(&cmd, 0, sizeof(cmd));
- 		cmd.cmd=CMD_LOSE_SYNC;
- 		if (down_interruptible(&local->sem))
+I'll follow up with the patches themselves for comments.
 
+johannes
+
+
+The following changes since commit 36eb22e97a2b621fb707eead58ef915ab0f46e9e=
+:
+
+  libertas: firmware.c: remove duplicated include (2012-07-19 12:36:34 -040=
+0)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 40503f7b48260a91ab65a4f8b00a2c6f004fa807:
+
+  iwlwifi: fix FW restart on init FW (2012-08-21 18:32:09 +0200)
+
+----------------------------------------------------------------
+Amit Beka (1):
+      iwlwifi: fix FW restart on init FW
+
+Emmanuel Grumbach (3):
+      iwlwifi: s/iwl_ucode_callback/iwl_req_fw_callback
+      iwlwifi: get the correct HCMD in the response handler
+      iwlwifi: fix the preparation of the card
+
+Johannes Berg (2):
+      iwlwifi: fix aggregation check indentation
+      iwlwifi: reduce max remain-on-channel duration
+
+Meenakshi Venkataraman (2):
+      iwlwifi: clean up properly when registration with mac80211 fails
+      iwlwifi: rework the iwlwifi debugfs structure
+
+ drivers/net/wireless/iwlwifi/dvm/agn.h       |    9 +-
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c   |   56 +++++-----
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c  |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c      |   24 +++--
+ drivers/net/wireless/iwlwifi/dvm/sta.c       |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/tx.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-drv.c       |  141 ++++++++++++++++++++++=
+----
+ drivers/net/wireless/iwlwifi/iwl-drv.h       |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h   |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |   12 ++-
+ drivers/net/wireless/iwlwifi/pcie/drv.c      |    6 ++
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    1 +
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |   16 ++-
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |   28 ++---
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |   26 ++++-
+ 15 files changed, 241 insertions(+), 93 deletions(-)
+
+
+--=-1uhuYWSLGapOwsiSgLar
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQM77HAAoJEDBSmw7B7bqr+mgQAIIJT5f8bRxMW2+LtLk6kWPS
+mQZIZ/lgpmCtfjML7/pJQbQVw6zMF8d6/6LqvHNuKRrl6kLl/KrqDQHhoQuLfEWV
+ZivchlsWzF9Iaori5/henhvkxx2UW2r0sZIRHCq5jaS/TlvYlw5v3U0C7GXYx8RG
+5ggBhy3BNTzfslg2WxSpRy31EAXzH/0oL2/BcDGFX6iV4kYf76z3tN4CNuJTXc45
+ed51RYKDJjCnji5LrsCr4GYHzrHrkZpN1VCEP/qfu1cWib/qpmTWWFH5FSH1ZFr2
+aWGgX75DZ/91aEaDans254JTBrhBRD2LW4znkO6byI6VhsYK7dNQD6DNYw6IG4gG
+e+hSej2tRXJGE8KVw01/m6Ar++6P7mImwN8dNEa4xcEqeZA7/0guW3ryZItHNWSj
+MRxAOVlz37+MpQD/i03Yayk9pLeNoQfEdMaLmu9WAJBiqS8tCsjO9gyzMpBqNY3q
+GKUEL23ZimoPu2mHeiBgG3QRjZ8dyAuLjqxQWeYYtOZGpsWHHpTz+PxryRTRus8Z
+tyDW27Fn2rXgPBer61ZLowDVUWUXG8fzgTVtnq96zO9NMEJfsF5xwaCY25FDGLhl
+vKIb94ftvQutQk4coI22YnSnYOXeNc2RacgvU9yw1eWV4T676MGGPaPlmtoE08Nd
+pBRGXcLqFWnW47jWtiJM
+=baej
+-----END PGP SIGNATURE-----
+
+--=-1uhuYWSLGapOwsiSgLar--
 
