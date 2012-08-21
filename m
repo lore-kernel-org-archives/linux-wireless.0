@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59502 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab2HEQbx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 12:31:53 -0400
-Message-ID: <1344184306.5765.0.camel@jlt3.sipsolutions.net> (sfid-20120805_183234_976708_F712B40F)
-Subject: [PATCH v3.6] iwlwifi: disable greenfield transmissions as a
- workaround
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Cesar Eduardo Barros <cesarb@cesarb.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 05 Aug 2012 18:31:46 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:33329 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751917Ab2HUHuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Aug 2012 03:50:18 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mahesh Palivela <maheshp@posedge.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville\@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCDD559@mbx022-e1-nj-10.exch022.domain.local>
+	<20120816102211.GD17659@redhat.com> <502CF2D5.6020704@posedge.com>
+	<20120817140657.GA1645@redhat.com> <502E85D9.5050301@posedge.com>
+	<1345480718.4459.37.camel@jlt3.sipsolutions.net>
+Date: Tue, 21 Aug 2012 10:50:13 +0300
+In-Reply-To: <1345480718.4459.37.camel@jlt3.sipsolutions.net> (Johannes Berg's
+	message of "Mon, 20 Aug 2012 18:38:38 +0200")
+Message-ID: <87d32k7kga.fsf@purkki.adurom.net> (sfid-20120821_095021_970024_70970E8B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-There's a bug that causes the rate scaling to get stuck
-when it has to use single-stream rates with a peer that
-can do GF and SGI; the two are incompatible so we can't
-use them together, but that causes the algorithm to not
-work at all, it always rejects updates.
+> On the other hand, maybe for VHT we want to completely change channel
+> specifications? Maybe it would be better to allow specifying the
+> *global* center frequency of the entire channel, and the width, and the
+> control channel offset instead of encoding everything into the single
+> channel type value? I don't know.
 
-Disable greenfield for now to prevent that problem.
+What about the future? Will we see 320 MHz wide channels in 2020? :)
 
-Cc: stable@vger.kernel.org
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Tested-by: Cesar Eduardo Barros <cesarb@cesarb.net>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-John, can you apply this for 3.6 please, I forgot last
-week and didn't want to prepare a pull request for a single
-patch now. Thanks!
+After following the discussion about this I'm starting to think that
+what you propose above makes our life easier in the long run. I just
+don't trust that using a single channel type value is scalable in the
+long run.
 
- drivers/net/wireless/iwlwifi/dvm/rs.c |   13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.c b/drivers/net/wireless/iwlwifi/dvm/rs.c
-index 6fddd27..a82f46c 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rs.c
-@@ -707,11 +707,14 @@ static int rs_toggle_antenna(u32 valid_ant, u32 *rate_n_flags,
-  */
- static bool rs_use_green(struct ieee80211_sta *sta)
- {
--	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
--	struct iwl_rxon_context *ctx = sta_priv->ctx;
--
--	return (sta->ht_cap.cap & IEEE80211_HT_CAP_GRN_FLD) &&
--		!(ctx->ht.non_gf_sta_present);
-+	/*
-+	 * There's a bug somewhere in this code that causes the
-+	 * scaling to get stuck because GF+SGI can't be combined
-+	 * in SISO rates. Until we find that bug, disable GF, it
-+	 * has only limited benefit and we still interoperate with
-+	 * GF APs since we can always receive GF transmissions.
-+	 */
-+	return false;
- }
- 
- /**
 -- 
-1.7.10.4
-
-
-
+Kalle Valo
