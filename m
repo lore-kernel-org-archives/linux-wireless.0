@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:60986 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754758Ab2HZBpV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41775 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756099Ab2HURCK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Aug 2012 21:45:21 -0400
-MIME-Version: 1.0
-Date: Sun, 26 Aug 2012 09:45:21 +0800
-Message-ID: <CAPgLHd-Y2voCSSGdbxm4R2AH=fqN+CP2PQVJ5vT1Y-QLNNFTjw@mail.gmail.com> (sfid-20120826_034531_265994_CF6DB032)
-Subject: [PATCH] wl18xx: remove duplicated include from main.c
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: coelho@ti.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 21 Aug 2012 13:02:10 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/8] iwlwifi: fix aggregation check indentation
+Date: Tue, 21 Aug 2012 19:01:52 +0200
+Message-Id: <1345568516-20822-4-git-send-email-johannes@sipsolutions.net> (sfid-20120821_190216_539902_659C4D9A)
+In-Reply-To: <1345568516-20822-1-git-send-email-johannes@sipsolutions.net>
+References: <1345568455.10280.11.camel@jlt3.sipsolutions.net>
+ <1345568516-20822-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+From: Johannes Berg <johannes.berg@intel.com>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Align the code to inside the WARN_ON() as it should.
 
-Remove duplicated include.
-
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/iwlwifi/dvm/tx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 69042bb..31cf6eb 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -30,7 +30,6 @@
- #include "../wlcore/acx.h"
- #include "../wlcore/tx.h"
- #include "../wlcore/rx.h"
--#include "../wlcore/io.h"
- #include "../wlcore/boot.h"
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index 5971a23..954ac34 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -431,7 +431,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 		 * only. Check this here.
+ 		 */
+ 		if (WARN_ONCE(tid_data->agg.state != IWL_AGG_ON &&
+-		    tid_data->agg.state != IWL_AGG_OFF,
++			      tid_data->agg.state != IWL_AGG_OFF,
+ 		    "Tx while agg.state = %d", tid_data->agg.state))
+ 			goto drop_unlock_sta;
  
- #include "reg.h"
+-- 
+1.7.10.4
 
