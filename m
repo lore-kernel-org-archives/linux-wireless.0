@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:36079 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280Ab2H1NMB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41771 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756555Ab2HURCJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 09:12:01 -0400
-MIME-Version: 1.0
-Date: Tue, 28 Aug 2012 21:12:00 +0800
-Message-ID: <CAPgLHd_q0T=RD+qgEzFpnhez4Hdu-jDuFf0E+MgwiWLSeaMYaQ@mail.gmail.com> (sfid-20120828_151205_294215_49FDBB31)
-Subject: [PATCH] rtlwifi: rtl8192c: remove pointless conditional before kfree_skb()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 21 Aug 2012 13:02:09 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Subject: [PATCH 2/8] iwlwifi: clean up properly when registration with mac80211 fails
+Date: Tue, 21 Aug 2012 19:01:50 +0200
+Message-Id: <1345568516-20822-2-git-send-email-johannes@sipsolutions.net> (sfid-20120821_190213_500011_F7AA929C)
+In-Reply-To: <1345568516-20822-1-git-send-email-johannes@sipsolutions.net>
+References: <1345568455.10280.11.camel@jlt3.sipsolutions.net>
+ <1345568516-20822-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-Remove pointless conditional before kfree_skb().
+If registration with mac80211 fails, stop the thermal
+throttling and testmode work that were previously started.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/main.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-index 44febfd..b627151 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -577,8 +577,7 @@ static bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw,
- 	ring = &rtlpci->tx_ring[BEACON_QUEUE];
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index 84d3db5..e8ffbe4 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -1473,6 +1473,9 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 	return op_mode;
  
- 	pskb = __skb_dequeue(&ring->queue);
--	if (pskb)
--		kfree_skb(pskb);
-+	kfree_skb(pskb);
- 
- 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
- 
-
+ out_destroy_workqueue:
++	iwl_tt_exit(priv);
++	iwl_testmode_free(priv);
++	iwl_cancel_deferred_work(priv);
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+ 	iwl_uninit_drv(priv);
+-- 
+1.7.10.4
 
