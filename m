@@ -1,303 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58037 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753761Ab2HXRt0 (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:61051 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752663Ab2HUPBl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 13:49:26 -0400
-Date: Fri, 24 Aug 2012 13:31:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next 2012-08-24
-Message-ID: <20120824173138.GD27147@tuxdriver.com> (sfid-20120824_194937_208204_DD1B6346)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="IrhDeMKUP4DT/M7F"
+	Tue, 21 Aug 2012 11:01:41 -0400
+Received: by ghrr11 with SMTP id r11so5894483ghr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2012 08:01:40 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 3/6] rtlwifi: Update header file
+Date: Tue, 21 Aug 2012 10:00:52 -0500
+Message-Id: <1345561255-10349-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120821_170157_178600_7F38C196)
+In-Reply-To: <1345561255-10349-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1345561255-10349-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The latest version of the vendor driver for the rtlwifi family
+includes many changes. This patch incorporates the difference
+in the main header file. Many of the changes are in preparation
+for adding a new driver for the RTL8723AE device.
 
---IrhDeMKUP4DT/M7F
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-commit f20b6213f193f455a62ef9299ceca11f5531dff8
-
-Dave,
-
-This is a batch of updates intended for 3.7.  The bulk of it is
-mac80211 changes, including some mesh work from Thomas Pederson and
-some multi-channel work from Johannes.  A variety of driver updates
-and other bits are scattered in there as well.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
+ drivers/net/wireless/rtlwifi/wifi.h |   92 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 91 insertions(+), 1 deletion(-)
 
-The following changes since commit e6e94e392fddb8845bdd2e199f55ebf7d76cb58d:
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 51da6de..ec33cde 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -135,7 +135,7 @@ enum hardware_type {
+ 	HARDWARE_TYPE_RTL8192CU,
+ 	HARDWARE_TYPE_RTL8192DE,
+ 	HARDWARE_TYPE_RTL8192DU,
+-	HARDWARE_TYPE_RTL8723E,
++	HARDWARE_TYPE_RTL8723AE,
+ 	HARDWARE_TYPE_RTL8723U,
+ 
+ 	/* keep it last */
+@@ -389,6 +389,7 @@ enum rt_enc_alg {
+ 	RSERVED_ENCRYPTION = 3,
+ 	AESCCMP_ENCRYPTION = 4,
+ 	WEP104_ENCRYPTION = 5,
++	AESCMAC_ENCRYPTION = 6,	/*IEEE802.11w */
+ };
+ 
+ enum rtl_hal_state {
+@@ -873,6 +874,7 @@ struct rtl_phy {
+ 	u32 adda_backup[16];
+ 	u32 iqk_mac_backup[IQK_MAC_REG_NUM];
+ 	u32 iqk_bb_backup[10];
++	bool iqk_initialized;
+ 
+ 	/* Dual mac */
+ 	bool need_iqk;
+@@ -910,6 +912,8 @@ struct rtl_phy {
+ #define RTL_AGG_OPERATIONAL			3
+ #define RTL_AGG_OFF				0
+ #define RTL_AGG_ON				1
++#define RTL_RX_AGG_START			1
++#define RTL_RX_AGG_STOP				0
+ #define RTL_AGG_EMPTYING_HW_QUEUE_ADDBA		2
+ #define RTL_AGG_EMPTYING_HW_QUEUE_DELBA		3
+ 
+@@ -920,6 +924,7 @@ struct rtl_ht_agg {
+ 	u64 bitmap;
+ 	u32 rate_n_flags;
+ 	u8 agg_state;
++	u8 rx_agg_state;
+ };
+ 
+ struct rtl_tid_data {
+@@ -927,11 +932,19 @@ struct rtl_tid_data {
+ 	struct rtl_ht_agg agg;
+ };
+ 
++struct rssi_sta {
++	long undecorated_smoothed_pwdb;
++};
++
+ struct rtl_sta_info {
++	struct list_head list;
+ 	u8 ratr_index;
+ 	u8 wireless_mode;
+ 	u8 mimo_ps;
+ 	struct rtl_tid_data tids[MAX_TID_COUNT];
++
++	/* just used for ap adhoc or mesh*/
++	struct rssi_sta rssi_stat;
+ } __packed;
+ 
+ struct rtl_priv;
+@@ -1034,6 +1047,11 @@ struct rtl_mac {
+ struct rtl_hal {
+ 	struct ieee80211_hw *hw;
+ 
++	bool up_first_time;
++	bool first_init;
++	bool being_init_adapter;
++	bool bbrf_ready;
++
+ 	enum intf_type interface;
+ 	u16 hw_type;		/*92c or 92d or 92s and so on */
+ 	u8 ic_class;
+@@ -1048,6 +1066,7 @@ struct rtl_hal {
+ 	u16 fw_subversion;
+ 	bool h2c_setinprogress;
+ 	u8 last_hmeboxnum;
++	bool fw_ready;
+ 	/*Reserve page start offset except beacon in TxQ. */
+ 	u8 fw_rsvdpage_startoffset;
+ 	u8 h2c_txcmd_seq;
+@@ -1083,6 +1102,8 @@ struct rtl_hal {
+ 	bool load_imrandiqk_setting_for2g;
+ 
+ 	bool disable_amsdu_8k;
++	bool master_of_dmsp;
++	bool slave_of_dmsp;
+ };
+ 
+ struct rtl_security {
+@@ -1144,6 +1165,9 @@ struct rtl_dm {
+ 	bool disable_tx_int;
+ 	char ofdm_index[2];
+ 	char cck_index;
++
++	/* DMSP */
++	bool supp_phymode_switch;
+ };
+ 
+ #define	EFUSE_MAX_LOGICAL_SIZE			256
+@@ -1337,6 +1361,10 @@ struct rtl_stats {
+ };
+ 
+ struct rt_link_detect {
++	/* count for roaming */
++	u32 bcn_rx_inperiod;
++	u32 roam_times;
++
+ 	u32 num_tx_in4period[4];
+ 	u32 num_rx_in4period[4];
+ 
+@@ -1344,6 +1372,8 @@ struct rt_link_detect {
+ 	u32 num_rx_inperiod;
+ 
+ 	bool busytraffic;
++	bool tx_busy_traffic;
++	bool rx_busy_traffic;
+ 	bool higher_busytraffic;
+ 	bool higher_busyrxtraffic;
+ 
+@@ -1454,7 +1484,12 @@ struct rtl_hal_ops {
+ 			  u32 regaddr, u32 bitmask);
+ 	void (*set_rfreg) (struct ieee80211_hw *hw, enum radio_path rfpath,
+ 			   u32 regaddr, u32 bitmask, u32 data);
++	void (*allow_all_destaddr)(struct ieee80211_hw *hw,
++		bool allow_all_da, bool write_into_reg);
+ 	void (*linked_set_reg) (struct ieee80211_hw *hw);
++	void (*check_switch_to_dmdp) (struct ieee80211_hw *hw);
++	void (*dualmac_easy_concurrent) (struct ieee80211_hw *hw);
++	void (*dualmac_switch_to_dmdp) (struct ieee80211_hw *hw);
+ 	bool (*phy_rf6052_config) (struct ieee80211_hw *hw);
+ 	void (*phy_rf6052_set_cck_txpower) (struct ieee80211_hw *hw,
+ 					    u8 *powerlevel);
+@@ -1474,6 +1509,8 @@ struct rtl_intf_ops {
+ 	void (*read_efuse_byte)(struct ieee80211_hw *hw, u16 _offset, u8 *pbuf);
+ 	int (*adapter_start) (struct ieee80211_hw *hw);
+ 	void (*adapter_stop) (struct ieee80211_hw *hw);
++	bool (*check_buddy_priv)(struct ieee80211_hw *hw,
++				 struct rtl_priv **buddy_priv);
+ 
+ 	int (*adapter_tx) (struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			struct rtl_tcb_desc *ptcb_desc);
+@@ -1554,11 +1591,16 @@ struct rtl_locks {
+ 	spinlock_t h2c_lock;
+ 	spinlock_t rf_ps_lock;
+ 	spinlock_t rf_lock;
++	spinlock_t lps_lock;
+ 	spinlock_t waitq_lock;
++	spinlock_t entry_list_lock;
+ 	spinlock_t usb_lock;
+ 
+ 	/*Dual mac*/
+ 	spinlock_t cck_and_rw_pagea_lock;
++
++	/*Easy concurrent*/
++	spinlock_t check_sendpkt_lock;
+ };
+ 
+ struct rtl_works {
+@@ -1566,6 +1608,7 @@ struct rtl_works {
+ 
+ 	/*timer */
+ 	struct timer_list watchdog_timer;
++	struct timer_list dualmac_easyconcurrent_retrytimer;
+ 
+ 	/*task */
+ 	struct tasklet_struct irq_tasklet;
+@@ -1593,6 +1636,31 @@ struct rtl_debug {
+ 	char proc_name[20];
+ };
+ 
++#define MIMO_PS_STATIC			0
++#define MIMO_PS_DYNAMIC			1
++#define MIMO_PS_NOLIMIT			3
++
++struct rtl_dualmac_easy_concurrent_ctl {
++	enum band_type currentbandtype_backfordmdp;
++	bool close_bbandrf_for_dmsp;
++	bool change_to_dmdp;
++	bool change_to_dmsp;
++	bool switch_in_process;
++};
++
++struct rtl_dmsp_ctl {
++	bool activescan_for_slaveofdmsp;
++	bool scan_for_anothermac_fordmsp;
++	bool scan_for_itself_fordmsp;
++	bool writedig_for_anothermacofdmsp;
++	u32 curdigvalue_for_anothermacofdmsp;
++	bool changecckpdstate_for_anothermacofdmsp;
++	u8 curcckpdstate_for_anothermacofdmsp;
++	bool changetxhighpowerlvl_for_anothermacofdmsp;
++	u8 curtxhighlvl_for_anothermacofdmsp;
++	long rssivalmin_for_anothermacofdmsp;
++};
++
+ struct ps_t {
+ 	u8 pre_ccastate;
+ 	u8 cur_ccasate;
+@@ -1652,8 +1720,20 @@ struct dig_t {
+ 	char backoffval_range_min;
+ };
+ 
++struct rtl_global_var {
++	/* from this list we can get
++	 * other adapter's rtl_priv */
++	struct list_head glb_priv_list;
++	spinlock_t glb_list_lock;
++};
++
+ struct rtl_priv {
+ 	struct completion firmware_loading_complete;
++	struct list_head list;
++	struct rtl_priv *buddy_priv;
++	struct rtl_global_var *glb_var;
++	struct rtl_dualmac_easy_concurrent_ctl easy_concurrent_ctl;
++	struct rtl_dmsp_ctl dmsp_ctl;
+ 	struct rtl_locks locks;
+ 	struct rtl_works works;
+ 	struct rtl_mac mac80211;
+@@ -1674,6 +1754,9 @@ struct rtl_priv {
+ 
+ 	struct rtl_rate_priv *rate_priv;
+ 
++	/* sta entry list for ap adhoc or mesh */
++	struct list_head entry_list;
++
+ 	struct rtl_debug dbg;
+ 	int max_fw_size;
+ 
+@@ -2100,4 +2183,11 @@ static inline struct ieee80211_sta *get_sta(struct ieee80211_hw *hw,
+ 	return ieee80211_find_sta(vif, bssid);
+ }
+ 
++static inline struct ieee80211_sta *rtl_find_sta(struct ieee80211_hw *hw,
++		u8 *mac_addr)
++{
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	return ieee80211_find_sta(mac->vif, mac_addr);
++}
++
+ #endif
+-- 
+1.7.10.4
 
-  Merge tag 'batman-adv-for-davem' of git://git.open-mesh.org/linux-merge (=
-2012-08-24 11:30:50 -0400)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
-for-davem
-
-for you to fetch changes up to f20b6213f193f455a62ef9299ceca11f5531dff8:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless-next into for-davem (2012-08-24 12:25:30 -0400)
-
-----------------------------------------------------------------
-
-AceLan Kao (1):
-      Revert "rfkill: remove dead code"
-
-Amit Beka (1):
-      iwlwifi: fix FW restart on init FW
-
-Antonio Quartulli (2):
-      mac80211: add supported rates change notification in IBSS
-      ath9k_htc: implement sta_rc_update() mac80211 callback
-
-Arik Nemtsov (2):
-      wlcore: don't get the hlid from a queued skb
-      wlcore: op_tx: pass sta explicitly when inferring frame hlid
-
-Christian Lamparter (1):
-      carl9170: report A-MPDU status
-
-Chun-Yeow Yeoh (1):
-      mac80211: don't re-init rate control when receiving mesh beacon
-
-Eliad Peller (1):
-      mac80211: add PS flag to bss_conf
-
-Emmanuel Grumbach (4):
-      iwlwifi: s/iwl_ucode_callback/iwl_req_fw_callback
-      iwlwifi: get the correct HCMD in the response handler
-      mac80211: don't call mgd_prepare_tx when associated
-      iwlwifi: fix the preparation of the card
-
-Eyal Shapira (1):
-      mac80211: avoid using synchronize_rcu in ieee80211_set_probe_resp
-
-Johannes Berg (38):
-      iwlwifi: fix aggregation check indentation
-      iwlwifi: reduce max remain-on-channel duration
-      mac80211: don't react to beacon loss if HW monitoring
-      mac80211: supress HT/VHT disable if not supported
-      mac80211: rename sta to new_sta
-      mac80211: set channel only once during auth/assoc
-      mac80211: use oper_channel in mesh
-      mac80211: use oper_channel in ibss
-      mac80211: use oper_channel in managed mlme
-      mac80211: use oper_channel in utils and config
-      mac80211: fix current vs. operating channel in preq/beacon
-      mac80211: use correct channel in TX
-      mac80211: manage carrier state in mesh
-      mac80211: enable WDS carrier only after adding station
-      mac80211: use eth_broadcast_addr
-      mac80211: reset station MLME flags upon new association
-      wireless: add radiotap A-MPDU status field
-      mac80211: support A-MPDU status reporting
-      mac80211: remove unneeded 'bssid' variable
-      mac80211: clean up CSA handling code
-      mac80211: fix CSA handling timer
-      mac80211: check size of channel switch IE when parsing
-      mac80211: make ieee80211_beacon_connection_loss_work static
-      cfg80211: add P2P Device abstraction
-      mac80211: support P2P Device abstraction
-      mac80211: add IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF
-      mac80211_hwsim: add support for P2P Device
-      mac80211: simplify buffers in aes_128_cmac_vector
-      mac80211: mesh: don't use global channel type
-      mac80211: remove almost unused local variable
-      mac80211: remove freq/chantype from debugfs
-      mac80211: use oper_channel in rate init
-      mac80211: don't assume channel is set in tracing
-      mac80211: use RX status band instead of current band
-      mac80211: check operating channel in scan
-      mac80211: convert ops checks to WARN_ON
-      mac80211: pass channel to ieee80211_send_probe_req
-      mac80211: clean up ieee80211_subif_start_xmit
-
-John W. Linville (4):
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-ne=
-xt
-      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-n=
-ext
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-ne=
-xt
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
-ext into for-davem
-
-Mahesh Palivela (1):
-      mac80211: VHT (11ac) association
-
-Meenakshi Venkataraman (2):
-      iwlwifi: clean up properly when registration with mac80211 fails
-      iwlwifi: rework the iwlwifi debugfs structure
-
-Rafa=C5=82 Mi=C5=82ecki (2):
-      bcma: detect and register serial flash device
-      bcma: detect and register NAND flash device
-
-Sujith Manoharan (1):
-      mac80211: Fix AP mode regression
-
-Thomas Huehn (1):
-      mac80211: move TX station pointer and restructure TX
-
-Thomas Pedersen (6):
-      mac80211: improve cleanup when leaving mesh
-      mac80211: remove ieee80211_clean_sdata()
-      mac80211: don't request ack for peering close
-      mac80211: skb leak in mesh_plink_frame_tx()
-      mac80211: use skb_queue_walk() in mesh_path_assign_nexthop
-      mac80211: clean up mpath_move_to_queue()
-
-Vladimir Kondratiev (1):
-      cfg80211: unify IE search
-
- drivers/bcma/Kconfig                               |   4 +-
- drivers/bcma/bcma_private.h                        |   2 +
- drivers/bcma/driver_chipcommon_nflash.c            |  28 +-
- drivers/bcma/driver_chipcommon_sflash.c            | 123 ++++++++-
- drivers/bcma/main.c                                |  17 ++
- drivers/net/wireless/adm8211.c                     |   4 +-
- drivers/net/wireless/at76c50x-usb.c                |   4 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c      |   3 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |   1 +
- drivers/net/wireless/ath/ath9k/htc.h               |   1 +
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c    |   2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |  35 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c      |   2 +-
- drivers/net/wireless/ath/ath9k/main.c              |   5 +-
- drivers/net/wireless/ath/ath9k/xmit.c              |   9 +-
- drivers/net/wireless/ath/carl9170/carl9170.h       |   5 +-
- drivers/net/wireless/ath/carl9170/rx.c             |  15 +-
- drivers/net/wireless/ath/carl9170/tx.c             |  16 +-
- drivers/net/wireless/b43/main.c                    |   3 +-
- drivers/net/wireless/b43legacy/main.c              |   1 +
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   6 +-
- drivers/net/wireless/iwlegacy/3945-mac.c           |  12 +-
- drivers/net/wireless/iwlegacy/4965-mac.c           |  26 +-
- drivers/net/wireless/iwlegacy/4965.h               |   8 +-
- drivers/net/wireless/iwlwifi/dvm/agn.h             |  13 +-
- drivers/net/wireless/iwlwifi/dvm/debugfs.c         |  56 ++--
- drivers/net/wireless/iwlwifi/dvm/mac80211.c        |   8 +-
- drivers/net/wireless/iwlwifi/dvm/main.c            |  24 +-
- drivers/net/wireless/iwlwifi/dvm/sta.c             |   2 +-
- drivers/net/wireless/iwlwifi/dvm/tx.c              |  18 +-
- drivers/net/wireless/iwlwifi/iwl-drv.c             | 141 ++++++++--
- drivers/net/wireless/iwlwifi/iwl-drv.h             |   6 +-
- drivers/net/wireless/iwlwifi/iwl-op-mode.h         |   3 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h           |  12 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c            |   6 +
- drivers/net/wireless/iwlwifi/pcie/internal.h       |   1 +
- drivers/net/wireless/iwlwifi/pcie/rx.c             |  16 +-
- drivers/net/wireless/iwlwifi/pcie/trans.c          |  28 +-
- drivers/net/wireless/iwlwifi/pcie/tx.c             |  26 +-
- drivers/net/wireless/libertas_tf/main.c            |   4 +-
- drivers/net/wireless/mac80211_hwsim.c              |   8 +-
- drivers/net/wireless/mwl8k.c                       |  17 +-
- drivers/net/wireless/p54/lmac.h                    |   4 +-
- drivers/net/wireless/p54/main.c                    |   2 +-
- drivers/net/wireless/p54/txrx.c                    |  15 +-
- drivers/net/wireless/rt2x00/rt2x00.h               |   4 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c            |   2 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c            |   4 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c          |  20 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c         |   6 +-
- drivers/net/wireless/rtl818x/rtl8187/dev.c         |   6 +-
- drivers/net/wireless/rtlwifi/base.c                |   3 +-
- drivers/net/wireless/rtlwifi/core.c                |   8 +-
- drivers/net/wireless/rtlwifi/pci.c                 |  16 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   5 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.h       |   1 +
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |   5 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.h       |   4 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   5 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.h       |   1 +
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   5 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.h       |   1 +
- drivers/net/wireless/rtlwifi/usb.c                 |  15 +-
- drivers/net/wireless/rtlwifi/wifi.h                |  13 +-
- drivers/net/wireless/ti/wl1251/main.c              |   4 +-
- drivers/net/wireless/ti/wlcore/main.c              |   6 +-
- drivers/net/wireless/ti/wlcore/tx.c                |  61 ++---
- drivers/net/wireless/ti/wlcore/tx.h                |   4 +-
- drivers/net/wireless/zd1211rw/zd_mac.c             |   6 +-
- drivers/staging/winbond/wbusb.c                    |   4 +-
- include/linux/bcma/bcma_driver_chipcommon.h        |  26 ++
- include/linux/bcma/bcma_regs.h                     |   2 +
- include/linux/nl80211.h                            |  30 ++-
- include/linux/rfkill.h                             |  31 +++
- include/net/cfg80211.h                             |  40 ++-
- include/net/ieee80211_radiotap.h                   |  11 +
- include/net/mac80211.h                             |  87 +++++--
- net/mac80211/aes_cmac.c                            |   6 +-
- net/mac80211/cfg.c                                 |  66 +++--
- net/mac80211/debugfs.c                             |  32 ---
- net/mac80211/driver-ops.h                          |  11 +-
- net/mac80211/ibss.c                                |  15 +-
- net/mac80211/ieee80211_i.h                         |  30 ++-
- net/mac80211/iface.c                               | 289 +++++++++++++----=
-----
- net/mac80211/main.c                                |  21 +-
- net/mac80211/mesh.c                                |  28 +-
- net/mac80211/mesh.h                                |   3 +
- net/mac80211/mesh_hwmp.c                           |   2 -
- net/mac80211/mesh_pathtbl.c                        |  44 ++--
- net/mac80211/mesh_plink.c                          |  38 ++-
- net/mac80211/mlme.c                                | 240 +++++++++++------
- net/mac80211/offchannel.c                          |   6 +
- net/mac80211/rate.h                                |   2 +-
- net/mac80211/rx.c                                  |  58 ++++-
- net/mac80211/scan.c                                |  12 +-
- net/mac80211/status.c                              |  22 +-
- net/mac80211/trace.h                               |  11 +-
- net/mac80211/tx.c                                  |  71 +++--
- net/mac80211/util.c                                |  57 ++--
- net/rfkill/core.c                                  |  14 +
- net/wireless/chan.c                                |   7 +-
- net/wireless/core.c                                |  53 +++-
- net/wireless/mlme.c                                |  10 +-
- net/wireless/nl80211.c                             | 122 ++++++++-
- net/wireless/radiotap.c                            |   2 +
- net/wireless/util.c                                |  36 +--
- 106 files changed, 1765 insertions(+), 721 deletions(-)
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
---IrhDeMKUP4DT/M7F
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQN7p6AAoJEJctW/TcYTgG2qIQAIzGGRMblu3RQ46dfkx6tuHv
-+rPrIrUBr152sk0/6enSJ5R9oI09gL7fgLpqNrThPDfbJiruXp3HzSlhMPohHpXf
-bcpEQmQ2wCELmF+pyg0nRiGqAJAtiU4Fy+cB5PaJsmATho5Ddk0Mn55L/F+5MkCg
-y9ymOr3BZqYcEyenpP5nN2zCkDmrysfV02Crt79sK7ic4uhz45pA+Pb+syoPlnf/
-wfL9laXm3vit81dTibrr0DoPyD26rP9Lm7HQsBsOqRCgu5CzqtUNuJrwWyiNVklf
-QSMiA91h+G1/gNZeIZXuxyUisyBRtQkJKfViEPP/D8GeWyns62UvX5vMHLpXKURa
-kug362anKMQtU2b025/OKtMaVuON/ZQ2MbC4rdFiudzmhzi3LVlJOK/AgV/6WE1w
-25RDljNJLCXEOtd7Vn8VdXFHqHv3PVP163988LaqLGltpBtIbZVJidaOMplyNdXH
-X5FBCeFsnH5LXuUjrBlDBFQe6eMENqLLgLVgBSGxLYwrQjlOh41pETewfih0IV5X
-zYZ8zOedE99Q7YYEBOA5Re/ZuRnpgXz9lr5IkeDBb/kNY2fxda7CDRP3JxpmsXgY
-zCOHNyOA8Z2bJ9yk5ZbqrtEYbsDba+obdnTczm28lXNS8iorE748x3EjcARvCJYa
-NfZ363AIl8r26LeGvf98
-=INSU
------END PGP SIGNATURE-----
-
---IrhDeMKUP4DT/M7F--
