@@ -1,37 +1,530 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4980 "EHLO mms3.broadcom.com"
+Received: from mail.allnet.de ([212.18.29.59]:30679 "EHLO mail.allnet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751944Ab2H3IF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 04:05:56 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 0/4 v3.6] brcmfmac: fix stability issues observed
-Date: Thu, 30 Aug 2012 10:05:33 +0200
-Message-ID: <1346313937-3605-1-git-send-email-arend@broadcom.com> (sfid-20120830_100612_237091_D8727231)
+	id S1752821Ab2HUXz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Aug 2012 19:55:29 -0400
+Date: Wed, 22 Aug 2012 02:53:57 +0300
+From: Daniel Golle <dgolle@allnet.de>
+To: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
+CC: <gwingerde@gmail.com>
+Subject: [PATCH v1] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
+Message-ID: <20120821235349.GA14648@earthship.home> (sfid-20120822_015534_690901_D521E41B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="VbJkn9YxBvnuCH5J"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series addresses a couple of issues that were found during
-driver testing. These patches are intended for v3.6 and applies
-to the wireless tree.
+--VbJkn9YxBvnuCH5J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Arend van Spriel (1):
-  brcmfmac: fix use of dev_kfree_skb() in irq context
-
-Hante Meuleman (3):
-  brcmfmac: dont use ZERO flag for usb IN
-  brcmfmac: fix race condition for rx and tx data.
-  brcmfmac: fix get rssi by clearing getvar struct.
-
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   30 ++++++++++----------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   15 +++++-----
- 2 files changed, 23 insertions(+), 22 deletions(-)
-
--- 
-1.7.9.5
+(sorry for posting twice, I previously forgot to merge the final commit rem=
+oving
+a comment. now fixed.)
 
 
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Daniel Golle <dgolle@allnet.de>
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt=
+2x00/rt2800.h
+index e252e9b..b9566b2 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -1936,6 +1936,11 @@ struct mac_iveiv_entry {
+ #define BBP47_TSSI_ADC6			FIELD8(0x80)
+=20
+ /*
++ * BBP 49
++ */
++#define BBP49_UPDATE_FLAG		FIELD8(0x01)
++
++/*
+  * BBP 109
+  */
+ #define BBP109_TX0_POWER		FIELD8(0x0f)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless=
+/rt2x00/rt2800lib.c
+index cb8c2ac..e9c19b8 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1615,6 +1615,7 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, =
+struct antenna_setup *ant)
+ 	case 1:
+ 		if (rt2x00_rt(rt2x00dev, RT3070) ||
+ 		    rt2x00_rt(rt2x00dev, RT3090) ||
++		    rt2x00_rt(rt2x00dev, RT3352) ||
+ 		    rt2x00_rt(rt2x00dev, RT3390)) {
+ 			rt2x00_eeprom_read(rt2x00dev,
+ 					   EEPROM_NIC_CONF1, &eeprom);
+@@ -2053,6 +2054,58 @@ static void rt2800_config_channel_rf3290(struct rt2x=
+00_dev *rt2x00dev,
+ 	}
+ }
+=20
++static void rt2800_config_channel_rf3322(struct rt2x00_dev *rt2x00dev,
++					 struct ieee80211_conf *conf,
++					 struct rf_channel *rf,
++					 struct channel_info *info)
++{
++	u8 rfcsr;
++
++	rt2800_rfcsr_write(rt2x00dev, 8, rf->rf1);
++	rt2800_rfcsr_write(rt2x00dev, 9, rf->rf3);
++
++	rt2800_rfcsr_write(rt2x00dev, 11, 0x42);
++	rt2800_rfcsr_write(rt2x00dev, 12, 0x1c);
++	rt2800_rfcsr_write(rt2x00dev, 13, 0x00);
++
++	if (info->default_power1 > POWER_BOUND)
++		rt2800_rfcsr_write(rt2x00dev, 47, POWER_BOUND);
++	else
++		rt2800_rfcsr_write(rt2x00dev, 47, info->default_power1);
++
++	if (info->default_power2 > POWER_BOUND)
++		rt2800_rfcsr_write(rt2x00dev, 48, POWER_BOUND);
++	else
++		rt2800_rfcsr_write(rt2x00dev, 48, info->default_power2);
++
++	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
++	if (rt2x00dev->freq_offset > FREQ_OFFSET_BOUND)
++		rt2x00_set_field8(&rfcsr, RFCSR17_CODE,
++				  FREQ_OFFSET_BOUND);
++	else
++		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, rt2x00dev->freq_offset);
++
++	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
++	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 1);
++	rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
++	rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
++	rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
++	rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
++
++	if ( rt2x00dev->default_ant.tx_chain_num =3D=3D 1 )
++		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
++
++	if ( rt2x00dev->default_ant.rx_chain_num =3D=3D 1 )
++		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
++
++	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
++
++	rt2800_rfcsr_write(rt2x00dev, 31, 80);
++}
++
+ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
+ 					 struct ieee80211_conf *conf,
+ 					 struct rf_channel *rf,
+@@ -2182,6 +2235,9 @@ static void rt2800_config_channel(struct rt2x00_dev *=
+rt2x00dev,
+ 	case RF3290:
+ 		rt2800_config_channel_rf3290(rt2x00dev, conf, rf, info);
+ 		break;
++	case RF3322:
++		rt2800_config_channel_rf3322(rt2x00dev, conf, rf, info);
++		break;
+ 	case RF5360:
+ 	case RF5370:
+ 	case RF5372:
+@@ -2194,6 +2250,7 @@ static void rt2800_config_channel(struct rt2x00_dev *=
+rt2x00dev,
+ 	}
+=20
+ 	if (rt2x00_rf(rt2x00dev, RF3290) ||
++	    rt2x00_rf(rt2x00dev, RF3322) ||
+ 	    rt2x00_rf(rt2x00dev, RF5360) ||
+ 	    rt2x00_rf(rt2x00dev, RF5370) ||
+ 	    rt2x00_rf(rt2x00dev, RF5372) ||
+@@ -2212,10 +2269,20 @@ static void rt2800_config_channel(struct rt2x00_dev=
+ *rt2x00dev,
+ 	/*
+ 	 * Change BBP settings
+ 	 */
+-	rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
+-	rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
+-	rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
+-	rt2800_bbp_write(rt2x00dev, 86, 0);
++	if (rt2x00_rt(rt2x00dev, RT3352))
++	{
++		rt2800_bbp_write(rt2x00dev, 27, 0x0);
++		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 27, 0x20);
++		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
++	}
++	else
++	{
++		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 86, 0);
++	}
+=20
+ 	if (rf->channel <=3D 14) {
+ 		if (!rt2x00_rt(rt2x00dev, RT5390) &&
+@@ -2310,6 +2377,16 @@ static void rt2800_config_channel(struct rt2x00_dev =
+*rt2x00dev,
+ 	rt2800_register_read(rt2x00dev, CH_IDLE_STA, &reg);
+ 	rt2800_register_read(rt2x00dev, CH_BUSY_STA, &reg);
+ 	rt2800_register_read(rt2x00dev, CH_BUSY_STA_SEC, &reg);
++
++	/*
++	 * Clear update flag
++	 */
++	if (rt2x00_rt(rt2x00dev, RT3352))
++	{
++		rt2800_bbp_read(rt2x00dev, 49, &bbp);
++		rt2x00_set_field8(&bbp, BBP49_UPDATE_FLAG, 0);
++		rt2800_bbp_write(rt2x00dev, 49, bbp);
++	}
+ }
+=20
+ static int rt2800_get_gain_calibration_delta(struct rt2x00_dev *rt2x00dev)
+@@ -2961,11 +3038,15 @@ static int rt2800_init_registers(struct rt2x00_dev =
+*rt2x00dev)
+ 	if (rt2x00_rt(rt2x00dev, RT3071) ||
+ 	    rt2x00_rt(rt2x00dev, RT3090) ||
+ 	    rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT3390)) {
+=20
+ 		if (rt2x00_rt(rt2x00dev, RT3290))
+ 			rt2800_register_write(rt2x00dev, TX_SW_CFG0,
+ 					      0x00000404);
++		else if (rt2x00_rt(rt2x00dev, RT3352))
++			rt2800_register_write(rt2x00dev, TX_SW_CFG0,
++					      0x00000402);
+ 		else
+ 			rt2800_register_write(rt2x00dev, TX_SW_CFG0,
+ 					      0x00000400);
+@@ -3378,6 +3459,11 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00=
+dev)
+ 		     rt2800_wait_bbp_ready(rt2x00dev)))
+ 		return -EACCES;
+=20
++	if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_write(rt2x00dev, 3, 0x00);
++		rt2800_bbp_write(rt2x00dev, 4, 0x50);
++	}
++
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392)) {
+@@ -3388,15 +3474,20 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x0=
+0dev)
+=20
+ 	if (rt2800_is_305x_soc(rt2x00dev) ||
+ 	    rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT3572) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+=20
++	if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 47, 0x48);
++
+ 	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
+ 	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+=20
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 68, 0x0b);
+@@ -3405,6 +3496,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00d=
+ev)
+ 		rt2800_bbp_write(rt2x00dev, 69, 0x16);
+ 		rt2800_bbp_write(rt2x00dev, 73, 0x12);
+ 	} else if (rt2x00_rt(rt2x00dev, RT3290) ||
++		   rt2x00_rt(rt2x00dev, RT3352) ||
+ 		   rt2x00_rt(rt2x00dev, RT5390) ||
+ 		   rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_bbp_write(rt2x00dev, 69, 0x12);
+@@ -3436,6 +3528,10 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00=
+dev)
+ 	} else if (rt2800_is_305x_soc(rt2x00dev)) {
+ 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+ 		rt2800_bbp_write(rt2x00dev, 80, 0x08);
++	} else if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
++		rt2800_bbp_write(rt2x00dev, 80, 0x08);
++		rt2800_bbp_write(rt2x00dev, 81, 0x37);
+ 	} else {
+ 		rt2800_bbp_write(rt2x00dev, 81, 0x37);
+ 	}
+@@ -3465,18 +3561,21 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x0=
+0dev)
+ 		rt2800_bbp_write(rt2x00dev, 84, 0x99);
+=20
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 86, 0x38);
+ 	else
+ 		rt2800_bbp_write(rt2x00dev, 86, 0x00);
+=20
+-	if (rt2x00_rt(rt2x00dev, RT5392))
++	if (rt2x00_rt(rt2x00dev, RT3352) ||
++	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 88, 0x90);
+=20
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+=20
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 92, 0x02);
+@@ -3493,6 +3592,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00d=
+ev)
+ 	    rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
+ 	    rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
+ 	    rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT3572) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392) ||
+@@ -3502,6 +3602,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00d=
+ev)
+ 		rt2800_bbp_write(rt2x00dev, 103, 0x00);
+=20
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 104, 0x92);
+@@ -3510,6 +3611,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00d=
+ev)
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x01);
+ 	else if (rt2x00_rt(rt2x00dev, RT3290))
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x1c);
++	else if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 105, 0x34);
+ 	else if (rt2x00_rt(rt2x00dev, RT5390) ||
+ 			 rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x3c);
+@@ -3519,11 +3622,16 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x0=
+0dev)
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390))
+ 		rt2800_bbp_write(rt2x00dev, 106, 0x03);
++	else if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 106, 0x05);
+ 	else if (rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 106, 0x12);
+ 	else
+ 		rt2800_bbp_write(rt2x00dev, 106, 0x35);
+=20
++	if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 120, 0x50);
++
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+@@ -3534,6 +3642,9 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00d=
+ev)
+ 		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
+ 	}
+=20
++	if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 137, 0x0f);
++
+ 	if (rt2x00_rt(rt2x00dev, RT3071) ||
+ 	    rt2x00_rt(rt2x00dev, RT3090) ||
+ 	    rt2x00_rt(rt2x00dev, RT3390) ||
+@@ -3574,6 +3685,28 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00=
+dev)
+ 		rt2800_bbp_write(rt2x00dev, 3, value);
+ 	}
+=20
++	if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_write(rt2x00dev, 163, 0xbd);
++		/* Set ITxBF timeout to 0x9c40=3D1000msec */
++		rt2800_bbp_write(rt2x00dev, 179, 0x02);
++		rt2800_bbp_write(rt2x00dev, 180, 0x00);
++		rt2800_bbp_write(rt2x00dev, 182, 0x40);
++		rt2800_bbp_write(rt2x00dev, 180, 0x01);
++		rt2800_bbp_write(rt2x00dev, 182, 0x9c);
++		rt2800_bbp_write(rt2x00dev, 179, 0x00);
++		/* Reprogram the inband interface to put right values in RXWI */
++		rt2800_bbp_write(rt2x00dev, 142, 0x04);
++		rt2800_bbp_write(rt2x00dev, 143, 0x3b);
++		rt2800_bbp_write(rt2x00dev, 142, 0x06);
++		rt2800_bbp_write(rt2x00dev, 143, 0xa0);
++		rt2800_bbp_write(rt2x00dev, 142, 0x07);
++		rt2800_bbp_write(rt2x00dev, 143, 0xa1);
++		rt2800_bbp_write(rt2x00dev, 142, 0x08);
++		rt2800_bbp_write(rt2x00dev, 143, 0xa2);
++
++		rt2800_bbp_write(rt2x00dev, 148, 0xc8);
++	}
++
+ 	if (rt2x00_rt(rt2x00dev, RT5390) ||
+ 		rt2x00_rt(rt2x00dev, RT5392)) {
+ 		int ant, div_mode;
+@@ -3707,6 +3840,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x0=
+0dev)
+ 	    !rt2x00_rt(rt2x00dev, RT3071) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3090) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3290) &&
++	    !rt2x00_rt(rt2x00dev, RT3352) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3390) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3572) &&
+ 	    !rt2x00_rt(rt2x00dev, RT5390) &&
+@@ -3903,6 +4037,70 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x=
+00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 30, 0x00);
+ 		rt2800_rfcsr_write(rt2x00dev, 31, 0x00);
+ 		return 0;
++	} else if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_rfcsr_write(rt2x00dev, 0, 0xf0);
++		rt2800_rfcsr_write(rt2x00dev, 1, 0x23);
++		rt2800_rfcsr_write(rt2x00dev, 2, 0x50);
++		rt2800_rfcsr_write(rt2x00dev, 3, 0x18);
++		rt2800_rfcsr_write(rt2x00dev, 4, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 5, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 6, 0x33);
++		rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 8, 0xf1);
++		rt2800_rfcsr_write(rt2x00dev, 9, 0x02);
++		rt2800_rfcsr_write(rt2x00dev, 10, 0xd2);
++		rt2800_rfcsr_write(rt2x00dev, 11, 0x42);
++		rt2800_rfcsr_write(rt2x00dev, 12, 0x1c);
++		rt2800_rfcsr_write(rt2x00dev, 13, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 14, 0x5a);
++		rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 16, 0x01);
++		rt2800_rfcsr_write(rt2x00dev, 18, 0x45);
++		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
++		rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 21, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 23, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 24, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
++		rt2800_rfcsr_write(rt2x00dev, 26, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
++		rt2800_rfcsr_write(rt2x00dev, 28, 0x03);
++		rt2800_rfcsr_write(rt2x00dev, 29, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
++		rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
++		rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
++		rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 34, 0x01);
++		rt2800_rfcsr_write(rt2x00dev, 35, 0x03);
++		rt2800_rfcsr_write(rt2x00dev, 36, 0xbd);
++		rt2800_rfcsr_write(rt2x00dev, 37, 0x3c);
++		rt2800_rfcsr_write(rt2x00dev, 38, 0x5f);
++		rt2800_rfcsr_write(rt2x00dev, 39, 0xc5);
++		rt2800_rfcsr_write(rt2x00dev, 40, 0x33);
++		rt2800_rfcsr_write(rt2x00dev, 41, 0x5b);
++		rt2800_rfcsr_write(rt2x00dev, 42, 0x5b);
++		rt2800_rfcsr_write(rt2x00dev, 43, 0xdb);
++		rt2800_rfcsr_write(rt2x00dev, 44, 0xdb);
++		rt2800_rfcsr_write(rt2x00dev, 45, 0xdb);
++		rt2800_rfcsr_write(rt2x00dev, 46, 0xdd);
++		rt2800_rfcsr_write(rt2x00dev, 47, 0x0d);
++		rt2800_rfcsr_write(rt2x00dev, 48, 0x14);
++		rt2800_rfcsr_write(rt2x00dev, 49, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 50, 0x2d);
++		rt2800_rfcsr_write(rt2x00dev, 51, 0x7f);
++		rt2800_rfcsr_write(rt2x00dev, 52, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 53, 0x52);
++		rt2800_rfcsr_write(rt2x00dev, 54, 0x1b);
++		rt2800_rfcsr_write(rt2x00dev, 55, 0x7f);
++		rt2800_rfcsr_write(rt2x00dev, 56, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 57, 0x52);
++		rt2800_rfcsr_write(rt2x00dev, 58, 0x1b);
++		rt2800_rfcsr_write(rt2x00dev, 59, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 60, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 61, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
+ 	} else if (rt2x00_rt(rt2x00dev, RT5390)) {
+ 		rt2800_rfcsr_write(rt2x00dev, 1, 0x0f);
+ 		rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
+@@ -4103,6 +4301,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x0=
+0dev)
+ 			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x19);
+ 	} else if (rt2x00_rt(rt2x00dev, RT3071) ||
+ 		   rt2x00_rt(rt2x00dev, RT3090) ||
++		   rt2x00_rt(rt2x00dev, RT3352) ||
+ 		   rt2x00_rt(rt2x00dev, RT3390) ||
+ 		   rt2x00_rt(rt2x00dev, RT3572)) {
+ 		drv_data->calibration_bw20 =3D
+@@ -4561,6 +4760,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	case RT3071:
+ 	case RT3090:
+ 	case RT3290:
++	case RT3352:
+ 	case RT3390:
+ 	case RT3572:
+ 	case RT5390:
+@@ -4583,6 +4783,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	case RF3052:
+ 	case RF3290:
+ 	case RF3320:
++	case RF3322:
+ 	case RF5360:
+ 	case RF5370:
+ 	case RF5372:
+@@ -4607,6 +4808,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+=20
+ 	if (rt2x00_rt(rt2x00dev, RT3070) ||
+ 	    rt2x00_rt(rt2x00dev, RT3090) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT3390)) {
+ 		value =3D rt2x00_get_field16(eeprom,
+ 				EEPROM_NIC_CONF1_ANT_DIVERSITY);
+@@ -4900,6 +5102,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		   rt2x00_rf(rt2x00dev, RF3022) ||
+ 		   rt2x00_rf(rt2x00dev, RF3290) ||
+ 		   rt2x00_rf(rt2x00dev, RF3320) ||
++		   rt2x00_rf(rt2x00dev, RF3322) ||
+ 		   rt2x00_rf(rt2x00dev, RF5360) ||
+ 		   rt2x00_rf(rt2x00dev, RF5370) ||
+ 		   rt2x00_rf(rt2x00dev, RF5372) ||
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt=
+2x00/rt2x00.h
+index 8afb546..97f10d8 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -188,6 +188,7 @@ struct rt2x00_chip {
+ #define RT3071		0x3071
+ #define RT3090		0x3090	/* 2.4GHz PCIe */
+ #define RT3290		0x3290
++#define RT3352		0x3352  /* WSOC */
+ #define RT3390		0x3390
+ #define RT3572		0x3572
+ #define RT3593		0x3593
+--=20
+1.7.11.4
+
+
+--VbJkn9YxBvnuCH5J
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQNB+NAAoJEDy9cKN/1Et0ztEQAIkoibAKO5hQpegrI47msePw
+oV3+2hhEM+u6hZNwgJuWZCLROLLDx4EyzyP4bMOYLnLovLuYbwm0fzMMLe3MnB/N
+31CxB5v0atsS4s+TtRmHdGIjTVP5GJ4yKCFI/wX286u+99nf5suf05Qy01/q7SqU
+cRneTV0ltU4s4zz32g0jOnbPZ/19ZJtizQtritR43ZitUEp8cF5fVOj2r/BOgI+T
+1w8ghEt6HpTpgqKV7MCxX5aN+5zlZlcGb+OmLG3NhkugjdRZYdFUyTni0wm+WPfO
+wIwP+jCp7XufBvgwQ0EzA769o/IXXYzfhm3qg6ZFAiDgJ/YHTSGEdFjgKLF1Bp1u
+t/4wz5A8uxR8z/Jjd8FknN8uaRg8Au1v39kR7vmZYU0kceuD/loV/xWHla70xvOx
+h1CtEBBMK683B9FmDoeSU9eaqPZrwIfoDT/5hILUH1MMOBa4wjne2EX0tYibVBRd
+ZwU6P1YnlCzZ/RebOEQ+BiywncoAK2zQ1Hu3LIJA8WEQ87I8UA1TzEQ20oE/nVOR
+hl+gWlfqJIU6Vaw69qq5g/CpNObzhoOyYXvnBz14xWMYeEPNR8szniyg5kamkGiC
+Vf0WpEZbAKeygBxS6yjtcnd5YjopVcxK9XM+sD283Pucx+kBI/I4PVWBFapSbmy0
+oEMUdxCGWp3wnPz4uqYo
+=4AAY
+-----END PGP SIGNATURE-----
+
+--VbJkn9YxBvnuCH5J--
