@@ -1,53 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48877 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758270Ab2HHN47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 09:56:59 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.6 2/4] ath9k_hw: clear the AM2PM predistortion mask on AR933x
-Date: Tue,  7 Aug 2012 15:06:10 +0200
-Message-Id: <1344344772-49459-2-git-send-email-nbd@openwrt.org> (sfid-20120808_155706_495161_34C13214)
-In-Reply-To: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
-References: <1344344772-49459-1-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:41564 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988Ab2HUPxs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Aug 2012 11:53:48 -0400
+Message-ID: <1345564421.10280.9.camel@jlt3.sipsolutions.net> (sfid-20120821_175402_799730_CEB3273A)
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Tue, 21 Aug 2012 17:53:41 +0200
+In-Reply-To: <50338E84.3050709@posedge.com>
+References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCDD559@mbx022-e1-nj-10.exch022.domain.local>
+	 <20120816102211.GD17659@redhat.com> <502CF2D5.6020704@posedge.com>
+	 <20120817140657.GA1645@redhat.com> <502E85D9.5050301@posedge.com>
+	 <1345480718.4459.37.camel@jlt3.sipsolutions.net>
+	 <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>
+	 <50338E84.3050709@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That predistortion type is not supported
+On Tue, 2012-08-21 at 19:05 +0530, Mahesh Palivela wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+> so we are talking about how to specify channel info to cfg/mac80211 from 
+> upper layers. 
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 2c9f7d7..2173bd7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -142,6 +142,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	};
- 	int training_power;
- 	int i, val;
-+	u32 am2pm_mask = ah->paprd_ratemask;
- 
- 	if (IS_CHAN_2GHZ(ah->curchan))
- 		training_power = ar9003_get_training_power_2g(ah);
-@@ -158,10 +159,13 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	}
- 	ah->paprd_training_power = training_power;
- 
-+	if (AR_SREV_9330(ah))
-+		am2pm_mask = 0;
-+
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK,
- 		      ah->paprd_ratemask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK,
--		      ah->paprd_ratemask);
-+		      am2pm_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
- 		      ah->paprd_ratemask_ht40);
- 
--- 
-1.7.9.6 (Apple Git-31.1)
+Correct
+
+> But regulatory tells if that channel config is allowed or not.
+
+Correct.
+
+> so derive channel type from center freq, width and control chan offset.
+> Then determine if that channel type is allowed from regulatory flags?
+> 
+> In short we have scaled approach on specifying channel info but not 
+> regulatory. Please comment.
+
+Well, we don't really have it yet :-)
+
+I think the question really is whether or not we actually need the
+flags. Sometimes, but very rarely really, we need to answer the question
+
+        Is this set of parameters allowed with the current regulatory
+        rules?
+
+There's nothing that says this needs to be a flag. It could just as well
+be a function
+
+bool regulatory_chan_use_permitted(...);
+
+where the ... gives all the necessary parameters or maybe some structure
+holding all these.
+
+If this was a function, it could go back to the regulatory definitions
+(that we hopefully keep track of in the kernel) and actually use the
+algorithm that today we use to determine the flags to determine the
+answer.
+
+Today, with the flags, we basically pre-determine the answers to all
+possible such questions, and encode the answers in the flags for each
+channel. If we don't pre-determine the answers, then we can get away
+without any flags at all.
+
+Does that make sense?
+
+Still doesn't solve the problems we saw with how to configure the
+channel with considerations such as
+  - bandwidth
+  - center frequency
+  - primary subchannel
+  - 80 + 80 (which is basically two such channels?)
+
+johannes
 
