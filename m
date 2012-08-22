@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:39939 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754325Ab2HOAEI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56060 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758246Ab2HVSPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 20:04:08 -0400
-Date: Tue, 14 Aug 2012 17:04:06 -0700 (PDT)
-Message-Id: <20120814.170406.477984164150450996.davem@davemloft.net> (sfid-20120815_020428_112290_66056923)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-08-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120814190245.GA22136@tuxdriver.com>
-References: <20120814190245.GA22136@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 22 Aug 2012 14:15:15 -0400
+Date: Wed, 22 Aug 2012 14:13:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] bcma: handle BCM43227
+Message-ID: <20120822181324.GB14913@tuxdriver.com> (sfid-20120822_201519_177924_8216A680)
+References: <1345277555-13013-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1345277555-13013-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 14 Aug 2012 15:02:46 -0400
+What are the prerequisite patches for this one?  It seems to be based
+on something other than wireless-next.
 
-> Alexey Khoroshilov provides a potential memory leak in rndis_wlan.
-> 
-> Bob Copeland gives us an ath5k fix for a lockdep problem.
-> 
-> Dan Carpenter fixes a signedness mismatch in at76c50x.
-> 
-> Felix Fietkau corrects a regression caused by an earlier commit that can
-> lead to an IRQ storm.
-> 
-> Lorenzo Bianconi offers a fix for a bad variable initialization in ath9k
-> that can cause it to improperly mark decrypted frames.
-> 
-> Rajkumar Manoharan fixes ath9k to prevent the btcoex time from running
-> when the hardware is asleep.
-> 
-> The remainder are Bluetooth fixes, about which Gustavo says:
-> 
-> 	"Here goes some fixes for 3.6-rc1, there are a few fix to
-> 	thte inquiry code by Ram Malovany, support for 2 new devices,
-> 	and few others fixes for NULL dereference, possible deadlock
-> 	and a memory leak."
-> 
-> Please let me know if there are problems!
+John
 
-Pulled, thanks John.
+On Sat, Aug 18, 2012 at 10:12:35AM +0200, Rafał Miłecki wrote:
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Tested-by: Jack <x6719620@gmail.com>
+> ---
+>  drivers/bcma/host_pci.c |    1 +
+>  drivers/bcma/sprom.c    |    2 ++
+>  2 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+> index f7b0af7..b6b4b5e 100644
+> --- a/drivers/bcma/host_pci.c
+> +++ b/drivers/bcma/host_pci.c
+> @@ -273,6 +273,7 @@ static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4358) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+>  	{ 0, },
+> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+> index 9ea4627..0d546b6 100644
+> --- a/drivers/bcma/sprom.c
+> +++ b/drivers/bcma/sprom.c
+> @@ -507,7 +507,9 @@ static bool bcma_sprom_onchip_available(struct bcma_bus *bus)
+>  		/* for these chips OTP is always available */
+>  		present = true;
+>  		break;
+> +	case BCMA_CHIP_ID_BCM43227:
+>  	case BCMA_CHIP_ID_BCM43228:
+> +	case BCMA_CHIP_ID_BCM43428:
+>  		present = chip_status & BCMA_CC_CHIPST_43228_OTP_PRESENT;
+>  		break;
+>  	default:
+> -- 
+> 1.7.7
+> 
+> 
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
