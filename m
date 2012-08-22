@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36116 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751606Ab2HTKeE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 06:34:04 -0400
-Message-ID: <1345458836.4459.2.camel@jlt3.sipsolutions.net> (sfid-20120820_123408_212148_EF780C3A)
-Subject: Re: [PATCH] Revert "rfkill: remove dead code"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: AceLan Kao <acelan.kao@canonical.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Corentin Chary <corentincj@iksaif.net>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Date: Mon, 20 Aug 2012 12:33:56 +0200
-In-Reply-To: <CAMz9Wg8DdBbWXUv5gQKr6TJmxQqXHn_DEA4UyyuNPzNwsa4Deg@mail.gmail.com> (sfid-20120820_041144_435039_23A24BE0)
-References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
-	 <CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
-	 <CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
-	 <CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
-	 <CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
-	 <20120813184749.GC10529@tuxdriver.com>
-	 <CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com>
-	 <CAMz9Wg8DdBbWXUv5gQKr6TJmxQqXHn_DEA4UyyuNPzNwsa4Deg@mail.gmail.com>
-	 (sfid-20120820_041144_435039_23A24BE0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:37153 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755191Ab2HVJB3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2012 05:01:29 -0400
+Date: Wed, 22 Aug 2012 11:01:05 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mahesh Palivela <maheshp@posedge.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+Message-ID: <20120822090104.GA4959@redhat.com> (sfid-20120822_110134_928819_77778748)
+References: <502CF2D5.6020704@posedge.com>
+ <20120817140657.GA1645@redhat.com>
+ <502E85D9.5050301@posedge.com>
+ <1345480718.4459.37.camel@jlt3.sipsolutions.net>
+ <87d32k7kga.fsf@purkki.adurom.net>
+ <20120821081839.GA2380@redhat.com>
+ <50338E84.3050709@posedge.com>
+ <1345564421.10280.9.camel@jlt3.sipsolutions.net>
+ <5033CE76.6040306@posedge.com>
+ <1345619008.4635.3.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1345619008.4635.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-08-20 at 10:11 +0800, AceLan Kao wrote:
-> Hi,
+On Wed, Aug 22, 2012 at 09:03:28AM +0200, Johannes Berg wrote:
+> On Tue, 2012-08-21 at 23:37 +0530, Mahesh Palivela wrote:
+> > Yes it does. Basically we want to retire look up table approach and 
+> > compute everytime as its not scalable. Fine. In that case, even we need 
+> > to cover HT20, HT40-, HT40+ as well right?
 > 
-> I didn't see this patch in linux-next nor in Linville's tree,and this
-> patch is needed by the asus-wmi driver.
-> Please help to merge this patch earlier, so that platform-x86 can get
-> rid of the compiling error.
-> Thank you very much.
+> I think we should, yeah. Might even just start with that to make the
+> transition.
 
-I have no objections to this -- should I pick it up, John?
+[snip]
 
-johannes
+> > > Still doesn't solve the problems we saw with how to configure the
+> > > channel with considerations such as
+> > >    - bandwidth
+> > >    - center frequency
+> > >    - primary subchannel
+> > >    - 80 + 80 (which is basically two such channels?)
+> > >
+> > Yes It does. From center freq, width, control chan offset we know the 
+> > secondary chans. That's all we want. For 80+80 configuration, we will 
+> > get two center freq values.
+> 
+> Yeah but we don't have that yet. We could do it that way, sure, but it
+> has wide-spread implications, since we'll need to
+>  - use this new form of specifying channels all over mac80211 and all
+>    drivers,
+>  - define new nl80211 attributes for it,
+>  - write new code in nl80211 to handle all this,
+>  - and parse the old attributes into the new data structure(s) so
+>    drivers use the new API but userspace can continue to use the old
+> 
+> None of that is done yet.
 
+For starters (for regulatory purpose only) would be sufficient to
+implement
+
+regulatory_chan_use_permitted(center freq, bandwidth, whatever else),
+
+and use it where currently IEEE80211_CHAN_NO_HT_X flags are used.
+
+Stanislaw
