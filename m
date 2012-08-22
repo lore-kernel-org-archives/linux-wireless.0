@@ -1,53 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44314 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758731Ab2HVJMU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 05:12:20 -0400
-Date: Wed, 22 Aug 2012 11:11:59 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Daniel Golle <dgolle@allnet.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
-Message-ID: <20120822091158.GB4959@redhat.com> (sfid-20120822_111226_903263_6A1C1DA4)
-References: <20120821231100.GA13890@earthship.home>
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:49543 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753220Ab2HVOHg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2012 10:07:36 -0400
+Date: Wed, 22 Aug 2012 23:07:33 +0900
+From: Norbert Preining <preining@logic.at>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: rtl8192se hanging completely
+Message-ID: <20120822140733.GA1266@gamma.logic.tuwien.ac.at> (sfid-20120822_160742_154647_E722F43F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120821231100.GA13890@earthship.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please keep version (PATCH vX in subject) to do not confuse
-patches.
+Dear all,
 
-On Wed, Aug 22, 2012 at 02:11:11AM +0300, Daniel Golle wrote:
-> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Signed-off-by: Daniel Golle <dgolle@allnet.de>
+(please cc)
 
-How do you know what to write to each RF/BBP register? I guess patch
-is based on vendor driver, right? Where I can find it, if I would
-like to compare it with this patch?
+I am having serious troubles with my rtl8192se card:
 
-> +	if (rt2x00dev->freq_offset > FREQ_OFFSET_BOUND)
-> +		rt2x00_set_field8(&rfcsr, RFCSR17_CODE,
-> +				  FREQ_OFFSET_BOUND);
-Not needed line break.
+kernel: 3.6.0-rc2+, compiled from git today, same with rc1
+rtl8192se in kernel driver, loaded with debug=3
+Debian sid
+Lenovo Thinkpad Edge
 
-> +	if ( rt2x00dev->default_ant.tx_chain_num == 1 )
-Coding style.
+When starting from cold boot, the driver associates, but no packet
+whatsoever leaves the computer it seems, pinging the gateway
+does not return anything, and ns lookups are not working.
 
-> +	if ( rt2x00dev->default_ant.rx_chain_num == 1 )
-The same.
+In the logs I see many instances of:
+rtlwifi:rtl_tx_agg_start():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6 seq:39
+rtlwifi:rtl_action_proc():<200-1> Tx ACT_ADDBAREQ From :88:9f:fa:f9:07:28
+rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 6
+rtlwifi:rtl_action_proc():<400-1> ACT_ADDBADEL From :88:9f:fa:f9:07:28
+rtlwifi:rtl_action_proc():<10000-1> Rx ACT_ADDBARSP From :00:0a:79:eb:56:10
+in various orders.
 
-> +	}
-> +	else
-> +	{
-Again coding style.
 
-> +		else if (rt2x00_rt(rt2x00dev, RT3352))
-> +			rt2800_register_write(rt2x00dev, TX_SW_CFG0,
-> +					      0x00000402);
-Is possible to describe what does it mean?
+trying to remove the module gave me:
+[  649.459652] wlan0: deauthenticating from 00:0a:79:eb:56:10 by local choice (reason=3)
+[  649.459701] rtlwifi:rtl_tx_agg_stop():<0-0> on ra = 00:0a:79:eb:56:10 tid = 0
+[  659.094654] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 0, mac: 00:0a:79:eb:56:10
+[  659.094659] rtlwifi:rtl_op_set_key():<0-0> alg:CCMP
+[  659.094663] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:4(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
+[  659.094667] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
+[  659.094670] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:0
+[  659.094673] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
+[  659.094676] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010000
+[  659.094719] rtlwifi:rtl_op_sta_remove():<0-0> Remove sta addr is 00:0a:79:eb:56:10
+[  659.142712] rtlwifi:rtl_op_bss_info_changed():<0-0> BSS_CHANGED_UN_ASSOC
+[  659.142725] rtlwifi:rtl_op_bss_info_changed():<0-0> 00:00:00:00:00:00
+[  659.190740] rtlwifi:rtl_op_set_key():<0-0> Disabling hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
+[  659.190744] rtlwifi:rtl_op_set_key():<0-0> alg:TKIP
+[  659.190747] rtlwifi:rtl_op_set_key():<0-0> set enable_hw_sec, key_type:2(OPEN:0 WEP40:1 TKIP:2 AES:4 WEP104:5)
+[  659.190750] rtlwifi:rtl_op_set_key():<0-0> disable key delete one entry
+[  659.190753] rtlwifi:rtl_cam_delete_one_entry():<0-0> key_idx:1
+[  659.190756] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A4: 0
+[  659.190759] rtlwifi:rtl_cam_delete_one_entry():<0-0> rtl_cam_delete_one_entry(): WRITE A0: 80010008
 
-Thanks
-Stanislaw
+
+After that I reloaded the module and then it is getting worse:
+rtl8192se 0000:03:00.0: Refused to change power state, currently in D3
+rtl8192se:_rtl92se_read_adapter_info():<0-0> RTL819X Not boot from eeprom, check it !!
+tl8192se: FW Power Save off (module option)
+rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE
+Loading firmware rtlwifi/rtl8192sefw.bin
+...
+rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-0> OK
+rtl8192se:rtl92s_phy_bb_config():<0-0> RF_Type(0) does not match RF_Num(4)!!
+rtl8192se:rtl92s_phy_bb_config():<0-0> path1 0xf, path2 0xf, pathmap 0xf
+rtlwifi:rtl_pci_start():<0-0> OK
+rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
+rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
+rtl8192se:rtl92s_phy_set_rf_power_state():<0-0> IPS Set eRf nic disable
+
+rtl8192se:rtl92s_phy_set_rf_power_state():<0-1> IPS Set eRf nic enable
+rtl8192se:_rtl92se_macconfig_after_fwdownload():<0-1> OK
+
+...
+rtl8192se:rtl92s_phy_chk_fwcmd_iodone():<0-0> Set FW Cmd fail!!
+rtlwifi:rtl_pci_tx():<200-1> No more TX desc@6, ring->idx = 0, idx = 0, skb_queue_len = 0x0
+
+etc etc.
+
+That is the end, no connection at all, and no way (AFAIS) to get
+it back.
+
+Are there any suggestions, patches, ideas to fix and track that down?
+
+THanks a lot
+
+Norbert
+(please cc)
+
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+MOTSPUR (n.)
+The fourth wheel of a supermarket trolley which looks identical to the
+other tree but renders the trolley completely uncontrollable.
+MO I RANA Imagine being on a vacation, and it's raining all the time,
+you are driving and the kids are making you a nervous wreck. Well you
+are definitive in Mo i Rana.
+			--- Douglas Adams, The Meaning of Liff
