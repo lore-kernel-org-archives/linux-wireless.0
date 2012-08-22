@@ -1,62 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173009pub.verizon.net ([206.46.173.9]:27985 "EHLO
-	vms173009pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab2HLRUD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44448 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758630Ab2HVJEu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Aug 2012 13:20:03 -0400
-Message-id: <5027D79E.9050607@verizon.net> (sfid-20120812_192009_539490_FFA9A7C3)
-Date: Sun, 12 Aug 2012 12:19:42 -0400
-From: "C. McPherson" <ccmcphe@verizon.net>
-MIME-version: 1.0
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: mcgrof@kernel.org, lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: [PATCH] compat: fix system crash on 2.6.35 when flushing work
-References: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
-In-reply-to: <1342168714-3361-1-git-send-email-zefir.kurtisi@neratec.com>
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 22 Aug 2012 05:04:50 -0400
+Message-ID: <1345626282.4635.8.camel@jlt3.sipsolutions.net> (sfid-20120822_110526_722162_EAE416DE)
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Mahesh Palivela <maheshp@posedge.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Wed, 22 Aug 2012 11:04:42 +0200
+In-Reply-To: <20120822090104.GA4959@redhat.com>
+References: <502CF2D5.6020704@posedge.com>
+	 <20120817140657.GA1645@redhat.com> <502E85D9.5050301@posedge.com>
+	 <1345480718.4459.37.camel@jlt3.sipsolutions.net>
+	 <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>
+	 <50338E84.3050709@posedge.com>
+	 <1345564421.10280.9.camel@jlt3.sipsolutions.net>
+	 <5033CE76.6040306@posedge.com>
+	 <1345619008.4635.3.camel@jlt3.sipsolutions.net>
+	 <20120822090104.GA4959@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zefir:
-Thanks a lot for this reference. All my systems are running Ubuntu 
-10.04/10.10. I was updating our compat-wireless with the stable 
-compat-wireless 3.5
-and came across this crash in our testing lab. I added your patch and 
-the stable compat-wireless 3.5 is now working with our Ubuntu.
+On Wed, 2012-08-22 at 11:01 +0200, Stanislaw Gruszka wrote:
 
--Tex
+> > Yeah but we don't have that yet. We could do it that way, sure, but it
+> > has wide-spread implications, since we'll need to
+> >  - use this new form of specifying channels all over mac80211 and all
+> >    drivers,
+> >  - define new nl80211 attributes for it,
+> >  - write new code in nl80211 to handle all this,
+> >  - and parse the old attributes into the new data structure(s) so
+> >    drivers use the new API but userspace can continue to use the old
+> > 
+> > None of that is done yet.
+> 
+> For starters (for regulatory purpose only) would be sufficient to
+> implement
+> 
+> regulatory_chan_use_permitted(center freq, bandwidth, whatever else),
+> 
+> and use it where currently IEEE80211_CHAN_NO_HT_X flags are used.
 
+Yes, in theory. However, if this was intended to use the actual "center
+freq, bandwidth, control channel offset" values, then it would be much
+better to first actually define a struct to hold those, use it here, and
+give it to drivers etc. Otherwise, drivers would have to take, e.g.
 
-On 07/13/2012 04:38 AM, Zefir Kurtisi wrote:
-> Ubuntu 10.10 stock kernel (2.6.35-22-generic) crashes in
-> compat_flush_scheduled_work(), that is called e.g. when
-> mac80211 module is unloaded.
->
-> The problem was introduced with 80bf8a83
-> compat: backport system work queues system_wq and system_long_wq
->
-> The crash happens in compat_flush_scheduled_work() where both
-> flush_workqueue() and flush_scheduled_work() are called successively.
-> Removing one of them resolves the issue.
->
-> All compat-wireless tarballs after 2012-03-18 are affected.
->
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-> ---
->   compat/compat-2.6.36.c |    1 -
->   1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
-> index 9190ecd..8f25be0 100644
-> --- a/compat/compat-2.6.36.c
-> +++ b/compat/compat-2.6.36.c
-> @@ -140,7 +140,6 @@ void compat_flush_scheduled_work(void)
->   	 * go with the old kernel's one first for now (keventd_wq) and
->   	 * if think its reasonable later we can flip this around.
->   	 */
-> -	flush_workqueue(system_wq);
->   	flush_scheduled_work();
->   }
->   EXPORT_SYMBOL_GPL(compat_flush_scheduled_work);
+ - channel = 1 (2412 MHz)
+ - HT40+
+
+and calculate
+
+ - center freq = 2422 MHz
+ - bandwidth = 40
+ - control channel offset = 0
+
+before being able to call this function. To me, that seems wrong.
+
+johannes
 
