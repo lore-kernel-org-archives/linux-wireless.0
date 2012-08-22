@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40841 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755596Ab2HKAaq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 20:30:46 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: adapt changes in cfg80211.h in wil6210
-Date: Sat, 11 Aug 2012 02:30:24 +0200
-Message-Id: <1344645025-26796-1-git-send-email-hauke@hauke-m.de> (sfid-20120811_023049_094718_8D20B0C8)
+Received: from nbd.name ([46.4.11.11]:44345 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752506Ab2HVU2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2012 16:28:48 -0400
+Message-ID: <503540FC.9030408@openwrt.org> (sfid-20120822_222852_268986_DCB69FD8)
+Date: Wed, 22 Aug 2012 22:28:44 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Per sta interfaces in WDS (4-address) mode
+References: <CAHNKnsRVh_BXqW0CLfxO5WZCJ8UH7O=cHN-zh7AuM_pQj0xUqg@mail.gmail.com> <20120820111321.71c6f07e@mj>
+In-Reply-To: <20120820111321.71c6f07e@mj>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct cfg80211_ops changed and this patches changes wil6210 to use the
-correct parameter types in the callback functions.
+On 2012-08-20 5:13 PM, Pavel Roskin wrote:
+> On Sun, 19 Aug 2012 21:51:27 +0400
+> Sergey Ryazanov <ryazanov.s.a@gmail.com> wrote:
+> 
+>> Hello dear all,
+>> 
+>> please tell me, why in the WDS mode, the stack creates a new interface
+>> for each WDS station, and this interface hostapd adds to the parent AP
+>> interface bridge? Why we couldn't simply pass this frames via AP
+>> interface?
+> 
+> You may want to use a completely different IP address and netmask on the
+> WDS interface.  Using the AP interface would take away that option.
+> 
+> hostapd is not a part of the kernel.  It should be possible not to add
+> WDS interfaces to the bridge.
+It's not just that. If the WDS station communication were done over the
+AP interface, mac80211 would have to keep a table of which MAC address
+is reachable behind which WDS station, which is something that the
+bridge layer is supposed to do.
+I've seen such a design mistake in various drivers, and I've seen the
+weird quirks that this usually produces in more complex network
+topologies ;)
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- ...s-adds-the-802.11ad-60-GHz-wil6210-driver.patch |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch b/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch
-index 32ee1fc..d3406de 100644
---- a/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch
-+++ b/crap/0004-wireless-adds-the-802.11ad-60-GHz-wil6210-driver.patch
-@@ -323,7 +323,7 @@ Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
- +	return 0;
- +}
- +
--+static int wil_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
-++static int wil_cfg80211_scan(struct wiphy *wiphy,
- +			     struct cfg80211_scan_request *request)
- +{
- +#if 0
-@@ -601,7 +601,7 @@ Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
- +	return 0;
- +}
- +
--+static int wil_mgmt_tx(struct wiphy *wiphy, struct net_device *ndev,
-++static int wil_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- +		struct ieee80211_channel *chan, bool offchan,
- +		enum nl80211_channel_type channel_type,
- +		bool channel_type_valid, unsigned int wait,
-@@ -617,7 +617,7 @@ Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
- +}
- +
- +static void wil_mgmt_frame_register(struct wiphy *wiphy,
--+		struct net_device *ndev, u16 frame_type, bool reg)
-++		struct wireless_dev *wdev, u16 frame_type, bool reg)
- +{
- +	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- +	wil_info(wil, "%s()\n", __func__);
--- 
-1.7.9.5
+- Felix
 
