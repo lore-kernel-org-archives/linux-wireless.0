@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38164 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751368Ab2HMOPQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 10:15:16 -0400
-Date: Mon, 13 Aug 2012 10:04:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wireless-regdb: Update regulatory rules for ES
- (Spain) on 5GHz and 2.4GHz
-Message-ID: <20120813140441.GA10529@tuxdriver.com> (sfid-20120813_161522_187782_51113C87)
-References: <1341362473-18747-1-git-send-email-xose.vazquez@gmail.com>
- <CAB=NE6U=bk6RSXHouuHvJd0=GErYJp82jkgeNWGnPDooZ_SONQ@mail.gmail.com>
- <4FF396DD.7060408@gmail.com>
- <4FF3DC31.2030004@broadcom.com>
- <87pq852i0l.fsf@purkki.adurom.net>
- <502908A9.2010803@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40064 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751519Ab2HVKNP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2012 06:13:15 -0400
+Date: Wed, 22 Aug 2012 12:12:53 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mahesh Palivela <maheshp@posedge.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+Message-ID: <20120822101252.GA6082@redhat.com> (sfid-20120822_121320_462094_71EA2CCE)
+References: <502E85D9.5050301@posedge.com>
+ <1345480718.4459.37.camel@jlt3.sipsolutions.net>
+ <87d32k7kga.fsf@purkki.adurom.net>
+ <20120821081839.GA2380@redhat.com>
+ <50338E84.3050709@posedge.com>
+ <1345564421.10280.9.camel@jlt3.sipsolutions.net>
+ <5033CE76.6040306@posedge.com>
+ <1345619008.4635.3.camel@jlt3.sipsolutions.net>
+ <20120822090104.GA4959@redhat.com>
+ <1345626282.4635.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <502908A9.2010803@broadcom.com>
+In-Reply-To: <1345626282.4635.8.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2012 at 04:01:13PM +0200, Arend van Spriel wrote:
-> On 07/09/2012 03:14 PM, Kalle Valo wrote:
-> > "Arend van Spriel" <arend@broadcom.com> writes:
-> > 
-> >> Just a general remark not specific to this patch. The commit message
-> >> often contains a source reference. I think it would be useful to have
-> >> this reference in the database as well so people validating it do not
-> >> need to do the digging using 'git blame'. Does that make sense?
-> > 
-> > Yes :)
-> > 
-> > IMHO makes a lot easier to validate the entries.
-> > 
+On Wed, Aug 22, 2012 at 11:04:42AM +0200, Johannes Berg wrote:
+> On Wed, 2012-08-22 at 11:01 +0200, Stanislaw Gruszka wrote:
 > 
-> Luis, John,
+> > > Yeah but we don't have that yet. We could do it that way, sure, but it
+> > > has wide-spread implications, since we'll need to
+> > >  - use this new form of specifying channels all over mac80211 and all
+> > >    drivers,
+> > >  - define new nl80211 attributes for it,
+> > >  - write new code in nl80211 to handle all this,
+> > >  - and parse the old attributes into the new data structure(s) so
+> > >    drivers use the new API but userspace can continue to use the old
+> > > 
+> > > None of that is done yet.
+> > 
+> > For starters (for regulatory purpose only) would be sufficient to
+> > implement
+> > 
+> > regulatory_chan_use_permitted(center freq, bandwidth, whatever else),
+> > 
+> > and use it where currently IEEE80211_CHAN_NO_HT_X flags are used.
 > 
-> What are your thoughts on my remark above?
+> Yes, in theory. However, if this was intended to use the actual "center
+> freq, bandwidth, control channel offset" values, then it would be much
+> better to first actually define a struct to hold those, use it here, and
+> give it to drivers etc. Otherwise, drivers would have to take, e.g.
+> 
+>  - channel = 1 (2412 MHz)
+>  - HT40+
+> 
+> and calculate
+> 
+>  - center freq = 2422 MHz
+>  - bandwidth = 40
+>  - control channel offset = 0
+> 
+> before being able to call this function. To me, that seems wrong.
 
-It seems reasonable to me.  OTOH, it could lead to a lot of clutter
-in the database file...?  I guess it is a matter of judgment.
+I see, we could add helper function that will calculate
+center_freq/bandwidth, but starting from defining new channel
+structure and accompanying code in nl80211/mac80211 is more
+reasonable.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Stanislaw
