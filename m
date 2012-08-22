@@ -1,256 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31841 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757001Ab2HGBOw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 21:14:52 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12400 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755299Ab2HVKub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2012 06:50:31 -0400
+Date: Wed, 22 Aug 2012 12:50:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Li Chaoming <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH 4/6] rtlwifi: Add changes for new vendor driver version
+Message-ID: <20120822105010.GB6082@redhat.com> (sfid-20120822_125035_918741_2F95F235)
+References: <1345561255-10349-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1345561255-10349-5-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20512.27579.61051.814291@gargle.gargle.HOWL> (sfid-20120807_031454_970023_40643AA4)
-Date: Tue, 7 Aug 2012 06:43:31 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC 02/14] ath9k: Cleanup RC init API
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1345561255-10349-5-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A reference to the rate table is stored inside the
-private structure, so there is no need to pass "rate_table"
-around.
+On Tue, Aug 21, 2012 at 10:00:53AM -0500, Larry Finger wrote:
+> From: Li Chaoming <chaoming_li@realsil.com.cn>
+> 
+> Realtek driver rtl_92ce_92se_92de_linux_mac80211_0005.1230.2011 includes
+> many changes not previously included. The main changes are as follows:
+> 
+> 1. Support for the PHY mode switch implemented for some models.
+> 2. Implementation of new routines for the dual-MAC devices.
+> 3. Implement a mechanism for reaching the private data storage
+>    of the other unit in a dual-MAC device.
+> 4. Impplementation of RX aggregation.
+> 5. Storage of beacon statistics for roaming.
+> 6. The RX routine has been rewritten to reduce the number of O(1) buffers.
+> 
+> Signed-off-by: Li Chaoming <chaoming_li@realsil.com.cn>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  drivers/net/wireless/rtlwifi/base.c  |  323 ++++++++++++++++--
+>  drivers/net/wireless/rtlwifi/base.h  |   10 +-
+>  drivers/net/wireless/rtlwifi/cam.c   |    7 +-
+>  drivers/net/wireless/rtlwifi/core.c  |   76 +++--
+>  drivers/net/wireless/rtlwifi/debug.h |    8 +
+>  drivers/net/wireless/rtlwifi/efuse.c |   40 ++-
+>  drivers/net/wireless/rtlwifi/efuse.h |    1 -
+>  drivers/net/wireless/rtlwifi/pci.c   |  624 +++++++++++++++++++---------------
+>  drivers/net/wireless/rtlwifi/pci.h   |    3 +
+>  drivers/net/wireless/rtlwifi/ps.c    |   93 ++++-
+>  drivers/net/wireless/rtlwifi/ps.h    |    3 +-
+>  drivers/net/wireless/rtlwifi/rc.c    |    3 +-
+>  drivers/net/wireless/rtlwifi/regd.c  |   18 +
+>  13 files changed, 851 insertions(+), 358 deletions(-)
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 99 +++++++++++++------------------------
- 1 file changed, 35 insertions(+), 64 deletions(-)
+Could Realsil/Realtek post small patches please?
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 2188d1b..49c71da 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -405,9 +405,9 @@ static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
- 	return rix;
- }
- 
--static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
--				   struct ath_rate_priv *ath_rc_priv)
-+static void ath_rc_sort_validrates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	u8 i, j, idx, idx_next;
- 
- 	for (i = ath_rc_priv->max_valid_rate - 1; i > 0; i--) {
-@@ -424,14 +424,6 @@ static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
- 	}
- }
- 
--static void ath_rc_init_valid_rate_idx(struct ath_rate_priv *ath_rc_priv)
--{
--	u8 i;
--
--	for (i = 0; i < ath_rc_priv->rate_table_size; i++)
--		ath_rc_priv->valid_rate_index[i] = 0;
--}
--
- static inline void ath_rc_set_valid_rate_idx(struct ath_rate_priv *ath_rc_priv,
- 					   u8 index, int valid_tx_rate)
- {
-@@ -495,10 +487,9 @@ ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
- 	return 0;
- }
- 
--static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
--				 const struct ath_rate_table *rate_table,
--				 u32 capflag)
-+static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	u8 i, hi = 0;
- 
- 	for (i = 0; i < rate_table->rate_cnt; i++) {
-@@ -506,7 +497,7 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
- 			u32 phy = rate_table->info[i].phy;
- 			u8 valid_rate_count = 0;
- 
--			if (!ath_rc_valid_phyrate(phy, capflag, 0))
-+			if (!ath_rc_valid_phyrate(phy, ath_rc_priv->ht_cap, 0))
- 				continue;
- 
- 			valid_rate_count = ath_rc_priv->valid_phy_ratecnt[phy];
-@@ -521,14 +512,13 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
- 	return hi;
- }
- 
--static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
--				const struct ath_rate_table *rate_table,
--				struct ath_rateset *rateset,
--				u32 capflag)
-+static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
-+	struct ath_rateset *rateset = &ath_rc_priv->neg_rates;
-+	u32 capflag = ath_rc_priv->ht_cap;
- 	u8 i, j, hi = 0;
- 
--	/* Use intersection of working rates and valid rates */
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
-@@ -565,13 +555,13 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
- 	return hi;
- }
- 
--static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
--				  const struct ath_rate_table *rate_table,
--				  struct ath_rateset *rateset, u32 capflag)
-+static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
-+	struct ath_rateset *rateset = &ath_rc_priv->neg_ht_rates;
-+	u32 capflag = ath_rc_priv->ht_cap;
- 	u8 i, j, hi = 0;
- 
--	/* Use intersection of working rates and valid rates */
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
-@@ -1200,28 +1190,20 @@ struct ath_rate_table *ath_choose_rate_table(struct ath_softc *sc,
- }
- 
- static void ath_rc_init(struct ath_softc *sc,
--			struct ath_rate_priv *ath_rc_priv,
--			struct ieee80211_supported_band *sband,
--			struct ieee80211_sta *sta,
--			const struct ath_rate_table *rate_table)
-+			struct ath_rate_priv *ath_rc_priv)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	struct ath_rateset *rateset = &ath_rc_priv->neg_rates;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_rateset *ht_mcs = &ath_rc_priv->neg_ht_rates;
- 	u8 i, j, k, hi = 0, hthi = 0;
- 
--	/* Initial rate table size. Will change depending
--	 * on the working rate set */
- 	ath_rc_priv->rate_table_size = RATE_TABLE_SIZE;
- 
--	/* Initialize thresholds according to the global rate table */
- 	for (i = 0 ; i < ath_rc_priv->rate_table_size; i++) {
- 		ath_rc_priv->per[i] = 0;
-+		ath_rc_priv->valid_rate_index[i] = 0;
- 	}
- 
--	/* Determine the valid rates */
--	ath_rc_init_valid_rate_idx(ath_rc_priv);
--
- 	for (i = 0; i < WLAN_RC_PHY_MAX; i++) {
- 		for (j = 0; j < RATE_TABLE_SIZE; j++)
- 			ath_rc_priv->valid_phy_rateidx[i][j] = 0;
-@@ -1229,25 +1211,19 @@ static void ath_rc_init(struct ath_softc *sc,
- 	}
- 
- 	if (!rateset->rs_nrates) {
--		/* No working rate, just initialize valid rates */
--		hi = ath_rc_init_validrates(ath_rc_priv, rate_table,
--					    ath_rc_priv->ht_cap);
-+		hi = ath_rc_init_validrates(ath_rc_priv);
- 	} else {
--		/* Use intersection of working rates and valid rates */
--		hi = ath_rc_setvalid_rates(ath_rc_priv, rate_table,
--					   rateset, ath_rc_priv->ht_cap);
--		if (ath_rc_priv->ht_cap & WLAN_RC_HT_FLAG) {
--			hthi = ath_rc_setvalid_htrates(ath_rc_priv,
--						       rate_table,
--						       ht_mcs,
--						       ath_rc_priv->ht_cap);
--		}
-+		hi = ath_rc_setvalid_rates(ath_rc_priv);
-+
-+		if (ath_rc_priv->ht_cap & WLAN_RC_HT_FLAG)
-+			hthi = ath_rc_setvalid_htrates(ath_rc_priv);
-+
- 		hi = max(hi, hthi);
- 	}
- 
- 	ath_rc_priv->rate_table_size = hi + 1;
- 	ath_rc_priv->rate_max_phy = 0;
--	BUG_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
-+	WARN_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
- 
- 	for (i = 0, k = 0; i < WLAN_RC_PHY_MAX; i++) {
- 		for (j = 0; j < ath_rc_priv->valid_phy_ratecnt[i]; j++) {
-@@ -1255,21 +1231,20 @@ static void ath_rc_init(struct ath_softc *sc,
- 				ath_rc_priv->valid_phy_rateidx[i][j];
- 		}
- 
--		if (!ath_rc_valid_phyrate(i, rate_table->initial_ratemax, 1)
--		    || !ath_rc_priv->valid_phy_ratecnt[i])
-+		if (!ath_rc_valid_phyrate(i, rate_table->initial_ratemax, 1) ||
-+		    !ath_rc_priv->valid_phy_ratecnt[i])
- 			continue;
- 
- 		ath_rc_priv->rate_max_phy = ath_rc_priv->valid_phy_rateidx[i][j-1];
- 	}
--	BUG_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
--	BUG_ON(k > RATE_TABLE_SIZE);
-+	WARN_ON(ath_rc_priv->rate_table_size > RATE_TABLE_SIZE);
-+	WARN_ON(k > RATE_TABLE_SIZE);
- 
- 	ath_rc_priv->max_valid_rate = k;
--	ath_rc_sort_validrates(rate_table, ath_rc_priv);
-+	ath_rc_sort_validrates(ath_rc_priv);
- 	ath_rc_priv->rate_max_phy = (k > 4) ?
--					ath_rc_priv->valid_rate_index[k-4] :
--					ath_rc_priv->valid_rate_index[k-1];
--	ath_rc_priv->rate_table = rate_table;
-+		ath_rc_priv->valid_rate_index[k-4] :
-+		ath_rc_priv->valid_rate_index[k-1];
- 
- 	ath_dbg(common, CONFIG, "RC Initialized with capabilities: 0x%x\n",
- 		ath_rc_priv->ht_cap);
-@@ -1392,7 +1367,6 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	struct ath_softc *sc = priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
--	const struct ath_rate_table *rate_table;
- 	int i, j = 0;
- 
- 	for (i = 0; i < sband->n_bitrates; i++) {
-@@ -1414,15 +1388,15 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 		ath_rc_priv->neg_ht_rates.rs_nrates = j;
- 	}
- 
--	rate_table = ath_choose_rate_table(sc, sband->band,
--					   sta->ht_cap.ht_supported);
--	if (!rate_table) {
-+	ath_rc_priv->rate_table = ath_choose_rate_table(sc, sband->band,
-+							sta->ht_cap.ht_supported);
-+	if (!ath_rc_priv->rate_table) {
- 		ath_err(common, "No rate table chosen\n");
- 		return;
- 	}
- 
- 	ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta);
--	ath_rc_init(sc, priv_sta, sband, sta, rate_table);
-+	ath_rc_init(sc, priv_sta);
- }
- 
- static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
-@@ -1431,13 +1405,10 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
- {
- 	struct ath_softc *sc = priv;
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
--	const struct ath_rate_table *rate_table = NULL;
- 
- 	if (changed & IEEE80211_RC_BW_CHANGED) {
--		rate_table = ath_choose_rate_table(sc, sband->band,
--						   sta->ht_cap.ht_supported);
- 		ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta);
--		ath_rc_init(sc, priv_sta, sband, sta, rate_table);
-+		ath_rc_init(sc, priv_sta);
- 
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), CONFIG,
- 			"Operating HT Bandwidth changed to: %d\n",
--- 
-1.7.11.4
+See "Separate your changes." from Documentation/SubmittingPatches.
 
+You must have separate patches in repositories already. Life is strange,
+but I don't believe Realsil/Realtek develops driver without source
+control :-)
+
+>  	    /* IEEE80211_HW_SUPPORTS_CQM_RSSI | */
+> -	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | 0;
+> +	    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+> +	    WIPHY_FLAG_IBSS_RSN |
+This flags belongs to hw->wiphy->flags.
+
+Apparently RSN IBSS functionality wasn't tested, so for now, this probably
+should be removed.
+
+> +	init_timer(&rtlpriv->works.dualmac_easyconcurrent_retrytimer);
+> +	setup_timer(&rtlpriv->works.dualmac_easyconcurrent_retrytimer,
+> +		    rtl_easy_concurrent_retrytimer_callback, (unsigned long)hw);
+Nit: init_timer is not needed if setup_timer is used.
+
+>  	mutex_init(&rtlpriv->locks.conf_mutex);
+> -	mutex_init(&rtlpriv->locks.ps_mutex);
+>  	spin_lock_init(&rtlpriv->locks.ips_lock);
+>  	spin_lock_init(&rtlpriv->locks.irq_th_lock);
+>  	spin_lock_init(&rtlpriv->locks.h2c_lock);
+>  	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
+>  	spin_lock_init(&rtlpriv->locks.rf_lock);
+> +	spin_lock_init(&rtlpriv->locks.lps_lock);
+This reverts various changes we did in kernel driver regarding PS
+locking, which was started by commit:
+
+commit 312d5479dcfaca2b8aa451201b5388fdb8c8684a
+Author: Mike McCormack <mikem@ring3k.org>
+Date:   Tue May 31 08:49:36 2011 +0900
+
+    rtlwifi: Don't block interrupts in spinlocks
+
+I wonder if this change does not reintroduce "disabling interrupts for
+long time" problem.
+
+Also below there is overwrite of IRQ_HANDLED fix. I did not check more,
+but possibly patch also overwrite some other, more important fixes
+we have in kernel version of rtlwifi driver. Larry put dozen of fixes to
+driver, would be pity to lost them.
+
+> +/* mac80211 have issues when receive del ba
+> + * so here we just make a fake del_ba when we receive a ba_req
+> + * but rx_agg was opened to let mac80211 release some ba
+> + * related resources, so please this del_ba for tx
+> + */
+
+So this issue should be fixed in mac80211 instead of work around 
+in driver.
+
+BTW, such approach is typical "platform problem" (see
+http://lwn.net/Articles/443531/), which frustrate kernel developers.
+Please participate in mac80211 and other kernel core components too.
+
+>  static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+> @@ -775,7 +865,6 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+>  	unsigned long flags;
+>  	u32 inta = 0;
+>  	u32 intb = 0;
+> -	irqreturn_t ret = IRQ_HANDLED;
+>  
+>  	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+>  
+> @@ -783,10 +872,8 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+>  	rtlpriv->cfg->ops->interrupt_recognized(hw, &inta, &intb);
+>  
+>  	/*Shared IRQ or HW disappared */
+> -	if (!inta || inta == 0xffff) {
+> -		ret = IRQ_NONE;
+> +	if (!inta || inta == 0xffff)
+>  		goto done;
+> -	}
+>  
+>  	/*<1> beacon related */
+>  	if (inta & rtlpriv->cfg->maps[RTL_IMR_TBDOK]) {
+> @@ -889,7 +976,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+>  
+>  done:
+>  	spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock, flags);
+> -	return ret;
+> +	return IRQ_HANDLED;
+Overwrite of:
+
+commit de2e56cea25c80f91a6c6699de40fb3fe8b2479d
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Wed Nov 23 21:30:19 2011 -0600
+
+    rtlwifi: Fix incorrect return of IRQ_HANDLED
+
+> +/* this is used for other modules get
+> + * hw pointer in rtl_pci_get_hw_pointer
+> + */
+> +static struct ieee80211_hw *hw_export;
+> +
+>  int __devinit rtl_pci_probe(struct pci_dev *pdev,
+>  			    const struct pci_device_id *id)
+>  {
+> @@ -1785,6 +1832,7 @@ int __devinit rtl_pci_probe(struct pci_dev *pdev,
+>  		err = -ENOMEM;
+>  		goto fail1;
+>  	}
+> +	hw_export = hw;
+How this is suppose to work, this variable will be overwritten by
+any ->pci_probe ? In general this buddy/glabal_var stuff is very 
+fishy, but I did not looked in detail at that. Does all of
+that actually work ? 
+
+>  	if (rtlpci->irq_alloc) {
+> +		synchronize_irq(rtlpci->pdev->irq);
+>  		free_irq(rtlpci->pdev->irq, hw);
+Nit: not needed - free_irq do sync internally.
+
+> +static void _rtl_dump_channel_map(struct wiphy *wiphy)
+> +{
+> +	enum ieee80211_band band;
+> +	struct ieee80211_supported_band *sband;
+> +	struct ieee80211_channel *ch;
+> +	unsigned int i;
+> +
+> +	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+> +		if (!wiphy->bands[band])
+> +			continue;
+> +		sband = wiphy->bands[band];
+> +		for (i = 0; i < sband->n_channels; i++)
+> +			ch = &sband->channels[i];
+> +	}
+> +}
+This functions doesn't do anything useful.
+
+Thanks
+Stanislaw
