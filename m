@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f202.google.com ([209.85.214.202]:63377 "EHLO
-	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983Ab2HBA1Z (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:64464 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754155Ab2HVQAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 20:27:25 -0400
-Received: by obbwc20 with SMTP id wc20so5564419obb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 17:27:24 -0700 (PDT)
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by wpzn4.hot.corp.google.com (Postfix) with ESMTP id 065B51E0043
-	for <linux-wireless@vger.kernel.org>; Wed,  1 Aug 2012 17:27:24 -0700 (PDT)
-From: Paul Stewart <pstew@chromium.org>
-Date: Wed, 1 Aug 2012 16:54:42 -0700
-Subject: [PATCH] cfg80211: Clear "beacon_found" on regulatory restore
-To: linux-wireless@vger.kernel.org
-Message-Id: <20120802002723.7762E2056A@glenhelen.mtv.corp.google.com> (sfid-20120802_022727_815743_111F3AB3)
+	Wed, 22 Aug 2012 12:00:18 -0400
+Message-ID: <5035020E.5040806@lwfinger.net> (sfid-20120822_180039_160396_CFC947FD)
+Date: Wed, 22 Aug 2012 11:00:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: Neal Cardwell <ncardwell@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+References: <50345B12.1050600@lwfinger.net> <1345612503.5158.566.camel@edumazet-glaptop>
+In-Reply-To: <1345612503.5158.566.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Restore the default state to the "beacon_found" flag when
-the channel flags are restored.  Otherwise, we can end up
-with a channel that we can no longer transmit on even when
-we can see beacons on that channel.
+On 08/22/2012 12:15 AM, Eric Dumazet wrote:
+>
+> This particular commit is the start of a patches batch that ended in the
+> generic TCP coalescing mechanism.
+>
+> It is known to have problem on drivers doing skb_clone() in their rx
+> path.
+>
+> Current kernels should be ok, because coalescing doesnt happen if the
+> destination skb is cloned (skb_cloned(to) in skb_try_coalesce())
+>
+> For 3.4 kernel, I guess I need to backport this skb_cloned(to) check fo
+> stable 3.4 kernel
+>
+> But these skb_clone() in various USB drivers should be killed for good,
+> they really can kill the box because of skb->truesize lies.
 
-Signed-off-by: Paul Stewart <pstew@chromium.org>
----
- net/wireless/reg.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Applying your patch to 3.4 does not fix the problem. In addition, all of the 
+problems I noted happen with 3.6-rc2 - current kernels are not OK.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2303ee7..cc6b4c4 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1885,6 +1885,7 @@ static void restore_custom_reg_settings(struct wiphy *wiphy)
- 			chan->flags = chan->orig_flags;
- 			chan->max_antenna_gain = chan->orig_mag;
- 			chan->max_power = chan->orig_mpwr;
-+			chan->beacon_found = false;
- 		}
- 	}
- }
--- 
-1.7.7.3
+Of the drivers I reported, only r8712u in staging/rtl8712/rtl8712_recv.c has a 
+direct call to skb_clone(). As its symptoms are different, the cloning is likely 
+the source of the problems there. In addition, the problem is intermittent. The 
+driver normally allocates a new buffer and copies to it, and the clone only 
+occurs when that skb allocation fails. I will try to fix that. My skb skills are 
+minimal and I will have to do some studying.
+
+Thanks,
+
+Larry
+
 
