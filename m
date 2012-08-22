@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:59015 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851Ab2HYFQ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Aug 2012 01:16:29 -0400
-Received: by vcbfk26 with SMTP id fk26so2911721vcb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2012 22:16:28 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:44314 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758731Ab2HVJMU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2012 05:12:20 -0400
+Date: Wed, 22 Aug 2012 11:11:59 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
+Message-ID: <20120822091158.GB4959@redhat.com> (sfid-20120822_111226_903263_6A1C1DA4)
+References: <20120821231100.GA13890@earthship.home>
 MIME-Version: 1.0
-In-Reply-To: <50381437.7040903@lwfinger.net>
-References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
-	<50365AC8.7030503@lwfinger.net>
-	<CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
-	<5036660B.9020208@lwfinger.net>
-	<CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com>
-	<50381437.7040903@lwfinger.net>
-Date: Fri, 24 Aug 2012 22:16:28 -0700
-Message-ID: <CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com> (sfid-20120825_071633_418117_1CDFCA17)
-Subject: Re: Question about ath9k/mac80211 Driver
-From: Patrick Connolly <pjc999@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120821231100.GA13890@earthship.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kernel is 2.6.32
--Patrick
+Please keep version (PATCH vX in subject) to do not confuse
+patches.
 
-On Fri, Aug 24, 2012 at 4:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 08/24/2012 06:38 PM, Patrick Connolly wrote:
->>
->> Okay so I built "iw" version 0.9.22 successfully (after much grief).
->> The help page shows that "set bitrates" is now supported:
->>
->>          dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in
->> Mbps>*]
->>
->>
->>   but when I try to use it I get:
->>
->>         # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
->>         command failed: Operation not supported (-95)
->>
->> ...so what does this mean?  Is it "iw" or the driver that lacks the
->> support?
->
->
-> I would think that your kernel is too old. What version are you running?
->
-> Larry
->
->
+On Wed, Aug 22, 2012 at 02:11:11AM +0300, Daniel Golle wrote:
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Signed-off-by: Daniel Golle <dgolle@allnet.de>
+
+How do you know what to write to each RF/BBP register? I guess patch
+is based on vendor driver, right? Where I can find it, if I would
+like to compare it with this patch?
+
+> +	if (rt2x00dev->freq_offset > FREQ_OFFSET_BOUND)
+> +		rt2x00_set_field8(&rfcsr, RFCSR17_CODE,
+> +				  FREQ_OFFSET_BOUND);
+Not needed line break.
+
+> +	if ( rt2x00dev->default_ant.tx_chain_num == 1 )
+Coding style.
+
+> +	if ( rt2x00dev->default_ant.rx_chain_num == 1 )
+The same.
+
+> +	}
+> +	else
+> +	{
+Again coding style.
+
+> +		else if (rt2x00_rt(rt2x00dev, RT3352))
+> +			rt2800_register_write(rt2x00dev, TX_SW_CFG0,
+> +					      0x00000402);
+Is possible to describe what does it mean?
+
+Thanks
+Stanislaw
