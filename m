@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47602 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154Ab2HBNb0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58446 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932126Ab2HVUpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 09:31:26 -0400
-Message-ID: <1343914280.4471.0.camel@jlt3.sipsolutions.net> (sfid-20120802_153129_916792_BE529147)
-Subject: Re: [PATCH 1/2] cfg80211: add channel flag to prohibit OFDM
- operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Date: Thu, 02 Aug 2012 15:31:20 +0200
-In-Reply-To: <20120802130431.GA32395@thinkpad-t410>
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
-	 <1343854723-21987-2-git-send-email-seth.forshee@canonical.com>
-	 <1343888660.4458.1.camel@jlt3.sipsolutions.net>
-	 <20120802130431.GA32395@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 Aug 2012 16:45:14 -0400
+Date: Wed, 22 Aug 2012 16:41:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com
+Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
+ 2012 (Barcelona!)
+Message-ID: <20120822204122.GA2196@tuxdriver.com> (sfid-20120822_224520_015528_3E37FECA)
+References: <20120822201930.GC14913@tuxdriver.com>
+ <1345667975.8786.0.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1345667975.8786.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-08-02 at 08:04 -0500, Seth Forshee wrote:
-> On Thu, Aug 02, 2012 at 08:24:20AM +0200, Johannes Berg wrote:
-> > On Wed, 2012-08-01 at 15:58 -0500, Seth Forshee wrote:
-> > > Currently the only way for wireless drivers to tell whether or not OFDM
-> > > is allowed on the current channel is to check the regulatory
-> > > information. However, this requires hodling cfg80211_mutex, which is not
-> > > visible to the drivers.
-> > > 
-> > > Other regulatory restrictions are provided as flags in the channel
-> > > definition, so let's do similarly with OFDM. This patch adds a new flag,
-> > > IEEE80211_CHAN_NO_OFDM, to tell drivers that OFDM on a channel is not
-> > > allowed. This flag is set on any channels for which regulatory indicates
-> > > that OFDM is prohibited.
-> > 
-> > Looks good, this needs to go into 3.6, right?
+On Wed, Aug 22, 2012 at 10:39:35PM +0200, Johannes Berg wrote:
+> On Wed, 2012-08-22 at 16:19 -0400, John W. Linville wrote:
 > 
-> Yes, it should go into 3.6.
+> > With that said, there are still a number of slots available for
+> > presentations or discussion topics.  This is especially true for the
+> > 802.11 group...  Please step-up with some suggested topics!
+> 
+> Anyone want to carefully review & present Michal's and my work on
+> multi-channel in mac80211? :-)
 
-Alright, applied.
+I would _really_ like to see this.  Anyone (smarter than me) that is
+willing to do this for the group?
 
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
