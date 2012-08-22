@@ -1,43 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53934 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754100Ab2H0Ujc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 16:39:32 -0400
-Message-ID: <503BDAFF.9080904@lwfinger.net> (sfid-20120827_224034_837730_2E3124A7)
-Date: Mon, 27 Aug 2012 15:39:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:21565 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932335Ab2HVKvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Aug 2012 06:51:25 -0400
+Date: Wed, 22 Aug 2012 12:51:10 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	gwingerde@gmail.com
+Subject: Re: [PATCH v1] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
+Message-ID: <20120822105110.GC6082@redhat.com> (sfid-20120822_125133_313835_4F892977)
+References: <20120821235349.GA14648@earthship.home>
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: David Miller <davem@davemloft.net>, ncardwell@google.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop>  <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>  <1345830424.19483.69.camel@edumazet-glaptop>  <503BB49C.5010402@lwfinger.net> <1346091701.26634.6.camel@edumazet-glaptop>
-In-Reply-To: <1346091701.26634.6.camel@edumazet-glaptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120821235349.GA14648@earthship.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/27/2012 01:21 PM, Eric Dumazet wrote:
-> On Mon, 2012-08-27 at 12:55 -0500, Larry Finger wrote:
->
->> I have prepared a patch to fix all the unchecked allocations.
->>
->> Over the weekend I made some progress. To test the latest vendor driver, I
->> installed a 32-bit system. Their driver is not compatible with a 64-bit system.
->> I found that not only did the vendor driver work with secure sites, but so did
->> the in-kernel version. I now have tcpdump output for the 32-bit case that works,
->> and the 64-bit case that fails. It seems likely that I missed some 32/64 bit
->> incompatibility when I did the conversion.
->>
->> Thanks for all your help in trying to resolve this issue.
->
-> Interesting, so these 32/64 bits problems did not happen in prior
-> kernels ? (< 3.4 )
+On Wed, Aug 22, 2012 at 02:53:57AM +0300, Daniel Golle wrote:
+> (sorry for posting twice, I previously forgot to merge the final commit removing
+> a comment. now fixed.)
 
-Prior kernels are OK.
+Please address my comments from previous patch.
 
-Larry
-
+Thanks
+Stanislaw
