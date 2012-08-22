@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:34601 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154Ab2HYWEX (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58297 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091Ab2HVFPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Aug 2012 18:04:23 -0400
-Received: by ghrr11 with SMTP id r11so678151ghr.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2012 15:04:22 -0700 (PDT)
-Message-ID: <50394BE4.3000508@wybc.com> (sfid-20120826_000504_743944_E7FF1370)
-Date: Sat, 25 Aug 2012 18:04:20 -0400
-From: Sherwin Soltani <sherwin@wybc.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k: AR9462 btcoex doesn't appear to work
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 22 Aug 2012 01:15:09 -0400
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <50345B12.1050600@lwfinger.net>
+References: <50345B12.1050600@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Aug 2012 07:15:03 +0200
+Message-ID: <1345612503.5158.566.camel@edumazet-glaptop> (sfid-20120822_071544_027514_BA8EF54F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2012-08-21 at 23:07 -0500, Larry Finger wrote:
+> Hi,
+> 
+> The commit entitled "tcp: reduce out_of_order memory use" turns out to cause 
+> problems with a number of USB drivers.
+> 
+> The first one called to my attention was for staging/r8712u. For this driver, 
+> there are problems with SSL communications as reported in 
+> https://bugzilla.redhat.com/show_bug.cgi?id=847525.
+> 
+> Other drivers including rtl8187, rtl8192cu and rt2800usb cannot connect to a 
+> WPA1- or WEP-encrypted AP, but work fine with WPA2. The rtl8192cu problem is 
+> reported in https://bugzilla.kernel.org/show_bug.cgi?id=46171.
+> 
+> I find it hard to understand why this patch should cause these effects; however, 
+> I have verified that a kernel generated from "git checkout e86b2919" works fine. 
+> This commit is immediately before the patch in question.
+> 
+> Note, this patch was applied during the merge between 3.3 and 3.4. The 
+> regression has been undiscovered for some time.
+> 
+> Any help on this problem will be appreciated.
+> 
+> Larry
 
-I have an Acer Aspire V5-571 which contains the AR9462 chipset (PCI ID 
-168c:0034), supported by the ath9k driver. This chipset claims to 
-support Bluetooth coexistence. However, after booting up, my kernel does 
-not register any Bluetooth devices.
+This particular commit is the start of a patches batch that ended in the
+generic TCP coalescing mechanism.
 
-I am using kernel version 3.6.0-999-generic (apw@gomeisa) (gcc version 
-4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)). I also tried 3.4 and 3.2 kernels 
-without success. Additionally, I can try to do
+It is known to have problem on drivers doing skb_clone() in their rx
+path.
 
-rmmod ath9k && modprobe ath9k btcoex_enable=1
+Current kernels should be ok, because coalescing doesnt happen if the
+destination skb is cloned (skb_cloned(to) in skb_try_coalesce())
 
-In the message log, I can see this:
+For 3.4 kernel, I guess I need to backport this skb_cloned(to) check fo
+stable 3.4 kernel
 
-[ 1204.643120] ath9k: ath9k: Driver unloaded
-[ 1214.203099] ath: phy1: Disabling ASPM since BTCOEX is enabled
-[ 1214.203105] ath: EEPROM regdomain: 0x6a
-[ 1214.203106] ath: EEPROM indicates we should expect a direct regpair map
-[ 1214.203108] ath: Country alpha2 being used: 00
-[ 1214.203109] ath: Regpair used: 0x6a
+But these skb_clone() in various USB drivers should be killed for good,
+they really can kill the box because of skb->truesize lies.
 
-However 'hcitool dev' shows no devices after this operation.
+Please test following patch (for 3.4 kernels)
 
-Looking back through the ath9k-devel list, I can see that there was some 
-discussion on this chipset, but it seems that Bluetooth functionality 
-wasn't tested with it. Is this a known problem? Is there any information 
-I can supply to help fix it?
+diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
+index 257b617..c45ac2d 100644
+--- a/net/ipv4/tcp_input.c
++++ b/net/ipv4/tcp_input.c
+@@ -4496,7 +4496,9 @@ static void tcp_data_queue_ofo(struct sock *sk, struct sk_buff *skb)
+ 		 * to avoid future tcp_collapse_ofo_queue(),
+ 		 * probably the most expensive function in tcp stack.
+ 		 */
+-		if (skb->len <= skb_tailroom(skb1) && !tcp_hdr(skb)->fin) {
++		if (skb->len <= skb_tailroom(skb1) &&
++		    !skb_cloned(skb1) &&
++		    !tcp_hdr(skb)->fin) {
+ 			NET_INC_STATS_BH(sock_net(sk),
+ 					 LINUX_MIB_TCPRCVCOALESCE);
+ 			BUG_ON(skb_copy_bits(skb, 0,
 
-Aside from the Bluetooth problems, there are also problems with 
-frequently dropping signals (even when I am very close to the access 
-point), but right now that's a secondary concern to Bluetooth for me.
 
-Thanks,
-
-Sherwin Soltani
