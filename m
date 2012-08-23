@@ -1,108 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64141 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750972Ab2HBNyc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 09:54:32 -0400
-Date: Thu, 2 Aug 2012 09:54:13 -0400
-From: Josh Boyer <jwboyer@redhat.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 0/2] Fix lockdep warning in brcmsmac
-Message-ID: <20120802135412.GH1785@zod.bos.redhat.com> (sfid-20120802_155437_081011_C6C34887)
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
- <20120802002353.GD1785@zod.bos.redhat.com>
- <20120802015320.GA25933@thinkpad-t410>
- <20120802120230.GE1785@zod.bos.redhat.com>
- <20120802125102.GF1785@zod.bos.redhat.com>
- <501A842A.2080807@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13040 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933010Ab2HWNYR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2012 09:24:17 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 2/6] ath9k_htc: Advertise interface combinations supported
+Date: Thu, 23 Aug 2012 18:53:54 +0530
+Message-ID: <1345728238-5313-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152419_629198_A866916A)
+In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <501A842A.2080807@hauke-m.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 02, 2012 at 03:44:10PM +0200, Hauke Mehrtens wrote:
-> On 08/02/2012 02:51 PM, Josh Boyer wrote:
-> > On Thu, Aug 02, 2012 at 08:02:30AM -0400, Josh Boyer wrote:
-> >> On Wed, Aug 01, 2012 at 08:53:20PM -0500, Seth Forshee wrote:
-> >>> On Wed, Aug 01, 2012 at 08:23:54PM -0400, Josh Boyer wrote:
-> >>>> On Wed, Aug 01, 2012 at 03:58:41PM -0500, Seth Forshee wrote:
-> >>>>> As reported by Josh Boyer, brcmsmac is producing lockdep warnings by
-> >>>>> calling freq_reg_info() without holding cfg80211_lock. Currently
-> >>>>> freq_reg_info() is the only way for a wireless driver to tell whether
-> >>>>> OFDM is allowed on the current channel, but cfg80211_lock is outside the
-> >>>>> scope of the wireless drivers.
-> >>>>>
-> >>>>> Since other regulatory restrictions are communicated in the channel
-> >>>>> definition, it makes sense to do the same for OFDM. These patches add a
-> >>>>> new flag, IEEE80211_CHAN_NO_OFDM, which is set by regulatory to
-> >>>>> indicated OFDM operation is prohibited. brcmsmac is modifified to use
-> >>>>> this flag instead of consuming the regulatory data directly.
-> >>>>>
-> >>>>> Thanks,
-> >>>>> Seth
-> >>>>>
-> >>>>>
-> >>>>> Seth Forshee (2):
-> >>>>>   cfg80211: add channel flag to restrict OFDM
-> >>>>>   brcmsmac: use channel flags to restrict OFDM
-> >>>>
-> >>>> I would love to test these, but at the moment I can't.  Oddly, the very
-> >>>> same machine I hit the problem with originally is no longer presenting
-> >>>> any devices on the bcma bus.  The driver is loaded, brcmsmac is loaded,
-> >>>> but neither output the devices that showed up in my original email.
-> >>>> This is with both the kernel I originally reported the problem with, and
-> >>>> other kernels.  Nothing shows up for the BCM4313 in lspci either.
-> >>>>
-> >>>> I did power it off and then back on today after I hit the original
-> >>>> problem, but I'd expect the hardware in the box to still show up on a
-> >>>> power on...  Is there some specific module load order, or something
-> >>>> else I can do to try and get the device to show up?
-> >>>>
-> >>>> I did build a kernel with your patches applied, so at least I know they
-> >>>> build.  If I can get this machine to probe the chip again, I'll be happy
-> >>>> to test.
-> >>>>
-> >>>> At the moment, I'm just very confused and slightly afraid it's going to
-> >>>> just refuse to work at all.
-> >>>
-> >>> Do you have 1f03bf06e4e3b8ed9a69e7fc4cdb1be4c6c6c819? That fixed a bug
-> >>> that had caused some very odd behavior, like changing PCI device ids.
-> >>> Recovering after booting a bad kernel required a cold boot to a kernel
-> >>> with the fix; a warm reboot wasn't enough.
-> >>
-> >> The kernel I'm testing should have that commit in it.  I'll try a cold
-> >> boot to it to make sure.
-> > 
-> > That didn't help.  I've tried multiple module load orderings without
-> > anything being shown on the bcma bus.  The modules all load, but no
-> > devices are created.  It's as if the hardware was removed or something.
-> > Puzzling.
-> > 
-> > josh
-> 
-> Are you sure you have the commit
-> 1f03bf06e4e3b8ed9a69e7fc4cdb1be4c6c6c819 in your tree, this commit is
-> *not* in wireless-testing it is just in wireless-next-2.6 and linus tree
-> for 3.6-rc1. If lspci does not show the device, it has nothing to do
-> with some modules being loaded or not, at least when non of then is
-> controlling your PCIe bus. It could also be that a cold boot is not
-> enough to reset your device, what device are you using the BCM4313 in?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Yes, I'm sure.  I'm booting essentially Linus' latest git tree.  Now,
-during a bisect I was doing yesterday it's quite possible I booted
-something that did not have that commit, but the last 3 kernels I have
-tried definitely had it and all were from cold boots.  The newest kernel
-as of this morning is at 1a9b4993b70fb1884716902774dc9025b457760d.
+This will allow us to create virtual interface the driver supports.
+Also this ensures multivif support and limitation advertised
+by the driver is taken care in cfg80211 itself.
 
-The BCM4313 is in a Dell XPS 8300 box.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-josh
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a035a38..b6a824e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -689,6 +689,20 @@ err_hw:
+ 	return ret;
+ }
+ 
++static const struct ieee80211_iface_limit if_limits[] = {
++	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
++	{ .max = 2,	.types = BIT(NL80211_IFTYPE_AP) |
++				 BIT(NL80211_IFTYPE_P2P_GO) },
++};
++
++static const struct ieee80211_iface_combination if_comb = {
++	.limits = if_limits,
++	.n_limits = ARRAY_SIZE(if_limits),
++	.max_interfaces = 2,
++	.num_different_channels = 1,
++};
++
+ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 			       struct ieee80211_hw *hw)
+ {
+@@ -711,6 +725,9 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 		BIT(NL80211_IFTYPE_P2P_GO) |
+ 		BIT(NL80211_IFTYPE_P2P_CLIENT);
+ 
++	hw->wiphy->iface_combinations = &if_comb;
++	hw->wiphy->n_iface_combinations = 1;
++
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
+-- 
+1.7.0.4
+
