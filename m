@@ -1,30 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:64218 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758187Ab2HKAua (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13075 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933010Ab2HWNYa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 20:50:30 -0400
-Received: by obbuo13 with SMTP id uo13so3032582obb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 17:50:30 -0700 (PDT)
+	Thu, 23 Aug 2012 09:24:30 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 3/6] ath9k_htc: Remove interface combination specific checks
+Date: Thu, 23 Aug 2012 18:53:55 +0530
+Message-ID: <1345728238-5313-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152433_144408_2DE5E536)
+In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1344632236-516-1-git-send-email-andy@greyhouse.net>
-References: <1344632236-516-1-git-send-email-andy@greyhouse.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Fri, 10 Aug 2012 17:50:09 -0700
-Message-ID: <CAB=NE6V8cs81zghucNHGG=LrjxLg9tNb_2CRmihJp7OYEv30pQ@mail.gmail.com> (sfid-20120811_025143_156936_68788251)
-Subject: Re: [PATCH] compat: fixup error in no_printk definition
-To: Andy Gospodreak <andy@greyhouse.net>
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 10, 2012 at 1:57 PM, Andy Gospodreak <andy@greyhouse.net> wrote:
-> What initially looked like a valid definition for the #define for
-> no_printk was not.  This corrects the problem and the change that was
-> thought to correct it.
->
-> Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-thanks, applied and pushed!
+Once the driver advertizes interface combination logic
+based on its firmware/hardware limitation, cfg80211
+takes care of all the necessary logic such as maximum
+beaconing vifs, standlone interface etc.
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   20 --------------------
+ 1 files changed, 0 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index c32f6e3..51c69f2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1040,26 +1040,6 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+-	if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
+-		mutex_unlock(&priv->mutex);
+-		return -ENOBUFS;
+-	}
+-
+-	if (priv->num_ibss_vif ||
+-	    (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
+-		ath_err(common, "IBSS coexistence with other modes is not allowed\n");
+-		mutex_unlock(&priv->mutex);
+-		return -ENOBUFS;
+-	}
+-
+-	if (((vif->type == NL80211_IFTYPE_AP) ||
+-	     (vif->type == NL80211_IFTYPE_ADHOC)) &&
+-	    ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
+-		ath_err(common, "Max. number of beaconing interfaces reached\n");
+-		mutex_unlock(&priv->mutex);
+-		return -ENOBUFS;
+-	}
+-
+ 	ath9k_htc_ps_wakeup(priv);
+ 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
+ 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
+-- 
+1.7.0.4
+
