@@ -1,185 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38714 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753644Ab2HBOBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 10:01:09 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/2] ath9k: fix indentation in ar9003_hw_set_power_per_rate_table
-Date: Thu,  2 Aug 2012 16:00:52 +0200
-Message-Id: <1343916052-3367-2-git-send-email-juhosg@openwrt.org> (sfid-20120802_160113_935640_E8CBD8CA)
-In-Reply-To: <1343916052-3367-1-git-send-email-juhosg@openwrt.org>
-References: <1343916052-3367-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:39642 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238Ab2HWT0g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2012 15:26:36 -0400
+Received: by dady13 with SMTP id y13so564693dad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2012 12:26:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <50366411.6000408@openwrt.org>
+References: <20120813165340.GA10044@pandem0nium>
+	<20120819220436.GA9899@pandem0nium>
+	<CAD2nsn0O+dfJLnKroRUJF6TEVWUmgwvriF7M+Oy4YL2ug0gSNA@mail.gmail.com>
+	<CAJ-VmokN_2PHZinfE8zfx6-8VZ+KenccymfSs+JFWtDtmjExVg@mail.gmail.com>
+	<20120823092831.GA25818@pandem0nium>
+	<50366411.6000408@openwrt.org>
+Date: Thu, 23 Aug 2012 12:26:35 -0700
+Message-ID: <CAJ-VmonMAk3qsV=hKNxp58KmHEfQcNkPHtbrusfZnsM+ZKmGcw@mail.gmail.com> (sfid-20120823_212640_395701_1EEC0808)
+Subject: Re: AR9330 hornet board stops beaconing after a few days (0xdeadbeef)
+From: Adrian Chadd <adrian.chadd@gmail.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	openwrt-devel@lists.openwrt.org,
+	Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current indentation is off by one tab.
+If that's right, it's more likely the MAC/PHY is just asleep.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  143 ++++++++++++------------
- 1 file changed, 69 insertions(+), 74 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 86bd756..2d04791 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4901,84 +4901,79 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 				i, cfgCtl, pCtlMode[ctlMode], ctlIndex[i],
- 				chan->channel);
- 
--				/*
--				 * compare test group from regulatory
--				 * channel list with test mode from pCtlMode
--				 * list
--				 */
--				if ((((cfgCtl & ~CTL_MODE_M) |
--				       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
--					ctlIndex[i]) ||
--				    (((cfgCtl & ~CTL_MODE_M) |
--				       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
--				     ((ctlIndex[i] & CTL_MODE_M) |
--				       SD_NO_CTL))) {
--					twiceMinEdgePower =
--					  ar9003_hw_get_max_edge_power(pEepData,
--								       freq, i,
--								       is2ghz);
--
--					if ((cfgCtl & ~CTL_MODE_M) == SD_NO_CTL)
--						/*
--						 * Find the minimum of all CTL
--						 * edge powers that apply to
--						 * this channel
--						 */
--						twiceMaxEdgePower =
--							min(twiceMaxEdgePower,
--							    twiceMinEdgePower);
--						else {
--							/* specific */
--							twiceMaxEdgePower =
--							  twiceMinEdgePower;
--							break;
--						}
-+			/*
-+			 * compare test group from regulatory
-+			 * channel list with test mode from pCtlMode
-+			 * list
-+			 */
-+			if ((((cfgCtl & ~CTL_MODE_M) |
-+			       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
-+				ctlIndex[i]) ||
-+			    (((cfgCtl & ~CTL_MODE_M) |
-+			       (pCtlMode[ctlMode] & CTL_MODE_M)) ==
-+			     ((ctlIndex[i] & CTL_MODE_M) |
-+			       SD_NO_CTL))) {
-+				twiceMinEdgePower =
-+				  ar9003_hw_get_max_edge_power(pEepData,
-+							       freq, i,
-+							       is2ghz);
-+
-+				if ((cfgCtl & ~CTL_MODE_M) == SD_NO_CTL)
-+					/*
-+					 * Find the minimum of all CTL
-+					 * edge powers that apply to
-+					 * this channel
-+					 */
-+					twiceMaxEdgePower =
-+						min(twiceMaxEdgePower,
-+						    twiceMinEdgePower);
-+				else {
-+					/* specific */
-+					twiceMaxEdgePower = twiceMinEdgePower;
-+					break;
- 				}
- 			}
-+		}
- 
--			minCtlPower = (u8)min(twiceMaxEdgePower, scaledPower);
-+		minCtlPower = (u8)min(twiceMaxEdgePower, scaledPower);
- 
--			ath_dbg(common, REGULATORY,
--				"SEL-Min ctlMode %d pCtlMode %d 2xMaxEdge %d sP %d minCtlPwr %d\n",
--				ctlMode, pCtlMode[ctlMode], twiceMaxEdgePower,
--				scaledPower, minCtlPower);
--
--			/* Apply ctl mode to correct target power set */
--			switch (pCtlMode[ctlMode]) {
--			case CTL_11B:
--				for (i = ALL_TARGET_LEGACY_1L_5L;
--				     i <= ALL_TARGET_LEGACY_11S; i++)
--					pPwrArray[i] =
--					  (u8)min((u16)pPwrArray[i],
--						  minCtlPower);
--				break;
--			case CTL_11A:
--			case CTL_11G:
--				for (i = ALL_TARGET_LEGACY_6_24;
--				     i <= ALL_TARGET_LEGACY_54; i++)
--					pPwrArray[i] =
--					  (u8)min((u16)pPwrArray[i],
--						  minCtlPower);
--				break;
--			case CTL_5GHT20:
--			case CTL_2GHT20:
--				for (i = ALL_TARGET_HT20_0_8_16;
--				     i <= ALL_TARGET_HT20_23; i++)
--					pPwrArray[i] =
--					  (u8)min((u16)pPwrArray[i],
--						  minCtlPower);
--				break;
--			case CTL_5GHT40:
--			case CTL_2GHT40:
--				for (i = ALL_TARGET_HT40_0_8_16;
--				     i <= ALL_TARGET_HT40_23; i++)
--					pPwrArray[i] =
--					  (u8)min((u16)pPwrArray[i],
--						  minCtlPower);
--				break;
--			default:
--			    break;
--			}
-+		ath_dbg(common, REGULATORY,
-+			"SEL-Min ctlMode %d pCtlMode %d 2xMaxEdge %d sP %d minCtlPwr %d\n",
-+			ctlMode, pCtlMode[ctlMode], twiceMaxEdgePower,
-+			scaledPower, minCtlPower);
-+
-+		/* Apply ctl mode to correct target power set */
-+		switch (pCtlMode[ctlMode]) {
-+		case CTL_11B:
-+			for (i = ALL_TARGET_LEGACY_1L_5L;
-+			     i <= ALL_TARGET_LEGACY_11S; i++)
-+				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
-+						       minCtlPower);
-+			break;
-+		case CTL_11A:
-+		case CTL_11G:
-+			for (i = ALL_TARGET_LEGACY_6_24;
-+			     i <= ALL_TARGET_LEGACY_54; i++)
-+				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
-+						       minCtlPower);
-+			break;
-+		case CTL_5GHT20:
-+		case CTL_2GHT20:
-+			for (i = ALL_TARGET_HT20_0_8_16;
-+			     i <= ALL_TARGET_HT20_23; i++)
-+				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
-+						       minCtlPower);
-+			break;
-+		case CTL_5GHT40:
-+		case CTL_2GHT40:
-+			for (i = ALL_TARGET_HT40_0_8_16;
-+			     i <= ALL_TARGET_HT40_23; i++)
-+				pPwrArray[i] = (u8)min((u16)pPwrArray[i],
-+						       minCtlPower);
-+			break;
-+		default:
-+			break;
-+		}
- 	} /* end ctl mode checking */
- }
- 
--- 
-1.7.10
 
+adrian
