@@ -1,34 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54621 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753825Ab2HIReY (ORCPT
+Received: from [124.207.24.138] ([124.207.24.138]:41968 "EHLO
+	mail.ss.pku.edu.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863Ab2HWE65 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 13:34:24 -0400
-Date: Thu, 9 Aug 2012 10:34:35 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath9k: decrypt_error flag issue
-Message-ID: <20120809173435.GQ3745@lenteja.do-not-panic.com> (sfid-20120809_193428_091392_EFF9B535)
-References: <CAA2SeNJmaHs5fMHrG65HWbe5Y-ytz2qvuzNGKvhBKgvZ15KoVw@mail.gmail.com>
+	Thu, 23 Aug 2012 00:58:57 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAA2SeNJmaHs5fMHrG65HWbe5Y-ytz2qvuzNGKvhBKgvZ15KoVw@mail.gmail.com>
+Date: Thu, 23 Aug 2012 12:50:31 +0800
+Message-ID: <CAF1ivSZ63Zr9STz3NnLV=ynRftMokG=ZGghd+cQu=HRUsiH+EA@mail.gmail.com> (sfid-20120823_065900_672112_CAC752B0)
+Subject: wireless router performance differ with 2.4Ghz vs 5.0Ghz frequency
+From: Lin Ming <mlin@ss.pku.edu.cn>
+To: linux-wireless@vger.kernel.org
+Cc: networking <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 09, 2012 at 05:47:47PM +0200, Lorenzo Bianconi wrote:
-> From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-> 
-> After the hw reports a decryption error, the flag decrypt_error is set to
-> true in ath9k_rx_accept.
-> Since this flag is initialized to false just outside ath_rx_tasklet while cycle,
-> all subsequent frames are marked as corrupted until ath_rx_tasklet ends.
-> Fix the issue initializing decrypt_error flag at the begging of the cycle.
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Hi list,
 
-Thanks! In practice what issues did you see ?
+I have a wireless router with 2 wireless cards: 2.4Ghz and 5.0Ghz frequency.
 
-  Luis
+The performance for 2.4Ghz is much worse than 5.0Ghz.
+
+Does the frequency affect performance so much?
+
+Thanks,
+Lin Ming
