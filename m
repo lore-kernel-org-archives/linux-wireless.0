@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45359 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052Ab2HWFKQ (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:44712 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755593Ab2HWHQo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 01:10:16 -0400
-Received: by obbuo13 with SMTP id uo13so779366obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2012 22:10:15 -0700 (PDT)
+	Thu, 23 Aug 2012 03:16:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE3CJbmsAnRKCeOjtTk9TXH4zc6UtadCmkdwMT4rnFrDR8UVtg@mail.gmail.com>
-References: <CAE3CJbmsAnRKCeOjtTk9TXH4zc6UtadCmkdwMT4rnFrDR8UVtg@mail.gmail.com>
-Date: Thu, 23 Aug 2012 10:40:15 +0530
-Message-ID: <CAD2nsn3ZUhSR=WpkGR8YAxGVoEp5gD9hmakYh4O7Hsi4rqvU6Q@mail.gmail.com> (sfid-20120823_071100_870636_643BEF57)
-Subject: Re: Question about ath9k/mac80211 Driver
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Patrick Connolly <pjc999@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Date: Thu, 23 Aug 2012 15:16:44 +0800
+Message-ID: <CAPgLHd_L1=1zaq=NUAjr+3822WfR2gV-sMA2tzKowHEezPmvOA@mail.gmail.com> (sfid-20120823_091653_762529_3E8C684F)
+Subject: [PATCH] drivers/net: use is_zero_ether_addr() instead of memcmp()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: j@w1.fi, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-On Thu, Aug 23, 2012 at 2:26 AM, Patrick Connolly <pjc999@gmail.com> wrote:
-> Hello,
->       I'm new to ath9k and in need of some basic/rudimentary help.
->       I'm working with an Access Point that uses the ath9k/mac80211
-> driver combination to talk to an Atheros AR9285.  The firmware is
-> OpenWrt.
->
->     What is the best command line tool to use to get the driver to
-> switch the chip's mode between 'b', 'g', or 'bg' (mixed) mode?  The
-> OpenWrt Tools we're currently using ("uci" "wifi") are not talking to
-> the driver at all and when we switch settings (between b,g,bg), the
-> beacons go out advertising the same rates regardless of the mode.
+Using is_zero_ether_addr() instead of directly use
+memcmp() to determine if the ethernet address is all
+zeros.
 
-i don't think ath9k supports this
-regarding  commands
+spatch with a semantic match is used to found this problem.
+(http://coccinelle.lip6.fr/)
 
-   iwconfig eth0 modu 11g
-   iwconfig eth0 modu CCK OFDMa
-   iwconfig eth0 modu auto
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/hostap/hostap_info.c | 4 ++--
+ drivers/net/wireless/hostap/hostap_main.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/hostap/hostap_info.c b/drivers/net/wireless/hostap/hostap_info.c
+index 47932b2..970a48b 100644
+--- a/drivers/net/wireless/hostap/hostap_info.c
++++ b/drivers/net/wireless/hostap/hostap_info.c
+@@ -4,6 +4,7 @@
+ #include <linux/sched.h>
+ #include <linux/slab.h>
+ #include <linux/export.h>
++#include <linux/etherdevice.h>
+ #include "hostap_wlan.h"
+ #include "hostap.h"
+ #include "hostap_ap.h"
+@@ -463,8 +464,7 @@ static void handle_info_queue_scanresults(local_info_t *local)
+ 		prism2_host_roaming(local);
+ 
+ 	if (local->host_roaming == 2 && local->iw_mode == IW_MODE_INFRA &&
+-	    memcmp(local->preferred_ap, "\x00\x00\x00\x00\x00\x00",
+-		   ETH_ALEN) != 0) {
++	    !is_zero_ether_addr(local->preferred_ap)) {
+ 		/*
+ 		 * Firmware seems to be getting into odd state in host_roaming
+ 		 * mode 2 when hostscan is used without join command, so try
 
->
->     Any help would be appreciated.
->
-> -Patrick
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index 627bc12..15f0fad 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -1084,7 +1084,7 @@ int prism2_sta_deauth(local_info_t *local, u16 reason)
+ 	__le16 val = cpu_to_le16(reason);
+ 
+ 	if (local->iw_mode != IW_MODE_INFRA ||
+-	    memcmp(local->bssid, "\x00\x00\x00\x00\x00\x00", ETH_ALEN) == 0 ||
++	    is_zero_ether_addr(local->bssid) ||
+ 	    memcmp(local->bssid, "\x44\x44\x44\x44\x44\x44", ETH_ALEN) == 0)
+ 		return 0;
+ 
 
-
-
--- 
-thanks,
-shafi
