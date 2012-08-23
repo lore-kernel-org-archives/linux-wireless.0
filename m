@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38159 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750817Ab2HUPBV (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:39930 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934255Ab2HWTob convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 11:01:21 -0400
-Received: by yhmm54 with SMTP id m54so5880908yhm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2012 08:01:20 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Li Chaoming <chaoming_li@realsil.com.cn>
-Subject: [PATCH 0/6] Updates to rtlwifi family to match latest vendor version
-Date: Tue, 21 Aug 2012 10:00:49 -0500
-Message-Id: <1345561255-10349-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120821_170125_270339_25582754)
+	Thu, 23 Aug 2012 15:44:31 -0400
+Received: by weyx8 with SMTP id x8so606250wey.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2012 12:44:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <502E4B70.5090900@broadcom.com>
+References: <20120816190616.GE6726@eris.garyseven.net>
+	<502E4B70.5090900@broadcom.com>
+Date: Thu, 23 Aug 2012 21:44:30 +0200
+Message-ID: <CACna6ryXk-rL49uhe2nOqReYW8QVu-av0zDcbNOfwTEUa0q2tw@mail.gmail.com> (sfid-20120823_214446_575854_2C1BC919)
+Subject: Re: [PATCH 2/2] bcma: expose cc sprom to sysfs
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Saul St. John" <saul.stjohn@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Realtek's latest driver for the PCI-based devices include many changes
-that are ported to the in-kernel driver with this set of patches intended
-for wireless-next.
+2012/8/17 Arend van Spriel <arend@broadcom.com>:
+> On 08/16/2012 09:06 PM, Saul St. John wrote:
+>>
+>> On BCMA devices with a ChipCommon core of revision 31 or higher, the
+>> device
+>> SPROM can be accessed through CC core registers. This patch exposes the
+>> SPROM on such devices for read/write access as a sysfs attribute.
+>>
+>> Tested on a MacBookPro8,2 with BCM4331.
+>>
+>> Cc: Rafał Miłecki <zajec5@gmail.com>
+>> Cc: John W. Linville <linville@tuxdriver.com>
+>> Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
+>
+>
+> Hi Saul,
+>
+> I was still planning to come back to your reply on August 14. Just wanted to
+> reply to this patch as I still feel it is a bad thing to open up the sprom
+> as a whole. I can see the use-cases you mentioned as useful, but maybe we
+> can get a specific solution for that.
 
-Larry Finger (3):
-  rtlwifi: rtl8192c: rtl8192de: Fix typo in cursta_connectctate
-  rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192se: Remove sparse
-    warnings
-  rtlwifi: Update header file
-Li Chaoming (3):
-  rtlwifi: Add changes for new vendor driver version
-  rtlwifi: rtl8192ce: Update for new vendor driver version
-  rtlwifi: rtl8192se: Update driver for changes in 12/30/2011 vendor
-    version
+I agree with Arend's doubts, on the other hand it would be nice to
+provide some workaround for that stupid HP wifi blacklisting.
 
- drivers/net/wireless/rtlwifi/base.c               |  323 ++++++++++-
- drivers/net/wireless/rtlwifi/base.h               |   10 +-
- drivers/net/wireless/rtlwifi/cam.c                |    7 +-
- drivers/net/wireless/rtlwifi/core.c               |   76 ++-
- drivers/net/wireless/rtlwifi/debug.h              |    8 +
- drivers/net/wireless/rtlwifi/efuse.c              |   40 +-
- drivers/net/wireless/rtlwifi/efuse.h              |    1 -
- drivers/net/wireless/rtlwifi/pci.c                |  624 +++++++++++----------
- drivers/net/wireless/rtlwifi/pci.h                |    3 +
- drivers/net/wireless/rtlwifi/ps.c                 |   93 ++-
- drivers/net/wireless/rtlwifi/ps.h                 |    3 +-
- drivers/net/wireless/rtlwifi/rc.c                 |    3 +-
- drivers/net/wireless/rtlwifi/regd.c               |   18 +
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |   41 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h      |   12 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       |  110 +++-
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h      |    1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c       |    3 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |   70 ++-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |   10 +-
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |   91 +--
- drivers/net/wireless/rtlwifi/rtl8192se/fw.c       |    1 -
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c       |   25 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c      |  353 ++++++------
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |   17 +-
- drivers/net/wireless/rtlwifi/usb.c                |    2 +-
- drivers/net/wireless/rtlwifi/wifi.h               |  108 +++-
- 28 files changed, 1412 insertions(+), 643 deletions(-)
+Providing a way to overwrite just a vendor is really close to allowing
+overwriting anything. In that case we probably should just allow
+writing whole SPROM... Which again, is sth some want to avoid.
+
+
+I wonder if we could write some user-space tool for writing SPROM.
+Accessing ChipCommon registers is quite trivial, the thing I'm not
+familiar with is accessing PCIE Wifi card registers. I know there are
+tools for accessing GPU card regs. They work really well, I wonder if
+we can use the same method for Wifi cards?
+If so, we could write user-space app and keep this out of kernel.
+Maybe we could even extend that tool to cover ssb cards and drop SPROM
+on SSB writing support from kernel?
 
 -- 
-1.7.10.4
-
+Rafał
