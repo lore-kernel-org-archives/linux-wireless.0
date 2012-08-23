@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15507 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752988Ab2HQWCJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 18:02:09 -0400
-Date: Sat, 18 Aug 2012 00:02:06 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Syam Sidhardhan <syamsidhardh@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org
-Subject: Re: [PATCH] NFC: use module_platform_driver macro for nfcwilink.c
-Message-ID: <20120817220206.GB5179@sortiz-mobl> (sfid-20120818_000214_355959_AB7C73A5)
-References: <1345019650-5030-1-git-send-email-s.syam@samsung.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:36486 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934412Ab2HWVNI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Aug 2012 17:13:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1345019650-5030-1-git-send-email-s.syam@samsung.com>
+In-Reply-To: <CAPgLHd_K=bbQ=zpKY8kW3HCGeuE3GwCCQOAg+gJoFdCv9SnVrg@mail.gmail.com>
+References: <CAPgLHd_K=bbQ=zpKY8kW3HCGeuE3GwCCQOAg+gJoFdCv9SnVrg@mail.gmail.com>
+Date: Fri, 24 Aug 2012 01:13:07 +0400
+Message-ID: <CA++WF2Nv_qb_jAnxhiR+WMjD4nwa3hAwMOSNqNtxc1LDX9ouXQ@mail.gmail.com> (sfid-20120823_231316_663705_EF249810)
+Subject: Re: [PATCH] ipw2200: use is_zero_ether_addr() and is_broadcast_ether_addr()
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Syam,
+Hi,
 
-On Wed, Aug 15, 2012 at 02:04:10PM +0530, Syam Sidhardhan wrote:
-> Simplify the code by make use of module_platform_driver macro.
-> 
-> Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
+On 23 August 2012 10:54, Wei Yongjun <weiyj.lk@gmail.com> wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> Using is_zero_ether_addr() and is_broadcast_ether_addr() instead of
+> directly use memcmp() to determine if the ethernet address is all zeros.
+>
+> spatch with a semantic match is used to found this problem.
+> (http://coccinelle.lip6.fr/)
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > ---
->  drivers/nfc/nfcwilink.c |   16 +---------------
->  1 file changed, 1 insertion(+), 15 deletions(-)
-Thanks, patch applied.
+>  drivers/net/wireless/ipw2x00/ipw2200.c | 11 ++---------
+>  1 file changed, 2 insertions(+), 9 deletions(-)
 
-Cheers,
-Samuel.
+Looks fine, thanks.
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Stanislav.
