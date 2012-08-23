@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59958 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496Ab2HCTVm (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:41073 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932341Ab2HWRHx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 15:21:42 -0400
-Received: by pbbrp8 with SMTP id rp8so1800321pbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Aug 2012 12:21:42 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 3/4] mac80211: don't request ack for peering close
-Date: Fri,  3 Aug 2012 12:21:34 -0700
-Message-Id: <1344021695-12859-3-git-send-email-thomas@cozybit.com> (sfid-20120803_212149_427949_97615BCA)
-In-Reply-To: <1344021695-12859-1-git-send-email-thomas@cozybit.com>
-References: <1344021695-12859-1-git-send-email-thomas@cozybit.com>
+	Thu, 23 Aug 2012 13:07:53 -0400
+Received: by vcbfk26 with SMTP id fk26so1068159vcb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2012 10:07:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <50365AC8.7030503@lwfinger.net>
+References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
+	<50365AC8.7030503@lwfinger.net>
+Date: Thu, 23 Aug 2012 10:07:52 -0700
+Message-ID: <CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com> (sfid-20120823_190757_623484_5F3FAD99)
+Subject: Re: Question about ath9k/mac80211 Driver
+From: Patrick Connolly <pjc999@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make a lot of sense to wait for an ack in response to a
-peering close frame since either peer in this exchange could be going
-down.
+Larry,
+     Thanks for the response.  It appears that "set bitrates" is not
+possible with my version of iw (0.9.19) - I get a big long help screen
+when I try that command:
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_plink.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ "iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11"
+...the options printed out for "set" are:
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index af671b9..a5300ef 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -217,6 +217,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		u8 *da, __le16 llid, __le16 plid, __le16 reason) {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
-+	struct ieee80211_tx_info *info;
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
- 	u16 peering_proto = 0;
-@@ -238,6 +239,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			    sdata->u.mesh.ie_len);
- 	if (!skb)
- 		return -1;
-+	info = IEEE80211_SKB_CB(skb);
- 	skb_reserve(skb, local->tx_headroom);
- 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
- 	memset(mgmt, 0, hdr_len);
-@@ -265,6 +267,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		    mesh_add_meshconf_ie(skb, sdata))
- 			return -1;
- 	} else {	/* WLAN_SP_MESH_PEERING_CLOSE */
-+		info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 		if (mesh_add_meshid_ie(skb, sdata))
- 			return -1;
- 	}
--- 
-1.7.5.4
+        phy <phyname> set distance <distance>
+        phy <phyname> set coverage <coverage class>
+        phy <phyname> set netns <pid>
+        phy <phyname> set rts <rts threshold|off>
+        phy <phyname> set frag <fragmentation threshold|off>
+        dev <devname> set channel <channel> [HT20|HT40+|HT40-]
+        phy <phyname> set channel <channel> [HT20|HT40+|HT40-]
+        dev <devname> set freq <freq> [HT20|HT40+|HT40-]
+        phy <phyname> set freq <freq> [HT20|HT40+|HT40-]
+        phy <phyname> set name <new name>
+        dev <devname> set type <type>
+        dev <devname> set meshid <meshid>
+        dev <devname> set monitor <flag>*
+        dev <devname> set mesh_param <param> <value>
 
+ ...also there's the issue of "basic rates" and "supported rates" I
+would need the supported rates appropriate for the mode (such as 'b')
+to show in the beacon also.
+
+Thanks again for the response.
+
+-Patrick
+
+
+On Thu, Aug 23, 2012 at 9:31 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 08/23/2012 11:19 AM, Patrick Connolly wrote:
+>>
+>> Mohammed,
+>>       Thanks very much for the response.
+>>
+>>     Yes I get "Operation not supported":
+>>
+>> # iwconfig wlan0 modu 11b
+>> Error for wireless request "Set Modulation" (8B2F) :
+>>      SET failed on device wlan0 ; Operation not supported.
+>>
+>>     ...so what does this mean; what are my options here?  In view of
+>> the fact that the capability of changing modes (from 'g' to 'b'
+>> ...etc.) is an essential requirement, am I using the wrong driver
+>> ...is there a different driver that supports this chip?  Or is it that
+>> there's no driver that supports this chip so that I would have to put
+>> this functionality into ath9k myself if I want it?
+>
+>
+> Adding that functionality should not be necessary. The simple command
+>
+> iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
+>
+> will restrict the device to 802.11b rates, which I think is what you want.
+> This command does not involve the device driver, but sets the appropriate
+> parameters in mac80211.
+>
+> Larry
+>
+>
