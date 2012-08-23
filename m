@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:58570 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab2HJC1b (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51238 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933010Ab2HWNYr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 22:27:31 -0400
-Received: by weyx8 with SMTP id x8so704460wey.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Aug 2012 19:27:30 -0700 (PDT)
+	Thu, 23 Aug 2012 09:24:47 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 5/6] ath9k: Make use of ath_stop_ani wrapper
+Date: Thu, 23 Aug 2012 18:53:57 +0530
+Message-ID: <1345728238-5313-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152450_277665_BEFA0961)
+In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UNz2oXvCu3NpNVqQLg4pSsL5L-Dw==KGkqxS0CxQfjFg@mail.gmail.com>
-References: <1344487215-24143-1-git-send-email-andy@greyhouse.net>
-	<2121451356.93690.1344518764022.JavaMail.root@neratec.com>
-	<CAB=NE6UNz2oXvCu3NpNVqQLg4pSsL5L-Dw==KGkqxS0CxQfjFg@mail.gmail.com>
-Date: Thu, 9 Aug 2012 22:27:29 -0400
-Message-ID: <CAHashqDJypSyRkk__zvK3arTdNBzC08Xgfhdp4NO0vyU_FuKEQ@mail.gmail.com> (sfid-20120810_042735_326638_631C88DF)
-Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
-From: Andy Gospodarek <andy@greyhouse.net>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	Phil Perry <phil@elrepo.org>,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 9, 2012 at 9:27 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Thu, Aug 9, 2012 at 6:26 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->> @@ -101,7 +101,7 @@ struct pm_qos_request_list {
->>  /* mask no_printk as RHEL6 backports this */
->>  #define no_printk(...) compat_no_printk(...)
->>  static inline __attribute__ ((format (printf, 1, 2)))
->> -int no_printk(const char *s, ...) { return 0; }
->> +int compat_no_printk(const char *s, ...) { return 0; }
->
-> I merged this in. Andy can you review your other changes as Zefir points out?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Yes, I will check it out tomorrow.
+Additionally it has a neat debug message informing us
+that we are stopping the ANI algorithm.
 
-> mcgrof@frijol ~/compat (git::master)$ gcc --version
-> gcc (Debian 4.7.1-2) 4.7.1
-> Copyright (C) 2012 Free Software Foundation, Inc.
-> This is free software; see the source for copying conditions.  There is NO
-> warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
->
-> I suppose we should get ckmake to spit out the version of gcc onto the report.
->
->   Luis
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index d308b44..3923ad9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2223,7 +2223,7 @@ static int ath9k_suspend(struct ieee80211_hw *hw,
+ 	mutex_lock(&sc->mutex);
+ 
+ 	ath_cancel_work(sc);
+-	del_timer_sync(&common->ani.timer);
++	ath_stop_ani(sc);
+ 	del_timer_sync(&sc->rx_poll_timer);
+ 
+ 	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+-- 
+1.7.0.4
+
