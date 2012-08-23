@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:3358 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752350Ab2H3VEf (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:43534 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757927Ab2HWGya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 17:04:35 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 10/17] rt2x00: Fix rt2500usb rfkill polling prior to interface start.
-Date: Thu, 30 Aug 2012 23:04:19 +0200
-Message-Id: <1346360670-6498-2-git-send-email-gwingerde@gmail.com> (sfid-20120830_230504_980085_E88DFC49)
-In-Reply-To: <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
-References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
+	Thu, 23 Aug 2012 02:54:30 -0400
+MIME-Version: 1.0
+Date: Thu, 23 Aug 2012 14:54:29 +0800
+Message-ID: <CAPgLHd9iXQf3_W5b4kO1Mv68udqnmfFO8n+R-0ZqzCrhg1Z_WQ@mail.gmail.com> (sfid-20120823_085437_697218_C6E810B2)
+Subject: [PATCH] mwifiex: use is_zero_ether_addr() instead of memcmp()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: bzhao@marvell.com, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to program the rfkill switch GPIO pin direction to input at
-device initialization time, not only when the interface is brought up.
-Doing this only when the interface is brought up could lead to rfkill
-detecting the switch is turned on erroneously and inability to create
-the interface and bringing it up.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: <stable@vger.kernel.org>
+Using is_zero_ether_addr() instead of directly use
+memcmp() to determine if the ethernet address is all
+zeros.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 5742ce9..f95b551 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1768,6 +1768,7 @@ static int rt2500usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
-+	u16 reg;
+spatch with a semantic match is used to found this problem.
+(http://coccinelle.lip6.fr/)
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 0b09004..a2a33dc 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -17,6 +17,8 @@
+  * this warranty disclaimer.
+  */
  
- 	/*
- 	 * Allocate eeprom data.
-@@ -1781,6 +1782,14 @@ static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		return retval;
- 
- 	/*
-+	 * Enable rfkill polling by setting GPIO direction of the
-+	 * rfkill switch GPIO pin correctly.
-+	 */
-+	rt2500usb_register_read(rt2x00dev, MAC_CSR19, &reg);
-+	rt2x00_set_field16(&reg, MAC_CSR19_DIR0, 0);
-+	rt2500usb_register_write(rt2x00dev, MAC_CSR19, reg);
++#include <linux/etherdevice.h>
 +
-+	/*
- 	 * Initialize hw specifications.
- 	 */
- 	retval = rt2500usb_probe_hw_mode(rt2x00dev);
--- 
-1.7.11.1
+ #include "decl.h"
+ #include "ioctl.h"
+ #include "util.h"
+@@ -736,7 +738,6 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
+ {
+ 	struct host_cmd_ds_802_11_ibss_status *ibss_coal_resp =
+ 					&(resp->params.ibss_coalescing);
+-	u8 zero_mac[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
+ 
+ 	if (le16_to_cpu(ibss_coal_resp->action) == HostCmd_ACT_GEN_SET)
+ 		return 0;
+@@ -745,7 +746,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
+ 		"info: new BSSID %pM\n", ibss_coal_resp->bssid);
+ 
+ 	/* If rsp has NULL BSSID, Just return..... No Action */
+-	if (!memcmp(ibss_coal_resp->bssid, zero_mac, ETH_ALEN)) {
++	if (is_zero_ether_addr(ibss_coal_resp->bssid)) {
+ 		dev_warn(priv->adapter->dev, "new BSSID is NULL\n");
+ 		return 0;
+ 	}
+
 
