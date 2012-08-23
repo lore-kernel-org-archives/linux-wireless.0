@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46347 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753831Ab2HBGY1 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:42473 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756195Ab2HWKfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 02:24:27 -0400
-Message-ID: <1343888660.4458.1.camel@jlt3.sipsolutions.net> (sfid-20120802_082439_831923_C9BCD8E8)
-Subject: Re: [PATCH 1/2] cfg80211: add channel flag to prohibit OFDM
- operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Date: Thu, 02 Aug 2012 08:24:20 +0200
-In-Reply-To: <1343854723-21987-2-git-send-email-seth.forshee@canonical.com>
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
-	 <1343854723-21987-2-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 23 Aug 2012 06:35:06 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAF1ivSZ63Zr9STz3NnLV=ynRftMokG=ZGghd+cQu=HRUsiH+EA@mail.gmail.com>
+References: <CAF1ivSZ63Zr9STz3NnLV=ynRftMokG=ZGghd+cQu=HRUsiH+EA@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 23 Aug 2012 20:34:44 +1000
+Message-ID: <CAGRGNgWddAH3UyYq5T7iT+FuX8ajdGpP6rfjjCUkZZpiCoTmpQ@mail.gmail.com> (sfid-20120823_123512_435130_A3C7D4D7)
+Subject: Re: wireless router performance differ with 2.4Ghz vs 5.0Ghz frequency
+To: Lin Ming <mlin@ss.pku.edu.cn>
+Cc: linux-wireless@vger.kernel.org, networking <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-01 at 15:58 -0500, Seth Forshee wrote:
-> Currently the only way for wireless drivers to tell whether or not OFDM
-> is allowed on the current channel is to check the regulatory
-> information. However, this requires hodling cfg80211_mutex, which is not
-> visible to the drivers.
-> 
-> Other regulatory restrictions are provided as flags in the channel
-> definition, so let's do similarly with OFDM. This patch adds a new flag,
-> IEEE80211_CHAN_NO_OFDM, to tell drivers that OFDM on a channel is not
-> allowed. This flag is set on any channels for which regulatory indicates
-> that OFDM is prohibited.
+Hi,
 
-Looks good, this needs to go into 3.6, right?
+On Thu, Aug 23, 2012 at 2:50 PM, Lin Ming <mlin@ss.pku.edu.cn> wrote:
+> Hi list,
+>
+> I have a wireless router with 2 wireless cards: 2.4Ghz and 5.0Ghz frequency.
+>
+> The performance for 2.4Ghz is much worse than 5.0Ghz.
+>
+> Does the frequency affect performance so much?
 
-johannes
+There are a lot of factors:
+- Amounts of other networks on the same channel
+- Noise
+- Signal strength
+etc.
 
+It's quite possible that there are less networks on 5GHz channels
+where you are so there's less noise, stronger signal, and therefore
+better performance. Most routers are still only 2.4GHz.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
