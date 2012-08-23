@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42916 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756099Ab2HAQAU (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45359 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052Ab2HWFKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 12:00:20 -0400
-Date: Wed, 1 Aug 2012 11:52:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Josh Boyer <jwboyer@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
-Message-ID: <20120801155252.GE27433@tuxdriver.com> (sfid-20120801_180109_487466_57357472)
-References: <20120801131232.GA1785@zod.bos.redhat.com>
- <20120801141810.GB27433@tuxdriver.com>
- <50194D7A.6060400@broadcom.com>
- <5019506C.6020707@broadcom.com>
+	Thu, 23 Aug 2012 01:10:16 -0400
+Received: by obbuo13 with SMTP id uo13so779366obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2012 22:10:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5019506C.6020707@broadcom.com>
+In-Reply-To: <CAE3CJbmsAnRKCeOjtTk9TXH4zc6UtadCmkdwMT4rnFrDR8UVtg@mail.gmail.com>
+References: <CAE3CJbmsAnRKCeOjtTk9TXH4zc6UtadCmkdwMT4rnFrDR8UVtg@mail.gmail.com>
+Date: Thu, 23 Aug 2012 10:40:15 +0530
+Message-ID: <CAD2nsn3ZUhSR=WpkGR8YAxGVoEp5gD9hmakYh4O7Hsi4rqvU6Q@mail.gmail.com> (sfid-20120823_071100_870636_643BEF57)
+Subject: Re: Question about ath9k/mac80211 Driver
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Patrick Connolly <pjc999@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 01, 2012 at 05:51:08PM +0200, Arend van Spriel wrote:
-> On 08/01/2012 05:38 PM, Arend van Spriel wrote:
-> >> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
-> >> > 
-> >> > It looks like those calls were added in mid-June.
-> >> > 
-> > I think mid-june sounds about right. We never observed the warning when
-> > changes to use regulatory infrastructure were tested/reviewed. Should
-> > this precondition be mentioned in cfg80211.h?
-> > 
-> > Gr. AvS
-> 
-> Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
-> another solution is needed.
+Hi,
 
-Do we need to revert those patches?
+On Thu, Aug 23, 2012 at 2:26 AM, Patrick Connolly <pjc999@gmail.com> wrote:
+> Hello,
+>       I'm new to ath9k and in need of some basic/rudimentary help.
+>       I'm working with an Access Point that uses the ath9k/mac80211
+> driver combination to talk to an Atheros AR9285.  The firmware is
+> OpenWrt.
+>
+>     What is the best command line tool to use to get the driver to
+> switch the chip's mode between 'b', 'g', or 'bg' (mixed) mode?  The
+> OpenWrt Tools we're currently using ("uci" "wifi") are not talking to
+> the driver at all and when we switch settings (between b,g,bg), the
+> beacons go out advertising the same rates regardless of the mode.
+
+i don't think ath9k supports this
+regarding  commands
+
+   iwconfig eth0 modu 11g
+   iwconfig eth0 modu CCK OFDMa
+   iwconfig eth0 modu auto
+
+
+>
+>     Any help would be appreciated.
+>
+> -Patrick
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+thanks,
+shafi
