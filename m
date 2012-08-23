@@ -1,33 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46512 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508Ab2HVUji (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46104 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752507Ab2HWAFa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 16:39:38 -0400
-Message-ID: <1345667975.8786.0.camel@jlt3.sipsolutions.net> (sfid-20120822_223942_700107_FAC91378)
-Subject: Re: Agenda for Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona!)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com
-Date: Wed, 22 Aug 2012 22:39:35 +0200
-In-Reply-To: <20120822201930.GC14913@tuxdriver.com> (sfid-20120822_223021_705167_DDBC53BF)
-References: <20120822201930.GC14913@tuxdriver.com>
-	 (sfid-20120822_223021_705167_DDBC53BF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 22 Aug 2012 20:05:30 -0400
+Message-ID: <503573C6.4000103@candelatech.com> (sfid-20120823_020534_597161_5DFE76A4)
+Date: Wed, 22 Aug 2012 17:05:26 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Issue with ath9k and tx/rx chainmask:  3x3 doesn't work with
+ mask of 0x1.
+References: <50329D11.9030405@candelatech.com> <5035414D.2080600@openwrt.org> <50355C21.2030508@candelatech.com>
+In-Reply-To: <50355C21.2030508@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-22 at 16:19 -0400, John W. Linville wrote:
+On 08/22/2012 03:24 PM, Ben Greear wrote:
+> On 08/22/2012 01:30 PM, Felix Fietkau wrote:
+>> On 2012-08-20 10:24 PM, Ben Greear wrote:
+>>> I am trying to test out an attenuator.  For now, I have only a single attenuator,
+>>> so I set tx and rx chainmask to 0x1 on both AP and Station machine.
+>>>
+>>> I then connected channel 0 on the two machines together through the
+>>> attenuator.
+>>>
+>>> I have two station interfaces on the station machine.  They both
+>>> seem to associate OK, but they cannot receive dhcp responses.
+>>>
+>>> It *seems* that broadcast packets may go through fine.
+>>>
+>>> If I force the rate down to 1x1 or 2x2 MIMO (or force disable /n
+>>> and just use /a), then it appears to work fine.
+>>>
+>>> Nics are WPEA-127n (AR9380).  Kernel is 3.5.1+ on AP, 3.5.2+ on station
+>>> machine.
+>>>
+>>> I can see why forcing it down to 1x1 might work around some issue,
+>>> but I find it funny that 2x2 works while 3x3 does not.
+>> Did you set the chainmask manually via debugfs? If so, don't do that!
+>> Use the nl80211 antenna control API (e.g. via iw)
+>
+> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1 1
+> command failed: Operation not supported (-95)
+> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1
+> command failed: Operation not supported (-95)
+> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 3
+> command failed: Operation not supported (-95)
+> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7
+> command failed: Operation not supported (-95)
+> [root@lec2010-ath9k-1 lanforge]# uname -a
+> Linux lec2010-ath9k-1 3.5.1+ #15 SMP PREEMPT Thu Aug 9 09:31:45 PDT 2012 i686 i686 i386 GNU/Linux
 
-> With that said, there are still a number of slots available for
-> presentations or discussion topics.  This is especially true for the
-> 802.11 group...  Please step-up with some suggested topics!
+I'm guessing it is because of this:
 
-Anyone want to carefully review & present Michal's and my work on
-multi-channel in mac80211? :-)
+static int ieee80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
+{
+	struct ieee80211_local *local = wiphy_priv(wiphy);
 
-johannes
+	if (local->started)
+		return -EOPNOTSUPP;
+
+	return drv_set_antenna(local, tx_ant, rx_ant);
+}
+
+
+So, we'd have to admin down all virtual stations/aps/whatever before setting the
+antenna configuration?
+
+Thanks,
+Ben
+
+
+>
+> # Set previously using debugfs.
+> [root@lec2010-ath9k-1 lanforge]# cat /debug/ieee80211/wiphy0/ath9k/tx_chainmask
+> 0x00000001
+>
+> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7 7
+> command failed: Operation not supported (-95)
+>
+>
+> Any idea what I'm doing wrong?
+>
+> Thanks,
+> Ben
+>
+>
+>>
+>> - Felix
+>>
+>
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
