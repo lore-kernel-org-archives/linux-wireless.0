@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52226 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243Ab2HXGz1 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:40925 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750705Ab2HWEDT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Aug 2012 02:55:27 -0400
-Message-ID: <1345791322.4503.0.camel@jlt3.sipsolutions.net> (sfid-20120824_085533_586718_66888795)
-Subject: Re: [PATCH] ath5k: set hw mfp capable flag for secured mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
-	ath5k-devel@lists.ath5k.org
-Date: Fri, 24 Aug 2012 08:55:22 +0200
-In-Reply-To: <1345778993-23033-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120824_053128_684894_141999F9)
-References: <1345778993-23033-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20120824_053128_684894_141999F9)
+	Thu, 23 Aug 2012 00:03:19 -0400
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <50355021.7000408@lwfinger.net>
+References: <50345B12.1050600@lwfinger.net>
+	 <1345612503.5158.566.camel@edumazet-glaptop>
+	 <50355021.7000408@lwfinger.net>
 Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 23 Aug 2012 06:03:13 +0200
+Message-ID: <1345694593.5904.87.camel@edumazet-glaptop> (sfid-20120823_060416_125940_1EFFB9FF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-08-24 at 11:29 +0800, Chun-Yeow Yeoh wrote:
-> The IEEE80211_HW_MFP_CAPABLE is required to ensure the
-> successful key installation of CIPHER_AES_CMAC (currently
-> done in software) for secured mesh.
+On Wed, 2012-08-22 at 16:33 -0500, Larry Finger wrote:
+> On 08/22/2012 12:15 AM, Eric Dumazet wrote:
+> >
+> > This particular commit is the start of a patches batch that ended in the
+> > generic TCP coalescing mechanism.
+> >
+> > It is known to have problem on drivers doing skb_clone() in their rx
+> > path.
+> >
+> > Current kernels should be ok, because coalescing doesnt happen if the
+> > destination skb is cloned (skb_cloned(to) in skb_try_coalesce())
+> 
+> The skb_clone() call is not the source of the problem for r8712u, as it is only 
+> used when a memory allocation fails, which is not happening. The suggestion did 
+> lead to another patch that I had been preparing. The initial allocation of RX 
+> buffers used a size of 30720 bytes, while 9100 is sufficient to allow 
+> aggregation. Upon reducing the buffer size, the driver now works for me. I am 
+> now awaiting tests by the OP on the Red Hat bugzilla before sending the patch 
+> upstream.
+> 
+> So far, no ideas for the problem in connecting to WPA1 networks.
+> 
 
-You shouldn't blindly set the flag though because it "is required". You
-really need to test that management frames aren't decrypted by the
-hardware erroneously.
+Changing the allocation size removes the problem ? thats really strange.
 
-johannes
+If you try different sizes in the 9100-30720 range, can you pinpoint the
+failure threshold ?
+
+
 
