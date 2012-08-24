@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:50956 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964822Ab2HHR4p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 13:56:45 -0400
-Received: by qadb17 with SMTP id b17so2712745qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 10:56:45 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:4892 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759301Ab2HXK7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2012 06:59:37 -0400
+Message-ID: <50375E8F.6010302@broadcom.com> (sfid-20120824_125955_140923_C44D3E33)
+Date: Fri, 24 Aug 2012 12:59:27 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <50229A06.9090106@net.t-labs.tu-berlin.de>
-References: <1344195337-27461-1-git-send-email-mickflemm@gmail.com>
-	<1344195337-27461-6-git-send-email-mickflemm@gmail.com>
-	<50229A06.9090106@net.t-labs.tu-berlin.de>
-Date: Wed, 8 Aug 2012 20:56:44 +0300
-Message-ID: <CAFtRNNz+G-keFp5c1=Ps_4acQj7uv=ByTpPAAFX3JKTsT1dioQ@mail.gmail.com> (sfid-20120808_195650_364245_AF8B36C1)
-Subject: Re: [ath5k-devel] [PATCH v2 5/5] ath5k: Return correct offset when
- reading frequencies
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: Felix Fietkau <nbd@openwrt.org>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: "Sebastian Poehn" <sebastian.poehn@googlemail.com>
+cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [BUG] brcmsmac: Invalid killswitch handling
+References: <1345798314.1478.12.camel@localhost.localdomain>
+In-Reply-To: <1345798314.1478.12.camel@localhost.localdomain>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/8/8 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
-> Hi Nick, hi Felix,
+On 08/24/2012 10:51 AM, Sebastian Poehn wrote:
+> I had a discussion with Matthew Garrett about handling of a wifi
+> killswitch on a Dell laptop.
 >
-> This patch does break the operation of all DCMA82 (AR5413), as this
-> chips have only 8 valid piers, but with the "continue" all 10 got read.
-> So the former version was correct as it break after 8 piers.
-> The patch was initiated by my observation and after revisiting what I
-> did, blame Thomas is correct here... The power variation is properly
-> working and I miss measured based on an uncleaned patch mess in my env.
+> Some (rfkill) code was removed from platform/dell-laptop. On my machine
+> a bug now occurs which is caused by brcmsmac in the view of Matthew.
 >
-> Please revert this patch to get proper pier readings back in ath5k.
->
->
-> Greetings Thomas
->
+> So is this a bug, or do you have no killsitch handling, so far?
 
-ACK so documentation is once again misleading because it says that we
-always have 10 frequencies to read and if some are zero we just ignore
-the matching data. It doesn't say that if we get a zeroed frequency
-the rest are missing from the EEPROM and we should move on to the next
-section. I'll keep that in mind ;-)
+brcmsmac handled the rfkill switch properly so this would be a 
+regression. I also have Dell laptops here with a physical rfkill switch. 
+What rfkill switch do you have?
 
-John please ignore this one and sorry for the mess !
+Anyway, I will test over here on my hardware as this regression has been 
+flagged internally here as well. Would you be willing to test a fix on 
+your system when I have one?
 
+Gr. AvS
 
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
