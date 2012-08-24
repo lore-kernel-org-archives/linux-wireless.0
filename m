@@ -1,93 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:50165 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753792Ab2HFIuV convert rfc822-to-8bit (ORCPT
+Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:60290
+	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751146Ab2HXNIr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 04:50:21 -0400
-Received: by eeil10 with SMTP id l10so737589eei.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 01:50:20 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH V2] bcma: add basic NAND flash driver
-Date: Mon, 06 Aug 2012 10:50:15 +0200
-Message-ID: <1673359.JloXiOZbAj@flexo> (sfid-20120806_105026_077270_B44DFEA7)
-In-Reply-To: <CACna6rzFeX5rHVxZSpFVwL1psLBfuWK-X8_YAZdtLDFbNKjPPQ@mail.gmail.com>
-References: <1344196987-32041-1-git-send-email-zajec5@gmail.com> <201208052240.21982.florian@openwrt.org> <CACna6rzFeX5rHVxZSpFVwL1psLBfuWK-X8_YAZdtLDFbNKjPPQ@mail.gmail.com>
+	Fri, 24 Aug 2012 09:08:47 -0400
+Message-ID: <50377CD9.3090204@posedge.com> (sfid-20120824_150851_841070_797A37C5)
+Date: Fri, 24 Aug 2012 18:38:41 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+References: <502E85D9.5050301@posedge.com>  <1345480718.4459.37.camel@jlt3.sipsolutions.net>  <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>  <50338E84.3050709@posedge.com>  <1345564421.10280.9.camel@jlt3.sipsolutions.net>  <5033CE76.6040306@posedge.com>  <1345619008.4635.3.camel@jlt3.sipsolutions.net>  <20120822090104.GA4959@redhat.com>  <1345626282.4635.8.camel@jlt3.sipsolutions.net>  <20120822101252.GA6082@redhat.com> <50376671.7080007@posedge.com> <1345809927.6991.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1345809927.6991.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Rafal,
+On 08/24/2012 05:35 PM, Johannes Berg wrote:
+> On Fri, 2012-08-24 at 17:03 +0530, Mahesh Palivela wrote:
+>
+>> /**
+>>    * enum ieee80211_chan_width - channel bandwidths
+>>    *
+>>    * @IEEE80211_CHAN_WIDTH_20MHZ: 20 MHz chan bandwidth
+>>    * @IEEE80211_CHAN_WIDTH_40MHZ: 40 MHz chan bandwidth
+>>    * @IEEE80211_CHAN_WIDTH_80MHZ: 80 MHz chan bandwidth
+>>    * @IEEE80211_CHAN_WIDTH_160MHZ: 160 MHz chan bandwidth
+>>    */
+>
+> We might need 20MHZ_NOHT or something?
 
-On Monday 06 August 2012 08:50:35 Rafał Miłecki wrote:
-> Thanks for looking at this!
-> 
-> 2012/8/5 Florian Fainelli <florian@openwrt.org>:
-> > Le dimanche 05 août 2012 22:03:07, Rafał Miłecki a écrit :
-> >> This is basic driver for NAND flash memory that allows reading it's
-> >> content. It was succesfully tested on Netgear WNDR4500 which is BCM4706
-> >> based router.
-> >>
-> >> This driver has been written using specs at:
-> >> http://bcm-v4.sipsolutions.net/NAND_Flash
-> >
-> > The big problem that I see with your driver is that it does not interface 
-with
-> > the MTD subsystem, and therefore:
-> >
-> > - does not conform to the MTD API for reading pages, blocks etc...
-> 
-> My idea for bcma responsibilities consists of:
-> 1) Detecting hardware
-> 2) Providing basic access to it
-> This is what (I believe) I provided with that submitted patch.
-> 
-> I'm not registering MTD driver directly in bcma, just like we don't
-> register ieee80211 device for 80211 core or netdev for ETH core.
-> 
-> After providing basic/low-level access in bcma my plan is to write
-> real MTD driver. In this driver I could make use of functions from
-> bcma_chipcommon_nflash.[ch].
-> 
-> Does it sound better now?
+Yes, I missed that.
+20MHZ_NOHT in 5G band and legacy operation 2.4G band may be 5MHZ.
 
-A little, but I still wonder why this would be needed at all, unless you 
-cannot rely on MTD because you are doing stuff very early with the Flash.
-I find perfectly legitimate to export some bcma-specific symbols for accessing 
-the NAND flash controller, but am a little more dubious about duplicating the 
-reading/detection.
+>
+>>           enum ieee80211_chan_width chan_width2;
+>>           u16 control_offset2;
+>
+> Those shouldn't be necessary, I think? The secondary 80 MHz channel
+> can't have a control channel, it seems, and the width should be the same
+> as well? Plus this is only allowed in 80+80 anyway.
+>
+> johannes
+>
+11ac d3.0 spec section 8.4.2.10 says
 
-> 
-> 
-> > - duplicates NAND flash detection in a manner which is far less robust than
-> > what the MTD NAND subsystem already does
-> 
-> Hm, do you mean there is some MTD driver detecting NAND flash on BCMA?
-> I wasn't aware of that. Grepping drivers/mtd for "bcma" didn't give me
-> anything. Can you say something more about this?
+An operating class for an 80+80 MHz channel bandwidth is expressed by 
+two consecutive Operating/Sub-
+band Sequences, where the first Operating/Subband Sequence field 
+contains an Operating Triplet for an
+80 MHz Channel Spacing with an 80+ Behavior Limit and the second 
+Operating/Subband Sequence field
+contains an Operating Triplet for an 80 MHz Channel Spacing without an 
+80+ Behavior Limit.
 
-No I meant that all the ID code decoding to determine the chip size, 
-manufacturer etc ... is already well handled within MTD.
+so country might allow primary chan to fall in other frequency segment?
 
-> 
-> 
-> > I guess that this driver enables you do some stuff on your router, but 
-clearly
-> > you should aim at writing a real MTD driver instead of having such an ad-
-hoc
-> > solution.
-> 
-> That "do some stuff" means almost nothing right now. My plan (as
-> explained earlier) is to write MTD driver.
-
-Ok, well maybe I should just let you write your MTD driver and we see how that 
-interfaces with this current patch.
-
-> 
-> -- 
-> Rafał
+- Mahesh
