@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37022 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932473Ab2HFTRe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:17:34 -0400
-Message-ID: <50201846.2000606@suse.com> (sfid-20120806_211737_514909_59079845)
-Date: Mon, 06 Aug 2012 15:17:26 -0400
-From: Jeff Mahoney <jeffm@suse.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:40565 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755461Ab2HXXiw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2012 19:38:52 -0400
+Received: by vcbfk26 with SMTP id fk26so2767231vcb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2012 16:38:52 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>
-Subject: [PATCH] brcmsmac: document firmware dependencies
+In-Reply-To: <5036660B.9020208@lwfinger.net>
+References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
+	<50365AC8.7030503@lwfinger.net>
+	<CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
+	<5036660B.9020208@lwfinger.net>
+Date: Fri, 24 Aug 2012 16:38:51 -0700
+Message-ID: <CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com> (sfid-20120825_013856_214005_B5A1B629)
+Subject: Re: Question about ath9k/mac80211 Driver
+From: Patrick Connolly <pjc999@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcmsmac driver requests firmware but doesn't document the
-dependency. This means that software that analyzes the modules to
-determine if firmware is needed won't detect it.
+Okay so I built "iw" version 0.9.22 successfully (after much grief).
+The help page shows that "set bitrates" is now supported:
 
-Specifically, (at least) openSUSE won't install the kernel-firmware
-package if no hardware requires it.
+        dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in Mbps>*]
 
-This patch adds the MODULE_FIRMWARE directives.
 
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ but when I try to use it I get:
 
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -86,7 +86,9 @@ MODULE_AUTHOR("Broadcom Corporation");
- MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN driver.");
- MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN cards");
- MODULE_LICENSE("Dual BSD/GPL");
--
-+/* This needs to be adjusted when brcms_firmwares changes */
-+MODULE_FIRMWARE("brcm/bcm43xx-0.fw");
-+MODULE_FIRMWARE("brcm/bcm43xx_hdr-0.fw");
-  /* recognized BCMA Core IDs */
- static struct bcma_device_id brcms_coreid_table[] = {
+       # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
+       command failed: Operation not supported (-95)
 
--- 
-Jeff Mahoney
-SUSE Labs
+...so what does this mean?  Is it "iw" or the driver that lacks the support?
+
+-Patrick
+
+
+
+On Thu, Aug 23, 2012 at 10:19 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> On 08/23/2012 12:07 PM, Patrick Connolly wrote:
+>>
+>> Larry,
+>>       Thanks for the response.  It appears that "set bitrates" is not
+>> possible with my version of iw (0.9.19) - I get a big long help screen
+>> when I try that command:
+>>
+>>   "iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11"
+>> ...the options printed out for "set" are:
+>
+>
+> You need to upgrade iw. I have 0.9.22, which has the set bitrates option.
+>
+> Once the rates are locked by mac80211, the beacons should only advertise
+> 802.11b rates. (I have not tested that statement.)
+>
+> Larry
+>
