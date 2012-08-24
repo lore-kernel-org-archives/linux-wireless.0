@@ -1,625 +1,482 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56605 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754175Ab2HEQeq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 12:34:46 -0400
-Received: by weyx8 with SMTP id x8so1434412wey.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 09:34:44 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] bcma: add basic NAND flash driver
-Date: Sun,  5 Aug 2012 18:34:42 +0200
-Message-Id: <1344184482-1516-1-git-send-email-zajec5@gmail.com> (sfid-20120805_183450_483778_0D2D2C2D)
+Received: from mail.allnet.de ([212.18.29.59]:22550 "EHLO mail.allnet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754672Ab2HXP1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2012 11:27:15 -0400
+Date: Fri, 24 Aug 2012 18:25:42 +0300
+From: Daniel Golle <dgolle@allnet.de>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<users@rt2x00.serialmonkey.com>, <gwingerde@gmail.com>,
+	<heinold@inf.fu-berlin.de>
+Subject: [PATCH v2] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
+Message-ID: <20120824152542.GA32145@earthship.home> (sfid-20120824_172742_842478_7BD2FE56)
+References: <20120821235349.GA14648@earthship.home>
+ <20120822105110.GC6082@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120822105110.GC6082@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is basic driver for NAND flash memory that allows reading it's
-content. It was succesfully tested on Netgear WNDR4500 which is BCM4706
-based router.
+Hi Stanislaw,
 
-This driver has been written using specs at:
-http://bcm-v4.sipsolutions.net/NAND_Flash
+Thank you for reviewing!
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Hauke Mehrtens <hauke@hauke-m.de>
----
-John: I think I've heard somewhere that new drivers can go into
-currently developed release, skipping -next. Not sure if this is
-correct [at all/still]. Please grab this patch to the tree you find
-the best for it.
+On Wed, Aug 22, 2012 at 12:51:10PM +0200, Stanislaw Gruszka wrote:
+> Please address my comments from previous patch.
 
-I've tested this patch by reading SQUASHFS header MAGIC from NAND flash
-with the following code:
+I fixed the CodingStyle issues you mentioned and simplified the initilization of
+the TX_SW_CFG{0,1,2} registers similarly to other SoCs.
 
-u8 tmpbuf[512];
-int ret = bcma_nflash_read(cc, 0x141400, 512, tmpbuf);
-if (ret != 512)
-	pr_err("[ERR] NFLASH read failed. Function returned: %d\n", ret);
-for (i = 0x120; i < 0x124; i++)
-	pr_info("tmpbuf[%02d]: 0x%X\n", i, tmpbuf[i]);
+Best regards
 
-(yeah, I had to figure out 0x141400 offset first).
----
- drivers/bcma/Kconfig                        |    4 +-
- drivers/bcma/bcma_private.h                 |    2 +-
- drivers/bcma/driver_chipcommon_nflash.c     |  377 ++++++++++++++++++++++++++-
- drivers/bcma/driver_chipcommon_pmu.c        |    2 +-
- include/linux/bcma/bcma_driver_chipcommon.h |   88 +++++++
- 5 files changed, 466 insertions(+), 7 deletions(-)
+--
+Signed-off-by: Daniel Golle <dgolle@allnet.de>
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 8d1f777..a58d7a9 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -53,8 +53,8 @@ config BCMA_SFLASH
- 	default y
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index e252e9b..b9566b2 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -1936,6 +1936,11 @@ struct mac_iveiv_entry {
+ #define BBP47_TSSI_ADC6			FIELD8(0x80)
  
- config BCMA_NFLASH
--	bool
--	depends on BCMA_DRIVER_MIPS && BROKEN
-+	bool "Support for NAND flash"
-+	depends on BCMA_DRIVER_MIPS
- 	default y
- 
- config BCMA_DRIVER_GMAC_CMN
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 3cf9cc9..9895c7e 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -68,7 +68,7 @@ int bcma_nflash_init(struct bcma_drv_cc *cc);
- #else
- static inline int bcma_nflash_init(struct bcma_drv_cc *cc)
- {
--	bcma_err(cc->core->bus, "NAND flash not supported\n");
-+	bcma_err(cc->core->bus, "NAND flash support not enabled\n");
- 	return 0;
+ /*
++ * BBP 49
++ */
++#define BBP49_UPDATE_FLAG		FIELD8(0x01)
++
++/*
+  * BBP 109
+  */
+ #define BBP109_TX0_POWER		FIELD8(0x0f)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index cb8c2ac..e207452 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1615,6 +1615,7 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+ 	case 1:
+ 		if (rt2x00_rt(rt2x00dev, RT3070) ||
+ 		    rt2x00_rt(rt2x00dev, RT3090) ||
++		    rt2x00_rt(rt2x00dev, RT3352) ||
+ 		    rt2x00_rt(rt2x00dev, RT3390)) {
+ 			rt2x00_eeprom_read(rt2x00dev,
+ 					   EEPROM_NIC_CONF1, &eeprom);
+@@ -2053,6 +2054,60 @@ static void rt2800_config_channel_rf3290(struct rt2x00_dev *rt2x00dev,
+ 	}
  }
- #endif /* CONFIG_BCMA_NFLASH */
-diff --git a/drivers/bcma/driver_chipcommon_nflash.c b/drivers/bcma/driver_chipcommon_nflash.c
-index 574d624..54c7d81 100644
---- a/drivers/bcma/driver_chipcommon_nflash.c
-+++ b/drivers/bcma/driver_chipcommon_nflash.c
-@@ -11,9 +11,380 @@
  
- #include "bcma_private.h"
- 
--/* Initialize NAND flash access */
--int bcma_nflash_init(struct bcma_drv_cc *cc)
-+/* Broadcom uses 1'000'000 but it seems to be too many. Tests on WNDR4500 has
-+ * shown 6 retries were enough. */
-+#define NFLASH_READY_RETRIES		100
-+
-+/**************************************************
-+ * Various helpers
-+ **************************************************/
-+
-+static inline u8 bcma_nflash_ns_to_cycle(u16 ns, u16 clock)
++static void rt2800_config_channel_rf3322(struct rt2x00_dev *rt2x00dev,
++					 struct ieee80211_conf *conf,
++					 struct rf_channel *rf,
++					 struct channel_info *info)
 +{
-+	return ((ns * 1000 * clock) / 1000000) + 1;
-+}
++	u8 rfcsr;
 +
-+static void bcma_nflash_enable(struct bcma_drv_cc *cc, bool enable)
-+{
-+	if (cc->core->id.rev == 38) {
-+		if (cc->status & BCMA_CC_CHIPST_REV38_NAND_BOOT)
-+			return;
-+		if (enable)
-+			bcma_chipco_chipctl_maskset(cc, 1, ~0, 0x10000);
-+		else
-+			bcma_chipco_chipctl_maskset(cc, 1, ~0x10000, 0);
-+	}
-+}
++	rt2800_rfcsr_write(rt2x00dev, 8, rf->rf1);
++	rt2800_rfcsr_write(rt2x00dev, 9, rf->rf3);
 +
-+static int bcma_nflash_ctl_cmd(struct bcma_drv_cc *cc, u32 code)
- {
--	bcma_err(cc->core->bus, "NAND flash support is broken\n");
-+	int i = 0;
++	rt2800_rfcsr_write(rt2x00dev, 11, 0x42);
++	rt2800_rfcsr_write(rt2x00dev, 12, 0x1c);
++	rt2800_rfcsr_write(rt2x00dev, 13, 0x00);
 +
-+	bcma_cc_write32(cc, BCMA_CC_NFLASH_CTL, 0x80000000 | code);
-+	for (i = 0; i < NFLASH_READY_RETRIES; i++) {
-+		if (!(bcma_cc_read32(cc, BCMA_CC_NFLASH_CTL) & 0x80000000)) {
-+			i = 0;
-+			break;
-+		}
-+	}
-+	if (i) {
-+		pr_err("NFLASH control command not ready!\n");
-+		return -EBUSY;
-+	}
- 	return 0;
- }
-+
-+int bcma_nflash_poll(struct bcma_drv_cc *cc)
-+{
-+	int i;
-+	u32 tmp;
-+
-+	if (cc->core->bus->chipinfo.id == BCMA_CHIP_ID_BCM4706) {
-+		for (i = 0; i < NFLASH_READY_RETRIES; i++) {
-+			if (bcma_cc_read32(cc, BCMA_CC_NFLASH_CTL) &
-+			    0x04000000) {
-+				if (bcma_cc_read32(cc, BCMA_CC_NFLASH_CTL) &
-+				    BCMA_CC_NFLASH_CTL_ERR) {
-+					pr_err("Error on polling\n");
-+					return -EBUSY;
-+				} else {
-+					return 0;
-+				}
-+			}
-+		}
-+	} else {
-+		for (i = 0; i < NFLASH_READY_RETRIES; i++) {
-+			tmp = bcma_cc_read32(cc, BCMA_CC_NAND_INTFC_STATUS);
-+			if ((tmp & 0xC0000000) == 0xC0000000)
-+				return 0;
-+		}
-+	}
-+	pr_err("Polling timeout!\n");
-+	return -EBUSY;
-+}
-+
-+static void bcma_nflash_cmd(struct bcma_drv_cc *cc, u32 code)
-+{
-+	bcma_cc_write32(cc, BCMA_CC_NAND_CMD_START, code);
-+	bcma_cc_read32(cc, BCMA_CC_NAND_CMD_START);
-+}
-+
-+static char *bcma_nflash_check_id(u8 *id)
-+{
-+	switch (id[0]) {
-+	case 0x01:
-+		return "AMD";
-+	case 0x20:
-+		return "Numonyx";
-+	case 0x2c:
-+		return "Micron";
-+	case 0x98:
-+		return "Toshiba";
-+	case 0xad:
-+		return "Hynix";
-+	case 0xec:
-+		return "Samsung";
-+	}
-+	return NULL;
-+}
-+
-+/**************************************************
-+ * Initialize NAND flash access
-+ **************************************************/
-+
-+static int bcma_nflash_init_bcm4706(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_nflash *nflash = &cc->nflash;
-+
-+	u32 freq, code, val, tmp;
-+	u16 clock;
-+	u8 w0, w1, w2, w3, w4;
-+	u8 cbits, tbits;
-+	u8 csize, rbits, bsize;
-+	char *name;
-+	int i;
-+
-+	/* TODO: Set bit 0x8 in CC flashstrconfig Register */
-+
-+	if (cc->status & BCMA_CC_CHIPST_4706_PKG_OPTION) {
-+		freq = 100000000;
-+	} else {
-+		freq = bcma_chipco_pll_read(cc, 4);
-+		freq = (freq * 0xFFF) >> 3;
-+		freq = (freq * 25000000) >> 3;
-+	}
-+	clock = freq / 1000000;
-+	w0 = bcma_nflash_ns_to_cycle(15, clock);
-+	w1 = bcma_nflash_ns_to_cycle(20, clock);
-+	w2 = bcma_nflash_ns_to_cycle(10, clock);
-+	w3 = bcma_nflash_ns_to_cycle(10, clock);
-+	w4 = bcma_nflash_ns_to_cycle(100, clock);
-+	bcma_cc_write32(cc, BCMA_CC_NFLASH_WAITCNT0,
-+		(w4 << 24 | w3 << 18 | w2 << 12 | w1 << 6 | w0));
-+	if (bcma_nflash_ctl_cmd(cc, 0x40000000 | 0x01000000 | 0x00080000 |
-+				    0x00010000 | 0x00000090))
-+		return -EBUSY;
-+
-+	for (i = 0; i < 5; i++) {
-+		/* Useless Broadcom condition dropped */
-+		code = 0x40000000 | 0x00100000;
-+		if (bcma_nflash_ctl_cmd(cc, code))
-+			return -EBUSY;
-+		else
-+			nflash->id[i] =
-+				bcma_cc_read32(cc, BCMA_CC_NFLASH_DATA) & 0xFF;
-+	}
-+
-+	name = bcma_nflash_check_id(nflash->id);
-+	if (name == NULL) {
-+		pr_err("Invalid flash id: 0x%X\n", nflash->id[0]);
-+		/* TODO: Clear bit 8 of Register flashstrconfig */
-+		return -ENOTSUPP;
-+	}
-+
-+	nflash->type = nflash->id[0];
-+	nflash->pagesize = 1024 << (nflash->id[3] & 0x3);
-+	nflash->blocksize = (64 * 1024) << ((nflash->id[3] >> 4) & 0x3);
-+	tmp = (8 << ((nflash->id[3] >> 2) & 0x1));
-+	nflash->oobsize = tmp * nflash->pagesize / 512;
-+	nflash->size = (8 << ((nflash->id[4] >> 4) & 0x7)) *
-+		       (1 << ((nflash->id[4] >> 2) & 0x3));
-+
-+	tbits = ffs(nflash->size); /* find first bit set */
-+	if (!tbits || tbits != fls(nflash->size)) {
-+		pr_err("Invalid flash size 0x%X\n", nflash->size);
-+		return -ENOTSUPP;
-+	}
-+	tbits += 19; /* Broadcom increases *index* by 20, we increase *pos* */
-+
-+	cbits = ffs(nflash->pagesize);
-+	if (!cbits || cbits != fls(nflash->pagesize)) {
-+		pr_err("Invalid flash pagesize 0x%X\n", nflash->pagesize);
-+		return -ENOTSUPP;
-+	}
-+
-+	nflash->col_mask = (1 << cbits) - 1;
-+	nflash->row_shift = cbits;
-+	csize = (cbits + 7) / 8;
-+	rbits = tbits - cbits + 1;
-+	bsize = (rbits + 7) / 8;
-+	val = ((bsize - 1) << 6) | ((csize - 1) << 4) | 2;
-+	bcma_cc_write32(cc, BCMA_CC_NFLASH_CONF, val);
-+
-+	pr_info("Found %s %dMiB NAND flash, pagesize: %dB, blocksize: %dKiB\n",
-+		name, nflash->size, nflash->pagesize, nflash->blocksize / 1024);
-+	nflash->present = true;
-+	return 0;
-+}
-+
-+static int bcma_nflash_init_default(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_nflash *nflash = &cc->nflash;
-+	u32 id, id2, ncfg, control, val;
-+	char *name;
-+	int i;
-+
-+	bcma_nflash_enable(cc, true);
-+	bcma_nflash_cmd(cc, 7);
-+	if (bcma_nflash_poll(cc) < 0) {
-+		bcma_nflash_enable(cc, false);
-+		return -EBUSY;
-+	}
-+	bcma_nflash_enable(cc, false);
-+
-+	id = bcma_cc_read32(cc, BCMA_CC_NAND_DEVID);
-+	id2 = bcma_cc_read32(cc, BCMA_CC_NAND_DEVID_X);
-+	for (i = 0; i < 5; i++) {
-+		if (i < 4)
-+			nflash->id[i] = (id >> (8 * i)) & 0xff;
-+		else
-+			nflash->id[i] = id2 & 0xff;
-+	}
-+
-+	name = bcma_nflash_check_id(nflash->id);
-+	if (name == NULL) {
-+		pr_err("Invalid flash id: 0x%X\n", nflash->id[0]);
-+		return -ENOTSUPP;
-+	}
-+
-+	nflash->type = nflash->id[0];
-+
-+	ncfg = bcma_cc_read32(cc, BCMA_CC_NAND_CONFIG);
-+	switch ((ncfg >> 20) & 3) {
-+	case 0:
-+		nflash->pagesize = 0x200;
-+		break;
-+	case 1:
-+		nflash->pagesize = 0x800;
-+		break;
-+	case 2:
-+		nflash->pagesize = 0x1000;
-+		break;
-+	default:
-+		nflash->pagesize = 0x2000;
-+		break;
-+	}
-+	val = (ncfg >> 28) & 7;
-+	switch (val) {
-+	case 0:
-+		nflash->blocksize = 0x4000;
-+		break;
-+	case 1:
-+		nflash->blocksize = 0x20000;
-+		break;
-+	case 2:
-+		nflash->blocksize = 0x2000;
-+		break;
-+	case 3:
-+		nflash->blocksize = 0x80000;
-+		break;
-+	case 4:
-+		nflash->blocksize = 0x40000;
-+		break;
-+	default:
-+		nflash->blocksize = 0;
-+		pr_err("Unknown blocksize\n");
-+		return -ENOTSUPP;
-+	}
-+	nflash->size = (1 << (val - 1)) * 8;
-+
-+	control = bcma_cc_read32(cc, BCMA_CC_NAND_ACC_CONTROL);
-+	nflash->ecclevel = (control & 0x000f0000) >> 16;
-+	nflash->ecclevel0 = (control & 0x00f00000) >> 20;
-+	if (nflash->ecclevel != nflash->ecclevel0) {
-+		control = control & ~(0x00ff0000);
-+		control = control | (nflash->ecclevel0 << 20) |
-+				(nflash->ecclevel0 << 16);
-+		bcma_cc_write32(cc, BCMA_CC_NAND_ACC_CONTROL, control);
-+		nflash->ecclevel = nflash->ecclevel0;
-+	}
-+	nflash->numblocks = (nflash->size * (1 << 10)) /
-+			    (nflash->blocksize >> 10);
-+	if (nflash->size == 0) {
-+		pr_err("Invalid flash size\n");
-+		return -ENOTSUPP;
-+	}
-+
-+	pr_info("Found %s %dMiB NAND flash, pagesize: %dB, blocksize: %dKiB\n",
-+		name, nflash->size, nflash->pagesize, nflash->blocksize / 1024);
-+	nflash->present = true;
-+	return 0;
-+}
-+
-+int bcma_nflash_init(struct bcma_drv_cc *cc)
-+{
-+	if (cc->core->bus->chipinfo.id != BCMA_CHIP_ID_BCM4706 &&
-+	    cc->core->id.rev != 0x38) {
-+		pr_err("NAND flash on unsupported board!\n");
-+		return -ENOTSUPP;
-+	}
-+
-+	if (!(cc->capabilities & BCMA_CC_CAP_NFLASH)) {
-+		pr_err("NAND flash not present according to ChipCommon\n");
-+		return -ENODEV;
-+	}
-+
-+	if (cc->nflash.present) {
-+		pr_warn("NAND flash already initialized");
-+		return 0;
-+	}
-+
-+	if (cc->core->bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
-+		return bcma_nflash_init_bcm4706(cc);
++	if (info->default_power1 > POWER_BOUND)
++		rt2800_rfcsr_write(rt2x00dev, 47, POWER_BOUND);
 +	else
-+		return bcma_nflash_init_default(cc);
++		rt2800_rfcsr_write(rt2x00dev, 47, info->default_power1);
++
++	if (info->default_power2 > POWER_BOUND)
++		rt2800_rfcsr_write(rt2x00dev, 48, POWER_BOUND);
++	else
++		rt2800_rfcsr_write(rt2x00dev, 48, info->default_power2);
++
++	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
++	if (rt2x00dev->freq_offset > FREQ_OFFSET_BOUND)
++		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, FREQ_OFFSET_BOUND);
++	else
++		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, rt2x00dev->freq_offset);
++
++	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
++	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 1);
++
++	if ( rt2x00dev->default_ant.tx_chain_num == 2)
++		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
++	else
++		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
++
++	if ( rt2x00dev->default_ant.rx_chain_num == 2)
++		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
++	else
++		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
++
++	rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
++	rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
++
++	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
++
++	rt2800_rfcsr_write(rt2x00dev, 31, 80);
 +}
 +
-+/**************************************************
-+ * R/W ops
-+ **************************************************/
-+
-+int bcma_nflash_read(struct bcma_drv_cc *cc, uint offset, uint len, u8 *buf)
-+{
-+	struct bcma_nflash *nflash = &cc->nflash;
-+	u32 mask = 0x1FF;
-+	u32 tmp, ctrlcode;
-+	u32 page_offset, page_addr;
-+	u32 *dest = (u32 *)buf;
-+	uint remains;
-+	int i;
-+
-+	if ((offset & mask) != 0 || (len & mask) != 0)
-+		return 0;
-+
-+	tmp = (offset + len) >> 20;
-+	if (tmp > nflash->size)
-+		return 0;
-+	if (tmp == nflash->size && ((offset + len) & ((1 << 20) - 1)) != 0)
-+		return 0;
-+
-+	remains = len;
-+	if (cc->core->bus->chipinfo.id == BCMA_CHIP_ID_BCM4706) {
-+		while (remains > 0) {
-+			page_offset = offset & (nflash->pagesize - 1);
-+			page_addr = (offset & ~(nflash->pagesize - 1)) *
-+				    2 + page_offset;
-+			bcma_cc_write32(cc, BCMA_CC_NFLASH_COL_ADDR,
-+					page_addr & nflash->col_mask);
-+			bcma_cc_write32(cc, BCMA_CC_NFLASH_ROW_ADDR,
-+					page_addr >> nflash->row_shift);
-+
-+			ctrlcode = 0x40000000 | 0x00080000 | 0x00040000 |
-+				   0x00020000 | 0x00010000 | 0x3000;
-+			if (bcma_nflash_ctl_cmd(cc, ctrlcode))
-+				break;
-+			if (bcma_nflash_poll(cc) < 0)
-+				break;
-+			for (i = 0; i < 512; i += 4, dest++) {
-+				if (i < 508)
-+					ctrlcode = 0x40000000 | 0x30000000 |
-+						   0x00100000;
-+				else
-+					ctrlcode = 0x30000000 | 0x00100000;
-+				if (bcma_nflash_ctl_cmd(cc, ctrlcode))
-+					return len - remains;
-+				*dest = bcma_cc_read32(cc, BCMA_CC_NFLASH_DATA);
-+			}
-+			remains -= 512;
-+			offset += 512;
-+		}
+ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
+ 					 struct ieee80211_conf *conf,
+ 					 struct rf_channel *rf,
+@@ -2182,6 +2237,9 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	case RF3290:
+ 		rt2800_config_channel_rf3290(rt2x00dev, conf, rf, info);
+ 		break;
++	case RF3322:
++		rt2800_config_channel_rf3322(rt2x00dev, conf, rf, info);
++		break;
+ 	case RF5360:
+ 	case RF5370:
+ 	case RF5372:
+@@ -2194,6 +2252,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	if (rt2x00_rf(rt2x00dev, RF3290) ||
++	    rt2x00_rf(rt2x00dev, RF3322) ||
+ 	    rt2x00_rf(rt2x00dev, RF5360) ||
+ 	    rt2x00_rf(rt2x00dev, RF5370) ||
+ 	    rt2x00_rf(rt2x00dev, RF5372) ||
+@@ -2212,10 +2271,17 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Change BBP settings
+ 	 */
+-	rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
+-	rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
+-	rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
+-	rt2800_bbp_write(rt2x00dev, 86, 0);
++	if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_write(rt2x00dev, 27, 0x0);
++		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 27, 0x20);
++		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
 +	} else {
-+		bcma_nflash_enable(cc, true);
-+		while (remains > 0) {
-+			bcma_cc_write32(cc, BCMA_CC_NAND_CMD_ADDR, offset);
-+			bcma_nflash_cmd(cc, 1);
-+			if (bcma_nflash_poll(cc) < 0)
-+				break;
-+			if (!(bcma_cc_read32(cc, BCMA_CC_NAND_INTFC_STATUS) &
-+			      0x20000000))
-+				break;
-+			for (i = 0; i < 512; i += 4, dest++)
-+				*dest = bcma_cc_read32(cc,
-+						       BCMA_CC_NAND_CACHE_DATA);
-+			remains -= 512;
-+			offset += 512;
-+		}
-+		bcma_nflash_enable(cc, false);
++		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 86, 0);
 +	}
-+	return len - remains;
-+}
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 4432617..fd6620e 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -13,7 +13,7 @@
- #include <linux/export.h>
- #include <linux/bcma/bcma.h>
  
--static u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset)
-+u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset)
- {
- 	bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR, offset);
- 	bcma_cc_read32(cc, BCMA_CC_PLLCTL_ADDR);
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 3c80885..c80d8f1 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -94,6 +94,7 @@
- #define  BCMA_CC_CHIPST_4706_SFLASH_TYPE	BIT(2) /* 0: 8b-p/ST-s flash, 1: 16b-p/Atmal-s flash */
- #define  BCMA_CC_CHIPST_4706_MIPS_BENDIAN	BIT(3) /* 0: little, 1: big endian */
- #define  BCMA_CC_CHIPST_4706_PCIE1_DISABLE	BIT(5) /* PCIE1 enable strap pin */
-+#define  BCMA_CC_CHIPST_REV38_NAND_BOOT		BIT(4) /* NAND boot, valid for CC rev 38 */
- #define BCMA_CC_JCMD			0x0030		/* Rev >= 10 only */
- #define  BCMA_CC_JCMD_START		0x80000000
- #define  BCMA_CC_JCMD_BUSY		0x80000000
-@@ -260,6 +261,14 @@
- #define  BCMA_CC_SROM_CONTROL_SIZE_16K	0x00000004
- #define  BCMA_CC_SROM_CONTROL_SIZE_SHIFT	1
- #define  BCMA_CC_SROM_CONTROL_PRESENT	0x00000001
-+/* NAND flash registers for BCM4706 (corerev = 31) */
-+#define BCMA_CC_NFLASH_CTL		0x01A0
-+#define  BCMA_CC_NFLASH_CTL_ERR		0x08000000
-+#define BCMA_CC_NFLASH_CONF		0x01A4
-+#define BCMA_CC_NFLASH_COL_ADDR		0x01A8
-+#define BCMA_CC_NFLASH_ROW_ADDR		0x01AC
-+#define BCMA_CC_NFLASH_DATA		0x01B0
-+#define BCMA_CC_NFLASH_WAITCNT0		0x01B4
- /* 0x1E0 is defined as shared BCMA_CLKCTLST */
- #define BCMA_CC_HW_WORKAROUND		0x01E4 /* Hardware workaround (rev >= 20) */
- #define BCMA_CC_UART0_DATA		0x0300
-@@ -319,6 +328,60 @@
- #define BCMA_CC_PLLCTL_ADDR		0x0660
- #define BCMA_CC_PLLCTL_DATA		0x0664
- #define BCMA_CC_SPROM			0x0800 /* SPROM beginning */
-+/* NAND flash MLC controller registers (corerev >= 38) */
-+#define BCMA_CC_NAND_REVISION		0x0C00
-+#define BCMA_CC_NAND_CMD_START		0x0C04
-+#define BCMA_CC_NAND_CMD_ADDR_X		0x0C08
-+#define BCMA_CC_NAND_CMD_ADDR		0x0C0C
-+#define BCMA_CC_NAND_CMD_END_ADDR	0x0C10
-+#define BCMA_CC_NAND_CS_NAND_SELECT	0x0C14
-+#define BCMA_CC_NAND_CS_NAND_XOR	0x0C18
-+#define BCMA_CC_NAND_SPARE_RD0		0x0C20
-+#define BCMA_CC_NAND_SPARE_RD4		0x0C24
-+#define BCMA_CC_NAND_SPARE_RD8		0x0C28
-+#define BCMA_CC_NAND_SPARE_RD12		0x0C2C
-+#define BCMA_CC_NAND_SPARE_WR0		0x0C30
-+#define BCMA_CC_NAND_SPARE_WR4		0x0C34
-+#define BCMA_CC_NAND_SPARE_WR8		0x0C38
-+#define BCMA_CC_NAND_SPARE_WR12		0x0C3C
-+#define BCMA_CC_NAND_ACC_CONTROL	0x0C40
-+#define BCMA_CC_NAND_CONFIG		0x0C48
-+#define BCMA_CC_NAND_TIMING_1		0x0C50
-+#define BCMA_CC_NAND_TIMING_2		0x0C54
-+#define BCMA_CC_NAND_SEMAPHORE		0x0C58
-+#define BCMA_CC_NAND_DEVID		0x0C60
-+#define BCMA_CC_NAND_DEVID_X		0x0C64
-+#define BCMA_CC_NAND_BLOCK_LOCK_STATUS	0x0C68
-+#define BCMA_CC_NAND_INTFC_STATUS	0x0C6C
-+#define BCMA_CC_NAND_ECC_CORR_ADDR_X	0x0C70
-+#define BCMA_CC_NAND_ECC_CORR_ADDR	0x0C74
-+#define BCMA_CC_NAND_ECC_UNC_ADDR_X	0x0C78
-+#define BCMA_CC_NAND_ECC_UNC_ADDR	0x0C7C
-+#define BCMA_CC_NAND_READ_ERROR_COUNT	0x0C80
-+#define BCMA_CC_NAND_CORR_STAT_THRESHOLD	0x0C84
-+#define BCMA_CC_NAND_READ_ADDR_X	0x0C90
-+#define BCMA_CC_NAND_READ_ADDR		0x0C94
-+#define BCMA_CC_NAND_PAGE_PROGRAM_ADDR_X	0x0C98
-+#define BCMA_CC_NAND_PAGE_PROGRAM_ADDR	0x0C9C
-+#define BCMA_CC_NAND_COPY_BACK_ADDR_X	0x0CA0
-+#define BCMA_CC_NAND_COPY_BACK_ADDR	0x0CA4
-+#define BCMA_CC_NAND_BLOCK_ERASE_ADDR_X	0x0CA8
-+#define BCMA_CC_NAND_BLOCK_ERASE_ADDR	0x0CAC
-+#define BCMA_CC_NAND_INV_READ_ADDR_X	0x0CB0
-+#define BCMA_CC_NAND_INV_READ_ADDR	0x0CB4
-+#define BCMA_CC_NAND_BLK_WR_PROTECT	0x0CC0
-+#define BCMA_CC_NAND_ACC_CONTROL_CS1	0x0CD0
-+#define BCMA_CC_NAND_CONFIG_CS1		0x0CD4
-+#define BCMA_CC_NAND_TIMING_1_CS1	0x0CD8
-+#define BCMA_CC_NAND_TIMING_2_CS1	0x0CDC
-+#define BCMA_CC_NAND_SPARE_RD16		0x0D30
-+#define BCMA_CC_NAND_SPARE_RD20		0x0D34
-+#define BCMA_CC_NAND_SPARE_RD24		0x0D38
-+#define BCMA_CC_NAND_SPARE_RD28		0x0D3C
-+#define BCMA_CC_NAND_CACHE_ADDR		0x0D40
-+#define BCMA_CC_NAND_CACHE_DATA		0x0D44
-+#define BCMA_CC_NAND_CTRL_CONFIG	0x0D48
-+#define BCMA_CC_NAND_CTRL_STATUS	0x0D4C
- 
- /* Divider allocation in 4716/47162/5356 */
- #define BCMA_CC_PMU5_MAINPLL_CPU	1
-@@ -424,6 +487,26 @@ struct bcma_pflash {
- 	u32 window_size;
- };
- 
-+#ifdef CONFIG_BCMA_NFLASH
-+struct bcma_nflash {
-+	bool present;
+ 	if (rf->channel <= 14) {
+ 		if (!rt2x00_rt(rt2x00dev, RT5390) &&
+@@ -2310,6 +2376,15 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_register_read(rt2x00dev, CH_IDLE_STA, &reg);
+ 	rt2800_register_read(rt2x00dev, CH_BUSY_STA, &reg);
+ 	rt2800_register_read(rt2x00dev, CH_BUSY_STA_SEC, &reg);
 +
-+	uint blocksize; /* Block size */
-+	uint pagesize; /* Page size */
-+	uint oobsize; /* OOB size per page */
-+	uint numblocks; /* Number of blocks */
-+	u32 type; /* Type */
-+	uint size; /* Total size */
-+	u8 id[5];
-+	uint ecclevel; /* ECC algorithm for blocks other than block 0 */
-+	uint ecclevel0; /* ECC algorithm for blocks 0 */
-+
-+	/* BCM4706 specific */
-+	u32 col_mask;
-+	u32 row_shift;
-+};
-+#endif
-+
- struct bcma_serial_port {
- 	void *regs;
- 	unsigned long clockspeed;
-@@ -442,8 +525,12 @@ struct bcma_drv_cc {
- 	/* Fast Powerup Delay constant */
- 	u16 fast_pwrup_delay;
- 	struct bcma_chipcommon_pmu pmu;
-+
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- 	struct bcma_pflash pflash;
-+#ifdef CONFIG_BCMA_NFLASH
-+	struct bcma_nflash nflash;
-+#endif
++	/*
++	 * Clear update flag
++	 */
++	if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_read(rt2x00dev, 49, &bbp);
++		rt2x00_set_field8(&bbp, BBP49_UPDATE_FLAG, 0);
++		rt2800_bbp_write(rt2x00dev, 49, bbp);
++	}
+ }
  
- 	int nr_serial_ports;
- 	struct bcma_serial_port serial_ports[4];
-@@ -488,6 +575,7 @@ u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value);
- /* PMU support */
- extern void bcma_pmu_init(struct bcma_drv_cc *cc);
+ static int rt2800_get_gain_calibration_delta(struct rt2x00_dev *rt2x00dev)
+@@ -2998,6 +3073,10 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000030);
++	} else if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000402);
++		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
++		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+ 	} else if (rt2x00_rt(rt2x00dev, RT3572)) {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+@@ -3378,6 +3457,11 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		     rt2800_wait_bbp_ready(rt2x00dev)))
+ 		return -EACCES;
  
-+u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset);
- extern void bcma_chipco_pll_write(struct bcma_drv_cc *cc, u32 offset,
- 				  u32 value);
- extern void bcma_chipco_pll_maskset(struct bcma_drv_cc *cc, u32 offset,
++	if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_write(rt2x00dev, 3, 0x00);
++		rt2800_bbp_write(rt2x00dev, 4, 0x50);
++	}
++
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392)) {
+@@ -3388,15 +3472,20 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 
+ 	if (rt2800_is_305x_soc(rt2x00dev) ||
+ 	    rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT3572) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ 
++	if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 47, 0x48);
++
+ 	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
+ 	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 68, 0x0b);
+@@ -3405,6 +3494,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 69, 0x16);
+ 		rt2800_bbp_write(rt2x00dev, 73, 0x12);
+ 	} else if (rt2x00_rt(rt2x00dev, RT3290) ||
++		   rt2x00_rt(rt2x00dev, RT3352) ||
+ 		   rt2x00_rt(rt2x00dev, RT5390) ||
+ 		   rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_bbp_write(rt2x00dev, 69, 0x12);
+@@ -3436,6 +3526,10 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	} else if (rt2800_is_305x_soc(rt2x00dev)) {
+ 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+ 		rt2800_bbp_write(rt2x00dev, 80, 0x08);
++	} else if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
++		rt2800_bbp_write(rt2x00dev, 80, 0x08);
++		rt2800_bbp_write(rt2x00dev, 81, 0x37);
+ 	} else {
+ 		rt2800_bbp_write(rt2x00dev, 81, 0x37);
+ 	}
+@@ -3465,18 +3559,21 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 84, 0x99);
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 86, 0x38);
+ 	else
+ 		rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 
+-	if (rt2x00_rt(rt2x00dev, RT5392))
++	if (rt2x00_rt(rt2x00dev, RT3352) ||
++	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 88, 0x90);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 92, 0x02);
+@@ -3493,6 +3590,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	    rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
+ 	    rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
+ 	    rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT3572) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392) ||
+@@ -3502,6 +3600,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 103, 0x00);
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 104, 0x92);
+@@ -3510,6 +3609,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x01);
+ 	else if (rt2x00_rt(rt2x00dev, RT3290))
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x1c);
++	else if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 105, 0x34);
+ 	else if (rt2x00_rt(rt2x00dev, RT5390) ||
+ 			 rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x3c);
+@@ -3519,11 +3620,16 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390))
+ 		rt2800_bbp_write(rt2x00dev, 106, 0x03);
++	else if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 106, 0x05);
+ 	else if (rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_bbp_write(rt2x00dev, 106, 0x12);
+ 	else
+ 		rt2800_bbp_write(rt2x00dev, 106, 0x35);
+ 
++	if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 120, 0x50);
++
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+@@ -3534,6 +3640,9 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
+ 	}
+ 
++	if (rt2x00_rt(rt2x00dev, RT3352))
++		rt2800_bbp_write(rt2x00dev, 137, 0x0f);
++
+ 	if (rt2x00_rt(rt2x00dev, RT3071) ||
+ 	    rt2x00_rt(rt2x00dev, RT3090) ||
+ 	    rt2x00_rt(rt2x00dev, RT3390) ||
+@@ -3574,6 +3683,28 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 3, value);
+ 	}
+ 
++	if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_bbp_write(rt2x00dev, 163, 0xbd);
++		/* Set ITxBF timeout to 0x9c40=1000msec */
++		rt2800_bbp_write(rt2x00dev, 179, 0x02);
++		rt2800_bbp_write(rt2x00dev, 180, 0x00);
++		rt2800_bbp_write(rt2x00dev, 182, 0x40);
++		rt2800_bbp_write(rt2x00dev, 180, 0x01);
++		rt2800_bbp_write(rt2x00dev, 182, 0x9c);
++		rt2800_bbp_write(rt2x00dev, 179, 0x00);
++		/* Reprogram the inband interface to put right values in RXWI */
++		rt2800_bbp_write(rt2x00dev, 142, 0x04);
++		rt2800_bbp_write(rt2x00dev, 143, 0x3b);
++		rt2800_bbp_write(rt2x00dev, 142, 0x06);
++		rt2800_bbp_write(rt2x00dev, 143, 0xa0);
++		rt2800_bbp_write(rt2x00dev, 142, 0x07);
++		rt2800_bbp_write(rt2x00dev, 143, 0xa1);
++		rt2800_bbp_write(rt2x00dev, 142, 0x08);
++		rt2800_bbp_write(rt2x00dev, 143, 0xa2);
++
++		rt2800_bbp_write(rt2x00dev, 148, 0xc8);
++	}
++
+ 	if (rt2x00_rt(rt2x00dev, RT5390) ||
+ 		rt2x00_rt(rt2x00dev, RT5392)) {
+ 		int ant, div_mode;
+@@ -3707,6 +3838,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	    !rt2x00_rt(rt2x00dev, RT3071) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3090) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3290) &&
++	    !rt2x00_rt(rt2x00dev, RT3352) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3390) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3572) &&
+ 	    !rt2x00_rt(rt2x00dev, RT5390) &&
+@@ -3903,6 +4035,70 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 30, 0x00);
+ 		rt2800_rfcsr_write(rt2x00dev, 31, 0x00);
+ 		return 0;
++	} else if (rt2x00_rt(rt2x00dev, RT3352)) {
++		rt2800_rfcsr_write(rt2x00dev, 0, 0xf0);
++		rt2800_rfcsr_write(rt2x00dev, 1, 0x23);
++		rt2800_rfcsr_write(rt2x00dev, 2, 0x50);
++		rt2800_rfcsr_write(rt2x00dev, 3, 0x18);
++		rt2800_rfcsr_write(rt2x00dev, 4, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 5, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 6, 0x33);
++		rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 8, 0xf1);
++		rt2800_rfcsr_write(rt2x00dev, 9, 0x02);
++		rt2800_rfcsr_write(rt2x00dev, 10, 0xd2);
++		rt2800_rfcsr_write(rt2x00dev, 11, 0x42);
++		rt2800_rfcsr_write(rt2x00dev, 12, 0x1c);
++		rt2800_rfcsr_write(rt2x00dev, 13, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 14, 0x5a);
++		rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 16, 0x01);
++		rt2800_rfcsr_write(rt2x00dev, 18, 0x45);
++		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
++		rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 21, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 23, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 24, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
++		rt2800_rfcsr_write(rt2x00dev, 26, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
++		rt2800_rfcsr_write(rt2x00dev, 28, 0x03);
++		rt2800_rfcsr_write(rt2x00dev, 29, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
++		rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
++		rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
++		rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 34, 0x01);
++		rt2800_rfcsr_write(rt2x00dev, 35, 0x03);
++		rt2800_rfcsr_write(rt2x00dev, 36, 0xbd);
++		rt2800_rfcsr_write(rt2x00dev, 37, 0x3c);
++		rt2800_rfcsr_write(rt2x00dev, 38, 0x5f);
++		rt2800_rfcsr_write(rt2x00dev, 39, 0xc5);
++		rt2800_rfcsr_write(rt2x00dev, 40, 0x33);
++		rt2800_rfcsr_write(rt2x00dev, 41, 0x5b);
++		rt2800_rfcsr_write(rt2x00dev, 42, 0x5b);
++		rt2800_rfcsr_write(rt2x00dev, 43, 0xdb);
++		rt2800_rfcsr_write(rt2x00dev, 44, 0xdb);
++		rt2800_rfcsr_write(rt2x00dev, 45, 0xdb);
++		rt2800_rfcsr_write(rt2x00dev, 46, 0xdd);
++		rt2800_rfcsr_write(rt2x00dev, 47, 0x0d);
++		rt2800_rfcsr_write(rt2x00dev, 48, 0x14);
++		rt2800_rfcsr_write(rt2x00dev, 49, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 50, 0x2d);
++		rt2800_rfcsr_write(rt2x00dev, 51, 0x7f);
++		rt2800_rfcsr_write(rt2x00dev, 52, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 53, 0x52);
++		rt2800_rfcsr_write(rt2x00dev, 54, 0x1b);
++		rt2800_rfcsr_write(rt2x00dev, 55, 0x7f);
++		rt2800_rfcsr_write(rt2x00dev, 56, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 57, 0x52);
++		rt2800_rfcsr_write(rt2x00dev, 58, 0x1b);
++		rt2800_rfcsr_write(rt2x00dev, 59, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 60, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 61, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
+ 	} else if (rt2x00_rt(rt2x00dev, RT5390)) {
+ 		rt2800_rfcsr_write(rt2x00dev, 1, 0x0f);
+ 		rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
+@@ -4103,6 +4299,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x19);
+ 	} else if (rt2x00_rt(rt2x00dev, RT3071) ||
+ 		   rt2x00_rt(rt2x00dev, RT3090) ||
++		   rt2x00_rt(rt2x00dev, RT3352) ||
+ 		   rt2x00_rt(rt2x00dev, RT3390) ||
+ 		   rt2x00_rt(rt2x00dev, RT3572)) {
+ 		drv_data->calibration_bw20 =
+@@ -4561,6 +4758,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	case RT3071:
+ 	case RT3090:
+ 	case RT3290:
++	case RT3352:
+ 	case RT3390:
+ 	case RT3572:
+ 	case RT5390:
+@@ -4583,6 +4781,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	case RF3052:
+ 	case RF3290:
+ 	case RF3320:
++	case RF3322:
+ 	case RF5360:
+ 	case RF5370:
+ 	case RF5372:
+@@ -4607,6 +4806,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT3070) ||
+ 	    rt2x00_rt(rt2x00dev, RT3090) ||
++	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT3390)) {
+ 		value = rt2x00_get_field16(eeprom,
+ 				EEPROM_NIC_CONF1_ANT_DIVERSITY);
+@@ -4900,6 +5100,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		   rt2x00_rf(rt2x00dev, RF3022) ||
+ 		   rt2x00_rf(rt2x00dev, RF3290) ||
+ 		   rt2x00_rf(rt2x00dev, RF3320) ||
++		   rt2x00_rf(rt2x00dev, RF3322) ||
+ 		   rt2x00_rf(rt2x00dev, RF5360) ||
+ 		   rt2x00_rf(rt2x00dev, RF5370) ||
+ 		   rt2x00_rf(rt2x00dev, RF5372) ||
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 8afb546..97f10d8 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -188,6 +188,7 @@ struct rt2x00_chip {
+ #define RT3071		0x3071
+ #define RT3090		0x3090	/* 2.4GHz PCIe */
+ #define RT3290		0x3290
++#define RT3352		0x3352  /* WSOC */
+ #define RT3390		0x3390
+ #define RT3572		0x3572
+ #define RT3593		0x3593
 -- 
-1.7.7
+1.7.12
 
