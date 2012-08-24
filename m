@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54328 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040Ab2HMPlV (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:55023 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759048Ab2HXRgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 11:41:21 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20521.8011.624016.146590@gargle.gargle.HOWL> (sfid-20120813_174124_730727_BFB8326E)
-Date: Mon, 13 Aug 2012 21:07:47 +0530
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>
-Subject: [RFC 2/3] ath9k_htc: Advertise interface combinations supported
-In-Reply-To: <1344871339-6575-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1344871339-6575-1-git-send-email-mohammed@qca.qualcomm.com>
+	Fri, 24 Aug 2012 13:36:18 -0400
+Received: by wibhr14 with SMTP id hr14so1200637wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2012 10:36:17 -0700 (PDT)
+Message-ID: <1345829949.1460.5.camel@localhost.localdomain> (sfid-20120824_193622_464995_2E8DD5FD)
+Subject: Re: [BUG] brcmsmac: Invalid killswitch handling
+From: Sebastian Poehn <sebastian.poehn@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arend van Spriel <arend@broadcom.com>
+Date: Fri, 24 Aug 2012 19:39:09 +0200
+In-Reply-To: <50375E8F.6010302@broadcom.com>
+References: <1345798314.1478.12.camel@localhost.localdomain>
+	 <50375E8F.6010302@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan wrote:
-> +static const struct ieee80211_iface_limit if_limits[] = {
-> +	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
-> +				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
-> +	{ .max = 2,	.types =
-> +			BIT(NL80211_IFTYPE_AP) |
-> +			BIT(NL80211_IFTYPE_P2P_GO) },
-> +};
+On Fri, 2012-08-24 at 12:59 +0200, Arend van Spriel wrote:
+> brcmsmac handled the rfkill switch properly so this would be a 
+> regression. I also have Dell laptops here with a physical rfkill switch. 
+> What rfkill switch do you have?
 
-Well, P2P-GO/AP modes etc. are just broken in ath9k_htc.. but the patch could
-go in, I guess. If you can fix the weird indentation. :)
+I have no idea how to detect the type of the switch (looks like it's
+neither connected via usb nor pci). That's what rfkill tells me:
 
-Sujith
+[sebastian@localhost ~]$ rfkill list
+0: dell-wifi: Wireless LAN
+	Soft blocked: yes
+	Hard blocked: yes
+1: phy0: Wireless LAN
+	Soft blocked: no
+	Hard blocked: no
+
+It is a Vostro 3300 with a physical slide switch on the front being
+either black and enabled or red and disabled.
+
+> 
+> Anyway, I will test over here on my hardware as this regression has been 
+> flagged internally here as well. Would you be willing to test a fix on 
+> your system when I have one?
+
+Would be a joy for me
+
