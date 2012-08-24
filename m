@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:49832 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754473Ab2HEM7A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 08:59:00 -0400
-Received: by obbuo13 with SMTP id uo13so4219322obb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 05:59:00 -0700 (PDT)
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:46484 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753781Ab2HXGCM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2012 02:02:12 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Date: Thu, 23 Aug 2012 23:01:57 -0700
+Subject: RE: [PATCH v2] mwifiex: use is_broadcast_ether_addr() instead of
+ memcmp()
+Message-ID: <477F20668A386D41ADCC57781B1F7043083B0BBBB6@SC-VEXCH1.marvell.com> (sfid-20120824_080217_370128_C49B78DF)
+References: <CAPgLHd81cZS4K-wzcLycRTVF3pGy-S6=YR9UZ++Ot=6OXZp-5Q@mail.gmail.com>
+In-Reply-To: <CAPgLHd81cZS4K-wzcLycRTVF3pGy-S6=YR9UZ++Ot=6OXZp-5Q@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <501E68EE.1060000@net.t-labs.tu-berlin.de>
-References: <1343059275-49590-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	<1343059275-49590-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	<501CD9F3.4000903@net.t-labs.tu-berlin.de>
-	<CAFtRNNzV+vwCcg7APcjUUA4f7zhphH4=v4KshUq5XYKWHmBdhQ@mail.gmail.com>
-	<501E539A.9060706@net.t-labs.tu-berlin.de>
-	<CAFtRNNyXgrzsB8Od+qqLgRSb3o_KkxD4sG3UOzu5C1Sz06-GkA@mail.gmail.com>
-	<501E68EE.1060000@net.t-labs.tu-berlin.de>
-Date: Sun, 5 Aug 2012 15:59:00 +0300
-Message-ID: <CAFtRNNyF4Hm=U2LiJqpb60m6yjp+Hf1bi_Cth39H4QAHYZrPsA@mail.gmail.com> (sfid-20120805_145912_980472_4F83F422)
-Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix wrong per rate target power
- eeprom reads for AR5K_EEPROM_MODE_11A
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: nbd@nbd.name, jirislaby@gmail.com, linux-wireless@vger.kernel.org,
-	mcgrof@qca.qualcomm.com, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>,
-	Adrian Chadd <adrian@freebsd.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/8/5 Thomas Huehn <thomas@net.t-labs.tu-berlin.de>:
-> Hi Nick
->
->> According to EEPROM docs there are 10 calibration piers on all chips
->> after 5111 for 11a but some of them are not used and the way to test
->> this is if frequency is zero. Now here is a bug in the EEPROM code
->> that might result the wrong reads you get, check this out:
->>
->> on ath5k_eeprom_read_freq_list we do this
->>
->> if (!freq1)
->>  break;
->>
->> instead of this
->>
->> if (!freq1)
->>  continue;
->
->
-> That did the trick !
-> So reading 10 calibration piers and using the fix from above works in
-> terms of tx_power changes on CM9 and DCMA82 are properly used by the
-> hardware.
->
-> I will send a patch for that.
->
->
-> Greetings Thomas
->
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Using is_broadcast_ether_addr() instead of directly use
+> memcmp() to determine if the ethernet address is broadcast
+> address.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-CCing Adrian in case this bug is also present on newer HAL sources on
-FreeBSD etc...
+Acked-by: Bing Zhao <bzhao@marvell.com>
 
-Thanks for testing/patching Thomas, I 'll try to find some time to
-work on EEPROM code again, I know it's a mess :P
+Thanks,
+Bing
 
+> ---
+>  drivers/net/wireless/mwifiex/sta_cmd.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+> index df3a33c..323b91b 100644
+> --- a/drivers/net/wireless/mwifiex/sta_cmd.c
+> +++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+> @@ -551,7 +551,6 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+>  	struct host_cmd_tlv_mac_addr *tlv_mac;
+>  	u16 key_param_len = 0, cmd_size;
+>  	int ret = 0;
+> -	const u8 bc_mac[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+> 
+>  	cmd->command = cpu_to_le16(HostCmd_CMD_802_11_KEY_MATERIAL);
+>  	key_material->action = cpu_to_le16(cmd_action);
+> @@ -593,7 +592,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+>  			/* set 0 when re-key */
+>  			key_material->key_param_set.key[1] = 0;
+> 
+> -		if (0 != memcmp(enc_key->mac_addr, bc_mac, sizeof(bc_mac))) {
+> +		if (!is_broadcast_ether_addr(enc_key->mac_addr)) {
+>  			/* WAPI pairwise key: unicast */
+>  			key_material->key_param_set.key_info |=
+>  				cpu_to_le16(KEY_UNICAST);
+> 
 
--- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
