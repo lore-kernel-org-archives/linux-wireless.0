@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:40772 "EHLO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932290Ab2HGCfs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 22:35:48 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Fengguang Wu <fengguang.wu@intel.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 6 Aug 2012 19:35:11 -0700
-Subject: RE: [PATCH] mwifiex: fix code mis-alignment after the if statement
-Message-ID: <477F20668A386D41ADCC57781B1F7043083AE3DA2D@SC-VEXCH1.marvell.com> (sfid-20120807_043552_070071_9BC2CAEF)
-References: <20120807022653.GA21014@localhost>
-In-Reply-To: <20120807022653.GA21014@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Received: from hetz2.bluebottle.com ([176.9.57.138]:58969 "EHLO
+	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758758Ab2HXRNO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2012 13:13:14 -0400
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Bastian Bittorf <bittorf@bluebottle.com>,
+	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
+	feint@lists.subsignal.org,
+	=?iso-8859-1?b?UmFmYcWCIA==?= =?iso-8859-1?b?TWnFgmVja2k=?=
+	<zajec5@gmail.com>, b43-dev <b43-dev@lists.infradead.org>
+Message-ID: <1345828391.5037b627637de@mail.bluebottle.com> (sfid-20120824_191320_544637_3A7318D2)
+Date: Fri, 24 Aug 2012 18:13:11 +0100
+From: Bastian Bittorf <bittorf@bluebottle.com>
+Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
+References: <1342612598.5006a476022c6@mail.bluebottle.com> <50350706.609@hauke-m.de> <503528BD.2020302@lwfinger.net>
+In-Reply-To: <503528BD.2020302@lwfinger.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Fengguang,
+> Do you have any info whether the failure occurs with the change
+> from OFDM to 
+> CCK, or vice versa? I am wondering if the radio needs a dummy
 
-Thanks for the patch.
+i cannot answer this question - interesting idea.
+i like to test your patch, simply do a dummy tx in both cases.
 
-> Subject: [PATCH] mwifiex: fix code mis-alignment after the if statement
-> 
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+bye, bastian
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Thanks,
-Bing
-
-> ---
->  drivers/net/wireless/mwifiex/scan.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> --- linux.orig/drivers/net/wireless/mwifiex/scan.c	2012-07-25 19:09:37.939358714 +0800
-> +++ linux/drivers/net/wireless/mwifiex/scan.c	2012-08-07 10:21:20.303090255 +0800
-> @@ -1433,9 +1433,9 @@ int mwifiex_check_network_compatibility(
->  			if (ret)
->  				dev_err(priv->adapter->dev, "cannot find ssid "
->  					"%s\n", bss_desc->ssid.ssid);
-> -				break;
-> +			break;
->  		default:
-> -				ret = 0;
-> +			ret = 0;
->  		}
->  	}
-> 
