@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:34256 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753893Ab2HIDh5 (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:38697 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761Ab2HXFZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 23:37:57 -0400
-Received: by obbuo13 with SMTP id uo13so8699obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 20:37:57 -0700 (PDT)
+	Fri, 24 Aug 2012 01:25:32 -0400
 MIME-Version: 1.0
-In-Reply-To: <1344481126-15702-1-git-send-email-andy@greyhouse.net>
-References: <1344481126-15702-1-git-send-email-andy@greyhouse.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 8 Aug 2012 20:37:36 -0700
-Message-ID: <CAB=NE6XfyQSjWHrr97L29hRzRx-H4wsPHMQ7mG4n9D_e7p46=A@mail.gmail.com> (sfid-20120809_053833_049316_D7CCC427)
-Subject: Re: [PATCH] compat: support RHEL6.3 as a build target
-To: Andy Gospodarek <andy@greyhouse.net>
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Phil Perry <phil@elrepo.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Fri, 24 Aug 2012 13:25:30 +0800
+Message-ID: <CAPgLHd81cZS4K-wzcLycRTVF3pGy-S6=YR9UZ++Ot=6OXZp-5Q@mail.gmail.com> (sfid-20120824_072552_923154_8492AB3D)
+Subject: [PATCH v2] mwifiex: use is_broadcast_ether_addr() instead of memcmp()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: bzhao@marvell.com, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 8, 2012 at 7:58 PM, Andy Gospodarek <andy@greyhouse.net> wrote:
-> This patch allows me to compile and load the latest compat modules on
-> RHEL6.3.  Users of compat on RHEL6 should note that you should set
-> CONFIG_COMPAT_KFIFO=n as those bits are not needed at all.
->
-> Signed-off-by: Andy Gospodarek <andy@greyhouse.net>
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Thanks! Any chance you can git fetch; git rebase; (ensuring you have
-42faf2dc8d8 at tip) and then try running:
+Using is_broadcast_ether_addr() instead of directly use
+memcmp() to determine if the ethernet address is broadcast
+address.
 
-./bin/get-compat-kernels
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/mwifiex/sta_cmd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-This can take ~10 minutes
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index df3a33c..323b91b 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -551,7 +551,6 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+ 	struct host_cmd_tlv_mac_addr *tlv_mac;
+ 	u16 key_param_len = 0, cmd_size;
+ 	int ret = 0;
+-	const u8 bc_mac[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+ 
+ 	cmd->command = cpu_to_le16(HostCmd_CMD_802_11_KEY_MATERIAL);
+ 	key_material->action = cpu_to_le16(cmd_action);
+@@ -593,7 +592,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+ 			/* set 0 when re-key */
+ 			key_material->key_param_set.key[1] = 0;
+ 
+-		if (0 != memcmp(enc_key->mac_addr, bc_mac, sizeof(bc_mac))) {
++		if (!is_broadcast_ether_addr(enc_key->mac_addr)) {
+ 			/* WAPI pairwise key: unicast */
+ 			key_material->key_param_set.key_info |=
+ 				cpu_to_le16(KEY_UNICAST);
 
-And then test compile your changes with:
 
-./bin/ckmake
-
-And provide that as part of your commit log message? We can likely add
-the RHEL kernels to the ./bin/get-compat-kernels if you can figure out
-a way to unpack them for any user out there on any Linux distribution.
-This way I can gate future patches from being merged unless they also
-give me a good set of results from ckmake.
-
-Thoughts ?
-
-  Luis
