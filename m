@@ -1,105 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:39818 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932380Ab2HFTEX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27362 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757700Ab2HXORw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:04:23 -0400
-Date: Mon, 6 Aug 2012 16:04:16 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2012-08-06
-Message-ID: <20120806190416.GE3146@joana> (sfid-20120806_210439_082072_56A2126E)
+	Fri, 24 Aug 2012 10:17:52 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC 2/3] ath9k_htc: Add a modparam to enable BTCOEX rather than default
+Date: Fri, 24 Aug 2012 19:47:30 +0530
+Message-ID: <1345817851-8700-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120824_161755_882754_9D0BF4BC)
+In-Reply-To: <1345817851-8700-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1345817851-8700-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
---M9NhX3UHpAaciwkO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Enable BTCOEX for WB193(which seems to be the only supported
+ath9k_htc BTCOEX chipset)only when it is enabled via modparam,
+rather than enabling it by default.
 
-Hi John,=20
-
-Here goes some fixes for 3.6-rc1, there are a few fix to thte inquiry code =
-by
-Ram Malovany, support for 2 new devices, and few others fixes for NULL
-dereference, possible deadlock and a memory leak.
-
-Please pull, or let me know of any problems with this! Thanks.
-
-	Gustavo
-
+Cc: Vivek Natarajan <nataraja@qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    9 +++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    5 +++++
+ 2 files changed, 14 insertions(+), 0 deletions(-)
 
-The following changes since commit d4e5979c0da95791aa717c18e162540c7a596360:
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 07df279..fe4836b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -182,8 +182,17 @@ void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv)
+ void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
+ {
+ 	struct ath_hw *ah = priv->ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	int qnum;
+ 
++	/*
++	 * Check if BTCOEX is globally disabled.
++	 */
++	if (!common->btcoex_enabled) {
++		ah->btcoex_hw.scheme = ATH_BTCOEX_CFG_NONE;
++		return;
++	}
++
+ 	if (product && strncmp(product, ATH_HTC_BTCOEX_PRODUCT_ID, 5) == 0) {
+ 		ah->btcoex_hw.scheme = ATH_BTCOEX_CFG_3WIRE;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a035a38..d98255e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -30,6 +30,10 @@ int htc_modparam_nohwcrypt;
+ module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+ 
++static int ath9k_htc_btcoex_enable;
++module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
++MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
++
+ #define CHAN2G(_freq, _idx)  { \
+ 	.center_freq = (_freq), \
+ 	.hw_value = (_idx), \
+@@ -635,6 +639,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	common->hw = priv->hw;
+ 	common->priv = priv;
+ 	common->debug_mask = ath9k_debug;
++	common->btcoex_enabled = ath9k_htc_btcoex_enable == 1;
+ 
+ 	spin_lock_init(&priv->beacon_lock);
+ 	spin_lock_init(&priv->tx.tx_lock);
+-- 
+1.7.0.4
 
-  ath9k: Add PID/VID support for AR1111 (2012-08-03 10:11:14 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-
-for you to fetch changes up to 2096ae6ca647302d50a68aa36cb66a00e7dfac70:
-
-  Bluetooth: add support for atheros 0489:e057 (2012-08-06 15:33:05 -0300)
-
-----------------------------------------------------------------
-Andrei Emeltchenko (1):
-      Bluetooth: smp: Fix possible NULL dereference
-
-Gustavo Padovan (1):
-      Bluetooth: Fix possible deadlock in SCO code
-
-Jaganath Kanakkassery (1):
-      Bluetooth: Fix socket not getting freed if l2cap channel create fails
-
-Manoj Iyer (1):
-      Bluetooth: btusb: Add vendor specific ID (0a5c:21f4) BCM20702A0
-
-Peng Chen (1):
-      Bluetooth: add support for atheros 0489:e057
-
-Ram Malovany (3):
-      Bluetooth: Fix using NULL inquiry entry
-      Bluetooth: Fix using a NULL inquiry cache entry
-      Bluetooth: Set name_state to unknown when entry name is empty
-
-Szymon Janc (1):
-      Bluetooth: Fix legacy pairing with some devices
-
- drivers/bluetooth/ath3k.c  |  2 ++
- drivers/bluetooth/btusb.c  |  2 ++
- net/bluetooth/hci_event.c  | 28 ++++++++++++++++++++++------
- net/bluetooth/l2cap_core.c |  1 +
- net/bluetooth/l2cap_sock.c |  2 +-
- net/bluetooth/sco.c        | 19 +++++++++----------
- net/bluetooth/smp.c        |  5 ++++-
- 7 files changed, 41 insertions(+), 18 deletions(-)
-
---M9NhX3UHpAaciwkO
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQIBUwAAoJEPs3PUX4s20oV00P/jykZdeYqL6AD6relxw2B9Ew
-g2WqcfTjLZO7oQdufiRlKho7rD/WX2T5CHRFksQ+n1XUwcVve4ffFTKgeLrabEdN
-TK4xYw43ze+OcpT4nLn3gNxVu0QMGsr/TEIT6nQ6hQq9JNgPWTvKij+ysBbdsTpk
-3oiLdpXQjNNssIZdIQu0b87WjsFlDt1yeoLDT9gyHSZyBgUuj3H65jyC3jeXzHgt
-3bVlt7dizYEAghzJXxTokAFK6Ye+CflyKav2E82oe/qXOzuUHAjIKdOKWsdGi3IY
-k1PDhd7khGUROOQw/BZvl/mHBZWsks4+pWPeVApQuMiJfA5NufUt3lus+CxyZKGp
-f8jl3B6nsiEscXMuRr41XcLwoYDJ49u73uyLN8OiFbGFgbPXg903SPRLq352xIOB
-fvMB2dTO2T8ymAZ9KUGPlXWDg0S8OFQT4bY+FIhUtIqaWXNUqHtBqCVKk5kFbBIG
-X8HgZTxrv9KwVWclBCu9Iwh4MU1KpJJ09eaGx8/bOvPWuaiyJNMFvSFcohTlI0qN
-yzt/9qKERGj0FjBI0hFHz8Zo9byf2jxvjj3HtzHX/CM1wXZl1rc33SfJdCgltFTG
-tKpjwo6zZs25HOBR+MB8jVQHezBgsdF8GhZ7BEmR0t854K3KacxwbnCty4RdCvDq
-uhVj8qVsCGjk0tqYf6q+
-=3DRr
------END PGP SIGNATURE-----
-
---M9NhX3UHpAaciwkO--
