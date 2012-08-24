@@ -1,45 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37282 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751324Ab2HBNEm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2754 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756199Ab2HXK5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 09:04:42 -0400
-Date: Thu, 2 Aug 2012 08:04:31 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 1/2] cfg80211: add channel flag to prohibit OFDM operation
-Message-ID: <20120802130431.GA32395@thinkpad-t410> (sfid-20120802_150446_735992_8F5E5A83)
-References: <1343854723-21987-1-git-send-email-seth.forshee@canonical.com>
- <1343854723-21987-2-git-send-email-seth.forshee@canonical.com>
- <1343888660.4458.1.camel@jlt3.sipsolutions.net>
+	Fri, 24 Aug 2012 06:57:15 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v2] ath9k_hw: small optimization
+Date: Fri, 24 Aug 2012 16:27:06 +0530
+Message-ID: <1345805826-6291-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120824_125717_838024_D2862FC6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343888660.4458.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 02, 2012 at 08:24:20AM +0200, Johannes Berg wrote:
-> On Wed, 2012-08-01 at 15:58 -0500, Seth Forshee wrote:
-> > Currently the only way for wireless drivers to tell whether or not OFDM
-> > is allowed on the current channel is to check the regulatory
-> > information. However, this requires hodling cfg80211_mutex, which is not
-> > visible to the drivers.
-> > 
-> > Other regulatory restrictions are provided as flags in the channel
-> > definition, so let's do similarly with OFDM. This patch adds a new flag,
-> > IEEE80211_CHAN_NO_OFDM, to tell drivers that OFDM on a channel is not
-> > allowed. This flag is set on any channels for which regulatory indicates
-> > that OFDM is prohibited.
-> 
-> Looks good, this needs to go into 3.6, right?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Yes, it should go into 3.6.
+Assign the MCI BT state locally, rather than unnecessarily calling
+ar9003_mci_state and updating it.
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    6 ------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    2 --
+ drivers/net/wireless/ath/ath9k/mci.c        |    2 +-
+ 3 files changed, 1 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9a34fca..ff53091 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1201,12 +1201,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 
+ 		ar9003_mci_2g5g_switch(ah, false);
+ 		break;
+-	case MCI_STATE_SET_BT_CAL_START:
+-		mci->bt_state = MCI_BT_CAL_START;
+-		break;
+-	case MCI_STATE_SET_BT_CAL:
+-		mci->bt_state = MCI_BT_CAL;
+-		break;
+ 	case MCI_STATE_RESET_REQ_WAKE:
+ 		ar9003_mci_reset_req_wakeup(ah);
+ 		mci->update_2g5g = true;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index d33b8e1..f3bef8d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -190,8 +190,6 @@ enum mci_bt_state {
+ enum mci_state_type {
+ 	MCI_STATE_ENABLE,
+ 	MCI_STATE_SET_BT_AWAKE,
+-	MCI_STATE_SET_BT_CAL_START,
+-	MCI_STATE_SET_BT_CAL,
+ 	MCI_STATE_LAST_SCHD_MSG_OFFSET,
+ 	MCI_STATE_REMOTE_SLEEP,
+ 	MCI_STATE_RESET_REQ_WAKE,
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index fb536e7..9ee1f89 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -201,7 +201,7 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 	switch (opcode) {
+ 	case MCI_GPM_BT_CAL_REQ:
+ 		if (mci_hw->bt_state == MCI_BT_AWAKE) {
+-			ar9003_mci_state(ah, MCI_STATE_SET_BT_CAL_START);
++			mci_hw->bt_state = MCI_BT_CAL_START;
+ 			ath9k_queue_reset(sc, RESET_TYPE_MCI);
+ 		}
+ 		ath_dbg(common, MCI, "MCI State : %d\n", mci_hw->bt_state);
+-- 
+1.7.0.4
 
