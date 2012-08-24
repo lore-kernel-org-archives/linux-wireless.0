@@ -1,52 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:47478 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab2HBScq (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:60043 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759959Ab2HXRrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Aug 2012 14:32:46 -0400
-Received: by ggnl2 with SMTP id l2so1792435ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Aug 2012 11:32:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1343889136.4458.2.camel@jlt3.sipsolutions.net>
-References: <1343855731-27920-1-git-send-email-thomas@cozybit.com> <1343889136.4458.2.camel@jlt3.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 2 Aug 2012 11:32:24 -0700
-Message-ID: <CAG6hwVNYeGCW_kseQhfu_pEYAM+xU1sGEQmaOiJeGQ30eioKJA@mail.gmail.com> (sfid-20120802_203249_727462_850E703A)
-Subject: Re: [PATCH] mac80211: improve cleanup when leaving mesh
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 24 Aug 2012 13:47:10 -0400
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: David Miller <davem@davemloft.net>, ncardwell@google.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <5037B2AC.50704@lwfinger.net>
+References: <50369925.3050705@lwfinger.net>
+	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
+	 <20120824.111948.680531915905273128.davem@davemloft.net>
+	 <5037A4B0.3080208@lwfinger.net>
+	 <1345825095.19483.19.camel@edumazet-glaptop>
+	 <1345825432.19483.20.camel@edumazet-glaptop>  <5037B2AC.50704@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Aug 2012 19:47:04 +0200
+Message-ID: <1345830424.19483.69.camel@edumazet-glaptop> (sfid-20120824_194738_223887_AC8616F2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 1, 2012 at 11:32 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-08-01 at 14:15 -0700, Thomas Pedersen wrote:
->> A couple improvements to cleanup when stopping a mesh:
->>
->>  - flush mpath entries.
->>  - flush sta entries per-sdata so we don't remove entries belonging to
->>    other vifs on the same hw.
->>
->> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
->> ---
->>  net/mac80211/mesh.c |    3 ++-
->>  1 files changed, 2 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
->> index 764593d..21c02c6 100644
->> --- a/net/mac80211/mesh.c
->> +++ b/net/mac80211/mesh.c
->> @@ -618,7 +618,8 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
->>
->>       ifmsh->mesh_id_len = 0;
->>       ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
->> -     sta_info_flush(local, NULL);
->> +     sta_info_flush(local, sdata);
->> +     mesh_path_flush_by_iface(sdata);
->
-> We can remove ieee80211_clean_sdata() then, right?
+On Fri, 2012-08-24 at 11:58 -0500, Larry Finger wrote:
+> On 08/24/2012 11:23 AM, Eric Dumazet wrote:
+> > On Fri, 2012-08-24 at 18:18 +0200, Eric Dumazet wrote:
+> >> On Fri, 2012-08-24 at 10:58 -0500, Larry Finger wrote:
+> >>> On 08/24/2012 10:19 AM, David Miller wrote:
+> >>>>
+> >>>> This looks like full-on data corruption to me.
+> >>>
+> >>> I agree. The question is why does it happen with r8712u, and only after the
+> >>> commit in the subject. Drivers for other devices that I have are OK. Thus far, I
+> >>> have tested b43, rtl8187, ath9k_htc, and rtl8192cu. To my knowledge, there are
+> >>> no reports posted for this bug with any other device.
+> >>
+> >> bugs can sit unnoticed, and one change somewhere can uncover them.
+> >>
+> >> Really this driver must have a bug, if not half a dozen of bugs.
+> >>
+> >> For example this sequence of code is a clear bug :
+> >>
+> >> sub_skb = dev_alloc_skb(nSubframe_Length + 12);
+> >> skb_reserve(sub_skb, 12);
+> >>
+> >>
+> >> Also the free_recv_skb_queue looks really suspect to me
+> >>
+> >> What the hell is doing recv_tasklet() I really wonder.
+> >>
+> >> This code, combined with the skb_clone() in recvbuf2recvframe()
+> >> can clearly reuse an skb passed to upper stacks.
+> >>
+> >>
+> >> queueing one skb in free_recv_skb_queue should be done
+> >> only if no clone of this skb exist somewhere.
+> >>
+> >> Please someone fix this buggy driver.
+> >>
+> >
+> > Try the following patch for a start
+> >
+> > diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
+> > index 8e82ce2..88e3ca6 100644
+> > --- a/drivers/staging/rtl8712/rtl8712_recv.c
+> > +++ b/drivers/staging/rtl8712/rtl8712_recv.c
+> > @@ -1127,6 +1127,9 @@ static void recv_tasklet(void *priv)
+> >   		recvbuf2recvframe(padapter, pskb);
+> >   		skb_reset_tail_pointer(pskb);
+> >   		pskb->len = 0;
+> > -		skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
+> > +		if (!skb_cloned(pskb))
+> > +			skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
+> > +		else
+> > +			consume_skb(pskb);
+> >   	}
+> >   }
+> 
+> This one did not help. There is no doubt it is needed for the case where memory 
+> is tight, an allocation fails, and the driver clones the skb. In the present 
+> case, debug statements have shown that the skb_clone() call was not made.
+> 
+> In the long term, this driver will be replaced with one that uses mac80211, but 
+> in the short term, I am trying to fix it.
+> 
+> As I said earlier, my skb skills are minimal. Could you explain what is wrong 
+> with the following sequence?
+> 
+>   sub_skb = dev_alloc_skb(nSubframe_Length + 12);
+>   skb_reserve(sub_skb, 12);
 
-Yes, looks like any mesh cleanup can happen in the netdev ops. Thanks!
+dev_alloc_skb() can return NULL
 
-Thomas
+-> crash
+
+skb_clone() can also return NULL 
+
+-> crash
+
+
+
