@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:35071 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230Ab2HZINL (ORCPT
+Received: from hub022-nj-1.exch022.serverdata.net ([206.225.164.184]:51852
+	"EHLO HUB022-nj-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755885Ab2HXLdL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Aug 2012 04:13:11 -0400
-From: Antonio Quartulli <ordex@autistici.org>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH 2/2] ath9k_htc: advertise allowed VIFs combination
-Date: Sun, 26 Aug 2012 10:12:53 +0200
-Message-Id: <1345968773-17166-2-git-send-email-ordex@autistici.org> (sfid-20120826_101328_335797_12BC21BA)
-In-Reply-To: <1345968773-17166-1-git-send-email-ordex@autistici.org>
-References: <1345968773-17166-1-git-send-email-ordex@autistici.org>
+	Fri, 24 Aug 2012 07:33:11 -0400
+Message-ID: <50376671.7080007@posedge.com> (sfid-20120824_133315_053662_D757BC25)
+Date: Fri, 24 Aug 2012 17:03:05 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+References: <502E85D9.5050301@posedge.com> <1345480718.4459.37.camel@jlt3.sipsolutions.net> <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com> <50338E84.3050709@posedge.com> <1345564421.10280.9.camel@jlt3.sipsolutions.net> <5033CE76.6040306@posedge.com> <1345619008.4635.3.camel@jlt3.sipsolutions.net> <20120822090104.GA4959@redhat.com> <1345626282.4635.8.camel@jlt3.sipsolutions.net> <20120822101252.GA6082@redhat.com>
+In-Reply-To: <20120822101252.GA6082@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver now advertises its allowed VIFs combination to the mac80211
-sublayer.
+>
+> I see, we could add helper function that will calculate
+> center_freq/bandwidth, but starting from defining new channel
+> structure and accompanying code in nl80211/mac80211 is more
+> reasonable.
+>
+> Stanislaw
+>
+How about below new channel config structure? wanted to fit 80+80 config 
+as well.
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+/**
+  * enum ieee80211_chan_width - channel bandwidths
+  *
+  * @IEEE80211_CHAN_WIDTH_20MHZ: 20 MHz chan bandwidth
+  * @IEEE80211_CHAN_WIDTH_40MHZ: 40 MHz chan bandwidth
+  * @IEEE80211_CHAN_WIDTH_80MHZ: 80 MHz chan bandwidth
+  * @IEEE80211_CHAN_WIDTH_160MHZ: 160 MHz chan bandwidth
+  */
+enum ieee80211_chan_width {
+         IEEE80211_CHAN_WIDTH_20MHZ = 20,
+         IEEE80211_CHAN_WIDTH_40MHZ = 40,
+         IEEE80211_CHAN_WIDTH_80MHZ = 80,
+         IEEE80211_CHAN_WIDTH_160MHZ = 160
+};
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a035a38..59965e2 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -689,6 +689,19 @@ err_hw:
- 	return ret;
- }
- 
-+static const struct ieee80211_iface_limit if_limits[] = {
-+	{ .max = ATH9K_HTC_MAX_VIF,  .types = BIT(NL80211_IFTYPE_STATION) },
-+	{ .max = ATH9K_HTC_MAX_BCN_VIF,  .types = BIT(NL80211_IFTYPE_AP) },
-+	{ .max = 1,  .types = BIT(NL80211_IFTYPE_ADHOC) },
-+};
-+
-+static const struct ieee80211_iface_combination if_comb = {
-+	.limits = if_limits,
-+	.n_limits = ARRAY_SIZE(if_limits),
-+	.max_interfaces = ATH9K_HTC_MAX_VIF,
-+	.num_different_channels = 1,
-+};
-+
- static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 			       struct ieee80211_hw *hw)
- {
-@@ -711,6 +724,9 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		BIT(NL80211_IFTYPE_P2P_GO) |
- 		BIT(NL80211_IFTYPE_P2P_CLIENT);
- 
-+	hw->wiphy->iface_combinations = &if_comb;
-+	hw->wiphy->n_iface_combinations = 1;
-+
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
--- 
-1.7.12
-
+/**
+  * struct ieee80211_channel_config - channel config definition
+  *
+  * This structure describes channel configuration
+  *
+  * @chan_width1: channel bandwidth 1
+  * @center_freq1: center frequency 1 for entire chan width
+  * @control_offset1: control chan offset 1
+  * @chan_width2: channel bandwidth 2
+  * @center_freq2: center frequency 2 for entire chan width
+  * @control_offset2: control chan offset 2
+  */
+struct ieee80211_channel_config {
+         enum ieee80211_chan_width chan_width1;
+         u16 center_freq1;
+         u16 control_offset1;
+         enum ieee80211_chan_width chan_width2;
+         u16 center_freq2;
+         u16 control_offset2;
+};
