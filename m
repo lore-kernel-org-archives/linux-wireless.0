@@ -1,68 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13075 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933010Ab2HWNYa (ORCPT
+Received: from hetz2.bluebottle.com ([176.9.57.138]:35177 "EHLO
+	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754155Ab2HXRSo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 09:24:30 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 3/6] ath9k_htc: Remove interface combination specific checks
-Date: Thu, 23 Aug 2012 18:53:55 +0530
-Message-ID: <1345728238-5313-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152433_144408_2DE5E536)
-In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
+	Fri, 24 Aug 2012 13:18:44 -0400
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Bastian Bittorf <bittorf@bluebottle.com>,
+	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
+	feint@lists.subsignal.org,
+	=?iso-8859-1?b?UmFmYcWCIA==?= =?iso-8859-1?b?TWnFgmVja2k=?=
+	<zajec5@gmail.com>, b43-dev <b43-dev@lists.infradead.org>
+Message-ID: <1345828723.5037b773e4dfc@mail.bluebottle.com> (sfid-20120824_191848_359059_45EA5687)
+Date: Fri, 24 Aug 2012 18:18:43 +0100
+From: Bastian Bittorf <bittorf@bluebottle.com>
+Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
+References: <1342612598.5006a476022c6@mail.bluebottle.com> <50350706.609@hauke-m.de> <503528BD.2020302@lwfinger.net> <503549B2.7030900@hauke-m.de>
+In-Reply-To: <503549B2.7030900@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> How do I monitor this particular channel with an other wifi card to
+> get
+> most of the packages, with aircrack I am unable to set the
+> channel?
 
-Once the driver advertizes interface combination logic
-based on its firmware/hardware limitation, cfg80211
-takes care of all the necessary logic such as maximum
-beaconing vifs, standlone interface etc.
+the simple approach is installing horst on another router
+or your pc. ofcourse you get a full dump with wireshark
+sniffing on your monitor-interface.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   20 --------------------
- 1 files changed, 0 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index c32f6e3..51c69f2 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1040,26 +1040,6 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&priv->mutex);
- 
--	if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
--		mutex_unlock(&priv->mutex);
--		return -ENOBUFS;
--	}
--
--	if (priv->num_ibss_vif ||
--	    (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
--		ath_err(common, "IBSS coexistence with other modes is not allowed\n");
--		mutex_unlock(&priv->mutex);
--		return -ENOBUFS;
--	}
--
--	if (((vif->type == NL80211_IFTYPE_AP) ||
--	     (vif->type == NL80211_IFTYPE_ADHOC)) &&
--	    ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
--		ath_err(common, "Max. number of beaconing interfaces reached\n");
--		mutex_unlock(&priv->mutex);
--		return -ENOBUFS;
--	}
--
- 	ath9k_htc_ps_wakeup(priv);
- 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
- 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
--- 
-1.7.0.4
-
+bye, bastian
