@@ -1,44 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51254 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933010Ab2HWNY6 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:37271 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752060Ab2HXQX6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 09:24:58 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 6/6] ath9k: Remove an obselete function declaration
-Date: Thu, 23 Aug 2012 18:53:58 +0530
-Message-ID: <1345728238-5313-6-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120823_152502_195256_3414792C)
-In-Reply-To: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1345728238-5313-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 24 Aug 2012 12:23:58 -0400
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: David Miller <davem@davemloft.net>, ncardwell@google.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1345825095.19483.19.camel@edumazet-glaptop>
+References: <50369925.3050705@lwfinger.net>
+	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
+	 <20120824.111948.680531915905273128.davem@davemloft.net>
+	 <5037A4B0.3080208@lwfinger.net>
+	 <1345825095.19483.19.camel@edumazet-glaptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Aug 2012 18:23:52 +0200
+Message-ID: <1345825432.19483.20.camel@edumazet-glaptop> (sfid-20120824_182422_763995_BC6EDCEF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Fri, 2012-08-24 at 18:18 +0200, Eric Dumazet wrote:
+> On Fri, 2012-08-24 at 10:58 -0500, Larry Finger wrote:
+> > On 08/24/2012 10:19 AM, David Miller wrote:
+> > >
+> > > This looks like full-on data corruption to me.
+> > 
+> > I agree. The question is why does it happen with r8712u, and only after the 
+> > commit in the subject. Drivers for other devices that I have are OK. Thus far, I 
+> > have tested b43, rtl8187, ath9k_htc, and rtl8192cu. To my knowledge, there are 
+> > no reports posted for this bug with any other device.
+> 
+> bugs can sit unnoticed, and one change somewhere can uncover them.
+> 
+> Really this driver must have a bug, if not half a dozen of bugs.
+> 
+> For example this sequence of code is a clear bug :
+> 
+> sub_skb = dev_alloc_skb(nSubframe_Length + 12); 
+> skb_reserve(sub_skb, 12);
+> 
+> 
+> Also the free_recv_skb_queue looks really suspect to me
+> 
+> What the hell is doing recv_tasklet() I really wonder.
+> 
+> This code, combined with the skb_clone() in recvbuf2recvframe()
+> can clearly reuse an skb passed to upper stacks.
+> 
+> 
+> queueing one skb in free_recv_skb_queue should be done
+> only if no clone of this skb exist somewhere.
+> 
+> Please someone fix this buggy driver.
+> 
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Try the following patch for a start
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7373e4b..216b8b7 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -423,7 +423,6 @@ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath9k_set_beacon(struct ath_softc *sc);
--void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
- 
- /*******************/
- /* Link Monitoring */
--- 
-1.7.0.4
+diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
+index 8e82ce2..88e3ca6 100644
+--- a/drivers/staging/rtl8712/rtl8712_recv.c
++++ b/drivers/staging/rtl8712/rtl8712_recv.c
+@@ -1127,6 +1127,9 @@ static void recv_tasklet(void *priv)
+ 		recvbuf2recvframe(padapter, pskb);
+ 		skb_reset_tail_pointer(pskb);
+ 		pskb->len = 0;
+-		skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
++		if (!skb_cloned(pskb))
++			skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
++		else
++			consume_skb(pskb);
+ 	}
+ }
+
 
