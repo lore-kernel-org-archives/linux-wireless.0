@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43526 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755364Ab2HFB4K (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:54580 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758445Ab2HXRax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 21:56:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com>
-References: <CAGh4K3+RODO0zuDThZKKzBCLexXa1M7qYVUu6knciruZ0KWGRQ@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 6 Aug 2012 11:55:48 +1000
-Message-ID: <CAGRGNgXLLr3fP19Bgwnk6phs_i8fbEsiyVh6W_SrKA0tJu0oKw@mail.gmail.com> (sfid-20120806_035614_999128_8A7225A1)
-Subject: Re: [PATCH]: Mac80211 Driver patch
-To: Christopher Sacchi <chris.sacchi@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 24 Aug 2012 13:30:53 -0400
+Date: Fri, 24 Aug 2012 13:30:50 -0400 (EDT)
+Message-Id: <20120824.133050.95947607393326346.davem@davemloft.net> (sfid-20120824_193057_998808_6193F2DC)
+To: weiyj.lk@gmail.com
+Cc: j@w1.fi, linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] drivers/net: use is_zero_ether_addr() instead of
+ memcmp()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAPgLHd_L1=1zaq=NUAjr+3822WfR2gV-sMA2tzKowHEezPmvOA@mail.gmail.com>
+References: <CAPgLHd_L1=1zaq=NUAjr+3822WfR2gV-sMA2tzKowHEezPmvOA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christopher,
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Date: Thu, 23 Aug 2012 15:16:44 +0800
 
-On Mon, Aug 6, 2012 at 11:52 AM, Christopher Sacchi
-<chris.sacchi@gmail.com> wrote:
-> Patch for Mac80211, and no this is not spam, so do not ignore my
-> e-mails. This is a patch, so copy this into your favorite text editor
-> and save it as test.patch. Let the maintainers read and know! By the
-> way, it is under the first -- line and to the 2nd to last line. :)
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Using is_zero_ether_addr() instead of directly use
+> memcmp() to determine if the ethernet address is all
+> zeros.
+> 
+> spatch with a semantic match is used to found this problem.
+> (http://coccinelle.lip6.fr/)
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Again, this is not how you submit patches. Please read my previous email.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Since this is wireless, John will pick it up.
