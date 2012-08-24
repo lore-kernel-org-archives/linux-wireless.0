@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55205 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178Ab2HLL2T (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48186 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759830Ab2HXQ30 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Aug 2012 07:28:19 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2] 4-way handshake offloading
-Date: Sun, 12 Aug 2012 14:28:03 +0300
-Message-ID: <1344770884-17102-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20120812_132823_584151_BDF098C0)
+	Fri, 24 Aug 2012 12:29:26 -0400
+Message-ID: <5037ABE2.2020407@lwfinger.net> (sfid-20120824_182946_087349_5C5E2316)
+Date: Fri, 24 Aug 2012 11:29:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: Neal Cardwell <ncardwell@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+References: <50345B12.1050600@lwfinger.net>  <1345612503.5158.566.camel@edumazet-glaptop>  <50355021.7000408@lwfinger.net> <1345694593.5904.87.camel@edumazet-glaptop>  <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <1345820142.4824.1.camel@edumazet-laptop> <5037A292.1020801@lwfinger.net> <1345824094.19483.9.camel@edumazet-glaptop>
+In-Reply-To: <1345824094.19483.9.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rebased and fix in kerneldoc comments
+On 08/24/2012 11:01 AM, Eric Dumazet wrote:
+> On Fri, 2012-08-24 at 10:49 -0500, Larry Finger wrote:
+>
+>> There is nothing in kernel log when it happens. The file STRACE is attached.
+>>
+>
+> So there is indeed a corruption. What was the driver you used in this
+> case ?
 
-Adding 4-way handshake offload support.
+The only driver that shows this problem is r8712u. One thought that I just had 
+is that this driver does not use mac80211, which is why it is in staging. 
+Instead it uses a Realtek soft MAC layer derived from the obsolete softmac 
+driver that was in the kernel in the 2.6.20 time frame. That means that none of 
+the skbs have ever been cloned by any part of the wireless code.
 
-Intention is to support "smart" devices in P2P flow - they tend to
-offload as much as possible.
+Larry
 
-This patch address WPA2-Personal - this is what P2P uses.
-WPA2-Enterprise not supported yet.
-
-Currently, ath6kl driver can use this feature (patch in works),
-and wil6210 (60g) driver can work only in the offload mode - 
-working on security flow right now.
-
-Corresponding patch for WPA supplicant almost ready (by Jouni).
-for WPA supplicant, STA part verified; AP not finalized yet.
-
-Vladimir Kondratiev (1):
-  cfg80211: Support for 4-way handshake offloading for WPA2-Personal
-
- include/linux/ieee80211.h |    2 ++
- include/linux/nl80211.h   |   19 +++++++++++++++++++
- include/net/cfg80211.h    |   10 ++++++++++
- net/wireless/nl80211.c    |   16 ++++++++++++++++
- 4 files changed, 47 insertions(+)
-
--- 
-1.7.9.5
 
