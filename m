@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37248 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751295Ab2H1JQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 05:16:27 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: Re: Scalable approach for nl80211_feature_flags
-References: <1343907187-6686-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<3373913.UaOl7A5Fl4@lx-vladimir>
-	<1345967092.3622.2.camel@jlt4.sipsolutions.net>
-	<122380019.CZjM6Zxjfs@lx-vladimir>
-Date: Tue, 28 Aug 2012 12:16:20 +0300
-In-Reply-To: <122380019.CZjM6Zxjfs@lx-vladimir> (Vladimir Kondratiev's message
-	of "Mon, 27 Aug 2012 18:26:48 +0300")
-Message-ID: <871uir74wr.fsf@purkki.adurom.net> (sfid-20120828_111631_128287_CF2579CE)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13028 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754780Ab2HXQ6J convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Aug 2012 12:58:09 -0400
+From: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: RE: [RFC 1/3] ath9k: Fix BTCOEX timer triggering comparision
+Date: Fri, 24 Aug 2012 16:58:02 +0000
+Message-ID: <8F3AF1C9F856774F8C8D67AA7EDFEC8801EEB120@aphydexd01b> (sfid-20120824_185813_542370_8C8DAE9E)
+References: <1345817851-8700-1-git-send-email-mohammed@qca.qualcomm.com>,<20120825153919.GA23173@kamboji.qca.qualcomm.com>
+In-Reply-To: <20120825153919.GA23173@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
-
-> There is 'new' approach for specifying various wifi driver flags,
-> using enum nl80211_feature_flags and wiphy.features.
+On Fri, Aug 24, 2012 at 07:47:29PM +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 >
-> Problem is, wiphy.features is u32, i.e. it is not scalable
-> beyond 32 flags.
-
-And currently we have used 4 out of 32. During the 10 months it has
-existed we have added four new flags, which makes it a rate of 2,5
-months per flag. Based on this it takes over five years to fill
-that u32. So I'm not really worried about that right now.
-
-> I propose to re-define 'features' approach - convert it to
-> use 'bitmap' API like DECLARE_BITMAP for the 'features' and
-> use bit numbers rather then raw values in the
-> enum nl80211_feature_flags. Last value will be defined like
-> NL80211_FEATURE_MAX, and 'features' will auto-size using
-> DECLARE_BITMAP(features, NL80211_FEATURE_MAX);
+> Its safer to convert btcoex_period to 'us' while
+> comparing with btcoex_no_stomp which is in 'us'.
+> Did not find any functionality issues being fixed,
+> as the generic hardware timer triggers are usually
+> refreshed with the newer duty cycle.
 >
-> Then, user space tools need to be modified as well.
+In which way it is safer? What does the patch fix? It was intentionally
+converted to msec by "ath9k: keep btcoex period in milliseconds".
 
-Please take into account that the kernel needs to be backwards
-compatible and you cannot just change an existing nl80211 attribute to
-something else. IMHO this isn't worth the trouble, we manage with the
-u32 just fine for now.
-
--- 
-Kalle Valo
+-Rajkumar
