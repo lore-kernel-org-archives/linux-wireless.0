@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:43898
-	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753858Ab2HSJuB (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:59015 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851Ab2HYFQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2012 05:50:01 -0400
-Date: Sun, 19 Aug 2012 11:49:58 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-cc: Julia Lawall <Julia.Lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] drivers/net/wireless/ipw2x00/ipw2100.c: introduce
- missing initialization
-In-Reply-To: <CA++WF2MmTe6WP6MQRV-v1VwkpcUrw4hU6yh79NdG-K4snzQkbg@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1208191149400.2031@localhost6.localdomain6> (sfid-20120819_115027_366001_94C0ABF4)
-References: <1345325159-7365-1-git-send-email-Julia.Lawall@lip6.fr> <CA++WF2MmTe6WP6MQRV-v1VwkpcUrw4hU6yh79NdG-K4snzQkbg@mail.gmail.com>
+	Sat, 25 Aug 2012 01:16:29 -0400
+Received: by vcbfk26 with SMTP id fk26so2911721vcb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2012 22:16:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <50381437.7040903@lwfinger.net>
+References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
+	<50365AC8.7030503@lwfinger.net>
+	<CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
+	<5036660B.9020208@lwfinger.net>
+	<CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com>
+	<50381437.7040903@lwfinger.net>
+Date: Fri, 24 Aug 2012 22:16:28 -0700
+Message-ID: <CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com> (sfid-20120825_071633_418117_1CDFCA17)
+Subject: Re: Question about ath9k/mac80211 Driver
+From: Patrick Connolly <pjc999@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+The kernel is 2.6.32
+-Patrick
 
-The result of one call to a function is tested, and then at the second call
-to the same function, the previous result, and not the current result, is
-tested again.
-
-Also changed &bssid to bssid, at the suggestion of Stanislav Yakovlev.
-
-The semantic match that finds the first problem is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression ret;
-identifier f;
-statement S1,S2;
-@@
-
-*ret = f(...);
-if (\(ret != 0\|ret < 0\|ret == NULL\)) S1
-... when any
-*f(...);
-if (\(ret != 0\|ret < 0\|ret == NULL\)) S2
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-v2: changed &bssid to bssid
-
-  drivers/net/wireless/ipw2x00/ipw2100.c |    3 ++-
-  1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 8a34202..534e655 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -2042,7 +2042,8 @@ static void isr_indicate_associated(struct ipw2100_priv *priv, u32 status)
-  		return;
-  	}
-  	len = ETH_ALEN;
--	ipw2100_get_ordinal(priv, IPW_ORD_STAT_ASSN_AP_BSSID, &bssid, &len);
-+	ret = ipw2100_get_ordinal(priv, IPW_ORD_STAT_ASSN_AP_BSSID, bssid,
-+				  &len);
-  	if (ret) {
-  		IPW_DEBUG_INFO("failed querying ordinals at line %d\n",
-  			       __LINE__);
+On Fri, Aug 24, 2012 at 4:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 08/24/2012 06:38 PM, Patrick Connolly wrote:
+>>
+>> Okay so I built "iw" version 0.9.22 successfully (after much grief).
+>> The help page shows that "set bitrates" is now supported:
+>>
+>>          dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in
+>> Mbps>*]
+>>
+>>
+>>   but when I try to use it I get:
+>>
+>>         # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
+>>         command failed: Operation not supported (-95)
+>>
+>> ...so what does this mean?  Is it "iw" or the driver that lacks the
+>> support?
+>
+>
+> I would think that your kernel is too old. What version are you running?
+>
+> Larry
+>
+>
