@@ -1,90 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:17614 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750845Ab2HKKlf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2012 06:41:35 -0400
-Date: Sat, 11 Aug 2012 18:41:33 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [wireless-testing:master 68/100]
- drivers/net/wireless/p54/eeprom.c:291:15: warning: comparison of distinct
- pointer types lacks a cast
-Message-ID: <20120811104133.GA9132@localhost> (sfid-20120811_124140_605946_232A8533)
-References: <20120811084404.GA7755@localhost>
- <201208111149.47874.chunkeey@googlemail.com>
- <20120811095951.GA8534@localhost>
- <201208111229.35167.chunkeey@googlemail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:41746 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752687Ab2HYOvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Aug 2012 10:51:14 -0400
+Message-ID: <5038E653.9050401@hauke-m.de> (sfid-20120825_165155_084360_BAEF1123)
+Date: Sat, 25 Aug 2012 16:50:59 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201208111229.35167.chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Bastian Bittorf <bittorf@bluebottle.com>,
+	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
+	feint@lists.subsignal.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
+References: <1342612598.5006a476022c6@mail.bluebottle.com> <50350706.609@hauke-m.de> <503528BD.2020302@lwfinger.net> <503549B2.7030900@hauke-m.de> <50354CD2.80306@lwfinger.net>
+In-Reply-To: <50354CD2.80306@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 11, 2012 at 12:29:34PM +0200, Christian Lamparter wrote:
-> On Saturday 11 August 2012 11:59:51 Fengguang Wu wrote:
-> > On Sat, Aug 11, 2012 at 11:49:47AM +0200, Christian Lamparter wrote:
-> > > On Saturday 11 August 2012 10:44:04 Fengguang Wu wrote:
-> > > > Hi Christian,
-> > > > 
-> > > > FYI, there are new compile warnings show up in
-> > > 
-> > > Thanks for telling me. Are these "normal" gcc's warnings
-> > > for PPC? Because the usual C=2 CF=-D__CHECK_ENDIAN__
-> > > doesn't show anything (on a x86 no cross-compile).
-> > 
-> > Yes, I don't use any special flags.
-> > 
-> > > > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git master
-> > > > head:   0eba6e668abe4e0760d9d5e20921cc6000a77a85
-> > > > commit: 9bc63816be9bf504414d350e605a4b30f857907d [68/100] p54: parse output power table
-> > > > config: powerpc-allmodconfig (attached as .config)
-> > > > 
-> > > > All error/warnings:
-> > > > 
-> > > > drivers/net/wireless/p54/eeprom.c: In function 'p54_get_maxpower':
-> > > > drivers/net/wireless/p54/eeprom.c:291:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > > > drivers/net/wireless/p54/eeprom.c:292:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > > > drivers/net/wireless/p54/eeprom.c:293:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > > > drivers/net/wireless/p54/eeprom.c:294:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > > 
-> > > interesting, rawpower is declared as u16.
-> > > whereas le16_to_cpu returns a __u16. 
-> > > (is that all, or is there something I don't see?)
-> > > 
-> > > Anyway, since you are currently the only person
-> > > I know, would you mind telling me if either (or
-> > > both?) of those patches has/have an effect?
-> > > 
-> > > patch 1: make rawpower __u16
-> > 
-> > Thanks for the quick fix! It works (build log follows).
-> > 
-> > wfg@bee ~/tip/obj-compiletest% make drivers/net/wireless/p54/
-> > /usr/bin/make -j40 -C source O=/home/wfg/tip/obj-compiletest ARCH=powerpc 
-> > CROSS_COMPILE=/usr/local/gcc-4.6.3-nolibc/powerpc64-linux/bin/powerpc64-linux- -j32 
-> > drivers/net/wireless/p54/
-> OT: why is there a "-j40" (after make) and "-j32" (after CROSS_COMPILE)
-> in the command line? Isn't one -jXY enough anymore?
+On 08/22/2012 11:19 PM, Larry Finger wrote:
+> On 08/22/2012 04:05 PM, Hauke Mehrtens wrote:
+>> On 08/22/2012 08:45 PM, Larry Finger wrote:
+>>> On 08/22/2012 11:21 AM, Hauke Mehrtens wrote:
+>>>> On 07/18/2012 01:56 PM, Bastian Bittorf wrote:
+>>>>> hi devs!
+>>>>>
+>>>>> yesterday we had a breaktrough debugging b43 in our hackspace
+>>>>> maschinenraum/m18[1,2]
+>>>>> at weimar.freifunk.net[3,4] - since a long time our darling wrt54g
+>>>>> suffers from a
+>>>>> hanging wifi and bad performance[5], but the workaround is easy: now
+>>>>> it's up to
+>>>>> you to fix the rootcause.
+>>>>>
+>>>>> our testsetup, where we could _reproduce_ reliably a stopping TX is
+>>>>> like this:
+>>>>>
+>>>>> laptop ---lan--- "A"-wrt54g/adhoc ~~~   air  ~~~ "B"-anyrouter/adhoc
+>>>>>
+>>>>> now make a testdownload with the laptop from B.
+>>>>> wireless will stop working after ~10 seconds.
+>>>>>
+>>>>> wifi up will reanimate and our freifunk-cron.minutely-check
+>>>>> will do this automagically. (read further, this is not the solution)
+>>>>>
+>>>>> we tried to limit the rateset to e.g. lower rates, but this does NOT
+>>>>> change
+>>>>> the behaviour. what works is: define a rateset on BOTH router which
+>>>>> makes
+>>>>> it impossible to change the band, e.g.:
+>>>>>
+>>>>> iw dev $WIFIDEV set bitrates legacy-2.4 1 2 5.5 11
+>>>>> OR
+>>>>> iw dev $WIFIDEV set bitrates legacy-2.4 6 9 12 18 24 36 48 54
+>>>>>
+>>>>> now we had a great performance, 10 Gigabytes of wireless transfer,
+>>>>> no stopping TX anymore and an empty box of beer. three things to do
+>>>>> now:
+>>>>>
+>>>>> 1) why does a band change (can be seen through minstrel) is a problem?
+>>>>>
+>>>>> 2) we have to make in config-option to force a band, or a rateset:
+>>>>>      e.g. uci set wireless.radio0.hwmode=11g
+>>>>>      e.g. uci set wireless.radio0.bitrates='6 9 12 18 24 36 48 54'
+>>>>>
+>>>>> 3) spread to word:
+>>>>>      there is a great frustration in the community about b43,
+>>>>>      but the old drivers _have_ to die, it's about time - really.
+>>>>>
+>>>>> thanks for your work,
+>>>>> bye storchi, andi, bastian + m18 crew
+>>>>>
+>>>>> [1] http://blog.maschinenraum.tk/
+>>>>> [2]
+>>>>> http://blog.maschinenraum.tk/2012/07/15/bitcoin-vending-machine-exchange-euro-coins-for-bitcoin-wallets/
+>>>>>
+>>>>>
+>>>>> [3] http://wireless.subsignal.org
+>>>>> [4] http://wireless.subsignal.org/index.php?title=Main_Page_en
+>>>>> [5] https://dev.openwrt.org/ticket/7552
+>>>>
+>>>> I tried this on some of my devices (BCM4318 G-PHY and BCM4322 N-PHY)
+>>>> and
+>>>> it is easily reproducible on all tested devices when restricting the
+>>>> rates to 11 and 12 MBit/s.
+>>>>
+>>>> I have the Broadcom device working as an Access point (on a MIPS SoC)
+>>>> and a Laptop with an Intel Wifi device is connected to it. I generated
+>>>> the traffic with iperf. If the Access Points sends the traffic the
+>>>> problem occurs, if it is just receiving there is not problem.
+>>>>
+>>>> After the problem occurred b43_generate_txhdr is called rarely ( every
+>>>> ~10 seconds) and I am not able to stay connected or connect to the
+>>>> network any more. I am not familiar with the internal flow in b43 or
+>>>> mac80211 could someone give me a hint where to look.
+>>>>
+>>>> I can not see any special changes between CCK and OFDM rates before it
+>>>> goes down there are many changes without a problem before it goes down.
+>>>>
+>>>> Currently I do not have a Broadcom wifi card running in a x86 device
+>>>> just mips devices could someone try to reproduce the problem on a x86
+>>>> device.
+>>>>
+>>>> I added the b43 mailing list and Rafał.
+>>>
+>>> Hauke or Bastian,
+>>>
+>>> Do you have any info whether the failure occurs with the change from
+>>> OFDM to CCK, or vice versa? I am wondering if the radio needs a dummy
+>>> transmission when the switch happens. I will try to put together a patch
+>>> to test that hypothesis.
+>>>
+>>> Larry
+>>
+>> It is strange. The stop does not occur directly after changing from OFDM
+>> to CCK or vice versa. TX seams to still work, but the device does not
+>> receive anything any more.
+>>
+>> Here are some logs from my device:
+>> http://hauke-m.de/files/b43/wifi-stop/2012-08-22/b43-ap-block.txt
+>> Patch used:
+>> http://hauke-m.de/files/b43/wifi-stop/2012-08-22/b43-ap-block.patch
+>>
+>> "iw dev wlan0 set bitrates legacy-2.4 11 12" was issued at ~120.000000.
+>>
+>> How do I monitor this particular channel with an other wifi card to get
+>> most of the packages, with aircrack I am unable to set the channel?
+> 
+> Thanks for the log and the patch you used.
+> 
+> You should be able to use Kismet and set the channel; however, I usually
+> let it capture everything, and then use wireshark to analyze the pcap
+> file. That way, it is fairly easy to set filters to exclude the unwanted
+> traffic from other AP and STA sources.
+> 
+> I don't use wireshark to capture the data because the box I use does not
+> have a GUI desktop, and the command-line kismet is perfect for that setup.
+> 
+> Larry
 
-Err, one is from shell alias, another is added by the script.. It's a
-bit awkward, but there are situations that one cannot cover the other,
-and in the cases they both take effect, the last one will take effect.
+Hi Larry,
 
-> >   CC [M]  drivers/net/wireless/p54/eeprom.o
-> [...]
-> >   LD [M]  drivers/net/wireless/p54/p54common.o
-> > make: Leaving directory `/c/wfg/tip'
-> > wfg@bee ~/tip/obj-compiletest% ..
-> > wfg@bee ~/tip% q pop
-> > Removing patch patches/mutt-wfg-t420-1000-8534-5234451332105763812
-> > Restoring drivers/net/wireless/p54/eeprom.c
-> > 
-> Is this patch 1, or patch 2... or both?
+I did some further debugging and saw that the driver gets an interrupt
+indicating some new received frames, but b43_dma_rx does not fetch any
+new frames.
 
-It's the only applied patch (and is from you).
+Here are some logs from my device:
+http://hauke-m.de/files/b43/wifi-stop/2012-08-25/b43-ap-block-2.log
+Patch used:
+http://hauke-m.de/files/b43/wifi-stop/2012-08-25/b43-ap-block-2.patch
 
-Thanks,
-Fengguang
+Sometime after 210 my wifi client disconnects from the network.
+
+With PIO the AP goes down when trying to connect to it with a wifi client.
+
+Hauke
