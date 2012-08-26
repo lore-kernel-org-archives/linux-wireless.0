@@ -1,46 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36521 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756381Ab2HWVUi (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:62240 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752567Ab2HZUzZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 17:20:38 -0400
-Message-ID: <50369EA4.7030609@candelatech.com> (sfid-20120823_232042_486700_242B7538)
-Date: Thu, 23 Aug 2012 14:20:36 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Paul Stewart <pstew@google.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Any suggestions for programmable attenuators?
-References: <50117096.8010706@candelatech.com> <CAMcMvsjVciPhx_aiYzBg+K5oLVGv=f_2TSZ125TJN_ngk__d9g@mail.gmail.com>
-In-Reply-To: <CAMcMvsjVciPhx_aiYzBg+K5oLVGv=f_2TSZ125TJN_ngk__d9g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 26 Aug 2012 16:55:25 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
+Date: Sun, 26 Aug 2012 22:55:05 +0200
+Message-Id: <1346014505-7554-2-git-send-email-ordex@autistici.org> (sfid-20120826_225529_699045_B5BAE44C)
+In-Reply-To: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2012 10:29 AM, Paul Stewart wrote:
-> We have a few units from eubus (http://www.eubus.net, ATS0760-95).
-> They're fairly easy to interface to (we're controlling them with a
-> BeagleBone, but need level shifting because they are 5V devices).  We
-> don't have a whole lot of seat time with them so far, but we've
-> validated that they work.
+This driver now advertises its allowed VIFs combinations to the mac80211
+sublayer.
 
-I've managed to wire up some of these as well (using Arduino as controller).
+Other than that, practical tests shown that ath9k_htc devices allow an IBSS VIF
+to coexist with VIF set up on other modes. This patch removes the check which
+block the creation of any other VIF whenever an IBSS one is already present.
 
-One thing I notice is that the smallest signal quality I can see
-reported by the NIC (ath9k) is about -81 or -82 dBm.
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 30 +++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Technically, the attenuator should be able to go below the
-noise floor of around -90dbm if I understand things properly.
-
-Have you done any testing of this nature?
-
-And for what it's worth, using ath9k, 1x1 MIMO (one channel) /n, ht40 on 5ghz,
-I get almost 8Mbps UDP download at -80 dBm signal quality :)
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a035a38..6aa2af4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -689,6 +689,33 @@ err_hw:
+ 	return ret;
+ }
+ 
++/* it is possible to have at most ATH9K_HTC_MAX_BCN_VIF beaconing interfaces,
++ * therefore either we have 1 IBSS + ATH9K_HTC_MAX_BCN_VIF - 1 APs, or we have
++ * only ATH9K_HTC_MAX_BCN_VIF APs */
++static const struct ieee80211_iface_limit if_limits_ibss[] = {
++	{ .max = ATH9K_HTC_MAX_VIF,  .types = BIT(NL80211_IFTYPE_STATION) },
++	{ .max = ATH9K_HTC_MAX_BCN_VIF - 1,  .types = BIT(NL80211_IFTYPE_AP) },
++	{ .max = 1,  .types = BIT(NL80211_IFTYPE_ADHOC) },
++};
++
++static const struct ieee80211_iface_limit if_limits_noibss[] = {
++	{ .max = ATH9K_HTC_MAX_VIF,  .types = BIT(NL80211_IFTYPE_STATION) },
++	{ .max = ATH9K_HTC_MAX_BCN_VIF,  .types = BIT(NL80211_IFTYPE_AP) },
++};
++
++static const struct ieee80211_iface_combination if_comb[] = {
++	{ .limits = if_limits_ibss,
++	  .n_limits = ARRAY_SIZE(if_limits_ibss),
++	  .max_interfaces = ATH9K_HTC_MAX_VIF,
++	  .num_different_channels = 1,
++	},
++	{ .limits = if_limits_noibss,
++	  .n_limits = ARRAY_SIZE(if_limits_noibss),
++	  .max_interfaces = ATH9K_HTC_MAX_VIF,
++	  .num_different_channels = 1,
++	},
++};
++
+ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 			       struct ieee80211_hw *hw)
+ {
+@@ -711,6 +738,9 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 		BIT(NL80211_IFTYPE_P2P_GO) |
+ 		BIT(NL80211_IFTYPE_P2P_CLIENT);
+ 
++	hw->wiphy->iface_combinations = if_comb;
++	hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
++
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.12
 
