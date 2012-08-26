@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62178 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755702Ab2HIJqu (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:38811 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903Ab2HZXsx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 05:46:50 -0400
+	Sun, 26 Aug 2012 19:48:53 -0400
+Received: by eekc1 with SMTP id c1so731476eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 16:48:52 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CAB=NE6UP7JfP+Uxo1Px67-xsGrsfddyyqTVP=ybbZCnE=2kxFw@mail.gmail.com>
-References: <CAB=NE6WZWEO=b5Usx4RKDLC--TvLWnOom0P+HmXsxh7QZQQXQA@mail.gmail.com>
-	<CAFub=KRtuTDn1DnHP0aKZT6RBeA2kNkLm6ud-4Z=1ESPs==h0g@mail.gmail.com>
-	<CAB=NE6V7Tx1ioDafPmOprwzd0Q61dDe8XK5gBghXHVROXOBA=Q@mail.gmail.com>
-	<CA+icZUV51Bk=jxnfrGL4xo6MQXnVdhUCago_RPZM-iL+twpF1A@mail.gmail.com>
-	<CAB=NE6UP7JfP+Uxo1Px67-xsGrsfddyyqTVP=ybbZCnE=2kxFw@mail.gmail.com>
-Date: Thu, 9 Aug 2012 11:46:48 +0200
-Message-ID: <CA+icZUXsaB8nu7ag5=sSsEDJU49x-4eSVQH0U4=J9G71fAmOYA@mail.gmail.com> (sfid-20120809_114707_900141_B15CBA92)
-Subject: Re: Using vanilla kernels headers to do backport testing -- issues
- with memcpy()
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
-	Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1346014505-7554-2-git-send-email-ordex@autistici.org>
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org> <1346014505-7554-2-git-send-email-ordex@autistici.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 27 Aug 2012 09:48:31 +1000
+Message-ID: <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com> (sfid-20120827_014933_243805_D149F43D)
+Subject: Re: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 9, 2012 at 11:01 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Thu, Aug 9, 2012 at 12:27 AM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
->> I am not an English native but this sentence sounds a bit strange to
->> me ("used" followed by "require" and double "Linux"?).
->> I can imagine what you want to express but have no better wording right now.
->>
->> 180 +  echo -e "   This was added since kernels >= 3.4 used require"
->> 181 +  echo -e "   a glibc >= 2.14 for memcpy(), and not all Linux"
->> 182 +  echo -e "   Linux distributions have such glibc.
+Antonio,
+
+On Mon, Aug 27, 2012 at 6:55 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+> This driver now advertises its allowed VIFs combinations to the mac80211
+> sublayer.
 >
-> Fixed.
->
+> Other than that, practical tests shown that ath9k_htc devices allow an IBSS VIF
+> to coexist with VIF set up on other modes. This patch removes the check which
+> block the creation of any other VIF whenever an IBSS one is already present.
 
-Thanks for the quick fix, sounds much better now.
+These two patches should really be applied in the opposite order:
 
-- Sedat -
+You should add the interface combination data (this patch) then remove
+the old checking code.
 
->  Luis
+This way there's not a window (admittedly only one patch) where the
+interface combinations aren't enforced.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
