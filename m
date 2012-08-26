@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39374 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755225Ab2HGQUg (ORCPT
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:34479 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318Ab2HZW0t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2012 12:20:36 -0400
-Message-ID: <1344356425.4766.0.camel@jlt3.sipsolutions.net> (sfid-20120807_182047_993111_3B7FBF42)
-Subject: Re: [PATCH] cfg80211: Fix for crash in cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: Srinivasan B <srinivasanb@posedge.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Date: Tue, 07 Aug 2012 18:20:25 +0200
-In-Reply-To: <50211696.40607@posedge.com>
-References: <5020BF4F.2090304@posedge.com>
-	 <1344339753.15172.0.camel@jlt3.sipsolutions.net>
-	 <50211696.40607@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 26 Aug 2012 18:26:49 -0400
+From: Marc Kleine-Budde <mkl@blackshift.org>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marc Kleine-Budde <mkl@blackshift.org>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH] rt2x00: fix votage setting for RT3572/RT3592
+Date: Mon, 27 Aug 2012 00:26:37 +0200
+Message-Id: <1346019997-14487-1-git-send-email-mkl@blackshift.org> (sfid-20120827_002654_144840_0AC0AE4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-08-07 at 18:52 +0530, Mahesh Palivela wrote:
+According to the vendor driver v2.6.0.1, during the rf register init the SRAM
+voltage should be increased to 1.35V and after 1ms decreased back to 1.2V. This
+patch adds the field setting of LDO_CFG0_LDO_CORE_VLEVEL accordingly.
 
-> >>                       dev->ethtools_ops is assigned during
-> >> NETDEV_REGISTER and the same can be cleared during NETDEV_UNREGISTER.
-> >
-> > This doesn't make any sense to me at all.
-> >
-> cleanup of ethtools_ops pointer is required upon netdev_unreg 
-> notification. we are assigning this pointer to cfg80211_ethtool_ops on 
-> netdev_reg notification. Is it not required?
-> 
-> we have seen crash when keeping cfg80211 and mac80211 loaded and lmac 
-> driver unloaded. With this fix, we didn't see crash. Crash doesn't 
-> happen right away. Only when some operation trying to access ethtool_ops.
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Marc Kleine-Budde <mkl@blackshift.org>
+---
+Hello,
 
-I don't see how anything could access ethtool_ops after the netdev is
-unregistered.
+I don't have the hardware to test, just stumbled over this while hacking on the
+rt3593.
 
-johannes
+regards,  Marc
+
+ drivers/net/wireless/rt2x00/rt2800lib.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index cb8c2ac..b93516d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4089,6 +4089,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+ 		msleep(1);
+ 		rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
+ 		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+ 		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+ 	}
+-- 
+1.7.10
 
