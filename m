@@ -1,78 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47981 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933404Ab2HVWYi (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:36647 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033Ab2HZH61 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 18:24:38 -0400
-Message-ID: <50355C21.2030508@candelatech.com> (sfid-20120823_002441_892545_A737F18C)
-Date: Wed, 22 Aug 2012 15:24:33 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 26 Aug 2012 03:58:27 -0400
+Received: by obbuo13 with SMTP id uo13so6629670obb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 00:58:26 -0700 (PDT)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Issue with ath9k and tx/rx chainmask:  3x3 doesn't work with
- mask of 0x1.
-References: <50329D11.9030405@candelatech.com> <5035414D.2080600@openwrt.org>
-In-Reply-To: <5035414D.2080600@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1345800585.4503.8.camel@jlt3.sipsolutions.net>
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	<1345800585.4503.8.camel@jlt3.sipsolutions.net>
+Date: Sun, 26 Aug 2012 10:58:26 +0300
+Message-ID: <CAB3XZEcnVxiBkSz4ZMYSqWF55BYBcDgF7tZsRRXoD91unVrAww@mail.gmail.com> (sfid-20120826_095830_795795_DEF8FB5B)
+Subject: Re: [RFC 00/20] mac80211: multi-channel work
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/22/2012 01:30 PM, Felix Fietkau wrote:
-> On 2012-08-20 10:24 PM, Ben Greear wrote:
->> I am trying to test out an attenuator.  For now, I have only a single attenuator,
->> so I set tx and rx chainmask to 0x1 on both AP and Station machine.
->>
->> I then connected channel 0 on the two machines together through the
->> attenuator.
->>
->> I have two station interfaces on the station machine.  They both
->> seem to associate OK, but they cannot receive dhcp responses.
->>
->> It *seems* that broadcast packets may go through fine.
->>
->> If I force the rate down to 1x1 or 2x2 MIMO (or force disable /n
->> and just use /a), then it appears to work fine.
->>
->> Nics are WPEA-127n (AR9380).  Kernel is 3.5.1+ on AP, 3.5.2+ on station
->> machine.
->>
->> I can see why forcing it down to 1x1 might work around some issue,
->> but I find it funny that 2x2 works while 3x3 does not.
-> Did you set the chainmask manually via debugfs? If so, don't do that!
-> Use the nl80211 antenna control API (e.g. via iw)
-
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1 1
-command failed: Operation not supported (-95)
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1
-command failed: Operation not supported (-95)
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 3
-command failed: Operation not supported (-95)
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7
-command failed: Operation not supported (-95)
-[root@lec2010-ath9k-1 lanforge]# uname -a
-Linux lec2010-ath9k-1 3.5.1+ #15 SMP PREEMPT Thu Aug 9 09:31:45 PDT 2012 i686 i686 i386 GNU/Linux
-
-# Set previously using debugfs.
-[root@lec2010-ath9k-1 lanforge]# cat /debug/ieee80211/wiphy0/ath9k/tx_chainmask
-0x00000001
-
-[root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7 7
-command failed: Operation not supported (-95)
-
-
-Any idea what I'm doing wrong?
-
-Thanks,
-Ben
-
-
+On Fri, Aug 24, 2012 at 12:29 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2012-07-27 at 13:16 +0200, Johannes Berg wrote:
 >
-> - Felix
+>> Comments welcome!
 >
+> Ilan pointed me to a problem here yesterday.
+>
+> Say we authenticate, then at that time we'll bind the virtual interface
+> into an appropriate channel context. Now we associate, and keep that
+> channel context. So far, so good.
+>
+> Now say we disassociate. At this point, the connection is gone, so we
+> remove the channel context.
+>
+> Now if the supplicant wants to deauthenticate as well, we have no
+> channel context to use for it. We could use remain-on-channel? Or we
+> could create a new channel context? Or just ignore the deauth? I haven't
+> found a good solution yet... We also can't rely on the supplicant always
+> doing a deauth, so we don't want to keep the channel context around
+> until the deauth either.
+>
+> Obviously the same can also happen if the supplicant just asks us to
+> deauthenticate without ever having connected at all, but that's a rather
+> unlikely case.
+>
+> Anyone have any idea? :)
+>
+is it really different from the situation today, when we'll try tx on
+idle device/interface (afaict)?
+this scenario (deauth after disassoc) also sounds pretty unlikely...
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Eliad.
