@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:33492 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924Ab2HXDA6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7387 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756667Ab2HZCB7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 23:00:58 -0400
+	Sat, 25 Aug 2012 22:01:59 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Date: Fri, 24 Aug 2012 11:00:57 +0800
-Message-ID: <CAPgLHd9YDVVJ+RMZTR4ubQy_cvMPYgWgFWpjpdUuAeu5B6T1Bw@mail.gmail.com> (sfid-20120824_050104_994040_8E2B2DAD)
-Subject: [PATCH] mwifiex: use is_broadcast_ether_addr() instead of memcmp()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: bzhao@marvell.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20537.33465.256314.716102@gargle.gargle.HOWL> (sfid-20120826_040242_537925_EFE99F19)
+Date: Sun, 26 Aug 2012 07:28:17 +0530
+To: Sherwin Soltani <sherwin@wybc.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k: AR9462 btcoex doesn't appear to work
+In-Reply-To: <50394BE4.3000508@wybc.com>
+References: <50394BE4.3000508@wybc.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Sherwin Soltani wrote:
+> I have an Acer Aspire V5-571 which contains the AR9462 chipset (PCI ID 
+> 168c:0034), supported by the ath9k driver. This chipset claims to 
+> support Bluetooth coexistence. However, after booting up, my kernel does 
+> not register any Bluetooth devices.
+> 
+> I am using kernel version 3.6.0-999-generic (apw@gomeisa) (gcc version 
+> 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)). I also tried 3.4 and 3.2 kernels 
+> without success. Additionally, I can try to do
+> 
+> rmmod ath9k && modprobe ath9k btcoex_enable=1
+> 
+> In the message log, I can see this:
+> 
+> [ 1204.643120] ath9k: ath9k: Driver unloaded
+> [ 1214.203099] ath: phy1: Disabling ASPM since BTCOEX is enabled
+> [ 1214.203105] ath: EEPROM regdomain: 0x6a
+> [ 1214.203106] ath: EEPROM indicates we should expect a direct regpair map
+> [ 1214.203108] ath: Country alpha2 being used: 00
+> [ 1214.203109] ath: Regpair used: 0x6a
+> 
+> However 'hcitool dev' shows no devices after this operation.
 
-Using is_broadcast_ether_addr() instead of directly use
-memcmp() to determine if the ethernet address is broadcast
-address.
+What does lsusb -v show ?
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/mwifiex/sta_cmd.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+The correct firmware is required, you can find it in:
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=summary
 
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index df3a33c..45461ca 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -17,6 +17,8 @@
-  * this warranty disclaimer.
-  */
- 
-+#include <linux/etherdevice.h>
-+
- #include "decl.h"
- #include "ioctl.h"
- #include "util.h"
-@@ -551,7 +553,6 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 	struct host_cmd_tlv_mac_addr *tlv_mac;
- 	u16 key_param_len = 0, cmd_size;
- 	int ret = 0;
--	const u8 bc_mac[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
- 
- 	cmd->command = cpu_to_le16(HostCmd_CMD_802_11_KEY_MATERIAL);
- 	key_material->action = cpu_to_le16(cmd_action);
-@@ -593,7 +594,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 			/* set 0 when re-key */
- 			key_material->key_param_set.key[1] = 0;
- 
--		if (0 != memcmp(enc_key->mac_addr, bc_mac, sizeof(bc_mac))) {
-+		if (!is_broadcast_ether_addr(enc_key->mac_addr)) {
- 			/* WAPI pairwise key: unicast */
- 			key_material->key_param_set.key_info |=
- 				cpu_to_le16(KEY_UNICAST);
+Copy the files in ar3k/ into /lib/firmware/ar3k (might be different depending
+on your distro).
 
+Reload ath3k and something like this should be seen:
+
+root@linux-test ~# hciconfig hci1 up
+root@linux-test ~# hcitool dev
+Devices:
+        hci1    00:03:7F:44:84:8A
+
+> Looking back through the ath9k-devel list, I can see that there was some 
+> discussion on this chipset, but it seems that Bluetooth functionality 
+> wasn't tested with it. Is this a known problem? Is there any information 
+> I can supply to help fix it?
+
+Coexistence testing is ongoing and bugs are still being ironed out,
+but basic support is mostly done.
+
+> Aside from the Bluetooth problems, there are also problems with 
+> frequently dropping signals (even when I am very close to the access 
+> point), but right now that's a secondary concern to Bluetooth for me.
+
+Can you try with the latest driver (using compat-wireless) and see if the
+problem persists ? If it does, please post the kernel log with driver
+debugging set to 0x8f49.
+
+http://wireless.kernel.org/en/users/Drivers/ath9k/debug
+
+Sujith
