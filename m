@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:33882 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763Ab2HHOMZ (ORCPT
+Received: from ocean.emcraft.com ([213.221.7.182]:40851 "EHLO
+	ocean.emcraft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658Ab2HZN4y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 10:12:25 -0400
-Date: Wed, 8 Aug 2012 17:12:14 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: luoy@marvell.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: mwifiex: add AES_CMAC support in key_material cmd
-Message-ID: <20120808141213.GA28142@elgon.mountain> (sfid-20120808_161229_196629_E95D014B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 26 Aug 2012 09:56:54 -0400
+Subject: Re: [rt2x00-users] [PATCH] compat-wireless:rt2800usb: Fixed a typo
+From: Sergei Poselenov <sposelenov@emcraft.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Sun, 26 Aug 2012 17:56:51 +0400
+In-Reply-To: <20120821114343.GB2380@redhat.com>
+References: <20120820205355.7ccc0450@emcraft.com>
+	 <20120821114343.GB2380@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Message-ID: <1345989412.8762.6.camel@mehome> (sfid-20120826_155658_250088_4F457FAC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Ying Luo,
+Fixed a typo in the comment.
 
-The patch b877f4cf5af8: "mwifiex: add AES_CMAC support in 
-key_material cmd" from Aug 3, 2012, leads to the following warning:
-drivers/net/wireless/mwifiex/sta_cmd.c:692 
-mwifiex_cmd_802_11_key_material()
-	 error: memcpy() 'param->key' too small (16 vs 32)
+Cc: stable@vger.kernel.org
+Signed-off-by: Sergei Poselenov <sposelenov@emcraft.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-   656          } else if (enc_key->key_len == WLAN_KEY_LEN_TKIP) {
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 6cf3365..f8085b2 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -662,7 +662,7 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+ 	rx_pkt_len = rt2x00_get_field32(word, RXINFO_W0_USB_DMA_RX_PKT_LEN);
+ 
+ 	/*
+-	 * Remove the RXINFO structure from the sbk.
++	 * Remove the RXINFO structure from the skb.
+ 	 */
+ 	skb_pull(entry->skb, RXINFO_DESC_SIZE);
+ 
+-- 
+1.7.4.4
 
-We assume a 32 byte key_len here.
 
-   657                  dev_dbg(priv->adapter->dev, "cmd: WPA_TKIP\n");
-   658                  key_material->key_param_set.key_type_id =
-   659                                                  cpu_to_le16(KEY_TYPE_ID_TKIP);
-   660                  key_material->key_param_set.key_info =
-   661                                                  cpu_to_le16(KEY_ENABLED);
-
-[snip]
-
-   686                  if (le16_to_cpu(key_material->key_param_set.key_type_id) ==
-   687                                                          KEY_TYPE_ID_AES_CMAC) {
-   688                          struct mwifiex_cmac_param *param =
-   689                                          (void *)key_material->key_param_set.key;
-   690  
-   691                          memcpy(param->ipn, enc_key->pn, IGTK_PN_LEN);
-   692                          memcpy(param->key, enc_key->key_material,
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   693                                 enc_key->key_len);
-                                       ^^^^^^^^^^^^^^^^
-"param->key" only has space for 16 bytes.
-
-   694  
-
-regards,
-dan carpenter
 
