@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43142 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60399 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736Ab2HALJ7 (ORCPT
+	with ESMTP id S1752805Ab2HZHo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 07:09:59 -0400
-Message-ID: <1343819395.4638.4.camel@jlt3.sipsolutions.net> (sfid-20120801_131002_820645_B45276F4)
-Subject: Re: [PATCH] cfg80211: use correct (original) max power
+	Sun, 26 Aug 2012 03:44:59 -0400
+Message-ID: <1345967092.3622.2.camel@jlt4.sipsolutions.net> (sfid-20120826_094502_906151_595EAE6B)
+Subject: Re: [PATCH v1] cfg80211: Support for 4-way handshake offloading for
+ WPA2-Personal
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Hong Wu <Hong.Wu@dspg.com>, "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 01 Aug 2012 13:09:55 +0200
-In-Reply-To: <1343812040.4638.3.camel@jlt3.sipsolutions.net> (sfid-20120801_110727_142881_01F13F13)
-References: <1343811819-15582-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20120801_110350_289489_AA41BA81) <1343812040.4638.3.camel@jlt3.sipsolutions.net>
-	 (sfid-20120801_110727_142881_01F13F13)
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Date: Sun, 26 Aug 2012 09:44:52 +0200
+In-Reply-To: <3373913.UaOl7A5Fl4@lx-vladimir>
+References: <1343907187-6686-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1850661.W9RYC5ddVW@lx-vladimir>
+	 <1345737566.4534.12.camel@jlt3.sipsolutions.net>
+	 <3373913.UaOl7A5Fl4@lx-vladimir>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-01 at 11:07 +0200, Johannes Berg wrote:
-> On Wed, 2012-08-01 at 11:03 +0200, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > When calculating the maximum TX power for a channel,
-> > the original maximum power should be restricted to
-> > the current regulatory TX power. Restricting the
-> > current maximum TX power has the effect that it'll
-> > never be possible to increase the power again when
-> > the regulatory requirement changes.
-> 
-> 
-> No ... this isn't right either. Hong Wu, can you please fix this mess?
+On Sun, 2012-08-26 at 10:11 +0300, Vladimir Kondratiev wrote:
 
-Never mind. Stanislaw already did fix this, I just forgot about it
-because I was checking mac80211-next.git and had (of course) applied his
-fix to mac80211.git. Sorry!
+> > >       if ((dev->wiphy.flags & WIPHY_FLAG_IBSS_RSN) &&
+> > >           nla_put_flag(msg, NL80211_ATTR_SUPPORT_IBSS_RSN))
+> > >               goto nla_put_failure;
+> > 
+> > Yes, but we abandoned this approach later, in favour of the nl80211
+> > feature flags.
+> 
+> Good. Will re-implement this way.
+> Could you please show an example that I can follow?
+
+well, look at the feature flags.
+
+enum nl80211_feature_flags
 
 johannes
 
