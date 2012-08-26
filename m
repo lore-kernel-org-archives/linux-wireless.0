@@ -1,111 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:44527 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951Ab2HTCLn (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:24268 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855Ab2HZUGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Aug 2012 22:11:43 -0400
-Received: by vcbfk26 with SMTP id fk26so4515533vcb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2012 19:11:42 -0700 (PDT)
+	Sun, 26 Aug 2012 16:06:38 -0400
+Date: Sun, 26 Aug 2012 22:06:24 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k_htc: allow coexistence of IBSS with other modes
+Message-ID: <20120826200624.GK7642@ritirata.org> (sfid-20120826_220641_933098_A9A67815)
+References: <1345968773-17166-1-git-send-email-ordex@autistici.org>
 MIME-Version: 1.0
-In-Reply-To: <CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com>
-References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
-	<CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
-	<CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
-	<CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
-	<CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
-	<20120813184749.GC10529@tuxdriver.com>
-	<CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com>
-Date: Mon, 20 Aug 2012 10:11:41 +0800
-Message-ID: <CAMz9Wg8DdBbWXUv5gQKr6TJmxQqXHn_DEA4UyyuNPzNwsa4Deg@mail.gmail.com> (sfid-20120820_041202_243202_18550FB4)
-Subject: Re: [PATCH] Revert "rfkill: remove dead code"
-From: AceLan Kao <acelan.kao@canonical.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Corentin Chary <corentincj@iksaif.net>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4wkndigzIeYF6Hbg"
+In-Reply-To: <1345968773-17166-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-I didn't see this patch in linux-next nor in Linville's tree,and this
-patch is needed by the asus-wmi driver.
-Please help to merge this patch earlier, so that platform-x86 can get
-rid of the compiling error.
-Thank you very much.
+--4wkndigzIeYF6Hbg
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Best regards,
-AceLan Kao.
+On Sun, Aug 26, 2012 at 10:12:52AM +0200, Antonio Quartulli wrote:
+> Practical tests shown that ath9k_htc devices allow an IBSS VIF to coexist=
+ with
+> VIF set up on other modes. This patch removes the check which block the c=
+reation
+> of any other VIF whenever an IBSS one is already present.
+>=20
+> Signed-off-by: Antonio Quartulli <ordex@autistici.org>
 
-2012/8/14 AceLan Kao <acelan.kao@canonical.com>:
-> No, I only submit the patch here, and the asus-wmi patch for platform is waiting
-> this patch into kernel first.
->
-> 2012/8/14 John W. Linville <linville@tuxdriver.com>:
->> Is this all sorted?  Is this patch going through the platform tree?
->>
->> On Thu, Jul 26, 2012 at 02:19:23PM +0800, AceLan Kao wrote:
->>> Dear Julian,
->>>
->>> Yes, I have said that the asus-wmi patch needs this commit
->>> and CC'd the asus-wmi maintainer, Corentin Chary, here in this rfkill patch.
->>>
->>> Best regards,
->>> AceLan Kao.
->>>
->>> 2012/7/26 Julian Calaby <julian.calaby@gmail.com>:
->>> > Hi AceLan,
->>> >
->>> > On Thu, Jul 26, 2012 at 3:55 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
->>> >> Dear Julian,
->>> >>
->>> >> I just submitted a patch to platform-x86 for asus-wmi.
->>> >> And the patch needs to use rfkill_set_led_trigger_name() function
->>> >> to bind the wlan led to rfkill event.
->>> >
->>> > That's what I wanted to know.
->>> >
->>> > I assume that you've added a note to the ASUS-WMI patch so people know
->>> > that it needs this one first. (I can't see it here so I don't know)
->>> >
->>> > Thanks,
->>> >
->>> > --
->>> > Julian Calaby
->>> >
->>> > Email: julian.calaby@gmail.com
->>> > Profile: http://www.google.com/profiles/julian.calaby/
->>> > .Plan: http://sites.google.com/site/juliancalaby/
->>>
->>>
->>>
->>> --
->>> Chia-Lin Kao(AceLan)
->>> http://blog.acelan.idv.tw/
->>> E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> --
->> John W. Linville                Someday the world will need a hero, and you
->> linville@tuxdriver.com                  might be all we have.  Be ready.
->
->
->
-> --
-> Chia-Lin Kao(AceLan)
-> http://blog.acelan.idv.tw/
-> E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+Johannes, please drop this patch. I'll send Patch 1/2 again because I'll al=
+so
+remove all the driver-specific checks for interface combinations.
 
+Cheers,
 
+--=20
+Antonio Quartulli
 
--- 
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--4wkndigzIeYF6Hbg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlA6gcAACgkQpGgxIkP9cwf/hQCggtNykcWepjH0xKQ/bHt94s+b
+8RgAnA1gqKpejr5sWTOE/0BizG83HBDB
+=nt8n
+-----END PGP SIGNATURE-----
+
+--4wkndigzIeYF6Hbg--
