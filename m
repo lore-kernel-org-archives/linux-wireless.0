@@ -1,136 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:65245 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717Ab2HGT26 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60522 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750Ab2HZIaj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Aug 2012 15:28:58 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 7 Aug 2012 12:28:37 -0700
-Message-ID: <CAB=NE6WZWEO=b5Usx4RKDLC--TvLWnOom0P+HmXsxh7QZQQXQA@mail.gmail.com> (sfid-20120807_212919_958455_8D4C2B9F)
-Subject: Using vanilla kernels headers to do backport testing -- issues with memcpy()
-To: Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 26 Aug 2012 04:30:39 -0400
+Message-ID: <1345969836.3622.4.camel@jlt4.sipsolutions.net> (sfid-20120826_103043_696198_77584419)
+Subject: Re: [RFC 00/20] mac80211: multi-channel work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 26 Aug 2012 10:30:36 +0200
+In-Reply-To: <CAB3XZEfTEz5U0Tu7H-S0ZzDZvUMBdfMgjx6+oS3yF+LaudznjA@mail.gmail.com> (sfid-20120826_102847_800178_D01E8625)
+References: <1343387816-9414-1-git-send-email-johannes@sipsolutions.net>
+	 <1345800585.4503.8.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEcnVxiBkSz4ZMYSqWF55BYBcDgF7tZsRRXoD91unVrAww@mail.gmail.com>
+	 <1345968623.3622.3.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEfTEz5U0Tu7H-S0ZzDZvUMBdfMgjx6+oS3yF+LaudznjA@mail.gmail.com>
+	 (sfid-20120826_102847_800178_D01E8625)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A while ago we reviewed the idea of whether or not to use a set of
-distribution vanilla kernels to allow us to do compilation testing of
-modules on the compat backport project [0] with the benefit being that
-at least one Linux distribution was doing this work already and given
-that this work was using plain vanilla kernels directly from
-kernel.org, with no modifications. The other option that existed was
-that each distro could provide their own set of kernel packages along
-with their own kernel headers but it didn't seem like other Linux
-distributions were doing this and the information was not easy to
-gather. So we went with the Ubuntu vanilla kernels and Ozan later
-figured out a way to extract deb packages in a distribution agnostic
-manner [1] and later added an option to enable a way to install and
-use this for ckmake which test compiles against 21 kernels without
-requiring root [2].
+On Sun, 2012-08-26 at 11:28 +0300, Eliad Peller wrote:
 
-This works swell as it allows anyone on any Linux distribution to test
-compile against a series of older kernels, today 21 older kernels and
-all vanilla kernels which means we get to focus and prioritize
-upstream.
+> >> this scenario (deauth after disassoc) also sounds pretty unlikely...
+> >
+> > It seems that it happens when you ask the supplicant to "disconnect" via
+> > the CLI.
+> >
+> at least in my setup issuing a "disconnect" via the CLI ends only with
+> a deauth (as the respective code in wpa_supplicant/ctrl_iface.c seems
+> to call only wpa_supplicant_deauthenticate())
 
-This has started working well except for the fact that as of the >=
-v3.4 vanilla kernel releases, there are a few files which are binary
-in the kernel headers which use dynamic libraries. Of interest to us
-here are the ones required to build external modules. An example:
+Hm. Maybe it was removing the interface then, or something. I don't
+remember, but Ilan said he had a way to trigger this.
 
-/lib/modules/3.4.4-030404-generic/build/scripts/genksyms/genksyms
+In any case, it seems we should handle it in some way?
 
-It just so happens to be that the folks building these packages are
-using a glibc >= 2.14 and although the *only* symbol I see being
-required from glibc >= 2.14 being memcpy():
+johannes
 
-mcgrof@garbanzo ~/compat (git::master)$ objdump -T
-/home/mcgrof/compat-ksrc/lib/modules/3.4.4-030404-generic/build/scripts/genksyms/genksyms
-
-/home/mcgrof/compat-ksrc/lib/modules/3.4.4-030404-generic/build/scripts/genksyms/genksyms:
-    file format elf64-x86-64
-
-DYNAMIC SYMBOL TABLE:
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __snprintf_chk
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 free
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __vfprintf_chk
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 __errno_location
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 ferror
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 isatty
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fread
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fclose
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strlen
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.4   __stack_chk_fail
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 getopt_long
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strchr
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 _IO_putc
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fputs
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fgetc
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fputc
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 __strdup
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 __libc_start_main
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strcmp
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 feof
-0000000000000000  w   D  *UND*  0000000000000000              __gmon_start__
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 strtol
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 clearerr
-
-
-Bleh:
-
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.14  memcpy
-
-
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fileno
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 malloc
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 _IO_getc
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 ungetc
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 realloc
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __printf_chk
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fopen
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 perror
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 exit
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.2.5 fwrite
-0000000000000000      DF *UND*  0000000000000000  GLIBC_2.3.4 __fprintf_chk
-000000000060b160 g    DO .bss   0000000000000008  GLIBC_2.2.5 stdout
-000000000060b168 g    DO .bss   0000000000000008  GLIBC_2.2.5 stdin
-000000000060b178 g    DO .bss   0000000000000008  GLIBC_2.2.5 stderr
-000000000060b170 g    DO .bss   0000000000000008  GLIBC_2.2.5 optarg
-
-It would be reasonable to simply require the users of ckmake to update
-their libc version but even Debian sid does not yet seem to have libc
->= 2.14, not sure of others. The gains for requiring a glibc >= 2.14
-only for memcpy() would seem rather small for this particular case so
-I wanted to review the options to fix this.
-
----------------
-1) Get the kernel headers to statically link against the required libraries
-
-This options would enable any Linux distribution to use the packages provided
-
-2) Add a LD_PRELOAD hack for mempcy() for running ckmake and friends
-on the compat package
-
-This doesn't seem so.. clean, but its the only thing I can currently control.
-
-3) Simply require libc > 2.14 for folks who really want to help do
-backport testing for kernels >= 3.4
-
-I suppose this is the easiest but we likely could run into other
-similar issues later.
-
----------------
-
-Are there other options?
-
-[0] https://lkml.org/lkml/2012/2/6/558
-[1] https://github.com/mcgrof/compat/commit/fdbea5a6ce2cba6d6c8fb3eb998cffa5a9e3bf78
-[2] https://github.com/mcgrof/compat/commit/e7d88d67040bbaa79720fa1b2dfc4fc24e4d004f
-
-  Luis
