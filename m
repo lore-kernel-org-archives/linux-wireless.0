@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:33188 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751892Ab2HIUs1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 16:48:27 -0400
-Date: Thu, 9 Aug 2012 16:48:10 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] ath9k: decrypt_error flag issue
-Message-ID: <20120809164810.20c89c59@mj> (sfid-20120809_224831_082905_19494044)
-In-Reply-To: <CAD2nsn3qwus1fZiGrcTmOiEOqPJHKDhHXmuJd7c=WWK5U=5JNw@mail.gmail.com>
-References: <CAA2SeNLv9pE_3_-99Df_s0gF+56O6TFjfDfV-QuVxsOc6_Z5TQ@mail.gmail.com>
-	<20120808164813.0011148e@mj>
-	<CAA2SeNLHW=wA9nVG5YS5938vO7nZCJxMT8KiJCooPrFkvrv77g@mail.gmail.com>
-	<CAD2nsn3qwus1fZiGrcTmOiEOqPJHKDhHXmuJd7c=WWK5U=5JNw@mail.gmail.com>
+Received: from ocean.emcraft.com ([213.221.7.182]:34533 "EHLO
+	ocean.emcraft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751878Ab2HZNxd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Aug 2012 09:53:33 -0400
+Subject: Re: [rt2x00-users] [PATCH] compat-wireless:rt2800usb: Added rx
+ packet length validity check
+From: Sergei Poselenov <sposelenov@emcraft.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Sun, 26 Aug 2012 17:53:25 +0400
+In-Reply-To: <20120821114343.GB2380@redhat.com>
+References: <20120820205355.7ccc0450@emcraft.com>
+	 <20120821114343.GB2380@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Message-ID: <1345989206.8762.3.camel@mehome> (sfid-20120826_155412_998592_2944F38A)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Aug 2012 18:21:59 +0530
-Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+Stanislaw,
 
-> > Assume hw reports a decryption error, the flag decrypt_error is set
-> > to true in ath9k_rx_accept.
-> > Since this flag is initialized to false just out of  ath_rx_tasklet
-> > while cycle, all subsequent frames are marked as corrupted until
-> > ath_rx_tasklet ends.
-> 
-> seems to be a nice catch!
-> It would be great if we can simulate this situation (ie
-> decrypt_error is set to true, and subsequent frames are discarded)
-> may be we can try this some time, purposefully setting the
-> decrypt_error 'true' for the first instance and see if there is data
-> loss/throughput diff because of this.
+On Tue, 2012-08-21 at 13:43 +0200, Stanislaw Gruszka wrote:
+> >       /*
+> > -      * Remove the RXINFO structure from the sbk.
+> > +      * Remove the RXINFO structure from the skb.
+> >        */
+> >       skb_pull(entry->skb, RXINFO_DESC_SIZE);
+> Would be great if you could post this as separate patch.
 
-That simulation might be too much work.  The only affected frames would
-be those that are processed in the same tasklet as the frame with
-decryption error.  What frame is processed in which tasklet is
-timing-dependent.
+I'm sending the patch for this typo in the follow-up email.
 
-It's enough to see that the code is wrong as it is.
-
-ath9k_rx_accept() only sets decrypt_error to true and never to false.
-It's not my favorite way of handling errors, but it's OK.
-
-ath9k_rx_skb_preprocess() calls ath9k_rx_accept() and never writes or
-reads decrypt_error in any other way.
-
-ath_rx_tasklet() calls ath9k_rx_skb_preprocess() in a loop over the
-frames to be processed.  Then it calls ath9k_rx_skb_postprocess() and
-passes decrypt_error to it.  So we can have a leftover value from
-another frame passed there.  In that case, the frame won't me marked as
-decrypted.
-
-I think it would be nice to examine all the variables initialized
-outside the loop in ath_rx_tasklet().  There may be more catches
-waiting to be discovered.
-
--- 
 Regards,
-Pavel Roskin
+Sergei
+
