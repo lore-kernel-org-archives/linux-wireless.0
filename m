@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56826 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932132Ab2HFPNu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 11:13:50 -0400
-Message-ID: <501FDF2C.5020608@openwrt.org> (sfid-20120806_171356_042754_F0369B2F)
-Date: Mon, 06 Aug 2012 17:13:48 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: WDS vs. multi-channel operation
-References: <1343655393.4452.13.camel@jlt3.sipsolutions.net>   <501EA97B.3010703@openwrt.org>   <1344187264.5765.4.camel@jlt3.sipsolutions.net>   (sfid-20120805_192133_648139_FC40F06B) <1344187324.5765.5.camel@jlt3.sipsolutions.net>  <501FDC87.1000204@openwrt.org> <1344265599.4807.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1344265599.4807.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from contumacia.investici.org ([178.255.144.35]:35062 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab2HZINL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Aug 2012 04:13:11 -0400
+From: Antonio Quartulli <ordex@autistici.org>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH 1/2] ath9k_htc: allow coexistence of IBSS with other modes
+Date: Sun, 26 Aug 2012 10:12:52 +0200
+Message-Id: <1345968773-17166-1-git-send-email-ordex@autistici.org> (sfid-20120826_101324_957952_01A75CFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-08-06 5:06 PM, Johannes Berg wrote:
-> On Mon, 2012-08-06 at 17:02 +0200, Felix Fietkau wrote:
-> 
->> >> If you're going to require them to be bound to an AP though, where's the
->> >> difference to the current 4-addr AP_VLAN behaviour? It seems with that
->> >> you could actually implement a bound-to-AP-WDS entirely in userspace
->> >> since there's no requirement to actually go through the auth/assoc
->> >> sequence for hostapd to add the station entry?
->> > 
->> > Oh and if you actually do need WDS-type interfaces, maybe their role
->> > should change to be virtual like AP_VLAN-type interfaces?
-> 
->> The difference between WDS and 4-addr AP_VLAN is that WDS is AP<->AP,
->> not AP<->STA. I guess it would be possible to write some code to create
->> AP VLANs + station entries for remote APs based on cooked monitor mode
->> based discovery or some form of mgmt frame exchange.
-> 
-> I was thinking just pre-configure it as you have to anyway now?
-Well, when creating station entries manually, it has to know the HT
-capabilities, etc.
-With my incomplete fixes (which are being used on OpenWrt), those are
-automatically extracted from the remote AP's beacons, so that needs less
-preconfiguration.
+Practical tests shown that ath9k_htc devices allow an IBSS VIF to coexist with
+VIF set up on other modes. This patch removes the check which block the creation
+of any other VIF whenever an IBSS one is already present.
 
-- Felix
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index c32f6e3..c41d85f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1045,9 +1045,9 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 		return -ENOBUFS;
+ 	}
+ 
+-	if (priv->num_ibss_vif ||
+-	    (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
+-		ath_err(common, "IBSS coexistence with other modes is not allowed\n");
++	if (priv->num_ibss_vif && vif->type == NL80211_IFTYPE_ADHOC) {
++		ath_err(common,
++			"IBSS coexistence with another IBSS is not allowed\n");
+ 		mutex_unlock(&priv->mutex);
+ 		return -ENOBUFS;
+ 	}
+-- 
+1.7.12
+
