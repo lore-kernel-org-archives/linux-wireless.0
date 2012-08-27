@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53242 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590Ab2HPTEf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25924 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936Ab2H0OQv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 15:04:35 -0400
-Received: by ialo24 with SMTP id o24so489044ial.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2012 12:04:35 -0700 (PDT)
-Date: Thu, 16 Aug 2012 13:59:05 -0500
-From: "Saul St. John" <saul.stjohn@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Saul St. John" <saul.stjohn@gmail.com>
-Subject: [PATCH 0/2] bcma: expose cc sprom for read/write in sysfs
-Message-ID: <20120816185905.GA6726@eris.garyseven.net> (sfid-20120816_210440_517664_67816F0F)
+	Mon, 27 Aug 2012 10:16:51 -0400
+Message-ID: <503B8147.7030607@qca.qualcomm.com> (sfid-20120827_161654_677880_EC8C1A51)
+Date: Mon, 27 Aug 2012 17:16:39 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath6kl: trivial cleanup
+References: <1345818208-9129-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1345818208-9129-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ssb driver exposes the device SPROM to sysfs, which allows users to
-modify various device settings using ssb-sprom from the b43-tools package.
+On 08/24/2012 05:23 PM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> 
+> a minor cleanup in assigning the driver specific network type
+> based on interface type.
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-These patches implement similar functionality in bcma, so that ssb-sprom
-can be used with newer Broadcom devices.
+Thanks, applied to ath6kl.git. But I changed the title to:
 
-Saul St. John (2):
-  bcma: register cc core driver, device
-  bcma: expose cc sprom to sysfs
+ath6kl: trivial cleanup on interface type selection
 
- drivers/bcma/bcma_private.h                 |    5 +
- drivers/bcma/driver_chipcommon.c            |  212 ++++++++++++++++++++++++---
- drivers/bcma/main.c                         |   79 +++++-----
- drivers/bcma/sprom.c                        |   47 +++++-
- include/linux/bcma/bcma_driver_chipcommon.h |    4 +-
- 5 files changed, 287 insertions(+), 60 deletions(-)
-
--- 
-1.7.10.4
-
+Kalle
