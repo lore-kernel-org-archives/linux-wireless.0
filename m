@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28314 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755310Ab2HQOHP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Aug 2012 10:07:15 -0400
-Date: Fri, 17 Aug 2012 16:06:58 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
-Message-ID: <20120817140657.GA1645@redhat.com> (sfid-20120817_160720_374165_1ABF9220)
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCDD559@mbx022-e1-nj-10.exch022.domain.local>
- <20120816102211.GD17659@redhat.com>
- <502CF2D5.6020704@posedge.com>
+Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:4194 "EHLO
+	HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750777Ab2H0EPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 00:15:48 -0400
+Message-ID: <503AF46A.4030704@posedge.com> (sfid-20120827_061631_919046_F011F2FD)
+Date: Mon, 27 Aug 2012 09:45:38 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <502CF2D5.6020704@posedge.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+References: <502E85D9.5050301@posedge.com>   <1345480718.4459.37.camel@jlt3.sipsolutions.net>   <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>   <50338E84.3050709@posedge.com>   <1345564421.10280.9.camel@jlt3.sipsolutions.net>   <5033CE76.6040306@posedge.com>   <1345619008.4635.3.camel@jlt3.sipsolutions.net>   <20120822090104.GA4959@redhat.com>   <1345626282.4635.8.camel@jlt3.sipsolutions.net>   <20120822101252.GA6082@redhat.com> <50376671.7080007@posedge.com>  <1345809927.6991.0.camel@jlt3.sipsolutions.net>  <50377CD9.3090204@posedge.com> <1345970386.3622.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1345970386.3622.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 16, 2012 at 06:47:09PM +0530, Mahesh Palivela wrote:
-> On 8/16/2012 3:52 PM, Stanislaw Gruszka wrote:
-> >On Tue, Aug 14, 2012 at 03:55:26PM +0000, Mahesh Palivela wrote:
-> >>Handling of 80 MHz, 160 MHz channel bandwidths for VHT (11ac) Regulatory
-> >>and setting channel flags for allowed bandwidths.
-> >>
-> >>Signed-off-by: Mahesh Palivela <maheshp@posedge.com>
-> >>---
-> >>
-> >>Sending patch second time as Stanislaw Gruszka complained its malformed.
-> >
-> >And now complaining that patch is ugly. There is really on other,
-> >simpler way to handle that?
-> >
-> >Stanislaw
-> >
-> oh, you mean my implementation is ugly? Not a problem. Give me some
-> clue, I will work on it.
+On 08/26/2012 02:09 PM, Johannes Berg wrote:
+> On Fri, 2012-08-24 at 18:38 +0530, Mahesh Palivela wrote:
+>
+> We don't support 5/10 MHz (yet anyway), so we don't have to worry about
+> that.
+>
 
-We can not extend channel, if regulatory disallow to use some
-nearby channels or disallow HT at all.
+Oh, for legacy we still depend on chan_type setting for sometime?
 
-So it's not possible that for particular channel that we can extend it
-to let say -160|0+ and -0|160+, but can not extend it to -40|120+. So
-we do not need zilion flags, but just specify left and right borders,
-inside which we can extend channel.
+>> so country might allow primary chan to fall in other frequency segment?
+>
+> Yes, but how's that related to how you specify the channel?
+>
 
-For example: channel 36 (5180 MHz) is prohibited and all channels
-above are allowed. For channel 52 (5260 MHz) left border will be
--60 and right border +160 (max). That will allow to support
-VHT160: -60|100+, -40|120+, -20|140+, -0|160+ ;
-VHT80: -60|20+, -40|40+, -20|60+, -0|80+ ;
-HT40 :-40|0+, -0|40+
+ok. I will change the channel config structure per 11ac spec.
 
-Stanislaw
+dot11CurrentChannelBandwidth
+       Channel bandwidth. Possible values represent 20 MHz, 40 MHz,
+       80 MHz, 160 MHz and 80+80 MHz channels.
+
+dot11CurrentChannelCenterFrequencyIndex0
+       In 20 MHz, 40 MHz, 80 MHz and 160 MHz channels, denotes
+       the channel center frequency.In 80+80 MHz channels, denotes the
+       center frequency of the frequency segment 0, which is the
+       frequency segment containing the primary channel.
+       Valid range is 1 to 200.
+
+dot11CurrentChannelCenterFrequencyIndex1
+       In 80+80 MHz channels, denotes the center frequency of the fre-
+       quency segment 1, which is the frequency segment that does not
+       contain the primary channel.Valid range is 1 to 200.
+       Undefined for 20 MHz, 40 MHz, 80 MHz and 160 MHz chan-
+                                    nels.
+dot11CurrentPrimaryChannel
+       Denotes the location of the primary 20 MHz channel.
+       Valid range is 1 to 200.
+
+
+> joahnnes
+>
