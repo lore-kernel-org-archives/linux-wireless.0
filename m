@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:19887 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754058Ab2HIVII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Aug 2012 17:08:08 -0400
-Date: Thu, 9 Aug 2012 17:07:57 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k: decrypt_error flag issue
-Message-ID: <20120809170757.748b68bf@mj> (sfid-20120809_230824_256029_7214E717)
-In-Reply-To: <CAB=NE6V6T0RMSiMZCsUdr85vWMgs4VfJ6HTYHwf+kDQUwQ-mhg@mail.gmail.com>
-References: <CAA2SeNJmaHs5fMHrG65HWbe5Y-ytz2qvuzNGKvhBKgvZ15KoVw@mail.gmail.com>
-	<20120809173435.GQ3745@lenteja.do-not-panic.com>
-	<CAA2SeNKbBCxPbJmXMyo4-nK2SXL-WcOFQaKDrEM-cxbVrzt7Ew@mail.gmail.com>
-	<CAB=NE6V6T0RMSiMZCsUdr85vWMgs4VfJ6HTYHwf+kDQUwQ-mhg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13092 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653Ab2H0PcL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 11:32:11 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: Scalable approach for nl80211_feature_flags
+Date: Mon, 27 Aug 2012 18:32:01 +0300
+Message-ID: <3206344.1tm1fpsF4D@lx-vladimir> (sfid-20120827_173214_959129_07962250)
+In-Reply-To: <1345967092.3622.2.camel@jlt4.sipsolutions.net>
+References: <1343907187-6686-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <3373913.UaOl7A5Fl4@lx-vladimir> <1345967092.3622.2.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Aug 2012 11:10:38 -0700
-"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> wrote:
+Hi,
 
-> And this would lead to .. what? How did you realize this? Can you
-> please resend and add all this information to the commit log message?
+There is 'new' approach for specifying various wifi driver flags,
+using enum nl80211_feature_flags and wiphy.features.
 
-Also please use a better subject.  For example:
+Problem is, wiphy.features is u32, i.e. it is not scalable
+beyond 32 flags.
 
-ath9k: fix decrypt_error initialization in ath_rx_tasklet()
+I propose to re-define 'features' approach - convert it to
+use 'bitmap' API like DECLARE_BITMAP for the 'features' and
+use bit numbers rather then raw values in the
+enum nl80211_feature_flags. Last value will be defined like
+NL80211_FEATURE_MAX, and 'features' will auto-size using
+DECLARE_BITMAP(features, NL80211_FEATURE_MAX);
 
-"issue" is too vague.
+Then, user space tools need to be modified as well.
 
--- 
-Regards,
-Pavel Roskin
+If the direction looks correct, I'll go ahead to prepare patch.
+
+Thanks, Vladimir.
