@@ -1,68 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:37402 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751361Ab2HWDdu (ORCPT
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:5900 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753116Ab2H0K0U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 23:33:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.6] mwifiex: fix skb length issue when send a command to firmware
-Date: Wed, 22 Aug 2012 20:26:31 -0700
-Message-Id: <1345692391-8693-1-git-send-email-bzhao@marvell.com> (sfid-20120823_053355_052975_945597D5)
+	Mon, 27 Aug 2012 06:26:20 -0400
+From: Wei Ni <wni@nvidia.com>
+To: <swarren@wwwdotorg.org>, <brudley@broadcom.com>,
+	<rvossen@broadcom.com>
+CC: <krakesh@nvidia.com>, <ldewangan@nvidia.com>,
+	<linux-tegra@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, Wei Ni <wni@nvidia.com>
+Subject: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR directly for non-OOB
+Date: Mon, 27 Aug 2012 18:25:10 +0800
+Message-ID: <1346063114-30361-3-git-send-email-wni@nvidia.com> (sfid-20120827_122738_891002_93ED1051)
+In-Reply-To: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+In case of inband interrupts, if we handle the interrupt in dpc thread,
+two level of thread switching takes place to process wifi interrupts.
+One in SDHCI driver and the other in Wifi driver. This may cause the system
+instability.
+Because the SDHCI calls sdio_irq_thread() to handle the irq, this thread locks
+mmc host and calls wifi handler. It expects WiFi handler to be quick and
+enables sdio interrupt from card at end. If wifi handler defers this work for
+a different thread, sdio_irq_thread() will be stuck on next wifi interrupt
+since mmc lock is not freed.
 
-When we send a command to firmware, we assumed that cmd_size
-will be always less than or equal to the structure size of
-host_cmd_ds_command. However, this is no longer true after
-we added AP support. There are some AP commands that Custom
-IE TLVs are included in command buffer, hence the cmd_size
-gets enlarged by the TLV data. We need to increase the skb
-length for the extra data.
+Handling the interrupt in ISR directly will prevent thread context switching in
+wifi driver. It can fix the instability problems.
 
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Wei Ni <wni@nvidia.com>
 ---
- drivers/net/wireless/mwifiex/cmdevt.c |   15 ++++++++++++++-
- 1 files changed, 14 insertions(+), 1 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    2 ++
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +++++++-
+ 2 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index c229ddd..225c1a4 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -170,7 +170,20 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	cmd_code = le16_to_cpu(host_cmd->command);
- 	cmd_size = le16_to_cpu(host_cmd->size);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 8e7e692..5cf6c3b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -121,7 +121,9 @@ static void brcmf_sdio_irqhandler(struct sdio_func *func)
  
--	skb_trim(cmd_node->cmd_skb, cmd_size);
-+	/* Adjust skb length */
-+	if (cmd_node->cmd_skb->len > cmd_size)
-+		/*
-+		 * cmd_size is less than sizeof(struct host_cmd_ds_command).
-+		 * Trim off the unused portion.
-+		 */
-+		skb_trim(cmd_node->cmd_skb, cmd_size);
-+	else if (cmd_node->cmd_skb->len < cmd_size)
-+		/*
-+		 * cmd_size is larger than sizeof(struct host_cmd_ds_command)
-+		 * because we have appended custom IE TLV. Increase skb length
-+		 * accordingly.
-+		 */
-+		skb_put(cmd_node->cmd_skb, cmd_size - cmd_node->cmd_skb->len);
+ 	brcmf_dbg(INTR, "ib intr triggered\n");
  
- 	do_gettimeofday(&tstamp);
- 	dev_dbg(adapter->dev, "cmd: DNLD_CMD: (%lu.%lu): %#x, act %#x, len %d,"
++	sdio_release_host(sdiodev->func[1]);
+ 	brcmf_sdbrcm_isr(sdiodev->bus);
++	sdio_claim_host(sdiodev->func[1]);
+ }
+ 
+ /* dummy handler for SDIO function 2 interrupt */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 472f2ef..4576d59 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2347,7 +2347,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+ 	uint framecnt = 0;	/* Temporary counter of tx/rx frames */
+ 	bool rxdone = true;	/* Flag for no more read data */
+ 	bool resched = false;	/* Flag indicating resched wanted */
+-	int err;
++	int err = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -3786,11 +3786,17 @@ void brcmf_sdbrcm_isr(void *arg)
+ 	if (!bus->intr)
+ 		brcmf_dbg(ERROR, "isr w/o interrupt configured!\n");
+ 
++
++#ifndef CONFIG_BRCMFMAC_SDIO_OOB
++	while (brcmf_sdbrcm_dpc(bus))
++		;
++#else
+ 	bus->dpc_sched = true;
+ 	if (bus->dpc_tsk) {
+ 		brcmf_sdbrcm_adddpctsk(bus);
+ 		complete(&bus->dpc_wait);
+ 	}
++#endif
+ }
+ 
+ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
 -- 
-1.7.0.2
+1.7.1
 
