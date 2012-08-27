@@ -1,98 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:2561 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752350Ab2H3VEh (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37099 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122Ab2H0GqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 17:04:37 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <users@rt2x00.serialmonkey.com>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 16/17] rt2x00: Fix rt2800 rfkill polling prior to interface start.
-Date: Thu, 30 Aug 2012 23:04:29 +0200
-Message-Id: <1346360670-6498-12-git-send-email-gwingerde@gmail.com> (sfid-20120830_230449_043079_D7071797)
-In-Reply-To: <1346360670-6498-11-git-send-email-gwingerde@gmail.com>
-References: <1346355248-5331-10-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-1-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-2-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-3-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-4-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-5-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-6-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-7-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-8-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-9-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-10-git-send-email-gwingerde@gmail.com>
- <1346360670-6498-11-git-send-email-gwingerde@gmail.com>
+	Mon, 27 Aug 2012 02:46:06 -0400
+Received: by eaac11 with SMTP id c11so1075807eaa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 23:46:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120827064248.GA22073@ritirata.org>
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+ <1346014505-7554-2-git-send-email-ordex@autistici.org> <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com>
+ <1346045881.3746.0.camel@jlt4.sipsolutions.net> <CAGRGNgXy3t5TJqY=VwKjPEH=K4XKR_Dm5qVKkmYxStYoAP3fvQ@mail.gmail.com>
+ <20120827064248.GA22073@ritirata.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 27 Aug 2012 16:45:44 +1000
+Message-ID: <CAGRGNgUnC_A21zp8T35HZQkVtQxTWDY_1nymstPLAo5+zWqF+A@mail.gmail.com> (sfid-20120827_084610_475356_05B87476)
+Subject: Re: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to program the rfkill switch GPIO pin direction to input at
-device initialization time, not only when the interface is brought up.
-Doing this only when the interface is brought up could lead to rfkill
-detecting the switch is turned on erroneously and inability to create
-the interface and bringing it up.
+Hi Antonio,
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: <stable@vger.kernel.org>
+On Mon, Aug 27, 2012 at 4:42 PM, Antonio Quartulli <ordex@autistici.org> wrote:
+> On Mon, Aug 27, 2012 at 03:41:09 +1000, Julian Calaby wrote:
+>> Hi Johannes,
+>>
+>> On Mon, Aug 27, 2012 at 3:38 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Mon, 2012-08-27 at 09:48 +1000, Julian Calaby wrote:
+>> >> Antonio,
+>> >>
+>> >> On Mon, Aug 27, 2012 at 6:55 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+>> >> > This driver now advertises its allowed VIFs combinations to the mac80211
+>> >> > sublayer.
+>> >> >
+>> >> > Other than that, practical tests shown that ath9k_htc devices allow an IBSS VIF
+>> >> > to coexist with VIF set up on other modes. This patch removes the check which
+>> >> > block the creation of any other VIF whenever an IBSS one is already present.
+>> >>
+>> >> These two patches should really be applied in the opposite order:
+>> >>
+>> >> You should add the interface combination data (this patch) then remove
+>> >> the old checking code.
+>> >>
+>> >> This way there's not a window (admittedly only one patch) where the
+>> >> interface combinations aren't enforced.
+>> >
+>> > FWIW, it's the other way around, in that window no combinations would be
+>> > permitted at all...
+>>
+>> It's still a problem for bisection then =)
+>
+> Shall I merge the two patches and do both the changes in one shot?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 98aa426..0965540 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -983,6 +983,7 @@ static int rt2800pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
-+	u32 reg;
- 
- 	/*
- 	 * Allocate eeprom data.
-@@ -996,6 +997,14 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		return retval;
- 
- 	/*
-+	 * Enable rfkill polling by setting GPIO direction of the
-+	 * rfkill switch GPIO pin correctly.
-+	 */
-+	rt2x00pci_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+	rt2x00_set_field32(&reg, GPIO_CTRL_DIR2, 1);
-+	rt2x00pci_register_write(rt2x00dev, GPIO_CTRL, reg);
-+
-+	/*
- 	 * Initialize hw specifications.
- 	 */
- 	retval = rt2800_probe_hw_mode(rt2x00dev);
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 6681bfc..5390632 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -736,6 +736,7 @@ static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
-+	u32 reg;
- 
- 	/*
- 	 * Allocate eeprom data.
-@@ -749,6 +750,14 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		return retval;
- 
- 	/*
-+	 * Enable rfkill polling by setting GPIO direction of the
-+	 * rfkill switch GPIO pin correctly.
-+	 */
-+	rt2x00usb_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+	rt2x00_set_field32(&reg, GPIO_CTRL_DIR2, 1);
-+	rt2x00usb_register_write(rt2x00dev, GPIO_CTRL, reg);
-+
-+	/*
- 	 * Initialize hw specifications.
- 	 */
- 	retval = rt2800_probe_hw_mode(rt2x00dev);
+You might as well, however you should address Mohammed's comment first.
+
+Thanks,
+
 -- 
-1.7.11.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
