@@ -1,232 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58142 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754878Ab2HaUju (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61163 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192Ab2H0Kjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2012 16:39:50 -0400
-Received: by mail-iy0-f174.google.com with SMTP id k25so1839643iah.19
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2012 13:39:50 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 2/3 V2] rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192se: Remove sparse warnings
-Date: Fri, 31 Aug 2012 15:39:00 -0500
-Message-Id: <1346445541-5251-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120831_223953_974423_5F21A2CE)
-In-Reply-To: <1346445541-5251-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1346445541-5251-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 27 Aug 2012 06:39:51 -0400
+Received: by pbbrr13 with SMTP id rr13so7209181pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 03:39:51 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] cfg80211: allow software encryption of aes cmac in mesh
+Date: Mon, 27 Aug 2012 18:38:07 +0800
+Message-Id: <1346063887-29078-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120827_123956_109139_7E756E21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtlwifi family of drivers has the following sparse errors:
+Secured mesh requires the key installation using cipher
+suite AES CMAC for multicast management frame. This patch
+will allow the key installation to proceed. Otherwise, it
+will be rejected due to hw encryption is not supported.
 
-  CHECK   drivers/net/wireless/rtlwifi/usb.c
-drivers/net/wireless/rtlwifi/usb.c:122:17: warning: cast to restricted __le32
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:1157:13: warning: context imbalance in 'rtl92c_dm_refresh_rate_adaptive_mask' - different lock contexts for basic block
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-drivers/net/wireless/rtlwifi/rtl8192ce/hw.c:1909:30: warning: cast to restricted __le32
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-drivers/net/wireless/rtlwifi/rtl8192ce/sw.c:345:1: warning: symbol 'rtl92ce_pci_ids' was not declared. Should it be static?
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-drivers/net/wireless/rtlwifi/rtl8192cu/trx.c:494:9: warning: cast from restricted __le16
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192se/fw.c
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:490:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:490:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:494:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:494:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:499:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:499:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:510:25: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:510:25: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:607:9: warning: cast to restricted __le16
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:607:9: warning: cast to restricted __le16
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:650:9: warning: cast to restricted __le16
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:650:9: warning: cast to restricted __le16
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:652:9: warning: cast to restricted __le16
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:652:9: warning: cast to restricted __le16
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c:758:9: warning: cast from restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c:788:17: warning: cast from restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c:804:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c:804:17: warning: cast to restricted __le32
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c:807:17: warning: cast from restricted __le32
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |   11 +++--------
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       |    4 ++--
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |    6 +++---
- drivers/net/wireless/rtlwifi/usb.c                |    2 +-
- drivers/net/wireless/rtlwifi/wifi.h               |   14 +++++++-------
- 7 files changed, 18 insertions(+), 23 deletions(-)
+ net/wireless/util.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index 2fd3b49..1ca4e25 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -1214,18 +1214,13 @@ static void rtl92c_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
- 				 "PreState = %d, CurState = %d\n",
- 				 p_ra->pre_ratr_state, p_ra->ratr_state);
- 
--			/* Only the PCI card uses sta in the update rate table
--			 * callback routine */
--			if (rtlhal->interface == INTF_PCI) {
--				rcu_read_lock();
--				sta = ieee80211_find_sta(mac->vif, mac->bssid);
--			}
-+			rcu_read_lock();
-+			sta = ieee80211_find_sta(mac->vif, mac->bssid);
- 			rtlpriv->cfg->ops->update_rate_tbl(hw, sta,
- 					p_ra->ratr_state);
- 
- 			p_ra->pre_ratr_state = p_ra->ratr_state;
--			if (rtlhal->interface == INTF_PCI)
--				rcu_read_unlock();
-+			rcu_read_unlock();
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index ef35f4e..1b665a7 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -253,7 +253,9 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
  		}
  	}
- }
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index bd0da7e..cc89582 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1906,8 +1906,8 @@ static void rtl92ce_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	}
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
- 		 "ratr_bitmap :%x\n", ratr_bitmap);
--	*(u32 *)&rate_mask = EF4BYTE((ratr_bitmap & 0x0fffffff) |
--				     (ratr_index << 28));
-+	*(u32 *)&rate_mask = (ratr_bitmap & 0x0fffffff) |
-+				     (ratr_index << 28);
- 	rate_mask[4] = macid | (shortgi ? 0x20 : 0x00) | 0x80;
- 	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG,
- 		 "Rate_index:%x, ratr_val:%x, %x:%x:%x:%x:%x\n",
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-index 3aa927f..60451ee 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -342,7 +342,7 @@ static struct rtl_hal_cfg rtl92ce_hal_cfg = {
- 	.maps[RTL_RC_HT_RATEMCS15] = DESC92_RATEMCS15,
- };
  
--DEFINE_PCI_DEVICE_TABLE(rtl92ce_pci_ids) = {
-+static DEFINE_PCI_DEVICE_TABLE(rtl92ce_pci_ids) = {
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8191, rtl92ce_hal_cfg)},
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8178, rtl92ce_hal_cfg)},
- 	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8177, rtl92ce_hal_cfg)},
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index 27863d7..6e66f04 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -491,7 +491,7 @@ static void _rtl_tx_desc_checksum(u8 *txdesc)
- 	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, 0);
- 	for (index = 0; index < 16; index++)
- 		checksum = checksum ^ (*(ptr + index));
--	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, cpu_to_le16(checksum));
-+	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, checksum);
- }
+-	if (!cfg80211_supported_cipher_suite(&rdev->wiphy, params->cipher))
++	if (!cfg80211_supported_cipher_suite(&rdev->wiphy, params->cipher) &&
++	    !(params->cipher == WLAN_CIPHER_SUITE_AES_CMAC &&
++	      (rdev->wiphy.flags & WIPHY_FLAG_MESH_AUTH)))
+ 		return -EINVAL;
  
- void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-index 28c53fb..e3cf4c0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -756,7 +756,7 @@ void rtl92se_tx_fill_desc(struct ieee80211_hw *hw,
- 	SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16) skb->len);
- 
- 	/* DOWRD 8 */
--	SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, cpu_to_le32(mapping));
-+	SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, mapping);
- 
- 	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
- }
-@@ -786,7 +786,7 @@ void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
- 		/* 92SE need not to set TX packet size when firmware download */
- 		SET_TX_DESC_PKT_SIZE(pdesc, (u16)(skb->len));
- 		SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16)(skb->len));
--		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, cpu_to_le32(mapping));
-+		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, mapping);
- 
- 		wmb();
- 		SET_TX_DESC_OWN(pdesc, 1);
-@@ -805,7 +805,7 @@ void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
- 		SET_BITS_TO_LE_4BYTE(skb->data, 24, 7, rtlhal->h2c_txcmd_seq);
- 
- 		SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16)(skb->len));
--		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, cpu_to_le32(mapping));
-+		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, mapping);
- 
- 		wmb();
- 		SET_TX_DESC_OWN(pdesc, 1);
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 9140469..030beb4 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -120,7 +120,7 @@ static int _usbctrl_vendorreq_sync_read(struct usb_device *udev, u8 request,
- 
- 	if (status < 0 && count++ < 4)
- 		pr_err("reg 0x%x, usbctrl_vendorreq TimeOut! status:0x%x value=0x%x\n",
--		       value, status, le32_to_cpu(*(u32 *)pdata));
-+		       value, status, *(u32 *)pdata);
- 	return status;
- }
- 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index a15c112..d4bc785 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1820,9 +1820,9 @@ struct bt_coexist_info {
- 	EF1BYTE(*((u8 *)(_ptr)))
- /* Read le16 data from memory and convert to host ordering */
- #define READEF2BYTE(_ptr)	\
--	EF2BYTE(*((u16 *)(_ptr)))
-+	EF2BYTE(*(_ptr))
- #define READEF4BYTE(_ptr)	\
--	EF4BYTE(*((u32 *)(_ptr)))
-+	EF4BYTE(*(_ptr))
- 
- /* Write data to memory */
- #define WRITEEF1BYTE(_ptr, _val)	\
-@@ -1831,7 +1831,7 @@ struct bt_coexist_info {
- #define WRITEEF2BYTE(_ptr, _val)	\
- 	(*((u16 *)(_ptr))) = EF2BYTE(_val)
- #define WRITEEF4BYTE(_ptr, _val)	\
--	(*((u16 *)(_ptr))) = EF2BYTE(_val)
-+	(*((u32 *)(_ptr))) = EF2BYTE(_val)
- 
- /* Create a bit mask
-  * Examples:
-@@ -1864,9 +1864,9 @@ struct bt_coexist_info {
-  * 4-byte pointer in little-endian system.
-  */
- #define LE_P4BYTE_TO_HOST_4BYTE(__pstart) \
--	(EF4BYTE(*((u32 *)(__pstart))))
-+	(EF4BYTE(*((__le32 *)(__pstart))))
- #define LE_P2BYTE_TO_HOST_2BYTE(__pstart) \
--	(EF2BYTE(*((u16 *)(__pstart))))
-+	(EF2BYTE(*((__le16 *)(__pstart))))
- #define LE_P1BYTE_TO_HOST_1BYTE(__pstart) \
- 	(EF1BYTE(*((u8 *)(__pstart))))
- 
-@@ -1913,13 +1913,13 @@ value to host byte ordering.*/
-  * Set subfield of little-endian 4-byte value to specified value.
-  */
- #define SET_BITS_TO_LE_4BYTE(__pstart, __bitoffset, __bitlen, __val) \
--	*((u32 *)(__pstart)) = EF4BYTE \
-+	*((u32 *)(__pstart)) = \
- 	( \
- 		LE_BITS_CLEARED_TO_4BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u32)__val) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset)) \
- 	);
- #define SET_BITS_TO_LE_2BYTE(__pstart, __bitoffset, __bitlen, __val) \
--	*((u16 *)(__pstart)) = EF2BYTE \
-+	*((u16 *)(__pstart)) = \
- 	( \
- 		LE_BITS_CLEARED_TO_2BYTE(__pstart, __bitoffset, __bitlen) | \
- 		((((u16)__val) & BIT_LEN_MASK_16(__bitlen)) << (__bitoffset)) \
+ 	return 0;
 -- 
-1.7.10.4
+1.7.0.4
 
