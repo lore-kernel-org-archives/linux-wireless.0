@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53696 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:35855 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab2HDDKE (ORCPT
+	with ESMTP id S1751996Ab2H0FiO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Aug 2012 23:10:04 -0400
-Received: from wireless by sipsolutions.net with local (Exim 4.80)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1SxUkd-0007vk-3c
-	for linux-wireless@vger.kernel.org; Sat, 04 Aug 2012 05:10:03 +0200
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] iw: v3.6
-Reply-to: linux-wireless@vger.kernel.org
-Message-Id: <E1SxUkd-0007vk-3c@sipsolutions.net>
-From: wireless@sipsolutions.net
-Date: Sat, 04 Aug 2012 05:10:03 +0200
+	Mon, 27 Aug 2012 01:38:14 -0400
+Message-ID: <1346045881.3746.0.camel@jlt4.sipsolutions.net> (sfid-20120827_073818_095438_8C5B1E39)
+Subject: Re: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Antonio Quartulli <ordex@autistici.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Date: Mon, 27 Aug 2012 07:38:01 +0200
+In-Reply-To: <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com> (sfid-20120827_014933_243805_D149F43D)
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+	 <1346014505-7554-2-git-send-email-ordex@autistici.org>
+	 <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com>
+	 (sfid-20120827_014933_243805_D149F43D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2012-08-27 at 09:48 +1000, Julian Calaby wrote:
+> Antonio,
+> 
+> On Mon, Aug 27, 2012 at 6:55 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+> > This driver now advertises its allowed VIFs combinations to the mac80211
+> > sublayer.
+> >
+> > Other than that, practical tests shown that ath9k_htc devices allow an IBSS VIF
+> > to coexist with VIF set up on other modes. This patch removes the check which
+> > block the creation of any other VIF whenever an IBSS one is already present.
+> 
+> These two patches should really be applied in the opposite order:
+> 
+> You should add the interface combination data (this patch) then remove
+> the old checking code.
+> 
+> This way there's not a window (admittedly only one patch) where the
+> interface combinations aren't enforced.
 
-A new release of iw (v3.6) is available at:
+FWIW, it's the other way around, in that window no combinations would be
+permitted at all...
 
-http://wireless.kernel.org/download/iw/iw-3.6.tar.bz2
-
-SHA1 sum: e3e0600ced24c05e84ba021c2629bf9dcafd5c3b
-
-Here is the short log of the changes (since v3.5)
-included in this release:
-
-Chun-Yeow Yeoh (1):
-      iw: allow setting mesh proactive tree building mode related parameters
-
-Johannes Berg (10):
-      add (optional) hwsim code
-      update nl80211.h
-      update nl80211.h
-      update nl80211.h
-      add basics for identify wireless devs
-      update interface info for non-netdev wdevs
-      pass idby argument to all functions
-      allow wdev in place of dev
-      print wdev id in event info
-      update version to 3.6
-
-Vladimir Kondratiev (3):
-      Prefer 32-bit bitrate
-      introduce GCMP cipher
-      Fix print channel number for 60g
+johannes
 
