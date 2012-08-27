@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:42529 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992Ab2HaF2e (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53934 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100Ab2H0Ujc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Aug 2012 01:28:34 -0400
-Received: by obbuo13 with SMTP id uo13so4823145obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2012 22:28:34 -0700 (PDT)
+	Mon, 27 Aug 2012 16:39:32 -0400
+Message-ID: <503BDAFF.9080904@lwfinger.net> (sfid-20120827_224034_837730_2E3124A7)
+Date: Mon, 27 Aug 2012 15:39:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <503E2E66.8010909@candelatech.com>
-References: <503D14FF.5000309@candelatech.com>
-	<CAD2nsn2JFEAwB0AauFiEYxj=mC7dNjFZn12EQ0q-aOwXjfZj4A@mail.gmail.com>
-	<503E2E66.8010909@candelatech.com>
-Date: Fri, 31 Aug 2012 10:58:33 +0530
-Message-ID: <CAD2nsn3jzWn+pW_3ZQEPtzHRwtZNy_k6=5WtB+F-J-vuMTvyKw@mail.gmail.com> (sfid-20120831_072907_223748_C52F4CB2)
-Subject: Re: Does ath9k support beam forming?
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: David Miller <davem@davemloft.net>, ncardwell@google.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop>  <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>  <1345830424.19483.69.camel@edumazet-glaptop>  <503BB49C.5010402@lwfinger.net> <1346091701.26634.6.camel@edumazet-glaptop>
+In-Reply-To: <1346091701.26634.6.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
-
-sorry for the delayed reply was bit involved in some other tasks.
-
+On 08/27/2012 01:21 PM, Eric Dumazet wrote:
+> On Mon, 2012-08-27 at 12:55 -0500, Larry Finger wrote:
 >
+>> I have prepared a patch to fix all the unchecked allocations.
+>>
+>> Over the weekend I made some progress. To test the latest vendor driver, I
+>> installed a 32-bit system. Their driver is not compatible with a 64-bit system.
+>> I found that not only did the vendor driver work with secure sites, but so did
+>> the in-kernel version. I now have tcpdump output for the 32-bit case that works,
+>> and the 64-bit case that fails. It seems likely that I missed some 32/64 bit
+>> incompatibility when I did the conversion.
+>>
+>> Thanks for all your help in trying to resolve this issue.
 >
-> Can you post the latest patch series for this?
+> Interesting, so these 32/64 bits problems did not happen in prior
+> kernels ? (< 3.4 )
 
-there are some commitments which i have to finish it off and i can start
-doing this only out of my free time.  Further it would take some good
-amount of time for testing.
-Unless its not pushed officially validating requires even more effort.
-i hope we can make this work into ath9k.
+Prior kernels are OK.
 
->
-> And maybe we can make the functionality configurable by debugfs
-> so that we can test it out easily?
+Larry
 
-yes sure.
-
->
-> Are there any particular test cases that would help verify the
-> patches?
-
-throughput test cases with variation attenuation and antenna orientation ?
-definitely it should not cause any throughput regressions :)
-
->
->
-> Thanks,
-> Ben
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
->
-
-
-
--- 
-thanks,
-shafi
