@@ -1,267 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp02.msg.oleane.net ([62.161.4.2]:39123 "EHLO
-	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756175Ab2HPJZY (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51594 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347Ab2H0JPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 05:25:24 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Thomas Pedersen'" <thomas@cozybit.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A3190138F360@sbs2003.acksys.local> <CAG6hwVMir23S-v0p=r=vkDn5Cu7fOSSEXaAU5jtSrVsC-Bp4ow@mail.gmail.com>
-In-Reply-To: <CAG6hwVMir23S-v0p=r=vkDn5Cu7fOSSEXaAU5jtSrVsC-Bp4ow@mail.gmail.com>
-Subject: RE: Mesh addressing issue
-Date: Thu, 16 Aug 2012 11:26:46 +0200
-Message-ID: <01f801cd7b91$41fee2b0$c5fca810$@acksys.fr> (sfid-20120816_112528_656127_B4256A45)
+	Mon, 27 Aug 2012 05:15:37 -0400
+Received: by obbuo13 with SMTP id uo13so7677397obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 02:15:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_01F9_01CD7BA2.0589FCA0"
+In-Reply-To: <20120827065419.GB22073@ritirata.org>
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+	<CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
+	<20120827065419.GB22073@ritirata.org>
+Date: Mon, 27 Aug 2012 14:45:36 +0530
+Message-ID: <CAD2nsn2CYYP2+VRX0Ph=6Vw2kTqmwRvMn+FVeS3FwMd=jvwy8Q@mail.gmail.com> (sfid-20120827_111541_684991_DE6471E5)
+Subject: Re: [PATCHv2 1/2] ath9k_htc: remove driver specific checks for
+ interfaces combinations
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multipart message in MIME format.
+Hi Antonio,
 
-------=_NextPart_000_01F9_01CD7BA2.0589FCA0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-
-	Dear Thomas,=20
-
-	Please find in atachment 3 file capture.
-	Computer.pcap : This capture show the ICMP request sent by the
-computer. The MAC address destination is unicast.
-	Mp2_to_mp1.pcap : this capture show the ICMP request (frame 33)
-from MP2 to MP1 in mesh network.  The MAC address destination is =
-broadcast
-	Mp1.pcap : this capture show the ICMP request message received on
-MP1 WLAN0 interface. The MAC address destination is broadcast
-
-	Thanks for your help.
-
------Message d'origine-----
-De=A0: linux-wireless-owner@vger.kernel.org
-[mailto:linux-wireless-owner@vger.kernel.org] De la part de Thomas =
-Pedersen
-Envoy=E9=A0: mardi 14 ao=FBt 2012 21:13
-=C0=A0: Cedric VONCKEN
-Cc=A0: linux-wireless@vger.kernel.org
-Objet=A0: Re: Mesh addressing issue
-
-Hi Cedric,
-
-On Tue, Aug 14, 2012 at 9:25 AM, Cedric VONCKEN =
-<cedric.voncken@acksys.fr>
-wrote:
-> I think I found an issue in mesh addressing.
-> I used the compat-2012-06-14.
 >
-> My network topology for the test is :
-> -----------------      -------------------   Wired LAN
------------------
-> |MP1              |   |MP2                   |------------------| =
-Computer
-|
-> |192.168.4.1|    |192.168.4.253|                            =
-|192.168.4.90
-|
-> -----------------     -------------------
----------------
+> On Mon, Aug 27, 2012 at 10:47:29 +0530, Mohammed Shafi wrote:
+>> Hi,
+>>
+>> On Mon, Aug 27, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+>> > Thanks to the new interface combinations code we can safely remove all the
+>> > driver specific checks for unsupported modes.
+>>
+>> i had just sent this some time back
+>> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/96443.
+>>
+>> please review if something had to be changed.
+>>
 >
-> The MP1 is not bridged with any wired interface (The ip address is set =
+> Sorry, but I hadn't seen your patch. Otherwise I would have not sent mine.
 
-> directly on WLAN0 interface) The MP2 is bridged with eth0 to offer =
-link
-with a wired network (My computer is connected with the wired network).
+no issues :-)
+
 >
-> If I try to ping from Computer to MP1.
->       The ICMP request sent on WiFi (from MP2 to MP1) is a broadcast =
-frame
-using a strange address format (3 address in 802.11 header + 1 address =
-in
-mesh extension) .
->       The ICMP reply sent on wifi (from MP1 to MP2) is unicast frame =
-using
-6 addresses format.
+> Your patch is ok. But, at this point, should patch 2/6 and 3/6 be merged
+> together?
+
+an order of interface combinations advertisement(2/6), followed by
+removing specific
+checks should be fine right ?
+
 >
-> Why the ICMP request is sent with address 1 set to broadcast (It was =
-not
-the case for older compat-2011-08-25)?
+> Other than that, patch 2/6 should be modified to take into account IBSS mode.
+
+yeah saw your patch, that in ath9k_htc IBSS interface can coexist with
+one more interface.
+The standalone limitation exists in ath9k too, not sure this is a
+limitation to beacon config
+for ath9k & ath9k_htc, I will just confirm. If its fine i will resend
+the v2 version signing off both
+of our names accounting IBSS mode too.
+
+
 >
-> If in MP1 I move the WLAN0 to a bridge with brctl (with no other=20
-> interface), ICMP request are still sent with broadcast, But  If I=20
-> change the mac address of bridge interface, the ICMP request is now =
-sent
-in unicast  format (using the 6 addresses formats) !
+>
+> Cheers,
+>
+>
+> --
+> Antonio Quartulli
+>
+> ..each of us alone is worth nothing..
+> Ernesto "Che" Guevara
 
-Based on the information you've provided, none of this immediately =
-sounds
-wrong. Can you please link to a capture file we can investigate?
 
-Thanks,
-Thomas
---
-To unsubscribe from this list: send the line "unsubscribe =
-linux-wireless" in
-the body of a message to majordomo@vger.kernel.org More majordomo info =
-at
-http://vger.kernel.org/majordomo-info.html
 
-------=_NextPart_000_01F9_01CD7BA2.0589FCA0
-Content-Type: application/octet-stream;
-	name="mp1.pcap"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="mp1.pcap"
-
-obLD1AACAAQAAAAAAAAAAAAAAGAAAAABT/8ARAAEpnUAAABaAAAAYv///////xx1CN21zwgARQAA
-VAAAQABAAbD9wKgEWsCoBAEIAGU28RYAAS6yLFBQrAsACAkKCwwNDg8QERITFBUWFxgZGhscHR4f
-ICEiIyQlJicoKSorLC0uL0//AEQABKdfAAAAWgAAAGIcdQjdtc+QpN4hT1MIAEUAAFQo4QAAQAHI
-HMCoBAHAqARaAABtNvEWAAEusixQUKwLAAgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYn
-KCkqKywtLi9P/wBJAAScEAAAACoAAAAqHHUI3bXPkKTeIU9TCAYAAQgABgQAAZCk3iFPU8CoBAEA
-AAAAAADAqARaT/8ASQAEobQAAAA8AAAAPP///////xx1CN21zwgGAAEIAAYEAAIcdQjdtc/AqARa
-kKTeIU9TwKgEAQAAAAAAAAAAAAAAAAAAAAAAAA==
-
-------=_NextPart_000_01F9_01CD7BA2.0589FCA0
-Content-Type: application/octet-stream;
-	name="mp2_to_mp1.pcapng"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="mp2_to_mp1.pcapng"
-
-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
-AAgAAAAAAAAAAAAAAAAAbAAAAA==
-
-------=_NextPart_000_01F9_01CD7BA2.0589FCA0
-Content-Type: application/octet-stream;
-	name="computer.pcap"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="computer.pcap"
-
-1MOyoQIABAAAAAAAAAAAAP//AAABAAAALrIsUHysCwBiAAAAYgAAAJCk3iFPUxx1CN21zwgARQAA
-VAAAQABAAbD9wKgEWsCoBAEIAGU28RYAAS6yLFBQrAsACAkKCwwNDg8QERITFBUWFxgZGhscHR4f
-ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3LrIsULa4CwBiAAAAYgAAABx1CN21z5Ck3iFPUwgARQAA
-VCjhAABAAcgcwKgEAcCoBFoAAG028RYAAS6yLFBQrAsACAkKCwwNDg8QERITFBUWFxgZGhscHR4f
-ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3M7IsUE6oCwA8AAAAPAAAABx1CN21z5Ck3iFPUwgGAAEI
-AAYEAAGQpN4hT1PAqAQBAAAAAAAAwKgEWgAAAAAAAAAAAAAAAAAAAAAAADOyLFBtqAsAKgAAACoA
-AACQpN4hT1McdQjdtc8IBgABCAAGBAACHHUI3bXPwKgEWpCk3iFPU8CoBAE=
-
-------=_NextPart_000_01F9_01CD7BA2.0589FCA0--
-
+-- 
+thanks,
+shafi
