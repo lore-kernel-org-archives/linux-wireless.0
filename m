@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60568 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754198Ab2HKAZ5 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:54267 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825Ab2H0Rzp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 20:25:57 -0400
-Received: by pbbrr13 with SMTP id rr13so3542514pbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 17:25:56 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: dquan@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFT 0/2] cfg80211: UNII regulatory hints
-Date: Fri, 10 Aug 2012 17:25:48 -0700
-Message-Id: <1344644750-14000-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120811_022602_688868_FDFF93AB)
+	Mon, 27 Aug 2012 13:55:45 -0400
+Message-ID: <503BB49C.5010402@lwfinger.net> (sfid-20120827_195601_553243_8FB6DEA2)
+Date: Mon, 27 Aug 2012 12:55:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: David Miller <davem@davemloft.net>, ncardwell@google.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+References: <50369925.3050705@lwfinger.net>  <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>  <20120824.111948.680531915905273128.davem@davemloft.net>  <5037A4B0.3080208@lwfinger.net>  <1345825095.19483.19.camel@edumazet-glaptop>  <1345825432.19483.20.camel@edumazet-glaptop>  <5037B2AC.50704@lwfinger.net> <1345830424.19483.69.camel@edumazet-glaptop>
+In-Reply-To: <1345830424.19483.69.camel@edumazet-glaptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On 08/24/2012 12:47 PM, Eric Dumazet wrote:
+>
+> dev_alloc_skb() can return NULL
+>
+> -> crash
+>
+> skb_clone() can also return NULL
+>
+> -> crash
 
-It was hinted to me a while ago that we can enhance
-beacon hints a little more by taking advantage of
-common regulatory assumptions globally on UNII 1
-and UNII 3. This implements that idea.
+I have prepared a patch to fix all the unchecked allocations.
 
-What this will do is in short enable to lift passive
-scan flags off of 5 GHz channels *faster* when cards
-are world roaming. This means that we can also initiate
-communication on channels on either UNII 1 or UNII 3
-faster than before when world roaming.
+Over the weekend I made some progress. To test the latest vendor driver, I 
+installed a 32-bit system. Their driver is not compatible with a 64-bit system. 
+I found that not only did the vendor driver work with secure sites, but so did 
+the in-kernel version. I now have tcpdump output for the 32-bit case that works, 
+and the 64-bit case that fails. It seems likely that I missed some 32/64 bit 
+incompatibility when I did the conversion.
 
-Credit goes got David Quan for the idea.
+Thanks for all your help in trying to resolve this issue.
 
-Luis R. Rodriguez (2):
-  cfg80211: add a helper for processing 5 GHz beacon hints
-  cfg80211: add 5 GHz UNII band regulatory hints
+Larry
 
- net/wireless/reg.c |  167 +++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 151 insertions(+), 16 deletions(-)
-
--- 
-1.7.10.4
 
