@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:33076 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755215Ab2HNJGN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 05:06:13 -0400
-Received: by eeil10 with SMTP id l10so55690eei.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2012 02:06:11 -0700 (PDT)
-From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-To: mcgrof@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH] compat: Drop redundant udev rules file
-Date: Tue, 14 Aug 2012 12:06:04 +0300
-Message-Id: <1344935164-21377-1-git-send-email-ozancag@gmail.com> (sfid-20120814_110617_229782_59EC8E5F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.web.de ([212.227.17.12]:55121 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750967Ab2H0N0D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 09:26:03 -0400
+Received: from aldoreel ([79.198.116.157]) by smtp.web.de (mrweb003) with
+ ESMTPSA (Nemesis) id 0LsQQK-1TlpQn1mPY-012NfT for
+ <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 15:26:01 +0200
+Date: Mon, 27 Aug 2012 15:25:59 +0200
+From: Julian Wollrath <jwollrath@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: brcmsmac: BCM43224 trace of a warning
+Message-ID: <20120827152559.0b8a9502@aldoreel> (sfid-20120827_152607_901282_E3CD2F7C)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-udev rules for Ubuntu and the-rest-of-world are the same. Drop one of
-them and use the other one.
+Hello,
 
-Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
----
- scripts/compat_firmware_install      | 2 +-
- udev/ubuntu/50-compat_firmware.rules | 4 ----
- 2 files changed, 1 insertion(+), 5 deletions(-)
- delete mode 100644 udev/ubuntu/50-compat_firmware.rules
+I just found the following in my dmesg output:
+[  999.752979] ------------[ cut here ]------------
+[  999.753001] WARNING: at drivers/net/wireless/brcm80211/brcmsmac/main.c:7993 brcms_c_wait_for_tx_completion+0x91/0xa0 [brcmsmac]()
+[  999.753004] Hardware name: Vostro 3500
+[  999.753005] Modules linked in: parport_pc ppdev lp parport af_packet fuse arc4 snd_hda_codec_hdmi nouveau snd_hda_codec_idt snd_hda_intel cfbfillrect cfbimgblt mxm_wmi cfbcopyarea i2c_algo_bit brcmsmac drm_kms_helper ttm drm cordic brcmutil agpgart mac80211 snd_hda_codec sg i2c_i801 i2c_core ehci_hcd usbcore snd_pcm snd_page_alloc sr_mod cdrom coretemp cfg80211 snd_timer snd soundcore rfkill dell_wmi sparse_keymap kvm_intel kvm evdev usb_common psmouse r8169 pcspkr dell_laptop acpi_cpufreq mperf dcdbas bcma battery ac serio_raw crc32c_intel mii button wmi processor sd_mod microcode thermal ahci libahci libata scsi_mod
+[  999.753064] Pid: 698, comm: kworker/u:5 Not tainted 3.6.0-rc3-wl-00079-g90c76a9 #1
+[  999.753066] Call Trace:
+[  999.753075]  [<ffffffff8103c339>] ? warn_slowpath_common+0x79/0xc0
+[  999.753085]  [<ffffffffa061e9c1>] ? brcms_c_wait_for_tx_completion+0x91/0xa0 [brcmsmac]
+[  999.753090]  [<ffffffffa06111b2>] ? brcms_ops_flush+0x32/0x50 [brcmsmac]
+[  999.753102]  [<ffffffffa056e98c>] ? ieee80211_mgd_probe_ap.part.42+0x12c/0x150 [mac80211]
+[  999.753111]  [<ffffffffa056f91d>] ? ieee80211_beacon_connection_loss_work+0x8d/0x130 [mac80211]
+[  999.753116]  [<ffffffff81054157>] ? process_one_work+0x127/0x450
+[  999.753121]  [<ffffffff81052356>] ? cwq_activate_first_delayed+0x26/0x40
+[  999.753130]  [<ffffffffa056f890>] ? ieee80211_set_disassoc+0x3a0/0x3a0 [mac80211]
+[  999.753133]  [<ffffffff81054aad>] ? worker_thread+0x15d/0x420
+[  999.753138]  [<ffffffff810682ca>] ? sched_move_task+0xba/0x1a0
+[  999.753141]  [<ffffffff81054950>] ? manage_workers.isra.27+0x280/0x280
+[  999.753146]  [<ffffffff810598b5>] ? kthread+0x85/0x90
+[  999.753154]  [<ffffffff8141c574>] ? kernel_thread_helper+0x4/0x10
+[  999.753158]  [<ffffffff81059830>] ? kthread_freezable_should_stop+0x50/0x50
+[  999.753161]  [<ffffffff8141c570>] ? gs_change+0xb/0xb
+[  999.753163] ---[ end trace b305ccae444fa33f ]---
 
-diff --git a/scripts/compat_firmware_install b/scripts/compat_firmware_install
-index 33e4fde..e4b9fb0 100755
---- a/scripts/compat_firmware_install
-+++ b/scripts/compat_firmware_install
-@@ -10,7 +10,7 @@ case $LSB_RED_ID in
- "Ubuntu")
- 	mkdir -p /lib/udev/ /lib/udev/rules.d/
- 	cp udev/ubuntu/compat_firmware.sh /lib/udev/
--	cp udev/ubuntu/50-compat_firmware.rules /lib/udev/rules.d/
-+	cp udev/50-compat_firmware.rules /lib/udev/rules.d/
-         ;;
- *)
- 	mkdir -p /lib/udev/ /lib/udev/rules.d/
-diff --git a/udev/ubuntu/50-compat_firmware.rules b/udev/ubuntu/50-compat_firmware.rules
-deleted file mode 100644
-index 6473788..0000000
---- a/udev/ubuntu/50-compat_firmware.rules
-+++ /dev/null
-@@ -1,4 +0,0 @@
--# do not edit this file, it will be overwritten on update
--
--# compat_firmware-class requests, copies files into the kernel
--SUBSYSTEM=="compat_firmware", ACTION=="add", RUN+="compat_firmware.sh"
--- 
-1.7.11.2
+I do not really know what I did, when the warning was triggered but
+maybe the warning will be of interest nevertheless. I am using 3.6-rc3 +
+wireless-testing/master as of yesterday (August 26th 2012). If
+you need more information, please feel free to ask; if you have some
+hints, on how to find what caused the problem, please tell me.
 
+With best regards,
+Julian Wollrath
