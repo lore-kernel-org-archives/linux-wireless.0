@@ -1,46 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:36456 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757952Ab2HJJcz convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35230 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931Ab2H0Mi7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 05:32:55 -0400
-Received: by wibhr14 with SMTP id hr14so1191014wib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 02:32:54 -0700 (PDT)
+	Mon, 27 Aug 2012 08:38:59 -0400
+Message-ID: <503B6A5C.8070607@qca.qualcomm.com> (sfid-20120827_143904_991122_4E07DD6D)
+Date: Mon, 27 Aug 2012 18:08:52 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com>
-References: <1344544690-11280-1-git-send-email-zajec5@gmail.com>
-	<5024CE29.5030500@broadcom.com>
-	<CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com>
-Date: Fri, 10 Aug 2012 11:32:54 +0200
-Message-ID: <CACna6rw=-PV0w4T9S=3uGrORAUp_BbGHbg9QHRWYuRT9GwpM8A@mail.gmail.com> (sfid-20120810_113258_394535_11E6ACC7)
-Subject: Re: [PATCH wireless?] bcma: keep info about parallel flash presentence
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [RFC 1/3] ath9k: Fix BTCOEX timer triggering comparision
+References: <1345817851-8700-1-git-send-email-mohammed@qca.qualcomm.com> <20120825153919.GA23173@kamboji.qca.qualcomm.com> <8F3AF1C9F856774F8C8D67AA7EDFEC8801EEB120@aphydexd01b> <503B3E1F.1010804@qca.qualcomm.com> <20120827105318.GA2333@vmraj-lnx.qca.qualcomm.com>
+In-Reply-To: <20120827105318.GA2333@vmraj-lnx.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/8/10 Rafał Miłecki <zajec5@gmail.com>:
-> 2012/8/10 Arend van Spriel <arend@broadcom.com>:
->> On 08/09/2012 10:38 PM, Rafał Miłecki wrote:
->>> This allows drivers to access flash conditionally and stop crashing some
->>> devices.
->>>
->>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>> John: I suggest taking it for wirelesss, AKA fix
->>
->> Maybe you could mentioned devices and/or drivers crashes without this patch?
->
-> Yes, sure! The problematic one for me is arch/mips/bcm47xx/nvram.c.
-> Right now it assumes every BCMA board has pflash. I'll submit fix for
-> mips tree when this patch hits it.
+Hi Raj,
 
-Ah, and device. My Netgear WNDR4500 has serial flash and NAND flash.
-It doesn't have parallel one, so this code crashes my device.
+On Monday 27 August 2012 04:23 PM, Rajkumar Manoharan wrote:
+> On Mon, Aug 27, 2012 at 03:00:07PM +0530, Mohammed Shafi Shajakhan wrote:
+>> Hi Raj,
+>>
+>>
+>> On Friday 24 August 2012 10:28 PM, Manoharan, Rajkumar wrote:
+>>> On Fri, Aug 24, 2012 at 07:47:29PM +0530, Mohammed Shafi Shajakhan wrote:
+>>>> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>>>>
+>>>> Its safer to convert btcoex_period to 'us' while
+>>>> comparing with btcoex_no_stomp which is in 'us'.
+>>>> Did not find any functionality issues being fixed,
+>>>> as the generic hardware timer triggers are usually
+>>>> refreshed with the newer duty cycle.
+>>>>
+>>> In which way it is safer? What does the patch fix? It was intentionally
+>>> converted to msec by "ath9k: keep btcoex period in milliseconds".
+>>
+>> we got btcoex_period is in 'us' while 'btcoex_no_stomp' in 'ms'
+>> when we are going to compare , both of them had to been in same time
+>> units. Rather then mentioning it as 'safer' the commit log should say
+>> its 'more correct' :-)  previously the comparison happened with same
+>> timeunits(ms).
+>>
+>> I could not find any functionality issue being fixed,
+>> but i saw the difference, when putting debug prints for
+>> btcoex->btcoex_period, btcoex->btcoex_no_stomp), there was so
+>> much difference. Yet the check itself
+>>
+>>          if (btcoex->btcoex_period != btcoex->btcoex_no_stomp)
+>>
+>> seems to be true for almost all the cases. So fine with changing the
+>> commit log ?
+>>
+>> thanks a lot for the review!
+>>
+> Oops. Its a regression. Can you please include the commit "ath9k: keep btcoex
+> period in milliseconds" that causes this regression in your commit log.
+>
+
+sure Raj, i would do it, it did not make any difference :-)
+the h/w timers are usually stopped and started.
+again, thanks for you kind review!
+
 
 -- 
-Rafał
+thanks,
+shafi
+
+
