@@ -1,63 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:35918 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753235Ab2HWGzD (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36968 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab2H0Oyd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 02:55:03 -0400
+	Mon, 27 Aug 2012 10:54:33 -0400
+Received: by ialo24 with SMTP id o24so8331679ial.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 07:54:33 -0700 (PDT)
+Message-ID: <503B8A25.9010001@lwfinger.net> (sfid-20120827_165437_827168_53D8B5DF)
+Date: Mon, 27 Aug 2012 09:54:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Thu, 23 Aug 2012 14:55:02 +0800
-Message-ID: <CAPgLHd8vJYvcUnDUwD-WuZTcxbfA8f+gjhQihuvLqTzS==sR9g@mail.gmail.com> (sfid-20120823_085512_664031_96133B47)
-Subject: [PATCH] orinoco: use is_zero_ether_addr() instead of memcmp()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Patrick Connolly <pjc999@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Question about ath9k/mac80211 Driver
+References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com> <50365AC8.7030503@lwfinger.net> <CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com> <5036660B.9020208@lwfinger.net> <CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com> <50381437.7040903@lwfinger.net> <CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com> <CAE3CJbmK4nF2gR56Rkrrd8qWoCuLot=XD-a9koWxCzcDeOrg8A@mail.gmail.com>
+In-Reply-To: <CAE3CJbmK4nF2gR56Rkrrd8qWoCuLot=XD-a9koWxCzcDeOrg8A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 08/27/2012 08:50 AM, Patrick Connolly wrote:
+> So can anybody comment on whether kernel 2.6.32 is recent enough to
+> support "iw" version 0.9.22 ?
 
-Using is_zero_ether_addr() instead of directly use
-memcmp() to determine if the ethernet address is all
-zeros.
+It is not; however, you can build compat-wireless for that kernel and get code 
+that will.
 
-spatch with a semantic match is used to found this problem.
-(http://coccinelle.lip6.fr/)
+Larry
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/orinoco/wext.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-index 33747e1..3b5508f 100644
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -7,6 +7,7 @@
- #include <linux/if_arp.h>
- #include <linux/wireless.h>
- #include <linux/ieee80211.h>
-+#include <linux/etherdevice.h>
- #include <net/iw_handler.h>
- #include <net/cfg80211.h>
- #include <net/cfg80211-wext.h>
-@@ -159,15 +160,13 @@ static int orinoco_ioctl_setwap(struct net_device *dev,
- 	struct orinoco_private *priv = ndev_priv(dev);
- 	int err = -EINPROGRESS;		/* Call commit handler */
- 	unsigned long flags;
--	static const u8 off_addr[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
--	static const u8 any_addr[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
- 
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return -EBUSY;
- 
- 	/* Enable automatic roaming - no sanity checks are needed */
--	if (memcmp(&ap_addr->sa_data, off_addr, ETH_ALEN) == 0 ||
--	    memcmp(&ap_addr->sa_data, any_addr, ETH_ALEN) == 0) {
-+	if (is_zero_ether_addr(ap_addr->sa_data) ||
-+	    is_broadcast_ether_addr(ap_addr->sa_data)) {
- 		priv->bssid_fixed = 0;
- 		memset(priv->desired_bssid, 0, ETH_ALEN);
- 
 
