@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43985 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755762Ab2HAPyH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 11:54:07 -0400
-Message-ID: <1343836438.4638.5.camel@jlt3.sipsolutions.net> (sfid-20120801_175412_359524_458C7981)
-Subject: Re: assert_cfg80211_lock warning with Linux v3.5-8833-g2d53492
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Josh Boyer <jwboyer@redhat.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Seth Forshee <seth.forshee@canonical.com>
-Date: Wed, 01 Aug 2012 17:53:58 +0200
-In-Reply-To: <5019506C.6020707@broadcom.com>
-References: <20120801131232.GA1785@zod.bos.redhat.com>
-	 <20120801141810.GB27433@tuxdriver.com> <50194D7A.6060400@broadcom.com>
-	 <5019506C.6020707@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:53764 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752974Ab2H0PAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 11:00:18 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 3.6 4/6] ath9k_hw: disable PA linearization for AR9462
+Date: Mon, 27 Aug 2012 17:00:06 +0200
+Message-Id: <1346079608-40944-4-git-send-email-nbd@openwrt.org> (sfid-20120827_170105_537368_3C3328EE)
+In-Reply-To: <1346079608-40944-3-git-send-email-nbd@openwrt.org>
+References: <1346079608-40944-1-git-send-email-nbd@openwrt.org>
+ <1346079608-40944-2-git-send-email-nbd@openwrt.org>
+ <1346079608-40944-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-01 at 17:51 +0200, Arend van Spriel wrote:
-> On 08/01/2012 05:38 PM, Arend van Spriel wrote:
-> >> brcmsmac needs to hold cfg80211_mutex before calling freq_reg_info...
-> >> > 
-> >> > It looks like those calls were added in mid-June.
-> >> > 
-> > I think mid-june sounds about right. We never observed the warning when
-> > changes to use regulatory infrastructure were tested/reviewed. Should
-> > this precondition be mentioned in cfg80211.h?
-> > 
-> > Gr. AvS
-> 
-> Diving in further it seems brcmsmac can not grab the cfg80211_mutex. So
-> another solution is needed.
+Support for it is incomplete
 
-Yeah I was going to say -- how can it possibly access that? It seems
-that in some patch the API got broken, it should be taking the lock or
-whatever ... I'll leave it to Luis to sort out though :-P
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d95474e..64a00d2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2499,7 +2499,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->tx_desc_len = sizeof(struct ar9003_txc);
+ 		pCap->txs_len = sizeof(struct ar9003_txs);
+ 		if (!ah->config.paprd_disable &&
+-		    ah->eep_ops->get_eeprom(ah, EEP_PAPRD))
++		    ah->eep_ops->get_eeprom(ah, EEP_PAPRD) &&
++		    !AR_SREV_9462(ah))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_PAPRD;
+ 	} else {
+ 		pCap->tx_desc_len = sizeof(struct ath_desc);
+-- 
+1.7.9.6 (Apple Git-31.1)
 
