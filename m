@@ -1,66 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:40114 "EHLO
-	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751894Ab2H2S6J (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:58176 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527Ab2H0FRa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Aug 2012 14:58:09 -0400
-Received: by bkwj10 with SMTP id j10so463138bkw.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 11:58:07 -0700 (PDT)
-Message-ID: <1346266668.3935.23.camel@cumari.coelho.fi> (sfid-20120829_205814_589618_3AA0F398)
-Subject: Re: [PATCH 3.6-rc3] wlcore: Declare MODULE_FIRMWARE usage
-From: Luciano Coelho <coelho@ti.com>
-To: Tim Gardner <tim.gardner@canonical.com>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 29 Aug 2012 21:57:48 +0300
-In-Reply-To: <503E4DBB.4030606@canonical.com>
-References: <1346251689-37023-1-git-send-email-tim.gardner@canonical.com>
-	 <1346259706.3935.2.camel@cumari.coelho.fi> <503E4DBB.4030606@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 27 Aug 2012 01:17:30 -0400
+Received: by obbuo13 with SMTP id uo13so7467937obb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 22:17:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+Date: Mon, 27 Aug 2012 10:47:29 +0530
+Message-ID: <CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com> (sfid-20120827_071734_571193_31F171E7)
+Subject: Re: [PATCHv2 1/2] ath9k_htc: remove driver specific checks for
+ interfaces combinations
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-08-29 at 11:13 -0600, Tim Gardner wrote:
-> On 08/29/2012 11:01 AM, Luciano Coelho wrote:
-> > On Wed, 2012-08-29 at 08:48 -0600, Tim Gardner wrote:
-> >> Cc: Luciano Coelho <coelho@ti.com>
-> >> Cc: "John W. Linville" <linville@tuxdriver.com>
-> >> Cc: Eliad Peller <eliad@wizery.com>
-> >> Cc: Arik Nemtsov <arik@wizery.com>
-> >> Cc: Eyal Shapira <eyal@wizery.com>
-> >> Cc: linux-wireless@vger.kernel.org
-> >> Cc: netdev@vger.kernel.org
-> >> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> >> ---
-> > 
-> > Please add a proper commit message.  And there's no need to put all
-> > these people in Cc: in the commit log.  CC'ing when sending the patch is
-> > enough (even though for such small patch, the linux-wireless mailing
-> > list and myself is enough).
-> > 
-> > --
-> > Luca.
-> > 
-> 
-> What more would you like covered in the commit message that isn't
-> obvious from the subject?
+Hi,
 
-It's obvious from the subject, indeed.  But commits with no descriptions
-are ugly.  Add something, for example a small "why" would be nice.
+On Mon, Aug 27, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+> Thanks to the new interface combinations code we can safely remove all the
+> driver specific checks for unsupported modes.
+
+i had just sent this some time back
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/96443.
+
+please review if something had to be changed.
+
+>
+> Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+> ---
+>
+> this patch if v2 of "ath9k_htc: allow coexistence of IBSS with other modes". Now
+> it is more generic.
+>
+>
+>
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 20 --------------------
+>  1 file changed, 20 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> index c32f6e3..51c69f2 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -1040,26 +1040,6 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+>
+>         mutex_lock(&priv->mutex);
+>
+> -       if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
+> -               mutex_unlock(&priv->mutex);
+> -               return -ENOBUFS;
+> -       }
+> -
+> -       if (priv->num_ibss_vif ||
+> -           (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
+> -               ath_err(common, "IBSS coexistence with other modes is not allowed\n");
+> -               mutex_unlock(&priv->mutex);
+> -               return -ENOBUFS;
+> -       }
+> -
+> -       if (((vif->type == NL80211_IFTYPE_AP) ||
+> -            (vif->type == NL80211_IFTYPE_ADHOC)) &&
+> -           ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
+> -               ath_err(common, "Max. number of beaconing interfaces reached\n");
+> -               mutex_unlock(&priv->mutex);
+> -               return -ENOBUFS;
+> -       }
+> -
+>         ath9k_htc_ps_wakeup(priv);
+>         memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
+>         memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
+> --
+> 1.7.12
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-> The Cc list comes from scripts/get_maintainers.pl as suggested by
-> Documentation/SubmittingPatches: "5) Select e-mail destination."
 
-Yeah, that's correct, but it doesn't mean you should put them as Cc:
-tags in the commit log.  CCing when *sending* the email only is enough.
-Most people won't really care for the entire lifetime of this patch.
-And, come on, the Cc tags take more space than the actual patch.
-
---
-Luca.
-
+-- 
+thanks,
+shafi
