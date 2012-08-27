@@ -1,42 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33329 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751917Ab2HUHuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 03:50:18 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mahesh Palivela <maheshp@posedge.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville\@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCDD559@mbx022-e1-nj-10.exch022.domain.local>
-	<20120816102211.GD17659@redhat.com> <502CF2D5.6020704@posedge.com>
-	<20120817140657.GA1645@redhat.com> <502E85D9.5050301@posedge.com>
-	<1345480718.4459.37.camel@jlt3.sipsolutions.net>
-Date: Tue, 21 Aug 2012 10:50:13 +0300
-In-Reply-To: <1345480718.4459.37.camel@jlt3.sipsolutions.net> (Johannes Berg's
-	message of "Mon, 20 Aug 2012 18:38:38 +0200")
-Message-ID: <87d32k7kga.fsf@purkki.adurom.net> (sfid-20120821_095021_970024_70970E8B)
+Received: from investici.nine.ch ([217.150.252.179]:34428 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751001Ab2H0Gna (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 02:43:30 -0400
+Date: Mon, 27 Aug 2012 08:42:48 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
+Message-ID: <20120827064248.GA22073@ritirata.org> (sfid-20120827_084335_998055_A5175438)
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+ <1346014505-7554-2-git-send-email-ordex@autistici.org>
+ <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com>
+ <1346045881.3746.0.camel@jlt4.sipsolutions.net>
+ <CAGRGNgXy3t5TJqY=VwKjPEH=K4XKR_Dm5qVKkmYxStYoAP3fvQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
+In-Reply-To: <CAGRGNgXy3t5TJqY=VwKjPEH=K4XKR_Dm5qVKkmYxStYoAP3fvQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On the other hand, maybe for VHT we want to completely change channel
-> specifications? Maybe it would be better to allow specifying the
-> *global* center frequency of the entire channel, and the width, and the
-> control channel offset instead of encoding everything into the single
-> channel type value? I don't know.
+--MGYHOYXEY6WxJCY8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-What about the future? Will we see 320 MHz wide channels in 2020? :)
+On Mon, Aug 27, 2012 at 03:41:09 +1000, Julian Calaby wrote:
+> Hi Johannes,
+>=20
+> On Mon, Aug 27, 2012 at 3:38 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Mon, 2012-08-27 at 09:48 +1000, Julian Calaby wrote:
+> >> Antonio,
+> >>
+> >> On Mon, Aug 27, 2012 at 6:55 AM, Antonio Quartulli <ordex@autistici.or=
+g> wrote:
+> >> > This driver now advertises its allowed VIFs combinations to the mac8=
+0211
+> >> > sublayer.
+> >> >
+> >> > Other than that, practical tests shown that ath9k_htc devices allow =
+an IBSS VIF
+> >> > to coexist with VIF set up on other modes. This patch removes the ch=
+eck which
+> >> > block the creation of any other VIF whenever an IBSS one is already =
+present.
+> >>
+> >> These two patches should really be applied in the opposite order:
+> >>
+> >> You should add the interface combination data (this patch) then remove
+> >> the old checking code.
+> >>
+> >> This way there's not a window (admittedly only one patch) where the
+> >> interface combinations aren't enforced.
+> >
+> > FWIW, it's the other way around, in that window no combinations would be
+> > permitted at all...
+>=20
+> It's still a problem for bisection then =3D)
 
-After following the discussion about this I'm starting to think that
-what you propose above makes our life easier in the long run. I just
-don't trust that using a single channel type value is scalable in the
-long run.
+Shall I merge the two patches and do both the changes in one shot?
 
--- 
-Kalle Valo
+Cheers,
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--MGYHOYXEY6WxJCY8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlA7FugACgkQpGgxIkP9cwf91gCgjiVbArfZt8CGu3DM7iL2AcJe
+1XYAnA0JxN9ryK2/M93jq6OCQB37rj5V
+=kpsC
+-----END PGP SIGNATURE-----
+
+--MGYHOYXEY6WxJCY8--
