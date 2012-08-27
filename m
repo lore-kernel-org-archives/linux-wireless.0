@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:59060 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221Ab2HTPxu (ORCPT
+Received: from contumacia.investici.org ([178.255.144.35]:36188 "EHLO
+	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002Ab2H0JnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 11:53:50 -0400
-Received: by ggdk6 with SMTP id k6so5136567ggd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2012 08:53:49 -0700 (PDT)
-Message-ID: <50325D89.9080209@lwfinger.net> (sfid-20120820_175359_118501_EB784972)
-Date: Mon, 20 Aug 2012 10:53:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 27 Aug 2012 05:43:11 -0400
+Date: Mon, 27 Aug 2012 11:42:56 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 1/2] ath9k_htc: remove driver specific checks for
+ interfaces combinations
+Message-ID: <20120827094256.GC22073@ritirata.org> (sfid-20120827_114315_128676_0E31D842)
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+ <CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
+ <20120827065419.GB22073@ritirata.org>
+ <CAD2nsn2CYYP2+VRX0Ph=6Vw2kTqmwRvMn+FVeS3FwMd=jvwy8Q@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: Missing firmware iwlwifi-2030-5.ucode
-References: <502D0C72.2050207@lwfinger.net>  (sfid-20120816_170635_404509_F239FBF6) <1345459509.4459.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1345459509.4459.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ZmUaFz6apKcXQszQ"
+In-Reply-To: <CAD2nsn2CYYP2+VRX0Ph=6Vw2kTqmwRvMn+FVeS3FwMd=jvwy8Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/20/2012 05:45 AM, Johannes Berg wrote:
 
-Johannes,
+--ZmUaFz6apKcXQszQ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Unfortunately, I can't just release this firmware, it was mostly
-> internal experimental builds, we released the -6 version later. However,
-> as Thomas pointed out, it should be possible to backport some patches to
-> make the driver in 3.1.9 work with the device, that simply wasn't a
-> concern for us and it's not entirely clear to me that such patches are
-> candidates for stable.
+Hi Mohammed,
 
-The openSUSE user has gotten his system working by installing the 
-compat-wireless package. I do not know if he could patch and compile his own 
-kernel, and I don't have that device in my collection, thus I would be unable to 
-test any such changes.
+On Mon, Aug 27, 2012 at 02:45:36 +0530, Mohammed Shafi wrote:
+> Hi Antonio,
+>=20
+> > Your patch is ok. But, at this point, should patch 2/6 and 3/6 be merged
+> > together?
+>=20
+> an order of interface combinations advertisement(2/6), followed by
+> removing specific
+> checks should be fine right ?
 
-I'm still concerned about the bigger picture. I can understand that the -5 
-version was experimental, but why was a driver released that needed a firmware 
-version that could never be obtained? If any driver version needs a particular 
-firmware, the fw must be available as long as anyone might be using that driver. 
-To me, that means forever.
+In my opinion this is correct. But maybe Johannes has some arguments agains=
+t this
+order?
 
-Larry
+>=20
+> >
+> > Other than that, patch 2/6 should be modified to take into account IBSS=
+ mode.
+>=20
+> yeah saw your patch, that in ath9k_htc IBSS interface can coexist with
+> one more interface.
+> The standalone limitation exists in ath9k too, not sure this is a
+> limitation to beacon config
+> for ath9k & ath9k_htc, I will just confirm. If its fine i will resend
+> the v2 version signing off both
+> of our names accounting IBSS mode too.
 
 
+fine with me :) Thank you!
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--ZmUaFz6apKcXQszQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlA7QSAACgkQpGgxIkP9cwfxdQCePZWsy/J7W/Mxo0WLtZDPeVxm
+ZdMAn3nfCewdXsqNjKLPO6y9e5UtxuvH
+=j7uQ
+-----END PGP SIGNATURE-----
+
+--ZmUaFz6apKcXQszQ--
