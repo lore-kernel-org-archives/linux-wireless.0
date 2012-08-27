@@ -1,43 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59598 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752506Ab2HVUaI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 16:30:08 -0400
-Message-ID: <5035414D.2080600@openwrt.org> (sfid-20120822_223011_829114_28D49CA3)
-Date: Wed, 22 Aug 2012 22:30:05 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:5906 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753116Ab2H0K0b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 06:26:31 -0400
+From: Wei Ni <wni@nvidia.com>
+To: <swarren@wwwdotorg.org>, <brudley@broadcom.com>,
+	<rvossen@broadcom.com>
+CC: <krakesh@nvidia.com>, <ldewangan@nvidia.com>,
+	<linux-tegra@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, Wei Ni <wni@nvidia.com>
+Subject: [PATCH 5/6] ARM: dt: t30 cardhu: set pinmux and power for wlan
+Date: Mon, 27 Aug 2012 18:25:13 +0800
+Message-ID: <1346063114-30361-6-git-send-email-wni@nvidia.com> (sfid-20120827_122733_854855_BA366D0A)
+In-Reply-To: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Issue with ath9k and tx/rx chainmask:  3x3 doesn't work with
- mask of 0x1.
-References: <50329D11.9030405@candelatech.com>
-In-Reply-To: <50329D11.9030405@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-08-20 10:24 PM, Ben Greear wrote:
-> I am trying to test out an attenuator.  For now, I have only a single attenuator,
-> so I set tx and rx chainmask to 0x1 on both AP and Station machine.
-> 
-> I then connected channel 0 on the two machines together through the
-> attenuator.
-> 
-> I have two station interfaces on the station machine.  They both
-> seem to associate OK, but they cannot receive dhcp responses.
-> 
-> It *seems* that broadcast packets may go through fine.
-> 
-> If I force the rate down to 1x1 or 2x2 MIMO (or force disable /n
-> and just use /a), then it appears to work fine.
-> 
-> Nics are WPEA-127n (AR9380).  Kernel is 3.5.1+ on AP, 3.5.2+ on station
-> machine.
-> 
-> I can see why forcing it down to 1x1 might work around some issue,
-> but I find it funny that 2x2 works while 3x3 does not.
-Did you set the chainmask manually via debugfs? If so, don't do that!
-Use the nl80211 antenna control API (e.g. via iw)
+Configure pinmux as required for WiFi.
+Enable the SDHCI1 controller. This is connectted to the WiFi module.
+For now, always enable the regulator that provides power to the Wifi module.
 
-- Felix
+Signed-off-by: Wei Ni <wni@nvidia.com>
+---
+ arch/arm/boot/dts/tegra30-cardhu.dtsi |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+index 4794693..ed9b530 100644
+--- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
++++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+@@ -52,6 +52,22 @@
+ 				nvidia,pull = <2>;
+ 				nvidia,tristate = <0>;
+ 			};
++			sdmmc3_clk_pa6 {
++				nvidia,pins = "sdmmc3_clk_pa6";
++				nvidia,function = "sdmmc3";
++				nvidia,pull = <0>;
++				nvidia,tristate = <0>;
++			};
++			sdmmc3_cmd_pa7 {
++				nvidia,pins =	"sdmmc3_cmd_pa7",
++						"sdmmc3_dat0_pb7",
++						"sdmmc3_dat1_pb6",
++						"sdmmc3_dat2_pb5",
++						"sdmmc3_dat3_pb4";
++				nvidia,function = "sdmmc3";
++				nvidia,pull = <2>;
++				nvidia,tristate = <0>;
++			};
+ 			sdmmc4_clk_pcc4 {
+ 				nvidia,pins =	"sdmmc4_clk_pcc4",
+ 						"sdmmc4_rst_n_pcc3";
+@@ -81,6 +97,15 @@
+ 				nvidia,pull = <0>;
+ 				nvidia,tristate = <0>;
+ 			};
++			sdio3 {
++				nvidia,pins = "drive_sdio3";
++				nvidia,high-speed-mode = <0>;
++				nvidia,schmitt = <0>;
++				nvidia,pull-down-strength = <46>;
++				nvidia,pull-up-strength = <42>;
++				nvidia,slew-rate-rising = <1>;
++				nvidia,slew-rate-falling = <1>;
++			};
+ 		};
+ 	};
+ 
+@@ -292,6 +317,11 @@
+ 		bus-width = <4>;
+ 	};
+ 
++	sdhci@78000400 {
++		status = "okay";
++		power-gpios = <&gpio 28 0>; /* gpio PD4 */
++	};
++
+ 	sdhci@78000600 {
+ 		status = "okay";
+ 		bus-width = <8>;
+@@ -407,6 +437,8 @@
+ 			regulator-name = "vdd_com";
+ 			regulator-min-microvolt = <3300000>;
+ 			regulator-max-microvolt = <3300000>;
++			regulator-always-on;
++			regulator-boot-on;
+ 			enable-active-high;
+ 			gpio = <&gpio 24 0>; /* gpio PD0 */
+ 			vin-supply = <&sys_3v3_reg>;
+-- 
+1.7.1
+
