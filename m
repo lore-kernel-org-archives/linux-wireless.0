@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:52849 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879Ab2HETgS (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:33953 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752942Ab2H0IXi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Aug 2012 15:36:18 -0400
-Received: by mail-we0-f174.google.com with SMTP id x8so1488533wey.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2012 12:36:17 -0700 (PDT)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
-	thomas@net.t-labs.tu-berlin.de, nbd@openwrt.org,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH v2 3/5] ath5k: Preserve tx power level requested from above on phy_init
-Date: Sun,  5 Aug 2012 22:35:35 +0300
-Message-Id: <1344195337-27461-4-git-send-email-mickflemm@gmail.com> (sfid-20120805_213620_805643_60EF0A90)
-In-Reply-To: <1344195337-27461-1-git-send-email-mickflemm@gmail.com>
-References: <1344195337-27461-1-git-send-email-mickflemm@gmail.com>
+	Mon, 27 Aug 2012 04:23:38 -0400
+Received: by vcbfk26 with SMTP id fk26so4108975vcb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 01:23:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1345989412.8762.6.camel@mehome>
+References: <20120820205355.7ccc0450@emcraft.com>
+	<20120821114343.GB2380@redhat.com>
+	<1345989412.8762.6.camel@mehome>
+Date: Mon, 27 Aug 2012 10:23:37 +0200
+Message-ID: <CAOZOX0UsnFg_ZKcpR3h-wP+3AuO42Qyro2VRosgkuwjzX7-OSg@mail.gmail.com> (sfid-20120827_102341_326000_15281149)
+Subject: Re: [rt2x00-users] [PATCH] compat-wireless:rt2800usb: Fixed a typo
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Sergei Poselenov <sposelenov@emcraft.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By using cur_pwr on phy_init we re-use the power level previously set by the
-driver, not the one we got from above.
+On Sun, Aug 26, 2012 at 3:56 PM, Sergei Poselenov
+<sposelenov@emcraft.com> wrote:
+> Fixed a typo in the comment.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Sergei Poselenov <sposelenov@emcraft.com>
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 84a9aaf..27ca993 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -3802,8 +3802,8 @@ ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 	 * RF buffer settings on 5211/5212+ so that we
- 	 * properly set curve indices.
- 	 */
--	ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
--			ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
-+	ret = ath5k_hw_txpower(ah, channel, ah->power_level ?
-+			ah->power_level * 2 : AR5K_TUNE_MAX_TXPOWER);
- 	if (ret)
- 		return ret;
- 
--- 
-1.7.3.4
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 6cf3365..f8085b2 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -662,7 +662,7 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+>         rx_pkt_len = rt2x00_get_field32(word, RXINFO_W0_USB_DMA_RX_PKT_LEN);
+>
+>         /*
+> -        * Remove the RXINFO structure from the sbk.
+> +        * Remove the RXINFO structure from the skb.
+>          */
+>         skb_pull(entry->skb, RXINFO_DESC_SIZE);
+>
+> --
+> 1.7.4.4
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
