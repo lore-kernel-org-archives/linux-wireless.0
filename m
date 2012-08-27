@@ -1,102 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46104 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507Ab2HWAFa (ORCPT
+Received: from hqemgate04.nvidia.com ([216.228.121.35]:12973 "EHLO
+	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753062Ab2H0K0a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 20:05:30 -0400
-Message-ID: <503573C6.4000103@candelatech.com> (sfid-20120823_020534_597161_5DFE76A4)
-Date: Wed, 22 Aug 2012 17:05:26 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 27 Aug 2012 06:26:30 -0400
+From: Wei Ni <wni@nvidia.com>
+To: <swarren@wwwdotorg.org>, <brudley@broadcom.com>,
+	<rvossen@broadcom.com>
+CC: <krakesh@nvidia.com>, <ldewangan@nvidia.com>,
+	<linux-tegra@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, Wei Ni <wni@nvidia.com>
+Subject: [PATCH 4/6] ARM: dt: t20 ventana: set pinmux and power for wlan
+Date: Mon, 27 Aug 2012 18:25:12 +0800
+Message-ID: <1346063114-30361-5-git-send-email-wni@nvidia.com> (sfid-20120827_122754_344802_6362D0C3)
+In-Reply-To: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Issue with ath9k and tx/rx chainmask:  3x3 doesn't work with
- mask of 0x1.
-References: <50329D11.9030405@candelatech.com> <5035414D.2080600@openwrt.org> <50355C21.2030508@candelatech.com>
-In-Reply-To: <50355C21.2030508@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/22/2012 03:24 PM, Ben Greear wrote:
-> On 08/22/2012 01:30 PM, Felix Fietkau wrote:
->> On 2012-08-20 10:24 PM, Ben Greear wrote:
->>> I am trying to test out an attenuator.  For now, I have only a single attenuator,
->>> so I set tx and rx chainmask to 0x1 on both AP and Station machine.
->>>
->>> I then connected channel 0 on the two machines together through the
->>> attenuator.
->>>
->>> I have two station interfaces on the station machine.  They both
->>> seem to associate OK, but they cannot receive dhcp responses.
->>>
->>> It *seems* that broadcast packets may go through fine.
->>>
->>> If I force the rate down to 1x1 or 2x2 MIMO (or force disable /n
->>> and just use /a), then it appears to work fine.
->>>
->>> Nics are WPEA-127n (AR9380).  Kernel is 3.5.1+ on AP, 3.5.2+ on station
->>> machine.
->>>
->>> I can see why forcing it down to 1x1 might work around some issue,
->>> but I find it funny that 2x2 works while 3x3 does not.
->> Did you set the chainmask manually via debugfs? If so, don't do that!
->> Use the nl80211 antenna control API (e.g. via iw)
->
-> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1 1
-> command failed: Operation not supported (-95)
-> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 1
-> command failed: Operation not supported (-95)
-> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 3
-> command failed: Operation not supported (-95)
-> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7
-> command failed: Operation not supported (-95)
-> [root@lec2010-ath9k-1 lanforge]# uname -a
-> Linux lec2010-ath9k-1 3.5.1+ #15 SMP PREEMPT Thu Aug 9 09:31:45 PDT 2012 i686 i686 i386 GNU/Linux
+Configure pinmux as required for WiFi.
+Enable the SDHCI1 controller, which is connectted to the WiFi module.
 
-I'm guessing it is because of this:
+Signed-off-by: Wei Ni <wni@nvidia.com>
+---
+ arch/arm/boot/dts/tegra20-ventana.dts |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-static int ieee80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
-{
-	struct ieee80211_local *local = wiphy_priv(wiphy);
-
-	if (local->started)
-		return -EOPNOTSUPP;
-
-	return drv_set_antenna(local, tx_ant, rx_ant);
-}
-
-
-So, we'd have to admin down all virtual stations/aps/whatever before setting the
-antenna configuration?
-
-Thanks,
-Ben
-
-
->
-> # Set previously using debugfs.
-> [root@lec2010-ath9k-1 lanforge]# cat /debug/ieee80211/wiphy0/ath9k/tx_chainmask
-> 0x00000001
->
-> [root@lec2010-ath9k-1 lanforge]# ./local/sbin/iw phy wiphy0 set antenna 7 7
-> command failed: Operation not supported (-95)
->
->
-> Any idea what I'm doing wrong?
->
-> Thanks,
-> Ben
->
->
->>
->> - Felix
->>
->
->
-
-
+diff --git a/arch/arm/boot/dts/tegra20-ventana.dts b/arch/arm/boot/dts/tegra20-ventana.dts
+index 4ec6b4c..3cbe54c 100644
+--- a/arch/arm/boot/dts/tegra20-ventana.dts
++++ b/arch/arm/boot/dts/tegra20-ventana.dts
+@@ -237,6 +237,16 @@
+ 					"ld23_22";
+ 				nvidia,pull = <1>;
+ 			};
++			drive_sdio1 {
++				nvidia,pins = "drive_sdio1";
++				nvidia,high-speed-mode = <0>;
++				nvidia,schmitt = <1>;
++				nvidia,low-power-mode = <3>;
++				nvidia,pull-down-strength = <31>;
++				nvidia,pull-up-strength = <31>;
++				nvidia,slew-rate-rising = <3>;
++				nvidia,slew-rate-falling = <3>;
++			};
+ 		};
+ 	};
+ 
+@@ -454,6 +464,11 @@
+ 		status = "okay";
+ 	};
+ 
++	sdhci@c8000000 {
++		status = "okay";
++		power-gpios = <&gpio 86 0>; /* gpio PK6 */
++	};
++
+ 	sdhci@c8000400 {
+ 		status = "okay";
+ 		cd-gpios = <&gpio 69 0>; /* gpio PI5 */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
