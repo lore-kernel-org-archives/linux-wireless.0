@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:64233 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754594Ab2HFTUc convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:32965 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389Ab2H0NuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 15:20:32 -0400
-Received: by obbuo13 with SMTP id uo13so6299149obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2012 12:20:32 -0700 (PDT)
+	Mon, 27 Aug 2012 09:50:03 -0400
+Received: by pbbrr13 with SMTP id rr13so7462791pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 06:50:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1344251193-18733-1-git-send-email-ozancag@gmail.com>
-References: <1344251193-18733-1-git-send-email-ozancag@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 6 Aug 2012 12:20:11 -0700
-Message-ID: <CAB=NE6WNRwahAXM8=XTFmkFMViBKVM7vXBj-oFYHdgzGo6919g@mail.gmail.com> (sfid-20120806_212035_222139_C829F3DE)
-Subject: Re: [PATCH] compat: backport PCIe register definitions
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5811BCFB-A140-4A91-BF85-8074242B6000@jaist.ac.jp>
+References: <5811BCFB-A140-4A91-BF85-8074242B6000@jaist.ac.jp>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 27 Aug 2012 06:49:43 -0700
+Message-ID: <CAG6hwVPtKYVcZPOm_p6kCrEPOpsRS_Lc=rWEkEkYW+ZC-8wAcg@mail.gmail.com> (sfid-20120827_155009_138146_D02CAF6F)
+Subject: Re: [PATCH] mac80211: Various small fixes for cfg.c: mpath_set_pinfo()
+To: LEO Airwarosu Yoichi Shinoda <shinoda@jaist.ac.jp>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 6, 2012 at 4:06 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> New DRM core in 3.6 needs these in order to detect the maximum
-> link speed of the underlying bus.
->
-> This backports:
->
->         commit cdcac9cd7741af2c2b9255cbf060f772596907bb
->         Author: Dave Airlie <airlied@redhat.com>
->         Date:   Wed Jun 27 08:35:52 2012 +0100
->
->             pci_regs: define LNKSTA2 pcie cap + bits.
->
->             We need these for detecting the max link speed for drm drivers.
->
->             Acked-by: Bjorn Helgaas <bhelgass@google.com>
->             Signed-off-by: Dave Airlie <airlied@redhat.com>
->
-> [root@ozan linux-2.6]# git describe --contains cdcac9cd
-> v3.6-rc1~83^2~26
->
-> Trying kernel 3.5.0-030500-generic [OK]
-> Trying kernel 3.4.4-030404-generic [OK]
-> Trying kernel 3.3.7-030307-generic [OK]
-> Trying kernel 3.2.2-030202-generic [OK]
-> Trying kernel 3.1.10-030110-generic [OK]
-> Trying kernel 3.0.18-030018-generic [OK]
-> Trying kernel 2.6.39-02063904-generic [OK]
-> Trying kernel 2.6.38-02063808-generic [OK]
-> Trying kernel 2.6.37-02063706-generic [OK]
-> Trying kernel 2.6.36-02063604-generic [OK]
-> Trying kernel 2.6.35-02063512-generic [OK]
-> Trying kernel 2.6.34-02063410-generic [OK]
-> Trying kernel 2.6.33-02063305-generic [OK]
-> Trying kernel 2.6.32-02063255-generic [OK]
-> Trying kernel 2.6.31-02063113-generic [OK]
-> Trying kernel 2.6.30-02063010-generic [OK]
-> Trying kernel 2.6.29-02062906-generic [OK]
-> Trying kernel 2.6.28-02062810-generic [OK]
-> Trying kernel 2.6.27-020627-generic [OK]
-> Trying kernel 2.6.26-020626-generic [OK]
-> Trying kernel 2.6.25-020625-generic [OK]
-> Trying kernel 2.6.24-020624-generic [OK]
->
-> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
+Hi Shinoda,
 
-Applied and pushed, thanks!
+On Mon, Aug 27, 2012 at 6:28 AM, LEO Airwarosu Yoichi Shinoda
+<shinoda@jaist.ac.jp> wrote:
+>
+> Various small fixes for net/mac80211/cfg.c:mpath_set_pinfo():
+> Initialize *pinfo before filling members in, handle MESH_PATH_RESOLVED
+> correctly, and remove bogus assignment; result in correct display
+> of FLAGS values and meaningful EXPTIME for expired paths in iw utility.
+>
+> Signed-off-by: Yoichi Shinoda <shinoda@jaist.ac.jp>
+Acked-by: Thomas Pedersen <thomas@cozybit.com>
+> ---
+>  net/mac80211/cfg.c |    9 ++++-----
+>  1 files changed, 4 insertions(+), 5 deletions(-)
+>
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index d41974a..d69e38b 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -1378,6 +1378,8 @@ static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
+>         else
+>                 memset(next_hop, 0, ETH_ALEN);
+>
+> +       memset(pinfo, 0, sizeof(struct mpath_info));
+> +
 
-  Luis
+This is probably up to personal preference, but IMO 'sizeof(*p)' is a
+little nicer since the compiler already knows the pointer type.
+
+>         pinfo->generation = mesh_paths_generation;
+>
+>         pinfo->filled = MPATH_INFO_FRAME_QLEN |
+> @@ -1396,7 +1398,6 @@ static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
+>         pinfo->discovery_timeout =
+>                         jiffies_to_msecs(mpath->discovery_timeout);
+>         pinfo->discovery_retries = mpath->discovery_retries;
+> -       pinfo->flags = 0;
+>         if (mpath->flags & MESH_PATH_ACTIVE)
+>                 pinfo->flags |= NL80211_MPATH_FLAG_ACTIVE;
+>         if (mpath->flags & MESH_PATH_RESOLVING)
+> @@ -1405,10 +1406,8 @@ static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
+>                 pinfo->flags |= NL80211_MPATH_FLAG_SN_VALID;
+>         if (mpath->flags & MESH_PATH_FIXED)
+>                 pinfo->flags |= NL80211_MPATH_FLAG_FIXED;
+> -       if (mpath->flags & MESH_PATH_RESOLVING)
+> -               pinfo->flags |= NL80211_MPATH_FLAG_RESOLVING;
+> -
+> -       pinfo->flags = mpath->flags;
+> +       if (mpath->flags & MESH_PATH_RESOLVED)
+> +               pinfo->flags |= NL80211_MPATH_FLAG_RESOLVED;
+>  }
+>
+>  static int ieee80211_get_mpath(struct wiphy *wiphy, struct net_device *dev,
+> --
+> 1.7.4.1
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
