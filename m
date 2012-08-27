@@ -1,80 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:48567 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845Ab2HKK3m (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:54211 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab2H0Gya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Aug 2012 06:29:42 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [wireless-testing:master 68/100] drivers/net/wireless/p54/eeprom.c:291:15: warning: comparison of distinct pointer types lacks a cast
-Date: Sat, 11 Aug 2012 12:29:34 +0200
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20120811084404.GA7755@localhost> <201208111149.47874.chunkeey@googlemail.com> <20120811095951.GA8534@localhost>
-In-Reply-To: <20120811095951.GA8534@localhost>
+	Mon, 27 Aug 2012 02:54:30 -0400
+Date: Mon, 27 Aug 2012 08:54:19 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 1/2] ath9k_htc: remove driver specific checks for
+ interfaces combinations
+Message-ID: <20120827065419.GB22073@ritirata.org> (sfid-20120827_085434_600693_C795223F)
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+ <CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208111229.35167.chunkeey@googlemail.com> (sfid-20120811_123031_980170_32526638)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="hHWLQfXTYDoKhP50"
+In-Reply-To: <CAD2nsn16-uZ0CbBXrHjUS2Rwn53OYNrLvjujmPAwGDCEbdYJxg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 11 August 2012 11:59:51 Fengguang Wu wrote:
-> On Sat, Aug 11, 2012 at 11:49:47AM +0200, Christian Lamparter wrote:
-> > On Saturday 11 August 2012 10:44:04 Fengguang Wu wrote:
-> > > Hi Christian,
-> > > 
-> > > FYI, there are new compile warnings show up in
-> > 
-> > Thanks for telling me. Are these "normal" gcc's warnings
-> > for PPC? Because the usual C=2 CF=-D__CHECK_ENDIAN__
-> > doesn't show anything (on a x86 no cross-compile).
-> 
-> Yes, I don't use any special flags.
-> 
-> > > tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git master
-> > > head:   0eba6e668abe4e0760d9d5e20921cc6000a77a85
-> > > commit: 9bc63816be9bf504414d350e605a4b30f857907d [68/100] p54: parse output power table
-> > > config: powerpc-allmodconfig (attached as .config)
-> > > 
-> > > All error/warnings:
-> > > 
-> > > drivers/net/wireless/p54/eeprom.c: In function 'p54_get_maxpower':
-> > > drivers/net/wireless/p54/eeprom.c:291:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > > drivers/net/wireless/p54/eeprom.c:292:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > > drivers/net/wireless/p54/eeprom.c:293:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > > drivers/net/wireless/p54/eeprom.c:294:15: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-> > 
-> > interesting, rawpower is declared as u16.
-> > whereas le16_to_cpu returns a __u16. 
-> > (is that all, or is there something I don't see?)
-> > 
-> > Anyway, since you are currently the only person
-> > I know, would you mind telling me if either (or
-> > both?) of those patches has/have an effect?
-> > 
-> > patch 1: make rawpower __u16
-> 
-> Thanks for the quick fix! It works (build log follows).
-> 
-> wfg@bee ~/tip/obj-compiletest% make drivers/net/wireless/p54/
-> /usr/bin/make -j40 -C source O=/home/wfg/tip/obj-compiletest ARCH=powerpc 
-> CROSS_COMPILE=/usr/local/gcc-4.6.3-nolibc/powerpc64-linux/bin/powerpc64-linux- -j32 
-> drivers/net/wireless/p54/
-OT: why is there a "-j40" (after make) and "-j32" (after CROSS_COMPILE)
-in the command line? Isn't one -jXY enough anymore?
 
->   CC [M]  drivers/net/wireless/p54/eeprom.o
-[...]
->   LD [M]  drivers/net/wireless/p54/p54common.o
-> make: Leaving directory `/c/wfg/tip'
-> wfg@bee ~/tip/obj-compiletest% ..
-> wfg@bee ~/tip% q pop
-> Removing patch patches/mutt-wfg-t420-1000-8534-5234451332105763812
-> Restoring drivers/net/wireless/p54/eeprom.c
-> 
-Is this patch 1, or patch 2... or both?
+--hHWLQfXTYDoKhP50
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-	Chr
+Hi Mohammed,
+
+On Mon, Aug 27, 2012 at 10:47:29 +0530, Mohammed Shafi wrote:
+> Hi,
+>=20
+> On Mon, Aug 27, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> =
+wrote:
+> > Thanks to the new interface combinations code we can safely remove all =
+the
+> > driver specific checks for unsupported modes.
+>=20
+> i had just sent this some time back
+> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/96443.
+>=20
+> please review if something had to be changed.
+>=20
+
+Sorry, but I hadn't seen your patch. Otherwise I would have not sent mine.
+
+Your patch is ok. But, at this point, should patch 2/6 and 3/6 be merged
+together?
+
+Other than that, patch 2/6 should be modified to take into account IBSS mod=
+e.
+
+
+Cheers,
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--hHWLQfXTYDoKhP50
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEARECAAYFAlA7GZsACgkQpGgxIkP9cwdZyACgkMrhvvYaYhslCxyYskNUHIOG
+4m4An2m3uGN4VMebyWQ0Mi1KCoB0rLQV
+=9KLw
+-----END PGP SIGNATURE-----
+
+--hHWLQfXTYDoKhP50--
