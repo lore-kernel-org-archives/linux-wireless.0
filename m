@@ -1,153 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11903 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020Ab2HJLRj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:17:39 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60808.853966.705163@gargle.gargle.HOWL> (sfid-20120810_131742_542810_AF22D6A1)
-Date: Fri, 10 Aug 2012 16:46:24 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/15] ath9k: Cleanup index retrieval routines
+Received: from nbd.name ([46.4.11.11]:53761 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752845Ab2H0PAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 11:00:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 3.6 2/6] ath9k_hw: clear the AM2PM predistortion mask on AR933x
+Date: Mon, 27 Aug 2012 17:00:04 +0200
+Message-Id: <1346079608-40944-2-git-send-email-nbd@openwrt.org> (sfid-20120827_170120_128142_1B7D3F7D)
+In-Reply-To: <1346079608-40944-1-git-send-email-nbd@openwrt.org>
+References: <1346079608-40944-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trim API and remove unused variables.
+That predistortion type is not supported
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/rc.c | 56 ++++++++++++++++++-------------------
- 1 file changed, 27 insertions(+), 29 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 69745ad..2e517c0 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -471,8 +471,7 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 2c9f7d7..2173bd7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -142,6 +142,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 	};
+ 	int training_power;
+ 	int i, val;
++	u32 am2pm_mask = ah->paprd_ratemask;
  
- static inline int
--ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
--		     struct ath_rate_priv *ath_rc_priv,
-+ath_rc_get_lower_rix(struct ath_rate_priv *ath_rc_priv,
- 		     u8 cur_valid_txrate, u8 *next_idx)
- {
- 	int8_t i;
-@@ -582,13 +581,11 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv)
- 	return hi;
- }
- 
--/* Finds the highest rate index we can use */
--static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
--			         struct ath_rate_priv *ath_rc_priv,
--				 const struct ath_rate_table *rate_table,
-+static u8 ath_rc_get_highest_rix(struct ath_rate_priv *ath_rc_priv,
- 				 int *is_probing,
- 				 bool legacy)
- {
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	u32 best_thruput, this_thruput, now_msec;
- 	u8 rate, next_rate, best_rate, maxindex, minindex;
- 	int8_t index = 0;
-@@ -773,14 +770,8 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	try_per_rate = 4;
- 
- 	rate_table = ath_rc_priv->rate_table;
--	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
--				     &is_probe, false);
-+	rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, false);
- 
--	/*
--	 * If we're in HT mode and both us and our peer supports LDPC.
--	 * We don't need to check our own device's capabilities as our own
--	 * ht capabilities would have already been intersected with our peer's.
--	 */
- 	if (conf_is_ht(&sc->hw->conf) &&
- 	    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
- 		tx_info->flags |= IEEE80211_TX_CTL_LDPC;
-@@ -790,35 +781,42 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 		tx_info->flags |= (1 << IEEE80211_TX_CTL_STBC_SHIFT);
- 
- 	if (is_probe) {
--		/* set one try for probe rates. For the
--		 * probes don't enable rts */
-+		/*
-+		 * Set one try for probe rates. For the
-+		 * probes don't enable RTS.
-+		 */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       1, rix, 0);
--
--		/* Get the next tried/allowed rate. No RTS for the next series
--		 * after the probe rate
-+		/*
-+		 * Get the next tried/allowed rate.
-+		 * No RTS for the next series after the probe rate.
- 		 */
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
-+		ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, rix, 0);
- 
- 		tx_info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 	} else {
--		/* Set the chosen rate. No RTS for first series entry. */
-+		/*
-+		 * Set the chosen rate. No RTS for first series entry.
-+		 */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, rix, 0);
+ 	if (IS_CHAN_2GHZ(ah->curchan))
+ 		training_power = ar9003_get_training_power_2g(ah);
+@@ -158,10 +159,13 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
  	}
+ 	ah->paprd_training_power = training_power;
  
--	/* Fill in the other rates for multirate retry */
- 	for ( ; i < 3; i++) {
-+		ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
- 
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
--		/* All other rates in the series have RTS enabled */
-+		/*
-+		 * All other rates in the series have RTS enabled.
-+		 */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, rix, 1);
- 	}
- 
--	/* Use twice the number of tries for the last MRR segment. */
-+	/*
-+	 * Use twice the number of tries for the last MRR segment.
-+	 */
- 	try_per_rate = 8;
- 
- 	/*
-@@ -827,11 +825,11 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	 * as last retry to ensure that the frame is tried in both
- 	 * MCS and legacy rate.
- 	 */
--	ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
-+	ath_rc_get_lower_rix(ath_rc_priv, rix, &rix);
++	if (AR_SREV_9330(ah))
++		am2pm_mask = 0;
 +
- 	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy) &&
- 	    (ath_rc_priv->per[rix] > 45))
--		rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
--				&is_probe, true);
-+		rix = ath_rc_get_highest_rix(ath_rc_priv, &is_probe, true);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK,
+ 		      ah->paprd_ratemask);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK,
+-		      ah->paprd_ratemask);
++		      am2pm_mask);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
+ 		      ah->paprd_ratemask_ht40);
  
- 	/* All other rates in the series have RTS enabled */
- 	ath_rc_rate_set_series(rate_table, &rates[i], txrc,
-@@ -1061,8 +1059,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	if (ath_rc_priv->per[tx_rate] >= 55 && tx_rate > 0 &&
- 	    rate_table->info[tx_rate].ratekbps <=
- 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
--				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
-+		ath_rc_get_lower_rix(ath_rc_priv, (u8)tx_rate,
-+				     &ath_rc_priv->rate_max_phy);
- 
- 		/* Don't probe for a little while. */
- 		ath_rc_priv->probe_time = now_msec;
 -- 
-1.7.11.4
+1.7.9.6 (Apple Git-31.1)
 
