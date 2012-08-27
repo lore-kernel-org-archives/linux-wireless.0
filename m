@@ -1,83 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:58297 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091Ab2HVFPJ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5966 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543Ab2H0OTV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 01:15:09 -0400
-Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
- out_of_order memory use"
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <50345B12.1050600@lwfinger.net>
-References: <50345B12.1050600@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Aug 2012 07:15:03 +0200
-Message-ID: <1345612503.5158.566.camel@edumazet-glaptop> (sfid-20120822_071544_027514_BA8EF54F)
-Mime-Version: 1.0
+	Mon, 27 Aug 2012 10:19:21 -0400
+Message-ID: <503B81E3.6040101@qca.qualcomm.com> (sfid-20120827_161927_759932_8CD1E738)
+Date: Mon, 27 Aug 2012 19:49:15 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath6kl: trivial cleanup
+References: <1345818208-9129-1-git-send-email-mohammed@qca.qualcomm.com> <503B8147.7030607@qca.qualcomm.com>
+In-Reply-To: <503B8147.7030607@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-08-21 at 23:07 -0500, Larry Finger wrote:
-> Hi,
-> 
-> The commit entitled "tcp: reduce out_of_order memory use" turns out to cause 
-> problems with a number of USB drivers.
-> 
-> The first one called to my attention was for staging/r8712u. For this driver, 
-> there are problems with SSL communications as reported in 
-> https://bugzilla.redhat.com/show_bug.cgi?id=847525.
-> 
-> Other drivers including rtl8187, rtl8192cu and rt2800usb cannot connect to a 
-> WPA1- or WEP-encrypted AP, but work fine with WPA2. The rtl8192cu problem is 
-> reported in https://bugzilla.kernel.org/show_bug.cgi?id=46171.
-> 
-> I find it hard to understand why this patch should cause these effects; however, 
-> I have verified that a kernel generated from "git checkout e86b2919" works fine. 
-> This commit is immediately before the patch in question.
-> 
-> Note, this patch was applied during the merge between 3.3 and 3.4. The 
-> regression has been undiscovered for some time.
-> 
-> Any help on this problem will be appreciated.
-> 
-> Larry
+Hi Kalle,
 
-This particular commit is the start of a patches batch that ended in the
-generic TCP coalescing mechanism.
+On Monday 27 August 2012 07:46 PM, Kalle Valo wrote:
+> On 08/24/2012 05:23 PM, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>>
+>> a minor cleanup in assigning the driver specific network type
+>> based on interface type.
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>
+> Thanks, applied to ath6kl.git. But I changed the title to:
+>
+> ath6kl: trivial cleanup on interface type selection
 
-It is known to have problem on drivers doing skb_clone() in their rx
-path.
+thanks for the review!
 
-Current kernels should be ok, because coalescing doesnt happen if the
-destination skb is cloned (skb_cloned(to) in skb_try_coalesce())
+>
+> Kalle
+>
 
-For 3.4 kernel, I guess I need to backport this skb_cloned(to) check fo
-stable 3.4 kernel
 
-But these skb_clone() in various USB drivers should be killed for good,
-they really can kill the box because of skb->truesize lies.
-
-Please test following patch (for 3.4 kernels)
-
-diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
-index 257b617..c45ac2d 100644
---- a/net/ipv4/tcp_input.c
-+++ b/net/ipv4/tcp_input.c
-@@ -4496,7 +4496,9 @@ static void tcp_data_queue_ofo(struct sock *sk, struct sk_buff *skb)
- 		 * to avoid future tcp_collapse_ofo_queue(),
- 		 * probably the most expensive function in tcp stack.
- 		 */
--		if (skb->len <= skb_tailroom(skb1) && !tcp_hdr(skb)->fin) {
-+		if (skb->len <= skb_tailroom(skb1) &&
-+		    !skb_cloned(skb1) &&
-+		    !tcp_hdr(skb)->fin) {
- 			NET_INC_STATS_BH(sock_net(sk),
- 					 LINUX_MIB_TCPRCVCOALESCE);
- 			BUG_ON(skb_copy_bits(skb, 0,
+-- 
+thanks,
+shafi
 
 
