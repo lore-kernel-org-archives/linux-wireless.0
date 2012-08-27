@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:38576 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044Ab2HJMZt convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:59002 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171Ab2H0Flb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 08:25:49 -0400
-Received: by wgbdr13 with SMTP id dr13so1438841wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2012 05:25:48 -0700 (PDT)
+	Mon, 27 Aug 2012 01:41:31 -0400
+Received: by eekc1 with SMTP id c1so771622eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2012 22:41:30 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5024FD42.6070307@hauke-m.de>
-References: <1344544690-11280-1-git-send-email-zajec5@gmail.com>
-	<5024CE29.5030500@broadcom.com>
-	<CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com>
-	<5024FD42.6070307@hauke-m.de>
-Date: Fri, 10 Aug 2012 14:25:48 +0200
-Message-ID: <CACna6rxLe6PKqdfG7XVb4f7XH5nk_dKZX-sC1-KS19AManD1+Q@mail.gmail.com> (sfid-20120810_142553_031354_4D1CE547)
-Subject: Re: [PATCH wireless?] bcma: keep info about parallel flash presentence
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1346045881.3746.0.camel@jlt4.sipsolutions.net>
+References: <1346014505-7554-1-git-send-email-ordex@autistici.org>
+ <1346014505-7554-2-git-send-email-ordex@autistici.org> <CAGRGNgUoNnuh_23qzULJyJcvMUgNpUxFnZjaAcGj26_jrTHdeA@mail.gmail.com>
+ <1346045881.3746.0.camel@jlt4.sipsolutions.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 27 Aug 2012 15:41:09 +1000
+Message-ID: <CAGRGNgXy3t5TJqY=VwKjPEH=K4XKR_Dm5qVKkmYxStYoAP3fvQ@mail.gmail.com> (sfid-20120827_074134_726815_651A3AAC)
+Subject: Re: [PATCHv2 2/2] ath9k_htc: advertise allowed VIFs combination
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Antonio Quartulli <ordex@autistici.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/8/10 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 08/10/2012 11:32 AM, Rafał Miłecki wrote:
->> 2012/8/10 Arend van Spriel <arend@broadcom.com>:
->>> On 08/09/2012 10:38 PM, Rafał Miłecki wrote:
->>>> This allows drivers to access flash conditionally and stop crashing some
->>>> devices.
->>>>
->>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
->>>> ---
->>>> John: I suggest taking it for wirelesss, AKA fix
->>>
->>> Maybe you could mentioned devices and/or drivers crashes without this patch?
->>
->> Yes, sure! The problematic one for me is arch/mips/bcm47xx/nvram.c.
->> Right now it assumes every BCMA board has pflash. I'll submit fix for
->> mips tree when this patch hits it.
->
-> Letting this patches get merged into the wireless tree and an other
-> patches which depends on this one into the mips tree will cause
-> problems, because the wireless tree only gets merged into the mips tree
-> indirectly round about the rc1 release in form of the rc1 release done
-> by Linus.
->
-> The patch to arch/mips/bcm47xx/nvram.c will depend on this one and you
-> should submit them to the same tree.
+Hi Johannes,
 
-I'm planning to wait until rc2 (or rc3 if needed). I know the dependency :)
+On Mon, Aug 27, 2012 at 3:38 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-08-27 at 09:48 +1000, Julian Calaby wrote:
+>> Antonio,
+>>
+>> On Mon, Aug 27, 2012 at 6:55 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+>> > This driver now advertises its allowed VIFs combinations to the mac80211
+>> > sublayer.
+>> >
+>> > Other than that, practical tests shown that ath9k_htc devices allow an IBSS VIF
+>> > to coexist with VIF set up on other modes. This patch removes the check which
+>> > block the creation of any other VIF whenever an IBSS one is already present.
+>>
+>> These two patches should really be applied in the opposite order:
+>>
+>> You should add the interface combination data (this patch) then remove
+>> the old checking code.
+>>
+>> This way there's not a window (admittedly only one patch) where the
+>> interface combinations aren't enforced.
+>
+> FWIW, it's the other way around, in that window no combinations would be
+> permitted at all...
+
+It's still a problem for bisection then =)
+
+Thanks,
 
 -- 
-Rafał
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
