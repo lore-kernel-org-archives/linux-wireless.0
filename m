@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43874 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755492Ab2HAPVd (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:47996 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754209Ab2H0UGc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 11:21:33 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 3/8] mac80211: fix CSA handling timer
-Date: Wed,  1 Aug 2012 17:21:22 +0200
-Message-Id: <1343834487-23737-4-git-send-email-johannes@sipsolutions.net> (sfid-20120801_172137_159670_AF8B8BE1)
-In-Reply-To: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
-References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 27 Aug 2012 16:06:32 -0400
+Message-ID: <503BD345.6030501@wwwdotorg.org> (sfid-20120827_220648_991365_DFE038F8)
+Date: Mon, 27 Aug 2012 13:06:29 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Wei Ni <wni@nvidia.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	rvossen@broadcom.com, krakesh@nvidia.com, ldewangan@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR directly
+ for non-OOB
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com> <1346063114-30361-3-git-send-email-wni@nvidia.com> <503B9F31.5050502@broadcom.com>
+In-Reply-To: <503B9F31.5050502@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 08/27/2012 09:24 AM, Arend van Spriel wrote:
+> On 08/27/2012 12:25 PM, Wei Ni wrote:
+>> In case of inband interrupts, if we handle the interrupt in dpc thread,
+>> two level of thread switching takes place to process wifi interrupts.
+>> One in SDHCI driver and the other in Wifi driver. This may cause the
+>> system
+>> instability.
+> 
+> Looking into the sdhci/mmc code indeed shows that the brcmfmac irq
+> handler is not called in true IRQ context. So the dpc thread may add
+> unnecessary complexity, but to me there is not indication that there is
+> a stability issue.
+> 
+>> Because the SDHCI calls sdio_irq_thread() to handle the irq, this
+>> thread locks
+>> mmc host and calls wifi handler. It expects WiFi handler to be quick and
+>> enables sdio interrupt from card at end. If wifi handler defers this
+>> work for
+>> a different thread, sdio_irq_thread() will be stuck on next wifi
+>> interrupt
+>> since mmc lock is not freed.
+> 
+> Not sure if I can follow this explanation. The isr is called with host
+> claimed (by sdio_irq_thread) and all it does is at a linked list member
+> and signal the dpc thread. After doing this the host is released.
 
-The time until the channel switch is in TU,
-not in milliseconds, so use TU_TO_EXP_TIME()
-to correctly program the timer.
+Is the issue something like the ISR handler or first level of threading
+does:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+* Trigger DPC
+* Re-enable interrupt
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index dc1c84b..5eef6bd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -813,9 +813,8 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
- 	else
- 		mod_timer(&ifmgd->chswitch_timer,
--			  jiffies +
--			  msecs_to_jiffies(sw_elem->count *
--					   cbss->beacon_interval));
-+			  TU_TO_EXP_TIME(sw_elem->count *
-+					 cbss->beacon_interval));
- }
- 
- static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
--- 
-1.7.10.4
+So that the interrupt then fires again before the triggered DPC can run
+to handle/clear it, thus causing an interrupt storm?
 
+Whereas handling the interrupt directly prevents this race condition?
