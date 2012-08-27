@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:50501 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758989Ab2HHRjv (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38614 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752296Ab2H0SVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 13:39:51 -0400
-Received: by vcbfk26 with SMTP id fk26so1014580vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 10:39:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <50227EBF.9030400@lwfinger.net>
-References: <CAEOSq-Nac1-6SbfQTLCO7bkQVWgLxZE4x0oNbviyyyToPZzo5w@mail.gmail.com>
-	<50227EBF.9030400@lwfinger.net>
-Date: Wed, 8 Aug 2012 10:39:50 -0700
-Message-ID: <CAEOSq-MurTzp=KZsuPRxCipVioTfhmpMx2t6ZFMBvz-YDL4OcQ@mail.gmail.com> (sfid-20120808_193954_323012_E5682058)
-Subject: Re: Problems with rtl8192cu driver in Access Point mode
-From: Mike Thompson <mpthompson@gmail.com>
+	Mon, 27 Aug 2012 14:21:46 -0400
+Subject: Re: Regression associated with commit c8628155ece3 - "tcp: reduce
+ out_of_order memory use"
+From: Eric Dumazet <eric.dumazet@gmail.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: David Miller <davem@davemloft.net>, ncardwell@google.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <503BB49C.5010402@lwfinger.net>
+References: <50369925.3050705@lwfinger.net>
+	 <1345757200.5904.1890.camel@edumazet-glaptop> <50378B35.80307@lwfinger.net>
+	 <20120824.111948.680531915905273128.davem@davemloft.net>
+	 <5037A4B0.3080208@lwfinger.net>
+	 <1345825095.19483.19.camel@edumazet-glaptop>
+	 <1345825432.19483.20.camel@edumazet-glaptop> <5037B2AC.50704@lwfinger.net>
+	 <1345830424.19483.69.camel@edumazet-glaptop>
+	 <503BB49C.5010402@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Aug 2012 11:21:41 -0700
+Message-ID: <1346091701.26634.6.camel@edumazet-glaptop> (sfid-20120827_202210_940695_ABDED944)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'll see what I can do to set up wireshark or kismit.  Also, as
-suggested in the IRC forum I'm going to try to switch to debugging the
-rtl8192cu driver on a PC where I'll have a lot more tools available to
-analyze debug output from the driver.
+On Mon, 2012-08-27 at 12:55 -0500, Larry Finger wrote:
 
-I'll write back to this thread once I have more information what might
-be happening to the ARP packets.
+> I have prepared a patch to fix all the unchecked allocations.
+> 
+> Over the weekend I made some progress. To test the latest vendor driver, I 
+> installed a 32-bit system. Their driver is not compatible with a 64-bit system. 
+> I found that not only did the vendor driver work with secure sites, but so did 
+> the in-kernel version. I now have tcpdump output for the 32-bit case that works, 
+> and the 64-bit case that fails. It seems likely that I missed some 32/64 bit 
+> incompatibility when I did the conversion.
+> 
+> Thanks for all your help in trying to resolve this issue.
 
-Thanks,
+Interesting, so these 32/64 bits problems did not happen in prior
+kernels ? (< 3.4 )
 
-Mike Thompson
 
-On Wed, Aug 8, 2012 at 7:59 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Do you have a 3rd system that can use wireshark or kismet to capture the
-> data on the air? That way we would know if the ARP responses are being lost
-> inside rtl8192cu, or if they are just being badly formatted and being
-> rejected by the laptop's receiver.
->
-> Larry
->
