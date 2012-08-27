@@ -1,70 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:40188 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755879Ab2HHMAs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 08:00:48 -0400
-Received: by ggmb6 with SMTP id b6so725226ggm.40
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2012 05:00:47 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>, <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: [PATCH v3 7/7] mac80211: add DFS support to monitor interface
-Date: Wed,  8 Aug 2012 14:53:43 +0300
-Message-Id: <1344426823-1795-8-git-send-email-victorg@ti.com> (sfid-20120808_140053_992647_C2674B49)
-In-Reply-To: <1344426823-1795-1-git-send-email-victorg@ti.com>
-References: <1344426823-1795-1-git-send-email-victorg@ti.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4299 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752260Ab2H0QYc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 12:24:32 -0400
+Message-ID: <503B9F31.5050502@broadcom.com> (sfid-20120827_182436_688883_6D725A0B)
+Date: Mon, 27 Aug 2012 18:24:17 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Wei Ni" <wni@nvidia.com>
+cc: swarren@wwwdotorg.org,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	rvossen@broadcom.com, krakesh@nvidia.com, ldewangan@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR
+ directly for non-OOB
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+ <1346063114-30361-3-git-send-email-wni@nvidia.com>
+In-Reply-To: <1346063114-30361-3-git-send-email-wni@nvidia.com>
+Content-Type: text/plain;
+ charset=windows-1252;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AP mode uses monitor interfaces to transmit
-management frames which were blocked for "radar
-channels" until now.
+On 08/27/2012 12:25 PM, Wei Ni wrote:
+> In case of inband interrupts, if we handle the interrupt in dpc thread,
+> two level of thread switching takes place to process wifi interrupts.
+> One in SDHCI driver and the other in Wifi driver. This may cause the system
+> instability.
 
-Stop dropping packets if we are on 'radar channel'
-and the DFS is enabled.
+Looking into the sdhci/mmc code indeed shows that the brcmfmac irq 
+handler is not called in true IRQ context. So the dpc thread may add 
+unnecessary complexity, but to me there is not indication that there is 
+a stability issue.
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
- net/mac80211/tx.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+> Because the SDHCI calls sdio_irq_thread() to handle the irq, this thread locks
+> mmc host and calls wifi handler. It expects WiFi handler to be quick and
+> enables sdio interrupt from card at end. If wifi handler defers this work for
+> a different thread, sdio_irq_thread() will be stuck on next wifi interrupt
+> since mmc lock is not freed.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index acf712f..d1b6f9a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1583,6 +1583,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
- 	u16 len_rthdr;
- 	int hdrlen;
-+	bool dfs_supported = (local->hw.wiphy->features & NL80211_FEATURE_DFS);
- 
- 	/*
- 	 * Frame injection is not allowed if beaconing is not allowed
-@@ -1595,13 +1596,13 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * flag.
- 	 *
- 	 * Since AP mode uses monitor interfaces to inject/TX management
--	 * frames we can make AP mode the exception to this rule once it
--	 * supports radar detection as its implementation can deal with
--	 * radar detection by itself. We can do that later by adding a
--	 * monitor flag interfaces used for AP support.
-+	 * frames we can make AP mode the exception to this rule, in the
-+	 * case the driver supports radar detection, allow usage of radar
-+	 * channels.
- 	 */
--	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
--	     IEEE80211_CHAN_PASSIVE_SCAN)))
-+	if ((!(chan->flags & IEEE80211_CHAN_RADAR) || !dfs_supported) &&
-+	    ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
-+			     IEEE80211_CHAN_PASSIVE_SCAN))))
- 		goto fail;
- 
- 	/* check for not even having the fixed radiotap header part */
--- 
-1.7.5.4
+Not sure if I can follow this explanation. The isr is called with host 
+claimed (by sdio_irq_thread) and all it does is at a linked list member 
+and signal the dpc thread. After doing this the host is released.
+
+> Handling the interrupt in ISR directly will prevent thread context switching in
+> wifi driver. It can fix the instability problems.
+
+This basically increases the duration of the isr in brcmfmac.
+
+> Signed-off-by: Wei Ni <wni@nvidia.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    2 ++
+>   drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    8 +++++++-
+>   2 files changed, 9 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 8e7e692..5cf6c3b 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -121,7 +121,9 @@ static void brcmf_sdio_irqhandler(struct sdio_func *func)
+>
+>   	brcmf_dbg(INTR, "ib intr triggered\n");
+>
+> +	sdio_release_host(sdiodev->func[1]);
+>   	brcmf_sdbrcm_isr(sdiodev->bus);
+> +	sdio_claim_host(sdiodev->func[1]);
+
+This is probably needed because the ISR now locks the host to long 
+because brcmf_sdbrcm_dpc() is called directly.
+
+>   }
+>
+>   /* dummy handler for SDIO function 2 interrupt */
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> index 472f2ef..4576d59 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> @@ -2347,7 +2347,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+>   	uint framecnt = 0;	/* Temporary counter of tx/rx frames */
+>   	bool rxdone = true;	/* Flag for no more read data */
+>   	bool resched = false;	/* Flag indicating resched wanted */
+> -	int err;
+> +	int err = 0;
+>
+>   	brcmf_dbg(TRACE, "Enter\n");
+>
+> @@ -3786,11 +3786,17 @@ void brcmf_sdbrcm_isr(void *arg)
+>   	if (!bus->intr)
+>   		brcmf_dbg(ERROR, "isr w/o interrupt configured!\n");
+>
+> +
+> +#ifndef CONFIG_BRCMFMAC_SDIO_OOB
+> +	while (brcmf_sdbrcm_dpc(bus))
+> +		;
+> +#else
+>   	bus->dpc_sched = true;
+>   	if (bus->dpc_tsk) {
+>   		brcmf_sdbrcm_adddpctsk(bus);
+>   		complete(&bus->dpc_wait);
+>   	}
+> +#endif
+>   }
+>
+>   static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
+>
+
+I would really like to know what issue is solved by this change. Could 
+you provide more details.
+
+Franky,
+
+Do you have anything to add here?
+
+Gr. AvS
 
