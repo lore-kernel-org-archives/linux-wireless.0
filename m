@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63244 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151Ab2HJLSE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:18:04 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mail.allnet.de ([212.18.29.59]:51421 "EHLO mail.allnet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751391Ab2H1Mxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2012 08:53:43 -0400
+Message-ID: <503CBEF8.7010505@allnet.de> (sfid-20120828_145357_516405_A11CF358)
+Date: Tue, 28 Aug 2012 15:52:08 +0300
+From: Daniel Golle <dgolle@allnet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60834.610230.197582@gargle.gargle.HOWL> (sfid-20120810_131810_018959_EC20F991)
-Date: Fri, 10 Aug 2012 16:46:50 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/15] ath9k: Do not set IEEE80211_TX_RC_USE_SHORT_PREAMBLE
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"gwingerde@gmail.com" <gwingerde@gmail.com>,
+	"heinold@inf.fu-berlin.de" <heinold@inf.fu-berlin.de>
+Subject: Re: [PATCH v2] rt2x00: add MediaTek/RaLink Rt3352 WiSoC
+References: <20120821235349.GA14648@earthship.home> <20120822105110.GC6082@redhat.com> <20120824152542.GA32145@earthship.home> <20120828124214.GA8426@redhat.com>
+In-Reply-To: <20120828124214.GA8426@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 does it for us.
+Hi Stanislaw,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c | 2 --
- 1 file changed, 2 deletions(-)
+On 28/08/12 15:42, Stanislaw Gruszka wrote:
+> Thanks. Could you also provide information what was the source
+> (registers programming) you based when writing this patch?
+The vendor-driver Allnet got for that board (which is not publicly available and
+we can't release its source)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index ed48d3d..78192c1 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -682,8 +682,6 @@ static void ath_rc_rate_set_series(const struct ath_rate_table *rate_table,
- 	rate->count = tries;
- 	rate->idx = rate_table->info[rix].ratecode;
- 
--	if (txrc->short_preamble)
--		rate->flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
- 	if (txrc->rts || rtsctsenable)
- 		rate->flags |= IEEE80211_TX_RC_USE_RTS_CTS;
- 
--- 
-1.7.11.4
+>> +	if (rt2x00_rt(rt2x00dev, RT3352)) {
+>> +		rt2800_bbp_write(rt2x00dev, 27, 0x0);
+>> +		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
+>> +		rt2800_bbp_write(rt2x00dev, 27, 0x20);
+>> +		rt2800_bbp_write(rt2x00dev, 62, 0x26 + rt2x00dev->lna_gain);
+> 
+> Writes two times to the same registers are intended?
+Yes, as this is how it is done in the vendor driver, to me it looks like
+register 27 acts as a switch selecting the destination for the value written to
+register 62 or something like that.
 
+
+Thank you!
+
+
+Daniel
