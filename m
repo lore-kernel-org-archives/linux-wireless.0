@@ -1,79 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.unitix.de ([176.9.2.175]:36571 "EHLO mail2.unitix.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753158Ab2HTM7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 08:59:04 -0400
-Message-ID: <503232E7.2080802@arndnet.de> (sfid-20120820_145910_412577_689F0116)
-Date: Mon, 20 Aug 2012 14:51:51 +0200
-From: Arnd Hannemann <arnd@arndnet.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58690 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936Ab2H1Go6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2012 02:44:58 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Fix a crash in 2 WIRE btcoex chipsets
+Date: Tue, 28 Aug 2012 12:14:48 +0530
+Message-ID: <1346136288-3741-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120828_084501_796335_0CE83445)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: netdev <netdev@vger.kernel.org>
-Subject: WARNING: at include/net/mac80211.h:3630 rate_control_send_low+0xc1/0x1a1
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-I just observed the above kernel warning after issuing an "wpa_cli reassociate",
-followed by some "iwconfig" calls to check the status.
-Kernel is 3.4.7, Hardware is x86 (32bit) and ath9k
+Generic timers for BTCOEX functionality is applicable
+only for 3 WIRE BTCOEX (and MCI) chipsets.
+Hence btcoex->no_stomp_timer is allocated only 3 WIRE
+btcoex chipsets and in all the other cases its NULL.
+Make sure we stop the generic timer only if
+'btcoex->hw_timer_enabled' is true(only if its up and
+running)
 
-WARNING comes from inline function "rate_lowest_index":
-3629         /* warn when we cannot find a rate. */
-3630         WARN_ON_ONCE(1);
+Fixes the following crash
 
-Full stacktrace below:
+	[68757.020454] BUG: unable to handle kernel NULL pointer dereference at 0000000c
+	[68757.020916] IP: [<f9b055c3>] ath9k_hw_gen_timer_stop+0x13/0x80 [ath9k_hw]
+	[68757.021251] *pde = 00000000
+	[68757.024384] EIP: 0060:[<f9b055c3>] EFLAGS: 00010082 CPU: 0
+	[68757.024384] EIP is at ath9k_hw_gen_timer_stop+0x13/0x80 [ath9k_hw]
+	[68757.024384] EAX: d32d0000 EBX: d32d0000 ECX: 00000000 EDX: 00000000
+	[68757.024384] ESI: e67c24c0 EDI: 00000296 EBP: e137be2c ESP: e137be20
+	[68757.024384]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+	[68757.024384] CR0: 8005003b CR2: 0000000c CR3: 00b99000 CR4: 000407d0
+	[68757.024384] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+	[68757.024384] DR6: ffff0ff0 DR7: 00000400
+	[68757.024384] Process kworker/u:2 (pid: 8917, ti=e137a000 task=ea7a6860 task.ti=e137a000)
+	[68757.024384] Stack:
+	[68757.024384]  c06c4676 d32d0000 e67c24c0 e137be38 f81c9590 e67c1ca0 e137be40 f81c95d9
+	[68757.024384]  e137be64 f81cd1c5 00000246 00000002 d32d0000 e67c05e0 e67c1ca0 e67c05e0
+	[68757.024384]  00000000 e137beac f81cdfa0 e137be84 00000246 00000246 e67c1ca0 e67c1ca0
+	[68757.024384] Call Trace:
+	[68757.024384]  [<c06c4676>] ? _raw_spin_lock_irqsave+0x86/0xa0
+	[68757.024384]  [<f81c9590>] ath9k_gen_timer_stop+0x10/0x40 [ath9k]
+	[68757.024384]  [<f81c95d9>] ath9k_btcoex_stop_gen_timer+0x19/0x20 [ath9k]
+	[68757.024384]  [<f81cd1c5>] ath9k_ps_restore+0x85/0x110 [ath9k]
+	[68757.024384]  [<f81cdfa0>] ath9k_config+0x220/0x520 [ath9k]
+	[68757.024384]  [<f81cd47d>] ? ath9k_flush+0x15d/0x1b0 [ath9k]
+	[68757.024384]  [<f85c7ca5>] ieee80211_hw_config+0x135/0x2c0 [mac80211]
+	[68757.024384]  [<f860e3c8>] ieee80211_dynamic_ps_enable_work+0x198/0x5f0 [mac80211]
 
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-[1793205.090602] wlan0: deauthenticating from XX:XX:XX:XX:XX:XX by local choice (reason=3)
-[1793205.090754] ------------[ cut here ]------------
-[1793205.105295] WARNING: at include/net/mac80211.h:3630 rate_control_send_low+0xc1/0x1a1 [mac80211]()
-[1793205.132424] Modules linked in: aes_generic xt_TCPMSS ipt_ULOG ipt_MASQUERADE xt_LOG xt_time xt_connlimit xt_helper xt_realm xt_NFQUEUE xt_tcpmss xt_addrtype xt_pkttype iptab
-le_raw xt_TPROXY nf_tproxy_core ip6_tables nf_defrag_ipv6 xt_hashlimit xt_comment xt_length xt_connmark xt_owner xt_recent xt_iprange xt_physdev xt_policy xt_multiport iptable_na
-t nf_nat xt_conntrack nf_conntrack_tftp nf_conntrack_sip nf_conntrack_proto_sctp nf_conntrack_pptp nf_conntrack_proto_gre nf_conntrack_netlink nfnetlink nf_conntrack_irc nf_connt
-rack_h323 nf_conntrack_ftp nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack ath9k ath5k ath9k_common ath9k_hw mac80211 ath ohci_hcd ehci_hcd cfg80211
-[1793205.313648] Pid: 1959, comm: wpa_supplicant Not tainted 3.4.7-ela1 #1
-[1793205.333502] Call Trace:
-[1793205.341407]  [<c1016dee>] warn_slowpath_common+0x65/0x7a
-[1793205.357935]  [<d094178b>] ? rate_control_send_low+0xc1/0x1a1 [mac80211]
-[1793205.378312]  [<c1016e12>] warn_slowpath_null+0xf/0x13
-[1793205.394073]  [<d094178b>] rate_control_send_low+0xc1/0x1a1 [mac80211]
-[1793205.414008]  [<d095af6c>] minstrel_ht_get_rate+0x25/0x295 [mac80211]
-[1793205.433675]  [<d09414fb>] rate_control_get_rate+0x7e/0x24d [mac80211]
-[1793205.453528]  [<c102e7f4>] ? T.295+0xe/0x128
-[1793205.466632]  [<c1167ffe>] ? rb_insert_color+0x58/0xc5
-[1793205.482397]  [<d09494d1>] invoke_tx_handlers+0x78f/0xfa5 [mac80211]
-[1793205.501799]  [<d094a648>] ieee80211_tx+0x50/0x77 [mac80211]
-[1793205.519112]  [<d094a971>] ieee80211_xmit+0xae/0xb6 [mac80211]
-[1793205.536956]  [<d094a9bf>] ieee80211_tx_skb_tid+0x46/0x50 [mac80211]
-[1793205.556368]  [<d094e4d4>] ieee80211_send_deauth_disassoc+0xbb/0xc1 [mac80211]
-[1793205.578365]  [<d094e5ff>] ieee80211_set_disassoc+0x125/0x275 [mac80211]
-[1793205.598803]  [<d094e8b9>] ieee80211_mgd_deauth+0x92/0x102 [mac80211]
-[1793205.618455]  [<d0943b87>] ieee80211_deauth+0x10/0x12 [mac80211]
-[1793205.636812]  [<d0878348>] __cfg80211_mlme_deauth+0x84/0x90 [cfg80211]
-[1793205.656702]  [<d087a9d5>] __cfg80211_disconnect+0xc3/0x125 [cfg80211]
-[1793205.676594]  [<d087d330>] cfg80211_mgd_wext_siwessid+0xec/0x18d [cfg80211]
-[1793205.697778]  [<d087c639>] cfg80211_wext_siwessid+0x31/0x3e [cfg80211]
-[1793205.717648]  [<c1293b8a>] ioctl_standard_call+0x1e6/0x27a
-[1793205.734374]  [<c1293ccf>] wext_handle_ioctl+0xb1/0x132
-[1793205.750374]  [<d087c608>] ? cfg80211_wext_giwessid+0x4a/0x4a [cfg80211]
-[1793205.770755]  [<c11df9db>] dev_ioctl+0x53f/0x57c
-[1793205.784892]  [<c10683f8>] ? do_sync_write+0x93/0xce
-[1793205.800077]  [<c11d0250>] ? kernel_sendmsg+0x37/0x37
-[1793205.815514]  [<c11d0428>] sock_ioctl+0x1d8/0x1e4
-[1793205.829892]  [<c11d0250>] ? kernel_sendmsg+0x37/0x37
-[1793205.845341]  [<c10733b8>] do_vfs_ioctl+0x424/0x463
-[1793205.860263]  [<c11d0b76>] ? sys_send+0x18/0x1a
-[1793205.874146]  [<c11d1ad4>] ? sys_socketcall+0xc9/0x19c
-[1793205.889848]  [<c1073425>] sys_ioctl+0x2e/0x48
-[1793205.903477]  [<c129d095>] syscall_call+0x7/0xb
-[1793205.917356]  [<c1290000>] ? rsi_parse+0xbf/0x331
-[1793205.931752] ---[ end trace 9c8890d6ce64a00b ]---
-[1793205.966909] cfg80211: Calling CRDA to update world regulatory domain
-[1793205.986669] wlan0: authenticate with XX:XX:XX:XX:XX:XY
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index bacdb8f..9f83f71 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -341,7 +341,8 @@ void ath9k_btcoex_stop_gen_timer(struct ath_softc *sc)
+ {
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 
+-	ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
++	if (btcoex->hw_timer_enabled)
++		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
+ }
+ 
+ u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen)
+-- 
+1.7.0.4
 
-
-Best regards
-Arnd
