@@ -1,76 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42768 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714Ab2HMTAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 15:00:14 -0400
-Date: Mon, 13 Aug 2012 14:47:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: AceLan Kao <acelan.kao@canonical.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Corentin Chary <corentincj@iksaif.net>
-Subject: Re: [PATCH] Revert "rfkill: remove dead code"
-Message-ID: <20120813184749.GC10529@tuxdriver.com> (sfid-20120813_210020_999383_42C25649)
-References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
- <CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
- <CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
- <CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
- <CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4534 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752572Ab2H1Qpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2012 12:45:50 -0400
+Message-ID: <503CF5B3.8040201@broadcom.com> (sfid-20120828_184607_948023_D625575D)
+Date: Tue, 28 Aug 2012 09:45:39 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
+To: "Wei Ni" <wni@nvidia.com>
+cc: "Stephen Warren" <swarren@wwwdotorg.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"rvossen@broadcom.com" <rvossen@broadcom.com>,
+	"Rakesh Kumar" <krakesh@nvidia.com>,
+	"Laxman Dewangan" <ldewangan@nvidia.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR
+ directly for non-OOB
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+ <1346063114-30361-3-git-send-email-wni@nvidia.com>
+ <503B9F31.5050502@broadcom.com> <503BD345.6030501@wwwdotorg.org>
+ <1346152413.3516.211.camel@tegra-chromium-2>
+In-Reply-To: <1346152413.3516.211.camel@tegra-chromium-2>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is this all sorted?  Is this patch going through the platform tree?
+On 08/28/2012 04:13 AM, Wei Ni wrote:
+> On Tue, 2012-08-28 at 04:06 +0800, Stephen Warren wrote:
+>> On 08/27/2012 09:24 AM, Arend van Spriel wrote:
+>>> On 08/27/2012 12:25 PM, Wei Ni wrote:
+>>>> In case of inband interrupts, if we handle the interrupt in dpc thread,
+>>>> two level of thread switching takes place to process wifi interrupts.
+>>>> One in SDHCI driver and the other in Wifi driver. This may cause the
+>>>> system
+>>>> instability.
+>>>
+>>> Looking into the sdhci/mmc code indeed shows that the brcmfmac irq
+>>> handler is not called in true IRQ context. So the dpc thread may add
+>>> unnecessary complexity, but to me there is not indication that there is
+>>> a stability issue.
+>
+> The brcmfmac irq handler is called in the thread sdio_irq_thread(), this
+> thread indeed is driven by the sdhci irq, although it's not the true IRQ
+> context. If the brcmfmac doesn't clear the IRQ condition ASAP, the
+> sdio_irq_thread will be triggered again and again, and in this condition
+> it's too difficult to run the brcmfmac dpc thread, more and more
+> interrupt can't be handled.
+>
+>>>
+>>>> Because the SDHCI calls sdio_irq_thread() to handle the irq, this
+>>>> thread locks
+>>>> mmc host and calls wifi handler. It expects WiFi handler to be quick and
+>>>> enables sdio interrupt from card at end. If wifi handler defers this
+>>>> work for
+>>>> a different thread, sdio_irq_thread() will be stuck on next wifi
+>>>> interrupt
+>>>> since mmc lock is not freed.
+>>>
+>>> Not sure if I can follow this explanation. The isr is called with host
+>>> claimed (by sdio_irq_thread) and all it does is at a linked list member
+>>> and signal the dpc thread. After doing this the host is released.
+>>
+>> Is the issue something like the ISR handler or first level of threading
+>> does:
+>>
+>> * Trigger DPC
+>> * Re-enable interrupt
+>>
+>> So that the interrupt then fires again before the triggered DPC can run
+>> to handle/clear it, thus causing an interrupt storm?
+>>
+>> Whereas handling the interrupt directly prevents this race condition?
+>
+> Above is my understanding.
+>
 
-On Thu, Jul 26, 2012 at 02:19:23PM +0800, AceLan Kao wrote:
-> Dear Julian,
-> 
-> Yes, I have said that the asus-wmi patch needs this commit
-> and CC'd the asus-wmi maintainer, Corentin Chary, here in this rfkill patch.
-> 
-> Best regards,
-> AceLan Kao.
-> 
-> 2012/7/26 Julian Calaby <julian.calaby@gmail.com>:
-> > Hi AceLan,
-> >
-> > On Thu, Jul 26, 2012 at 3:55 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
-> >> Dear Julian,
-> >>
-> >> I just submitted a patch to platform-x86 for asus-wmi.
-> >> And the patch needs to use rfkill_set_led_trigger_name() function
-> >> to bind the wlan led to rfkill event.
-> >
-> > That's what I wanted to know.
-> >
-> > I assume that you've added a note to the ASUS-WMI patch so people know
-> > that it needs this one first. (I can't see it here so I don't know)
-> >
-> > Thanks,
-> >
-> > --
-> > Julian Calaby
-> >
-> > Email: julian.calaby@gmail.com
-> > Profile: http://www.google.com/profiles/julian.calaby/
-> > .Plan: http://sites.google.com/site/juliancalaby/
-> 
-> 
-> 
-> -- 
-> Chia-Lin Kao(AceLan)
-> http://blog.acelan.idv.tw/
-> E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Hi Wei,
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I understand the issue here and totally agree that we should treat 
+in-band and out-band interrupts differently. But my concern is that the 
+behavior of releasing the host before calling brcmf_sdbrcm_isr and grab 
+it after is likely error prone. Also we are restructuring the dpc 
+routine internally and it's almost done. I will find a better solution 
+for in-band interrupt and get it the queue as well. So I suggest 
+dropping this patch.
+
+Thanks,
+Franky
+
