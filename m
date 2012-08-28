@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:57501 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759Ab2HNTNZ (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:43169 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753231Ab2H1Wjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 15:13:25 -0400
-Received: by ggdk6 with SMTP id k6so847642ggd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2012 12:13:24 -0700 (PDT)
+	Tue, 28 Aug 2012 18:39:43 -0400
+Message-ID: <503D48AC.5040509@wwwdotorg.org> (sfid-20120829_003949_515867_E44D8770)
+Date: Tue, 28 Aug 2012 15:39:40 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190138F360@sbs2003.acksys.local>
-References: <773DB8A82AB6A046AE0195C68612A3190138F360@sbs2003.acksys.local>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Tue, 14 Aug 2012 12:13:03 -0700
-Message-ID: <CAG6hwVMir23S-v0p=r=vkDn5Cu7fOSSEXaAU5jtSrVsC-Bp4ow@mail.gmail.com> (sfid-20120814_211328_788803_E42C9EBA)
-Subject: Re: Mesh addressing issue
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>
-Cc: linux-wireless@vger.kernel.org
+To: Franky Lin <frankyl@broadcom.com>
+CC: Wei Ni <wni@nvidia.com>, Arend van Spriel <arend@broadcom.com>,
+	"rvossen@broadcom.com" <rvossen@broadcom.com>,
+	Rakesh Kumar <krakesh@nvidia.com>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR directly
+ for non-OOB
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com> <1346063114-30361-3-git-send-email-wni@nvidia.com> <503B9F31.5050502@broadcom.com> <503BD345.6030501@wwwdotorg.org> <1346152413.3516.211.camel@tegra-chromium-2> <503CF5B3.8040201@broadcom.com>
+In-Reply-To: <503CF5B3.8040201@broadcom.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cedric,
+On 08/28/2012 09:45 AM, Franky Lin wrote:
+> On 08/28/2012 04:13 AM, Wei Ni wrote:
+>> On Tue, 2012-08-28 at 04:06 +0800, Stephen Warren wrote:
+>>> On 08/27/2012 09:24 AM, Arend van Spriel wrote:
+>>>> On 08/27/2012 12:25 PM, Wei Ni wrote:
+>>>>> In case of inband interrupts, if we handle the interrupt in dpc
+>>>>> thread,
+>>>>> two level of thread switching takes place to process wifi interrupts.
+>>>>> One in SDHCI driver and the other in Wifi driver. This may cause the
+>>>>> system
+>>>>> instability.
+...
+>>>> Not sure if I can follow this explanation. The isr is called with host
+>>>> claimed (by sdio_irq_thread) and all it does is at a linked list member
+>>>> and signal the dpc thread. After doing this the host is released.
+>>>
+>>> Is the issue something like the ISR handler or first level of threading
+>>> does:
+>>>
+>>> * Trigger DPC
+>>> * Re-enable interrupt
+>>>
+>>> So that the interrupt then fires again before the triggered DPC can run
+>>> to handle/clear it, thus causing an interrupt storm?
+>>>
+>>> Whereas handling the interrupt directly prevents this race condition?
+>>
+>> Above is my understanding.
+> 
+> I understand the issue here and totally agree that we should treat
+> in-band and out-band interrupts differently. But my concern is that the
+> behavior of releasing the host before calling brcmf_sdbrcm_isr and grab
+> it after is likely error prone. Also we are restructuring the dpc
+> routine internally and it's almost done. I will find a better solution
+> for in-band interrupt and get it the queue as well. So I suggest
+> dropping this patch.
 
-On Tue, Aug 14, 2012 at 9:25 AM, Cedric VONCKEN
-<cedric.voncken@acksys.fr> wrote:
-> I think I found an issue in mesh addressing.
-> I used the compat-2012-06-14.
->
-> My network topology for the test is :
-> -----------------      -------------------   Wired LAN       -----------------
-> |MP1              |   |MP2                   |------------------| Computer      |
-> |192.168.4.1|    |192.168.4.253|                            |192.168.4.90 |
-> -----------------     -------------------                               ---------------
->
-> The MP1 is not bridged with any wired interface (The ip address is set directly on WLAN0 interface)
-> The MP2 is bridged with eth0 to offer link with a wired network (My computer is connected with the wired network).
->
-> If I try to ping from Computer to MP1.
->       The ICMP request sent on WiFi (from MP2 to MP1) is a broadcast frame using a strange address format (3 address in 802.11 header + 1 address in mesh extension) .
->       The ICMP reply sent on wifi (from MP1 to MP2) is unicast frame using 6 addresses format.
->
-> Why the ICMP request is sent with address 1 set to broadcast (It was not the case for older compat-2011-08-25)?
->
-> If in MP1 I move the WLAN0 to a bridge with brctl (with no other interface), ICMP request are still sent with broadcast,
-> But
->  If I change the mac address of bridge interface, the ICMP request is now sent in unicast  format (using the 6 addresses formats) !
-
-Based on the information you've provided, none of this immediately
-sounds wrong. Can you please link to a capture file we can
-investigate?
-
-Thanks,
-Thomas
+Franky, do you know which kernel release the DPC restructuring will make
+it into? I ask because I can't apply the rest of the patches in this
+series without first resolving the stability issues with the Broadcom
+WiFi enabled, since that'd de-stabilize the Tegra platform
+significantly, and I'd like to plan when we can apply these patches to
+Tegra. Thanks!
