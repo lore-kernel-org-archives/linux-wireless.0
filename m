@@ -1,110 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:56849 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415Ab2HZFSO (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:53989 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751441Ab2H1Df0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Aug 2012 01:18:14 -0400
-Received: by ggdk6 with SMTP id k6so701293ggd.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2012 22:18:13 -0700 (PDT)
-Message-ID: <5039B192.3000206@wybc.com> (sfid-20120826_071858_308165_474D36D7)
-Date: Sun, 26 Aug 2012 01:18:10 -0400
-From: Sherwin Soltani <sherwin@wybc.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k: AR9462 btcoex doesn't appear to work
-References: <50394BE4.3000508@wybc.com> <20537.33465.256314.716102@gargle.gargle.HOWL>
-In-Reply-To: <20537.33465.256314.716102@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 27 Aug 2012 23:35:26 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/4] mwifiex: parse rate info for AP
+Date: Mon, 27 Aug 2012 20:32:53 -0700
+Message-Id: <1346124774-17701-3-git-send-email-bzhao@marvell.com> (sfid-20120828_054602_368723_07962067)
+In-Reply-To: <1346124774-17701-1-git-send-email-bzhao@marvell.com>
+References: <1346124774-17701-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2012 09:58 PM, Sujith Manoharan wrote:
-> Sherwin Soltani wrote:
->> I have an Acer Aspire V5-571 which contains the AR9462 chipset (PCI ID
->> 168c:0034), supported by the ath9k driver. This chipset claims to
->> support Bluetooth coexistence. However, after booting up, my kernel does
->> not register any Bluetooth devices.
->>
->> I am using kernel version 3.6.0-999-generic (apw@gomeisa) (gcc version
->> 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)). I also tried 3.4 and 3.2 kernels
->> without success. Additionally, I can try to do
->>
->> rmmod ath9k && modprobe ath9k btcoex_enable=1
->>
->> In the message log, I can see this:
->>
->> [ 1204.643120] ath9k: ath9k: Driver unloaded
->> [ 1214.203099] ath: phy1: Disabling ASPM since BTCOEX is enabled
->> [ 1214.203105] ath: EEPROM regdomain: 0x6a
->> [ 1214.203106] ath: EEPROM indicates we should expect a direct regpair map
->> [ 1214.203108] ath: Country alpha2 being used: 00
->> [ 1214.203109] ath: Regpair used: 0x6a
->>
->> However 'hcitool dev' shows no devices after this operation.
-> What does lsusb -v show ?
+From: Avinash Patil <patila@marvell.com>
 
-It shows:
+This patch adds support for parsing rates from cfg80211_ap_settings
+of start_ap handler. This in turn adds support for 11a and 11b phy
+configurations.
 
-03:00.0 Network controller: Atheros Communications Inc. AR9462 Wireless 
-Network Adapter (rev 01)
-     Subsystem: Lite-On Communications Inc Device 6621
-     Flags: bus master, fast devsel, latency 0, IRQ 19
-     Memory at f0500000 (64-bit, non-prefetchable) [size=512K]
-     Expansion ROM at dfa00000 [disabled] [size=64K]
-     Capabilities: [40] Power Management version 2
-     Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
-     Capabilities: [70] Express Endpoint, MSI 00
-     Capabilities: [100] Advanced Error Reporting
-     Capabilities: [140] Virtual Channel
-     Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
-     Kernel driver in use: ath9k
-     Kernel modules: ath9k
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    6 ++++-
+ drivers/net/wireless/mwifiex/fw.h       |    6 ++++
+ drivers/net/wireless/mwifiex/ioctl.h    |    7 ++++-
+ drivers/net/wireless/mwifiex/main.h     |    7 ++---
+ drivers/net/wireless/mwifiex/uap_cmd.c  |   39 ++++++++++++++++++++++++++++++-
+ 5 files changed, 58 insertions(+), 7 deletions(-)
 
-> ...
->
-> Reload ath3k and something like this should be seen:
->
-> root@linux-test ~# hciconfig hci1 up
-> root@linux-test ~# hcitool dev
-> Devices:
->          hci1    00:03:7F:44:84:8A
-
-By ath3k, I assume you meant ath9k since that is the driver I was using. 
-After loading up the new firmware, I still have no devices shown (and 
-'hciconfig hci1 up' replies with 'No such device'). Rebooting doesn't help.
-
-Here is what I see in the message buffer after re-inserting ath9k:
-[19157.961388] ath9k: ath9k: Driver unloaded
-[19178.196366] ath: phy2: ASPM enabled: 0x43
-[19178.196371] ath: EEPROM regdomain: 0x6a
-[19178.196372] ath: EEPROM indicates we should expect a direct regpair map
-[19178.196375] ath: Country alpha2 being used: 00
-[19178.196376] ath: Regpair used: 0x6a
-
-... lots of cfg80211 info ...
-
-[19178.197491] Registered led device: ath9k-phy2
-[19178.197500] ieee80211 phy2: Atheros AR9462 Rev:2 
-mem=0xffffc90016300000, irq=19
-[19178.211376] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[19186.703984] wlan0: authenticate with 2c:b0:5d:45:33:58
-[19186.708760] wlan0: send auth to 2c:b0:5d:45:33:58 (try 1/3)
-[19186.759145] wlan0: authenticated
-[19186.765888] wlan0: associate with 2c:b0:5d:45:33:58 (try 1/3)
-[19186.863455] wlan0: RX AssocResp from 2c:b0:5d:45:33:58 (capab=0x411 
-status=0 aid=2)
-[19186.863561] wlan0: associated
-
-> Coexistence testing is ongoing and bugs are still being ironed out,
-> but basic support is mostly done.
->
->> Aside from the Bluetooth problems, there are also problems with
->> frequently dropping signals (even when I am very close to the access
->> point), but right now that's a secondary concern to Bluetooth for me.
-> Can you try with the latest driver (using compat-wireless) and see if the
-> problem persists ? If it does, please post the kernel log with driver
-> debugging set to 0x8f49.
-
-I will take a look at what happens with compat-wireless.
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index e57f543..f7a06d2 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -969,15 +969,18 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ 	bss_cfg->channel =
+ 	    (u8)ieee80211_frequency_to_channel(params->channel->center_freq);
+-	bss_cfg->band_cfg = BAND_CONFIG_MANUAL;
+ 
+ 	/* Set appropriate bands */
+ 	if (params->channel->band == IEEE80211_BAND_2GHZ) {
++		bss_cfg->band_cfg = BAND_CONFIG_BG;
++
+ 		if (params->channel_type == NL80211_CHAN_NO_HT)
+ 			config_bands = BAND_B | BAND_G;
+ 		else
+ 			config_bands = BAND_B | BAND_G | BAND_GN;
+ 	} else {
++		bss_cfg->band_cfg = BAND_CONFIG_A;
++
+ 		if (params->channel_type == NL80211_CHAN_NO_HT)
+ 			config_bands = BAND_A;
+ 		else
+@@ -988,6 +991,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 	      ~priv->adapter->fw_bands))
+ 		priv->adapter->config_bands = config_bands;
+ 
++	mwifiex_set_uap_rates(bss_cfg, params);
+ 	mwifiex_send_domain_info_cmd_fw(wiphy);
+ 
+ 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index ae06f31..1a4a694 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -108,6 +108,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define MGMT_MASK_BEACON			0x100
+ 
+ #define TLV_TYPE_UAP_SSID			0x0000
++#define TLV_TYPE_UAP_RATES			0x0001
+ 
+ #define PROPRIETARY_TLV_BASE_ID                 0x0100
+ #define TLV_TYPE_KEY_MATERIAL       (PROPRIETARY_TLV_BASE_ID + 0)
+@@ -1284,6 +1285,11 @@ struct host_cmd_tlv_ssid {
+ 	u8 ssid[0];
+ } __packed;
+ 
++struct host_cmd_tlv_rates {
++	struct host_cmd_tlv tlv;
++	u8 rates[0];
++} __packed;
++
+ struct host_cmd_tlv_bcast_ssid {
+ 	struct host_cmd_tlv tlv;
+ 	u8 bcast_ctl;
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 6a5eded..8688535 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -81,7 +81,11 @@ struct wep_key {
+ 
+ #define KEY_MGMT_ON_HOST        0x03
+ #define MWIFIEX_AUTH_MODE_AUTO  0xFF
+-#define BAND_CONFIG_MANUAL      0x00
++#define BAND_CONFIG_BG          0x00
++#define BAND_CONFIG_A           0x01
++#define MWIFIEX_SUPPORTED_RATES                 14
++#define MWIFIEX_SUPPORTED_RATES_EXT             32
++
+ struct mwifiex_uap_bss_param {
+ 	u8 channel;
+ 	u8 band_cfg;
+@@ -100,6 +104,7 @@ struct mwifiex_uap_bss_param {
+ 	struct wpa_param wpa_cfg;
+ 	struct wep_key wep_cfg[NUM_WEP_KEYS];
+ 	struct ieee80211_ht_cap ht_cap;
++	u8 rates[MWIFIEX_SUPPORTED_RATES];
+ };
+ 
+ enum {
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 994bc4f..ede0c65 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -116,6 +116,7 @@ enum {
+ #define MAX_BITMAP_RATES_SIZE			10
+ 
+ #define MAX_CHANNEL_BAND_BG     14
++#define MAX_CHANNEL_BAND_A      165
+ 
+ #define MAX_FREQUENCY_BAND_BG   2484
+ 
+@@ -249,10 +250,6 @@ struct ieee_types_header {
+ 	u8 len;
+ } __packed;
+ 
+-#define MWIFIEX_SUPPORTED_RATES                 14
+-
+-#define MWIFIEX_SUPPORTED_RATES_EXT             32
+-
+ struct ieee_types_vendor_specific {
+ 	struct ieee_types_vendor_header vend_hdr;
+ 	u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_vendor_header)];
+@@ -872,6 +869,8 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
+ void mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 			   struct mwifiex_uap_bss_param *bss_cfg,
+ 			   struct cfg80211_ap_settings *params);
++void mwifiex_set_uap_rates(struct mwifiex_uap_bss_param *bss_cfg,
++			   struct cfg80211_ap_settings *params);
+ 
+ /*
+  * This function checks if the queuing is RA based or not.
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index c10aac0..8a627d8 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -177,6 +177,25 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 	return;
+ }
+ 
++/* This function finds supported rates IE from beacon parameter and sets
++ * these rates into bss_config structure.
++ */
++void
++mwifiex_set_uap_rates(struct mwifiex_uap_bss_param *bss_cfg,
++		      struct cfg80211_ap_settings *params)
++{
++	struct ieee_types_header *rate_ie;
++	int var_offset = offsetof(struct ieee80211_mgmt, u.beacon.variable);
++	const u8 *var_pos = params->beacon.head + var_offset;
++	int len = params->beacon.head_len - var_offset;
++
++	rate_ie = (void *)cfg80211_find_ie(WLAN_EID_SUPP_RATES, var_pos, len);
++	if (rate_ie)
++		memcpy(bss_cfg->rates, rate_ie + 1, rate_ie->len);
++
++	return;
++}
++
+ /* This function initializes some of mwifiex_uap_bss_param variables.
+  * This helps FW in ignoring invalid values. These values may or may not
+  * be get updated to valid ones at later stage.
+@@ -323,8 +342,10 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 	struct host_cmd_tlv_retry_limit *retry_limit;
+ 	struct host_cmd_tlv_encrypt_protocol *encrypt_protocol;
+ 	struct host_cmd_tlv_auth_type *auth_type;
++	struct host_cmd_tlv_rates *tlv_rates;
+ 	struct mwifiex_ie_types_htcap *htcap;
+ 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
++	int i;
+ 	u16 cmd_size = *param_size;
+ 
+ 	if (bss_cfg->ssid.ssid_len) {
+@@ -344,7 +365,23 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 		cmd_size += sizeof(struct host_cmd_tlv_bcast_ssid);
+ 		tlv += sizeof(struct host_cmd_tlv_bcast_ssid);
+ 	}
+-	if (bss_cfg->channel && bss_cfg->channel <= MAX_CHANNEL_BAND_BG) {
++	if (bss_cfg->rates[0]) {
++		tlv_rates = (struct host_cmd_tlv_rates *)tlv;
++		tlv_rates->tlv.type = cpu_to_le16(TLV_TYPE_UAP_RATES);
++
++		for (i = 0; i < MWIFIEX_SUPPORTED_RATES && bss_cfg->rates[i];
++		     i++)
++			tlv_rates->rates[i] = bss_cfg->rates[i];
++
++		tlv_rates->tlv.len = cpu_to_le16(i);
++		cmd_size += sizeof(struct host_cmd_tlv_rates) + i;
++		tlv += sizeof(struct host_cmd_tlv_rates) + i;
++	}
++	if (bss_cfg->channel &&
++	    ((bss_cfg->band_cfg == BAND_CONFIG_BG &&
++	      bss_cfg->channel <= MAX_CHANNEL_BAND_BG) ||
++	    (bss_cfg->band_cfg == BAND_CONFIG_A &&
++	     bss_cfg->channel <= MAX_CHANNEL_BAND_A))) {
+ 		chan_band = (struct host_cmd_tlv_channel_band *)tlv;
+ 		chan_band->tlv.type = cpu_to_le16(TLV_TYPE_CHANNELBANDLIST);
+ 		chan_band->tlv.len =
+-- 
+1.7.0.2
 
