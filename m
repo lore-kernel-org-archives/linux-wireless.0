@@ -1,132 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4026 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756800Ab2HFR7o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Aug 2012 13:59:44 -0400
-Message-ID: <502005FD.10102@broadcom.com> (sfid-20120806_195959_979395_521333AE)
-Date: Mon, 6 Aug 2012 19:59:25 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Christopher Sacchi" <chris.sacchi@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH]: Mac80211 driver and I checked the patch
-References: <CAGh4K3Lym9yETNbMutfjNuANrgwtvfrGes6emr3Mvhx47D3B2g@mail.gmail.com>
-In-Reply-To: <CAGh4K3Lym9yETNbMutfjNuANrgwtvfrGes6emr3Mvhx47D3B2g@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:46871 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751465Ab2H1Dfd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Aug 2012 23:35:33 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Subject: [PATCH 4/4] mwifiex: make use of is_zero_ether_addr()
+Date: Mon, 27 Aug 2012 20:32:54 -0700
+Message-Id: <1346124774-17701-4-git-send-email-bzhao@marvell.com> (sfid-20120828_054602_988040_5C3206F6)
+In-Reply-To: <1346124774-17701-1-git-send-email-bzhao@marvell.com>
+References: <1346124774-17701-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Very generic subject line. I would expect something like:
+Use is_zero_ether_addr() instead of directly using memcmp() to
+determine if the ethernet address is all zeros.
 
-[PATCH] mac80211: include rfkill header implicitly
+Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/scan.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-On 08/06/2012 01:49 PM, Christopher Sacchi wrote:
-> The source file needed a change  that was told in the description to
-> know that the #include needed to be fixed, and the function changed
-> another value to 0 (yes) in the description (that said FIXME.) The
-> patch fixes a typo-like error and has been checked with checkpatch.pl
-> in the scripts directory.
-
-
-> Here's the patch:
-
-Do need a heads-up stating the obvious.
-> --
-> --- main.c	2012-07-21 20:58:29.000000000 +0000
-> +++ mainnew.c	2012-08-05 20:00:37.000000000 +0000
-
-How did you create this patch? diff -U? When I try to apply your patch:
-
-$ git am patches/mac80211-crappy-patch-test.eml
-Applying: Mac80211 driver and I checked the patch
-error: mainnew.c: does not exist in index
-Patch failed at 0001 Mac80211 driver and I checked the patch
-When you have resolved this problem run "git am --resolved".
-If you would prefer to skip this patch, instead run "git am --skip".
-To restore the original branch and stop patching run "git am --abort".
-
-You really should do your changes in a git repository.
-
-I changed it to:
-
---- a/net/mac80211/main.c	2012-07-21 20:58:29.000000000 +0000
-+++ b/net/mac80211/main.c	2012-08-05 20:00:37.000000000 +0000
-
-and applied it. That applied, but it does not build.
-
-> @@ -32,7 +32,7 @@
->  #include "led.h"
->  #include "cfg.h"
->  #include "debugfs.h"
-> -
-> +#include "net/rfkill/rfkill.h"
-
-add empty line between #include and function prototype.
-
->  static struct lock_class_key ieee80211_rx_skb_queue_class;
-> 
->  void ieee80211_configure_filter(struct ieee80211_local *local)
-> @@ -183,6 +183,7 @@ int ieee80211_hw_config(struct ieee80211
->  		 *
->  		 */
->  		/* WARN_ON(ret); */
-> +		WARN_ON(1)
-
-Still no ';' here.
-
->  	}
-> 
->  	return ret;
-> Signed-off-by: Christopher P. Sacchi <chris.sacchi@gmail.com>
-
-Now this line will be added in the code. You really do not want that! (I
-hope).
-
-> --
-> 
-
-More general: What are you trying to change? I did take a look in
-net/mac80211/main.c and found the FIXME you refer to:
-
-int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
-{
-	:
-	:
-        if (changed && local->open_count) {
-                ret = drv_config(local, changed);
-                /*
-                 * Goal:
-                 * HW reconfiguration should never fail, the driver has told
-                 * us what it can support so it should live up to that
-promise.
-                 *
-                 * Current status:
-                 * rfkill is not integrated with mac80211 and a
-                 * configuration command can thus fail if hardware rfkill
-                 * is enabled
-                 *
-                 * FIXME: integrate rfkill with mac80211 and then add this
-                 * WARN_ON() back
-                 *
-                 */
-                /* WARN_ON(ret); */
-        }
-
-        return ret;
-}
-
-Back to your change:
-1) You are a WARN_ON(1). So on every drv_config() call you get a kernel
-warning. Unlikely we want that.
-2) For the warning to be put back, the comment says "integrate rfkill
-with mac80211". Adding an include of the rfkill header file does not
-really cover that statement.
-
-All in all you seem to forget a number of steps in
-Documentation/SubmittingPatches. Apart from passing checkpatch.pl it
-should first of all at least compile :-(
-
-Gr. AvS
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 215d07e..9e077e5 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -726,7 +726,6 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 	struct mwifiex_ie_types_num_probes *num_probes_tlv;
+ 	struct mwifiex_ie_types_wildcard_ssid_params *wildcard_ssid_tlv;
+ 	struct mwifiex_ie_types_rates_param_set *rates_tlv;
+-	const u8 zero_mac[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
+ 	u8 *tlv_pos;
+ 	u32 num_probes;
+ 	u32 ssid_len;
+@@ -840,8 +839,7 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 		 *  or BSSID filter applied to the scan results in the firmware.
+ 		 */
+ 		if ((i && ssid_filter) ||
+-		    memcmp(scan_cfg_out->specific_bssid, &zero_mac,
+-			   sizeof(zero_mac)))
++		    !is_zero_ether_addr(scan_cfg_out->specific_bssid))
+ 			*filtered_scan = true;
+ 	} else {
+ 		scan_cfg_out->bss_mode = (u8) adapter->scan_mode;
+-- 
+1.7.0.2
 
