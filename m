@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31233 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756321Ab2HNOYT (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:33596 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab2H1Hmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Aug 2012 10:24:19 -0400
-Message-ID: <502A5F8B.4000303@qca.qualcomm.com> (sfid-20120814_162428_761031_E3225DBB)
-Date: Tue, 14 Aug 2012 17:24:11 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 28 Aug 2012 03:42:55 -0400
+Received: by obbuo13 with SMTP id uo13so9902799obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2012 00:42:54 -0700 (PDT)
 MIME-Version: 1.0
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: reconfigure RSN capabilities when restarting
- AP
-References: <1343438007-5252-1-git-send-email-c_tpeder@qca.qualcomm.com>
-In-Reply-To: <1343438007-5252-1-git-send-email-c_tpeder@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAG6hwVNZYM6hQe9BvhP2eyFCMWTk7-HbZBx9hqikwQNkdF_6cQ@mail.gmail.com>
+References: <1346063887-29078-1-git-send-email-yeohchunyeow@gmail.com>
+	<CAG6hwVMQckH9KYp=OZorb2Q__91VrC-V5MNqE+zXsCTN4B5=dg@mail.gmail.com>
+	<CAEFj984VD6VmnX5nP0bCV7-pb-YPQ55eX2Gusg4G4jwRV7O9ng@mail.gmail.com>
+	<CAG6hwVNZYM6hQe9BvhP2eyFCMWTk7-HbZBx9hqikwQNkdF_6cQ@mail.gmail.com>
+Date: Tue, 28 Aug 2012 15:42:54 +0800
+Message-ID: <CAEFj984iZqFYoJNSYPHYZvYkYatUPnmOtV2q9gDtsf8xwAWR1w@mail.gmail.com> (sfid-20120828_094258_816037_EF77A11A)
+Subject: Re: [PATCH] cfg80211: allow software encryption of aes cmac in mesh
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/28/2012 04:13 AM, Thomas Pedersen wrote:
-> If the firmware decides to initiate a channel switch on an AP vif
-> running an RSN BSS, reconfigure the saved RSN IE capabilities as well.
-> 
-> Fixes a bug where the beacon and 4-way handshake would have a capability
-> mismatch after a channel switch, since the firmware apparently clears
-> these on an AP disconnect.
-> 
-> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Hi, Thomas
 
-Thanks, applied.
+> But this is ugly. I liked your ath5k patch better and am not really
+> sure what Johannes' problem with it was?
 
-Kalle
+Further investigation seems that MFP can be supported in hardware.
+
+Let me resubmit a patch on ath5k and see what are the comments coming
+from ath5k developers.
+
+Thanks
+
+---
+Chun-Yeow
