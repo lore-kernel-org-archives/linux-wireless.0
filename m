@@ -1,61 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3674 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2545 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752411Ab2H3Rn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 13:43:29 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 1/5] brcmfmac: prevent possible race condition on usb rx
- control.
-Date: Thu, 30 Aug 2012 19:42:58 +0200
-Message-ID: <1346348582-20095-2-git-send-email-arend@broadcom.com> (sfid-20120830_194335_127331_D665AEB5)
-In-Reply-To: <1346348582-20095-1-git-send-email-arend@broadcom.com>
-References: <1346348582-20095-1-git-send-email-arend@broadcom.com>
+	id S1751324Ab2H1XBv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Aug 2012 19:01:51 -0400
+Message-ID: <503D4DD9.2060808@broadcom.com> (sfid-20120829_010211_793751_F993528E)
+Date: Tue, 28 Aug 2012 16:01:45 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Stephen Warren" <swarren@wwwdotorg.org>
+cc: "Wei Ni" <wni@nvidia.com>, "Arend van Spriel" <arend@broadcom.com>,
+	"rvossen@broadcom.com" <rvossen@broadcom.com>,
+	"Rakesh Kumar" <krakesh@nvidia.com>,
+	"Laxman Dewangan" <ldewangan@nvidia.com>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH 2/6] brcmfmac: Handling the interrupt in ISR
+ directly for non-OOB
+References: <1346063114-30361-1-git-send-email-wni@nvidia.com>
+ <1346063114-30361-3-git-send-email-wni@nvidia.com>
+ <503B9F31.5050502@broadcom.com> <503BD345.6030501@wwwdotorg.org>
+ <1346152413.3516.211.camel@tegra-chromium-2>
+ <503CF5B3.8040201@broadcom.com> <503D48AC.5040509@wwwdotorg.org>
+In-Reply-To: <503D48AC.5040509@wwwdotorg.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 08/28/2012 03:39 PM, Stephen Warren wrote:
+> On 08/28/2012 09:45 AM, Franky Lin wrote:
+>> On 08/28/2012 04:13 AM, Wei Ni wrote:
+>>> On Tue, 2012-08-28 at 04:06 +0800, Stephen Warren wrote:
+>>>> On 08/27/2012 09:24 AM, Arend van Spriel wrote:
+>>>>> On 08/27/2012 12:25 PM, Wei Ni wrote:
+>>>>>> In case of inband interrupts, if we handle the interrupt in dpc
+>>>>>> thread,
+>>>>>> two level of thread switching takes place to process wifi interrupts.
+>>>>>> One in SDHCI driver and the other in Wifi driver. This may cause the
+>>>>>> system
+>>>>>> instability.
+> ...
+>>>>> Not sure if I can follow this explanation. The isr is called with host
+>>>>> claimed (by sdio_irq_thread) and all it does is at a linked list member
+>>>>> and signal the dpc thread. After doing this the host is released.
+>>>>
+>>>> Is the issue something like the ISR handler or first level of threading
+>>>> does:
+>>>>
+>>>> * Trigger DPC
+>>>> * Re-enable interrupt
+>>>>
+>>>> So that the interrupt then fires again before the triggered DPC can run
+>>>> to handle/clear it, thus causing an interrupt storm?
+>>>>
+>>>> Whereas handling the interrupt directly prevents this race condition?
+>>>
+>>> Above is my understanding.
+>>
+>> I understand the issue here and totally agree that we should treat
+>> in-band and out-band interrupts differently. But my concern is that the
+>> behavior of releasing the host before calling brcmf_sdbrcm_isr and grab
+>> it after is likely error prone. Also we are restructuring the dpc
+>> routine internally and it's almost done. I will find a better solution
+>> for in-band interrupt and get it the queue as well. So I suggest
+>> dropping this patch.
+>
+> Franky, do you know which kernel release the DPC restructuring will make
+> it into? I ask because I can't apply the rest of the patches in this
+> series without first resolving the stability issues with the Broadcom
+> WiFi enabled, since that'd de-stabilize the Tegra platform
+> significantly, and I'd like to plan when we can apply these patches to
+> Tegra. Thanks!
+>
 
-brcmf_usb_tx_ctlpkt sends message using brcmf_usb_send_ctl then
-clears boolean and waits for boolean to be set (by another
-thread). This can result in situation where flag gets cleared
-while result was already received. First clearing the flag and
-then sending the data will prevent this.
+Hi Stephen,
 
-Reviewed-by: Arend Van Spriel (arend@broadcom.com)
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Since we submit patches through linux-wireless tree, you may only be 
+able to pick it up at 3.7-rc1. It's quite a big change so I don't think 
+it will qualify as a bug fix to get into 3.6-rcX.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index a299d42..ac1ed1f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -366,13 +366,13 @@ static int brcmf_usb_tx_ctlpkt(struct device *dev, u8 *buf, u32 len)
- 	if (test_and_set_bit(0, &devinfo->ctl_op))
- 		return -EIO;
- 
-+	devinfo->ctl_completed = false;
- 	err = brcmf_usb_send_ctl(devinfo, buf, len);
- 	if (err) {
- 		brcmf_dbg(ERROR, "fail %d bytes: %d\n", err, len);
- 		return err;
- 	}
- 
--	devinfo->ctl_completed = false;
- 	timeout = brcmf_usb_ioctl_resp_wait(devinfo, &devinfo->ctl_completed,
- 					    &pending);
- 	clear_bit(0, &devinfo->ctl_op);
--- 
-1.7.9.5
-
+Regards,
+Franky
 
