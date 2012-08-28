@@ -1,106 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:44566 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752673Ab2HaBgD (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:54210 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538Ab2H1Ooh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Aug 2012 21:36:03 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jeff Disher <disher@chromium.org>,
-	Sam Leffler <sleffler@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: store mwifiex_ds_misc_subsc_evt in mwifiex_private
-Date: Thu, 30 Aug 2012 18:20:55 -0700
-Message-Id: <1346376056-25708-1-git-send-email-bzhao@marvell.com> (sfid-20120831_033646_673859_D450BCF9)
+	Tue, 28 Aug 2012 10:44:37 -0400
+Message-ID: <503CD951.2090602@lwfinger.net> (sfid-20120828_164444_760259_6817BD4A)
+Date: Tue, 28 Aug 2012 09:44:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Wei Yongjun <weiyj.lk@gmail.com>
+CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
+	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192de: remove pointless conditional before
+ kfree_skb()
+References: <CAPgLHd86W5X=Tb_fXoz_Ood-w_s282QNePTXG9m_6ESdG-rG2A@mail.gmail.com>
+In-Reply-To: <CAPgLHd86W5X=Tb_fXoz_Ood-w_s282QNePTXG9m_6ESdG-rG2A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jeff Disher <disher@chromium.org>
+On 08/28/2012 08:11 AM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> Remove pointless conditional before kfree_skb().
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192de/fw.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 
-Since mwifiex_ds_misc_subsc_evt is used in an asynchronous case,
-store the structure in the long-lived mwifiex_private instead of
-on the calling stack.
+Acked-by: Larry Finger <Larry.Finger.net>
 
-This fixes a problem where the response of the asynchronous
-operation would corrupt a stack frame potentially in use by
-a different thread.
+Thanks,
 
-Signed-off-by: Jeff Disher <disher@chromium.org>
-Reviewed-by: Sam Leffler <sleffler@chromium.org>
-Tested-by: Jeff Disher <disher@chromium.org>
-Acked-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h        |    1 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |   24 +++++++++++++-----------
- 2 files changed, 14 insertions(+), 11 deletions(-)
+Larry
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index ede0c65..bb75390 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -484,6 +484,7 @@ struct mwifiex_private {
- 	s32 cqm_rssi_thold;
- 	u32 cqm_rssi_hyst;
- 	u8 subsc_evt_rssi_state;
-+	struct mwifiex_ds_misc_subsc_evt async_subsc_evt_storage;
- 	struct mwifiex_ie mgmt_ie[MAX_MGMT_IE_INDEX];
- 	u16 beacon_idx;
- 	u16 proberesp_idx;
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 0b09004..6536356 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -123,7 +123,8 @@ static int mwifiex_ret_802_11_rssi_info(struct mwifiex_private *priv,
- {
- 	struct host_cmd_ds_802_11_rssi_info_rsp *rssi_info_rsp =
- 						&resp->params.rssi_info_rsp;
--	struct mwifiex_ds_misc_subsc_evt subsc_evt;
-+	struct mwifiex_ds_misc_subsc_evt *subsc_evt =
-+						&priv->async_subsc_evt_storage;
- 
- 	priv->data_rssi_last = le16_to_cpu(rssi_info_rsp->data_rssi_last);
- 	priv->data_nf_last = le16_to_cpu(rssi_info_rsp->data_nf_last);
-@@ -140,26 +141,27 @@ static int mwifiex_ret_802_11_rssi_info(struct mwifiex_private *priv,
- 	if (priv->subsc_evt_rssi_state == EVENT_HANDLED)
- 		return 0;
- 
-+	memset(subsc_evt, 0x00, sizeof(struct mwifiex_ds_misc_subsc_evt));
-+
- 	/* Resubscribe low and high rssi events with new thresholds */
--	memset(&subsc_evt, 0x00, sizeof(struct mwifiex_ds_misc_subsc_evt));
--	subsc_evt.events = BITMASK_BCN_RSSI_LOW | BITMASK_BCN_RSSI_HIGH;
--	subsc_evt.action = HostCmd_ACT_BITWISE_SET;
-+	subsc_evt->events = BITMASK_BCN_RSSI_LOW | BITMASK_BCN_RSSI_HIGH;
-+	subsc_evt->action = HostCmd_ACT_BITWISE_SET;
- 	if (priv->subsc_evt_rssi_state == RSSI_LOW_RECVD) {
--		subsc_evt.bcn_l_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg -
-+		subsc_evt->bcn_l_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg -
- 				priv->cqm_rssi_hyst);
--		subsc_evt.bcn_h_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
-+		subsc_evt->bcn_h_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
- 	} else if (priv->subsc_evt_rssi_state == RSSI_HIGH_RECVD) {
--		subsc_evt.bcn_l_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
--		subsc_evt.bcn_h_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg +
-+		subsc_evt->bcn_l_rssi_cfg.abs_value = abs(priv->cqm_rssi_thold);
-+		subsc_evt->bcn_h_rssi_cfg.abs_value = abs(priv->bcn_rssi_avg +
- 				priv->cqm_rssi_hyst);
- 	}
--	subsc_evt.bcn_l_rssi_cfg.evt_freq = 1;
--	subsc_evt.bcn_h_rssi_cfg.evt_freq = 1;
-+	subsc_evt->bcn_l_rssi_cfg.evt_freq = 1;
-+	subsc_evt->bcn_h_rssi_cfg.evt_freq = 1;
- 
- 	priv->subsc_evt_rssi_state = EVENT_HANDLED;
- 
- 	mwifiex_send_cmd_async(priv, HostCmd_CMD_802_11_SUBSCRIBE_EVENT,
--			       0, 0, &subsc_evt);
-+			       0, 0, subsc_evt);
- 
- 	return 0;
- }
--- 
-1.7.0.2
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+> index 895ae6c..a3aede0 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+> @@ -570,8 +570,7 @@ static bool _rtl92d_cmd_send_packet(struct ieee80211_hw *hw,
+>
+>   	ring = &rtlpci->tx_ring[BEACON_QUEUE];
+>   	pskb = __skb_dequeue(&ring->queue);
+> -	if (pskb)
+> -		kfree_skb(pskb);
+> +	kfree_skb(pskb);
+>   	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+>   	pdesc = &ring->desc[idx];
+>   	/* discard output from call below */
+>
+>
+>
 
