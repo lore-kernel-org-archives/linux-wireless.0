@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:49107 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751527Ab2HVEHv (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:45812 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752064Ab2H1NLg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Aug 2012 00:07:51 -0400
-Message-ID: <50345B12.1050600@lwfinger.net> (sfid-20120822_060814_072944_17941B17)
-Date: Tue, 21 Aug 2012 23:07:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 28 Aug 2012 09:11:36 -0400
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>,
-	Neal Cardwell <ncardwell@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-CC: LKML <linux-kernel@vger.kernel.org>
-Subject: Regression associated with commit c8628155ece3 - "tcp: reduce out_of_order
- memory use"
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Tue, 28 Aug 2012 21:11:34 +0800
+Message-ID: <CAPgLHd86W5X=Tb_fXoz_Ood-w_s282QNePTXG9m_6ESdG-rG2A@mail.gmail.com> (sfid-20120828_151145_554785_7CCF71DE)
+Subject: [PATCH] rtlwifi: rtl8192de: remove pointless conditional before kfree_skb()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-The commit entitled "tcp: reduce out_of_order memory use" turns out to cause 
-problems with a number of USB drivers.
+Remove pointless conditional before kfree_skb().
 
-The first one called to my attention was for staging/r8712u. For this driver, 
-there are problems with SSL communications as reported in 
-https://bugzilla.redhat.com/show_bug.cgi?id=847525.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Other drivers including rtl8187, rtl8192cu and rt2800usb cannot connect to a 
-WPA1- or WEP-encrypted AP, but work fine with WPA2. The rtl8192cu problem is 
-reported in https://bugzilla.kernel.org/show_bug.cgi?id=46171.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+index 895ae6c..a3aede0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+@@ -570,8 +570,7 @@ static bool _rtl92d_cmd_send_packet(struct ieee80211_hw *hw,
+ 
+ 	ring = &rtlpci->tx_ring[BEACON_QUEUE];
+ 	pskb = __skb_dequeue(&ring->queue);
+-	if (pskb)
+-		kfree_skb(pskb);
++	kfree_skb(pskb);
+ 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+ 	pdesc = &ring->desc[idx];
+ 	/* discard output from call below */
 
-I find it hard to understand why this patch should cause these effects; however, 
-I have verified that a kernel generated from "git checkout e86b2919" works fine. 
-This commit is immediately before the patch in question.
 
-Note, this patch was applied during the merge between 3.3 and 3.4. The 
-regression has been undiscovered for some time.
-
-Any help on this problem will be appreciated.
-
-Larry
