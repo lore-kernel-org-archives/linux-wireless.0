@@ -1,91 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51955 "EHLO
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65520 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275Ab2HTS2b (ORCPT
+	with ESMTP id S1751801Ab2H1JgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 14:28:31 -0400
-Received: by pbbrr13 with SMTP id rr13so7300544pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2012 11:28:31 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	cedric.voncken@acksys.fr, Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH] mac80211: fix DS to MBSS address translation
-Date: Mon, 20 Aug 2012 11:28:25 -0700
-Message-Id: <1345487305-23759-1-git-send-email-thomas@cozybit.com> (sfid-20120820_202839_931488_49FFDE68)
+	Tue, 28 Aug 2012 05:36:04 -0400
+Received: by pbbrr13 with SMTP id rr13so9037981pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2012 02:36:03 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@qca.qualcomm.com,
+	ath5k-devel@lists.ath5k.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath5k: add support of HW encryption in management frames
+Date: Tue, 28 Aug 2012 17:34:06 +0800
+Message-Id: <1346146446-628-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120828_113608_728319_48791C3E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The destination address of unicast frames forwarded through a mesh gate
-was being replaced with the broadcast address. Instead leave the
-original destination address as the mesh DA. If the nexthop address is
-not in the mpath table it will be resolved. If that fails, the frame
-will be forwarded to known mesh gates.
+This patch provides the support of hardware encyrption for
+management frame, including the support of AES CMAC. This
+patch is tested with the following chipsets:
+- AR5213A
+- AR5413
+- AR2413/AR2414
 
-Reported-by: Cedric Voncken <cedric.voncken@acksys.fr>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Beside, this patch also extends the IBSS RSN to mesh.
+
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- net/mac80211/tx.c |   38 ++++++++++++++++----------------------
- 1 files changed, 16 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c         |    4 +++-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |    7 +++++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index acf712f..c5e8c9c 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1811,37 +1811,31 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 			meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr,
- 					sdata, NULL, NULL);
- 		} else {
--			int is_mesh_mcast = 1;
--			const u8 *mesh_da;
-+			/* DS -> MBSS (802.11-2012 13.11.3.3).
-+			 * For unicast with unknown forwarding information,
-+			 * destination might be in the MBSS or if that fails
-+			 * forwarded to another mesh gate. In either case
-+			 * resolution will be handled in ieee80211_xmit(), so
-+			 * leave the original DA. This also works for mcast */
-+			const u8 *mesh_da = skb->data;
-+
-+			if (mppath)
-+				mesh_da = mppath->mpp;
-+			else if (mpath)
-+				mesh_da = mpath->dst;
-+			rcu_read_unlock();
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index a0a202d..084162e 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2446,7 +2446,9 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 			IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 			IEEE80211_HW_SIGNAL_DBM |
+-			IEEE80211_HW_REPORTS_TX_ACK_STATUS;
++			IEEE80211_HW_REPORTS_TX_ACK_STATUS |
++			IEEE80211_HW_MFP_CAPABLE |
++			IEEE80211_HW_SUPPORTS_PER_STA_GTK;
  
--			if (is_multicast_ether_addr(skb->data))
--				/* DA TA mSA AE:SA */
--				mesh_da = skb->data;
--			else {
--				static const u8 bcast[ETH_ALEN] =
--					{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
--				if (mppath) {
--					/* RA TA mDA mSA AE:DA SA */
--					mesh_da = mppath->mpp;
--					is_mesh_mcast = 0;
--				} else if (mpath) {
--					mesh_da = mpath->dst;
--					is_mesh_mcast = 0;
--				} else {
--					/* DA TA mSA AE:SA */
--					mesh_da = bcast;
--				}
--			}
- 			hdrlen = ieee80211_fill_mesh_addresses(&hdr, &fc,
- 					mesh_da, sdata->vif.addr);
--			rcu_read_unlock();
--			if (is_mesh_mcast)
-+			if (is_multicast_ether_addr(mesh_da))
-+				/* DA TA mSA AE:SA */
- 				meshhdrlen =
- 					ieee80211_new_mesh_header(&mesh_hdr,
- 							sdata,
- 							skb->data + ETH_ALEN,
- 							NULL);
- 			else
-+				/* RA TA mDA mSA AE:DA SA */
- 				meshhdrlen =
- 					ieee80211_new_mesh_header(&mesh_hdr,
- 							sdata,
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index df61a09..7f78caa 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -489,7 +489,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if (ath5k_modparam_nohwcrypt)
+ 		return -EOPNOTSUPP;
+ 
+-	if (vif->type == NL80211_IFTYPE_ADHOC &&
++	if ((vif->type == NL80211_IFTYPE_ADHOC ||
++	     vif->type == NL80211_IFTYPE_MESH_POINT) &&
+ 	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
+ 	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
+ 	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+@@ -502,6 +503,7 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		if (common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM)
+ 			break;
+@@ -522,7 +524,8 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+ 			if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
+ 				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+-			if (key->cipher == WLAN_CIPHER_SUITE_CCMP)
++			if (key->cipher == WLAN_CIPHER_SUITE_CCMP &&
++			    !(common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM))
+ 				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
+ 			ret = 0;
+ 		}
 -- 
-1.7.5.4
+1.7.0.4
 
