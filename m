@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3823 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab2HTSSn (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:38287 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751133Ab2H1DfR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Aug 2012 14:18:43 -0400
-Date: Mon, 20 Aug 2012 11:18:38 -0700
-From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: protect firmware from excessive WoW pattern
- length
-Message-ID: <20120820181837.GA4695@pista> (sfid-20120820_201846_801051_E9B76E6E)
-References: <1345076116-5053-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <1345446793.4504.0.camel@jlt3.sipsolutions.net>
- <5031E74F.4010104@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <5031E74F.4010104@qca.qualcomm.com>
+	Mon, 27 Aug 2012 23:35:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>, Ying Luo <luoy@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/4] mwifiex: release semaphore acquired for internal scan operation
+Date: Mon, 27 Aug 2012 20:32:51 -0700
+Message-Id: <1346124774-17701-1-git-send-email-bzhao@marvell.com> (sfid-20120828_054600_946902_B5A8D170)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 10:29:19AM +0300, Kalle Valo wrote:
-> On 08/20/2012 10:13 AM, Johannes Berg wrote:
-> > On Wed, 2012-08-15 at 17:15 -0700, Thomas Pedersen wrote:
-> >> Don't accept WoW patterns longer than supported by firmware.
-> >>
-> >> Reported-by: Haijun Jin <nhjin@qca.qualcomm.com>
-> >> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-> >> ---
-> >>  drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +++
-> >>  1 files changed, 3 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> >> index bd003fe..ffa18f3 100644
-> >> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> >> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> >> @@ -1876,6 +1876,9 @@ static int ath6kl_wow_usr(struct ath6kl *ar, struct ath6kl_vif *vif,
-> >>  	/* Configure the patterns that we received from the user. */
-> >>  	for (i = 0; i < wow->n_patterns; i++) {
-> >>  
-> >> +		if (wow->patterns[i].pattern_len > WOW_MASK_SIZE)
-> >> +			return -EINVAL;
-> >> +
-> > 
-> > No objection, but doesn't nl80211 already validate that (assuming you
-> > give the right pattern_max_len, of course)?
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Thanks for pointing that out. That check would be completely redundant
-then.
+If "iw connect" command is fired for station interface, when
+heavy traffic is running on AP interface, internal scan operation
+performed before actual association is aborted. In this case we
+missed to release semaphore.
 
-Kalle,
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-Can you revert this patch? Otherwise the followup will just do the same.
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index fad2c8d..c510563 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -92,6 +92,11 @@ static void scan_delay_timer_fn(unsigned long data)
+ 			kfree(priv->user_scan_cfg);
+ 			priv->user_scan_cfg = NULL;
+ 		}
++
++		if (priv->scan_pending_on_block) {
++			priv->scan_pending_on_block = false;
++			up(&priv->async_sem);
++		}
+ 		goto done;
+ 	}
+ 
+-- 
+1.7.0.2
 
-> And ath6kl even uses different define pattern_max_len:
-> 
-> 	wiphy->wowlan.pattern_max_len = WOW_PATTERN_SIZE;
-> 
-> But the value is still same:
-> 
-> #define WOW_PATTERN_SIZE	 64
-> #define WOW_MASK_SIZE		 64
-> 
-> Thomas, can you please check this? Do we really need two different
-> defines? And which one is the correct one here?
-
-No AFAICT there is no reason to have two different defines. I can submit
-a small patch consolidating these, but it would remove the above hunk
-anyway so I need to know whether you'll revert or not.
-
-Thanks,
-Thomas
