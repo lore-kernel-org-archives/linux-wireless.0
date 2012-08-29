@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:54210 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538Ab2H1Ooh (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:54545 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628Ab2H2VfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Aug 2012 10:44:37 -0400
-Message-ID: <503CD951.2090602@lwfinger.net> (sfid-20120828_164444_760259_6817BD4A)
-Date: Tue, 28 Aug 2012 09:44:33 -0500
+	Wed, 29 Aug 2012 17:35:04 -0400
+Received: by ieje11 with SMTP id e11so434329iej.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 14:35:02 -0700 (PDT)
+Message-ID: <503E8B03.4070905@lwfinger.net> (sfid-20120829_233509_844501_D1CE4000)
+Date: Wed, 29 Aug 2012 16:34:59 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Wei Yongjun <weiyj.lk@gmail.com>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192de: remove pointless conditional before
- kfree_skb()
-References: <CAPgLHd86W5X=Tb_fXoz_Ood-w_s282QNePTXG9m_6ESdG-rG2A@mail.gmail.com>
-In-Reply-To: <CAPgLHd86W5X=Tb_fXoz_Ood-w_s282QNePTXG9m_6ESdG-rG2A@mail.gmail.com>
+To: Patrick Connolly <pjc999@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Question about ath9k/mac80211 Driver
+References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com> <50365AC8.7030503@lwfinger.net> <CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com> <5036660B.9020208@lwfinger.net> <CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com> <50381437.7040903@lwfinger.net> <CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com> <CAE3CJbmK4nF2gR56Rkrrd8qWoCuLot=XD-a9koWxCzcDeOrg8A@mail.gmail.com> <CAE3CJbmJ8JZzBKKJwYAL_6K_ossMK0HDCEkNLNfG-A4HzZSfzg@mail.gmail.com> <CAE3CJbm++cjK0Mf8JOsRk8vCkvKF97iw1SnJdySjc7vXUz1Qgg@mail.gmail.com>
+In-Reply-To: <CAE3CJbm++cjK0Mf8JOsRk8vCkvKF97iw1SnJdySjc7vXUz1Qgg@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/28/2012 08:11 AM, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> Remove pointless conditional before kfree_skb().
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192de/fw.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+On 08/29/2012 04:09 PM, Patrick Connolly wrote:
+> Can anyone comment on whether "iw set bitrates" should be fully
+> functional using compat-wireless version 3.2.5-1 ?
+>     ( if not, what do I have to do to get this to work? )
 
-Acked-by: Larry Finger <Larry.Finger.net>
+The version of compat-wireless (3.2.5) is the version of the kernel that is 
+backported, and I don't think that is new enough.
 
-Thanks,
+If you use the version at
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.5/compat-wireless-3.5.1-1-snpc.tar.bz2, 
+you should be OK.
 
 Larry
 
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-> index 895ae6c..a3aede0 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-> @@ -570,8 +570,7 @@ static bool _rtl92d_cmd_send_packet(struct ieee80211_hw *hw,
->
->   	ring = &rtlpci->tx_ring[BEACON_QUEUE];
->   	pskb = __skb_dequeue(&ring->queue);
-> -	if (pskb)
-> -		kfree_skb(pskb);
-> +	kfree_skb(pskb);
->   	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
->   	pdesc = &ring->desc[idx];
->   	/* discard output from call below */
->
->
->
 
