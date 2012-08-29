@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:58735 "EHLO mail.neratec.com"
+Received: from mail.tpi.com ([70.99.223.143]:4948 "EHLO mail.tpi.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752606Ab2HJIuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 04:50:18 -0400
-Message-ID: <5024CB44.6040608@neratec.com> (sfid-20120810_105025_862476_0BDE97B9)
-Date: Fri, 10 Aug 2012 10:50:12 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+	id S1754153Ab2H2ROA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Aug 2012 13:14:00 -0400
+Message-ID: <503E4DBB.4030606@canonical.com> (sfid-20120829_191439_434268_957533DD)
+Date: Wed, 29 Aug 2012 11:13:31 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
 MIME-Version: 1.0
-To: Andy Gospodarek <andy@greyhouse.net>
-CC: mcgrof@frijolero.org, Phil Perry <phil@elrepo.org>,
-	linux-wireless@vger.kernel.org,
-	lf driver backport
-	<lf_driver_backport@lists.linux-foundation.org>
-Subject: Re: [PATCH v2] compat: support RHEL6.3 as a build target
-References: <1344487215-24143-1-git-send-email-andy@greyhouse.net> <2121451356.93690.1344518764022.JavaMail.root@neratec.com> <CAHashqCmcgXXDyyqwEYefTMXFDVFKm9GKydfbS14UCY_L443Vg@mail.gmail.com>
-In-Reply-To: <CAHashqCmcgXXDyyqwEYefTMXFDVFKm9GKydfbS14UCY_L443Vg@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+To: Luciano Coelho <coelho@ti.com>
+CC: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3.6-rc3] wlcore: Declare MODULE_FIRMWARE usage
+References: <1346251689-37023-1-git-send-email-tim.gardner@canonical.com> <1346259706.3935.2.camel@cumari.coelho.fi>
+In-Reply-To: <1346259706.3935.2.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2012 11:59 PM, Andy Gospodarek wrote:
-> On Aug 9, 2012 9:26 AM, "Zefir Kurtisi" <zefir.kurtisi@neratec.com
->> [...]
->> This at least breaks compilation on 2.6.35-22 with gcc throwing a
->> compat-2.6.36.h:104: error: ISO C requires a named argument before ‘...’
->>
+On 08/29/2012 11:01 AM, Luciano Coelho wrote:
+> On Wed, 2012-08-29 at 08:48 -0600, Tim Gardner wrote:
+>> Cc: Luciano Coelho <coelho@ti.com>
+>> Cc: "John W. Linville" <linville@tuxdriver.com>
+>> Cc: Eliad Peller <eliad@wizery.com>
+>> Cc: Arik Nemtsov <arik@wizery.com>
+>> Cc: Eyal Shapira <eyal@wizery.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: netdev@vger.kernel.org
+>> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+>> ---
 > 
-> Actually that might be due to the fact that I chose to use
-> no_printk(...) rather than no_printk(a,...).
+> Please add a proper commit message.  And there's no need to put all
+> these people in Cc: in the commit log.  CC'ing when sending the patch is
+> enough (even though for such small patch, the linux-wireless mailing
+> list and myself is enough).
 > 
-> What version of gcc are you using?
+> --
+> Luca.
 > 
-Since you already resolved the issue, just FYI: I'm using
-gcc (Ubuntu/Linaro 4.4.4-14ubuntu5.1) 4.4.5
 
+What more would you like covered in the commit message that isn't
+obvious from the subject?
 
+The Cc list comes from scripts/get_maintainers.pl as suggested by
+Documentation/SubmittingPatches: "5) Select e-mail destination."
 
-
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
