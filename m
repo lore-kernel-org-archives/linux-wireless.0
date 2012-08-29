@@ -1,81 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41564 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988Ab2HUPxs (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:49209 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659Ab2H2PCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Aug 2012 11:53:48 -0400
-Message-ID: <1345564421.10280.9.camel@jlt3.sipsolutions.net> (sfid-20120821_175402_799730_CEB3273A)
-Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Tue, 21 Aug 2012 17:53:41 +0200
-In-Reply-To: <50338E84.3050709@posedge.com>
-References: <952C5D5D0470AE4FB7D8A75C6ADC71CA0FCDD559@mbx022-e1-nj-10.exch022.domain.local>
-	 <20120816102211.GD17659@redhat.com> <502CF2D5.6020704@posedge.com>
-	 <20120817140657.GA1645@redhat.com> <502E85D9.5050301@posedge.com>
-	 <1345480718.4459.37.camel@jlt3.sipsolutions.net>
-	 <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>
-	 <50338E84.3050709@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 29 Aug 2012 11:02:06 -0400
+Received: by wibhq12 with SMTP id hq12so7817567wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 08:02:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1AC80D@POCITMSEXMB03.LntUniverse.com>
+References: <45566970CF58C74CB52107862E0541CD1D1AC80D@POCITMSEXMB03.LntUniverse.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 29 Aug 2012 18:01:47 +0300
+Message-ID: <CA+XVXfcD4jMYQUy25pqWTBq18ZN7pMg++j-mZqW14GqC2OmfOA@mail.gmail.com> (sfid-20120829_170212_448531_01FD5F7A)
+Subject: Re: Crash with Wl12xx driver while Concurrent operation(P2P and Wi-Fi legacy)
+To: Girish Bn <Girish.BN@lnties.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-08-21 at 19:05 +0530, Mahesh Palivela wrote:
+On Tue, Aug 28, 2012 at 5:45 PM, Girish Bn <Girish.BN@lnties.com> wrote:
+> [  725.900000] [<bf0b8c24>] (wl1271_op_bss_info_changed+0x0/0xc24 [wlcore]) from [<bf06a56c>] (ieee80211_bss_info_change_notify+0x1dc/0x200 [mac80211])
+> [  725.900000] [<bf06a390>] (ieee80211_bss_info_change_notify+0x0/0x200 [mac80211]) from [<bf089b98>] (ieee80211_reconfig+0x584/0x9a0 [mac80211])
+> [  725.900000]  r7:c161a888 r6:c15f07d0 r5:c161a3a0 r4:c159cb00
+> [  725.900000] [<bf089614>] (ieee80211_reconfig+0x0/0x9a0 [mac80211]) from [<bf06b460>] (ieee80211_restart_work+0x7c/0x94 [mac80211])
+> [  725.910000] [<bf06b3e4>] (ieee80211_restart_work+0x0/0x94 [mac80211]) from [<c00487a4>] (run_workqueue+0xc4/0x14c)
+> [  725.910000]  r7:00000000 r6:bf06b3e4 r5:c14d2000 r4:c1fef280
+> [  725.910000] [<c00486e0>] (run_workqueue+0x0/0x14c) from [<c0048f18>] (worker_thread+0x10c/0x120)
+> [  725.910000]  r7:c1fef288 r6:c14d3fa4 r5:c14d2000 r4:c1fef280
+> [  725.910000] [<c0048e0c>] (worker_thread+0x0/0x120) from [<c004c888>] (kthread+0x60/0x9c)
+> [  725.910000]  r7:00000000 r6:c1fef280 r5:c0048e0c r4:c14d2000
+> [  725.910000] [<c004c828>] (kthread+0x0/0x9c) from [<c003ab6c>] (do_exit+0x0/0x734)
+> [  725.910000]  r7:00000000 r6:00000000 r5:00000000 r4:00000000
+> [  725.910000] ---[ end trace 1cd0b968bc5f5a81 ]---
+> [  725.910000] wl12xx: ERROR AP rate policy change failed -22
+> Can you please let me know the reason behind crash? Also confirm the driver and firmware version being used is right or not?
 
-> so we are talking about how to specify channel info to cfg/mac80211 from 
-> upper layers. 
-
-Correct
-
-> But regulatory tells if that channel config is allowed or not.
-
-Correct.
-
-> so derive channel type from center freq, width and control chan offset.
-> Then determine if that channel type is allowed from regulatory flags?
-> 
-> In short we have scaled approach on specifying channel info but not 
-> regulatory. Please comment.
-
-Well, we don't really have it yet :-)
-
-I think the question really is whether or not we actually need the
-flags. Sometimes, but very rarely really, we need to answer the question
-
-        Is this set of parameters allowed with the current regulatory
-        rules?
-
-There's nothing that says this needs to be a flag. It could just as well
-be a function
-
-bool regulatory_chan_use_permitted(...);
-
-where the ... gives all the necessary parameters or maybe some structure
-holding all these.
-
-If this was a function, it could go back to the regulatory definitions
-(that we hopefully keep track of in the kernel) and actually use the
-algorithm that today we use to determine the flags to determine the
-answer.
-
-Today, with the flags, we basically pre-determine the answers to all
-possible such questions, and encode the answers in the flags for each
-channel. If we don't pre-determine the answers, then we can get away
-without any flags at all.
-
-Does that make sense?
-
-Still doesn't solve the problems we saw with how to configure the
-channel with considerations such as
-  - bandwidth
-  - center frequency
-  - primary subchannel
-  - 80 + 80 (which is basically two such channels?)
-
-johannes
-
+Seems you have problems since you're using p2p_go in multiple
+interface mode (p2p-wlan0-0). Try removing
+"driver_param=use_p2p_group_interface=1" from your wpa_s.conf and
+apply this patch:
+https://github.com/TI-OpenLink/hostap/commit/b0f48bcc8a61cf620412202166d0d6947f3ba26e
