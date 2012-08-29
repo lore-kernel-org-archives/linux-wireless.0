@@ -1,180 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63293 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781Ab2HJLSY (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:38777 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579Ab2H2UyO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 07:18:24 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20516.60853.935619.159171@gargle.gargle.HOWL> (sfid-20120810_132552_022462_121FE005)
-Date: Fri, 10 Aug 2012 16:47:09 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/15] ath9k: Cleanup TX status API
+	Wed, 29 Aug 2012 16:54:14 -0400
+Message-ID: <1346273644.2077.3.camel@router7789> (sfid-20120829_225424_144867_E11FEEC0)
+Subject: [PATCH] vt6656: [BUG] - Failed connection, incorrect endian. v2
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 29 Aug 2012 21:54:04 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calculate the final rate index inside ath_rc_tx_status().
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This patch fixes a bug with driver failing to negotiate a connection.
+
+The bug was traced to commit
+203e4615ee9d9fa8d3506b9d0ef30095e4d5bc90
+staging: vt6656: removed custom definitions of Ethernet packet types
+
+In that patch, definitions in include/linux/if_ether.h replaced ones
+in tether.h which had both big and little endian definitions.
+
+include/linux/if_ether.h only refers to big endian values, cpu_to_be16
+should be used for the correct endian architectures.
+
+checkpatch fixed version.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/rc.c | 71 +++++++++++++++----------------------
- 1 file changed, 29 insertions(+), 42 deletions(-)
+ drivers/staging/vt6656/dpc.c  |    2 +-
+ drivers/staging/vt6656/rxtx.c |   38 +++++++++++++++++++-------------------
+ 2 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 0e3d20a..2051fac 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -993,9 +993,6 @@ static void ath_debug_stat_retries(struct ath_rate_priv *rc, int rix,
- 	stats->per = per;
- }
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index e4bdf2a..3aa895e 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -200,7 +200,7 @@ s_vProcessRxMACHeader (
+     } else if (!compare_ether_addr(pbyRxBuffer, &pDevice->abySNAP_RFC1042[0])) {
+         cbHeaderSize += 6;
+         pwType = (PWORD) (pbyRxBufferAddr + cbHeaderSize);
+-	if ((*pwType == cpu_to_le16(ETH_P_IPX)) ||
++	if ((*pwType == cpu_to_be16(ETH_P_IPX)) ||
+ 	    (*pwType == cpu_to_le16(0xF380))) {
+ 		cbHeaderSize -= 8;
+             pwType = (PWORD) (pbyRxBufferAddr + cbHeaderSize);
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index bb46452..b6e04e7 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -1699,7 +1699,7 @@ s_bPacketToWirelessUsb(
+     // 802.1H
+     if (ntohs(psEthHeader->wType) > ETH_DATA_LEN) {
+ 	if (pDevice->dwDiagRefCount == 0) {
+-		if ((psEthHeader->wType == cpu_to_le16(ETH_P_IPX)) ||
++		if ((psEthHeader->wType == cpu_to_be16(ETH_P_IPX)) ||
+ 		    (psEthHeader->wType == cpu_to_le16(0xF380))) {
+ 			memcpy((PBYTE) (pbyPayloadHead),
+ 			       abySNAP_Bridgetunnel, 6);
+@@ -2838,10 +2838,10 @@ int nsDMA_tx_packet(PSDevice pDevice, unsigned int uDMAIdx, struct sk_buff *skb)
+     Packet_Type = skb->data[ETH_HLEN+1];
+     Descriptor_type = skb->data[ETH_HLEN+1+1+2];
+     Key_info = (skb->data[ETH_HLEN+1+1+2+1] << 8)|(skb->data[ETH_HLEN+1+1+2+2]);
+-    if (pDevice->sTxEthHeader.wType == cpu_to_le16(ETH_P_PAE)) {
+-	/* 802.1x OR eapol-key challenge frame transfer */
+-	if (((Protocol_Version == 1) || (Protocol_Version == 2)) &&
+-		(Packet_Type == 3)) {
++	if (pDevice->sTxEthHeader.wType == cpu_to_be16(ETH_P_PAE)) {
++		/* 802.1x OR eapol-key challenge frame transfer */
++		if (((Protocol_Version == 1) || (Protocol_Version == 2)) &&
++			(Packet_Type == 3)) {
+                         bTxeapol_key = TRUE;
+                        if(!(Key_info & BIT3) &&  //WPA or RSN group-key challenge
+ 			   (Key_info & BIT8) && (Key_info & BIT9)) {    //send 2/2 key
+@@ -2987,19 +2987,19 @@ int nsDMA_tx_packet(PSDevice pDevice, unsigned int uDMAIdx, struct sk_buff *skb)
+         }
+     }
  
--/* Update PER, RSSI and whatever else that the code thinks it is doing.
--   If you can make sense of all this, you really need to go out more. */
--
- static void ath_rc_update_ht(struct ath_softc *sc,
- 			     struct ath_rate_priv *ath_rc_priv,
- 			     struct ieee80211_tx_info *tx_info,
-@@ -1069,25 +1066,43 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 
- }
- 
-+static void ath_debug_stat_rc(struct ath_rate_priv *rc, int final_rate)
-+{
-+	struct ath_rc_stats *stats;
-+
-+	stats = &rc->rcstats[final_rate];
-+	stats->success++;
-+}
- 
- static void ath_rc_tx_status(struct ath_softc *sc,
- 			     struct ath_rate_priv *ath_rc_priv,
--			     struct ieee80211_tx_info *tx_info,
--			     int final_ts_idx, int xretries, int long_retry)
-+			     struct sk_buff *skb)
- {
--	const struct ath_rate_table *rate_table;
-+	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *rates = tx_info->status.rates;
-+	struct ieee80211_tx_rate *rate;
-+	int final_ts_idx = 0, xretries = 0, long_retry = 0;
- 	u8 flags;
- 	u32 i = 0, rix;
- 
--	rate_table = ath_rc_priv->rate_table;
-+	for (i = 0; i < sc->hw->max_rates; i++) {
-+		rate = &tx_info->status.rates[i];
-+		if (rate->idx < 0 || !rate->count)
-+			break;
-+
-+		final_ts_idx = i;
-+		long_retry = rate->count - 1;
+-    if (pDevice->sTxEthHeader.wType == cpu_to_le16(ETH_P_PAE)) {
+-        if (pDevice->byBBType != BB_TYPE_11A) {
+-            pDevice->wCurrentRate = RATE_1M;
+-            pDevice->byACKRate = RATE_1M;
+-            pDevice->byTopCCKBasicRate = RATE_1M;
+-            pDevice->byTopOFDMBasicRate = RATE_6M;
+-        } else {
+-            pDevice->wCurrentRate = RATE_6M;
+-            pDevice->byACKRate = RATE_6M;
+-            pDevice->byTopCCKBasicRate = RATE_1M;
+-            pDevice->byTopOFDMBasicRate = RATE_6M;
+-        }
+-    }
++	if (pDevice->sTxEthHeader.wType == cpu_to_be16(ETH_P_PAE)) {
++		if (pDevice->byBBType != BB_TYPE_11A) {
++			pDevice->wCurrentRate = RATE_1M;
++			pDevice->byACKRate = RATE_1M;
++			pDevice->byTopCCKBasicRate = RATE_1M;
++			pDevice->byTopOFDMBasicRate = RATE_6M;
++		} else {
++			pDevice->wCurrentRate = RATE_6M;
++			pDevice->byACKRate = RATE_6M;
++			pDevice->byTopCCKBasicRate = RATE_1M;
++			pDevice->byTopOFDMBasicRate = RATE_6M;
++		}
 +	}
-+
-+	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
-+		xretries = 1;
  
- 	/*
- 	 * If the first rate is not the final index, there
- 	 * are intermediate rate failures to be processed.
- 	 */
- 	if (final_ts_idx != 0) {
--		/* Process intermediate rates that failed.*/
- 		for (i = 0; i < final_ts_idx ; i++) {
- 			if (rates[i].count != 0 && (rates[i].idx >= 0)) {
- 				flags = rates[i].flags;
-@@ -1101,8 +1116,8 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+     DBG_PRT(MSG_LEVEL_DEBUG,
+ 	    KERN_INFO "dma_tx: pDevice->wCurrentRate = %d\n",
+@@ -3015,7 +3015,7 @@ int nsDMA_tx_packet(PSDevice pDevice, unsigned int uDMAIdx, struct sk_buff *skb)
  
- 				rix = ath_rc_get_rateindex(rate_table, &rates[i]);
- 				ath_rc_update_ht(sc, ath_rc_priv, tx_info,
--						rix, xretries ? 1 : 2,
--						rates[i].count);
-+						 rix, xretries ? 1 : 2,
-+						 rates[i].count);
- 			}
- 		}
- 	} else {
-@@ -1116,15 +1131,16 @@ static void ath_rc_tx_status(struct ath_softc *sc,
- 			xretries = 2;
- 	}
- 
--	flags = rates[i].flags;
-+	flags = rates[final_ts_idx].flags;
- 
- 	/* If HT40 and we have switched mode from 40 to 20 => don't update */
- 	if ((flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
- 	    !(ath_rc_priv->ht_cap & WLAN_RC_40_FLAG))
- 		return;
- 
--	rix = ath_rc_get_rateindex(rate_table, &rates[i]);
-+	rix = ath_rc_get_rateindex(rate_table, &rates[final_ts_idx]);
- 	ath_rc_update_ht(sc, ath_rc_priv, tx_info, rix, xretries, long_retry);
-+	ath_debug_stat_rc(ath_rc_priv, rix);
- }
- 
- static const
-@@ -1248,15 +1264,6 @@ static bool ath_tx_aggr_check(struct ath_softc *sc, struct ieee80211_sta *sta,
- /* mac80211 Rate Control callbacks */
- /***********************************/
- 
--static void ath_debug_stat_rc(struct ath_rate_priv *rc, int final_rate)
--{
--	struct ath_rc_stats *stats;
--
--	stats = &rc->rcstats[final_rate];
--	stats->success++;
--}
--
--
- static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 			  struct ieee80211_sta *sta, void *priv_sta,
- 			  struct sk_buff *skb)
-@@ -1265,10 +1272,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	int final_ts_idx = 0, tx_status = 0;
--	int long_retry = 0;
- 	__le16 fc = hdr->frame_control;
--	int i;
- 
- 	if (!priv_sta || !ieee80211_is_data(fc))
- 		return;
-@@ -1281,20 +1285,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
- 		return;
- 
--	for (i = 0; i < sc->hw->max_rates; i++) {
--		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
--		if (rate->idx < 0 || !rate->count)
--			break;
--
--		final_ts_idx = i;
--		long_retry = rate->count - 1;
--	}
--
--	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
--		tx_status = 1;
--
--	ath_rc_tx_status(sc, ath_rc_priv, tx_info, final_ts_idx, tx_status,
--			 long_retry);
-+	ath_rc_tx_status(sc, ath_rc_priv, skb);
- 
- 	/* Check if aggregation has to be enabled for this tid */
- 	if (conf_is_ht(&sc->hw->conf) &&
-@@ -1310,10 +1301,6 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 				ieee80211_start_tx_ba_session(sta, tid, 0);
- 		}
- 	}
--
--	ath_debug_stat_rc(ath_rc_priv,
--		ath_rc_get_rateindex(ath_rc_priv->rate_table,
--			&tx_info->status.rates[final_ts_idx]));
- }
- 
- static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+     if (bNeedEncryption == TRUE) {
+         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ntohs Pkt Type=%04x\n", ntohs(pDevice->sTxEthHeader.wType));
+-	if ((pDevice->sTxEthHeader.wType) == cpu_to_le16(ETH_P_PAE)) {
++	if ((pDevice->sTxEthHeader.wType) == cpu_to_be16(ETH_P_PAE)) {
+ 		bNeedEncryption = FALSE;
+             DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Pkt Type=%04x\n", (pDevice->sTxEthHeader.wType));
+             if ((pMgmt->eCurrMode == WMAC_MODE_ESS_STA) && (pMgmt->eCurrState == WMAC_STATE_ASSOC)) {
 -- 
-1.7.11.4
+1.7.10.4
+
 
