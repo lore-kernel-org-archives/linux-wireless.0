@@ -1,94 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:50732 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129Ab2HXC4q (ORCPT
+Received: from hub022-nj-5.exch022.serverdata.net ([206.225.164.188]:35645
+	"EHLO HUB022-nj-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750696Ab2H2EHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 22:56:46 -0400
+	Wed, 29 Aug 2012 00:07:10 -0400
+Message-ID: <503D9569.9080206@posedge.com> (sfid-20120829_060758_891347_BE3BDD5A)
+Date: Wed, 29 Aug 2012 09:37:05 +0530
+From: Mahesh Palivela <maheshp@posedge.com>
 MIME-Version: 1.0
-Date: Fri, 24 Aug 2012 10:56:45 +0800
-Message-ID: <CAPgLHd--KY+zNjUwOHKgEJuTfJuoA=7vKR3JMBUgUc+BtjC9Ng@mail.gmail.com> (sfid-20120824_045655_675710_23261171)
-Subject: Re: [PATCH] mwifiex: use is_zero_ether_addr() instead of memcmp()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: bzhao@marvell.com
-Cc: linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] cfg80211: VHT (11ac) Regulatory change
+References: <502E85D9.5050301@posedge.com>   <1345480718.4459.37.camel@jlt3.sipsolutions.net>   <87d32k7kga.fsf@purkki.adurom.net> <20120821081839.GA2380@redhat.com>   <50338E84.3050709@posedge.com>   <1345564421.10280.9.camel@jlt3.sipsolutions.net>   <5033CE76.6040306@posedge.com>   <1345619008.4635.3.camel@jlt3.sipsolutions.net>   <20120822090104.GA4959@redhat.com>   <1345626282.4635.8.camel@jlt3.sipsolutions.net>   <20120822101252.GA6082@redhat.com> <50376671.7080007@posedge.com>  <1345809927.6991.0.camel@jlt3.sipsolutions.net>  <50377CD9.3090204@posedge.com> <1345970386.3622.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1345970386.3622.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Zhao,
-
-On 08/24/2012 02:28 AM, Bing Zhao wrote:
-> Hi Wei,
+On 08/26/2012 02:09 PM, Johannes Berg wrote:
+> On Fri, 2012-08-24 at 18:38 +0530, Mahesh Palivela wrote:
 >
-> Thanks for the patch.
+>>> We might need 20MHZ_NOHT or something?
+>>
+>> Yes, I missed that.
+>> 20MHZ_NOHT in 5G band and legacy operation 2.4G band may be 5MHZ.
 >
->> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->>
->> Using is_zero_ether_addr() instead of directly use
->> memcmp() to determine if the ethernet address is all
->> zeros.
->>
->> spatch with a semantic match is used to found this problem.
->> (http://coccinelle.lip6.fr/)
-> Apparently there are two more occurrences of zero_mac (scan.c:843)
-
-This is part is special:
-
-memcmp(scan_cfg_out->specific_bssid, &zero_mac, sizeof(zero_mac)))
-
-&zero_mac equal zero_mac, but it missing to spatch.
-
-
->  and bc_mac (sta_cmd.c:596).
-> But I can fix them when I get the chance.
-
-This part will be sent in other patch which using
-is_broadcast_ether_addr()
-
->
->> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> Acked-by: Bing Zhao <bzhao@marvell.com>
->
-> Thanks,
-> Bing
->
->> ---
->>  drivers/net/wireless/mwifiex/sta_cmdresp.c | 5 +++--
->>  1 file changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
->> index 0b09004..a2a33dc 100644
->> --- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
->> +++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
->> @@ -17,6 +17,8 @@
->>   * this warranty disclaimer.
->>   */
->>
->> +#include <linux/etherdevice.h>
->> +
->>  #include "decl.h"
->>  #include "ioctl.h"
->>  #include "util.h"
->> @@ -736,7 +738,6 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
->>  {
->>  	struct host_cmd_ds_802_11_ibss_status *ibss_coal_resp =
->>  					&(resp->params.ibss_coalescing);
->> -	u8 zero_mac[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
->>
->>  	if (le16_to_cpu(ibss_coal_resp->action) == HostCmd_ACT_GEN_SET)
->>  		return 0;
->> @@ -745,7 +746,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
->>  		"info: new BSSID %pM\n", ibss_coal_resp->bssid);
->>
->>  	/* If rsp has NULL BSSID, Just return..... No Action */
->> -	if (!memcmp(ibss_coal_resp->bssid, zero_mac, ETH_ALEN)) {
->> +	if (is_zero_ether_addr(ibss_coal_resp->bssid)) {
->>  		dev_warn(priv->adapter->dev, "new BSSID is NULL\n");
->>  		return 0;
->>  	}
->>
+> We don't support 5/10 MHz (yet anyway), so we don't have to worry about
+> that.
 >
 >
+>
+> Yes, but how's that related to how you specify the channel?
+>
+> joahnnes
+>
+To keep the backward compatibility, how about we still keep channel 
+type. New enum value "NL80211_CHAN_VHT" tells us to look at the new 
+channel_config structure. That way not every driver out there have to 
+change to use the new channel config structure. Let me know.
 
-
+Thanks,
+Mahesh
