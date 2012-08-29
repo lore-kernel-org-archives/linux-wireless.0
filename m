@@ -1,80 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:39743 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758084Ab2HHTdj (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:44934 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176Ab2H2FFX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Aug 2012 15:33:39 -0400
-Message-ID: <20120808222306.133742ltgk7j9tic@www.81.fi> (sfid-20120808_213400_089651_86CD78C2)
-Date: Wed, 08 Aug 2012 22:23:06 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
-Subject: Re: [PATCH] rndis_wlan: Fix potential memory leak in
- update_pmkid()
-References: <1344440661-32322-1-git-send-email-khoroshilov@ispras.ru>
-In-Reply-To: <1344440661-32322-1-git-send-email-khoroshilov@ispras.ru>
+	Wed, 29 Aug 2012 01:05:23 -0400
+Received: by obbuo13 with SMTP id uo13so276126obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2012 22:05:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+In-Reply-To: <503D14FF.5000309@candelatech.com>
+References: <503D14FF.5000309@candelatech.com>
+Date: Wed, 29 Aug 2012 10:35:22 +0530
+Message-ID: <CAD2nsn2JFEAwB0AauFiEYxj=mC7dNjFZn12EQ0q-aOwXjfZj4A@mail.gmail.com> (sfid-20120829_070604_945838_2BAD1543)
+Subject: Re: Does ath9k support beam forming?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Alexey Khoroshilov <khoroshilov@ispras.ru>:
+Hi Ben,
 
-> Do not leak memory by updating pointer with potentially NULL realloc  
-> return value.
->
-> Found by Linux Driver Verification project (linuxtesting.org).
->
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+On Wed, Aug 29, 2012 at 12:29 AM, Ben Greear <greearb@candelatech.com> wrote:
+> I saw some RFC patches about beam-forming from 2010, but grepping current
+> code doesn't find anything that indicates these patches ever made it
+> upstream.
+> Of course, I could be looking for the wrong thing...
 
-Thanks!
+i think even though the patches are ready for submission,
+I think the testing them proved to be very challenging, where there
+does not seems to be consistent improvement(if not decrease)
+in throughput.  I can be wrong.
 
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>
+> Does the current ath9k code support beam-forming?
 
-> ---
->  drivers/net/wireless/rndis_wlan.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+no. hopefully we can support them(yet we need some considerable
+amount of time to test  i suppose).
+
 >
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index 241162e..7a4ae9e 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -1803,6 +1803,7 @@ static struct ndis_80211_pmkid  
-> *update_pmkid(struct usbnet *usbdev,
->  						struct cfg80211_pmksa *pmksa,
->  						int max_pmkids)
->  {
-> +	struct ndis_80211_pmkid *new_pmkids;
->  	int i, err, newlen;
->  	unsigned int count;
+> Thanks,
+> Ben
 >
-> @@ -1833,11 +1834,12 @@ static struct ndis_80211_pmkid  
-> *update_pmkid(struct usbnet *usbdev,
->  	/* add new pmkid */
->  	newlen = sizeof(*pmkids) + (count + 1) * sizeof(pmkids->bssid_info[0]);
->
-> -	pmkids = krealloc(pmkids, newlen, GFP_KERNEL);
-> -	if (!pmkids) {
-> +	new_pmkids = krealloc(pmkids, newlen, GFP_KERNEL);
-> +	if (!new_pmkids) {
->  		err = -ENOMEM;
->  		goto error;
->  	}
-> +	pmkids = new_pmkids;
->
->  	pmkids->length = cpu_to_le32(newlen);
->  	pmkids->bssid_info_count = cpu_to_le32(count + 1);
 > --
-> 1.7.9.5
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
 >
->
->
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 
+-- 
+thanks,
+shafi
