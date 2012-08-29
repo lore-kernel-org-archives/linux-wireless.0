@@ -1,127 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21397 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395Ab2HMPXZ (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:46091 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659Ab2H2PGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 11:23:25 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 1/3] ath9k: cleanup add_iterface/change_interface
-Date: Mon, 13 Aug 2012 20:51:18 +0530
-Message-ID: <1344871278-6499-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120813_172338_722082_D81777ED)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 29 Aug 2012 11:06:46 -0400
+Received: by eaac11 with SMTP id c11so216393eaa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 08:06:45 -0700 (PDT)
+Date: Wed, 29 Aug 2012 17:06:27 +0200
+From: Anisse Astier <anisse@astier.eu>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce : freeze after connecting to network with FW Power
+ Save on
+Message-ID: <20120829170627.5b15ec9c@destiny.ordissimo> (sfid-20120829_170650_521613_A1047E2F)
+In-Reply-To: <20120524191037.19e10917@destiny.ordissimo>
+References: <20120515152951.7cc4f84b@destiny.ordissimo>
+	<4FB26D6B.2030005@lwfinger.net>
+	<20120515170405.7f6510f2@destiny.ordissimo>
+	<4FB28834.4000803@lwfinger.net>
+	<20120516124133.69f57311@destiny.ordissimo>
+	<4FB3D348.2010700@lwfinger.net>
+	<20120524191037.19e10917@destiny.ordissimo>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi,
 
-All these checks will be handled by cfg80211 based on
-the interface combination advertized. For instance
-we support 8 beacon while we advertize maximum 8
-beaconing interface in the interface combination
-support, also cfg80211 will take care of not allowing
-us to add an interface that is not supported by the
-driver, so as if the change_interface changes the
-old interface to a beaconing interface where we had
-reached the maximum number of beacoing interface
+On Thu, 24 May 2012 19:10:37 +0200, Anisse Astier <anisse@astier.eu> wrote :
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   41 +-------------------------------
- 1 files changed, 2 insertions(+), 39 deletions(-)
+> (sorry for the delay, I got caught up in other things, and forgot to send
+> answer email)
+> 
+> On Wed, 16 May 2012 11:18:16 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
+> 
+> > On 05/16/2012 05:41 AM, Anisse Astier wrote:
+> > > I enabled the following options:
+> > > CONFIG_LOCKDEP_SUPPORT=y
+> > > CONFIG_LOCKDEP=y
+> > > CONFIG_DEBUG_LOCKDEP=y
+> > > CONFIG_DEBUG_SPINLOCK=y
+> > > CONFIG_DEBUG_MUTEXES=y
+> > > But it didn't detect any lockup yet, and machine still hangs. I'll try
+> > > CONFIG_PROVE_LOCKING.
+> > >
+> > > Enabling CONFIG_DEBUG_INFO seems to make the problem go away...
+> > 
+> > That may explain why I never see the problem. I do not think I have ever 
+> > generated a kernel with that parameter disabled, and my distro's kernels have it 
+> > enabled. Does anything new get logged (dmesg output) when that parameter is enabled?
+> > 
+> 
+> There's no zero difference in dmesg output. Have you tried with
+> debug_info disabled?
+> 
+> Unfortunately, I've lost access to this hardware, so I won't be able to
+> do more test for quite some time.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a22df74..b0ee05a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -983,35 +983,10 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	int ret = 0;
- 
- 	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
- 
--	switch (vif->type) {
--	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_WDS:
--	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_MESH_POINT:
--		break;
--	default:
--		ath_err(common, "Interface type %d not yet supported\n",
--			vif->type);
--		ret = -EOPNOTSUPP;
--		goto out;
--	}
--
--	if (ath9k_uses_beacons(vif->type)) {
--		if (sc->nbcnvifs >= ATH_BCBUF) {
--			ath_err(common, "Not enough beacon buffers when adding"
--				" new interface of type: %i\n",
--				vif->type);
--			ret = -ENOBUFS;
--			goto out;
--		}
--	}
--
- 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
- 
- 	sc->nvifs++;
-@@ -1020,10 +995,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_assign_slot(sc, vif);
- 
--out:
- 	mutex_unlock(&sc->mutex);
- 	ath9k_ps_restore(sc);
--	return ret;
-+	return 0;
- }
- 
- static int ath9k_change_interface(struct ieee80211_hw *hw,
-@@ -1033,22 +1007,12 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	int ret = 0;
- 
- 	ath_dbg(common, CONFIG, "Change Interface\n");
- 
- 	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
- 
--	if (ath9k_uses_beacons(new_type) &&
--	    !ath9k_uses_beacons(vif->type)) {
--		if (sc->nbcnvifs >= ATH_BCBUF) {
--			ath_err(common, "No beacon slot available\n");
--			ret = -ENOBUFS;
--			goto out;
--		}
--	}
--
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_remove_slot(sc, vif);
- 
-@@ -1059,10 +1023,9 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	if (ath9k_uses_beacons(vif->type))
- 		ath9k_beacon_assign_slot(sc, vif);
- 
--out:
- 	ath9k_ps_restore(sc);
- 	mutex_unlock(&sc->mutex);
--	return ret;
-+	return 0;
- }
- 
- static void ath9k_remove_interface(struct ieee80211_hw *hw,
--- 
-1.7.0.4
 
+I got hold of the hardware again. Problem is still here with today's
+wireless-next (a4881cc45a3fab).
+PROVE_LOCKING doesn't find any discrepancy.
+I tried the new firmware files as well, no change.
+
+Regards,
+
+Anisse
