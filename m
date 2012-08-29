@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42866 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964841Ab2HWRTL (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:59491 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754212Ab2H2RdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Aug 2012 13:19:11 -0400
-Received: by ialo24 with SMTP id o24so1663385ial.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2012 10:19:10 -0700 (PDT)
-Message-ID: <5036660B.9020208@lwfinger.net> (sfid-20120823_191947_529040_A0C3E052)
-Date: Thu, 23 Aug 2012 12:19:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Patrick Connolly <pjc999@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Question about ath9k/mac80211 Driver
-References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com> <50365AC8.7030503@lwfinger.net> <CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
-In-Reply-To: <CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 29 Aug 2012 13:33:10 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr13so1592856pbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 10:33:10 -0700 (PDT)
+From: Devendra Naga <devendra.aaru@gmail.com>
+To: Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>, Ido Reis <idor@ti.com>,
+	linux-wireless@vger.kernel.org
+Cc: Devendra Naga <devendra.aaru@gmail.com>
+Subject: [PATCH] wl18xx: use module_platform_driver
+Date: Wed, 29 Aug 2012 23:03:01 +0530
+Message-Id: <1346261581-21613-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120829_193315_065672_4F59F9B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/23/2012 12:07 PM, Patrick Connolly wrote:
-> Larry,
->       Thanks for the response.  It appears that "set bitrates" is not
-> possible with my version of iw (0.9.19) - I get a big long help screen
-> when I try that command:
->
->   "iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11"
-> ...the options printed out for "set" are:
+the driver's init and exit routines can be implemented with the
+module_platform_driver, as the init and exit code is same as
+that of the module_platform_driver
 
-You need to upgrade iw. I have 0.9.22, which has the set bitrates option.
+Signed-off-by: Devendra Naga <devendra.aaru@gmail.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |   13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-Once the rates are locked by mac80211, the beacons should only advertise 802.11b 
-rates. (I have not tested that statement.)
-
-Larry
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 69042bb..0b3e21b 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1539,18 +1539,7 @@ static struct platform_driver wl18xx_driver = {
+ 	}
+ };
+ 
+-static int __init wl18xx_init(void)
+-{
+-	return platform_driver_register(&wl18xx_driver);
+-}
+-module_init(wl18xx_init);
+-
+-static void __exit wl18xx_exit(void)
+-{
+-	platform_driver_unregister(&wl18xx_driver);
+-}
+-module_exit(wl18xx_exit);
+-
++module_platform_driver(wl18xx_driver);
+ module_param_named(ht_mode, ht_mode_param, charp, S_IRUSR);
+ MODULE_PARM_DESC(ht_mode, "Force HT mode: wide or siso20");
+ 
+-- 
+1.7.9.5
 
