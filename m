@@ -1,90 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:59413 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753192Ab2HNAds (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2025 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752575Ab2H2Dyj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Aug 2012 20:33:48 -0400
-Received: by ghrr11 with SMTP id r11so3745372ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2012 17:33:47 -0700 (PDT)
+	Tue, 28 Aug 2012 23:54:39 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120813184749.GC10529@tuxdriver.com>
-References: <1343267468-9986-1-git-send-email-acelan.kao@canonical.com>
-	<CAGRGNgWk1wV_6Xi6jQppkBtJ+1TYRpTSQ=v8NZffqSBtJNGBYQ@mail.gmail.com>
-	<CAMz9Wg8a0rAj8FN4gczfB6aUA8KgAiTc0_MG6Vc046Zmo4o0Tw@mail.gmail.com>
-	<CAGRGNgX+QmoYhkPuPrr_c5TvqRP=hhzxOSftZh969aOFeiV28g@mail.gmail.com>
-	<CAMz9Wg8eMTJcmd5tcxBURP3Rmuu4siEFTBDqW1aK8rqdZ8utqA@mail.gmail.com>
-	<20120813184749.GC10529@tuxdriver.com>
-Date: Tue, 14 Aug 2012 08:33:47 +0800
-Message-ID: <CAMz9Wg-Ft-STtew-zZ9wSbiC79iEpyV3vp1HoiCutEvn1g=-MA@mail.gmail.com> (sfid-20120814_023356_536443_8C8BDAB9)
-Subject: Re: [PATCH] Revert "rfkill: remove dead code"
-From: AceLan Kao <acelan.kao@canonical.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Corentin Chary <corentincj@iksaif.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20541.37266.533608.571099@gargle.gargle.HOWL> (sfid-20120829_055520_793707_FC62695D)
+Date: Wed, 29 Aug 2012 09:20:42 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Fix TX filter usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No, I only submit the patch here, and the asus-wmi patch for platform is waiting
-this patch into kernel first.
+The TX filter bit for a station would be set by the HW
+when a frame is not acked. A frame would be completed with
+ATH9K_TXERR_FILT status only when the corresponding filter bit
+for the destination station is already set.
 
-2012/8/14 John W. Linville <linville@tuxdriver.com>:
-> Is this all sorted?  Is this patch going through the platform tree?
->
-> On Thu, Jul 26, 2012 at 02:19:23PM +0800, AceLan Kao wrote:
->> Dear Julian,
->>
->> Yes, I have said that the asus-wmi patch needs this commit
->> and CC'd the asus-wmi maintainer, Corentin Chary, here in this rfkill patch.
->>
->> Best regards,
->> AceLan Kao.
->>
->> 2012/7/26 Julian Calaby <julian.calaby@gmail.com>:
->> > Hi AceLan,
->> >
->> > On Thu, Jul 26, 2012 at 3:55 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
->> >> Dear Julian,
->> >>
->> >> I just submitted a patch to platform-x86 for asus-wmi.
->> >> And the patch needs to use rfkill_set_led_trigger_name() function
->> >> to bind the wlan led to rfkill event.
->> >
->> > That's what I wanted to know.
->> >
->> > I assume that you've added a note to the ASUS-WMI patch so people know
->> > that it needs this one first. (I can't see it here so I don't know)
->> >
->> > Thanks,
->> >
->> > --
->> > Julian Calaby
->> >
->> > Email: julian.calaby@gmail.com
->> > Profile: http://www.google.com/profiles/julian.calaby/
->> > .Plan: http://sites.google.com/site/juliancalaby/
->>
->>
->>
->> --
->> Chia-Lin Kao(AceLan)
->> http://blog.acelan.idv.tw/
->> E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
+Currently, un-acknowledged  packets are added to the pending queue
+and retried, but the "clear_dest_mask" bit in the descriptor is
+set only when the TX status has been ATH9K_TXERR_FILT. This results
+in packet loss and the log shows:
 
+wlan0: dropped TX filtered frame, queue_len=0 PS=0 @4309746071
+wlan0: dropped TX filtered frame, queue_len=0 PS=0 @4309746076
+wlan0: dropped TX filtered frame, queue_len=0 PS=0 @4309746377
+...
+...
 
+This issue can be resolved by making sure that the destination
+mask is cleared when the packet is being retried and the earlier
+TX status is ATH9K_TXERR_XRETRY.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ef91f6c..b074c3a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -568,7 +568,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		if (!an->sleeping) {
+ 			ath_tx_queue_tid(txq, tid);
+ 
+-			if (ts->ts_status & ATH9K_TXERR_FILT)
++			if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
+ 				tid->ac->clear_ps_filter = true;
+ 		}
+ 	}
 -- 
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
+1.7.12
+
