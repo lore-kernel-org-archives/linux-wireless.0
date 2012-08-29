@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:42553 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121Ab2HATyh (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48566 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752042Ab2H2PAY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Aug 2012 15:54:37 -0400
-Received: by ggnl2 with SMTP id l2so470296ggn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2012 12:54:36 -0700 (PDT)
+	Wed, 29 Aug 2012 11:00:24 -0400
+Message-ID: <503E2E66.8010909@candelatech.com> (sfid-20120829_170027_983876_3FDF2E73)
+Date: Wed, 29 Aug 2012 07:59:50 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1343849597.4638.20.camel@jlt3.sipsolutions.net>
-References: <1343834487-23737-1-git-send-email-johannes@sipsolutions.net>
- <1343834487-23737-8-git-send-email-johannes@sipsolutions.net>
- <CA+XVXfegwamdK3mzP5eiAUJM4eYrFRTXY4Mr2tKP7+VBYriF-w@mail.gmail.com> <1343849597.4638.20.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 1 Aug 2012 22:54:19 +0300
-Message-ID: <CA+XVXfdwE5-vwF6=aFVU=qmNyGMwi3csPoQ569+O6BG-jc5g8g@mail.gmail.com> (sfid-20120801_215441_998746_8AE24961)
-Subject: Re: [RFC 7/8] mac80211: support extended channel switch
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Does ath9k support beam forming?
+References: <503D14FF.5000309@candelatech.com> <CAD2nsn2JFEAwB0AauFiEYxj=mC7dNjFZn12EQ0q-aOwXjfZj4A@mail.gmail.com>
+In-Reply-To: <CAD2nsn2JFEAwB0AauFiEYxj=mC7dNjFZn12EQ0q-aOwXjfZj4A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 1, 2012 at 10:33 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-08-01 at 22:28 +0300, Arik Nemtsov wrote:
+On 08/28/2012 10:05 PM, Mohammed Shafi wrote:
+> Hi Ben,
 >
->> > +static void
->> > +ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
->> > +                                u8 new_chan_no, u8 count, u8 mode,
->> > +                                enum ieee80211_band new_band,
->> > +                                struct ieee80211_bss *bss, u64 timestamp)
->> >  {
->> >         struct cfg80211_bss *cbss =
->> >                 container_of((void *)bss, struct cfg80211_bss, priv);
->> >         struct ieee80211_channel *new_ch;
->> >         struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
->> > -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
->> > -                                                     cbss->channel->band);
->> > +       int new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
+> On Wed, Aug 29, 2012 at 12:29 AM, Ben Greear <greearb@candelatech.com> wrote:
+>> I saw some RFC patches about beam-forming from 2010, but grepping current
+>> code doesn't find anything that indicates these patches ever made it
+>> upstream.
+>> Of course, I could be looking for the wrong thing...
+>
+> i think even though the patches are ready for submission,
+> I think the testing them proved to be very challenging, where there
+> does not seems to be consistent improvement(if not decrease)
+> in throughput.  I can be wrong.
+>
 >>
->> I'm not sure a channel switch between bands should be allowed. Case in
->> point - a device might have different HT capabilities between bands,
->> so different rates might need to be programmed to FW. This would
->> require a re-assoc..
+>> Does the current ath9k code support beam-forming?
 >
-> Hmm, that might require some new flags or something? I'm not even sure
-> the extended chanswitch is allowed to switch bands, but by the look of
-> it that must have been the intent?
+> no. hopefully we can support them(yet we need some considerable
+> amount of time to test  i suppose).
 
-Maybe the idea was to change the operating class while staying in the
-same band? But now I'm thinking that even without different HT caps
-per band, the change of class alone might impose new regulatory
-restrictions. For instance HT40 may now be allowed/disallowed.
-So we have to notify the driver about this somehow?
+Can you post the latest patch series for this?
 
-If it's too cumbersome, maybe we should just disconnect if the class
-changes? wpa_s would reconnect anyway in most situations (non p2p).
+And maybe we can make the functionality configurable by debugfs
+so that we can test it out easily?
+
+Are there any particular test cases that would help verify the
+patches?
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
+
