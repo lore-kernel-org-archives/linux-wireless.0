@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39320 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751842Ab2HJMXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Aug 2012 08:23:42 -0400
-Message-ID: <5024FD42.6070307@hauke-m.de> (sfid-20120810_142346_488874_679F5B8E)
-Date: Fri, 10 Aug 2012 14:23:30 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22642 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753660Ab2H2OLN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Aug 2012 10:11:13 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 4/4] ath6kl: Recover from "wmi ctrl ep is full" condition
+Date: Wed, 29 Aug 2012 19:40:28 +0530
+Message-ID: <1346249428-24741-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120829_161123_231449_C489A5F0)
+In-Reply-To: <1346249428-24741-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1346249428-24741-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH wireless?] bcma: keep info about parallel flash presentence
-References: <1344544690-11280-1-git-send-email-zajec5@gmail.com> <5024CE29.5030500@broadcom.com> <CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com>
-In-Reply-To: <CACna6rzxb4jtFWOQcRvPxPE0KhTXP5P8fckaN-KaZMCyvq0Lhw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/10/2012 11:32 AM, Rafał Miłecki wrote:
-> 2012/8/10 Arend van Spriel <arend@broadcom.com>:
->> On 08/09/2012 10:38 PM, Rafał Miłecki wrote:
->>> This allows drivers to access flash conditionally and stop crashing some
->>> devices.
->>>
->>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>> John: I suggest taking it for wirelesss, AKA fix
->>
->> Maybe you could mentioned devices and/or drivers crashes without this patch?
-> 
-> Yes, sure! The problematic one for me is arch/mips/bcm47xx/nvram.c.
-> Right now it assumes every BCMA board has pflash. I'll submit fix for
-> mips tree when this patch hits it.
+In some error conditions, fw pauses HTC pipes which would
+result in control endpoint full condition. When we hit this
+case, most of the time the device will be unusable. Re-initialize
+the target to recover from this situation.
 
-Letting this patches get merged into the wireless tree and an other
-patches which depends on this one into the mips tree will cause
-problems, because the wireless tree only gets merged into the mips tree
-indirectly round about the rc1 release in form of the rc1 release done
-by Linus.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 +
+ drivers/net/wireless/ath/ath6kl/recovery.c |    2 ++
+ drivers/net/wireless/ath/ath6kl/txrx.c     |    1 +
+ 3 files changed, 4 insertions(+), 0 deletions(-)
 
-The patch to arch/mips/bcm47xx/nvram.c will depend on this one and you
-should submit them to the same tree.
-
-Hauke
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index b2cbecf..ac90b31 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -660,6 +660,7 @@ enum ath6kl_state {
+ enum ath6kl_fw_err {
+ 	ATH6KL_FW_ASSERT,
+ 	ATH6KL_FW_HB_RESP_FAILURE,
++	ATH6KL_FW_EP_FULL,
+ };
+ 
+ struct ath6kl {
+diff --git a/drivers/net/wireless/ath/ath6kl/recovery.c b/drivers/net/wireless/ath/ath6kl/recovery.c
+index 9161d84..26e0816 100644
+--- a/drivers/net/wireless/ath/ath6kl/recovery.c
++++ b/drivers/net/wireless/ath/ath6kl/recovery.c
+@@ -30,6 +30,8 @@ static void ath6kl_recovery_work(struct work_struct *work)
+ 	ath6kl_init_hw_restart(ar);
+ 
+ 	ar->state = ATH6KL_STATE_ON;
++	clear_bit(WMI_CTRL_EP_FULL, &ar->flag);
++
+ 	ar->fw_recovery.err_reason = 0;
+ 
+ 	if (ar->fw_recovery.enable)
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index cbe1a9d..e867193 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -594,6 +594,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 		 */
+ 		set_bit(WMI_CTRL_EP_FULL, &ar->flag);
+ 		ath6kl_err("wmi ctrl ep is full\n");
++		ath6kl_recovery_err_notify(ar, ATH6KL_FW_EP_FULL);
+ 		return action;
+ 	}
+ 
+-- 
+1.7.0.4
 
