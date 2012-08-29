@@ -1,29 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57890 "EHLO nbd.name"
+Received: from mail.tpi.com ([70.99.223.143]:4196 "EHLO mail.tpi.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756175Ab2HPJXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Aug 2012 05:23:42 -0400
-Message-ID: <502CBC15.6090804@openwrt.org> (sfid-20120816_112346_258862_1996DADA)
-Date: Thu, 16 Aug 2012 11:23:33 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: stop btcoex on device suspend
-References: <1344496046-2177-1-git-send-email-rmanohar@qca.qualcomm.com>
-In-Reply-To: <1344496046-2177-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1751644Ab2H2Osw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Aug 2012 10:48:52 -0400
+From: Tim Gardner <tim.gardner@canonical.com>
+To: linux-kernel@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 3.6-rc3] wlcore: Declare MODULE_FIRMWARE usage
+Date: Wed, 29 Aug 2012 08:48:09 -0600
+Message-Id: <1346251689-37023-1-git-send-email-tim.gardner@canonical.com> (sfid-20120829_164856_459727_BA0DECC2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-08-09 9:07 AM, Rajkumar Manoharan wrote:
-> During suspend, the device will be moved to FULLSLEEP state.
-> As btcoex is never been stopped, the btcoex timer is running
-> and tries to access hw on fullsleep state. Fix that.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Why put ath9k_stop_btcoex here? mac80211 calls drv_stop on suspend, and
-ath9k_stop_btcoex is called early in ath9k_stop().
+Cc: Luciano Coelho <coelho@ti.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Eliad Peller <eliad@wizery.com>
+Cc: Arik Nemtsov <arik@wizery.com>
+Cc: Eyal Shapira <eyal@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-- Felix
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 7254860..a55ace6 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5663,3 +5663,4 @@ MODULE_PARM_DESC(no_recovery, "Prevent HW recovery. FW will remain stuck.");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
++MODULE_FIRMWARE(WL12XX_NVS_NAME);
+-- 
+1.7.9.5
+
