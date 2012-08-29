@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:41446 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751068Ab2H0Nud (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:44363 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753307Ab2H2RCI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Aug 2012 09:50:33 -0400
-Received: by vcbfk26 with SMTP id fk26so4396521vcb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2012 06:50:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com>
-References: <CAE3CJbkhmZ75gBjEToshQ2M9Xu7ciVrDtv8n2DVZepnhBoNt-Q@mail.gmail.com>
-	<50365AC8.7030503@lwfinger.net>
-	<CAE3CJbm5a0hZ8uWT8yU5Z8vbKX2HNwZ2uPUFULGA-3no1XFc_Q@mail.gmail.com>
-	<5036660B.9020208@lwfinger.net>
-	<CAE3CJbkodiw7kZ9F1PQrzZA2hSCF2PAwPAw-UHMwKhC2-6Ky2g@mail.gmail.com>
-	<50381437.7040903@lwfinger.net>
-	<CAE3CJb=Zi12MVpBNGE3kOu00x3b1sZ7S67TCyBty3GkPbtoJXA@mail.gmail.com>
-Date: Mon, 27 Aug 2012 06:50:32 -0700
-Message-ID: <CAE3CJbmK4nF2gR56Rkrrd8qWoCuLot=XD-a9koWxCzcDeOrg8A@mail.gmail.com> (sfid-20120827_155036_135313_6DD2C84F)
-Subject: Re: Question about ath9k/mac80211 Driver
-From: Patrick Connolly <pjc999@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 29 Aug 2012 13:02:08 -0400
+Received: by bkwj10 with SMTP id j10so408502bkw.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2012 10:02:05 -0700 (PDT)
+Message-ID: <1346259706.3935.2.camel@cumari.coelho.fi> (sfid-20120829_190232_088040_C388A45A)
+Subject: Re: [PATCH 3.6-rc3] wlcore: Declare MODULE_FIRMWARE usage
+From: Luciano Coelho <coelho@ti.com>
+To: Tim Gardner <tim.gardner@canonical.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 29 Aug 2012 20:01:46 +0300
+In-Reply-To: <1346251689-37023-1-git-send-email-tim.gardner@canonical.com>
+References: <1346251689-37023-1-git-send-email-tim.gardner@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So can anybody comment on whether kernel 2.6.32 is recent enough to
-support "iw" version 0.9.22 ?
+On Wed, 2012-08-29 at 08:48 -0600, Tim Gardner wrote:
+> Cc: Luciano Coelho <coelho@ti.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: Eliad Peller <eliad@wizery.com>
+> Cc: Arik Nemtsov <arik@wizery.com>
+> Cc: Eyal Shapira <eyal@wizery.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+> ---
 
-Thank you,
-Patrick Connolly
+Please add a proper commit message.  And there's no need to put all
+these people in Cc: in the commit log.  CC'ing when sending the patch is
+enough (even though for such small patch, the linux-wireless mailing
+list and myself is enough).
 
+--
+Luca.
 
-
-
-On Fri, Aug 24, 2012 at 10:16 PM, Patrick Connolly <pjc999@gmail.com> wrote:
-> The kernel is 2.6.32
-> -Patrick
->
-> On Fri, Aug 24, 2012 at 4:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 08/24/2012 06:38 PM, Patrick Connolly wrote:
->>>
->>> Okay so I built "iw" version 0.9.22 successfully (after much grief).
->>> The help page shows that "set bitrates" is now supported:
->>>
->>>          dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in
->>> Mbps>*]
->>>
->>>
->>>   but when I try to use it I get:
->>>
->>>         # iw dev wlan0 set bitrates legacy-2.4 1 2 5.5 11
->>>         command failed: Operation not supported (-95)
->>>
->>> ...so what does this mean?  Is it "iw" or the driver that lacks the
->>> support?
->>
->>
->> I would think that your kernel is too old. What version are you running?
->>
->> Larry
->>
->>
